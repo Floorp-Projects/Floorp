@@ -1205,6 +1205,12 @@ class UrlbarInput {
       };
       this._searchModeIndicatorTitle.textContent = alternateLabel || engineName;
       this._searchModeLabel.textContent = alternateLabel || engineName;
+      this.document.l10n.setAttributes(
+        this.inputField,
+        UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)
+          ? "urlbar-placeholder-search-mode-web"
+          : "urlbar-placeholder-search-mode-other"
+      );
     } else if (source) {
       let sourceName = UrlbarUtils.getResultSourceName(source);
       if (!sourceName) {
@@ -1218,10 +1224,15 @@ class UrlbarInput {
           l10nID
         );
         this.document.l10n.setAttributes(this._searchModeLabel, l10nID);
+        this.document.l10n.setAttributes(
+          this.inputField,
+          "urlbar-placeholder-search-mode-other"
+        );
       }
     } else {
       // Exit search mode.
       this.searchMode = null;
+      this.window.BrowserSearch.initPlaceHolder(true);
     }
 
     if (this.searchMode) {

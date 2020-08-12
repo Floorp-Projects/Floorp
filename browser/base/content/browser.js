@@ -4033,14 +4033,19 @@ const BrowserSearch = {
    * initialized quickly before the user sees anything.
    *
    * Note: If the preference doesn't exist, we don't do anything as the default
-   * placeholder is a string which doesn't have the engine name.
+   * placeholder is a string which doesn't have the engine name; however, this
+   * can be overridden using the `force` parameter.
+   *
+   * @param {Boolean} force If true and the preference doesn't exist, the
+   *                        placeholder will be set to the default version
+   *                        without an engine name ("Search or enter address").
    */
-  initPlaceHolder() {
+  initPlaceHolder(force = false) {
     const prefName =
       "browser.urlbar.placeholderName" +
       (PrivateBrowsingUtils.isWindowPrivate(window) ? ".private" : "");
     let engineName = Services.prefs.getStringPref(prefName, "");
-    if (engineName) {
+    if (engineName || force) {
       // We can do this directly, since we know we're at DOMContentLoaded.
       this._setURLBarPlaceholder(engineName);
     }

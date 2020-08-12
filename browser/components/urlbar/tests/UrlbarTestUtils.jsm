@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
@@ -387,6 +389,19 @@ var UrlbarTestUtils = {
         !window.gURLBar.searchMode,
         "gURLBar.searchMode not expected"
       );
+
+      // Check the input's placeholder.
+      const prefName =
+        "browser.urlbar.placeholderName" +
+        (PrivateBrowsingUtils.isWindowPrivate(window) ? ".private" : "");
+      let engineName = Services.prefs.getStringPref(prefName, "");
+      this.Assert.deepEqual(
+        window.document.l10n.getAttributes(window.gURLBar.inputField),
+        engineName
+          ? { id: "urlbar-placeholder-with-name", args: { name: engineName } }
+          : { id: "urlbar-placeholder", args: null },
+        "Expected placeholder l10n when search mode is inactive"
+      );
       return;
     }
 
@@ -404,29 +419,17 @@ var UrlbarTestUtils = {
 
     // Check the textContent and l10n attributes of the indicator and label.
     let expectedTextContent = "";
-    let expectedL10n = {};
-
+    let expectedL10n = { id: null, args: null };
     if (expectedSearchMode.alternateLabel) {
       expectedTextContent = expectedSearchMode.alternateLabel;
-    } else if (expectedSearchMode.engineDisplayName) {
-      expectedTextContent = expectedSearchMode.engineDisplayName;
     } else if (expectedSearchMode.engineName) {
       expectedTextContent = expectedSearchMode.engineName;
     } else if (expectedSearchMode.source) {
       let name = UrlbarUtils.getResultSourceName(expectedSearchMode.source);
       this.Assert.ok(name, "Expected result source should have a name");
-      expectedL10n = { id: `urlbar-search-mode-${name}` };
+      expectedL10n = { id: `urlbar-search-mode-${name}`, args: null };
     } else {
       this.Assert.ok(false, "Unexpected searchMode");
-    }
-
-    // document.l10n.getAttributes returns an object with a null value for each
-    // of these properties when they aren't present.
-    if (!expectedL10n.id) {
-      expectedL10n.id = null;
-    }
-    if (!expectedL10n.args) {
-      expectedL10n.args = null;
     }
 
     for (let element of [
@@ -446,6 +449,27 @@ var UrlbarTestUtils = {
         "Expected l10n"
       );
     }
+
+    // Check the input's placeholder.
+    let expectedPlaceholderL10n;
+    if (expectedSearchMode.engineName) {
+      expectedPlaceholderL10n = {
+        id: UrlbarUtils.WEB_ENGINE_NAMES.has(expectedSearchMode.engineName)
+          ? "urlbar-placeholder-search-mode-web"
+          : "urlbar-placeholder-search-mode-other",
+        args: null,
+      };
+    } else if (expectedSearchMode.source) {
+      expectedPlaceholderL10n = {
+        id: "urlbar-placeholder-search-mode-other",
+        args: null,
+      };
+    }
+    this.Assert.deepEqual(
+      window.document.l10n.getAttributes(window.gURLBar.inputField),
+      expectedPlaceholderL10n,
+      "Expected placeholder l10n when search mode is active"
+    );
   },
 
   /**
