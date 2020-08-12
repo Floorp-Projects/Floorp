@@ -43,6 +43,7 @@ mozilla::GenericErrorResult<OOM&> RaiseParserAtomsOOMError(JSContext* cx);
  */
 class alignas(alignof(void*)) ParserAtomEntry {
   friend class ParserAtomsTable;
+  friend class WellKnownParserAtoms;
 
   template <typename CharT>
   static constexpr uint32_t MaxInline() {
@@ -279,6 +280,10 @@ class alignas(alignof(void*)) ParserAtomEntry {
 
   // Convert this entry to a number.
   bool toNumber(JSContext* cx, double* result) const;
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpCharsNoQuote(js::GenericPrinter& out) const;
+#endif
 };
 
 class ParserAtom : public ParserAtomEntry {
@@ -483,10 +488,6 @@ inline bool ParserAtomEntry::equalsSeq(
         return false;
       }
     }
-    if (seq.hasMore()) {
-      return false;
-    }
-
   } else {
     const Latin1Char* chars = latin1Chars();
     for (uint32_t i = 0; i < length_; i++) {
@@ -494,11 +495,8 @@ inline bool ParserAtomEntry::equalsSeq(
         return false;
       }
     }
-    if (seq.hasMore()) {
-      return false;
-    }
   }
-  return true;
+  return !seq.hasMore();
 }
 
 } /* namespace frontend */
