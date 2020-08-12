@@ -132,7 +132,9 @@ async function dnsLookup(hostname, resolveCanonicalName = false) {
     try {
       request = gDNSService.asyncResolve(
         hostname,
+        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         dnsFlags,
+        null,
         listener,
         null,
         {} /* defaultOriginAttributes */

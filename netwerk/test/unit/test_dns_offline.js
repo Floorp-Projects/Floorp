@@ -49,7 +49,9 @@ function run_test() {
   try {
     dns.asyncResolve(
       "localhost",
+      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,
+      null, // resolverInfo
       listener1,
       mainThread,
       defaultOriginAttributes
@@ -73,7 +75,9 @@ function test2() {
 function test2Continued() {
   dns.asyncResolve(
     "localhost",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
+    null, // resolverInfo
     listener2,
     mainThread,
     defaultOriginAttributes
@@ -90,7 +94,9 @@ function test3() {
 function test3Continued() {
   dns.asyncResolve(
     "localhost",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
+    null, // resolverInfo
     listener3,
     mainThread,
     defaultOriginAttributes

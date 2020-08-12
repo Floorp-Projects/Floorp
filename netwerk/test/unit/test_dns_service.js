@@ -38,7 +38,9 @@ add_task(async function test_dns_localhost() {
   let listener = new Listener();
   dns.asyncResolve(
     "localhost",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
@@ -53,7 +55,9 @@ add_task(async function test_idn_cname() {
   let listener = new Listener();
   dns.asyncResolve(
     DOMAIN_IDN,
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes

@@ -39,7 +39,9 @@ function run_test() {
   try {
     dns.asyncResolve(
       "example.org",
+      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
+      null, // resolverInfo
       listener,
       null,
       defaultOriginAttributes

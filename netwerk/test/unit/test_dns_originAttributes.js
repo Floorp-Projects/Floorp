@@ -41,7 +41,9 @@ function run_test() {
   do_test_pending();
   dns.asyncResolve(
     "localhost",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
+    null, // resolverInfo
     listener1,
     mainThread,
     firstOriginAttributes
@@ -54,7 +56,9 @@ function test2() {
   do_test_pending();
   dns.asyncResolve(
     "localhost",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_OFFLINE,
+    null, // resolverInfo
     listener2,
     mainThread,
     firstOriginAttributes
@@ -69,7 +73,9 @@ function test3() {
   try {
     dns.asyncResolve(
       "localhost",
+      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       Ci.nsIDNSService.RESOLVE_OFFLINE,
+      null, // resolverInfo
       listener3,
       mainThread,
       secondOriginAttributes
