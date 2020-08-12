@@ -478,11 +478,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
   if (!(c)) return false; \
   break
 
-#define CHECK_EXPERIMENTAL_SIMD()        \
-  if (!SimdExperimentalEnabled) {        \
-    return iter.unrecognizedOpcode(&op); \
-  }
-
   while (true) {
     OpBytes op;
     if (!iter.readOp(&op)) {
@@ -1048,14 +1043,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::V8x16Swizzle):
             CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
 
-          case uint32_t(SimdOp::F32x4PMaxExperimental):
-          case uint32_t(SimdOp::F32x4PMinExperimental):
-          case uint32_t(SimdOp::F64x2PMaxExperimental):
-          case uint32_t(SimdOp::F64x2PMinExperimental):
-          case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
-            CHECK_EXPERIMENTAL_SIMD();
-            CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
-
           case uint32_t(SimdOp::I8x16Neg):
           case uint32_t(SimdOp::I16x8Neg):
           case uint32_t(SimdOp::I16x8WidenLowSI8x16):
@@ -1082,17 +1069,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::I8x16Abs):
           case uint32_t(SimdOp::I16x8Abs):
           case uint32_t(SimdOp::I32x4Abs):
-            CHECK(iter.readUnary(ValType::V128, &nothing));
-
-          case uint32_t(SimdOp::F32x4CeilExperimental):
-          case uint32_t(SimdOp::F32x4FloorExperimental):
-          case uint32_t(SimdOp::F32x4TruncExperimental):
-          case uint32_t(SimdOp::F32x4NearestExperimental):
-          case uint32_t(SimdOp::F64x2CeilExperimental):
-          case uint32_t(SimdOp::F64x2FloorExperimental):
-          case uint32_t(SimdOp::F64x2TruncExperimental):
-          case uint32_t(SimdOp::F64x2NearestExperimental):
-            CHECK_EXPERIMENTAL_SIMD();
             CHECK(iter.readUnary(ValType::V128, &nothing));
 
           case uint32_t(SimdOp::I8x16Shl):
@@ -1168,18 +1144,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::V128Store): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readStore(ValType::V128, 16, &addr, &nothing));
-          }
-
-          case uint32_t(SimdOp::V128Load32ZeroExperimental): {
-            LinearMemoryAddress<Nothing> addr;
-            CHECK_EXPERIMENTAL_SIMD();
-            CHECK(iter.readLoadSplat(4, &addr));
-          }
-
-          case uint32_t(SimdOp::V128Load64ZeroExperimental): {
-            LinearMemoryAddress<Nothing> addr;
-            CHECK_EXPERIMENTAL_SIMD();
-            CHECK(iter.readLoadSplat(8, &addr));
           }
 
           default:
@@ -1486,7 +1450,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
   MOZ_CRASH("unreachable");
 
 #undef CHECK
-#undef CHECK_EXPERIMENTAL_SIMD
 }
 
 bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
