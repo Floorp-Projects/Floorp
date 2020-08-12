@@ -550,11 +550,21 @@ class AssemblerX86Shared : public AssemblerShared {
     masm.xchgl_rr(src.encoding(), dest.encoding());
   }
 
-  // Eventually vmovapd should be overloaded to support loads and
-  // stores too.
   void vmovapd(FloatRegister src, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     masm.vmovapd_rr(src.encoding(), dest.encoding());
+  }
+  // Eventually vmovapd should be overloaded to support loads and
+  // stores too.
+  void vmovapd(const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vmovapd_rr(src.fpu(), dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
   }
 
   void vmovaps(FloatRegister src, FloatRegister dest) {
@@ -3589,6 +3599,17 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
+  void vandpd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    switch (src1.kind()) {
+      case Operand::FPREG:
+        masm.vandpd_rr(src1.fpu(), src0.encoding(), dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+
   void vpand(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     masm.vpand_rr(src1.encoding(), src0.encoding(), dest.encoding());

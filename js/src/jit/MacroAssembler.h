@@ -2405,19 +2405,23 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // NaN-propagating minimum
 
-  inline void minFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
+  inline void minFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
+                           FloatRegister temp1, FloatRegister temp2)
       DEFINED_ON(x86_shared);
 
-  inline void minFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
+  inline void minFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
+                           FloatRegister temp1, FloatRegister temp2)
       DEFINED_ON(x86_shared);
 
   // NaN-propagating maximum
 
   inline void maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                           FloatRegister temp) DEFINED_ON(x86_shared);
+                           FloatRegister temp1, FloatRegister temp2)
+      DEFINED_ON(x86_shared);
 
   inline void maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                           FloatRegister temp) DEFINED_ON(x86_shared);
+                           FloatRegister temp1, FloatRegister temp2)
+      DEFINED_ON(x86_shared);
 
   // Floating add
 
