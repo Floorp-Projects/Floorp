@@ -583,26 +583,10 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
 bool AntiTrackingUtils::IsThirdPartyChannel(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  // We assume that the channel is a third-party by default.
-  bool thirdParty = true;
-
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-  if (!thirdPartyUtil) {
-    return thirdParty;
-  }
-
-  // Check that if the channel is a third-party to its parent.
-  nsresult rv =
-      thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &thirdParty);
-  if (NS_FAILED(rv)) {
-    // Assume third-party in case of failure
-    thirdParty = true;
-  }
-
-  // We check the top-level window to prevent the top-level navigation from
-  // being detected as third-party.
+  // We only care whether the channel is 3rd-party with respect to
+  // the top-level.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  return thirdParty && loadInfo->GetIsThirdPartyContextToTopWindow();
+  return loadInfo->GetIsThirdPartyContextToTopWindow();
 }
 
 /* static */
@@ -614,11 +598,44 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
   // We assume that the window is foreign to the URI by default.
   bool thirdParty = true;
 
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-  Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(), aURI,
-                                               &thirdParty);
+  // This is to comply with ThirdPartyUtil::IsThirdPartyWindow API.
+  if (aURI && !NS_IsAboutBlank(aURI)) {
+    nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrin =
+        do_QueryInterface(aWindow);
+    if (!scriptObjPrin) {
+      return thirdParty;
+    }
 
-  return thirdParty;
+    nsCOMPtr<nsIPrincipal> prin = scriptObjPrin->GetPrincipal();
+    if (!prin) {
+      return thirdParty;
+    }
+
+    // Determine whether aURI is foreign with respect to the current principal.
+    nsresult rv = prin->IsThirdPartyURI(aURI, &thirdParty);
+    if (NS_FAILED(rv)) {
+      return thirdParty;
+    }
+
+    if (thirdParty) {
+      return thirdParty;
+    }
+  }
+
+  RefPtr<Document> doc = aWindow->GetDoc();
+  if (!doc || !doc->GetChannel()) {
+    // If we can't get channel from the window, ex, about:blank, fallback to use
+    // IsThirdPartyWindow check that examine the whole hierarchy.
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+    Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
+                                                 nullptr, &thirdParty);
+    return thirdParty;
+  }
+
+  // We only care whether the channel is 3rd-party with respect to
+  // the top-level.
+  nsCOMPtr<nsILoadInfo> loadInfo = doc->GetChannel()->LoadInfo();
+  return loadInfo->GetIsThirdPartyContextToTopWindow();
 }
 
 /* static */
