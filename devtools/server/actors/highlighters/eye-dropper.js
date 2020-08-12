@@ -65,8 +65,6 @@ function EyeDropper(highlighterEnv) {
 }
 
 EyeDropper.prototype = {
-  typeName: "EyeDropper",
-
   ID_CLASS_PREFIX: "eye-dropper-",
 
   get win() {

@@ -42,8 +42,6 @@ function RulersHighlighter(highlighterEnv) {
 }
 
 RulersHighlighter.prototype = {
-  typeName: "RulersHighlighter",
-
   ID_CLASS_PREFIX: "rulers-highlighter-",
 
   _buildMarkup: function() {
