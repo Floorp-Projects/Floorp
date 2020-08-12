@@ -177,7 +177,7 @@ Selection.prototype = {
 
   isConnected: function() {
     let node = this._nodeFront;
-    if (!node || !node.actorID) {
+    if (!node || node.isDestroyed()) {
       return false;
     }
 
