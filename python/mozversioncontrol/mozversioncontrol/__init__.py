@@ -550,7 +550,7 @@ class GitRepository(Repository):
         self._run('reset', *paths)
 
     def get_files_in_working_directory(self):
-        return self._run('ls-files', '-z').split('\0')
+        return [p for p in self._run('ls-files', '-z').split('\0') if p]
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ['status', '--porcelain']
