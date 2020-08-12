@@ -922,6 +922,16 @@
   args:
     array: ObjId
 
+- name: PackedArraySliceResult
+  shared: false
+  transpile: true
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+    array: ObjId
+    begin: Int32Id
+    end: Int32Id
+
 - name: IsArrayResult
   shared: false
   transpile: true
@@ -1661,6 +1671,14 @@
   cost_estimate: 1
   args:
     obj: ObjId
+
+- name: LoadInt32ArrayLength
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    result: Int32Id
 
 - name: LoadArgumentsObjectArgResult
   shared: true
