@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -55,6 +56,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
+    private val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
 
     private var readerModeAvailable = false
 
@@ -106,6 +108,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 )
 
             browserToolbarView.view.addPageAction(readerModeAction)
+
+            thumbnailsFeature.set(
+                feature = BrowserThumbnails(context, view.engineView, components.core.store),
+                owner = this,
+                view = view
+            )
 
             readerViewFeature.set(
                 feature = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
