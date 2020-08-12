@@ -153,7 +153,7 @@ class Front extends Pool {
    *        The function is called with the same argument than onAvailable.
    */
   watchFronts(typeName, onAvailable, onDestroy) {
-    if (!this.actorID) {
+    if (this.isDestroyed()) {
       // The front was already destroyed, bail out.
       console.error(
         `Tried to call watchFronts for the '${typeName}' type on an ` +
@@ -184,7 +184,7 @@ class Front extends Pool {
    * See `watchFronts()` for documentation of the arguments.
    */
   unwatchFronts(typeName, onAvailable, onDestroy) {
-    if (!this.actorID) {
+    if (this.isDestroyed()) {
       // The front was already destroyed, bail out.
       console.error(
         `Tried to call unwatchFronts for the '${typeName}' type on an ` +

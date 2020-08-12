@@ -253,8 +253,7 @@ const PerformanceController = {
   async stopRecording() {
     const recording = this.getLatestManualRecording();
 
-    // What the actorID is null means this actor was already destroyed.
-    if (this.front.actorID) {
+    if (!this.front.isDestroyed()) {
       await this.front.stopRecording(recording);
     } else {
       // As the front was destroyed, we do stop sequence manually without the actor.

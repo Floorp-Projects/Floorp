@@ -38,7 +38,7 @@ function details(state = getInitialState(), action) {
 function onUpdateDetails(state, action) {
   const { accessible, response, error } = action;
   if (error) {
-    if (accessible.actorID) {
+    if (!accessible.isDestroyed()) {
       console.warn(
         `Error fetching accessible details: `,
         accessible.actorID,
