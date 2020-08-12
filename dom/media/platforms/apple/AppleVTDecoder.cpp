@@ -11,15 +11,16 @@
 
 #include "AppleDecoderModule.h"
 #include "AppleUtils.h"
+#include "H264.h"
+#include "MP4Decoder.h"
 #include "MacIOSurfaceImage.h"
 #include "MediaData.h"
-#include "mozilla/ArrayUtils.h"
-#include "H264.h"
-#include "nsThreadUtils.h"
-#include "mozilla/Logging.h"
+#include "VPXDecoder.h"
 #include "VideoUtils.h"
 #include "gfxPlatform.h"
-#include "MacIOSurfaceImage.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Logging.h"
+#include "nsThreadUtils.h"
 
 #define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
 #define LOGEX(_this, ...) \
@@ -42,10 +43,17 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
                       ? DefaultColorSpace({mPictureWidth, mPictureHeight})
                       : aConfig.mColorSpace),
       mColorRange(aConfig.mColorRange),
+      mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)
+                      ? StreamType::H264
+                      : VPXDecoder::IsVP9(aConfig.mMimeType)
+                            ? StreamType::VP9
+                            : StreamType::Unknown),
       mTaskQueue(aTaskQueue),
-      mMaxRefFrames(aOptions.contains(CreateDecoderParams::Option::LowLatency)
-                        ? 0
-                        : H264::ComputeMaxRefFrames(aConfig.mExtraData)),
+      mMaxRefFrames(
+          mStreamType != StreamType::H264 ||
+                  aOptions.contains(CreateDecoderParams::Option::LowLatency)
+              ? 0
+              : H264::ComputeMaxRefFrames(aConfig.mExtraData)),
       mImageContainer(aImageContainer),
       mKnowsCompositor(aKnowsCompositor)
 #ifdef MOZ_WIDGET_UIKIT
@@ -64,9 +72,10 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
       mSession(nullptr),
       mIsHardwareAccelerated(false) {
   MOZ_COUNT_CTOR(AppleVTDecoder);
+  MOZ_ASSERT(mStreamType != StreamType::Unknown);
   // TODO: Verify aConfig.mime_type.
-  LOG("Creating AppleVTDecoder for %dx%d h.264 video", mDisplayWidth,
-      mDisplayHeight);
+  LOG("Creating AppleVTDecoder for %dx%d %s video", mDisplayWidth,
+      mDisplayHeight, mStreamType == StreamType::H264 ? "H.264" : "VP9");
 }
 
 AppleVTDecoder::~AppleVTDecoder() { MOZ_COUNT_DTOR(AppleVTDecoder); }
@@ -496,9 +505,12 @@ MediaResult AppleVTDecoder::InitializeSession() {
 
   AutoCFRelease<CFDictionaryRef> extensions = CreateDecoderExtensions();
 
-  rv = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
-                                      kCMVideoCodecType_H264, mPictureWidth,
-                                      mPictureHeight, extensions, &mFormat);
+  rv = CMVideoFormatDescriptionCreate(
+      kCFAllocatorDefault,
+      mStreamType == StreamType::H264
+          ? kCMVideoCodecType_H264
+          : CMVideoCodecType(AppleDecoderModule::kCMVideoCodecType_VP9),
+      mPictureWidth, mPictureHeight, extensions, &mFormat);
   if (rv != noErr) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Couldn't create format description!"));
@@ -539,11 +551,12 @@ MediaResult AppleVTDecoder::InitializeSession() {
 }
 
 CFDictionaryRef AppleVTDecoder::CreateDecoderExtensions() {
-  AutoCFRelease<CFDataRef> avc_data = CFDataCreate(
+  AutoCFRelease<CFDataRef> data = CFDataCreate(
       kCFAllocatorDefault, mExtraData->Elements(), mExtraData->Length());
 
-  const void* atomsKey[] = {CFSTR("avcC")};
-  const void* atomsValue[] = {avc_data};
+  const void* atomsKey[1];
+  atomsKey[0] = mStreamType == StreamType::H264 ? CFSTR("avcC") : CFSTR("vpcC");
+  const void* atomsValue[] = {data};
   static_assert(ArrayLength(atomsKey) == ArrayLength(atomsValue),
                 "Non matching keys/values array size");
 
