@@ -1073,12 +1073,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "data-encoding"
-version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4d0e2d24e5ee3b23a01de38eefdcd978907890701f08ffffd4cb457ca4ee8d6"
-
-[[package]]
 name = "dbus"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1978,7 +1972,6 @@ dependencies = [
  "gecko_logger",
  "geckoservo",
  "gkrust_utils",
- "http_sfv",
  "jsrust_shared",
  "kvstore",
  "lmdb-rkv-sys",
@@ -2260,17 +2253,6 @@ dependencies = [
  "neqo-http3",
  "neqo-qpack",
  "neqo-transport",
-]
-
-[[package]]
-name = "http_sfv"
-version = "0.1.0"
-dependencies = [
- "nserror",
- "nsstring",
- "sfv",
- "thin-vec",
- "xpcom",
 ]
 
 [[package]]
@@ -4249,16 +4231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_decimal"
-version = "1.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95ba36e8c41bf675947e200af432325f332f60a0aea0ef2dc456636c2f6037d7"
-dependencies = [
- "num-traits",
- "serde",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4472,17 +4444,6 @@ version = "0.1.1"
 dependencies = [
  "nodrop",
  "stable_deref_trait",
-]
-
-[[package]]
-name = "sfv"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13ed1dd5a626253083678d21b5c38dd94f8717b961d4b7469eb96b41173cc148"
-dependencies = [
- "data-encoding",
- "indexmap",
- "rust_decimal",
 ]
 
 [[package]]
