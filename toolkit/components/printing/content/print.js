@@ -612,9 +612,7 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
     document.l10n.setAttributes(this, "printui-sheets-count", {
       sheetCount: this.numPages * this.numCopies,
     });
-    if (this.hidden) {
-      document.l10n.translateElements([this]).then(() => (this.hidden = false));
-    }
+    this.removeAttribute("loading");
   }
 
   handleEvent(e) {
