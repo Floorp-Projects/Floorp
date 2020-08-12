@@ -38,6 +38,7 @@ const char* GetExtensionName(const WebGLExtensionID ext) {
     WEBGL_EXTENSION_IDENTIFIER(EXT_texture_compression_bptc)
     WEBGL_EXTENSION_IDENTIFIER(EXT_texture_compression_rgtc)
     WEBGL_EXTENSION_IDENTIFIER(EXT_texture_filter_anisotropic)
+    WEBGL_EXTENSION_IDENTIFIER(EXT_texture_norm16)
     WEBGL_EXTENSION_IDENTIFIER(MOZ_debug)
     WEBGL_EXTENSION_IDENTIFIER(OES_element_index_uint)
     WEBGL_EXTENSION_IDENTIFIER(OES_fbo_render_mipmap)
@@ -152,6 +153,8 @@ RefPtr<ClientWebGLExtensionBase> ClientWebGLContext::GetExtension(
           return new ClientWebGLExtensionCompressedTextureRGTC(*this);
         case WebGLExtensionID::EXT_texture_filter_anisotropic:
           return new ClientWebGLExtensionTextureFilterAnisotropic(*this);
+        case WebGLExtensionID::EXT_texture_norm16:
+          return new ClientWebGLExtensionTextureNorm16(*this);
 
         // MOZ_
         case WebGLExtensionID::MOZ_debug:
@@ -269,6 +272,9 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
       return gl->IsExtensionSupported(
           gl::GLContext::EXT_texture_filter_anisotropic);
+
+    case WebGLExtensionID::EXT_texture_norm16:
+      return WebGLExtensionTextureNorm16::IsSupported(this);
 
     // OES_
     case WebGLExtensionID::OES_element_index_uint:
@@ -403,6 +409,9 @@ void WebGLContext::RequestExtension(const WebGLExtensionID ext,
       break;
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
       slot.reset(new WebGLExtensionTextureFilterAnisotropic(this));
+      break;
+    case WebGLExtensionID::EXT_texture_norm16:
+      slot.reset(new WebGLExtensionTextureNorm16(this));
       break;
 
     // MOZ_

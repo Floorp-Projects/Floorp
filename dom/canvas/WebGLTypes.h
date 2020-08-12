@@ -220,6 +220,7 @@ enum class WebGLExtensionID : uint8_t {
   EXT_texture_compression_bptc,
   EXT_texture_compression_rgtc,
   EXT_texture_filter_anisotropic,
+  EXT_texture_norm16,
   MOZ_debug,
   OES_element_index_uint,
   OES_fbo_render_mipmap,

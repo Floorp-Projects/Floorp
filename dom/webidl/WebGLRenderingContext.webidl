@@ -836,6 +836,20 @@ interface EXT_texture_compression_rgtc {
     const GLenum COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT = 0x8DBE;
 };
 
+// https://www.khronos.org/registry/webgl/extensions/EXT_texture_norm16/
+[NoInterfaceObject,
+ Exposed=Window]
+interface EXT_texture_norm16 {
+  const GLenum R16_EXT = 0x822A;
+  const GLenum RG16_EXT = 0x822C;
+  const GLenum RGB16_EXT = 0x8054;
+  const GLenum RGBA16_EXT = 0x805B;
+  const GLenum R16_SNORM_EXT = 0x8F98;
+  const GLenum RG16_SNORM_EXT = 0x8F99;
+  const GLenum RGB16_SNORM_EXT = 0x8F9A;
+  const GLenum RGBA16_SNORM_EXT = 0x8F9B;
+};
+
 [NoInterfaceObject,
  Exposed=Window]
 interface WEBGL_compressed_texture_s3tc
