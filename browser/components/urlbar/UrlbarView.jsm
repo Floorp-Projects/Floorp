@@ -1700,13 +1700,6 @@ class UrlbarView {
         continue;
       }
 
-      if (
-        this.oneOffsRefresh &&
-        !result.heuristic &&
-        (!result.payload.inPrivateWindow || result.payload.isPrivateEngine)
-      ) {
-        continue;
-      }
       if (engine) {
         if (!result.payload.originalEngine) {
           result.payload.originalEngine = result.payload.engine;
@@ -1730,19 +1723,29 @@ class UrlbarView {
           [(engine && engine.name) || result.payload.engine]
         );
       }
-      // If we just changed the engine from the original engine and it had an
-      // icon, then make sure the result now uses the new engine's icon or
-      // failing that the default icon.  If we changed it back to the original
-      // engine, go back to the original or default icon.
-      let favicon = item.querySelector(".urlbarView-favicon");
-      if (engine && result.payload.icon) {
-        favicon.src =
-          (engine.iconURI && engine.iconURI.spec) ||
-          UrlbarUtils.ICON.SEARCH_GLASS;
-      } else if (!engine) {
-        favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
+
+      // Update result favicons.
+      if (
+        // Don't update the favicon on non-heuristic results when update2 is
+        // enabled.
+        !this.oneOffsRefresh ||
+        result.heuristic ||
+        (result.payload.inPrivateWindow && !result.payload.isPrivateEngine)
+      ) {
+        // If we just changed the engine from the original engine and it had an
+        // icon, then make sure the result now uses the new engine's icon or
+        // failing that the default icon.  If we changed it back to the original
+        // engine, go back to the original or default icon.
+        let favicon = item.querySelector(".urlbarView-favicon");
+        if (engine && result.payload.icon) {
+          favicon.src =
+            (engine.iconURI && engine.iconURI.spec) ||
+            UrlbarUtils.ICON.SEARCH_GLASS;
+        } else if (!engine) {
+          favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
+        }
+        favicon.src = this._iconForSearchResult(result, engine);
       }
-      favicon.src = this._iconForSearchResult(result, engine);
     }
   }
 
