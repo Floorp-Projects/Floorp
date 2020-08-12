@@ -5381,17 +5381,6 @@
     "labels": ["absent", "present"],
     "description": "Network ID presence when the network connectivity checker reports that we have connectivity"
   },
-  "NETWORK_PAC_URL_SCHEME": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
-    "bug_numbers": [1622335, 1630899],
-    "expires_in_version": "82",
-    "kind": "categorical",
-    "releaseChannelCollection": "opt-out",
-    "labels": ["ftp", "other"],
-    "description": "Whether the scheme of the PAC URL was FTP"
-  },
   "IDLE_NOTIFY_IDLE_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
