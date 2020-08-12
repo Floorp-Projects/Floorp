@@ -275,12 +275,23 @@ enum ConditionCmp {
   ConditionCmp_ORD = 0x7,
 };
 
-// Rounding modes for ROUNDSD.
+// Rounding modes for ROUNDSS / ROUNDSD.
 enum RoundingMode {
   RoundToNearest = 0x0,
   RoundDown = 0x1,
   RoundUp = 0x2,
   RoundToZero = 0x3
+};
+
+// Rounding modes for ROUNDPS / ROUNDPD.  Note these are the same as for
+// RoundingMode above but incorporate the 'inexact' bit which says not to signal
+// exceptions for lost precision.  It's not obvious that this bit is needed; it
+// was however suggested in the wasm SIMD proposal that led to these encodings.
+enum class SSERoundingMode {
+  RoundToNearest = 0x08,
+  RoundDown = 0x09,
+  RoundUp = 0x0A,
+  RoundToZero = 0x0B
 };
 
 // Test whether the given address will fit in an address immediate field.

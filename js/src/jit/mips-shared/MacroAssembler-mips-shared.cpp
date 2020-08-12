@@ -2126,9 +2126,11 @@ void MacroAssemblerMIPSShared::wasmLoadImpl(
       isSigned = false;
       break;
     case Scalar::Float64:
+      MOZ_ASSERT(!access.isZeroExtendSimd128Load());
       isFloat = true;
       break;
     case Scalar::Float32:
+      MOZ_ASSERT(!access.isZeroExtendSimd128Load());
       isFloat = true;
       break;
     default:
