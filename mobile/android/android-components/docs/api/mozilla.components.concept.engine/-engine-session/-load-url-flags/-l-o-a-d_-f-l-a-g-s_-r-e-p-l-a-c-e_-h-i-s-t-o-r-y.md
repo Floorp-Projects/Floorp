@@ -2,4 +2,4 @@
 
 # LOAD_FLAGS_REPLACE_HISTORY
 
-`const val LOAD_FLAGS_REPLACE_HISTORY: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L394)
+`const val LOAD_FLAGS_REPLACE_HISTORY: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L418)

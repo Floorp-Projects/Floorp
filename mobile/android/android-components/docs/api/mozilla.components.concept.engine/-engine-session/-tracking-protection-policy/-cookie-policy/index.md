@@ -2,7 +2,7 @@
 
 # CookiePolicy
 
-`enum class CookiePolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L194)
+`enum class CookiePolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L196)
 
 Indicates how cookies should behave for a given [TrackingProtectionPolicy](../index.md).
 The ids of each cookiePolicy is aligned with the GeckoView @CookieBehavior constants.
