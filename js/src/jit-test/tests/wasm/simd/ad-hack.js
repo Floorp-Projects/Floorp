@@ -74,7 +74,7 @@ function cross(xs) {
     return results;
 }
 
-function eq(a, b) {
+function equal(a, b) {
     return a === b || isNaN(a) && isNaN(b);
 }
 
@@ -82,7 +82,7 @@ function eq(a, b) {
 function remove(v, xs) {
     let result = [];
     for ( let w of xs ) {
-        if (eq(v, w))
+        if (equal(v, w))
             continue;
         result.push(w);
     }
@@ -508,11 +508,26 @@ function fadd(x, y) { return Math.fround(x+y) }
 function fsub(x, y) { return Math.fround(x-y) }
 function fmul(x, y) { return Math.fround(x*y) }
 function fdiv(x, y) { return Math.fround(x/y) }
-
+function fmin(x, y) {
+    if (x == y) return x;
+    if (x < y) return x;
+    if (y < x) return y;
+    if (isNaN(x)) return x;
+    return y;
+}
+function fmax(x, y) {
+    if (x == y) return x;
+    if (x > y) return x;
+    if (y > x) return y;
+    if (isNaN(x)) return x;
+    return y;
+}
 function dadd(x, y) { return x+y }
 function dsub(x, y) { return x-y }
 function dmul(x, y) { return x*y }
 function ddiv(x, y) { return x/y }
+var dmax = fmax;
+var dmin = fmin;
 
 function op_sat_s(bits, op) {
     return (x, y) => {
@@ -624,14 +639,14 @@ for ( let [op, memtype, rop, resultmemtype] of
        ['f32x4.sub', Float32Array, fsub],
        ['f32x4.mul', Float32Array, fmul],
        ['f32x4.div', Float32Array, fdiv],
-       ['f32x4.min', Float32Array, min],
-       ['f32x4.max', Float32Array, max],
+       ['f32x4.min', Float32Array, fmin],
+       ['f32x4.max', Float32Array, fmax],
        ['f64x2.add', Float64Array, dadd],
        ['f64x2.sub', Float64Array, dsub],
        ['f64x2.mul', Float64Array, dmul],
        ['f64x2.div', Float64Array, ddiv],
-       ['f64x2.min', Float64Array, min],
-       ['f64x2.max', Float64Array, max],
+       ['f64x2.min', Float64Array, dmin],
+       ['f64x2.max', Float64Array, dmax],
        ['i8x16.eq', Int8Array, eq(-1)],
        ['i8x16.ne', Int8Array, ne(-1)],
        ['i8x16.lt_s', Int8Array, lt(-1)],
