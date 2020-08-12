@@ -165,6 +165,17 @@ const inlinePreviewItem = (editorActions: EditorItemActions) => ({
   click: () => editorActions.toggleInlinePreview(!features.inlinePreview),
 });
 
+const editorWrappingItem = (
+  editorActions: EditorItemActions,
+  editorWrappingEnabled: boolean
+) => ({
+  id: "node-menu-editor-wrapping",
+  label: editorWrappingEnabled
+    ? L10N.getStr("editorWrapping.hide.label")
+    : L10N.getStr("editorWrapping.show.label"),
+  click: () => editorActions.toggleEditorWrapping(!editorWrappingEnabled),
+});
+
 export function editorMenuItems({
   cx,
   editorActions,
@@ -174,6 +185,7 @@ export function editorMenuItems({
   hasMappedLocation,
   isTextSelected,
   isPaused,
+  editorWrappingEnabled,
 }: {
   cx: ThreadContext,
   editorActions: EditorItemActions,
@@ -183,6 +195,7 @@ export function editorMenuItems({
   hasMappedLocation: boolean,
   isTextSelected: boolean,
   isPaused: boolean,
+  editorWrappingEnabled: boolean,
 }) {
   const items = [];
 
@@ -224,7 +237,11 @@ export function editorMenuItems({
     );
   }
 
-  items.push({ type: "separator" }, inlinePreviewItem(editorActions));
+  items.push(
+    { type: "separator" },
+    inlinePreviewItem(editorActions),
+    editorWrappingItem(editorActions, editorWrappingEnabled)
+  );
 
   return items;
 }
@@ -238,6 +255,7 @@ export type EditorItemActions = {
   showSource: typeof actions.showSource,
   toggleBlackBox: typeof actions.toggleBlackBox,
   toggleInlinePreview: typeof actions.toggleInlinePreview,
+  toggleEditorWrapping: typeof actions.toggleEditorWrapping,
 };
 
 export function editorItemActions(dispatch: Function) {
@@ -251,6 +269,7 @@ export function editorItemActions(dispatch: Function) {
       showSource: actions.showSource,
       toggleBlackBox: actions.toggleBlackBox,
       toggleInlinePreview: actions.toggleInlinePreview,
+      toggleEditorWrapping: actions.toggleEditorWrapping,
     },
     dispatch
   );

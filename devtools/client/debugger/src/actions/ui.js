@@ -16,7 +16,11 @@ import {
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
 import type { ThunkArgs, panelPositionType } from "./types";
-import { getEditor, getLocationsInViewport } from "../utils/editor";
+import {
+  getEditor,
+  getLocationsInViewport,
+  updateDocuments,
+} from "../utils/editor";
 import { searchContents } from "./file-search";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
@@ -84,6 +88,17 @@ export function toggleInlinePreview(toggleValue: boolean) {
   return ({ dispatch, getState }: ThunkArgs) => {
     dispatch({
       type: "TOGGLE_INLINE_PREVIEW",
+      value: toggleValue,
+    });
+  };
+}
+
+export function toggleEditorWrapping(toggleValue: boolean) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    updateDocuments(doc => doc.cm.setOption("lineWrapping", toggleValue));
+
+    dispatch({
+      type: "TOGGLE_EDITOR_WRAPPING",
       value: toggleValue,
     });
   };

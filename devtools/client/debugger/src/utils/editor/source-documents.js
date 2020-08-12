@@ -75,7 +75,18 @@ export function updateDocument(editor: SourceEditor, source: Source): void {
   updateLineNumberFormat(editor, sourceId);
 }
 
-export function clearEditor(editor: SourceEditor): void {
+/* used to apply the context menu wrap line option change to all the docs */
+export function updateDocuments(updater: Function) {
+  for (const key in sourceDocs) {
+    if (sourceDocs[key].cm == null) {
+      continue;
+    } else {
+      updater(sourceDocs[key]);
+    }
+  }
+}
+
+export function clearEditor(editor: SourceEditor) {
   const doc = editor.createDocument();
   editor.replaceDocument(doc);
   editor.setText("");

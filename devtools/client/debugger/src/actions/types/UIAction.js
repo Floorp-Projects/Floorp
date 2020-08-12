@@ -35,6 +35,10 @@ export type UIAction =
       +value: boolean,
     |}
   | {|
+      +type: "TOGGLE_EDITOR_WRAPPING",
+      +value: boolean,
+    |}
+  | {|
       +type: "TOGGLE_SOURCE_MAPS_ENABLED",
       +value: boolean,
     |}

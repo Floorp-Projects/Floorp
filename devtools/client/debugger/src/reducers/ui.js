@@ -40,6 +40,7 @@ export type UIState = {
   conditionalPanelLocation: null | SourceLocation,
   isLogPoint: boolean,
   inlinePreviewEnabled: boolean,
+  editorWrappingEnabled: boolean,
   sourceMapsEnabled: boolean,
   javascriptEnabled: boolean,
 };
@@ -58,6 +59,7 @@ export const initialUIState = (): UIState => ({
   viewport: null,
   cursorPosition: null,
   inlinePreviewEnabled: features.inlinePreview,
+  editorWrappingEnabled: prefs.editorWrapping,
   sourceMapsEnabled: prefs.clientSourceMapsEnabled,
   javascriptEnabled: true,
 });
@@ -76,6 +78,11 @@ function update(state: UIState = initialUIState(), action: Action): UIState {
     case "TOGGLE_INLINE_PREVIEW": {
       features.inlinePreview = action.value;
       return { ...state, inlinePreviewEnabled: action.value };
+    }
+
+    case "TOGGLE_EDITOR_WRAPPING": {
+      prefs.editorWrapping = action.value;
+      return { ...state, editorWrappingEnabled: action.value };
     }
 
     case "TOGGLE_JAVASCRIPT_ENABLED": {
@@ -218,6 +225,10 @@ export function getCursorPosition(state: OuterState) {
 
 export function getInlinePreview(state: OuterState) {
   return state.ui.inlinePreviewEnabled;
+}
+
+export function getEditorWrapping(state: OuterState) {
+  return state.ui.editorWrappingEnabled;
 }
 
 export default update;
