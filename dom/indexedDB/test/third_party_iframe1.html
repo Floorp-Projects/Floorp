@@ -13,15 +13,35 @@
       if (message.source == "parent") {
         document.getElementById("iframe2").src = message.href;
       }
-      else if (message.source == "iframe") {
+      else if (message.source == "iframe2") {
         parent.postMessage(event.data, "*");
+      }
+    }
+
+    function report(result) {
+      let message = { source: "iframe1" };
+      message.result = result;
+      window.parent.postMessage(JSON.stringify(message), "*");
+    }
+
+    function runIndexedDBTest() {
+      window.addEventListener('message', messageListener);
+
+      try {
+        let request = indexedDB.open(window.location.pathname, 1);
+        request.onsuccess = function(event) {
+          report(!!(event.target.result instanceof IDBDatabase));
+        };
+      }
+      catch (e) {
+        report(false);
       }
     }
   </script>
 
 </head>
 
-<body onload="window.addEventListener('message', messageListener, false);">
+<body onload="runIndexedDBTest();">
   <iframe id="iframe2"></iframe>
 </body>
 
