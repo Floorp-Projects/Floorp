@@ -107,29 +107,22 @@ class TRRDNSListener {
     );
     const currentThread = threadManager.currentThread;
 
-    if (trrServer == "") {
+    let resolverInfo =
+      trrServer == "" ? null : dns.newTRRResolverInfo(trrServer);
+    try {
       this.request = dns.asyncResolve(
         name,
+        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         0,
+        resolverInfo,
         this,
         currentThread,
         {} // defaultOriginAttributes
       );
-    } else {
-      try {
-        this.request = dns.asyncResolveWithTrrServer(
-          name,
-          trrServer,
-          0,
-          this,
-          currentThread,
-          {} // defaultOriginAttributes
-        );
-        Assert.ok(!expectEarlyFail);
-      } catch (e) {
-        Assert.ok(expectEarlyFail);
-        this.resolve([e]);
-      }
+      Assert.ok(!expectEarlyFail);
+    } catch (e) {
+      Assert.ok(expectEarlyFail);
+      this.resolve([e]);
     }
   }
 

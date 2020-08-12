@@ -70,7 +70,9 @@ this.dns = class extends ExtensionAPI {
             try {
               request = dnss.asyncResolve(
                 hostname,
+                Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
                 dnsFlags,
+                null, // resolverInfo
                 listener,
                 null,
                 {} /* defaultOriginAttributes */

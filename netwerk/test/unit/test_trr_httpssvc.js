@@ -117,10 +117,11 @@ add_task(async function testHTTPSSVC() {
   }
 
   let listenerEsni = new DNSListener();
-  let request = dns.asyncResolveByType(
+  let request = dns.asyncResolve(
     "test.httpssvc.com",
     dns.RESOLVE_TYPE_HTTPSSVC,
     0,
+    null, // resolverInfo
     listenerEsni,
     mainThread,
     defaultOriginAttributes
@@ -416,10 +417,11 @@ add_task(async function test_aliasform() {
   ]);
 
   let listener = new DNSListener();
-  let request = dns.asyncResolveByType(
+  let request = dns.asyncResolve(
     "multi.com",
     dns.RESOLVE_TYPE_HTTPSSVC,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
@@ -455,10 +457,11 @@ add_task(async function test_aliasform() {
   ]);
 
   listener = new DNSListener();
-  request = dns.asyncResolveByType(
+  request = dns.asyncResolve(
     "order.com",
     dns.RESOLVE_TYPE_HTTPSSVC,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
@@ -490,10 +493,11 @@ add_task(async function test_aliasform() {
   ]);
 
   listener = new DNSListener();
-  request = dns.asyncResolveByType(
+  request = dns.asyncResolve(
     "duplicate.com",
     dns.RESOLVE_TYPE_HTTPSSVC,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
@@ -526,10 +530,11 @@ add_task(async function test_aliasform() {
   ]);
 
   listener = new DNSListener();
-  request = dns.asyncResolveByType(
+  request = dns.asyncResolve(
     "mandatory.com",
     dns.RESOLVE_TYPE_HTTPSSVC,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
@@ -573,10 +578,11 @@ add_task(async function test_aliasform() {
   ]);
 
   listener = new DNSListener();
-  request = dns.asyncResolveByType(
+  request = dns.asyncResolve(
     "mandatory2.com",
     dns.RESOLVE_TYPE_HTTPSSVC,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
