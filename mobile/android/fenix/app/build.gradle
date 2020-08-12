@@ -330,7 +330,6 @@ dependencies {
     implementation Deps.androidx_coordinatorlayout
 
     implementation Deps.sentry
-    implementation Deps.osslicenses_library
 
     implementation Deps.leanplum_core
     implementation Deps.leanplum_fcm

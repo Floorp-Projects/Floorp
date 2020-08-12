@@ -13,7 +13,6 @@ import android.view.ViewGroup
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import kotlinx.android.synthetic.main.fragment_about.*
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
@@ -168,13 +167,8 @@ class AboutFragment : Fragment(), AboutPageListener {
     }
 
     private fun openLibrariesPage() {
-        startActivity(Intent(context, OssLicensesMenuActivity::class.java))
-        OssLicensesMenuActivity.setActivityTitle(
-            getString(
-                R.string.open_source_licenses_title,
-                appName
-            )
-        )
+        val intent = Intent(requireContext(), AboutLibrariesActivity::class.java)
+        startActivity(intent)
     }
 
     override fun onAboutItemClicked(item: AboutItem) {

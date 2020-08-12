@@ -228,13 +228,8 @@
         <activity android:name=".settings.account.AuthIntentReceiverActivity"
             android:exported="false" />
 
-        <activity android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
-
-        <activity android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
+        <activity android:name=".settings.about.AboutLibrariesActivity"
+            android:exported="false" />
 
         <service android:name=".media.MediaService"
             android:exported="false" />

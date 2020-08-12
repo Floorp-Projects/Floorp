@@ -10,7 +10,6 @@ object Versions {
     const val leakcanary = "2.4"
     const val leanplum = "5.4.0"
     const val osslicenses_plugin = "0.9.5"
-    const val osslicenses_library = "17.0.0"
     const val detekt = "1.9.1"
 
     const val androidx_appcompat = "1.2.0-rc01"
@@ -59,7 +58,6 @@ object Deps {
 
     const val allopen = "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
     const val osslicenses_plugin = "com.google.android.gms:oss-licenses-plugin:${Versions.osslicenses_plugin}"
-    const val osslicenses_library = "com.google.android.gms:play-services-oss-licenses:${Versions.osslicenses_library}"
 
     const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"
     const val mozilla_concept_menu = "org.mozilla.components:concept-menu:${Versions.mozilla_android_components}"
