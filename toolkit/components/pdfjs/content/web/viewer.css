@@ -1511,22 +1511,29 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
   width: calc(100% - 8px);
   top: 0;
   bottom: 0;
-  padding: 4px 4px 0;
   overflow: auto;
   user-select: none;
 }
 
-html[dir='ltr'] .treeWithDeepNesting > .treeItem,
-html[dir='ltr'] .treeItem > .treeItems {
+#outlineView {
+  padding: 4px 4px 0;
+}
+#attachmentsView {
+  padding: 3px 4px 0;
+}
+
+html[dir='ltr'] .outlineWithDeepNesting > .outlineItem,
+html[dir='ltr'] .outlineItem > .outlineItems {
   margin-left: 20px;
 }
 
-html[dir='rtl'] .treeWithDeepNesting > .treeItem,
-html[dir='rtl'] .treeItem > .treeItems {
+html[dir='rtl'] .outlineWithDeepNesting > .outlineItem,
+html[dir='rtl'] .outlineItem > .outlineItems {
   margin-right: 20px;
 }
 
-.treeItem > a {
+.outlineItem > a,
+.attachmentsItem > button {
   text-decoration: none;
   display: inline-block;
   min-width: 95%;
@@ -1540,52 +1547,69 @@ html[dir='rtl'] .treeItem > .treeItems {
   line-height: 15px;
   user-select: none;
   white-space: normal;
-  cursor: pointer;
-}
-html[dir='ltr'] .treeItem > a {
-  padding: 2px 0 5px 4px;
-}
-html[dir='rtl'] .treeItem > a {
-  padding: 2px 4px 5px 0;
 }
 
-.treeItemToggler {
+.attachmentsItem > button {
+  border: 0 none;
+  background: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+html[dir='ltr'] .outlineItem > a {
+  padding: 2px 0 5px 4px;
+}
+html[dir='ltr'] .attachmentsItem > button {
+  padding: 2px 0 3px 7px;
+  text-align: left;
+}
+
+html[dir='rtl'] .outlineItem > a {
+  padding: 2px 4px 5px 0;
+}
+html[dir='rtl'] .attachmentsItem > button {
+  padding: 2px 7px 3px 0;
+  text-align: right;
+}
+
+.outlineItemToggler {
   position: relative;
   height: 0;
   width: 0;
   color: rgba(255, 255, 255, 0.5);
 }
-.treeItemToggler::before {
+.outlineItemToggler::before {
   content: url(images/treeitem-expanded.png);
   display: inline-block;
   position: absolute;
 }
-.treeItemToggler.treeItemsHidden::before {
+.outlineItemToggler.outlineItemsHidden::before {
   content: url(images/treeitem-collapsed.png);
 }
-html[dir='rtl'] .treeItemToggler.treeItemsHidden::before {
+html[dir='rtl'] .outlineItemToggler.outlineItemsHidden::before {
   transform: scaleX(-1);
 }
-.treeItemToggler.treeItemsHidden ~ .treeItems {
+.outlineItemToggler.outlineItemsHidden ~ .outlineItems {
   display: none;
 }
-html[dir='ltr'] .treeItemToggler {
+html[dir='ltr'] .outlineItemToggler {
   float: left;
 }
-html[dir='rtl'] .treeItemToggler {
+html[dir='rtl'] .outlineItemToggler {
   float: right;
 }
-html[dir='ltr'] .treeItemToggler::before {
+html[dir='ltr'] .outlineItemToggler::before {
   right: 4px;
 }
-html[dir='rtl'] .treeItemToggler::before {
+html[dir='rtl'] .outlineItemToggler::before {
   left: 4px;
 }
 
-.treeItemToggler:hover,
-.treeItemToggler:hover + a,
-.treeItemToggler:hover ~ .treeItems,
-.treeItem > a:hover {
+.outlineItemToggler:hover,
+.outlineItemToggler:hover + a,
+.outlineItemToggler:hover ~ .outlineItems,
+.outlineItem > a:hover,
+.attachmentsItem > button:hover {
   background-color: rgba(255, 255, 255, 0.02);
   background-image: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
   background-clip: padding-box;
@@ -1596,7 +1620,7 @@ html[dir='rtl'] .treeItemToggler::before {
   color: rgba(255, 255, 255, 0.9);
 }
 
-.treeItem.selected {
+.outlineItem.selected {
   background-color: rgba(255, 255, 255, 0.08);
   background-image: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
   background-clip: padding-box;
@@ -2060,21 +2084,21 @@ html[dir='rtl'] #documentPropertiesOverlay .row > * {
     content: url(images/secondaryToolbarButton-documentProperties@2x.png);
   }
 
-  .treeItemToggler::before {
+  .outlineItemToggler::before {
     transform: scale(0.5);
     top: -1px;
     content: url(images/treeitem-expanded@2x.png);
   }
-  .treeItemToggler.treeItemsHidden::before {
+  .outlineItemToggler.outlineItemsHidden::before {
     content: url(images/treeitem-collapsed@2x.png);
   }
-  html[dir='rtl'] .treeItemToggler.treeItemsHidden::before {
+  html[dir='rtl'] .outlineItemToggler.outlineItemsHidden::before {
     transform: scale(-0.5, 0.5);
   }
-  html[dir='ltr'] .treeItemToggler::before {
+  html[dir='ltr'] .outlineItemToggler::before {
     right: 0;
   }
-  html[dir='rtl'] .treeItemToggler::before {
+  html[dir='rtl'] .outlineItemToggler::before {
     left: 0;
   }
 }
