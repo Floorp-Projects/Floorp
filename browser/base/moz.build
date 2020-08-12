@@ -20,6 +20,7 @@ MOCHITEST_CHROME_MANIFESTS += [
 BROWSER_CHROME_MANIFESTS += [
     'content/test/about/browser.ini',
     'content/test/alerts/browser.ini',
+    'content/test/backforward/browser.ini',
     'content/test/caps/browser.ini',
     'content/test/captivePortal/browser.ini',
     'content/test/contextMenu/browser.ini',
