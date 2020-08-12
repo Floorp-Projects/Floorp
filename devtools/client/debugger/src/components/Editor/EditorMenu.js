@@ -29,7 +29,9 @@ type OwnProps = {|
   contextMenu: ?MouseEvent,
   clearContextMenu: () => void,
   editor: SourceEditor,
+  editorWrappingEnabled: boolean,
 |};
+
 type Props = {
   cx: ThreadContext,
   contextMenu: ?MouseEvent,
@@ -38,6 +40,7 @@ type Props = {
   editor: SourceEditor,
   hasMappedLocation: boolean,
   isPaused: boolean,
+  editorWrappingEnabled: boolean,
   selectedSource: SourceWithContent,
 };
 
@@ -57,6 +60,7 @@ class EditorMenu extends Component<Props> {
       editorActions,
       hasMappedLocation,
       isPaused,
+      editorWrappingEnabled,
       contextMenu: event,
     } = props;
 
@@ -76,6 +80,7 @@ class EditorMenu extends Component<Props> {
         hasMappedLocation,
         location,
         isPaused,
+        editorWrappingEnabled,
         selectionText: editor.codeMirror.getSelection().trim(),
         isTextSelected: editor.codeMirror.somethingSelected(),
       })
