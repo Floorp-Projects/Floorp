@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.234';
-const pdfjsBuild = '6620861c7';
+const pdfjsVersion = '2.6.207';
+const pdfjsBuild = '63e33a589';
 
 /***/ }),
 /* 1 */
@@ -229,7 +229,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.234';
+    const workerVersion = '2.6.207';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -685,7 +685,6 @@ exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
-exports.escapeString = escapeString;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
@@ -1403,10 +1402,6 @@ function stringToPDFString(str) {
   }
 
   return strBuf.join("");
-}
-
-function escapeString(str) {
-  return str.replace(/([\(\)\\])/g, "\\$1");
 }
 
 function stringToUTF8String(str) {
@@ -19311,147 +19306,7 @@ class WidgetAnnotation extends Annotation {
       return Promise.resolve(new _operator_list.OperatorList());
     }
 
-    if (!this._hasText) {
-      return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
-    }
-
-    return this._getAppearance(evaluator, task, annotationStorage).then(content => {
-      if (this.appearance && content === null) {
-        return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
-      }
-
-      const operatorList = new _operator_list.OperatorList();
-
-      if (!this.data.defaultAppearance || content === null) {
-        return operatorList;
-      }
-
-      const matrix = [1, 0, 0, 1, 0, 0];
-      const bbox = [0, 0, this.data.rect[2] - this.data.rect[0], this.data.rect[3] - this.data.rect[1]];
-      const transform = getTransformMatrix(this.data.rect, bbox, matrix);
-      operatorList.addOp(_util.OPS.beginAnnotation, [this.data.rect, transform, matrix]);
-      const stream = new _stream.StringStream(content);
-      return evaluator.getOperatorList({
-        stream,
-        task,
-        resources: this.fieldResources,
-        operatorList
-      }).then(function () {
-        operatorList.addOp(_util.OPS.endAnnotation, []);
-        return operatorList;
-      });
-    });
-  }
-
-  async _getAppearance(evaluator, task, annotationStorage) {
-    const isPassword = this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD);
-
-    if (!annotationStorage || isPassword) {
-      return null;
-    }
-
-    const value = annotationStorage[this.data.id];
-
-    if (value === "") {
-      return "";
-    }
-
-    const defaultPadding = 2;
-    const hPadding = defaultPadding;
-    const totalHeight = this.data.rect[3] - this.data.rect[1];
-    const totalWidth = this.data.rect[2] - this.data.rect[0];
-    const fontInfo = await this._getFontData(evaluator, task);
-    const [font, fontName] = fontInfo;
-    let fontSize = fontInfo[2];
-    fontSize = this._computeFontSize(font, fontName, fontSize, totalHeight);
-    let descent = font.descent;
-
-    if (isNaN(descent)) {
-      descent = 0;
-    }
-
-    const vPadding = defaultPadding + Math.abs(descent) * fontSize;
-    const defaultAppearance = this.data.defaultAppearance;
-    const alignment = this.data.textAlignment;
-
-    if (this.data.comb) {
-      return this._getCombAppearance(defaultAppearance, value, totalWidth, hPadding, vPadding);
-    }
-
-    if (this.data.multiLine) {
-      return this._getMultilineAppearance(defaultAppearance, value, font, fontSize, totalWidth, totalHeight, alignment, hPadding, vPadding);
-    }
-
-    if (alignment === 0 || alignment > 2) {
-      return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm (${(0, _util.escapeString)(value)}) Tj` + " ET Q EMC";
-    }
-
-    const renderedText = this._renderText(value, font, fontSize, totalWidth, alignment, hPadding, vPadding);
-
-    return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 0 0 Tm ${renderedText}` + " ET Q EMC";
-  }
-
-  async _getFontData(evaluator, task) {
-    const operatorList = new _operator_list.OperatorList();
-    const initialState = {
-      fontSize: 0,
-      font: null,
-      fontName: null,
-
-      clone() {
-        return this;
-      }
-
-    };
-    await evaluator.getOperatorList({
-      stream: new _stream.StringStream(this.data.defaultAppearance),
-      task,
-      resources: this.fieldResources,
-      operatorList,
-      initialState
-    });
-    return [initialState.font, initialState.fontName, initialState.fontSize];
-  }
-
-  _computeFontSize(font, fontName, fontSize, height) {
-    if (fontSize === null || fontSize === 0) {
-      const em = font.charsToGlyphs("M", true)[0].width / 1000;
-      const capHeight = 0.7 * em;
-      fontSize = Math.max(1, Math.floor(height / (1.5 * capHeight)));
-      let fontRegex = new RegExp(`/${fontName}\\s+[0-9\.]+\\s+Tf`);
-
-      if (this.data.defaultAppearance.search(fontRegex) === -1) {
-        fontRegex = new RegExp(`/${fontName}\\s+Tf`);
-      }
-
-      this.data.defaultAppearance = this.data.defaultAppearance.replace(fontRegex, `/${fontName} ${fontSize} Tf`);
-    }
-
-    return fontSize;
-  }
-
-  _renderText(text, font, fontSize, totalWidth, alignment, hPadding, vPadding) {
-    const glyphs = font.charsToGlyphs(text);
-    const scale = fontSize / 1000;
-    let width = 0;
-
-    for (const glyph of glyphs) {
-      width += glyph.width * scale;
-    }
-
-    let shift;
-
-    if (alignment === 1) {
-      shift = (totalWidth - width) / 2;
-    } else if (alignment === 2) {
-      shift = totalWidth - width - hPadding;
-    } else {
-      shift = hPadding;
-    }
-
-    shift = shift.toFixed(2);
-    vPadding = vPadding.toFixed(2);
-    return `${shift} ${vPadding} Td (${(0, _util.escapeString)(text)}) Tj`;
+    return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
   }
 
 }
@@ -19459,7 +19314,6 @@ class WidgetAnnotation extends Annotation {
 class TextWidgetAnnotation extends WidgetAnnotation {
   constructor(params) {
     super(params);
-    this._hasText = true;
     const dict = params.dict;
     this.data.fieldValue = (0, _util.stringToPDFString)(this.data.fieldValue || "");
     let alignment = (0, _core_utils.getInheritableProperty)({
@@ -19486,86 +19340,26 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     this.data.comb = this.hasFieldFlag(_util.AnnotationFieldFlag.COMB) && !this.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD) && !this.hasFieldFlag(_util.AnnotationFieldFlag.FILESELECT) && this.data.maxLen !== null;
   }
 
-  _getCombAppearance(defaultAppearance, text, width, hPadding, vPadding) {
-    const combWidth = (width / this.data.maxLen).toFixed(2);
-    const buf = [];
-
-    for (const character of text) {
-      buf.push(`(${(0, _util.escapeString)(character)}) Tj`);
+  getOperatorList(evaluator, task, renderForms, annotationStorage) {
+    if (renderForms || this.appearance) {
+      return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
     }
 
-    const renderedComb = buf.join(` ${combWidth} 0 Td `);
-    return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm ${renderedComb}` + " ET Q EMC";
-  }
+    const operatorList = new _operator_list.OperatorList();
 
-  _getMultilineAppearance(defaultAppearance, text, font, fontSize, width, height, alignment, hPadding, vPadding) {
-    const lines = text.split(/\r\n|\r|\n/);
-    const buf = [];
-    const totalWidth = width - 2 * hPadding;
-
-    for (const line of lines) {
-      const chunks = this._splitLine(line, font, fontSize, totalWidth);
-
-      for (const chunk of chunks) {
-        const padding = buf.length === 0 ? hPadding : 0;
-        buf.push(this._renderText(chunk, font, fontSize, width, alignment, padding, -fontSize));
-      }
+    if (!this.data.defaultAppearance) {
+      return Promise.resolve(operatorList);
     }
 
-    const renderedText = buf.join("\n");
-    return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 0 ${height} Tm ${renderedText}` + " ET Q EMC";
-  }
-
-  _splitLine(line, font, fontSize, width) {
-    if (line.length <= 1) {
-      return [line];
-    }
-
-    const scale = fontSize / 1000;
-    const whitespace = font.charsToGlyphs(" ", true)[0].width * scale;
-    const chunks = [];
-    let lastSpacePos = -1,
-        startChunk = 0,
-        currentWidth = 0;
-
-    for (let i = 0, ii = line.length; i < ii; i++) {
-      const character = line.charAt(i);
-
-      if (character === " ") {
-        if (currentWidth + whitespace > width) {
-          chunks.push(line.substring(startChunk, i));
-          startChunk = i;
-          currentWidth = whitespace;
-          lastSpacePos = -1;
-        } else {
-          currentWidth += whitespace;
-          lastSpacePos = i;
-        }
-      } else {
-        const charWidth = font.charsToGlyphs(character, false)[0].width * scale;
-
-        if (currentWidth + charWidth > width) {
-          if (lastSpacePos !== -1) {
-            chunks.push(line.substring(startChunk, lastSpacePos + 1));
-            startChunk = i = lastSpacePos + 1;
-            lastSpacePos = -1;
-            currentWidth = 0;
-          } else {
-            chunks.push(line.substring(startChunk, i));
-            startChunk = i;
-            currentWidth = charWidth;
-          }
-        } else {
-          currentWidth += charWidth;
-        }
-      }
-    }
-
-    if (startChunk < line.length) {
-      chunks.push(line.substring(startChunk, line.length));
-    }
-
-    return chunks;
+    const stream = new _stream.Stream((0, _util.stringToBytes)(this.data.defaultAppearance));
+    return evaluator.getOperatorList({
+      stream,
+      task,
+      resources: this.fieldResources,
+      operatorList
+    }).then(function () {
+      return operatorList;
+    });
   }
 
 }
@@ -19728,7 +19522,6 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
 
     this.data.combo = this.hasFieldFlag(_util.AnnotationFieldFlag.COMBO);
     this.data.multiSelect = this.hasFieldFlag(_util.AnnotationFieldFlag.MULTISELECT);
-    this._hasText = true;
   }
 
 }
@@ -21300,13 +21093,11 @@ class PartialEvaluator {
   }
 
   handleSetFont(resources, fontArgs, fontRef, operatorList, task, state) {
-    var fontName,
-        fontSize = 0;
+    var fontName;
 
     if (fontArgs) {
       fontArgs = fontArgs.slice();
       fontName = fontArgs[0].name;
-      fontSize = fontArgs[1];
     }
 
     return this.loadFont(fontName, fontRef, resources).then(translated => {
@@ -21330,8 +21121,6 @@ class PartialEvaluator {
       });
     }).then(translated => {
       state.font = translated.font;
-      state.fontSize = fontSize;
-      state.fontName = fontName;
       translated.send(this.handler);
       return translated.loadedName;
     });
