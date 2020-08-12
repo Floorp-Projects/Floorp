@@ -208,7 +208,9 @@
     </menupopup>
 
     <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
-         of this menupopup -->
+         of this menupopup, to prevent already-handled clicks on menu items from
+         propagating to the back or forward button.
+    -->
     <menupopup id="backForwardMenu"
                onpopupshowing="return FillHistoryMenu(event.target);"
                oncommand="gotoHistoryIndex(event); event.stopPropagation();"
