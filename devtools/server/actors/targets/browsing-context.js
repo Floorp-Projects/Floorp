@@ -349,7 +349,7 @@ const browsingContextTargetPrototype = {
       // Don't try to emit if the actor was destroyed.
       return;
     }
-    this.emit("resource-available-form", resources);
+    this.emit(name, resources);
   },
 
   traits: null,
