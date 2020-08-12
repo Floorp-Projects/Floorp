@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Page with iframe that contains page that opens two popups</title>
+  </head>
+  <body>
+    <iframe id="iframe"></iframe>
+    <script type="text/javascript">
+      let params = new URLSearchParams(location.search);
+      let base = params.get('base') || location.href;
+      let frame = document.getElementById('iframe');
+
+      function addPopupOpeningFrame() {
+        frame.src = new URL("popup_blocker.html", base);
+      }
+
+      if (params.get('delayed') !== 'true') {
+        addPopupOpeningFrame();
+      } else {
+        addEventListener("message", () => {
+          addPopupOpeningFrame();
+        }, {once: true});
+      }
+    </script>
+  </body>
+</html>
