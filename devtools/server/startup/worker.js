@@ -43,6 +43,7 @@ var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");
 var { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
 var makeDebugger = worker.require("devtools/server/actors/utils/make-debugger");
 var { DevToolsServer } = worker.require("devtools/server/devtools-server");
+var Targets = worker.require("devtools/server/actors/targets/index");
 
 DevToolsServer.init();
 DevToolsServer.createRootActor = function() {
@@ -81,6 +82,8 @@ this.addEventListener("message", function(event) {
 
       Object.assign(targetActorMock, {
         actorID: packet.id,
+        targetType: Targets.TYPES.FRAME,
+
         // threadActor is needed from the webconsole for grip previewing
         threadActor,
         workerGlobal: global,

@@ -20,6 +20,7 @@ const {
   browsingContextTargetSpec,
 } = require("devtools/shared/specs/targets/browsing-context");
 const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
+const Targets = require("devtools/server/actors/targets/index");
 
 var gTestGlobals = new Set();
 DevToolsServer.addTestGlobal = function(global) {
@@ -165,6 +166,8 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
     this.dbg = this.makeDebugger();
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
   },
+
+  targetType: Targets.TYPES.FRAME,
 
   get window() {
     return this._global;

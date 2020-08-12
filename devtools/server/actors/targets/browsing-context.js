@@ -33,6 +33,7 @@ var { assert } = DevToolsUtils;
 var { TabSources } = require("devtools/server/actors/utils/TabSources");
 var makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const InspectorUtils = require("InspectorUtils");
+const Targets = require("devtools/server/actors/targets/index");
 const { TargetActorRegistry } = ChromeUtils.import(
   "resource://devtools/server/actors/targets/target-actor-registry.jsm"
 );
@@ -394,10 +395,7 @@ const browsingContextTargetPrototype = {
 
   _targetScopedActorPool: null,
 
-  /**
-   * A constant prefix that will be used to form the actor ID by the server.
-   */
-  typeName: "browsingContextTarget",
+  targetType: Targets.TYPES.FRAME,
 
   /**
    * An object on which listen for DOMWindowCreated and pageshow events.
