@@ -30,6 +30,19 @@ assertExpr("foo?.[bar][baz]", optExpr(memExpr(optMemExpr(ident("foo"), ident("ba
 assertExpr("foo?.['bar']?.['baz']", optExpr(optMemExpr(optMemExpr(ident("foo"), lit("bar")), lit("baz"))));
 assertExpr("foo?.[bar]?.baz", optExpr(optDotExpr(optMemExpr(ident("foo"), ident("bar")), ident("baz"))));
 
+// delete optional expressions
+assertExpr("\ndelete [] ?. [1]", delOptExpr(optMemExpr(arrExpr([]), lit(1))));
+assertExpr("delete foo?.bar", delOptExpr(optDotExpr(ident("foo"), ident("bar"))));
+assertExpr("delete foo?.bar.baz", delOptExpr(dotExpr(optDotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("delete foo.bar?.baz", delOptExpr(optDotExpr(dotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("delete foo?.bar?.baz", delOptExpr(optDotExpr(optDotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("delete foo?.[bar].baz", delOptExpr(dotExpr(optMemExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("delete foo.bar?.[baz]", delOptExpr(optMemExpr(dotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("delete foo[bar]?.[baz]", delOptExpr(optMemExpr(memExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("delete foo?.[bar][baz]", delOptExpr(memExpr(optMemExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("delete foo?.['bar']?.['baz']", delOptExpr(optMemExpr(optMemExpr(ident("foo"), lit("bar")), lit("baz"))));
+assertExpr("delete foo?.[bar]?.baz", delOptExpr(optDotExpr(optMemExpr(ident("foo"), ident("bar")), ident("baz"))));
+
 // function expressions
 assertExpr("(function(){})", funExpr(null, [], blockStmt([])));
 assertExpr("(function f() {})", funExpr(ident("f"), [], blockStmt([])));

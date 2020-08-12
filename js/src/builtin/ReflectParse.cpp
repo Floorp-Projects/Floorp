@@ -687,6 +687,9 @@ class NodeBuilder {
   MOZ_MUST_USE bool optionalExpression(HandleValue expr, TokenPos* pos,
                                        MutableHandleValue dst);
 
+  MOZ_MUST_USE bool deleteOptionalExpression(HandleValue expr, TokenPos* pos,
+                                             MutableHandleValue dst);
+
   MOZ_MUST_USE bool computedName(HandleValue name, TokenPos* pos,
                                  MutableHandleValue dst);
 
@@ -1268,6 +1271,11 @@ bool NodeBuilder::spreadExpression(HandleValue expr, TokenPos* pos,
 bool NodeBuilder::optionalExpression(HandleValue expr, TokenPos* pos,
                                      MutableHandleValue dst) {
   return newNode(AST_OPTIONAL_EXPR, pos, "expression", expr, dst);
+}
+
+bool NodeBuilder::deleteOptionalExpression(HandleValue expr, TokenPos* pos,
+                                           MutableHandleValue dst) {
+  return newNode(AST_DELETE_OPTIONAL_EXPR, pos, "expression", expr, dst);
 }
 
 bool NodeBuilder::propertyPattern(HandleValue key, HandleValue patt,
@@ -2837,6 +2845,12 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
       RootedValue expr(cx);
       return expression(operand, &expr) &&
              builder.unaryExpression(op, expr, &unaryNode->pn_pos, dst);
+    }
+
+    case ParseNodeKind::DeleteOptionalChainExpr: {
+      RootedValue expr(cx);
+      return expression(pn->as<UnaryNode>().kid(), &expr) &&
+             builder.deleteOptionalExpression(expr, &pn->pn_pos, dst);
     }
 
     case ParseNodeKind::OptionalChain: {

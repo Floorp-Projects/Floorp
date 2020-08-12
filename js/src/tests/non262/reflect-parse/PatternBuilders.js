@@ -31,6 +31,9 @@ function spread(val) {
 function optExpr(val) {
     return Pattern({ type: "OptionalExpression", expression: val});
 }
+function delOptExpr(val) {
+    return Pattern({ type: "DeleteOptionalExpression", expression: val});
+}
 var thisExpr = Pattern({ type: "ThisExpression" });
 function funDecl(id, params, body, defaults=[], rest=null) {
     return Pattern({ type: "FunctionDeclaration",
