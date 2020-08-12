@@ -449,6 +449,8 @@ linux-rusttests/opt:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        test-inclusive: [rusttests]
 
 linux-rusttests/debug:
     description: "Linux32 Rust Tests Debug"
@@ -491,6 +493,8 @@ linux-rusttests/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        test-inclusive: [rusttests]
 
 linux-devedition/opt:
     description: "Linux32 devedition (shippable)"
@@ -1131,6 +1135,8 @@ linux64-rusttests/opt:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        test-inclusive: [rusttests]
 
 linux64-rusttests/debug:
     description: "Linux64 Rust Tests Debug"
@@ -1172,6 +1178,8 @@ linux64-rusttests/debug:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        test-inclusive: [rusttests]
 
 linux64-ccov/opt:
     description: "Linux64-CCov Opt"
