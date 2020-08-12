@@ -6617,6 +6617,14 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   mListener = listener;
 
+  OriginAttributes originAttributes;
+  StoragePrincipalHelper::GetOriginAttributesForNetworkState(this,
+                                                             originAttributes);
+
+  gHttpHandler->MaybeAddAltSvcForTesting(mURI, mUsername, GetTopWindowOrigin(),
+                                         mPrivateBrowsing, IsIsolated(),
+                                         mCallbacks, originAttributes);
+
   if (nsIOService::UseSocketProcess() &&
       !gIOService->IsSocketProcessLaunchComplete()) {
     RefPtr<nsHttpChannel> self = this;
