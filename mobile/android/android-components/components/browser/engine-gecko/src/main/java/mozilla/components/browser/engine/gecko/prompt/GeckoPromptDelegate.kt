@@ -4,10 +4,8 @@
 
 package mozilla.components.browser.engine.gecko.prompt
 
-import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.storage.Login
@@ -18,7 +16,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.kotlin.sanitizeFileName
+import mozilla.components.support.ktx.android.net.getFileName
 import mozilla.components.support.ktx.kotlin.toDate
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
@@ -32,8 +30,10 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.TIM
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.WEEK
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
 import org.mozilla.geckoview.Autocomplete
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.security.InvalidParameterException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -541,9 +541,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val temporalFile = java.io.File(cacheUploadDirectory, getFileName(contentResolver))
         try {
             contentResolver.openInputStream(this)!!.use { inStream ->
-                FileOutputStream(temporalFile).use { outStream ->
-                    inStream.copyTo(outStream)
-                }
+                copyFile(temporalFile, inStream)
             }
         } catch (e: IOException) {
             Logger("GeckoPromptDelegate").warn("Could not convert uri to file uri", e)
@@ -551,15 +549,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         return Uri.parse("file:///${temporalFile.absolutePath}")
     }
 
-    private fun Uri.getFileName(contentResolver: ContentResolver): String {
-        val returnUri = this
-        var fileName = ""
-        contentResolver.query(returnUri, null, null, null, null)?.use { cursor ->
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            cursor.moveToFirst()
-            fileName = cursor.getString(nameIndex)
+    @VisibleForTesting
+    internal fun copyFile(temporalFile: File, inStream: InputStream): Long {
+        return FileOutputStream(temporalFile).use { outStream ->
+            inStream.copyTo(outStream)
         }
-        return fileName.sanitizeFileName()
     }
 }
 

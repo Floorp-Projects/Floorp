@@ -8,8 +8,13 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
+import androidx.annotation.VisibleForTesting
+import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import java.io.File
 import java.io.IOException
+import java.util.UUID
 
 private val commonPrefixes = listOf("www.", "mobile.", "m.")
 
@@ -83,5 +88,57 @@ fun Uri.isUnderPrivateAppDirectory(context: Context): Boolean {
             }
         }
         else -> false
+    }
+}
+
+/**
+ * Return a file name for [this] give Uri.
+ * @return A file name for the content, or generated file name if the URL is invalid or the type is unknown
+ */
+fun Uri.getFileName(contentResolver: ContentResolver): String {
+    return when (this.scheme) {
+        ContentResolver.SCHEME_FILE -> File(path ?: "").name.sanitizeFileName()
+        ContentResolver.SCHEME_CONTENT -> getFileNameForContentUris(contentResolver)
+        else -> {
+            generateFileName(getFileExtension(contentResolver))
+        }
+    }
+}
+
+/**
+ * Return a file extension for [this] give Uri (only supports content:// schemes).
+ * @return A file extension for the content, or empty string if the URL is invalid or the type is unknown
+ */
+fun Uri.getFileExtension(contentResolver: ContentResolver): String {
+    return MimeTypeMap.getSingleton().getExtensionFromMimeType(contentResolver.getType(this)) ?: ""
+}
+
+@VisibleForTesting
+internal fun Uri.getFileNameForContentUris(contentResolver: ContentResolver): String {
+    var fileName = ""
+    contentResolver.query(this, null, null, null, null)?.use { cursor ->
+        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        val fileExtension = getFileExtension(contentResolver)
+        fileName = if (nameIndex == -1) {
+            generateFileName(fileExtension)
+        } else {
+            cursor.moveToFirst()
+            cursor.getString(nameIndex) ?: generateFileName(fileExtension)
+        }
+    }
+    return fileName.sanitizeFileName()
+}
+
+/**
+ * Generate a file name using a randomUUID + the current timestamp.
+ */
+@VisibleForTesting
+internal fun generateFileName(fileExtension: String = ""): String {
+    val randomId = UUID.randomUUID().toString().removePrefix("-").trim()
+    val timeStamp = System.currentTimeMillis()
+    return if (fileExtension.isNotEmpty()) {
+        "$randomId$timeStamp.$fileExtension"
+    } else {
+        "$randomId$timeStamp"
     }
 }

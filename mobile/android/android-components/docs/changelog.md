@@ -12,6 +12,8 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * Fixed issue [#7983](https://github.com/mozilla-mobile/android-components/issues/7983), crash when a file name wasn't provided when uploading a file.
 
 # 54.0.0
 

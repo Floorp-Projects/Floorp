@@ -4,14 +4,22 @@
 
 package mozilla.components.support.ktx.android.net
 
+import android.content.ContentResolver
+import android.database.Cursor
+import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.any
+import org.mockito.Mockito.doReturn
+import org.robolectric.Shadows
 
 @RunWith(AndroidJUnit4::class)
 class UriTest {
@@ -108,5 +116,123 @@ class UriTest {
 
         assertTrue("https://foo.bar:443/bobo".toUri().sameOriginAs("https://foo.bar:443/obob".toUri()))
         assertTrue("https://foo.bar:333".toUri().sameOriginAs("https://foo.bar:333".toUri()))
+    }
+
+    @Test
+    fun testGenerateFileName() {
+        val fileExtension = "txt"
+        var fileName = generateFileName(fileExtension)
+
+        assertTrue(fileName.contains(fileExtension))
+
+        fileName = generateFileName()
+
+        assertFalse(fileName.contains("."))
+    }
+
+    @Test
+    fun testGetFileExtension() {
+        val resolver = mock<ContentResolver>()
+        val uri = "content://media/external/file/37162".toUri()
+
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+
+        doReturn("text/plain").`when`(resolver).getType(any())
+
+        assertEquals("txt", uri.getFileExtension(resolver))
+    }
+
+    @Test
+    fun `getFileNameForContentUris for urls with DISPLAY_NAME`() {
+        val resolver = mock<ContentResolver>()
+        val uri = "content://media/external/file/37162".toUri()
+        val cursor = mock<Cursor>()
+
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        doReturn("text/plain").`when`(resolver).getType(any())
+
+        doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
+        doReturn(1).`when`(cursor).getColumnIndex(any())
+        doReturn("myFile.txt").`when`(cursor).getString(anyInt())
+
+        assertEquals("myFile.txt", uri.getFileNameForContentUris(resolver))
+    }
+
+    @Test
+    fun `getFileNameForContentUris for urls without DISPLAY_NAME`() {
+        val resolver = mock<ContentResolver>()
+        val uri = "content://media/external/file/37162".toUri()
+        val cursor = mock<Cursor>()
+
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        doReturn("text/plain").`when`(resolver).getType(any())
+
+        doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
+        doReturn(-1).`when`(cursor).getColumnIndex(any())
+
+        val fileName = uri.getFileNameForContentUris(resolver)
+
+        assertTrue(fileName.contains(".txt"))
+        assertTrue(fileName.isNotEmpty())
+    }
+
+    @Test
+    fun `getFileNameForContentUris for urls with null DISPLAY_NAME`() {
+        val resolver = mock<ContentResolver>()
+        val uri = "content://media/external/file/37162".toUri()
+        val cursor = mock<Cursor>()
+
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        doReturn("text/plain").`when`(resolver).getType(any())
+
+        doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
+        doReturn(1).`when`(cursor).getColumnIndex(any())
+        doReturn(null).`when`(cursor).getString(anyInt())
+
+        val fileName = uri.getFileNameForContentUris(resolver)
+
+        assertTrue(fileName.contains(".txt"))
+        assertTrue(fileName.isNotEmpty())
+    }
+
+    @Test
+    fun `getFileName for file uri schemes`() {
+        val resolver = mock<ContentResolver>()
+        val uri = "file:///home/user/myfile.html".toUri()
+
+        assertEquals("myfile.html", uri.getFileName(resolver))
+    }
+
+    @Test
+    fun `getFileName for content uri schemes`() {
+        val resolver = mock<ContentResolver>()
+        val uri = "content://media/external/file/37162".toUri()
+        val cursor = mock<Cursor>()
+
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        doReturn("text/plain").`when`(resolver).getType(any())
+
+        doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
+        doReturn(1).`when`(cursor).getColumnIndex(any())
+        doReturn(null).`when`(cursor).getString(anyInt())
+
+        val fileName = uri.getFileName(resolver)
+
+        assertTrue(fileName.contains(".txt"))
+        assertTrue(fileName.isNotEmpty())
+    }
+
+    @Test
+    fun `getFileName for UNKNOWN uri schemes will generate file name`() {
+        val resolver = mock<ContentResolver>()
+        val uri = "UNKNOWN://media/external/file/37162".toUri()
+
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        doReturn("text/plain").`when`(resolver).getType(any())
+
+        val fileName = uri.getFileName(resolver)
+
+        assertTrue(fileName.contains(".txt"))
+        assertTrue(fileName.isNotEmpty())
     }
 }
