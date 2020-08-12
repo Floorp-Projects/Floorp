@@ -42,8 +42,7 @@ var validateDevice = ({kind, label, deviceId, groupId}) => {
 }
 
 runTest(async () => {
-  await pushPrefs(["media.navigator.streams.fake", true],
-                  ["dom.security.featurePolicy.enabled", true]);
+  await pushPrefs(["media.navigator.streams.fake", true]);
 
   // Validate enumerated devices.
 

@@ -18,8 +18,7 @@
  * ~~~~~~~~~~~~~
  *
  * Each document and each HTMLIFrameElement have a FeaturePolicy object which is
- * used to allow or deny features in their contexts. FeaturePolicy is active
- * when pref dom.security.featurePolicy.enabled is set to true.
+ * used to allow or deny features in their contexts.
  *
  * FeaturePolicy is composed by a set of directives configured by the
  * 'Feature-Policy' HTTP Header and the 'allow' attribute in HTMLIFrameElements.

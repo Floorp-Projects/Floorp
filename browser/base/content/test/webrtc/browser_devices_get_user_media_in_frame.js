@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 SpecialPowers.pushPrefEnv({
-  set: [
-    ["dom.security.featurePolicy.enabled", true],
-    ["permissions.delegation.enabled", true],
-  ],
+  set: [["permissions.delegation.enabled", true]],
 });
 
 let gShouldObserveSubframes = false;
