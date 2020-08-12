@@ -24,6 +24,7 @@ const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const {
   contentProcessTargetSpec,
 } = require("devtools/shared/specs/targets/content-process");
+const Targets = require("devtools/server/actors/targets/index");
 
 loader.lazyRequireGetter(
   this,
@@ -85,6 +86,8 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     this.destroyObserver = this.destroy.bind(this);
     Services.obs.addObserver(this.destroyObserver, "xpcom-shutdown");
   },
+
+  targetType: Targets.TYPES.FRAME,
 
   get isRootActor() {
     return true;
