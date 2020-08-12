@@ -48,6 +48,7 @@ static mozilla::LazyLogModule gWinWakeLockLog("WinWakeLock");
 class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
  public:
   NS_DECL_ISUPPORTS
+  WinWakeLockListener() { MOZ_ASSERT(XRE_IsParentProcess()); }
 
  private:
   ~WinWakeLockListener() {}
@@ -424,12 +425,18 @@ nsAppShell::Run(void) {
   }
 
   // Add an observer that disables the screen saver when requested by Gecko.
-  // For example when we're playing video in the foreground tab.
-  AddScreenWakeLockListener();
+  // For example when we're playing video in the foreground tab. Whole firefox
+  // only needs one wakelock instance, so we would only create one listener in
+  // chrome process to prevent requesting unnecessary wakelock.
+  if (XRE_IsParentProcess()) {
+    AddScreenWakeLockListener();
+  }
 
   nsresult rv = nsBaseAppShell::Run();
 
-  RemoveScreenWakeLockListener();
+  if (XRE_IsParentProcess()) {
+    RemoveScreenWakeLockListener();
+  }
 
   return rv;
 }
