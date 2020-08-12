@@ -2,7 +2,7 @@
 
 # ACCEPT_NONE
 
-`ACCEPT_NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L209)
+`ACCEPT_NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L211)
 
 Do not store any cookies and site data.
 

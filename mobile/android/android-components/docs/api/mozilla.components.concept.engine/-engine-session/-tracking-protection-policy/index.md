@@ -2,7 +2,7 @@
 
 # TrackingProtectionPolicy
 
-`open class TrackingProtectionPolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L181)
+`open class TrackingProtectionPolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L182)
 
 Represents a tracking protection policy, which is a combination of
 tracker categories that should be blocked. Unless otherwise specified,
@@ -21,6 +21,7 @@ a [TrackingProtectionPolicy](./index.md) is applicable to all session types (see
 | Name | Summary |
 |---|---|
 | [cookiePolicy](cookie-policy.md) | `val cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md) |
+| [cookiePurging](cookie-purging.md) | `val cookiePurging: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [strictSocialTrackingProtection](strict-social-tracking-protection.md) | `val strictSocialTrackingProtection: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`?` |
 | [trackingCategories](tracking-categories.md) | `val trackingCategories: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`TrackingCategory`](-tracking-category/index.md)`>` |
 | [useForPrivateSessions](use-for-private-sessions.md) | `val useForPrivateSessions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
@@ -40,7 +41,7 @@ a [TrackingProtectionPolicy](./index.md) is applicable to all session types (see
 |---|---|
 | [none](none.md) | `fun none(): `[`TrackingProtectionPolicy`](./index.md) |
 | [recommended](recommended.md) | `fun recommended(): `[`TrackingProtectionPolicyForSessionTypes`](../-tracking-protection-policy-for-session-types/index.md)<br>Recommended policy. Combining the [TrackingCategory.RECOMMENDED](-tracking-category/-r-e-c-o-m-m-e-n-d-e-d.md) plus a [CookiePolicy](-cookie-policy/index.md) of [ACCEPT_NON_TRACKERS](-cookie-policy/-a-c-c-e-p-t_-n-o-n_-t-r-a-c-k-e-r-s.md). This is the recommended setting. |
-| [select](select.md) | `fun select(trackingCategories: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`TrackingCategory`](-tracking-category/index.md)`> = arrayOf(TrackingCategory.RECOMMENDED), cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md)` = ACCEPT_NON_TRACKERS, strictSocialTrackingProtection: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`? = null): `[`TrackingProtectionPolicyForSessionTypes`](../-tracking-protection-policy-for-session-types/index.md) |
+| [select](select.md) | `fun select(trackingCategories: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`TrackingCategory`](-tracking-category/index.md)`> = arrayOf(TrackingCategory.RECOMMENDED), cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md)` = ACCEPT_NON_TRACKERS, strictSocialTrackingProtection: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`? = null, cookiePurging: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`TrackingProtectionPolicyForSessionTypes`](../-tracking-protection-policy-for-session-types/index.md)<br>Creates a custom [TrackingProtectionPolicyForSessionTypes](../-tracking-protection-policy-for-session-types/index.md) using the provide values . |
 | [strict](strict.md) | `fun strict(): `[`TrackingProtectionPolicyForSessionTypes`](../-tracking-protection-policy-for-session-types/index.md)<br>Strict policy. Combining the [TrackingCategory.STRICT](-tracking-category/-s-t-r-i-c-t.md) plus a cookiePolicy of [ACCEPT_NON_TRACKERS](-cookie-policy/-a-c-c-e-p-t_-n-o-n_-t-r-a-c-k-e-r-s.md) This is the strictest setting and may cause issues on some web sites. |
 
 ### Extension Functions
