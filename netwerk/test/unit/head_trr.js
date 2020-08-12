@@ -140,6 +140,7 @@ class TRRDNSListener {
     }
 
     Assert.equal(inStatus, Cr.NS_OK, "Checking status");
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     let answer = inRecord.getNextAddrAsString();
     Assert.equal(
       answer,

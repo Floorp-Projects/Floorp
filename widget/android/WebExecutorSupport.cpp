@@ -451,7 +451,11 @@ class DNSListener final : public nsIDNSListener {
  private:
   nsresult CompleteWithRecord(nsIDNSRecord* aRecord) {
     nsTArray<NetAddr> addrs;
-    nsresult rv = aRecord->GetAddresses(addrs);
+    nsCOMPtr<nsIDNSAddrRecord> rec = do_QueryInterface(aRecord);
+    if (!rec) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    nsresult rv = rec->GetAddresses(addrs);
     NS_ENSURE_SUCCESS(rv, rv);
 
     jni::ByteArray::LocalRef bytes;
