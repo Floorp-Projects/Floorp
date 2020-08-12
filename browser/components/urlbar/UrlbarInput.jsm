@@ -1533,12 +1533,15 @@ class UrlbarInput {
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
         return result.payload.input;
-      case UrlbarUtils.RESULT_TYPE.SEARCH:
-        return (
-          (result.payload.keyword && !UrlbarPrefs.get("update2")
-            ? result.payload.keyword + " "
-            : "") + (result.payload.suggestion || result.payload.query)
-        );
+      case UrlbarUtils.RESULT_TYPE.SEARCH: {
+        let value = "";
+        if (result.payload.keyword) {
+          value +=
+            result.payload.keyword + (UrlbarPrefs.get("update2") ? "" : " ");
+        }
+        value += result.payload.suggestion || result.payload.query;
+        return value;
+      }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         return result.payload.content;
     }
