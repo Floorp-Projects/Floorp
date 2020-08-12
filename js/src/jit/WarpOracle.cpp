@@ -61,6 +61,10 @@ class MOZ_STACK_CLASS WarpScriptOracle {
   AbortReasonOr<WarpEnvironment> createEnvironment();
   AbortReasonOr<Ok> maybeInlineIC(WarpOpSnapshotList& snapshots,
                                   BytecodeLocation loc);
+  AbortReasonOr<bool> maybeInlineCallIC(WarpOpSnapshotList& snapshots,
+                                        BytecodeLocation loc, ICStub* stub,
+                                        ICFallbackStub* fallbackStub,
+                                        uint8_t* stubDataCopy);
   MOZ_MUST_USE bool replaceNurseryPointers(ICStub* stub,
                                            const CacheIRStubInfo* stubInfo,
                                            uint8_t* stubDataCopy);
@@ -934,82 +938,12 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   JitCode* jitCode = stub->jitCode();
 
-  Maybe<InlinableCallData> callData;
   if (loc.isInvokeOp()) {
-    callData = FindInlinableCallData(stub);
-  }
-  if (callData.isSome() && callData->icScript) {
-    RootedFunction targetFunction(cx_, callData->target);
-    RootedScript targetScript(cx_, targetFunction->nonLazyScript());
-    ICScript* icScript = callData->icScript;
-    MOZ_ASSERT(targetScript->jitScript() == icScript->jitScript());
-    MOZ_ASSERT(TrialInliner::canInline(targetFunction, script_));
-
-    // Add the inlined script to the inline script tree.
-    LifoAlloc* lifoAlloc = alloc_.lifoAlloc();
-    InlineScriptTree* inlineScriptTree = info_->inlineScriptTree()->addCallee(
-        &alloc_, loc.toRawBytecode(), targetScript);
-    if (!inlineScriptTree) {
-      return abort(AbortReason::Alloc);
-    }
-
-    // Create a CompileInfo for the inlined script.
-    jsbytecode* osrPc = nullptr;
-    bool needsArgsObj = false;
-    CompileInfo* info = lifoAlloc->new_<CompileInfo>(
-        mirGen_.runtime, targetScript, targetFunction, osrPc,
-        info_->analysisMode(), needsArgsObj, inlineScriptTree);
-    if (!info) {
-      return abort(AbortReason::Alloc);
-    }
-
-    // Take a snapshot of the CacheIR.
-    WarpCacheIR* cacheIRSnapshot = new (alloc_.fallible())
-        WarpCacheIR(offset, jitCode, stubInfo, stubDataCopy);
-    if (!cacheIRSnapshot) {
-      return abort(AbortReason::Alloc);
-    }
-
-    // Take a snapshot of the inlined script (which may do more
-    // inlining recursively).
-    WarpScriptOracle scriptOracle(cx_, oracle_, targetScript, info, icScript);
-
-    AbortReasonOr<WarpScriptSnapshot*> maybeScriptSnapshot =
-        scriptOracle.createScriptSnapshot();
-
-    if (maybeScriptSnapshot.isOk()) {
-      WarpScriptSnapshot* scriptSnapshot = maybeScriptSnapshot.unwrap();
-      oracle_->addScriptSnapshot(scriptSnapshot);
-
-      if (!AddOpSnapshot<WarpInlinedCall>(alloc_, snapshots, offset,
-                                          cacheIRSnapshot, scriptSnapshot,
-                                          info)) {
-        return abort(AbortReason::Alloc);
-      }
-      fallbackStub->setUsedByTranspiler();
+    bool inlinedCall;
+    MOZ_TRY_VAR(inlinedCall, maybeInlineCallIC(snapshots, loc, stub,
+                                               fallbackStub, stubDataCopy));
+    if (inlinedCall) {
       return Ok();
-    }
-
-    // We failed to create a script snapshot.
-    JitSpew(JitSpew_WarpTranspiler, "Can't create snapshot for JSOp::%s",
-            CodeName(loc.getOp()));
-
-    switch (maybeScriptSnapshot.unwrapErr()) {
-      case AbortReason::Disable:
-        // If the target script can't be warp-compiled, mark it as
-        // uninlineable, clean up, and fall through to the non-inlined path.
-        MOZ_ASSERT(stub == entry.firstStub());
-        fallbackStub->unlinkStubDontInvalidateWarp(cx_->zone(),
-                                                   /*prev=*/nullptr, stub);
-        targetScript->setUninlineable();
-        info_->inlineScriptTree()->removeCallee(inlineScriptTree);
-        icScript_->removeInlinedChild(loc.bytecodeToOffset(script_));
-        break;
-      case AbortReason::Error:
-      case AbortReason::Alloc:
-        return Err(maybeScriptSnapshot.unwrapErr());
-      default:
-        MOZ_CRASH("Unexpected abort reason");
     }
   }
 
@@ -1021,6 +955,88 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   fallbackStub->setUsedByTranspiler();
 
   return Ok();
+}
+
+AbortReasonOr<bool> WarpScriptOracle::maybeInlineCallIC(
+    WarpOpSnapshotList& snapshots, BytecodeLocation loc, ICStub* stub,
+    ICFallbackStub* fallbackStub, uint8_t* stubDataCopy) {
+  Maybe<InlinableCallData> callData = FindInlinableCallData(stub);
+  if (callData.isNothing() || !callData->icScript) {
+    return false;
+  }
+
+  RootedFunction targetFunction(cx_, callData->target);
+  RootedScript targetScript(cx_, targetFunction->nonLazyScript());
+  ICScript* icScript = callData->icScript;
+  MOZ_ASSERT(TrialInliner::canInline(targetFunction, script_));
+  MOZ_ASSERT(targetScript->jitScript() == icScript->jitScript());
+
+  // Add the inlined script to the inline script tree.
+  LifoAlloc* lifoAlloc = alloc_.lifoAlloc();
+  InlineScriptTree* inlineScriptTree = info_->inlineScriptTree()->addCallee(
+      &alloc_, loc.toRawBytecode(), targetScript);
+  if (!inlineScriptTree) {
+    return abort(AbortReason::Alloc);
+  }
+
+  // Create a CompileInfo for the inlined script.
+  jsbytecode* osrPc = nullptr;
+  bool needsArgsObj = false;
+  CompileInfo* info = lifoAlloc->new_<CompileInfo>(
+      mirGen_.runtime, targetScript, targetFunction, osrPc,
+      info_->analysisMode(), needsArgsObj, inlineScriptTree);
+  if (!info) {
+    return abort(AbortReason::Alloc);
+  }
+
+  // Take a snapshot of the CacheIR.
+  uint32_t offset = loc.bytecodeToOffset(script_);
+  JitCode* jitCode = stub->jitCode();
+  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
+  WarpCacheIR* cacheIRSnapshot = new (alloc_.fallible())
+      WarpCacheIR(offset, jitCode, stubInfo, stubDataCopy);
+  if (!cacheIRSnapshot) {
+    return abort(AbortReason::Alloc);
+  }
+
+  // Take a snapshot of the inlined script (which may do more
+  // inlining recursively).
+  WarpScriptOracle scriptOracle(cx_, oracle_, targetScript, info, icScript);
+
+  AbortReasonOr<WarpScriptSnapshot*> maybeScriptSnapshot =
+      scriptOracle.createScriptSnapshot();
+
+  if (maybeScriptSnapshot.isErr()) {
+    JitSpew(JitSpew_WarpTranspiler, "Can't create snapshot for JSOp::%s",
+            CodeName(loc.getOp()));
+
+    switch (maybeScriptSnapshot.unwrapErr()) {
+      case AbortReason::Disable:
+        // If the target script can't be warp-compiled, mark it as
+        // uninlineable, clean up, and fall through to the non-inlined path.
+        fallbackStub->unlinkStubDontInvalidateWarp(cx_->zone(),
+                                                   /*prev=*/nullptr, stub);
+        targetScript->setUninlineable();
+        info_->inlineScriptTree()->removeCallee(inlineScriptTree);
+        icScript_->removeInlinedChild(loc.bytecodeToOffset(script_));
+        return false;
+      case AbortReason::Error:
+      case AbortReason::Alloc:
+        return Err(maybeScriptSnapshot.unwrapErr());
+      default:
+        MOZ_CRASH("Unexpected abort reason");
+    }
+  }
+
+  WarpScriptSnapshot* scriptSnapshot = maybeScriptSnapshot.unwrap();
+  oracle_->addScriptSnapshot(scriptSnapshot);
+
+  if (!AddOpSnapshot<WarpInlinedCall>(alloc_, snapshots, offset,
+                                      cacheIRSnapshot, scriptSnapshot, info)) {
+    return abort(AbortReason::Alloc);
+  }
+  fallbackStub->setUsedByTranspiler();
+  return true;
 }
 
 bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
