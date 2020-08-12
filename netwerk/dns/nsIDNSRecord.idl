@@ -27,6 +27,11 @@ interface nsINetAddr;
 [scriptable, uuid(f92228ae-c417-4188-a604-0830a95e7eb9)]
 interface nsIDNSRecord : nsISupports
 {
+};
+
+[scriptable, uuid(cb260e20-943f-4309-953b-78c90d3a7638)]
+interface nsIDNSAddrRecord : nsIDNSRecord
+{
     /**
      * @return the canonical hostname for this record.  this value is empty if
      * the record was not fetched with the RESOLVE_CANONICAL_NAME flag.

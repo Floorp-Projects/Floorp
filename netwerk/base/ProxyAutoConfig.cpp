@@ -479,9 +479,15 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
     return false;
   });
 
-  if (NS_FAILED(helper->mStatus) ||
-      NS_FAILED(helper->mResponse->GetNextAddr(0, aNetAddr)))
+  if (NS_FAILED(helper->mStatus)) {
     return false;
+  }
+
+  nsCOMPtr<nsIDNSAddrRecord> rec = do_QueryInterface(helper->mResponse);
+  if (!rec || NS_FAILED(rec->GetNextAddr(0, aNetAddr))) {
+    return false;
+  }
+
   return true;
 }
 

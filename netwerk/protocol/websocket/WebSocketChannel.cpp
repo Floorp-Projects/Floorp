@@ -2932,7 +2932,9 @@ WebSocketChannel::OnLookupComplete(nsICancelable* aRequest,
     // set host in case we got here without calling DoAdmissionDNS()
     mURI->GetHost(mAddress);
   } else {
-    nsresult rv = aRecord->GetNextAddrAsString(mAddress);
+    nsCOMPtr<nsIDNSAddrRecord> record = do_QueryInterface(aRecord);
+    MOZ_ASSERT(record);
+    nsresult rv = record->GetNextAddrAsString(mAddress);
     if (NS_FAILED(rv))
       LOG(("WebSocketChannel::OnLookupComplete: Failed GetNextAddr\n"));
   }

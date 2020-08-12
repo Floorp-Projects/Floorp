@@ -65,10 +65,11 @@ static const char kPrefNetworkProxySOCKS[] = "network.proxy.socks";
 
 //-----------------------------------------------------------------------------
 
-class nsDNSRecord : public nsIDNSRecord {
+class nsDNSRecord : public nsIDNSAddrRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSRECORD
+  NS_DECL_NSIDNSADDRRECORD
 
   explicit nsDNSRecord(nsHostRecord* hostRecord)
       : mIter(nullptr), mIterGenCnt(-1), mDone(false) {
@@ -86,7 +87,7 @@ class nsDNSRecord : public nsIDNSRecord {
   bool mDone;
 };
 
-NS_IMPL_ISUPPORTS(nsDNSRecord, nsIDNSRecord)
+NS_IMPL_ISUPPORTS(nsDNSRecord, nsIDNSRecord, nsIDNSAddrRecord)
 
 NS_IMETHODIMP
 nsDNSRecord::GetCanonicalName(nsACString& result) {
@@ -327,7 +328,7 @@ class nsDNSByTypeRecord : public nsIDNSByTypeRecord,
                           public nsIDNSHTTPSSVCRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_FORWARD_SAFE_NSIDNSRECORD(((nsIDNSRecord*)nullptr))
+  NS_DECL_NSIDNSRECORD
   NS_DECL_NSIDNSBYTYPERECORD
   NS_DECL_NSIDNSTXTRECORD
   NS_DECL_NSIDNSHTTPSSVCRECORD

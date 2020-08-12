@@ -3012,7 +3012,8 @@ nsSocketTransport::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   if (NS_FAILED(status) && mDNSTxtRequest) {
     mDNSTxtRequest->Cancel(NS_ERROR_ABORT);
   } else if (NS_SUCCEEDED(status)) {
-    mDNSRecord = rec;
+    mDNSRecord = do_QueryInterface(rec);
+    MOZ_ASSERT(mDNSRecord);
   }
 
   // flag host lookup complete for the benefit of the ResolveHost method.
@@ -3043,7 +3044,8 @@ nsSocketTransport::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 // nsIInterfaceRequestor
 NS_IMETHODIMP
 nsSocketTransport::GetInterface(const nsIID& iid, void** result) {
-  if (iid.Equals(NS_GET_IID(nsIDNSRecord))) {
+  if (iid.Equals(NS_GET_IID(nsIDNSRecord)) ||
+      iid.Equals(NS_GET_IID(nsIDNSAddrRecord))) {
     return mDNSRecord ? mDNSRecord->QueryInterface(iid, result)
                       : NS_ERROR_NO_INTERFACE;
   }
