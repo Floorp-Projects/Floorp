@@ -7392,6 +7392,35 @@ AttachDecision CallIRGenerator::tryAttachAtomicsIsLockFree(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachBoolean(HandleFunction callee) {
+  // Need zero or one argument.
+  if (argc_ > 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'Boolean' native function.
+  emitNativeCalleeGuard(callee);
+
+  if (argc_ == 0) {
+    writer.loadBooleanResult(false);
+  } else {
+    ValOperandId valId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+    writer.loadValueTruthyResult(valId);
+  }
+
+  // This stub doesn't need to be monitored, because it always returns a bool.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("Boolean");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8493,6 +8522,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachAtomicsStore(callee);
     case InlinableNative::AtomicsIsLockFree:
       return tryAttachAtomicsIsLockFree(callee);
+
+    // Boolean natives.
+    case InlinableNative::Boolean:
+      return tryAttachBoolean(callee);
 
     default:
       return AttachDecision::NoAction;
