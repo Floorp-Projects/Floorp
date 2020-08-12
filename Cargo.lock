@@ -1978,6 +1978,7 @@ dependencies = [
  "gecko_logger",
  "geckoservo",
  "gkrust_utils",
+ "http_sfv",
  "jsrust_shared",
  "kvstore",
  "lmdb-rkv-sys",
@@ -2259,6 +2260,17 @@ dependencies = [
  "neqo-http3",
  "neqo-qpack",
  "neqo-transport",
+]
+
+[[package]]
+name = "http_sfv"
+version = "0.1.0"
+dependencies = [
+ "nserror",
+ "nsstring",
+ "sfv",
+ "thin-vec",
+ "xpcom",
 ]
 
 [[package]]
