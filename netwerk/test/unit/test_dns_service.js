@@ -46,7 +46,7 @@ add_task(async function test_dns_localhost() {
     defaultOriginAttributes
   );
   let [inRequest, inRecord, inStatus] = await listener;
-
+  inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   let answer = inRecord.getNextAddrAsString();
   Assert.ok(answer == ADDR1 || answer == ADDR2);
 });
@@ -63,5 +63,6 @@ add_task(async function test_idn_cname() {
     defaultOriginAttributes
   );
   let [inRequest, inRecord, inStatus] = await listener;
+  inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   Assert.equal(inRecord.canonicalName, ACE_IDN, "IDN is returned as punycode");
 });

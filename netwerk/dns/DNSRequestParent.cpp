@@ -88,17 +88,17 @@ bool DNSRequestHandler::OnRecvLookupCompleted(const DNSRequestResponse& reply) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
-                                    nsresult status) {
+DNSRequestHandler::OnLookupComplete(nsICancelable* request,
+                                    nsIDNSRecord* aRecord, nsresult status) {
   if (!mIPCActor || !mIPCActor->CanSend()) {
     // nothing to do: child probably crashed
     return NS_OK;
   }
 
   if (NS_SUCCEEDED(status)) {
-    MOZ_ASSERT(rec);
+    MOZ_ASSERT(aRecord);
 
-    nsCOMPtr<nsIDNSByTypeRecord> byTypeRec = do_QueryInterface(rec);
+    nsCOMPtr<nsIDNSByTypeRecord> byTypeRec = do_QueryInterface(aRecord);
     if (byTypeRec) {
       IPCTypeRecord result;
       byTypeRec->GetResults(&result.mData);
@@ -106,6 +106,8 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
       return NS_OK;
     }
 
+    nsCOMPtr<nsIDNSAddrRecord> rec = do_QueryInterface(aRecord);
+    MOZ_ASSERT(rec);
     nsAutoCString cname;
     if (mFlags & nsHostResolver::RES_CANON_NAME) {
       rec->GetCanonicalName(cname);

@@ -26,6 +26,7 @@ function makeListenerDontBlock(next, expectedAnswer) {
   return {
     onLookupComplete(inRequest, inRecord, inStatus) {
       Assert.equal(inStatus, Cr.NS_OK);
+      inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
       var answer = inRecord.getNextAddrAsString();
       if (expectedAnswer) {
         Assert.equal(answer, expectedAnswer);
