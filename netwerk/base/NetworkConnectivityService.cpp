@@ -130,16 +130,18 @@ NetworkConnectivityService::RecheckDNS() {
   Preferences::GetCString("network.connectivity-service.DNSv4.domain", host);
 
   rv = dns->AsyncResolveNative(
-      host,
+      host, nsIDNSService::RESOLVE_TYPE_DEFAULT,
       nsIDNSService::RESOLVE_DISABLE_IPV6 | nsIDNSService::RESOLVE_DISABLE_TRR,
-      this, NS_GetCurrentThread(), attrs, getter_AddRefs(mDNSv4Request));
+      nullptr, this, NS_GetCurrentThread(), attrs,
+      getter_AddRefs(mDNSv4Request));
   NS_ENSURE_SUCCESS(rv, rv);
 
   Preferences::GetCString("network.connectivity-service.DNSv6.domain", host);
   rv = dns->AsyncResolveNative(
-      host,
+      host, nsIDNSService::RESOLVE_TYPE_DEFAULT,
       nsIDNSService::RESOLVE_DISABLE_IPV4 | nsIDNSService::RESOLVE_DISABLE_TRR,
-      this, NS_GetCurrentThread(), attrs, getter_AddRefs(mDNSv6Request));
+      nullptr, this, NS_GetCurrentThread(), attrs,
+      getter_AddRefs(mDNSv6Request));
   return rv;
 }
 

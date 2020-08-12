@@ -171,9 +171,10 @@ int NrIceResolver::resolve(nr_resolver_resource* resource,
       ABORT(R_BAD_ARGS);
   }
 
-  if (NS_FAILED(dns_->AsyncResolveNative(nsAutoCString(resource->domain_name),
-                                         resolve_flags, pr, sts_thread_, attrs,
-                                         getter_AddRefs(pr->request_)))) {
+  if (NS_FAILED(dns_->AsyncResolveNative(
+          nsAutoCString(resource->domain_name),
+          nsIDNSService::RESOLVE_TYPE_DEFAULT, resolve_flags, nullptr, pr,
+          sts_thread_, attrs, getter_AddRefs(pr->request_)))) {
     MOZ_MTLOG(ML_ERROR, "AsyncResolve failed.");
     ABORT(R_NOT_FOUND);
   }

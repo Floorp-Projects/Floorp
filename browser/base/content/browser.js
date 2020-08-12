@@ -1412,7 +1412,9 @@ var gKeywordURIFixup = {
     try {
       gDNSService.asyncResolve(
         hostName,
+        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         0,
+        null,
         onLookupCompleteListener,
         Services.tm.mainThread,
         contentPrincipal.originAttributes
