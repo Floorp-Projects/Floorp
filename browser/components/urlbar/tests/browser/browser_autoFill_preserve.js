@@ -191,9 +191,12 @@ add_task(async function tokenAlias() {
   });
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(details.autofill);
-  Assert.equal(gURLBar.value, "@ExAmple ");
+  Assert.equal(gURLBar.value, getAutofillSearchString("@ExAmple"));
   Assert.equal(gURLBar.selectionStart, "@ExA".length);
-  Assert.equal(gURLBar.selectionEnd, "@ExAmple ".length);
+  Assert.equal(
+    gURLBar.selectionEnd,
+    getAutofillSearchString("@ExAmple").length
+  );
   // Token aliases (1) hide the one-off buttons and (2) show only a single
   // result, the "Search with" result for the alias's engine, so there's no way
   // to key up/down to change the selection, so this task doesn't check key

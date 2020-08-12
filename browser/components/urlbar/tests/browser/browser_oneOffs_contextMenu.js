@@ -99,7 +99,16 @@ async function searchInTab(checkFn) {
 }
 
 add_task(async function searchInNewTab_opensBackground() {
-  Services.prefs.setBoolPref("browser.tabs.loadInBackground", true);
+  // TODO: Rewrite/duplicate this test to work with update2. See bug 1657212
+  // comment 1.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", false],
+      ["browser.urlbar.update2.oneOffsRefresh", false],
+      ["browser.tabs.loadInBackground", true],
+    ],
+  });
+
   await searchInTab((testBrowser, newTab) => {
     Assert.equal(
       newTab.linkedBrowser.currentURI.spec,
@@ -119,10 +128,19 @@ add_task(async function searchInNewTab_opensBackground() {
       "Should not have changed the selected tab"
     );
   });
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function searchInNewTab_opensForeground() {
-  Services.prefs.setBoolPref("browser.tabs.loadInBackground", false);
+  // TODO: Rewrite/duplicate this test to work with update2. See bug 1657212
+  // comment 1.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", false],
+      ["browser.urlbar.update2.oneOffsRefresh", false],
+      ["browser.tabs.loadInBackground", false],
+    ],
+  });
 
   await searchInTab((testBrowser, newTab) => {
     Assert.equal(
