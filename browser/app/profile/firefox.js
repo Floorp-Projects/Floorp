@@ -329,17 +329,21 @@ pref("browser.urlbar.openintab", false);
 // If true, we show tail suggestions when available.
 pref("browser.urlbar.richSuggestions.tail", true);
 
-// Whether aliases are styled as a "chiclet" separated from the Urlbar.
-// Also controls the other urlbar.update2 prefs.
-pref("browser.urlbar.update2", false);
-
+#ifdef NIGHTLY_BUILD
+// Whether the Urlbar can enter search mode. Also controls the other
+// urlbar.update2 prefs.
+pref("browser.urlbar.update2", true);
 // Whether the urlbar displays one-offs to filter searches to history,
 // bookmarks, or tabs.
-pref("browser.urlbar.update2.localOneOffs", false);
-
+pref("browser.urlbar.update2.localOneOffs", true);
 // Whether the urlbar one-offs act as search filters instead of executing a
 // search immediately.
+pref("browser.urlbar.update2.oneOffsRefresh", true);
+#else
+pref("browser.urlbar.update2", false);
+pref("browser.urlbar.update2.localOneOffs", false);
 pref("browser.urlbar.update2.oneOffsRefresh", false);
+#endif
 
 // Whether we display a tab-to-complete result when the user types an engine
 // name.
