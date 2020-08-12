@@ -49,7 +49,7 @@ const EXPORTED_SYMBOLS = ["BroadcastConduit", "ConduitsParent"];
  */
 
 const {
-  ExtensionUtils: { DefaultWeakMap, ExtensionError },
+  ExtensionUtils: { DefaultWeakMap },
 } = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const { BaseConduit } = ChromeUtils.import(
@@ -288,15 +288,8 @@ class BroadcastConduit extends BaseConduit {
               result = value;
             }
           })
-          .catch(err => {
-            // Forward errors that are exposed to extension, but ignore
-            // internal errors such as actor destruction and DataCloneError.
-            if (err instanceof ExtensionError || err?.mozWebExtLocation) {
-              reject(err);
-            } else {
-              Cu.reportError(err);
-            }
-          })
+          // Ignore errors trying to query child Messengers being destroyed.
+          .catch(err => err.result !== Cr.NS_ERROR_NOT_AVAILABLE && reject(err))
       );
       // Ensure resolving when there are no responses.
       Promise.allSettled(promises).then(() => resolve(result));
