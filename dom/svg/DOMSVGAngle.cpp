@@ -18,7 +18,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAngle, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAngle, Release)
 
 DOMSVGAngle::DOMSVGAngle(SVGSVGElement* aSVGElement)
-    : mSVGElement(aSVGElement), mType(DOMSVGAngle::CreatedValue) {
+    : mSVGElement(aSVGElement), mType(AngleType::CreatedValue) {
   mVal = new SVGAnimatedOrient();
   mVal->Init();
 }
@@ -29,7 +29,7 @@ JSObject* DOMSVGAngle::WrapObject(JSContext* aCx,
 }
 
 uint16_t DOMSVGAngle::UnitType() const {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     mSVGElement->FlushAnimations();
     return mVal->mAnimValUnit;
   }
@@ -37,7 +37,7 @@ uint16_t DOMSVGAngle::UnitType() const {
 }
 
 float DOMSVGAngle::Value() const {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     mSVGElement->FlushAnimations();
     return mVal->GetAnimValue();
   }
@@ -45,28 +45,28 @@ float DOMSVGAngle::Value() const {
 }
 
 void DOMSVGAngle::SetValue(float aValue, ErrorResult& rv) {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
-  bool isBaseVal = mType == BaseValue;
+  bool isBaseVal = mType == AngleType::BaseValue;
   mVal->SetBaseValue(aValue, mVal->mBaseValUnit,
                      isBaseVal ? mSVGElement.get() : nullptr, isBaseVal);
 }
 
 float DOMSVGAngle::ValueInSpecifiedUnits() const {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     return mVal->mAnimVal;
   }
   return mVal->mBaseVal;
 }
 
 void DOMSVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv) {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
-  if (mType == BaseValue) {
+  if (mType == AngleType::BaseValue) {
     mVal->SetBaseValueInSpecifiedUnits(aValue, mSVGElement);
   } else {
     mVal->mBaseVal = aValue;
@@ -76,36 +76,36 @@ void DOMSVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv) {
 void DOMSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
                                          float valueInSpecifiedUnits,
                                          ErrorResult& rv) {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
   rv = mVal->NewValueSpecifiedUnits(
       unitType, valueInSpecifiedUnits,
-      mType == BaseValue ? mSVGElement.get() : nullptr);
+      mType == AngleType::BaseValue ? mSVGElement.get() : nullptr);
 }
 
 void DOMSVGAngle::ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv) {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
   rv = mVal->ConvertToSpecifiedUnits(
-      unitType, mType == BaseValue ? mSVGElement.get() : nullptr);
+      unitType, mType == AngleType::BaseValue ? mSVGElement.get() : nullptr);
 }
 
 void DOMSVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv) {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
-  bool isBaseVal = mType == BaseValue;
+  bool isBaseVal = mType == AngleType::BaseValue;
   rv = mVal->SetBaseValueString(aValue, isBaseVal ? mSVGElement.get() : nullptr,
                                 isBaseVal);
 }
 
 void DOMSVGAngle::GetValueAsString(nsAString& aValue) {
-  if (mType == AnimValue) {
+  if (mType == AngleType::AnimValue) {
     mSVGElement->FlushAnimations();
     mVal->GetAnimAngleValueString(aValue);
   } else {

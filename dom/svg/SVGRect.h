@@ -20,7 +20,7 @@ class SVGSVGElement;
 
 class SVGRect final : public nsWrapperCache {
  public:
-  typedef enum { BaseValue, AnimValue, CreatedValue } RectType;
+  enum class RectType : uint8_t { BaseValue, AnimValue, CreatedValue };
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGRect)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGRect)
@@ -31,7 +31,7 @@ class SVGRect final : public nsWrapperCache {
   SVGRect(SVGAnimatedViewBox* aVal, SVGElement* aSVGElement, RectType aType)
       : mVal(aVal), mParent(aSVGElement), mType(aType) {
     MOZ_ASSERT(mParent);
-    MOZ_ASSERT(mType == BaseValue || mType == AnimValue);
+    MOZ_ASSERT(mType == RectType::BaseValue || mType == RectType::AnimValue);
   }
 
   /**
@@ -44,7 +44,10 @@ class SVGRect final : public nsWrapperCache {
    * Ctor for all other non-attribute usage i.e getBBox, getExtentOfChar etc.
    */
   SVGRect(nsIContent* aParent, const gfx::Rect& aRect)
-      : mVal(nullptr), mRect(aRect), mParent(aParent), mType(CreatedValue) {
+      : mVal(nullptr),
+        mRect(aRect),
+        mParent(aParent),
+        mType(RectType::CreatedValue) {
     MOZ_ASSERT(mParent);
   }
 

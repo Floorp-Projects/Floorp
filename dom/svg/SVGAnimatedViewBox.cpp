@@ -216,7 +216,7 @@ already_AddRefed<SVGRect> SVGAnimatedViewBox::ToDOMBaseVal(
 
   RefPtr<SVGRect> domBaseVal = sBaseSVGViewBoxTearoffTable.GetTearoff(this);
   if (!domBaseVal) {
-    domBaseVal = new SVGRect(this, aSVGElement, SVGRect::BaseValue);
+    domBaseVal = new SVGRect(this, aSVGElement, SVGRect::RectType::BaseValue);
     sBaseSVGViewBoxTearoffTable.AddTearoff(this, domBaseVal);
   }
 
@@ -224,10 +224,15 @@ already_AddRefed<SVGRect> SVGAnimatedViewBox::ToDOMBaseVal(
 }
 
 SVGRect::~SVGRect() {
-  if (mType == BaseValue) {
-    sBaseSVGViewBoxTearoffTable.RemoveTearoff(mVal);
-  } else if (mType == AnimValue) {
-    sAnimSVGViewBoxTearoffTable.RemoveTearoff(mVal);
+  switch (mType) {
+    case RectType::BaseValue:
+      sBaseSVGViewBoxTearoffTable.RemoveTearoff(mVal);
+      break;
+    case RectType::AnimValue:
+      sAnimSVGViewBoxTearoffTable.RemoveTearoff(mVal);
+      break;
+    default:
+      break;
   }
 }
 
@@ -240,7 +245,7 @@ already_AddRefed<SVGRect> SVGAnimatedViewBox::ToDOMAnimVal(
 
   RefPtr<SVGRect> domAnimVal = sAnimSVGViewBoxTearoffTable.GetTearoff(this);
   if (!domAnimVal) {
-    domAnimVal = new SVGRect(this, aSVGElement, SVGRect::AnimValue);
+    domAnimVal = new SVGRect(this, aSVGElement, SVGRect::RectType::AnimValue);
     sAnimSVGViewBoxTearoffTable.AddTearoff(this, domAnimVal);
   }
 
