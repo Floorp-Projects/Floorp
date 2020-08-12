@@ -1181,11 +1181,8 @@ class UrlbarInput {
    *   The name of the search engine to restrict to.
    * @param {UrlbarUtils.RESULT_SOURCE} source
    *   A result source to restrict to.
-   * @param {string} [alternateLabel]
-   *   Optional. If provided, this string will be shown in the search mode
-   *   indicator instead of the engine. Does not override a source title.
    */
-  setSearchMode({ engineName, source, alternateLabel }) {
+  setSearchMode({ engineName, source }) {
     if (!UrlbarPrefs.get("update2")) {
       // Exit search mode.
       engineName = null;
@@ -1201,10 +1198,9 @@ class UrlbarInput {
       this.searchMode = {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         engineName,
-        alternateLabel,
       };
-      this._searchModeIndicatorTitle.textContent = alternateLabel || engineName;
-      this._searchModeLabel.textContent = alternateLabel || engineName;
+      this._searchModeIndicatorTitle.textContent = engineName;
+      this._searchModeLabel.textContent = engineName;
       this.document.l10n.setAttributes(
         this.inputField,
         UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)
@@ -2147,11 +2143,7 @@ class UrlbarInput {
       (!result.payload.originalEngine ||
         result.payload.engine == result.payload.originalEngine)
     ) {
-      let params = { engineName: result.payload.engine };
-      if (result.payload.keyword && !result.payload.keyword.startsWith("@")) {
-        params.alternateLabel = result.payload.keyword;
-      }
-      return params;
+      return { engineName: result.payload.engine };
     }
 
     return null;

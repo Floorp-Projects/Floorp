@@ -405,12 +405,6 @@ var UrlbarTestUtils = {
       return;
     }
 
-    // Since alternateLabel is only used in limited circumstances, set it to
-    // undefined here to avoid every consumer having to do this.
-    if (expectedSearchMode.engineName && !expectedSearchMode.alternateLabel) {
-      expectedSearchMode.alternateLabel = undefined;
-    }
-
     this.Assert.deepEqual(
       window.gURLBar.searchMode,
       expectedSearchMode,
@@ -420,9 +414,7 @@ var UrlbarTestUtils = {
     // Check the textContent and l10n attributes of the indicator and label.
     let expectedTextContent = "";
     let expectedL10n = { id: null, args: null };
-    if (expectedSearchMode.alternateLabel) {
-      expectedTextContent = expectedSearchMode.alternateLabel;
-    } else if (expectedSearchMode.engineName) {
+    if (expectedSearchMode.engineName) {
       expectedTextContent = expectedSearchMode.engineName;
     } else if (expectedSearchMode.source) {
       let name = UrlbarUtils.getResultSourceName(expectedSearchMode.source);
