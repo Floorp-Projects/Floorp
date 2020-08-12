@@ -48,7 +48,9 @@ function do_test({
   try {
     dns.asyncResolve(
       testDomain,
+      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,
+      null, // resolverInfo
       mustBlock
         ? makeListenerBlock(nextCallback)
         : makeListenerDontBlock(nextCallback, expectedAnswer),

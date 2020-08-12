@@ -768,9 +768,9 @@ Dashboard::RequestDNSLookup(const nsACString& aHost,
       "nsINetDashboardCallback", aCallback, true);
   helper->mEventTarget = GetCurrentEventTarget();
   OriginAttributes attrs;
-  rv = mDnsService->AsyncResolveNative(aHost, 0, helper.get(),
-                                       NS_GetCurrentThread(), attrs,
-                                       getter_AddRefs(helper->mCancel));
+  rv = mDnsService->AsyncResolveNative(
+      aHost, nsIDNSService::RESOLVE_TYPE_DEFAULT, 0, nullptr, helper.get(),
+      NS_GetCurrentThread(), attrs, getter_AddRefs(helper->mCancel));
   return rv;
 }
 

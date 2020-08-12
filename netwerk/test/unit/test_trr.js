@@ -131,29 +131,23 @@ class DNSListener {
     this.promise = new Promise(resolve => {
       this.resolve = resolve;
     });
-    if (trrServer == "") {
+
+    let resolverInfo =
+      trrServer == "" ? null : dns.newTRRResolverInfo(trrServer);
+    try {
       this.request = dns.asyncResolve(
         name,
+        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         flags,
+        resolverInfo,
         this,
         mainThread,
         defaultOriginAttributes
       );
-    } else {
-      try {
-        this.request = dns.asyncResolveWithTrrServer(
-          name,
-          trrServer,
-          flags,
-          this,
-          mainThread,
-          defaultOriginAttributes
-        );
-        Assert.ok(!expectEarlyFail);
-      } catch (e) {
-        Assert.ok(expectEarlyFail);
-        this.resolve([e]);
-      }
+      Assert.ok(!expectEarlyFail);
+    } catch (e) {
+      Assert.ok(expectEarlyFail);
+      this.resolve([e]);
     }
   }
 

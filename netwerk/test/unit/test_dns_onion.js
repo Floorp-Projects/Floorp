@@ -37,7 +37,9 @@ function do_test_dontBlock() {
   prefs.setBoolPref("network.dns.blockDotOnion", false);
   dns.asyncResolve(
     "private.onion",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
+    null, // resolverInfo
     listenerDontBlock,
     mainThread,
     defaultOriginAttributes
@@ -49,7 +51,9 @@ function do_test_block() {
   try {
     dns.asyncResolve(
       "private.onion",
+      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,
+      null, // resolverInfo
       listenerBlock,
       mainThread,
       defaultOriginAttributes
