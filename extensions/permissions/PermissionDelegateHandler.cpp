@@ -108,8 +108,7 @@ PermissionDelegateHandler::MaybeUnsafePermissionDelegate(
 NS_IMETHODIMP
 PermissionDelegateHandler::GetPermissionDelegateFPEnabled(bool* aEnabled) {
   MOZ_ASSERT(NS_IsMainThread());
-  *aEnabled = StaticPrefs::permissions_delegation_enabled() &&
-              StaticPrefs::dom_security_featurePolicy_enabled();
+  *aEnabled = StaticPrefs::permissions_delegation_enabled();
   return NS_OK;
 }
 
@@ -131,8 +130,7 @@ nsresult PermissionDelegateHandler::GetDelegatePrincipal(
   }
 
   if (info->mPolicy == DelegatePolicy::eDelegateUseTopOrigin ||
-      (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
-       StaticPrefs::dom_security_featurePolicy_enabled())) {
+      info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy) {
     return aRequest->GetTopLevelPrincipal(aResult);
   }
 
@@ -257,8 +255,7 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
   RefPtr<BrowsingContext> bc = mDocument->GetBrowsingContext();
 
   if ((info->mPolicy == DelegatePolicy::eDelegateUseTopOrigin ||
-       (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
-        StaticPrefs::dom_security_featurePolicy_enabled())) &&
+       info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy) &&
       bc) {
     RefPtr<WindowContext> topWC = bc->GetTopWindowContext();
 

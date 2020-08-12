@@ -3509,10 +3509,6 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
 
   mFeaturePolicy->ResetDeclaredPolicy();
 
-  if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
-    return NS_OK;
-  }
-
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
 
   RefPtr<mozilla::dom::FeaturePolicy> parentPolicy = GetParentFeaturePolicy();
