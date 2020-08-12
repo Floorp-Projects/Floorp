@@ -262,7 +262,7 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
       bc) {
     RefPtr<WindowContext> topWC = bc->GetTopWindowContext();
 
-    if (topWC->IsInProcess()) {
+    if (topWC && topWC->IsInProcess()) {
       // If the top-level window context is in the same process, we directly get
       // the node principal from the top-level document to test the permission.
       // We cannot check the lists in the window context in this case since the
@@ -276,7 +276,7 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
       if (topDoc) {
         principal = topDoc->NodePrincipal();
       }
-    } else {
+    } else if (topWC) {
       // Get the delegated permissions from the top-level window context.
       DelegatedPermissionList list =
           aExactHostMatch ? topWC->GetDelegatedExactHostMatchPermissions()
