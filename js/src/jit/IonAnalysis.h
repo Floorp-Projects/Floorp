@@ -100,7 +100,8 @@ struct SimpleLinearSum {
 enum class MathSpace { Modulo, Infinite, Unknown };
 
 SimpleLinearSum ExtractLinearSum(MDefinition* ins,
-                                 MathSpace space = MathSpace::Unknown);
+                                 MathSpace space = MathSpace::Unknown,
+                                 int32_t recursionDepth = 0);
 
 MOZ_MUST_USE bool ExtractLinearInequality(MTest* test,
                                           BranchDirection direction,
