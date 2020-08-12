@@ -15338,28 +15338,6 @@
     "n_buckets": 56,
     "description": "How much time (in hours) passed between the current cookie purging activity and the one before that (cookie purging is run on 'daily idle')"
   },
-  "WHEEL_INDEX" : {
-    "products": ["firefox"],
-    "record_in_processes": ["main"],
-    "alert_emails": ["kgupta@mozilla.com"],
-    "expires_in_version": "80",
-    "kind" : "enumerated",
-    "bug_numbers": [1638314],
-    "description": "Keyboard modifier key applied to wheel events (WheelPrefs::Index)",
-    "n_values": 7,
-    "releaseChannelCollection": "opt-out"
-  },
-  "WHEEL_ACTION" : {
-    "products": ["firefox"],
-    "record_in_processes": ["main"],
-    "alert_emails": ["kgupta@mozilla.com"],
-    "expires_in_version": "80",
-    "kind" : "enumerated",
-    "bug_numbers": [1638314],
-    "description": "Action triggered by wheel event (WheelPrefs::Action)",
-    "n_values": 10,
-    "releaseChannelCollection": "opt-out"
-  },
   "APZ_ZOOM_ACTIVITY" : {
     "products": ["firefox"],
     "record_in_processes": ["content"],

@@ -3358,14 +3358,12 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
       MOZ_ASSERT(wheelEvent);
 
+      // When APZ is enabled, the actual scroll animation might be handled by
+      // the compositor.
       WheelPrefs::Action action =
-          WheelPrefs::GetInstance()->RecordTelemetryAndComputeActionFor(
-              wheelEvent);
-      if (wheelEvent->mFlags.mHandledByAPZ) {
-        // When APZ is enabled, the actual scroll animation might be handled by
-        // the compositor.
-        action = WheelPrefs::ACTION_NONE;
-      }
+          wheelEvent->mFlags.mHandledByAPZ
+              ? WheelPrefs::ACTION_NONE
+              : WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
 
       WheelDeltaAdjustmentStrategy strategy =
           GetWheelDeltaAdjustmentStrategy(*wheelEvent);
@@ -6208,18 +6206,6 @@ EventStateManager::WheelPrefs::ComputeActionFor(
   }
 
   return actions[index];
-}
-
-EventStateManager::WheelPrefs::Action
-EventStateManager::WheelPrefs::RecordTelemetryAndComputeActionFor(
-    const WidgetWheelEvent* aEvent) {
-  Index index = GetIndexFor(aEvent);
-  Action action = ComputeActionFor(aEvent);
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::WHEEL_INDEX,
-                                 (uint32_t)index);
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::WHEEL_ACTION,
-                                 (uint32_t)action);
-  return action;
 }
 
 bool EventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(

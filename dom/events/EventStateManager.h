@@ -627,13 +627,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
     Action ComputeActionFor(const WidgetWheelEvent* aEvent);
 
     /**
-     * Same as ComputeActionFor, but also records telemetry probes about the
-     * event. This is a member of WheelPrefs mostly to avoid exposing private
-     * members.
-     */
-    Action RecordTelemetryAndComputeActionFor(const WidgetWheelEvent* aEvent);
-
-    /**
      * NeedToComputeLineOrPageDelta() returns if the aEvent needs to be
      * computed the lineOrPageDelta values.
      */
