@@ -297,7 +297,10 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
       break;
     case eMouseEventClass:
       if (aEvent->IsTrusted()) {
-        if (aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary) {
+        // Let's ignore MouseButton::eSecondary because that is handled as
+        // context menu.
+        if (aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary ||
+            aEvent->AsMouseEvent()->mButton == MouseButton::eMiddle) {
           abuse = PopupBlocker::openBlocked;
           switch (aEvent->mMessage) {
             case eMouseUp:
