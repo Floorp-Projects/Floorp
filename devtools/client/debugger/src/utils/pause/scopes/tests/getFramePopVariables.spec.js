@@ -10,7 +10,7 @@ import type { NamedValue } from "../types";
 
 const errorGrip = {
   type: "object",
-  actor: "server2.conn66.child1/pausedobj243",
+  actor: "server2.conn66.child1/obj243",
   class: "Error",
   extensible: true,
   frozen: false,

@@ -64,8 +64,6 @@ function MeasuringToolHighlighter(highlighterEnv) {
 }
 
 MeasuringToolHighlighter.prototype = {
-  typeName: "MeasuringToolHighlighter",
-
   ID_CLASS_PREFIX: "measuring-tool-",
 
   _buildMarkup() {

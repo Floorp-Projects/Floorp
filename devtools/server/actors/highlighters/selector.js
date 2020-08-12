@@ -26,8 +26,6 @@ function SelectorHighlighter(highlighterEnv) {
 }
 
 SelectorHighlighter.prototype = {
-  typeName: "SelectorHighlighter",
-
   /**
    * Show BoxModelHighlighter on each node that matches that provided selector.
    * @param {DOMNode} node A context node that is used to get the document on
