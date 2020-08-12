@@ -25,6 +25,7 @@
 #include "mozilla/widget/CompositorWidget.h"
 
 #ifdef XP_WIN
+#  include "GLContextEGL.h"
 #  include "GLLibraryEGL.h"
 #  include "mozilla/widget/WinCompositorWindowThread.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
