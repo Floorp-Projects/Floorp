@@ -191,6 +191,7 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         if self.query_minidump_stackwalk():
             env.update({'MINIDUMP_STACKWALK': self.minidump_stackwalk_path})
         env['RUST_BACKTRACE'] = '1'
+        env['MOZ_IGNORE_NSS_SHUTDOWN_LEAKS'] = '1'
 
         # If code coverage is enabled, set GCOV_PREFIX env variable
         if self.config.get('code_coverage'):
