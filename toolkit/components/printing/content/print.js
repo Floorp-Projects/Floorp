@@ -117,9 +117,8 @@ var PrintEventHandler = {
 
       if (flags) {
         PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
+        this.updatePrintPreview();
       }
-
-      this.updatePrintPreview();
 
       document.dispatchEvent(
         new CustomEvent("print-settings", {
