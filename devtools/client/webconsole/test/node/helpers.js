@@ -18,6 +18,10 @@ const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
 const prefsService = getPrefsService({});
 const { PREFS } = require("devtools/client/webconsole/constants");
 const Telemetry = require("devtools/client/shared/telemetry");
+const {
+  getSerializedPacket,
+  parsePacketAndCreateFronts,
+} = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
 
 /**
  * Prepare actions for use in testing.
@@ -65,7 +69,8 @@ function setupStore(
  * Create deep copy of given packet object.
  */
 function clonePacket(packet) {
-  return JSON.parse(JSON.stringify(packet));
+  const strPacket = getSerializedPacket(packet);
+  return parsePacketAndCreateFronts(JSON.parse(strPacket));
 }
 
 /**

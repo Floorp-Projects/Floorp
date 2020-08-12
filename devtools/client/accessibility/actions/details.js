@@ -16,7 +16,7 @@ exports.updateDetails = accessible => async dispatch => {
   );
   // By the time getFront resolves, the accessibleFront may have been destroyed.
   // This typically happens during navigations.
-  if (!accessible.actorID) {
+  if (accessible.isDestroyed()) {
     return;
   }
   try {

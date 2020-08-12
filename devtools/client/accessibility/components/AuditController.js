@@ -48,7 +48,7 @@ class AuditController extends React.Component {
 
   onAudited() {
     const { accessibleFront } = this.props;
-    if (!accessibleFront.actorID) {
+    if (accessibleFront.isDestroyed()) {
       // Accessible front is being removed, stop listening for 'audited' events.
       accessibleFront.off("audited", this.onAudited);
       return;
@@ -59,7 +59,7 @@ class AuditController extends React.Component {
 
   maybeRequestAudit() {
     const { accessibleFront } = this.props;
-    if (!accessibleFront.actorID) {
+    if (accessibleFront.isDestroyed()) {
       // Accessible front is being removed, stop listening for 'audited' events.
       accessibleFront.off("audited", this.onAudited);
       return;
@@ -70,8 +70,9 @@ class AuditController extends React.Component {
     }
 
     accessibleFront.audit().catch(error => {
-      // Accessible actor was destroyed, connection closed.
-      if (accessibleFront.actorID) {
+      // If the actor was destroyed (due to a connection closed for instance) do
+      // nothing, otherwise log a warning
+      if (!accessibleFront.isDestroyed()) {
         console.warn(error);
       }
     });

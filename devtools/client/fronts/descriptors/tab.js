@@ -126,8 +126,8 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
       }
     } catch (e) {
       // We might request the data for a tab which is going to be destroyed.
-      // In this case targetFront.actorID will be null. Otherwise log an error.
-      if (this.actorID) {
+      // In this case the TargetFront will be destroyed. Otherwise log an error.
+      if (!this.isDestroyed()) {
         console.error(
           "Failed to retrieve the async form data for " + this.url,
           e
@@ -137,7 +137,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
   }
 
   async getTarget() {
-    if (this._targetFront && this._targetFront.actorID) {
+    if (this._targetFront && !this._targetFront.isDestroyed()) {
       return this._targetFront;
     }
 

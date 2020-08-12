@@ -314,10 +314,17 @@ function TargetMixin(parentClass) {
     // i.e. an actor served by RootActor.listTabs or RootActorActor.getTab requests
     async getFront(typeName) {
       let front = this.fronts.get(typeName);
-      // the front might have been destroyed and no longer have an actor ID
-      if (front?.actorID || (front && typeof front.then === "function")) {
-        return front;
+      if (front) {
+        // XXX: This is typically the kind of spot where switching to
+        // `isDestroyed()` is complicated, because `front` is not necessarily a
+        // Front...
+        const isFrontInitializing = typeof front.then === "function";
+        const isFrontAlive = !isFrontInitializing && !front.isDestroyed();
+        if (isFrontInitializing || isFrontAlive) {
+          return front;
+        }
       }
+
       front = getFront(this.client, typeName, this.targetForm, this);
       this.fronts.set(typeName, front);
       // replace the placeholder with the instance of the front once it has loaded
@@ -580,7 +587,7 @@ function TargetMixin(parentClass) {
 
         // Not all targets supports attach/detach. For example content process doesn't.
         // Also ensure that the front is still active before trying to do the request.
-      } else if (this.detach && this.actorID) {
+      } else if (this.detach && !this.isDestroyed()) {
         // The client was handed to us, so we are not responsible for closing
         // it. We just need to detach from the tab, if already attached.
         // |detach| may fail if the connection is already dead, so proceed with

@@ -108,7 +108,7 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
       );
     }
 
-    if (this._targetFront && this._targetFront.actorID) {
+    if (this._targetFront && !this._targetFront.isDestroyed()) {
       return this._targetFront;
     }
 

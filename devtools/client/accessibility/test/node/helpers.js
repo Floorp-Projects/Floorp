@@ -29,6 +29,7 @@ function mockAccessible(form) {
   return {
     on: jest.fn(),
     off: jest.fn(),
+    isDestroyed: () => !form?.actorID,
     audit: jest.fn().mockReturnValue(Promise.resolve()),
     ...form,
   };

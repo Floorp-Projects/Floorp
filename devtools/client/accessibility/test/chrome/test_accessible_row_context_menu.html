@@ -76,6 +76,9 @@ window.onload = async function() {
           snapshot: async () => SNAPSHOT,
           on: () => {},
           off: () => {},
+          // This accessible mock has no actorID and should be treated as
+          // destroyed.
+          isDestroyed: () => true,
         },
       },
       columns: [

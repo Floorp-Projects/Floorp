@@ -192,7 +192,7 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
   },
 
   destroy: function() {
-    if (!this.actorID) {
+    if (this.isDestroyed()) {
       return;
     }
     Actor.prototype.destroy.call(this);

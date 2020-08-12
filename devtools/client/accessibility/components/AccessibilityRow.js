@@ -199,13 +199,13 @@ class AccessibilityRow extends Component {
    *          possible.
    */
   async scrollNodeIntoViewIfNeeded(accessibleFront) {
-    if (!accessibleFront.actorID) {
+    if (accessibleFront.isDestroyed()) {
       return;
     }
 
     const domWalker = (await accessibleFront.targetFront.getFront("inspector"))
       .walker;
-    if (!accessibleFront.actorID) {
+    if (accessibleFront.isDestroyed()) {
       return;
     }
 

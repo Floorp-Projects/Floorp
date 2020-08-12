@@ -41,6 +41,9 @@ window.onload = async function() {
         accessible: {
           on: () => {},
           off: () => {},
+          // This accessible mock has no actorID and should be treated as
+          // destroyed.
+          isDestroyed: () => true,
         },
       },
       ui: { supports: {} }

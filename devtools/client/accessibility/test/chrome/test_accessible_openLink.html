@@ -61,8 +61,18 @@ window.onload = async function() {
       action ? { ...state, ...action } : state,
       {
         initialState: {
-          details: { DOMNode: {}, accessible: { value: URL } },
-          ui: { supports: {} }
+          details: {
+            DOMNode: {},
+            accessible: {
+              // This accessible mock has no actorID and should be treated as
+              // destroyed.
+              isDestroyed: () => true,
+              value: URL,
+            }
+          },
+          ui: {
+            supports: {}
+          }
         },
       }
     );
@@ -75,7 +85,19 @@ window.onload = async function() {
 
     URL = "non-URL";
     await mockStore.dispatch(
-      { type: "update", details: { DOMNode: {}, accessible: { value: URL } } });
+      {
+        type: "update",
+        details: {
+          DOMNode: {},
+          accessible: {
+            // This accessible mock has no actorID and should be treated as
+            // destroyed.
+            isDestroyed: () => true,
+            value: URL,
+          }
+        }
+      }
+    );
     link = document.querySelector(".url");
     ok(!link, "Non URL link should not be rendered as a link.");
   } catch (e) {

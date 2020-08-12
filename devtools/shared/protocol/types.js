@@ -594,7 +594,7 @@ async function getFront(client, typeName, form, target = null) {
   if (!formAttributeName) {
     throw new Error(`Can't find the form attribute name for ${typeName}`);
   }
-  // Retrive the actor ID from root or target actor's form
+  // Retrieve the actor ID from root or target actor's form
   front.actorID = form[formAttributeName];
   if (!front.actorID) {
     throw new Error(

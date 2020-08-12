@@ -39,7 +39,7 @@ function enableActorReleaser(webConsoleUI) {
           if (
             front &&
             typeof front.release === "function" &&
-            front.actorID &&
+            !front.isDestroyed() &&
             (!state.ui.frontInSidebar ||
               state.ui.frontInSidebar.actorID !== front.actorID)
           ) {

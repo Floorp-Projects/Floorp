@@ -23,9 +23,8 @@ var generateRequestMethods = function(actorSpec, frontProto) {
     const name = spec.name;
 
     frontProto[name] = function(...args) {
-      // If this.actorID are not available, the request will not be able to complete.
-      // The front was probably destroyed earlier.
-      if (!this.actorID) {
+      // If the front is destroyed, the request will not be able to complete.
+      if (this.isDestroyed()) {
         throw new Error(
           `Can not send request '${name}' because front '${this.typeName}' is already destroyed.`
         );

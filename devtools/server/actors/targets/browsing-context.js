@@ -344,7 +344,7 @@ const browsingContextTargetPrototype = {
    * Wrapper around emit for resource forms to bail early after destroy.
    */
   _emitResourcesForm(name, resources) {
-    if (!this.actorID) {
+    if (this.isDestroyed()) {
       // Don't try to emit if the actor was destroyed.
       return;
     }
@@ -385,7 +385,7 @@ const browsingContextTargetPrototype = {
    * Try to locate the console actor if it exists.
    */
   get _consoleActor() {
-    if (this.exited || !this.actorID) {
+    if (this.exited || this.isDestroyed()) {
       return null;
     }
     const form = this.form();

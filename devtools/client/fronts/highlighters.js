@@ -23,15 +23,11 @@ class HighlighterFront extends FrontClassWithSpec(highlighterSpec) {
 
     // un/highlight requests can be triggered while DevTools are closing.
     this.highlight = safeAsyncMethod(this.highlight.bind(this), () =>
-      this._isDestroyed()
+      this.isDestroyed()
     );
     this.unhighlight = safeAsyncMethod(this.unhighlight.bind(this), () =>
-      this._isDestroyed()
+      this.isDestroyed()
     );
-  }
-
-  _isDestroyed() {
-    return !this.actorID;
   }
 
   // Update the object given a form representation off the wire.

@@ -54,7 +54,7 @@ class Actor extends Pool {
   }
 
   _sendEvent(name, request, ...args) {
-    if (!this.actorID) {
+    if (this.isDestroyed()) {
       console.error(
         `Tried to send a '${name}' event on an already destroyed actor` +
           ` '${this.typeName}'`

@@ -77,7 +77,7 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
    * monitor, which for historical reasons is part of the console actor.
    */
   get _consoleActor() {
-    if (this.targetActor.exited || !this.targetActor.actorID) {
+    if (this.targetActor.exited || this.targetActor.isDestroyed()) {
       return null;
     }
     const form = this.targetActor.form();

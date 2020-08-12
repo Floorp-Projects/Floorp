@@ -168,7 +168,9 @@ function _appendTopLevelTargetIssues(targetIssues, node, issues) {
 
 function _clearDestroyedNodes(targetIssues) {
   return targetIssues.reduce((newIssues, targetIssue) => {
-    const retainedNodes = targetIssue.nodes.filter(n => n.targetFront?.actorID);
+    const retainedNodes = targetIssue.nodes.filter(
+      n => n.targetFront && !n.targetFront.isDestroyed()
+    );
 
     // All the nodes for a given issue are destroyed
     if (retainedNodes.length === 0) {

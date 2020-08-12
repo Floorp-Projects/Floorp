@@ -168,7 +168,8 @@ class Accessible extends Component {
 
   componentDidUpdate(prevProps) {
     if (
-      this.props?.accessibleFront?.actorID &&
+      this.props.accessibleFront &&
+      !this.props.accessibleFront.isDestroyed() &&
       this.props.accessibleFront !== prevProps.accessibleFront
     ) {
       window.emit(EVENTS.PROPERTIES_UPDATED);
@@ -198,7 +199,7 @@ class Accessible extends Component {
 
   update() {
     const { dispatch, accessibleFront } = this.props;
-    if (!accessibleFront.actorID) {
+    if (accessibleFront.isDestroyed()) {
       return;
     }
 

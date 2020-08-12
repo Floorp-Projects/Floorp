@@ -533,7 +533,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       console.warn("Tried to open remote connection to an invalid frame.");
       return null;
     }
-    if (this._remoteFrameTarget && this._remoteFrameTarget.actorID) {
+    if (this._remoteFrameTarget && !this._remoteFrameTarget.isDestroyed()) {
       return this._remoteFrameTarget;
     }
 

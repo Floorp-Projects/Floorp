@@ -534,5 +534,6 @@ module.exports = {
   getCleanedPacket,
   getSerializedPacket,
   parsePacketsWithFronts,
+  parsePacketAndCreateFronts,
   writeStubsToFile,
 };

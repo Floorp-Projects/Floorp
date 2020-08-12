@@ -207,7 +207,7 @@ class CompatibilityView {
         continue;
       }
 
-      const retainedNodes = removed.filter(node => node?.actorID);
+      const retainedNodes = removed.filter(node => node && !node.isDestroyed());
       cleanupDestroyedNodes =
         cleanupDestroyedNodes || retainedNodes.length !== removed.length;
 
