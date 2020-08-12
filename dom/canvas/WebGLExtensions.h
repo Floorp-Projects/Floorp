@@ -222,6 +222,12 @@ class WebGLExtensionTextureHalfFloatLinear : public WebGLExtensionBase {
   explicit WebGLExtensionTextureHalfFloatLinear(WebGLContext*);
 };
 
+class WebGLExtensionTextureNorm16 : public WebGLExtensionBase {
+ public:
+  static bool IsSupported(const WebGLContext*);
+  explicit WebGLExtensionTextureNorm16(WebGLContext*);
+};
+
 class WebGLExtensionColorBufferFloat : public WebGLExtensionBase {
  public:
   explicit WebGLExtensionColorBufferFloat(WebGLContext*);

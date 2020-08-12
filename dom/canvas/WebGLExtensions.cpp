@@ -86,4 +86,61 @@ bool WebGLExtensionMultiview::IsSupported(const WebGLContext* const webgl) {
   return gl->IsSupported(gl::GLFeature::multiview);
 }
 
+// -
+
+bool WebGLExtensionTextureNorm16::IsSupported(const WebGLContext* const webgl) {
+  if (!StaticPrefs::webgl_enable_draft_extensions()) return false;
+  if (!webgl->IsWebGL2()) return false;
+
+  const auto& gl = webgl->gl;
+
+  // ANGLE's support is broken in our checkout.
+  if (gl->IsANGLE()) return false;
+
+  return gl->IsSupported(gl::GLFeature::texture_norm16);
+}
+
+WebGLExtensionTextureNorm16::WebGLExtensionTextureNorm16(WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl));
+
+  auto& fua = *webgl->mFormatUsage;
+
+  const auto fnAdd = [&](webgl::EffectiveFormat effFormat,
+                         const bool renderable, const webgl::PackingInfo& pi) {
+    auto& usage = *fua.EditUsage(effFormat);
+    const auto& format = *usage.format;
+
+    const auto dui =
+        webgl::DriverUnpackInfo{format.sizedFormat, pi.format, pi.type};
+    fua.AddTexUnpack(&usage, pi, dui);
+
+    fua.AllowSizedTexFormat(format.sizedFormat, &usage);
+    fua.AllowUnsizedTexFormat(pi, &usage);
+
+    if (renderable) {
+      usage.SetRenderable();
+      fua.AllowRBFormat(format.sizedFormat, &usage);
+    }
+  };
+
+  fnAdd(webgl::EffectiveFormat::R16, true,
+        {LOCAL_GL_RED, LOCAL_GL_UNSIGNED_SHORT});
+  fnAdd(webgl::EffectiveFormat::RG16, true,
+        {LOCAL_GL_RG, LOCAL_GL_UNSIGNED_SHORT});
+  fnAdd(webgl::EffectiveFormat::RGB16, false,
+        {LOCAL_GL_RGB, LOCAL_GL_UNSIGNED_SHORT});
+  fnAdd(webgl::EffectiveFormat::RGBA16, true,
+        {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_SHORT});
+
+  fnAdd(webgl::EffectiveFormat::R16_SNORM, false,
+        {LOCAL_GL_RED, LOCAL_GL_SHORT});
+  fnAdd(webgl::EffectiveFormat::RG16_SNORM, false,
+        {LOCAL_GL_RG, LOCAL_GL_SHORT});
+  fnAdd(webgl::EffectiveFormat::RGB16_SNORM, false,
+        {LOCAL_GL_RGB, LOCAL_GL_SHORT});
+  fnAdd(webgl::EffectiveFormat::RGBA16_SNORM, false,
+        {LOCAL_GL_RGBA, LOCAL_GL_SHORT});
+}
+
 }  // namespace mozilla
