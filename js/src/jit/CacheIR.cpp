@@ -5229,6 +5229,84 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachArraySlice(HandleFunction callee) {
+  // Only handle argc <= 2.
+  if (argc_ > 2) {
+    return AttachDecision::NoAction;
+  }
+
+  // Only optimize if |this| is a packed array.
+  if (!thisval_.isObject() || !IsPackedArray(&thisval_.toObject())) {
+    return AttachDecision::NoAction;
+  }
+
+  // Arguments for the sliced region must be integers.
+  if (argc_ > 0 && !args_[0].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+  if (argc_ > 1 && !args_[1].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedArrayObject arr(cx_, &thisval_.toObject().as<ArrayObject>());
+
+  // The group of the result will be dynamically fixed up to match the input
+  // object, allowing us to handle 'this' objects that might have more than one
+  // group. Make sure that no singletons can be sliced here.
+  if (arr->isSingleton()) {
+    return AttachDecision::NoAction;
+  }
+
+  JSObject* templateObj =
+      NewFullyAllocatedArrayTryReuseGroup(cx_, arr, 0, TenuredObject);
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'slice' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardClass(objId, GuardClassKind::Array);
+
+  Int32OperandId int32BeginId;
+  if (argc_ > 0) {
+    ValOperandId beginId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+    int32BeginId = writer.guardToInt32(beginId);
+  } else {
+    int32BeginId = writer.loadInt32Constant(0);
+  }
+
+  Int32OperandId int32EndId;
+  if (argc_ > 1) {
+    ValOperandId endId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+    int32EndId = writer.guardToInt32(endId);
+  } else {
+    int32EndId = writer.loadInt32ArrayLength(objId);
+  }
+
+  writer.packedArraySliceResult(templateObj, objId, int32BeginId, int32EndId);
+
+  if (!JitOptions.warpBuilder) {
+    // Store the template object for BaselineInspector.
+    writer.metaNativeTemplateObject(callee, templateObj);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("ArraySlice");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachArrayIsArray(HandleFunction callee) {
   // Need a single argument.
   if (argc_ != 1) {
@@ -8228,6 +8306,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachArrayPopShift(callee, native);
     case InlinableNative::ArrayJoin:
       return tryAttachArrayJoin(callee);
+    case InlinableNative::ArraySlice:
+      return tryAttachArraySlice(callee);
     case InlinableNative::ArrayIsArray:
       return tryAttachArrayIsArray(callee);
 
@@ -8762,6 +8842,17 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
 
       RootedObject obj(cx_, &thisval_.toObject());
       if (obj->isSingleton()) {
+        return true;
+      }
+
+      if (IsPackedArray(obj)) {
+        // This case is handled by tryAttachArraySlice.
+        return true;
+      }
+
+      // TODO(Warp): Support non-packed arrays in tryAttachArraySlice if they're
+      // common in user code.
+      if (JitOptions.warpBuilder) {
         return true;
       }
 

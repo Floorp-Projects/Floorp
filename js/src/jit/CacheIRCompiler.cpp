@@ -2479,6 +2479,25 @@ bool CacheIRCompiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadInt32ArrayLength(ObjOperandId objId,
+                                               Int32OperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  Register res = allocator.defineRegister(masm, resultId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), res);
+  masm.load32(Address(res, ObjectElements::offsetOfLength()), res);
+
+  // Guard length fits in an int32.
+  masm.branchTest32(Assembler::Signed, res, res, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitDoubleAddResult(NumberOperandId lhsId,
                                           NumberOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -8028,6 +8047,10 @@ struct ReturnTypeToJSValueType<JSString*> {
 template <>
 struct ReturnTypeToJSValueType<BigInt*> {
   static constexpr JSValueType result = JSVAL_TYPE_BIGINT;
+};
+template <>
+struct ReturnTypeToJSValueType<JSObject*> {
+  static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
 };
 template <>
 struct ReturnTypeToJSValueType<ArrayIteratorObject*> {
