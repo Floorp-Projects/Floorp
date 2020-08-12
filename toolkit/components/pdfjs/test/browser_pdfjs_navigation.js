@@ -114,7 +114,7 @@ const TESTS = [
   },
   {
     action: {
-      selector: ".outlineItem:nth-child(1) a",
+      selector: "#outlineView .treeItem:nth-child(1) a",
       event: "click",
     },
     expectedPage: 1,
@@ -122,7 +122,7 @@ const TESTS = [
   },
   {
     action: {
-      selector: ".outlineItem:nth-child(" + PDF_OUTLINE_ITEMS + ") a",
+      selector: "#outlineView .treeItem:nth-child(" + PDF_OUTLINE_ITEMS + ") a",
       event: "click",
     },
     expectedPage: 4,
@@ -205,11 +205,12 @@ async function contentSetUp() {
           var outlineCount = evt.detail.outlineCount;
 
           if (
-            document.querySelectorAll(".outlineItem").length === outlineCount
+            document.querySelectorAll("#outlineView .treeItem").length ===
+            outlineCount
           ) {
             resolve();
           } else {
-            reject();
+            reject("Unable to find outline items.");
           }
         },
         { once: true }
