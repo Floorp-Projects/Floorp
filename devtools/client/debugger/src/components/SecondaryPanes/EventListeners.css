@@ -110,8 +110,7 @@
   background-color: var(--theme-sidebar-background);
   border: 0;
   outline: 0;
-  line-height: 16px;
-  padding-block: 2px;
+  height: 24px;
   color: var(--theme-body-color);
   background-image: url("chrome://devtools/skin/images/filter-small.svg");
   background-position-x: 4px;
@@ -142,8 +141,8 @@
 }
 
 .event-search-input::placeholder {
-  font-style: italic;
-  color: var(--theme-comment);
+  color: var(--theme-text-color-alt);
+  opacity: 1;
 }
 
 .event-search-container:focus-within {

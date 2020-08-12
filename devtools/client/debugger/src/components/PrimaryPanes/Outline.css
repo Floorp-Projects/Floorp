@@ -23,9 +23,9 @@
 
 .outline-list {
   margin: 0;
-  padding: 0 0 4px 0;
+  padding: 4px 0;
   position: absolute;
-  top: 22px;
+  top: 25px;
   bottom: 25px;
   left: 0;
   right: 0;

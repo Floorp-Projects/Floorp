@@ -81,7 +81,8 @@
 }
 
 .search-field input::placeholder {
-  color: var(--theme-toolbar-color);
+  color: var(--theme-text-color-alt);
+  opacity: 1;
 }
 
 .search-field-summary {
