@@ -23,6 +23,7 @@ var listener1 = {
 var listener2 = {
   onLookupComplete(inRequest, inRecord, inStatus) {
     Assert.equal(inStatus, Cr.NS_OK);
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     var answer = inRecord.getNextAddrAsString();
     Assert.ok(answer == "127.0.0.1" || answer == "::1");
     test3();
@@ -33,6 +34,7 @@ var listener2 = {
 var listener3 = {
   onLookupComplete(inRequest, inRecord, inStatus) {
     Assert.equal(inStatus, Cr.NS_OK);
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     var answer = inRecord.getNextAddrAsString();
     Assert.ok(answer == "127.0.0.1" || answer == "::1");
     cleanup();

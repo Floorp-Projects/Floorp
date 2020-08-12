@@ -165,6 +165,7 @@ class DNSListener {
     }
 
     Assert.equal(inStatus, Cr.NS_OK, "Checking status");
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     let answer = inRecord.getNextAddrAsString();
     Assert.equal(
       answer,
@@ -1692,6 +1693,7 @@ add_task(async function test_resolve_not_confirmed() {
       undefined,
       false
     );
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     let responseIP = inRecord.getNextAddrAsString();
     if (responseIP == "7.7.7.7") {
       break;

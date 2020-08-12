@@ -22,6 +22,9 @@ interface nsIDNSListener : nsISupports
      * @param aRecord
      *        the DNS record corresponding to the hostname that was resolved.
      *        this parameter is null if there was an error.
+     *        depending on the type parameter passed to asyncResolve() the
+     *        caller should QueryInterface to either nsIDNSAddrRecord or
+     *        nsIDNSByTypeRecord.
      * @param aStatus
      *        if the lookup failed, this parameter gives the reason.
      */

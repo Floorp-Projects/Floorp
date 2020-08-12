@@ -20,6 +20,7 @@ var listener = {
 
     while (true) {
       try {
+        inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
         var answer = inRecord.getNextAddrAsString();
         // If there is an answer it should be an IPv4  address
         dump(answer);
