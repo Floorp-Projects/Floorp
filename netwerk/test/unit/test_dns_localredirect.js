@@ -30,7 +30,9 @@ function run_test() {
   nextTest = do_test_2;
   dns.asyncResolve(
     "local.vingtetun.org",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
@@ -48,7 +50,9 @@ function do_test_2() {
   prefs.setCharPref("network.dns.forceResolve", "localhost");
   dns.asyncResolve(
     "www.example.com",
+    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
+    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
