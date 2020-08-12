@@ -6380,7 +6380,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void roundF32(RoundingMode roundingMode, RegF32 f0) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-    masm.vroundss(Assembler::ToX86RoundingMode(roundingMode), f0, f0, f0);
+    masm.vroundss(Assembler::ToX86RoundingMode(roundingMode), f0, f0);
 #else
     MOZ_CRASH("NYI");
 #endif
@@ -6388,7 +6388,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void roundF64(RoundingMode roundingMode, RegF64 f0) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-    masm.vroundsd(Assembler::ToX86RoundingMode(roundingMode), f0, f0, f0);
+    masm.vroundsd(Assembler::ToX86RoundingMode(roundingMode), f0, f0);
 #else
     MOZ_CRASH("NYI");
 #endif
@@ -8140,6 +8140,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitVectorAndNot();
 
   MOZ_MUST_USE bool emitLoadSplat(Scalar::Type viewType);
+  MOZ_MUST_USE bool emitLoadZero(Scalar::Type viewType);
   MOZ_MUST_USE bool emitLoadExtend(Scalar::Type viewType);
   MOZ_MUST_USE bool emitBitselect();
   MOZ_MUST_USE bool emitVectorShuffle();
@@ -12776,6 +12777,26 @@ static void MaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
   masm.maxFloat64x2(rs, rsd, temp);
 }
 
+static void PMinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.pseudoMinFloat32x4(rs, rsd);
+}
+
+static void PMinF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.pseudoMinFloat64x2(rs, rsd);
+}
+
+static void PMaxF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.pseudoMaxFloat32x4(rs, rsd);
+}
+
+static void PMaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.pseudoMaxFloat64x2(rs, rsd);
+}
+
+static void DotI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.widenDotInt16x8(rs, rsd);
+}
+
 static void CmpI8x16(MacroAssembler& masm, Assembler::Condition cond,
                      RegV128 rs, RegV128 rsd) {
   masm.compareInt8x16(cond, rs, rsd);
@@ -12854,6 +12875,38 @@ static void SqrtF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
 
 static void SqrtF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.sqrtFloat64x2(rs, rd);
+}
+
+static void CeilF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.ceilFloat32x4(rs, rd);
+}
+
+static void FloorF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.floorFloat32x4(rs, rd);
+}
+
+static void TruncF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.truncFloat32x4(rs, rd);
+}
+
+static void NearestF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.nearestFloat32x4(rs, rd);
+}
+
+static void CeilF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.ceilFloat64x2(rs, rd);
+}
+
+static void FloorF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.floorFloat64x2(rs, rd);
+}
+
+static void TruncF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.truncFloat64x2(rs, rd);
+}
+
+static void NearestF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.nearestFloat64x2(rs, rd);
 }
 
 static void NotV128(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
@@ -13355,6 +13408,22 @@ bool BaseCompiler::emitLoadSplat(Scalar::Type viewType) {
   return true;
 }
 
+bool BaseCompiler::emitLoadZero(Scalar::Type viewType) {
+  // LoadZero has the structure of LoadSplat
+  LinearMemoryAddress<Nothing> addr;
+  if (!iter_.readLoadSplat(Scalar::byteSize(viewType), &addr)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  access.setZeroExtendSimd128Load();
+  return loadCommon(&access, AccessCheck(), ValType::V128);
+}
+
 bool BaseCompiler::emitLoadExtend(Scalar::Type viewType) {
   LinearMemoryAddress<Nothing> addr;
   if (!iter_.readLoadExtend(&addr)) {
@@ -13579,6 +13648,11 @@ bool BaseCompiler::emitBody() {
     do {                      \
     } while (0)
 #endif
+
+#define CHECK_EXPERIMENTAL_SIMD() \
+  if (!SimdExperimentalEnabled) { \
+    break;                        \
+  }
 
 #define CHECK(E) \
   if (!(E)) return false
@@ -14534,6 +14608,21 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, NarrowUI32x4));
           case uint32_t(SimdOp::V8x16Swizzle):
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinopWithTemp, Swizzle));
+          case uint32_t(SimdOp::F32x4PMaxExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMaxF32x4));
+          case uint32_t(SimdOp::F32x4PMinExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMinF32x4));
+          case uint32_t(SimdOp::F64x2PMaxExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMaxF64x2));
+          case uint32_t(SimdOp::F64x2PMinExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, PMinF64x2));
+          case uint32_t(SimdOp::I32x4DotSI16x8Experimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, DotI16x8));
           case uint32_t(SimdOp::I8x16Neg):
             CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NegI8x16));
           case uint32_t(SimdOp::I16x8Neg):
@@ -14590,6 +14679,30 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, AbsI16x8));
           case uint32_t(SimdOp::I32x4Abs):
             CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, AbsI32x4));
+          case uint32_t(SimdOp::F32x4CeilExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, CeilF32x4));
+          case uint32_t(SimdOp::F32x4FloorExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, FloorF32x4));
+          case uint32_t(SimdOp::F32x4TruncExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, TruncF32x4));
+          case uint32_t(SimdOp::F32x4NearestExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NearestF32x4));
+          case uint32_t(SimdOp::F64x2CeilExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, CeilF64x2));
+          case uint32_t(SimdOp::F64x2FloorExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, FloorF64x2));
+          case uint32_t(SimdOp::F64x2TruncExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, TruncF64x2));
+          case uint32_t(SimdOp::F64x2NearestExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(dispatchVectorUnary(emitVectorUnop, NearestF64x2));
           case uint32_t(SimdOp::I8x16Shl):
             CHECK_NEXT(dispatchVectorVariableShiftWithTwoTemps(ShiftLeftI8x16));
           case uint32_t(SimdOp::I8x16ShrS):
@@ -14650,6 +14763,12 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitLoadExtend(Scalar::Int32));
           case uint32_t(SimdOp::I64x2LoadU32x2):
             CHECK_NEXT(emitLoadExtend(Scalar::Uint32));
+          case uint32_t(SimdOp::V128Load32ZeroExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(emitLoadZero(Scalar::Float32));
+          case uint32_t(SimdOp::V128Load64ZeroExperimental):
+            CHECK_EXPERIMENTAL_SIMD();
+            CHECK_NEXT(emitLoadZero(Scalar::Float64));
           case uint32_t(SimdOp::V128Store):
             CHECK_NEXT(emitStore(ValType::V128, Scalar::Simd128));
           default:
@@ -14954,6 +15073,7 @@ bool BaseCompiler::emitBody() {
 #undef NEXT
 #undef CHECK_NEXT
 #undef CHECK_POINTER_COUNT
+#undef CHECK_EXPERIMENTAL_SIMD
 #undef dispatchBinary
 #undef dispatchUnary
 #undef dispatchComparison
