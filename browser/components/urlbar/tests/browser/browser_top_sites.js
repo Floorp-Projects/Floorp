@@ -134,6 +134,9 @@ add_task(async function topSitesShown() {
 
 // This subtest can be removed when update2 is on by default.
 add_task(async function selectSearchTopSite_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
   await updateTopSites(
     sites => sites && sites[0] && sites[0].searchTopSite,
     true
@@ -173,6 +176,7 @@ add_task(async function selectSearchTopSite_legacy() {
   await UrlbarTestUtils.promisePopupClose(window, () => {
     gURLBar.blur();
   });
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function selectSearchTopSite() {
@@ -218,6 +222,7 @@ add_task(async function selectSearchTopSite() {
   await UrlbarTestUtils.promisePopupClose(window, () => {
     gURLBar.blur();
   });
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function topSitesBookmarksAndTabs() {

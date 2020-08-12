@@ -109,8 +109,15 @@ const tests = [
     };
   },
 
+  // TODO: (Bug 1654680) Rewrite this subtest with update2 enabled.
   async function(win) {
     info("Type something, click one-off.");
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update2", false],
+        ["browser.urlbar.update2.oneOffsRefresh", false],
+      ],
+    });
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -121,6 +128,7 @@ const tests = [
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
     UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton.click();
     await promise;
+    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -136,8 +144,15 @@ const tests = [
     };
   },
 
+  // TODO: (Bug 1654680) Rewrite this subtest with update2 enabled.
   async function(win) {
     info("Type something, select one-off, Enter.");
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update2", false],
+        ["browser.urlbar.update2.oneOffsRefresh", false],
+      ],
+    });
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -149,6 +164,7 @@ const tests = [
     Assert.ok(UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
+    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -446,8 +462,15 @@ const tests = [
     };
   },
 
+  // TODO: (Bug 1654680) Rewrite this subtest with update2 enabled.
   async function(win) {
     info("Type @, Enter on a keywordoffer");
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update2", false],
+        ["browser.urlbar.update2.oneOffsRefresh", false],
+      ],
+    });
     win.gURLBar.select();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
@@ -459,6 +482,7 @@ const tests = [
     }
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await UrlbarTestUtils.promiseSearchComplete(win);
+    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",

@@ -77,3 +77,20 @@ async function updateTopSites(condition, searchShortcuts = false) {
     return condition(sites);
   }, "Waiting for top sites to be updated");
 }
+
+/**
+ * Simple convenience method to append a space to a token alias if update2 is
+ * off. When the update2 pref is removed, this method can be removed and its
+ * callers can simply use the passed string
+ * (e.g. change foo(getAutofillSearchString("@test")) to foo("@test")).
+ * @param {string} val
+ * @returns {string}
+ *   `val` with a space appended if update2 is disabled. Returns `val` if it
+ *    does not start with "@".
+ */
+function getAutofillSearchString(val) {
+  if (!val.startsWith("@")) {
+    return val;
+  }
+  return val + (UrlbarPrefs.get("update2") ? "" : " ");
+}

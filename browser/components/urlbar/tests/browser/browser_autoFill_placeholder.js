@@ -62,14 +62,17 @@ add_task(async function tokenAlias() {
   });
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(details.autofill);
-  Assert.equal(gURLBar.value, "@__example ");
+  Assert.equal(gURLBar.value, getAutofillSearchString("@__example"));
   Assert.equal(gURLBar.selectionStart, "@__ex".length);
-  Assert.equal(gURLBar.selectionEnd, "@__example ".length);
+  Assert.equal(
+    gURLBar.selectionEnd,
+    getAutofillSearchString("@__example").length
+  );
 
-  await searchAndCheck("@__exa", "@__example ");
-  await searchAndCheck("@__EXAM", "@__EXAMple ");
-  await searchAndCheck("@__eXaMp", "@__eXaMple ");
-  await searchAndCheck("@__exampl", "@__example ");
+  await searchAndCheck("@__exa", getAutofillSearchString("@__example"));
+  await searchAndCheck("@__EXAM", getAutofillSearchString("@__EXAMple"));
+  await searchAndCheck("@__eXaMp", getAutofillSearchString("@__eXaMple"));
+  await searchAndCheck("@__exampl", getAutofillSearchString("@__example"));
 
   await cleanUp();
 });

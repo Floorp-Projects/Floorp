@@ -222,6 +222,9 @@ add_task(async function nonTokenAlias() {
 // view should fill it in the urlbar input.
 // This subtest can be removed when update2 is on by default.
 add_task(async function clickAndFillAlias_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
   // Do a search for "@" to show all the @ aliases.
   gURLBar.search("@");
   await UrlbarTestUtils.promiseSearchComplete(window);
@@ -266,6 +269,7 @@ add_task(async function clickAndFillAlias_legacy() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
+  await SpecialPowers.popPrefEnv();
 });
 
 // Clicking on an @ alias offer (an @ alias with an empty search string) in the
@@ -312,6 +316,9 @@ add_task(async function clickAndFillAlias() {
 // in the view should fill it in the urlbar input.
 // This subtest can be removed when update2 is on by default.
 add_task(async function enterAndFillAlias_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
   // Do a search for "@" to show all the @ aliases.
   gURLBar.search("@");
   await UrlbarTestUtils.promiseSearchComplete(window);
@@ -355,6 +362,7 @@ add_task(async function enterAndFillAlias_legacy() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
+  await SpecialPowers.popPrefEnv();
 });
 
 // Pressing enter on an @ alias offer (an @ alias with an empty search string)
@@ -401,6 +409,9 @@ add_task(async function enterAndFillAlias() {
 // with a trailing space and move the caret at the end.
 // This subtest can be removed when update2 is on by default.
 add_task(async function enterAutofillsAlias_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
   let expectedString = `${ALIAS} `;
   for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -425,6 +436,7 @@ add_task(async function enterAutofillsAlias_legacy() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
+  await SpecialPowers.popPrefEnv();
 });
 
 // Pressing enter on an @ alias autofill should fill it in the urlbar input

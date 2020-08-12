@@ -587,7 +587,11 @@ function makeSearchResult(
 ) {
   if (!keywordOffer) {
     keywordOffer = UrlbarUtils.KEYWORD_OFFER.NONE;
-    if (alias && !query.trim() && alias.startsWith("@")) {
+    if (
+      alias &&
+      !query.trim() &&
+      (UrlbarPrefs.get("update2") || alias.startsWith("@"))
+    ) {
       keywordOffer = heuristic
         ? UrlbarUtils.KEYWORD_OFFER.HIDE
         : UrlbarUtils.KEYWORD_OFFER.SHOW;

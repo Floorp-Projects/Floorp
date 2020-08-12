@@ -36,7 +36,8 @@ add_task(async function basic() {
     0,
     Math.round(TEST_ENGINE_ALIAS.length / 2)
   );
-  let autofilledValue = TEST_ENGINE_ALIAS + " ";
+  let autofilledValue =
+    TEST_ENGINE_ALIAS + (UrlbarPrefs.get("update2") ? "" : " ");
   let context = createContext(search, { isPrivate: false });
   await check_results({
     context,
@@ -71,7 +72,7 @@ add_task(async function preserveCase() {
   );
   let alias = search + TEST_ENGINE_ALIAS.substr(search.length);
 
-  let autofilledValue = alias + " ";
+  let autofilledValue = alias + (UrlbarPrefs.get("update2") ? "" : " ");
   let context = createContext(search, { isPrivate: false });
   await check_results({
     context,
