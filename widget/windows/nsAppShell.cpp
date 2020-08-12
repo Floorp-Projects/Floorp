@@ -45,13 +45,13 @@ static mozilla::LazyLogModule gWinWakeLockLog("WinWakeLock");
 // A wake lock listener that disables screen saver when requested by
 // Gecko. For example when we're playing video in a foreground tab we
 // don't want the screen saver to turn on.
-class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
+class LegacyWinWakeLockListener final : public nsIDOMMozWakeLockListener {
  public:
   NS_DECL_ISUPPORTS
-  WinWakeLockListener() { MOZ_ASSERT(XRE_IsParentProcess()); }
+  LegacyWinWakeLockListener() { MOZ_ASSERT(XRE_IsParentProcess()); }
 
  private:
-  ~WinWakeLockListener() {}
+  ~LegacyWinWakeLockListener() {}
 
   NS_IMETHOD Callback(const nsAString& aTopic,
                       const nsAString& aState) override {
@@ -91,14 +91,14 @@ class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
   bool mRequireForNonDisplayLock = false;
 };
 
-NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener)
-StaticRefPtr<WinWakeLockListener> sWakeLockListener;
+NS_IMPL_ISUPPORTS(LegacyWinWakeLockListener, nsIDOMMozWakeLockListener)
+StaticRefPtr<nsIDOMMozWakeLockListener> sWakeLockListener;
 
 static void AddScreenWakeLockListener() {
   nsCOMPtr<nsIPowerManagerService> sPowerManagerService =
       do_GetService(POWERMANAGERSERVICE_CONTRACTID);
   if (sPowerManagerService) {
-    sWakeLockListener = new WinWakeLockListener();
+    sWakeLockListener = new LegacyWinWakeLockListener();
     sPowerManagerService->AddWakeLockListener(sWakeLockListener);
   } else {
     NS_WARNING(
