@@ -111,9 +111,7 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
     return TextureType::MacIOSurface;
   }
   if (kIsWayland) {
-    if (gfxPlatform::GetPlatform()->IsWaylandDisplay()) {
-      return TextureType::DMABUF;
-    }
+    return TextureType::DMABUF;
   }
   if (kIsX11) {
     return TextureType::X11;
