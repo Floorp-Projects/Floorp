@@ -20,7 +20,7 @@ class SVGSVGElement;
 
 class DOMSVGAngle final : public nsWrapperCache {
  public:
-  typedef enum { BaseValue, AnimValue, CreatedValue } AngleType;
+  enum class AngleType : int8_t { BaseValue, AnimValue, CreatedValue };
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAngle)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAngle)
