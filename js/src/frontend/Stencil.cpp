@@ -64,14 +64,6 @@ AbstractScopePtr ScopeStencil::enclosing(CompilationInfo& compilationInfo) {
   return AbstractScopePtr(compilationInfo.enclosingScope);
 }
 
-Scope* ScopeStencil::getEnclosingScope(CompilationInfo& compilationInfo) {
-  return enclosing(compilationInfo).existingScope();
-}
-
-JSFunction* ScopeStencil::function(frontend::CompilationInfo& compilationInfo) {
-  return compilationInfo.functions[*functionIndex_];
-}
-
 Scope* ScopeStencil::createScope(JSContext* cx,
                                  CompilationInfo& compilationInfo) {
   Scope* scope = nullptr;
