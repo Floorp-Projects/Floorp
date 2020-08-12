@@ -2617,6 +2617,17 @@ void BrowsingContext::SessionHistoryChanged(int32_t aIndexDelta,
                                                          changeID);
 }
 
+bool BrowsingContext::IsPopupAllowed() {
+  for (auto* context = GetCurrentWindowContext(); context;
+       context = context->GetParentWindowContext()) {
+    if (context->CanShowPopup()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace dom
 
 namespace ipc {
