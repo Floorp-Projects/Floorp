@@ -2250,7 +2250,8 @@ SI vec4 fetchOffsetsRGBA8(S sampler, I32 offset) {
                        sampler->buf[offset.z], sampler->buf[offset.w]);
 }
 
-vec4 texelFetchRGBA8(sampler2D sampler, ivec2 P) {
+template <typename S>
+vec4 texelFetchRGBA8(S sampler, ivec2 P) {
   I32 offset = P.x + P.y * sampler->stride;
   return fetchOffsetsRGBA8(sampler, offset);
 }
@@ -2269,7 +2270,8 @@ SI Float fetchOffsetsR8(S sampler, I32 offset) {
   return cast(i) * (1.0f / 255.0f);
 }
 
-vec4 texelFetchR8(sampler2D sampler, ivec2 P) {
+template <typename S>
+vec4 texelFetchR8(S sampler, ivec2 P) {
   I32 offset = P.x + P.y * sampler->stride;
   return vec4(fetchOffsetsR8(sampler, offset), 0.0f, 0.0f, 1.0f);
 }
@@ -2289,7 +2291,8 @@ SI vec4 fetchOffsetsRG8(S sampler, I32 offset) {
   return vec4(r, g, 0.0f, 1.0f);
 }
 
-vec4 texelFetchRG8(sampler2D sampler, ivec2 P) {
+template <typename S>
+vec4 texelFetchRG8(S sampler, ivec2 P) {
   I32 offset = P.x + P.y * sampler->stride;
   return fetchOffsetsRG8(sampler, offset);
 }
@@ -2408,9 +2411,17 @@ vec4_scalar texelFetch(sampler2DRG8 sampler, ivec2_scalar P, int lod) {
 
 vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
   P = clamp2D(P, sampler);
-  assert(sampler->format == TextureFormat::RGBA8);
-  I32 offset = P.x + P.y * sampler->stride;
-  return fetchOffsetsRGBA8(sampler, offset);
+  switch (sampler->format) {
+    case TextureFormat::RGBA8:
+      return texelFetchRGBA8(sampler, P);
+    case TextureFormat::R8:
+      return texelFetchR8(sampler, P);
+    case TextureFormat::RG8:
+      return texelFetchRG8(sampler, P);
+    default:
+      assert(false);
+      return vec4();
+  }
 }
 
 SI vec4 texelFetch(sampler2DArray sampler, ivec3 P, int lod) {
@@ -2535,6 +2546,11 @@ SI T linearQuantize(T P, float scale, S sampler) {
   return linearQuantize(P, scale);
 }
 
+template <typename T>
+SI T linearQuantize(T P, float scale, sampler2DRect sampler) {
+  return linearQuantize(P, scale);
+}
+
 template <typename S>
 vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA8);
@@ -2551,10 +2567,11 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
                                _mm_set1_epi32(sampler->width - 1));
   // Clamp coords to valid range to prevent sampling outside texture.
   __m128i clampyx = _mm_min_epi16(_mm_max_epi16(yx, _mm_setzero_si128()), hw);
-  // Multiply clamped Y by stride and add X offset.
+  // Multiply clamped Y by stride and add X offset without overflowing 2^15
+  // stride and accidentally yielding signed result.
   __m128i row0 = _mm_madd_epi16(
-      _mm_unpacklo_epi16(clampyx, _mm_setzero_si128()),
-      _mm_set1_epi16(sampler->stride));
+      _mm_unpacklo_epi16(clampyx, clampyx),
+      _mm_set1_epi32((sampler->stride - 1) | 0x10000));
   row0 = _mm_add_epi32(row0, _mm_unpackhi_epi16(clampyx, _mm_setzero_si128()));
   // Add in layer offset if available
   row0 = _mm_add_epi32(row0, _mm_set1_epi32(zoffset));
@@ -2750,10 +2767,11 @@ vec4 textureLinearR8(S sampler, vec2 P, int32_t zoffset = 0) {
                                _mm_set1_epi32(sampler->width - 1));
   // Clamp coords to valid range to prevent sampling outside texture.
   __m128i clampyx = _mm_min_epi16(_mm_max_epi16(yx, _mm_setzero_si128()), hw);
-  // Multiply clamped Y by stride and add X offset.
+  // Multiply clamped Y by stride and add X offset without overflowing 2^15
+  // stride and accidentally yielding signed result.
   __m128i row0 = _mm_madd_epi16(
-      _mm_unpacklo_epi16(clampyx, _mm_setzero_si128()),
-      _mm_set1_epi16(sampler->stride));
+      _mm_unpacklo_epi16(clampyx, clampyx),
+      _mm_set1_epi32((sampler->stride - 1) | 0x10000));
   row0 = _mm_add_epi32(row0, _mm_unpackhi_epi16(clampyx, _mm_setzero_si128()));
   // Add in layer offset if available
   row0 = _mm_add_epi32(row0, _mm_set1_epi32(zoffset));
@@ -2933,10 +2951,18 @@ SI vec4 texture(sampler2D sampler, vec2 P) {
 }
 
 vec4 texture(sampler2DRect sampler, vec2 P) {
-  assert(sampler->format == TextureFormat::RGBA8);
   if (sampler->filter == TextureFilter::LINEAR) {
-    return textureLinearRGBA8(sampler,
-                              P * vec2_scalar{1.0f / sampler->width, 1.0f / sampler->height});
+    switch (sampler->format) {
+      case TextureFormat::RGBA8:
+        return textureLinearRGBA8(sampler, P);
+      case TextureFormat::R8:
+        return textureLinearR8(sampler, P);
+      case TextureFormat::RG8:
+        return textureLinearRG8(sampler, P);
+      default:
+        assert(false);
+        return vec4();
+    }
   } else {
     ivec2 coord(roundzero(P.x, 1.0f), roundzero(P.y, 1.0f));
     return texelFetch(sampler, coord);
