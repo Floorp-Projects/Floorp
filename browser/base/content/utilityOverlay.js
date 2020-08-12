@@ -732,6 +732,11 @@ function checkForMiddleClick(node, event) {
     );
     node.dispatchEvent(cmdEvent);
 
+    // Stop the propagation of the click event, to prevent the event from being
+    // handled more than once.
+    // E.g. see https://bugzilla.mozilla.org/show_bug.cgi?id=1657992#c4
+    event.stopPropagation();
+
     // If the middle-click was on part of a menu, close the menu.
     // (Menus close automatically with left-click but not with middle-click.)
     closeMenus(event.target);
