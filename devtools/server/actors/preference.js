@@ -28,8 +28,6 @@ function ensurePrefType(name, expectedType) {
  * individual tab.
  */
 var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
-  typeName: "preference",
-
   getBoolPref: function(name) {
     ensurePrefType(name, PREF_BOOL);
     return Services.prefs.getBoolPref(name);

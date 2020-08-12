@@ -14,7 +14,7 @@ describe("promises utils function", () => {
         enumerable: true,
         configurable: false,
         value: {
-          actor: "server2.conn2.child1/pausedobj36",
+          actor: "server2.conn2.child1/obj36",
           promiseState: {
             state: "rejected",
             reason: {
@@ -35,7 +35,7 @@ describe("promises utils function", () => {
       path: "root",
       contents: {
         value: {
-          actor: "server2.conn2.child1/pausedobj36",
+          actor: "server2.conn2.child1/obj36",
           promiseState: {
             state: "rejected",
             reason: {

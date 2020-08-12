@@ -36,8 +36,6 @@ function PausedDebuggerOverlay(highlighterEnv, options = {}) {
 }
 
 PausedDebuggerOverlay.prototype = {
-  typeName: "PausedDebuggerOverlay",
-
   ID_CLASS_PREFIX: "paused-dbg-",
 
   _buildMarkup() {

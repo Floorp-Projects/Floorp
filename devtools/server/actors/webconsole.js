@@ -376,8 +376,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   _webConsoleCommandsCache: null,
 
-  typeName: "console",
-
   grip: function() {
     return { actor: this.actorID };
   },

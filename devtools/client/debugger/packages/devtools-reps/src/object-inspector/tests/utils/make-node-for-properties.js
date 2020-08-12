@@ -31,7 +31,7 @@ const objProperties = {
   },
   prototype: {
     type: "object",
-    actor: "server2.conn1.child1/pausedobj618",
+    actor: "server2.conn1.child1/obj618",
     class: "bla",
   },
 };

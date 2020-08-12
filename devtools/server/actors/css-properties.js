@@ -18,8 +18,6 @@ loader.lazyRequireGetter(
 );
 
 exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
-  typeName: "cssProperties",
-
   initialize(conn) {
     Actor.prototype.initialize.call(this, conn);
   },
