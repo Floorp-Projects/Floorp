@@ -614,11 +614,9 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
       movl(srcAddr, out.gpr());
       break;
     case Scalar::Float32:
-      // vmovss does the right thing also for access.isZeroExtendSimdLoad()
       vmovss(srcAddr, out.fpu());
       break;
     case Scalar::Float64:
-      // vmovsd does the right thing also for access.isZeroExtendSimdLoad()
       vmovsd(srcAddr, out.fpu());
       break;
     case Scalar::Simd128:

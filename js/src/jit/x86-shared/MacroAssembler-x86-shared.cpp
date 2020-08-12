@@ -1565,7 +1565,7 @@ void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
     // Round toward -Infinity.
     {
       ScratchFloat32Scope scratch(*this);
-      vroundss(X86Encoding::RoundDown, src, scratch);
+      vroundss(X86Encoding::RoundDown, src, scratch, scratch);
       truncateFloat32ToInt32(scratch, dest, fail);
     }
   } else {
@@ -1620,7 +1620,7 @@ void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
     // Round toward -Infinity.
     {
       ScratchDoubleScope scratch(*this);
-      vroundsd(X86Encoding::RoundDown, src, scratch);
+      vroundsd(X86Encoding::RoundDown, src, scratch, scratch);
       truncateDoubleToInt32(scratch, dest, fail);
     }
   } else {
@@ -1684,7 +1684,7 @@ void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
     // x <= -1 or x > -0
     bind(&lessThanOrEqualMinusOne);
     // Round toward +Infinity.
-    vroundss(X86Encoding::RoundUp, src, scratch);
+    vroundss(X86Encoding::RoundUp, src, scratch, scratch);
     truncateFloat32ToInt32(scratch, dest, fail);
     return;
   }
@@ -1729,7 +1729,7 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
     // x <= -1 or x > -0
     bind(&lessThanOrEqualMinusOne);
     // Round toward +Infinity.
-    vroundsd(X86Encoding::RoundUp, src, scratch);
+    vroundsd(X86Encoding::RoundUp, src, scratch, scratch);
     truncateDoubleToInt32(scratch, dest, fail);
     return;
   }
@@ -1848,7 +1848,7 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
       // Add 0.5 and round toward -Infinity. The result is stored in the temp
       // register (currently contains 0.5).
       addFloat32(src, temp);
-      vroundss(X86Encoding::RoundDown, temp, scratch);
+      vroundss(X86Encoding::RoundDown, temp, scratch, scratch);
 
       // Truncate.
       truncateFloat32ToInt32(scratch, dest, fail);
@@ -1934,7 +1934,7 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
       // Add 0.5 and round toward -Infinity. The result is stored in the temp
       // register (currently contains 0.5).
       addDouble(src, temp);
-      vroundsd(X86Encoding::RoundDown, temp, scratch);
+      vroundsd(X86Encoding::RoundDown, temp, scratch, scratch);
 
       // Truncate.
       truncateDoubleToInt32(scratch, dest, fail);
