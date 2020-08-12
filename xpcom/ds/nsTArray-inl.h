@@ -598,6 +598,10 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveConstructNonAutoArray(
   // empty, so don't use SwapArrayElements which doesn't know either of these
   // facts and is very complex.
 
+  if (aOther.IsEmpty()) {
+    return;
+  }
+
   // aOther might be an (Copyable)AutoTArray though, and it might use its inline
   // buffer.
   const bool otherUsesAutoArrayBuffer = aOther.UsesAutoArrayBuffer();
@@ -611,6 +615,9 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveConstructNonAutoArray(
 
   const bool otherIsAuto = otherUsesAutoArrayBuffer || aOther.IsAutoArray();
   mHdr = aOther.mHdr;
+  // We might write to mHdr, so ensure it's not the static empty header. aOther
+  // shouldn't have been empty if we get here anyway.
+  MOZ_ASSERT(EmptyHdr() != mHdr);
 
   if (otherIsAuto) {
     mHdr->mIsAutoArray = false;
