@@ -1848,6 +1848,7 @@ CGFloat nsCocoaWindow::BackingScaleFactor() {
 }
 
 void nsCocoaWindow::BackingScaleFactorChanged() {
+  CGFloat oldScale = mBackingScaleFactor;
   CGFloat newScale = GetBackingScaleFactor(mWindow);
 
   // ignore notification if it hasn't really changed (or maybe we have
@@ -1881,6 +1882,23 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
     presShell->BackingScaleFactorChanged();
   }
   mWidgetListener->UIResolutionChanged();
+
+  if ((mWindowType == eWindowType_popup) && (mBackingScaleFactor == 2.0)) {
+    // Recalculate the size and y-origin for the popup now that the backing
+    // scale factor has changed. After creating the popup window NSWindow,
+    // setting the frame when the menu is moved into the correct location
+    // causes the backing scale factor to change if the window is not on the
+    // menu bar display. Update the dimensions and y-origin here so that the
+    // frame is correct for the following ::Show(). Only do this when the
+    // scale factor changes from 1.0 to 2.0. When the scale factor changes
+    // from 2.0 to 1.0, the view will resize the widget before it is shown.
+    NSRect frame = [mWindow frame];
+    CGFloat previousYOrigin = frame.origin.y + frame.size.height;
+    frame.size.width = mBounds.Width() * (oldScale / newScale);
+    frame.size.height = mBounds.Height() * (oldScale / newScale);
+    frame.origin.y = previousYOrigin - frame.size.height;
+    [mWindow setFrame:frame display:NO animate:NO];
+  }
 }
 
 int32_t nsCocoaWindow::RoundsWidgetCoordinatesTo() {
