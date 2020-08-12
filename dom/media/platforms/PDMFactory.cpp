@@ -361,6 +361,10 @@ void PDMFactory::CreatePDMs() {
         StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure();
   }
 #endif
+#ifdef MOZ_APPLEMEDIA
+  m = new AppleDecoderModule();
+  StartupPDM(m);
+#endif
 #ifdef MOZ_OMX
   if (StaticPrefs::media_omx_enabled()) {
     m = OmxDecoderModule::Create();
@@ -380,10 +384,6 @@ void PDMFactory::CreatePDMs() {
   } else {
     mFFmpegFailedToLoad = false;
   }
-#endif
-#ifdef MOZ_APPLEMEDIA
-  m = new AppleDecoderModule();
-  StartupPDM(m);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   if (StaticPrefs::media_android_media_codec_enabled()) {
