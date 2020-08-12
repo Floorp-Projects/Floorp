@@ -448,9 +448,10 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
       nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
       nsIDNSService::GetFlagsFromTRRMode(nsIRequest::TRR_DISABLED_MODE);
 
-  if (NS_FAILED(dns->AsyncResolveNative(aHostName, flags, helper,
-                                        GetCurrentEventTarget(), attrs,
-                                        getter_AddRefs(helper->mRequest)))) {
+  if (NS_FAILED(dns->AsyncResolveNative(
+          aHostName, nsIDNSService::RESOLVE_TYPE_DEFAULT, flags, nullptr,
+          helper, GetCurrentEventTarget(), attrs,
+          getter_AddRefs(helper->mRequest)))) {
     return false;
   }
 
