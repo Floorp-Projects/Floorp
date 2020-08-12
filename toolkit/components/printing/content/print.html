@@ -46,8 +46,12 @@
         <div class="row cols-2">
           <span class="col"><input type="radio" name="scale-choice" id="percent-scale-choice"></span>
           <span class="col">
-            <label for="percent-scale-choice" data-l10n-id="printui-scale-pcent"></label>
-            <input id="percent-scale" type="number" min="10" max="200" step="1" placeholder="100%" size="6" disabled required>
+            <label id="percent-scale-label" for="percent-scale-choice" data-l10n-id="printui-scale-pcent"></label>
+            <input
+              id="percent-scale"
+              type="number" min="10" max="200" step="1" size="6"
+              aria-labelledby="percent-scale-label"
+              autocomplete="off" disabled required>
           </span>
         </div>
       </div>
@@ -67,12 +71,12 @@
         <section id="settings">
           <section id="copies" class="section-block row">
             <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <input id="copies-count" is="copy-count-input" min="1" class="copy-count-input">
+            <input id="copies-count" is="copy-count-input" min="1" class="copy-count-input" autocomplete="off">
           </section>
 
           <section id="orientation" class="section-block row">
-            <label class="block-label" for="orientation-input" data-l10n-id="printui-orientation"></label>
-            <div id="orientation-input" is="orientation-input" role="radiogroup" class="toggle-group"></div>
+            <label id="orientation-label" class="block-label" data-l10n-id="printui-orientation"></label>
+            <div is="orientation-input" class="toggle-group" role="radiogroup" aria-labelledby="orientation-label"></div>
           </section>
 
           <section id="pages" class="section-block row" hidden>
@@ -85,8 +89,8 @@
                      data-open-l10n-id="printui-less-settings"
                      data-closed-l10n-id="printui-more-settings"></summary>
             <section id="scale" class="section-block row">
-              <label for="scale-control" class="block-label" data-l10n-id="printui-scale"></label>
-              <div is="scale-input" id="scale-control" role="radiogroup"></div>
+              <label id="scale-label" class="block-label" data-l10n-id="printui-scale"></label>
+              <scale-input></scale-input>
             </section>
 
             <section id="more-settings-options" class="section-block row">
