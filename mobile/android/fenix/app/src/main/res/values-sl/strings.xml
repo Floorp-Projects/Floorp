@@ -25,6 +25,8 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">Odprtih zavihkov: %1$s. Tapnite za preklop zavihkov.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d izbranih</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Dodaj novo zbirko</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->

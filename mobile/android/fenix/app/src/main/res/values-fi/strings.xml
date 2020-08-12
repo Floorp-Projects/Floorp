@@ -40,6 +40,8 @@
     <string name="tab_tray_collection_button_multiselect_content_description">Tallenna valitut välilehdet kokoelmaan</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">Valittu %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Kumottu valinta %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Poistuttiin monivalintatilasta</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->

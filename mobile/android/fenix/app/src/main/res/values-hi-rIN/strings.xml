@@ -37,8 +37,17 @@
     <string name="tab_tray_close_multiselect_content_description">मल्टीसेलेक्ट मोड से बाहर निकलें</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">चुने गए टैब को संग्रह में सहेजें</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s चयनित</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s अचयनित</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">मल्टीसेलेक्ट मोड से बाहर निकल चुके</string>
+
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">मल्टीसेलेक्ट मोड में दाखिल, संग्रह में सहेजने के लिए टैबों को चुनें</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">चयनित</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s को Mozilla द्वारा निर्मित किया गया है।</string>
@@ -165,8 +174,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">स्कैन करें</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">खोज इंजन</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">खोज इंजन</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">खोज इंजन सेटिंग्स</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -597,6 +606,8 @@
     <string name="bookmark_select_folder">फ़ोल्डर चुनें</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">क्या आप वाकई इस फ़ोल्डर को हटाना चाहते हैं?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s चयनित वस्तुओं को मिटा देगा।</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s मिटाया गया</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -655,6 +666,8 @@
 
     <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">बुकमार्क मिटा दिए गए</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">चयनित फोल्डर मिटाए जा रहे हैं</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">पूर्ववत करें</string>
 
@@ -860,6 +873,8 @@
     <string name="tab_collection_dialog_message">क्या आप वाकई %1$s को हटाना चाहते हैं?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_message">इस टैब को हटाने से संपूर्ण संग्रह मिट जाएगा। आप किसी भी समय नए संग्रह बना सकते हैं।</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s को मिटाएं?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">मिटाएं</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1269,6 +1284,8 @@
     <string name="preferences_passwords_exceptions_description_empty">लॉगिन और पासवर्ड जो सहेजे नहीं गए हैं उन्हें यहां दिखाये जायेंगे।</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">इन साइटों के लिए लॉगिन और पासवर्ड सहेजे नहीं जाएंगे।</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">सभी अपवादों को मिटाएं</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">लॉगिन खोजें</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1472,9 +1489,7 @@
     <string name="saved_login_duplicate">एक लॉगिन इस उपयोगकर्ता नाम के साथ मौजूद है</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Firefox खाते से कनेक्ट करें।</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">अन्य डिवाइस कनेक्ट करें</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">कृपया पुनः प्रमाणित करें।</string>
@@ -1495,13 +1510,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ठीक है, समझ गए</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">शॉर्टकट</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">के साथ खोजें</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">इस बार, इसके साथ खोजें:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">खोज शॉर्टकट्स दिखाएं</string>
     </resources>

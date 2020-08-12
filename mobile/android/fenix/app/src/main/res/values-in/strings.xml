@@ -27,6 +27,29 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s tab terbuka. Ketuk untuk beralih tab.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d terpilih</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Tambah koleksi baru</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Nama</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Pilih koleksi</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Keluar mode seleksi ganda</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Simpan tab terpilih ke koleksi</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s dipilih</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s tidak dipilih</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Keluar dari mode seleksi ganda</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Memasuki mode seleksi ganda, pilih tab untuk menyimpannya ke koleksi</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Terpilih</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s diproduksi oleh Mozilla.</string>
 
@@ -152,15 +175,13 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Pindai</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Pintasan</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Mesin pencari</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Setelan mesin pencari</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Cari dengan</string>
 
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Kali ini, cari lewat:</string>
+    <string name="search_engines_search_with">Saat ini, cari dengan:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Isi tautan dari papan klip</string>
 
@@ -270,8 +291,8 @@
     <string name="developer_tools_category">Perangkat pengembang</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Pengawakutuan jarak jauh melalui USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Tampilkan pintasan pencarian</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Tampilkan mesin pencari</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Tampilkan saran pencarian</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -525,6 +546,9 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Mode Privat)</string>
 
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Simpan</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Hapus riwayat</string>
@@ -592,6 +616,8 @@
     <string name="bookmark_select_folder">Pilih folder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Yakin akan menghapus folder ini?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s akan menghapus item terpilih.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s terhapus</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -646,8 +672,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s terhapus</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Markah dihapus</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Menghapus folder terpilih</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">URUNGKAN</string>
 
@@ -743,6 +771,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d tab dipilih</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Tab disimpan!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Koleksi disimpan!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Tab disimpan!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -849,6 +879,10 @@
     <string name="qr_scanner_dialog_negative">TOLAK</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Yakin ingin menghapus %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Menghapus tab ini akan menghapus keseluruhan koleksi. Kamu dapat membuat koleksi baru kapan saja.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Hapus %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Hapus</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1249,6 +1283,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Info masuk dan kata sandi yang tidak disimpan akan ditampilkan di sini.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Info masuk dan kata sandi tidak akan disimpan untuk situs-situs ini.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Hapus semua pengecualian</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Cari log masuk</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1287,6 +1323,8 @@
     <string name="saved_login_copy_username">Salin nama pengguna</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Salin situs</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Buka situs di peramban</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Tampilkan sandi</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1437,9 +1475,7 @@
     <string name="saved_login_duplicate">Sebuah info masuk dengan nama pengguna tersebut sudah ada</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Hubungkan dengan Firefox Account.</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Hubungkan perangkat lain</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Harap autentikasi ulang.</string>
