@@ -8,8 +8,7 @@
 }
 
 .outline-filter-input {
-  padding-top: 2px;
-  padding-bottom: 2px;
+  height: 24px;
   width: 100%;
   background-color: var(--theme-sidebar-background);
   color: var(--theme-body-color);
@@ -22,8 +21,8 @@
 }
 
 .outline-filter-input::placeholder {
-  font-style: italic;
-  color: var(--theme-comment);
+  color: var(--theme-text-color-alt);
+  opacity: 1;
 }
 
 .theme-dark .outline-filter-input.focused {

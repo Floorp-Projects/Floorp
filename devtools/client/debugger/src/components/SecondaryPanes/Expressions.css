@@ -12,9 +12,7 @@
   font-size: inherit;
   border: 1px;
   background-color: var(--theme-sidebar-background);
-  line-height: 16px;
-  padding-top: 1px;
-  padding-bottom: 1px;
+  height: 24px;
   padding-inline-start: 19px;
   padding-inline-end: 12px;
   color: var(--theme-body-color);
@@ -37,8 +35,8 @@
 }
 
 .input-expression::placeholder {
-  font-style: italic;
-  color: var(--theme-comment);
+  color: var(--theme-text-color-alt);
+  opacity: 1;
 }
 
 .input-expression:focus {
@@ -48,7 +46,7 @@
 .expressions-list {
   /* TODO: add normalize */
   margin: 0;
-  padding: 4px 0px;
+  padding: 0px 0px;
   overflow-x: auto;
 }
 

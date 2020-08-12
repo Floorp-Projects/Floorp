@@ -28,6 +28,8 @@
   width: 100%;
   padding-inline-start: 20px;
   padding-inline-end: 12px;
+  /* Stop select height from increasing as input height increases */
+  align-items: center;
 }
 
 .xhr-checkbox {
@@ -37,17 +39,16 @@
 
 .xhr-input-url {
   border: 1px;
-  padding: 3px 0px;
   flex-grow: 1;
   background-color: var(--theme-sidebar-background);
   font-size: inherit;
-  line-height: 14px;
+  height: 24px;
   color: var(--theme-body-color);
 }
 
 .xhr-input-url::placeholder {
-  font-style: italic;
-  color: var(--theme-comment);
+  color: var(--theme-text-color-alt);
+  opacity: 1;
 }
 
 .xhr-input-url:focus {
@@ -82,6 +83,7 @@
 
 .xhr-input-method {
   display: none;
+  margin-top: 2px;
 }
 
 .xhr-input-container.focused .xhr-input-method {
