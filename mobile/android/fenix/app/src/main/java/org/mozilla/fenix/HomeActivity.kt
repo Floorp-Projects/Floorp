@@ -252,21 +252,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         lifecycleScope.launch(IO) {
             if (
                 settings().isDefaultBrowser() &&
-                settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()
+                settings().wasDefaultBrowserOnLastResume != settings().isDefaultBrowser()
             ) {
                 metrics.track(Event.ChangedToDefaultBrowser)
             }
+
+            settings().wasDefaultBrowserOnLastResume = settings().isDefaultBrowser()
         }
     }
 
     final override fun onPause() {
         if (settings().lastKnownMode.isPrivate) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-
-        if (settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()
-        ) {
-            settings().wasDefaultBrowserOnLastPause = settings().isDefaultBrowser()
         }
 
         super.onPause()

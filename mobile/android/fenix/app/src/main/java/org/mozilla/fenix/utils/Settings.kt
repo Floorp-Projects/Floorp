@@ -340,7 +340,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Caches the last known "is default browser" state when the app was paused.
      * For an up to do date state use `isDefaultBrowser` instead.
      */
-    var wasDefaultBrowserOnLastPause by booleanPreference(
+    var wasDefaultBrowserOnLastResume by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_default_browser),
         default = isDefaultBrowser()
     )
