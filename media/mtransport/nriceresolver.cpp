@@ -171,10 +171,9 @@ int NrIceResolver::resolve(nr_resolver_resource* resource,
       ABORT(R_BAD_ARGS);
   }
 
-  if (NS_FAILED(dns_->AsyncResolveNative(
-          nsAutoCString(resource->domain_name),
-          nsIDNSService::RESOLVE_TYPE_DEFAULT, resolve_flags, nullptr, pr,
-          sts_thread_, attrs, getter_AddRefs(pr->request_)))) {
+  if (NS_FAILED(dns_->AsyncResolveNative(nsAutoCString(resource->domain_name),
+                                         resolve_flags, pr, sts_thread_, attrs,
+                                         getter_AddRefs(pr->request_)))) {
     MOZ_MTLOG(ML_ERROR, "AsyncResolve failed.");
     ABORT(R_NOT_FOUND);
   }
@@ -192,7 +191,7 @@ abort:
 }
 
 nsresult NrIceResolver::PendingResolution::OnLookupComplete(
-    nsICancelable* request, nsIDNSRecord* aRecord, nsresult status) {
+    nsICancelable* request, nsIDNSRecord* record, nsresult status) {
   ASSERT_ON_THREAD(thread_);
   // First check if we've been canceled. This is single-threaded on the STS
   // thread, but cancel() cannot guarantee this event isn't on the queue.
@@ -202,8 +201,7 @@ nsresult NrIceResolver::PendingResolution::OnLookupComplete(
     // TODO(jib@mozilla.com): Revisit when we do TURN.
     if (NS_SUCCEEDED(status)) {
       net::NetAddr na;
-      nsCOMPtr<nsIDNSAddrRecord> record = do_QueryInterface(aRecord);
-      if (record && NS_SUCCEEDED(record->GetNextAddr(port_, &na))) {
+      if (NS_SUCCEEDED(record->GetNextAddr(port_, &na))) {
         MOZ_ALWAYS_TRUE(nr_netaddr_to_transport_addr(&na, &ta, transport_) ==
                         0);
         cb_addr = &ta;

@@ -19,7 +19,6 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIDNSListener.h"
-#include "nsIDNSRecord.h"
 #include "nsIClassInfo.h"
 #include "TCPFastOpen.h"
 #include "mozilla/net/DNS.h"
@@ -325,7 +324,7 @@ class nsSocketTransport final : public nsASocketHandler,
   bool mResolving;
 
   nsCOMPtr<nsICancelable> mDNSRequest;
-  nsCOMPtr<nsIDNSAddrRecord> mDNSRecord;
+  nsCOMPtr<nsIDNSRecord> mDNSRecord;
 
   nsresult mDNSLookupStatus;
   PRIntervalTime mDNSARequestFinished;
