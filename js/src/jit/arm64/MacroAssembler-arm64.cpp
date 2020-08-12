@@ -360,9 +360,11 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
         Ldr(SelectGPReg(outany, out64), srcAddr);
         break;
       case Scalar::Float32:
+        MOZ_ASSERT(!access.isZeroExtendSimd128Load());
         Ldr(SelectFPReg(outany, out64, 32), srcAddr);
         break;
       case Scalar::Float64:
+        MOZ_ASSERT(!access.isZeroExtendSimd128Load());
         Ldr(SelectFPReg(outany, out64, 64), srcAddr);
         break;
       case Scalar::Uint8Clamped:

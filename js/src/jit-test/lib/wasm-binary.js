@@ -39,6 +39,7 @@ const I32Code          = 0x7f;
 const I64Code          = 0x7e;
 const F32Code          = 0x7d;
 const F64Code          = 0x7c;
+const V128Code         = 0x7b;
 const AnyFuncCode      = 0x70;
 const AnyrefCode       = 0x6f;
 const OptRefCode       = 0x6c;
@@ -53,6 +54,7 @@ const CallCode         = 0x10;
 const CallIndirectCode = 0x11;
 const DropCode         = 0x1a;
 const SelectCode       = 0x1b;
+const LocalGetCode     = 0x20;
 const I32Load          = 0x28;
 const I64Load          = 0x29;
 const F32Load          = 0x2a;
@@ -101,6 +103,27 @@ const I64RemUCode      = 0x82;
 const RefNullCode      = 0xd0;
 const RefIsNullCode    = 0xd1;
 const RefFuncCode      = 0xd2;
+
+// SIMD opcodes
+const V128LoadCode = 0x00;
+const V128StoreCode = 0x0b;
+
+// Experimental SIMD opcodes as of August, 2020.
+const I32x4DotSI16x8Code = 0xba;
+const F32x4CeilCode = 0xd8;
+const F32x4FloorCode = 0xd9;
+const F32x4TruncCode = 0xda;
+const F32x4NearestCode = 0xdb;
+const F64x2CeilCode = 0xdc;
+const F64x2FloorCode = 0xdd;
+const F64x2TruncCode = 0xde;
+const F64x2NearestCode = 0xdf;
+const F32x4PMinCode = 0xea;
+const F32x4PMaxCode = 0xeb;
+const F64x2PMinCode = 0xf6;
+const F64x2PMaxCode = 0xf7;
+const V128Load32ZeroCode = 0xfc;
+const V128Load64ZeroCode = 0xfd;
 
 const FirstInvalidOpcode = 0xc5;
 const LastInvalidOpcode = 0xfa;
@@ -300,8 +323,15 @@ function exportSection(exports) {
     body.push(...varU32(exports.length));
     for (let exp of exports) {
         body.push(...string(exp.name));
-        body.push(...varU32(FunctionCode));
-        body.push(...varU32(exp.funcIndex));
+        if (exp.hasOwnProperty("funcIndex")) {
+            body.push(...varU32(FunctionCode));
+            body.push(...varU32(exp.funcIndex));
+        } else if (exp.hasOwnProperty("memIndex")) {
+            body.push(...varU32(MemoryCode));
+            body.push(...varU32(exp.memIndex));
+        } else {
+            throw "Bad export " + exp;
+        }
     }
     return { name: exportId, body };
 }

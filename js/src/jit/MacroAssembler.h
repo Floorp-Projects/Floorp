@@ -2524,6 +2524,54 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void unsignedWidenLowInt32x4(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared);
 
+  // Compare-based minimum/maximum (experimental as of August, 2020)
+  // https://github.com/WebAssembly/simd/pull/122
+
+  inline void pseudoMinFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void pseudoMinFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void pseudoMaxFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void pseudoMaxFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  // Widening/pairwise integer dot product (experimental as of August, 2020)
+  // https://github.com/WebAssembly/simd/pull/127
+
+  inline void widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  // Floating point rounding (experimental as of August, 2020)
+  // https://github.com/WebAssembly/simd/pull/232
+
+  inline void ceilFloat32x4(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void ceilFloat64x2(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void floorFloat32x4(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void floorFloat64x2(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void truncFloat32x4(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void truncFloat64x2(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void nearestFloat32x4(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void nearestFloat64x2(FloatRegister src, FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
  public:
   // ========================================================================
   // Truncate floating point.

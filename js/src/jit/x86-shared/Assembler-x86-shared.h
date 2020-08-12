@@ -327,6 +327,13 @@ class AssemblerX86Shared : public AssemblerShared {
     NoParity = X86Encoding::ConditionNP
   };
 
+  enum class SSERoundingMode {
+    Nearest = int(X86Encoding::SSERoundingMode::RoundToNearest),
+    Floor = int(X86Encoding::SSERoundingMode::RoundDown),
+    Ceil = int(X86Encoding::SSERoundingMode::RoundUp),
+    Trunc = int(X86Encoding::SSERoundingMode::RoundToZero)
+  };
+
   // If this bit is set, the vucomisd operands have to be inverted.
   static const int DoubleConditionBitInvert = 0x10;
 
@@ -621,6 +628,18 @@ class AssemblerX86Shared : public AssemblerShared {
     masm.vmovsd_mr(src.offset, src.base.encoding(), src.index.encoding(),
                    src.scale, dest.encoding());
   }
+  void vmovsd(const Operand& src, FloatRegister dest) {
+    switch (src.kind()) {
+      case Operand::MEM_REG_DISP:
+        vmovsd(src.toAddress(), dest);
+        break;
+      case Operand::MEM_SCALE:
+        vmovsd(src.toBaseIndex(), dest);
+        break;
+      default:
+        MOZ_CRASH("Unknown operand for vmovsd");
+    }
+  }
   void vmovsd(FloatRegister src, const Address& dest) {
     masm.vmovsd_rm(src.encoding(), dest.offset, dest.base.encoding());
   }
@@ -638,6 +657,18 @@ class AssemblerX86Shared : public AssemblerShared {
   void vmovss(const BaseIndex& src, FloatRegister dest) {
     masm.vmovss_mr(src.offset, src.base.encoding(), src.index.encoding(),
                    src.scale, dest.encoding());
+  }
+  void vmovss(const Operand& src, FloatRegister dest) {
+    switch (src.kind()) {
+      case Operand::MEM_REG_DISP:
+        vmovss(src.toAddress(), dest);
+        break;
+      case Operand::MEM_SCALE:
+        vmovss(src.toBaseIndex(), dest);
+        break;
+      default:
+        MOZ_CRASH("Unknown operand for vmovss");
+    }
   }
   void vmovss(FloatRegister src, const Address& dest) {
     masm.vmovss_rm(src.encoding(), dest.offset, dest.base.encoding());
@@ -2948,6 +2979,16 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
+  void vpmaddwd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE2());
+    switch (src1.kind()) {
+      case Operand::FPREG:
+        masm.vpmaddwd_rr(src1.fpu(), src0.encoding(), dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
   void vpaddq(const Operand& src1, FloatRegister src0, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     switch (src1.kind()) {
@@ -3931,6 +3972,28 @@ class AssemblerX86Shared : public AssemblerShared {
     MOZ_ASSERT(HasSSE2());
     masm.vsqrtss_rr(src1.encoding(), src0.encoding(), dest.encoding());
   }
+  void vroundps(SSERoundingMode mode, const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE41());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vroundps_irr((X86Encoding::SSERoundingMode)mode, src.fpu(),
+                          dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+  void vroundpd(SSERoundingMode mode, const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE41());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vroundpd_irr((X86Encoding::SSERoundingMode)mode, src.fpu(),
+                          dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
 
   static X86Encoding::RoundingMode ToX86RoundingMode(RoundingMode mode) {
     switch (mode) {
@@ -3945,15 +4008,15 @@ class AssemblerX86Shared : public AssemblerShared {
     }
     MOZ_CRASH("unexpected mode");
   }
-  void vroundsd(X86Encoding::RoundingMode mode, FloatRegister src1,
-                FloatRegister src0, FloatRegister dest) {
+  void vroundsd(X86Encoding::RoundingMode mode, FloatRegister src,
+                FloatRegister dest) {
     MOZ_ASSERT(HasSSE41());
-    masm.vroundsd_irr(mode, src1.encoding(), src0.encoding(), dest.encoding());
+    masm.vroundsd_irr(mode, src.encoding(), dest.encoding());
   }
-  void vroundss(X86Encoding::RoundingMode mode, FloatRegister src1,
-                FloatRegister src0, FloatRegister dest) {
+  void vroundss(X86Encoding::RoundingMode mode, FloatRegister src,
+                FloatRegister dest) {
     MOZ_ASSERT(HasSSE41());
-    masm.vroundss_irr(mode, src1.encoding(), src0.encoding(), dest.encoding());
+    masm.vroundss_irr(mode, src.encoding(), dest.encoding());
   }
 
   unsigned vinsertpsMask(unsigned sourceLane, unsigned destLane,
