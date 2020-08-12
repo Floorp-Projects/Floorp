@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.6.207';
-const pdfjsBuild = '63e33a589';
+const pdfjsVersion = '2.6.234';
+const pdfjsBuild = '6620861c7';
 ;
 
 /***/ }),
@@ -403,12 +403,20 @@ class BaseCanvasFactory {
 exports.BaseCanvasFactory = BaseCanvasFactory;
 
 class DOMCanvasFactory extends BaseCanvasFactory {
+  constructor({
+    ownerDocument = globalThis.document
+  } = {}) {
+    super();
+    this._document = ownerDocument;
+  }
+
   create(width, height) {
     if (width <= 0 || height <= 0) {
       throw new Error("Invalid canvas size");
     }
 
-    const canvas = document.createElement("canvas");
+    const canvas = this._document.createElement("canvas");
+
     const context = canvas.getContext("2d");
     canvas.width = width;
     canvas.height = height;
@@ -844,6 +852,7 @@ exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
+exports.escapeString = escapeString;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
@@ -1563,6 +1572,10 @@ function stringToPDFString(str) {
   return strBuf.join("");
 }
 
+function escapeString(str) {
+  return str.replace(/([\(\)\\])/g, "\\$1");
+}
+
 function stringToUTF8String(str) {
   return decodeURIComponent(escape(str));
 }
@@ -1805,6 +1818,10 @@ function getDocument(src) {
     params.disableFontFace = _api_compatibility.apiCompatibilityParams.disableFontFace || false;
   }
 
+  if (typeof params.ownerDocument === "undefined") {
+    params.ownerDocument = globalThis.document;
+  }
+
   if (typeof params.disableRange !== "boolean") {
     params.disableRange = false;
   }
@@ -1889,7 +1906,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.207',
+    apiVersion: '2.6.234',
     source: {
       data: source.data,
       url: source.url,
@@ -2136,9 +2153,10 @@ class PDFDocumentProxy {
 exports.PDFDocumentProxy = PDFDocumentProxy;
 
 class PDFPageProxy {
-  constructor(pageIndex, pageInfo, transport, pdfBug = false) {
+  constructor(pageIndex, pageInfo, transport, ownerDocument, pdfBug = false) {
     this._pageIndex = pageIndex;
     this._pageInfo = pageInfo;
+    this._ownerDocument = ownerDocument;
     this._transport = transport;
     this._stats = pdfBug ? new _display_utils.StatTimer() : null;
     this._pdfBug = pdfBug;
@@ -2235,7 +2253,9 @@ class PDFPageProxy {
       intentState.streamReaderCancelTimeout = null;
     }
 
-    const canvasFactoryInstance = canvasFactory || new DefaultCanvasFactory();
+    const canvasFactoryInstance = canvasFactory || new DefaultCanvasFactory({
+      ownerDocument: this._ownerDocument
+    });
     const webGLContext = new _webgl.WebGLContext({
       enable: enableWebGL
     });
@@ -2256,7 +2276,7 @@ class PDFPageProxy {
         pageIndex: this._pageIndex,
         intent: renderingIntent,
         renderInteractiveForms: renderInteractiveForms === true,
-        annotationStorage
+        annotationStorage: annotationStorage && annotationStorage.getAll() || null
       });
     }
 
@@ -3023,7 +3043,8 @@ class WorkerTransport {
     this.commonObjs = new PDFObjects();
     this.fontLoader = new _font_loader.FontLoader({
       docId: loadingTask.docId,
-      onUnsupportedFeature: this._onUnsupportedFeature.bind(this)
+      onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
+      ownerDocument: params.ownerDocument
     });
     this._params = params;
     this.CMapReaderFactory = new params.CMapReaderFactory({
@@ -3427,7 +3448,7 @@ class WorkerTransport {
         throw new Error("Transport destroyed");
       }
 
-      const page = new PDFPageProxy(pageIndex, pageInfo, this, this._params.pdfBug);
+      const page = new PDFPageProxy(pageIndex, pageInfo, this, this._params.ownerDocument, this._params.pdfBug);
       this.pageCache[pageIndex] = page;
       return page;
     });
@@ -3790,9 +3811,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.207';
+const version = '2.6.234';
 exports.version = version;
-const build = '63e33a589';
+const build = '6620861c7';
 exports.build = build;
 
 /***/ }),
@@ -3812,7 +3833,8 @@ var _util = __w_pdfjs_require__(2);
 class BaseFontLoader {
   constructor({
     docId,
-    onUnsupportedFeature
+    onUnsupportedFeature,
+    ownerDocument = globalThis.document
   }) {
     if (this.constructor === BaseFontLoader) {
       (0, _util.unreachable)("Cannot initialize BaseFontLoader.");
@@ -3820,22 +3842,25 @@ class BaseFontLoader {
 
     this.docId = docId;
     this._onUnsupportedFeature = onUnsupportedFeature;
+    this._document = ownerDocument;
     this.nativeFontFaces = [];
     this.styleElement = null;
   }
 
   addNativeFontFace(nativeFontFace) {
     this.nativeFontFaces.push(nativeFontFace);
-    document.fonts.add(nativeFontFace);
+
+    this._document.fonts.add(nativeFontFace);
   }
 
   insertRule(rule) {
     let styleElement = this.styleElement;
 
     if (!styleElement) {
-      styleElement = this.styleElement = document.createElement("style");
+      styleElement = this.styleElement = this._document.createElement("style");
       styleElement.id = `PDFJS_FONT_STYLE_TAG_${this.docId}`;
-      document.documentElement.getElementsByTagName("head")[0].appendChild(styleElement);
+
+      this._document.documentElement.getElementsByTagName("head")[0].appendChild(styleElement);
     }
 
     const styleSheet = styleElement.sheet;
@@ -3843,8 +3868,8 @@ class BaseFontLoader {
   }
 
   clear() {
-    this.nativeFontFaces.forEach(function (nativeFontFace) {
-      document.fonts.delete(nativeFontFace);
+    this.nativeFontFaces.forEach(nativeFontFace => {
+      this._document.fonts.delete(nativeFontFace);
     });
     this.nativeFontFaces.length = 0;
 
@@ -3905,7 +3930,7 @@ class BaseFontLoader {
   }
 
   get isFontLoadingAPISupported() {
-    const supported = typeof document !== "undefined" && !!document.fonts;
+    const supported = typeof this._document !== "undefined" && !!this._document.fonts;
     return (0, _util.shadow)(this, "isFontLoadingAPISupported", supported);
   }
 
@@ -7379,13 +7404,7 @@ class Metadata {
   }
 
   getAll() {
-    const obj = Object.create(null);
-
-    for (const [key, value] of this._metadataMap) {
-      obj[key] = value;
-    }
-
-    return obj;
+    return Object.fromEntries(this._metadataMap);
   }
 
   has(name) {
@@ -9097,19 +9116,26 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
   render() {
     const TEXT_ALIGNMENT = ["left", "center", "right"];
+    const storage = this.annotationStorage;
+    const id = this.data.id;
     this.container.className = "textWidgetAnnotation";
     let element = null;
 
     if (this.renderInteractiveForms) {
+      const textContent = storage.getOrCreateValue(id, this.data.fieldValue);
+
       if (this.data.multiLine) {
         element = document.createElement("textarea");
-        element.textContent = this.data.fieldValue;
+        element.textContent = textContent;
       } else {
         element = document.createElement("input");
         element.type = "text";
-        element.setAttribute("value", this.data.fieldValue);
+        element.setAttribute("value", textContent);
       }
 
+      element.addEventListener("input", function (event) {
+        storage.setValue(id, event.target.value);
+      });
       element.disabled = this.data.readOnly;
       element.name = this.data.fieldName;
 
@@ -9253,6 +9279,8 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 
   render() {
     this.container.className = "choiceWidgetAnnotation";
+    const storage = this.annotationStorage;
+    const id = this.data.id;
     const selectElement = document.createElement("select");
     selectElement.disabled = this.data.readOnly;
     selectElement.name = this.data.fieldName;
@@ -9272,11 +9300,17 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 
       if (this.data.fieldValue.includes(option.displayValue)) {
         optionElement.setAttribute("selected", true);
+        storage.setValue(id, option.displayValue);
       }
 
       selectElement.appendChild(optionElement);
     }
 
+    selectElement.addEventListener("input", function (event) {
+      const options = event.target.options;
+      const value = options[options.selectedIndex].text;
+      storage.setValue(id, value);
+    });
     this.container.appendChild(selectElement);
     return this.container;
   }
@@ -10285,6 +10319,7 @@ var renderTextLayer = function renderTextLayerClosure() {
     this._textContent = textContent;
     this._textContentStream = textContentStream;
     this._container = container;
+    this._document = container.ownerDocument;
     this._viewport = viewport;
     this._textDivs = textDivs || [];
     this._textContentItemsStr = textContentItemsStr || [];
@@ -10391,7 +10426,9 @@ var renderTextLayer = function renderTextLayerClosure() {
     _render: function TextLayer_render(timeout) {
       const capability = (0, _util.createPromiseCapability)();
       let styleCache = Object.create(null);
-      const canvas = document.createElement("canvas");
+
+      const canvas = this._document.createElement("canvas");
+
       canvas.mozOpaque = true;
       this._layoutTextCtx = canvas.getContext("2d", {
         alpha: false
