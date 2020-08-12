@@ -9,6 +9,7 @@
 
 #include "mozilla/PermissionDelegateHandler.h"
 #include "mozilla/Span.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
 #include "nsILoadInfo.h"
