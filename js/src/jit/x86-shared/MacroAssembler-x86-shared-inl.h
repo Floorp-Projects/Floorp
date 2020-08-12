@@ -1961,24 +1961,30 @@ void MacroAssembler::absFloat64x2(FloatRegister src, FloatRegister dest) {
 
 // NaN-propagating minimum
 
-void MacroAssembler::minFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::minFloat32x4(lhsDest, Operand(rhs), lhsDest);
+void MacroAssembler::minFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
+                                  FloatRegister temp1, FloatRegister temp2) {
+  MacroAssemblerX86Shared::minFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
+                                        lhsDest);
 }
 
-void MacroAssembler::minFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::minFloat64x2(lhsDest, Operand(rhs), lhsDest);
+void MacroAssembler::minFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
+                                  FloatRegister temp1, FloatRegister temp2) {
+  MacroAssemblerX86Shared::minFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
+                                        lhsDest);
 }
 
 // NaN-propagating maximum
 
 void MacroAssembler::maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp) {
-  MacroAssemblerX86Shared::maxFloat32x4(lhsDest, Operand(rhs), temp, lhsDest);
+                                  FloatRegister temp1, FloatRegister temp2) {
+  MacroAssemblerX86Shared::maxFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
+                                        lhsDest);
 }
 
 void MacroAssembler::maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp) {
-  MacroAssemblerX86Shared::maxFloat64x2(lhsDest, Operand(rhs), temp, lhsDest);
+                                  FloatRegister temp1, FloatRegister temp2) {
+  MacroAssemblerX86Shared::maxFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
+                                        lhsDest);
 }
 
 // Compare-based minimum

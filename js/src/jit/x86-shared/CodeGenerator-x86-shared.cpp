@@ -2419,10 +2419,10 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.divFloat32x4(rhs, lhsDest);
       break;
     case wasm::SimdOp::F32x4Min:
-      masm.minFloat32x4(rhs, lhsDest);
+      masm.minFloat32x4(rhs, lhsDest, temp1, temp2);
       break;
     case wasm::SimdOp::F32x4Max:
-      masm.maxFloat32x4(rhs, lhsDest, temp1);
+      masm.maxFloat32x4(rhs, lhsDest, temp1, temp2);
       break;
     case wasm::SimdOp::F64x2Add:
       masm.addFloat64x2(rhs, lhsDest);
@@ -2437,10 +2437,10 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.divFloat64x2(rhs, lhsDest);
       break;
     case wasm::SimdOp::F64x2Min:
-      masm.minFloat64x2(rhs, lhsDest);
+      masm.minFloat64x2(rhs, lhsDest, temp1, temp2);
       break;
     case wasm::SimdOp::F64x2Max:
-      masm.maxFloat64x2(rhs, lhsDest, temp1);
+      masm.maxFloat64x2(rhs, lhsDest, temp1, temp2);
       break;
     case wasm::SimdOp::V8x16Swizzle:
       masm.swizzleInt8x16(rhs, lhsDest, temp1);

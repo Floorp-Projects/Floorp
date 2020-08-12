@@ -1325,89 +1325,176 @@ void MacroAssemblerX86Shared::mulInt32x4(FloatRegister lhs, Operand rhs,
   vshufps(MacroAssembler::ComputeShuffleMask(2, 0, 3, 1), lhs, lhs, lhs);
 }
 
-/* clang-format off */
-
-// NaN is s111 1111 1qxx ... where the q indicates quiet or
-// signaling NaN; q=1 means quiet.
+// Semantics of wasm max and min.
 //
-// If the values are both zero the second value is returned from min/max, this
-// matters if one of them is signed.
+//  * -0 < 0
+//  * If one input is NaN then that NaN is the output
+//  * If both inputs are NaN then the output is selected nondeterministically
+//  * Any returned NaN is always made quiet
+//  * The MVP spec 2.2.3 says "No distinction is made between signalling and
+//    quiet NaNs", suggesting SNaN inputs are allowed and should not fault
 //
-// If one value is a NaN then the second value is returned.
+// Semantics of maxps/minps/maxpd/minpd:
 //
-// Generally for min/max, the sign of zero matters (-0 < 0) and NaN inputs are
-// always quiet and we want to propagate NaN.
+//  * If the values are both +/-0 the rhs is returned
+//  * If the rhs is SNaN then the rhs is returned
+//  * If either value is NaN then the rhs is returned
+//  * An SNaN operand does not appear to give rise to an exception, at least
+//    not in the JS shell on Linux, though the Intel spec lists Invalid
+//    as one of the possible exceptions
 
-// For min:
-// - we compute x=min(a,b) and y=min(b,a) and then OR them together
-// - if the values are not NaN but not both zero then x==y, the OR
-//   matters not
-// - if the values are -0 and 0 then we will get -0 from the OR
-// - if one of the values is NaN then x or y will be NaN and we will
-//   get a NaN from the OR, with some arbitrary sign, and since
-//   the input NaN is quiet the output NaN will be quiet.
+// Various unaddressed considerations:
+//
+// It's pretty insane for this to take an Operand rhs - it really needs to be
+// a register, given the number of times we access it.
+//
+// Constant load can be folded into the ANDPS.  Do we care?  It won't save us
+// any registers, since output/temp1/temp2/scratch are all live at the same time
+// after the first instruction of the slow path.
+//
+// Can we use blend for the NaN extraction/insertion?  We'd need xmm0 for the
+// mask, which is no fun.  But it would be lhs UNORD lhs -> mask, blend;
+// rhs UNORD rhs -> mask; blend.  Better than the mess we have below.  But
+// we'd still need to setup the QNaN bits, unless we can blend those too
+// with the lhs UNORD rhs mask?
+//
+// If we could determine that both input lanes are NaN then the result of the
+// fast path should be fine modulo the QNaN bits, but it's not obvious this is
+// much of an advantage.
 
-// For max:
-// - the UNORD comparison will create a mask of ~0 in scratch if at least
-//   one value is NaN, otherwise 0
-// - we compute x=max(a,b) and y=max(b,a) and then AND them together
-// - if the values are not NaN but not both zero then x==y, the
-//   AND matters not
-// - if the values are -0 and 0 then the AND will create 0
-// - if one of the values is NaN then the AND will select the wrong
-//   value
-// - a final OR of the result with the mask from the UNORD comparison
-//   will leave valid results alone and create NaN where the UNORD
-//   was true.
+void MacroAssemblerX86Shared::minMaxFloat32x4(bool isMin, FloatRegister lhs_,
+                                              Operand rhs, FloatRegister temp1,
+                                              FloatRegister temp2,
+                                              FloatRegister output) {
+  ScratchSimd128Scope scratch(asMasm());
+  Label l;
+  SimdConstant quietBits(SimdConstant::SplatX4(int32_t(0x00400000)));
 
-/* clang-format on */
+  /* clang-format off */ /* leave my comments alone */
+  FloatRegister lhs = reusedInputSimd128Float(lhs_, scratch);
+  if (isMin) {
+    vmovaps(lhs, output);                    // compute
+    vminps(rhs, output, output);             //   min lhs, rhs
+    vmovaps(rhs, temp1);                     // compute
+    vminps(Operand(lhs), temp1, temp1);      //   min rhs, lhs
+    vorps(temp1, output, output);            // fix min(-0, 0) with OR
+  } else {
+    vmovaps(lhs, output);                    // compute
+    vmaxps(rhs, output, output);             //   max lhs, rhs
+    vmovaps(rhs, temp1);                     // compute
+    vmaxps(Operand(lhs), temp1, temp1);      //   max rhs, lhs
+    vandps(temp1, output, output);           // fix max(-0, 0) with AND
+  }
+  vmovaps(lhs, temp1);                       // compute
+  vcmpunordps(rhs, temp1, temp1);            //   lhs UNORD rhs
+  vptest(temp1, temp1);                      // check if any unordered
+  j(Assembler::Equal, &l);                   //   and exit if not
+
+  // Slow path.
+  // output has result for non-NaN lanes, garbage in NaN lanes.
+  // temp1 has lhs UNORD rhs.
+  // temp2 is dead.
+
+  vmovaps(temp1, temp2);                     // clear NaN lanes of result
+  vpandn(output, temp2, temp2);              //   result now in temp2
+  asMasm().loadConstantSimd128Float(quietBits, output);
+  vandps(output, temp1, temp1);              // setup QNaN bits in NaN lanes
+  vorps(temp1, temp2, temp2);                //   and OR into result
+  vmovaps(lhs, temp1);                       // find NaN lanes
+  vcmpunordps(Operand(temp1), temp1, temp1); //   in lhs
+  vmovaps(temp1, output);                    //     (and save them for later)
+  vandps(lhs, temp1, temp1);                 //       and extract the NaNs
+  vorps(temp1, temp2, temp2);                //         and add to the result
+  vmovaps(rhs, temp1);                       // find NaN lanes
+  vcmpunordps(Operand(temp1), temp1, temp1); //   in rhs
+  vpandn(temp1, output, output);             //     except if they were in lhs
+  vandps(rhs, output, output);               //       and extract the NaNs
+  vorps(temp2, output, output);              //         and add to the result
+
+  bind(&l);
+  /* clang-format on */
+}
+
+// Exactly as above.
+void MacroAssemblerX86Shared::minMaxFloat64x2(bool isMin, FloatRegister lhs_,
+                                              Operand rhs, FloatRegister temp1,
+                                              FloatRegister temp2,
+                                              FloatRegister output) {
+  ScratchSimd128Scope scratch(asMasm());
+  Label l;
+  SimdConstant quietBits(SimdConstant::SplatX2(int64_t(0x0008000000000000ull)));
+
+  /* clang-format off */ /* leave my comments alone */
+  FloatRegister lhs = reusedInputSimd128Float(lhs_, scratch);
+  if (isMin) {
+    vmovapd(lhs, output);                    // compute
+    vminpd(rhs, output, output);             //   min lhs, rhs
+    vmovapd(rhs, temp1);                     // compute
+    vminpd(Operand(lhs), temp1, temp1);      //   min rhs, lhs
+    vorpd(temp1, output, output);            // fix min(-0, 0) with OR
+  } else {
+    vmovapd(lhs, output);                    // compute
+    vmaxpd(rhs, output, output);             //   max lhs, rhs
+    vmovapd(rhs, temp1);                     // compute
+    vmaxpd(Operand(lhs), temp1, temp1);      //   max rhs, lhs
+    vandpd(temp1, output, output);           // fix max(-0, 0) with AND
+  }
+  vmovapd(lhs, temp1);                       // compute
+  vcmpunordpd(rhs, temp1, temp1);            //   lhs UNORD rhs
+  vptest(temp1, temp1);                      // check if any unordered
+  j(Assembler::Equal, &l);                   //   and exit if not
+
+  // Slow path.
+  // output has result for non-NaN lanes, garbage in NaN lanes.
+  // temp1 has lhs UNORD rhs.
+  // temp2 is dead.
+
+  vmovapd(temp1, temp2);                     // clear NaN lanes of result
+  vpandn(output, temp2, temp2);              //   result now in temp2
+  asMasm().loadConstantSimd128Float(quietBits, output);
+  vandpd(output, temp1, temp1);              // setup QNaN bits in NaN lanes
+  vorpd(temp1, temp2, temp2);                //   and OR into result
+  vmovapd(lhs, temp1);                       // find NaN lanes
+  vcmpunordpd(Operand(temp1), temp1, temp1); //   in lhs
+  vmovapd(temp1, output);                    //     (and save them for later)
+  vandpd(lhs, temp1, temp1);                 //       and extract the NaNs
+  vorpd(temp1, temp2, temp2);                //         and add to the result
+  vmovapd(rhs, temp1);                       // find NaN lanes
+  vcmpunordpd(Operand(temp1), temp1, temp1); //   in rhs
+  vpandn(temp1, output, output);             //     except if they were in lhs
+  vandpd(rhs, output, output);               //       and extract the NaNs
+  vorpd(temp2, output, output);              //         and add to the result
+
+  bind(&l);
+  /* clang-format on */
+}
 
 void MacroAssemblerX86Shared::minFloat32x4(FloatRegister lhs, Operand rhs,
+                                           FloatRegister temp1,
+                                           FloatRegister temp2,
                                            FloatRegister output) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister rhsCopy = reusedInputAlignedSimd128Float(rhs, scratch);
-  vminps(Operand(lhs), rhsCopy, scratch);
-  vminps(rhs, lhs, output);
-  vorps(scratch, output, output);  // NaN or'd with arbitrary bits is NaN
+  minMaxFloat32x4(/*isMin=*/true, lhs, rhs, temp1, temp2, output);
 }
 
 void MacroAssemblerX86Shared::maxFloat32x4(FloatRegister lhs, Operand rhs,
-                                           FloatRegister temp,
+                                           FloatRegister temp1,
+                                           FloatRegister temp2,
                                            FloatRegister output) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister lhsCopy = reusedInputSimd128Float(lhs, scratch);
-  vcmpunordps(rhs, lhsCopy, scratch);
-
-  FloatRegister rhsCopy = reusedInputAlignedSimd128Float(rhs, temp);
-  vmaxps(Operand(lhs), rhsCopy, temp);
-  vmaxps(rhs, lhs, output);
-
-  vandps(temp, output, output);
-  vorps(scratch, output, output);  // or in the all-ones NaNs
+  minMaxFloat32x4(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
 }
 
 void MacroAssemblerX86Shared::minFloat64x2(FloatRegister lhs, Operand rhs,
+                                           FloatRegister temp1,
+                                           FloatRegister temp2,
                                            FloatRegister output) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister rhsCopy = reusedInputAlignedSimd128Float(rhs, scratch);
-  vminpd(Operand(lhs), rhsCopy, scratch);
-  vminpd(rhs, lhs, output);
-  vorpd(scratch, output, output);  // NaN or'd with arbitrary bits is NaN
+  minMaxFloat64x2(/*isMin=*/true, lhs, rhs, temp1, temp2, output);
 }
 
 void MacroAssemblerX86Shared::maxFloat64x2(FloatRegister lhs, Operand rhs,
-                                           FloatRegister temp,
+                                           FloatRegister temp1,
+                                           FloatRegister temp2,
                                            FloatRegister output) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister lhsCopy = reusedInputSimd128Float(lhs, scratch);
-  vcmpunordpd(rhs, lhsCopy, scratch);
-
-  FloatRegister rhsCopy = reusedInputAlignedSimd128Float(rhs, temp);
-  vmaxpd(Operand(lhs), rhsCopy, temp);
-  vmaxpd(rhs, lhs, output);
-
-  vandpd(temp, output, output);
-  vorpd(scratch, output, output);  // or in the all-ones NaNs
+  minMaxFloat64x2(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
 }
 
 void MacroAssemblerX86Shared::minNumFloat32x4(FloatRegister lhs, Operand rhs,
