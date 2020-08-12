@@ -1819,7 +1819,7 @@ bool ScopeStencil::createForFunctionScope(
 
   *index = compilationInfo.scopeData.length();
   return compilationInfo.scopeData.emplaceBack(
-      cx, ScopeKind::Function, enclosing, firstFrameSlot, envShape,
+      ScopeKind::Function, enclosing, firstFrameSlot, envShape,
       std::move(data.get()), mozilla::Some(functionIndex), isArrow);
 }
 
@@ -1843,8 +1843,8 @@ bool ScopeStencil::createForLexicalScope(
   }
 
   *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(
-      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
+  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
+                                               envShape, std::move(data.get()));
 }
 
 bool ScopeStencil::createForVarScope(
@@ -1868,8 +1868,8 @@ bool ScopeStencil::createForVarScope(
   }
 
   *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(
-      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
+  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
+                                               envShape, std::move(data.get()));
 }
 
 /* static */
@@ -1895,8 +1895,8 @@ bool ScopeStencil::createForGlobalScope(
   mozilla::Maybe<ScopeIndex> enclosing;
 
   *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(
-      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
+  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
+                                               envShape, std::move(data.get()));
 }
 
 /* static */
@@ -1920,8 +1920,8 @@ bool ScopeStencil::createForEvalScope(
   }
 
   *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(
-      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
+  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
+                                               envShape, std::move(data.get()));
 }
 
 /* static */
@@ -1953,7 +1953,7 @@ bool ScopeStencil::createForModuleScope(
   }
 
   *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(cx, ScopeKind::Module, enclosing,
+  return compilationInfo.scopeData.emplaceBack(ScopeKind::Module, enclosing,
                                                firstFrameSlot, envShape,
                                                std::move(data.get()));
 }
@@ -1988,7 +1988,7 @@ bool ScopeStencil::createForWithScope(
   mozilla::Maybe<uint32_t> envShape;
 
   *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(cx, ScopeKind::With, enclosing,
+  return compilationInfo.scopeData.emplaceBack(ScopeKind::With, enclosing,
                                                firstFrameSlot, envShape);
 }
 
@@ -2003,7 +2003,8 @@ template <>
 UniquePtr<FunctionScope::Data> ScopeStencil::releaseData<FunctionScope>(
     CompilationInfo& compilationInfo) {
   // Initialize the GCPtrs in the Scope::Data.
-  data<FunctionScope>().canonicalFunction = function(compilationInfo);
+  data<FunctionScope>().canonicalFunction =
+      compilationInfo.functions[*functionIndex_];
 
   return UniquePtr<FunctionScope::Data>(
       static_cast<FunctionScope::Data*>(data_.release()));
@@ -2023,7 +2024,7 @@ UniquePtr<ModuleScope::Data> ScopeStencil::releaseData<ModuleScope>(
 template <>
 Scope* ScopeStencil::createSpecificScope<WithScope, std::nullptr_t>(
     JSContext* cx, CompilationInfo& compilationInfo) {
-  RootedScope enclosingScope(cx, getEnclosingScope(compilationInfo));
+  RootedScope enclosingScope(cx, enclosing(compilationInfo).existingScope());
   return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
 }
 
@@ -2034,7 +2035,7 @@ Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
   Rooted<UniquePtr<GlobalScope::Data>> rootedData(
       cx, releaseData<GlobalScope>(compilationInfo));
 
-  MOZ_ASSERT(getEnclosingScope(compilationInfo) == nullptr);
+  MOZ_ASSERT(enclosing(compilationInfo).isNullptr());
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<GlobalScope>(cx, kind(), nullptr, nullptr, &rootedData);
@@ -2052,7 +2053,7 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
     return nullptr;
   }
 
-  RootedScope enclosingScope(cx, getEnclosingScope(compilationInfo));
+  RootedScope enclosingScope(cx, enclosing(compilationInfo).existingScope());
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<SpecificScopeType>(cx, kind(), enclosingScope, shape,

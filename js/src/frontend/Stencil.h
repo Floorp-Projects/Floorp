@@ -141,9 +141,6 @@ class BigIntStencil {
 };
 
 class ScopeStencil {
-  friend class js::AbstractScopePtr;
-  friend class js::GCMarker;
-
   // The enclosing scope. If Nothing, then the enclosing scope of the
   // compilation applies.
   mozilla::Maybe<ScopeIndex> enclosing_;
@@ -164,11 +161,14 @@ class ScopeStencil {
   // True if this is a FunctionScope for an arrow function.
   bool isArrow_;
 
+  // The list of binding and scope-specific data. Note that the back pointers to
+  // the owning JSFunction / ModuleObject are not set until Stencils are
+  // converted to GC allocations.
   UniquePtr<BaseScopeData> data_;
 
  public:
-  ScopeStencil(JSContext* cx, ScopeKind kind,
-               mozilla::Maybe<ScopeIndex> enclosing, uint32_t firstFrameSlot,
+  ScopeStencil(ScopeKind kind, mozilla::Maybe<ScopeIndex> enclosing,
+               uint32_t firstFrameSlot,
                mozilla::Maybe<uint32_t> numEnvironmentSlots,
                UniquePtr<BaseScopeData> data = {},
                mozilla::Maybe<FunctionIndex> functionIndex = mozilla::Nothing(),
@@ -181,62 +181,57 @@ class ScopeStencil {
         isArrow_(isArrow),
         data_(std::move(data)) {}
 
-  ScopeKind kind() const { return kind_; }
-  AbstractScopePtr enclosing(CompilationInfo& compilationInfo);
-
-  Scope* getEnclosingScope(frontend::CompilationInfo& compilationInfo);
-
   static bool createForFunctionScope(
-      JSContext* cx, frontend::CompilationInfo& compilationInfo,
+      JSContext* cx, CompilationInfo& compilationInfo,
       Handle<FunctionScope::Data*> dataArg, bool hasParameterExprs,
       bool needsEnvironment, FunctionIndex functionIndex, bool isArrow,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   static bool createForLexicalScope(
-      JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+      JSContext* cx, CompilationInfo& compilationInfo, ScopeKind kind,
       Handle<LexicalScope::Data*> dataArg, uint32_t firstFrameSlot,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
-  static bool createForVarScope(JSContext* cx,
-                                frontend::CompilationInfo& compilationInfo,
+
+  static bool createForVarScope(JSContext* cx, CompilationInfo& compilationInfo,
                                 ScopeKind kind, Handle<VarScope::Data*> dataArg,
                                 uint32_t firstFrameSlot, bool needsEnvironment,
                                 mozilla::Maybe<ScopeIndex> enclosing,
                                 ScopeIndex* index);
 
   static bool createForGlobalScope(JSContext* cx,
-                                   frontend::CompilationInfo& compilationInfo,
+                                   CompilationInfo& compilationInfo,
                                    ScopeKind kind,
                                    Handle<GlobalScope::Data*> dataArg,
                                    ScopeIndex* index);
 
   static bool createForEvalScope(JSContext* cx,
-                                 frontend::CompilationInfo& compilationInfo,
+                                 CompilationInfo& compilationInfo,
                                  ScopeKind kind,
                                  Handle<EvalScope::Data*> dataArg,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
   static bool createForModuleScope(JSContext* cx,
-                                   frontend::CompilationInfo& compilationInfo,
+                                   CompilationInfo& compilationInfo,
                                    Handle<ModuleScope::Data*> dataArg,
                                    mozilla::Maybe<ScopeIndex> enclosing,
                                    ScopeIndex* index);
 
   static bool createForWithScope(JSContext* cx,
-                                 frontend::CompilationInfo& compilationInfo,
+                                 CompilationInfo& compilationInfo,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
-  bool hasEnvironmentShape() const { return numEnvironmentSlots_.isSome(); }
+  AbstractScopePtr enclosing(CompilationInfo& compilationInfo);
+
+  ScopeKind kind() const { return kind_; }
 
   bool hasEnvironment() const {
     // Check if scope kind alone means we have an env shape, and
     // otherwise check if we have one created.
-    return Scope::hasEnvironment(kind(), hasEnvironmentShape());
+    bool hasEnvironmentShape = numEnvironmentSlots_.isSome();
+    return Scope::hasEnvironment(kind(), hasEnvironmentShape);
   }
-
-  // Valid for functions;
-  JSFunction* function(frontend::CompilationInfo& compilationInfo);
 
   bool isArrow() const { return isArrow_; }
 
@@ -512,13 +507,4 @@ class ScriptStencil {
 } /* namespace frontend */
 } /* namespace js */
 
-namespace JS {
-template <>
-struct GCPolicy<js::frontend::ScopeStencil*> {
-  static void trace(JSTracer* trc, js::frontend::ScopeStencil** data,
-                    const char* name) {
-    (*data)->trace(trc);
-  }
-};
-}  // namespace JS
 #endif /* frontend_Stencil_h */
