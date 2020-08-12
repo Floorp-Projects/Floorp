@@ -446,7 +446,8 @@ bool WarpCacheIRTranspiler::emitLoadFrameNumActualArgsResult() {
 
 bool WarpCacheIRTranspiler::emitLoadFrameArgumentResult(
     Int32OperandId indexId) {
-  // We don't support arguments[i] in inlined functions.
+  // We don't support arguments[i] in inlined functions. Scripts using
+  // arguments[i] are marked as uninlineable in arguments analysis.
   MOZ_ASSERT(!builder_->inlineCallInfo());
 
   MDefinition* index = getOperand(indexId);
