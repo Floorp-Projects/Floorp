@@ -208,7 +208,10 @@ for (let op of [
     'i16x8.any_true',
     'i16x8.all_true',
     'i32x4.any_true',
-    'i32x4.all_true'])
+    'i32x4.all_true',
+    'i8x16.bitmask',
+    'i16x8.bitmask',
+    'i32x4.bitmask'])
 {
     testValid(`(module
                  (func (param v128) (result i32)
