@@ -228,6 +228,7 @@ dictionary RTCConfigurationInternal {
 // WebrtcGlobalInformation for about:webrtc, and telemetry.
 dictionary RTCStatsReportInternal : RTCStatsCollection {
   required DOMString                        pcid;
+  required unsigned long                    browserId;
   RTCConfigurationInternal                  configuration;
   DOMString                                 jsepSessionErrors;
   DOMString                                 localSdp;
