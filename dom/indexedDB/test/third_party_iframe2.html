@@ -8,7 +8,7 @@
 
   <script type="text/javascript">
     function report(result) {
-      let message = { source: "iframe" };
+      let message = { source: "iframe2" };
       message.result = result;
       window.parent.postMessage(JSON.stringify(message), "*");
     }
