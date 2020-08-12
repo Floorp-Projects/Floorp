@@ -1993,6 +1993,23 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
+  if (PREF_CHANGED(HTTP_PREF("http3.alt-svc-mapping-for-testing"))) {
+    nsAutoCString altSvcMappings;
+    rv = Preferences::GetCString(HTTP_PREF("http3.alt-svc-mapping-for-testing"),
+                                 altSvcMappings);
+    if (NS_SUCCEEDED(rv)) {
+      nsCCharSeparatedTokenizer tokenizer(altSvcMappings, ',');
+      while (tokenizer.hasMoreTokens()) {
+        nsAutoCString token(tokenizer.nextToken());
+        int32_t index = token.Find(";");
+        if (index != kNotFound) {
+          auto* map = new nsCString(Substring(token, index + 1));
+          mAltSvcMappingTemptativeMap.Put(Substring(token, 0, index), map);
+        }
+      }
+    }
+  }
+
   // Enable HTTP response timeout if TCP Keepalives are disabled.
   mResponseTimeoutEnabled =
       !mTCPKeepaliveShortLivedEnabled && !mTCPKeepaliveLongLivedEnabled;
@@ -2912,6 +2929,39 @@ void nsHttpHandler::SetHttpHandlerInitArgs(const HttpHandlerInitArgs& aArgs) {
 void nsHttpHandler::SetDeviceModelId(const nsCString& aModelId) {
   MOZ_ASSERT(XRE_IsSocketProcess());
   mDeviceModelId = aModelId;
+}
+
+void nsHttpHandler::MaybeAddAltSvcForTesting(
+    nsIURI* aUri, const nsACString& aUsername,
+    const nsACString& aTopWindowOrigin, bool aPrivateBrowsing, bool aIsolated,
+    nsIInterfaceRequestor* aCallbacks,
+    const OriginAttributes& aOriginAttributes) {
+  if (!IsHttp3Enabled() || mAltSvcMappingTemptativeMap.IsEmpty()) {
+    return;
+  }
+
+  bool isHttps = false;
+  if (NS_FAILED(aUri->SchemeIs("https", &isHttps)) || !isHttps) {
+    // Only set forr HTTPS.
+    return;
+  }
+
+  nsAutoCString originHost;
+  if (NS_FAILED(aUri->GetAsciiHost(originHost))) {
+    return;
+  }
+
+  nsCString* map = mAltSvcMappingTemptativeMap.Get(originHost);
+  if (map) {
+    int32_t originPort = 80;
+    aUri->GetPort(&originPort);
+    LOG(("nsHttpHandler::MaybeAddAltSvcForTesting for %s map: %s",
+         originHost.get(), PromiseFlatCString(*map).get()));
+    AltSvcMapping::ProcessHeader(*map, nsCString("https"), originHost,
+                                 originPort, aUsername, aTopWindowOrigin,
+                                 aPrivateBrowsing, aIsolated, aCallbacks,
+                                 nullptr, 0, aOriginAttributes, true);
+  }
 }
 
 }  // namespace mozilla::net
