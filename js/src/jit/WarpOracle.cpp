@@ -968,7 +968,9 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCallIC(
   RootedFunction targetFunction(cx_, callData->target);
   RootedScript targetScript(cx_, targetFunction->nonLazyScript());
   ICScript* icScript = callData->icScript;
-  MOZ_ASSERT(TrialInliner::canInline(targetFunction, script_));
+  if (!TrialInliner::canInline(targetFunction, script_)) {
+    return false;
+  }
   MOZ_ASSERT(targetScript->jitScript() == icScript->jitScript());
 
   // Add the inlined script to the inline script tree.

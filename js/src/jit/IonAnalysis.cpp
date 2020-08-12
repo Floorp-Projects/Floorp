@@ -4587,6 +4587,7 @@ static bool ArgumentsUseCanBeLazy(JSContext* cx, JSScript* script,
   if (JitOptions.warpBuilder) {
     if (ins->isGetPropertyCache() && index == 0 &&
         IsGetElemPC(ins->resumePoint()->pc())) {
+      script->setUninlineable();
       *argumentsContentsObserved = true;
       return true;
     }
