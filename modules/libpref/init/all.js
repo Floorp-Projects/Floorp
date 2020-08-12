@@ -1447,12 +1447,6 @@ pref("network.http.http3.default-qpack-table-size", 65536); // 64k
 // instructions.
 pref("network.http.http3.default-max-stream-blocked", 20);
 
-
-// This is only for testing!
-// This adds alt-svc mapping and it has a form of <host-name>;<alt-svc-header>
-// Example: example1.com;h3-29=":443",example2.com;h3-29=":443"
-pref("network.http.http3.alt-svc-mapping-for-testing", "");
-
 // alt-svc allows separation of transport routing from
 // the origin host without using a proxy.
 pref("network.http.altsvc.enabled", true);
