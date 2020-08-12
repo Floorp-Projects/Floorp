@@ -42,9 +42,172 @@ using namespace mozilla::widget;
   MOZ_LOG(gWinWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 static mozilla::LazyLogModule gWinWakeLockLog("WinWakeLock");
 
-// A wake lock listener that disables screen saver when requested by
-// Gecko. For example when we're playing video in a foreground tab we
-// don't want the screen saver to turn on.
+// This wakelock listener is used for Window7 and above.
+class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
+ public:
+  NS_DECL_ISUPPORTS
+  WinWakeLockListener() { MOZ_ASSERT(XRE_IsParentProcess()); }
+
+ private:
+  ~WinWakeLockListener() {
+    ReleaseWakelockIfNeeded(PowerRequestDisplayRequired);
+    ReleaseWakelockIfNeeded(PowerRequestExecutionRequired);
+  }
+
+  void SetHandle(HANDLE aHandle, POWER_REQUEST_TYPE aType) {
+    switch (aType) {
+      case PowerRequestDisplayRequired: {
+        if (!aHandle && mDisplayHandle) {
+          CloseHandle(mDisplayHandle);
+        }
+        mDisplayHandle = aHandle;
+        return;
+      }
+      case PowerRequestExecutionRequired: {
+        if (!aHandle && mNonDisplayHandle) {
+          CloseHandle(mNonDisplayHandle);
+        }
+        mNonDisplayHandle = aHandle;
+        return;
+      }
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid request type");
+        return;
+    }
+  }
+
+  HANDLE GetHandle(POWER_REQUEST_TYPE aType) const {
+    switch (aType) {
+      case PowerRequestDisplayRequired:
+        return mDisplayHandle;
+      case PowerRequestExecutionRequired:
+        return mNonDisplayHandle;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid request type");
+        return nullptr;
+    }
+  }
+
+  HANDLE CreateHandle(POWER_REQUEST_TYPE aType) {
+    MOZ_ASSERT(!GetHandle(aType));
+    REASON_CONTEXT context = {0};
+    context.Version = POWER_REQUEST_CONTEXT_VERSION;
+    context.Flags = POWER_REQUEST_CONTEXT_SIMPLE_STRING;
+    context.Reason.SimpleReasonString = RequestTypeLPWSTR(aType);
+    HANDLE handle = PowerCreateRequest(&context);
+    if (!handle) {
+      WAKE_LOCK_LOG("Failed to create handle for %s, error=%d",
+                    RequestTypeStr(aType), GetLastError());
+      return nullptr;
+    }
+    SetHandle(handle, aType);
+    return handle;
+  }
+
+  LPWSTR RequestTypeLPWSTR(POWER_REQUEST_TYPE aType) const {
+    switch (aType) {
+      case PowerRequestDisplayRequired:
+        return const_cast<LPWSTR>(L"display request");  // -Wwritable-strings
+      case PowerRequestExecutionRequired:
+        return const_cast<LPWSTR>(
+            L"non-display request");  // -Wwritable-strings
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid request type");
+        return const_cast<LPWSTR>(L"unknown");  // -Wwritable-strings
+    }
+  }
+
+  const char* RequestTypeStr(POWER_REQUEST_TYPE aType) const {
+    switch (aType) {
+      case PowerRequestDisplayRequired:
+        return "display request";
+      case PowerRequestExecutionRequired:
+        return "non-display request";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid request type");
+        return "unknown";
+    }
+  }
+
+  void RequestWakelockIfNeeded(POWER_REQUEST_TYPE aType) {
+    if (GetHandle(aType)) {
+      WAKE_LOCK_LOG("Already requested lock for %s", RequestTypeStr(aType));
+      return;
+    }
+
+    WAKE_LOCK_LOG("Prepare a wakelock for %s", RequestTypeStr(aType));
+    HANDLE handle = CreateHandle(aType);
+    if (!handle) {
+      WAKE_LOCK_LOG("Failed due to no handle for %s", RequestTypeStr(aType));
+      return;
+    }
+
+    if (PowerSetRequest(handle, aType)) {
+      WAKE_LOCK_LOG("Requested %s lock", RequestTypeStr(aType));
+    } else {
+      WAKE_LOCK_LOG("Failed to request %s lock, error=%d",
+                    RequestTypeStr(aType), GetLastError());
+      SetHandle(nullptr, aType);
+    }
+  }
+
+  void ReleaseWakelockIfNeeded(POWER_REQUEST_TYPE aType) {
+    if (!GetHandle(aType)) {
+      WAKE_LOCK_LOG("Already released lock for %s", RequestTypeStr(aType));
+      return;
+    }
+
+    WAKE_LOCK_LOG("Prepare to release wakelock for %s", RequestTypeStr(aType));
+    if (!PowerClearRequest(GetHandle(aType), aType)) {
+      WAKE_LOCK_LOG("Failed to release %s lock, error=%d",
+                    RequestTypeStr(aType), GetLastError());
+      return;
+    }
+    SetHandle(nullptr, aType);
+    WAKE_LOCK_LOG("Released wakelock for %s", RequestTypeStr(aType));
+  }
+
+  NS_IMETHOD Callback(const nsAString& aTopic,
+                      const nsAString& aState) override {
+    WAKE_LOCK_LOG("topic=%s, state=%s", NS_ConvertUTF16toUTF8(aTopic).get(),
+                  NS_ConvertUTF16toUTF8(aState).get());
+    if (!aTopic.EqualsASCII("screen") && !aTopic.EqualsASCII("audio-playing") &&
+        !aTopic.EqualsASCII("video-playing")) {
+      return NS_OK;
+    }
+
+    const bool isNonDisplayLock = aTopic.EqualsASCII("audio-playing");
+    bool requestLock = false;
+    if (isNonDisplayLock) {
+      requestLock = aState.EqualsASCII("locked-foreground") ||
+                    aState.EqualsASCII("locked-background");
+    } else {
+      requestLock = aState.EqualsASCII("locked-foreground");
+    }
+
+    if (isNonDisplayLock) {
+      if (requestLock) {
+        RequestWakelockIfNeeded(PowerRequestExecutionRequired);
+      } else {
+        ReleaseWakelockIfNeeded(PowerRequestExecutionRequired);
+      }
+    } else {
+      if (requestLock) {
+        RequestWakelockIfNeeded(PowerRequestDisplayRequired);
+      } else {
+        ReleaseWakelockIfNeeded(PowerRequestDisplayRequired);
+      }
+    }
+    return NS_OK;
+  }
+
+  // Handle would only exist when we request wakelock successfully.
+  HANDLE mDisplayHandle = nullptr;
+  HANDLE mNonDisplayHandle = nullptr;
+};
+NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener)
+
+// This wakelock is used for the version older than Windows7.
 class LegacyWinWakeLockListener final : public nsIDOMMozWakeLockListener {
  public:
   NS_DECL_ISUPPORTS
@@ -98,7 +261,11 @@ static void AddScreenWakeLockListener() {
   nsCOMPtr<nsIPowerManagerService> sPowerManagerService =
       do_GetService(POWERMANAGERSERVICE_CONTRACTID);
   if (sPowerManagerService) {
-    sWakeLockListener = new LegacyWinWakeLockListener();
+    if (IsWin7SP1OrLater()) {
+      sWakeLockListener = new WinWakeLockListener();
+    } else {
+      sWakeLockListener = new LegacyWinWakeLockListener();
+    }
     sPowerManagerService->AddWakeLockListener(sWakeLockListener);
   } else {
     NS_WARNING(
