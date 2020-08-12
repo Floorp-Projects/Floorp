@@ -9,6 +9,7 @@ var mainThread = threadManager.currentThread;
 var listener1 = {
   onLookupComplete(inRequest, inRecord, inStatus) {
     Assert.equal(inStatus, Cr.NS_OK);
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     var answer = inRecord.getNextAddrAsString();
     Assert.ok(answer == "127.0.0.1" || answer == "::1");
     test2();
@@ -19,6 +20,7 @@ var listener1 = {
 var listener2 = {
   onLookupComplete(inRequest, inRecord, inStatus) {
     Assert.equal(inStatus, Cr.NS_OK);
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     var answer = inRecord.getNextAddrAsString();
     Assert.ok(answer == "127.0.0.1" || answer == "::1");
     test3();

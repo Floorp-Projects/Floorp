@@ -148,6 +148,7 @@ add_task(async function testEsniPushPart1() {
   let [inRequest, inRecord, inStatus] = await listenerAddr;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
+  inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   let answer = inRecord.getNextAddrAsString();
   Assert.equal(answer, test_answer_addr, "got correct answer");
 });

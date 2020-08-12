@@ -9,6 +9,7 @@ var nextTest;
 
 var listener = {
   onLookupComplete(inRequest, inRecord, inStatus) {
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     var answer = inRecord.getNextAddrAsString();
     Assert.ok(answer == "127.0.0.1" || answer == "::1");
 

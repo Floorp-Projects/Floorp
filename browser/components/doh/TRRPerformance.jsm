@@ -182,7 +182,10 @@ class LookupAggregator {
               domain: usedDomain,
               trr,
               status,
-              time: record ? record.trrFetchDurationNetworkOnly : -1,
+              time: record
+                ? record.QueryInterface(Ci.nsIDNSAddrRecord)
+                    .trrFetchDurationNetworkOnly
+                : -1,
               retryCount,
             });
 
