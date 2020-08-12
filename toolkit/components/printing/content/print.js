@@ -595,20 +595,33 @@ class TwistySummary extends PrintUIControlMixin(HTMLElement) {
 }
 customElements.define("twisty-summary", TwistySummary);
 
-class PageCount extends HTMLParagraphElement {
-  constructor() {
-    super();
+class PageCount extends PrintUIControlMixin(HTMLElement) {
+  initialize() {
+    super.initialize();
     document.addEventListener("page-count", this);
   }
 
-  handleEvent(e) {
-    let { numPages } = e.detail;
+  update(settings) {
+    this.numCopies = settings.numCopies;
+    this.render();
+  }
+
+  render() {
+    if (!this.numCopies || !this.numPages) {
+      return;
+    }
     document.l10n.setAttributes(this, "printui-sheets-count", {
-      sheetCount: numPages,
+      sheetCount: this.numPages * this.numCopies,
     });
     if (this.hidden) {
       document.l10n.translateElements([this]).then(() => (this.hidden = false));
     }
   }
+
+  handleEvent(e) {
+    let { numPages } = e.detail;
+    this.numPages = numPages;
+    this.render();
+  }
 }
-customElements.define("page-count", PageCount, { extends: "p" });
+customElements.define("page-count", PageCount);
