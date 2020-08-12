@@ -82,6 +82,10 @@ body {
   margin: 0;
 }
 
+#sheet-count[loading] {
+  visibility: hidden;
+}
+
 form#print {
   display: flex;
   flex: 1 1 auto;
