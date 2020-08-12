@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Targets = require("devtools/server/actors/targets/index");
-
 const TYPES = {
   CONSOLE_MESSAGE: "console-message",
   CSS_CHANGE: "css-change",
@@ -16,16 +14,17 @@ const TYPES = {
 };
 exports.TYPES = TYPES;
 
-// Helper dictionaries, which will contain data specific to each resource type.
+// Helper dictionary, which will contain all data specific to each resource type.
 // - `path` is the absolute path to the module defining the Resource Watcher class,
-// Also see the attributes added by `augmentResourceDictionary` for each type:
+// - `parentProcessResource` is an optional boolean to be set to true for resources to be
+//    watched from the parent process.
+// Also see the following for loop which will add new attributes for each type:
 // - `watchers` is a weak map which will store Resource Watchers
 //    (i.e. devtools/server/actors/resources/ class instances)
 //    keyed by target actor -or- watcher actor.
 // - `WatcherClass` is a shortcut to the Resource Watcher module.
 //    Each module exports a Resource Watcher class.
-// These lists are specific for the parent process and each target type.
-const FrameTargetResources = augmentResourceDictionary({
+const Resources = {
   [TYPES.CONSOLE_MESSAGE]: {
     path: "devtools/server/actors/resources/console-messages",
   },
@@ -44,58 +43,12 @@ const FrameTargetResources = augmentResourceDictionary({
   [TYPES.PLATFORM_MESSAGE]: {
     path: "devtools/server/actors/resources/platform-messages",
   },
-});
-const ParentProcessResources = augmentResourceDictionary({});
+};
 
-function augmentResourceDictionary(dict) {
-  for (const resource of Object.values(dict)) {
-    resource.watchers = new WeakMap();
+for (const resource of Object.values(Resources)) {
+  resource.watchers = new WeakMap();
 
-    loader.lazyRequireGetter(resource, "WatcherClass", resource.path);
-  }
-  return dict;
-}
-
-/**
- * For a given actor, return the related dictionary defined just before,
- * that contains info about how to listen for a given resource type, from a given actor.
- *
- * @param Actor watcherOrTargetActor
- *        Either a WatcherActor or a TargetActor which can be listening to a resource.
- */
-function getResourceTypeDictionary(watcherOrTargetActor) {
-  const { typeName } = watcherOrTargetActor;
-  if (typeName == "watcher") {
-    return ParentProcessResources;
-  }
-  const { targetType } = watcherOrTargetActor;
-  switch (targetType) {
-    case "frame":
-      return FrameTargetResources;
-    default:
-      throw new Error(
-        `Unsupported target actor typeName '${targetType}'`
-      );
-  }
-}
-
-/**
- * For a given actor, return the object stored in one of the previous dictionary
- * that contains info about how to listen for a given resource type, from a given actor.
- *
- * @param Actor watcherOrTargetActor
- *        Either a WatcherActor or a TargetActor which can be listening to a resource.
- * @param String resourceType
- *        The resource type to be observed.
- */
-function getResourceTypeEntry(watcherOrTargetActor, resourceType) {
-  const dict = getResourceTypeDictionary(watcherOrTargetActor);
-  if (!(resourceType in dict)) {
-    throw new Error(
-      `Unsupported resource type '${resourceType}' for ${watcherOrTargetActor.typeName}`
-    );
-  }
-  return dict[resourceType];
+  loader.lazyRequireGetter(resource, "WatcherClass", resource.path);
 }
 
 /**
@@ -115,17 +68,12 @@ function getResourceTypeEntry(watcherOrTargetActor, resourceType) {
  *        List of all type of resource to listen to.
  */
 function watchResources(watcherOrTargetActor, resourceTypes) {
-  // If we are given a target actor, filter out the resource types supported by the target.
-  // When using sharedData to pass types between processes, we are passing them for all target types.
-  const { targetType } = watcherOrTargetActor;
-  if (targetType) {
-    resourceTypes = getResourceTypesForTargetType(resourceTypes, targetType);
-  }
   for (const resourceType of resourceTypes) {
-    const { watchers, WatcherClass } = getResourceTypeEntry(
-      watcherOrTargetActor,
-      resourceType
-    );
+    if (!(resourceType in Resources)) {
+      throw new Error(`Unsupported resource type '${resourceType}'`);
+    }
+    // Pull all info about this resource type from `Resources` global object
+    const { watchers, WatcherClass } = Resources[resourceType];
 
     // Ignore resources we're already listening to
     if (watchers.has(watcherOrTargetActor)) {
@@ -140,31 +88,52 @@ function watchResources(watcherOrTargetActor, resourceTypes) {
     watchers.set(watcherOrTargetActor, watcher);
   }
 }
-exports.watchResources = watchResources;
-
 function getParentProcessResourceTypes(resourceTypes) {
   return resourceTypes.filter(resourceType => {
-    return resourceType in ParentProcessResources;
+    if (!(resourceType in Resources)) {
+      throw new Error(`Unsupported resource type '${resourceType}'`);
+    }
+    return !!Resources[resourceType].parentProcessResource;
   });
 }
-exports.getParentProcessResourceTypes = getParentProcessResourceTypes;
-
-function getResourceTypesForTargetType(resourceTypes, targetType) {
-  if (targetType == Targets.TYPES.FRAME) {
-    return resourceTypes.filter(resourceType => {
-      return resourceType in FrameTargetResources;
-    });
-  }
-  throw new Error(`Unsupported target type ${targetType}`);
-}
-exports.getResourceTypesForTargetType = getResourceTypesForTargetType;
-
-function hasResourceTypesForTargets(resourceTypes) {
-  return resourceTypes.some(resourceType => {
-    return resourceType in FrameTargetResources;
+function getContentProcessResourceTypes(resourceTypes) {
+  return resourceTypes.filter(resourceType => {
+    if (!(resourceType in Resources)) {
+      throw new Error(`Unsupported resource type '${resourceType}'`);
+    }
+    return !Resources[resourceType].parentProcessResource;
   });
 }
-exports.hasResourceTypesForTargets = hasResourceTypesForTargets;
+
+/**
+ * See `watchResources` jsdoc.
+ *
+ * This one is to be called from the target process/thread.
+ * This is called by DevToolsFrameChild.
+ */
+function watchTargetResources(targetActor, resourceTypes) {
+  const contentProcessTypes = getContentProcessResourceTypes(resourceTypes);
+  watchResources(targetActor, contentProcessTypes);
+}
+exports.watchTargetResources = watchTargetResources;
+
+/**
+ * See `watchResources` jsdoc.
+ * This one is to be called from the parent process.
+ * This is called by WatcherActor.
+ *
+ * @return Array<String>
+ *         List of all resource types that aren't watched from the parent process.
+ */
+function watchParentProcessResources(watcherActor, resourceTypes) {
+  const parentProcessTypes = getParentProcessResourceTypes(resourceTypes);
+  watchResources(watcherActor, parentProcessTypes);
+
+  return resourceTypes.filter(
+    resource => !parentProcessTypes.includes(resource)
+  );
+}
+exports.watchParentProcessResources = watchParentProcessResources;
 
 /**
  * Stop watching for a list of resource types.
@@ -176,11 +145,11 @@ exports.hasResourceTypesForTargets = hasResourceTypesForTargets;
  */
 function unwatchResources(watcherOrTargetActor, resourceTypes) {
   for (const resourceType of resourceTypes) {
+    if (!(resourceType in Resources)) {
+      throw new Error(`Unsupported resource type '${resourceType}'`);
+    }
     // Pull all info about this resource type from `Resources` global object
-    const { watchers } = getResourceTypeEntry(
-      watcherOrTargetActor,
-      resourceType
-    );
+    const { watchers } = Resources[resourceType];
 
     const watcher = watchers.get(watcherOrTargetActor);
     if (watcher) {
@@ -189,18 +158,44 @@ function unwatchResources(watcherOrTargetActor, resourceTypes) {
     }
   }
 }
-exports.unwatchResources = unwatchResources;
+
+/**
+ * See `unwatchResources` jsdoc.
+ * This one is to be called from the target process/thread.
+ * This is called by DevToolsFrameChild.
+ */
+function unwatchTargetResources(targetActor, resourceTypes) {
+  const contentProcessTypes = getContentProcessResourceTypes(resourceTypes);
+  unwatchResources(targetActor, contentProcessTypes);
+}
+exports.unwatchTargetResources = unwatchTargetResources;
+
+/**
+ * See `unwatchResources` jsdoc.
+ * This one is to be called from the parent process.
+ * This is called by WatcherActor.
+ *
+ * @return Array<String>
+ *         List of all resource types that aren't watched from the parent process.
+ */
+function unwatchParentProcessResources(watcherActor, resourceTypes) {
+  const parentProcessTypes = getParentProcessResourceTypes(resourceTypes);
+  unwatchResources(watcherActor, parentProcessTypes);
+
+  return resourceTypes.filter(
+    resource => !parentProcessTypes.includes(resource)
+  );
+}
+exports.unwatchParentProcessResources = unwatchParentProcessResources;
 
 /**
  * Stop watching for all watched resources on a given actor.
  *
  * @param Actor watcherOrTargetActor
- *        The related actor, already passed to watchResources.
+ *        The related actor, already passed to watchTargetResources or watchParentProcessResources.
  */
 function unwatchAllTargetResources(watcherOrTargetActor) {
-  for (const { watchers } of Object.values(
-    getResourceTypeDictionary(watcherOrTargetActor)
-  )) {
+  for (const { watchers } of Object.values(Resources)) {
     const watcher = watchers.get(watcherOrTargetActor);
     if (watcher) {
       watcher.destroy();
@@ -225,7 +220,11 @@ exports.unwatchAllTargetResources = unwatchAllTargetResources;
  *         The resource watcher instance, defined in devtools/server/actors/resources/
  */
 function getResourceWatcher(watcherOrTargetActor, resourceType) {
-  const { watchers } = getResourceTypeEntry(watcherOrTargetActor, resourceType);
+  if (!(resourceType in Resources)) {
+    throw new Error(`Unsupported resource type '${resourceType}'`);
+  }
+  // Pull the watchers Map for this resource type from `Resources` global object
+  const { watchers } = Resources[resourceType];
 
   return watchers.get(watcherOrTargetActor);
 }
