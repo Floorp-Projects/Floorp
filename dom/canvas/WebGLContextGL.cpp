@@ -978,9 +978,12 @@ void WebGLContext::ReadPixelsPbo(const webgl::ReadPixelsDesc& desc,
 static webgl::PackingInfo DefaultReadPixelPI(
     const webgl::FormatUsageInfo* usage) {
   MOZ_ASSERT(usage->IsRenderable());
-
-  switch (usage->format->componentType) {
+  const auto& format = *usage->format;
+  switch (format.componentType) {
     case webgl::ComponentType::NormUInt:
+      if (format.r == 16) {
+        return {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_SHORT};
+      }
       return {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE};
 
     case webgl::ComponentType::Int:

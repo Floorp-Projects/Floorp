@@ -436,6 +436,17 @@ static void InitFormatInfo() {
     // OES_compressed_ETC1_RGB8_texture
     AddFormatInfo(FOO(ETC1_RGB8_OES), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB, false, ComponentType::NormUInt);
 
+    // EXT_texture_norm16
+    AddFormatInfo(FOO(R16   ), 2, 16, 0, 0, 0, 0,0, UnsizedFormat::R   , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RG16  ), 4, 16,16, 0, 0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGB16 ), 6, 16,16,16, 0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGBA16), 8, 16,16,16,16, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+
+    AddFormatInfo(FOO(R16_SNORM   ), 2, 16, 0, 0, 0, 0,0, UnsizedFormat::R   , false, ComponentType::NormInt);
+    AddFormatInfo(FOO(RG16_SNORM  ), 4, 16,16, 0, 0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormInt);
+    AddFormatInfo(FOO(RGB16_SNORM ), 6, 16,16,16, 0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormInt);
+    AddFormatInfo(FOO(RGBA16_SNORM), 8, 16,16,16,16, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormInt);
+
 #undef FOO
 
     // 'Virtual' effective formats have no sizedFormat.
@@ -516,6 +527,7 @@ static void InitFormatInfo() {
     SET_BY_SUFFIX(8I)
     SET_BY_SUFFIX(8UI)
 
+    SET_BY_SUFFIX(16)
     SET_BY_SUFFIX(16I)
     SET_BY_SUFFIX(16UI)
 
