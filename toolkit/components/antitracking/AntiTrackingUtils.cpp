@@ -550,6 +550,17 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  // When a top-level load is opened by window.open, BrowsingContext from
+  // LoadInfo is its opener, which may make the third-party caculation code
+  // below returns an incorrect result. So we use TYPE_DOCUMENT to
+  // ensure a top-level load is not considered 3rd-party.
+  auto policyType = loadInfo->GetExternalContentPolicyType();
+  if (policyType == nsIContentPolicy::TYPE_DOCUMENT) {
+    loadInfo->SetIsThirdPartyContextToTopWindow(false);
+    return;
+  }
+
   RefPtr<BrowsingContext> bc;
   loadInfo->GetBrowsingContext(getter_AddRefs(bc));
 
