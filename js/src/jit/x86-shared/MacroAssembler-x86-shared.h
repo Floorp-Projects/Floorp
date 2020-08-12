@@ -491,17 +491,25 @@ class MacroAssemblerX86Shared : public Assembler {
   void notInt32x4(Operand in, FloatRegister out);
   void notFloat32x4(Operand in, FloatRegister out);
 
-  void minFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister output);
-  void maxFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister temp,
-                    FloatRegister output);
+  void minMaxFloat32x4(bool isMin, FloatRegister lhs, Operand rhs,
+                       FloatRegister temp1, FloatRegister temp2,
+                       FloatRegister output);
+  void minMaxFloat64x2(bool isMin, FloatRegister lhs, Operand rhs,
+                       FloatRegister temp1, FloatRegister temp2,
+                       FloatRegister output);
+  void minFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister temp1,
+                    FloatRegister temp2, FloatRegister output);
+  void maxFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister temp1,
+                    FloatRegister temp2, FloatRegister output);
   void minNumFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister temp,
                        FloatRegister output);
   void maxNumFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister temp,
                        FloatRegister output);
 
-  void minFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister output);
-  void maxFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister temp,
-                    FloatRegister output);
+  void minFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister temp1,
+                    FloatRegister temp2, FloatRegister output);
+  void maxFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister temp1,
+                    FloatRegister temp2, FloatRegister output);
 
   void absFloat32x4(Operand in, FloatRegister out);
   void absFloat64x2(Operand in, FloatRegister out);
