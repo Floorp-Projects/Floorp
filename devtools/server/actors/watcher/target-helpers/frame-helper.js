@@ -8,7 +8,6 @@ const Services = require("Services");
 const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
-const Targets = require("devtools/server/actors/targets/index");
 
 /**
  * Force creating targets for all existing BrowsingContext, that, for a given Watcher Actor.
@@ -146,7 +145,7 @@ function getWatchingBrowsingContexts(watcher) {
   // either via devtools.contenttoolbox.fission or devtools.browsertoolbox.fission pref.
   const watchingAdditionalTargets = WatcherRegistry.isWatchingTargets(
     watcher,
-    Targets.TYPES.FRAME
+    "frame"
   );
   const { browserElement } = watcher;
   const browsingContexts = watchingAdditionalTargets
