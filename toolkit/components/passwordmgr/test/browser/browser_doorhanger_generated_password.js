@@ -363,6 +363,92 @@ add_task(async function autocomplete_generated_password_auto_saved() {
   );
 });
 
+add_task(
+  async function autocomplete_generated_password_with_confirm_field_auto_saved() {
+    // confirm behavior when filling a generated password via autocomplete
+    // when there are no other logins and the form has a confirm password field
+    const FORM_WITH_CONFIRM_FIELD_PAGE_PATH =
+      "/browser/toolkit/components/passwordmgr/test/browser/form_basic_with_confirm_field.html";
+    const confirmPasswordInputSelector = "#form-basic-confirm-password";
+    await setup_withNoLogins();
+    await openFormInNewTab(
+      TEST_ORIGIN + FORM_WITH_CONFIRM_FIELD_PAGE_PATH,
+      {
+        password: { selector: passwordInputSelector, expectedValue: "" },
+        username: { selector: usernameInputSelector, expectedValue: "" },
+      },
+      async function taskFn(browser) {
+        let storageChangedPromise = TestUtils.topicObserved(
+          "passwordmgr-storage-changed",
+          (_, data) => data == "addLogin"
+        );
+        // Let the hint hide itself this first time
+        let forceClosePopup = false;
+        let hintShownAndVerified = verifyConfirmationHint(
+          browser,
+          forceClosePopup
+        );
+
+        await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
+        let [{ username, password }] = await storageChangedPromise;
+        await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
+        await verifyGeneratedPasswordWasFilled(
+          browser,
+          confirmPasswordInputSelector
+        );
+
+        // Make sure confirmation hint was shown
+        info("waiting for verifyConfirmationHint");
+        await hintShownAndVerified;
+
+        // Check properties of the newly auto-saved login
+        is(username, "", "Saved login should have no username");
+        is(
+          password.length,
+          LoginTestUtils.generation.LENGTH,
+          "Saved login should have generated password"
+        );
+
+        let notif = await openAndVerifyDoorhanger(browser, "password-change", {
+          dismissed: true,
+          anchorExtraAttr: "attention",
+          usernameValue: "",
+          passwordLength: LoginTestUtils.generation.LENGTH,
+        });
+
+        let promiseHidden = BrowserTestUtils.waitForEvent(
+          PopupNotifications.panel,
+          "popuphidden"
+        );
+        clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+        await promiseHidden;
+
+        // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
+        ok(
+          !notif.anchorElement.hasAttribute("extraAttr"),
+          "Check if the extraAttr attribute was removed"
+        );
+        await cleanupDoorhanger(notif);
+
+        storageChangedPromise = TestUtils.topicObserved(
+          "passwordmgr-storage-changed",
+          (_, data) => data == "modifyLogin"
+        );
+        let [autoSavedLogin] = Services.logins.getAllLogins();
+        info("waiting for submitForm");
+        await submitForm(browser);
+        await storageChangedPromise;
+        verifyLogins([
+          {
+            timesUsed: autoSavedLogin.timesUsed + 1,
+            username: "",
+          },
+        ]);
+      }
+    );
+  }
+);
+
 add_task(async function autocomplete_generated_password_saved_empty_username() {
   // confirm behavior when filling a generated password via autocomplete
   // when there is an existing saved login with a "" username
