@@ -2789,6 +2789,7 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   UniquePtr<dom::RTCStatsReportInternal> report(
       new dom::RTCStatsReportInternal);
   report->mPcid = NS_ConvertASCIItoUTF16(mName.c_str());
+  report->mBrowserId = mWindow->GetBrowsingContext()->BrowserId();
   report->mConfiguration.Construct(mJsConfiguration);
   // TODO(bug 1589416): We need to do better here.
   if (!mIceStartTime.IsNull()) {
