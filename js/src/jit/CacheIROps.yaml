@@ -2285,13 +2285,6 @@
   args:
     bigInt: BigIntId
 
-- name: LoadValueTruthyResult
-  shared: true
-  transpile: true
-  cost_estimate: 4
-  args:
-    input: ValId
-
 - name: LoadValueResult
   shared: false
   transpile: false
