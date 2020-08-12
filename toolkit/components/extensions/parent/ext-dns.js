@@ -48,6 +48,7 @@ this.dns = class extends ExtensionAPI {
                   if (!Components.isSuccessCode(inStatus)) {
                     return reject({ message: getErrorString(inStatus) });
                   }
+                  inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
                   if (dnsFlags & Ci.nsIDNSService.RESOLVE_CANONICAL_NAME) {
                     try {
                       response.canonicalName = inRecord.canonicalName;
