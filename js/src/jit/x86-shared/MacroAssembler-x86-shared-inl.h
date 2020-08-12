@@ -1961,92 +1961,24 @@ void MacroAssembler::absFloat64x2(FloatRegister src, FloatRegister dest) {
 
 // NaN-propagating minimum
 
-void MacroAssembler::minFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::minFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::minFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::minFloat32x4(lhsDest, Operand(rhs), lhsDest);
 }
 
-void MacroAssembler::minFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::minFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::minFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::minFloat64x2(lhsDest, Operand(rhs), lhsDest);
 }
 
-// NaN-propagating maximum
+// NaN-propagating maxium
 
 void MacroAssembler::maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::maxFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+                                  FloatRegister temp) {
+  MacroAssemblerX86Shared::maxFloat32x4(lhsDest, Operand(rhs), temp, lhsDest);
 }
 
 void MacroAssembler::maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::maxFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
-}
-
-// Compare-based minimum
-
-void MacroAssembler::pseudoMinFloat32x4(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  vminps(Operand(rhs), lhsDest, lhsDest);
-}
-
-void MacroAssembler::pseudoMinFloat64x2(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  vminpd(Operand(rhs), lhsDest, lhsDest);
-}
-
-// Compare-based maximum
-
-void MacroAssembler::pseudoMaxFloat32x4(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  vmaxps(Operand(rhs), lhsDest, lhsDest);
-}
-
-void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  vmaxpd(Operand(rhs), lhsDest, lhsDest);
-}
-
-void MacroAssembler::widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
-  vpmaddwd(Operand(rhs), lhsDest, lhsDest);
-}
-
-// Rounding
-
-void MacroAssembler::ceilFloat32x4(FloatRegister src, FloatRegister dest) {
-  vroundps(Assembler::SSERoundingMode::Ceil, Operand(src), dest);
-}
-
-void MacroAssembler::ceilFloat64x2(FloatRegister src, FloatRegister dest) {
-  vroundpd(Assembler::SSERoundingMode::Ceil, Operand(src), dest);
-}
-
-void MacroAssembler::floorFloat32x4(FloatRegister src, FloatRegister dest) {
-  vroundps(Assembler::SSERoundingMode::Floor, Operand(src), dest);
-}
-
-void MacroAssembler::floorFloat64x2(FloatRegister src, FloatRegister dest) {
-  vroundpd(Assembler::SSERoundingMode::Floor, Operand(src), dest);
-}
-
-void MacroAssembler::truncFloat32x4(FloatRegister src, FloatRegister dest) {
-  vroundps(Assembler::SSERoundingMode::Trunc, Operand(src), dest);
-}
-
-void MacroAssembler::truncFloat64x2(FloatRegister src, FloatRegister dest) {
-  vroundpd(Assembler::SSERoundingMode::Trunc, Operand(src), dest);
-}
-
-void MacroAssembler::nearestFloat32x4(FloatRegister src, FloatRegister dest) {
-  vroundps(Assembler::SSERoundingMode::Nearest, Operand(src), dest);
-}
-
-void MacroAssembler::nearestFloat64x2(FloatRegister src, FloatRegister dest) {
-  vroundpd(Assembler::SSERoundingMode::Nearest, Operand(src), dest);
+                                  FloatRegister temp) {
+  MacroAssemblerX86Shared::maxFloat64x2(lhsDest, Operand(rhs), temp, lhsDest);
 }
 
 // Floating add

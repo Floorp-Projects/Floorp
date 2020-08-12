@@ -746,14 +746,12 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
       rhs = tmp;
       break;
     }
+    case wasm::SimdOp::F32x4Max:
+    case wasm::SimdOp::F64x2Max:
     case wasm::SimdOp::I64x2Mul:
     case wasm::SimdOp::V8x16Swizzle:
       tempReg0 = tempSimd128();
       break;
-    case wasm::SimdOp::F32x4Min:
-    case wasm::SimdOp::F32x4Max:
-    case wasm::SimdOp::F64x2Min:
-    case wasm::SimdOp::F64x2Max:
     case wasm::SimdOp::I8x16LtU:
     case wasm::SimdOp::I8x16GtU:
     case wasm::SimdOp::I8x16LeU:
