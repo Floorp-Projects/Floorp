@@ -11,8 +11,8 @@
 #include "PresentationIPCService.h"
 #include "nsThreadUtils.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 /*
  * Implementation of PresentationChild
@@ -168,3 +168,6 @@ mozilla::ipc::IPCResult PresentationRequestChild::RecvNotifyRequestUrlSelected(
   Unused << NS_WARN_IF(NS_FAILED(mCallback->NotifySuccess(aUrl)));
   return IPC_OK();
 }
+
+}  // namespace dom
+}  // namespace mozilla
