@@ -33,6 +33,7 @@ ASTDEF(AST_OPT_MEMBER_EXPR,       "OptionalMemberExpression",       "optionalMem
 ASTDEF(AST_FUNC_EXPR,             "FunctionExpression",             "functionExpression")
 ASTDEF(AST_ARROW_EXPR,            "ArrowFunctionExpression",        "arrowFunctionExpression")
 ASTDEF(AST_ARRAY_EXPR,            "ArrayExpression",                "arrayExpression")
+ASTDEF(AST_DELETE_OPTIONAL_EXPR,  "DeleteOptionalExpression",       "deleteOptionalExpression")
 ASTDEF(AST_OPTIONAL_EXPR,         "OptionalExpression",             "optionalExpression")
 ASTDEF(AST_SPREAD_EXPR,           "SpreadExpression",               "spreadExpression")
 ASTDEF(AST_OBJECT_EXPR,           "ObjectExpression",               "objectExpression")
