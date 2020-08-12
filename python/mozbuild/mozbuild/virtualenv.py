@@ -8,10 +8,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform
 import shutil
 import subprocess
 import sys
-
 
 IS_NATIVE_WIN = (sys.platform == 'win32' and os.sep == '\\')
 IS_CYGWIN = (sys.platform == 'cygwin')
@@ -589,6 +589,8 @@ class VirtualenvManager(object):
         populated from the manifest file. The optional ``python`` argument
         indicates the version of Python for pipenv to use.
         """
+        from distutils.version import LooseVersion
+
         pipenv = os.path.join(self.bin_path, 'pipenv')
         env = ensure_subprocess_env(os.environ.copy())
         env.update(ensure_subprocess_env({
@@ -615,12 +617,31 @@ class VirtualenvManager(object):
 
         def ensure_venv():
             """Create virtual environment if needed and return path"""
+            if python is not None:
+                if os.path.exists(python):
+                    pipenv_python = python
+                else:
+                    # If the desired python version matches the running python version,
+                    # then have pipenv install that same identical version.
+                    # Without this logic, pipenv would be more aggressive at finding the
+                    # newest possible relevant python version available.
+                    # However, due to "purge a venv if it has a different version" logic
+                    # we have elsewhere in-tree, it is more useful to have consistent
+                    # venv versions than new-as-possible venv versions.
+                    target_version = LooseVersion(python)
+                    current_version = LooseVersion(platform.python_version())
+                    pipenv_python = sys.executable
+
+                    for target, current in zip(target_version.version, current_version.version):
+                        if target != current:
+                            pipenv_python = python
+
             venv = get_venv()
             if venv is not None:
                 return venv
             if python is not None:
                 subprocess.check_call(
-                    [pipenv, '--python', python],
+                    [pipenv, '--python', pipenv_python],
                     stderr=subprocess.STDOUT,
                     env=env)
             return get_venv()
