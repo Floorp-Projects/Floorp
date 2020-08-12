@@ -744,6 +744,9 @@ class BaseAssembler : public GenericAssembler {
     twoByteOpSimd("vpmuludq", VEX_PD, OP2_PMULUDQ_VdqWdq, offset, base, src0,
                   dst);
   }
+  void vpmaddwd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
+    twoByteOpSimd("vpmaddwd", VEX_PD, OP2_PMADDWD_VdqWdq, src1, src0, dst);
+  }
 
   void vpmullw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vpmullw", VEX_PD, OP2_PMULLW_VdqWdq, src1, src0, dst);
@@ -3461,16 +3464,24 @@ class BaseAssembler : public GenericAssembler {
     twoByteOpSimd("vsqrtss", VEX_SS, OP2_SQRTSS_VssWss, src1, src0, dst);
   }
 
-  void vroundsd_irr(RoundingMode mode, XMMRegisterID src1, XMMRegisterID src0,
-                    XMMRegisterID dst) {
+  void vroundsd_irr(RoundingMode mode, XMMRegisterID src, XMMRegisterID dst) {
     threeByteOpImmSimd("vroundsd", VEX_PD, OP3_ROUNDSD_VsdWsd, ESCAPE_3A, mode,
-                       src1, src0, dst);
+                       src, invalid_xmm, dst);
   }
 
-  void vroundss_irr(RoundingMode mode, XMMRegisterID src1, XMMRegisterID src0,
-                    XMMRegisterID dst) {
+  void vroundss_irr(RoundingMode mode, XMMRegisterID src, XMMRegisterID dst) {
     threeByteOpImmSimd("vroundss", VEX_PD, OP3_ROUNDSS_VsdWsd, ESCAPE_3A, mode,
-                       src1, src0, dst);
+                       src, invalid_xmm, dst);
+  }
+  void vroundps_irr(SSERoundingMode mode, XMMRegisterID src,
+                    XMMRegisterID dst) {
+    threeByteOpImmSimd("vroundps", VEX_PD, OP3_ROUNDPS_VpsWps, ESCAPE_3A,
+                       int(mode), src, invalid_xmm, dst);
+  }
+  void vroundpd_irr(SSERoundingMode mode, XMMRegisterID src,
+                    XMMRegisterID dst) {
+    threeByteOpImmSimd("vroundpd", VEX_PD, OP3_ROUNDPD_VpdWpd, ESCAPE_3A,
+                       int(mode), src, invalid_xmm, dst);
   }
 
   void vinsertps_irr(uint32_t mask, XMMRegisterID src1, XMMRegisterID src0,
