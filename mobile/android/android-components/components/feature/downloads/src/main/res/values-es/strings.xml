@@ -40,4 +40,6 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Cerrar</string>
-</resources>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Completar acción usando</string>
+    </resources>

@@ -47,6 +47,12 @@
     <string name="mozac_feature_prompts_deny">တားမြစ်ပါ</string>
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">သင် သေချာ သလား?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">ဒီ ဆိုက် မှ ထွက်လို သလား? သင် ထည့်သွင်းသော အချက်အလက်များ မသိမ်းရသေးပါ။</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">နေမည်</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">ထွက်ခွာမည်</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">လ အားရွေးပါ</string>
     <!-- January (short description), used on the month chooser dialog. -->

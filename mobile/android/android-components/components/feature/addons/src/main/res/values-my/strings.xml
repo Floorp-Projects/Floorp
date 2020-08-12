@@ -134,6 +134,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">%1$s သို့ သူတို့ကိုပေါင်းထည့်ပါ။</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox အတ်အွန်နည်းပညာသည် ခေတ်မှီနေပါပြီ။ ယခု သုံးနေသည် အတ်အွန်များသည် Firefox 75 နှင့် အထက်တွင် သုံးဆွဲလို့မရနိုင်ပါ။</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">စတင်သုံး ထပ်ပေါ်းဆော့ဝဲထည့်သွင်းခြင်းအား ထောက်ပံ့ပေးနိုင်ရန် လုပ်ဆောင်လျက်ရှိပါသည်</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">မွမ်းမံချက်များကိုဒေါင်းလုပ် လုပ်၍ စစ်ဆေးခြင်း…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

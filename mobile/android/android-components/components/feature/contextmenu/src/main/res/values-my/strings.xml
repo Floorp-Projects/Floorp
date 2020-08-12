@@ -30,6 +30,14 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">ပြောင်းပါ</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">ပြင်ပအက်ပ်တွင်လင့်ခ်ဖွင့်ပါ</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">အီးမေလ်းလိပ်စာ မျှဝေမည်</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">အီးမေလ်းအား ကူးမည်</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">ကလစ်ဘုတ်သို့ အီးမေလ်းကိုကူးထားပြီး</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">အဆက်အသွယ်ထဲသို့ထည့်ပါ</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">ရှာရန်</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->

@@ -21,4 +21,13 @@
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_send_crash_report_in_progress">%1$s သို့ ပျက်စီးမှုအစီရင်ခံစာပို့ပါ</string>
+
+    <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
+    <string name="mozac_lib_crash_activity_title">ပျက်ဆီးမှု အစီရင်ခံစာများ</string>
+
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">မည်သည့် ပျက်စီးမှု အစီရင်ခံစာ မျှ မတင်သွင်းထားပါ။</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">မျှဝေ</string>
 </resources>
