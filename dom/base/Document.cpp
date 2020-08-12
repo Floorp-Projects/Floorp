@@ -6858,8 +6858,19 @@ static void NotifyActivityChanged(nsISupports* aSupports) {
 }
 
 bool Document::IsTopLevelWindowInactive() const {
-  BrowsingContext* bc = GetBrowsingContext();
-  return bc ? !bc->Top()->GetIsActiveBrowserWindow() : false;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShell();
+  if (!treeItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
+  if (!rootItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> domWindow = rootItem->GetWindow();
+  return domWindow && !domWindow->IsActive();
 }
 
 void Document::SetContainer(nsDocShell* aContainer) {

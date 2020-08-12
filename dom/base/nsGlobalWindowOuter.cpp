@@ -6616,15 +6616,33 @@ void nsGlobalWindowOuter::ActivateOrDeactivate(bool aActivate) {
   }
 }
 
+static CallState NotifyDocumentTree(Document& aDocument) {
+  aDocument.EnumerateSubDocuments(NotifyDocumentTree);
+  aDocument.UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, true);
+  return CallState::Continue;
+}
+
 void nsGlobalWindowOuter::SetActive(bool aActive) {
-  if (mBrowsingContext) {
-    Unused << mBrowsingContext->Top()->SetIsActiveBrowserWindow(aActive);
+  nsPIDOMWindowOuter::SetActive(aActive);
+  if (mDoc) {
+    NotifyDocumentTree(*mDoc);
   }
 }
 
 bool nsGlobalWindowOuter::IsTopLevelWindowActive() {
-  BrowsingContext* bc = GetBrowsingContext();
-  return bc ? bc->Top()->GetIsActiveBrowserWindow() : false;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShell());
+  if (!treeItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
+  if (!rootItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> domWindow = rootItem->GetWindow();
+  return domWindow && domWindow->IsActive();
 }
 
 void nsGlobalWindowOuter::SetIsBackground(bool aIsBackground) {
@@ -7524,6 +7542,7 @@ mozilla::dom::DocGroup* nsPIDOMWindowOuter::GetDocGroup() const {
 nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
     : mFrameElement(nullptr),
       mModalStateDepth(0),
+      mIsActive(false),
       mIsBackground(false),
       mMediaSuspend(StaticPrefs::media_block_autoplay_until_in_foreground()
                         ? nsISuspendedTypes::SUSPENDED_BLOCK

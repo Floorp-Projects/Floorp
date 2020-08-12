@@ -85,10 +85,6 @@ class WindowProxyHolder;
   FIELD(Name, nsString)                                                      \
   FIELD(Closed, bool)                                                        \
   FIELD(IsActive, bool)                                                      \
-  /* Indicates if the browser window is active for the purpose of the        \
-   * :-moz-window-inactive pseudoclass. Only read from or set on the         \
-   * top BrowsingContext. */                                                 \
-  FIELD(IsActiveBrowserWindow, bool)                                         \
   FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)                  \
   /* Current opener for the BrowsingContext. Weak reference */               \
   FIELD(OpenerId, uint64_t)                                                  \
@@ -737,10 +733,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DidSet(FieldIndex<IDX_UserActivationState>);
   void DidSet(FieldIndex<IDX_IsActive>, bool aOldValue);
-
-  bool CanSet(FieldIndex<IDX_IsActiveBrowserWindow>, const bool& aValue,
-              ContentParent* aSource);
-  void DidSet(FieldIndex<IDX_IsActiveBrowserWindow>, bool aOldValue);
 
   // Ensure that we only set the flag on the top level browsingContext.
   // And then, we do a pre-order walk in the tree to refresh the

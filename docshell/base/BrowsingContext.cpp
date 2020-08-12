@@ -2177,24 +2177,6 @@ bool BrowsingContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   return true;
 }
 
-bool BrowsingContext::CanSet(FieldIndex<IDX_IsActiveBrowserWindow>,
-                             const bool& aValue, ContentParent* aSource) {
-  return IsTop();
-}
-
-void BrowsingContext::DidSet(FieldIndex<IDX_IsActiveBrowserWindow>,
-                             bool aOldValue) {
-  // The active state of the browser window containing this
-  // BrowsingContext has changed, so update the window inactive
-  // document state for all documents in the tree.
-  Top()->PreOrderWalk([](BrowsingContext* aContext) {
-    if (aContext->GetDocument()) {
-      aContext->GetDocument()->UpdateDocumentStates(
-          NS_DOCUMENT_STATE_WINDOW_INACTIVE, true);
-    }
-  });
-}
-
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargeting>,
                              const bool& aAllowContentRetargeting,
                              ContentParent* aSource) {
