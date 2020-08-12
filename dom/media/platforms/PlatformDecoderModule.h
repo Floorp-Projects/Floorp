@@ -66,7 +66,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     bool mUse = false;
   };
 
-  // Do not wrap decoder in a MediaChangeMonitor.
+  // Do not wrap H264 decoder in a H264Converter.
   struct NoWrapper {
     NoWrapper() = default;
     explicit NoWrapper(bool aDontUseWrapper)
