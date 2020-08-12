@@ -1464,6 +1464,50 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitPackedArraySliceResult(
+    uint32_t templateObjectOffset, ObjOperandId arrayId, Int32OperandId beginId,
+    Int32OperandId endId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
+
+  Register array = allocator.useRegister(masm, arrayId);
+  Register begin = allocator.useRegister(masm, beginId);
+  Register end = allocator.useRegister(masm, endId);
+
+  FailurePath* failure = nullptr;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  allocator.discardStack(masm);
+
+  masm.branchArrayIsNotPacked(array, scratch1, scratch2, failure->label());
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch2);
+
+  // Don't attempt to pre-allocate the object, instead always use the slow
+  // path.
+  ImmPtr result(nullptr);
+
+  masm.Push(result);
+  masm.Push(end);
+  masm.Push(begin);
+  masm.Push(array);
+
+  using Fn =
+      JSObject* (*)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
+  callVM<Fn, ArraySliceDense>(masm);
+
+  stubFrame.leave(masm);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, output.valueReg());
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
