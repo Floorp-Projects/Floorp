@@ -649,6 +649,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void SessionHistoryChanged(int32_t aIndexDelta, int32_t aLengthDelta);
 
+  // Check if it is allowed to open a popup from the current browsing
+  // context or any of its ancestors.
+  bool IsPopupAllowed();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
