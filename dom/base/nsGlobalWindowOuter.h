@@ -797,7 +797,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
  public:
   nsresult SecurityCheckURL(const char* aURL, nsIURI** aURI);
 
-  bool PopupWhitelisted();
   mozilla::dom::PopupBlocker::PopupControlState RevisePopupAbuseLevel(
       mozilla::dom::PopupBlocker::PopupControlState aState);
   void FireAbuseEvents(const nsAString& aPopupURL,
@@ -1039,6 +1038,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   virtual mozilla::AbstractThread* AbstractMainThreadFor(
       mozilla::TaskCategory aCategory) override;
+
+ private:
+  bool IsPopupAllowed();
 
  protected:
   bool mFullscreen : 1;

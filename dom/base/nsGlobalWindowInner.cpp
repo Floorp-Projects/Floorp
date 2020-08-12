@@ -1572,13 +1572,7 @@ void nsGlobalWindowInner::UpdateShortcutsPermission() {
     return;
   }
 
-  uint32_t perm = nsIPermissionManager::DENY_ACTION;
-  nsIPrincipal* principal = GetPrincipal();
-  nsCOMPtr<nsIPermissionManager> permMgr =
-      mozilla::services::GetPermissionManager();
-  if (principal && permMgr) {
-    permMgr->TestExactPermissionFromPrincipal(principal, "shortcuts"_ns, &perm);
-  }
+  uint32_t perm = GetShortcutsPermission(GetPrincipal());
 
   if (GetWindowContext()->GetShortcutsPermission() == perm) {
     return;
@@ -1586,6 +1580,53 @@ void nsGlobalWindowInner::UpdateShortcutsPermission() {
 
   // If the WindowContext is discarded this has no effect.
   Unused << GetWindowContext()->SetShortcutsPermission(perm);
+}
+
+/* static */
+uint32_t nsGlobalWindowInner::GetShortcutsPermission(nsIPrincipal* aPrincipal) {
+  uint32_t perm = nsIPermissionManager::DENY_ACTION;
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      mozilla::services::GetPermissionManager();
+  if (aPrincipal && permMgr) {
+    permMgr->TestExactPermissionFromPrincipal(aPrincipal, "shortcuts"_ns,
+                                              &perm);
+  }
+  return perm;
+}
+
+void nsGlobalWindowInner::UpdatePopupPermission() {
+  if (!GetWindowContext()) {
+    return;
+  }
+
+  uint32_t perm = PopupBlocker::GetPopupPermission(GetPrincipal());
+  if (GetWindowContext()->GetPopupPermission() == perm) {
+    return;
+  }
+
+  // If the WindowContext is discarded this has no effect.
+  Unused << GetWindowContext()->SetPopupPermission(perm);
+}
+
+void nsGlobalWindowInner::UpdatePermissions() {
+  if (!GetWindowContext()) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = GetPrincipal();
+  RefPtr<WindowContext> windowContext = GetWindowContext();
+
+  WindowContext::Transaction txn;
+  txn.SetAutoplayPermission(
+      AutoplayPolicy::GetSiteAutoplayPermission(principal));
+  txn.SetPopupPermission(PopupBlocker::GetPopupPermission(principal));
+
+  if (windowContext->IsTop()) {
+    txn.SetShortcutsPermission(GetShortcutsPermission(principal));
+  }
+
+  // Setting permissions on a discarded WindowContext has no effect
+  Unused << txn.Commit(windowContext);
 }
 
 void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
@@ -1613,8 +1654,7 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
   }
 
-  UpdateAutoplayPermission();
-  UpdateShortcutsPermission();
+  UpdatePermissions();
 
   RefPtr<PermissionDelegateHandler> permDelegateHandler =
       mDoc->GetPermissionDelegateHandler();
@@ -5013,6 +5053,10 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
   if (!nsCRT::strcmp(aTopic, PERMISSION_CHANGED_TOPIC)) {
     nsCOMPtr<nsIPermission> perm(do_QueryInterface(aSubject));
     if (!perm) {
+      // A null permission indicates that the entire permission list
+      // was cleared.
+      MOZ_ASSERT(!nsCRT::strcmp(aData, u"cleared"));
+      UpdatePermissions();
       return NS_OK;
     }
 
@@ -5022,6 +5066,8 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
       UpdateAutoplayPermission();
     } else if (type == "shortcuts"_ns) {
       UpdateShortcutsPermission();
+    } else if (type == "popup"_ns) {
+      UpdatePopupPermission();
     }
 
     if (!mDoc) {
