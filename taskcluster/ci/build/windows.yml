@@ -710,6 +710,8 @@ win32-rusttests/opt:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+    optimization:
+        test-inclusive: [rusttests]
 
 win32-rusttests/debug:
     description: "Win32 Rust Tests Debug"
@@ -751,6 +753,8 @@ win32-rusttests/debug:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+    optimization:
+        test-inclusive: [rusttests]
 
 win64-rusttests/opt:
     description: "Win64 Rust Tests Opt"
@@ -789,6 +793,8 @@ win64-rusttests/opt:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+    optimization:
+        test-inclusive: [rusttests]
 
 win64-rusttests/debug:
     description: "Win64 Rust Tests Debug"
@@ -827,6 +833,8 @@ win64-rusttests/debug:
             - win64-nasm
             - win64-node
             - win64-winchecksec
+    optimization:
+        test-inclusive: [rusttests]
 
 win64-ccov/opt:
     description: "Win64 Opt Code Coverage"
