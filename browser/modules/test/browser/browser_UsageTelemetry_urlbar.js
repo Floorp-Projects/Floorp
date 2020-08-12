@@ -138,6 +138,16 @@ add_task(async function setup() {
   });
 });
 
+add_task(async function setup() {
+  // TODO: (Bug 1654680) Rewrite this test with update2 enabled.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", false],
+      ["browser.urlbar.update2.oneOffsRefresh", false],
+    ],
+  });
+});
+
 add_task(async function test_simpleQuery() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();

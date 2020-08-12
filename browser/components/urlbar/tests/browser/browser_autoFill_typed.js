@@ -110,29 +110,29 @@ add_task(async function tokenAlias() {
   // all lowercase
   await typeAndCheck([
     ["@", "@"],
-    ["_", "@__example "],
-    ["_", "@__example "],
-    ["e", "@__example "],
-    ["x", "@__example "],
-    ["a", "@__example "],
-    ["m", "@__example "],
-    ["p", "@__example "],
-    ["l", "@__example "],
-    ["e", "@__example "],
+    ["_", getAutofillSearchString("@__example")],
+    ["_", getAutofillSearchString("@__example")],
+    ["e", getAutofillSearchString("@__example")],
+    ["x", getAutofillSearchString("@__example")],
+    ["a", getAutofillSearchString("@__example")],
+    ["m", getAutofillSearchString("@__example")],
+    ["p", getAutofillSearchString("@__example")],
+    ["l", getAutofillSearchString("@__example")],
+    ["e", getAutofillSearchString("@__example")],
   ]);
   gURLBar.value = "";
   // mixed case
   await typeAndCheck([
     ["@", "@"],
-    ["_", "@__example "],
-    ["_", "@__example "],
-    ["E", "@__Example "],
-    ["x", "@__Example "],
-    ["A", "@__ExAmple "],
-    ["m", "@__ExAmple "],
-    ["P", "@__ExAmPle "],
-    ["L", "@__ExAmPLe "],
-    ["e", "@__ExAmPLe "],
+    ["_", getAutofillSearchString("@__example")],
+    ["_", getAutofillSearchString("@__example")],
+    ["E", getAutofillSearchString("@__Example")],
+    ["x", getAutofillSearchString("@__Example")],
+    ["A", getAutofillSearchString("@__ExAmple")],
+    ["m", getAutofillSearchString("@__ExAmple")],
+    ["P", getAutofillSearchString("@__ExAmPle")],
+    ["L", getAutofillSearchString("@__ExAmPLe")],
+    ["e", getAutofillSearchString("@__ExAmPLe")],
   ]);
   await cleanUp();
 });
