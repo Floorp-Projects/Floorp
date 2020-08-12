@@ -272,7 +272,7 @@ Float32Array.inputs = [[1, -1, 1e10, -1e10],
                        ...permute([1, -10, NaN, Infinity])];
 Float32Array.rectify = (x) => Math.fround(x);
 
-Float64Array.inputs = Float32Array.inputs;
+Float64Array.inputs = Float32Array.inputs.map((x) => x.slice(0, 2))
 Float64Array.rectify = (x) => x;
 
 // Tidy up all the inputs
@@ -694,6 +694,8 @@ for ( let [op, memtype, rop, resultmemtype] of
     let [ins, mem, resultmem] = insAndMemBinop(op, memtype, resultmemtype);
     let len = 16/memtype.BYTES_PER_ELEMENT;
     let xs = iota(len);
+    let bitsForF32 = memtype == Float32Array ? new Uint32Array(mem.buffer) : null;
+    let bitsForF64 = memtype == Float64Array ? new BigInt64Array(mem.buffer) : null;
 
     function testIt(a,b) {
         let r = xs.map((i) => rop(a[i], b[i]));
@@ -701,11 +703,26 @@ for ( let [op, memtype, rop, resultmemtype] of
         set(mem, len*2, b);
         ins.exports.run();
         assertSame(get(resultmem, 0, len), r);
+
+        // Test signalling NaN superficially by replacing QNaN inputs with SNaN
+        if (bitsForF32 != null && (a.some(isNaN) || b.some(isNaN))) {
+            a.forEach((x, i) => { if (isNaN(x)) { bitsForF32[len+i] = 0x7FA0_0000; } });
+            b.forEach((x, i) => { if (isNaN(x)) { bitsForF32[(len*2)+i] = 0x7FA0_0000; } });
+            ins.exports.run();
+            assertSame(get(resultmem, 0, len), r);
+        }
+        if (bitsForF64 != null && (a.some(isNaN) || b.some(isNaN))) {
+            a.forEach((x, i) => { if (isNaN(x)) { bitsForF64[len+i] = 0x7FF4_0000_0000_0000n; } });
+            b.forEach((x, i) => { if (isNaN(x)) { bitsForF64[(len*2)+i] = 0x7FF4_0000_0000_0000n; } });
+            ins.exports.run();
+            assertSame(get(resultmem, 0, len), r);
+        }
     }
 
     for (let [a,b] of cross(memtype.inputs))
         testIt(a,b);
 }
+
 
 // Splat, with and without constants (different code paths in ion)
 
@@ -819,12 +836,26 @@ for ( let [op, memtype, rop, resultmemtype] of
     let [ins, mem, resultmem] = insAndMemUnop(op, memtype, resultmemtype);
     let len = 16/memtype.BYTES_PER_ELEMENT;
     let xs = iota(len);
+    let bitsForF32 = memtype == Float32Array ? new Uint32Array(mem.buffer) : null;
+    let bitsForF64 = memtype == Float64Array ? new BigInt64Array(mem.buffer) : null;
 
     function testIt(a) {
         let r = xs.map((i) => rop(a[i]));
         set(mem, len, a);
         ins.exports.run();
         assertSame(get(resultmem, 0, len), r);
+
+        // Test signalling NaN superficially by replacing QNaN inputs with SNaN
+        if (bitsForF32 != null && a.some(isNaN)) {
+            a.forEach((x, i) => { if (isNaN(x)) { bitsForF32[len+i] = 0x7FA0_0000; } });
+            ins.exports.run();
+            assertSame(get(resultmem, 0, len), r);
+        }
+        if (bitsForF64 != null && a.some(isNaN)) {
+            a.forEach((x, i) => { if (isNaN(x)) { bitsForF64[len+i] = 0x7FF4_0000_0000_0000n; } });
+            ins.exports.run();
+            assertSame(get(resultmem, 0, len), r);
+        }
     }
 
     for (let a of memtype.inputs)
