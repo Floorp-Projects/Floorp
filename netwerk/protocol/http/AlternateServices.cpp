@@ -59,9 +59,7 @@ void AltSvcMapping::ProcessHeader(
     const nsCString& originHost, int32_t originPort, const nsACString& username,
     const nsACString& topWindowOrigin, bool privateBrowsing, bool isolated,
     nsIInterfaceRequestor* callbacks, nsProxyInfo* proxyInfo, uint32_t caps,
-    const OriginAttributes& originAttributes,
-    bool aDontValidate /* = false */) { // aDontValidate is only used for
-                                        // testing
+    const OriginAttributes& originAttributes) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("AltSvcMapping::ProcessHeader: %s\n", buf.get()));
 
@@ -180,12 +178,9 @@ void AltSvcMapping::ProcessHeader(
       // as that would have happened if we had accepted the parameters.
       gHttpHandler->AltServiceCache()->ClearHostMapping(
           originHost, originPort, originAttributes, topWindowOrigin);
-    } else if (!aDontValidate) {
-      gHttpHandler->UpdateAltServiceMapping(
-          mapping, proxyInfo, callbacks, caps, originAttributes);
     } else {
-      gHttpHandler->UpdateAltServiceMappingWithoutValidation(mapping, proxyInfo, callbacks,
-                                                             caps, originAttributes);
+      gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps,
+                                            originAttributes);
     }
   }
 
@@ -957,25 +952,6 @@ already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(
   MOZ_ASSERT(rv->Private() == privateBrowsing);
   LOG(("AltSvcCache::LookupMapping %p HIT %p\n", this, rv.get()));
   return rv.forget();
-}
-
-// This is only used for testing!
-void AltSvcCache::UpdateAltServiceMappingWithoutValidation(
-    AltSvcMapping* map, nsProxyInfo* pi, nsIInterfaceRequestor* aCallbacks,
-    uint32_t caps, const OriginAttributes& originAttributes) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mStorage) {
-    return;
-  }
-  RefPtr<AltSvcMapping> existing =
-      LookupMapping(map->HashKey(), map->Private());
-  LOG(
-      ("AltSvcCache::UpdateAltServiceMappingWithoutValidation %p map %p "
-       "existing %p %s",
-       this, map, existing.get(), map->AlternateHost().get()));
-  if (!existing) {
-    map->SetValidated(true);
-  }
 }
 
 void AltSvcCache::UpdateAltServiceMapping(
