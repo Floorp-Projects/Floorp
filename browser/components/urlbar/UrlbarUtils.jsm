@@ -179,6 +179,20 @@ var UrlbarUtils = {
   // path-like chars are admitted.
   REGEXP_SINGLE_WORD: /^[^\s@:/?#]+(:\d+)?$/,
 
+  // Names of engines shipped in Firefox that search the web in general.  These
+  // are used to update the input placeholder when entering search mode.
+  // TODO (Bug 1658661): Don't hardcode this list; store search engine category
+  // information someplace better.
+  WEB_ENGINE_NAMES: new Set([
+    "Baidu",
+    "Bing",
+    "DuckDuckGo",
+    "Ecosia",
+    "Google",
+    "Qwant",
+    "Yandex",
+  ]),
+
   /**
    * Returns the payload schema for the given type of result.
    *
