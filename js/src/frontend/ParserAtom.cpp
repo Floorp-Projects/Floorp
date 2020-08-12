@@ -101,24 +101,26 @@ bool ParserAtomEntry::equalsJSAtom(JSAtom* other) const {
              : EqualChars(latin1Chars(), other->twoByteChars(nogc), length_);
 }
 
-UniqueChars ParserAtomToPrintableString(JSContext* cx, const ParserAtom* atom) {
+template <typename CharT>
+UniqueChars ToPrintableStringImpl(JSContext* cx, mozilla::Range<CharT> str) {
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return nullptr;
   }
-  size_t length = atom->length();
-  if (atom->hasLatin1Chars()) {
-    if (!QuoteString<QuoteTarget::String>(
-            &sprinter, mozilla::Range(atom->latin1Chars(), length))) {
-      return nullptr;
-    }
-  } else {
-    if (!QuoteString<QuoteTarget::String>(
-            &sprinter, mozilla::Range(atom->twoByteChars(), length))) {
-      return nullptr;
-    }
+  if (!QuoteString<QuoteTarget::String>(&sprinter, str)) {
+    return nullptr;
   }
   return sprinter.release();
+}
+
+UniqueChars ParserAtomToPrintableString(JSContext* cx, const ParserAtom* atom) {
+  size_t length = atom->length();
+
+  return atom->hasLatin1Chars()
+             ? ToPrintableStringImpl(
+                   cx, mozilla::Range(atom->latin1Chars(), length))
+             : ToPrintableStringImpl(
+                   cx, mozilla::Range(atom->twoByteChars(), length));
 }
 
 bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
@@ -154,6 +156,16 @@ bool ParserAtomEntry::toNumber(JSContext* cx, double* result) const {
   return hasLatin1Chars() ? CharsToNumber(cx, latin1Chars(), length(), result)
                           : CharsToNumber(cx, twoByteChars(), length(), result);
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
+  if (hasLatin1Chars()) {
+    JSString::dumpCharsNoQuote<Latin1Char>(latin1Chars(), length(), out);
+  } else {
+    JSString::dumpCharsNoQuote<char16_t>(twoByteChars(), length(), out);
+  }
+}
+#endif
 
 ParserAtomsTable::ParserAtomsTable(JSContext* cx)
     : entrySet_(cx), wellKnownTable_(*cx->runtime()->commonParserNames) {}
@@ -425,21 +437,37 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
   MOZ_ASSERT(FindSmallestEncoding(UTF8Chars(str, len)) ==
              JS::SmallestEncoding::ASCII);
 
-  UniqueLatin1Chars copy(cx->pod_malloc<Latin1Char>(len));
-  if (!copy) {
-    return false;
-  }
-  mozilla::PodCopy(copy.get(), reinterpret_cast<const Latin1Char*>(str), len);
-
-  InflatedChar16Sequence<Latin1Char> seq(copy.get(), len);
+  InflatedChar16Sequence<Latin1Char> seq(
+      reinterpret_cast<const Latin1Char*>(str), len);
   SpecificParserAtomLookup<Latin1Char> lookup(seq);
+  HashNumber hash = lookup.hash();
 
-  auto maybeEntry =
-      ParserAtomEntry::allocate(cx, std::move(copy), len, lookup.hash());
-  if (maybeEntry.isErr()) {
-    return false;
+  UniquePtr<ParserAtomEntry> entry = nullptr;
+
+  // Check for inline allocation.
+  if (len <= ParserAtomEntry::MaxInline<Latin1Char>()) {
+    auto maybeEntry =
+        ParserAtomEntry::allocateInline<Latin1Char>(cx, seq, len, hash);
+    if (maybeEntry.isErr()) {
+      return false;
+    }
+    entry = maybeEntry.unwrap();
+
+    // Do heap-allocation of contents.
+  } else {
+    UniqueLatin1Chars copy(cx->pod_malloc<Latin1Char>(len));
+    if (!copy) {
+      return false;
+    }
+    mozilla::PodCopy(copy.get(), reinterpret_cast<const Latin1Char*>(str), len);
+    auto maybeEntry = ParserAtomEntry::allocate(cx, std::move(copy), len, hash);
+    if (maybeEntry.isErr()) {
+      return false;
+    }
+    entry = maybeEntry.unwrap();
   }
-  UniquePtr<ParserAtomEntry> entry = maybeEntry.unwrap();
+
+  // Save name for returning after moving entry into set.
   const ParserName* nm = entry.get()->asName();
   if (!entrySet_.putNew(lookup, std::move(entry))) {
     return false;
