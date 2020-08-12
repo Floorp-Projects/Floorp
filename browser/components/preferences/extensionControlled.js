@@ -26,6 +26,16 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionPreferencesManager",
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Management",
+  "resource://gre/modules/Extension.jsm"
+);
 
 const PREF_SETTING_TYPE = "prefs";
 const PROXY_KEY = "proxy.settings";
@@ -52,6 +62,7 @@ let extensionControlledContentIds = {
   homepage_override: "browserHomePageExtensionContent",
   newTabURL: "browserNewTabExtensionContent",
   webNotificationsDisabled: "browserNotificationsPermissionExtensionContent",
+  "services.passwordSavingEnabled": "passwordManagerExtensionContent",
   defaultSearch: "browserDefaultSearchExtensionContent",
   "proxy.settings": "proxyExtensionContent",
   get "websites.trackingProtectionMode"() {
@@ -66,6 +77,7 @@ const extensionControlledL10nKeys = {
   homepage_override: "homepage-override",
   newTabURL: "new-tab-url",
   webNotificationsDisabled: "web-notifications",
+  "services.passwordSavingEnabled": "password-saving",
   defaultSearch: "default-search",
   "privacy.containers": "privacy-containers",
   "websites.trackingProtectionMode": "websites-content-blocking-all-trackers",
@@ -270,6 +282,28 @@ function makeDisableControllingExtension(type, settingName) {
     let addon = await AddonManager.getAddonByID(id);
     await addon.disable();
   };
+}
+
+/**
+ *  Initialize listeners though the Management API to update the UI
+ *  when an extension is controlling a pref.
+ * @param {string} type
+ * @param {string} prefId The unique id of the setting
+ * @param {HTMLElement} controlledElement
+ */
+async function initListenersForPrefChange(type, prefId, controlledElement) {
+  await Management.asyncLoadSettingsModules();
+
+  let managementObserver = async () => {
+    let managementControlled = await handleControllingExtension(type, prefId);
+    controlledElement.disabled = managementControlled;
+  };
+  managementObserver();
+  Management.on(`extension-setting-changed:${prefId}`, managementObserver);
+
+  window.addEventListener("unload", () => {
+    Management.off(`extension-setting-changed:${prefId}`, managementObserver);
+  });
 }
 
 function initializeProxyUI(container) {
