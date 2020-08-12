@@ -185,13 +185,15 @@ auto ToResultInvokeMemberFunction(T& aObj, const Func& aFunc, Args&&... aArgs) {
 }
 }  // namespace detail
 
-template <typename T, typename U, typename... XArgs, typename... Args>
+template <typename T, typename U, typename... XArgs, typename... Args,
+          typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(T& aObj, nsresult (U::*aFunc)(XArgs...), Args&&... aArgs) {
   return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <typename T, typename U, typename... XArgs, typename... Args>
+template <typename T, typename U, typename... XArgs, typename... Args,
+          typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(const T& aObj, nsresult (U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
   return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
@@ -207,6 +209,24 @@ auto ToResultInvoke(T* const aObj, nsresult (U::*aFunc)(XArgs...),
 template <typename T, typename U, typename... XArgs, typename... Args>
 auto ToResultInvoke(const T* const aObj, nsresult (U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
+  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+}
+
+template <template <class> class SmartPtr, typename T, typename U,
+          typename... XArgs, typename... Args,
+          typename = std::enable_if_t<std::is_base_of_v<U, T>>,
+          typename = decltype(*std::declval<const SmartPtr<T>>())>
+auto ToResultInvoke(const SmartPtr<T>& aObj, nsresult (U::*aFunc)(XArgs...),
+                    Args&&... aArgs) {
+  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+}
+
+template <template <class> class SmartPtr, typename T, typename U,
+          typename... XArgs, typename... Args,
+          typename = std::enable_if_t<std::is_base_of_v<U, T>>,
+          typename = decltype(*std::declval<const SmartPtr<T>>())>
+auto ToResultInvoke(const SmartPtr<const T>& aObj,
+                    nsresult (U::*aFunc)(XArgs...) const, Args&&... aArgs) {
   return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
