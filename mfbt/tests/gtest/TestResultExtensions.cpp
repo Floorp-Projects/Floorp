@@ -55,6 +55,22 @@ class TestClass {
   }
   nsresult PolymorphicNoInputFails(nsIFile** aOut) { return NS_ERROR_FAILURE; }
 };
+
+class RefCountedTestClass {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(RefCountedTestClass);
+
+  static constexpr int kTestValue = 42;
+
+  nsresult NonOverloadedNoInput(int* aOut) {
+    *aOut = kTestValue;
+    return NS_OK;
+  }
+  nsresult NonOverloadedNoInputFails(int* aOut) { return NS_ERROR_FAILURE; }
+
+ private:
+  ~RefCountedTestClass() = default;
+};
 }  // namespace
 
 TEST(ResultExtensions_ToResultInvoke, Lambda)
@@ -240,6 +256,29 @@ TEST(ResultExtensions_ToResultInvoke, PolymorphicPointerResult_nsCOMPtr_Result)
         std::mem_fn(&TestClass::PolymorphicNoInputFails), foo);
     static_assert(std::is_same_v<decltype(valOrErr),
                                  Result<nsCOMPtr<nsIFile>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(ResultExtensions_ToResultInvoke, RefPtr_MemberFunction_NoInput)
+{
+  auto foo = MakeRefPtr<RefCountedTestClass>();
+
+  // success
+  {
+    auto valOrErr =
+        ToResultInvoke(foo, &RefCountedTestClass::NonOverloadedNoInput);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ(TestClass::kTestValue, valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr =
+        ToResultInvoke(foo, &RefCountedTestClass::NonOverloadedNoInputFails);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
     ASSERT_TRUE(valOrErr.isErr());
     ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
   }
