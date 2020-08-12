@@ -76,8 +76,7 @@ nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
   flags |= nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
 
   nsresult rv = sDNSService->AsyncResolveNative(
-      mHostname, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-      flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, this, target,
+      mHostname, flags | nsIDNSService::RESOLVE_SPECULATE, this, target,
       mOriginAttributes, getter_AddRefs(tmpOutstanding));
   if (NS_FAILED(rv)) {
     return rv;
@@ -88,10 +87,10 @@ nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
     nsAutoCString esniHost;
     esniHost.Append("_esni.");
     esniHost.Append(mHostname);
-    sDNSService->AsyncResolveNative(esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
-                                    flags | nsIDNSService::RESOLVE_SPECULATE,
-                                    nullptr, this, target, mOriginAttributes,
-                                    getter_AddRefs(tmpOutstanding));
+    sDNSService->AsyncResolveByTypeNative(
+        esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
+        flags | nsIDNSService::RESOLVE_SPECULATE, this, target,
+        mOriginAttributes, getter_AddRefs(tmpOutstanding));
   }
   return NS_OK;
 }

@@ -9,7 +9,6 @@ var nextTest;
 
 var listener = {
   onLookupComplete(inRequest, inRecord, inStatus) {
-    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     var answer = inRecord.getNextAddrAsString();
     Assert.ok(answer == "127.0.0.1" || answer == "::1");
 
@@ -31,9 +30,7 @@ function run_test() {
   nextTest = do_test_2;
   dns.asyncResolve(
     "local.vingtetun.org",
-    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
-    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes
@@ -51,9 +48,7 @@ function do_test_2() {
   prefs.setCharPref("network.dns.forceResolve", "localhost");
   dns.asyncResolve(
     "www.example.com",
-    Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
-    null, // resolverInfo
     listener,
     mainThread,
     defaultOriginAttributes

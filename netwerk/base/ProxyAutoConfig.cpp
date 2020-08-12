@@ -448,10 +448,9 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
       nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
       nsIDNSService::GetFlagsFromTRRMode(nsIRequest::TRR_DISABLED_MODE);
 
-  if (NS_FAILED(dns->AsyncResolveNative(
-          aHostName, nsIDNSService::RESOLVE_TYPE_DEFAULT, flags, nullptr,
-          helper, GetCurrentEventTarget(), attrs,
-          getter_AddRefs(helper->mRequest)))) {
+  if (NS_FAILED(dns->AsyncResolveNative(aHostName, flags, helper,
+                                        GetCurrentEventTarget(), attrs,
+                                        getter_AddRefs(helper->mRequest)))) {
     return false;
   }
 
@@ -479,15 +478,9 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
     return false;
   });
 
-  if (NS_FAILED(helper->mStatus)) {
+  if (NS_FAILED(helper->mStatus) ||
+      NS_FAILED(helper->mResponse->GetNextAddr(0, aNetAddr)))
     return false;
-  }
-
-  nsCOMPtr<nsIDNSAddrRecord> rec = do_QueryInterface(helper->mResponse);
-  if (!rec || NS_FAILED(rec->GetNextAddr(0, aNetAddr))) {
-    return false;
-  }
-
   return true;
 }
 
