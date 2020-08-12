@@ -315,11 +315,11 @@ const browsingContextTargetPrototype = {
    * which is a JSM and doesn't have a reference to a DevTools Loader.
    */
   watchTargetResources(resourceTypes) {
-    return Resources.watchTargetResources(this, resourceTypes);
+    return Resources.watchResources(this, resourceTypes);
   },
 
   unwatchTargetResources(resourceTypes) {
-    return Resources.unwatchTargetResources(this, resourceTypes);
+    return Resources.unwatchResources(this, resourceTypes);
   },
 
   /**
