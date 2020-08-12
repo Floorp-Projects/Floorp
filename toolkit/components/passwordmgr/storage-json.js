@@ -299,7 +299,7 @@ class LoginManagerStorage_json {
   }
 
   async recordBreachAlertDismissal(loginGUID) {
-    await this._store.load();
+    this._store.ensureDataReady();
     const dismissedBreachAlertsByLoginGUID = this._store._data
       .dismissedBreachAlertsByLoginGUID;
 
@@ -338,7 +338,7 @@ class LoginManagerStorage_json {
    * @resolve {nsILoginInfo[]}
    */
   async getAllLoginsAsync() {
-    await this._store.load();
+    this._store.ensureDataReady();
 
     let [logins, ids] = this._searchLogins({});
     if (!logins.length) {
@@ -386,7 +386,6 @@ class LoginManagerStorage_json {
 
   async searchLoginsAsync(matchData) {
     this.log("searchLoginsAsync:", matchData);
-    await this._store.load();
     let result = this.searchLogins(LoginHelper.newPropertyBag(matchData));
     // Emulate being async:
     return Promise.resolve(result);
