@@ -47,8 +47,7 @@ job-defaults:
                     default: ['mozilla-beta', 'trunk']
     fission-run-on-projects:
         by-test-platform:
-            linux64-shippable-qr/opt: ['mozilla-central']
-            windows10-64-shippable-qr/opt: ['mozilla-central']
+            (linux64|windows10-64|macosx1014-64)-shippable-qr/opt: ['mozilla-central']
             default: []
 
 talos-bcv:
@@ -117,6 +116,11 @@ talos-damp:
             macosx1014-64-shippable-qr/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-beta', 'trunk']
+    fission-run-on-projects:
+        by-test-platform:
+            (linux64|windows10-64)-shippable-qr/opt: ['mozilla-central']
+            # Bug 1657864 - Disabled on macos for high frequency intermittents
+            default: []
 
     mozharness:
         extra-options:
