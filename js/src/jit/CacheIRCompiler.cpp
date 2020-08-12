@@ -5756,23 +5756,12 @@ bool CacheIRCompiler::emitLoadObjectTruthyResult(ObjOperandId objId) {
   masm.jump(&done);
 
   masm.bind(&slowPath);
-  {
-    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
-                                 liveVolatileFloatRegs());
-    volatileRegs.takeUnchecked(scratch);
-    volatileRegs.takeUnchecked(output);
-    masm.PushRegsInMask(volatileRegs);
-
-    masm.setupUnalignedABICall(scratch);
-    masm.passABIArg(obj);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
-    masm.convertBoolToInt32(ReturnReg, scratch);
-    masm.xor32(Imm32(1), scratch);
-
-    masm.PopRegsInMask(volatileRegs);
-
-    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
-  }
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(obj);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
+  masm.convertBoolToInt32(ReturnReg, ReturnReg);
+  masm.xor32(Imm32(1), ReturnReg);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, output.valueReg());
 
   masm.bind(&done);
   return true;
@@ -5787,122 +5776,6 @@ bool CacheIRCompiler::emitLoadBigIntTruthyResult(BigIntOperandId bigIntId) {
   masm.branch32(Assembler::Equal,
                 Address(bigInt, BigInt::offsetOfDigitLength()), Imm32(0),
                 &ifFalse);
-  masm.moveValue(BooleanValue(true), output.valueReg());
-  masm.jump(&done);
-
-  masm.bind(&ifFalse);
-  masm.moveValue(BooleanValue(false), output.valueReg());
-
-  masm.bind(&done);
-  return true;
-}
-
-bool CacheIRCompiler::emitLoadValueTruthyResult(ValOperandId inputId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  ValueOperand value = allocator.useValueRegister(masm, inputId);
-  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
-  AutoScratchRegister scratch2(allocator, masm);
-  AutoScratchFloatRegister floatReg(this);
-
-  Label ifFalse, ifTrue, done;
-
-  {
-    ScratchTagScope tag(masm, value);
-    masm.splitTagForTest(value, tag);
-
-    masm.branchTestUndefined(Assembler::Equal, tag, &ifFalse);
-    masm.branchTestNull(Assembler::Equal, tag, &ifFalse);
-
-    Label notBoolean;
-    masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    {
-      ScratchTagScopeRelease _(&tag);
-      masm.branchTestBooleanTruthy(false, value, &ifFalse);
-      masm.jump(&ifTrue);
-    }
-    masm.bind(&notBoolean);
-
-    Label notInt32;
-    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
-    {
-      ScratchTagScopeRelease _(&tag);
-      masm.branchTestInt32Truthy(false, value, &ifFalse);
-      masm.jump(&ifTrue);
-    }
-    masm.bind(&notInt32);
-
-    Label notObject;
-    masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
-    {
-      ScratchTagScopeRelease _(&tag);
-
-      Register obj = masm.extractObject(value, scratch1);
-
-      Label slowPath;
-      masm.branchIfObjectEmulatesUndefined(obj, scratch2, &slowPath, &ifFalse);
-      masm.jump(&ifTrue);
-
-      masm.bind(&slowPath);
-      {
-        LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
-                                     liveVolatileFloatRegs());
-        volatileRegs.takeUnchecked(scratch1);
-        volatileRegs.takeUnchecked(scratch2);
-        volatileRegs.takeUnchecked(output);
-        masm.PushRegsInMask(volatileRegs);
-
-        masm.setupUnalignedABICall(scratch2);
-        masm.passABIArg(obj);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
-        masm.storeCallBoolResult(scratch2);
-
-        masm.PopRegsInMask(volatileRegs);
-
-        masm.branchTest32(Assembler::Zero, scratch2, scratch2, &ifFalse);
-        masm.jump(&ifTrue);
-      }
-    }
-    masm.bind(&notObject);
-
-    Label notString;
-    masm.branchTestString(Assembler::NotEqual, tag, &notString);
-    {
-      ScratchTagScopeRelease _(&tag);
-      masm.branchTestStringTruthy(false, value, &ifFalse);
-      masm.jump(&ifTrue);
-    }
-    masm.bind(&notString);
-
-    Label notBigInt;
-    masm.branchTestBigInt(Assembler::NotEqual, tag, &notBigInt);
-    {
-      ScratchTagScopeRelease _(&tag);
-      masm.branchTestBigIntTruthy(false, value, &ifFalse);
-      masm.jump(&ifTrue);
-    }
-    masm.bind(&notBigInt);
-
-    masm.branchTestSymbol(Assembler::Equal, tag, &ifTrue);
-
-#ifdef DEBUG
-    Label isDouble;
-    masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
-    masm.assumeUnreachable("Unexpected value type");
-    masm.bind(&isDouble);
-#endif
-
-    {
-      ScratchTagScopeRelease _(&tag);
-      masm.unboxDouble(value, floatReg);
-      masm.branchTestDoubleTruthy(false, floatReg, &ifFalse);
-    }
-
-    // Fall through to true case.
-  }
-
-  masm.bind(&ifTrue);
   masm.moveValue(BooleanValue(true), output.valueReg());
   masm.jump(&done);
 
