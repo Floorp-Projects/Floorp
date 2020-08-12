@@ -15,14 +15,12 @@ const {
 const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
+const Targets = require("devtools/server/actors/targets/index");
 
-const TARGET_TYPES = {
-  FRAME: "frame",
-};
 const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
   TARGET_HELPERS,
-  TARGET_TYPES.FRAME,
+  Targets.TYPES.FRAME,
   "devtools/server/actors/watcher/target-helpers/frame-helper"
 );
 
@@ -65,7 +63,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   destroy: function() {
     // Force unwatching for all types, even if we weren't watching.
     // This is fine as unwatchTarget is NOOP if we weren't already watching for this target type.
-    for (const targetType of Object.values(TARGET_TYPES)) {
+    for (const targetType of Object.values(Targets.TYPES)) {
       this.unwatchTargets(targetType);
     }
     this.unwatchResources(Object.values(Resources.TYPES));
@@ -133,7 +131,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * resolves.
    *
    * @param {string} targetType
-   *        Type of context to observe. See TARGET_TYPES object.
+   *        Type of context to observe. See Targets.TYPES object.
    */
   async watchTargets(targetType) {
     WatcherRegistry.watchTargets(this, targetType);
@@ -148,7 +146,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * Stop watching for a given target type.
    *
    * @param {string} targetType
-   *        Type of context to observe. See TARGET_TYPES object.
+   *        Type of context to observe. See Targets.TYPES object.
    */
   unwatchTargets(targetType) {
     const isWatchingTargets = WatcherRegistry.unwatchTargets(this, targetType);
@@ -253,7 +251,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       // so we should always process it. It does a second check to isWatchingTargets.
       if (
         !WatcherRegistry.isWatchingTargets(this, targetType) &&
-        targetType != TARGET_TYPES.FRAME
+        targetType != Targets.TYPES.FRAME
       ) {
         continue;
       }
@@ -328,7 +326,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         // so we should always process it. It does a second check to isWatchingTargets.
         if (
           !WatcherRegistry.isWatchingTargets(this, targetType) &&
-          targetType != TARGET_TYPES.FRAME
+          targetType != Targets.TYPES.FRAME
         ) {
           continue;
         }
