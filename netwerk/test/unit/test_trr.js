@@ -131,23 +131,29 @@ class DNSListener {
     this.promise = new Promise(resolve => {
       this.resolve = resolve;
     });
-
-    let resolverInfo =
-      trrServer == "" ? null : dns.newTRRResolverInfo(trrServer);
-    try {
+    if (trrServer == "") {
       this.request = dns.asyncResolve(
         name,
-        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         flags,
-        resolverInfo,
         this,
         mainThread,
         defaultOriginAttributes
       );
-      Assert.ok(!expectEarlyFail);
-    } catch (e) {
-      Assert.ok(expectEarlyFail);
-      this.resolve([e]);
+    } else {
+      try {
+        this.request = dns.asyncResolveWithTrrServer(
+          name,
+          trrServer,
+          flags,
+          this,
+          mainThread,
+          defaultOriginAttributes
+        );
+        Assert.ok(!expectEarlyFail);
+      } catch (e) {
+        Assert.ok(expectEarlyFail);
+        this.resolve([e]);
+      }
     }
   }
 
@@ -165,7 +171,6 @@ class DNSListener {
     }
 
     Assert.equal(inStatus, Cr.NS_OK, "Checking status");
-    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     let answer = inRecord.getNextAddrAsString();
     Assert.equal(
       answer,
@@ -1693,7 +1698,6 @@ add_task(async function test_resolve_not_confirmed() {
       undefined,
       false
     );
-    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     let responseIP = inRecord.getNextAddrAsString();
     if (responseIP == "7.7.7.7") {
       break;

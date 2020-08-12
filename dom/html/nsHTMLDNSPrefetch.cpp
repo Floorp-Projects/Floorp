@@ -154,9 +154,9 @@ nsresult nsHTMLDNSPrefetch::Prefetch(
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
   nsresult rv = sDNSService->AsyncResolveNative(
-      NS_ConvertUTF16toUTF8(hostname), nsIDNSService::RESOLVE_TYPE_DEFAULT,
-      flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener, nullptr,
-      aPartitionedPrincipalOriginAttributes, getter_AddRefs(tmpOutstanding));
+      NS_ConvertUTF16toUTF8(hostname), flags | nsIDNSService::RESOLVE_SPECULATE,
+      sDNSListener, nullptr, aPartitionedPrincipalOriginAttributes,
+      getter_AddRefs(tmpOutstanding));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -166,11 +166,10 @@ nsresult nsHTMLDNSPrefetch::Prefetch(
     nsAutoCString esniHost;
     esniHost.Append("_esni.");
     esniHost.Append(NS_ConvertUTF16toUTF8(hostname));
-    Unused << sDNSService->AsyncResolveNative(
+    Unused << sDNSService->AsyncResolveByTypeNative(
         esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
-        flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
-        nullptr, aPartitionedPrincipalOriginAttributes,
-        getter_AddRefs(tmpOutstanding));
+        flags | nsIDNSService::RESOLVE_SPECULATE, sDNSListener, nullptr,
+        aPartitionedPrincipalOriginAttributes, getter_AddRefs(tmpOutstanding));
   }
 
   return NS_OK;
@@ -252,19 +251,17 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
 
   // Forward cancellation to DNS service
   nsresult rv = sDNSService->CancelAsyncResolveNative(
-      NS_ConvertUTF16toUTF8(hostname), nsIDNSService::RESOLVE_TYPE_DEFAULT,
-      flags | nsIDNSService::RESOLVE_SPECULATE,
-      nullptr,  // resolverInfo
+      NS_ConvertUTF16toUTF8(hostname), flags | nsIDNSService::RESOLVE_SPECULATE,
       sDNSListener, aReason, aPartitionedPrincipalOriginAttributes);
   // Cancel fetching ESNI keys if needed.
   if (StaticPrefs::network_security_esni_enabled() && isHttps) {
     nsAutoCString esniHost;
     esniHost.Append("_esni.");
     esniHost.Append(NS_ConvertUTF16toUTF8(hostname));
-    sDNSService->CancelAsyncResolveNative(
+    sDNSService->CancelAsyncResolveByTypeNative(
         esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
-        flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
-        aReason, aPartitionedPrincipalOriginAttributes);
+        flags | nsIDNSService::RESOLVE_SPECULATE, sDNSListener, aReason,
+        aPartitionedPrincipalOriginAttributes);
   }
   return rv;
 }
@@ -406,21 +403,19 @@ void nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue() {
             nsCOMPtr<nsICancelable> tmpOutstanding;
 
             rv = sDNSService->AsyncResolveNative(
-                hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+                hostName,
                 mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
-                nullptr, sDNSListener, nullptr, oa,
-                getter_AddRefs(tmpOutstanding));
+                sDNSListener, nullptr, oa, getter_AddRefs(tmpOutstanding));
             // Fetch ESNI keys if needed.
             if (NS_SUCCEEDED(rv) &&
                 StaticPrefs::network_security_esni_enabled() && isHttps) {
               nsAutoCString esniHost;
               esniHost.Append("_esni.");
               esniHost.Append(hostName);
-              sDNSService->AsyncResolveNative(
+              sDNSService->AsyncResolveByTypeNative(
                   esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
                   mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
-                  nullptr, sDNSListener, nullptr, oa,
-                  getter_AddRefs(tmpOutstanding));
+                  sDNSListener, nullptr, oa, getter_AddRefs(tmpOutstanding));
             }
             // Tell link that deferred prefetch was requested
             if (NS_SUCCEEDED(rv)) link->OnDNSPrefetchRequested();

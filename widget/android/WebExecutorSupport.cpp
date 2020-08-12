@@ -451,11 +451,7 @@ class DNSListener final : public nsIDNSListener {
  private:
   nsresult CompleteWithRecord(nsIDNSRecord* aRecord) {
     nsTArray<NetAddr> addrs;
-    nsCOMPtr<nsIDNSAddrRecord> rec = do_QueryInterface(aRecord);
-    if (!rec) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    nsresult rv = rec->GetAddresses(addrs);
+    nsresult rv = aRecord->GetAddresses(addrs);
     NS_ENSURE_SUCCESS(rv, rv);
 
     jni::ByteArray::LocalRef bytes;
@@ -661,8 +657,7 @@ static nsresult ResolveHost(nsCString& host, java::GeckoResult::Param result) {
 
   nsCOMPtr<nsICancelable> cancelable;
   RefPtr<DNSListener> listener = new DNSListener(host, result);
-  rv = dns->AsyncResolveNative(host, nsIDNSService::RESOLVE_TYPE_DEFAULT, 0,
-                               nullptr, listener, nullptr /* aListenerTarget */,
+  rv = dns->AsyncResolveNative(host, 0, listener, nullptr /* aListenerTarget */,
                                OriginAttributes(), getter_AddRefs(cancelable));
   return rv;
 }

@@ -469,8 +469,7 @@ PRStatus nsSOCKSSocketInfo::StartDNS(PRFileDesc* fd) {
 
   mFD = fd;
   nsresult rv = dns->AsyncResolveNative(
-      proxyHost, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-      nsIDNSService::RESOLVE_IGNORE_SOCKS_DNS, nullptr, this,
+      proxyHost, nsIDNSService::RESOLVE_IGNORE_SOCKS_DNS, this,
       mozilla::GetCurrentEventTarget(), attrs, getter_AddRefs(mLookup));
 
   if (NS_FAILED(rv)) {
@@ -529,13 +528,11 @@ PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc* fd) {
         return PR_FAILURE;
       }
     } else {
-      nsCOMPtr<nsIDNSAddrRecord> record = do_QueryInterface(mDnsRec);
-      MOZ_ASSERT(record);
       if (addresses++) {
-        record->ReportUnusable(proxyPort);
+        mDnsRec->ReportUnusable(proxyPort);
       }
 
-      rv = record->GetNextAddr(proxyPort, &mInternalProxyAddr);
+      rv = mDnsRec->GetNextAddr(proxyPort, &mInternalProxyAddr);
       // No more addresses to try? If so, we'll need to bail
       if (NS_FAILED(rv)) {
         LOGERROR(

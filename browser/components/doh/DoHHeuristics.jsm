@@ -106,7 +106,6 @@ async function dnsLookup(hostname, resolveCanonicalName = false) {
             reject({ message: new Components.Exception("", inStatus).name });
             return;
           }
-          inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
           if (resolveCanonicalName) {
             try {
               response.canonicalName = inRecord.canonicalName;
@@ -133,9 +132,7 @@ async function dnsLookup(hostname, resolveCanonicalName = false) {
     try {
       request = gDNSService.asyncResolve(
         hostname,
-        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         dnsFlags,
-        null,
         listener,
         null,
         {} /* defaultOriginAttributes */

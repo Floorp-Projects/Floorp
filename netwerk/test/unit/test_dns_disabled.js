@@ -26,7 +26,6 @@ function makeListenerDontBlock(next, expectedAnswer) {
   return {
     onLookupComplete(inRequest, inRecord, inStatus) {
       Assert.equal(inStatus, Cr.NS_OK);
-      inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
       var answer = inRecord.getNextAddrAsString();
       if (expectedAnswer) {
         Assert.equal(answer, expectedAnswer);
@@ -49,9 +48,7 @@ function do_test({
   try {
     dns.asyncResolve(
       testDomain,
-      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,
-      null, // resolverInfo
       mustBlock
         ? makeListenerBlock(nextCallback)
         : makeListenerDontBlock(nextCallback, expectedAnswer),

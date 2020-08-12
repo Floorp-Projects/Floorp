@@ -20,7 +20,6 @@ var listener = {
 
     while (true) {
       try {
-        inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
         var answer = inRecord.getNextAddrAsString();
         // If there is an answer it should be an IPv4  address
         dump(answer);
@@ -41,9 +40,7 @@ function run_test() {
   try {
     dns.asyncResolve(
       "example.com",
-      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,
-      null, // resolverInfo
       listener,
       null,
       defaultOriginAttributes

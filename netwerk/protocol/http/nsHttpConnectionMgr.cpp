@@ -5256,7 +5256,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport* trans,
       gHttpHandler->CoalesceSpdy() && mEnt && mEnt->mConnInfo &&
       mEnt->mConnInfo->EndToEndSSL() && mEnt->AllowSpdy() &&
       !mEnt->mConnInfo->UsingProxy() && mEnt->mCoalescingKeys.IsEmpty()) {
-    nsCOMPtr<nsIDNSAddrRecord> dnsRecord(do_GetInterface(mSocketTransport));
+    nsCOMPtr<nsIDNSRecord> dnsRecord(do_GetInterface(mSocketTransport));
     nsTArray<NetAddr> addressSet;
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     if (dnsRecord) {

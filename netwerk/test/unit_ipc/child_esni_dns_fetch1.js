@@ -35,11 +35,10 @@ DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
 add_task(async function testEsniRequest() {
   // use the h2 server as DOH provider
   let listenerEsni = new DNSListener();
-  let request = dns.asyncResolve(
+  let request = dns.asyncResolveByType(
     "_esni.example.com",
     dns.RESOLVE_TYPE_TXT,
     0,
-    null, // resolverInfo
     listenerEsni,
     mainThread,
     defaultOriginAttributes
@@ -57,11 +56,10 @@ add_task(async function testEsniRequest() {
 add_task(async function testEsniHTTPSSVC() {
   // use the h2 server as DOH provider
   let listenerEsni = new DNSListener();
-  let request = dns.asyncResolve(
+  let request = dns.asyncResolveByType(
     "httpssvc_esni.example.com",
     dns.RESOLVE_TYPE_HTTPSSVC,
     0,
-    null, // resolverInfo
     listenerEsni,
     mainThread,
     defaultOriginAttributes

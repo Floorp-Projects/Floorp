@@ -1064,10 +1064,9 @@ nsresult nsSocketTransport::ResolveHost() {
     SOCKET_LOG(("nsSocketTransport %p origin %s doing dns for %s\n", this,
                 mOriginHost.get(), SocketHost().get()));
   }
-  rv =
-      dns->AsyncResolveNative(SocketHost(), nsIDNSService::RESOLVE_TYPE_DEFAULT,
-                              dnsFlags, nullptr, this, mSocketTransportService,
-                              mOriginAttributes, getter_AddRefs(mDNSRequest));
+  rv = dns->AsyncResolveNative(SocketHost(), dnsFlags, this,
+                               mSocketTransportService, mOriginAttributes,
+                               getter_AddRefs(mDNSRequest));
   mEsniQueried = false;
   if (mSocketTransportService->IsEsniEnabled() && NS_SUCCEEDED(rv) &&
       !(mConnectionFlags & (DONT_TRY_ESNI | BE_CONSERVATIVE))) {
@@ -1085,10 +1084,10 @@ nsresult nsSocketTransport::ResolveHost() {
       // This might end up being the SocketHost
       // see https://github.com/ekr/draft-rescorla-tls-esni/issues/61
       esniHost.Append(SocketHost());
-      rv = dns->AsyncResolveNative(esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
-                                   dnsFlags, nullptr, this,
-                                   mSocketTransportService, mOriginAttributes,
-                                   getter_AddRefs(mDNSTxtRequest));
+      rv = dns->AsyncResolveByTypeNative(
+          esniHost, nsIDNSService::RESOLVE_TYPE_TXT, dnsFlags, this,
+          mSocketTransportService, mOriginAttributes,
+          getter_AddRefs(mDNSTxtRequest));
       if (NS_FAILED(rv)) {
         SOCKET_LOG(("  dns request by type failed."));
         mDNSTxtRequest = nullptr;
@@ -3012,8 +3011,7 @@ nsSocketTransport::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   if (NS_FAILED(status) && mDNSTxtRequest) {
     mDNSTxtRequest->Cancel(NS_ERROR_ABORT);
   } else if (NS_SUCCEEDED(status)) {
-    mDNSRecord = do_QueryInterface(rec);
-    MOZ_ASSERT(mDNSRecord);
+    mDNSRecord = rec;
   }
 
   // flag host lookup complete for the benefit of the ResolveHost method.
@@ -3044,8 +3042,7 @@ nsSocketTransport::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 // nsIInterfaceRequestor
 NS_IMETHODIMP
 nsSocketTransport::GetInterface(const nsIID& iid, void** result) {
-  if (iid.Equals(NS_GET_IID(nsIDNSRecord)) ||
-      iid.Equals(NS_GET_IID(nsIDNSAddrRecord))) {
+  if (iid.Equals(NS_GET_IID(nsIDNSRecord))) {
     return mDNSRecord ? mDNSRecord->QueryInterface(iid, result)
                       : NS_ERROR_NO_INTERFACE;
   }

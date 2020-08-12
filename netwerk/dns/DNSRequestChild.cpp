@@ -36,11 +36,10 @@ void DNSRequestBase::SetIPCActor(DNSRequestActor* aActor) {
 // A simple class to provide nsIDNSRecord on the child
 //-----------------------------------------------------------------------------
 
-class ChildDNSRecord : public nsIDNSAddrRecord {
+class ChildDNSRecord : public nsIDNSRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSRECORD
-  NS_DECL_NSIDNSADDRRECORD
 
   ChildDNSRecord(const DNSRecord& reply, uint16_t flags);
 
@@ -56,7 +55,7 @@ class ChildDNSRecord : public nsIDNSAddrRecord {
   bool mIsTRR;
 };
 
-NS_IMPL_ISUPPORTS(ChildDNSRecord, nsIDNSRecord, nsIDNSAddrRecord)
+NS_IMPL_ISUPPORTS(ChildDNSRecord, nsIDNSRecord)
 
 ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
     : mCurrent(0), mFlags(flags) {
@@ -71,7 +70,7 @@ ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
 }
 
 //-----------------------------------------------------------------------------
-// ChildDNSRecord::nsIDNSAddrRecord
+// ChildDNSRecord::nsIDNSRecord
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
@@ -177,7 +176,7 @@ class ChildDNSByTypeRecord : public nsIDNSByTypeRecord,
                              public nsIDNSHTTPSSVCRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIDNSRECORD
+  NS_FORWARD_SAFE_NSIDNSRECORD(((nsIDNSRecord*)nullptr))
   NS_DECL_NSIDNSBYTYPERECORD
   NS_DECL_NSIDNSTXTRECORD
   NS_DECL_NSIDNSHTTPSSVCRECORD
