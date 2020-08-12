@@ -348,6 +348,14 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
                                           originAttributes);
   }
 
+  void UpdateAltServiceMappingWithoutValidation(
+      AltSvcMapping* map, nsProxyInfo* proxyInfo,
+      nsIInterfaceRequestor* callbacks, uint32_t caps,
+      const OriginAttributes& originAttributes) {
+    mAltSvcCache->UpdateAltServiceMappingWithoutValidation(
+        map, proxyInfo, callbacks, caps, originAttributes);
+  }
+
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
       bool isolated, const nsACString& topWindowOrigin,
@@ -488,6 +496,12 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsresult DoShiftReloadConnectionCleanupWithConnInfo(
       nsHttpConnectionInfo* aCI);
 
+
+  void MaybeAddAltSvcForTesting(nsIURI* aUri, const nsACString& aUsername,
+                                const nsACString& aTopWindowOrigin,
+                                bool aPrivateBrowsing, bool aIsolated,
+                                nsIInterfaceRequestor* aCallbacks,
+                                const OriginAttributes& aOriginAttributes);
  private:
   nsHttpHandler();
 
@@ -835,6 +849,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // The mapping of channel id and the weak pointer of nsHttpChannel.
   nsDataHashtable<nsUint64HashKey, nsWeakPtr> mIDToHttpChannelMap;
+
+  // This is parsed pref network.http.http3.alt-svc-mapping-for-testing.
+  // The pref set artificial altSvc-s for origin for testing.
+  // This maps an origin to an altSvc.
+  nsClassHashtable<nsCStringHashKey, nsCString> mAltSvcMappingTemptativeMap;
 };
 
 extern StaticRefPtr<nsHttpHandler> gHttpHandler;
