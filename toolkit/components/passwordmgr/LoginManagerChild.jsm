@@ -292,6 +292,8 @@ const observer = {
         let loginManagerChild = LoginManagerChild.forWindow(window);
         if (
           docState.generatedPasswordFields.has(field) &&
+          // Depending on the edit, we may no longer want to consider
+          // the field a generated password field to avoid autosaving.
           loginManagerChild._doesEventClearPrevFieldValue(aEvent)
         ) {
           loginManagerChild._stopTreatingAsGeneratedPasswordField(field);
@@ -354,6 +356,18 @@ const observer = {
           break;
         }
         if (field.hasBeenTypePassword) {
+          // When a field is filled with a generated password, we also fill a confirm password field
+          // if found. To do this, _fillConfirmFieldWithGeneratedPassword calls setUserInput, which fires
+          // an "input" event on the confirm password field. _compareAndUpdatePreviouslySentValues will
+          // allow that message through due to triggeredByFillingGenerated, so early return here.
+          let form = LoginFormFactory.createFromField(field);
+          if (
+            docState.generatedPasswordFields.has(field) &&
+            LoginManagerChild.forWindow(window)._getFormFields(form)
+              .confirmPasswordField === field
+          ) {
+            break;
+          }
           // Don't check for triggeredByFillingGenerated, as we do not want to autosave
           // a field marked as a generated password field on every "input" event
           LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(field);
@@ -1817,8 +1831,17 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    *
    * @returns {boolean}
    */
-  _doesEventClearPrevFieldValue({ target, data }) {
-    return !target.value || (data && data == target.value);
+  _doesEventClearPrevFieldValue({ target, data, inputType }) {
+    return (
+      !target.value ||
+      // We check inputType here as a proxy for the previous field value.
+      // If the previous field value was empty, e.g. automatically filling
+      // a confirm password field when a new password field is filled with
+      // a generated password, there's nothing to replace.
+      // We may be able to use the "beforeinput" event instead when that
+      // ships (Bug 1609291).
+      (data && data == target.value && inputType !== "insertReplacementText")
+    );
   }
 
   _stopTreatingAsGeneratedPasswordField(passwordField) {
@@ -1958,9 +1981,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       }
     }
     if (confirmPasswordInput && !confirmPasswordInput.value) {
+      this._treatAsGeneratedPasswordField(confirmPasswordInput);
       confirmPasswordInput.setUserInput(passwordField.value);
       this._highlightFilledField(confirmPasswordInput);
-      this._treatAsGeneratedPasswordField(confirmPasswordInput);
     }
   }
 
