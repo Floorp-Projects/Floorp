@@ -97,7 +97,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
 
 #ifdef MOZ_WAYLAND
   mUseWebGLDmabufBackend =
-      IsWaylandDisplay() && GetDMABufDevice()->IsDMABufWebGLEnabled();
+      gfxVars::UseEGL() && GetDMABufDevice()->IsDMABufWebGLEnabled();
 #endif
 
   gPlatformFTLibrary = Factory::NewFTLibrary();
