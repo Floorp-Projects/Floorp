@@ -143,30 +143,17 @@ add_task(async function test_cached_engine_properties() {
   const engines = await Services.search.getEngines();
 
   // Modern config has a slightly different expected order.
-  const expectedEngines = gModernConfig
-    ? [
-        // Default engines
-        "Test search engine",
-        // Rest of engines in order
-        "engine-resourceicon",
-        "engine-chromeicon",
-        "engine-pref",
-        "engine-rel-searchform-purpose",
-        "Test search engine (Reordered)",
-        "A second test engine",
-      ]
-    : [
-        // Default engine
-        "Test search engine",
-        // Two engines listed in searchOrder.
-        "engine-resourceicon",
-        "engine-chromeicon",
-        "A second test engine",
-        // Rest of the engines in order.
-        "engine-pref",
-        "engine-rel-searchform-purpose",
-        "Test search engine (Reordered)",
-      ];
+  const expectedEngines = [
+    // Default engines
+    "Test search engine",
+    // Rest of engines in order
+    "engine-resourceicon",
+    "engine-chromeicon",
+    "engine-pref",
+    "engine-rel-searchform-purpose",
+    "Test search engine (Reordered)",
+    "A second test engine",
+  ];
 
   Assert.deepEqual(
     engines.map(e => e.name),

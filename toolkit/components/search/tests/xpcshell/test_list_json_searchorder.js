@@ -14,6 +14,7 @@ add_task(async function setup() {
   );
 
   await useTestEngines();
+  await Services.search.init();
 });
 
 async function checkOrder(expectedOrder) {
