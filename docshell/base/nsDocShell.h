@@ -1050,13 +1050,10 @@ class nsDocShell final : public nsDocLoader,
 
   void SetTitleOnHistoryEntry();
 
-  void SetScrollRestorationIsManualOnHistoryEntry(
-      nsISHEntry* aSHEntry, mozilla::dom::SessionHistoryInfo* aInfo,
-      bool aIsManual);
+  void SetScrollRestorationIsManualOnHistoryEntry(nsISHEntry* aSHEntry,
+                                                  bool aIsManual);
 
-  void SetCacheKeyOnHistoryEntry(nsISHEntry* aSHEntry,
-                                 mozilla::dom::SessionHistoryInfo* aInfo,
-                                 uint32_t aCacheKey);
+  void SetCacheKeyOnHistoryEntry(nsISHEntry* aSHEntry, uint32_t aCacheKey);
 
  private:  // data members
   nsID mHistoryID;

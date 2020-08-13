@@ -2961,16 +2961,20 @@ nsDocShell::GetCurrentSHEntry(nsISHEntry** aEntry, bool* aOSHE) {
 }
 
 NS_IMETHODIMP nsDocShell::SynchronizeLayoutHistoryState() {
-  if (mActiveEntry && mActiveEntry->GetLayoutHistoryState()) {
+  if (mActiveEntry && mActiveEntry->GetLayoutHistoryState() &&
+      mBrowsingContext) {
     if (XRE_IsContentProcess()) {
       dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
       if (contentChild) {
         contentChild->SendSynchronizeLayoutHistoryState(
-            mActiveEntry->Id(), mActiveEntry->GetLayoutHistoryState());
+            mBrowsingContext, mActiveEntry->GetLayoutHistoryState());
       }
     } else {
-      SessionHistoryEntry::UpdateLayoutHistoryState(
-          mActiveEntry->Id(), mActiveEntry->GetLayoutHistoryState());
+      SessionHistoryEntry* entry =
+          mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
+      if (entry) {
+        entry->SetLayoutHistoryState(mActiveEntry->GetLayoutHistoryState());
+      }
     }
   }
 
@@ -4751,18 +4755,18 @@ void nsDocShell::SetTitleOnHistoryEntry() {
     mOSHE->SetTitle(mTitle);
   }
 
-  if (mActiveEntry) {
+  if (mActiveEntry && mBrowsingContext) {
     mActiveEntry->SetTitle(mTitle);
     if (XRE_IsParentProcess()) {
       SessionHistoryEntry* entry =
-          SessionHistoryEntry::GetByInfoId(mActiveEntry->Id());
+          mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
       if (entry) {
         entry->SetTitle(mTitle);
       }
     } else {
       mozilla::Unused
           << ContentChild::GetSingleton()->SendSessionHistoryEntryTitle(
-                 mActiveEntry->Id(), mTitle);
+                 mBrowsingContext, mTitle);
     }
   }
 }
@@ -8511,14 +8515,16 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       if (mLoadingEntry && !mLoadingEntry->mIsLoadFromSessionHistory) {
         // If we're not doing a history load, scroll restoration
         // should be inherited from the previous session history entry.
-        SetScrollRestorationIsManualOnHistoryEntry(
-            nullptr, &mLoadingEntry->mInfo, scrollRestorationIsManual);
+        // XXX This needs most probably tweaks once fragment navigation is fixed
+        // to work with session-history-in-parent.
+        SetScrollRestorationIsManualOnHistoryEntry(nullptr,
+                                                   scrollRestorationIsManual);
       }
       if (mLSHE) {
         if (!aLoadState->SHEntry()) {
           // If we're not doing a history load, scroll restoration
           // should be inherited from the previous session history entry.
-          SetScrollRestorationIsManualOnHistoryEntry(mLSHE, nullptr,
+          SetScrollRestorationIsManualOnHistoryEntry(mLSHE,
                                                      scrollRestorationIsManual);
         }
         mLSHE->AdoptBFCacheEntry(mOSHE);
@@ -8551,10 +8557,9 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     // Make sure we won't just repost without hitting the
     // cache first
     if (cacheKey != 0) {
-      // XXX Update this call to deal with mLoadingEntry or mActiveEntry once
-      // the whole HandleSameDocumentNavigation is updated to work with
-      // SessionHistoryInfo objects!
-      SetCacheKeyOnHistoryEntry(mOSHE, nullptr, cacheKey);
+      // XXX Ensure this method is still called when fragment navigation is
+      //     fixed to work with session history in parent.
+      SetCacheKeyOnHistoryEntry(mOSHE, cacheKey);
     }
   }
 
@@ -10327,17 +10332,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     // in it.  Otherwise, since we're doing a reload and won't be updating
     // our history entry, store the cache key in our current history entry.
 
-    if (mLoadingEntry) {
-      SetCacheKeyOnHistoryEntry(nullptr, &mLoadingEntry->mInfo, cacheKey);
-    } else if (mActiveEntry) {
-      SetCacheKeyOnHistoryEntry(nullptr, mActiveEntry.get(), cacheKey);
-    }
-
-    if (mLSHE) {
-      SetCacheKeyOnHistoryEntry(mLSHE, nullptr, cacheKey);
-    } else if (mOSHE) {
-      SetCacheKeyOnHistoryEntry(mOSHE, nullptr, cacheKey);
-    }
+    SetCacheKeyOnHistoryEntry(mLSHE ? mLSHE : mOSHE, cacheKey);
 
     // Since we're force-reloading, clear all the sub frame history.
     ClearFrameHistory(mLSHE);
@@ -10804,54 +10799,50 @@ nsDocShell::GetCurrentScrollRestorationIsManual(bool* aIsManual) {
 
 NS_IMETHODIMP
 nsDocShell::SetCurrentScrollRestorationIsManual(bool aIsManual) {
-  SetScrollRestorationIsManualOnHistoryEntry(mOSHE, mActiveEntry.get(),
-                                             aIsManual);
+  SetScrollRestorationIsManualOnHistoryEntry(mOSHE, aIsManual);
 
   return NS_OK;
 }
 
 void nsDocShell::SetScrollRestorationIsManualOnHistoryEntry(
-    nsISHEntry* aSHEntry, mozilla::dom::SessionHistoryInfo* aInfo,
-    bool aIsManual) {
+    nsISHEntry* aSHEntry, bool aIsManual) {
   if (aSHEntry) {
     aSHEntry->SetScrollRestorationIsManual(aIsManual);
   }
 
-  if (aInfo) {
-    aInfo->SetScrollRestorationIsManual(aIsManual);
+  if (mActiveEntry && mBrowsingContext) {
+    mActiveEntry->SetScrollRestorationIsManual(aIsManual);
     if (XRE_IsParentProcess()) {
       SessionHistoryEntry* entry =
-          SessionHistoryEntry::GetByInfoId(aInfo->Id());
+          mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
       if (entry) {
         entry->SetScrollRestorationIsManual(aIsManual);
       }
     } else {
       mozilla::Unused << ContentChild::GetSingleton()
                              ->SendSessionHistoryEntryScrollRestorationIsManual(
-                                 aInfo->Id(), aIsManual);
+                                 mBrowsingContext, aIsManual);
     }
   }
 }
 
-void nsDocShell::SetCacheKeyOnHistoryEntry(
-    nsISHEntry* aSHEntry, mozilla::dom::SessionHistoryInfo* aInfo,
-    uint32_t aCacheKey) {
+void nsDocShell::SetCacheKeyOnHistoryEntry(nsISHEntry* aSHEntry,
+                                           uint32_t aCacheKey) {
   if (aSHEntry) {
     aSHEntry->SetCacheKey(aCacheKey);
   }
 
-  if (aInfo) {
-    aInfo->SetCacheKey(aCacheKey);
+  if (mActiveEntry && mBrowsingContext) {
     if (XRE_IsParentProcess()) {
       SessionHistoryEntry* entry =
-          SessionHistoryEntry::GetByInfoId(aInfo->Id());
+          mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
       if (entry) {
         entry->SetCacheKey(aCacheKey);
       }
     } else {
       mozilla::Unused
           << ContentChild::GetSingleton()->SendSessionHistoryEntryCacheKey(
-                 aInfo->Id(), aCacheKey);
+                 mBrowsingContext, aCacheKey);
     }
   }
 }

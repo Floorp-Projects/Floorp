@@ -151,9 +151,6 @@ class SessionHistoryEntry : public nsISHEntry {
   // Get an entry based on SessionHistoryInfo's Id. Parent process only.
   static SessionHistoryEntry* GetByInfoId(uint64_t aId);
 
-  static void UpdateLayoutHistoryState(uint64_t aSessionHistoryEntryID,
-                                       nsILayoutHistoryState* aState);
-
   static void MaybeSynchronizeSharedStateToInfo(nsISHEntry* aEntry);
 
  private:
