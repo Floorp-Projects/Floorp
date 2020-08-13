@@ -1660,16 +1660,17 @@ MarkerTiming get_marker_timing_from_payload(
 
 // Add the marker to the given buffer with the given information.
 // This is a unified insertion point for all the markers.
-template <typename Buffer>
-static void StoreMarker(Buffer& aBuffer, int aThreadId, const char* aMarkerName,
+static void StoreMarker(ProfileChunkedBuffer& aChunkedBuffer, int aThreadId,
+                        const char* aMarkerName,
                         const MarkerTiming& aMarkerTiming,
                         JS::ProfilingCategoryPair aCategoryPair,
                         const ProfilerMarkerPayload* aPayload) {
-  aBuffer.PutObjects(ProfileBufferEntry::Kind::MarkerData, aThreadId,
-                     WrapProfileBufferUnownedCString(aMarkerName),
-                     aMarkerTiming.GetStartTime(), aMarkerTiming.GetEndTime(),
-                     aMarkerTiming.GetMarkerPhase(),
-                     static_cast<uint32_t>(aCategoryPair), aPayload);
+  aChunkedBuffer.PutObjects(ProfileBufferEntry::Kind::MarkerData, aThreadId,
+                            WrapProfileBufferUnownedCString(aMarkerName),
+                            aMarkerTiming.GetStartTime(),
+                            aMarkerTiming.GetEndTime(),
+                            aMarkerTiming.GetMarkerPhase(),
+                            static_cast<uint32_t>(aCategoryPair), aPayload);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2764,7 +2765,8 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
     if (!text) {
       // This marker doesn't have a text.
-      StoreMarker(aProfileBuffer, threadId, markerName.get(), timing,
+      StoreMarker(aProfileBuffer.UnderlyingChunkedBuffer(), threadId,
+                  markerName.get(), timing,
                   JS::ProfilingCategoryPair::JAVA_ANDROID, nullptr);
     } else {
       // This marker has a text.
@@ -2773,7 +2775,8 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
                                       nullptr);
 
       // Put the marker inside the buffer.
-      StoreMarker(aProfileBuffer, threadId, markerName.get(), timing,
+      StoreMarker(aProfileBuffer.UnderlyingChunkedBuffer(), threadId,
+                  markerName.get(), timing,
                   JS::ProfilingCategoryPair::JAVA_ANDROID, &payload);
     }
   }
