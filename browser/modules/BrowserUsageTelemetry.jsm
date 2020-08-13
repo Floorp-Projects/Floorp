@@ -18,7 +18,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ClientID: "resource://gre/modules/ClientID.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
@@ -390,6 +392,18 @@ let URICountListener = {
 };
 
 let BrowserUsageTelemetry = {
+  /**
+   * This is a policy object used to override behavior for testing.
+   */
+  Policy: {
+    getTelemetryClientId: async () => ClientID.getClientID(),
+    getUpdateDirectory: () => Services.dirsvc.get("UpdRootD", Ci.nsIFile),
+    readProfileCountFile: async path =>
+      OS.File.read(path, { encoding: "UTF-8" }),
+    writeProfileCountFile: async (path, data) =>
+      OS.File.writeAtomic(path, data),
+  },
+
   _inited: false,
 
   init() {
@@ -1256,6 +1270,118 @@ let BrowserUsageTelemetry = {
         .add(loadedTabCount);
       this._lastRecordLoadedTabCount = currentTime;
     }
+  },
+
+  _checkProfileCountFileSchema(fileData) {
+    // Verifies that the schema of the file is the expected schema
+    if (typeof fileData.version != "string") {
+      throw new Error("Schema Mismatch Error: Bad type for 'version' field");
+    }
+    if (!Array.isArray(fileData.profileTelemetryIds)) {
+      throw new Error(
+        "Schema Mismatch Error: Bad type for 'profileTelemetryIds' field"
+      );
+    }
+    for (let profileTelemetryId of fileData.profileTelemetryIds) {
+      if (typeof profileTelemetryId != "string") {
+        throw new Error(
+          "Schema Mismatch Error: Bad type for an element of 'profileTelemetryIds'"
+        );
+      }
+    }
+  },
+
+  // Reports the number of Firefox profiles on this machine to telemetry.
+  async reportProfileCount() {
+    if (AppConstants.platform != "win") {
+      // This is currently a windows-only feature.
+      return;
+    }
+
+    // To report only as much data as we need, we will bucket our values.
+    // Rather than the raw value, we will report the greatest value in the list
+    // below that is no larger than the raw value.
+    const buckets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000];
+
+    // We need both the C:\ProgramData\Mozilla directory and the install
+    // directory hash to create the profile count file path. We can easily
+    // reassemble this from the update directory, which looks like:
+    // C:\ProgramData\Mozilla\updates\hash
+    // Retrieving the directory this way also ensures that the "Mozilla"
+    // directory is created with the correct permissions.
+    // The ProgramData directory, by default, grants write permissions only to
+    // file creators. The directory service calls GetCommonUpdateDirectory,
+    // which makes sure the the directory is created with user-writable
+    // permissions.
+    const updateDirectory = BrowserUsageTelemetry.Policy.getUpdateDirectory();
+    const hash = updateDirectory.leafName;
+    const profileCountFilename = "profile_count_" + hash + ".json";
+    let profileCountFile = updateDirectory.parent.parent;
+    profileCountFile.append(profileCountFilename);
+
+    let readError = false;
+    let fileData;
+    try {
+      let json = await BrowserUsageTelemetry.Policy.readProfileCountFile(
+        profileCountFile.path
+      );
+      fileData = JSON.parse(json);
+      BrowserUsageTelemetry._checkProfileCountFileSchema(fileData);
+    } catch (ex) {
+      // Note that since this also catches the "no such file" error, this is
+      // always the template that we use when writing to the file for the first
+      // time.
+      fileData = { version: "1", profileTelemetryIds: [] };
+      if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
+        Cu.reportError(ex);
+        // Don't just return here on a read error. We need to send the error
+        // value to telemetry and we want to attempt to fix the file.
+        // However, we will still report an error for this ping, even if we
+        // fix the file. This is to prevent always sending a profile count of 1
+        // if, for some reason, we always get a read error but never a write
+        // error.
+        readError = true;
+      }
+    }
+
+    let writeError = false;
+    let currentTelemetryId = await BrowserUsageTelemetry.Policy.getTelemetryClientId();
+    // Don't add our telemetry ID to the file if we've already reached the
+    // largest bucket. This prevents the file size from growing forever.
+    if (
+      !fileData.profileTelemetryIds.includes(currentTelemetryId) &&
+      fileData.profileTelemetryIds.length < Math.max(...buckets)
+    ) {
+      fileData.profileTelemetryIds.push(currentTelemetryId);
+      try {
+        await BrowserUsageTelemetry.Policy.writeProfileCountFile(
+          profileCountFile.path,
+          JSON.stringify(fileData)
+        );
+      } catch (ex) {
+        Cu.reportError(ex);
+        writeError = true;
+      }
+    }
+
+    // Determine the bucketed value to report
+    let rawProfileCount = fileData.profileTelemetryIds.length;
+    let valueToReport = 0;
+    for (let bucket of buckets) {
+      if (bucket <= rawProfileCount && bucket > valueToReport) {
+        valueToReport = bucket;
+      }
+    }
+
+    if (readError || writeError) {
+      // We convey errors via a profile count of 0.
+      valueToReport = 0;
+    }
+
+    Services.telemetry.scalarSet(
+      "browser.engagement.profile_count",
+      valueToReport
+    );
   },
 };
 
