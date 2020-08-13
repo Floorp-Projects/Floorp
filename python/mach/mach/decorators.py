@@ -13,11 +13,8 @@ from mozbuild.base import MachCommandBase
 
 
 class _MachCommand(object):
-    """Container for mach command metadata.
+    """Container for mach command metadata."""
 
-    Mach commands contain lots of attributes. This class exists to capture them
-    in a sane way so tuples, etc aren't used instead.
-    """
     __slots__ = (
         # Content from decorator arguments to define the command.
         'name',
@@ -28,6 +25,7 @@ class _MachCommand(object):
         '_parser',
         'arguments',
         'argument_group_names',
+        'virtualenv_name',
 
         # By default, subcommands will be sorted. If this is set to
         # 'declaration', they will be left in declaration order.
@@ -56,7 +54,7 @@ class _MachCommand(object):
 
     def __init__(self, name=None, subcommand=None, category=None,
                  description=None, conditions=None, parser=None,
-                 order=None):
+                 order=None, virtualenv_name=None):
         self.name = name
         self.subcommand = subcommand
         self.category = category
@@ -65,6 +63,7 @@ class _MachCommand(object):
         self._parser = parser
         self.arguments = []
         self.argument_group_names = []
+        self.virtualenv_name = virtualenv_name
         self.order = order
 
         self.cls = None
