@@ -78,4 +78,4 @@ _NS_InvokeByIndex:
 
             .size _NS_InvokeByIndex, . - _NS_InvokeByIndex
 
-
+            .section .note.GNU-stack, "", @progbits ; .previous
