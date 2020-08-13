@@ -202,6 +202,13 @@ add_task(async function testAboutPage() {
         "after cancelling enrollment, Pioneer is not enrolled."
       );
 
+      // When a modal dialog is cancelled, the inertness for other elements
+      // is reverted. However, in order to have the new state (non-inert)
+      // effective, Firefox needs to do a frame flush. This flush is taken
+      // place when it's really needed.
+      // getBoundingClientRect forces a frame flush here to ensure the
+      // following click is going to work properly.
+      enrollmentButton.getBoundingClientRect();
       enrollmentButton.click();
       ok(dialog.open, "after retrying enrollment, consent dialog is open.");
 
@@ -276,6 +283,9 @@ add_task(async function testAboutPage() {
           "After canceling study enrollment, join button is enabled."
         );
 
+        // Similar to the getBoundingClientRect call we did for
+        // enrollmentButton, we are forcing a frame flush here.
+        joinButton.getBoundingClientRect();
         joinButton.click();
         await waitForAnimationFrame();
 
