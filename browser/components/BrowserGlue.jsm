@@ -2624,14 +2624,16 @@ BrowserGlue.prototype = {
           Corroborate.init().catch(Cu.reportError);
         }
       },
+
+      () => BrowserUsageTelemetry.reportProfileCount(),
     ];
 
     for (let task of idleTasks) {
-      ChromeUtils.idleDispatch(() => {
+      ChromeUtils.idleDispatch(async () => {
         if (!Services.startup.shuttingDown) {
           let startTime = Cu.now();
           try {
-            task();
+            await task();
           } catch (ex) {
             Cu.reportError(ex);
           } finally {

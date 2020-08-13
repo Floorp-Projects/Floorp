@@ -119,3 +119,19 @@ is a number. The number used is stable for a single session. Everytime the user
 moves or interacts with an add-on the same number is used but then the numbers
 for each add-on may change after Firefox has been restarted.
 
+Profile Count
+=============
+
+The scalar ``browser.engagement.profile_count`` records how many profiles have
+been used by the current Firefox installation. It reports a bucketed result,
+which will be 0 if there is an error. The raw value will be reported for 1-10,
+but above that, it will report 10 for 10-99, 100 for 100-999, 1000 for
+1000-9999, and 10000 for any values greater than that.
+
+The profile count data for an installation is stored in the root of the
+update directory in a file called ``profile_count_<install hash>.json``. The
+full path to the file will typically look something like
+``C:\ProgramData\Mozilla\profile_count_5A9E6E2F272F7AA0.json``.
+
+This value is meant to be resilient to re-installation, so that file will not
+be removed when Firefox is uninstalled.
