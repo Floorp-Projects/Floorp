@@ -144,6 +144,8 @@ class MediaController final : public DOMEventTargetHelper,
 
   CopyableTArray<MediaControlKey> GetSupportedMediaKeys() const;
 
+  bool IsBeingUsedInPIPModeOrFullscreen() const;
+
  private:
   ~MediaController();
   void HandleActualPlaybackStateChanged() override;
@@ -166,8 +168,6 @@ class MediaController final : public DOMEventTargetHelper,
   bool ShouldDeactivateController() const;
 
   void UpdateDeactivationTimerIfNeeded();
-
-  bool IsMediaBeingUsedInPIPModeOrFullScreen() const;
 
   void DispatchAsyncEvent(const nsAString& aName);
   void DispatchAsyncEvent(Event* aEvent);

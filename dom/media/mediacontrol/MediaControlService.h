@@ -121,12 +121,14 @@ class MediaControlService final : public nsIObserver {
     void MainControllerMetadataChanged(const MediaMetadataBase& aMetadata);
 
    private:
-    // Assume that we have a list [A, B, C, D], and we want to reorder B.
-    // When applying `eInsertToTail`, list would become [A, C, D, B].
-    // When applying `eInsertBeforeTail`, list would become [A, C, B, D].
+    // When applying `eInsertAsMainController`, we would always insert the
+    // element to the tail of the list. Eg. Insert C , [A, B] -> [A, B, C]
+    // When applying `eInsertAsNormalController`, we would insert the element
+    // prior to the element with a higher priority controller. Eg. Insert E and
+    // C and D have higher priority. [A, B, C, D] -> [A, B, E, C, D]
     enum class InsertOptions {
-      eInsertToTail,
-      eInsertBeforeTail,
+      eInsertAsMainController,
+      eInsertAsNormalController,
     };
 
     // Adjust the given controller's order by the insert option.
