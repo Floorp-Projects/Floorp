@@ -272,6 +272,7 @@ class RemoteAutomation(object):
             return False
         if not newLogContent:
             return False
+        newLogContent = six.ensure_str(newLogContent, errors='replace')
 
         self.stdoutlen += len(newLogContent)
 
