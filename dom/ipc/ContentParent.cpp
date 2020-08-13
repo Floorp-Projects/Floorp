@@ -6962,8 +6962,18 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryUpdate(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSynchronizeLayoutHistoryState(
-    uint64_t aSessionHistoryEntryID, nsILayoutHistoryState* aState) {
+    const uint64_t& aSessionHistoryEntryID, nsILayoutHistoryState* aState) {
   SessionHistoryEntry::UpdateLayoutHistoryState(aSessionHistoryEntryID, aState);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryTitle(
+    const uint64_t& aSessionHistoryEntryID, const nsString& aTitle) {
+  SessionHistoryEntry* entry =
+      SessionHistoryEntry::GetByInfoId(aSessionHistoryEntryID);
+  if (entry) {
+    entry->SetTitle(aTitle);
+  }
   return IPC_OK();
 }
 
