@@ -24,7 +24,7 @@ using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class nsIPropertyBag2 from "mozilla/dom/PropertyBagUtils.h";
 using refcounted class nsDOMNavigationTiming from "nsDOMNavigationTiming.h";
 using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
-using moveonly mozilla::dom::SessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
+using moveonly mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 
 namespace mozilla {
 namespace net {
@@ -483,7 +483,7 @@ struct RedirectToRealChannelArgs {
   nsDOMNavigationTiming? timing;
   nsString srcdocData;
   nsIURI baseUri;
-  SessionHistoryInfo? sessionHistoryInfo;
+  LoadingSessionHistoryInfo? loadingSessionHistoryInfo;
   uint64_t loadIdentifier;
   nsCString? originalUriString;
 };

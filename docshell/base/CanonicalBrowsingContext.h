@@ -34,7 +34,7 @@ namespace dom {
 class BrowserParent;
 struct LoadURIOptions;
 class MediaController;
-class SessionHistoryInfo;
+struct LoadingSessionHistoryInfo;
 class SessionHistoryEntry;
 class WindowGlobalParent;
 
@@ -96,7 +96,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   Nullable<WindowProxyHolder> GetTopChromeWindow();
 
   nsISHistory* GetSessionHistory();
-  UniquePtr<SessionHistoryInfo> CreateSessionHistoryEntryForLoad(
+  UniquePtr<LoadingSessionHistoryInfo> CreateLoadingSessionHistoryEntryForLoad(
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   void SessionHistoryCommit(uint64_t aSessionHistoryEntryId,
                             const nsID& aChangeID);

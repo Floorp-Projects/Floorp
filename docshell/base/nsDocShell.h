@@ -65,6 +65,7 @@ class ClientInfo;
 class ClientSource;
 class EventTarget;
 class SessionHistoryInfo;
+struct LoadingSessionHistoryInfo;
 }  // namespace dom
 namespace net {
 class LoadInfo;
@@ -499,7 +500,7 @@ class nsDocShell final : public nsDocLoader,
       mozilla::dom::BrowsingContext* aBrowsingContext, uint32_t aLoadType);
 
   void SetLoadingSessionHistoryInfo(
-      const mozilla::dom::SessionHistoryInfo& aInfo);
+      const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo);
 
  private:  // member functions
   friend class nsDSURIContentListener;
@@ -1110,7 +1111,7 @@ class nsDocShell final : public nsDocLoader,
 
   // These are only set when fission.sessionHistoryInParent is set.
   mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mActiveEntry;
-  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mLoadingEntry;
+  mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> mLoadingEntry;
 
   // Holds a weak pointer to a RestorePresentationEvent object if any that
   // holds a weak pointer back to us. We use this pointer to possibly revoke
