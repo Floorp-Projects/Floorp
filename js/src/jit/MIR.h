@@ -9584,6 +9584,46 @@ class MGuardNullOrUndefined : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+// Guard on function flags
+class MGuardFunctionFlags : public MUnaryInstruction,
+                            public SingleObjectPolicy::Data {
+  uint16_t flags_;
+  bool bailWhenSet_;
+
+  explicit MGuardFunctionFlags(MDefinition* fun, uint16_t flags,
+                               bool bailWhenSet)
+      : MUnaryInstruction(classOpcode, fun),
+        flags_(flags),
+        bailWhenSet_(bailWhenSet) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(fun->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardFunctionFlags)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function))
+
+  uint16_t flags() const { return flags_; };
+  bool bailWhenSet() const { return bailWhenSet_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardFunctionFlags()) {
+      return false;
+    }
+    if (flags() != ins->toGuardFunctionFlags()->flags()) {
+      return false;
+    }
+    if (bailWhenSet() != ins->toGuardFunctionFlags()->bailWhenSet()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Guard on function kind
 class MGuardFunctionKind : public MUnaryInstruction,
                            public SingleObjectPolicy::Data {
