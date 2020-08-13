@@ -117,3 +117,5 @@ details > summary {
 .modal::backdrop {
   background-color: rgba(0,0,0,.5);
 }
+
+h1 > p { margin-bottom: 0}
