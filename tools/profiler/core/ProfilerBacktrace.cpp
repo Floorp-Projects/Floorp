@@ -14,22 +14,61 @@
 
 ProfilerBacktrace::ProfilerBacktrace(
     const char* aName, int aThreadId,
-    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aProfileChunkedBuffer,
-    mozilla::UniquePtr<ProfileBuffer> aProfileBuffer)
+    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer>
+        aProfileChunkedBufferStorage,
+    mozilla::UniquePtr<ProfileBuffer>
+        aProfileBufferStorageOrNull /* = nullptr */)
     : mName(aName),
       mThreadId(aThreadId),
-      mProfileChunkedBuffer(std::move(aProfileChunkedBuffer)),
-      mProfileBuffer(std::move(aProfileBuffer)) {
+      mOptionalProfileChunkedBufferStorage(
+          std::move(aProfileChunkedBufferStorage)),
+      mProfileChunkedBuffer(mOptionalProfileChunkedBufferStorage.get()),
+      mOptionalProfileBufferStorage(std::move(aProfileBufferStorageOrNull)),
+      mProfileBuffer(mOptionalProfileBufferStorage.get()) {
   MOZ_COUNT_CTOR(ProfilerBacktrace);
-  MOZ_ASSERT(!!mProfileChunkedBuffer,
-             "ProfilerBacktrace only takes a non-null "
-             "UniquePtr<ProfileChunkedBuffer>");
+  if (mProfileBuffer) {
+    MOZ_RELEASE_ASSERT(mProfileChunkedBuffer,
+                       "If we take ownership of a ProfileBuffer, we must also "
+                       "receive ownership of a ProfileChunkedBuffer");
+    MOZ_RELEASE_ASSERT(
+        mProfileChunkedBuffer == &mProfileBuffer->UnderlyingChunkedBuffer(),
+        "If we take ownership of a ProfileBuffer, we must also receive "
+        "ownership of its ProfileChunkedBuffer");
+  }
   MOZ_ASSERT(
-      !!mProfileBuffer,
-      "ProfilerBacktrace only takes a non-null UniquePtr<ProfileBuffer>");
-  MOZ_ASSERT(
-      !mProfileChunkedBuffer->IsThreadSafe(),
+      !mProfileChunkedBuffer || !mProfileChunkedBuffer->IsThreadSafe(),
       "ProfilerBacktrace only takes a non-thread-safe ProfileChunkedBuffer");
+}
+
+ProfilerBacktrace::ProfilerBacktrace(
+    const char* aName, int aThreadId,
+    mozilla::ProfileChunkedBuffer* aExternalProfileChunkedBuffer,
+    ProfileBuffer* aExternalProfileBuffer)
+    : mName(aName),
+      mThreadId(aThreadId),
+      mProfileChunkedBuffer(aExternalProfileChunkedBuffer),
+      mProfileBuffer(aExternalProfileBuffer) {
+  MOZ_COUNT_CTOR(ProfilerBacktrace);
+  if (!mProfileChunkedBuffer) {
+    if (mProfileBuffer) {
+      // We don't have a ProfileChunkedBuffer but we have a ProfileBuffer, use
+      // the latter's ProfileChunkedBuffer.
+      mProfileChunkedBuffer = &mProfileBuffer->UnderlyingChunkedBuffer();
+      MOZ_ASSERT(!mProfileChunkedBuffer->IsThreadSafe(),
+                 "ProfilerBacktrace only takes a non-thread-safe "
+                 "ProfileChunkedBuffer");
+    }
+  } else {
+    if (mProfileBuffer) {
+      MOZ_RELEASE_ASSERT(
+          mProfileChunkedBuffer == &mProfileBuffer->UnderlyingChunkedBuffer(),
+          "If we reference both ProfileChunkedBuffer and ProfileBuffer, they "
+          "must already be connected");
+    }
+    MOZ_ASSERT(!mProfileChunkedBuffer->IsThreadSafe(),
+               "ProfilerBacktrace only takes a non-thread-safe "
+               "ProfileChunkedBuffer");
+  }
 }
 
 ProfilerBacktrace::~ProfilerBacktrace() { MOZ_COUNT_DTOR(ProfilerBacktrace); }
@@ -38,12 +77,22 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                                    const mozilla::TimeStamp& aProcessStartTime,
                                    UniqueStacks& aUniqueStacks) {
   // Unlike ProfiledThreadData::StreamJSON, we don't need to call
-  // ProfileBuffer::AddJITInfoForRange because mProfileBuffer does not contain
+  // ProfileBuffer::AddJITInfoForRange because ProfileBuffer does not contain
   // any JitReturnAddr entries. For synchronous samples, JIT frames get expanded
   // at sample time.
-  StreamSamplesAndMarkers(mName.c_str(), mThreadId, *mProfileBuffer, aWriter,
-                          ""_ns, ""_ns, aProcessStartTime,
-                          /* aRegisterTime */ mozilla::TimeStamp(),
-                          /* aUnregisterTime */ mozilla::TimeStamp(),
-                          /* aSinceTime */ 0, aUniqueStacks);
+  if (mProfileBuffer) {
+    StreamSamplesAndMarkers(mName.c_str(), mThreadId, *mProfileBuffer, aWriter,
+                            ""_ns, ""_ns, aProcessStartTime,
+                            /* aRegisterTime */ mozilla::TimeStamp(),
+                            /* aUnregisterTime */ mozilla::TimeStamp(),
+                            /* aSinceTime */ 0, aUniqueStacks);
+  } else if (mProfileChunkedBuffer) {
+    ProfileBuffer profileBuffer(*mProfileChunkedBuffer);
+    StreamSamplesAndMarkers(mName.c_str(), mThreadId, profileBuffer, aWriter,
+                            ""_ns, ""_ns, aProcessStartTime,
+                            /* aRegisterTime */ mozilla::TimeStamp(),
+                            /* aUnregisterTime */ mozilla::TimeStamp(),
+                            /* aSinceTime */ 0, aUniqueStacks);
+  }
+  // If there are no buffers, the backtrace is empty and nothing is streamed.
 }
