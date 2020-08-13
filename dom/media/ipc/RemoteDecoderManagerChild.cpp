@@ -20,7 +20,7 @@ using namespace layers;
 using namespace gfx;
 
 // Only modified on the main-thread
-StaticRefPtr<TaskQueue> sRemoteDecoderManagerChildThread;
+StaticRefPtr<nsIThread> sRemoteDecoderManagerChildThread;
 
 // Only accessed from sRemoteDecoderManagerChildThread
 static StaticRefPtr<RemoteDecoderManagerChild>
@@ -39,9 +39,10 @@ void RemoteDecoderManagerChild::InitializeThread() {
     // RemoteDecoderModule runs on it and dispatch synchronous tasks to the
     // manager thread, should more than 4 concurrent videos being instantiated
     // at the same time, we could end up in a deadlock.
-    sRemoteDecoderManagerChildThread = new TaskQueue(
-        GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "RemVidChild");
-
+    RefPtr<nsIThread> childThread;
+    nsresult rv = NS_NewNamedThread("RemVidChild", getter_AddRefs(childThread));
+    NS_ENSURE_SUCCESS_VOID(rv);
+    sRemoteDecoderManagerChildThread = childThread;
     sRecreateTasks = MakeUnique<nsTArray<RefPtr<Runnable>>>();
   }
 }
@@ -84,8 +85,7 @@ void RemoteDecoderManagerChild::Shutdown() {
               sRemoteDecoderManagerChildForGPUProcess = nullptr;
             })));
 
-    sRemoteDecoderManagerChildThread->BeginShutdown();
-    sRemoteDecoderManagerChildThread->AwaitShutdownAndIdle();
+    sRemoteDecoderManagerChildThread->Shutdown();
     sRemoteDecoderManagerChildThread = nullptr;
 
     sRecreateTasks = nullptr;
