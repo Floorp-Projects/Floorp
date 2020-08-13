@@ -281,6 +281,10 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
   return mSessionHistory;
 }
 
+SessionHistoryEntry* CanonicalBrowsingContext::GetActiveSessionHistoryEntry() {
+  return mActiveEntry;
+}
+
 UniquePtr<LoadingSessionHistoryInfo>
 CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {

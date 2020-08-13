@@ -6962,15 +6962,28 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryUpdate(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSynchronizeLayoutHistoryState(
-    const uint64_t& aSessionHistoryEntryID, nsILayoutHistoryState* aState) {
-  SessionHistoryEntry::UpdateLayoutHistoryState(aSessionHistoryEntryID, aState);
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    nsILayoutHistoryState* aState) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  SessionHistoryEntry* entry =
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
+  if (entry) {
+    entry->SetLayoutHistoryState(aState);
+  }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryTitle(
-    const uint64_t& aSessionHistoryEntryID, const nsString& aTitle) {
+    const MaybeDiscarded<BrowsingContext>& aContext, const nsString& aTitle) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
   SessionHistoryEntry* entry =
-      SessionHistoryEntry::GetByInfoId(aSessionHistoryEntryID);
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
   if (entry) {
     entry->SetTitle(aTitle);
   }
@@ -6979,9 +6992,13 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryTitle(
 
 mozilla::ipc::IPCResult
 ContentParent::RecvSessionHistoryEntryScrollRestorationIsManual(
-    const uint64_t& aSessionHistoryEntryID, const bool& aIsManual) {
+    const MaybeDiscarded<BrowsingContext>& aContext, const bool& aIsManual) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
   SessionHistoryEntry* entry =
-      SessionHistoryEntry::GetByInfoId(aSessionHistoryEntryID);
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
   if (entry) {
     entry->SetScrollRestorationIsManual(aIsManual);
   }
@@ -6989,9 +7006,14 @@ ContentParent::RecvSessionHistoryEntryScrollRestorationIsManual(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
-    const uint64_t& aSessionHistoryEntryID, const uint32_t& aCacheKey) {
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const uint32_t& aCacheKey) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
   SessionHistoryEntry* entry =
-      SessionHistoryEntry::GetByInfoId(aSessionHistoryEntryID);
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
   if (entry) {
     entry->SetCacheKey(aCacheKey);
   }

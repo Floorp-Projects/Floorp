@@ -922,16 +922,16 @@ parent:
     async SessionHistoryUpdate(MaybeDiscardedBrowsingContext aTopContext,
                                int32_t aIndex, int32_t aLength, nsID aChangeID);
 
-    async SynchronizeLayoutHistoryState(uint64_t aSessionHistoryEntryID,
+    async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
                                         nsILayoutHistoryState aState);
 
-    async SessionHistoryEntryTitle(uint64_t aSessionHistoryEntryID,
+    async SessionHistoryEntryTitle(MaybeDiscardedBrowsingContext aContext,
                                    nsString aTitle);
 
-    async SessionHistoryEntryScrollRestorationIsManual(uint64_t aSessionHistoryEntryID,
+    async SessionHistoryEntryScrollRestorationIsManual(MaybeDiscardedBrowsingContext aContext,
                                                        bool aIsManual);
 
-    async SessionHistoryEntryCacheKey(uint64_t aSessionHistoryEntryID,
+    async SessionHistoryEntryCacheKey(MaybeDiscardedBrowsingContext aContext,
                                       uint32_t aCacheKey);
 
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
