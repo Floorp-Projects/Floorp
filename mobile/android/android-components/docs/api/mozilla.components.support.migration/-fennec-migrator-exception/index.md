@@ -2,7 +2,7 @@
 
 # FennecMigratorException
 
-`sealed class FennecMigratorException : `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L137)
+`sealed class FennecMigratorException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L137)
 
 Exceptions related to Fennec migrations.
 
@@ -13,8 +13,10 @@ exceptions.
 
 | Name | Summary |
 |---|---|
+| [HighLevel](-high-level/index.md) | `class HighLevel : `[`FennecMigratorException`](./index.md)<br>Unexpected exception during high level migration processing. |
 | [MigrateAddonsException](-migrate-addons-exception/index.md) | `class MigrateAddonsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating addons. |
 | [MigrateBookmarksException](-migrate-bookmarks-exception/index.md) | `class MigrateBookmarksException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating bookmarks. |
+| [MigrateFxaException](-migrate-fxa-exception/index.md) | `class MigrateFxaException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating FxA. |
 | [MigrateGeckoException](-migrate-gecko-exception/index.md) | `class MigrateGeckoException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating gecko profile. |
 | [MigrateHistoryException](-migrate-history-exception/index.md) | `class MigrateHistoryException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating history. |
 | [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |
@@ -36,8 +38,10 @@ exceptions.
 
 | Name | Summary |
 |---|---|
+| [HighLevel](-high-level/index.md) | `class HighLevel : `[`FennecMigratorException`](./index.md)<br>Unexpected exception during high level migration processing. |
 | [MigrateAddonsException](-migrate-addons-exception/index.md) | `class MigrateAddonsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating addons. |
 | [MigrateBookmarksException](-migrate-bookmarks-exception/index.md) | `class MigrateBookmarksException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating bookmarks. |
+| [MigrateFxaException](-migrate-fxa-exception/index.md) | `class MigrateFxaException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating FxA. |
 | [MigrateGeckoException](-migrate-gecko-exception/index.md) | `class MigrateGeckoException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating gecko profile. |
 | [MigrateHistoryException](-migrate-history-exception/index.md) | `class MigrateHistoryException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating history. |
 | [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |

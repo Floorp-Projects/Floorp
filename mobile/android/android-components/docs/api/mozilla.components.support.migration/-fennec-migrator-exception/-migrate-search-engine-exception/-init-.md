@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`MigrateSearchEngineException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`
+`MigrateSearchEngineException(cause: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`)`
 
 Unexpected exception while migrating the default search engine.
 

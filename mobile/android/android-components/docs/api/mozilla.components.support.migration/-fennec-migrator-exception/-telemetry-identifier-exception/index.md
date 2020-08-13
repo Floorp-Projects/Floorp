@@ -2,7 +2,7 @@
 
 # TelemetryIdentifierException
 
-`class TelemetryIdentifierException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L184)
+`class TelemetryIdentifierException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L196)
 
 Unexpected exception while migrating telemetry identifiers.
 
@@ -14,4 +14,4 @@ Unexpected exception while migrating telemetry identifiers.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TelemetryIdentifierException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`<br>Unexpected exception while migrating telemetry identifiers. |
+| [&lt;init&gt;](-init-.md) | `TelemetryIdentifierException(cause: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`)`<br>Unexpected exception while migrating telemetry identifiers. |
