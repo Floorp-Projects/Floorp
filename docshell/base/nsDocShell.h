@@ -1054,6 +1054,10 @@ class nsDocShell final : public nsDocLoader,
       nsISHEntry* aSHEntry, mozilla::dom::SessionHistoryInfo* aInfo,
       bool aIsManual);
 
+  void SetCacheKeyOnHistoryEntry(nsISHEntry* aSHEntry,
+                                 mozilla::dom::SessionHistoryInfo* aInfo,
+                                 uint32_t aCacheKey);
+
  private:  // data members
   nsID mHistoryID;
   nsString mTitle;

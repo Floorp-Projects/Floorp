@@ -931,6 +931,9 @@ parent:
     async SessionHistoryEntryScrollRestorationIsManual(uint64_t aSessionHistoryEntryID,
                                                        bool aIsManual);
 
+    async SessionHistoryEntryCacheKey(uint64_t aSessionHistoryEntryID,
+                                      uint32_t aCacheKey);
+
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
     async CreateGMPService();
