@@ -3412,7 +3412,26 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     aDirectionAndAmount = nsIEditor::ePrevious;
   }
 
-  // Figure out block parents
+  AutoBlockElementsJoiner joiner;
+  if (!joiner.PrepareToDeleteNonCollapsedRanges()) {
+    return EditActionHandled(NS_ERROR_FAILURE);
+  }
+  EditActionResult result =
+      joiner.Run(*this, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
+                 aSelectionWasCollapsed);
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "AutoBlockElementsJoiner::Run() failed");
+  return result;
+}
+
+EditActionResult
+HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
+    HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
+
   RefPtr<Element> leftBlockElement =
       HTMLEditUtils::GetInclusiveAncestorBlockElement(
           *aRangesToDelete.FirstRangeRef()->GetStartContainer()->AsContent());
@@ -3426,11 +3445,11 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
   // XXX This is also odd.  We do we simply use
   //     `DeleteRangesWithTransaction()` only when **first** range is in
   //     same block?
-  if (leftBlockElement && leftBlockElement == rightBlockElement) {
+  if (leftBlockElement == rightBlockElement) {
     {
-      AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
+      AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                           &aRangesToDelete.FirstRangeRef());
-      nsresult rv = DeleteRangesWithTransaction(
+      nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
           aDirectionAndAmount, aStripWrappers, aRangesToDelete);
       if (rv == NS_ERROR_EDITOR_DESTROYED) {
         NS_WARNING(
@@ -3442,7 +3461,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
           NS_SUCCEEDED(rv),
           "EditorBase::DeleteRangesWithTransaction() failed, but ignored");
     }
-    nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
+    nsresult rv = aHTMLEditor.DeleteUnnecessaryNodesAndCollapseSelection(
         aDirectionAndAmount,
         EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
         EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
@@ -3452,30 +3471,29 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     return EditActionHandled(rv);
   }
 
-  // Deleting across blocks.
-
   // If left block and right block are adjuscent siblings and they are same
   // type of elements, we can merge them after deleting the selected contents.
   // MOOSE: this could conceivably screw up a table.. fix me.
   if (leftBlockElement->GetParentNode() == rightBlockElement->GetParentNode() &&
       HTMLEditUtils::CanContentsBeJoined(
           *leftBlockElement, *rightBlockElement,
-          IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
-                         : StyleDifference::Ignore) &&
+          aHTMLEditor.IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
+                                     : StyleDifference::Ignore) &&
       // XXX What's special about these three types of block?
       (leftBlockElement->IsHTMLElement(nsGkAtoms::p) ||
        HTMLEditUtils::IsListItem(leftBlockElement) ||
        HTMLEditUtils::IsHeader(*leftBlockElement))) {
     // First delete the selection
-    nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount,
-                                              aStripWrappers, aRangesToDelete);
+    nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
+        aDirectionAndAmount, aStripWrappers, aRangesToDelete);
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
       return EditActionHandled(rv);
     }
     // Join blocks
     Result<EditorDOMPoint, nsresult> atFirstChildOfTheLastRightNodeOrError =
-        JoinNodesDeepWithTransaction(*leftBlockElement, *rightBlockElement);
+        aHTMLEditor.JoinNodesDeepWithTransaction(*leftBlockElement,
+                                                 *rightBlockElement);
     if (atFirstChildOfTheLastRightNodeOrError.isErr()) {
       NS_WARNING("HTMLEditor::JoinNodesDeepWithTransaction() failed");
       return EditActionHandled(
@@ -3483,7 +3501,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     }
     MOZ_ASSERT(atFirstChildOfTheLastRightNodeOrError.inspect().IsSet());
     // Fix up selection
-    rv = CollapseSelectionTo(atFirstChildOfTheLastRightNodeOrError.inspect());
+    rv = aHTMLEditor.CollapseSelectionTo(
+        atFirstChildOfTheLastRightNodeOrError.inspect());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::CollapseSelectionTo() failed");
     return EditActionHandled(rv);
@@ -3493,7 +3512,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
   EditActionResult result(NS_OK);
   result.MarkAsHandled();
   {
-    AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
+    AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                         &aRangesToDelete.FirstRangeRef());
 
     // Else blocks not same type, or not siblings.  Delete everything
@@ -3523,8 +3542,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
         // this might need to stay, because 'arrayOfTopChildren' is not const,
         // so it's not obvious how to prove via static analysis that it won't
         // change and release us.
-        nsresult rv =
-            DeleteElementsExceptTableRelatedElements(MOZ_KnownLive(content));
+        nsresult rv = aHTMLEditor.DeleteElementsExceptTableRelatedElements(
+            MOZ_KnownLive(content));
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -3536,15 +3555,16 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
         // all nodes except non-visible textnodes and breaks.
         // XXX Odd.  Why do we check the visibility after removing the node
         //     from the DOM tree?
-        if (join && aSelectionWasCollapsed == SelectionWasCollapsed::Yes) {
+        if (join &&
+            aSelectionWasCollapsed == HTMLEditor::SelectionWasCollapsed::Yes) {
           if (Text* text = content->GetAsText()) {
-            join = !IsInVisibleTextFrames(*text);
+            join = !aHTMLEditor.IsInVisibleTextFrames(*text);
           } else if (content->IsElement()) {
-            if (IsEmptyNode(*content->AsElement())) {
+            if (aHTMLEditor.IsEmptyNode(*content->AsElement())) {
               join = true;
             } else {
               join = content->IsHTMLElement(nsGkAtoms::br) &&
-                     !IsVisibleBRElement(content);
+                     !aHTMLEditor.IsVisibleBRElement(content);
             }
           }
         }
@@ -3560,10 +3580,10 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     if (firstRangeStart.IsInTextNode() && !firstRangeStart.IsEndOfContainer()) {
       // Delete to last character
       OwningNonNull<Text> textNode = *firstRangeStart.GetContainerAsText();
-      nsresult rv = DeleteTextWithTransaction(
+      nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
           textNode, firstRangeStart.Offset(),
           firstRangeStart.GetContainer()->Length() - firstRangeStart.Offset());
-      if (NS_WARN_IF(Destroyed())) {
+      if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
         return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_FAILED(rv)) {
@@ -3574,9 +3594,9 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     if (firstRangeEnd.IsInTextNode() && !firstRangeEnd.IsStartOfContainer()) {
       // Delete to first character
       OwningNonNull<Text> textNode = *firstRangeEnd.GetContainerAsText();
-      nsresult rv =
-          DeleteTextWithTransaction(textNode, 0, firstRangeEnd.Offset());
-      if (NS_WARN_IF(Destroyed())) {
+      nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
+          textNode, 0, firstRangeEnd.Offset());
+      if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
         return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_FAILED(rv)) {
@@ -3586,8 +3606,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     }
 
     if (join) {
-      result |=
-          TryToJoinBlocksWithTransaction(*leftBlockElement, *rightBlockElement);
+      result |= aHTMLEditor.TryToJoinBlocksWithTransaction(*leftBlockElement,
+                                                           *rightBlockElement);
       if (result.Failed()) {
         NS_WARNING("HTMLEditor::TryToJoinBlocksWithTransaction() failed");
         return result;
@@ -3610,7 +3630,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     }
   }
 
-  nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
+  nsresult rv = aHTMLEditor.DeleteUnnecessaryNodesAndCollapseSelection(
       aDirectionAndAmount,
       EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
       EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
