@@ -700,6 +700,7 @@ template class LogTaskBase<IPC::Message>;
 template class LogTaskBase<nsTimerImpl>;
 template class LogTaskBase<Task>;
 template class LogTaskBase<PresShell>;
+template class LogTaskBase<dom::FrameRequestCallback>;
 
 MOZ_THREAD_LOCAL(nsISerialEventTarget*)
 SerialEventTargetGuard::sCurrentThreadTLS;

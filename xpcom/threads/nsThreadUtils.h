@@ -1953,6 +1953,9 @@ class LogTaskBase {
 class MicroTaskRunnable;
 class Task;  // TaskController
 class PresShell;
+namespace dom {
+class FrameRequestCallback;
+}  // namespace dom
 
 // Specialized methods must be explicitly predeclared.
 template <>
@@ -1971,6 +1974,7 @@ typedef LogTaskBase<IPC::Message> LogIPCMessage;
 typedef LogTaskBase<nsTimerImpl> LogTimerEvent;
 typedef LogTaskBase<Task> LogTask;
 typedef LogTaskBase<PresShell> LogPresShellObserver;
+typedef LogTaskBase<dom::FrameRequestCallback> LogFrameRequestCallback;
 // If you add new types don't forget to add:
 // `template class LogTaskBase<YourType>;` to nsThreadUtils.cpp
 

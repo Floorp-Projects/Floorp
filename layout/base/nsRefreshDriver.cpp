@@ -1843,6 +1843,7 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
         // MOZ_KnownLive is OK, because the stack array frameRequestCallbacks
         // keeps callback alive and the mCallback strong reference can't be
         // mutated by the call.
+        LogFrameRequestCallback::Run run(callback.mCallback);
         MOZ_KnownLive(callback.mCallback)->Call(timeStamp);
       }
     }
