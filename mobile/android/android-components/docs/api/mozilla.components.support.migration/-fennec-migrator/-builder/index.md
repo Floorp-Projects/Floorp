@@ -2,7 +2,7 @@
 
 # Builder
 
-`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L234)
+`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L246)
 
 Data migration builder. Allows configuring which migrations to run, their versions and relative order.
 

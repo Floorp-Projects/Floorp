@@ -2,7 +2,7 @@
 
 # MigrateSettingsException
 
-`class MigrateSettingsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L172)
+`class MigrateSettingsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L178)
 
 Unexpected exception while migrating settings.
 
@@ -14,4 +14,4 @@ Unexpected exception while migrating settings.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MigrateSettingsException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`<br>Unexpected exception while migrating settings. |
+| [&lt;init&gt;](-init-.md) | `MigrateSettingsException(cause: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`)`<br>Unexpected exception while migrating settings. |

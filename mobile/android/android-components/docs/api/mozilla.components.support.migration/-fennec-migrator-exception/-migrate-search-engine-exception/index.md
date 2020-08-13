@@ -2,7 +2,7 @@
 
 # MigrateSearchEngineException
 
-`class MigrateSearchEngineException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L190)
+`class MigrateSearchEngineException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L202)
 
 Unexpected exception while migrating the default search engine.
 
@@ -14,4 +14,4 @@ Unexpected exception while migrating the default search engine.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MigrateSearchEngineException(cause: `[`Exception`](http://docs.oracle.com/javase/7/docs/api/java/lang/Exception.html)`)`<br>Unexpected exception while migrating the default search engine. |
+| [&lt;init&gt;](-init-.md) | `MigrateSearchEngineException(cause: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`)`<br>Unexpected exception while migrating the default search engine. |
