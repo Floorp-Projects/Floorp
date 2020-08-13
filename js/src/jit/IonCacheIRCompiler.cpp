@@ -1866,6 +1866,11 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   return true;
 }
 
+bool IonCacheIRCompiler::emitArrayPush(ObjOperandId objId, ValOperandId rhsId) {
+  MOZ_ASSERT_UNREACHABLE("emitArrayPush not supported for IonCaches.");
+  return false;
+}
+
 bool IonCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
                                               uint32_t setterOffset,
                                               ValOperandId rhsId) {
@@ -2431,16 +2436,6 @@ bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
 
 bool IonCacheIRCompiler::emitGuardFunApply(Int32OperandId argcId,
                                            CallFlags flags) {
-  MOZ_CRASH("Call ICs not used in ion");
-}
-
-bool IonCacheIRCompiler::emitArrayPush(ObjOperandId objId, ValOperandId rhsId) {
-  MOZ_CRASH("Call ICs not used in ion");
-}
-
-bool IonCacheIRCompiler::emitPackedArraySliceResult(
-    uint32_t templateObjectOffset, ObjOperandId arrayId, Int32OperandId beginId,
-    Int32OperandId endId) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 

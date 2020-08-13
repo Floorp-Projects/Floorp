@@ -3536,9 +3536,6 @@ void LIRGenerator::visitArraySlice(MArraySlice* ins) {
                   useFixedAtStart(ins->begin(), CallTempReg1),
                   useFixedAtStart(ins->end(), CallTempReg2),
                   tempFixed(CallTempReg3), tempFixed(CallTempReg4));
-  if (JitOptions.warpBuilder) {
-    assignSnapshot(lir, BailoutKind::ArraySlice);
-  }
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
