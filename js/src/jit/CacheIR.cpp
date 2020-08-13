@@ -1500,7 +1500,7 @@ AttachDecision GetPropIRGenerator::tryAttachGenericProxy(
   if (!handleDOMProxies) {
     // Ensure that the incoming object is not a DOM proxy, so that we can get to
     // the specialized stubs
-    writer.guardNotDOMProxy(objId);
+    writer.guardIsNotDOMProxy(objId);
   }
 
   if (cacheKind_ == CacheKind::GetProp || mode_ == ICState::Mode::Specialized) {
@@ -4293,7 +4293,7 @@ AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
     // get to the specialized stubs. If handleDOMProxies is true, we were
     // unable to attach a specialized DOM stub, so we just handle all
     // proxies here.
-    writer.guardNotDOMProxy(objId);
+    writer.guardIsNotDOMProxy(objId);
   }
 
   if (cacheKind_ == CacheKind::SetProp || mode_ == ICState::Mode::Specialized) {

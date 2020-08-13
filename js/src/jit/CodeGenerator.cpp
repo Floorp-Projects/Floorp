@@ -4487,6 +4487,16 @@ void CodeGenerator::visitGuardIsNotProxy(LGuardIsNotProxy* guard) {
   bailoutFrom(&bail, guard->snapshot());
 }
 
+void CodeGenerator::visitGuardIsNotDOMProxy(LGuardIsNotDOMProxy* guard) {
+  Register proxy = ToRegister(guard->proxy());
+  Register temp = ToRegister(guard->temp());
+
+  Label bail;
+  masm.branchTestProxyHandlerFamily(Assembler::Equal, proxy, temp,
+                                    GetDOMProxyHandlerFamily(), &bail);
+  bailoutFrom(&bail, guard->snapshot());
+}
+
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
     LGuardIsNotArrayBufferMaybeShared* guard) {
   Register obj = ToRegister(guard->input());
