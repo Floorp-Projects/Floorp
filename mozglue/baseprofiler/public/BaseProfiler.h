@@ -60,6 +60,20 @@
 
 #  define AUTO_PROFILER_STATS(name)
 
+using UniqueProfilerBacktrace =
+    UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
+static inline UniqueProfilerBacktrace profiler_get_backtrace() {
+  return nullptr;
+}
+
+namespace mozilla {
+class ProfileChunkedBuffer;
+}  // namespace mozilla
+static inline bool profiler_capture_backtrace(
+    ProfileChunkedBuffer& aChunkedBuffer) {
+  return false;
+}
+
 #else  // !MOZ_GECKO_PROFILER
 
 #  include "BaseProfilingStack.h"
@@ -81,6 +95,7 @@
 namespace mozilla {
 
 class MallocAllocPolicy;
+class ProfileChunkedBuffer;
 template <class T, size_t MinInlineCapacity, class AllocPolicy>
 class Vector;
 
@@ -518,6 +533,7 @@ using UniqueProfilerBacktrace =
 // Immediately capture the current thread's call stack and return it. A no-op
 // if the profiler is inactive.
 MFBT_API UniqueProfilerBacktrace profiler_get_backtrace();
+MFBT_API bool profiler_capture_backtrace(ProfileChunkedBuffer& aChunkedBuffer);
 
 struct ProfilerStats {
   unsigned n = 0;
