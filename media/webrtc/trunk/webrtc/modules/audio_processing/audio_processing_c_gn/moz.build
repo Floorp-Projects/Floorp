@@ -69,7 +69,6 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
-    DEFINES["CR_XCODE_VERSION"] = "0920"
     DEFINES["NO_TCMALLOC"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
@@ -77,11 +76,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
     OS_LIBS += [
         "-framework Foundation"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
@@ -237,6 +231,19 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["CR_XCODE_VERSION"] = "0120"
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["CR_XCODE_VERSION"] = "0920"
 
     UNIFIED_SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",

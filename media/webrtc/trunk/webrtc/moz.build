@@ -144,15 +144,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DIRS += [
         "/media/webrtc/trunk/webrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
         "/media/webrtc/trunk/webrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
-        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_objc_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
         "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn",
-        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn",
         "/media/webrtc/trunk/webrtc/rtc_base/rtc_base_approved_objc_gn",
         "/media/webrtc/trunk/webrtc/rtc_base/rtc_base_objc_gn"
     ]
@@ -265,6 +261,26 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
         "/media/webrtc/trunk/webrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_neon_c_gn",
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_neon_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/isac_neon_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_c_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_neon_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn"
     ]
 
