@@ -200,8 +200,7 @@ void MediaController::UpdateDeactivationTimerIfNeeded() {
     return;
   }
 
-  bool shouldBeAlwaysActive =
-      IsPlaying() || IsMediaBeingUsedInPIPModeOrFullScreen();
+  bool shouldBeAlwaysActive = IsPlaying() || IsBeingUsedInPIPModeOrFullscreen();
   if (shouldBeAlwaysActive && mDeactivationTimer) {
     LOG("Cancel deactivation timer");
     mDeactivationTimer->Cancel();
@@ -219,7 +218,7 @@ void MediaController::UpdateDeactivationTimerIfNeeded() {
   }
 }
 
-bool MediaController::IsMediaBeingUsedInPIPModeOrFullScreen() const {
+bool MediaController::IsBeingUsedInPIPModeOrFullscreen() const {
   return mIsInPictureInPictureMode || mIsInFullScreenMode;
 }
 
@@ -237,7 +236,7 @@ NS_IMETHODIMP MediaController::Notify(nsITimer* aTimer) {
   // As the media being used in the PIP mode or fullscreen would always display
   // on the screen, users would have high chance to interact with it again, so
   // we don't want to stop media control.
-  if (IsMediaBeingUsedInPIPModeOrFullScreen()) {
+  if (IsBeingUsedInPIPModeOrFullscreen()) {
     LOG("Cancel deactivation timer because controller is in PIP mode");
     return NS_OK;
   }
@@ -301,7 +300,7 @@ bool MediaController::ShouldActivateController() const {
   // as a sign of that a user is going to start that media soon. Therefore, it
   // makes sense to activate the controller in order to start controlling media.
   return IsAnyMediaBeingControlled() &&
-         (IsAudible() || IsMediaBeingUsedInPIPModeOrFullScreen()) && !mIsActive;
+         (IsAudible() || IsBeingUsedInPIPModeOrFullscreen()) && !mIsActive;
 }
 
 bool MediaController::ShouldDeactivateController() const {
