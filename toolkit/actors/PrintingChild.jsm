@@ -316,6 +316,12 @@ class PrintingChild extends ActorChild {
     try {
       let printSettings = this.getPrintSettings(lastUsedPrinterName);
 
+      // Disable the progress dialog for generating previews.
+      printSettings.showPrintProgress = !Services.prefs.getBoolPref(
+        "print.tab_modal.enabled",
+        false
+      );
+
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
       // "about:blank" as its URI.
