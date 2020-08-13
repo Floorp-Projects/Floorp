@@ -33,7 +33,7 @@ var PdfJsDefaultPreferences = Object.freeze({
  "ignoreDestinationZoom": false,
  "pdfBugEnabled": false,
  "renderer": "canvas",
- "renderInteractiveForms": false,
+ "renderInteractiveForms": true,
  "sidebarViewOnLoad": -1,
  "scrollModeOnLoad": -1,
  "spreadModeOnLoad": -1,
