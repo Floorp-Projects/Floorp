@@ -249,7 +249,7 @@ class WebRenderAPI final {
 
   void Readback(const TimeStamp& aStartTime, gfx::IntSize aSize,
                 const gfx::SurfaceFormat& aFormat,
-                const Range<uint8_t>& aBuffer, bool* aNeedsYFlip);
+                const Range<uint8_t>& aBuffer);
 
   void ClearAllCaches();
   void EnableNativeCompositor(bool aEnable);

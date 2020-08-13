@@ -765,15 +765,16 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItemsForLayer(
     return mPrepareResult;
   }
 
-  CSSIntRect srcRect(0, 0, nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                     nsPresContext::AppUnitsToIntCSSPixels(mSize.height));
-
-  if (aDest.IsEmpty() || aFill.IsEmpty() || srcRect.IsEmpty()) {
+  if (aDest.IsEmpty() || aFill.IsEmpty() || mSize.width <= 0 ||
+      mSize.height <= 0) {
     return ImgDrawResult::SUCCESS;
   }
-  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aResources, aSc,
-                                    aManager, aItem, aDirty, aDest, aFill,
-                                    aAnchor, aRepeatSize, srcRect, aOpacity);
+  return BuildWebRenderDisplayItems(
+      aPresContext, aBuilder, aResources, aSc, aManager, aItem, aDirty, aDest,
+      aFill, aAnchor, aRepeatSize,
+      CSSIntRect(0, 0, nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                 nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
+      aOpacity);
 }
 
 /**

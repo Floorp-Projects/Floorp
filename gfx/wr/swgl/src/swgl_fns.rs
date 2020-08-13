@@ -299,7 +299,6 @@ extern "C" {
         dst_height: GLsizei,
         opaque: GLboolean,
         flip: GLboolean,
-        filter: GLenum,
     );
     fn CreateContext() -> *mut c_void;
     fn ReferenceContext(ctx: *mut c_void);
@@ -2302,7 +2301,6 @@ impl LockedResource {
         dst_height: GLsizei,
         opaque: bool,
         flip: bool,
-        filter: GLenum,
     ) {
         unsafe {
             Composite(
@@ -2318,7 +2316,6 @@ impl LockedResource {
                 dst_height,
                 opaque as GLboolean,
                 flip as GLboolean,
-                filter,
             );
         }
     }

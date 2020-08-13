@@ -1539,8 +1539,7 @@ void WebRenderBridgeParent::MaybeCaptureScreenPixels() {
 #endif
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
-    PTextureParent* aTexture, bool* aNeedsYFlip) {
-  *aNeedsYFlip = false;
+    PTextureParent* aTexture) {
   if (mDestroyed) {
     return IPC_OK();
   }
@@ -1592,7 +1591,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
   FlushSceneBuilds();
   FlushFrameGeneration();
   mApi->Readback(start, size, bufferTexture->GetFormat(),
-                 Range<uint8_t>(buffer, buffer_size), aNeedsYFlip);
+                 Range<uint8_t>(buffer, buffer_size));
 
   return IPC_OK();
 }
