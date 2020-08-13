@@ -60,14 +60,14 @@ class AltSvcMapping {
   AltSvcMapping(DataStorage* storage, int32_t storageEpoch,
                 const nsCString& serialized);
 
-  static void ProcessHeader(const nsCString& buf, const nsCString& originScheme,
-                            const nsCString& originHost, int32_t originPort,
-                            const nsACString& username,
-                            const nsACString& topWindowOrigin,
-                            bool privateBrowsing, bool isolated,
-                            nsIInterfaceRequestor* callbacks,
-                            nsProxyInfo* proxyInfo, uint32_t caps,
-                            const OriginAttributes& originAttributes);
+  static void ProcessHeader(
+      const nsCString& buf, const nsCString& originScheme,
+      const nsCString& originHost, int32_t originPort,
+      const nsACString& username, const nsACString& topWindowOrigin,
+      bool privateBrowsing, bool isolated, nsIInterfaceRequestor* callbacks,
+      nsProxyInfo* proxyInfo, uint32_t caps,
+      const OriginAttributes& originAttributes,
+      bool aDontValidate = false);  // aDontValidate is only used for testing!
 
   // AcceptableProxy() decides whether a particular proxy configuration (pi) is
   // suitable for use with Alt-Svc. No proxy (including a null pi) is suitable.
@@ -188,6 +188,10 @@ class AltSvcCache {
   AltSvcCache() : mStorageEpoch(0) {}
   virtual ~AltSvcCache() = default;
   void UpdateAltServiceMapping(
+      AltSvcMapping* map, nsProxyInfo* pi, nsIInterfaceRequestor*,
+      uint32_t caps,
+      const OriginAttributes& originAttributes);  // main thread
+  void UpdateAltServiceMappingWithoutValidation(
       AltSvcMapping* map, nsProxyInfo* pi, nsIInterfaceRequestor*,
       uint32_t caps,
       const OriginAttributes& originAttributes);  // main thread

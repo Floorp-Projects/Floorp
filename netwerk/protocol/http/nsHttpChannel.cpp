@@ -6806,6 +6806,10 @@ nsresult nsHttpChannel::BeginConnect() {
         this, originAttributes);
   }
 
+  gHttpHandler->MaybeAddAltSvcForTesting(mURI, mUsername, GetTopWindowOrigin(),
+                                         mPrivateBrowsing, IsIsolated(),
+                                         mCallbacks, originAttributes);
+
   RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
       host, port, EmptyCString(), mUsername, GetTopWindowOrigin(), proxyInfo,
       originAttributes, isHttps);
