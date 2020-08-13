@@ -72,7 +72,7 @@ class MachRegistrar(object):
             prerun(context, handler, args=kwargs)
 
         context.handler = handler
-        return cls(context)
+        return cls(context, handler.virtualenv_name)
 
     @classmethod
     def _fail_conditions(_, handler, instance):
