@@ -80,6 +80,8 @@ WindowContext* WindowContext::TopWindowContext() {
   return current;
 }
 
+bool WindowContext::IsTop() const { return mBrowsingContext->IsTop(); }
+
 nsIGlobalObject* WindowContext::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
