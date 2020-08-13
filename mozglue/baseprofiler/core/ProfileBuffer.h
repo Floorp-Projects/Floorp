@@ -27,6 +27,8 @@ class ProfileBuffer final {
   // manager.
   explicit ProfileBuffer(ProfileChunkedBuffer& aBuffer);
 
+  ProfileChunkedBuffer& UnderlyingChunkedBuffer() const { return mEntries; }
+
   bool IsThreadSafe() const { return mEntries.IsThreadSafe(); }
 
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
