@@ -446,8 +446,12 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // default serif/sans-serif choice based on font.default.xxx prefs
   mozilla::StyleGenericFontFamily GetDefaultGeneric(eFontPrefLang aLang);
 
-  // Returns true if the font family whitelist is not empty.
-  bool IsFontFamilyWhitelistActive();
+  // Returns true if the font family whitelist is not empty. In this case we
+  // ignore the "CSS visibility level"; only the given fonts are present in
+  // the browser's font list.
+  bool IsFontFamilyWhitelistActive() const {
+    return mFontFamilyWhitelistActive;
+  };
 
   static void FontWhitelistPrefChanged(const char* aPref, void* aClosure);
 
