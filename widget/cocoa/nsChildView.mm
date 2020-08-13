@@ -2676,8 +2676,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
       // event is not over the rollup window, default is to roll up
       bool shouldRollup = true;
 
-      // check to see if scroll events should roll up the popup
-      if ([theEvent type] == NSScrollWheel) {
+      // check to see if scroll/zoom events should roll up the popup
+      if ([theEvent type] == NSScrollWheel || [theEvent type] == NSEventTypeMagnify) {
         shouldRollup = rollupListener->ShouldRollupOnMouseWheelEvent();
         // consume scroll events that aren't over the popup
         // unless the popup is an arrow panel
