@@ -284,6 +284,16 @@ bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsProxy(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardIsProxy::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotProxy(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
