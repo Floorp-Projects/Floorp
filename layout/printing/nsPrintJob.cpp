@@ -193,34 +193,6 @@ static void DispatchEventToWindowTree(Document& aDoc, const nsAString& aEvent) {
   }
 }
 
-class nsScriptSuppressor {
- public:
-  explicit nsScriptSuppressor(nsPrintJob* aPrintJob)
-      : mPrintJob(aPrintJob), mSuppressed(false) {}
-
-  ~nsScriptSuppressor() { Unsuppress(); }
-
-  void Suppress() {
-    if (mPrintJob) {
-      mSuppressed = true;
-      mPrintJob->TurnScriptingOn(false);
-    }
-  }
-
-  void Unsuppress() {
-    if (mPrintJob && mSuppressed) {
-      mPrintJob->TurnScriptingOn(true);
-    }
-    mSuppressed = false;
-  }
-
-  void Disconnect() { mPrintJob = nullptr; }
-
- protected:
-  RefPtr<nsPrintJob> mPrintJob;
-  bool mSuppressed;
-};
-
 // -------------------------------------------------------
 // Helpers
 // -------------------------------------------------------
@@ -769,13 +741,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsScriptSuppressor scriptSuppressor(this);
   // If printing via parent we still call ShowPrintDialog even for print preview
   // because we use that to retrieve the print settings from the printer.
   // The dialog is not shown, but this means we don't need to access the printer
   // driver from the child, which causes sandboxing issues.
   if (!mIsCreatingPrintPreview || printingViaParent) {
-    scriptSuppressor.Suppress();
     bool printSilently = false;
     printData->mPrintSettings->GetPrintSilent(&printSilently);
     if (StaticPrefs::print_always_print_silent()) {
@@ -910,9 +880,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     bool notifyOnInit = false;
     ShowPrintProgress(false, notifyOnInit);
 
-    // Very important! Turn Off scripting
-    TurnScriptingOn(false);
-
     if (!notifyOnInit) {
       SuppressPrintPreviewUserEvents();
       rv = InitPrintDocConstruction(false);
@@ -929,9 +896,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
       rv = InitPrintDocConstruction(false);
     }
   }
-
-  // We will enable scripting later after printing has finished.
-  scriptSuppressor.Disconnect();
 
   return NS_OK;
 }
@@ -2525,7 +2489,6 @@ bool nsPrintJob::DonePrintingPages(nsPrintObject* aPO, nsresult aResult) {
     //     do nothing due to no proper nsPrintData instance.
   }
 
-  TurnScriptingOn(true);
   SetIsPrinting(false);
 
   // Release reference to mPagePrintTimer; the timer object destroys itself
@@ -2604,69 +2567,6 @@ nsPrintObject* nsPrintJob::FindSmallestSTF() {
   return smallestPO;
 }
 
-//-------------------------------------------------------
-void nsPrintJob::TurnScriptingOn(bool aDoTurnOn) {
-  if (mIsDoingPrinting && aDoTurnOn && mDocViewerPrint &&
-      mDocViewerPrint->GetIsPrintPreview()) {
-    // We don't want to turn scripting on if print preview is shown still after
-    // printing.
-    return;
-  }
-
-  // The following for loop uses nsPrintObject instances that are owned by
-  // mPrt or mPrtPreview.  Therefore, this method needs to guarantee that
-  // they won't be deleted in this method.
-  RefPtr<nsPrintData> printData = mPrt ? mPrt : mPrtPreview;
-  if (!printData) {
-    return;
-  }
-
-  // First, get the script global object from the document...
-
-  for (uint32_t i = 0; i < printData->mPrintDocList.Length(); i++) {
-    nsPrintObject* po = printData->mPrintDocList.ElementAt(i);
-    MOZ_ASSERT(po);
-
-    Document* doc = po->mDocument;
-    if (!doc) {
-      continue;
-    }
-
-    if (nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow()) {
-      nsCOMPtr<nsIGlobalObject> go = window->AsGlobal();
-      NS_WARNING_ASSERTION(go->HasJSGlobal(), "Window has no global");
-      nsresult propThere = NS_PROPTABLE_PROP_NOT_THERE;
-      doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
-                       &propThere);
-      if (aDoTurnOn) {
-        if (propThere != NS_PROPTABLE_PROP_NOT_THERE) {
-          doc->RemoveProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
-          if (go->HasJSGlobal()) {
-            xpc::Scriptability::Get(go->GetGlobalJSObjectPreserveColor())
-                .Unblock();
-          }
-          window->Resume();
-        }
-      } else {
-        // Have to be careful, because people call us over and over again with
-        // aDoTurnOn == false.  So don't set the property if it's already
-        // set, since in that case we'd set it to the wrong value.
-        if (propThere == NS_PROPTABLE_PROP_NOT_THERE) {
-          // Stash the current value of IsScriptEnabled on the document, so
-          // that layout code running in print preview doesn't get confused.
-          doc->SetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
-                           NS_INT32_TO_PTR(doc->IsScriptEnabled()));
-          if (go && go->HasJSGlobal()) {
-            xpc::Scriptability::Get(go->GetGlobalJSObjectPreserveColor())
-                .Block();
-          }
-          window->Suspend();
-        }
-      }
-    }
-  }
-}
-
 //-----------------------------------------------------------------
 //-- Done: Misc Support Methods
 //-----------------------------------------------------------------
@@ -2719,9 +2619,6 @@ nsresult nsPrintJob::FinishPrintPreview() {
      * what went wrong...
      */
     printData->OnEndPrinting();
-    // XXX mPrt may be nullptr here.  So, Shouldn't TurnScriptingOn() take
-    //     nsPrintData as an argument?
-    TurnScriptingOn(true);
 
     return rv;
   }
