@@ -10067,19 +10067,6 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
     return false;
   }
 
-  MultiStringRange filePaths = op->getMultiStringOption('f');
-  MultiStringRange utf16FilePaths = op->getMultiStringOption('u');
-  MultiStringRange codeChunks = op->getMultiStringOption('e');
-  MultiStringRange modulePaths = op->getMultiStringOption('m');
-
-  if (filePaths.empty() && utf16FilePaths.empty() && codeChunks.empty() &&
-      modulePaths.empty() && !op->getStringArg("script")) {
-    // Always use the interactive shell when -i is used. Without -i we let
-    // Process figure it out based on isatty.
-    bool forceTTY = op->getBoolOption('i');
-    return Process(cx, nullptr, forceTTY, FileScript);
-  }
-
   RootedString moduleLoadPath(cx);
   if (const char* option = op->getStringOption("module-load-path")) {
     RootedString jspath(cx, JS_NewStringCopyZ(cx, option));
@@ -10106,6 +10093,19 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   sc->moduleLoader = js::MakeUnique<ModuleLoader>();
   if (!sc->moduleLoader || !sc->moduleLoader->init(cx, moduleLoadPath)) {
     return false;
+  }
+
+  MultiStringRange filePaths = op->getMultiStringOption('f');
+  MultiStringRange utf16FilePaths = op->getMultiStringOption('u');
+  MultiStringRange codeChunks = op->getMultiStringOption('e');
+  MultiStringRange modulePaths = op->getMultiStringOption('m');
+
+  if (filePaths.empty() && utf16FilePaths.empty() && codeChunks.empty() &&
+      modulePaths.empty() && !op->getStringArg("script")) {
+    // Always use the interactive shell when -i is used. Without -i we let
+    // Process figure it out based on isatty.
+    bool forceTTY = op->getBoolOption('i');
+    return Process(cx, nullptr, forceTTY, FileScript);
   }
 
   while (!filePaths.empty() || !utf16FilePaths.empty() || !codeChunks.empty() ||
