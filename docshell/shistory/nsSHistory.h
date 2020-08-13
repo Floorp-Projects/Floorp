@@ -168,6 +168,10 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   bool HasOngoingUpdate() { return mHasOngoingUpdate; }
   void SetHasOngoingUpdate(bool aVal) { mHasOngoingUpdate = aVal; }
 
+  void SetBrowsingContext(mozilla::dom::BrowsingContext* aRootBC) {
+    mRootBC = aRootBC;
+  }
+
  protected:
   virtual ~nsSHistory();
 
