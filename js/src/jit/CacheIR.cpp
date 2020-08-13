@@ -4298,13 +4298,13 @@ AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
 
   if (cacheKind_ == CacheKind::SetProp || mode_ == ICState::Mode::Specialized) {
     maybeEmitIdGuard(id);
-    writer.callProxySet(objId, id, rhsId, IsStrictSetPC(pc_));
+    writer.proxySet(objId, id, rhsId, IsStrictSetPC(pc_));
   } else {
     // Attach a stub that handles every id.
     MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
     MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
-    writer.callProxySetByValue(objId, setElemKeyValueId(), rhsId,
-                               IsStrictSetPC(pc_));
+    writer.proxySetByValue(objId, setElemKeyValueId(), rhsId,
+                           IsStrictSetPC(pc_));
   }
 
   writer.returnFromIC();
@@ -4319,7 +4319,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
 
   maybeEmitIdGuard(id);
   TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
-  writer.callProxySet(objId, id, rhsId, IsStrictSetPC(pc_));
+  writer.proxySet(objId, id, rhsId, IsStrictSetPC(pc_));
   writer.returnFromIC();
 
   trackAttached("DOMProxyShadowed");
@@ -4469,8 +4469,7 @@ AttachDecision SetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   // Like GetPropIRGenerator::tryAttachProxyElement, don't check for DOM
   // proxies here as we don't have specialized DOM stubs for this.
   MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
-  writer.callProxySetByValue(objId, setElemKeyValueId(), rhsId,
-                             IsStrictSetPC(pc_));
+  writer.proxySetByValue(objId, setElemKeyValueId(), rhsId, IsStrictSetPC(pc_));
   writer.returnFromIC();
 
   trackAttached("ProxyElement");
