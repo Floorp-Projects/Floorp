@@ -91,6 +91,7 @@ EXPORTS.mozilla += [
     'public/ProfileBufferChunkManagerSingle.h',
     'public/ProfileBufferChunkManagerWithLocalLimit.h',
     'public/ProfileBufferControlledChunkManager.h',
+    'public/ProfileBufferEntryKinds.h',
     'public/ProfileBufferEntrySerialization.h',
     'public/ProfileBufferIndex.h',
     'public/ProfileChunkedBuffer.h',
