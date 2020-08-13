@@ -430,9 +430,13 @@ SessionHistoryEntry::SetStateData(nsIStructuredCloneContainer* aStateData) {
   return NS_OK;
 }
 
+const nsID& SessionHistoryEntry::DocshellID() const {
+  return mSharedInfo->mDocShellID;
+}
+
 NS_IMETHODIMP
 SessionHistoryEntry::GetDocshellID(nsID& aDocshellID) {
-  aDocshellID = mSharedInfo->mDocShellID;
+  aDocshellID = DocshellID();
   return NS_OK;
 }
 
@@ -686,13 +690,22 @@ SessionHistoryEntry::SetLoadTypeAsHistory() {
 NS_IMETHODIMP
 SessionHistoryEntry::AddChild(nsISHEntry* aChild, int32_t aOffset,
                               bool aUseRemoteSubframes) {
+  nsCOMPtr<SessionHistoryEntry> child = do_QueryInterface(aChild);
+  MOZ_ASSERT(child);
+  AddChild(child, aOffset, aUseRemoteSubframes);
+
+  return NS_OK;
+}
+
+void SessionHistoryEntry::AddChild(SessionHistoryEntry* aChild, int32_t aOffset,
+                                   bool aUseRemoteSubframes) {
   if (aChild) {
-    NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
+    aChild->SetParent(this);
   }
 
   if (aOffset < 0) {
-    mChildren.AppendObject(aChild);
-    return NS_OK;
+    mChildren.AppendElement(aChild);
+    return;
   }
 
   //
@@ -701,117 +714,117 @@ SessionHistoryEntry::AddChild(nsISHEntry* aChild, int32_t aOffset,
   //  Later frames in the child list may load faster and get appended
   //  before earlier frames, causing session history to be scrambled.
   //  By growing the list here, they are added to the right position.
-  //
-  //  Assert that aOffset will not be so high as to grow us a lot.
-  //
-  NS_ASSERTION(aOffset < (mChildren.Count() + 1023), "Large frames array!\n");
 
-  bool newChildIsDyn = aChild ? aChild->IsDynamicallyAdded() : false;
+  int32_t length = mChildren.Length();
+
+  //  Assert that aOffset will not be so high as to grow us a lot.
+  NS_ASSERTION(aOffset < length + 1023, "Large frames array!\n");
 
   // If the new child is dynamically added, try to add it to aOffset, but if
   // there are non-dynamically added children, the child must be after those.
-  if (newChildIsDyn) {
+  if (aChild && aChild->IsDynamicallyAdded()) {
     int32_t lastNonDyn = aOffset - 1;
-    for (int32_t i = aOffset; i < mChildren.Count(); ++i) {
-      nsISHEntry* entry = mChildren[i];
+    for (int32_t i = aOffset; i < length; ++i) {
+      SessionHistoryEntry* entry = mChildren[i];
       if (entry) {
         if (entry->IsDynamicallyAdded()) {
           break;
-        } else {
-          lastNonDyn = i;
         }
-      }
-    }
-    // InsertObjectAt allows only appending one object.
-    // If aOffset is larger than Count(), we must first manually
-    // set the capacity.
-    if (aOffset > mChildren.Count()) {
-      mChildren.SetCount(aOffset);
-    }
-    if (!mChildren.InsertObjectAt(aChild, lastNonDyn + 1)) {
-      NS_WARNING("Adding a child failed!");
-      aChild->SetParent(nullptr);
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    // If the new child isn't dynamically added, it should be set to aOffset.
-    // If there are dynamically added children before that, those must be
-    // moved to be after aOffset.
-    if (mChildren.Count() > 0) {
-      int32_t start = std::min(mChildren.Count() - 1, aOffset);
-      int32_t dynEntryIndex = -1;
-      nsISHEntry* dynEntry = nullptr;
-      for (int32_t i = start; i >= 0; --i) {
-        nsISHEntry* entry = mChildren[i];
-        if (entry) {
-          if (entry->IsDynamicallyAdded()) {
-            dynEntryIndex = i;
-            dynEntry = entry;
-          } else {
-            break;
-          }
-        }
-      }
 
-      if (dynEntry) {
-        nsCOMArray<nsISHEntry> tmp;
-        tmp.SetCount(aOffset - dynEntryIndex + 1);
-        mChildren.InsertObjectsAt(tmp, dynEntryIndex);
-        NS_ASSERTION(mChildren[aOffset + 1] == dynEntry, "Whaat?");
+        lastNonDyn = i;
       }
     }
 
-    // Make sure there isn't anything at aOffset.
-    if (aOffset < mChildren.Count()) {
-      nsISHEntry* oldChild = mChildren[aOffset];
-      if (oldChild && oldChild != aChild) {
-        // Under Fission, this can happen when a network-created iframe starts
-        // out in-process, moves out-of-process, and then switches back. At that
-        // point, we'll create a new network-created DocShell at the same index
-        // where we already have an entry for the original network-created
-        // DocShell.
-        //
-        // This should ideally stop being an issue once the Fission-aware
-        // session history rewrite is complete.
-        NS_ASSERTION(
-            aUseRemoteSubframes,
-            "Adding a child where we already have a child? This may misbehave");
-        oldChild->SetParent(nullptr);
-      }
+    // If aOffset is larger than Length(), we must first truncate the array.
+    if (aOffset > length) {
+      mChildren.SetLength(aOffset);
     }
 
-    mChildren.ReplaceObjectAt(aChild, aOffset);
+    mChildren.InsertElementAt(lastNonDyn + 1, aChild);
+
+    return;
   }
 
-  return NS_OK;
+  // If the new child isn't dynamically added, it should be set to aOffset.
+  // If there are dynamically added children before that, those must be moved
+  // to be after aOffset.
+  if (length > 0) {
+    int32_t start = std::min(length - 1, aOffset);
+    int32_t dynEntryIndex = -1;
+    DebugOnly<SessionHistoryEntry*> dynEntry = nullptr;
+    for (int32_t i = start; i >= 0; --i) {
+      SessionHistoryEntry* entry = mChildren[i];
+      if (entry) {
+        if (!entry->IsDynamicallyAdded()) {
+          break;
+        }
+
+        dynEntryIndex = i;
+        dynEntry = entry;
+      }
+    }
+
+    if (dynEntryIndex >= 0) {
+      mChildren.InsertElementsAt(dynEntryIndex, aOffset - dynEntryIndex + 1);
+      NS_ASSERTION(mChildren[aOffset + 1] == dynEntry, "Whaat?");
+    }
+  }
+
+  // Make sure there isn't anything at aOffset.
+  if ((uint32_t)aOffset < mChildren.Length()) {
+    SessionHistoryEntry* oldChild = mChildren[aOffset];
+    if (oldChild && oldChild != aChild) {
+      // Under Fission, this can happen when a network-created iframe starts
+      // out in-process, moves out-of-process, and then switches back. At that
+      // point, we'll create a new network-created DocShell at the same index
+      // where we already have an entry for the original network-created
+      // DocShell.
+      //
+      // This should ideally stop being an issue once the Fission-aware
+      // session history rewrite is complete.
+      NS_ASSERTION(
+          aUseRemoteSubframes,
+          "Adding a child where we already have a child? This may misbehave");
+      oldChild->SetParent(nullptr);
+    }
+  }
+
+  mChildren.ReplaceElementAt(aOffset, aChild);
 }
 
 NS_IMETHODIMP
 SessionHistoryEntry::RemoveChild(nsISHEntry* aChild) {
   NS_ENSURE_TRUE(aChild, NS_ERROR_FAILURE);
+
+  nsCOMPtr<SessionHistoryEntry> child = do_QueryInterface(aChild);
+  MOZ_ASSERT(child);
+  RemoveChild(child);
+
+  return NS_OK;
+}
+
+void SessionHistoryEntry::RemoveChild(SessionHistoryEntry* aChild) {
   bool childRemoved = false;
   if (aChild->IsDynamicallyAdded()) {
-    childRemoved = mChildren.RemoveObject(aChild);
+    childRemoved = mChildren.RemoveElement(aChild);
   } else {
-    int32_t index = mChildren.IndexOfObject(aChild);
+    int32_t index = mChildren.IndexOf(aChild);
     if (index >= 0) {
       // Other alive non-dynamic child docshells still keep mChildOffset,
       // so we don't want to change the indices here.
-      mChildren.ReplaceObjectAt(nullptr, index);
+      mChildren.ReplaceElementAt(index, nullptr);
       childRemoved = true;
     }
   }
+
   if (childRemoved) {
     aChild->SetParent(nullptr);
 
     // reduce the child count, i.e. remove empty children at the end
-    for (int32_t i = mChildren.Count() - 1; i >= 0 && !mChildren[i]; --i) {
-      if (!mChildren.RemoveObjectAt(i)) {
-        break;
-      }
+    for (int32_t i = mChildren.Length() - 1; i >= 0 && !mChildren[i]; --i) {
+      mChildren.RemoveElementAt(i);
     }
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -829,24 +842,27 @@ SessionHistoryEntry::GetChildSHEntryIfHasNoDynamicallyAddedChild(
 
 NS_IMETHODIMP
 SessionHistoryEntry::ReplaceChild(nsISHEntry* aNewChild) {
-  NS_ENSURE_STATE(aNewEntry);
+  NS_ENSURE_STATE(aNewChild);
 
-  nsID docshellID;
-  aNewEntry->GetDocshellID(docshellID);
+  nsCOMPtr<SessionHistoryEntry> newChild = do_QueryInterface(aNewChild);
+  MOZ_ASSERT(newChild);
+  return ReplaceChild(newChild) ? NS_OK : NS_ERROR_FAILURE;
+}
 
-  for (int32_t i = 0; i < mChildren.Count(); ++i) {
-    if (mChildren[i]) {
-      nsID childDocshellID;
-      nsresult rv = mChildren[i]->GetDocshellID(childDocshellID);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (docshellID == childDocshellID) {
-        mChildren[i]->SetParent(nullptr);
-        mChildren.ReplaceObjectAt(aNewEntry, i);
-        return aNewEntry->SetParent(this);
-      }
+bool SessionHistoryEntry::ReplaceChild(SessionHistoryEntry* aNewChild) {
+  const nsID& docshellID = aNewChild->DocshellID();
+
+  for (uint32_t i = 0; i < mChildren.Length(); ++i) {
+    if (mChildren[i] && docshellID == mChildren[i]->DocshellID()) {
+      mChildren[i]->SetParent(nullptr);
+      mChildren.ReplaceElementAt(i, aNewChild);
+      aNewChild->SetParent(this);
+
+      return true;
     }
   }
-  return NS_ERROR_FAILURE;
+
+  return false;
 }
 
 NS_IMETHODIMP_(void)
