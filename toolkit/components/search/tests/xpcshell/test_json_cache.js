@@ -33,45 +33,9 @@ async function loadCacheFile(cacheFile) {
   cacheTemplate.buildID = getAppInfo().platformBuildID;
   cacheTemplate.version = SearchUtils.CACHE_VERSION;
 
-  if (gModernConfig) {
-    delete cacheTemplate.visibleDefaultEngines;
-  } else {
-    // The list of visibleDefaultEngines needs to match or the cache will be ignored.
-    cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
-
-    // Since the above code is querying directly from list.json,
-    // we need to override the values in the esr case.
-    if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
-      let esrOverrides = {
-        "google-b-d": "google-b-e",
-        "google-b-1-d": "google-b-1-e",
-      };
-
-      for (let engine in esrOverrides) {
-        let index = cacheTemplate.visibleDefaultEngines.indexOf(engine);
-        if (index > -1) {
-          cacheTemplate.visibleDefaultEngines[index] = esrOverrides[engine];
-        }
-      }
-    }
-  }
+  delete cacheTemplate.visibleDefaultEngines;
 
   await promiseSaveCacheData(cacheTemplate);
-
-  if (!gModernConfig) {
-    // For the legacy config, make sure we switch _isBuiltin to _isAppProvided
-    // after saving, so that the expected results match.
-    for (let engine of cacheTemplate.engines) {
-      if ("_isBuiltin" in engine) {
-        engine._isAppProvided = engine._isBuiltin;
-        delete engine._isBuiltin;
-      }
-      if ("extensionID" in engine) {
-        engine._extensionID = engine.extensionID;
-        delete engine.extensionID;
-      }
-    }
-  }
 }
 
 /**
@@ -127,10 +91,6 @@ add_task(async function test_legacy_cached_engine_properties() {
 });
 
 add_task(async function test_current_cached_engine_properties() {
-  // Legacy configuration doesn't support loading the modern cache directly.
-  if (!gModernConfig) {
-    return;
-  }
   await checkLoadCachedProperties("data/search.json");
 });
 
@@ -140,9 +100,7 @@ add_task(async function test_current_cached_engine_properties() {
 add_task(async function test_cache_write() {
   info("test cache writing");
 
-  await loadCacheFile(
-    gModernConfig ? "data/search.json" : "data/search-legacy.json"
-  );
+  await loadCacheFile("data/search.json");
 
   const cacheFileWritten = promiseAfterCache();
   await Services.search.init();

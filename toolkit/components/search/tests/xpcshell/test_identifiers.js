@@ -49,12 +49,7 @@ add_task(async function test_from_profile() {
 });
 
 add_task(async function test_from_telemetry_id() {
-  // The telemetryId check isn't applicable to the legacy config.
-  if (gModernConfig) {
-    checkIdentifier("basic", "telemetry", "telemetry");
-  } else {
-    checkIdentifier("basic", "basic", "basic");
-  }
+  checkIdentifier("basic", "telemetry", "telemetry");
 });
 
 add_task(async function test_from_webextension_id() {

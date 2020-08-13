@@ -29,9 +29,6 @@ const SUBMISSION_NO = new Map([
 
 add_task(async function setup() {
   await useTestEngines("data1");
-  if (!gModernConfig) {
-    installDistributionEngine();
-  }
   await AddonTestUtils.promiseStartupManager();
 });
 
@@ -77,21 +74,6 @@ add_task(async function test_submission_url_built_in() {
     engineInfo.defaultSearchEngineData.submissionURL,
     "https://1.example.com/search?q=",
     "Should have given the submission url for a built-in engine."
-  );
-});
-
-add_task(async function test_submission_url_distribution() {
-  if (gModernConfig) {
-    return;
-  }
-  const engine = Services.search.getEngineByName("basic");
-  await Services.search.setDefault(engine);
-
-  const engineInfo = await Services.search.getDefaultEngineInfo();
-  Assert.equal(
-    engineInfo.defaultSearchEngineData.submissionURL,
-    "http://searchtest.local/?search=",
-    "Should have given the submission url for a distribution engine."
   );
 });
 

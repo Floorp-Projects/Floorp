@@ -15,7 +15,6 @@ const TEST_CONFIG = [
 ];
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref("browser.search.gModernConfig", true);
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 
   await useTestEngines("test-extensions", null, TEST_CONFIG);
