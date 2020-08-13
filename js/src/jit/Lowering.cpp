@@ -4190,6 +4190,26 @@ void LIRGenerator::visitProxyHasProp(MProxyHasProp* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitProxySet(MProxySet* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->rhs()->type() == MIRType::Value);
+  auto* lir = new (alloc()) LProxySet(useRegisterAtStart(ins->proxy()),
+                                      useBoxAtStart(ins->rhs()), temp());
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitProxySetByValue(MProxySetByValue* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->idVal()->type() == MIRType::Value);
+  MOZ_ASSERT(ins->rhs()->type() == MIRType::Value);
+  auto* lir = new (alloc())
+      LProxySetByValue(useRegisterAtStart(ins->proxy()),
+                       useBoxAtStart(ins->idVal()), useBoxAtStart(ins->rhs()));
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitGuardIsNotArrayBufferMaybeShared(
     MGuardIsNotArrayBufferMaybeShared* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

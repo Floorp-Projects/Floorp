@@ -4535,6 +4535,34 @@ void CodeGenerator::visitProxyHasProp(LProxyHasProp* lir) {
   }
 }
 
+void CodeGenerator::visitProxySet(LProxySet* lir) {
+  Register proxy = ToRegister(lir->proxy());
+  ValueOperand rhs = ToValue(lir, LProxySet::RhsIndex);
+  Register temp = ToRegister(lir->temp());
+
+  pushArg(Imm32(lir->mir()->strict()));
+  pushArg(rhs);
+  pushArg(lir->mir()->id(), temp);
+  pushArg(proxy);
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+  callVM<Fn, ProxySetProperty>(lir);
+}
+
+void CodeGenerator::visitProxySetByValue(LProxySetByValue* lir) {
+  Register proxy = ToRegister(lir->proxy());
+  ValueOperand idVal = ToValue(lir, LProxySetByValue::IdIndex);
+  ValueOperand rhs = ToValue(lir, LProxySetByValue::RhsIndex);
+
+  pushArg(Imm32(lir->mir()->strict()));
+  pushArg(rhs);
+  pushArg(idVal);
+  pushArg(proxy);
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
+  callVM<Fn, ProxySetPropertyByValue>(lir);
+}
+
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
     LGuardIsNotArrayBufferMaybeShared* guard) {
   Register obj = ToRegister(guard->input());

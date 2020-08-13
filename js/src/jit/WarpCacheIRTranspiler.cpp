@@ -354,6 +354,32 @@ bool WarpCacheIRTranspiler::emitProxyHasPropResult(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitProxySet(ObjOperandId objId, uint32_t idOffset,
+                                         ValOperandId rhsId, bool strict) {
+  MDefinition* obj = getOperand(objId);
+  jsid id = idStubField(idOffset);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MProxySet::New(alloc(), obj, id, rhs, strict);
+  addEffectful(ins);
+
+  return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitProxySetByValue(ObjOperandId objId,
+                                                ValOperandId idId,
+                                                ValOperandId rhsId,
+                                                bool strict) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* id = getOperand(idId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MProxySetByValue::New(alloc(), obj, id, rhs, strict);
+  addEffectful(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);

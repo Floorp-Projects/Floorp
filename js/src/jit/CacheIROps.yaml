@@ -1427,9 +1427,9 @@
     strict: BoolImm
     rhs: ValId
 
-- name: CallProxySet
+- name: ProxySet
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     obj: ObjId
@@ -1437,9 +1437,9 @@
     rhs: ValId
     strict: BoolImm
 
-- name: CallProxySetByValue
+- name: ProxySetByValue
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     obj: ObjId

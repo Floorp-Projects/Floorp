@@ -2024,8 +2024,8 @@ bool IonCacheIRCompiler::emitCallSetArrayLength(ObjOperandId objId, bool strict,
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallProxySet(ObjOperandId objId, uint32_t idOffset,
-                                          ValOperandId rhsId, bool strict) {
+bool IonCacheIRCompiler::emitProxySet(ObjOperandId objId, uint32_t idOffset,
+                                      ValOperandId rhsId, bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
@@ -2048,10 +2048,9 @@ bool IonCacheIRCompiler::emitCallProxySet(ObjOperandId objId, uint32_t idOffset,
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallProxySetByValue(ObjOperandId objId,
-                                                 ValOperandId idId,
-                                                 ValOperandId rhsId,
-                                                 bool strict) {
+bool IonCacheIRCompiler::emitProxySetByValue(ObjOperandId objId,
+                                             ValOperandId idId,
+                                             ValOperandId rhsId, bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 

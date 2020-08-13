@@ -9261,6 +9261,48 @@ class MProxyHasProp : public MBinaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
+class MProxySet : public MBinaryInstruction,
+                  public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  jsid id_;
+  bool strict_;
+
+  MProxySet(MDefinition* proxy, jsid id, MDefinition* rhs, bool strict)
+      : MBinaryInstruction(classOpcode, proxy, rhs), id_(id), strict_(strict) {}
+
+ public:
+  INSTRUCTION_HEADER(ProxySet)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy), (1, rhs))
+
+  jsid id() const { return id_; }
+  bool strict() const { return strict_; }
+
+  bool possiblyCalls() const override { return true; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(id_);
+  }
+};
+
+class MProxySetByValue
+    : public MTernaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2>>::Data {
+  bool strict_;
+
+  MProxySetByValue(MDefinition* proxy, MDefinition* idVal, MDefinition* rhs,
+                   bool strict)
+      : MTernaryInstruction(classOpcode, proxy, idVal, rhs), strict_(strict) {}
+
+ public:
+  INSTRUCTION_HEADER(ProxySetByValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy), (1, idVal), (2, rhs))
+
+  bool strict() const { return strict_; }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.
 class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
                                           public SingleObjectPolicy::Data {

@@ -6255,6 +6255,47 @@ class LProxyHasProp
   MProxyHasProp* mir() const { return mir_->toProxyHasProp(); }
 };
 
+class LProxySet : public LCallInstructionHelper<0, 1 + BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(ProxySet)
+
+  LProxySet(const LAllocation& proxy, const LBoxAllocation& rhs,
+            const LDefinition& temp)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, proxy);
+    setBoxOperand(RhsIndex, rhs);
+    setTemp(0, temp);
+  }
+
+  static const size_t RhsIndex = 1;
+
+  const LAllocation* proxy() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+
+  MProxySet* mir() const { return mir_->toProxySet(); }
+};
+
+class LProxySetByValue
+    : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(ProxySetByValue)
+
+  LProxySetByValue(const LAllocation& proxy, const LBoxAllocation& idVal,
+                   const LBoxAllocation& rhs)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, proxy);
+    setBoxOperand(IdIndex, idVal);
+    setBoxOperand(RhsIndex, rhs);
+  }
+
+  static const size_t IdIndex = 1;
+  static const size_t RhsIndex = 1 + BOX_PIECES;
+
+  const LAllocation* proxy() { return getOperand(0); }
+
+  MProxySetByValue* mir() const { return mir_->toProxySetByValue(); }
+};
+
 class LGuardIsNotArrayBufferMaybeShared : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardIsNotArrayBufferMaybeShared)
