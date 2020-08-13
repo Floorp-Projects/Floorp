@@ -7,11 +7,13 @@ const ABOUT_WELCOME_OVERRIDE_CONTENT = "browser.aboutwelcome.overrideContent";
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
+
 const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
 
 const SIMPLIFIED_WELCOME_CONTENT = {
+  template: "simplified",
   title: {
     string_id: "onboarding-welcome-header",
   },

@@ -55,94 +55,132 @@ export const AboutWelcomeUtils = {
 };
 
 export const DEFAULT_WELCOME_CONTENT = {
-  title: {
-    string_id: "onboarding-welcome-header",
-  },
-  startButton: {
-    label: {
-      string_id: "onboarding-start-browsing-button-label",
-    },
-    message_id: "START_BROWSING_BUTTON",
-    action: {
-      type: "OPEN_AWESOME_BAR",
-    },
-  },
-  cards: [
+  template: "multistage",
+  screens: [
     {
+      id: "AW_GET_STARTED",
+      order: 0,
       content: {
+        zap: true,
         title: {
-          string_id: "onboarding-data-sync-title",
+          string_id: "onboarding-multistage-welcome-header",
         },
-        text: {
-          string_id: "onboarding-data-sync-text2",
-        },
-        icon: "devices",
+        subtitle: { string_id: "onboarding-multistage-welcome-subtitle" },
         primary_button: {
           label: {
-            string_id: "onboarding-data-sync-button2",
+            string_id: "onboarding-multistage-welcome-primary-button-label",
           },
+          action: {
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          text: {
+            string_id: "onboarding-multistage-welcome-secondary-button-text",
+          },
+          label: {
+            string_id: "onboarding-multistage-welcome-secondary-button-label",
+          },
+          position: "top",
           action: {
             type: "OPEN_URL",
             addFlowParams: true,
             data: {
               args:
                 "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead",
-              where: "tabshifted",
+              where: "current",
             },
           },
         },
       },
-      id: "TRAILHEAD_CARD_2",
+    },
+    {
+      id: "AW_IMPORT_SETTINGS",
       order: 1,
-      blockOnClick: false,
-    },
-    {
       content: {
-        title: {
-          string_id: "onboarding-firefox-monitor-title",
+        zap: true,
+        disclaimer: { string_id: "onboarding-import-sites-disclaimer" },
+        title: { string_id: "onboarding-multistage-import-header" },
+        subtitle: { string_id: "onboarding-multistage-import-subtitle" },
+        tiles: {
+          type: "topsites",
+          info: true,
         },
-        text: {
-          string_id: "onboarding-firefox-monitor-text2",
-        },
-        icon: "ffmonitor",
         primary_button: {
           label: {
-            string_id: "onboarding-firefox-monitor-button",
+            string_id: "onboarding-multistage-import-primary-button-label",
           },
           action: {
-            type: "OPEN_URL",
-            data: {
-              args: "https://monitor.firefox.com/",
-              where: "tabshifted",
-            },
+            type: "SHOW_MIGRATION_WIZARD",
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "onboarding-multistage-import-secondary-button-label",
+          },
+          action: {
+            navigate: true,
           },
         },
       },
-      id: "TRAILHEAD_CARD_3",
+    },
+    {
+      id: "AW_CHOOSE_THEME",
       order: 2,
-      blockOnClick: false,
-    },
-    {
       content: {
-        title: {
-          string_id: "onboarding-browse-privately-title",
+        zap: true,
+        title: { string_id: "onboarding-multistage-theme-header" },
+        subtitle: { string_id: "onboarding-multistage-theme-subtitle" },
+        tiles: {
+          type: "theme",
+          action: {
+            theme: "<event>",
+          },
+          data: [
+            {
+              theme: "automatic",
+              label: {
+                string_id: "onboarding-multistage-theme-label-automatic",
+              },
+              tooltip: {
+                string_id: "onboarding-multistage-theme-tooltip-automatic",
+              },
+            },
+            {
+              theme: "light",
+              label: { string_id: "onboarding-multistage-theme-label-light" },
+              tooltip: {
+                string_id: "onboarding-multistage-theme-tooltip-light",
+              },
+            },
+            {
+              theme: "dark",
+              label: { string_id: "onboarding-multistage-theme-label-dark" },
+              tooltip: {
+                string_id: "onboarding-multistage-theme-tooltip-dark",
+              },
+            },
+          ],
         },
-        text: {
-          string_id: "onboarding-browse-privately-text",
-        },
-        icon: "private",
         primary_button: {
           label: {
-            string_id: "onboarding-browse-privately-button",
+            string_id: "onboarding-multistage-theme-primary-button-label",
           },
           action: {
-            type: "OPEN_PRIVATE_BROWSER_WINDOW",
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "onboarding-multistage-theme-secondary-button-label",
+          },
+          action: {
+            theme: "automatic",
+            navigate: true,
           },
         },
       },
-      id: "TRAILHEAD_CARD_4",
-      order: 3,
-      blockOnClick: true,
     },
   ],
 };
