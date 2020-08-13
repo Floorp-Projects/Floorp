@@ -47,3 +47,5 @@ SharedStub:
             .cfi_endproc
 
             .size SharedStub, . - SharedStub
+
+            .section .note.GNU-stack, "", @progbits ; .previous
