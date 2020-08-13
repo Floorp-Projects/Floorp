@@ -77,6 +77,7 @@
   <link rel="localization" href="browser/sidebarMenu.ftl"/>
   <link rel="localization" href="browser/allTabsMenu.ftl"/>
   <link rel="localization" href="browser/places.ftl"/>
+  <link rel="localization" href="toolkit/printing/printUI.ftl"/>
 
   <title data-l10n-id="browser-main-window-title"></title>
 
@@ -278,7 +279,12 @@
             <button class="dialogClose close-icon"/>
           </hbox>
           <hbox class="printTabModalView">
-            <browser class="printSettingsBrowser dialogFrame"/>
+            <stack class="previewStack">
+              <vbox class="previewRendering">
+                <h1 class="print-pending-label" data-l10n-id="printui-loading"></h1>
+              </vbox>
+            </stack>
+            <browser class="printSettingsBrowser dialogFrame" hidden="true"/>
           </hbox>
         </vbox>
       </vbox>

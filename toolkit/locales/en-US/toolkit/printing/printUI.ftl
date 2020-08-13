@@ -49,3 +49,4 @@ printui-system-dialog-link = Print using the system dialog…
 printui-primary-button = Print
 printui-cancel-button = Cancel
 
+printui-loading = Preparing Preview
