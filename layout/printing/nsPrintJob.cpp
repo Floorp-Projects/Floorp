@@ -315,7 +315,7 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
   if (aParentPO->mFrameType == eIFrame &&
       aParentPO->mDocument->GetOriginalDocument() == aFocusedDoc) {
     aPrintData->mSelectionRoot = aParentPO.get();
-  } else if (!aPrintData->mSelectionRoot && aParentPO->mHasSelection) {
+  } else if (!aPrintData->mSelectionRoot && aParentPO->HasSelection()) {
     // If there is no focused iframe but there is a selection in one or more
     // frames then we want to set the root nsPrintObject as the focus root so
     // that later EnablePrintingSelectionOnly can search for and enable all
@@ -355,7 +355,7 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
     }
 
     auto childPO = MakeUnique<nsPrintObject>();
-    rv = childPO->InitAsNestedObject(docshell, doc, sourceDoc, aParentPO.get());
+    rv = childPO->InitAsNestedObject(docshell, doc, aParentPO.get());
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
@@ -2569,7 +2569,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   // If mSelectionRoot is a selected iframe without a selection, then just
   // enable normally from that point.
   if (printData->mSelectionRoot->mFrameType == eIFrame &&
-      !printData->mSelectionRoot->mHasSelection) {
+      !printData->mSelectionRoot->HasSelection()) {
     printData->mSelectionRoot->EnablePrinting(true);
   } else {
     // Otherwise, only enable nsPrintObjects that have a selection.

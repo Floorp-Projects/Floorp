@@ -10614,6 +10614,10 @@ void Document::Destroy() {
     mOriginalDocument->mLatestStaticClone = nullptr;
   }
 
+  if (IsStaticDocument()) {
+    RemoveProperty(nsGkAtoms::printselectionranges);
+  }
+
   // Shut down our external resource map.  We might not need this for
   // leak-fixing if we fix nsDocumentViewer to do cycle-collection, but
   // tearing down all those frame trees right now is the right thing to do.
@@ -12144,6 +12148,117 @@ void Document::FlushPendingLinkUpdates() {
   }
 }
 
+/**
+ * Retrieves the node in a static-clone document that corresponds to aOrigNode,
+ * which is a node in the original document from which aStaticClone was cloned.
+ */
+static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
+                                               Document& aStaticClone) {
+  MOZ_ASSERT(aOrigNode);
+
+  // Selections in anonymous subtrees aren't supported.
+  if (aOrigNode->IsInNativeAnonymousSubtree() || aOrigNode->IsInShadowTree()) {
+    return nullptr;
+  }
+
+  nsTArray<int32_t> indexArray;
+  const nsINode* child = aOrigNode;
+  while (const nsINode* parent = child->GetParentNode()) {
+    int32_t index = parent->ComputeIndexOf(child);
+    MOZ_ASSERT(index >= 0);
+    indexArray.AppendElement(index);
+    child = parent;
+  }
+  MOZ_ASSERT(child->IsDocument());
+
+  nsINode* correspondingNode = &aStaticClone;
+  for (int32_t i : Reversed(indexArray)) {
+    correspondingNode = correspondingNode->GetChildAt_Deprecated(i);
+    NS_ENSURE_TRUE(correspondingNode, nullptr);
+  }
+
+  return correspondingNode;
+}
+
+/**
+ * Caches the selection ranges from the source document onto the static clone in
+ * case the "Print Selection Only" functionality is invoked.
+ *
+ * Note that we cannot use the selection obtained from GetOriginalDocument()
+ * since that selection may have mutated after the print was invoked.
+ *
+ * Note also that because nsRange objects point into a specific document's
+ * nodes, we cannot reuse an array of nsRange objects across multiple static
+ * clone documents. For that reason we cache a new array of ranges on each
+ * static clone that we create.
+ *
+ * TODO(emilio): This can be simplified once we don't re-clone from static
+ * documents.
+ *
+ * @param aSourceDoc the document from which we are caching selection ranges
+ * @param aStaticClone the document that will hold the cache
+ * @return true if a selection range was cached
+ */
+static void CachePrintSelectionRanges(const Document& aSourceDoc,
+                                      Document& aStaticClone) {
+  MOZ_ASSERT(aStaticClone.IsStaticDocument());
+  MOZ_ASSERT(!aStaticClone.GetProperty(nsGkAtoms::printselectionranges));
+
+  const Selection* origSelection = nullptr;
+  const nsTArray<RefPtr<nsRange>>* origRanges = nullptr;
+  bool sourceDocIsStatic = aSourceDoc.IsStaticDocument();
+
+  if (sourceDocIsStatic) {
+    origRanges = static_cast<nsTArray<RefPtr<nsRange>>*>(
+        aSourceDoc.GetProperty(nsGkAtoms::printselectionranges));
+  } else if (PresShell* shell = aSourceDoc.GetPresShell()) {
+    origSelection = shell->GetCurrentSelection(SelectionType::eNormal);
+  }
+
+  if (!origSelection && !origRanges) {
+    return;
+  }
+
+  size_t rangeCount =
+      sourceDocIsStatic ? origRanges->Length() : origSelection->RangeCount();
+  auto printRanges = MakeUnique<nsTArray<RefPtr<nsRange>>>(rangeCount);
+
+  for (size_t i = 0; i < rangeCount; ++i) {
+    const nsRange* range = sourceDocIsStatic ? origRanges->ElementAt(i).get()
+                                             : origSelection->GetRangeAt(i);
+    nsINode* startContainer = range->GetStartContainer();
+    nsINode* endContainer = range->GetEndContainer();
+
+    if (!startContainer || !endContainer) {
+      continue;
+    }
+
+    nsINode* startNode =
+        GetCorrespondingNodeInDocument(startContainer, aStaticClone);
+    nsINode* endNode =
+        GetCorrespondingNodeInDocument(endContainer, aStaticClone);
+
+    if (!startNode || !endNode) {
+      continue;
+    }
+
+    RefPtr<nsRange> clonedRange =
+        nsRange::Create(startNode, range->StartOffset(), endNode,
+                        range->EndOffset(), IgnoreErrors());
+    if (clonedRange && !clonedRange->Collapsed()) {
+      printRanges->AppendElement(std::move(clonedRange));
+    }
+  }
+
+  if (printRanges->IsEmpty()) {
+    return;
+  }
+
+  aStaticClone.SetProperty(nsGkAtoms::printselectionranges,
+                           printRanges.release(),
+                           nsINode::DeleteProperty<nsTArray<RefPtr<nsRange>>>);
+}
+
 already_AddRefed<Document> Document::CreateStaticClone(
     nsIDocShell* aCloneContainer) {
   MOZ_ASSERT(!mCreatingStaticClone);
@@ -12211,6 +12326,7 @@ already_AddRefed<Document> Document::CreateStaticClone(
     clonedDoc->mReferrerInfo =
         static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
     clonedDoc->mPreloadReferrerInfo = clonedDoc->mReferrerInfo;
+    CachePrintSelectionRanges(*this, *clonedDoc);
   }
 
   return clonedDoc.forget();
