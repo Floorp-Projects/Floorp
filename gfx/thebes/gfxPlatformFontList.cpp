@@ -807,12 +807,14 @@ void gfxPlatformFontList::UpdateFontList() {
 }
 
 bool gfxPlatformFontList::IsVisibleToCSS(const gfxFontFamily& aFamily) const {
-  return aFamily.Visibility() <= mVisibilityLevel;
+  return aFamily.Visibility() <= mVisibilityLevel ||
+         IsFontFamilyWhitelistActive();
 }
 
 bool gfxPlatformFontList::IsVisibleToCSS(
     const fontlist::Family& aFamily) const {
-  return aFamily.Visibility() <= mVisibilityLevel;
+  return aFamily.Visibility() <= mVisibilityLevel ||
+         IsFontFamilyWhitelistActive();
 }
 
 void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
@@ -2294,10 +2296,6 @@ void gfxPlatformFontList::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                                  FontListSizes* aSizes) const {
   aSizes->mFontListSize += aMallocSizeOf(this);
   AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
-}
-
-bool gfxPlatformFontList::IsFontFamilyWhitelistActive() {
-  return mFontFamilyWhitelistActive;
 }
 
 void gfxPlatformFontList::InitOtherFamilyNamesInternal(
