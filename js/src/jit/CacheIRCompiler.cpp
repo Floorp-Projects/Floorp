@@ -7372,8 +7372,8 @@ bool CacheIRCompiler::emitCallProxyHasPropResult(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitCallProxyGetByValueResult(ObjOperandId objId,
-                                                    ValOperandId idId) {
+bool CacheIRCompiler::emitProxyGetByValueResult(ObjOperandId objId,
+                                                ValOperandId idId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoCallVM callvm(masm, this, allocator);
 

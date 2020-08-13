@@ -1506,13 +1506,13 @@ AttachDecision GetPropIRGenerator::tryAttachGenericProxy(
   if (cacheKind_ == CacheKind::GetProp || mode_ == ICState::Mode::Specialized) {
     MOZ_ASSERT(!isSuper());
     maybeEmitIdGuard(id);
-    writer.callProxyGetResult(objId, id);
+    writer.proxyGetResult(objId, id);
   } else {
     // Attach a stub that handles every id.
     MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
     MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
     MOZ_ASSERT(!isSuper());
-    writer.callProxyGetByValueResult(objId, getElemKeyValueId());
+    writer.proxyGetByValueResult(objId, getElemKeyValueId());
   }
 
   writer.typeMonitorResult();
@@ -1604,7 +1604,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj,
 
   maybeEmitIdGuard(id);
   TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
-  writer.callProxyGetResult(objId, id);
+  writer.proxyGetResult(objId, id);
   writer.typeMonitorResult();
 
   trackAttached("DOMProxyShadowed");
@@ -1696,7 +1696,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     // Property was not found on the prototype chain. Deoptimize down to
     // proxy get call.
     MOZ_ASSERT(!isSuper());
-    writer.callProxyGetResult(objId, id);
+    writer.proxyGetResult(objId, id);
     writer.typeMonitorResult();
   }
 
@@ -2528,12 +2528,12 @@ AttachDecision GetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
 
   // We are not guarding against DOM proxies here, because there is no other
   // specialized DOM IC we could attach.
-  // We could call maybeEmitIdGuard here and then emit CallProxyGetResult,
+  // We could call maybeEmitIdGuard here and then emit ProxyGetResult,
   // but for GetElem we prefer to attach a stub that can handle any Value
   // so we don't attach a new stub for every id.
   MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
   MOZ_ASSERT(!isSuper());
-  writer.callProxyGetByValueResult(objId, getElemKeyValueId());
+  writer.proxyGetByValueResult(objId, getElemKeyValueId());
   writer.typeMonitorResult();
 
   trackAttached("ProxyElement");
