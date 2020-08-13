@@ -314,6 +314,8 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">앱에서 링크 열기</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">외부 다운로드 관리자</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">부가 기능</string>
 
