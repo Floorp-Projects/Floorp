@@ -39,9 +39,13 @@ import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.toolbar.TabCounter.Companion.INFINITE_CHAR_PADDING_BOTTOM
+import org.mozilla.fenix.components.toolbar.TabCounter.Companion.MAX_VISIBLE_TABS
+import org.mozilla.fenix.components.toolbar.TabCounter.Companion.SO_MANY_TABS_OPEN
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.MultiselectModeChange
+import java.text.NumberFormat
 
 /**
  * View that contains and configures the BrowserAwesomeBar
@@ -372,7 +376,7 @@ class TabTrayView(
         }
         view.tab_tray_overflow.isVisible = !hasNoTabs
 
-        counter_text.text = "${browserState.normalTabs.size}"
+        counter_text.text = updateTabCounter(browserState.normalTabs.size)
         updateTabCounterContentDescription(browserState.normalTabs.size)
 
         adjustNewTabButtonsForNormalMode()
@@ -455,6 +459,14 @@ class TabTrayView(
         } else {
             view.context?.getString(R.string.open_tab_tray_plural, count.toString())
         }
+    }
+
+    private fun updateTabCounter(count: Int): String {
+        if (count > MAX_VISIBLE_TABS) {
+            counter_text.setPadding(0, 0, 0, INFINITE_CHAR_PADDING_BOTTOM)
+            return SO_MANY_TABS_OPEN
+        }
+        return NumberFormat.getInstance().format(count.toLong())
     }
 
     fun setTopOffset(landscape: Boolean) {
