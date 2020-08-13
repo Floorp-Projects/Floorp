@@ -405,7 +405,7 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
 
     all_mozbuild_results = []
 
-    for path in gn_config_files:
+    for path in sorted(gn_config_files):
         with open(path, 'r') as fh:
             gn_config = json.load(fh)
             mozbuild_attrs = process_gn_config(gn_config, srcdir, config,
@@ -423,7 +423,7 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
         for d, build_data in dirs.items():
             configs_by_dir[d].append((mozbuild_args, build_data))
 
-    for relsrcdir, configs in configs_by_dir.items():
+    for relsrcdir, configs in sorted(configs_by_dir.items()):
         target_srcdir = mozpath.join(config.topsrcdir, relsrcdir)
         mkdir(target_srcdir)
 
@@ -447,12 +447,13 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
                           ('MOZ_DEBUG', 'OS_TARGET', 'CPU_ARCH', 'HOST_CPU_ARCH')):
                 conditions = set()
                 for args in all_args:
-                    cond = tuple(((k, args.get(k)) for k in attrs))
+                    cond = tuple(((k, args.get(k) or '') for k in attrs))
                     conditions.add(cond)
 
-                for cond in conditions:
-                    common_attrs = find_common_attrs([attrs for args, attrs in configs if
-                                                      all(args.get(k) == v for k, v in cond)])
+                for cond in sorted(conditions):
+                    common_attrs = find_common_attrs([
+                        attrs for args, attrs in configs if
+                        all((args.get(k) or '') == v for k, v in cond)])
                     if any(common_attrs.values()):
                         if cond:
                             mb.write_condition(dict(cond))
@@ -478,13 +479,13 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
 
             conditions = set()
             for args in dirs_by_config.keys():
-                cond = tuple(((k, dict(args).get(k)) for k in attrs))
+                cond = tuple(((k, dict(args).get(k) or '') for k in attrs))
                 conditions.add(cond)
 
             for cond in sorted(conditions):
                 common_dirs = None
                 for args, dir_set in dirs_by_config.items():
-                    if all(dict(args).get(k) == v for k, v in cond):
+                    if all((dict(args).get(k) or '') == v for k, v in cond):
                         if common_dirs is None:
                             common_dirs = deepcopy(dir_set)
                         else:
