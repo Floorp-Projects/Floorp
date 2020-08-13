@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=619644
 const expectedFinalDoc =
 "<head><\/head><body><p>Original content<\/p>\n<script>\n    window.opener.postMessage(\"\", \"*\");\n    confirm(\"Message\");\n    document.write(\"Extra content\");\n    window.opener.postMessage(document.documentElement.innerHTML, \"*\");\n<\/script>Extra content<\/body>";
 
-if (!tabModalPromptEnabled) {
+if (!isTabModal) {
   todo(false, "Test disabled when tab modal prompts are not enabled.");
 } else {
   inittest();
@@ -36,8 +36,6 @@ function inittest() {
 }
 
 function runtest(e) {
-  modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
-
   window.removeEventListener("message", runtest);
   window.addEventListener("message", checktest);
 
