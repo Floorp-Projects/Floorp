@@ -7349,9 +7349,8 @@ bool CacheIRCompiler::emitCallNativeGetElementResult(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitCallProxyHasPropResult(ObjOperandId objId,
-                                                 ValOperandId idId,
-                                                 bool hasOwn) {
+bool CacheIRCompiler::emitProxyHasPropResult(ObjOperandId objId,
+                                             ValOperandId idId, bool hasOwn) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoCallVM callvm(masm, this, allocator);
 

@@ -9242,6 +9242,25 @@ class MProxyGetByValue : public MBinaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
+class MProxyHasProp : public MBinaryInstruction,
+                      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  bool hasOwn_;
+
+  MProxyHasProp(MDefinition* proxy, MDefinition* idVal, bool hasOwn)
+      : MBinaryInstruction(classOpcode, proxy, idVal), hasOwn_(hasOwn) {
+    setResultType(MIRType::Boolean);
+  }
+
+ public:
+  INSTRUCTION_HEADER(ProxyHasProp)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy), (1, idVal))
+
+  bool hasOwn() const { return hasOwn_; }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.
 class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
                                           public SingleObjectPolicy::Data {
