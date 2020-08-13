@@ -473,6 +473,16 @@ class Query {
       return;
     }
 
+    // When in search mode and the search string is empty, don't allow heuristic
+    // results since they don't make sense.
+    if (
+      result.heuristic &&
+      !this.context.trimmedSearchString &&
+      this.context.searchMode
+    ) {
+      return;
+    }
+
     // Check if the result source should be filtered out. Pay attention to the
     // heuristic result though, that is supposed to be added regardless.
     if (

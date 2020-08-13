@@ -1095,10 +1095,8 @@ class UrlbarInput {
     };
 
     if (this.searchMode) {
+      options.searchMode = this.searchMode;
       options.sources = [this.searchMode.source];
-      if (this.searchMode.engineName) {
-        options.engineName = this.searchMode.engineName;
-      }
     }
 
     // TODO (Bug 1522902): This promise is necessary for tests, because some
@@ -2383,18 +2381,14 @@ class UrlbarInput {
   _on_input(event) {
     // We enter search mode when space is typed if there is a selected keyword
     // offer result.
-    let searchModeParams;
+    let enteredSearchMode = false;
     if (event.data == " ") {
       let result = this.view.selectedResult;
-      searchModeParams = this._searchModeForResult(result);
-      if (
-        searchModeParams &&
-        this.value.trim() == result.payload.keyword.trim()
-      ) {
-        this.setSearchMode(searchModeParams);
+      let searchMode = this._searchModeForResult(result);
+      if (searchMode && this.value.trim() == result.payload.keyword.trim()) {
+        this.setSearchMode(searchMode);
         this.value = "";
-      } else {
-        searchModeParams = null;
+        enteredSearchMode = true;
       }
     }
 
@@ -2431,18 +2425,16 @@ class UrlbarInput {
     }
 
     let canShowTopSites =
-      !this.isPrivate &&
-      UrlbarPrefs.get("suggest.topsites") &&
-      !this.searchMode;
-    if (
-      !this.view.isOpen ||
-      (!value && !canShowTopSites && !searchModeParams)
-    ) {
+      !this.isPrivate && UrlbarPrefs.get("suggest.topsites");
+
+    if (!this.view.isOpen) {
       this.view.clear();
-    }
-    if (!value && !canShowTopSites && !searchModeParams) {
-      this.view.close();
-      return;
+    } else if (!value && !canShowTopSites && !enteredSearchMode) {
+      this.view.clear();
+      if (!this.searchMode) {
+        this.view.close();
+        return;
+      }
     }
 
     this.view.removeAccessibleFocus();

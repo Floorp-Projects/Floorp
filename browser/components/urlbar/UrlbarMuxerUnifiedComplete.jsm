@@ -85,15 +85,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // context.results.find(), filter(), sort(), etc., modify one or both passes
     // instead.
 
-    // Capture information about the heuristic result to dedupe results from the
-    // heuristic more quickly.
+    // Determine the highest-ranking heuristic result.
     let topHeuristicRank = Infinity;
     for (let result of context.allHeuristicResults) {
-      // Determine the highest-ranking heuristic result.
-      if (!result.heuristic) {
-        continue;
-      }
-
       // + 2 to reserve the highest-priority slots for test and extension
       // providers.
       let heuristicRank = heuristicOrder.indexOf(result.providerName) + 2;
