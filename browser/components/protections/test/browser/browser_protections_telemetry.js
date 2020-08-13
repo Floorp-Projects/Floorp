@@ -217,11 +217,7 @@ add_task(async function checkTelemetryClickEvents() {
 
   // Add breached logins.
   AboutProtectionsParent.setTestOverride(
-    mockGetMonitorData({
-      potentiallyBreachedLogins: 4,
-      numBreaches: 5,
-      numBreachesResolved: 0,
-    })
+    mockGetLoginDataWithSyncedDevices(false, 4)
   );
   await reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {

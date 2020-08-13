@@ -9,11 +9,6 @@ const { AboutProtectionsParent } = ChromeUtils.import(
 );
 const ABOUT_LOGINS_URL = "about:logins";
 
-let mockMonitorData = {
-  numBreaches: 2,
-  numBreachesResolved: 0,
-};
-
 add_task(async function testNoLoginsLockwiseCardUI() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
@@ -123,6 +118,10 @@ add_task(async function testLockwiseCardUIWithLogins() {
     }, "Lockwise card for user with logins is visible");
 
     const lockwiseTitle = content.document.querySelector("#lockwise-title");
+    await ContentTaskUtils.waitForCondition(
+      () => lockwiseTitle.textContent == "Password Management",
+      "Waiting for Fluent to provide the title translation"
+    );
     is(
       lockwiseTitle.textContent,
       "Password Management",
@@ -231,8 +230,9 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   Services.logins.addLogin(TEST_LOGIN1);
 
   info("Mock monitor data with a breached login to test the Lockwise UI");
-  mockMonitorData.potentiallyBreachedLogins = 1;
-  AboutProtectionsParent.setTestOverride(mockGetMonitorData(mockMonitorData));
+  AboutProtectionsParent.setTestOverride(
+    mockGetLoginDataWithSyncedDevices(false, 1)
+  );
   await reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
@@ -254,8 +254,9 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   info(
     "Mock monitor data with more than one breached logins to test the Lockwise UI"
   );
-  mockMonitorData.potentiallyBreachedLogins = 2;
-  AboutProtectionsParent.setTestOverride(mockGetMonitorData(mockMonitorData));
+  AboutProtectionsParent.setTestOverride(
+    mockGetLoginDataWithSyncedDevices(false, 2)
+  );
   await reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseScannedText = content.document.querySelector(

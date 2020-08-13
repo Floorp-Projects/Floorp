@@ -13,7 +13,6 @@ const monitorErrorData = {
 };
 
 const mockMonitorData = {
-  potentiallyBreachedLogins: 8,
   numBreaches: 11,
   numBreachesResolved: 0,
 };
