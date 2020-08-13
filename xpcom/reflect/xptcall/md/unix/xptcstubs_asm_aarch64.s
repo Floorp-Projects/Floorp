@@ -48,4 +48,4 @@ SharedStub:
 
             .size SharedStub, . - SharedStub
 
-            .section .note.GNU-stack, "", @progbits ; .previous
+            .section .note.GNU-stack, "", @progbits
