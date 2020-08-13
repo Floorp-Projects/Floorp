@@ -2480,7 +2480,10 @@ bool nsPrintJob::DonePrintingPages(nsPrintObject* aPO, nsresult aResult) {
     }
   }
 
-  printData->mPrintDC->UnregisterPageDoneCallback();
+  if (XRE_IsParentProcess() && printData->mPrintDC &&
+      !printData->mPrintDC->IsSyncPagePrinting()) {
+    printData->mPrintDC->UnregisterPageDoneCallback();
+  }
 
   if (NS_SUCCEEDED(aResult)) {
     FirePrintCompletionEvent();
