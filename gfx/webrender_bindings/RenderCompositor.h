@@ -132,8 +132,7 @@ class RenderCompositor {
   // result. It could happen when WebRender renders to multiple overlay layers.
   virtual bool MaybeReadback(const gfx::IntSize& aReadbackSize,
                              const wr::ImageFormat& aReadbackFormat,
-                             const Range<uint8_t>& aReadbackBuffer,
-                             bool* aNeedsYFlip) {
+                             const Range<uint8_t>& aReadbackBuffer) {
     return false;
   }
 

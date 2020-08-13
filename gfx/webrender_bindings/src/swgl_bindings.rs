@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use bindings::{GeckoProfilerThreadListener, WrCompositor};
-use gleam::{gl, gl::Gl, gl::GLenum};
+use gleam::{gl, gl::Gl};
 use std::cell::Cell;
 use std::collections::hash_map::HashMap;
 use std::os::raw::c_void;
@@ -295,7 +295,6 @@ impl DrawTileHelper {
         surface: &SwSurface,
         tile: &SwTile,
         flip_y: bool,
-        filter: GLenum,
     ) {
         let dx = dest.origin.x as f32 / viewport.size.width as f32;
         let dy = dest.origin.y as f32 / viewport.size.height as f32;
@@ -324,8 +323,6 @@ impl DrawTileHelper {
             .uniform_matrix_3fv(self.tex_matrix_loc, false, &[sw, 0.0, 0.0, 0.0, sh, 0.0, sx, sy, 1.0]);
 
         self.gl.bind_texture(gl::TEXTURE_2D, tile.tex_id);
-        self.gl.tex_parameter_i(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, filter as gl::GLint);
-        self.gl.tex_parameter_i(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, filter as gl::GLint);
         self.gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
     }
 
@@ -346,7 +343,6 @@ struct SwCompositeJob {
     dst_rect: DeviceIntRect,
     opaque: bool,
     flip_y: bool,
-    filter: GLenum,
 }
 
 /// The SwComposite thread processes a queue of composite jobs, also signaling
@@ -398,7 +394,6 @@ impl SwCompositeThread {
                         job.dst_rect.size.height,
                         job.opaque,
                         job.flip_y,
-                        job.filter,
                     );
                     // Release locked resources before modifying job count
                     drop(job);
@@ -425,7 +420,6 @@ impl SwCompositeThread {
         dst_rect: DeviceIntRect,
         opaque: bool,
         flip_y: bool,
-        filter: GLenum,
     ) {
         // There are still tile updates happening, so send the job to the SwComposite thread.
         *self.job_count.lock().unwrap() += 1;
@@ -437,7 +431,6 @@ impl SwCompositeThread {
                 dst_rect,
                 opaque,
                 flip_y,
-                filter,
             })
             .expect("Failing queuing SwComposite job");
     }
@@ -456,7 +449,7 @@ pub struct SwCompositor {
     native_gl: Option<Rc<dyn gl::Gl>>,
     compositor: Option<WrCompositor>,
     surfaces: HashMap<NativeSurfaceId, SwSurface>,
-    frame_surfaces: Vec<(NativeSurfaceId, CompositorSurfaceTransform, DeviceIntRect, GLenum)>,
+    frame_surfaces: Vec<(NativeSurfaceId, CompositorSurfaceTransform, DeviceIntRect)>,
     cur_tile: NativeTileId,
     draw_tile: Option<DrawTileHelper>,
     /// The maximum tile size required for any of the allocated surfaces.
@@ -549,7 +542,7 @@ impl SwCompositor {
     /// in composition.
     fn get_overlaps(&self, overlap_rect: &DeviceIntRect) -> u32 {
         let mut overlaps = 0;
-        for &(ref id, ref transform, ref clip_rect, _) in &self.frame_surfaces {
+        for &(ref id, ref transform, ref clip_rect) in &self.frame_surfaces {
             // If the surface's clip rect doesn't overlap the tile's rect,
             // then there is no need to check any tiles within the surface.
             if !overlap_rect.intersects(clip_rect) {
@@ -575,14 +568,13 @@ impl SwCompositor {
         surface: &SwSurface,
         transform: &CompositorSurfaceTransform,
         clip_rect: &DeviceIntRect,
-        filter: GLenum,
         tile: &SwTile,
     ) {
         if let Some(ref composite_thread) = self.composite_thread {
             if let Some((src_rect, dst_rect, flip_y)) = tile.composite_rects(surface, transform, clip_rect) {
                 if let Some(texture) = self.gl.lock_texture(tile.color_id) {
                     let framebuffer = self.locked_framebuffer.clone().unwrap();
-                    composite_thread.queue_composite(texture, framebuffer, src_rect, dst_rect, surface.is_opaque, flip_y, filter);
+                    composite_thread.queue_composite(texture, framebuffer, src_rect, dst_rect, surface.is_opaque, flip_y);
                 }
             }
         }
@@ -592,13 +584,7 @@ impl SwCompositor {
     /// within the surface being queued for composition this frame. If the tile is immediately
     /// ready to composite, then queue that now. Otherwise, set its draw order index for later
     /// composition.
-    fn init_composites(
-        &mut self,
-        id: &NativeSurfaceId,
-        transform: &CompositorSurfaceTransform,
-        clip_rect: &DeviceIntRect,
-        filter: GLenum,
-    ) {
+    fn init_composites(&mut self, id: &NativeSurfaceId, transform: &CompositorSurfaceTransform, clip_rect: &DeviceIntRect) {
         if self.composite_thread.is_none() {
             return;
         }
@@ -614,7 +600,7 @@ impl SwCompositor {
                     }
                     if overlaps == 0 {
                         // Not dependent on any tiles, so go ahead and composite now.
-                        self.queue_composite(surface, transform, clip_rect, filter, tile);
+                        self.queue_composite(surface, transform, clip_rect, tile);
                     } else {
                         // Has a dependency on some invalid tiles, so need to defer composition.
                         tile.overlaps.set(overlaps);
@@ -635,9 +621,9 @@ impl SwCompositor {
         let mut frame_surfaces = self
             .frame_surfaces
             .iter()
-            .skip_while(|&(ref id, _, _, _)| *id != tile_id.surface_id);
+            .skip_while(|&(ref id, _, _)| *id != tile_id.surface_id);
         let overlap_rect = match frame_surfaces.next() {
-            Some(&(_, ref transform, ref clip_rect, filter)) => {
+            Some(&(_, ref transform, ref clip_rect)) => {
                 // Remove invalid tile's update dependency.
                 if tile.invalid.get() {
                     tile.overlaps.set(tile.overlaps.get() - 1);
@@ -647,7 +633,7 @@ impl SwCompositor {
                     return;
                 }
                 // Otherwise, the tile's dependencies are all resolved, so composite it.
-                self.queue_composite(surface, transform, clip_rect, filter, tile);
+                self.queue_composite(surface, transform, clip_rect, tile);
                 // Finally, get the tile's overlap rect used for tracking dependencies
                 match tile.overlap_rect(surface, transform, clip_rect) {
                     Some(overlap_rect) => overlap_rect,
@@ -663,7 +649,7 @@ impl SwCompositor {
         let mut flushed_rects = vec![overlap_rect];
 
         // Check surfaces following the update in the frame list and see if they would overlap it.
-        for &(ref id, ref transform, ref clip_rect, filter) in frame_surfaces {
+        for &(ref id, ref transform, ref clip_rect) in frame_surfaces {
             // If the clip rect doesn't overlap the conservative bounds, we can skip the whole surface.
             if !flushed_bounds.intersects(clip_rect) {
                 continue;
@@ -696,7 +682,7 @@ impl SwCompositor {
                         // If the count hit zero, it is ready to composite.
                         tile.overlaps.set(overlaps);
                         if overlaps == 0 {
-                            self.queue_composite(surface, transform, clip_rect, filter, tile);
+                            self.queue_composite(surface, transform, clip_rect, tile);
                             // Record that the tile got flushed to update any downwind dependencies.
                             flushed_bounds = flushed_bounds.union(&overlap_rect);
                             flushed_rects.push(overlap_rect);
@@ -1007,7 +993,7 @@ impl Compositor for SwCompositor {
                     let viewport = dirty.translate(info.origin.to_vector());
                     let draw_tile = self.draw_tile.as_ref().unwrap();
                     draw_tile.enable(&viewport);
-                    draw_tile.draw(&viewport, &viewport, &dirty, &surface, &tile, false, gl::LINEAR);
+                    draw_tile.draw(&viewport, &viewport, &dirty, &surface, &tile, false);
                     draw_tile.disable();
 
                     native_gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, 0);
@@ -1043,19 +1029,10 @@ impl Compositor for SwCompositor {
             compositor.add_surface(id, transform, clip_rect, image_rendering);
         }
 
-        let filter = match image_rendering {
-            ImageRendering::Pixelated => {
-                gl::NEAREST
-            }
-            ImageRendering::Auto | ImageRendering::CrispEdges => {
-                gl::LINEAR
-            }
-        };
-
         // Compute overlap dependencies and issue any initial composite jobs for the SwComposite thread.
-        self.init_composites(&id, &transform, &clip_rect, filter);
+        self.init_composites(&id, &transform, &clip_rect);
 
-        self.frame_surfaces.push((id, transform, clip_rect, filter));
+        self.frame_surfaces.push((id, transform, clip_rect));
     }
 
     fn end_frame(&mut self) {
@@ -1068,7 +1045,7 @@ impl Compositor for SwCompositor {
             draw_tile.enable(&viewport);
             let mut blend = false;
             native_gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
-            for &(ref id, ref transform, ref clip_rect, filter) in &self.frame_surfaces {
+            for &(ref id, ref transform, ref clip_rect) in &self.frame_surfaces {
                 if let Some(surface) = self.surfaces.get(id) {
                     if surface.is_opaque {
                         if blend {
@@ -1081,7 +1058,7 @@ impl Compositor for SwCompositor {
                     }
                     for tile in &surface.tiles {
                         if let Some((src_rect, dst_rect, flip_y)) = tile.composite_rects(surface, transform, clip_rect) {
-                            draw_tile.draw(&viewport, &dst_rect, &src_rect, surface, tile, flip_y, filter);
+                            draw_tile.draw(&viewport, &dst_rect, &src_rect, surface, tile, flip_y);
                         }
                     }
                 }
