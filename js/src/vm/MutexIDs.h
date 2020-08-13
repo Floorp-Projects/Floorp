@@ -28,9 +28,9 @@
                                       \
   _(StoreBuffer, 275)                 \
                                       \
-  _(GlobalHelperThreadState, 300)     \
+  _(GCLock, 300)                      \
                                       \
-  _(GCLock, 400)                      \
+  _(GlobalHelperThreadState, 400)     \
                                       \
   _(SharedImmutableStringsCache, 500) \
   _(FutexThread, 500)                 \
