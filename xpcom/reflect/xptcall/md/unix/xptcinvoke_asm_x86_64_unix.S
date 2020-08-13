@@ -113,5 +113,5 @@ SYM(NS_InvokeByIndex):
 
 #ifndef XP_DARWIN
 // Magic indicating no need for an executable stack
-.section .note.GNU-stack, "", @progbits ; .previous
+.section .note.GNU-stack, "", @progbits
 #endif
