@@ -92,41 +92,8 @@ void Omnijar::InitOne(nsIFile* aPath, Type aType) {
   }
 
   RefPtr<nsZipArchive> zipReader = new nsZipArchive();
-  auto* cache = scache::StartupCache::GetSingleton();
-  const uint8_t* centralBuf = nullptr;
-  uint32_t centralBufLength = 0;
-  nsCString startupCacheKey =
-      nsPrintfCString("::%s:OmnijarCentral", sCachePrefixes[aType]);
-  if (cache) {
-    nsresult rv = cache->GetBuffer(startupCacheKey.get(),
-                                   reinterpret_cast<const char**>(&centralBuf),
-                                   &centralBufLength);
-    if (NS_FAILED(rv)) {
-      centralBuf = nullptr;
-      centralBufLength = 0;
-    }
-  }
-
-  if (!centralBuf) {
-    if (NS_FAILED(zipReader->OpenArchive(file))) {
-      return;
-    }
-    if (cache) {
-      size_t bufSize;
-      // Annoyingly, nsZipArchive and the startupcache use different types to
-      // represent bytes (uint8_t vs char), so we have to do a little dance to
-      // convert the UniquePtr over.
-      UniquePtr<char[]> centralBuf(reinterpret_cast<char*>(
-          zipReader->CopyCentralDirectoryBuffer(&bufSize).release()));
-      if (centralBuf) {
-        cache->PutBuffer(startupCacheKey.get(), std::move(centralBuf), bufSize);
-      }
-    }
-  } else {
-    if (NS_FAILED(zipReader->LazyOpenArchive(
-            file, Span(centralBuf, centralBufLength)))) {
-      return;
-    }
+  if (NS_FAILED(zipReader->OpenArchive(file))) {
+    return;
   }
 
   RefPtr<nsZipArchive> outerReader;
