@@ -6988,6 +6988,16 @@ ContentParent::RecvSessionHistoryEntryScrollRestorationIsManual(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
+    const uint64_t& aSessionHistoryEntryID, const uint32_t& aCacheKey) {
+  SessionHistoryEntry* entry =
+      SessionHistoryEntry::GetByInfoId(aSessionHistoryEntryID);
+  if (entry) {
+    entry->SetCacheKey(aCacheKey);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
     const MaybeDiscarded<WindowContext>& aContext,
     WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch) {
