@@ -341,6 +341,19 @@ bool WarpCacheIRTranspiler::emitProxyGetByValueResult(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitProxyHasPropResult(ObjOperandId objId,
+                                                   ValOperandId idId,
+                                                   bool hasOwn) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* id = getOperand(idId);
+
+  auto* ins = MProxyHasProp::New(alloc(), obj, id, hasOwn);
+  addEffectful(ins);
+
+  pushResult(ins);
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
