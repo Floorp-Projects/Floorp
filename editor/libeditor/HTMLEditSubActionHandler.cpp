@@ -3436,8 +3436,58 @@ bool HTMLEditor::AutoBlockElementsJoiner::PrepareToDeleteNonCollapsedRanges(
   if (NS_WARN_IF(!mLeftContent) || NS_WARN_IF(!mRightContent)) {
     return false;
   }
+  if (mLeftContent == mRightContent) {
+    mMode = Mode::DeleteContentInRanges;
+    return true;
+  }
   mMode = Mode::DeleteNonCollapsedRanges;
   return true;
+}
+
+EditActionResult HTMLEditor::AutoBlockElementsJoiner::DeleteContentInRanges(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
+  MOZ_ASSERT(mMode == Mode::DeleteContentInRanges);
+  MOZ_ASSERT(mLeftContent);
+  MOZ_ASSERT(mLeftContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetStartContainer()
+                 ->IsInclusiveDescendantOf(mLeftContent));
+  MOZ_ASSERT(mRightContent);
+  MOZ_ASSERT(mRightContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetEndContainer()
+                 ->IsInclusiveDescendantOf(mRightContent));
+
+  // XXX This is also odd.  We do we simply use
+  //     `DeleteRangesWithTransaction()` only when **first** range is in
+  //     same block?
+  MOZ_ASSERT(mLeftContent == mRightContent);
+  {
+    AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
+                                        &aRangesToDelete.FirstRangeRef());
+    nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
+        aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+    if (rv == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING(
+          "EditorBase::DeleteRangesWithTransaction() caused destroying the "
+          "editor");
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::DeleteRangesWithTransaction() failed, but ignored");
+  }
+  nsresult rv = aHTMLEditor.DeleteUnnecessaryNodesAndCollapseSelection(
+      aDirectionAndAmount,
+      EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
+      EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::DeleteUnnecessaryNodesAndCollapseSelection() failed");
+  return EditActionHandled(rv);
 }
 
 EditActionResult
@@ -3457,35 +3507,6 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
   MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
                  ->GetEndContainer()
                  ->IsInclusiveDescendantOf(mRightContent));
-
-  // XXX This is also odd.  We do we simply use
-  //     `DeleteRangesWithTransaction()` only when **first** range is in
-  //     same block?
-  if (mLeftContent == mRightContent) {
-    {
-      AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
-                                          &aRangesToDelete.FirstRangeRef());
-      nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
-          aDirectionAndAmount, aStripWrappers, aRangesToDelete);
-      if (rv == NS_ERROR_EDITOR_DESTROYED) {
-        NS_WARNING(
-            "EditorBase::DeleteRangesWithTransaction() caused destroying "
-            "the editor");
-        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "EditorBase::DeleteRangesWithTransaction() failed, but ignored");
-    }
-    nsresult rv = aHTMLEditor.DeleteUnnecessaryNodesAndCollapseSelection(
-        aDirectionAndAmount,
-        EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
-        EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::DeleteUnnecessaryNodesAndCollapseSelection() failed");
-    return EditActionHandled(rv);
-  }
 
   // If left block and right block are adjuscent siblings and they are same
   // type of elements, we can merge them after deleting the selected contents.
