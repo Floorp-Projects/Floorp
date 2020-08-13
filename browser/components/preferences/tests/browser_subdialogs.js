@@ -121,30 +121,20 @@ async function close_subdialog_and_test_generic_end_state(
       let win = content.window;
       let subdialog = win.gSubDialog._topDialog;
       let frame = subdialog._frame;
-
-      let frameWinUnload = ContentTaskUtils.waitForEvent(
-        frame.contentWindow,
-        "unload",
-        true
-      );
-
-      let actualAcceptCount;
       info("waiting for dialogclosing");
-      info("URI " + frame.currentURI?.spec);
       let closingEvent = await ContentTaskUtils.waitForEvent(
         frame.contentWindow,
-        "dialogclosing",
-        true,
-        () => {
-          actualAcceptCount = frame.contentWindow?.arguments[0].acceptCount;
-          return true;
-        }
+        "dialogclosing"
       );
-
-      info("Waiting for subdialog unload");
-      await frameWinUnload;
-
       let contentClosingButton = closingEvent.detail.button;
+      let actualAcceptCount =
+        frame.contentWindow.arguments &&
+        frame.contentWindow.arguments[0].acceptCount;
+
+      info("waiting for about:blank load");
+      await ContentTaskUtils.waitForEvent(frame, "load", false, () => {
+        return frame.contentWindow.location.href == "about:blank";
+      });
 
       Assert.notEqual(
         win.getComputedStyle(subdialog._overlay).visibility,
@@ -155,6 +145,11 @@ async function close_subdialog_and_test_generic_end_state(
         frame.getAttribute("style"),
         "",
         "inline styles should be cleared"
+      );
+      Assert.equal(
+        frame.contentWindow.location.href.toString(),
+        "about:blank",
+        "sub-dialog should be unloaded"
       );
       Assert.equal(
         contentClosingButton,
@@ -355,7 +350,7 @@ add_task(async function window_close_on_dialog() {
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
     function() {
-      content.window.gSubDialog._topDialog._frame.contentWindow.close();
+      content.window.gSubDialog._topDialog._frame.contentWindow.window.close();
     },
     null,
     0
@@ -414,6 +409,35 @@ add_task(async function background_click_should_close_dialog() {
   );
 });
 
+add_task(async function back_navigation_on_subdialog_should_close_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+
+  info("canceling the dialog");
+  await close_subdialog_and_test_generic_end_state(
+    tab.linkedBrowser,
+    function() {
+      content.window.gSubDialog._topDialog._frame.goBack();
+    },
+    null,
+    undefined
+  );
+});
+
+add_task(async function back_navigation_on_browser_tab_should_close_dialog() {
+  await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
+
+  info("canceling the dialog");
+  await close_subdialog_and_test_generic_end_state(
+    tab.linkedBrowser,
+    function() {
+      tab.linkedBrowser.goBack();
+    },
+    null,
+    undefined,
+    { runClosingFnOutsideOfContentTask: true }
+  );
+});
+
 add_task(async function escape_should_close_dialog() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
@@ -449,7 +473,7 @@ add_task(async function correct_width_and_height_should_be_used_for_dialog() {
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
     function() {
-      content.window.gSubDialog._topDialog._frame.contentWindow.close();
+      content.window.gSubDialog._topDialog._frame.contentWindow.window.close();
     },
     null,
     0
