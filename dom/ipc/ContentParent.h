@@ -1338,13 +1338,7 @@ class ContentParent final
       const int32_t& aLength, const nsID& aChangeID);
 
   mozilla::ipc::IPCResult RecvSynchronizeLayoutHistoryState(
-      const uint64_t& aSessionHistoryEntryID, nsILayoutHistoryState* aState);
-
-  mozilla::ipc::IPCResult RecvSessionHistoryEntryTitle(
-      const uint64_t& aSessionHistoryEntryID, const nsString& aTitle);
-
-  mozilla::ipc::IPCResult RecvSessionHistoryEntryScrollRestorationIsManual(
-      const uint64_t& aSessionHistoryEntryID, const bool& aIsManual);
+      uint64_t aSessionHistoryEntryID, nsILayoutHistoryState* aState);
 
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
