@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Clear disabled/readonly datetime inputs</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<p>Disabled inputs should be able to be cleared just as they can be set with real values</p>
+<input type="date" id="date1" value="2020-08-11" disabled>
+<input type="date" id="date2" value="2020-08-11" readonly>
+<input type="time" id="time1" value="07:01" disabled>
+<input type="time" id="time2" value="07:01" readonly>
+<script>
+/* global date1, date2, time1, time2 */
+function querySelectorAllShadow(parent, selector) {
+  const shadowRoot = SpecialPowers.wrap(parent).openOrClosedShadowRoot;
+  return shadowRoot.querySelectorAll(selector);
+}
+date1.value = date2.value = "";
+time1.value = time2.value = "";
+for (const date of [date1, date2]) {
+  const fields = [...querySelectorAllShadow(date, ".datetime-edit-field")];
+  is(fields.length, 3, "Three numeric fields are expected");
+  for (const field of fields) {
+    is(field.getAttribute("value"), "", "All fields should be cleared");
+  }
+}
+for (const time of [time1, time2]) {
+  const fields = [...querySelectorAllShadow(time, ".datetime-edit-field")];
+  ok(fields.length >= 2, "At least two numeric fields are expected");
+  for (const field of fields) {
+    is(field.getAttribute("value"), "", "All fields should be cleared");
+  }
+}
+</script>
