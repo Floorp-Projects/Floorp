@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["Element"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -1158,6 +1159,58 @@ var PlacesUIUtils = {
     // top.XULBrowserWindow has been nullified already.
     if (win.top.XULBrowserWindow) {
       win.top.XULBrowserWindow.setOverLink(url);
+    }
+  },
+
+  /**
+   * Uncollapses PersonalToolbar if its collapsed status is not
+   * persisted, and user customized it or changed default bookmarks.
+   *
+   * If the user does not have a persisted value for the toolbar's
+   * "collapsed" attribute, try to determine whether it's customized.
+   *
+   * @param {Boolean} aForceVisible Set to true to ignore if the user had
+   * previously collapsed the toolbar manually.
+   */
+  NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE: 3,
+  maybeToggleBookmarkToolbarVisibility(aForceVisible = false) {
+    const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
+    let xulStore = Services.xulStore;
+
+    if (
+      aForceVisible ||
+      !xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed")
+    ) {
+      // We consider the toolbar customized if it has more than NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+      // children, or if it has a persisted currentset value.
+      let toolbarIsCustomized = xulStore.hasValue(
+        BROWSER_DOCURL,
+        "PersonalToolbar",
+        "currentset"
+      );
+
+      if (
+        aForceVisible ||
+        toolbarIsCustomized ||
+        PlacesUtils.getToolbarFolderCount(PlacesUtils.bookmarks.toolbarGuid) >
+          this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+      ) {
+        Services.obs.notifyObservers(
+          null,
+          "browser-set-toolbar-visibility",
+          JSON.stringify([CustomizableUI.AREA_BOOKMARKS, "true"])
+        );
+      }
+    }
+  },
+
+  maybeToggleBookmarkToolbarVisibilityAfterMigration() {
+    if (
+      Services.prefs.getBoolPref(
+        "browser.migrate.showBookmarksToolbarAfterMigration"
+      )
+    ) {
+      this.maybeToggleBookmarkToolbarVisibility(true);
     }
   },
 };
