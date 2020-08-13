@@ -150,7 +150,8 @@ var UrlbarTestUtils = {
    * @returns {boolean} True if the buttons are visible.
    */
   getOneOffSearchButtonsVisible(win) {
-    return this.getOneOffSearchButtons(win).style.display != "none";
+    let buttons = this.getOneOffSearchButtons(win);
+    return buttons.style.display != "none" && !buttons.container.hidden;
   },
 
   /**
@@ -465,24 +466,45 @@ var UrlbarTestUtils = {
   },
 
   /**
-   * Enters search mode by clicking the first one-off.
+   * Enters search mode by clicking a one-off.
    * @param {object} window
+   * @param {object} searchMode
+   *   If given, the one-off matching this search mode will be clicked; it
+   *   should be a full search mode object as described in
+   *   UrlbarInput.setSearchMode.  If not given, the first one-off is clicked.
    * @note Can only be used if UrlbarTestUtils has been initialized with init().
    */
-  async enterSearchMode(window) {
+  async enterSearchMode(window, searchMode = null) {
     // Ensure any pending query is complete.
     await this.promiseSearchComplete(window);
-    // Ensure oneoffbuttons
-    let oneOffs = this.getOneOffSearchButtons(window).getSelectableButtons(
-      true
+
+    // Ensure the the one-offs are finished rebuilding and visible.
+    let oneOffs = this.getOneOffSearchButtons(window);
+    await TestUtils.waitForCondition(
+      () => !oneOffs._rebuilding,
+      "Waiting for one-offs to finish rebuilding"
     );
-    this.EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
+    this.Assert.equal(
+      UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+      true,
+      "One-offs are visible"
+    );
+
+    let buttons = oneOffs.getSelectableButtons(true);
+    searchMode = searchMode || {
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engineName: buttons[0].engine.name,
+    };
+    let oneOff = buttons.find(o =>
+      searchMode.engineName
+        ? o.engine.name == searchMode.engineName
+        : o.source == searchMode.source
+    );
+    this.Assert.ok(oneOff, "Found one-off button for search mode");
+    this.EventUtils.synthesizeMouseAtCenter(oneOff, {}, window);
     await this.promiseSearchComplete(window);
     this.Assert.ok(this.isPopupOpen(window), "Urlbar view is still open.");
-    this.assertSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-      engineName: oneOffs[0].engine.name,
-    });
+    this.assertSearchMode(window, searchMode);
   },
 
   /**
@@ -524,10 +546,10 @@ var UrlbarTestUtils = {
       urlbar.selectionStart = urlbar.selectionEnd = 0;
       if (waitForSearch) {
         let searchPromise = this.promiseSearchComplete(window);
-        this.EventUtils.synthesizeKey("KEY_Backspace");
+        this.EventUtils.synthesizeKey("KEY_Backspace", {}, window);
         await searchPromise;
       } else {
-        this.EventUtils.synthesizeKey("KEY_Backspace");
+        this.EventUtils.synthesizeKey("KEY_Backspace", {}, window);
       }
       this.Assert.equal(
         urlbar.value,
@@ -539,16 +561,20 @@ var UrlbarTestUtils = {
       // We need to hover the indicator to make the close button clickable in the
       // test.
       let indicator = urlbar.querySelector("#urlbar-search-mode-indicator");
-      this.EventUtils.synthesizeMouseAtCenter(indicator, { type: "mouseover" });
+      this.EventUtils.synthesizeMouseAtCenter(
+        indicator,
+        { type: "mouseover" },
+        window
+      );
       let closeButton = urlbar.querySelector(
         "#urlbar-search-mode-indicator-close"
       );
       if (waitForSearch) {
         let searchPromise = this.promiseSearchComplete(window);
-        this.EventUtils.synthesizeMouseAtCenter(closeButton, {});
+        this.EventUtils.synthesizeMouseAtCenter(closeButton, {}, window);
         await searchPromise;
       } else {
-        this.EventUtils.synthesizeMouseAtCenter(closeButton, {});
+        this.EventUtils.synthesizeMouseAtCenter(closeButton, {}, window);
       }
       this.assertSearchMode(window, null);
     }

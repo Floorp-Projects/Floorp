@@ -69,6 +69,11 @@
   white-space: nowrap;
 }
 
+/* Vertically center the one-offs when no results are present. */
+.urlbarView[noresults] > .urlbarView-body-outer > .urlbarView-body-inner > .urlbarView-results {
+  padding-block: 0;
+}
+
 .urlbarView-row {
   fill: currentColor;
   fill-opacity: .6;
@@ -462,6 +467,10 @@
   align-items: start;
   padding-block: 16px;
   flex-wrap: wrap;
+}
+
+.urlbarView[noresults] > .search-one-offs {
+  border-top: none;
 }
 
 #urlbar .search-panel-one-offs-container {

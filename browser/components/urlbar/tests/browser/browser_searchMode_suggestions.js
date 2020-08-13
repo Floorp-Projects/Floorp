@@ -60,13 +60,9 @@ add_task(async function emptySearch() {
     });
     await UrlbarTestUtils.enterSearchMode(window);
     Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
-    // For the empty search case, we expect to get the heuristic and
-    // form history relative to the picked engine.
+    // For the empty search case, we expect to get the form history relative to
+    // the picked engine and no heuristic.
     await checkResults([
-      {
-        isSearchHistory: false,
-        suggestion: undefined,
-      },
       {
         isSearchHistory: true,
         suggestion: "hello formHistory 1",

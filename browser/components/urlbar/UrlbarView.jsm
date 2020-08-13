@@ -69,6 +69,10 @@ class UrlbarView {
     this._rows.addEventListener("overflow", this);
     this._rows.addEventListener("underflow", this);
 
+    // `noresults` is used to style the one-offs without their usual top border
+    // when no results are present.
+    this.panel.setAttribute("noresults", "true");
+
     this.controller.setView(this);
     this.controller.addQueryListener(this);
     // This is used by autoOpen to avoid flickering results when reopening
@@ -367,6 +371,7 @@ class UrlbarView {
 
   clear() {
     this._rows.textContent = "";
+    this.panel.setAttribute("noresults", "true");
   }
 
   /**
@@ -496,17 +501,29 @@ class UrlbarView {
 
   onQueryFinished(queryContext) {
     this._cancelRemoveStaleRowsTimer();
-    if (!this._queryWasCancelled) {
-      // If the query has not been canceled and returned some results, remove
-      // stale rows immediately. If no results were returned, just clear and
-      // close the view.
-      if (this._queryUpdatedResults) {
-        this._removeStaleRows();
-      } else {
-        this.clear();
-        this.close();
-      }
+    if (this._queryWasCancelled) {
+      return;
     }
+
+    // If the query finished and it returned some results, remove stale rows.
+    if (this._queryUpdatedResults) {
+      this._removeStaleRows();
+      return;
+    }
+
+    // The query didn't return any results.  Clear the view.
+    this.clear();
+
+    // If search mode isn't active, close the view.
+    if (!this.input.searchMode) {
+      this.close();
+      return;
+    }
+
+    // Search mode is active.  Make sure the view is open and the one-offs are
+    // enabled.
+    this.oneOffSearchButtons.enable(true);
+    this._openPanel();
   }
 
   onQueryResults(queryContext) {
@@ -532,14 +549,14 @@ class UrlbarView {
       // * The update 2 refresh is enabled but the first result is a search tip
       // * The update 2 refresh is disabled and the search string is empty
       // * The search string starts with an `@` or search restriction character
-      let trimmedValue = queryContext.searchString.trim();
       this.oneOffSearchButtons.enable(
         ((this.oneOffsRefresh &&
           firstResult.providerName != "UrlbarProviderSearchTips") ||
-          trimmedValue) &&
-          trimmedValue[0] != "@" &&
-          (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
-            trimmedValue.length != 1)
+          queryContext.trimmedSearchString) &&
+          queryContext.trimmedSearchString[0] != "@" &&
+          (queryContext.trimmedSearchString[0] !=
+            UrlbarTokenizer.RESTRICT.SEARCH ||
+            queryContext.trimmedSearchString.length != 1)
       );
 
       // Notify the input, so it can make adjustments based on the first result.
@@ -1273,15 +1290,22 @@ class UrlbarView {
   }
 
   _updateIndices() {
+    let visibleRowsExist = false;
     for (let i = 0; i < this._rows.children.length; i++) {
       let item = this._rows.children[i];
       item.result.rowIndex = i;
+      visibleRowsExist = visibleRowsExist || this._isElementVisible(item);
     }
     let selectableElement = this._getFirstSelectableElement();
     let uiIndex = 0;
     while (selectableElement) {
       selectableElement.elementIndex = uiIndex++;
       selectableElement = this._getNextSelectableElement(selectableElement);
+    }
+    if (visibleRowsExist) {
+      this.panel.removeAttribute("noresults");
+    } else {
+      this.panel.setAttribute("noresults", "true");
     }
   }
 

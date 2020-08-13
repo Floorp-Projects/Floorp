@@ -1,3 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Tests the one-off search buttons in the urlbar.
+ */
+
+"use strict";
+
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 let gMaxResults;
@@ -754,6 +763,80 @@ add_task(async function localOneOffReturn() {
   }
 
   window.gURLBar.setSearchMode({});
+
+  await hidePopup();
+  await SpecialPowers.popPrefEnv();
+});
+
+// With an empty search string, clicking a local one-off should result in no
+// heuristic result.
+add_task(async function localOneOffEmptySearchString() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+
+  // Null out _engines so that the one-offs rebuild themselves when the view
+  // opens.
+  oneOffSearchButtons._engines = null;
+  let rebuildPromise = BrowserTestUtils.waitForEvent(
+    oneOffSearchButtons,
+    "rebuild"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+  await rebuildPromise;
+
+  Assert.equal(
+    UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+    true,
+    "One-offs are visible"
+  );
+
+  let buttons = oneOffSearchButtons.localButtons;
+  Assert.ok(buttons.length, "Sanity check: Local one-offs exist");
+
+  for (let button of buttons) {
+    Assert.ok(button.source, "Sanity check: Button has a source");
+    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+    EventUtils.synthesizeMouseAtCenter(button, {});
+    await searchPromise;
+    Assert.ok(
+      UrlbarTestUtils.isPopupOpen(window),
+      "Urlbar view is still open."
+    );
+    Assert.equal(
+      UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+      true,
+      "One-offs are visible"
+    );
+    UrlbarTestUtils.assertSearchMode(window, {
+      source: button.source,
+    });
+
+    let resultCount = UrlbarTestUtils.getResultCount(window);
+    if (!resultCount) {
+      Assert.equal(
+        gURLBar.panel.getAttribute("noresults"),
+        "true",
+        "Panel has no results, therefore should have noresults attribute"
+      );
+      continue;
+    }
+    Assert.ok(
+      !gURLBar.panel.hasAttribute("noresults"),
+      "Panel has results, therefore should not have noresults attribute"
+    );
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+    Assert.ok(!result.heuristic, "The first result should not be heuristic");
+  }
+
+  gURLBar.setSearchMode({});
 
   await hidePopup();
   await SpecialPowers.popPrefEnv();

@@ -222,8 +222,7 @@ add_task(async function test_search_mode_engine_web() {
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: extraEngine.name,
     },
-    { id: "urlbar-placeholder-search-mode-web", args: null },
-    button => button.engine?.name == extraEngine.name
+    { id: "urlbar-placeholder-search-mode-web", args: null }
   );
 
   UrlbarUtils.WEB_ENGINE_NAMES.delete(extraEngine.name);
@@ -235,32 +234,28 @@ add_task(async function test_search_mode_engine_other() {
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: extraEngine.name,
     },
-    { id: "urlbar-placeholder-search-mode-other", args: null },
-    button => button.engine?.name == extraEngine.name
+    { id: "urlbar-placeholder-search-mode-other", args: null }
   );
 });
 
 add_task(async function test_search_mode_bookmarks() {
   await doSearchModeTest(
     { source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS },
-    { id: "urlbar-placeholder-search-mode-other", args: null },
-    button => button.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
+    { id: "urlbar-placeholder-search-mode-other", args: null }
   );
 });
 
 add_task(async function test_search_mode_tabs() {
   await doSearchModeTest(
     { source: UrlbarUtils.RESULT_SOURCE.TABS },
-    { id: "urlbar-placeholder-search-mode-other", args: null },
-    button => button.source == UrlbarUtils.RESULT_SOURCE.TABS
+    { id: "urlbar-placeholder-search-mode-other", args: null }
   );
 });
 
 add_task(async function test_search_mode_history() {
   await doSearchModeTest(
     { source: UrlbarUtils.RESULT_SOURCE.HISTORY },
-    { id: "urlbar-placeholder-search-mode-other", args: null },
-    button => button.source == UrlbarUtils.RESULT_SOURCE.HISTORY
+    { id: "urlbar-placeholder-search-mode-other", args: null }
   );
 });
 
@@ -272,15 +267,8 @@ add_task(async function test_search_mode_history() {
  *   The expected search mode object for the one-off.
  * @param {object} expectedPlaceholderL10n
  *   The expected l10n object for the one-off.
- * @param {function} findOneOff
- *   A function that will be passed to oneOffs.find().  It will be passed each
- *   one-off button, and it should return true for the one-off being tested.
  */
-async function doSearchModeTest(
-  expectedSearchMode,
-  expectedPlaceholderL10n,
-  findOneOff
-) {
+async function doSearchModeTest(expectedSearchMode, expectedPlaceholderL10n) {
   // Enable update2.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -297,23 +285,9 @@ async function doSearchModeTest(
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
   });
-  let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
-  await TestUtils.waitForCondition(
-    () => !oneOffs._rebuilding,
-    "Waiting for one-offs to finish rebuilding"
-  );
 
-  // Find the one-off being tested.
-  let buttons = oneOffs.getSelectableButtons(true);
-  let button = buttons.find(findOneOff);
-  Assert.ok(button, "Target one-off should exist");
-
-  // Click the one-off to enter search mode.
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-  EventUtils.synthesizeMouseAtCenter(button, {});
-  await searchPromise;
-  Assert.ok(UrlbarTestUtils.isPopupOpen(window), "View is still open");
-  UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
+  // Enter search mode.
+  await UrlbarTestUtils.enterSearchMode(window, expectedSearchMode);
 
   // Check the placeholder.
   Assert.deepEqual(

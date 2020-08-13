@@ -85,7 +85,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
       return false;
     }
 
-    if (queryContext.searchString.trim() == "@") {
+    if (queryContext.trimmedSearchString == "@") {
       return true;
     }
 
@@ -113,7 +113,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
       return;
     }
 
-    if (queryContext.searchString.trim() == "@") {
+    if (queryContext.trimmedSearchString == "@") {
       for (let { engine, tokenAliases } of this._engines) {
         let result = new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,

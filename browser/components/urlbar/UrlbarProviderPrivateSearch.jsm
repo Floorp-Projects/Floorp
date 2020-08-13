@@ -85,7 +85,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    let searchString = queryContext.searchString.trim();
+    let searchString = queryContext.trimmedSearchString;
     if (
       queryContext.tokens.some(
         t => t.type == UrlbarTokenizer.TYPE.RESTRICT_SEARCH
@@ -104,8 +104,8 @@ class ProviderPrivateSearch extends UrlbarProvider {
 
     let instance = this.queryInstance;
 
-    let engine = queryContext.engineName
-      ? Services.search.getEngineByName(queryContext.engineName)
+    let engine = queryContext.searchMode?.engineName
+      ? Services.search.getEngineByName(queryContext.searchMode.engineName)
       : await Services.search.getDefaultPrivate();
     let isPrivateEngine =
       separatePrivateDefault && engine != (await Services.search.getDefault());

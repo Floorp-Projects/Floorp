@@ -1130,10 +1130,9 @@ class UrlbarQueryContext {
    *   The container id where this context was generated, if any.
    * @param {array} [options.sources]
    *   A list of acceptable UrlbarUtils.RESULT_SOURCE for the context.
-   * @param {string} [options.engineName]
-   *   If sources is restricting to just SEARCH, this property can be used to
-   *   pick a specific search engine, by setting it to the name under which the
-   *   engine is registered with the search service.
+   * @param {object} [options.searchMode]
+   *   The input's current search mode.  See UrlbarInput.setSearchMode for a
+   *   description.
    * @param {boolean} [options.allowSearchSuggestions]
    *   Whether to allow search suggestions.  This is a veto, meaning that when
    *   false, suggestions will not be fetched, but when true, some other
@@ -1160,9 +1159,9 @@ class UrlbarQueryContext {
     for (let [prop, checkFn, defaultValue] of [
       ["allowSearchSuggestions", v => true, true],
       ["currentPage", v => typeof v == "string" && !!v.length],
-      ["engineName", v => typeof v == "string" && !!v.length],
       ["formHistoryName", v => typeof v == "string" && !!v.length],
       ["providers", v => Array.isArray(v) && v.length],
+      ["searchMode", v => v && typeof v == "object"],
       ["sources", v => Array.isArray(v) && v.length],
     ]) {
       if (prop in options) {
@@ -1178,6 +1177,7 @@ class UrlbarQueryContext {
     this.lastResultCount = 0;
     this.allHeuristicResults = [];
     this.pendingHeuristicProviders = new Set();
+    this.trimmedSearchString = this.searchString.trim();
     this.userContextId =
       options.userContextId ||
       Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
@@ -1208,7 +1208,7 @@ class UrlbarQueryContext {
    * serializable so they can be sent to extensions.
    */
   get fixupInfo() {
-    if (this.searchString.trim() && !this._fixupInfo) {
+    if (this.trimmedSearchString && !this._fixupInfo) {
       let flags =
         Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
         Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
@@ -1218,7 +1218,7 @@ class UrlbarQueryContext {
 
       try {
         let info = Services.uriFixup.getFixupURIInfo(
-          this.searchString.trim(),
+          this.trimmedSearchString,
           flags
         );
         this._fixupInfo = {

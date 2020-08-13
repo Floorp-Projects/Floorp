@@ -136,7 +136,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       return null;
     }
 
-    let searchUrl = queryContext.searchString.trim();
+    let searchUrl = queryContext.trimmedSearchString;
 
     if (queryContext.fixupError) {
       if (
@@ -217,8 +217,10 @@ class ProviderHeuristicFallback extends UrlbarProvider {
 
   async _defaultEngineSearchResult(queryContext) {
     let engine;
-    if (queryContext.engineName) {
-      engine = Services.search.getEngineByName(queryContext.engineName);
+    if (queryContext.searchMode?.engineName) {
+      engine = Services.search.getEngineByName(
+        queryContext.searchMode.engineName
+      );
     } else if (queryContext.isPrivate) {
       engine = Services.search.defaultPrivateEngine;
     } else {
