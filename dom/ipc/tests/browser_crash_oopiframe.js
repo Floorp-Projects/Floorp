@@ -65,15 +65,19 @@ add_task(async function() {
         );
       });
 
-      // The BrowsingContext is re-used, but the currentWindowGlobal
-      // might still be getting set up at this point. We poll to wait
-      // until its created and available.
-      await BrowserTestUtils.waitForCondition(() => {
-        return (
-          iframeBC.currentWindowGlobal &&
-          iframeBC.currentWindowGlobal.documentURI != "about:blank"
-        );
-      });
+      // The BrowsingContext is re-used, but the window global might still be
+      // getting set up at this point, so wait until it's been initialized.
+      let {
+        subject: windowGlobal,
+      } = await BrowserUtils.promiseObserved("window-global-created", wgp =>
+        wgp.documentURI.spec.startsWith("about:framecrashed")
+      );
+
+      is(
+        windowGlobal,
+        iframeBC.currentWindowGlobal,
+        "Resolved on expected window global"
+      );
 
       let newIframeURI = await SpecialPowers.spawn(iframeBC, [], async () => {
         return content.document.documentURI;
