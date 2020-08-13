@@ -134,6 +134,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">ເພີ່ມເຂົ້າໄປໃນ %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox add-on ເປັນເທັກໂນໂລຍີທີ່ທັນສະໄຫມ. Add-on ເຫລົ່ານີ້ໃຊ້ເຟມເວີກທີ່ບໍ່ສາມາດເຮັດວຽກຮ່ວມກັບ Firefox 75 &amp; ເວີຊັນກ່ອນຫນ້ານັ້ນ.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">ພວກເຮົາກຳລັງສ້າງໃຫ້ມີການຊັບພອດການເລືອກ Extensions ທີ່ແນະນຳໃນຂັ້ນພື້ນຖານ.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">ກຳລັງດາວໂຫລດ ແລະ ກວດສອບ add-on…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -174,6 +176,8 @@
     <string name="mozac_feature_addons_updater_status_error">ຂໍ້ຜິດພາດ</string>
     <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
     <string name="mozac_feature_addons_updater_dialog_title">ຂໍ້ມູນກ່ຽວກັບການອັບເດດ</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">ການພະຍາຍາມຄັ້ງຫລ້າສຸດ:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">ສະຖານະ:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
