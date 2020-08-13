@@ -28,28 +28,6 @@ const JSWINDOWACTORS = {
       moduleURI: "resource:///actors/BrowserTabParent.jsm",
     },
   },
-  GeckoViewContent: {
-    parent: {
-      moduleURI: "resource:///actors/GeckoViewContentParent.jsm",
-    },
-    child: {
-      moduleURI: "resource:///actors/GeckoViewContentChild.jsm",
-      events: {
-        DOMContentLoaded: {},
-        DOMMetaViewportFitChanged: {},
-        DOMTitleChanged: {},
-        DOMWindowClose: {},
-        "MozDOMFullscreen:Entered": {},
-        "MozDOMFullscreen:Exit": {},
-        "MozDOMFullscreen:Exited": {},
-        "MozDOMFullscreen:Request": {},
-        MozFirstContentfulPaint: {},
-        contextmenu: { capture: true },
-        mozcaretstatechanged: { capture: true, mozSystemGroup: true },
-      },
-      allFrames: true,
-    },
-  },
   LoadURIDelegate: {
     child: {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
