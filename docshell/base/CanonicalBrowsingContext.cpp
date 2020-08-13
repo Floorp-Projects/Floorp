@@ -158,6 +158,16 @@ void CanonicalBrowsingContext::ReplacedBy(
   }
   aNewContext->mWebProgress = std::move(mWebProgress);
   aNewContext->mFields.SetWithoutSyncing<IDX_BrowserId>(GetBrowserId());
+
+  if (mSessionHistory) {
+    mSessionHistory->SetBrowsingContext(aNewContext);
+    mSessionHistory.swap(aNewContext->mSessionHistory);
+  }
+
+  MOZ_ASSERT(aNewContext->mLoadingEntries.IsEmpty());
+  mLoadingEntries.SwapElements(aNewContext->mLoadingEntries);
+  MOZ_ASSERT(!aNewContext->mActiveEntry);
+  mActiveEntry.swap(aNewContext->mActiveEntry);
 }
 
 void CanonicalBrowsingContext::

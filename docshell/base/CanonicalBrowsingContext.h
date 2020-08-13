@@ -20,6 +20,7 @@
 #include "nsISecureBrowserUI.h"
 
 class nsISHistory;
+class nsSHistory;
 class nsBrowserStatusFilter;
 class nsSecureBrowserUI;
 
@@ -272,7 +273,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // The current remoteness change which is in a pending state.
   RefPtr<PendingRemotenessChange> mPendingRemotenessChange;
 
-  nsCOMPtr<nsISHistory> mSessionHistory;
+  RefPtr<nsSHistory> mSessionHistory;
 
   // Tab media controller is used to control all media existing in the same
   // browsing context tree, so it would only exist in the top level browsing
