@@ -8,6 +8,7 @@
 
 #include "jit/MIR.h"
 #include "vm/ArrayObject.h"
+#include "vm/Iteration.h"
 #include "vm/JSFunction.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
@@ -35,6 +36,17 @@ KnownClass jit::GetObjectKnownClass(const MDefinition* def) {
 
     case MDefinition::Opcode::RegExp:
       return KnownClass::RegExp;
+
+    case MDefinition::Opcode::NewIterator:
+      switch (def->toNewIterator()->type()) {
+        case MNewIterator::ArrayIterator:
+          return KnownClass::ArrayIterator;
+        case MNewIterator::StringIterator:
+          return KnownClass::StringIterator;
+        case MNewIterator::RegExpStringIterator:
+          return KnownClass::RegExpStringIterator;
+      }
+      MOZ_CRASH("unreachable");
 
     case MDefinition::Opcode::Phi: {
       if (def->numOperands() == 0) {
@@ -79,6 +91,12 @@ const JSClass* jit::GetObjectKnownJSClass(const MDefinition* def) {
       return &JSFunction::class_;
     case KnownClass::RegExp:
       return &RegExpObject::class_;
+    case KnownClass::ArrayIterator:
+      return &ArrayIteratorObject::class_;
+    case KnownClass::StringIterator:
+      return &StringIteratorObject::class_;
+    case KnownClass::RegExpStringIterator:
+      return &RegExpStringIteratorObject::class_;
     case KnownClass::None:
       break;
   }
