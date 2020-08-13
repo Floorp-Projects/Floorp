@@ -12,6 +12,8 @@
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/UniquePtrExtensions.h"
 
+#include <string>
+
 class ProfileBuffer;
 class ProfilerCodeAddressService;
 class ThreadInfo;
@@ -51,7 +53,7 @@ class ProfilerBacktrace {
   friend struct mozilla::ProfileBufferEntryReader::Deserializer<
       ProfilerBacktrace>;
 
-  mozilla::UniqueFreePtr<char> mName;
+  std::string mName;
   int mThreadId;
   // `ProfileChunkedBuffer` in which `mProfileBuffer` stores its data; must be
   // located before `mProfileBuffer` so that it's destroyed after.
@@ -73,9 +75,7 @@ struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
     if (bufferBytes == 0) {
       return ULEB128Size<Length>(0);
     }
-    return bufferBytes +
-           SumBytes(aBacktrace.mThreadId,
-                    WrapProfileBufferUnownedCString(aBacktrace.mName.get()));
+    return bufferBytes + SumBytes(aBacktrace.mThreadId, aBacktrace.mName);
   }
   static void Write(mozilla::ProfileBufferEntryWriter& aEW,
                     const ProfilerBacktrace& aBacktrace) {
@@ -86,7 +86,7 @@ struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
     }
     aEW.WriteObject(*aBacktrace.mProfileChunkedBuffer);
     aEW.WriteObject(aBacktrace.mThreadId);
-    aEW.WriteObject(WrapProfileBufferUnownedCString(aBacktrace.mName.get()));
+    aEW.WriteObject(aBacktrace.mName);
   }
 };
 
