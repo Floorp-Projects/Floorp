@@ -43,7 +43,8 @@ class RenderCompositorNative : public RenderCompositor {
   // Does the readback for the ShouldUseNativeCompositor() case.
   bool MaybeReadback(const gfx::IntSize& aReadbackSize,
                      const wr::ImageFormat& aReadbackFormat,
-                     const Range<uint8_t>& aReadbackBuffer) override;
+                     const Range<uint8_t>& aReadbackBuffer,
+                     bool* aNeedsYFlip) override;
 
   // Interface for wr::Compositor
   void CompositorBeginFrame() override;

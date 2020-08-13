@@ -940,7 +940,7 @@ uint32_t RenderCompositorANGLE::GetMaxPartialPresentRects() {
 
 bool RenderCompositorANGLE::MaybeReadback(
     const gfx::IntSize& aReadbackSize, const wr::ImageFormat& aReadbackFormat,
-    const Range<uint8_t>& aReadbackBuffer) {
+    const Range<uint8_t>& aReadbackBuffer, bool* aNeedsYFlip) {
   MOZ_ASSERT(aReadbackFormat == wr::ImageFormat::BGRA8);
 
   if (!UseCompositor()) {
@@ -1005,6 +1005,10 @@ bool RenderCompositorANGLE::MaybeReadback(
   uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
   if (latencyMs > 500) {
     gfxCriticalNote << "Readback took too long: " << latencyMs << " ms";
+  }
+
+  if (aNeedsYFlip) {
+    *aNeedsYFlip = false;
   }
 
   return true;

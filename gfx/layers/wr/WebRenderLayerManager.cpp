@@ -471,7 +471,8 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
   }
 
   IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
-  if (!WrBridge()->SendGetSnapshot(texture->GetIPDLActor())) {
+  bool needsYFlip = false;
+  if (!WrBridge()->SendGetSnapshot(texture->GetIPDLActor(), &needsYFlip)) {
     return;
   }
 
@@ -495,14 +496,6 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
   Rect dst(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height());
   Rect src(0, 0, bounds.Width(), bounds.Height());
 
-  // The data we get from webrender is upside down. So flip and translate up so
-  // the image is rightside up. Webrender always does a full screen readback.
-#ifdef XP_WIN
-  // ANGLE with WR does not need y flip
-  const bool needsYFlip = !WrBridge()->GetCompositorUseANGLE();
-#else
-  const bool needsYFlip = true;
-#endif
   Matrix m;
   if (needsYFlip) {
     m = Matrix::Scaling(1.0, -1.0).PostTranslate(0.0, aSize.height);
