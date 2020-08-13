@@ -66,6 +66,7 @@ class PerformanceMainThread final : public Performance,
       const nsAString& aName, const Optional<nsAString>& aEntryType,
       nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
 
+  void UpdateNavigationTimingEntry() override;
   void QueueNavigationTimingEntry() override;
 
   bool CrossOriginIsolated() const override;

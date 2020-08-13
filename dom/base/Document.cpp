@@ -7369,7 +7369,9 @@ void Document::EndLoad() {
   // Update the attributes on the PerformanceNavigationTiming before notifying
   // the onload observers.
   if (nsPIDOMWindowInner* window = GetInnerWindow()) {
-    window->QueuePerformanceNavigationTiming();
+    if (RefPtr<Performance> performance = window->GetPerformance()) {
+      performance->UpdateNavigationTimingEntry();
+    }
   }
 
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));

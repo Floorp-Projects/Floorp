@@ -109,6 +109,8 @@ class Performance : public DOMEventTargetHelper {
 
   virtual void QueueNavigationTimingEntry() = 0;
 
+  virtual void UpdateNavigationTimingEntry() = 0;
+
   virtual bool CrossOriginIsolated() const = 0;
 
   void QueueNotificationObserversTask();
