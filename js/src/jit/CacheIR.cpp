@@ -3288,7 +3288,7 @@ AttachDecision HasPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   }
 
   writer.guardIsProxy(objId);
-  writer.callProxyHasPropResult(objId, keyId, hasOwn);
+  writer.proxyHasPropResult(objId, keyId, hasOwn);
   writer.returnFromIC();
 
   trackAttached("ProxyHasProp");

@@ -4181,6 +4181,15 @@ void LIRGenerator::visitProxyGetByValue(MProxyGetByValue* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitProxyHasProp(MProxyHasProp* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->idVal()->type() == MIRType::Value);
+  auto* lir = new (alloc()) LProxyHasProp(useRegisterAtStart(ins->proxy()),
+                                          useBoxAtStart(ins->idVal()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitGuardIsNotArrayBufferMaybeShared(
     MGuardIsNotArrayBufferMaybeShared* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

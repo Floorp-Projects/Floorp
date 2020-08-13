@@ -6237,6 +6237,24 @@ class LProxyGetByValue
   const LAllocation* proxy() { return getOperand(0); }
 };
 
+class LProxyHasProp
+    : public LCallInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(ProxyHasProp)
+
+  LProxyHasProp(const LAllocation& proxy, const LBoxAllocation& idVal)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, proxy);
+    setBoxOperand(IdIndex, idVal);
+  }
+
+  static const size_t IdIndex = 1;
+
+  const LAllocation* proxy() { return getOperand(0); }
+
+  MProxyHasProp* mir() const { return mir_->toProxyHasProp(); }
+};
+
 class LGuardIsNotArrayBufferMaybeShared : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardIsNotArrayBufferMaybeShared)
