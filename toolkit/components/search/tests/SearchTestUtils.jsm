@@ -101,22 +101,17 @@ var SearchTestUtils = Object.freeze({
       .getProtocolHandler("resource")
       .QueryInterface(Ci.nsIResProtocolHandler);
     resProt.setSubstitution("search-extensions", Services.io.newURI(url));
-    if (
-      Services.prefs.getBoolPref(
-        SearchUtils.BROWSER_SEARCH_PREF + "modernConfig"
-      )
-    ) {
-      const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
-      if (config) {
-        sinon.stub(settings, "get").returns(config);
-      } else {
-        let chan = NetUtil.newChannel({
-          uri: "resource://search-extensions/engines.json",
-          loadUsingSystemPrincipal: true,
-        });
-        let json = this.parseJsonFromStream(chan.open());
-        sinon.stub(settings, "get").returns(json.data);
-      }
+
+    const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+    if (config) {
+      sinon.stub(settings, "get").returns(config);
+    } else {
+      let chan = NetUtil.newChannel({
+        uri: "resource://search-extensions/engines.json",
+        loadUsingSystemPrincipal: true,
+      });
+      let json = this.parseJsonFromStream(chan.open());
+      sinon.stub(settings, "get").returns(json.data);
     }
   },
 
