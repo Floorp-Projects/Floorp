@@ -1877,10 +1877,9 @@ bool BaselineCacheIRCompiler::emitCallSetArrayLength(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallProxySet(ObjOperandId objId,
-                                               uint32_t idOffset,
-                                               ValOperandId rhsId,
-                                               bool strict) {
+bool BaselineCacheIRCompiler::emitProxySet(ObjOperandId objId,
+                                           uint32_t idOffset,
+                                           ValOperandId rhsId, bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   ValueOperand val = allocator.useValueRegister(masm, rhsId);
@@ -1908,10 +1907,10 @@ bool BaselineCacheIRCompiler::emitCallProxySet(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallProxySetByValue(ObjOperandId objId,
-                                                      ValOperandId idId,
-                                                      ValOperandId rhsId,
-                                                      bool strict) {
+bool BaselineCacheIRCompiler::emitProxySetByValue(ObjOperandId objId,
+                                                  ValOperandId idId,
+                                                  ValOperandId rhsId,
+                                                  bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   ValueOperand idVal = allocator.useValueRegister(masm, idId);
