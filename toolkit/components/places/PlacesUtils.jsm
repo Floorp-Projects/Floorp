@@ -1408,6 +1408,13 @@ var PlacesUtils = {
     return found;
   },
 
+  getChildCountForFolder(guid) {
+    let folder = PlacesUtils.getFolderContents(guid).root;
+    let childCount = folder.childCount;
+    folder.containerOpen = false;
+    return childCount;
+  },
+
   /**
    * Returns an array containing all the uris in the first level of the
    * passed in container.

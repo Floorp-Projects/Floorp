@@ -3,6 +3,9 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { CustomizableUI } = ChromeUtils.import(
+  "resource:///modules/CustomizableUI.jsm"
+);
 
 let rootDir = do_get_file("chromefiles/", true);
 
@@ -116,6 +119,21 @@ async function testBookmarks(migratorKey, subDirs, folderName) {
     id: "Default",
     name: "Default",
   };
+  let observerNotified = false;
+  Services.obs.addObserver((aSubject, aTopic, aData) => {
+    let [toolbar, visibility] = JSON.parse(aData);
+    Assert.equal(
+      toolbar,
+      CustomizableUI.AREA_BOOKMARKS,
+      "Notification should be received for bookmarks toolbar"
+    );
+    Assert.equal(
+      visibility,
+      "true",
+      "Notification should say to reveal the bookmarks toolbar"
+    );
+    observerNotified = true;
+  }, "browser-set-toolbar-visibility");
   await promiseMigration(
     migrator,
     MigrationUtils.resourceTypes.BOOKMARKS,
@@ -130,6 +148,7 @@ async function testBookmarks(migratorKey, subDirs, folderName) {
     itemsSeen.bookmarks + itemsSeen.folders,
     "Telemetry reporting correct."
   );
+  Assert.ok(observerNotified, "The observer should be notified upon migration");
 }
 
 add_task(async function test_Chrome() {
