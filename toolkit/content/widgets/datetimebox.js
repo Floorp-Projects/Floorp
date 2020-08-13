@@ -797,31 +797,15 @@ this.DateInputImplWidget = class extends DateTimeInputBaseImplWidget {
   clearInputFields(aFromInputElement) {
     this.log("clearInputFields");
 
-    if (!this.isEditable()) {
-      return;
-    }
-
-    if (
-      this.mMonthField &&
-      !this.mMonthField.disabled &&
-      !this.mMonthField.readOnly
-    ) {
+    if (this.mMonthField) {
       this.clearFieldValue(this.mMonthField);
     }
 
-    if (
-      this.mDayField &&
-      !this.mDayField.disabled &&
-      !this.mDayField.readOnly
-    ) {
+    if (this.mDayField) {
       this.clearFieldValue(this.mDayField);
     }
 
-    if (
-      this.mYearField &&
-      !this.mYearField.disabled &&
-      !this.mYearField.readOnly
-    ) {
+    if (this.mYearField) {
       this.clearFieldValue(this.mYearField);
     }
 
@@ -1477,47 +1461,23 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
   clearInputFields(aFromInputElement) {
     this.log("clearInputFields");
 
-    if (!this.isEditable()) {
-      return;
-    }
-
-    if (
-      this.mHourField &&
-      !this.mHourField.disabled &&
-      !this.mHourField.readOnly
-    ) {
+    if (this.mHourField) {
       this.clearFieldValue(this.mHourField);
     }
 
-    if (
-      this.mMinuteField &&
-      !this.mMinuteField.disabled &&
-      !this.mMinuteField.readOnly
-    ) {
+    if (this.mMinuteField) {
       this.clearFieldValue(this.mMinuteField);
     }
 
-    if (
-      this.hasSecondField() &&
-      !this.mSecondField.disabled &&
-      !this.mSecondField.readOnly
-    ) {
+    if (this.hasSecondField()) {
       this.clearFieldValue(this.mSecondField);
     }
 
-    if (
-      this.hasMillisecField() &&
-      !this.mMillisecField.disabled &&
-      !this.mMillisecField.readOnly
-    ) {
+    if (this.hasMillisecField()) {
       this.clearFieldValue(this.mMillisecField);
     }
 
-    if (
-      this.hasDayPeriodField() &&
-      !this.mDayPeriodField.disabled &&
-      !this.mDayPeriodField.readOnly
-    ) {
+    if (this.hasDayPeriodField()) {
       this.clearFieldValue(this.mDayPeriodField);
     }
 
