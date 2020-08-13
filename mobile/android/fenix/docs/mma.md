@@ -159,6 +159,16 @@ User Attributes
     <td>A boolean indicating that this is a Fenix installation</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/8208">#8208</a></td>
   </tr>
+  <tr>
+      <td>`installed_addons`</td>
+      <td>A boolean indicating that there are addons installed</td>
+      <td><a href="https://github.com/mozilla-mobile/fenix/pull/13233">#13233</a></td>
+  </tr>
+  <tr>
+      <td>`enabled_addons`</td>
+      <td>A boolean indicating that there are addons enabled</td>
+      <td><a href="https://github.com/mozilla-mobile/fenix/pull/13233">#13233</a></td>
+  </tr>
 </table>
 
 Events
