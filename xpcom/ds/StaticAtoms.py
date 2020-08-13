@@ -1080,7 +1080,6 @@ STATIC_ATOMS = [
     Atom("screenX", "screenX"),
     Atom("screenY", "screenY"),
     Atom("script", "script"),
-    Atom("scriptEnabledBeforePrintOrPreview", "scriptEnabledBeforePrintOrPreview"),
     Atom("scrollbar", "scrollbar"),
     Atom("scrollbarThumb", "scrollbar-thumb"),
     Atom("scrollamount", "scrollamount"),
