@@ -24,40 +24,37 @@ namespace mozilla {
 // Make sure you write and read with the same character type!
 //
 // Usage: `nsCString s = ...; aEW.WriteObject(s);`
-template <typename T>
-struct ProfileBufferEntryWriter::Serializer<nsTString<T>> {
-  static Length Bytes(const nsTString<T>& aS) {
-    // Note that we store the size in *bytes*, not in number of characters.
-    const auto bytes = aS.Length() * sizeof(T);
-    return ProfileBufferEntryWriter::ULEB128Size(bytes) +
-           static_cast<Length>(bytes);
+template <typename CHAR>
+struct ProfileBufferEntryWriter::Serializer<nsTString<CHAR>> {
+  static Length Bytes(const nsTString<CHAR>& aS) {
+    const auto length = aS.Length();
+    return ProfileBufferEntryWriter::ULEB128Size(length) +
+           static_cast<Length>(length * sizeof(CHAR));
   }
 
-  static void Write(ProfileBufferEntryWriter& aEW, const nsTString<T>& aS) {
-    // Note that we store the size in *bytes*, not in number of characters.
-    const auto bytes = aS.Length() * sizeof(T);
-    aEW.WriteULEB128(bytes);
+  static void Write(ProfileBufferEntryWriter& aEW, const nsTString<CHAR>& aS) {
+    const auto length = aS.Length();
+    aEW.WriteULEB128(length);
     // Copy the bytes from the string's buffer.
-    aEW.WriteBytes(reinterpret_cast<const char*>(aS.BeginReading()), bytes);
+    aEW.WriteBytes(aS.Data(), length * sizeof(CHAR));
   }
 };
 
-template <typename T>
-struct ProfileBufferEntryReader::Deserializer<nsTString<T>> {
-  static void ReadInto(ProfileBufferEntryReader& aER, nsTString<T>& aS) {
+template <typename CHAR>
+struct ProfileBufferEntryReader::Deserializer<nsTString<CHAR>> {
+  static void ReadInto(ProfileBufferEntryReader& aER, nsTString<CHAR>& aS) {
     aS = Read(aER);
   }
 
-  static nsTString<T> Read(ProfileBufferEntryReader& aER) {
-    // Note that the stored size is in *bytes*, not in number of characters.
-    const auto bytes = aER.ReadULEB128<Length>();
-    nsTString<T> s;
+  static nsTString<CHAR> Read(ProfileBufferEntryReader& aER) {
+    const Length length = aER.ReadULEB128<Length>();
+    nsTString<CHAR> s;
     nsresult rv;
     // BulkWrite is the most efficient way to copy bytes into the target string.
-    auto writer = s.BulkWrite(bytes / sizeof(T), 0, true, rv);
+    auto writer = s.BulkWrite(length, 0, true, rv);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    aER.ReadBytes(reinterpret_cast<char*>(writer.Elements()), bytes);
-    writer.Finish(bytes / sizeof(T), true);
+    aER.ReadBytes(writer.Elements(), length * sizeof(CHAR));
+    writer.Finish(length, true);
     return s;
   }
 };
@@ -70,42 +67,39 @@ struct ProfileBufferEntryReader::Deserializer<nsTString<T>> {
 // Make sure you write and read with the same character type!
 //
 // Usage: `nsAutoCString s = ...; aEW.WriteObject(s);`
-template <typename T, size_t N>
-struct ProfileBufferEntryWriter::Serializer<nsTAutoStringN<T, N>> {
-  static Length Bytes(const nsTAutoStringN<T, N>& aS) {
-    // Note that we store the size in *bytes*, not in number of characters.
-    const auto bytes = aS.Length() * sizeof(T);
-    return ProfileBufferEntryWriter::ULEB128Size(bytes) +
-           static_cast<Length>(bytes);
+template <typename CHAR, size_t N>
+struct ProfileBufferEntryWriter::Serializer<nsTAutoStringN<CHAR, N>> {
+  static Length Bytes(const nsTAutoStringN<CHAR, N>& aS) {
+    const auto length = aS.Length();
+    return ProfileBufferEntryWriter::ULEB128Size(length) +
+           static_cast<Length>(length * sizeof(CHAR));
   }
 
   static void Write(ProfileBufferEntryWriter& aEW,
-                    const nsTAutoStringN<T, N>& aS) {
-    const auto bytes = aS.Length() * sizeof(T);
-    // Note that we store the size in *bytes*, not in number of characters.
-    aEW.WriteULEB128(bytes);
+                    const nsTAutoStringN<CHAR, N>& aS) {
+    const auto length = aS.Length();
+    aEW.WriteULEB128(length);
     // Copy the bytes from the string's buffer.
-    aEW.WriteBytes(reinterpret_cast<const char*>(aS.BeginReading()), bytes);
+    aEW.WriteBytes(aS.BeginReading(), length * sizeof(CHAR));
   }
 };
 
-template <typename T, size_t N>
-struct ProfileBufferEntryReader::Deserializer<nsTAutoStringN<T, N>> {
+template <typename CHAR, size_t N>
+struct ProfileBufferEntryReader::Deserializer<nsTAutoStringN<CHAR, N>> {
   static void ReadInto(ProfileBufferEntryReader& aER,
-                       nsTAutoStringN<T, N>& aS) {
+                       nsTAutoStringN<CHAR, N>& aS) {
     aS = Read(aER);
   }
 
-  static nsTAutoStringN<T, N> Read(ProfileBufferEntryReader& aER) {
-    // Note that the stored size is in *bytes*, not in number of characters.
-    const auto bytes = aER.ReadULEB128<Length>();
-    nsTAutoStringN<T, N> s;
+  static nsTAutoStringN<CHAR, N> Read(ProfileBufferEntryReader& aER) {
+    const auto length = aER.ReadULEB128<Length>();
+    nsTAutoStringN<CHAR, N> s;
     nsresult rv;
     // BulkWrite is the most efficient way to copy bytes into the target string.
-    auto writer = s.BulkWrite(bytes / sizeof(T), 0, true, rv);
+    auto writer = s.BulkWrite(length, 0, true, rv);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    aER.ReadBytes(reinterpret_cast<char*>(writer.Elements()), bytes);
-    writer.Finish(bytes / sizeof(T), true);
+    aER.ReadBytes(writer.Elements(), length * sizeof(CHAR));
+    writer.Finish(length, true);
     return s;
   }
 };
