@@ -514,6 +514,7 @@ function Search(
   // properly recognize token types.
   let { tokens } = UrlbarTokenizer.tokenize({
     searchString: unescapedSearchString,
+    trimmedSearchString: unescapedSearchString.trim(),
   });
 
   // This allows to handle leading or trailing restriction characters specially.

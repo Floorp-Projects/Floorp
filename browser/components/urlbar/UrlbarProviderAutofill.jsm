@@ -455,10 +455,10 @@ class ProviderAutofill extends UrlbarProvider {
         .join("") + ".";
 
     // Build a string that's the URL stripped of its prefix, i.e., the host plus
-    // everything after the host.  Use queryContext.searchString instead of
+    // everything after.  Use queryContext.trimmedSearchString instead of
     // this._searchString because this._searchString has had unEscapeURIForUI()
     // called on it.  It's therefore not necessarily the literal URL.
-    let strippedURL = queryContext.searchString.trim();
+    let strippedURL = queryContext.trimmedSearchString;
     if (this._strippedPrefix) {
       strippedURL = strippedURL.substr(this._strippedPrefix.length);
     }

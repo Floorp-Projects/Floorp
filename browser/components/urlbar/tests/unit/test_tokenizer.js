@@ -431,6 +431,7 @@ add_task(async function test_tokenizer() {
 
   for (let queryContext of testContexts) {
     info(queryContext.desc);
+    queryContext.trimmedSearchString = queryContext.searchString.trim();
     for (let token of queryContext.expectedTokens) {
       token.lowerCaseValue = token.value.toLocaleLowerCase();
     }
