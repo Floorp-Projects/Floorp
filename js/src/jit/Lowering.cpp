@@ -4136,6 +4136,15 @@ void LIRGenerator::visitGuardNullProto(MGuardNullProto* ins) {
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardIsProxy(MGuardIsProxy* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LGuardIsProxy(useRegister(ins->object()), temp());
+  assignSnapshot(lir, BailoutKind::ProxyGuard);
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitGuardIsNotProxy(MGuardIsNotProxy* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 

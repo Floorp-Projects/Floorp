@@ -9128,6 +9128,28 @@ class MGuardNullProto : public MUnaryInstruction,
   }
 };
 
+// Guard the object is a proxy.
+class MGuardIsProxy : public MUnaryInstruction,
+                      public SingleObjectPolicy::Data {
+  explicit MGuardIsProxy(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(obj->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardIsProxy)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Guard the object is not a proxy.
 class MGuardIsNotProxy : public MUnaryInstruction,
                          public SingleObjectPolicy::Data {
