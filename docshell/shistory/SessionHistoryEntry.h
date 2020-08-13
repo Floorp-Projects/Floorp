@@ -49,6 +49,10 @@ class SessionHistoryInfo {
   const nsAString& GetTitle() { return mTitle; }
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
 
+  void SetScrollRestorationIsManual(bool aIsManual) {
+    mScrollRestorationIsManual = aIsManual;
+  }
+
   nsIURI* GetURI() const { return mURI; }
 
   bool GetURIWasModified() const { return mURIWasModified; }
