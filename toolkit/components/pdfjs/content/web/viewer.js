@@ -318,6 +318,8 @@ var _secondary_toolbar = __webpack_require__(30);
 
 var _toolbar = __webpack_require__(32);
 
+var _viewer_compatibility = __webpack_require__(4);
+
 var _view_history = __webpack_require__(33);
 
 const DEFAULT_SCALE_DELTA = 1.1;
@@ -419,6 +421,7 @@ const PDFViewerApplication = {
   _boundEvents: {},
   contentDispositionFilename: null,
   triggerDelayedFallback: null,
+  _saveInProgress: false,
 
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
@@ -555,9 +558,7 @@ const PDFViewerApplication = {
       ignoreDestinationZoom: _app_options.AppOptions.get("ignoreDestinationZoom")
     });
     this.pdfLinkService = pdfLinkService;
-    const downloadManager = this.externalServices.createDownloadManager({
-      disableCreateObjectURL: _app_options.AppOptions.get("disableCreateObjectURL")
-    });
+    const downloadManager = this.externalServices.createDownloadManager();
     this.downloadManager = downloadManager;
     const findController = new _pdf_find_controller.PDFFindController({
       linkService: pdfLinkService,
@@ -835,6 +836,7 @@ const PDFViewerApplication = {
     this.baseUrl = "";
     this.contentDispositionFilename = null;
     this.triggerDelayedFallback = null;
+    this._saveInProgress = false;
     this.pdfSidebar.reset();
     this.pdfOutlineViewer.reset();
     this.pdfAttachmentViewer.reset();
@@ -974,6 +976,36 @@ const PDFViewerApplication = {
       });
       downloadManager.download(blob, url, filename);
     }).catch(downloadByUrl);
+  },
+
+  save() {
+    if (this._saveInProgress) {
+      return;
+    }
+
+    const url = this.baseUrl;
+    const filename = this.contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url);
+    const downloadManager = this.downloadManager;
+
+    downloadManager.onerror = err => {
+      this.error(`PDF failed to be saved: ${err}`);
+    };
+
+    if (!this.pdfDocument || !this.downloadComplete) {
+      this.download();
+      return;
+    }
+
+    this._saveInProgress = true;
+    this.pdfDocument.saveDocument(this.pdfDocument.annotationStorage).then(data => {
+      const blob = new Blob([data], {
+        type: "application/pdf"
+      });
+      downloadManager.download(blob, url, filename);
+    }).catch(() => {
+      this.download();
+    });
+    this._saveInProgress = false;
   },
 
   _delayedFallback(featureId) {
@@ -1306,8 +1338,12 @@ const PDFViewerApplication = {
       this.setTitle(contentDispositionFilename);
     }
 
-    if (info.IsAcroFormPresent) {
-      console.warn("Warning: AcroForm/XFA is not supported");
+    if (info.IsXFAPresent) {
+      console.warn("Warning: XFA is not supported");
+
+      this._delayedFallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
+    } else if (info.IsAcroFormPresent && !this.pdfViewer.renderInteractiveForms) {
+      console.warn("Warning: AcroForm support is not enabled");
 
       this._delayedFallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
     }
@@ -2064,7 +2100,11 @@ function webViewerPrint() {
 }
 
 function webViewerDownload() {
-  PDFViewerApplication.download();
+  if (PDFViewerApplication.pdfDocument && PDFViewerApplication.pdfDocument.annotationStorage.size > 0) {
+    PDFViewerApplication.save();
+  } else {
+    PDFViewerApplication.download();
+  }
 }
 
 function webViewerFirstPage() {
@@ -3432,11 +3472,6 @@ const defaultOptions = {
     value: "",
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
-  disableCreateObjectURL: {
-    value: false,
-    compatibility: _viewer_compatibility.viewerCompatibilityParams.disableCreateObjectURL,
-    kind: OptionKind.VIEWER
-  },
   disableHistory: {
     value: false,
     kind: OptionKind.VIEWER
@@ -3495,7 +3530,7 @@ const defaultOptions = {
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   renderInteractiveForms: {
-    value: false,
+    value: true,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   sidebarViewOnLoad: {
@@ -4677,6 +4712,8 @@ var _pdfjsLib = __webpack_require__(5);
 
 var _base_tree_viewer = __webpack_require__(13);
 
+var _viewer_compatibility = __webpack_require__(4);
+
 class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
   constructor(options) {
     super(options);
@@ -4793,7 +4830,7 @@ class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
       div.className = "treeItem";
       const element = document.createElement("a");
 
-      if (/\.pdf$/i.test(filename) && !this.downloadManager.disableCreateObjectURL) {
+      if (/\.pdf$/i.test(filename) && !_viewer_compatibility.viewerCompatibilityParams.disableCreateObjectURL) {
         this._bindPdfLink(element, {
           content: item.content,
           filename
@@ -11768,10 +11805,6 @@ const FirefoxCom = function FirefoxComClosure() {
 exports.FirefoxCom = FirefoxCom;
 
 class DownloadManager {
-  constructor(options) {
-    this.disableCreateObjectURL = false;
-  }
-
   downloadUrl(url, filename) {
     FirefoxCom.request("download", {
       originalUrl: url,
@@ -12208,7 +12241,7 @@ function getDefaultPreferences() {
       "ignoreDestinationZoom": false,
       "pdfBugEnabled": false,
       "renderer": "canvas",
-      "renderInteractiveForms": false,
+      "renderInteractiveForms": true,
       "sidebarViewOnLoad": -1,
       "scrollModeOnLoad": -1,
       "spreadModeOnLoad": -1,

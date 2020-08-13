@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.6.234';
-const pdfjsBuild = '6620861c7';
+const pdfjsVersion = '2.6.246';
+const pdfjsBuild = 'e50cb4c9d';
 ;
 
 /***/ }),
@@ -853,6 +853,7 @@ exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
 exports.escapeString = escapeString;
+exports.getModificationDate = getModificationDate;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
@@ -1610,6 +1611,11 @@ function isArrayEqual(arr1, arr2) {
   });
 }
 
+function getModificationDate(date = new Date(Date.now())) {
+  const buffer = [date.getUTCFullYear().toString(), (date.getUTCMonth() + 1).toString().padStart(2, "0"), (date.getUTCDate() + 1).toString().padStart(2, "0"), date.getUTCHours().toString().padStart(2, "0"), date.getUTCMinutes().toString().padStart(2, "0"), date.getUTCSeconds().toString().padStart(2, "0")];
+  return buffer.join("");
+}
+
 function createPromiseCapability() {
   const capability = Object.create(null);
   let isSettled = false;
@@ -1906,7 +1912,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.234',
+    apiVersion: '2.6.246',
     source: {
       data: source.data,
       url: source.url,
@@ -2045,11 +2051,10 @@ class PDFDocumentProxy {
   constructor(pdfInfo, transport) {
     this._pdfInfo = pdfInfo;
     this._transport = transport;
-    this._annotationStorage = new _annotation_storage.AnnotationStorage();
   }
 
   get annotationStorage() {
-    return this._annotationStorage;
+    return (0, _util.shadow)(this, "annotationStorage", new _annotation_storage.AnnotationStorage());
   }
 
   get numPages() {
@@ -2146,6 +2151,10 @@ class PDFDocumentProxy {
 
   get loadingTask() {
     return this._transport.loadingTask;
+  }
+
+  saveDocument(annotationStorage) {
+    return this._transport.saveDocument(annotationStorage);
   }
 
 }
@@ -3471,6 +3480,14 @@ class WorkerTransport {
     });
   }
 
+  saveDocument(annotationStorage) {
+    return this.messageHandler.sendWithPromise("SaveDocument", {
+      numPages: this._numPages,
+      annotationStorage: annotationStorage && annotationStorage.getAll() || null,
+      filename: this._fullReader.filename
+    });
+  }
+
   getDestinations() {
     return this.messageHandler.sendWithPromise("GetDestinations", null);
   }
@@ -3811,9 +3828,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.234';
+const version = '2.6.246';
 exports.version = version;
-const build = '6620861c7';
+const build = 'e50cb4c9d';
 exports.build = build;
 
 /***/ }),
@@ -4118,24 +4135,33 @@ exports.AnnotationStorage = void 0;
 
 class AnnotationStorage {
   constructor() {
-    this._storage = Object.create(null);
+    this._storage = new Map();
   }
 
   getOrCreateValue(key, defaultValue) {
-    if (key in this._storage) {
-      return this._storage[key];
+    if (this._storage.has(key)) {
+      return this._storage.get(key);
     }
 
-    this._storage[key] = defaultValue;
+    this._storage.set(key, defaultValue);
+
     return defaultValue;
   }
 
   setValue(key, value) {
-    this._storage[key] = value;
+    this._storage.set(key, value);
   }
 
   getAll() {
-    return this._storage;
+    if (this._storage.size === 0) {
+      return null;
+    }
+
+    return Object.fromEntries(this._storage);
+  }
+
+  get size() {
+    return this._storage.size;
   }
 
 }
