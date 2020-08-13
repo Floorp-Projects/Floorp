@@ -25,8 +25,6 @@ class ProfileBuffer final {
   // manager.
   explicit ProfileBuffer(mozilla::ProfileChunkedBuffer& aBuffer);
 
-  ~ProfileBuffer();
-
   bool IsThreadSafe() const { return mEntries.IsThreadSafe(); }
 
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
