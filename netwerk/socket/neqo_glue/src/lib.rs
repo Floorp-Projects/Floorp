@@ -402,7 +402,6 @@ pub enum Http3Event {
     /// A server has send STOP_SENDING frame.
     StopSending {
         stream_id: u64,
-        error: u64,
     },
     HeaderReady {
         stream_id: u64,
@@ -485,8 +484,8 @@ pub extern "C" fn neqo_http3conn_event(
     while let Some(evt) = conn.conn.next_event() {
         let fe = match evt {
             Http3ClientEvent::DataWritable { stream_id } => Http3Event::DataWritable { stream_id },
-            Http3ClientEvent::StopSending { stream_id, error } => {
-                Http3Event::StopSending { stream_id, error }
+            Http3ClientEvent::StopSending { stream_id, .. } => {
+                Http3Event::StopSending { stream_id }
             }
             Http3ClientEvent::HeaderReady {
                 stream_id,

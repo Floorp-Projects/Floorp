@@ -235,13 +235,6 @@ void Http3Stream::SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders,
   mFin = aFin;
 }
 
-void Http3Stream::StopSending() {
-  MOZ_ASSERT((mSendState == SENDING_BODY) || (mSendState == SEND_DONE));
-  if (mSendState == SENDING_BODY) {
-    mSendState = EARLY_RESPONSE;
-  }
-}
-
 nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
                                      uint32_t* countWritten) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
