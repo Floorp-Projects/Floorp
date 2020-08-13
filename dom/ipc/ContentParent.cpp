@@ -6977,6 +6977,17 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryTitle(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvSessionHistoryEntryScrollRestorationIsManual(
+    const uint64_t& aSessionHistoryEntryID, const bool& aIsManual) {
+  SessionHistoryEntry* entry =
+      SessionHistoryEntry::GetByInfoId(aSessionHistoryEntryID);
+  if (entry) {
+    entry->SetScrollRestorationIsManual(aIsManual);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
     const MaybeDiscarded<WindowContext>& aContext,
     WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch) {
