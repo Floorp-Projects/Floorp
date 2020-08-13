@@ -1979,8 +1979,10 @@
 
       // Ensure that SessionStore has flushed any session history state from the
       // content process before we this browser's remoteness.
-      b.prepareToChangeRemoteness = () =>
-        SessionStore.prepareToChangeRemoteness(b);
+      if (!Services.prefs.getBoolPref("fission.sessionHistoryInParent")) {
+        b.prepareToChangeRemoteness = () =>
+          SessionStore.prepareToChangeRemoteness(b);
+      }
 
       const defaultBrowserAttributes = {
         contextmenu: "contentAreaContextMenu",
