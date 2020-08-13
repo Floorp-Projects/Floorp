@@ -11,8 +11,6 @@
 <div id="target" style="width: 50px; height: 50px; background: green"></div>
 <script>
 
-SimpleTest.waitForExplicitFinish();
-
 function sendMouseEvent(element, eventName, listenEventName, handler) {
   element.addEventListener(listenEventName, handler, {once: true});
   synthesizeMouseAtCenter(element, {type: eventName, button: 0});
@@ -43,19 +41,22 @@ function startTest() {
   sendMouseEvent(target, "mousedown", "mousedown", checkBlockOpenPopup);
   sendMouseEvent(target, "mousemove", "mousemove", checkBlockOpenPopup);
   sendMouseEvent(target, "mouseup", "mouseup", checkAllowOpenPopup);
-
-  SimpleTest.finish();
 }
 
 const DENY_ACTION = SpecialPowers.Ci.nsIPermissionManager.DENY_ACTION;
 
-SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION,
-                                  'context': document}], () => {
-    SpecialPowers.pushPrefEnv({
-      "set": [["dom.w3c_pointer_events.enabled", true]]
-    }, startTest);
-  });
+let xorigin = SimpleTest.getTestFileURL("").replace(location.hostname, 'mochi.xorigin-test');
+add_task(async () => {
+  await SpecialPowers.pushPermissions([
+    {'type': 'popup', 'allow': DENY_ACTION,
+     'context': document},
+    {'type': 'popup', 'allow': DENY_ACTION,
+     'context': xorigin}
+  ]);
+
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve));
+
+  startTest();
 });
 
 </script>
