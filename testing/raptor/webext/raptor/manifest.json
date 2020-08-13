@@ -35,6 +35,7 @@
                   "*://*.live.com/*",
                   "*://*.microsoft.com/*",
                   "*://*.netflix.com/*",
+                  "*://*.office.com/*",
                   "*://*.paypal.com/*",
                   "*://*.pinterest.com/*",
                   "*://*.reddit.com/*",
