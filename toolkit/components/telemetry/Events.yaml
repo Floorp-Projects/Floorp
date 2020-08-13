@@ -11,10 +11,10 @@ top_sites:
     record_in_processes: ["main"]
     description: >
       This is recorded when using a search top site that has been overridden to a URL as part of an experiment.
-    bug_numbers: [1637217, 1644442]
+    bug_numbers: [1637217, 1644442, 1658915]
     notification_emails:
       - "dao@mozilla.com"
-    expiry_version: "80"
+    expiry_version: "81"
     extra_keys:
       searchProvider: Name of the search provider, e.g. "amazon" or "google".
       source: Which part of the UI request came from, i.e. "newtab" or "urlbar".
