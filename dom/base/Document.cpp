@@ -1197,7 +1197,9 @@ void Document::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector) {
 
 Document::FrameRequest::FrameRequest(FrameRequestCallback& aCallback,
                                      int32_t aHandle)
-    : mCallback(&aCallback), mHandle(aHandle) {}
+    : mCallback(&aCallback), mHandle(aHandle) {
+  LogFrameRequestCallback::LogDispatch(mCallback);
+}
 
 Document::FrameRequest::~FrameRequest() = default;
 
