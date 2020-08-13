@@ -132,16 +132,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
     }
 
     fn accept_insecure_certs(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
-        let binary = self.chosen_binary.clone();
-        let version_str = self.version(binary.as_ref().map(|x| x.as_ref()));
-        if let Some(x) = version_str {
-            Ok(Version::from_str(&*x)
-                .or_else(|x| Err(convert_version_error(x)))?
-                .major
-                >= 52)
-        } else {
-            Ok(false)
-        }
+        Ok(true)
     }
 
     fn set_window_rect(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
