@@ -76,9 +76,9 @@ nsDocShellLoadState::nsDocShellLoadState(
   mHeadersStream = aLoadState.HeadersStream();
   mSrcdocData = aLoadState.SrcdocData();
   mChannelInitialized = aLoadState.ChannelInitialized();
-  if (aLoadState.sessionHistoryInfo().isSome()) {
-    mSessionHistoryInfo =
-        MakeUnique<SessionHistoryInfo>(aLoadState.sessionHistoryInfo().value());
+  if (aLoadState.loadingSessionHistoryInfo().isSome()) {
+    mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
+        aLoadState.loadingSessionHistoryInfo().value());
   }
 }
 
@@ -510,20 +510,30 @@ void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
   mSHEntry = aSHEntry;
   nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aSHEntry);
   if (she) {
-    SetSessionHistoryInfo(she->Info());
+    SetLoadingSessionHistoryInfo(LoadingSessionHistoryInfo(she->Info()));
   } else {
-    mSessionHistoryInfo = nullptr;
+    mLoadingSessionHistoryInfo = nullptr;
   }
 }
 
-void nsDocShellLoadState::SetSessionHistoryInfo(
-    const mozilla::dom::SessionHistoryInfo& aInfo) {
-  mSessionHistoryInfo = MakeUnique<SessionHistoryInfo>(aInfo);
+void nsDocShellLoadState::SetLoadingSessionHistoryInfo(
+    const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo) {
+  mLoadingSessionHistoryInfo =
+      MakeUnique<LoadingSessionHistoryInfo>(aLoadingInfo);
 }
 
-const mozilla::dom::SessionHistoryInfo*
-nsDocShellLoadState::GetSessionHistoryInfo() const {
-  return mSessionHistoryInfo.get();
+const mozilla::dom::LoadingSessionHistoryInfo*
+nsDocShellLoadState::GetLoadingSessionHistoryInfo() const {
+  return mLoadingSessionHistoryInfo.get();
+}
+
+void nsDocShellLoadState::SetLoadIsFromSessionHistory(
+    int32_t aRequestedIndex, int32_t aSessionHistoryLength) {
+  if (mLoadingSessionHistoryInfo) {
+    mLoadingSessionHistoryInfo->mIsLoadFromSessionHistory = true;
+    mLoadingSessionHistoryInfo->mRequestedIndex = aRequestedIndex;
+    mLoadingSessionHistoryInfo->mSessionHistoryLength = aSessionHistoryLength;
+  }
 }
 
 const nsString& nsDocShellLoadState::Target() const { return mTarget; }
@@ -915,8 +925,8 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.ResultPrincipalURI() = mResultPrincipalURI;
   loadState.LoadIdentifier() = mLoadIdentifier;
   loadState.ChannelInitialized() = mChannelInitialized;
-  if (mSessionHistoryInfo) {
-    loadState.sessionHistoryInfo().emplace(*mSessionHistoryInfo);
+  if (mLoadingSessionHistoryInfo) {
+    loadState.loadingSessionHistoryInfo().emplace(*mLoadingSessionHistoryInfo);
   }
   return loadState;
 }

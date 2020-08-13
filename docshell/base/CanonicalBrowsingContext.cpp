@@ -281,20 +281,25 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
   return mSessionHistory;
 }
 
-UniquePtr<SessionHistoryInfo>
-CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
+UniquePtr<LoadingSessionHistoryInfo>
+CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
   RefPtr<SessionHistoryEntry> entry;
-  const SessionHistoryInfo* info = aLoadState->GetSessionHistoryInfo();
-  if (info) {
-    entry = SessionHistoryEntry::GetByInfoId(info->Id());
-  }
-  if (!entry) {
+  const LoadingSessionHistoryInfo* existingLoadingInfo =
+      aLoadState->GetLoadingSessionHistoryInfo();
+  if (existingLoadingInfo) {
+    entry = SessionHistoryEntry::GetByInfoId(existingLoadingInfo->mInfo.Id());
+  } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
   }
+  MOZ_DIAGNOSTIC_ASSERT(entry);
+
   mLoadingEntries.AppendElement(entry);
   MOZ_ASSERT(SessionHistoryEntry::GetByInfoId(entry->Info().Id()) == entry);
-  return MakeUnique<SessionHistoryInfo>(entry->Info());
+  if (existingLoadingInfo) {
+    return MakeUnique<LoadingSessionHistoryInfo>(*existingLoadingInfo);
+  }
+  return MakeUnique<LoadingSessionHistoryInfo>(entry->Info());
 }
 
 void CanonicalBrowsingContext::SessionHistoryCommit(
@@ -361,7 +366,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
 void CanonicalBrowsingContext::NotifyOnHistoryReload(
     bool& aCanReload, Maybe<RefPtr<nsDocShellLoadState>>& aLoadState,
     Maybe<bool>& aReloadActiveEntry) {
-  GetSessionHistory()->NotifyOnHistoryReload(&aCanReload);
+  nsISHistory* shistory = GetSessionHistory();
+  shistory->NotifyOnHistoryReload(&aCanReload);
   if (!aCanReload) {
     return;
   }
@@ -375,6 +381,17 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
     mLoadingEntries.LastElement()->CreateLoadInfo(
         getter_AddRefs(aLoadState.ref()));
     aReloadActiveEntry.emplace(false);
+  }
+
+  if (aLoadState) {
+    int32_t index = 0;
+    int32_t requestedIndex = -1;
+    int32_t length = 0;
+    shistory->GetIndex(&index);
+    shistory->GetRequestedIndex(&requestedIndex);
+    shistory->GetCount(&length);
+    aLoadState.ref()->SetLoadIsFromSessionHistory(
+        requestedIndex >= 0 ? requestedIndex : index, length);
   }
   // If we don't have an active entry and we don't have a loading entry then
   // the nsDocShell will create a load state based on its document.
