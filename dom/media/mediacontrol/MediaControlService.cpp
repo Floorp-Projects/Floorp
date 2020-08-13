@@ -268,15 +268,16 @@ void MediaControlService::ControllerManager::UpdateMainControllerIfNeeded(
     return;
   }
 
-  if (GetMainController() && GetMainController()->IsInPictureInPictureMode() &&
-      !aController->IsInPictureInPictureMode()) {
+  if (GetMainController() &&
+      GetMainController()->IsBeingUsedInPIPModeOrFullscreen() &&
+      !aController->IsBeingUsedInPIPModeOrFullscreen()) {
     LOG_MAINCONTROLLER(
-        "Main controller is being used in PIP mode, so we won't replace it "
-        "with non-PIP controller");
+        "Normal media controller can't replace the controller being used in "
+        "PIP mode or fullscreen");
     return ReorderGivenController(aController,
-                                  InsertOptions::eInsertBeforeTail);
+                                  InsertOptions::eInsertAsNormalController);
   }
-  ReorderGivenController(aController, InsertOptions::eInsertToTail);
+  ReorderGivenController(aController, InsertOptions::eInsertAsMainController);
   UpdateMainControllerInternal(aController);
 }
 
@@ -284,8 +285,10 @@ void MediaControlService::ControllerManager::ReorderGivenController(
     MediaController* aController, InsertOptions aOption) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
   MOZ_DIAGNOSTIC_ASSERT(mControllers.contains(aController));
+  // Reset the controller's position and make it not in any list.
+  static_cast<LinkedListControllerPtr>(aController)->remove();
 
-  if (aOption == InsertOptions::eInsertToTail) {
+  if (aOption == InsertOptions::eInsertAsMainController) {
     // Make the main controller as the last element in the list to maintain the
     // order of controllers because we always use the last controller in the
     // list as the next main controller when removing current main controller
@@ -296,22 +299,24 @@ void MediaControlService::ControllerManager::ReorderGivenController(
     // controller would be B. But if we don't maintain the controller order when
     // main controller changes, we would pick C as the main controller because
     // the list is still [A, B, C].
-    static_cast<LinkedListControllerPtr>(aController)->remove();
     return mControllers.insertBack(aController);
   }
 
-  if (aOption == InsertOptions::eInsertBeforeTail) {
-    // This happens when the latest playing controller can't become the main
-    // controller because we have already had other controller being used in
-    // PIP mode, which would always be regarded as the main controller.
-    // However, we would still like to adjust its order in the list. Eg, we have
-    // a list [A, B, C, D, E] and E is the main controller. If we want to
-    // reorder B to the front of E, then the list would become [A, C, D, B, E].
-    MOZ_ASSERT(GetMainController() != aController);
-    static_cast<LinkedListControllerPtr>(aController)->remove();
-    return static_cast<LinkedListControllerPtr>(GetMainController())
-        ->setPrevious(aController);
+  MOZ_ASSERT(aOption == InsertOptions::eInsertAsNormalController);
+  MOZ_ASSERT(GetMainController() != aController);
+  // We might have multiple controllers which have higher priority (being used
+  // in PIP or fullscreen) from the head, the normal controller should be
+  // inserted before them. Therefore, search a higher priority controller from
+  // the head and insert new controller before it.
+  // Eg. a list [A, B, C, D, E] and D and E have higher priority, if we want
+  // to insert F, then the final result would be [A, B, C, F, D, E]
+  auto* current = static_cast<LinkedListControllerPtr>(mControllers.getFirst());
+  while (!static_cast<MediaController*>(current)
+              ->IsBeingUsedInPIPModeOrFullscreen()) {
+    current = current->getNext();
   }
+  MOZ_ASSERT(current, "Should have at least one higher priority controller!");
+  current->setPrevious(aController);
 }
 
 void MediaControlService::ControllerManager::Shutdown() {
