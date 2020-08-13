@@ -913,12 +913,14 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   updateMIMEInfo() {
-    // Don't update mime type preferences when the preferred action is set to
-    // the internal handler -- this dialog is the result of the handler fallback
+    // Don't erase the preferred choice being internal handler
+    // if the user didn't have the choice to use that internal handler here
+    // -- this dialog is the result of the handler fallback
     // (e.g. Content-Disposition was set as attachment)
     var discardUpdate =
       this.mLauncher.MIMEInfo.preferredAction ==
         this.nsIMIMEInfo.handleInternally &&
+      !this.shouldShowInternalHandlerOption() &&
       !this.dialogElement("rememberChoice").checked;
 
     var needUpdate = false;
