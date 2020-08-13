@@ -2761,10 +2761,19 @@ class HTMLEditor final : public TextEditor,
         const EditorDOMPoint& aCaretPoint,
         const WSRunScanner& aWSRunScannerAtCaret);
 
-    bool PrepareToDeleteNonCollapsedRanges() {
-      mMode = Mode::DeleteNonCollapsedRanges;
-      return true;
-    }
+    /**
+     * PrepareToDeleteNonCollapsedRanges() considers left block element and
+     * right block element which are inclusive ancestor block element of
+     * start and end container of first range of aRangesToDelete.
+     *
+     * @param aHTMLEditor               The HTML editor.
+     * @param aRangesToDelete           Ranges to delete.  Must not be
+     *                                  collapsed.
+     * @return                          true if can continue to handle the
+     *                                  deletion.
+     */
+    bool PrepareToDeleteNonCollapsedRanges(
+        const HTMLEditor& aHTMLEditor, const AutoRangeArray& aRangesToDelete);
 
     /**
      * Run() executes the joining.
