@@ -1099,57 +1099,42 @@ bool GlobalHelperThreadState::ensureInitialized() {
 
   MOZ_ASSERT(this == &HelperThreadState());
 
-  return ensureThreadCount(threadCount);
-}
+  {
+    // We must not hold this lock during the error handling code below.
+    AutoLockHelperThreadState lock;
 
-bool GlobalHelperThreadState::ensureThreadCount(size_t minimumThreadCount) {
-  UniquePtr<HelperThreadVector> newThreads;
-  auto destroyThreads = mozilla::MakeScopeExit([&] {
-    if (newThreads) {
-      finishThreads(*newThreads);
-    }
-  });
-
-  AutoLockHelperThreadState lock;
-
-  if (threads) {
-    if (threads->length() >= minimumThreadCount) {
+    if (threads) {
       return true;
     }
 
-    waitForAllThreadsLocked(lock);
-  }
-
-  // To simplify error handling, this creates a new vector and spawns new
-  // threads rather than reusing existing threads where possible.
-
-  size_t count = std::max(threadCount, minimumThreadCount);
-
-  newThreads = js::MakeUnique<HelperThreadVector>();
-  if (!newThreads || !newThreads->initCapacity(count)) {
-    return false;
-  }
-
-  for (size_t i = 0; i < count; i++) {
-    newThreads->infallibleEmplaceBack();
-    HelperThread& helper = (*newThreads)[i];
-
-    helper.thread = mozilla::Some(
-        Thread(Thread::Options().setStackSize(HELPER_STACK_SIZE)));
-    if (!helper.thread->init(HelperThread::ThreadMain, &helper)) {
-      // Ensure that we do not leave uninitialized threads in the `threads`
-      // vector.
-      newThreads->popBack();
+    threads = js::MakeUnique<HelperThreadVector>();
+    if (!threads) {
       return false;
+    }
+    if (!threads->initCapacity(threadCount)) {
+      goto error;
+    }
+
+    for (size_t i = 0; i < threadCount; i++) {
+      threads->infallibleEmplaceBack();
+      HelperThread& helper = (*threads)[i];
+
+      helper.thread = mozilla::Some(
+          Thread(Thread::Options().setStackSize(HELPER_STACK_SIZE)));
+      if (!helper.thread->init(HelperThread::ThreadMain, &helper)) {
+        // Ensure that we do not leave uninitialized threads in the `threads`
+        // vector.
+        threads->popBack();
+        goto error;
+      }
     }
   }
 
-  // Initialization was successful. Replace the threads vector and let the scope
-  // guard destroy any existing threads on the way out.
-  std::swap(threads, newThreads);
-  threadCount = count;
-
   return true;
+
+error:
+  finishThreads();
+  return false;
 }
 
 GlobalHelperThreadState::GlobalHelperThreadState()
@@ -1162,17 +1147,13 @@ GlobalHelperThreadState::GlobalHelperThreadState()
       helperLock(mutexid::GlobalHelperThreadState) {
   cpuCount = ClampDefaultCPUCount(GetCPUCount());
   threadCount = ThreadCountForCPUCount(cpuCount);
-  gcParallelThreadCount = threadCount;
 
   MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");
 }
 
 void GlobalHelperThreadState::finish() {
-  if (threads) {
-    MOZ_ASSERT(CanUseExtraThreads());
-    finishThreads(*threads);
-    threads.reset(nullptr);
-  }
+  CancelOffThreadWasmTier2Generator();
+  finishThreads();
 
   // Make sure there are no Ion free tasks left. We check this here because,
   // unlike the other tasks, we don't explicitly block on this when
@@ -1185,21 +1166,16 @@ void GlobalHelperThreadState::finish() {
   destroyHelperContexts(lock);
 }
 
-void GlobalHelperThreadState::finishThreads(HelperThreadVector& threads) {
-  {
-    AutoLockHelperThreadState lock;
-    waitForAllThreadsLocked(lock);
-
-    for (auto& thread : threads) {
-      thread.setTerminate(lock);
-    }
-
-    notifyAll(GlobalHelperThreadState::PRODUCER, lock);
+void GlobalHelperThreadState::finishThreads() {
+  if (!threads) {
+    return;
   }
 
-  for (auto& thread : threads) {
-    thread.join();
+  MOZ_ASSERT(CanUseExtraThreads());
+  for (auto& thread : *threads) {
+    thread.destroy();
   }
+  threads.reset(nullptr);
 }
 
 bool GlobalHelperThreadState::ensureContextListForThreadCount() {
@@ -1515,12 +1491,11 @@ size_t GlobalHelperThreadState::maxCompressionThreads() const {
   return 1;
 }
 
-size_t GlobalHelperThreadState::maxGCParallelThreads(
-    const AutoLockHelperThreadState& lock) const {
+size_t GlobalHelperThreadState::maxGCParallelThreads() const {
   if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_GCPARALLEL)) {
     return 1;
   }
-  return gcParallelThreadCount;
+  return threadCount;
 }
 
 bool GlobalHelperThreadState::canStartWasmTier1Compile(
@@ -1701,7 +1676,7 @@ void GlobalHelperThreadState::scheduleCompressionTasks(
 bool GlobalHelperThreadState::canStartGCParallelTask(
     const AutoLockHelperThreadState& lock) {
   return !gcParallelWorklist(lock).isEmpty() &&
-         checkTaskThreadLimit<GCParallelTask*>(maxGCParallelThreads(lock));
+         checkTaskThreadLimit<GCParallelTask*>(maxGCParallelThreads());
 }
 
 void HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& lock) {
@@ -1989,14 +1964,16 @@ void GlobalHelperThreadState::mergeParseTaskRealm(JSContext* cx,
   gc::MergeRealms(parseTask->parseGlobal->as<GlobalObject>().realm(), dest);
 }
 
-void HelperThread::setTerminate(const AutoLockHelperThreadState& lock) {
+void HelperThread::destroy() {
   if (thread.isSome()) {
-    terminate = true;
-  }
-}
+    {
+      AutoLockHelperThreadState lock;
+      terminate = true;
 
-void HelperThread::join() {
-  if (thread.isSome()) {
+      /* Notify all helpers, to ensure that this thread wakes up. */
+      HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
+    }
+
     thread->join();
     thread.reset();
   }

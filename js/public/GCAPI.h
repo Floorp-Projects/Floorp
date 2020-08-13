@@ -355,30 +355,6 @@ typedef enum JSGCParamKey {
    * This parameter is read-only.
    */
   JSGC_CHUNK_BYTES = 38,
-
-  /**
-   * The number of background threads to use for parallel GC work for each CPU
-   * core, expressed as an integer percentage.
-   *
-   * Pref: javascript.options.mem.gc_helper_thread_ratio
-   */
-  JSGC_HELPER_THREAD_RATIO = 39,
-
-  /**
-   * The maximum number of background threads to use for parallel GC work.
-   *
-   * Pref: javascript.options.mem.gc_max_helper_threads
-   */
-  JSGC_MAX_HELPER_THREADS = 40,
-
-  /**
-   * The number of background threads to use for parallel GC work.
-   *
-   * This parameter is read-only and is set based on the
-   * JSGC_HELPER_THREAD_RATIO and JSGC_MAX_HELPER_THREADS parameters.
-   */
-  JSGC_HELPER_THREAD_COUNT = 41,
-
 } JSGCParamKey;
 
 /*
