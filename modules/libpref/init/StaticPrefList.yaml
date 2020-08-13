@@ -7522,7 +7522,7 @@
 
 - name: media.hardwaremediakeys.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # If this pref is on, then `media.mediacontrol.stopcontrol.timer.ms` would take
