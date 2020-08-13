@@ -30,14 +30,6 @@ class CustomTabActivity : MainActivity() {
         customTabId = intent.getStringExtra(CUSTOM_TAB_ID)
             ?: throw IllegalAccessError("No custom tab id in intent")
 
-        // The session for this ID, no longer exists. This usually happens because we were gc-d
-        // and since we do not save custom tab sessions, the activity is re-created and we no longer
-        // have a session with us to restore. It's safer to finish the activity instead.
-        if (components.sessionManager.findSessionById(customTabId) == null) {
-            finish()
-            return
-        }
-
         super.onCreate(savedInstanceState)
     }
 

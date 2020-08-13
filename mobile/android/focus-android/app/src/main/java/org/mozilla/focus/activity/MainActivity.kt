@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
+import org.mozilla.focus.activity.CustomTabActivity.Companion.CUSTOM_TAB_ID
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
@@ -49,6 +50,16 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val customTabId = intent.getStringExtra(CUSTOM_TAB_ID)
+
+        // The session for this ID, no longer exists. This usually happens because we were gc-d
+        // and since we do not save custom tab sessions, the activity is re-created and we no longer
+        // have a session with us to restore. It's safer to finish the activity instead.
+        if (customTabId != null && components.sessionManager.findSessionById(customTabId) == null) {
+            finish()
+            return
+        }
 
         if (!isTaskRoot) {
             if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN == intent.action) {
