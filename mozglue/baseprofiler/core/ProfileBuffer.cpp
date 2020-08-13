@@ -19,13 +19,6 @@ ProfileBuffer::ProfileBuffer(ProfileChunkedBuffer& aBuffer)
   MOZ_ASSERT(mEntries.IsInSession());
 }
 
-ProfileBuffer::~ProfileBuffer() {
-  // Only ProfileBuffer controls this buffer, and it should be empty when there
-  // is no ProfileBuffer using it.
-  mEntries.ResetChunkManager();
-  MOZ_ASSERT(!mEntries.IsInSession());
-}
-
 /* static */
 ProfileBufferBlockIndex ProfileBuffer::AddEntry(
     ProfileChunkedBuffer& aProfileChunkedBuffer,
