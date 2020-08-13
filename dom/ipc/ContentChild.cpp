@@ -3481,9 +3481,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     loadState->SetLoadType(aArgs.loadStateLoadType());
   }
 
-  if (aArgs.loadingSessionHistoryInfo().isSome()) {
-    loadState->SetLoadingSessionHistoryInfo(
-        aArgs.loadingSessionHistoryInfo().ref());
+  if (aArgs.sessionHistoryInfo().isSome()) {
+    loadState->SetSessionHistoryInfo(aArgs.sessionHistoryInfo().ref());
   }
   if (aArgs.originalUriString().isSome()) {
     loadState->SetOriginalURIString(aArgs.originalUriString().ref());

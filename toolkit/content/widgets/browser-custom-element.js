@@ -1872,12 +1872,10 @@
       // history, and performing the `resumeRedirectedLoad`, in order to get
       // sesssion state set up correctly.
       // FIXME: This probably needs to be hookable by GeckoView.
-      if (!Services.prefs.getBoolPref("fission.sessionHistoryInParent")) {
-        let tabbrowser = this.getTabBrowser();
-        if (tabbrowser) {
-          tabbrowser.finishBrowserRemotenessChange(this, redirectLoadSwitchId);
-          return true;
-        }
+      let tabbrowser = this.getTabBrowser();
+      if (tabbrowser) {
+        tabbrowser.finishBrowserRemotenessChange(this, redirectLoadSwitchId);
+        return true;
       }
       return false;
     }

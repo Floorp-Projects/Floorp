@@ -5410,37 +5410,23 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
     SetDocCurrentStateObj(mLSHE);
 
     SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
-  }
-
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
-    mActiveEntry = nullptr;
-    mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> loadingEntry;
-    if (mLoadingEntry) {
-      mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
-      mLoadingEntry.swap(loadingEntry);
-    }
-    if (mActiveEntry) {
-      MOZ_ASSERT(loadingEntry);
-      nsID changeID = {};
-      if (XRE_IsParentProcess()) {
-        mBrowsingContext->Canonical()->SessionHistoryCommit(mActiveEntry->Id(),
-                                                            changeID);
-      } else {
-        RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-        if (rootSH) {
-          if (!loadingEntry->mIsLoadFromSessionHistory) {
+    nsID changeID = {};
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      mActiveEntry = nullptr;
+      mLoadingEntry.swap(mActiveEntry);
+      if (mActiveEntry) {
+        if (XRE_IsParentProcess()) {
+          mBrowsingContext->Canonical()->SessionHistoryCommit(
+              mActiveEntry->Id(), changeID);
+        } else {
+          RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
+          if (rootSH) {
             changeID = rootSH->AddPendingHistoryChange();
-          } else {
-            // This is a load from session history, so we can update
-            // index and length immediately.
-            rootSH->SetIndexAndLength(loadingEntry->mRequestedIndex,
-                                      loadingEntry->mSessionHistoryLength,
-                                      changeID);
           }
+          ContentChild* cc = ContentChild::GetSingleton();
+          mozilla::Unused << cc->SendHistoryCommit(
+              mBrowsingContext, mActiveEntry->Id(), changeID);
         }
-        ContentChild* cc = ContentChild::GetSingleton();
-        mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
-                                                 mActiveEntry->Id(), changeID);
       }
     }
   }
@@ -9582,9 +9568,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // FIXME We still have a ton of codepaths that don't pass through
   //       DocumentLoadListener, so probably need to create session history info
   //       in more places.
-  if (aLoadState->GetLoadingSessionHistoryInfo()) {
-    mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(
-        *aLoadState->GetLoadingSessionHistoryInfo());
+  if (aLoadState->GetSessionHistoryInfo()) {
+    mLoadingEntry =
+        MakeUnique<SessionHistoryInfo>(*aLoadState->GetSessionHistoryInfo());
   }
 
   // open a channel for the url
@@ -9741,7 +9727,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   bool uriModified;
   if (mLSHE) {
     if (StaticPrefs::fission_sessionHistoryInParent()) {
-      uriModified = mLoadingEntry->mInfo.GetURIWasModified();
+      uriModified = mLoadingEntry->GetURIWasModified();
       MOZ_ASSERT(uriModified == mLSHE->GetURIWasModified());
     } else {
       uriModified = mLSHE->GetURIWasModified();
@@ -12847,6 +12833,6 @@ bool nsDocShell::GetIsAttemptingToNavigate() {
 }
 
 void nsDocShell::SetLoadingSessionHistoryInfo(
-    const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo) {
-  mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(aLoadingInfo);
+    const mozilla::dom::SessionHistoryInfo& aInfo) {
+  mLoadingEntry = MakeUnique<SessionHistoryInfo>(aInfo);
 }
