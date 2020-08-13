@@ -75,7 +75,6 @@
 #include "mozilla/layout/VsyncChild.h"
 #include "VsyncSource.h"
 #include "mozilla/VsyncDispatcher.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/TimelineConsumers.h"
 #include "nsAnimationManager.h"
@@ -2107,6 +2106,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
           if (!mStyleFlushObservers.RemoveElement(rawPresShell)) {
             continue;
           }
+
+          LogPresShellObserver::Run run(rawPresShell, this);
+
           RefPtr<PresShell> presShell = rawPresShell;
           presShell->mObservingStyleFlushes = false;
           presShell->FlushPendingNotifications(
@@ -2133,6 +2135,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
         if (!mLayoutFlushObservers.RemoveElement(rawPresShell)) {
           continue;
         }
+
+        LogPresShellObserver::Run run(rawPresShell, this);
+
         RefPtr<PresShell> presShell = rawPresShell;
         presShell->mObservingLayoutFlushes = false;
         presShell->mWasLastReflowInterrupted = false;

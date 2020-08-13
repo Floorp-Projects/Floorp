@@ -23,6 +23,7 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefreshObservers.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/VisualViewport.h"
@@ -54,6 +55,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
       mozilla::dom::VisualViewport::VisualViewportResizeEvent;
   using VVPScrollEvent =
       mozilla::dom::VisualViewport::VisualViewportScrollEvent;
+  using LogPresShellObserver = mozilla::LogPresShellObserver;
 
  public:
   explicit nsRefreshDriver(nsPresContext* aPresContext);
@@ -170,6 +172,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void AddStyleFlushObserver(mozilla::PresShell* aPresShell) {
     MOZ_DIAGNOSTIC_ASSERT(!mStyleFlushObservers.Contains(aPresShell),
                           "Double-adding style flush observer");
+    LogPresShellObserver::LogDispatch(aPresShell, this);
     mStyleFlushObservers.AppendElement(aPresShell);
     EnsureTimerStarted();
   }
@@ -180,6 +183,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void AddLayoutFlushObserver(mozilla::PresShell* aPresShell) {
     MOZ_DIAGNOSTIC_ASSERT(!IsLayoutFlushObserver(aPresShell),
                           "Double-adding layout flush observer");
+    LogPresShellObserver::LogDispatch(aPresShell, this);
     mLayoutFlushObservers.AppendElement(aPresShell);
     EnsureTimerStarted();
   }
