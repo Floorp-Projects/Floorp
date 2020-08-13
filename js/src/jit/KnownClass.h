@@ -14,7 +14,18 @@ namespace jit {
 
 class MDefinition;
 
-enum class KnownClass { PlainObject, Array, Function, RegExp, None };
+// Users of this enum often can't handle Proxy and Wrapper classes,
+// as well as non-Function callables.
+enum class KnownClass {
+  PlainObject,
+  Array,
+  Function,
+  RegExp,
+  ArrayIterator,
+  StringIterator,
+  RegExpStringIterator,
+  None
+};
 
 KnownClass GetObjectKnownClass(const MDefinition* def);
 const JSClass* GetObjectKnownJSClass(const MDefinition* def);

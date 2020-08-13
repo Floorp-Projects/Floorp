@@ -3593,17 +3593,10 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
     case MIRType::Object: {
       KnownClass known = GetObjectKnownClass(unboxed);
       if (known != KnownClass::None) {
-        switch (known) {
-          case KnownClass::Array:
-          case KnownClass::PlainObject:
-          case KnownClass::RegExp:
-            type = JSTYPE_OBJECT;
-            break;
-          case KnownClass::Function:
-            type = JSTYPE_FUNCTION;
-            break;
-          case KnownClass::None:
-            MOZ_CRASH("not reachable");
+        if (known == KnownClass::Function) {
+          type = JSTYPE_FUNCTION;
+        } else {
+          type = JSTYPE_OBJECT;
         }
 
         AssertKnownClass(alloc, this, unboxed);

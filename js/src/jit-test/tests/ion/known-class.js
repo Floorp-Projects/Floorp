@@ -1,5 +1,7 @@
 var IsRegExpObject = getSelfHostedValue("IsRegExpObject");
 var IsCallable = getSelfHostedValue("IsCallable");
+var NewArrayIterator = getSelfHostedValue("NewArrayIterator");
+var GuardToArrayIterator = getSelfHostedValue("GuardToArrayIterator");
 
 function array() {
     var a = [0];
@@ -93,6 +95,15 @@ function regexp2(x) {
     assertEq(IsCallable(a), false);
 }
 
+function iterator() {
+    var i = NewArrayIterator();
+    assertEq(Array.isArray(i), false);
+    assertEq(typeof i, "object");
+    assertEq(IsRegExpObject(i), false);
+    assertEq(IsCallable(i), false);
+    assertEq(GuardToArrayIterator(i), i);
+}
+
 var b = true;
 for (var i = 0; i < 1e4; i++) {
     array();
@@ -104,6 +115,7 @@ for (var i = 0; i < 1e4; i++) {
     arrow();
     regexp()
     regexp2(b);
+    iterator();
 
     b = !b;
 }
