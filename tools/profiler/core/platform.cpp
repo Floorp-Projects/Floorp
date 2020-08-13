@@ -5330,12 +5330,12 @@ static UniqueProfilerBacktrace locked_profiler_get_backtrace(PSLockRef aLock) {
   auto bufferManager = MakeUnique<ProfileChunkedBuffer>(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
       MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
-  auto buffer = MakeUnique<ProfileBuffer>(*bufferManager);
+  ProfileBuffer buffer(*bufferManager);
 
-  DoSyncSample(aLock, *registeredThread, now, regs, *buffer);
+  DoSyncSample(aLock, *registeredThread, now, regs, buffer);
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(
-      "SyncProfile", tid, std::move(bufferManager), std::move(buffer)));
+  return UniqueProfilerBacktrace(
+      new ProfilerBacktrace("SyncProfile", tid, std::move(bufferManager)));
 }
 
 UniqueProfilerBacktrace profiler_get_backtrace() {
