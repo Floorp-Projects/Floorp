@@ -6259,6 +6259,9 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   // to configure the viewport and we only want to do that when we have
   // real content to paint. See Bug 798245
   if (mIsFirstPaint && !mPaintingSuppressed) {
+    MOZ_LOG(gLog, LogLevel::Debug,
+            ("PresShell::Paint, first paint, this=%p", this));
+
     layerManager->SetIsFirstPaint();
     mIsFirstPaint = false;
   }
