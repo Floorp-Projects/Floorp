@@ -2815,6 +2815,7 @@ class HTMLEditor final : public TextEditor,
               "AutoBlockElementsJoiner::DeleteBRElement() failed");
           return result;
         }
+        case Mode::DeleteContentInRanges:
         case Mode::DeleteNonCollapsedRanges:
           MOZ_ASSERT_UNREACHABLE(
               "This mode should be handled in the other Run()");
@@ -2850,6 +2851,15 @@ class HTMLEditor final : public TextEditor,
           MOZ_ASSERT_UNREACHABLE(
               "This mode should be handled in the other Run()");
           return EditActionResult(NS_ERROR_UNEXPECTED);
+        case Mode::DeleteContentInRanges: {
+          EditActionResult result =
+              DeleteContentInRanges(aHTMLEditor, aDirectionAndAmount,
+                                    aStripWrappers, aRangesToDelete);
+          NS_WARNING_ASSERTION(
+              result.Succeeded(),
+              "AutoBlockElementsJoiner::DeleteContentInRanges() failed");
+          return result;
+        }
         case Mode::DeleteNonCollapsedRanges: {
           EditActionResult result = HandleDeleteNonCollapsedRanges(
               aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
@@ -2885,6 +2895,10 @@ class HTMLEditor final : public TextEditor,
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult DeleteBRElement(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         const EditorDOMPoint& aCaretPoint);
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult DeleteContentInRanges(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete);
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteNonCollapsedRanges(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
@@ -2897,6 +2911,7 @@ class HTMLEditor final : public TextEditor,
       JoinCurrentBlock,
       JoinOtherBlock,
       DeleteBRElement,
+      DeleteContentInRanges,
       DeleteNonCollapsedRanges,
     };
     nsCOMPtr<nsIContent> mLeftContent;
