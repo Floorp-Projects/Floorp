@@ -6729,6 +6729,15 @@ nsresult nsDocShell::CaptureState() {
     nsCOMPtr<nsIURI> uri;
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       uri = mActiveEntry->GetURI();
+#ifdef DEBUG
+      nsCOMPtr<nsIURI> debugURI(mOSHE->GetURI());
+      MOZ_ASSERT(!uri == !debugURI);
+      if (uri && debugURI) {
+        bool debugURIEquals;
+        debugURI->Equals(uri, &debugURIEquals);
+        MOZ_ASSERT(debugURIEquals);
+      }
+#endif
     } else {
       uri = mOSHE->GetURI();
     }
@@ -8332,6 +8341,8 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
       nsCOMPtr<nsIInputStream> currentPostData;
       if (StaticPrefs::fission_sessionHistoryInParent()) {
         currentPostData = mActiveEntry->GetPostData();
+        MOZ_ASSERT(!(nsCOMPtr<nsIInputStream>(mOSHE->GetPostData())) ==
+                   !currentPostData);
       } else {
         currentPostData = mOSHE->GetPostData();
       }
@@ -8445,6 +8456,8 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() ==
+                 scrollRestorationIsManual);
     } else {
       scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
     }
@@ -8554,6 +8567,11 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     needsScrollPosUpdate = true;
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       mActiveEntry->GetScrollPosition(&bx, &by);
+#ifdef DEBUG
+      nscoord x, y;
+      mOSHE->GetScrollPosition(&x, &y);
+      MOZ_ASSERT(x == bx && y == by);
+#endif
     } else {
       mOSHE->GetScrollPosition(&bx, &by);
     }
@@ -9682,6 +9700,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   if (mLSHE) {
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       uriModified = mLoadingEntry->GetURIWasModified();
+      MOZ_ASSERT(uriModified == mLSHE->GetURIWasModified());
     } else {
       uriModified = mLSHE->GetURIWasModified();
     }
@@ -10582,6 +10601,8 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     bool scrollRestorationIsManual;
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() ==
+                 scrollRestorationIsManual);
     } else {
       scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
     }
@@ -10610,6 +10631,11 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     nsString title;
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       title = mActiveEntry->GetTitle();
+#ifdef DEBUG
+      nsString debugTitle;
+      mOSHE->GetTitle(debugTitle);
+      MOZ_ASSERT(title.Equals(debugTitle));
+#endif
     } else {
       mOSHE->GetTitle(title);
     }
@@ -10718,6 +10744,7 @@ nsDocShell::GetCurrentScrollRestorationIsManual(bool* aIsManual) {
   if (mOSHE) {
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       *aIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() == *aIsManual);
       return NS_OK;
     }
     return mOSHE->GetScrollRestorationIsManual(aIsManual);
@@ -11080,10 +11107,12 @@ NS_IMETHODIMP
 nsDocShell::PersistLayoutHistoryState() {
   nsresult rv = NS_OK;
 
-  if (mOSHE || mActiveEntry) {
+  if (mOSHE) {
     bool scrollRestorationIsManual;
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent() && mActiveEntry) {
       scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
+      MOZ_ASSERT(mOSHE->GetScrollRestorationIsManual() ==
+                 scrollRestorationIsManual);
     } else {
       scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
     }
