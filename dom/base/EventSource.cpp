@@ -235,6 +235,7 @@ class EventSourceImpl final : public nsIObserver,
     PARSE_STATE_FIELD_NAME,
     PARSE_STATE_FIRST_CHAR_OF_FIELD_VALUE,
     PARSE_STATE_FIELD_VALUE,
+    PARSE_STATE_IGNORE_FIELD_VALUE,
     PARSE_STATE_BEGIN_OF_LINE
   };
 
@@ -1705,8 +1706,20 @@ nsresult EventSourceImpl::ParseCharacter(char16_t aChr) {
       } else if (aChr != 0) {
         // Avoid appending the null char to the field value.
         mLastFieldValue += aChr;
+      } else if (mLastFieldName.EqualsLiteral("id")) {
+        // Ignore the whole id field if aChr is null
+        mStatus = PARSE_STATE_IGNORE_FIELD_VALUE;
+        mLastFieldValue.Truncate();
       }
 
+      break;
+
+    case PARSE_STATE_IGNORE_FIELD_VALUE:
+      if (aChr == CR_CHAR) {
+        mStatus = PARSE_STATE_CR_CHAR;
+      } else if (aChr == LF_CHAR) {
+        mStatus = PARSE_STATE_BEGIN_OF_LINE;
+      }
       break;
 
     case PARSE_STATE_BEGIN_OF_LINE:
