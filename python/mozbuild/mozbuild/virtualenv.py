@@ -93,12 +93,12 @@ class VirtualenvManager(object):
         return os.path.join(self.bin_path, 'activate_this.py')
 
     def get_exe_info(self):
-        """Returns the version and file size of the python executable that was in
-        use when this virtualenv was created.
+        """Returns the version of the python executable that was in use when
+        this virtualenv was created.
         """
         with open(self.exe_info_path, 'r') as fh:
-            version, size = fh.read().splitlines()
-        return int(version), int(size)
+            version = fh.read()
+        return int(version)
 
     def write_exe_info(self, python):
         """Records the the version of the python executable that was in use when
@@ -109,7 +109,6 @@ class VirtualenvManager(object):
         ver = self.python_executable_hexversion(python)
         with open(self.exe_info_path, 'w') as fh:
             fh.write("%s\n" % ver)
-            fh.write("%s\n" % os.path.getsize(python))
 
     def python_executable_hexversion(self, python):
         """Run a Python executable and return its sys.hexversion value."""
@@ -145,11 +144,9 @@ class VirtualenvManager(object):
         # python, or we have the Python version that was used to create the
         # virtualenv. If this fails, it is likely system Python has been
         # upgraded, and our virtualenv would not be usable.
-        orig_version, orig_size = self.get_exe_info()
-        python_size = os.path.getsize(python)
+        orig_version = self.get_exe_info()
         hexversion = self.python_executable_hexversion(python)
-        if ((python, python_size) != (self.python_path, os.path.getsize(self.python_path)) and
-                (hexversion, python_size) != (orig_version, orig_size)):
+        if (python != self.python_path) and (hexversion != orig_version):
             return False
 
         # recursively check sub packages.txt files
