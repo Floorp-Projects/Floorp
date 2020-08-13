@@ -10534,13 +10534,6 @@ void CodeGenerator::visitArraySlice(LArraySlice* lir) {
 
   Label call, fail;
 
-  if (JitOptions.warpBuilder) {
-    Label bail;
-    masm.branchArrayIsNotPacked(object, temp1, temp2, &bail);
-
-    bailoutFrom(&bail, lir->snapshot());
-  }
-
   // Try to allocate an object.
   TemplateObject templateObject(lir->mir()->templateObj());
   masm.createGCObject(temp1, temp2, templateObject, lir->mir()->initialHeap(),
