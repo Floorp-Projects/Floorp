@@ -629,6 +629,10 @@ template <typename T>
 void LogTaskBase<T>::LogDispatch(T* aEvent) {
   LOG1(("DISP %p", aEvent));
 }
+template <typename T>
+void LogTaskBase<T>::LogDispatch(T* aEvent, void* aContext) {
+  LOG1(("DISP %p (%p)", aEvent, aContext));
+}
 
 template <>
 void LogTaskBase<IPC::Message>::LogDispatchWithPid(IPC::Message* aEvent,
@@ -645,6 +649,11 @@ LogTaskBase<T>::Run::Run(T* aEvent, bool aWillRunAgain)
   // while not keeping any ref to the event that could be invalid at the dtor
   // time.
   LOG1(("EXEC %p %p", aEvent, this));
+}
+template <typename T>
+LogTaskBase<T>::Run::Run(T* aEvent, void* aContext, bool aWillRunAgain)
+    : mWillRunAgain(aWillRunAgain) {
+  LOG1(("EXEC %p (%p) %p", aEvent, aContext, this));
 }
 
 template <>
@@ -690,6 +699,7 @@ template class LogTaskBase<MicroTaskRunnable>;
 template class LogTaskBase<IPC::Message>;
 template class LogTaskBase<nsTimerImpl>;
 template class LogTaskBase<Task>;
+template class LogTaskBase<PresShell>;
 
 MOZ_THREAD_LOCAL(nsISerialEventTarget*)
 SerialEventTargetGuard::sCurrentThreadTLS;
