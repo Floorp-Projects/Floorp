@@ -366,6 +366,19 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         LOG(("Http3Session::ProcessEvents - Reset"));
         ResetRecvd(event.reset.stream_id, event.reset.error);
         break;
+      case Http3Event::Tag::StopSending:
+        LOG(("Http3Session::ProcessEvents - StopSeniding with error 0x%" PRIx64,
+             event.stop_sending.error));
+        if (event.stop_sending.error == HTTP3_APP_ERROR_NO_ERROR) {
+          RefPtr<Http3Stream> stream =
+              mStreamIdHash.Get(event.data_writable.stream_id);
+          if (stream) {
+            stream->StopSending();
+          }
+        } else {
+          ResetRecvd(event.reset.stream_id, event.reset.error);
+        }
+        break;
       case Http3Event::Tag::PushPromise:
         LOG(("Http3Session::ProcessEvents - PushPromise"));
         break;

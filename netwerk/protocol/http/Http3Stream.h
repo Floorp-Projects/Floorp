@@ -56,6 +56,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
     mRecvState = RECEIVED_RESET;
   }
 
+  void StopSending();
+
   void SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders, bool fin);
 
  private:
@@ -84,7 +86,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
    *      the data to neqo.
    *      After SENDING_BODY, the state transfers to READING_HEADERS.
    *  - EARLY_RESPONSE:
-   *      The server may send STOP_SENDING frame with error HTTP_EARLY_RESPONSE.
+   *      The server may send STOP_SENDING frame with error HTTP_NO_ERROR.
    *      That error means that the server is not interested in the request
    *      body. In this state the server will just ignore the request body.
    **/
