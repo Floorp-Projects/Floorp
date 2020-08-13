@@ -138,9 +138,11 @@ class nsDocShellLoadState final {
 
   void SetSHEntry(nsISHEntry* aSHEntry);
 
-  const mozilla::dom::SessionHistoryInfo* GetSessionHistoryInfo() const;
+  const mozilla::dom::LoadingSessionHistoryInfo* GetLoadingSessionHistoryInfo()
+      const;
 
-  void SetSessionHistoryInfo(const mozilla::dom::SessionHistoryInfo& aInfo);
+  void SetLoadingSessionHistoryInfo(
+      const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo);
 
   const nsString& Target() const;
 
@@ -276,6 +278,9 @@ class nsDocShellLoadState final {
 
   mozilla::dom::DocShellLoadStateInit Serialize();
 
+  void SetLoadIsFromSessionHistory(int32_t aRequestedIndex,
+                                   int32_t aSessionHistoryLength);
+
  protected:
   // Destructor can't be defaulted or inlined, as header doesn't have all type
   // includes it needs to do so.
@@ -377,8 +382,9 @@ class nsDocShellLoadState final {
   // Active Session History entry (if loading from SH)
   nsCOMPtr<nsISHEntry> mSHEntry;
 
-  // Session history info for the load
-  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mSessionHistoryInfo;
+  // Loading session history info for the load
+  mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo>
+      mLoadingSessionHistoryInfo;
 
   // Target for load, like _content, _blank etc.
   nsString mTarget;
