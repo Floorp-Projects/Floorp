@@ -1035,6 +1035,17 @@ class MRootList : public TempObject {
     return true;
   }
 
+  MOZ_MUST_USE bool append(jsid id) {
+    if (id.isString()) {
+      return append(id.toString());
+    }
+    if (id.isSymbol()) {
+      return append(id.toSymbol());
+    }
+    MOZ_ASSERT(!id.isGCThing());
+    return true;
+  }
+
   template <typename T>
   MOZ_MUST_USE bool append(const CompilerGCPointer<T>& ptr) {
     return append(static_cast<T>(ptr));
@@ -9192,6 +9203,43 @@ class MGuardIsNotDOMProxy : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+class MProxyGet : public MUnaryInstruction, public SingleObjectPolicy::Data {
+  jsid id_;
+
+  MProxyGet(MDefinition* proxy, jsid id)
+      : MUnaryInstruction(classOpcode, proxy), id_(id) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(ProxyGet)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy))
+
+  jsid id() const { return id_; }
+
+  bool possiblyCalls() const override { return true; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(id_);
+  }
+};
+
+class MProxyGetByValue : public MBinaryInstruction,
+                         public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  MProxyGetByValue(MDefinition* proxy, MDefinition* idVal)
+      : MBinaryInstruction(classOpcode, proxy, idVal) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(ProxyGetByValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, proxy), (1, idVal))
+
+  bool possiblyCalls() const override { return true; }
 };
 
 // Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.

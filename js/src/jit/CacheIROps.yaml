@@ -1850,17 +1850,17 @@
     val: ValId
     getter: ObjectField
 
-- name: CallProxyGetResult
+- name: ProxyGetResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     obj: ObjId
     id: IdField
 
-- name: CallProxyGetByValueResult
+- name: ProxyGetByValueResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     obj: ObjId

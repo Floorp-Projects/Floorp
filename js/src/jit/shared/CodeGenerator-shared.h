@@ -382,6 +382,13 @@ class CodeGeneratorShared : public LElementVisitor {
 #endif
   }
 
+  void pushArg(jsid id, Register temp) {
+    masm.Push(id, temp);
+#ifdef DEBUG
+    pushedArgs_++;
+#endif
+  }
+
   template <typename T>
   CodeOffset pushArgWithPatch(const T& t) {
 #ifdef DEBUG

@@ -620,8 +620,8 @@ bool BaselineCacheIRCompiler::emitCallNativeGetterByValueResult(
   });
 }
 
-bool BaselineCacheIRCompiler::emitCallProxyGetResult(ObjOperandId objId,
-                                                     uint32_t idOffset) {
+bool BaselineCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
+                                                 uint32_t idOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   Address idAddr(stubAddress(idOffset));

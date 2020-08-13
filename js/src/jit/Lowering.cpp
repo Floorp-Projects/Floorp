@@ -4165,6 +4165,22 @@ void LIRGenerator::visitGuardIsNotDOMProxy(MGuardIsNotDOMProxy* ins) {
   redefine(ins, ins->proxy());
 }
 
+void LIRGenerator::visitProxyGet(MProxyGet* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  auto* lir = new (alloc()) LProxyGet(useRegisterAtStart(ins->proxy()), temp());
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitProxyGetByValue(MProxyGetByValue* ins) {
+  MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->idVal()->type() == MIRType::Value);
+  auto* lir = new (alloc()) LProxyGetByValue(useRegisterAtStart(ins->proxy()),
+                                             useBoxAtStart(ins->idVal()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitGuardIsNotArrayBufferMaybeShared(
     MGuardIsNotArrayBufferMaybeShared* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

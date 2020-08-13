@@ -106,6 +106,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
+  jsid idStubField(uint32_t offset) {
+    return jsid::fromRawBits(readStubWord(offset));
+  }
   int32_t int32StubField(uint32_t offset) {
     return static_cast<int32_t>(readStubWord(offset));
   }
@@ -312,6 +315,30 @@ bool WarpCacheIRTranspiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
 
   setOperand(objId, ins);
   return true;
+}
+
+bool WarpCacheIRTranspiler::emitProxyGetResult(ObjOperandId objId,
+                                               uint32_t idOffset) {
+  MDefinition* obj = getOperand(objId);
+  jsid id = idStubField(idOffset);
+
+  auto* ins = MProxyGet::New(alloc(), obj, id);
+  addEffectful(ins);
+
+  pushResult(ins);
+  return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitProxyGetByValueResult(ObjOperandId objId,
+                                                      ValOperandId idId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* id = getOperand(idId);
+
+  auto* ins = MProxyGetByValue::New(alloc(), obj, id);
+  addEffectful(ins);
+
+  pushResult(ins);
+  return resumeAfter(ins);
 }
 
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
