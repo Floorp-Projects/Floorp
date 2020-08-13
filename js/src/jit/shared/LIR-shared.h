@@ -7700,6 +7700,20 @@ class LGuardNullOrUndefined : public LInstructionHelper<0, BOX_PIECES, 0> {
   MGuardNullOrUndefined* mir() { return mir_->toGuardNullOrUndefined(); }
 };
 
+class LGuardFunctionFlags : public LInstructionHelper<0, 1, 0> {
+ public:
+  LIR_HEADER(GuardFunctionFlags)
+
+  explicit LGuardFunctionFlags(const LAllocation& fun)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, fun);
+  }
+
+  const LAllocation* function() { return getOperand(0); }
+
+  MGuardFunctionFlags* mir() { return mir_->toGuardFunctionFlags(); }
+};
+
 class LGuardFunctionKind : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardFunctionKind)

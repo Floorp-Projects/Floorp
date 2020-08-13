@@ -605,7 +605,7 @@
 
 - name: GuardFunctionHasJitEntry
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     fun: ObjId
@@ -613,14 +613,14 @@
 
 - name: GuardFunctionHasNoJitEntry
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     fun: ObjId
 
 - name: GuardFunctionIsConstructor
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     fun: ObjId

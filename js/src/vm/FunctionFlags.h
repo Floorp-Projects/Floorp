@@ -315,6 +315,14 @@ class FunctionFlags {
   void setIsExtended() { setFlags(EXTENDED); }
 
   bool isNativeConstructor() const { return hasFlags(NATIVE_CTOR); }
+
+  static uint16_t HasJitEntryFlags(bool isConstructing) {
+    uint16_t flags = BASESCRIPT | SELFHOSTLAZY;
+    if (!isConstructing) {
+      flags |= WASM_JIT_ENTRY;
+    }
+    return flags;
+  }
 };
 
 } /* namespace js */

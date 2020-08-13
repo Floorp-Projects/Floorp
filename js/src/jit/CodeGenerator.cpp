@@ -5045,6 +5045,17 @@ void CodeGenerator::visitGuardNullOrUndefined(LGuardNullOrUndefined* lir) {
   masm.bind(&done);
 }
 
+void CodeGenerator::visitGuardFunctionFlags(LGuardFunctionFlags* lir) {
+  Register function = ToRegister(lir->function());
+
+  Assembler::Condition cond =
+      lir->mir()->bailWhenSet() ? Assembler::NonZero : Assembler::Zero;
+
+  Label bail;
+  masm.branchTestFunctionFlags(function, lir->mir()->flags(), cond, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardFunctionKind(LGuardFunctionKind* lir) {
   Register function = ToRegister(lir->function());
   Register temp = ToRegister(lir->temp());
