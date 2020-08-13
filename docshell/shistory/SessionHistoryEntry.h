@@ -23,7 +23,6 @@ class nsIURI;
 namespace mozilla {
 namespace dom {
 
-struct LoadingSessionHistoryInfo;
 class SHEntrySharedParentState;
 
 // SessionHistoryInfo stores session history data for a load. It can be sent
@@ -31,7 +30,6 @@ class SHEntrySharedParentState;
 class SessionHistoryInfo {
  public:
   SessionHistoryInfo() = default;
-  explicit SessionHistoryInfo(uint64_t aExistingId);
   SessionHistoryInfo(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
 
   bool operator==(const SessionHistoryInfo& aInfo) const {
@@ -69,7 +67,7 @@ class SessionHistoryInfo {
 
  private:
   friend class SessionHistoryEntry;
-  friend struct mozilla::ipc::IPDLParamTraits<LoadingSessionHistoryInfo>;
+  friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
 
   void MaybeUpdateTitleFromURI();
 
@@ -101,24 +99,6 @@ class SessionHistoryInfo {
   bool mPersist = false;
 };
 
-struct LoadingSessionHistoryInfo {
-  LoadingSessionHistoryInfo() = default;
-  explicit LoadingSessionHistoryInfo(const SessionHistoryInfo& aInfo);
-
-  SessionHistoryInfo mInfo;
-
-  // The following three member variables are used to inform about a load from
-  // the session history. The session-history-in-child approach has just
-  // an nsISHEntry in the nsDocShellLoadState and access to the nsISHistory,
-  // but session-history-in-parent needs to pass needed information explicitly
-  // to the relevant child process.
-  bool mIsLoadFromSessionHistory = false;
-  // mRequestedIndex and mSessionHistoryLength are relevant
-  // only if mIsLoadFromSessionHistory is true.
-  int32_t mRequestedIndex = -1;
-  int32_t mSessionHistoryLength = 0;
-};
-
 // SessionHistoryEntry is used to store session history data in the parent
 // process. It holds a SessionHistoryInfo, some state shared amongst multiple
 // SessionHistoryEntries, a parent and children.
@@ -132,7 +112,7 @@ struct LoadingSessionHistoryInfo {
 class SessionHistoryEntry : public nsISHEntry {
  public:
   SessionHistoryEntry(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
-  SessionHistoryEntry();
+  explicit SessionHistoryEntry(SessionHistoryInfo* aInfo);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
@@ -176,13 +156,13 @@ NS_DEFINE_STATIC_IID_ACCESSOR(SessionHistoryEntry, NS_SESSIONHISTORYENTRY_IID)
 
 namespace ipc {
 
-// Allow sending LoadingSessionHistoryInfo objects over IPC.
+// Allow sending SessionHistoryInfo objects over IPC.
 template <>
-struct IPDLParamTraits<dom::LoadingSessionHistoryInfo> {
+struct IPDLParamTraits<dom::SessionHistoryInfo> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const dom::LoadingSessionHistoryInfo& aParam);
+                    const dom::SessionHistoryInfo& aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, dom::LoadingSessionHistoryInfo* aResult);
+                   IProtocol* aActor, dom::SessionHistoryInfo* aResult);
 };
 
 // Allow sending nsILayoutHistoryState objects over IPC.

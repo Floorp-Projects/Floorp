@@ -624,9 +624,8 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   if (documentContext && StaticPrefs::fission_sessionHistoryInParent()) {
     // It's hard to know at this point whether session history will be enabled
     // in the browsing context, so we always create an entry for a load here.
-    mLoadingSessionHistoryInfo =
-        documentContext->CreateLoadingSessionHistoryEntryForLoad(aLoadState,
-                                                                 mChannel);
+    mSessionHistoryInfo =
+        documentContext->CreateSessionHistoryEntryForLoad(aLoadState, mChannel);
   }
 
   *aRv = NS_OK;
@@ -1331,8 +1330,8 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
   aArgs.loadStateLoadType() = mLoadStateLoadType;
   aArgs.originalUriString() = mOriginalUriString;
-  if (mLoadingSessionHistoryInfo) {
-    aArgs.loadingSessionHistoryInfo().emplace(*mLoadingSessionHistoryInfo);
+  if (mSessionHistoryInfo) {
+    aArgs.sessionHistoryInfo().emplace(*mSessionHistoryInfo);
   }
 }
 
@@ -1662,8 +1661,8 @@ DocumentLoadListener::RedirectToParentProcess(uint32_t aRedirectFlags,
 
   loadState->SetLoadFlags(mLoadStateLoadFlags);
   loadState->SetLoadType(mLoadStateLoadType);
-  if (mLoadingSessionHistoryInfo) {
-    loadState->SetLoadingSessionHistoryInfo(*mLoadingSessionHistoryInfo);
+  if (mSessionHistoryInfo) {
+    loadState->SetSessionHistoryInfo(*mSessionHistoryInfo);
   }
 
   // This is poorly named now.
