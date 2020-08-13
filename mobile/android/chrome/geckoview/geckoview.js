@@ -235,7 +235,7 @@ var ModuleManager = {
       module.enabled = true;
     });
 
-    this.messageManager.sendAsyncMessage(
+    this.getActor("GeckoViewContent").sendAsyncMessage(
       "GeckoView:RestoreState",
       sessionState
     );
@@ -509,10 +509,15 @@ function startup() {
   const browser = createBrowser();
   ModuleManager.init(browser, [
     {
+      name: "ExtensionContent",
+      onInit: {
+        frameScript: "chrome://geckoview/content/extension-content.js",
+      },
+    },
+    {
       name: "GeckoViewContent",
       onInit: {
         resource: "resource://gre/modules/GeckoViewContent.jsm",
-        frameScript: "chrome://geckoview/content/GeckoViewContentChild.js",
       },
     },
     {
