@@ -2718,6 +2718,7 @@ class HTMLEditor final : public TextEditor,
     RefPtr<Element> mEmptyInclusiveAncestorBlockElement;
   };
 
+  enum class SelectionWasCollapsed { Yes, No };
   class MOZ_STACK_CLASS AutoBlockElementsJoiner final {
    public:
     /**
@@ -2760,6 +2761,11 @@ class HTMLEditor final : public TextEditor,
         const EditorDOMPoint& aCaretPoint,
         const WSRunScanner& aWSRunScannerAtCaret);
 
+    bool PrepareToDeleteNonCollapsedRanges() {
+      mMode = Mode::DeleteNonCollapsedRanges;
+      return true;
+    }
+
     /**
      * Run() executes the joining.
      *
@@ -2800,6 +2806,50 @@ class HTMLEditor final : public TextEditor,
               "AutoBlockElementsJoiner::DeleteBRElement() failed");
           return result;
         }
+        case Mode::DeleteNonCollapsedRanges:
+          MOZ_ASSERT_UNREACHABLE(
+              "This mode should be handled in the other Run()");
+          return EditActionResult(NS_ERROR_UNEXPECTED);
+        case Mode::NotInitialized:
+          return EditActionIgnored();
+      }
+      return EditActionResult(NS_ERROR_NOT_INITIALIZED);
+    }
+
+    /**
+     * Run() executes the joining.
+     *
+     * @param aHTMLEditor               The HTML editor.
+     * @param aDirectionAndAmount       Direction of the deletion.
+     * @param aStripWrappers            Whether delete or keep new empty
+     *                                  ancestor elements.
+     * @param aRangesToDelete           Ranges to delete.  Must not be
+     *                                  collapsed.
+     * @param aSelectionWasCollapsed    Whether selection was or was not
+     *                                  collapsed when starting to handle
+     *                                  deletion.
+     */
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+    Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete,
+        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed) {
+      switch (mMode) {
+        case Mode::JoinCurrentBlock:
+        case Mode::JoinOtherBlock:
+        case Mode::DeleteBRElement:
+          MOZ_ASSERT_UNREACHABLE(
+              "This mode should be handled in the other Run()");
+          return EditActionResult(NS_ERROR_UNEXPECTED);
+        case Mode::DeleteNonCollapsedRanges: {
+          EditActionResult result = HandleDeleteNonCollapsedRanges(
+              aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
+              aSelectionWasCollapsed);
+          NS_WARNING_ASSERTION(result.Succeeded(),
+                               "AutoBlockElementsJoiner::"
+                               "HandleDeleteNonCollapsedRange() failed");
+          return result;
+        }
         case Mode::NotInitialized:
           return EditActionIgnored();
       }
@@ -2826,12 +2876,19 @@ class HTMLEditor final : public TextEditor,
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult DeleteBRElement(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         const EditorDOMPoint& aCaretPoint);
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+    HandleDeleteNonCollapsedRanges(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete,
+        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed);
 
     enum class Mode {
       NotInitialized,
       JoinCurrentBlock,
       JoinOtherBlock,
       DeleteBRElement,
+      DeleteNonCollapsedRanges,
     };
     nsCOMPtr<nsIContent> mLeftContent;
     nsCOMPtr<nsIContent> mRightContent;
@@ -2926,7 +2983,6 @@ class HTMLEditor final : public TextEditor,
    *                                    collapsed from the beginning, set
    *                                    this to `No`.
    */
-  enum class SelectionWasCollapsed { Yes, No };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteNonCollapsedRanges(nsIEditor::EDirection aDirectionAndAmount,
                                  nsIEditor::EStripWrappers aStripWrappers,
