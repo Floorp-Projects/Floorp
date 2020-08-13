@@ -27,7 +27,10 @@ class DefaultReaderModeController(
     private val isPrivate: Boolean = false
 ) : ReaderModeController {
     override fun hideReaderView() {
-        readerViewFeature.withFeature { it.hideReaderView() }
+        readerViewFeature.withFeature {
+            it.hideReaderView()
+            it.hideControls()
+        }
     }
 
     override fun showReaderView() {

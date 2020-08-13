@@ -54,6 +54,7 @@ class DefaultReaderModeControllerTest {
         every { readerViewFeature.hideReaderView() } returns Unit
         every { readerViewFeature.showReaderView() } returns Unit
         every { readerViewFeature.showControls() } returns Unit
+        every { readerViewFeature.hideControls() } returns Unit
     }
 
     @Test
@@ -61,6 +62,7 @@ class DefaultReaderModeControllerTest {
         val controller = DefaultReaderModeController(featureWrapper, readerViewControlsBar)
         controller.hideReaderView()
         verify { readerViewFeature.hideReaderView() }
+        verify { readerViewFeature.hideControls() }
     }
 
     @Test
