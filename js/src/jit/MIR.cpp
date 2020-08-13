@@ -21,6 +21,7 @@
 #include "jit/BaselineInspector.h"
 #include "jit/IonBuilder.h"
 #include "jit/JitSpewer.h"
+#include "jit/KnownClass.h"
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
 #include "js/Conversions.h"
