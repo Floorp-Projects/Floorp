@@ -1,7 +1,7 @@
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   const contentDocument = gBrowser.contentDocument;
-  const dialogOverlay = content.gSubDialog._preloadDialog._overlay;
+  let dialogOverlay = content.gSubDialog._preloadDialog._overlay;
 
   async function languagesSubdialogOpened() {
     const promiseSubDialogLoaded = promiseLoadSubDialog(
@@ -10,6 +10,7 @@ add_task(async function() {
     contentDocument.getElementById("chooseLanguage").click();
     const win = await promiseSubDialogLoaded;
     win.Preferences.forceEnableInstantApply();
+    dialogOverlay = content.gSubDialog._topDialog._overlay;
     is(dialogOverlay.style.visibility, "visible", "The dialog is visible.");
     return win;
   }
