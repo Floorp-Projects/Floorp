@@ -5301,6 +5301,20 @@ double profiler_time() {
   return delta.ToMilliseconds();
 }
 
+static void locked_profiler_fill_backtrace(PSLockRef aLock,
+                                           RegisteredThread& aRegisteredThread,
+                                           ProfileBuffer& aProfileBuffer) {
+  Registers regs;
+#if defined(HAVE_NATIVE_UNWIND)
+  regs.SyncPopulate();
+#else
+  regs.Clear();
+#endif
+
+  DoSyncSample(aLock, aRegisteredThread, TimeStamp::NowUnfuzzed(), regs,
+               aProfileBuffer);
+}
+
 static UniqueProfilerBacktrace locked_profiler_get_backtrace(PSLockRef aLock) {
   if (!ActivePS::Exists(aLock)) {
     return nullptr;
@@ -5316,26 +5330,16 @@ static UniqueProfilerBacktrace locked_profiler_get_backtrace(PSLockRef aLock) {
     return nullptr;
   }
 
-  int tid = profiler_current_thread_id();
-
-  TimeStamp now = TimeStamp::NowUnfuzzed();
-
-  Registers regs;
-#if defined(HAVE_NATIVE_UNWIND)
-  regs.SyncPopulate();
-#else
-  regs.Clear();
-#endif
-
   auto bufferManager = MakeUnique<ProfileChunkedBuffer>(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
       MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
   ProfileBuffer buffer(*bufferManager);
 
-  DoSyncSample(aLock, *registeredThread, now, regs, buffer);
+  locked_profiler_fill_backtrace(aLock, *registeredThread, buffer);
 
   return UniqueProfilerBacktrace(
-      new ProfilerBacktrace("SyncProfile", tid, std::move(bufferManager)));
+      new ProfilerBacktrace("SyncProfile", registeredThread->Info()->ThreadId(),
+                            std::move(bufferManager)));
 }
 
 UniqueProfilerBacktrace profiler_get_backtrace() {
@@ -5353,6 +5357,29 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
 
 void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
   delete aBacktrace;
+}
+
+bool profiler_capture_backtrace(ProfileChunkedBuffer& aChunkedBuffer) {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock(gPSMutex);
+
+  if (!ActivePS::Exists(lock)) {
+    return false;
+  }
+
+  RegisteredThread* registeredThread =
+      TLSRegisteredThread::RegisteredThread(lock);
+  if (!registeredThread) {
+    MOZ_ASSERT(registeredThread);
+    return false;
+  }
+
+  ProfileBuffer profileBuffer(aChunkedBuffer);
+
+  locked_profiler_fill_backtrace(lock, *registeredThread, profileBuffer);
+
+  return true;
 }
 
 static void racy_profiler_add_marker(const char* aMarkerName,
