@@ -252,6 +252,9 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
     case GuardClassKind::DataView:
       classp = &DataViewObject::class_;
       break;
+    case GuardClassKind::JSFunction:
+      classp = &JSFunction::class_;
+      break;
     default:
       MOZ_CRASH("not yet supported");
   }
@@ -598,6 +601,42 @@ bool WarpCacheIRTranspiler::emitGuardFrameHasNoArgumentsObject() {
   // WarpOracle ensures this op isn't transpiled in functions that need an
   // arguments object.
   MOZ_ASSERT(!currentBlock()->info().needsArgsObj());
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
+                                                         bool constructing) {
+  MDefinition* fun = getOperand(funId);
+  uint16_t flags = FunctionFlags::HasJitEntryFlags(constructing);
+
+  auto* ins = MGuardFunctionFlags::New(alloc(), fun, flags,
+                                       /*bailWhenSet=*/false);
+  add(ins);
+
+  setOperand(funId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardFunctionHasNoJitEntry(ObjOperandId funId) {
+  MDefinition* fun = getOperand(funId);
+  uint16_t flags = FunctionFlags::HasJitEntryFlags(/*isConstructing=*/false);
+
+  auto* ins = MGuardFunctionFlags::New(alloc(), fun, flags,
+                                       /*bailWhenSet=*/true);
+  add(ins);
+
+  setOperand(funId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardFunctionIsConstructor(ObjOperandId funId) {
+  MDefinition* fun = getOperand(funId);
+
+  auto* ins = MGuardFunctionFlags::New(alloc(), fun, FunctionFlags::CONSTRUCTOR,
+                                       /*bailWhenSet=*/false);
+  add(ins);
+
+  setOperand(funId, ins);
   return true;
 }
 
