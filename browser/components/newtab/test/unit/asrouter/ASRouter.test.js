@@ -183,7 +183,7 @@ describe("ASRouter", () => {
       ASRouterTriggerListeners,
       QueryCache,
       gURLBar: {},
-      multiStageAboutWelcome: null,
+      isSeparateAboutWelcome: true,
       AttributionCode: fakeAttributionCode,
       SnippetsTestMessageProvider,
       PanelTestProvider,
@@ -1789,7 +1789,51 @@ describe("ASRouter", () => {
 
         assert.calledOnce(Router.sendNewTabMessage);
       });
-      it("should fallback to snippets if onboarding message provider returned none", async () => {
+      it("should hide extended triplets by default when browser.aboutwelcome.enabled is true", async () => {
+        const handleMessageRequestStub = sandbox.stub(
+          Router,
+          "handleMessageRequest"
+        );
+        handleMessageRequestStub
+          .withArgs({
+            template: "extended_triplets",
+          })
+          .resolves({ id: "foo" });
+        const msg = fakeAsyncMessage({
+          type: "NEWTAB_MESSAGE_REQUEST",
+          data: {},
+        });
+        await Router.onMessage(msg);
+
+        assert.calledOnce(handleMessageRequestStub);
+        assert.calledWithExactly(handleMessageRequestStub, {
+          provider: "snippets",
+        });
+      });
+      it("should show extended triplets when browser.aboutwelcome.enabled is false", async () => {
+        globals.set({ isSeparateAboutWelcome: false });
+        const handleMessageRequestStub = sandbox.stub(
+          Router,
+          "handleMessageRequest"
+        );
+        handleMessageRequestStub
+          .withArgs({
+            template: "extended_triplets",
+          })
+          .resolves({ id: "foo" });
+        const msg = fakeAsyncMessage({
+          type: "NEWTAB_MESSAGE_REQUEST",
+          data: {},
+        });
+        await Router.onMessage(msg);
+
+        assert.calledOnce(handleMessageRequestStub);
+        assert.calledWithExactly(handleMessageRequestStub, {
+          template: "extended_triplets",
+        });
+      });
+      it("should fallback to snippets if onboarding message provider returned none when browser.aboutwelcome.enabled is false", async () => {
+        globals.set({ isSeparateAboutWelcome: false });
         const handleMessageRequestStub = sandbox.stub(
           Router,
           "handleMessageRequest"
@@ -4012,32 +4056,6 @@ describe("ASRouter", () => {
         id: "unblock",
         value: true,
       });
-    });
-  });
-  describe("#hideExtendedTripletsOnMultiStageWelcome", () => {
-    it("should return false by default", async () => {
-      global.ExperimentAPI.getExperiment.returns(null);
-      let result = Router.hasMultiStageAboutWelcome();
-      assert.isFalse(result);
-    });
-    it("should return true if experiment has multistage template", async () => {
-      global.ExperimentAPI.getExperiment.returns({
-        branch: {
-          slug: "branch01",
-          value: { id: "id01", template: "multistage" },
-        },
-      });
-      let result = Router.hasMultiStageAboutWelcome();
-      assert.calledOnce(global.ExperimentAPI.getExperiment);
-      assert.calledWithExactly(global.ExperimentAPI.getExperiment, {
-        group: "aboutwelcome",
-      });
-      assert.isTrue(result);
-    });
-    it("should return false by default when fails to get ExperimentData", async () => {
-      global.ExperimentAPI.getExperiment.throws();
-      let result = Router.hasMultiStageAboutWelcome();
-      assert.isFalse(result);
     });
   });
   describe("#loadMessagesForProvider", () => {
