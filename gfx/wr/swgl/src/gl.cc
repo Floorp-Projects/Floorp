@@ -4190,7 +4190,7 @@ void UnlockResource(LockedTexture* resource) {
 void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
                GLint srcY, GLsizei srcWidth, GLsizei srcHeight, GLint dstX,
                GLint dstY, GLsizei dstWidth, GLsizei dstHeight,
-               GLboolean opaque, GLboolean flip, GLenum filter) {
+               GLboolean opaque, GLboolean flip) {
   if (!lockedDst || !lockedSrc) {
     return;
   }
@@ -4224,6 +4224,7 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
 
   IntRect srcReq = {srcX, srcY, srcX + srcWidth, srcY + srcHeight};
   IntRect dstReq = {dstX, dstY, dstX + dstWidth, dstY + dstHeight};
+  GLenum filter = GL_LINEAR;  // TODO
 
   if (opaque) {
     if (!srcReq.same_size(dstReq) && filter == GL_LINEAR) {
