@@ -109,6 +109,14 @@ class SessionHistoryEntry : public nsISHEntry {
 
   const SessionHistoryInfo& Info() const { return *mInfo; }
 
+  void AddChild(SessionHistoryEntry* aChild, int32_t aOffset,
+                bool aUseRemoteSubframes);
+  void RemoveChild(SessionHistoryEntry* aChild);
+  // Finds the child with the same docshell ID as aNewChild, replaces it with
+  // aNewChild and returns true. If there is no child with the same docshell ID
+  // then it returns false.
+  bool ReplaceChild(SessionHistoryEntry* aNewChild);
+
   // Get an entry based on SessionHistoryInfo's Id. Parent process only.
   static SessionHistoryEntry* GetByInfoId(uint64_t aId);
 
@@ -117,6 +125,8 @@ class SessionHistoryEntry : public nsISHEntry {
 
  private:
   virtual ~SessionHistoryEntry();
+
+  const nsID& DocshellID() const;
 
   UniquePtr<SessionHistoryInfo> mInfo;
   RefPtr<SHEntrySharedParentState> mSharedInfo;
