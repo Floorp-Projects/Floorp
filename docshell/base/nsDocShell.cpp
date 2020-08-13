@@ -8537,10 +8537,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     // Make sure we won't just repost without hitting the
     // cache first
     if (cacheKey != 0) {
-      // XXX Update this call to deal with mLoadingEntry or mActiveEntry once
-      // the whole HandleSameDocumentNavigation is updated to work with
-      // SessionHistoryInfo objects!
-      SetCacheKeyOnHistoryEntry(mOSHE, nullptr, cacheKey);
+      mOSHE->SetCacheKey(cacheKey);
     }
   }
 
@@ -10312,17 +10309,10 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     // If we already have a loading history entry, store the new cache key
     // in it.  Otherwise, since we're doing a reload and won't be updating
     // our history entry, store the cache key in our current history entry.
-
-    if (mLoadingEntry) {
-      SetCacheKeyOnHistoryEntry(nullptr, &mLoadingEntry->mInfo, cacheKey);
-    } else if (mActiveEntry) {
-      SetCacheKeyOnHistoryEntry(nullptr, mActiveEntry.get(), cacheKey);
-    }
-
     if (mLSHE) {
-      SetCacheKeyOnHistoryEntry(mLSHE, nullptr, cacheKey);
+      mLSHE->SetCacheKey(cacheKey);
     } else if (mOSHE) {
-      SetCacheKeyOnHistoryEntry(mOSHE, nullptr, cacheKey);
+      mOSHE->SetCacheKey(cacheKey);
     }
 
     // Since we're force-reloading, clear all the sub frame history.
@@ -10815,29 +10805,6 @@ void nsDocShell::SetScrollRestorationIsManualOnHistoryEntry(
       mozilla::Unused << ContentChild::GetSingleton()
                              ->SendSessionHistoryEntryScrollRestorationIsManual(
                                  aInfo->Id(), aIsManual);
-    }
-  }
-}
-
-void nsDocShell::SetCacheKeyOnHistoryEntry(
-    nsISHEntry* aSHEntry, mozilla::dom::SessionHistoryInfo* aInfo,
-    uint32_t aCacheKey) {
-  if (aSHEntry) {
-    aSHEntry->SetCacheKey(aCacheKey);
-  }
-
-  if (aInfo) {
-    aInfo->SetCacheKey(aCacheKey);
-    if (XRE_IsParentProcess()) {
-      SessionHistoryEntry* entry =
-          SessionHistoryEntry::GetByInfoId(aInfo->Id());
-      if (entry) {
-        entry->SetCacheKey(aCacheKey);
-      }
-    } else {
-      mozilla::Unused
-          << ContentChild::GetSingleton()->SendSessionHistoryEntryCacheKey(
-                 aInfo->Id(), aCacheKey);
     }
   }
 }

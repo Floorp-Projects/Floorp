@@ -1346,9 +1346,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvSessionHistoryEntryScrollRestorationIsManual(
       const uint64_t& aSessionHistoryEntryID, const bool& aIsManual);
 
-  mozilla::ipc::IPCResult RecvSessionHistoryEntryCacheKey(
-      const uint64_t& aSessionHistoryEntryID, const uint32_t& aCacheKey);
-
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
