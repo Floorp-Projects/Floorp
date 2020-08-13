@@ -1338,7 +1338,10 @@ class ContentParent final
       const int32_t& aLength, const nsID& aChangeID);
 
   mozilla::ipc::IPCResult RecvSynchronizeLayoutHistoryState(
-      uint64_t aSessionHistoryEntryID, nsILayoutHistoryState* aState);
+      const uint64_t& aSessionHistoryEntryID, nsILayoutHistoryState* aState);
+
+  mozilla::ipc::IPCResult RecvSessionHistoryEntryTitle(
+      const uint64_t& aSessionHistoryEntryID, const nsString& aTitle);
 
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
