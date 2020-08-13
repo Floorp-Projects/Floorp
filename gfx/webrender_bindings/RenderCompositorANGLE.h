@@ -95,7 +95,8 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   bool MaybeReadback(const gfx::IntSize& aReadbackSize,
                      const wr::ImageFormat& aReadbackFormat,
-                     const Range<uint8_t>& aReadbackBuffer) override;
+                     const Range<uint8_t>& aReadbackBuffer,
+                     bool* aNeedsYFlip) override;
 
  protected:
   bool UseCompositor();
