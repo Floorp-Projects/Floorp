@@ -1365,6 +1365,37 @@ toolbarpaletteitem > toolbaritem {
   visibility: visible;
 }
 
+/* Print pending */
+.previewRendering {
+  width: 500px;
+  height: 600px;
+  background: #f9f9fa;
+  color: #0c0c0d;
+  background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
+  background-repeat: no-repeat;
+  background-size: 60px 60px;
+  background-position: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.printPreviewBrowser[isRendering=true] {
+  width: 0;
+}
+
+.print-pending-label {
+  margin-top: 110px;
+  font-size: large;
+}
+
+@media (prefers-color-scheme: dark) {
+  .previewRendering {
+    background: #2A2A2E;
+    color: rgb(249, 249, 250);
+  }
+}
+
 /* WebExtension Sidebars */
 #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: var(--webextension-menuitem-image, inherit);
