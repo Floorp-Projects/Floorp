@@ -555,7 +555,7 @@ async function runTest20() {
 }
 
 async function runTest21() {
-  await compareFiles("data:text/html,<audio controls>", "data:text/html,<audio controls>"); // Shouldn't crash.
+  await compareFiles("data:text/html,<audio controls>", "data:text/html,<audio controls >"); // Shouldn't crash.
   finish();
 }
 
