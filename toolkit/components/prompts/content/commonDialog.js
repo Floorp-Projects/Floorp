@@ -41,6 +41,11 @@ function commonDialogOnLoad() {
   };
 
   Dialog = new CommonDialog(args, ui);
+  window.addEventListener("dialogclosing", function(aEvent) {
+    if (aEvent.detail?.abort) {
+      Dialog.abortPrompt();
+    }
+  });
   document.addEventListener("dialogaccept", function() {
     Dialog.onButton0();
   });
