@@ -4367,6 +4367,16 @@ void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
   redefine(ins, ins->value());
 }
 
+void LIRGenerator::visitGuardFunctionKind(MGuardFunctionKind* ins) {
+  MOZ_ASSERT(ins->function()->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LGuardFunctionKind(useRegister(ins->function()), temp());
+  assignSnapshot(lir, BailoutKind::FunctionKindGuard);
+  add(lir, ins);
+  redefine(ins, ins->function());
+}
+
 void LIRGenerator::visitAssertRange(MAssertRange* ins) {
   MDefinition* input = ins->input();
   LInstruction* lir = nullptr;

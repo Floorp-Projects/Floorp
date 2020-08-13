@@ -9584,6 +9584,47 @@ class MGuardNullOrUndefined : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+// Guard on function kind
+class MGuardFunctionKind : public MUnaryInstruction,
+                           public SingleObjectPolicy::Data {
+  FunctionFlags::FunctionKind expected_;
+  bool bailOnEquality_;
+
+  explicit MGuardFunctionKind(MDefinition* fun,
+                              FunctionFlags::FunctionKind expected,
+                              bool bailOnEquality)
+      : MUnaryInstruction(classOpcode, fun),
+        expected_(expected),
+        bailOnEquality_(bailOnEquality) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(fun->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardFunctionKind)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function))
+
+  FunctionFlags::FunctionKind expected() const { return expected_; };
+  bool bailOnEquality() const { return bailOnEquality_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardFunctionKind()) {
+      return false;
+    }
+    if (expected() != ins->toGuardFunctionKind()->expected()) {
+      return false;
+    }
+    if (bailOnEquality() != ins->toGuardFunctionKind()->bailOnEquality()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Bail if the object's shape or unboxed group is not in the input list.
 class MGuardReceiverPolymorphic : public MUnaryInstruction,
                                   public SingleObjectPolicy::Data {
