@@ -6,8 +6,10 @@ from __future__ import absolute_import, print_function
 
 import io
 import os
+import pipes
 import posixpath
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -1073,18 +1075,19 @@ class ADBDevice(ADBCommand):
     @staticmethod
     def _quote(arg):
         """Utility function to return quoted version of command argument."""
-        # Replace with shlex.quote when we move totally to Python 3.3+?
-        if ADBDevice._should_quote(arg):
-            if "'" not in arg and '"' not in arg:
-                arg = '"%s"' % arg
-            elif "'" in arg and '"' not in arg:
-                arg = '"%s"' % arg
-            elif '"' in arg and "'" not in arg:
-                arg = "'%s'" % arg
-            else:
-                arg = '"%s"' % arg.replace(r'"', r'\"')
+        if hasattr(shlex, 'quote'):
+            quote = shlex.quote
+        elif hasattr(pipes, 'quote'):
+            quote = pipes.quote
+        else:
+            def quote(arg):
+                arg = arg or ''
+                re_unsafe = re.compile(r'[^\w@%+=:,./-]')
+                if re_unsafe.search(arg):
+                    arg = "'" + arg.replace("'", "'\"'\"'") + "'"
+                return arg
 
-        return arg
+        return quote(arg)
 
     @staticmethod
     def _escape_command_line(cmds):
@@ -1092,7 +1095,8 @@ class ADBDevice(ADBCommand):
         escaped and quoted version of the command as a string.
         """
         assert isinstance(cmds, list)
-        # Replace with shlex.join when we move totally to Python 3.8+?
+        # This is identical to shlex.join in Python 3.8. We can
+        # replace it should we ever get Python 3.8 as a minimum.
         quoted_cmd = " ".join([ADBDevice._quote(arg) for arg in cmds])
 
         return quoted_cmd
@@ -1675,7 +1679,7 @@ class ADBDevice(ADBCommand):
                     if line and len(line) > 0:
                         line = line.rstrip()
                         if self._verbose:
-                            self._logger.info(line)
+                            self._logger.info(six.ensure_str(line))
                         stdout_callback(line)
                     else:
                         # no new output, so sleep and poll
