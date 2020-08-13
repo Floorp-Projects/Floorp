@@ -40,7 +40,7 @@ var proxyAuthinfo = {
 };
 
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
-modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+isTabModal = false;
 
 const Cc_promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
 ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
