@@ -421,12 +421,6 @@ static const size_t MallocThresholdBase = 38 * 1024 * 1024;
 /* JSGC_MALLOC_GROWTH_FACTOR */
 static const double MallocGrowthFactor = 1.5;
 
-/* JSGC_HELPER_THREAD_RATIO */
-static const double HelperThreadRatio = 0.5;
-
-/* JSGC_MAX_HELPER_THREADS */
-static const size_t MaxHelperThreads = 8;
-
 }  // namespace TuningDefaults
 
 /*
