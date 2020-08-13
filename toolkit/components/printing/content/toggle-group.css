@@ -16,10 +16,8 @@
   display: inline-flex;
   align-items: center;
   margin: 0;
-  border: 1px solid var(--in-content-box-border-color);
-  border-inline-end-style: none;
   padding: 6px 10px;
-  background-color: var(--in-content-box-background);
+  background-color: var(--in-content-button-background);
 }
 
 .toggle-group-input {
@@ -41,7 +39,6 @@
 }
 
 .toggle-group-label:last-of-type {
-  border-inline-end-style: solid;
   border-start-end-radius: 2px;
   border-end-end-radius: 2px;
 }
@@ -70,16 +67,13 @@
 
 .toggle-group-input:enabled:checked + .toggle-group-label{
   background-color: var(--in-content-primary-button-background);
-  border-color: var(--in-content-primary-button-background-hover);
   color: var(--in-content-selected-text);
 }
 
 .toggle-group-input:enabled:checked + .toggle-group-label:hover {
   background-color: var(--in-content-primary-button-background-hover);
-  border-color: var(--in-content-primary-button-background-active);
 }
 
 .toggle-group-input:enabled:checked + .toggle-group-label:active {
   background-color: var(--in-content-primary-button-background-active);
-  border-color: var(--in-content-primary-button-background-active);
 }

@@ -12,6 +12,7 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   overflow: hidden;
+  background: var(--in-content-box-background);
 }
 
 *[hidden] {
@@ -25,7 +26,7 @@ body {
 
 .section-block .block-label {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .row {
@@ -34,6 +35,7 @@ body {
   width: 100%;
   box-sizing: border-box;
   min-height: 1.8em;
+  margin-block: 2px;
 }
 
 .row > input,
@@ -76,8 +78,6 @@ body {
 
 #sheet-count {
   font-size: 11px;
-  border-radius: 5px;
-  border: solid 1px var(--in-content-border-color);
   padding: 3px 8px;
   margin: 0;
 }
@@ -92,6 +92,80 @@ form#print {
   flex-direction: column;
   justify-content: flex-start;
   overflow: hidden;
+  font: menu;
+}
+
+select {
+  min-height: auto;
+  margin: 0;
+  padding: 0;
+}
+
+select:not([size]):not([multiple])[iconic] {
+  padding-inline-start: 28px;
+}
+
+#printer-picker {
+  background-size: auto 12px, 16px;
+  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://browser/skin/print.svg");
+  background-position: right 3px center, left 8px center;
+  width: 100%;
+}
+
+#printer-picker:dir(rtl) {
+  background-position-x: left 3px, right 8px;
+}
+
+input[type="checkbox"] {
+  margin-inline-end: 8px;
+}
+
+input[type="checkbox"]:checked {
+  fill: #3485ff !important;
+}
+
+input[type="radio"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 50%;
+  margin: 0;
+  margin-inline-end: 8px;
+  background-color: var(--in-content-box-background);
+}
+
+input[type="radio"]:checked {
+  appearance: none;
+  background-image: url("chrome://global/skin/in-content/radio.svg");
+  -moz-context-properties: fill;
+  fill: #3485ff;
+}
+
+input[type="radio"]:not(:disabled):focus,
+input[type="radio"]:not(:disabled):hover {
+  border-color: var(--in-content-border-focus);
+}
+
+input[type="radio"]:not(:disabled):focus {
+  outline: 2px solid var(--in-content-border-active);
+  /* offset outline to align with 1px border-width set for buttons/menulists above. */
+  outline-offset: -1px;
+  /* Make outline-radius slightly bigger than the border-radius set above,
+   * to make the thicker outline corners look smooth */
+  -moz-outline-radius: 50%;
+  box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
+}
+
+input[type="number"],
+input[type="text"] {
+  padding: 2px;
+  padding-inline-start: 4px;
+  outline: none !important;
+}
+
+.toggle-group-label {
+  padding: 4px 8px;
 }
 
 .body-container {
@@ -100,7 +174,7 @@ form#print {
 }
 
 #copies-count {
-  width: 6em;
+  width: 3em;
 }
 
 #more-settings {
@@ -111,6 +185,7 @@ form#print {
   list-style: none;
   display: flex;
   cursor: pointer;
+  align-items: center;
 }
 
 #more-settings > summary > .twisty {
@@ -119,7 +194,8 @@ form#print {
   background-position: center;
   -moz-context-properties: fill;
   fill: currentColor;
-  width: 20px;
+  width: 12px;
+  height: 12px;
   scale: 1 1;
 }
 
@@ -133,7 +209,22 @@ form#print {
 }
 
 #open-dialog-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#open-dialog-link::after {
   display: block;
+  content: url(chrome://browser/skin/open-in-new.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 12px;
+  height: 12px;
+}
+
+#open-dialog-link:dir(rtl)::after {
+  scale: -1 1;
 }
 
 .footer-container {
@@ -157,11 +248,10 @@ form#print {
 }
 
 .toggle-group #landscape + .toggle-group-label::before {
-  content: url("chrome://global/skin/icons/document.svg");
-  transform: scaleY(-1) rotate(90deg);
+  content: url("chrome://global/content/landscape.svg");
 }
 .toggle-group #portrait + .toggle-group-label::before {
-  content: url("chrome://global/skin/icons/document.svg");
+  content: url("chrome://global/content/portrait.svg");
 }
 
 input[type="number"]:invalid {
@@ -171,4 +261,5 @@ input[type="number"]:invalid {
 
 #percent-scale {
   appearance: textfield;
+  margin-inline-start: 4px;
 }
