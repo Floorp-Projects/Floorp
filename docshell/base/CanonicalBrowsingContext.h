@@ -96,6 +96,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   Nullable<WindowProxyHolder> GetTopChromeWindow();
 
   nsISHistory* GetSessionHistory();
+  SessionHistoryEntry* GetActiveSessionHistoryEntry();
+
   UniquePtr<LoadingSessionHistoryInfo> CreateLoadingSessionHistoryEntryForLoad(
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   void SessionHistoryCommit(uint64_t aSessionHistoryEntryId,
