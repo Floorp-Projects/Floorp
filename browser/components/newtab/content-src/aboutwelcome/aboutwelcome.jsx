@@ -70,27 +70,27 @@ class AboutWelcome extends React.PureComponent {
 
   render() {
     const { props } = this;
-    if (props.template === "multistage") {
+    if (props.template === "simplified") {
       return (
-        <MultiStageAboutWelcome
-          screens={props.screens}
+        <SimpleAboutWelcome
           metricsFlowUri={this.state.metricsFlowUri}
           message_id={props.messageId}
           utm_term={props.UTMTerm}
+          title={props.title}
+          subtitle={props.subtitle}
+          cards={props.cards}
+          startButton={props.startButton}
+          handleStartBtnClick={this.handleStartBtnClick}
         />
       );
     }
 
     return (
-      <SimpleAboutWelcome
+      <MultiStageAboutWelcome
+        screens={props.screens}
         metricsFlowUri={this.state.metricsFlowUri}
         message_id={props.messageId}
         utm_term={props.UTMTerm}
-        title={props.title}
-        subtitle={props.subtitle}
-        cards={props.cards}
-        startButton={props.startButton}
-        handleStartBtnClick={this.handleStartBtnClick}
       />
     );
   }
@@ -99,7 +99,7 @@ class AboutWelcome extends React.PureComponent {
 AboutWelcome.defaultProps = DEFAULT_WELCOME_CONTENT;
 
 function ComputeMessageId(experimentId, branchId, settings) {
-  let messageId = "ABOUT_WELCOME";
+  let messageId = "DEFAULT_ABOUTWELCOME";
   let UTMTerm = "default";
 
   if (settings.id && settings.screens) {
