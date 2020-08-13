@@ -90,5 +90,5 @@ NS_InvokeByIndex:
 	mr	sp,r11
 	blr
 
-// Magic indicating no need for an executable stack
-.section .note.GNU-stack, "", @progbits ; .previous
+	// Magic indicating no need for an executable stack
+	.section .note.GNU-stack, "", @progbits
