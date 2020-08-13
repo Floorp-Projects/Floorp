@@ -177,17 +177,9 @@ MediaMetadataBase MediaStatusManager::CreateDefaultMetadata() const {
 }
 
 nsString MediaStatusManager::GetDefaultTitle() const {
+  // TODO : maybe need l10n? (bug1657701)
   nsString defaultTitle;
-  // TODO : maybe need l10n?
-  if (nsCOMPtr<nsIXULAppInfo> appInfo =
-          do_GetService("@mozilla.org/xre/app-info;1")) {
-    nsCString appName;
-    appInfo->GetName(appName);
-    CopyUTF8toUTF16(appName, defaultTitle);
-  } else {
-    defaultTitle.AssignLiteral("Firefox");
-  }
-  defaultTitle.AppendLiteral(" is playing media");
+  defaultTitle.AssignLiteral("Firefox is playing media");
 
   RefPtr<CanonicalBrowsingContext> bc =
       CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);
