@@ -95,6 +95,10 @@ JSObject* ShadowRoot::WrapNode(JSContext* aCx,
 }
 
 void ShadowRoot::CloneInternalDataFrom(ShadowRoot* aOther) {
+  if (aOther->IsUAWidget()) {
+    SetIsUAWidget();
+  }
+
   size_t sheetCount = aOther->SheetCount();
   for (size_t i = 0; i < sheetCount; ++i) {
     StyleSheet* sheet = aOther->SheetAt(i);
