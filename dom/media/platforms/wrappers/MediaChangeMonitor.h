@@ -123,6 +123,7 @@ class MediaChangeMonitor : public MediaDataDecoder,
   Maybe<MediaDataDecoder::ConversionRequired> mConversionRequired;
   // Used for debugging purposes only
   Atomic<bool> mInConstructor;
+  bool mDecoderInitialized = false;
 };
 
 }  // namespace mozilla

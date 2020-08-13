@@ -156,7 +156,12 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
   }
 
-  bool CanBeInstantiated() const override { return true; }
+  bool CanBeInstantiated() const override {
+    // We want to see at least one sample before we create a decoder so that we
+    // can create the vpcC content on mCurrentConfig.mExtraData.
+    return mCodec == VPXDecoder::Codec::VP8 || mInfo ||
+           mCurrentConfig.mCrypto.IsEncrypted();
+  }
 
   MediaResult CheckForChange(MediaRawData* aSample) override {
     // Don't look at encrypted content.
@@ -194,6 +199,9 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
     mCurrentConfig.mColorSpace = info.ColorSpace();
     mCurrentConfig.mColorRange = info.ColorRange();
+    if (mCodec == VPXDecoder::Codec::VP9) {
+      VPXDecoder::GetVPCCBox(mCurrentConfig.mExtraData, info);
+    }
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
 
     return rv;
@@ -259,6 +267,7 @@ RefPtr<MediaDataDecoder::InitPromise> MediaChangeMonitor::Init() {
                      [self, this](InitPromise::ResolveOrRejectValue&& aValue) {
                        mInitPromiseRequest.Complete();
                        if (aValue.IsResolve()) {
+                         mDecoderInitialized = true;
                          mConversionRequired =
                              Some(mDecoder->NeedsConversion());
                          mCanRecycleDecoder = Some(CanRecycleDecoder());
@@ -367,7 +376,7 @@ RefPtr<MediaDataDecoder::FlushPromise> MediaChangeMonitor::Flush() {
       RefPtr<FlushPromise> p = mFlushPromise.Ensure(__func__);
       return p;
     }
-    if (mDecoder) {
+    if (mDecoder && mDecoderInitialized) {
       return mDecoder->Flush();
     }
     return FlushPromise::CreateAndResolve(true, __func__);
@@ -379,7 +388,7 @@ RefPtr<MediaDataDecoder::DecodePromise> MediaChangeMonitor::Drain() {
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
     MOZ_RELEASE_ASSERT(!mDrainRequest.Exists());
     mNeedKeyframe = true;
-    if (mDecoder) {
+    if (mDecoder && mDecoderInitialized) {
       return mDecoder->Drain();
     }
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
@@ -473,6 +482,7 @@ MediaResult MediaChangeMonitor::CreateDecoder(
 
   DDLINKCHILD("decoder", mDecoder.get());
 
+  mDecoderInitialized = false;
   mNeedKeyframe = true;
 
   return NS_OK;
@@ -496,6 +506,7 @@ MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
             mTaskQueue, __func__,
             [self, sample, this](const TrackType aTrackType) {
               mInitPromiseRequest.Complete();
+              mDecoderInitialized = true;
               mConversionRequired = Some(mDecoder->NeedsConversion());
               mCanRecycleDecoder = Some(CanRecycleDecoder());
 
@@ -604,6 +615,7 @@ MediaResult MediaChangeMonitor::CheckForChange(MediaRawData* aSample) {
 
 void MediaChangeMonitor::DrainThenFlushDecoder(MediaRawData* aPendingSample) {
   AssertOnTaskQueue();
+  MOZ_ASSERT(mDecoderInitialized);
 
   RefPtr<MediaRawData> sample = aPendingSample;
   RefPtr<MediaChangeMonitor> self = this;
@@ -641,6 +653,7 @@ void MediaChangeMonitor::DrainThenFlushDecoder(MediaRawData* aPendingSample) {
 void MediaChangeMonitor::FlushThenShutdownDecoder(
     MediaRawData* aPendingSample) {
   AssertOnTaskQueue();
+  MOZ_ASSERT(mDecoderInitialized);
 
   RefPtr<MediaRawData> sample = aPendingSample;
   RefPtr<MediaChangeMonitor> self = this;
