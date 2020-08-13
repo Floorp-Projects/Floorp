@@ -2238,6 +2238,8 @@ static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
       TimeStamp::NowUnfuzzed();
 #endif
 
+  LogRunnable::Run run(aRunnable);
+
   aRunnable->SetToken(aToken);
   NotifyOffThreadScriptLoadCompletedRunnable::Dispatch(aRunnable.forget());
 }
@@ -2290,6 +2292,10 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> runnable =
       new NotifyOffThreadScriptLoadCompletedRunnable(aRequest, this);
+
+  // Emulate dispatch.  CompileOffThreadModule will call
+  // OffThreadScriptLoaderCallback were we will emulate run.
+  LogRunnable::LogDispatch(runnable);
 
 #ifdef MOZ_GECKO_PROFILER
   aRequest->mOffThreadParseStartTime = TimeStamp::NowUnfuzzed();
