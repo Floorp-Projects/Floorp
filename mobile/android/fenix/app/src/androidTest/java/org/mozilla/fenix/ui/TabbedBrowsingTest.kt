@@ -10,13 +10,13 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.sendSingleTapToScreen
+import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
@@ -148,7 +148,6 @@ class TabbedBrowsingTest {
     }
 
     @Test
-    @Ignore("For some reason this intermittently fails with the drawer :(")
     fun closeTabTest() {
         var genericURLS = TestAssetHelper.getGenericAssets(mockWebServer)
 
@@ -161,25 +160,39 @@ class TabbedBrowsingTest {
                 closeTabViaXButton("Test_Page_${index + 1}")
                 verifySnackBarText("Tab closed")
                 snackBarButtonClick("UNDO")
-//                verifyExistingOpenTabs("Test_Page_${index + 1}")
-//                verifyCloseTabsButton("Test_Page_${index + 1}")
-//                swipeTabRight("Test_Page_${index + 1}")
-//                verifySnackBarText("Tab closed")
-//                snackBarButtonClick("UNDO")
-//                verifyExistingOpenTabs("Test_Page_${index + 1}")
-//                verifyCloseTabsButton("Test_Page_${index + 1}")
-//                swipeTabLeft("Test_Page_${index + 1}")
-//                verifySnackBarText("Tab closed")
-//                snackBarButtonClick("UNDO")
+            }
+
+            mDevice.waitForIdle()
+
+            browserScreen {
+            }.openTabDrawer {
                 verifyExistingOpenTabs("Test_Page_${index + 1}")
-                verifyCloseTabsButton("Test_Page_${index + 1}")
+                swipeTabRight("Test_Page_${index + 1}")
+                verifySnackBarText("Tab closed")
+                snackBarButtonClick("UNDO")
+            }
+
+            mDevice.waitForIdle()
+
+            browserScreen {
+            }.openTabDrawer {
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
+                swipeTabLeft("Test_Page_${index + 1}")
+                verifySnackBarText("Tab closed")
+                snackBarButtonClick("UNDO")
+            }
+
+            mDevice.waitForIdle()
+
+            browserScreen {
+            }.openTabDrawer {
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
             }.openHomeScreen {
             }
         }
     }
 
     @Test
-    @Ignore("For some reason this intermittently fails with the drawer :(")
     fun closePrivateTabTest() {
         var genericURLS = TestAssetHelper.getGenericAssets(mockWebServer)
 
@@ -193,19 +206,34 @@ class TabbedBrowsingTest {
                 closeTabViaXButton("Test_Page_${index + 1}")
                 verifySnackBarText("Private tab closed")
                 snackBarButtonClick("UNDO")
-//                verifyExistingOpenTabs("Test_Page_${index + 1}")
-//                verifyCloseTabsButton("Test_Page_${index + 1}")
-//                swipeTabRight("Test_Page_${index + 1}")
-//                verifySnackBarText("Private tab closed")
-//                snackBarButtonClick("UNDO")
-//                verifyExistingOpenTabs("Test_Page_${index + 1}")
-//                verifyCloseTabsButton("Test_Page_${index + 1}")
-//                swipeTabLeft("Test_Page_${index + 1}")
-//                verifySnackBarText("Private tab closed")
-//                snackBarButtonClick("UNDO")
+            }
+
+            mDevice.waitForIdle()
+
+            browserScreen {
+            }.openTabDrawer {
                 verifyExistingOpenTabs("Test_Page_${index + 1}")
-                verifyCloseTabsButton("Test_Page_${index + 1}")
-            }.openHomeScreen {
+                swipeTabRight("Test_Page_${index + 1}")
+                verifySnackBarText("Private tab closed")
+                snackBarButtonClick("UNDO")
+            }
+
+            mDevice.waitForIdle()
+
+            browserScreen {
+            }.openTabDrawer {
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
+                swipeTabLeft("Test_Page_${index + 1}")
+                verifySnackBarText("Private tab closed")
+                snackBarButtonClick("UNDO")
+            }
+
+            mDevice.waitForIdle()
+
+            browserScreen {
+            }.openTabDrawer {
+                verifyExistingOpenTabs("Test_Page_${index + 1}")
+                closeTabViaXButton("Test_Page_${index + 1}")
             }
         }
     }
