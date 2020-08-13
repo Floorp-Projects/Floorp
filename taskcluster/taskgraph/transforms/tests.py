@@ -1000,6 +1000,19 @@ def set_tier(config, tasks):
 
 
 @transforms.add
+def set_expires_after(config, tasks):
+    """Try jobs expire after 2 weeks; everything else lasts 1 year.  This helps
+    keep storage costs low."""
+    for task in tasks:
+        if 'expires-after' not in task:
+            if config.params.is_try():
+                task['expires-after'] = "14 days"
+            else:
+                task['expires-after'] = "1 year"
+        yield task
+
+
+@transforms.add
 def set_download_symbols(config, tasks):
     """In general, we download symbols immediately for debug builds, but only
     on demand for everything else. ASAN builds shouldn't download
@@ -1813,6 +1826,7 @@ def make_job_description(config, tasks):
         if task['mozharness']['requires-signed-builds'] is True:
             jobdesc['dependencies']['build-signing'] = task['build-signing-label']
 
+        jobdesc['expires-after'] = task['expires-after']
         jobdesc['routes'] = []
         jobdesc['run-on-projects'] = sorted(task['run-on-projects'])
         jobdesc['scopes'] = []
