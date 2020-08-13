@@ -627,6 +627,14 @@ void MacroAssembler::branchTestProxyHandlerFamily(Condition cond,
                                                   Register scratch,
                                                   const void* handlerp,
                                                   Label* label) {
+#ifdef DEBUG
+  Label ok;
+  loadObjClassUnsafe(proxy, scratch);
+  branchTestClassIsProxy(true, scratch, &ok);
+  assumeUnreachable("Expected ProxyObject in branchTestProxyHandlerFamily");
+  bind(&ok);
+#endif
+
   Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
   loadPtr(handlerAddr, scratch);
   Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());

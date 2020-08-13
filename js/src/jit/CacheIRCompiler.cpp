@@ -2091,7 +2091,7 @@ bool CacheIRCompiler::emitGuardIsNotArrayBufferMaybeShared(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardNotDOMProxy(ObjOperandId objId) {
+bool CacheIRCompiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);

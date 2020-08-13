@@ -304,6 +304,16 @@ bool WarpCacheIRTranspiler::emitGuardIsNotProxy(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardIsNotDOMProxy::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);

@@ -6191,6 +6191,20 @@ class LGuardIsNotProxy : public LInstructionHelper<0, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LGuardIsNotDOMProxy : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(GuardIsNotDOMProxy)
+
+  LGuardIsNotDOMProxy(const LAllocation& proxy, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, proxy);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* proxy() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 class LGuardIsNotArrayBufferMaybeShared : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardIsNotArrayBufferMaybeShared)
