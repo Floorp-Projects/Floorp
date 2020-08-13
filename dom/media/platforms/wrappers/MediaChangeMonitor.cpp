@@ -471,10 +471,19 @@ MediaResult MediaChangeMonitor::CreateDecoder(
        mDecoderOptions, mRate, &error});
 
   if (!mDecoder) {
-    if (NS_FAILED(error)) {
-      // The decoder supports CreateDecoderParam::mError, returns the value.
-      return error;
-    } else {
+    // We failed to create a decoder with the existing PDM; attempt once again
+    // with a PDMFactory.
+    RefPtr<PDMFactory> factory = new PDMFactory();
+    mDecoder = factory->CreateDecoder(
+        {mCurrentConfig, mTaskQueue, aDiagnostics, mImageContainer,
+         mKnowsCompositor, mGMPCrashHelper, mType, mOnWaitingForKeyEvent,
+         mDecoderOptions, mRate, &error, CreateDecoderParams::NoWrapper(true)});
+
+    if (!mDecoder) {
+      if (NS_FAILED(error)) {
+        // The decoder supports CreateDecoderParam::mError, returns the value.
+        return error;
+      }
       return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                          RESULT_DETAIL("Unable to create decoder"));
     }
