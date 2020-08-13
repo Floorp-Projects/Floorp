@@ -11,8 +11,8 @@
     <link rel="localization" href="toolkit/printing/printUI.ftl">
 
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-    <link rel="stylesheet" href="chrome://global/content/print.css">
     <link rel="stylesheet" href="chrome://global/content/toggle-group.css">
+    <link rel="stylesheet" href="chrome://global/content/print.css">
     <script defer src="chrome://global/content/print.js"></script>
   </head>
 
@@ -40,11 +40,11 @@
     <template id="scale-template">
       <div role="radiogroup" aria-labelledby="scale-label">
         <div class="row cols-2">
-          <span class="col"><input type="radio" name="scale-choice" id="fit-choice" value="fit" checked></span>
+          <input type="radio" name="scale-choice" id="fit-choice" value="fit" checked>
           <label for="fit-choice" data-l10n-id="printui-scale-fit-to-page" class="col"></label>
         </div>
         <div class="row cols-2">
-          <span class="col"><input type="radio" name="scale-choice" id="percent-scale-choice"></span>
+          <input type="radio" name="scale-choice" id="percent-scale-choice">
           <span class="col">
             <label id="percent-scale-label" for="percent-scale-choice" data-l10n-id="printui-scale-pcent"></label>
             <input
@@ -64,22 +64,26 @@
 
     <form id="print" is="print-form" aria-labelledby="page-header">
       <section class="body-container">
-        <section id="destination" class="section-block row">
+        <section id="destination" class="section-block">
           <label for="printer-picker" class="block-label" data-l10n-id="printui-destination-label"></label>
-          <select is="destination-picker" id="printer-picker"></select>
+          <div class="printer-picker-wrapper">
+            <select is="destination-picker" id="printer-picker" iconic></select>
+          </div>
         </section>
         <section id="settings">
-          <section id="copies" class="section-block row">
+          <section id="copies" class="section-block">
             <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <input id="copies-count" is="copy-count-input" min="1" class="copy-count-input" autocomplete="off">
+            <photon-number>
+              <input id="copies-count" is="copy-count-input" type="number" min="1" class="copy-count-input" autocomplete="off">
+            </photon-number>
           </section>
 
-          <section id="orientation" class="section-block row">
+          <section id="orientation" class="section-block">
             <label id="orientation-label" class="block-label" data-l10n-id="printui-orientation"></label>
             <div is="orientation-input" class="toggle-group" role="radiogroup" aria-labelledby="orientation-label"></div>
           </section>
 
-          <section id="pages" class="section-block row" hidden>
+          <section id="pages" class="section-block" hidden>
             <label for="page-range-input" class="block-label" data-l10n-id="printui-page-range-label"></label>
             <div id="page-range-input" is="page-range-input" class="page-range-input row"></div>
           </section>
@@ -88,31 +92,32 @@
             <summary class="block-label section-block" is="twisty-summary"
                      data-open-l10n-id="printui-less-settings"
                      data-closed-l10n-id="printui-more-settings"></summary>
-            <section id="scale" class="section-block row">
+            <section id="scale" class="section-block">
               <label id="scale-label" class="block-label" data-l10n-id="printui-scale"></label>
               <scale-input></scale-input>
             </section>
 
-            <section id="more-settings-options" class="section-block row">
+            <section id="more-settings-options" class="section-block">
               <label class="block-label" data-l10n-id="printui-options"></label>
               <div class="row cols-2">
-                <span class="col"><input is="setting-checkbox" type="checkbox" id="headers-footers-enabled" data-setting-name="printFootersHeaders"></span>
+                <input is="setting-checkbox" type="checkbox" id="headers-footers-enabled" data-setting-name="printFootersHeaders">
                 <label for="headers-footers-enabled" data-l10n-id="printui-headers-footers-checkbox"></label>
               </div>
               <div class="row cols-2">
-                <span class="col"><input is="setting-checkbox" type="checkbox" id="backgrounds-enabled" data-setting-name="printBackgrounds"></span>
+                <input is="setting-checkbox" type="checkbox" id="backgrounds-enabled" data-setting-name="printBackgrounds">
                 <label for="backgrounds-enabled" data-l10n-id="printui-backgrounds-checkbox"></label>
               </div>
             </section>
 
           </details>
         </section>
-      </section>
 
-      <footer class="footer-container" id="print-footer">
         <section id="system-print" class="section-block">
           <a href="#" id="open-dialog-link" data-l10n-id="printui-system-dialog-link"></a>
         </section>
+      </section>
+
+      <footer class="footer-container" id="print-footer">
         <section id="button-container" class="section-block">
           <button class="primary" name="print" data-l10n-id="printui-primary-button"></button>
           <button name="cancel" data-l10n-id="printui-cancel-button"></button>
