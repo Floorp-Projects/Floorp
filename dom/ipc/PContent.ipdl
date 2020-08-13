@@ -928,6 +928,9 @@ parent:
     async SessionHistoryEntryTitle(uint64_t aSessionHistoryEntryID,
                                    nsString aTitle);
 
+    async SessionHistoryEntryScrollRestorationIsManual(uint64_t aSessionHistoryEntryID,
+                                                       bool aIsManual);
+
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
     async CreateGMPService();
