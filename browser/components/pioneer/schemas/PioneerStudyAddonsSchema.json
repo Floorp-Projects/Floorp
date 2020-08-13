@@ -1,104 +1,159 @@
 {
+  "definitions": {},
+  "title": "Root",
   "type": "object",
-  "properties": {
-    "addon_id": {
-      "type": "string"
-    },
-    "icons": {
-      "type": "object",
-      "properties": {
-        "32": {
-          "type": "string"
-        },
-        "64": {
-          "type": "string"
-        },
-        "128": {
-          "type": "string"
-        }
-      }
-    },
-    "title": {
-      "type": "string",
-      "maxLength": 75
-    },
-    "version": {
-      "type": "string"
-    },
-    "sourceURI": {
-      "type": "object",
-      "properties": {
-        "spec": {
-          "type": "string"
-        }
-      }
-    },
-    "description": {
-      "type": "string"
-    },
-    "privacyPolicy": {
-      "type": "object",
-      "properties": {
-        "spec": {
-          "type": "string"
-        }
-      }
-    },
-    "studyType": {
-      "type": "string"
-    },
-    "moreInfo": {
-      "type": "object",
-      "properties": {
-        "spec": {
-          "type": "string"
-        }
-      }
-    },
-    "dataCollectionDetails": {
-      "type": "array",
-      "properties": {
-        "collectionDetail": {
-          "type": "string"
-        }
-      }
-    },
-    "authors": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "maxLength": 75
-        },
-        "moreInfo": {
-          "type": "object",
-          "properties": {
-            "spec": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    "isDefault": {
-      "type": "boolean"
-    },
-    "studyEnded": {
-      "type": "boolean"
-    }
-  },
   "required": [
     "addon_id",
     "icons",
+    "name",
     "version",
     "sourceURI",
     "description",
     "privacyPolicy",
     "studyType",
-    "moreInfo",
-    "dataCollectionDetails",
     "authors",
+    "dataCollectionDetails",
+    "moreInfo",
     "isDefault",
-    "studyEnded"
-  ]
+    "studyEnded",
+    "joinStudyConsent",
+    "leaveStudyConsent"
+  ],
+  "properties": {
+    "addon_id": {
+      "$id": "#root/addon_id",
+      "title": "Addon_id",
+      "type": "string"
+    },
+    "icons": {
+      "$id": "#root/icons",
+      "title": "Icons",
+      "type": "object",
+      "required": ["32", "64", "128"],
+      "properties": {
+        "32": {
+          "$id": "#root/icons/32",
+          "title": "32",
+          "type": "string"
+        },
+        "64": {
+          "$id": "#root/icons/64",
+          "title": "64",
+          "type": "string"
+        },
+        "128": {
+          "$id": "#root/icons/128",
+          "title": "128",
+          "type": "string"
+        }
+      }
+    },
+    "name": {
+      "$id": "#root/name",
+      "title": "Name",
+      "type": "string"
+    },
+    "version": {
+      "$id": "#root/version",
+      "title": "Version",
+      "type": "string"
+    },
+    "sourceURI": {
+      "$id": "#root/sourceURI",
+      "title": "Sourceuri",
+      "type": "object",
+      "required": ["spec"],
+      "properties": {
+        "spec": {
+          "$id": "#root/sourceURI/spec",
+          "title": "Spec",
+          "type": "string"
+        }
+      }
+    },
+    "description": {
+      "$id": "#root/description",
+      "title": "Description",
+      "type": "string"
+    },
+    "privacyPolicy": {
+      "$id": "#root/privacyPolicy",
+      "title": "Privacypolicy",
+      "type": "object",
+      "required": ["spec"],
+      "properties": {
+        "spec": {
+          "$id": "#root/privacyPolicy/spec",
+          "title": "Spec",
+          "type": "string"
+        }
+      }
+    },
+    "studyType": {
+      "$id": "#root/studyType",
+      "title": "Studytype",
+      "type": "string"
+    },
+    "authors": {
+      "$id": "#root/authors",
+      "title": "Authors",
+      "type": "object",
+      "required": ["name", "url"],
+      "properties": {
+        "name": {
+          "$id": "#root/authors/name",
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "$id": "#root/authors/url",
+          "title": "Url",
+          "type": "string"
+        }
+      }
+    },
+    "dataCollectionDetails": {
+      "$id": "#root/dataCollectionDetails",
+      "title": "Datacollectiondetails",
+      "type": "array",
+      "items": {
+        "$id": "#root/dataCollectionDetails/items",
+        "title": "Items",
+        "type": "string"
+      }
+    },
+    "moreInfo": {
+      "$id": "#root/moreInfo",
+      "title": "Moreinfo",
+      "type": "object",
+      "required": ["spec"],
+      "properties": {
+        "spec": {
+          "$id": "#root/moreInfo/spec",
+          "title": "Spec",
+          "type": "string"
+        }
+      }
+    },
+    "isDefault": {
+      "$id": "#root/isDefault",
+      "title": "Isdefault",
+      "type": "boolean"
+    },
+    "studyEnded": {
+      "$id": "#root/studyEnded",
+      "title": "Studyended",
+      "type": "boolean"
+    },
+    "joinStudyConsent": {
+      "$id": "#root/joinStudyConsent",
+      "title": "Joinstudyconsent",
+      "type": "string"
+    },
+    "leaveStudyConsent": {
+      "$id": "#root/leaveStudyConsent",
+      "title": "Leavestudyconsent",
+      "type": "string"
+    }
+  }
 }
