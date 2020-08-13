@@ -601,6 +601,18 @@ bool WarpCacheIRTranspiler::emitGuardFrameHasNoArgumentsObject() {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardNotClassConstructor(ObjOperandId funId) {
+  MDefinition* fun = getOperand(funId);
+
+  auto* ins =
+      MGuardFunctionKind::New(alloc(), fun, FunctionFlags::ClassConstructor,
+                              /*bailOnEquality=*/true);
+  add(ins);
+
+  setOperand(funId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadFrameCalleeResult() {
   if (const CallInfo* callInfo = builder_->inlineCallInfo()) {
     pushResult(callInfo->callee());
