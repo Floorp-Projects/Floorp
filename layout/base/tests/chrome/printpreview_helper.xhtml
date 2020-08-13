@@ -99,15 +99,7 @@ function finish() {
 
 function runTests()
 {
-  var printService = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                       .getService(Ci.nsIPrintSettingsService);
-
-  if (printService.lastUsedPrinterName != '') {
-    startTest1();
-  } else {
-    todo(false, "No printer seems installed on this machine, that is necessary for this test");
-    finish();
-  }
+  startTest1();
 }
 
 function compareCanvases(options = {}) {

@@ -53,20 +53,11 @@ function finish() {
   window.close();
 }
 
-function run1()
-{
-/** Test for Bug 482976 **/
-  var printService = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                       .getService(Ci.nsIPrintSettingsService);
-
-  if (printService.lastUsedPrinterName != '') {
-    printpreview();
-    ok(gWbp.doingPrintPreview, "Should be doing print preview");
-    exitprintpreview();
-    ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore");
-  } else {
-    todo(false, "No printer seems installed on this machine, that is necessary for this test");
-  }
+async function run1() {
+  printpreview();
+  ok(gWbp.doingPrintPreview, "Should be doing print preview");
+  exitprintpreview();
+  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore");
   finish();
 }
 ]]></script>
