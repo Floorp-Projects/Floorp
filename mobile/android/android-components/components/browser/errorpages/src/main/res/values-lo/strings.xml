@@ -137,17 +137,39 @@
     <string name="mozac_browser_errorpages_file_access_denied_title">ການເຂົ້າເຖິງໄຟລ໌ຂໍ້ມູນໄດ້ຖືກປະຕິເສດ</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ພັອກຊີເຊີເວີໄດ້ປະຕິເສດການເຊື່ອມຕໍ່</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">ບໍ່ພົບພລັອກຊີເຊີເວີ</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ປັນຫາເວັບໄຊທ Malware</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>ເວັບໄຊທທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບອັນຕະລາຍ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ບັນຫາໃນເວັບໄຊທທີ່ບໍ່ເພິງປະສົງ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>ເວັບໄຊທທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບທີ່ໃຫ້ບໍລິການຊັອບແວທີ່ອັນຕະລາຍ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">ເວບໄຊທທີ່ເປັນອັນຕະລາຍ</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>ເວັບໄຊທທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບທີ່ອາດຈະເປັນອັນຕະລາຍ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">ບັນຫາເວັບໄຊທປອມແປງ</string>
-    </resources>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>ຫນ້າເວັບນີ້ທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບປອມແປງ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
+</resources>
