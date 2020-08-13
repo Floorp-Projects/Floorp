@@ -1932,6 +1932,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   MozPromiseRequestHolder<ResumeDelayedPlaybackAgent::ResumePromise>
       mResumePlaybackRequest;
 
+  // Return true if we have already a decoder or a src stream and don't have any
+  // error.
+  bool IsPlayable() const;
+
   // Return true if the media qualifies for being controlled by media control
   // keys.
   bool ShouldStartMediaControlKeyListener() const;
