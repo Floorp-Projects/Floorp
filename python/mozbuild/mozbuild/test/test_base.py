@@ -212,7 +212,7 @@ class TestMozbuildObject(unittest.TestCase):
             context.log_manager = None
             context.detect_virtualenv_mozinfo = False
 
-            o = MachCommandBase(context, None)
+            o = MachCommandBase(context)
 
             self.assertEqual(o.topobjdir, mozpath.normsep(topobjdir))
             self.assertEqual(o.topsrcdir, mozpath.normsep(topsrcdir))
@@ -282,7 +282,7 @@ class TestMozbuildObject(unittest.TestCase):
             sys.stdout = StringIO()
             try:
                 with self.assertRaises(SystemExit):
-                    MachCommandBase(context, None)
+                    MachCommandBase(context)
 
                 self.assertTrue(sys.stdout.getvalue().startswith(
                     'Ambiguous object directory detected.'))
