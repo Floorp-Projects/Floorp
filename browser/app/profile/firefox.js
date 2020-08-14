@@ -1307,6 +1307,15 @@ pref("prompts.defaultModalType", 3);
 pref("browser.topsites.useRemoteSetting", false);
 pref("browser.topsites.attributionURL", "");
 
+// Whether to show tab level system prompts opened via nsIPrompt(Service) as
+// SubDialogs in the TabDialogBox (true) or as TabModalPrompt in the
+// TabModalPromptBox (false).
+#ifdef NIGHTLY_BUILD
+  pref("prompts.tabChromePromptSubDialog", true);
+#else
+  pref("prompts.tabChromePromptSubDialog", false);
+#endif
+
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
