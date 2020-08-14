@@ -372,7 +372,6 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
   gfx::Rect clip = transform.Inverse().TransformBounds(
       gfx::Rect(aClipRect.origin.x, aClipRect.origin.y, aClipRect.size.width,
                 aClipRect.size.height));
-  clip.Round();
   // Set the clip rect - converting from world space to the pre-offset space
   // that DC requires for rectangle clips.
   visual->SetClip(D2DRect(clip));
