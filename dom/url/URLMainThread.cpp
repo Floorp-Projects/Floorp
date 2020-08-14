@@ -82,16 +82,12 @@ void URLMainThread::RevokeObjectURL(const GlobalObject& aGlobal,
     return;
   }
 
-  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
-
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
 
-  nsIPrincipal* urlPrincipal =
-      BlobURLProtocolHandler::GetDataEntryPrincipal(asciiurl);
-
-  if (urlPrincipal && principal->Subsumes(urlPrincipal)) {
+  if (BlobURLProtocolHandler::RemoveDataEntry(
+          asciiurl, nsContentUtils::ObjectPrincipal(aGlobal.Get()),
+          global->GetAgentClusterId())) {
     global->UnregisterHostObjectURI(asciiurl);
-    BlobURLProtocolHandler::RemoveDataEntry(asciiurl);
   }
 }
 

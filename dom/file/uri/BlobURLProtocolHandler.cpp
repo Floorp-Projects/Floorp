@@ -644,6 +644,34 @@ void BlobURLProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   ReleasingTimerHolder::Create(aUri);
 }
 
+/*static */
+bool BlobURLProtocolHandler::RemoveDataEntry(
+    const nsACString& aUri, nsIPrincipal* aPrincipal,
+    const Maybe<nsID>& aAgentClusterId) {
+  MOZ_ASSERT(NS_IsMainThread(), "changing gDataTable is main-thread only");
+  if (!gDataTable) {
+    return false;
+  }
+
+  DataInfo* info = GetDataInfo(aUri);
+  if (!info) {
+    return false;
+  }
+
+  if (!aPrincipal || !aPrincipal->Subsumes(info->mPrincipal)) {
+    return false;
+  }
+
+  if (StaticPrefs::privacy_partition_bloburl_per_agent_cluster() &&
+      aAgentClusterId.isSome() && info->mAgentClusterId.isSome() &&
+      !aAgentClusterId.value().Equals(info->mAgentClusterId.value())) {
+    return false;
+  }
+
+  RemoveDataEntry(aUri, true);
+  return true;
+}
+
 /* static */
 void BlobURLProtocolHandler::RemoveDataEntries() {
   MOZ_ASSERT(NS_IsMainThread(), "changing gDataTable is main-thread only");
@@ -750,24 +778,6 @@ bool BlobURLProtocolHandler::GetDataEntry(
   blobImpl.forget(aBlobImpl);
 
   return true;
-}
-
-/* static */
-nsIPrincipal* BlobURLProtocolHandler::GetDataEntryPrincipal(
-    const nsACString& aUri, bool aAlsoIfRevoked) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "without locking gDataTable is main-thread only");
-  if (!gDataTable) {
-    return nullptr;
-  }
-
-  DataInfo* res = GetDataInfo(aUri, aAlsoIfRevoked);
-
-  if (!res) {
-    return nullptr;
-  }
-
-  return res->mPrincipal;
 }
 
 /* static */
