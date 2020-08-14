@@ -59,6 +59,16 @@ add_task(async function init() {
   await updateTopSites(sites => {
     return sites && sites[0] && sites[0].url.startsWith("http://example.com/");
   });
+
+  // Move the mouse away from the view so that a result or one-off isn't
+  // inadvertently highlighted.  See bug 1659011.
+  EventUtils.synthesizeMouse(
+    gURLBar.inputField,
+    0,
+    0,
+    { type: "mousemove" },
+    window
+  );
 });
 
 // Opens the view without showing the one-offs.  They should be hidden and arrow
