@@ -7487,6 +7487,29 @@ AttachDecision CallIRGenerator::tryAttachBoolean(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachBailout(HandleFunction callee) {
+  // Expecting no arguments.
+  if (argc_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'bailout' native function.
+  emitNativeCalleeGuard(callee);
+
+  writer.bailout();
+  writer.loadUndefinedResult();
+
+  // This stub doesn't need to be monitored, it always returns undefined.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("Bailout");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8594,6 +8617,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Boolean natives.
     case InlinableNative::Boolean:
       return tryAttachBoolean(callee);
+
+    // Testing functions.
+    case InlinableNative::TestBailout:
+      return tryAttachBailout(callee);
 
     default:
       return AttachDecision::NoAction;

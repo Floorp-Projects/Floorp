@@ -7917,6 +7917,14 @@ bool CacheIRCompiler::emitAtomicsIsLockFreeResult(Int32OperandId valueId) {
   return true;
 }
 
+bool CacheIRCompiler::emitBailout() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  // Generates no code.
+
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
