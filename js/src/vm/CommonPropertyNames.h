@@ -315,6 +315,7 @@
   MACRO(NFKD, NFKD, "NFKD")                                                    \
   MACRO(noFilename, noFilename, "noFilename")                                  \
   MACRO(nonincrementalReason, nonincrementalReason, "nonincrementalReason")    \
+  MACRO(NoPrivateGetter, NoPrivateGetter, "NoPrivateGetter")                   \
   MACRO(noStack, noStack, "noStack")                                           \
   MACRO(notation, notation, "notation")                                        \
   MACRO(notes, notes, "notes")                                                 \

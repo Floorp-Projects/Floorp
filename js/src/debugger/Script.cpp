@@ -1443,6 +1443,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::NewObjectWithGroup:
     case JSOp::InitElem:
     case JSOp::InitHiddenElem:
+    case JSOp::InitLockedElem:
     case JSOp::InitElemInc:
     case JSOp::InitElemArray:
     case JSOp::InitProp:

@@ -439,7 +439,7 @@ bool FunctionScriptEmitter::prepareForBody() {
 
   if (funbox_->isClassConstructor()) {
     if (!funbox_->isDerivedClassConstructor()) {
-      if (!bce_->emitInitializeInstanceFields()) {
+      if (!bce_->emitInitializeInstanceMembers()) {
         //          [stack]
         return false;
       }

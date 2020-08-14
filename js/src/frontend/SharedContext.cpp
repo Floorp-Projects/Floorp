@@ -191,9 +191,9 @@ void ScopeContext::computeExternalInitializers(Scope* scope) {
       }
 
       if (fun->isClassConstructor()) {
-        fieldInitializers =
-            mozilla::Some(fun->baseScript()->getFieldInitializers());
-        MOZ_ASSERT(fieldInitializers->valid);
+        memberInitializers =
+            mozilla::Some(fun->baseScript()->getMemberInitializers());
+        MOZ_ASSERT(memberInitializers->valid);
       }
 
       break;
@@ -430,7 +430,7 @@ void FunctionBox::copyScriptFields(ScriptStencil& stencil) {
 
   SharedContext::copyScriptFields(stencil);
 
-  stencil.fieldInitializers = fieldInitializers_;
+  stencil.memberInitializers = memberInitializers_;
 
   isScriptFieldCopiedToStencil = true;
 }
@@ -460,9 +460,9 @@ void FunctionBox::copyUpdatedExtent() {
   stencil.extent = extent_;
 }
 
-void FunctionBox::copyUpdatedFieldInitializers() {
+void FunctionBox::copyUpdatedMemberInitializers() {
   ScriptStencil& stencil = functionStencil().get();
-  stencil.fieldInitializers = fieldInitializers_;
+  stencil.memberInitializers = memberInitializers_;
 }
 
 void FunctionBox::copyUpdatedEnclosingScopeIndex() {

@@ -8,12 +8,14 @@
 #define frontend_FullParseHandler_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"  // mozilla::Maybe
 #include "mozilla/PodOperations.h"
 
 #include <cstddef>  // std::nullptr_t
 #include <string.h>
 
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
+#include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
@@ -474,15 +476,18 @@ class FullParseHandler {
     return true;
   }
 
-  MOZ_MUST_USE ClassMethod* newClassMethodDefinition(Node key,
-                                                     FunctionNodeType funNode,
-                                                     AccessorType atype,
-                                                     bool isStatic) {
+  MOZ_MUST_USE ClassMethod* newClassMethodDefinition(
+      Node key, FunctionNodeType funNode, AccessorType atype, bool isStatic,
+      mozilla::Maybe<FunctionNodeType> initializerIfPrivate) {
     MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
     checkAndSetIsDirectRHSAnonFunction(funNode);
 
-    return new_<ClassMethod>(key, funNode, atype, isStatic);
+    if (initializerIfPrivate.isSome()) {
+      return new_<ClassMethod>(key, funNode, atype, isStatic,
+                               initializerIfPrivate.value());
+    }
+    return new_<ClassMethod>(key, funNode, atype, isStatic, nullptr);
   }
 
   MOZ_MUST_USE ClassField* newClassFieldDefinition(Node name,
@@ -1087,6 +1092,11 @@ class FullParseHandler {
     gc::Cell* cell = gcthings[lazyClosedOverBindingIndex++].asCell();
     MOZ_ASSERT_IF(cell, cell->as<JSString>()->isAtom());
     return static_cast<JSAtom*>(cell);
+  }
+
+  void setPrivateNameKind(Node node, PrivateNameKind kind) {
+    MOZ_ASSERT(node->is<NameNode>());
+    node->as<NameNode>().setPrivateNameKind(kind);
   }
 };
 

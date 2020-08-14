@@ -43,6 +43,7 @@
 #include "frontend/LabelEmitter.h"  // LabelEmitter
 #include "frontend/LexicalScopeEmitter.h"  // LexicalScopeEmitter
 #include "frontend/ModuleSharedContext.h"  // ModuleSharedContext
+#include "frontend/NameAnalysisTypes.h"    // PrivateNameKind
 #include "frontend/NameFunctions.h"        // NameFunctions
 #include "frontend/NameOpEmitter.h"        // NameOpEmitter
 #include "frontend/ObjectEmitter.h"  // PropertyEmitter, ObjectEmitter, ClassEmitter
@@ -57,6 +58,7 @@
 #include "frontend/WhileEmitter.h"   // WhileEmitter
 #include "js/CompileOptions.h"       // TransitiveCompileOptions, CompileOptions
 #include "js/friend/StackLimits.h"   // CheckRecursionLimit
+#include "util/StringBuffer.h"       // StringBuffer
 #include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
@@ -64,7 +66,7 @@
 #include "vm/JSAtom.h"              // JSAtom, js_*_str
 #include "vm/JSContext.h"           // JSContext
 #include "vm/JSFunction.h"          // JSFunction,
-#include "vm/JSScript.h"  // JSScript, ScriptSourceObject, FieldInitializers, BaseScript
+#include "vm/JSScript.h"  // JSScript, ScriptSourceObject, MemberInitializers, BaseScript
 #include "vm/Opcodes.h"        // JSOp, JSOpLength_*
 #include "vm/SharedStencil.h"  // ScopeNote
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind
@@ -1697,8 +1699,11 @@ bool BytecodeEmitter::emitGetName(NameNode* name) {
 
 bool BytecodeEmitter::emitGetPrivateName(NameNode* name) {
   MOZ_ASSERT(name->isKind(ParseNodeKind::PrivateName));
+  return emitGetPrivateName(name->name());
+}
 
-  RootedAtom nameAtom(cx, name->name());
+bool BytecodeEmitter::emitGetPrivateName(JSAtom* name) {
+  RootedAtom nameAtom(cx, name);
 
   // The parser ensures the private name is present on the environment chain.
   NameLocation location = lookupName(nameAtom);
@@ -2337,7 +2342,7 @@ bool BytecodeEmitter::emitSetThis(BinaryNode* setThisNode) {
     return false;
   }
 
-  if (!emitInitializeInstanceFields()) {
+  if (!emitInitializeInstanceMembers()) {
     return false;
   }
 
@@ -5692,13 +5697,13 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     // NOTE: For a lazy function, this will be applied to any existing function
     //       in UpdateEmittedInnerFunctions().
     if (classContentsIfConstructor) {
-      mozilla::Maybe<FieldInitializers> fieldInitializers =
-          setupFieldInitializers(classContentsIfConstructor,
-                                 FieldPlacement::Instance);
-      if (!fieldInitializers) {
+      mozilla::Maybe<MemberInitializers> memberInitializers =
+          setupMemberInitializers(classContentsIfConstructor,
+                                  FieldPlacement::Instance);
+      if (!memberInitializers) {
         ReportAllocationOverflow(cx);
       }
-      funbox->setFieldInitializers(*fieldInitializers);
+      funbox->setMemberInitializers(*memberInitializers);
     }
 
     // A function is a run-once lambda if the following all hold:
@@ -8602,6 +8607,11 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     ParseNode* propVal = prop->right();
     AccessorType accessorType;
     if (prop->is<ClassMethod>()) {
+      if (key->isKind(ParseNodeKind::PrivateName)) {
+        // Private methods are separately added to the .initializers array.
+        continue;
+      }
+
       accessorType = prop->as<ClassMethod>().accessorType();
     } else if (prop->is<PropertyDefinition>()) {
       accessorType = prop->as<PropertyDefinition>().accessorType();
@@ -8746,12 +8756,14 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         //          [stack] CTOR? OBJ CTOR?
         return false;
       }
+
       if (!emitValue()) {
         //          [stack] CTOR? OBJ CTOR? VAL
         return false;
       }
 
       RootedAtom keyAtom(cx, key->as<NameNode>().atom());
+
       switch (accessorType) {
         case AccessorType::None:
           if (!pe.emitInitProp(keyAtom)) {
@@ -9037,22 +9049,32 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralStencil* data,
   return true;
 }
 
-mozilla::Maybe<FieldInitializers> BytecodeEmitter::setupFieldInitializers(
+mozilla::Maybe<MemberInitializers> BytecodeEmitter::setupMemberInitializers(
     ListNode* classMembers, FieldPlacement placement) {
   bool isStatic = placement == FieldPlacement::Static;
   auto isClassField = [isStatic](ParseNode* propdef) {
     return propdef->is<ClassField>() &&
            propdef->as<ClassField>().isStatic() == isStatic;
   };
+  auto isPrivateMethod = [isStatic](ParseNode* propdef) {
+    return propdef->is<ClassMethod>() &&
+           propdef->as<ClassMethod>().name().isKind(
+               ParseNodeKind::PrivateName) &&
+           propdef->as<ClassMethod>().isStatic() == isStatic;
+  };
 
   size_t numFields =
       std::count_if(classMembers->contents().begin(),
                     classMembers->contents().end(), isClassField);
+  size_t numPrivateMethods =
+      std::count_if(classMembers->contents().begin(),
+                    classMembers->contents().end(), isPrivateMethod);
+
   // If there are more initializers than can be represented, return invalid.
-  if (numFields > FieldInitializers::MaxInitializers) {
+  if (numFields + numPrivateMethods > MemberInitializers::MaxInitializers) {
     return Nothing();
   }
-  return Some(FieldInitializers(numFields));
+  return Some(MemberInitializers(numFields + numPrivateMethods));
 }
 
 // Purpose of .fieldKeys:
@@ -9121,31 +9143,39 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj,
   return true;
 }
 
-bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
-                                                  ListNode* obj,
-                                                  FieldPlacement placement) {
+bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
+                                                   ListNode* obj,
+                                                   FieldPlacement placement) {
   // FieldPlacement::Instance
   //                [stack] HOMEOBJ HERITAGE?
   //
   // FieldPlacement::Static
   //                [stack] CTOR HOMEOBJ
-  mozilla::Maybe<FieldInitializers> fieldInitializers =
-      setupFieldInitializers(obj, placement);
-  if (!fieldInitializers) {
+  mozilla::Maybe<MemberInitializers> memberInitializers =
+      setupMemberInitializers(obj, placement);
+  if (!memberInitializers) {
     ReportAllocationOverflow(cx);
     return false;
   }
-  size_t numFields = fieldInitializers->numFieldInitializers;
 
-  if (numFields == 0) {
+  size_t numInitializers = memberInitializers->numMemberInitializers;
+  if (numInitializers == 0) {
     return true;
   }
 
   bool isStatic = placement == FieldPlacement::Static;
-  if (!ce.prepareForFieldInitializers(numFields, isStatic)) {
+  if (!ce.prepareForMemberInitializers(numInitializers, isStatic)) {
     //              [stack] HOMEOBJ HERITAGE? ARRAY
     // or:
     //              [stack] CTOR HOMEOBJ ARRAY
+    return false;
+  }
+
+  // Private methods could be used in the field initializers,
+  // so we stamp them onto the instance first.
+  // Static private methods aren't implemented, so skip this step
+  // if emitting static initializers.
+  if (!isStatic && !emitPrivateMethodInitializers(ce, obj)) {
     return false;
   }
 
@@ -9158,7 +9188,8 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
     }
 
     FunctionNode* initializer = propdef->as<ClassField>().initializer();
-    if (!ce.prepareForFieldInitializer()) {
+
+    if (!ce.prepareForMemberInitializer()) {
       return false;
     }
     if (!emitTree(initializer)) {
@@ -9169,14 +9200,14 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
     }
     if (initializer->funbox()->needsHomeObject()) {
       MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
-      if (!ce.emitFieldInitializerHomeObject(isStatic)) {
+      if (!ce.emitMemberInitializerHomeObject(isStatic)) {
         //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
         // or:
         //          [stack] CTOR HOMEOBJ ARRAY LAMBDA
         return false;
       }
     }
-    if (!ce.emitStoreFieldInitializer()) {
+    if (!ce.emitStoreMemberInitializer()) {
       //            [stack] HOMEOBJ HERITAGE? ARRAY
       // or:
       //            [stack] CTOR HOMEOBJ ARRAY
@@ -9184,7 +9215,7 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
     }
   }
 
-  if (!ce.emitFieldInitializersEnd()) {
+  if (!ce.emitMemberInitializersEnd()) {
     //              [stack] HOMEOBJ HERITAGE?
     // or:
     //              [stack] CTOR HOMEOBJ
@@ -9194,7 +9225,214 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
   return true;
 }
 
-const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
+bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
+                                                    ListNode* obj) {
+  for (ParseNode* propdef : obj->contents()) {
+    if (!propdef->is<ClassMethod>()) {
+      continue;
+    }
+    ParseNode* propName = &propdef->as<ClassMethod>().name();
+    if (!propName->isKind(ParseNodeKind::PrivateName)) {
+      continue;
+    }
+
+    if (!ce.prepareForMemberInitializer()) {
+      //              [stack] HOMEOBJ HERITAGE? ARRAY
+      // or:
+      //              [stack] CTOR HOMEOBJ ARRAY
+      return false;
+    }
+
+    // Synthesize a name for the lexical variable that will store the
+    // private method body.
+    StringBuffer storedMethodName(cx);
+    if (!storedMethodName.append(propName->as<NameNode>().atom())) {
+      return false;
+    }
+    AccessorType accessorType = propdef->as<ClassMethod>().accessorType();
+    switch (accessorType) {
+      case AccessorType::None:
+        if (!storedMethodName.append(".method")) {
+          return false;
+        }
+        break;
+      case AccessorType::Getter:
+        if (!storedMethodName.append(".getter")) {
+          return false;
+        }
+        break;
+      case AccessorType::Setter:
+        if (!storedMethodName.append(".setter")) {
+          return false;
+        }
+        break;
+      default:
+        MOZ_CRASH("Invalid private method accessor type");
+    }
+    RootedAtom storedMethodAtom(cx, storedMethodName.finishAtom());
+
+    // Emit the private method body and store it as a lexical var.
+    if (!emitFunction(&propdef->as<ClassMethod>().method())) {
+      //              [stack] HOMEOBJ HERITAGE? ARRAY METHOD
+      // or:
+      //              [stack] CTOR HOMEOBJ ARRAY METHOD
+      return false;
+    }
+    // The private method body needs to access the home object,
+    // and the CE knows where that is on the stack.
+    if (!ce.emitMemberInitializerHomeObject(false)) {
+      //              [stack] HOMEOBJ HERITAGE? ARRAY METHOD
+      // or:
+      //              [stack] CTOR HOMEOBJ ARRAY METHOD
+      return false;
+    }
+    if (!emitLexicalInitialization(storedMethodAtom)) {
+      //              [stack] HOMEOBJ HERITAGE? ARRAY METHOD
+      // or:
+      //              [stack] CTOR HOMEOBJ ARRAY METHOD
+      return false;
+    }
+    if (!emit1(JSOp::Pop)) {
+      //              [stack] HOMEOBJ HERITAGE? ARRAY
+      // or:
+      //              [stack] CTOR HOMEOBJ ARRAY
+      return false;
+    }
+
+    if (!emitPrivateMethodInitializer(ce, propdef, propName, storedMethodAtom,
+                                      accessorType)) {
+      //              [stack] HOMEOBJ HERITAGE? ARRAY
+      // or:
+      //              [stack] CTOR HOMEOBJ ARRAY
+      return false;
+    }
+
+    // Store the emitted initializer function into the .initializers array.
+    if (!ce.emitStoreMemberInitializer()) {
+      //              [stack] HOMEOBJ HERITAGE? ARRAY
+      // or:
+      //              [stack] CTOR HOMEOBJ ARRAY
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool BytecodeEmitter::emitPrivateMethodInitializer(ClassEmitter& ce,
+                                                   ParseNode* prop,
+                                                   ParseNode* propName,
+                                                   HandleAtom storedMethodAtom,
+                                                   AccessorType accessorType) {
+  // Emit the synthesized initializer function.
+  FunctionNode* funNode = prop->as<ClassMethod>().initializerIfPrivate();
+  if (!funNode) {
+    return false;
+  }
+  FunctionBox* funbox = funNode->funbox();
+  FunctionEmitter fe(this, funbox, funNode->syntaxKind(),
+                     FunctionEmitter::IsHoisted::No);
+  if (!fe.prepareForNonLazy()) {
+    //              [stack]
+    return false;
+  }
+
+  BytecodeEmitter bce2(this, parser, funbox, compilationInfo, emitterMode);
+  if (!bce2.init(funNode->pn_pos)) {
+    return false;
+  }
+  ListNode* paramsBody = &funNode->body()->as<ListNode>();
+  FunctionScriptEmitter fse(&bce2, funbox, Nothing(), Nothing());
+  if (!fse.prepareForParameters()) {
+    //              [stack]
+    return false;
+  }
+  if (!bce2.emitFunctionFormalParameters(paramsBody)) {
+    //              [stack]
+    return false;
+  }
+  if (!fse.prepareForBody()) {
+    //              [stack]
+    return false;
+  }
+
+  if (!bce2.emit1(JSOp::FunctionThis)) {
+    //              [stack] THIS
+    return false;
+  }
+  if (!bce2.emitGetPrivateName(&propName->as<NameNode>())) {
+    //              [stack] THIS NAME
+    return false;
+  }
+  if (!bce2.emitGetName(storedMethodAtom)) {
+    //              [stack] THIS NAME METHOD
+    return false;
+  }
+
+  PrivateNameKind kind = propName->as<NameNode>().privateNameKind();
+  switch (kind) {
+    case PrivateNameKind::Method:
+      if (!bce2.emit1(JSOp::InitLockedElem)) {
+        //          [stack] THIS
+        return false;
+      }
+      break;
+    case PrivateNameKind::Setter:
+      if (!bce2.emit1(JSOp::InitHiddenElemSetter)) {
+        //          [stack] THIS
+        return false;
+      }
+      if (!bce2.emitGetPrivateName(&propName->as<NameNode>())) {
+        //          [stack] THIS NAME
+        return false;
+      }
+      if (!bce2.emitAtomOp(JSOp::GetIntrinsic,
+                           cx->parserNames().NoPrivateGetter)) {
+        //          [stack] THIS NAME FUN
+        return false;
+      }
+      if (!bce2.emit1(JSOp::InitHiddenElemGetter)) {
+        //          [stack] THIS
+        return false;
+      }
+      break;
+    case PrivateNameKind::Getter:
+    case PrivateNameKind::GetterSetter:
+      if (accessorType == AccessorType::Getter) {
+        if (!bce2.emit1(JSOp::InitHiddenElemGetter)) {
+          //        [stack] THIS
+          return false;
+        }
+      } else {
+        if (!bce2.emit1(JSOp::InitHiddenElemSetter)) {
+          //        [stack] THIS
+          return false;
+        }
+      }
+      break;
+    default:
+      MOZ_CRASH("Invalid op");
+  }
+
+  if (!fse.emitEndBody()) {
+    //              [stack]
+    return false;
+  }
+  if (!fse.intoStencil()) {
+    return false;
+  }
+
+  if (!fe.emitNonLazyEnd()) {
+    //              [stack] HOMEOBJ HERITAGE? ARRAY FUN
+    // or:
+    //              [stack] CTOR HOMEOBJ ARRAY FUN
+    return false;
+  }
+
+  return true;
+}
+
+const MemberInitializers& BytecodeEmitter::findMemberInitializersForCall() {
   for (BytecodeEmitter* current = this; current; current = current->parent) {
     if (current->sc->isFunctionBox()) {
       FunctionBox* funbox = current->sc->asFunctionBox();
@@ -9207,20 +9445,21 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
       // expect fields in the first place.
       MOZ_RELEASE_ASSERT(funbox->isClassConstructor());
 
-      MOZ_ASSERT(funbox->fieldInitializers().valid);
-      return funbox->fieldInitializers();
+      MOZ_ASSERT(funbox->memberInitializers().valid);
+      return funbox->memberInitializers();
     }
   }
 
-  MOZ_RELEASE_ASSERT(compilationInfo.scopeContext.fieldInitializers);
-  return *compilationInfo.scopeContext.fieldInitializers;
+  MOZ_RELEASE_ASSERT(compilationInfo.scopeContext.memberInitializers);
+  return *compilationInfo.scopeContext.memberInitializers;
 }
 
-bool BytecodeEmitter::emitInitializeInstanceFields() {
-  const FieldInitializers& fieldInitializers = findFieldInitializersForCall();
-  size_t numFields = fieldInitializers.numFieldInitializers;
+bool BytecodeEmitter::emitInitializeInstanceMembers() {
+  const MemberInitializers& memberInitializers =
+      findMemberInitializersForCall();
+  size_t numInitializers = memberInitializers.numMemberInitializers;
 
-  if (numFields == 0) {
+  if (numInitializers == 0) {
     return true;
   }
 
@@ -9229,8 +9468,8 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
     return false;
   }
 
-  for (size_t fieldIndex = 0; fieldIndex < numFields; fieldIndex++) {
-    if (fieldIndex < numFields - 1) {
+  for (size_t index = 0; index < numInitializers; index++) {
+    if (index < numInitializers - 1) {
       // We Dup to keep the array around (it is consumed in the bytecode
       // below) for next iterations of this loop, except for the last
       // iteration, which avoids an extra Pop at the end of the loop.
@@ -9240,7 +9479,7 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
       }
     }
 
-    if (!emitNumberOp(fieldIndex)) {
+    if (!emitNumberOp(index)) {
       //            [stack] ARRAY? ARRAY INDEX
       return false;
     }
@@ -9922,6 +10161,58 @@ static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(JSContext* cx,
   return nullptr;
 }
 
+template <class ClassMemberType>
+bool BytecodeEmitter::emitNewPrivateNames(ListNode* classMembers) {
+  for (ParseNode* classElement : classMembers->contents()) {
+    if (!classElement->is<ClassMemberType>()) {
+      continue;
+    }
+
+    ParseNode* elementName = &classElement->as<ClassMemberType>().name();
+    if (!elementName->isKind(ParseNodeKind::PrivateName)) {
+      continue;
+    }
+
+    RootedAtom privateName(cx, elementName->as<NameNode>().name());
+
+    // TODO: Add a new bytecode to create private names.
+    if (!emitAtomOp(JSOp::GetIntrinsic, cx->parserNames().NewPrivateName)) {
+      //          [stack] HERITAGE NEWPRIVATENAME
+      return false;
+    }
+
+    // Push `undefined` as `this` parameter for call.
+    if (!emit1(JSOp::Undefined)) {
+      //          [stack] HERITAGE NEWPRIVATENAME UNDEFINED
+      return false;
+    }
+
+    if (!emitAtomOp(JSOp::String, privateName)) {
+      //          [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
+      return false;
+    }
+
+    int argc = 1;
+    if (!emitCall(JSOp::Call, argc)) {
+      //          [stack] HERITAGE PRIVATENAME
+      return false;
+    }
+
+    // Add a binding for #name => privatename
+    if (!emitLexicalInitialization(privateName)) {
+      //          [stack] HERITAGE PRIVATENAME
+      return false;
+    }
+
+    // Pop Private name off the stack.
+    if (!emit1(JSOp::Pop)) {
+      //          [stack] HERITAGE
+      return false;
+    }
+  }
+  return true;
+}
+
 // This follows ES6 14.5.14 (ClassDefinitionEvaluation) and ES6 14.5.15
 // (BindingClassDeclarationEvaluation).
 bool BytecodeEmitter::emitClass(
@@ -9985,52 +10276,11 @@ bool BytecodeEmitter::emitClass(
       return false;
     }
 
-    for (ParseNode* classElement : classNode->memberList()->contents()) {
-      if (!classElement->is<ClassField>()) {
-        continue;
-      }
-
-      ParseNode* fieldName = &classElement->as<ClassField>().name();
-      if (!fieldName->isKind(ParseNodeKind::PrivateName)) {
-        continue;
-      }
-
-      RootedAtom privateName(cx, fieldName->as<NameNode>().name());
-
-      // TODO: Add a new bytecode to create private names.
-      if (!emitAtomOp(JSOp::GetIntrinsic, cx->parserNames().NewPrivateName)) {
-        //          [stack] HERITAGE NEWPRIVATENAME
-        return false;
-      }
-
-      // Push `undefined` as `this` parameter for call.
-      if (!emit1(JSOp::Undefined)) {
-        //          [stack] HERITAGE NEWPRIVATENAME UNDEFINED
-        return false;
-      }
-
-      if (!emitAtomOp(JSOp::String, privateName)) {
-        //          [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
-        return false;
-      }
-
-      int argc = 1;
-      if (!emitCall(JSOp::Call, argc)) {
-        //          [stack] HERITAGE PRIVATENAME
-        return false;
-      }
-
-      // Add a binding for #name => privatename
-      if (!emitLexicalInitialization(privateName)) {
-        //          [stack] HERITAGE PRIVATENAME
-        return false;
-      }
-
-      // Pop Private name off the stack.
-      if (!emit1(JSOp::Pop)) {
-        //          [stack] HERITAGE
-        return false;
-      }
+    if (!emitNewPrivateNames<ClassField>(classMembers)) {
+      return false;
+    }
+    if (!emitNewPrivateNames<ClassMethod>(classMembers)) {
+      return false;
     }
   }
 
@@ -10064,17 +10314,20 @@ bool BytecodeEmitter::emitClass(
       MOZ_ASSERT(constructorScope->scopeBindings()->trailingNames[0].name() ==
                  cx->parserNames().dotInitializers);
 
-      auto isInstanceField = [](ParseNode* propdef) {
-        return propdef->is<ClassField>() &&
-               !propdef->as<ClassField>().isStatic();
+      auto needsInitializer = [](ParseNode* propdef) {
+        return (propdef->is<ClassField>() &&
+                !propdef->as<ClassField>().isStatic()) ||
+               (propdef->is<ClassMethod>() &&
+                propdef->as<ClassMethod>().name().isKind(
+                    ParseNodeKind::PrivateName));
       };
 
       // As an optimization omit the |.initializers| binding when no instance
-      // fields are present.
-      bool hasInstanceFields =
+      // fields or private methods are present.
+      bool needsInitializers =
           std::any_of(classMembers->contents().begin(),
-                      classMembers->contents().end(), isInstanceField);
-      if (hasInstanceFields) {
+                      classMembers->contents().end(), needsInitializer);
+      if (needsInitializers) {
         lse.emplace(this);
         if (!lse->emitScope(ScopeKind::Lexical,
                             constructorScope->scopeBindings())) {
@@ -10082,8 +10335,8 @@ bool BytecodeEmitter::emitClass(
         }
 
         // Any class with field initializers will have a constructor
-        if (!emitCreateFieldInitializers(ce, classMembers,
-                                         FieldPlacement::Instance)) {
+        if (!emitCreateMemberInitializers(ce, classMembers,
+                                          FieldPlacement::Instance)) {
           return false;
         }
       }
@@ -10128,7 +10381,7 @@ bool BytecodeEmitter::emitClass(
     return false;
   }
 
-  if (!emitCreateFieldInitializers(ce, classMembers, FieldPlacement::Static)) {
+  if (!emitCreateMemberInitializers(ce, classMembers, FieldPlacement::Static)) {
     return false;
   }
 

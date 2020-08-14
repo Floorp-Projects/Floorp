@@ -29,7 +29,7 @@
 #include "vm/BigIntType.h"                // ParseBigIntLiteral
 #include "vm/FunctionFlags.h"             // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"     // GeneratorKind, FunctionAsyncKind
-#include "vm/JSScript.h"                  // FieldInitializers
+#include "vm/JSScript.h"                  // MemberInitializers
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
 #include "vm/ScopeKind.h"      // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex
@@ -426,7 +426,7 @@ class ScriptStencil {
   ImmutableScriptFlags immutableFlags;
 
   // See `BaseScript::data_`.
-  mozilla::Maybe<FieldInitializers> fieldInitializers;
+  mozilla::Maybe<MemberInitializers> memberInitializers;
   ScriptThingsVector gcThings;
 
   // See `BaseScript::sharedData_`.

@@ -21,7 +21,7 @@ namespace js {
 class Scope;
 class GlobalScope;
 class EvalScope;
-struct FieldInitializers;
+struct MemberInitializers;
 class GCMarker;
 
 namespace frontend {
