@@ -26,8 +26,8 @@ add_task(async function testDefaultPlaybackStateBeforeAnyMediaStart() {
   info(`open media page`);
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
 
-  info(`before media starts, playback state should be 'stopped'`);
-  await isActualPlaybackStateEqualTo(tab, "stopped");
+  info(`before media starts, playback state should be 'none'`);
+  await isActualPlaybackStateEqualTo(tab, "none");
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -96,7 +96,7 @@ function setGuessedPlaybackState(tab, state) {
 }
 
 function isActualPlaybackStateEqualTo(tab, expectedState) {
-  const currentState = ChromeUtils.getCurrentMediaSessionPlaybackState();
+  const currentState = MediaControlService.getCurrentMediaSessionPlaybackState();
   is(
     currentState,
     expectedState,

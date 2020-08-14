@@ -108,7 +108,7 @@ add_task(async function testResumingLatestPausedMedias() {
   info(`pressing 'pause' for already paused media, nothing would happen`);
   // All media are already paused, so no need to wait for playback state change,
   // call the method directly.
-  ChromeUtils.generateMediaControlKey("pause");
+  MediaControlService.generateMediaControlKey("pause");
 
   info(`pressing 'play' would still affect on latest paused media`);
   await generateMediaControlKeyEvent("play");
