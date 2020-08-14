@@ -29,44 +29,29 @@ const aside = {
 };
 
 const release = {
-  title: "What’s New in DevTools (Firefox 79)",
+  title: "What’s New in DevTools (Firefox 80)",
   linkText: "Read more",
-  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/79?${utmParams}`,
+  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/80?${utmParams}`,
   features: [
     {
-      header: `Async stack visibility in Console & Debugger`,
-      description: `Now you can view async code events, timeouts, and promises in the context of their stacks across panels. Benefit from the additional context in Debugger call stacks, Network initiator stacks, and Console error and log stacks.`,
-      href: `https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous/Timeouts_and_intervals?${utmParams}`,
+      header: `New commands for HTTP request blocking`,
+      description: `You can now block and unblock network requests using the :block and :unblock helper commands in the Console.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/Helpers?${utmParams}`,
     },
     {
-      header: `Even better source map references for JS and CSS`,
-      description: `Links to Style Editor and Debugger reliably jump to the right file and location. This results in a smoother SCSS inspection experience.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map?${utmParams}`,
+      header: `Class autocomplete in HTML editing`,
+      description: `When adding a class to an element in the Page Inspector's Rules pane, existing classes are suggested with autocomplete.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector/How_to/Examine_and_edit_CSS#Viewing_and_changing_classes_on_an_element?${utmParams}`,
     },
     {
-      header: `Console displays failed requests`,
-      description: `Network responses with 4xx/5xx status codes are now easier to spot and debug in the Console. In Firefox 79, they display as errors and can be expanded to view detailed request and response information.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/Console_messages?${utmParams}`,
-    },
-    {
-      header: `Debugger highlights errors in code`,
-      description: `When JavaScript code throws an error, the debugger will now highlight the relevant line of code and display error details.`,
+      header: `Stack traces for exceptions`,
+      description: `When the Debugger breaks on an exception, the tooltip in the source pane now shows disclosure triangle that reveals a stack trace.`,
       href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Breaking_on_exceptions?${utmParams}`,
     },
     {
-      header: `Faster JavaScript debugging`,
-      description: `Projects with large files and eval-heavy code patterns can now be debugged more quickly.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger?${utmParams}`,
-    },
-    {
-      header: `More accessible Inspector`,
-      description: `Inspector's Changes and Layout tabs can now be read by screen reader users.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector?${utmParams}`,
-    },
-    {
-      header: `Disabling cache also includes CORS preflight requests`,
-      description: `The "Disable Cache" option in the Network panel now also deactivates CORS preflight request caching, making it easier to iterate on your web security settings.`,
-      href: `https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request?${utmParams}`,
+      header: `Warning for slow server responses`,
+      description: `In the Network Monitor request list, a turtle icon is shown for "slow" requests that exceed a configurable threshhold for the waiting time.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list#Network_request_columns?${utmParams}`,
     },
   ],
 };
@@ -78,12 +63,7 @@ const dev = {
   features: [
     {
       header: `Inspect Server-Sent Events`,
-      description: `Monitor your received event stream data, adding to the existing WebSocket inspection.`,
-      href: `https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events?${utmParams}`,
-    },
-    {
-      header: `Warning for slow server responses`,
-      description: `The Network panel now highlights server performance bottlenecks. Watch out for the friendly turtle icon.`,
+      description: `Monitor your received event stream data, in addition to the existing WebSocket inspection. Flip "devtools.netmonitor.features.serverSentEvents" pref to try this feature.`,
       href: `https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events?${utmParams}`,
     },
   ],
