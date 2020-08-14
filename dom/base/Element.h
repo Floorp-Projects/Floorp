@@ -211,6 +211,11 @@ class Element : public FragmentOrElement {
    */
   void UpdateLinkState(EventStates aState);
 
+  /**
+   * Returns the current disabled state of the element.
+   */
+  bool IsDisabled() const { return State().HasState(NS_EVENT_STATE_DISABLED); }
+
   virtual int32_t TabIndexDefault() { return -1; }
 
   /**
