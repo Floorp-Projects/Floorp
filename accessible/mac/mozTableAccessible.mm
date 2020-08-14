@@ -7,8 +7,15 @@
 
 #import "mozTableAccessible.h"
 #import "nsCocoaUtils.h"
-#import "AccIterator.h"
-#import "TableAccessible.h"
+#import "MacUtils.h"
+
+#include "AccIterator.h"
+#include "Accessible.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
+
+using namespace mozilla;
+using namespace mozilla::a11y;
 
 @implementation mozColumnContainer
 

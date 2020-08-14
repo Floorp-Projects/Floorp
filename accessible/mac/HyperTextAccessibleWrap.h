@@ -11,7 +11,39 @@
 namespace mozilla {
 namespace a11y {
 
-typedef class HyperTextAccessible HyperTextAccessibleWrap;
+struct TextPoint;
+
+class HyperTextAccessibleWrap : public HyperTextAccessible {
+ public:
+  HyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
+      : HyperTextAccessible(aContent, aDoc) {}
+
+  void TextForRange(nsAString& aText, int32_t aStartOffset,
+                    HyperTextAccessible* aEndContainer, int32_t aEndOffset);
+
+  void LeftWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
+                  int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
+                  int32_t* aEndOffset);
+
+  void RightWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
+                   int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
+                   int32_t* aEndOffset);
+
+  void NextClusterAt(int32_t aOffset, HyperTextAccessible** aNextContainer,
+                     int32_t* aNextOffset);
+
+  void PreviousClusterAt(int32_t aOffset, HyperTextAccessible** aPrevContainer,
+                         int32_t* aPrevOffset);
+
+ protected:
+  ~HyperTextAccessibleWrap() {}
+
+  TextPoint FindTextPoint(int32_t aOffset, nsDirection aDirection,
+                          nsSelectionAmount aAmount,
+                          EWordMovementType aWordMovementType);
+
+  HyperTextAccessibleWrap* EditableRoot();
+};
 
 }  // namespace a11y
 }  // namespace mozilla
