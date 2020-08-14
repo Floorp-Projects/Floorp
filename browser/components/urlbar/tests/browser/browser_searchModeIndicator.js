@@ -197,6 +197,7 @@ add_task(async function escape() {
     window
   ).getSelectableButtons(true);
   UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: oneOffs[0].engine.name,
   });
 
@@ -372,6 +373,7 @@ add_task(async function tab_switch() {
     window
   ).getSelectableButtons(true);
   UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: oneOffs[0].engine.name,
   });
 
@@ -409,6 +411,7 @@ add_task(async function tab_switch() {
   await BrowserTestUtils.switchTab(gBrowser, tabs[0]);
   await searchPromise;
   UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: oneOffs[0].engine.name,
   });
 
@@ -432,6 +435,7 @@ add_task(async function tab_switch() {
   await BrowserTestUtils.switchTab(gBrowser, tabs[0]);
   await searchPromise;
   UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: oneOffs[0].engine.name,
   });
 
@@ -447,6 +451,7 @@ add_task(async function tab_switch() {
   await BrowserTestUtils.switchTab(gBrowser, tabs[0]);
   await searchPromise;
   UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: oneOffs[0].engine.name,
   });
 

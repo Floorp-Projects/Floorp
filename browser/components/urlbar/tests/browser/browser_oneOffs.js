@@ -484,6 +484,7 @@ add_task(async function oneOffClick() {
         "Urlbar view is still open."
       );
       UrlbarTestUtils.assertSearchMode(window, {
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         engineName: oneOffs[0].engine.name,
       });
       window.gURLBar.setSearchMode({});
@@ -534,6 +535,7 @@ add_task(async function oneOffReturn() {
         "Urlbar view is still open."
       );
       UrlbarTestUtils.assertSearchMode(window, {
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         engineName: oneOffs[0].engine.name,
       });
       window.gURLBar.setSearchMode({});

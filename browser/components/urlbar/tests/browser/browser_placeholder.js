@@ -230,7 +230,10 @@ add_task(async function test_search_mode_engine_web() {
 
 add_task(async function test_search_mode_engine_other() {
   await doSearchModeTest(
-    { engineName: extraEngine.name },
+    {
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engineName: extraEngine.name,
+    },
     { id: "urlbar-placeholder-search-mode-other", args: null }
   );
 });
