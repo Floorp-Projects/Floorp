@@ -1195,7 +1195,8 @@ class SpecialPowersParent extends JSWindowActorParent {
       }
 
       case "SPGenerateMediaControlKeyTestEvent": {
-        ChromeUtils.generateMediaControlKey(aMessage.data.event);
+        // eslint-disable-next-line no-undef
+        MediaControlService.generateMediaControlKey(aMessage.data.event);
         return undefined;
       }
 

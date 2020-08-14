@@ -45,7 +45,7 @@ add_task(async function testPlayPauseAndStop() {
     await checkIfMediaIsStillPlaying(tab, elementId);
 
     info(`- simulate pressing 'pause' media control key -`);
-    ChromeUtils.generateMediaControlKey("pause");
+    MediaControlService.generateMediaControlKey("pause");
 
     info(`- non eligible media won't be controlled by media control -`);
     await checkIfMediaIsStillPlaying(tab, elementId);
@@ -55,7 +55,7 @@ add_task(async function testPlayPauseAndStop() {
       await makeElementEligible(tab, elementId);
 
       info(`- simulate pressing 'pause' media control key -`);
-      ChromeUtils.generateMediaControlKey("pause");
+      MediaControlService.generateMediaControlKey("pause");
 
       info(`- audible media should be controlled by media control -`);
       await waitUntilMediaPaused(tab, elementId);
