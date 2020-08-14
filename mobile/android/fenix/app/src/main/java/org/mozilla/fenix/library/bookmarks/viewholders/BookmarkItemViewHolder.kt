@@ -37,7 +37,7 @@ class BookmarkItemViewHolder(
     override fun bind(item: BookmarkNode, mode: BookmarkFragmentState.Mode, payload: BookmarkPayload) {
         this.item = item
 
-        setupMenu(item)
+        updateMenu(item.type)
 
         if (payload.modeChanged) {
             if (mode is BookmarkFragmentState.Mode.Selecting) {

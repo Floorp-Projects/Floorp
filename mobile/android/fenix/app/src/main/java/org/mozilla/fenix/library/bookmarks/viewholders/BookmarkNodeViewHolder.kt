@@ -5,29 +5,32 @@
 package org.mozilla.fenix.library.bookmarks.viewholders
 
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu
 import org.mozilla.fenix.library.bookmarks.BookmarkPayload
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
+import org.mozilla.fenix.utils.Do
 
 /**
  * Base class for bookmark node view holders.
  */
 abstract class BookmarkNodeViewHolder(
-    override val containerView: LibrarySiteItemView,
+    protected val containerView: LibrarySiteItemView,
     private val interactor: BookmarkViewInteractor
-) : RecyclerView.ViewHolder(containerView), LayoutContainer {
+) : RecyclerView.ViewHolder(containerView) {
 
     abstract var item: BookmarkNode?
+    private lateinit var menu: BookmarkItemMenu
 
-    abstract fun bind(
-        item: BookmarkNode,
-        mode: BookmarkFragmentState.Mode
-    )
+    init {
+        setupMenu()
+    }
+
+    abstract fun bind(item: BookmarkNode, mode: BookmarkFragmentState.Mode)
 
     abstract fun bind(
         item: BookmarkNode,
@@ -39,11 +42,11 @@ abstract class BookmarkNodeViewHolder(
         containerView.setSelectionInteractor(item, selectionHolder, interactor)
     }
 
-    protected fun setupMenu(item: BookmarkNode) {
-        val bookmarkItemMenu = BookmarkItemMenu(containerView.context, item) {
-            when (it) {
+    private fun setupMenu() {
+        menu = BookmarkItemMenu(containerView.context) { menuItem ->
+            val item = this.item ?: return@BookmarkItemMenu
+            Do exhaustive when (menuItem) {
                 BookmarkItemMenu.Item.Edit -> interactor.onEditPressed(item)
-                BookmarkItemMenu.Item.Select -> interactor.select(item)
                 BookmarkItemMenu.Item.Copy -> interactor.onCopyPressed(item)
                 BookmarkItemMenu.Item.Share -> interactor.onSharePressed(item)
                 BookmarkItemMenu.Item.OpenInNewTab -> interactor.onOpenInNormalTab(item)
@@ -52,6 +55,8 @@ abstract class BookmarkNodeViewHolder(
             }
         }
 
-        containerView.attachMenu(bookmarkItemMenu)
+        containerView.attachMenu(menu.menuController)
     }
+
+    protected fun updateMenu(itemType: BookmarkNodeType) = menu.updateMenu(itemType)
 }

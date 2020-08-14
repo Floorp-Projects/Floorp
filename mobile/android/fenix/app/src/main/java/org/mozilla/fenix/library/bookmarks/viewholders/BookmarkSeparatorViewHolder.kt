@@ -26,7 +26,7 @@ class BookmarkSeparatorViewHolder(
     ) {
         this.item = item
         containerView.displayAs(LibrarySiteItemView.ItemType.SEPARATOR)
-        setupMenu(item)
+        updateMenu(item.type)
     }
 
     override fun bind(

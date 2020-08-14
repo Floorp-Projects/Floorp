@@ -44,7 +44,7 @@ class BookmarkFolderViewHolder(
         setSelectionListeners(item, mode)
 
         if (!item.inRoots()) {
-            setupMenu(item)
+            updateMenu(item.type)
             if (payload.modeChanged) {
                 if (mode is BookmarkFragmentState.Mode.Selecting) {
                     containerView.overflowView.hideAndDisable()

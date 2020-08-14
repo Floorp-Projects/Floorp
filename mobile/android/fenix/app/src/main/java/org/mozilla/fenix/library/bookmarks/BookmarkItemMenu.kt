@@ -5,65 +5,89 @@
 package org.mozilla.fenix.library.bookmarks
 
 import android.content.Context
-import mozilla.components.browser.menu.BrowserMenuBuilder
-import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.concept.storage.BookmarkNode
+import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.menu2.BrowserMenuController
+import mozilla.components.concept.menu.MenuController
+import mozilla.components.concept.menu.candidate.TextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
-import org.mozilla.fenix.library.LibraryItemMenu
-import org.mozilla.fenix.theme.ThemeManager
 
 class BookmarkItemMenu(
     private val context: Context,
-    private val item: BookmarkNode,
-    private val onItemTapped: (BookmarkItemMenu.Item) -> Unit = {}
-) : LibraryItemMenu {
+    private val onItemTapped: (Item) -> Unit
+) {
 
-    sealed class Item {
-        object Edit : Item()
-        object Select : Item()
-        object Copy : Item()
-        object Share : Item()
-        object OpenInNewTab : Item()
-        object OpenInPrivateTab : Item()
-        object Delete : Item()
+    enum class Item {
+        Edit,
+        Copy,
+        Share,
+        OpenInNewTab,
+        OpenInPrivateTab,
+        Delete;
     }
 
-    override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+    val menuController: MenuController by lazy { BrowserMenuController() }
 
-    private val menuItems by lazy {
-        listOfNotNull(
-            if (item.type in listOf(BookmarkNodeType.ITEM, BookmarkNodeType.FOLDER)) {
-                SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_edit_button)) {
-                    onItemTapped.invoke(BookmarkItemMenu.Item.Edit)
+    @VisibleForTesting
+    internal fun menuItems(itemType: BookmarkNodeType): List<TextMenuCandidate> {
+        return listOfNotNull(
+            if (itemType != BookmarkNodeType.SEPARATOR) {
+                TextMenuCandidate(
+                    text = context.getString(R.string.bookmark_menu_edit_button)
+                ) {
+                    onItemTapped.invoke(Item.Edit)
                 }
-            } else null,
-            if (item.type == BookmarkNodeType.ITEM) {
-                SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_copy_button)) {
-                    onItemTapped.invoke(BookmarkItemMenu.Item.Copy)
+            } else {
+                null
+            },
+            if (itemType == BookmarkNodeType.ITEM) {
+                TextMenuCandidate(
+                    text = context.getString(R.string.bookmark_menu_copy_button)
+                ) {
+                    onItemTapped.invoke(Item.Copy)
                 }
-            } else null,
-            if (item.type == BookmarkNodeType.ITEM) {
-                SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_share_button)) {
-                    onItemTapped.invoke(BookmarkItemMenu.Item.Share)
+            } else {
+                null
+            },
+            if (itemType == BookmarkNodeType.ITEM) {
+                TextMenuCandidate(
+                    text = context.getString(R.string.bookmark_menu_share_button)
+                ) {
+                    onItemTapped.invoke(Item.Share)
                 }
-            } else null,
-            if (item.type == BookmarkNodeType.ITEM) {
-                SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_open_in_new_tab_button)) {
-                    onItemTapped.invoke(BookmarkItemMenu.Item.OpenInNewTab)
+            } else {
+                null
+            },
+            if (itemType == BookmarkNodeType.ITEM) {
+                TextMenuCandidate(
+                    text = context.getString(R.string.bookmark_menu_open_in_new_tab_button)
+                ) {
+                    onItemTapped.invoke(Item.OpenInNewTab)
                 }
-            } else null,
-            if (item.type == BookmarkNodeType.ITEM) {
-                SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_open_in_private_tab_button)) {
-                    onItemTapped.invoke(BookmarkItemMenu.Item.OpenInPrivateTab)
+            } else {
+                null
+            },
+            if (itemType == BookmarkNodeType.ITEM) {
+                TextMenuCandidate(
+                    text = context.getString(R.string.bookmark_menu_open_in_private_tab_button)
+                ) {
+                    onItemTapped.invoke(Item.OpenInPrivateTab)
                 }
-            } else null,
-            SimpleBrowserMenuItem(
-                context.getString(R.string.bookmark_menu_delete_button),
-                textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)
+            } else {
+                null
+            },
+            TextMenuCandidate(
+                text = context.getString(R.string.bookmark_menu_delete_button),
+                textStyle = TextStyle(color = context.getColorFromAttr(R.attr.destructive))
             ) {
-                onItemTapped.invoke(BookmarkItemMenu.Item.Delete)
+                onItemTapped.invoke(Item.Delete)
             }
         )
+    }
+
+    fun updateMenu(itemType: BookmarkNodeType) {
+        menuController.submitList(menuItems(itemType))
     }
 }

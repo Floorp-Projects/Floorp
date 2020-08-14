@@ -110,7 +110,6 @@ class HistoryListItemViewHolder(
     private fun setupMenu() {
         val historyMenu = HistoryItemMenu(itemView.context) {
             val item = this.item ?: return@HistoryItemMenu
-
             Do exhaustive when (it) {
                 HistoryItemMenu.Item.Copy -> historyInteractor.onCopyPressed(item)
                 HistoryItemMenu.Item.Share -> historyInteractor.onSharePressed(item)
@@ -120,7 +119,7 @@ class HistoryListItemViewHolder(
             }
         }
 
-        itemView.history_layout.attachMenu(historyMenu)
+        itemView.history_layout.attachMenu(historyMenu.menuController)
     }
 
     companion object {
