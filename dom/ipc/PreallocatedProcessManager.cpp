@@ -341,25 +341,35 @@ void PreallocatedProcessManagerImpl::AllocateNow() {
 
       [self, this](const RefPtr<ContentParent>& process) {
         mLaunchInProgress = false;
-        if (CanAllocate()) {
-          // slight perf reason for push_back - while the cpu cache
-          // probably has stack/etc associated with the most recent
-          // process created, we don't know that it has finished startup.
-          // If we added it to the queue on completion of startup, we
-          // could push_front it, but that would require a bunch more
-          // logic.
-          mPreallocatedProcesses.push_back(process);
-          MOZ_LOG(
-              ContentParent::GetLog(), LogLevel::Debug,
-              ("Preallocated = %lu of %d processes",
-               (unsigned long)mPreallocatedProcesses.size(), mNumberPreallocs));
-
-          // Continue prestarting processes if needed
-          if (mPreallocatedProcesses.size() < mNumberPreallocs) {
-            AllocateOnIdle();
-          }
+        if (process->IsDead()) {
+          // Process died in startup (before we could add it).  If it
+          // dies after this, MarkAsDead() will Erase() this entry.
+          // Shouldn't be in the sBrowserContentParents, so we don't need
+          // RemoveFromList().  We won't try to kick off a new
+          // preallocation here, to avoid possible looping if something is
+          // causing them to consistently fail; if everything is ok on the
+          // next allocation request we'll kick off creation.
         } else {
-          process->ShutDownProcess(ContentParent::SEND_SHUTDOWN_MESSAGE);
+          if (CanAllocate()) {
+            // slight perf reason for push_back - while the cpu cache
+            // probably has stack/etc associated with the most recent
+            // process created, we don't know that it has finished startup.
+            // If we added it to the queue on completion of startup, we
+            // could push_front it, but that would require a bunch more
+            // logic.
+            mPreallocatedProcesses.push_back(process);
+            MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+                    ("Preallocated = %lu of %d processes",
+                     (unsigned long)mPreallocatedProcesses.size(),
+                     mNumberPreallocs));
+
+            // Continue prestarting processes if needed
+            if (mPreallocatedProcesses.size() < mNumberPreallocs) {
+              AllocateOnIdle();
+            }
+          } else {
+            process->ShutDownProcess(ContentParent::SEND_SHUTDOWN_MESSAGE);
+          }
         }
       },
 
