@@ -458,7 +458,7 @@ uint64_t Accessible::NativeLinkState() const { return 0; }
 
 bool Accessible::NativelyUnavailable() const {
   if (mContent->IsHTMLElement())
-    return mContent->AsElement()->State().HasState(NS_EVENT_STATE_DISABLED);
+    return mContent->AsElement()->IsDisabled();
 
   return mContent->IsElement() && mContent->AsElement()->AttrValueIs(
                                       kNameSpaceID_None, nsGkAtoms::disabled,
