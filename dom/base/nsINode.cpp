@@ -3305,7 +3305,7 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
 
         // Clone the Shadow DOM
         ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
-        if (originalShadowRoot) {
+        if (originalShadowRoot && !originalShadowRoot->IsUAWidget()) {
           RefPtr<ShadowRoot> newShadowRoot =
               clone->AsElement()->AttachShadowWithoutNameChecks(
                   originalShadowRoot->Mode());
