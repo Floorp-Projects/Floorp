@@ -177,15 +177,27 @@ MediaMetadataBase MediaStatusManager::CreateDefaultMetadata() const {
 }
 
 nsString MediaStatusManager::GetDefaultTitle() const {
+  nsString defaultTitle;
+  // TODO : maybe need l10n?
+  if (nsCOMPtr<nsIXULAppInfo> appInfo =
+          do_GetService("@mozilla.org/xre/app-info;1")) {
+    nsCString appName;
+    appInfo->GetName(appName);
+    CopyUTF8toUTF16(appName, defaultTitle);
+  } else {
+    defaultTitle.AssignLiteral("Firefox");
+  }
+  defaultTitle.AppendLiteral(" is playing media");
+
   RefPtr<CanonicalBrowsingContext> bc =
       CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);
   if (!bc) {
-    return EmptyString();
+    return defaultTitle;
   }
 
   RefPtr<WindowGlobalParent> globalParent = bc->GetCurrentWindowGlobal();
   if (!globalParent) {
-    return EmptyString();
+    return defaultTitle;
   }
 
   // The media metadata would be shown on the virtual controller interface. For
@@ -193,22 +205,13 @@ nsString MediaStatusManager::GetDefaultTitle() const {
   // and lockscreen. Therefore, what information we provide via metadata is
   // quite important, because if we're in private browsing, we don't want to
   // expose details about what website the user is browsing on the lockscreen.
-  nsString defaultTitle;
-  if (IsInPrivateBrowsing()) {
-    // TODO : maybe need l10n?
-    if (nsCOMPtr<nsIXULAppInfo> appInfo =
-            do_GetService("@mozilla.org/xre/app-info;1")) {
-      nsCString appName;
-      appInfo->GetName(appName);
-      CopyUTF8toUTF16(appName, defaultTitle);
-    } else {
-      defaultTitle.AssignLiteral("Firefox");
-    }
-    defaultTitle.AppendLiteral(" is playing media");
-  } else {
-    globalParent->GetDocumentTitle(defaultTitle);
+  // Therefore, using the default title when in the private browsing or the
+  // document title is empty. Otherwise, use the document title.
+  nsString documentTitle;
+  if (!IsInPrivateBrowsing()) {
+    globalParent->GetDocumentTitle(documentTitle);
   }
-  return defaultTitle;
+  return documentTitle.IsEmpty() ? defaultTitle : documentTitle;
 }
 
 nsString MediaStatusManager::GetDefaultFaviconURL() const {
