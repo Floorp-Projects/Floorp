@@ -523,6 +523,11 @@ ImageTestCase CorruptICOWithBadBppTestCase() {
                        IntSize(100, 100), TEST_CASE_IS_TRANSPARENT);
 }
 
+ImageTestCase CorruptAVIFTestCase() {
+  return ImageTestCase("bug-1655846.avif", "image/avif", IntSize(100, 100),
+                       TEST_CASE_HAS_ERROR);
+}
+
 ImageTestCase TransparentPNGTestCase() {
   return ImageTestCase("transparent.png", "image/png", IntSize(32, 32),
                        TEST_CASE_IS_TRANSPARENT);
