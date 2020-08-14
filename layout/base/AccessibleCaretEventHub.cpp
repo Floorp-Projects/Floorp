@@ -352,20 +352,13 @@ void AccessibleCaretEventHub::Init() {
   nsPresContext* presContext = mPresShell->GetPresContext();
   MOZ_ASSERT(presContext, "PresContext should be given in PresShell::Init()");
 
-  nsIDocShell* docShell = presContext->GetDocShell();
+  nsDocShell* docShell = presContext->GetDocShell();
   if (!docShell) {
     return;
   }
 
-  nsCOMPtr<nsIDocShell> curDocShell = docShell;
-  do {
-    curDocShell->AddWeakReflowObserver(this);
-    curDocShell->AddWeakScrollObserver(this);
-
-    nsCOMPtr<nsIDocShellTreeItem> tmp;
-    curDocShell->GetInProcessSameTypeParent(getter_AddRefs(tmp));
-    curDocShell = do_QueryInterface(tmp);
-  } while (curDocShell);
+  docShell->AddWeakReflowObserver(this);
+  docShell->AddWeakScrollObserver(this);
 
   mDocShell = static_cast<nsDocShell*>(docShell);
 
@@ -383,14 +376,9 @@ void AccessibleCaretEventHub::Terminate() {
     return;
   }
 
-  nsCOMPtr<nsIDocShell> curDocShell = mDocShell.get();
-  while (curDocShell) {
-    curDocShell->RemoveWeakReflowObserver(this);
-    curDocShell->RemoveWeakScrollObserver(this);
-
-    nsCOMPtr<nsIDocShellTreeItem> tmp;
-    curDocShell->GetInProcessSameTypeParent(getter_AddRefs(tmp));
-    curDocShell = do_QueryInterface(tmp);
+  if (mDocShell) {
+    mDocShell->RemoveWeakReflowObserver(this);
+    mDocShell->RemoveWeakScrollObserver(this);
   }
 
   if (mLongTapInjectorTimer) {
