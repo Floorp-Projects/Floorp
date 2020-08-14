@@ -15,6 +15,7 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  GeckoViewActorManager: "resource://gre/modules/GeckoViewActorManager.jsm",
   GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
@@ -346,6 +347,10 @@ class ModuleInfo {
     // onInitBrowser() override. However, load content module after initializing
     // browser, because we don't have a message manager before then.
     this._loadResource(onInit);
+    this._loadActors(onInit);
+    if (this._enabledOnInit) {
+      this._loadActors(onEnable);
+    }
 
     this._onInitPhase = onInit;
     this._onEnablePhase = onEnable;
@@ -381,6 +386,14 @@ class ModuleInfo {
       this._impl.onDestroyBrowser();
     }
     this._contentModuleLoaded = false;
+  }
+
+  _loadActors(aPhase) {
+    if (!aPhase || !aPhase.actors) {
+      return;
+    }
+
+    GeckoViewActorManager.addJSWindowActors(aPhase.actors);
   }
 
   /**
@@ -445,6 +458,7 @@ class ModuleInfo {
     if (aEnabled) {
       this._loadResource(this._onEnablePhase);
       this._loadFrameScript(this._onEnablePhase);
+      this._loadActors(this._onEnablePhase);
       if (this._impl) {
         this._impl.onEnable();
         this._impl.onSettingsUpdate();
@@ -518,6 +532,42 @@ function startup() {
       name: "GeckoViewContent",
       onInit: {
         resource: "resource://gre/modules/GeckoViewContent.jsm",
+        actors: {
+          GeckoViewContent: {
+            child: {
+              moduleURI: "resource:///actors/GeckoViewContentChild.jsm",
+              events: {
+                mozcaretstatechanged: { capture: true, mozSystemGroup: true },
+              },
+              allFrames: true,
+            },
+          },
+        },
+      },
+      onEnable: {
+        actors: {
+          ContentDelegate: {
+            parent: {
+              moduleURI: "resource:///actors/ContentDelegateParent.jsm",
+            },
+            child: {
+              moduleURI: "resource:///actors/ContentDelegateChild.jsm",
+              events: {
+                DOMContentLoaded: {},
+                DOMMetaViewportFitChanged: {},
+                DOMTitleChanged: {},
+                DOMWindowClose: {},
+                "MozDOMFullscreen:Entered": {},
+                "MozDOMFullscreen:Exit": {},
+                "MozDOMFullscreen:Exited": {},
+                "MozDOMFullscreen:Request": {},
+                MozFirstContentfulPaint: {},
+                contextmenu: { capture: true },
+              },
+              allFrames: true,
+            },
+          },
+        },
       },
     },
     {
