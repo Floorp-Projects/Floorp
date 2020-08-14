@@ -677,7 +677,7 @@
         /* advise*/ Type.int
       );
 
-      if (Const._DARWIN_FEATURE_64_BIT_INODE) {
+      if (Const._DARWIN_INODE64_SYMBOLS) {
         // Special case for MacOS X 10.5+
         // Symbol name "readdir" still exists but is used for a
         // deprecated function that does not match the
@@ -840,7 +840,7 @@
 
       // OSes use a variety of hacks to differentiate between
       // 32-bits and 64-bits versions of |stat|, |lstat|, |fstat|.
-      if (Const._DARWIN_FEATURE_64_BIT_INODE) {
+      if (Const._DARWIN_INODE64_SYMBOLS) {
         // MacOS X 64-bits
         libc.declareLazyFFI(
           SysFile,
