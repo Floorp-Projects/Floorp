@@ -42,7 +42,7 @@ class CreateShortcutFragment : DialogFragment() {
             cancel_button.setOnClickListener { dismiss() }
             add_button.setOnClickListener {
                 val text = shortcut_text.text.toString()
-                viewLifecycleOwner.lifecycleScope.launch {
+                requireActivity().lifecycleScope.launch {
                     requireComponents.useCases.webAppUseCases.addToHomescreen(text)
                 }
                 dismiss()
