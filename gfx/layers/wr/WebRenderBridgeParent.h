@@ -170,7 +170,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       const FocusTarget& aFocusTarget) override;
   mozilla::ipc::IPCResult RecvParentCommands(
       nsTArray<WebRenderParentCommand>&& commands) override;
-  mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;
+  mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture,
+                                          bool* aNeedsYFlip) override;
 
   mozilla::ipc::IPCResult RecvSetLayersObserverEpoch(
       const LayersObserverEpoch& aChildEpoch) override;

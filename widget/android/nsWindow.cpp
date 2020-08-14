@@ -1226,7 +1226,8 @@ class nsWindow::LayerViewSupport final
     }
   }
 
-  void RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
+  void RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize,
+                        bool aNeedsYFlip) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     CaptureRequest request;
     java::GeckoResult::LocalRef result = nullptr;
@@ -1244,8 +1245,16 @@ class nsWindow::LayerViewSupport final
 
     if (result) {
       if (bitmap) {
-        RefPtr<DataSourceSurface> surf =
-            FlipScreenPixels(aMem, aSize, request.mSource, request.mOutputSize);
+        RefPtr<DataSourceSurface> surf;
+        if (aNeedsYFlip) {
+          surf = FlipScreenPixels(aMem, aSize, request.mSource,
+                                  request.mOutputSize);
+        } else {
+          surf = gfx::Factory::CreateWrappingDataSourceSurface(
+              aMem.get<uint8_t>(),
+              StrideForFormatAndWidth(SurfaceFormat::B8G8R8A8, aSize.width),
+              IntSize(aSize.width, aSize.height), SurfaceFormat::B8G8R8A8);
+        }
         if (surf) {
           DataSourceSurface::ScopedMap smap(surf, DataSourceSurface::READ);
           auto pixels = mozilla::jni::ByteBuffer::New(
@@ -2405,10 +2414,11 @@ void nsWindow::UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset,
   }
 }
 
-void nsWindow::RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
+void nsWindow::RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize,
+                                bool aNeedsYFlip) {
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
-    lvs->RecvScreenPixels(std::move(aMem), aSize);
+    lvs->RecvScreenPixels(std::move(aMem), aSize, aNeedsYFlip);
   }
 }
 

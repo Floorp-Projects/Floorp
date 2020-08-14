@@ -64,7 +64,7 @@ parent:
   async UpdateResources(OpUpdateResource[] aResourceUpdates,
                         RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
-  sync GetSnapshot(PTexture texture);
+  sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
   async ClearCachedResources();
   // Invalidate rendered frame

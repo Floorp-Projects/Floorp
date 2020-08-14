@@ -2127,7 +2127,8 @@ class nsIWidget : public nsISupports {
    * @param aSize size of the buffer in screen pixels.
    */
   virtual void RecvScreenPixels(mozilla::ipc::Shmem&& aMem,
-                                const ScreenIntSize& aSize) = 0;
+                                const ScreenIntSize& aSize,
+                                bool aNeedsYFlip) = 0;
 
   virtual void UpdateDynamicToolbarMaxHeight(mozilla::ScreenIntCoord aHeight) {}
   virtual mozilla::ScreenIntCoord GetDynamicToolbarMaxHeight() const {
