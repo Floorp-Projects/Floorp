@@ -127,7 +127,7 @@ class ChromiumCDMProxy : public CDMProxy {
 
   Mutex mCDMMutex;
   RefPtr<gmp::ChromiumCDMParent> mCDM;
-  RefPtr<AbstractThread> mGMPThread;
+  nsCOMPtr<nsISerialEventTarget> mGMPThread;
   UniquePtr<ChromiumCDMCallbackProxy> mCallback;
 };
 

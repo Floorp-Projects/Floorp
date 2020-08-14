@@ -9,6 +9,8 @@
 #include <inttypes.h>
 
 #include "Adts.h"
+#include "ChromiumCDMVideoDecoder.h"
+#include "DecryptThroughputLimit.h"
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
 #include "MediaInfo.h"
@@ -20,8 +22,6 @@
 #include "mozilla/Unused.h"
 #include "nsClassHashtable.h"
 #include "nsServiceManagerUtils.h"
-#include "DecryptThroughputLimit.h"
-#include "ChromiumCDMVideoDecoder.h"
 
 namespace mozilla {
 
@@ -287,10 +287,10 @@ class EMEDecryptor : public MediaDataDecoder,
 };
 
 EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
-    already_AddRefed<AbstractThread> aProxyThread, CDMProxy* aProxy,
+    already_AddRefed<nsISerialEventTarget> aProxyThread, CDMProxy* aProxy,
     const CreateDecoderParams& aParams)
     : MediaDataDecoderProxy(std::move(aProxyThread)),
-      mThread(AbstractThread::GetCurrent()),
+      mThread(GetCurrentSerialEventTarget()),
       mSamplesWaitingForKey(new SamplesWaitingForKey(
           aProxy, aParams.mType, aParams.mOnWaitingForKeyEvent)),
       mProxy(aProxy) {}
@@ -299,7 +299,7 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
     const CreateDecoderParams& aParams,
     already_AddRefed<MediaDataDecoder> aProxyDecoder, CDMProxy* aProxy)
     : MediaDataDecoderProxy(std::move(aProxyDecoder)),
-      mThread(AbstractThread::GetCurrent()),
+      mThread(GetCurrentSerialEventTarget()),
       mSamplesWaitingForKey(new SamplesWaitingForKey(
           aProxy, aParams.mType, aParams.mOnWaitingForKeyEvent)),
       mProxy(aProxy) {}
@@ -368,7 +368,7 @@ static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper(
   if (!s) {
     return nullptr;
   }
-  RefPtr<AbstractThread> thread(s->GetAbstractGMPThread());
+  nsCOMPtr<nsISerialEventTarget> thread(s->GetGMPThread());
   if (!thread) {
     return nullptr;
   }

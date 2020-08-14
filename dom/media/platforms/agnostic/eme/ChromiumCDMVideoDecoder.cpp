@@ -19,7 +19,7 @@ ChromiumCDMVideoDecoder::ChromiumCDMVideoDecoder(
     : mCDMParent(aCDMProxy->AsChromiumCDMProxy()->GetCDMParent()),
       mConfig(aParams.mConfig),
       mCrashHelper(aParams.mCrashHelper),
-      mGMPThread(GetGMPAbstractThread()),
+      mGMPThread(GetGMPThread()),
       mImageContainer(aParams.mImageContainer) {}
 
 ChromiumCDMVideoDecoder::~ChromiumCDMVideoDecoder() = default;

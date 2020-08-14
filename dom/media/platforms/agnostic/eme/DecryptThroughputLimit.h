@@ -7,9 +7,10 @@
 #ifndef DecryptThroughputLimit_h
 #define DecryptThroughputLimit_h
 
-#include "PlatformDecoderModule.h"
-#include "MediaTimer.h"
 #include <deque>
+
+#include "MediaTimer.h"
+#include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
@@ -18,7 +19,7 @@ namespace mozilla {
 // Widevine CDM. See bug 1338924 and bug 1342822.
 class DecryptThroughputLimit {
  public:
-  explicit DecryptThroughputLimit(AbstractThread* aTargetThread)
+  explicit DecryptThroughputLimit(nsISerialEventTarget* aTargetThread)
       : mThrottleScheduler(aTargetThread) {}
 
   typedef MozPromise<RefPtr<MediaRawData>, MediaResult, true> ThrottlePromise;

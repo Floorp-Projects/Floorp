@@ -21,7 +21,8 @@ class MediaDataDecoderProxy
     : public MediaDataDecoder,
       public DecoderDoctorLifeLogger<MediaDataDecoderProxy> {
  public:
-  explicit MediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread)
+  explicit MediaDataDecoderProxy(
+      already_AddRefed<nsISerialEventTarget> aProxyThread)
       : mProxyThread(aProxyThread)
 #  if defined(DEBUG)
         ,
@@ -60,7 +61,7 @@ class MediaDataDecoderProxy
 
  private:
   RefPtr<MediaDataDecoder> mProxyDecoder;
-  RefPtr<AbstractThread> mProxyThread;
+  nsCOMPtr<nsISerialEventTarget> mProxyThread;
 
 #  if defined(DEBUG)
   Atomic<bool> mIsShutdown;

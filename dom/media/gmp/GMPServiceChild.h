@@ -10,8 +10,8 @@
 #include "MediaResult.h"
 #include "base/process.h"
 #include "mozilla/dom/PContent.h"
-#include "mozilla/ipc/Transport.h"
 #include "mozilla/gmp/PGMPServiceChild.h"
+#include "mozilla/ipc/Transport.h"
 #include "nsRefPtrHashtable.h"
 
 namespace mozilla {
@@ -45,7 +45,7 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService {
   void BeginShutdown();
 
  protected:
-  void InitializePlugins(AbstractThread*) override {
+  void InitializePlugins(nsISerialEventTarget*) override {
     // Nothing to do here.
   }
 

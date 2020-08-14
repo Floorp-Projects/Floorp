@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DecoderDoctorDiagnostics.h"
 #include "GMPDecoderModule.h"
+
+#include "DecoderDoctorDiagnostics.h"
 #include "GMPService.h"
 #include "GMPUtils.h"
 #include "GMPVideoDecoder.h"
@@ -32,7 +33,7 @@ static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper() {
   if (!s) {
     return nullptr;
   }
-  RefPtr<AbstractThread> thread(s->GetAbstractGMPThread());
+  nsCOMPtr<nsISerialEventTarget> thread(s->GetGMPThread());
   if (!thread) {
     return nullptr;
   }
