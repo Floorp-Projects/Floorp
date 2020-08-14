@@ -3065,6 +3065,11 @@ bool BaselineCodeGen<Handler>::emit_InitHiddenElem() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_InitLockedElem() {
+  return emit_InitElem();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_MutateProto() {
   // Keep values on the stack for the decompiler.
   frame.syncStack(0);

@@ -4055,7 +4055,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(InitProp)
 
     CASE(InitElem)
-    CASE(InitHiddenElem) {
+    CASE(InitHiddenElem)
+    CASE(InitLockedElem) {
       MOZ_ASSERT(REGS.stackDepth() >= 3);
       HandleValue val = REGS.stackHandleAt(-1);
       HandleValue id = REGS.stackHandleAt(-2);
@@ -5237,6 +5238,7 @@ unsigned js::GetInitDataPropAttrs(JSOp op) {
     case JSOp::InitElem:
       return JSPROP_ENUMERATE;
     case JSOp::InitLockedProp:
+    case JSOp::InitLockedElem:
       return JSPROP_PERMANENT | JSPROP_READONLY;
     case JSOp::InitHiddenProp:
     case JSOp::InitHiddenElem:

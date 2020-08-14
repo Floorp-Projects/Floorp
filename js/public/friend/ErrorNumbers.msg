@@ -84,6 +84,7 @@ MSG_DEF(JSMSG_REDECLARED_VAR,          2, JSEXN_SYNTAXERR, "redeclaration of {0}
 MSG_DEF(JSMSG_UNDECLARED_VAR,          1, JSEXN_REFERENCEERR, "assignment to undeclared variable {0}")
 MSG_DEF(JSMSG_UNDECLARED_PRIVATE,      0, JSEXN_TYPEERR, "Trying to read undeclared field")
 MSG_DEF(JSMSG_GETTER_ONLY,             1, JSEXN_TYPEERR, "setting getter-only property {0}")
+MSG_DEF(JSMSG_PRIVATE_SETTER_ONLY,     0, JSEXN_TYPEERR, "getting private setter-only property")
 MSG_DEF(JSMSG_OVERWRITING_ACCESSOR,    1, JSEXN_TYPEERR, "can't overwrite accessor property {0}")
 MSG_DEF(JSMSG_INVALID_MAP_ITERABLE,    1, JSEXN_TYPEERR, "iterable for {0} should have array-like objects")
 MSG_DEF(JSMSG_NESTING_GENERATOR,       0, JSEXN_TYPEERR, "already executing generator")
