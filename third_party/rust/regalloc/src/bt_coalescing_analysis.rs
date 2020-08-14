@@ -30,7 +30,7 @@ use log::{debug, info, log_enabled, Level};
 use smallvec::{smallvec, SmallVec};
 
 use crate::data_structures::{
-    InstIx, InstPoint, MoveInfo, MoveInfoElem, RangeFrag, RangeFragIx, RealRange, RealRangeIx,
+    InstIx, InstPoint, Map, MoveInfo, MoveInfoElem, RangeFrag, RangeFragIx, RealRange, RealRangeIx,
     RealReg, RealRegUniverse, RegToRangesMaps, SpillCost, TypedIxVec, VirtualRange, VirtualRangeIx,
     VirtualReg,
 };
@@ -105,6 +105,7 @@ fn show_hint(h: &Hint, univ: &RealRegUniverse) -> String {
     }
 }
 impl Hint {
+    #[inline(always)]
     fn get_weight(&self) -> u32 {
         match self {
             Hint::SameAs(_vlrix, weight) => *weight,
@@ -126,7 +127,7 @@ impl ToFromU32 for VirtualRangeIx {
 //=============================================================================
 // Coalescing analysis: top level function
 
-// This performs coalescing analysis and returns info as a 4-tuple.  Note that
+// This performs coalescing analysis and returns info as a 3-tuple.  Note that
 // it also may change the spill costs for some of the VLRs in `vlr_env` to
 // better reflect the spill cost situation in the presence of coalescing.
 #[inline(never)]
@@ -146,78 +147,354 @@ pub fn do_coalescing_analysis<F: Function>(
     info!("");
     info!("do_coalescing_analysis: begin");
 
-    // There follow four closures, which are used to find out whether a real or virtual reg has
-    // a last use or first def at some instruction.  This is the central activity of the
-    // coalescing analysis -- finding move instructions that are the last def for the src reg
-    // and the first def for the dst reg.
+    // This function contains significant additional complexity due to the requirement to handle
+    // pathological cases in reasonable time without unduly burdening the common cases.
+    //
+    // ========================================================================================
+    //
+    // The core questions that the coalescing analysis asks is:
+    //
+    //    For an instruction I and a reg V:
+    //
+    //    * does I start a live range fragment for V?  In other words, is it a "first def of V" ?
+    //
+    //    * and dually: does I end a live range fragment for V?  IOW, is it a "last use of V" ?
+    //
+    // V may be a real or virtual register -- we must handle both.  I is invariably a move
+    // instruction.  We could ask such questions about other kinds of insns, but we don't care
+    // about those.
+    //
+    // The reason we care about this is as follows.  If we can find some move insn I, which is
+    // the last use of some reg V1 and the first def of some other reg V2, then V1 and V2 can at
+    // least in principle be allocated to the same real register.
+    //
+    // Note that the "last" and "first" aspect is critical for correctness.  Consider this:
+    //
+    //       V1 = ...
+    //   I   V2 = V1
+    //   *   V2 = V2 - 99
+    //   #   V3 = V1 + 47
+    //
+    // Here, I might be a first def of V2, but it's certainly not the last use of V1, and so if
+    // we allocate V1 and V2 to the same real register, the insn marked * will trash the value
+    // of V1 while it's still needed at #, and we'll create wrong code.  For the same reason, we
+    // can only coalesce out a move if the destination is a first def.
+    //
+    // The use of names V* in the above example is slightly misleading.  As mentioned, the above
+    // criteria apply to both real and virtual registers.  The only limitation is that,
+    // obviously, we can't coalesce out a move if both registers involved are real.  But if only
+    // one is real then we have at least the possibility to do that.
+    //
+    // Now to the question of compiler performance.  The simplest way to establish whether (for
+    // example) I is a first def of V is to visit all of V's `RangeFrag`s, to see if any of them
+    // start at `I.d`.  That can be done by iterating over all of the live ranges that belong to
+    // V, and through each `RangeFrag` in each live range.  Hence it's a linear search through
+    // V's `RangeFrag`s.
+    //
+    // For the vast majority of cases, this works well because most regs -- and especially, most
+    // virtual regs, in code derived from an SSA precursor -- have short live ranges, and
+    // usually only one, and so there are very few `RangeFrag`s to visit.  However, there are
+    // cases where a register has many `RangeFrag`s -- we've seen inputs where that number
+    // exceeds 100,000 -- in which case a linear search is disastrously slow.
+    //
+    // To fix this, there is a Plan B scheme for establishing the same facts.  It relies on the
+    // observation that the `RangeFrag`s for each register are mutually non-overlapping.  Hence
+    // their start points are all unique, so we can park them all in a vector, sort it, and
+    // binary search it.  And the same for the end points.  This is the purpose of structs
+    // `ManyFragsInfoR` and `ManyFragsInfoV` below.
+    //
+    // Although this plan keeps us out of performance black holes in pathological cases, it is
+    // expensive in a constant-factors sense: it requires dynamic memory allocation for these
+    // vectors, and it requires sorting them.  Hence we try to avoid it as much as possible, and
+    // route almost all work via the simple linear-search scheme.
+    //
+    // The linear-vs-binary-search choice is made for each register individually.  Incoming
+    // parameter `reg_to_ranges_maps` contains fields `r/vregs_with_many_frags`, and it is only
+    // for those that sorted vectors are prepared.  Those vectors are tracked by the maps
+    // `r/v_many_map` below.  `reg_to_ranges_maps` also contains field `many_frags_thresh` which
+    // tells us what the size threshold actually was, and this is used to opportunistically
+    // pre-size the vectors.  It's not required for correctness.
+    //
+    // All this complexity is bought together in the four closures `doesVRegHaveLastUseAt`,
+    // `doesVRegHaveFirstDefAt`, `doesRRegHaveLastUseAt` and `doesRRegHaveFirstDefAt`.  In each
+    // case, they first try to resolve the query by binary search, which usually fails, in which
+    // case they fall back to a linear search, which will always give a correct result.  In
+    // debug builds, if the binary search does produce an answer, it is crosschecked against the
+    // linear search result.
+    //
+    // The duplication in the four closures is undesirable but hard to avoid.  The real- and
+    // virtual-reg cases have different types.  Similarly, the first/last cases are slightly
+    // different.  If there were a way to guarantee that rustc would inline closures, then it
+    // might be worth trying to common them up, on the basis that rustc can inline and
+    // specialise, leading back to what we currently have here.  However, in the absence of such
+    // a facility, I didn't want to risk it, given that these closures are performance-critical.
+    //
+    // Finally, note that the coalescing analysis proper involves more than just the above
+    // described searches, and one sees the code for the rest of it following the search
+    // closures below.  However, the rest of it isn't performance critical, and is not described
+    // in this comment.
+    //
+    // ========================================================================================
 
-    // Range checks for VRegs -- last use.
+    // So, first: for the registers which `reg_to_ranges_maps` tells us have "many" fragments,
+    // prepare the binary-search vectors.  This is done first for the real regs and then below
+    // for virtual regs.
+
+    struct ManyFragsInfoR {
+        sorted_firsts: Vec<(InstPoint, RealRangeIx)>,
+        sorted_lasts: Vec<(InstPoint, RealRangeIx)>,
+    }
+    let r_many_card = reg_to_ranges_maps.rregs_with_many_frags.len();
+    let mut r_many_map = Map::<u32 /*RealReg index*/, ManyFragsInfoR>::default();
+    r_many_map.reserve(r_many_card);
+
+    for rreg_no in &reg_to_ranges_maps.rregs_with_many_frags {
+        // `2 * reg_to_ranges_maps.many_frags_thresh` is clearly a heuristic hack, but we do
+        // know for sure that each vector will contain at least
+        // `reg_to_ranges_maps.many_frags_thresh` and very likely more.  And that threshold is
+        // already quite high, so pre-sizing the vectors at this point avoids quite a number of
+        // resize-reallocations later.
+        let mut many_frags_info = ManyFragsInfoR {
+            sorted_firsts: Vec::with_capacity(2 * reg_to_ranges_maps.many_frags_thresh),
+            sorted_lasts: Vec::with_capacity(2 * reg_to_ranges_maps.many_frags_thresh),
+        };
+        let rlrixs = &reg_to_ranges_maps.rreg_to_rlrs_map[*rreg_no as usize];
+        for rlrix in rlrixs {
+            for fix in &rlr_env[*rlrix].sorted_frags.frag_ixs {
+                let frag = &frag_env[*fix];
+                many_frags_info.sorted_firsts.push((frag.first, *rlrix));
+                many_frags_info.sorted_lasts.push((frag.last, *rlrix));
+            }
+        }
+        many_frags_info
+            .sorted_firsts
+            .sort_unstable_by_key(|&(point, _)| point);
+        many_frags_info
+            .sorted_lasts
+            .sort_unstable_by_key(|&(point, _)| point);
+        debug_assert!(many_frags_info.sorted_firsts.len() == many_frags_info.sorted_lasts.len());
+        // Because the RangeFrags for any reg (virtual or real) are non-overlapping, it follows
+        // that both the sorted first points and sorted last points contain no duplicates.  (In
+        // fact the implied condition (no duplicates) is weaker than the premise
+        // (non-overlapping), but this is nevertheless correct.)
+        for i in 1..(many_frags_info.sorted_firsts.len()) {
+            debug_assert!(
+                many_frags_info.sorted_firsts[i - 1].0 < many_frags_info.sorted_firsts[i].0
+            );
+        }
+        for i in 1..(many_frags_info.sorted_lasts.len()) {
+            debug_assert!(
+                many_frags_info.sorted_lasts[i - 1].0 < many_frags_info.sorted_lasts[i].0
+            );
+        }
+        r_many_map.insert(*rreg_no, many_frags_info);
+    }
+
+    // And the same for virtual regs.
+    struct ManyFragsInfoV {
+        sorted_firsts: Vec<(InstPoint, VirtualRangeIx)>,
+        sorted_lasts: Vec<(InstPoint, VirtualRangeIx)>,
+    }
+    let v_many_card = reg_to_ranges_maps.vregs_with_many_frags.len();
+    let mut v_many_map = Map::<u32 /*VirtualReg index*/, ManyFragsInfoV>::default();
+    v_many_map.reserve(v_many_card);
+
+    for vreg_no in &reg_to_ranges_maps.vregs_with_many_frags {
+        let mut many_frags_info = ManyFragsInfoV {
+            sorted_firsts: Vec::with_capacity(2 * reg_to_ranges_maps.many_frags_thresh),
+            sorted_lasts: Vec::with_capacity(2 * reg_to_ranges_maps.many_frags_thresh),
+        };
+        let vlrixs = &reg_to_ranges_maps.vreg_to_vlrs_map[*vreg_no as usize];
+        for vlrix in vlrixs {
+            for frag in &vlr_env[*vlrix].sorted_frags.frags {
+                many_frags_info.sorted_firsts.push((frag.first, *vlrix));
+                many_frags_info.sorted_lasts.push((frag.last, *vlrix));
+            }
+        }
+        many_frags_info
+            .sorted_firsts
+            .sort_unstable_by_key(|&(point, _)| point);
+        many_frags_info
+            .sorted_lasts
+            .sort_unstable_by_key(|&(point, _)| point);
+        debug_assert!(many_frags_info.sorted_firsts.len() == many_frags_info.sorted_lasts.len());
+        for i in 1..(many_frags_info.sorted_firsts.len()) {
+            debug_assert!(
+                many_frags_info.sorted_firsts[i - 1].0 < many_frags_info.sorted_firsts[i].0
+            );
+        }
+        for i in 1..(many_frags_info.sorted_lasts.len()) {
+            debug_assert!(
+                many_frags_info.sorted_lasts[i - 1].0 < many_frags_info.sorted_lasts[i].0
+            );
+        }
+        v_many_map.insert(*vreg_no, many_frags_info);
+    }
+
+    // There now follows the abovementioned four (well, actually, eight) closures, which are
+    // used to find out whether a real or virtual reg has a last use or first def at some
+    // instruction.  This is the central activity of the coalescing analysis -- finding move
+    // instructions that are the last def for the src reg and the first def for the dst reg.
+
+    // ---------------- Range checks for VirtualRegs: last use ----------------
+    // Checks whether `vreg` has a last use at `iix`.u.
+
+    let doesVRegHaveLastUseAt_LINEAR = |vreg: VirtualReg, iix: InstIx| -> Option<VirtualRangeIx> {
+        let point_to_find = InstPoint::new_use(iix);
+        let vreg_no = vreg.get_index();
+        let vlrixs = &reg_to_ranges_maps.vreg_to_vlrs_map[vreg_no];
+        for vlrix in vlrixs {
+            for frag in &vlr_env[*vlrix].sorted_frags.frags {
+                if frag.last == point_to_find {
+                    return Some(*vlrix);
+                }
+            }
+        }
+        None
+    };
     let doesVRegHaveLastUseAt = |vreg: VirtualReg, iix: InstIx| -> Option<VirtualRangeIx> {
+        let point_to_find = InstPoint::new_use(iix);
+        let vreg_no = vreg.get_index();
+        let mut binary_search_result = None;
+        if let Some(ref mfi) = v_many_map.get(&(vreg_no as u32)) {
+            match mfi
+                .sorted_lasts
+                .binary_search_by_key(&point_to_find, |(point, _)| *point)
+            {
+                Ok(found_at_ix) => binary_search_result = Some(mfi.sorted_lasts[found_at_ix].1),
+                Err(_) => {}
+            }
+        }
+        match binary_search_result {
+            None => doesVRegHaveLastUseAt_LINEAR(vreg, iix),
+            Some(_) => {
+                debug_assert!(binary_search_result == doesVRegHaveLastUseAt_LINEAR(vreg, iix));
+                binary_search_result
+            }
+        }
+    };
+
+    // ---------------- Range checks for VirtualRegs: first def ----------------
+    // Checks whether `vreg` has a first def at `iix`.d.
+
+    let doesVRegHaveFirstDefAt_LINEAR = |vreg: VirtualReg, iix: InstIx| -> Option<VirtualRangeIx> {
+        let point_to_find = InstPoint::new_def(iix);
         let vreg_no = vreg.get_index();
         let vlrixs = &reg_to_ranges_maps.vreg_to_vlrs_map[vreg_no];
         for vlrix in vlrixs {
             for frag in &vlr_env[*vlrix].sorted_frags.frags {
-                // We're checking to see if `vreg` has a last use in this block
-                // (well, technically, a fragment end in the block; we don't care if
-                // it is later redefined in the same block) .. anyway ..
-                // We're checking to see if `vreg` has a last use in this block
-                // at `iix`.u
-                if frag.last == InstPoint::new_use(iix) {
+                if frag.first == point_to_find {
                     return Some(*vlrix);
                 }
             }
         }
         None
     };
-
-    // Range checks for VRegs -- first def.
     let doesVRegHaveFirstDefAt = |vreg: VirtualReg, iix: InstIx| -> Option<VirtualRangeIx> {
+        let point_to_find = InstPoint::new_def(iix);
         let vreg_no = vreg.get_index();
-        let vlrixs = &reg_to_ranges_maps.vreg_to_vlrs_map[vreg_no];
-        for vlrix in vlrixs {
-            for frag in &vlr_env[*vlrix].sorted_frags.frags {
-                // We're checking to see if `vreg` has a first def in this block at `iix`.d
-                if frag.first == InstPoint::new_def(iix) {
-                    return Some(*vlrix);
+        let mut binary_search_result = None;
+        if let Some(ref mfi) = v_many_map.get(&(vreg_no as u32)) {
+            match mfi
+                .sorted_firsts
+                .binary_search_by_key(&point_to_find, |(point, _)| *point)
+            {
+                Ok(found_at_ix) => binary_search_result = Some(mfi.sorted_firsts[found_at_ix].1),
+                Err(_) => {}
+            }
+        }
+        match binary_search_result {
+            None => doesVRegHaveFirstDefAt_LINEAR(vreg, iix),
+            Some(_) => {
+                debug_assert!(binary_search_result == doesVRegHaveFirstDefAt_LINEAR(vreg, iix));
+                binary_search_result
+            }
+        }
+    };
+
+    // ---------------- Range checks for RealRegs: last use ----------------
+    // Checks whether `rreg` has a last use at `iix`.u.
+
+    let doesRRegHaveLastUseAt_LINEAR = |rreg: RealReg, iix: InstIx| -> Option<RealRangeIx> {
+        let point_to_find = InstPoint::new_use(iix);
+        let rreg_no = rreg.get_index();
+        let rlrixs = &reg_to_ranges_maps.rreg_to_rlrs_map[rreg_no];
+        for rlrix in rlrixs {
+            let frags = &rlr_env[*rlrix].sorted_frags;
+            for fix in &frags.frag_ixs {
+                let frag = &frag_env[*fix];
+                if frag.last == point_to_find {
+                    return Some(*rlrix);
                 }
             }
         }
         None
     };
-
-    // Range checks for RRegs -- last use.
     let doesRRegHaveLastUseAt = |rreg: RealReg, iix: InstIx| -> Option<RealRangeIx> {
+        let point_to_find = InstPoint::new_use(iix);
         let rreg_no = rreg.get_index();
-        let rlrixs = &reg_to_ranges_maps.rreg_to_rlrs_map[rreg_no];
-        for rlrix in rlrixs {
-            let frags = &rlr_env[*rlrix].sorted_frags;
-            for fix in &frags.frag_ixs {
-                let frag = &frag_env[*fix];
-                // We're checking to see if `rreg` has a last use in this block at `iix`.u
-                if frag.last == InstPoint::new_use(iix) {
-                    return Some(*rlrix);
-                }
+        let mut binary_search_result = None;
+        if let Some(ref mfi) = r_many_map.get(&(rreg_no as u32)) {
+            match mfi
+                .sorted_lasts
+                .binary_search_by_key(&point_to_find, |(point, _)| *point)
+            {
+                Ok(found_at_ix) => binary_search_result = Some(mfi.sorted_lasts[found_at_ix].1),
+                Err(_) => {}
             }
         }
-        None
+        match binary_search_result {
+            None => doesRRegHaveLastUseAt_LINEAR(rreg, iix),
+            Some(_) => {
+                debug_assert!(binary_search_result == doesRRegHaveLastUseAt_LINEAR(rreg, iix));
+                binary_search_result
+            }
+        }
     };
 
-    // Range checks for RRegs -- first def.
-    let doesRRegHaveFirstDefAt = |rreg: RealReg, iix: InstIx| -> Option<RealRangeIx> {
+    // ---------------- Range checks for RealRegs: first def ----------------
+    // Checks whether `rreg` has a first def at `iix`.d.
+
+    let doesRRegHaveFirstDefAt_LINEAR = |rreg: RealReg, iix: InstIx| -> Option<RealRangeIx> {
+        let point_to_find = InstPoint::new_def(iix);
         let rreg_no = rreg.get_index();
         let rlrixs = &reg_to_ranges_maps.rreg_to_rlrs_map[rreg_no];
         for rlrix in rlrixs {
             let frags = &rlr_env[*rlrix].sorted_frags;
             for fix in &frags.frag_ixs {
                 let frag = &frag_env[*fix];
-                // We're checking to see if `rreg` has a first def in this block at `iix`.d
-                if frag.first == InstPoint::new_def(iix) {
+                if frag.first == point_to_find {
                     return Some(*rlrix);
                 }
             }
         }
         None
     };
+    let doesRRegHaveFirstDefAt = |rreg: RealReg, iix: InstIx| -> Option<RealRangeIx> {
+        let point_to_find = InstPoint::new_def(iix);
+        let rreg_no = rreg.get_index();
+        let mut binary_search_result = None;
+        if let Some(ref mfi) = r_many_map.get(&(rreg_no as u32)) {
+            match mfi
+                .sorted_firsts
+                .binary_search_by_key(&point_to_find, |(point, _)| *point)
+            {
+                Ok(found_at_ix) => binary_search_result = Some(mfi.sorted_firsts[found_at_ix].1),
+                Err(_) => {}
+            }
+        }
+        match binary_search_result {
+            None => doesRRegHaveFirstDefAt_LINEAR(rreg, iix),
+            Some(_) => {
+                debug_assert!(binary_search_result == doesRRegHaveFirstDefAt_LINEAR(rreg, iix));
+                binary_search_result
+            }
+        }
+    };
+
+    // Finally we come to the core logic of the coalescing analysis.  It uses the complex
+    // hybrid-search mechanism described extensively above.  The comments above however don't
+    // describe any of the logic after this point.
 
     // RETURNED TO CALLER
     // Hints for each VirtualRange.  Note that the SmallVecs could contain duplicates, I

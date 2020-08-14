@@ -142,7 +142,9 @@ pub(crate) fn run<F: Function>(
             .collect(),
     );
     if !livein_sets_per_block[func.entry_block()].is_subset_of(&func_liveins) {
-        return Err(AnalysisError::EntryLiveinValues);
+        let mut regs = livein_sets_per_block[func.entry_block()].clone();
+        regs.remove(&func_liveins);
+        return Err(AnalysisError::EntryLiveinValues(regs.to_vec()));
     }
 
     // Add function liveouts to every block ending in a return.

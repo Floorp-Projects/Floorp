@@ -1463,6 +1463,7 @@ pub fn alloc_main<F: Function>(
     // `edit_list_sorted` is), and the indices in it refer to the original
     // virtual-registerised code.
     let mut iixs_to_nop_out = Vec::<InstIx>::new();
+    let mut ghost_moves = vec![];
 
     let n_edit_list_move = edit_list_move.len();
     let mut n_edit_list_move_processed = 0; // for assertions only
@@ -1519,6 +1520,22 @@ pub fn alloc_main<F: Function>(
                         iixs_to_nop_out.push(i_min_iix);
                         i_min = i_max + 1;
                         n_edit_list_move_processed += 2;
+                        if use_checker {
+                            let (from_reg, to_reg) = if frag1.last.pt() == Point::Use {
+                                (vlr1.vreg.to_reg(), vlr2.vreg.to_reg())
+                            } else {
+                                (vlr2.vreg.to_reg(), vlr1.vreg.to_reg())
+                            };
+                            ghost_moves.push(InstToInsertAndExtPoint::new(
+                                InstToInsert::ChangeSpillSlotOwnership {
+                                    inst_ix: i_min_iix,
+                                    slot: slot1,
+                                    from_reg,
+                                    to_reg,
+                                },
+                                InstExtPoint::new(i_min_iix, ExtPoint::Reload),
+                            ));
+                        }
                         continue;
                     }
                 }
@@ -1607,6 +1624,12 @@ pub fn alloc_main<F: Function>(
                 num_spills += 1;
             }
         }
+    }
+
+    // Append all ghost moves.
+    if use_checker {
+        spills_n_reloads.extend(ghost_moves.into_iter());
+        spills_n_reloads.sort_by_key(|inst_and_point| inst_and_point.iep.clone());
     }
 
     // ======== END Create all other spills and reloads ========
@@ -1703,6 +1726,8 @@ pub fn alloc_main<F: Function>(
         frag_map,
         &reg_universe,
         use_checker,
+        &stackmaps[..],
+        &reftyped_vregs[..],
     );
 
     // ======== END Create final instruction stream ========

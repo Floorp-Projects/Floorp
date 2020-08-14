@@ -3,6 +3,7 @@
 //! AVL tree internals are public, so that backtracking.rs can do custom
 //! traversals of the tree as it wishes.
 
+use smallvec::SmallVec;
 use std::cmp::Ordering;
 
 //=============================================================================
@@ -196,108 +197,113 @@ impl<T: Clone + PartialOrd> AVLTree<T> {
     //    or
     //    BALANCE     The local tree was balanced, but has grown in height.
     //                Do not assume the entire tree is valid.
-    fn leftgrown(&mut self, mut root: u32) -> (u32, AVLRes) {
-        match self.pool[root as usize].tag {
-            AVLTag::Left => {
-                if self.pool[self.pool[root as usize].left as usize].tag == AVLTag::Left {
+    //
+    // This function has been split into two pieces: `leftgrown`, which is small and hot, and is
+    // marked always-inline, and `leftgrown_left`, which handles a more complex and less
+    // frequent case, and is marked never-inline.  The intent is to have the common case always
+    // inlined without having to deal with the extra register pressure from inlining the less
+    // frequent code.  The dual function `rightgrown` is split similarly.
+    #[inline(never)]
+    fn leftgrown_left(&mut self, mut root: u32) -> (u32, AVLRes) {
+        if self.pool[self.pool[root as usize].left as usize].tag == AVLTag::Left {
+            self.pool[root as usize].tag = AVLTag::None;
+            let t = self.pool[root as usize].left;
+            self.pool[t as usize].tag = AVLTag::None;
+            root = self.rotright(root);
+        } else {
+            match self.pool[self.pool[self.pool[root as usize].left as usize].right as usize].tag {
+                AVLTag::Left => {
+                    self.pool[root as usize].tag = AVLTag::Right;
+                    let t = self.pool[root as usize].left;
+                    self.pool[t as usize].tag = AVLTag::None;
+                }
+                AVLTag::Right => {
+                    self.pool[root as usize].tag = AVLTag::None;
+                    let t = self.pool[root as usize].left;
+                    self.pool[t as usize].tag = AVLTag::Left;
+                }
+                AVLTag::None => {
                     self.pool[root as usize].tag = AVLTag::None;
                     let t = self.pool[root as usize].left;
                     self.pool[t as usize].tag = AVLTag::None;
-                    root = self.rotright(root);
-                } else {
-                    match self.pool
-                        [self.pool[self.pool[root as usize].left as usize].right as usize]
-                        .tag
-                    {
-                        AVLTag::Left => {
-                            self.pool[root as usize].tag = AVLTag::Right;
-                            let t = self.pool[root as usize].left;
-                            self.pool[t as usize].tag = AVLTag::None;
-                        }
-                        AVLTag::Right => {
-                            self.pool[root as usize].tag = AVLTag::None;
-                            let t = self.pool[root as usize].left;
-                            self.pool[t as usize].tag = AVLTag::Left;
-                        }
-                        AVLTag::None => {
-                            self.pool[root as usize].tag = AVLTag::None;
-                            let t = self.pool[root as usize].left;
-                            self.pool[t as usize].tag = AVLTag::None;
-                        }
-                        AVLTag::Free => panic!("AVLTree::leftgrown(1): unallocated node in tree"),
-                    }
-                    {
-                        let t = self.pool[self.pool[root as usize].left as usize].right;
-                        self.pool[t as usize].tag = AVLTag::None;
-                    }
-                    self.pool[root as usize].left = self.rotleft(self.pool[root as usize].left);
-                    root = self.rotright(root);
                 }
-                return (root, AVLRes::OK);
+                AVLTag::Free => panic!("AVLTree::leftgrown_left: unallocated node in tree"),
             }
+            let t = self.pool[self.pool[root as usize].left as usize].right;
+            self.pool[t as usize].tag = AVLTag::None;
+            self.pool[root as usize].left = self.rotleft(self.pool[root as usize].left);
+            root = self.rotright(root);
+        }
+        return (root, AVLRes::OK);
+    }
+
+    #[inline(always)]
+    fn leftgrown(&mut self, root: u32) -> (u32, AVLRes) {
+        let root_node = &mut self.pool[root as usize];
+        match root_node.tag {
+            AVLTag::Left => self.leftgrown_left(root),
             AVLTag::Right => {
-                self.pool[root as usize].tag = AVLTag::None;
+                root_node.tag = AVLTag::None;
                 return (root, AVLRes::OK);
             }
             AVLTag::None => {
-                self.pool[root as usize].tag = AVLTag::Left;
+                root_node.tag = AVLTag::Left;
                 return (root, AVLRes::Balance);
             }
-            AVLTag::Free => panic!("AVLTree::leftgrown(2): unallocated node in tree"),
+            AVLTag::Free => panic!("AVLTree::leftgrown: unallocated node in tree"),
         }
     }
 
     // Private function: rightgrown: helper function for `insert`
     //
     //  See leftgrown for details.
-    fn rightgrown(&mut self, mut root: u32) -> (u32, AVLRes) {
+    #[inline(never)]
+    fn rightgrown_right(&mut self, mut root: u32) -> (u32, AVLRes) {
+        if self.pool[self.pool[root as usize].right as usize].tag == AVLTag::Right {
+            self.pool[root as usize].tag = AVLTag::None;
+            let t = self.pool[root as usize].right as usize;
+            self.pool[t].tag = AVLTag::None;
+            root = self.rotleft(root);
+        } else {
+            match self.pool[self.pool[self.pool[root as usize].right as usize].left as usize].tag {
+                AVLTag::Right => {
+                    self.pool[root as usize].tag = AVLTag::Left;
+                    let t = self.pool[root as usize].right;
+                    self.pool[t as usize].tag = AVLTag::None;
+                }
+                AVLTag::Left => {
+                    self.pool[root as usize].tag = AVLTag::None;
+                    let t = self.pool[root as usize].right;
+                    self.pool[t as usize].tag = AVLTag::Right;
+                }
+                AVLTag::None => {
+                    self.pool[root as usize].tag = AVLTag::None;
+                    let t = self.pool[root as usize].right;
+                    self.pool[t as usize].tag = AVLTag::None;
+                }
+                AVLTag::Free => panic!("AVLTree::rightgrown_right: unallocated node in tree"),
+            }
+            let t = self.pool[self.pool[root as usize].right as usize].left;
+            self.pool[t as usize].tag = AVLTag::None;
+            self.pool[root as usize].right = self.rotright(self.pool[root as usize].right);
+            root = self.rotleft(root);
+        }
+        return (root, AVLRes::OK);
+    }
+
+    #[inline(always)]
+    fn rightgrown(&mut self, root: u32) -> (u32, AVLRes) {
         match self.pool[root as usize].tag {
             AVLTag::Left => {
                 self.pool[root as usize].tag = AVLTag::None;
                 return (root, AVLRes::OK);
             }
-            AVLTag::Right => {
-                if self.pool[self.pool[root as usize].right as usize].tag == AVLTag::Right {
-                    self.pool[root as usize].tag = AVLTag::None;
-                    let t = self.pool[root as usize].right as usize;
-                    self.pool[t].tag = AVLTag::None;
-                    root = self.rotleft(root);
-                } else {
-                    match self.pool
-                        [self.pool[self.pool[root as usize].right as usize].left as usize]
-                        .tag
-                    {
-                        AVLTag::Right => {
-                            self.pool[root as usize].tag = AVLTag::Left;
-                            let t = self.pool[root as usize].right;
-                            self.pool[t as usize].tag = AVLTag::None;
-                        }
-                        AVLTag::Left => {
-                            self.pool[root as usize].tag = AVLTag::None;
-                            let t = self.pool[root as usize].right;
-                            self.pool[t as usize].tag = AVLTag::Right;
-                        }
-                        AVLTag::None => {
-                            self.pool[root as usize].tag = AVLTag::None;
-                            let t = self.pool[root as usize].right;
-                            self.pool[t as usize].tag = AVLTag::None;
-                        }
-                        AVLTag::Free => panic!("AVLTree::rightgrown(1): unallocated node in tree"),
-                    }
-                    {
-                        let t = self.pool[self.pool[root as usize].right as usize].left;
-                        self.pool[t as usize].tag = AVLTag::None;
-                    }
-                    self.pool[root as usize].right = self.rotright(self.pool[root as usize].right);
-                    root = self.rotleft(root);
-                }
-                return (root, AVLRes::OK);
-            }
+            AVLTag::Right => self.rightgrown_right(root),
             AVLTag::None => {
                 self.pool[root as usize].tag = AVLTag::Right;
                 return (root, AVLRes::Balance);
             }
-            AVLTag::Free => panic!("AVLTree::rightgrown(2): unallocated node in tree"),
+            AVLTag::Free => panic!("AVLTree::rightgrown: unallocated node in tree"),
         }
     }
 
@@ -310,67 +316,132 @@ impl<T: Clone + PartialOrd> AVLTree<T> {
     //
     //    item        Item to be inserted.
     //
-    //  Return values:
+    // Returns AVL_NULL if the value is already in the tree.  Otherwise returns the index of the
+    // new root (which is obviously always non-AVL_NULL).  This is infallible in the sense that,
+    // if allocation of a new node fails, it won't return -- `self.alloc()` will panic.
     //
-    //  Root of the new tree, plus one of:
-    //
-    //    nonzero     The item has been inserted. The excact value of
-    //                nonzero yields is of no concern to user code; when
-    //                avlinsert recursively calls itself, the number
-    //                returned tells the parent activation if the AVL tree
-    //                may have become unbalanced; specifically:
-    //
-    //      OK        None of the subtrees of the node that n points to
-    //                has grown, the AVL tree is valid.
-    //
-    //      BALANCE   One of the subtrees of the node that n points to
-    //                has grown, the node's "skew" flag needs adjustment,
-    //                and the AVL tree may have become unbalanced.
-    //
-    //    zero        The datum provided could not be inserted, either due
-    //                to AVLKEY collision (the tree already contains another
-    //                item with which the same AVLKEY is associated), or
-    //                due to insufficient memory.
-    fn insert_wrk<F>(&mut self, mut root: u32, item: T, mb_cmp: Option<&F>) -> (u32, AVLRes)
+    // This function relies on the fact that any non-AVL_NULL value will have its top bit (bit
+    // 31) clear, since that bit is used as a boolean in the `stack`.  That property is
+    // guaranteed us by `fn alloc`, which ensures that the max number of nodes in the tree is
+    // 0x70000000.
+    fn insert_wrk<F>(&mut self, mut root: u32, item: T, mb_cmp: Option<&F>) -> u32
     where
         F: Fn(T, T) -> Option<Ordering>,
     {
-        if root == AVL_NULL {
-            root = self.alloc();
-            self.pool[root as usize] = AVLNode::new(AVLTag::None, AVL_NULL, AVL_NULL, item);
-            return (root, AVLRes::Balance);
+        #[inline(always)]
+        fn stack_entry_set_is_left(node: u32) -> u32 {
+            node | 0x8000_0000
+        }
+        #[inline(always)]
+        fn stack_entry_get_is_left(ent: u32) -> u32 {
+            ent & 0x8000_0000
+        }
+        #[inline(always)]
+        fn stack_entry_get_node(ent: u32) -> u32 {
+            ent & 0x7FFF_FFFF
         }
 
-        let cmp_arg_left: T = item.clone();
-        let cmp_arg_right: T = self.pool[root as usize].item.clone();
-        let cmp_res = match mb_cmp {
-            None => cmp_arg_left.partial_cmp(&cmp_arg_right),
-            Some(cmp) => cmp(cmp_arg_left, cmp_arg_right),
-        };
-        match cmp_res {
-            None => panic!("AVLTree::insert_wrk: unordered elements"),
-            Some(Ordering::Less) => {
-                let (new_left, res) =
-                    self.insert_wrk(self.pool[root as usize].left, item.clone(), mb_cmp);
-                self.pool[root as usize].left = new_left;
-                if res == AVLRes::Balance {
-                    return self.leftgrown(root);
+        // The stack will hold a root-leaf path.  Give that the max number of elements allowed
+        // in the tree is 0x70000000, which is (7/8) * 2^31, and that the max depth is 1.44 *
+        // log2(elems), a 64 entry stack should always be sufficient.  Hence there should never
+        // be any dynamic allocation here.  In fact a 48 entry stack would also suffice, but
+        // SmallVec doesn't provide that size.
+        let mut stack = SmallVec::<[u32; 64]>::new();
+
+        // In the first phase, walk down the tree to find the place where the new node should be
+        // inserted.  This loop is cloned so as to allow the test on `mb_cmp` to be done just
+        // once.
+        match mb_cmp {
+            None => {
+                while root != AVL_NULL {
+                    let cmp_loc_right = &self.pool[root as usize];
+                    let cmp_arg_right: T = cmp_loc_right.item.clone();
+                    let cmp_arg_left: T = item.clone();
+                    debug_assert!(stack_entry_get_is_left(root) == 0);
+                    match cmp_arg_left.partial_cmp(&cmp_arg_right) {
+                        None => panic!("AVLTree::insert_wrk: unordered elements(1)"),
+                        Some(Ordering::Less) => {
+                            stack.push(stack_entry_set_is_left(root));
+                            root = cmp_loc_right.left;
+                        }
+                        Some(Ordering::Greater) => {
+                            stack.push(root);
+                            root = cmp_loc_right.right;
+                        }
+                        Some(Ordering::Equal) => {
+                            // Item is already in the tree.
+                            return AVL_NULL;
+                        }
+                    }
                 }
-                return (root, res);
             }
-            Some(Ordering::Greater) => {
-                let (new_right, res) =
-                    self.insert_wrk(self.pool[root as usize].right, item.clone(), mb_cmp);
-                self.pool[root as usize].right = new_right;
-                if res == AVLRes::Balance {
-                    return self.rightgrown(root);
+            Some(cmp) => {
+                while root != AVL_NULL {
+                    let cmp_loc_right = &self.pool[root as usize];
+                    let cmp_arg_right: T = cmp_loc_right.item.clone();
+                    let cmp_arg_left: T = item.clone();
+                    debug_assert!(stack_entry_get_is_left(root) == 0);
+                    match cmp(cmp_arg_left, cmp_arg_right) {
+                        None => panic!("AVLTree::insert_wrk: unordered elements(2)"),
+                        Some(Ordering::Less) => {
+                            stack.push(stack_entry_set_is_left(root));
+                            root = cmp_loc_right.left;
+                        }
+                        Some(Ordering::Greater) => {
+                            stack.push(root);
+                            root = cmp_loc_right.right;
+                        }
+                        Some(Ordering::Equal) => {
+                            // Item is already in the tree.
+                            return AVL_NULL;
+                        }
+                    }
                 }
-                return (root, res);
-            }
-            Some(Ordering::Equal) => {
-                return (root, AVLRes::Error);
             }
         }
+
+        // Now allocate the new node.
+        debug_assert!(root == AVL_NULL);
+        let new_node = self.alloc();
+        self.pool[new_node as usize] = AVLNode::new(AVLTag::None, AVL_NULL, AVL_NULL, item.clone());
+
+        // And unwind the stack, back to the root, rebalancing as we go.  Once get to a place
+        // where the new subtree doesn't need to be rebalanced, we can stop this upward scan,
+        // because no nodes above it will need to be rebalanced either.
+        let mut curr_node = new_node;
+        let mut curr_node_action = AVLRes::Balance;
+
+        while let Some(parent_node_tagged) = stack.pop() {
+            let parent_node = stack_entry_get_node(parent_node_tagged);
+            if stack_entry_get_is_left(parent_node_tagged) != 0 {
+                self.pool[parent_node as usize].left = curr_node;
+                if curr_node_action == AVLRes::Balance {
+                    let pair = self.leftgrown(parent_node);
+                    curr_node = pair.0;
+                    curr_node_action = pair.1;
+                } else {
+                    curr_node = parent_node;
+                    break;
+                }
+            } else {
+                self.pool[parent_node as usize].right = curr_node;
+                if curr_node_action == AVLRes::Balance {
+                    let pair = self.rightgrown(parent_node);
+                    curr_node = pair.0;
+                    curr_node_action = pair.1;
+                } else {
+                    curr_node = parent_node;
+                    break;
+                }
+            }
+        }
+
+        if !stack.is_empty() {
+            curr_node = stack_entry_get_node(stack[0]);
+        }
+
+        debug_assert!(curr_node != AVL_NULL);
+        return curr_node;
     }
 
     // Private function: leftshrunk: helper function for delete and
@@ -793,8 +864,8 @@ impl<T: Clone + PartialOrd> AVLTree<T> {
     where
         F: Fn(T, T) -> Option<Ordering>,
     {
-        let (new_root, res) = self.insert_wrk(self.root, item, mb_cmp);
-        if res == AVLRes::Error {
+        let new_root = self.insert_wrk(self.root, item, mb_cmp);
+        if new_root == AVL_NULL {
             return false; // already in tree
         } else {
             self.root = new_root;
