@@ -3120,7 +3120,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //
   // If arrayType is Scalar::Uint32 then:
   //
-  //   - `output` must be a float register (this is bug 1077305)
+  //   - `output` must be a float register
   //   - if the operation takes one temp register then `temp` must be defined
   //   - if the operation takes two temp registers then `temp2` must be defined.
   //

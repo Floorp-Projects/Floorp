@@ -165,7 +165,8 @@ struct ArrayOps {
 template <>
 JS::Result<> ArrayOps<uint32_t>::storeResult(JSContext* cx, uint32_t v,
                                              MutableHandleValue result) {
-  result.setNumber(v);
+  // Always double typed so that the JITs can assume the types are stable.
+  result.setDouble(v);
   return Ok();
 }
 

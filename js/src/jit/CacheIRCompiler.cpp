@@ -7689,7 +7689,14 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
     masm.storeCallInt32Result(scratch);
 
     masm.PopRegsInMask(volatileRegs);
+  }
+
+  if (elementType != Scalar::Uint32) {
     masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  } else {
+    ScratchDoubleScope fpscratch(masm);
+    masm.convertUInt32ToDouble(scratch, fpscratch);
+    masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
   }
 
   return true;
@@ -7732,7 +7739,14 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
     masm.storeCallInt32Result(scratch);
 
     masm.PopRegsInMask(volatileRegs);
+  }
+
+  if (elementType != Scalar::Uint32) {
     masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  } else {
+    ScratchDoubleScope fpscratch(masm);
+    masm.convertUInt32ToDouble(scratch, fpscratch);
+    masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
   }
 
   return true;
@@ -7808,6 +7822,7 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
   AutoSpectreBoundsScratchRegister spectreTemp(allocator, masm);
+  AutoAvailableFloatRegister floatReg(*this, FloatReg0);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -7825,17 +7840,23 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   BaseIndex source(scratch, index,
                    ScaleFromElemWidth(Scalar::byteSize(elementType)));
 
-  // Uint32 isn't handled yet (bug 1077305).
-  MOZ_ASSERT(elementType != Scalar::Uint32);
-  bool allowDouble = false;
-  Register tempUint32 = Register::Invalid();
-  Label* failUint32 = nullptr;
-
   auto sync = Synchronization::Load();
 
   masm.memoryBarrierBefore(sync);
-  masm.loadFromTypedArray(elementType, source, output.valueReg(), allowDouble,
-                          tempUint32, failUint32);
+  if (elementType != Scalar::Uint32) {
+    bool allowDouble = false;
+    Register tempUint32 = Register::Invalid();
+    Label* failUint32 = nullptr;
+
+    masm.loadFromTypedArray(elementType, source, output.valueReg(), allowDouble,
+                            tempUint32, failUint32);
+  } else {
+    Label* failUint32 = nullptr;
+
+    masm.loadFromTypedArray(elementType, source, AnyRegister(floatReg), scratch,
+                            failUint32);
+    masm.boxDouble(floatReg, output.valueReg(), floatReg);
+  }
   masm.memoryBarrierAfter(sync);
 
   return true;

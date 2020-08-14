@@ -2190,6 +2190,8 @@ AtomicsCompareExchangeFn AtomicsCompareExchange(Scalar::Type elementType) {
       return AtomicsCompareExchange<uint16_t>;
     case Scalar::Int32:
       return AtomicsCompareExchange<int32_t>;
+    case Scalar::Uint32:
+      return AtomicsCompareExchange<uint32_t>;
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
@@ -2219,6 +2221,8 @@ AtomicsReadWriteModifyFn AtomicsExchange(Scalar::Type elementType) {
       return AtomicsExchange<uint16_t>;
     case Scalar::Int32:
       return AtomicsExchange<int32_t>;
+    case Scalar::Uint32:
+      return AtomicsExchange<uint32_t>;
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
@@ -2248,6 +2252,8 @@ AtomicsReadWriteModifyFn AtomicsAdd(Scalar::Type elementType) {
       return AtomicsAdd<uint16_t>;
     case Scalar::Int32:
       return AtomicsAdd<int32_t>;
+    case Scalar::Uint32:
+      return AtomicsAdd<uint32_t>;
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
@@ -2277,6 +2283,8 @@ AtomicsReadWriteModifyFn AtomicsSub(Scalar::Type elementType) {
       return AtomicsSub<uint16_t>;
     case Scalar::Int32:
       return AtomicsSub<int32_t>;
+    case Scalar::Uint32:
+      return AtomicsSub<uint32_t>;
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
@@ -2306,6 +2314,8 @@ AtomicsReadWriteModifyFn AtomicsAnd(Scalar::Type elementType) {
       return AtomicsAnd<uint16_t>;
     case Scalar::Int32:
       return AtomicsAnd<int32_t>;
+    case Scalar::Uint32:
+      return AtomicsAnd<uint32_t>;
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
@@ -2335,6 +2345,8 @@ AtomicsReadWriteModifyFn AtomicsOr(Scalar::Type elementType) {
       return AtomicsOr<uint16_t>;
     case Scalar::Int32:
       return AtomicsOr<int32_t>;
+    case Scalar::Uint32:
+      return AtomicsOr<uint32_t>;
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }
@@ -2364,6 +2376,8 @@ AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType) {
       return AtomicsXor<uint16_t>;
     case Scalar::Int32:
       return AtomicsXor<int32_t>;
+    case Scalar::Uint32:
+      return AtomicsXor<uint32_t>;
     default:
       MOZ_CRASH("Unexpected TypedArray type");
   }

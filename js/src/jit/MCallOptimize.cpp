@@ -3764,9 +3764,6 @@ bool IonBuilder::atomicsMeetsPreconditions(
       return checkResult == DontCheckAtomicResult ||
              getInlineReturnType() == MIRType::Int32;
     case Scalar::Uint32:
-      // Bug 1077305: it would be attractive to allow inlining even
-      // if the inline return type is Int32, which it will frequently
-      // be.
       return checkResult == DontCheckAtomicResult ||
              getInlineReturnType() == MIRType::Double;
     case Scalar::BigInt64:

@@ -7077,11 +7077,6 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
     return AttachDecision::NoAction;
   }
 
-  // TODO: Uint32 isn't yet supported (bug 1077305).
-  if (typedArray->type() == Scalar::Uint32) {
-    return AttachDecision::NoAction;
-  }
-
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -7111,7 +7106,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   writer.atomicsCompareExchangeResult(objId, int32IndexId, int32ExpectedId,
                                       int32ReplacementId, typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7142,11 +7138,6 @@ bool CallIRGenerator::canAttachAtomicsReadWriteModify() {
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   if (!AtomicsMeetsPreconditions(typedArray, args_[1].toNumber())) {
-    return false;
-  }
-
-  // TODO: Uint32 isn't yet supported (bug 1077305).
-  if (typedArray->type() == Scalar::Uint32) {
     return false;
   }
 
@@ -7196,7 +7187,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
   writer.atomicsExchangeResult(objId, int32IndexId, int32ValueId,
                                typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7217,7 +7209,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAdd(HandleFunction callee) {
   writer.atomicsAddResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7238,7 +7231,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsSub(HandleFunction callee) {
   writer.atomicsSubResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7259,7 +7253,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAnd(HandleFunction callee) {
   writer.atomicsAndResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7279,7 +7274,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsOr(HandleFunction callee) {
 
   writer.atomicsOrResult(objId, int32IndexId, int32ValueId, typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7300,7 +7296,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsXor(HandleFunction callee) {
   writer.atomicsXorResult(objId, int32IndexId, int32ValueId,
                           typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7331,11 +7328,6 @@ AttachDecision CallIRGenerator::tryAttachAtomicsLoad(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  // TODO: Uint32 isn't yet supported (bug 1077305).
-  if (typedArray->type() == Scalar::Uint32) {
-    return AttachDecision::NoAction;
-  }
-
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -7353,7 +7345,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsLoad(HandleFunction callee) {
 
   writer.atomicsLoadResult(objId, int32IndexId, typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or, for uint32, a double.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
@@ -7396,11 +7389,6 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  // TODO: Uint32 isn't yet supported (bug 1077305).
-  if (typedArray->type() == Scalar::Uint32) {
-    return AttachDecision::NoAction;
-  }
-
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -7429,7 +7417,8 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
   writer.atomicsStoreResult(objId, int32IndexId, int32ValueId,
                             typedArray->type());
 
-  // This stub doesn't need to be monitored, because it always returns an int32.
+  // This stub doesn't need to be monitored, because it always returns an int32
+  // or the result is not observed.
   writer.returnFromIC();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
