@@ -325,6 +325,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::InitElem:
       case JSOp::InitHiddenElem:
+      case JSOp::InitLockedElem:
       case JSOp::InitElemArray:
       case JSOp::InitElemInc:
       case JSOp::SetElem:
@@ -2079,7 +2080,8 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::SetElem || op == JSOp::StrictSetElem ||
              op == JSOp::InitElem || op == JSOp::InitHiddenElem ||
-             op == JSOp::InitElemArray || op == JSOp::InitElemInc);
+             op == JSOp::InitLockedElem || op == JSOp::InitElemArray ||
+             op == JSOp::InitElemInc);
 
   int objvIndex = -3;
   RootedObject obj(
@@ -2143,7 +2145,8 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
 
-  if (op == JSOp::InitElem || op == JSOp::InitHiddenElem) {
+  if (op == JSOp::InitElem || op == JSOp::InitHiddenElem ||
+      op == JSOp::InitLockedElem) {
     if (!InitElemOperation(cx, pc, obj, index, rhs)) {
       return false;
     }

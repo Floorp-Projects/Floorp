@@ -354,10 +354,10 @@ class FunctionBox : public SharedContext {
   // copy.
   uint16_t nargs_ = 0;
 
-  // See: PrivateScriptData::fieldInitializers_
+  // See: PrivateScriptData::memberInitializers_
   // This field is copied to ScriptStencil, and shouldn't be modified after the
   // copy.
-  mozilla::Maybe<FieldInitializers> fieldInitializers_ = {};
+  mozilla::Maybe<MemberInitializers> memberInitializers_ = {};
 
  public:
   // Back pointer used by asm.js for error messages.
@@ -676,15 +676,15 @@ class FunctionBox : public SharedContext {
 
   size_t nargs() { return nargs_; }
 
-  bool hasFieldInitializers() const { return fieldInitializers_.isSome(); }
-  const FieldInitializers& fieldInitializers() const {
-    return *fieldInitializers_;
+  bool hasMemberInitializers() const { return memberInitializers_.isSome(); }
+  const MemberInitializers& memberInitializers() const {
+    return *memberInitializers_;
   }
-  void setFieldInitializers(FieldInitializers fieldInitializers) {
-    MOZ_ASSERT(fieldInitializers_.isNothing());
-    fieldInitializers_ = mozilla::Some(fieldInitializers);
+  void setMemberInitializers(MemberInitializers memberInitializers) {
+    MOZ_ASSERT(memberInitializers_.isNothing());
+    memberInitializers_ = mozilla::Some(memberInitializers);
     if (isScriptFieldCopiedToStencil) {
-      copyUpdatedFieldInitializers();
+      copyUpdatedMemberInitializers();
     }
   }
 
@@ -710,9 +710,9 @@ class FunctionBox : public SharedContext {
   //   function, while parsing enclosing class
   void copyUpdatedExtent();
 
-  // * setFieldInitializers can be called to a class constructor with a lazy
+  // * setMemberInitializers can be called to a class constructor with a lazy
   //   function, while emitting enclosing script
-  void copyUpdatedFieldInitializers();
+  void copyUpdatedMemberInitializers();
 
   // * setEnclosingScopeForInnerLazyFunction can be called to a lazy function,
   //   while emitting enclosing script

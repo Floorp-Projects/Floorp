@@ -1292,7 +1292,7 @@ class ScriptWarmUpData {
 static_assert(sizeof(ScriptWarmUpData) == sizeof(uintptr_t),
               "JIT code depends on ScriptWarmUpData being pointer-sized");
 
-struct FieldInitializers {
+struct MemberInitializers {
   static constexpr uint32_t MaxInitializers = INT32_MAX;
 
 #ifdef DEBUG
@@ -1301,20 +1301,20 @@ struct FieldInitializers {
 
   // This struct will eventually have a vector of constant values for optimizing
   // field initializers.
-  uint32_t numFieldInitializers = 0;
+  uint32_t numMemberInitializers = 0;
 
-  explicit FieldInitializers(uint32_t numFieldInitializers)
+  explicit MemberInitializers(uint32_t numMemberInitializers)
       :
 #ifdef DEBUG
         valid(true),
 #endif
-        numFieldInitializers(numFieldInitializers) {
+        numMemberInitializers(numMemberInitializers) {
   }
 
-  static FieldInitializers Invalid() { return FieldInitializers(); }
+  static MemberInitializers Invalid() { return MemberInitializers(); }
 
  private:
-  FieldInitializers() = default;
+  MemberInitializers() = default;
 };
 
 // [SMDOC] - JSScript data layout (unshared)
@@ -1332,7 +1332,8 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
 
   // Note: This is only defined for scripts with an enclosing scope. This
   // excludes lazy scripts with lazy parents.
-  js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
+  js::MemberInitializers memberInitializers_ =
+      js::MemberInitializers::Invalid();
 
   // End of fields.
 
@@ -1358,12 +1359,14 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
     return mozilla::Span{offsetToPointer<JS::GCCellPtr>(offset), ngcthings};
   }
 
-  void setFieldInitializers(FieldInitializers fieldInitializers) {
-    MOZ_ASSERT(fieldInitializers_.valid == false,
-               "Only init FieldInitializers once");
-    fieldInitializers_ = fieldInitializers;
+  void setMemberInitializers(MemberInitializers memberInitializers) {
+    MOZ_ASSERT(memberInitializers_.valid == false,
+               "Only init MemberInitializers once");
+    memberInitializers_ = memberInitializers;
   }
-  const FieldInitializers& getFieldInitializers() { return fieldInitializers_; }
+  const MemberInitializers& getMemberInitializers() {
+    return memberInitializers_;
+  }
 
   // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
   static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
@@ -1935,13 +1938,13 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
     return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
   }
 
-  void setFieldInitializers(FieldInitializers fieldInitializers) {
+  void setMemberInitializers(MemberInitializers memberInitializers) {
     MOZ_ASSERT(data_);
-    data_->setFieldInitializers(fieldInitializers);
+    data_->setMemberInitializers(memberInitializers);
   }
-  const FieldInitializers& getFieldInitializers() const {
+  const MemberInitializers& getMemberInitializers() const {
     MOZ_ASSERT(data_);
-    return data_->getFieldInitializers();
+    return data_->getMemberInitializers();
   }
 
   RuntimeScriptData* sharedData() const { return sharedData_; }

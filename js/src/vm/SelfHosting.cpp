@@ -2137,6 +2137,17 @@ static bool intrinsic_NewAsyncIteratorHelper(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_NoPrivateGetter(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 0);
+
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_PRIVATE_SETTER_ONLY);
+
+  args.rval().setUndefined();
+  return false;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2622,6 +2633,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IntrinsicAsyncGeneratorThrow", AsyncGeneratorThrow, 1, 0),
 
     JS_FN("NewPrivateName", intrinsic_NewPrivateName, 1, 0),
+    JS_FN("NoPrivateGetter", intrinsic_NoPrivateGetter, 1, 0),
 
     JS_FS_END};
 

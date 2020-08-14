@@ -9,10 +9,12 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"  // mozilla::Maybe
 
 #include <string.h>
 
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
+#include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
 #include "js/GCAnnotations.h"
@@ -365,9 +367,9 @@ class SyntaxParseHandler {
                                               AccessorType atype) {
     return true;
   }
-  MOZ_MUST_USE Node newClassMethodDefinition(Node key, FunctionNodeType funNode,
-                                             AccessorType atype,
-                                             bool isStatic) {
+  MOZ_MUST_USE Node newClassMethodDefinition(
+      Node key, FunctionNodeType funNode, AccessorType atype, bool isStatic,
+      mozilla::Maybe<FunctionNodeType> initializerIfPrivate) {
     return NodeGeneric;
   }
   MOZ_MUST_USE Node newClassFieldDefinition(Node name,
@@ -724,6 +726,8 @@ class SyntaxParseHandler {
     MOZ_CRASH(
         "SyntaxParseHandler::canSkipLazyClosedOverBindings must return false");
   }
+
+  void setPrivateNameKind(Node node, PrivateNameKind kind) {}
 } JS_HAZ_ROOTED;  // See the top of SyntaxParseHandler for why this is safe.
 
 }  // namespace frontend

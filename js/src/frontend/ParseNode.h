@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
+#include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/Stencil.h"
 #include "frontend/Token.h"
 #include "js/RootingAPI.h"
@@ -304,6 +305,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * ClassMethod (ClassMethod)
  *   name: propertyName
  *   method: methodDefinition
+ *   initializerIfPrivate: initializer to stamp private method onto instance
  * Module (ModuleNode)
  *   body: statement list of the module
  *
@@ -485,6 +487,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *          * CallExpr: Call expr without jump
  * PropertyNameExpr (NameNode)
  *   atom: property name being accessed
+ *   privateNameKind: kind of the name if private
  * DotExpr (PropertyAccess)
  *   left: MEMBER expr to left of '.'
  *   right: PropertyName to right of '.'
@@ -846,6 +849,7 @@ class NullaryNode : public ParseNode {
 
 class NameNode : public ParseNode {
   JSAtom* atom_; /* lexical name or label atom */
+  PrivateNameKind privateNameKind_ = PrivateNameKind::None;
 
  public:
   NameNode(ParseNodeKind kind, JSAtom* atom, const TokenPos& pos)
@@ -877,6 +881,12 @@ class NameNode : public ParseNode {
   }
 
   void setAtom(JSAtom* atom) { atom_ = atom; }
+
+  void setPrivateNameKind(PrivateNameKind privateNameKind) {
+    privateNameKind_ = privateNameKind;
+  }
+
+  PrivateNameKind privateNameKind() { return privateNameKind_; }
 };
 
 inline bool ParseNode::isName(PropertyName* name) const {
@@ -2067,6 +2077,7 @@ class CallNode : public BinaryNode {
 class ClassMethod : public BinaryNode {
   bool isStatic_;
   AccessorType accessorType_;
+  FunctionNode* initializerIfPrivate_;
 
  public:
   /*
@@ -2074,11 +2085,12 @@ class ClassMethod : public BinaryNode {
    * so explicitly define the beginning and end here.
    */
   ClassMethod(ParseNode* name, ParseNode* body, AccessorType accessorType,
-              bool isStatic)
+              bool isStatic, FunctionNode* initializerIfPrivate)
       : BinaryNode(ParseNodeKind::ClassMethod,
                    TokenPos(name->pn_pos.begin, body->pn_pos.end), name, body),
         isStatic_(isStatic),
-        accessorType_(accessorType) {}
+        accessorType_(accessorType),
+        initializerIfPrivate_(initializerIfPrivate) {}
 
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::ClassMethod);
@@ -2093,6 +2105,8 @@ class ClassMethod : public BinaryNode {
   bool isStatic() const { return isStatic_; }
 
   AccessorType accessorType() const { return accessorType_; }
+
+  FunctionNode* initializerIfPrivate() const { return initializerIfPrivate_; }
 };
 
 class ClassField : public BinaryNode {

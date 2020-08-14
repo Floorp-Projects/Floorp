@@ -58,7 +58,7 @@ struct ScopeContext {
 
   // Class field initializer info if we are nested within a class constructor.
   // We may be an combination of arrow and eval context within the constructor.
-  mozilla::Maybe<FieldInitializers> fieldInitializers = {};
+  mozilla::Maybe<MemberInitializers> memberInitializers = {};
 
   explicit ScopeContext(Scope* scope, JSObject* enclosingEnv = nullptr) {
     computeAllowSyntax(scope);

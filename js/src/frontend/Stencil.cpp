@@ -537,8 +537,8 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
       script->initTreatAsRunOnce(stencil.immutableFlags.hasFlag(
           ImmutableScriptFlagsEnum::TreatAsRunOnce));
 
-      if (stencil.fieldInitializers) {
-        script->setFieldInitializers(*stencil.fieldInitializers);
+      if (stencil.memberInitializers) {
+        script->setMemberInitializers(*stencil.memberInitializers);
       }
     }
 
@@ -1198,11 +1198,11 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json) {
   DumpImmutableScriptFlags(json, immutableFlags);
   json.endList();
 
-  if (fieldInitializers) {
-    json.formatProperty("fieldInitializers", "Some(%u)",
-                        (*fieldInitializers).numFieldInitializers);
+  if (memberInitializers) {
+    json.formatProperty("memberInitializers", "Some(%u)",
+                        (*memberInitializers).numMemberInitializers);
   } else {
-    json.property("fieldInitializers", "Nothing");
+    json.property("memberInitializers", "Nothing");
   }
 
   json.beginListProperty("gcThings");

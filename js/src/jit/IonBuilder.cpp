@@ -2013,6 +2013,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
 
     case JSOp::InitElem:
     case JSOp::InitHiddenElem:
+    case JSOp::InitLockedElem:
       return jsop_initelem();
 
     case JSOp::InitElemInc:
@@ -6863,7 +6864,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_newobject() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_initelem() {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::InitElem || JSOp(*pc) == JSOp::InitHiddenElem);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::InitElem || JSOp(*pc) == JSOp::InitHiddenElem ||
+             JSOp(*pc) == JSOp::InitLockedElem);
 
   MDefinition* value = current->pop();
   MDefinition* id = current->pop();

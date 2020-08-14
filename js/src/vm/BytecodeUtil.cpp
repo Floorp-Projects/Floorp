@@ -588,6 +588,7 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
       case JSOp::InitHiddenElem:
       case JSOp::InitHiddenElemGetter:
       case JSOp::InitHiddenElemSetter:
+      case JSOp::InitLockedElem:
         // Keep the third value.
         MOZ_ASSERT(nuses == 3);
         MOZ_ASSERT(ndefs == 1);

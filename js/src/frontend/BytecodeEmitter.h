@@ -49,7 +49,7 @@
 #include "vm/Instrumentation.h"            // InstrumentationKind
 #include "vm/Iteration.h"                  // IteratorKind
 #include "vm/JSFunction.h"                 // JSFunction
-#include "vm/JSScript.h"       // JSScript, BaseScript, FieldInitializers
+#include "vm/JSScript.h"       // JSScript, BaseScript, MemberInitializers
 #include "vm/Runtime.h"        // ReportOutOfMemory
 #include "vm/SharedStencil.h"  // GCThingIndex
 #include "vm/StencilEnums.h"   // TryNoteKind
@@ -505,15 +505,24 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                         ParseNode* value);
 
   enum class FieldPlacement { Instance, Static };
-  mozilla::Maybe<FieldInitializers> setupFieldInitializers(
+  mozilla::Maybe<MemberInitializers> setupMemberInitializers(
       ListNode* classMembers, FieldPlacement placement);
   MOZ_MUST_USE bool emitCreateFieldKeys(ListNode* obj,
                                         FieldPlacement placement);
-  MOZ_MUST_USE bool emitCreateFieldInitializers(ClassEmitter& ce, ListNode* obj,
-                                                FieldPlacement placement);
-  const FieldInitializers& findFieldInitializersForCall();
-  MOZ_MUST_USE bool emitInitializeInstanceFields();
+  MOZ_MUST_USE bool emitCreateMemberInitializers(ClassEmitter& ce,
+                                                 ListNode* obj,
+                                                 FieldPlacement placement);
+  const MemberInitializers& findMemberInitializersForCall();
+  MOZ_MUST_USE bool emitInitializeInstanceMembers();
   MOZ_MUST_USE bool emitInitializeStaticFields(ListNode* classMembers);
+
+  MOZ_MUST_USE bool emitPrivateMethodInitializers(ClassEmitter& ce,
+                                                  ListNode* obj);
+  MOZ_MUST_USE bool emitPrivateMethodInitializer(ClassEmitter& ce,
+                                                 ParseNode* prop,
+                                                 ParseNode* propName,
+                                                 HandleAtom storedMethodAtom,
+                                                 AccessorType accessorType);
 
   // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
   // not used to unconditionally emit JSOp::GetLocal. Variable access should
@@ -539,6 +548,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   }
   MOZ_MUST_USE bool emitGetName(NameNode* name);
   MOZ_MUST_USE bool emitGetPrivateName(NameNode* name);
+  MOZ_MUST_USE bool emitGetPrivateName(JSAtom* name);
 
   MOZ_MUST_USE bool emitTDZCheckIfNeeded(HandleAtom name,
                                          const NameLocation& loc,
@@ -846,6 +856,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return emit3(JSOp::CheckPrivateField, uint8_t(throwCondition),
                  uint8_t(msgKind));
   }
+
+  template <class ClassMemberType>
+  MOZ_MUST_USE bool emitNewPrivateNames(ListNode* classMembers);
 
   MOZ_MUST_USE bool emitInstrumentation(InstrumentationKind kind,
                                         uint32_t npopped = 0) {

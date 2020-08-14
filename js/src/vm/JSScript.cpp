@@ -249,20 +249,21 @@ template <XDRMode mode>
 XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
                                         HandleScriptSourceObject sourceObject,
                                         Handle<BaseScript*> lazy,
-                                        bool hasFieldInitializers) {
+                                        bool hasMemberInitializers) {
   JSContext* cx = xdr->cx();
 
   RootedAtom atom(cx);
   RootedFunction func(cx);
 
-  if (hasFieldInitializers) {
-    uint32_t numFieldInitializers;
+  if (hasMemberInitializers) {
+    uint32_t numMemberInitializers;
     if (mode == XDR_ENCODE) {
-      numFieldInitializers = lazy->getFieldInitializers().numFieldInitializers;
+      numMemberInitializers =
+          lazy->getMemberInitializers().numMemberInitializers;
     }
-    MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
+    MOZ_TRY(xdr->codeUint32(&numMemberInitializers));
     if (mode == XDR_DECODE) {
-      lazy->setFieldInitializers(FieldInitializers(numFieldInitializers));
+      lazy->setMemberInitializers(MemberInitializers(numMemberInitializers));
     }
   }
 
@@ -715,13 +716,14 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
       funOrMod->as<JSFunction>().isClassConstructor()) {
     MOZ_ASSERT(scriptEnclosingScope);
 
-    uint32_t numFieldInitializers;
+    uint32_t numMemberInitializers;
     if (mode == XDR_ENCODE) {
-      numFieldInitializers = data->getFieldInitializers().numFieldInitializers;
+      numMemberInitializers =
+          data->getMemberInitializers().numMemberInitializers;
     }
-    MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
+    MOZ_TRY(xdr->codeUint32(&numMemberInitializers));
     if (mode == XDR_DECODE) {
-      data->setFieldInitializers(FieldInitializers(numFieldInitializers));
+      data->setMemberInitializers(MemberInitializers(numMemberInitializers));
     }
   }
 
@@ -1221,10 +1223,10 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 
   // FieldInitializer data is defined for class constructors, but only once
   // their enclosing script has been compiled.
-  bool hasFieldInitializers = fun->isClassConstructor() && enclosingScope;
+  bool hasMemberInitializers = fun->isClassConstructor() && enclosingScope;
 
   MOZ_TRY(BaseScript::XDRLazyScriptData(xdr, sourceObject, lazy,
-                                        hasFieldInitializers));
+                                        hasMemberInitializers));
 
   return Ok();
 }
@@ -3546,8 +3548,8 @@ bool PrivateScriptData::InitFromStencil(
     }
   }
 
-  if (stencil.fieldInitializers) {
-    script->setFieldInitializers(*stencil.fieldInitializers);
+  if (stencil.memberInitializers) {
+    script->setMemberInitializers(*stencil.memberInitializers);
   }
 
   return true;
@@ -4235,7 +4237,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   }
   PrivateScriptData* dstData = dst->data_;
 
-  dstData->fieldInitializers_ = srcData->fieldInitializers_;
+  dstData->memberInitializers_ = srcData->memberInitializers_;
 
   {
     auto array = dstData->gcthings();
