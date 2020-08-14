@@ -79,14 +79,6 @@ class nsHTTPSOnlyUtils {
   static void TestSitePermissionAndPotentiallyAddExemption(
       nsIChannel* aChannel);
 
-  /**
-   * Checks whether CORS or mixed content requests are safe because they'll get
-   * upgraded to HTTPS
-   * @param  aLoadInfo nsILoadInfo of request
-   * @return           true if it's safe to accept
-   */
-  static bool IsSafeToAcceptCORSOrMixedContent(nsILoadInfo* aLoadInfo);
-
  private:
   /**
    * Logs localized message to either content console or browser console
