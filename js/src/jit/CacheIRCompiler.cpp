@@ -7925,6 +7925,18 @@ bool CacheIRCompiler::emitBailout() {
   return true;
 }
 
+bool CacheIRCompiler::emitAssertRecoveredOnBailoutResult(ValOperandId valId,
+                                                         bool mustBeRecovered) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+
+  // NOP when not in IonMonkey
+  masm.moveValue(UndefinedValue(), output.valueReg());
+
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;

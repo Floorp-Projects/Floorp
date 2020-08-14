@@ -2489,3 +2489,11 @@
   transpile: true
   cost_estimate: 0
   args:
+
+- name: AssertRecoveredOnBailoutResult
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    val: ValId
+    mustBeRecovered: BoolImm

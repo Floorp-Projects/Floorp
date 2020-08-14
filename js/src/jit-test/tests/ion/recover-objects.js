@@ -1,8 +1,7 @@
-// |jit-test| test-join=--no-unboxed-objects; --ion-pgo=on
-//
-// Unboxed object optimization might not trigger in all cases, thus we ensure
-// that Scalar Replacement optimization is working well independently of the
-// object representation.
+// |jit-test| --no-warp; --ion-pgo=on
+
+// Warp lacks Scalar Replacement support (bug 1650233). Re-evaluate after that
+// bug has been fixed.
 
 var max = 200;
 
