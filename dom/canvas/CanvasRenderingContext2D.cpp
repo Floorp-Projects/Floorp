@@ -4877,27 +4877,6 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
       aError.Throw(NS_ERROR_FAILURE);
       return;
     }
-    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-    if (!data || !Factory::AllowedSurfaceSize(data->GetSize())) {
-      gfxCriticalError() << "Unexpected invalid data source surface "
-                         << (data ? data->GetSize() : IntSize(0, 0));
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    DataSourceSurface::MappedSurface rawData;
-    if (NS_WARN_IF(!data->Map(DataSourceSurface::READ, &rawData))) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-    RefPtr<SourceSurface> source = mTarget->CreateSourceSurfaceFromData(
-        rawData.mData, data->GetSize(), rawData.mStride, data->GetFormat());
-    data->Unmap();
-
-    if (!source) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
 
     op = UsedOperation();
     if (!IsTargetValid()) {
@@ -4906,7 +4885,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
     }
     gfx::Rect destRect(0, 0, aW, aH);
     gfx::Rect sourceRect(0, 0, sw, sh);
-    mTarget->DrawSurface(source, destRect, sourceRect,
+    mTarget->DrawSurface(snapshot, destRect, sourceRect,
                          DrawSurfaceOptions(gfx::SamplingFilter::POINT),
                          DrawOptions(GlobalAlpha(), op, AntialiasMode::NONE));
   } else {
