@@ -520,6 +520,7 @@ bool shell::enableToSource = false;
 bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
 bool shell::enablePrivateClassFields = false;
+bool shell::enablePrivateClassMethods = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -10248,6 +10249,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       !op.getBoolOption("disable-property-error-message-fix");
   enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
   enablePrivateClassFields = op.getBoolOption("enable-private-fields");
+  enablePrivateClassMethods =
+      enablePrivateClassFields && op.getBoolOption("enable-private-methods");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
@@ -10273,7 +10276,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
-      .setPrivateClassFields(enablePrivateClassFields);
+      .setPrivateClassFields(enablePrivateClassFields)
+      .setPrivateClassMethods(enablePrivateClassMethods);
 
   if (op.getBoolOption("no-ion-for-main-context")) {
     JS::ContextOptionsRef(cx).setDisableIon();
@@ -11141,6 +11145,8 @@ int main(int argc, char** argv, char** envp) {
                         "Enable iterator helpers") ||
       !op.addBoolOption('\0', "enable-private-fields",
                         "Enable private class fields") ||
+      !op.addBoolOption('\0', "enable-private-methods",
+                        "Enable private class methods") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
