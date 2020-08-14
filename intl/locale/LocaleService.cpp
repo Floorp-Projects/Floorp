@@ -297,24 +297,12 @@ static bool GetGREFileContents(const char* aFilePath, nsCString* aOutString) {
   // Look for the requested file in omnijar.
   RefPtr<CacheAwareZipReader> zip = Omnijar::GetReader(Omnijar::GRE);
   if (zip) {
-    const auto item = zip->GetItem(aFilePath);
-    if (!item) {
+    uint32_t length;
+    const uint8_t* data = zip->GetData(aFilePath, &length);
+    if (!data) {
       return false;
     }
-
-    MOZ_ASSERT(item->RealSize());
-
-    auto data = MakeUnique<uint8_t[]>(item->RealSize());
-    CacheAwareZipCursor cursor(item, zip, data.get(), item->RealSize());
-
-    uint32_t count;
-    cursor.Read(&count);
-
-    if (count != item->RealSize()) {
-      return false;
-    }
-
-    aOutString->Assign(reinterpret_cast<const char*>(data.get()), count);
+    aOutString->Assign(reinterpret_cast<const char*>(data), length);
     return true;
   }
 
