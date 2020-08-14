@@ -5108,8 +5108,7 @@ NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
   // Also check the selection of the capturing content which might be in a
   // different document.
   if (!frameSelection && captureContent) {
-    Document* doc = captureContent->GetUncomposedDoc();
-    if (doc) {
+    if (Document* doc = captureContent->GetComposedDoc()) {
       mozilla::PresShell* capturingPresShell = doc->GetPresShell();
       if (capturingPresShell &&
           capturingPresShell != PresContext()->GetPresShell()) {
@@ -5119,15 +5118,18 @@ NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
   }
 
   if (frameSelection) {
+    AutoWeakFrame wf(this);
     frameSelection->SetDragState(false);
     frameSelection->StopAutoScrollTimer();
-    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
-        this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
-                  nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-    if (scrollFrame) {
-      // Perform any additional scrolling needed to maintain CSS snap point
-      // requirements when autoscrolling is over.
-      scrollFrame->ScrollSnap();
+    if (wf.IsAlive()) {
+      nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
+          this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                    nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+      if (scrollFrame) {
+        // Perform any additional scrolling needed to maintain CSS snap point
+        // requirements when autoscrolling is over.
+        scrollFrame->ScrollSnap();
+      }
     }
   }
 
