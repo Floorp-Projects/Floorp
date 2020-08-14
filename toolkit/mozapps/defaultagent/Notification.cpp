@@ -109,43 +109,21 @@ struct Strings {
   }
 };
 
-// Returns true on success, false on failure.
-static bool ConvertToWide(const mozilla::UniquePtr<char[]>& toConvert,
-                          mozilla::UniquePtr<wchar_t[]>& result) {
-  int bufferSize =
-      MultiByteToWideChar(CP_UTF8, 0, toConvert.get(), -1, nullptr, 0);
-  result = mozilla::MakeUnique<wchar_t[]>(bufferSize);
-  int charsWritten = MultiByteToWideChar(CP_UTF8, 0, toConvert.get(), -1,
-                                         result.get(), bufferSize);
-  if (charsWritten == 0) {
-    LOG_ERROR_MESSAGE(L"Unable to widen string: %#X", GetLastError());
-    return false;
-  }
-  return true;
-}
-
 // Gets a string out of the specified INI file.
 // Returns true on success, false on failure
 static bool GetString(const wchar_t* iniPath, const char* section,
                       const char* key,
                       mozilla::UniquePtr<wchar_t[]>& toastString) {
-  const unsigned int stringCount = 1;
-
-  size_t keyLen = strlen(key);
-  mozilla::UniquePtr<char[]> keyList = mozilla::MakeUnique<char[]>(keyLen + 2);
-  strcpy(keyList.get(), key);
-  keyList.get()[keyLen + 1] = '\0';
-
-  mozilla::UniquePtr<char[]> narrowString;
-  int result =
-      ReadStrings(iniPath, keyList.get(), stringCount, &narrowString, section);
+  IniReader reader(iniPath, section);
+  reader.AddKey(key, &toastString);
+  int result = reader.Read();
   if (result != OK) {
     LOG_ERROR_MESSAGE(
         L"Unable to retrieve INI string: section=%S, key=%S, result=%d",
         section, key, result);
     return false;
   }
-  return ConvertToWide(narrowString, toastString);
+  return true;
 }
 
 // Gets all strings out of the localized INI file.
@@ -168,35 +146,43 @@ static bool GetStrings(Strings& strings) {
   _snwprintf_s(iniPath.get(), bufferSize, _TRUNCATE, iniFormat,
                installPath.get());
 
-  // The ReadStrings function is designed to read localized strings.
-  const unsigned int stringCount = 5;
-  const char* keys =
-      "DefaultBrowserNotificationTitle\0"
-      "DefaultBrowserNotificationText\0"
-      "DefaultBrowserNotificationRemindMeLater\0"
-      "DefaultBrowserNotificationMakeFirefoxDefault\0"
-      "DefaultBrowserNotificationDontShowAgain\0";
-  mozilla::UniquePtr<char[]> localizedStrings[stringCount];
-  int result = ReadStrings(iniPath.get(), keys, stringCount, localizedStrings);
+  IniReader stringsReader(iniPath.get());
+  stringsReader.AddKey("DefaultBrowserNotificationTitle",
+                       &strings.initialToast.text1);
+  stringsReader.AddKey("DefaultBrowserNotificationTitle",
+                       &strings.followupToast.text1);
+  stringsReader.AddKey("DefaultBrowserNotificationText",
+                       &strings.initialToast.text2);
+  stringsReader.AddKey("DefaultBrowserNotificationText",
+                       &strings.followupToast.text2);
+  stringsReader.AddKey("DefaultBrowserNotificationRemindMeLater",
+                       &strings.initialToast.action1);
+  stringsReader.AddKey("DefaultBrowserNotificationDontShowAgain",
+                       &strings.followupToast.action1);
+  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
+                       &strings.initialToast.action2);
+  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
+                       &strings.followupToast.action2);
+  int result = stringsReader.Read();
   if (result != OK) {
     LOG_ERROR_MESSAGE(L"Unable to read localized strings: %d", result);
     return false;
   }
 
-  return ConvertToWide(localizedStrings[0], strings.initialToast.text1) &&
-         ConvertToWide(localizedStrings[1], strings.initialToast.text2) &&
-         ConvertToWide(localizedStrings[2], strings.initialToast.action1) &&
-         ConvertToWide(localizedStrings[3], strings.initialToast.action2) &&
-         GetString(iniPath.get(), "Nonlocalized",
-                   "InitialToastRelativeImagePath",
-                   strings.initialToast.relImagePath) &&
-         ConvertToWide(localizedStrings[0], strings.followupToast.text1) &&
-         ConvertToWide(localizedStrings[1], strings.followupToast.text2) &&
-         ConvertToWide(localizedStrings[4], strings.followupToast.action1) &&
-         ConvertToWide(localizedStrings[3], strings.followupToast.action2) &&
-         GetString(iniPath.get(), "Nonlocalized",
-                   "FollowupToastRelativeImagePath",
-                   strings.followupToast.relImagePath);
+  // IniReader is only capable of reading from one section at a time, so we need
+  // to make another one to read the other section.
+  IniReader nonlocalizedReader(iniPath.get(), "Nonlocalized");
+  nonlocalizedReader.AddKey("InitialToastRelativeImagePath",
+                            &strings.initialToast.relImagePath);
+  nonlocalizedReader.AddKey("FollowupToastRelativeImagePath",
+                            &strings.followupToast.relImagePath);
+  result = nonlocalizedReader.Read();
+  if (result != OK) {
+    LOG_ERROR_MESSAGE(L"Unable to read non-localized strings: %d", result);
+    return false;
+  }
+
+  return true;
 }
 
 // This encapsulates the data that needs to be protected by a mutex because it
