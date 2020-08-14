@@ -283,6 +283,8 @@ var CustomizableUIInternal = {
     );
 
     SearchWidgetTracker.init();
+
+    Services.obs.addObserver(this, "browser-set-toolbar-visibility");
   },
 
   onEnabled(addon) {
@@ -3361,6 +3363,13 @@ var CustomizableUIInternal = {
         window.setToolbarVisibility(toolbar, aIsVisible, isFirstChangedToolbar);
         isFirstChangedToolbar = false;
       }
+    }
+  },
+
+  observe(aSubject, aTopic, aData) {
+    if (aTopic == "browser-set-toolbar-visibility") {
+      let [toolbar, visibility] = JSON.parse(aData);
+      CustomizableUI.setToolbarVisibility(toolbar, visibility == "true");
     }
   },
 };
