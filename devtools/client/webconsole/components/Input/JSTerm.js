@@ -1093,10 +1093,24 @@ class JSTerm extends Component {
       const xOffset = -1 * matchProp.length * this._inputCharWidth;
       const yOffset = 5;
       const popupAlignElement = this.props.serviceContainer.getJsTermTooltipAnchor();
-      await popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
-        preventSelectCallback: true,
-      });
-    } else if (items.length < minimumAutoCompleteLength && popup.isOpen) {
+      this._openPopupPendingPromise = popup.openPopup(
+        popupAlignElement,
+        xOffset,
+        yOffset,
+        0,
+        {
+          preventSelectCallback: true,
+        }
+      );
+      await this._openPopupPendingPromise;
+      this._openPopupPendingPromise = null;
+    } else if (
+      items.length < minimumAutoCompleteLength &&
+      (popup.isOpen || this._openPopupPendingPromise)
+    ) {
+      if (this._openPopupPendingPromise) {
+        await this._openPopupPendingPromise;
+      }
       popup.hidePopup();
     }
 
@@ -1158,9 +1172,16 @@ class JSTerm extends Component {
     if (this.autocompletePopup) {
       this.autocompletePopup.clearItems();
 
-      if (this.autocompletePopup.isOpen) {
+      if (this.autocompletePopup.isOpen || this._openPopupPendingPromise) {
         onPopupClosed = this.autocompletePopup.once("popup-closed");
-        this.autocompletePopup.hidePopup();
+
+        if (this._openPopupPendingPromise) {
+          this._openPopupPendingPromise.then(() =>
+            this.autocompletePopup.hidePopup()
+          );
+        } else {
+          this.autocompletePopup.hidePopup();
+        }
         onPopupClosed.then(() => this.focus());
       }
     }
@@ -1179,6 +1200,15 @@ class JSTerm extends Component {
 
     this.autocompleteUpdate.cancel();
     this.props.autocompleteClear();
+
+    // If the code triggering the opening of the popup was already triggered but not yet
+    // settled, then we need to wait until it's resolved in order to close the popup (See
+    // Bug 1655406).
+    if (this._openPopupPendingPromise) {
+      this._openPopupPendingPromise.then(() =>
+        this.autocompletePopup.hidePopup()
+      );
+    }
 
     if (completionText) {
       this.insertStringAtCursor(
@@ -1399,6 +1429,7 @@ class JSTerm extends Component {
   destroy() {
     this.autocompleteUpdate.cancel();
     this.terminalInputChanged.cancel();
+    this._openPopupPendingPromise = null;
 
     if (this.autocompletePopup) {
       this.autocompletePopup.destroy();
