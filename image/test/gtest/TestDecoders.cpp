@@ -799,6 +799,16 @@ TEST_F(ImageDecoders, CorruptICOWithBadBppSingleChunk) {
   CheckDecoderSingleChunk(CorruptICOWithBadBppTestCase());
 }
 
+// Running this test under emulation for Android 7 on x86_64 seems to result
+// in the large allocation succeeding, but leaving so little memory left the
+// system falls over and it kills the test run, so we skip it instead.
+// See bug 1655846 for more details.
+#ifndef ANDROID
+TEST_F(ImageDecoders, CorruptAVIFSingleChunk) {
+  CheckDecoderSingleChunk(CorruptAVIFTestCase());
+}
+#endif
+
 TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST) {
   CheckDecoderFrameFirst(GreenFirstFrameAnimatedGIFTestCase());
 }
