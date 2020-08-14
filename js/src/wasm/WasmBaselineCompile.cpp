@@ -15283,7 +15283,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
       return false;
     }
     if (!DecodeLocalEntries(d, env.types, env.refTypesEnabled(),
-                            env.gcTypesEnabled(), &locals)) {
+                            env.gcTypesEnabled(), env.v128Enabled(), &locals)) {
       return false;
     }
 

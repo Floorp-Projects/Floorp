@@ -1,4 +1,4 @@
-// |jit-test| skip-if: wasmCompileMode() != "ion" || !this.wasmSimdAnalysis
+// |jit-test| skip-if: !wasmSimdSupported() || wasmCompileMode() != "ion" || !this.wasmSimdAnalysis
 
 // White-box tests for SIMD optimizations.  These are sensitive to internal
 // details of the lowering logic, which is platform-dependent.

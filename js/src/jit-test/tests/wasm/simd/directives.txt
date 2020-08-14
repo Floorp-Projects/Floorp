@@ -1,1 +1,1 @@
-|jit-test| test-also=--no-wasm-simd; test-also=--wasm-compiler=baseline; test-also=--wasm-compiler=ion; skip-if: !wasmSimdSupported(); include:wasm.js
+|jit-test| test-also=--no-wasm-simd; test-also=--wasm-compiler=baseline; test-also=--wasm-compiler=ion; include:wasm.js
