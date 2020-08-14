@@ -11,10 +11,12 @@
 
 #include <taskschd.h>
 
+#include "readstrings.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "WindowsDefaultBrowser.h"
 
 #include "DefaultBrowser.h"
 
@@ -40,6 +42,31 @@ struct SysFreeStringDeleter {
   void operator()(BSTR aPtr) { ::SysFreeString(aPtr); }
 };
 using BStrPtr = mozilla::UniquePtr<OLECHAR, SysFreeStringDeleter>;
+
+bool GetTaskDescription(mozilla::UniquePtr<wchar_t[]>& description) {
+  mozilla::UniquePtr<wchar_t[]> installPath;
+  bool success = GetInstallDirectory(installPath);
+  if (!success) {
+    LOG_ERROR_MESSAGE(L"Failed to get install directory");
+    return false;
+  }
+  const wchar_t* iniFormat = L"%s\\defaultagent_localized.ini";
+  int bufferSize = _scwprintf(iniFormat, installPath.get());
+  ++bufferSize;  // Extra character for terminating null
+  mozilla::UniquePtr<wchar_t[]> iniPath =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+  _snwprintf_s(iniPath.get(), bufferSize, _TRUNCATE, iniFormat,
+               installPath.get());
+
+  IniReader reader(iniPath.get());
+  reader.AddKey("DefaultBrowserAgentTaskDescription", &description);
+  int status = reader.Read();
+  if (status != OK) {
+    LOG_ERROR_MESSAGE(L"Failed to read task description: %d", status);
+    return false;
+  }
+  return true;
+}
 
 HRESULT RegisterTask(const wchar_t* uniqueToken,
                      BSTR startTime /* = nullptr */) {
@@ -98,6 +125,16 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
 
   RefPtr<ITaskDefinition> newTask;
   ENSURE(scheduler->NewTask(0, getter_AddRefs(newTask)));
+
+  mozilla::UniquePtr<wchar_t[]> description;
+  if (!GetTaskDescription(description)) {
+    return E_FAIL;
+  }
+  BStrPtr descriptionBstr = BStrPtr(SysAllocString(description.get()));
+
+  RefPtr<IRegistrationInfo> taskRegistration;
+  ENSURE(newTask->get_RegistrationInfo(getter_AddRefs(taskRegistration)));
+  ENSURE(taskRegistration->put_Description(descriptionBstr.get()));
 
   RefPtr<ITaskSettings> taskSettings;
   ENSURE(newTask->get_Settings(getter_AddRefs(taskSettings)));
