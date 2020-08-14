@@ -559,7 +559,7 @@ nsresult nsPageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback,
     mCurrentCanvasListSetup = true;
     GetPrintCanvasElementsInFrame(currentPage, &mCurrentCanvasList);
 
-    if (mCurrentCanvasList.Length() != 0) {
+    if (!mCurrentCanvasList.IsEmpty()) {
       nsresult rv = NS_OK;
 
       // Begin printing of the document
@@ -579,8 +579,7 @@ nsresult nsPageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback,
         return NS_ERROR_FAILURE;
       }
 
-      for (int32_t i = mCurrentCanvasList.Length() - 1; i >= 0; i--) {
-        HTMLCanvasElement* canvas = mCurrentCanvasList[i];
+      for (HTMLCanvasElement* canvas : Reversed(mCurrentCanvasList)) {
         nsIntSize size = canvas->GetSize();
 
         RefPtr<DrawTarget> canvasTarget =
@@ -613,9 +612,7 @@ nsresult nsPageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback,
     }
   }
   uint32_t doneCounter = 0;
-  for (int32_t i = mCurrentCanvasList.Length() - 1; i >= 0; i--) {
-    HTMLCanvasElement* canvas = mCurrentCanvasList[i];
-
+  for (HTMLCanvasElement* canvas : mCurrentCanvasList) {
     if (canvas->IsPrintCallbackDone()) {
       doneCounter++;
     }
