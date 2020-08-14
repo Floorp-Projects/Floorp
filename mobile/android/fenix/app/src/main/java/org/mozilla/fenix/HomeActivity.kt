@@ -44,6 +44,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
+import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
 import mozilla.components.feature.search.SearchAdapter
 import mozilla.components.service.fxa.sync.SyncReason
@@ -88,7 +89,7 @@ import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.searchdialog.SearchDialogFragmentDirections
-import org.mozilla.fenix.session.NotificationSessionObserver
+import org.mozilla.fenix.session.PrivateNotificationService
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.settings.about.AboutFragmentDirections
@@ -121,7 +122,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private var isVisuallyComplete = false
 
     private var visualCompletenessQueue: RunWhenReadyQueue? = null
-    private var privateNotificationObserver: NotificationSessionObserver? = null
+    private var privateNotificationObserver: PrivateNotificationFeature<PrivateNotificationService>? = null
 
     private var isToolbarInflated = false
 
@@ -174,7 +175,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         sessionObserver = UriOpenedObserver(this)
 
         checkPrivateShortcutEntryPoint(intent)
-        privateNotificationObserver = NotificationSessionObserver(applicationContext).also {
+        privateNotificationObserver = PrivateNotificationFeature(
+            applicationContext,
+            components.core.store,
+            PrivateNotificationService::class
+        ).also {
             it.start()
         }
 
@@ -479,7 +484,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     intent.getStringExtra(OPEN_TO_SEARCH) ==
                     StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT)
         ) {
-            NotificationSessionObserver.isStartedFromPrivateShortcut = true
+            PrivateNotificationService.isStartedFromPrivateShortcut = true
         }
     }
 
