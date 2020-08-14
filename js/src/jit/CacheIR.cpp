@@ -7535,6 +7535,35 @@ AttachDecision CallIRGenerator::tryAttachAssertFloat32(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachAssertRecoveredOnBailout(
+    HandleFunction callee) {
+  // Expecting two arguments.
+  if (argc_ != 2) {
+    return AttachDecision::NoAction;
+  }
+
+  // (Fuzzing unsafe) testing function which must be called with a constant
+  // boolean as its second argument.
+  bool mustBeRecovered = args_[1].toBoolean();
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'assertRecoveredOnBailout' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId valId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+  writer.assertRecoveredOnBailoutResult(valId, mustBeRecovered);
+
+  // This stub doesn't need to be monitored, it always returns undefined.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AssertRecoveredOnBailout");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8648,6 +8677,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachBailout(callee);
     case InlinableNative::TestAssertFloat32:
       return tryAttachAssertFloat32(callee);
+    case InlinableNative::TestAssertRecoveredOnBailout:
+      return tryAttachAssertRecoveredOnBailout(callee);
 
     default:
       return AttachDecision::NoAction;

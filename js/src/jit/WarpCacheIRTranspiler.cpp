@@ -60,6 +60,12 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 #endif
   }
 
+  // Bypasses all checks in addEffectful. Only used for testing functions.
+  inline void addEffectfulUnsafe(MInstruction* ins) {
+    MOZ_ASSERT(ins->isEffectful());
+    current->add(ins);
+  }
+
   MOZ_MUST_USE bool resumeAfter(MInstruction* ins) {
     MOZ_ASSERT(effectful_ == ins);
     return WarpBuilderShared::resumeAfter(ins, loc_);
@@ -1315,7 +1321,7 @@ void WarpCacheIRTranspiler::addDataViewData(MDefinition* obj, Scalar::Type type,
                                             MDefinition** offset,
                                             MInstruction** elements) {
   MInstruction* length = MArrayBufferViewLength::New(alloc(), obj);
-  current->add(length);
+  add(length);
 
   // Adjust the length to account for accesses near the end of the dataview.
   if (size_t byteSize = Scalar::byteSize(type); byteSize > 1) {
@@ -2894,6 +2900,50 @@ bool WarpCacheIRTranspiler::emitBailout() {
   auto* bail = MBail::New(alloc());
   add(bail);
 
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitAssertRecoveredOnBailoutResult(
+    ValOperandId valId, bool mustBeRecovered) {
+  MDefinition* val = getOperand(valId);
+
+  // Don't assert for recovered instructions when recovering is disabled.
+  if (JitOptions.disableRecoverIns) {
+    pushResult(constant(UndefinedValue()));
+    return true;
+  }
+
+  if (JitOptions.checkRangeAnalysis) {
+    // If we are checking the range of all instructions, then the guards
+    // inserted by Range Analysis prevent the use of recover instruction. Thus,
+    // we just disable these checks.
+    pushResult(constant(UndefinedValue()));
+    return true;
+  }
+
+  auto* assert = MAssertRecoveredOnBailout::New(alloc(), val, mustBeRecovered);
+  addEffectfulUnsafe(assert);
+  current->push(assert);
+
+  // Create an instruction sequence which implies that the argument of the
+  // assertRecoveredOnBailout function would be encoded at least in one
+  // Snapshot.
+  auto* nop = MNop::New(alloc());
+  add(nop);
+
+  auto* resumePoint = MResumePoint::New(
+      alloc(), nop->block(), loc_.toRawBytecode(), MResumePoint::ResumeAfter);
+  if (!resumePoint) {
+    return false;
+  }
+  nop->setResumePoint(resumePoint);
+
+  auto* encode = MEncodeSnapshot::New(alloc());
+  addEffectfulUnsafe(encode);
+
+  current->pop();
+
+  pushResult(constant(UndefinedValue()));
   return true;
 }
 
