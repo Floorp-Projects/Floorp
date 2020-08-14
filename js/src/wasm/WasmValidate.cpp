@@ -401,7 +401,7 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
 
 bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
                               bool refTypesEnabled, bool gcTypesEnabled,
-                              ValTypeVector* locals) {
+                              bool v128Enabled, ValTypeVector* locals) {
   uint32_t numLocalEntries;
   if (!d.readVarU32(&numLocalEntries)) {
     return d.fail("failed to read number of local entries");
@@ -418,7 +418,8 @@ bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
     }
 
     ValType type;
-    if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, &type)) {
+    if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, v128Enabled,
+                       &type)) {
       return false;
     }
 
@@ -1500,7 +1501,7 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
   const uint8_t* bodyBegin = d.currentPosition();
 
   if (!DecodeLocalEntries(d, env.types, env.refTypesEnabled(),
-                          env.gcTypesEnabled(), &locals)) {
+                          env.gcTypesEnabled(), env.v128Enabled(), &locals)) {
     return false;
   }
 
@@ -1575,7 +1576,8 @@ static bool DecodeTypeVector(Decoder& d, ModuleEnvironment* env,
 
   for (uint32_t i = 0; i < count; i++) {
     if (!d.readValType(env->types.length(), env->refTypesEnabled(),
-                       env->gcTypesEnabled(), &(*types)[i])) {
+                       env->gcTypesEnabled(), env->v128Enabled(),
+                       &(*types)[i])) {
       return false;
     }
     if (!ValidateTypeState(d, typeState, (*types)[i])) {
@@ -1645,7 +1647,8 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   StructMetaTypeDescr::Layout layout;
   for (uint32_t i = 0; i < numFields; i++) {
     if (!d.readValType(env->types.length(), env->refTypesEnabled(),
-                       env->gcTypesEnabled(), &fields[i].type)) {
+                       env->gcTypesEnabled(), env->v128Enabled(),
+                       &fields[i].type)) {
       return false;
     }
 
@@ -1677,6 +1680,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
         offset = layout.addScalar(Scalar::Float64);
         break;
       case ValType::V128:
+        MOZ_ASSERT(env->v128Enabled());
         offset = layout.addScalar(Scalar::Simd128);
         break;
       case ValType::Ref:
@@ -1964,8 +1968,9 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
 
 static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
                              bool refTypesEnabled, bool gcTypesEnabled,
-                             ValType* type, bool* isMutable) {
-  if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, type)) {
+                             bool v128Enabled, ValType* type, bool* isMutable) {
+  if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, v128Enabled,
+                     type)) {
     return d.fail("expected global type");
   }
 
@@ -2077,7 +2082,8 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       ValType type;
       bool isMutable;
       if (!DecodeGlobalType(d, env->types, env->refTypesEnabled(),
-                            env->gcTypesEnabled(), &type, &isMutable)) {
+                            env->gcTypesEnabled(), env->v128Enabled(), &type,
+                            &isMutable)) {
         return false;
       }
       if (!GlobalIsJSCompatible(d, type)) {
@@ -2263,6 +2269,9 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
     }
 #ifdef ENABLE_WASM_SIMD
     case uint16_t(Op::SimdPrefix): {
+      if (!env->v128Enabled()) {
+        return d.fail("v128 not enabled");
+      }
       if (op.b1 != uint32_t(SimdOp::V128Const)) {
         return d.fail("unexpected initializer expression");
       }
@@ -2388,7 +2397,8 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
     ValType type;
     bool isMutable;
     if (!DecodeGlobalType(d, env->types, env->refTypesEnabled(),
-                          env->gcTypesEnabled(), &type, &isMutable)) {
+                          env->gcTypesEnabled(), env->v128Enabled(), &type,
+                          &isMutable)) {
       return false;
     }
 
