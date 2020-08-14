@@ -300,7 +300,6 @@ add_task(async function clickAndFillAlias() {
   EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
 
   UrlbarTestUtils.assertSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: testEngineItem.result.payload.engine,
   });
 
@@ -393,7 +392,6 @@ add_task(async function enterAndFillAlias() {
   EventUtils.synthesizeKey("KEY_Enter");
 
   UrlbarTestUtils.assertSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: details.searchParams.engine,
   });
 
@@ -461,7 +459,6 @@ add_task(async function enterAutofillsAlias() {
     EventUtils.synthesizeKey("KEY_Enter");
 
     UrlbarTestUtils.assertSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: testEngineItem.result.payload.engine,
     });
 

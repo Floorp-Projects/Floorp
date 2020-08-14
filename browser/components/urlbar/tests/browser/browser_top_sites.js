@@ -214,7 +214,6 @@ add_task(async function selectSearchTopSite() {
 
   EventUtils.synthesizeMouseAtCenter(amazonSearch, {});
   UrlbarTestUtils.assertSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: amazonSearch.result.payload.engine,
   });
   gURLBar.setSearchMode({});

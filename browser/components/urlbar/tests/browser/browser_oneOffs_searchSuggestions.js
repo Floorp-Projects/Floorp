@@ -187,7 +187,6 @@ add_task(async function test_returnAfterSuggestion() {
     EventUtils.synthesizeKey("KEY_Enter");
     await resultsPromise;
     UrlbarTestUtils.assertSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: gEngine.name,
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
@@ -259,7 +258,6 @@ add_task(async function test_returnAfterSuggestion_nonDefault() {
     EventUtils.synthesizeKey("KEY_Enter");
     await resultsPromise;
     UrlbarTestUtils.assertSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: gEngine2.name,
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
@@ -311,7 +309,6 @@ add_task(async function test_clickAfterSuggestion() {
     EventUtils.synthesizeMouseAtCenter(oneOffs[1], {});
     await resultsPromise;
     UrlbarTestUtils.assertSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: gEngine2.name,
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
@@ -363,7 +360,6 @@ add_task(async function test_clickAfterSuggestion_nonDefault() {
     EventUtils.synthesizeMouseAtCenter(oneOffs[1], {});
     await resultsPromise;
     UrlbarTestUtils.assertSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: gEngine2.name,
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
