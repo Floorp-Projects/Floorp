@@ -892,9 +892,11 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   // then the xhr request will be upgraded to https before it fetches any data
   // from the netwerk, hence we shouldn't require CORS in that specific case.
   if (CheckInsecureUpgradePreventsCORS(mRequestingPrincipal, aChannel)) {
-    // Check if https-only mode upgrades this later anyway
+    // Check if HTTPS-Only Mode is enabled
     nsCOMPtr<nsILoadInfo> loadinfo = aChannel->LoadInfo();
-    if (nsHTTPSOnlyUtils::IsSafeToAcceptCORSOrMixedContent(loadinfo)) {
+    bool isPrivateWin = loadinfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+    if (!(loadInfo->GetHttpsOnlyStatus() & nsILoadInfo::HTTPS_ONLY_EXEMPT) &&
+        nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin)) {
       return NS_OK;
     }
     // Check if 'upgrade-insecure-requests' is used
