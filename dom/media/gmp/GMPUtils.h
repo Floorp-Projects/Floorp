@@ -6,13 +6,13 @@
 #ifndef GMPUtils_h_
 #define GMPUtils_h_
 
-#include "mozilla/UniquePtr.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/AbstractThread.h"
-#include "nsStringFwd.h"
-#include "nsTArray.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 
 #define CHROMIUM_CDM_API_BACKWARD_COMPAT "chromium-cdm9-host4"
 #define CHROMIUM_CDM_API "chromium-cdm10-host4"
@@ -72,7 +72,7 @@ bool HaveGMPFor(const nsCString& aAPI, nsTArray<nsCString>&& aTags);
 
 void LogToConsole(const nsAString& aMsg);
 
-RefPtr<AbstractThread> GetGMPAbstractThread();
+already_AddRefed<nsISerialEventTarget> GetGMPThread();
 
 // Returns the number of bytes required to store an aWidth x aHeight image in
 // I420 format, padded so that the width and height are multiples of 16.

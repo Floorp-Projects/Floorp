@@ -189,7 +189,7 @@ RefPtr<ShutdownPromise> AllocationWrapper::Shutdown() {
   RefPtr<MediaDataDecoder> decoder = std::move(mDecoder);
   RefPtr<Token> token = std::move(mToken);
   return decoder->Shutdown()->Then(
-      AbstractThread::GetCurrent(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [token]() { return ShutdownPromise::CreateAndResolve(true, __func__); });
 }
 /* static */ RefPtr<AllocationWrapper::AllocateDecoderPromise>
@@ -215,7 +215,7 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams,
       (aPolicy ? aPolicy : GlobalAllocPolicy::Instance(aParams.mType))
           ->Alloc()
           ->Then(
-              AbstractThread::GetCurrent(), __func__,
+              GetCurrentSerialEventTarget(), __func__,
               [=](RefPtr<Token> aToken) {
                 // result may not always be updated by
                 // PDMFactory::CreateDecoder either when the creation

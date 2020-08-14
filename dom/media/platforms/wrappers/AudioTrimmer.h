@@ -22,7 +22,7 @@ class AudioTrimmer : public MediaDataDecoder {
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
-  bool CanDecodeBatch() override { return mDecoder->CanDecodeBatch(); }
+  bool CanDecodeBatch() const override { return mDecoder->CanDecodeBatch(); }
   RefPtr<DecodePromise> DecodeBatch(
       nsTArray<RefPtr<MediaRawData>>&& aSamples) override {
     return mDecoder->DecodeBatch(std::move(aSamples));
@@ -40,7 +40,7 @@ class AudioTrimmer : public MediaDataDecoder {
   RefPtr<DecodePromise> HandleDecodedResult(
       DecodePromise::ResolveOrRejectValue&& aValue, MediaRawData* aRaw);
   RefPtr<MediaDataDecoder> mDecoder;
-  RefPtr<AbstractThread> mTaskQueue;
+  RefPtr<TaskQueue> mTaskQueue;
   AutoTArray<Maybe<media::TimeInterval>, 2> mTrimmers;
 };
 

@@ -27,7 +27,7 @@ ChromiumCDMProxy::ChromiumCDMProxy(dom::MediaKeys* aKeys,
                aPersistentStateRequired, aMainThread),
       mCrashHelper(aCrashHelper),
       mCDMMutex("ChromiumCDMProxy"),
-      mGMPThread(GetGMPAbstractThread()) {
+      mGMPThread(GetGMPThread()) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -65,7 +65,7 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
   }
 
   gmp::NodeId nodeId(aOrigin, aTopLevelOrigin, aGMPName);
-  RefPtr<AbstractThread> thread = mGMPThread;
+  nsCOMPtr<nsISerialEventTarget> thread = mGMPThread;
   RefPtr<ChromiumCDMProxy> self(this);
   nsCString keySystem = NS_ConvertUTF16toUTF8(mKeySystem);
   RefPtr<Runnable> task(NS_NewRunnableFunction(
@@ -187,7 +187,7 @@ void ChromiumCDMProxy::ShutdownCDMIfExists() {
 
 #ifdef DEBUG
 bool ChromiumCDMProxy::IsOnOwnerThread() {
-  return mGMPThread->IsCurrentThreadIn();
+  return mGMPThread && mGMPThread->IsOnCurrentThread();
 }
 #endif
 

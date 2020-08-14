@@ -5,17 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPService.h"
+#include "GMPServiceParent.h"
 #include "GMPTestMonitor.h"
+#include "GMPUtils.h"
+#include "GMPVideoDecoderProxy.h"
 #include "gmp-api/gmp-video-host.h"
 #include "gtest/gtest.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
-#include "GMPVideoDecoderProxy.h"
-#include "GMPServiceParent.h"
-#include "GMPService.h"
-#include "GMPUtils.h"
-#include "mozilla/StaticPtr.h"
 
 #define GMP_DIR_NAME u"gmp-fakeopenh264"_ns
 #define GMP_OLD_VERSION u"1.0"_ns
@@ -222,7 +221,7 @@ void GMPRemoveTest::Setup() {
   // adding GMPs from MOZ_GMP_PATH. Otherwise, the RemovePluginDirectory()
   // below may complete before we're finished adding GMPs from MOZ_GMP_PATH,
   // and we'll end up not removing the GMP, and the test will fail.
-  RefPtr<AbstractThread> thread(GetServiceParent()->GetAbstractGMPThread());
+  nsCOMPtr<nsISerialEventTarget> thread(GetServiceParent()->GetGMPThread());
   EXPECT_TRUE(thread);
   GMPTestMonitor* mon = &mTestMonitor;
   GetServiceParent()->EnsureInitialized()->Then(
