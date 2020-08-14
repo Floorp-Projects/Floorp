@@ -3613,6 +3613,8 @@ static bool ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr,
 
 JSObject* js::ArraySliceDense(JSContext* cx, HandleObject obj, int32_t begin,
                               int32_t end, HandleObject result) {
+  MOZ_ASSERT_IF(jit::JitOptions.warpBuilder, IsPackedArray(obj));
+
   if (result && IsArraySpecies(cx, obj)) {
     if (!ArraySliceDenseKernel(cx, &obj->as<ArrayObject>(), begin, end,
                                &result->as<ArrayObject>())) {
