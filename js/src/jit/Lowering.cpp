@@ -3915,6 +3915,19 @@ void LIRGenerator::visitLoadElementAndUnbox(MLoadElementAndUnbox* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitAddAndStoreSlot(MAddAndStoreSlot* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  LDefinition maybeTemp = LDefinition::BogusTemp();
+  if (ins->kind() != MAddAndStoreSlot::Kind::FixedSlot) {
+    maybeTemp = temp();
+  }
+
+  auto* lir = new (alloc()) LAddAndStoreSlot(useRegister(ins->object()),
+                                             useBox(ins->value()), maybeTemp);
+  add(lir, ins);
+}
+
 void LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 

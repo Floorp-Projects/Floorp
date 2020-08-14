@@ -9831,6 +9831,47 @@ class MHomeObject : public MUnaryInstruction, public SingleObjectPolicy::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+class MAddAndStoreSlot
+    : public MBinaryInstruction,
+      public MixPolicy<SingleObjectPolicy, BoxPolicy<1>>::Data {
+ public:
+  enum class Kind {
+    FixedSlot,
+    DynamicSlot,
+  };
+
+ private:
+  Kind kind_;
+  uint32_t slotOffset_;
+  CompilerShape shape_;
+
+  MAddAndStoreSlot(MDefinition* obj, MDefinition* value, Kind kind,
+                   uint32_t slotOffset, Shape* shape)
+      : MBinaryInstruction(classOpcode, obj, value),
+        kind_(kind),
+        slotOffset_(slotOffset),
+        shape_(shape) {}
+
+ public:
+  INSTRUCTION_HEADER(AddAndStoreSlot)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, value))
+
+  Kind kind() const { return kind_; }
+  uint32_t slotOffset() const { return slotOffset_; }
+  Shape* shape() const { return shape_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::ObjectFields |
+                           (kind() == Kind::FixedSlot ? AliasSet::FixedSlot
+                                                      : AliasSet::DynamicSlot));
+  }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(shape_);
+  }
+};
+
 // Store to vp[slot] (slots that are not inline in an object).
 class MStoreDynamicSlot : public MBinaryInstruction,
                           public NoFloatPolicy<1>::Data {
