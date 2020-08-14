@@ -5024,7 +5024,7 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
   }
 
   // Where |obj| is a native array.
-  RootedObject thisobj(cx_, &thisval_.toObject());
+  JSObject* thisobj = &thisval_.toObject();
   if (!thisobj->is<ArrayObject>()) {
     return AttachDecision::NoAction;
   }
@@ -5033,7 +5033,7 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  RootedArrayObject thisarray(cx_, &thisobj->as<ArrayObject>());
+  auto* thisarray = &thisobj->as<ArrayObject>();
 
   // Check for other indexed properties or class hooks.
   if (!CanAttachAddElement(thisarray, /* isInit = */ false)) {
@@ -5166,12 +5166,12 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   }
 
   // Where |obj| is a native array.
-  RootedObject thisobj(cx_, &thisval_.toObject());
+  JSObject* thisobj = &thisval_.toObject();
   if (!thisobj->is<ArrayObject>()) {
     return AttachDecision::NoAction;
   }
 
-  RootedArrayObject thisarray(cx_, &thisobj->as<ArrayObject>());
+  auto* thisarray = &thisobj->as<ArrayObject>();
 
   // And the array is of length 0 or 1.
   if (thisarray->length() > 1) {
@@ -8191,7 +8191,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
     return AttachDecision::NoAction;
   }
-  RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
+  auto* target = &thisval_.toObject().as<JSFunction>();
 
   bool isScripted = target->hasJitEntry();
   MOZ_ASSERT_IF(!isScripted, target->isNativeWithoutJitEntry());
@@ -9013,7 +9013,7 @@ AttachDecision CallIRGenerator::tryAttachStub() {
     return tryAttachCallHook(calleeObj);
   }
 
-  RootedFunction calleeFunc(cx_, &calleeObj->as<JSFunction>());
+  HandleFunction calleeFunc = calleeObj.as<JSFunction>();
 
   // Check for scripted optimizations.
   if (calleeFunc->hasJitEntry()) {
@@ -10725,10 +10725,10 @@ AttachDecision NewObjectIRGenerator::tryAttachStub() {
 #ifdef JS_SIMULATOR
 bool js::jit::CallAnyNative(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject calleeObj(cx, &args.callee());
+  JSObject* calleeObj = &args.callee();
 
   MOZ_ASSERT(calleeObj->is<JSFunction>());
-  RootedFunction calleeFunc(cx, &calleeObj->as<JSFunction>());
+  auto* calleeFunc = &calleeObj->as<JSFunction>();
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
 
   JSNative native = calleeFunc->native();
