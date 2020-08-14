@@ -148,7 +148,6 @@ var PrintUtils = {
       parentElement: container,
       dialogOptions: {
         consumeOutsideClicks: false,
-        reuseDialog: false,
       },
     });
 
@@ -173,7 +172,7 @@ var PrintUtils = {
 
     await dialog.open(
       `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`,
-      null,
+      "resizable=no",
       null,
       () => {
         printPreviewBrowser.messageManager.sendAsyncMessage(
