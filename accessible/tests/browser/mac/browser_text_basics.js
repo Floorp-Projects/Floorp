@@ -147,12 +147,9 @@ addAccessibleTask(
     testWordAndAdvance("world", "world");
     testWordAndAdvance("world", "world");
     testWordAndAdvance("world", "world");
-    // Expected " ", got ""
-    testWordAndAdvance("world", " ", { rightIs: todo_is });
-    // Expected " ", got ""
-    testWordAndAdvance(" ", "i", { leftIs: todo_is });
-    // Expected "i", got "i love you"
-    testWordAndAdvance("i", " ", { leftIs: todo_is });
+    testWordAndAdvance("world", " ");
+    testWordAndAdvance(" ", "i");
+    testWordAndAdvance("i", " ");
     testWordAndAdvance(" ", "love");
     testWordAndAdvance("love", "love");
     testWordAndAdvance("love", "love");
@@ -161,17 +158,15 @@ addAccessibleTask(
     testWordAndAdvance(" ", "you");
     testWordAndAdvance("you", "you");
     testWordAndAdvance("you", "you");
-    // Expected " ", got "i love you"
-    testWordAndAdvance("you", " ", { rightIs: todo_is });
-    // Expected " ", for "you"
-    testWordAndAdvance(" ", "goodbye", { leftIs: todo_is });
+    testWordAndAdvance("you", " ");
+    testWordAndAdvance(" ", "goodbye");
     testWordAndAdvance("goodbye", "goodbye");
     testWordAndAdvance("goodbye", "goodbye");
     testWordAndAdvance("goodbye", "goodbye");
     testWordAndAdvance("goodbye", "goodbye");
     testWordAndAdvance("goodbye", "goodbye");
     testWordAndAdvance("goodbye", "goodbye");
-    testWordAndAdvance("goodbye", "", { expectNoNextMarker: true });
+    testWordAndAdvance("goodbye", "");
   }
 );
 
@@ -200,7 +195,7 @@ addAccessibleTask(
       marker
     );
     is(stringForRange(macDoc, left), "world", "Left word matches");
-    todo_is(stringForRange(macDoc, right), "world", "Right word matches");
+    is(stringForRange(macDoc, right), "world", "Right word matches");
 
     marker = macDoc.getParameterizedAttributeValue(
       "AXNextTextMarkerForTextMarker",
@@ -215,7 +210,7 @@ addAccessibleTask(
       "AXRightWordTextMarkerRangeForTextMarker",
       marker
     );
-    todo_is(stringForRange(macDoc, left), "world", "Left word matches");
-    todo_is(stringForRange(macDoc, right), "world", "Right word matches");
+    is(stringForRange(macDoc, left), "world", "Left word matches");
+    is(stringForRange(macDoc, right), "world", "Right word matches");
   }
 );
