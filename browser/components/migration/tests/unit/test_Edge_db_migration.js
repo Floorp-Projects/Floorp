@@ -594,8 +594,8 @@ add_task(async function() {
   Assert.ok(migrateResult, "Migration should succeed");
   Assert.equal(
     seenBookmarks.length,
-    7,
-    "Should have seen 7 items being bookmarked."
+    5,
+    "Should have seen 5 items being bookmarked."
   );
   Assert.equal(
     seenBookmarks.filter(bm => bm.title != sourceLabel).length,
@@ -608,8 +608,8 @@ add_task(async function() {
   );
   Assert.equal(
     menuParents.length,
-    1,
-    "Should have a single folder added to the menu"
+    3,
+    "Bookmarks are added to the menu without a folder"
   );
   let toolbarParents = seenBookmarks.filter(
     item => item.parentGuid == PlacesUtils.bookmarks.toolbarGuid
@@ -619,8 +619,8 @@ add_task(async function() {
     1,
     "Should have a single item added to the toolbar"
   );
-  let menuParentGuid = menuParents[0].guid;
-  let toolbarParentGuid = toolbarParents[0].guid;
+  let menuParentGuid = PlacesUtils.bookmarks.menuGuid;
+  let toolbarParentGuid = PlacesUtils.bookmarks.toolbarGuid;
 
   let expectedTitlesInMenu = bookmarkReferenceItems
     .filter(item => item.ParentId == kEdgeMenuParent)
