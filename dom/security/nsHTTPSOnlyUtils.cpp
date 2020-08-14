@@ -110,13 +110,11 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
   // 3. Check if NoUpgrade-flag is set in LoadInfo
   uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
   if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
-    // Let's log to the console, that we didn't upgrade this request
-    uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
     AutoTArray<nsString, 1> params = {
         NS_ConvertUTF8toUTF16(aURI->GetSpecOrDefault())};
     nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyNoUpgradeException", params,
-                                         nsIScriptError::infoFlag,
-                                         innerWindowId, isPrivateWin, aURI);
+                                         nsIScriptError::infoFlag, aLoadInfo,
+                                         aURI);
     return false;
   }
 
@@ -128,12 +126,10 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
   NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
   NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
-  uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
   AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
-  nsHTTPSOnlyUtils::LogLocalizedString(
-      "HTTPSOnlyUpgradeRequest", params, nsIScriptError::warningFlag,
-      innerWindowId, !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId,
-      aURI);
+  nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
+                                       nsIScriptError::warningFlag, aLoadInfo,
+                                       aURI);
 
   // If the status was not determined before, we now indicate that the request
   // will get upgraded, but no event-listener has been registered yet.
@@ -159,8 +155,6 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
     return false;
   }
 
-  uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
-
   // 3. Check if NoUpgrade-flag is set in LoadInfo
   uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
   if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
@@ -168,8 +162,8 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
     AutoTArray<nsString, 1> params = {
         NS_ConvertUTF8toUTF16(aURI->GetSpecOrDefault())};
     nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyNoUpgradeException", params,
-                                         nsIScriptError::infoFlag,
-                                         innerWindowId, isPrivateWin, aURI);
+                                         nsIScriptError::infoFlag, aLoadInfo,
+                                         aURI);
     return false;
   }
 
@@ -183,9 +177,8 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
 
   AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
   nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
-                                       nsIScriptError::warningFlag,
-                                       innerWindowId, isPrivateWin, aURI);
-
+                                       nsIScriptError::warningFlag, aLoadInfo,
+                                       aURI);
   return true;
 }
 
@@ -278,19 +271,26 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
 /* ------ Logging ------ */
 
 /* static */
-void nsHTTPSOnlyUtils::LogLocalizedString(
-    const char* aName, const nsTArray<nsString>& aParams, uint32_t aFlags,
-    uint64_t aInnerWindowID, bool aFromPrivateWindow, nsIURI* aURI) {
+void nsHTTPSOnlyUtils::LogLocalizedString(const char* aName,
+                                          const nsTArray<nsString>& aParams,
+                                          uint32_t aFlags,
+                                          nsILoadInfo* aLoadInfo,
+                                          nsIURI* aURI) {
   nsAutoString logMsg;
   nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
                                         aName, aParams, logMsg);
-  LogMessage(logMsg, aFlags, aInnerWindowID, aFromPrivateWindow, aURI);
+  LogMessage(logMsg, aFlags, aLoadInfo, aURI);
 }
 
 /* static */
 void nsHTTPSOnlyUtils::LogMessage(const nsAString& aMessage, uint32_t aFlags,
-                                  uint64_t aInnerWindowID,
-                                  bool aFromPrivateWindow, nsIURI* aURI) {
+                                  nsILoadInfo* aLoadInfo, nsIURI* aURI) {
+  // do not log to the console if the loadinfo says we should not!
+  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE) {
+    return;
+  }
+
   // Prepending HTTPS-Only to the outgoing console message
   nsString message;
   message.AppendLiteral(u"HTTPS-Only Mode: ");
@@ -299,15 +299,17 @@ void nsHTTPSOnlyUtils::LogMessage(const nsAString& aMessage, uint32_t aFlags,
   // Allow for easy distinction in devtools code.
   nsCString category("HTTPSOnly");
 
-  if (aInnerWindowID > 0) {
+  uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+  if (innerWindowId > 0) {
     // Send to content console
     nsContentUtils::ReportToConsoleByWindowID(message, aFlags, category,
-                                              aInnerWindowID, aURI);
+                                              innerWindowId, aURI);
   } else {
     // Send to browser console
-    nsContentUtils::LogSimpleConsoleError(
-        message, category.get(), aFromPrivateWindow,
-        true /* from chrome context */, aFlags);
+    bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+    nsContentUtils::LogSimpleConsoleError(message, category.get(), isPrivateWin,
+                                          true /* from chrome context */,
+                                          aFlags);
   }
 }
 
@@ -483,10 +485,12 @@ TestHTTPAnswerRunnable::Notify(nsITimer* aTimer) {
   }
 
   // We have exempt that load from HTTPS-Only to avoid getting upgraded
-  // to https as well.
+  // to https as well. Additonally let's not log that request to the console
+  // because it might confuse end users.
   nsCOMPtr<nsILoadInfo> loadInfo = testHTTPChannel->LoadInfo();
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-  httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+  httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT |
+                     nsILoadInfo::HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE;
   loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
 
   testHTTPChannel->SetNotificationCallbacks(this);
