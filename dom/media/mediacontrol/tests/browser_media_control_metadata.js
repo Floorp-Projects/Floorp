@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 const PAGE_NON_AUTOPLAY =
   "https://example.com/browser/dom/media/mediacontrol/tests/file_non_autoplay.html";
+const PAGE_EMPTY_TITLE_URL =
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_empty_title.html";
 
 const testVideoId = "video";
 const defaultFaviconName = "defaultFavicon.svg";
@@ -50,6 +52,22 @@ add_task(async function testDefaultMetadataForPageWithoutMediaSession() {
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
 });
+
+add_task(
+  async function testDefaultMetadataForEmptyTitlePageWithoutMediaSession() {
+    info(`open media page`);
+    const tab = await createTabAndLoad(PAGE_EMPTY_TITLE_URL);
+
+    info(`start media`);
+    await playMedia(tab, testVideoId);
+
+    info(`should use default metadata because of lacking of media session`);
+    await isUsingDefaultMetadata(tab);
+
+    info(`remove tab`);
+    await BrowserTestUtils.removeTab(tab);
+  }
+);
 
 add_task(async function testDefaultMetadataForPageUsingEmptyMetadata() {
   info(`open media page`);
