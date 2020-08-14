@@ -111,7 +111,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/DOMIntersectionObserver.h"
@@ -13574,7 +13573,7 @@ static void UpdateViewportScrollbarOverrideForFullscreen(Document* aDoc) {
   }
 }
 
-static void NotifyFullScreenChangedForMediaControl(Element* aElement,
+static void NotifyFullScreenChangedForMediaElement(Element* aElement,
                                                    bool aIsInFullScreen) {
   // When a media element enters the fullscreen, we would like to notify that
   // to the media controller in order to update its status.
@@ -13583,20 +13582,12 @@ static void NotifyFullScreenChangedForMediaControl(Element* aElement,
   }
   HTMLMediaElement* mediaElem = HTMLMediaElement::FromNodeOrNull(aElement);
   mediaElem->NotifyFullScreenChanged();
-
-  RefPtr<BrowsingContext> bc = aElement->OwnerDoc()->GetBrowsingContext();
-  if (!bc) {
-    return;
-  }
-  if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(bc)) {
-    updater->NotifyMediaFullScreenState(bc->Id(), aIsInFullScreen);
-  }
 }
 
 static void ClearFullscreenStateOnElement(Element* aElement) {
   // Remove styles from existing top element.
   EventStateManager::SetFullscreenState(aElement, false);
-  NotifyFullScreenChangedForMediaControl(aElement, false);
+  NotifyFullScreenChangedForMediaElement(aElement, false);
   // Reset iframe fullscreen flag.
   if (aElement->IsHTMLElement(nsGkAtoms::iframe)) {
     static_cast<HTMLIFrameElement*>(aElement)->SetFullscreenFlag(false);
@@ -13651,7 +13642,7 @@ void Document::UnsetFullscreenElement() {
 void Document::SetFullscreenElement(Element* aElement) {
   TopLayerPush(aElement);
   EventStateManager::SetFullscreenState(aElement, true);
-  NotifyFullScreenChangedForMediaControl(aElement, true);
+  NotifyFullScreenChangedForMediaElement(aElement, true);
   UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
