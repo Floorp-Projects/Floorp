@@ -424,7 +424,7 @@ async function compareFiles(src1, src2, options = {}) {
 
   await new Promise((resolve) => {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
-    iframeElement.setAttribute("src", BASE + src1);
+    iframeElement.setAttribute("src", new URL(src1, BASE).href);
   });
 
   if (messagePromise) {
@@ -438,7 +438,7 @@ async function compareFiles(src1, src2, options = {}) {
 
   await new Promise((resolve) => {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
-    iframeElement.setAttribute("src", BASE + src2);
+    iframeElement.setAttribute("src", new URL(src2, BASE).href);
   });
 
   await printpreview(options.ref || options);
@@ -551,6 +551,11 @@ async function runTest20() {
 
   exitprintpreview();
 
+  requestAnimationFrame(() => setTimeout(runTest21));
+}
+
+async function runTest21() {
+  await compareFiles("data:text/html,<audio controls>", "data:text/html,<audio controls >"); // Shouldn't crash.
   finish();
 }
 
