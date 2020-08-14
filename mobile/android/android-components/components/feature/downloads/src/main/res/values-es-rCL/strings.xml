@@ -38,4 +38,8 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Cerrar</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Completar acción usando</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">No se pudo abrir %1$s</string>
 </resources>
