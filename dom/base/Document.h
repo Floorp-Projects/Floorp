@@ -180,7 +180,6 @@ class ImageTracker;
 class HTMLAllCollection;
 class HTMLBodyElement;
 class HTMLMetaElement;
-class HTMLDialogElement;
 class HTMLSharedElement;
 class HTMLImageElement;
 struct LifecycleCallbackArgs;
@@ -1853,7 +1852,7 @@ class Document : public nsINode,
   void CleanupFullscreenState();
 
   // Pushes aElement onto the top layer
-  void TopLayerPush(Element* aElement);
+  bool TopLayerPush(Element* aElement);
 
   // Removes the topmost element which have aPredicate return true from the top
   // layer. The removed element, if any, is returned.
@@ -1865,14 +1864,10 @@ class Document : public nsINode,
 
   // Pushes the given element into the top of top layer and set fullscreen
   // flag.
-  void SetFullscreenElement(Element* aElement);
+  bool SetFullscreenElement(Element* aElement);
 
   // Cancel the dialog element if the document is blocked by the dialog
   void TryCancelDialog();
-
-  void SetBlockedByModalDialog(HTMLDialogElement&);
-
-  void UnsetBlockedByModalDialog(HTMLDialogElement&);
 
   /**
    * Called when a frame in a child process has entered fullscreen or when a
