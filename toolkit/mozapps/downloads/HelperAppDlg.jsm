@@ -365,16 +365,15 @@ nsUnknownContentTypeDialog.prototype = {
           result = picker.file;
 
           if (result) {
+            let allowOverwrite = false;
             try {
-              // Remove the file so that it's not there when we ensure non-existence later;
-              // this is safe because for the file to exist, the user would have had to
-              // confirm that he wanted the file overwritten.
-              // Only remove file if final name exists
+              // If we're overwriting, avoid renaming our file, and assume
+              // overwriting it does the right thing.
               if (
                 result.exists() &&
                 this.getFinalLeafName(result.leafName) == result.leafName
               ) {
-                result.remove(false);
+                allowOverwrite = true;
               }
             } catch (ex) {
               // As it turns out, the failure to remove the file, for example due to
@@ -387,7 +386,12 @@ nsUnknownContentTypeDialog.prototype = {
             gDownloadLastDir.setFile(aLauncher.source, newDir);
 
             try {
-              result = this.validateLeafName(newDir, result.leafName, null);
+              result = this.validateLeafName(
+                newDir,
+                result.leafName,
+                null,
+                allowOverwrite
+              );
             } catch (ex) {
               // When the chosen download directory is write-protected,
               // display an informative error message.
@@ -426,12 +430,14 @@ nsUnknownContentTypeDialog.prototype = {
    * @param   aFileExt
    *          the extension of the file, if one is known; this will be ignored
    *          if aLeafName is non-empty
+   * @param   aAllowExisting
+   *          if set to true, avoid creating a unique file.
    * @return  nsIFile
    *          the created file
    * @throw   an error such as permission doesn't allow creation of
    *          file, etc.
    */
-  validateLeafName(aLocalFolder, aLeafName, aFileExt) {
+  validateLeafName(aLocalFolder, aLeafName, aFileExt, aAllowExisting = false) {
     if (!(aLocalFolder && isUsableDirectory(aLocalFolder))) {
       throw new Components.Exception(
         "Destination directory non-existing or permission error",
@@ -442,9 +448,13 @@ nsUnknownContentTypeDialog.prototype = {
     aLeafName = this.getFinalLeafName(aLeafName, aFileExt);
     aLocalFolder.append(aLeafName);
 
-    // The following assignment can throw an exception, but
-    // is now caught properly in the caller of validateLeafName.
-    var createdFile = DownloadPaths.createNiceUniqueFile(aLocalFolder);
+    if (!aAllowExisting) {
+      // The following assignment can throw an exception, but
+      // is now caught properly in the caller of validateLeafName.
+      var validatedFile = DownloadPaths.createNiceUniqueFile(aLocalFolder);
+    } else {
+      validatedFile = aLocalFolder;
+    }
 
     if (AppConstants.platform == "win") {
       let ext;
@@ -455,15 +465,17 @@ nsUnknownContentTypeDialog.prototype = {
 
       // Append a file extension if it's an executable that doesn't have one
       // but make sure we actually have an extension to add
-      let leaf = createdFile.leafName;
-      if (ext && leaf.slice(-ext.length) != ext && createdFile.isExecutable()) {
-        createdFile.remove(false);
+      let leaf = validatedFile.leafName;
+      if (ext && !leaf.endsWith(ext) && validatedFile.isExecutable()) {
+        validatedFile.remove(false);
         aLocalFolder.leafName = leaf + ext;
-        createdFile = DownloadPaths.createNiceUniqueFile(aLocalFolder);
+        if (!aAllowExisting) {
+          validatedFile = DownloadPaths.createNiceUniqueFile(aLocalFolder);
+        }
       }
     }
 
-    return createdFile;
+    return validatedFile;
   },
 
   // ---------- implementation methods ----------
