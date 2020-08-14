@@ -6653,10 +6653,15 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
 }
 
 void HTMLMediaElement::NotifyFullScreenChanged() {
-  if (IsInFullScreen()) {
+  const bool isInFullScreen = IsInFullScreen();
+  if (isInFullScreen) {
     StartMediaControlKeyListenerIfNeeded();
     MOZ_ASSERT(mMediaControlKeyListener->IsStarted(),
                "Failed to start the listener when entering fullscreen!");
+  }
+  BrowsingContext* bc = OwnerDoc()->GetBrowsingContext();
+  if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(bc)) {
+    updater->NotifyMediaFullScreenState(bc->Id(), isInFullScreen);
   }
 }
 
