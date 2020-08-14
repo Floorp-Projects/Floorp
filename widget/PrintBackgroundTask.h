@@ -60,6 +60,26 @@ void SpawnPrintBackgroundTask(
       }));
 }
 
+// Gets a fresh promise into aResultPromise, that resolves whenever the print
+// background task finishes.
+template <typename T, typename Result, typename... Args>
+nsresult PrintBackgroundTaskPromise(
+    T& aReceiver, JSContext* aCx, dom::Promise** aResultPromise,
+    PrintBackgroundTask<T, Result, Args...> aTask, Args... aArgs) {
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  SpawnPrintBackgroundTask(aReceiver, *promise, aTask,
+                           std::forward<Args>(aArgs)...);
+
+  promise.forget(aResultPromise);
+  return NS_OK;
+}
+
 // Resolves an async attribute via a background task, creating and storing a
 // promise as needed in aPromiseSlot.
 template <typename T, typename Result, typename... Args>
@@ -72,17 +92,11 @@ nsresult AsyncPromiseAttributeGetter(
     return NS_OK;
   }
 
-  ErrorResult rv;
-  aPromiseSlot = dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
-  if (MOZ_UNLIKELY(rv.Failed())) {
-    return rv.StealNSResult();
-  }
+  nsresult rv = PrintBackgroundTaskPromise(aReceiver, aCx, aResultPromise,
+                                           aTask, std::forward<Args>(aArgs)...);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<dom::Promise> promise = aPromiseSlot;
-  SpawnPrintBackgroundTask(aReceiver, *promise, aTask,
-                           std::forward<Args>(aArgs)...);
-
-  promise.forget(aResultPromise);
+  aPromiseSlot = *aResultPromise;
   return NS_OK;
 }
 
