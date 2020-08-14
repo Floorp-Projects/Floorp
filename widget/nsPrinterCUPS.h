@@ -18,6 +18,7 @@ class nsPrinterCUPS final : public nsPrinterBase {
   NS_IMETHOD GetName(nsAString& aName) override;
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
+  bool SupportsCollation() const final;
   nsTArray<mozilla::PaperInfo> PaperList() const final;
   MarginDouble GetMarginsForPaper(uint64_t) const final {
     MOZ_ASSERT_UNREACHABLE(

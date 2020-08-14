@@ -31,6 +31,7 @@ class nsPrinterBase : public nsIPrinter {
 
   NS_IMETHOD GetSupportsDuplex(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsColor(JSContext*, Promise**) final;
+  NS_IMETHOD GetSupportsCollation(JSContext*, Promise**) final;
   NS_IMETHOD GetPaperList(JSContext*, Promise**) final;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -46,6 +47,7 @@ class nsPrinterBase : public nsIPrinter {
   enum class AsyncAttribute {
     SupportsDuplex = 0,
     SupportsColor,
+    SupportsCollation,
     PaperList,
     // Just a guard.
     Last,
@@ -68,6 +70,7 @@ class nsPrinterBase : public nsIPrinter {
   // which thread they run on.
   virtual bool SupportsDuplex() const = 0;
   virtual bool SupportsColor() const = 0;
+  virtual bool SupportsCollation() const = 0;
   virtual nsTArray<mozilla::PaperInfo> PaperList() const = 0;
   virtual MarginDouble GetMarginsForPaper(uint64_t aPaperId) const = 0;
 
