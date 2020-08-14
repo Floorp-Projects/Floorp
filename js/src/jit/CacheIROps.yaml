@@ -2483,3 +2483,9 @@
   transpile: false
   cost_estimate: 4
   args:
+
+- name: Bailout
+  shared: true
+  transpile: true
+  cost_estimate: 0
+  args:

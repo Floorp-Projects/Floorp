@@ -2890,6 +2890,13 @@ bool WarpCacheIRTranspiler::emitTypeMonitorResult() {
 
 bool WarpCacheIRTranspiler::emitReturnFromIC() { return true; }
 
+bool WarpCacheIRTranspiler::emitBailout() {
+  auto* bail = MBail::New(alloc());
+  add(bail);
+
+  return true;
+}
+
 static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
                                    MDefinition* input) {
   // When building MIR from bytecode, for each MDefinition that's an operand to
