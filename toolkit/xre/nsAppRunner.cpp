@@ -5126,8 +5126,8 @@ bool BrowserTabsRemoteAutostart() {
   }
   gBrowserTabsRemoteAutostartInitialized = true;
 
-  // If we're in the content process, we are running E10S.
-  if (XRE_IsContentProcess()) {
+  // If we're not in the parent process, we are running E10s.
+  if (!XRE_IsParentProcess()) {
     gBrowserTabsRemoteAutostart = true;
     return gBrowserTabsRemoteAutostart;
   }
@@ -5163,7 +5163,7 @@ bool BrowserTabsRemoteAutostart() {
   if (gBrowserTabsRemoteAutostart) {
     const char* forceDisable = PR_GetEnv("MOZ_FORCE_DISABLE_E10S");
     // The environment variable must match the application version to apply.
-    if (forceDisable && !strcmp(forceDisable, gAppData->version)) {
+    if (forceDisable && gAppData && !strcmp(forceDisable, gAppData->version)) {
       gBrowserTabsRemoteAutostart = false;
       status = kE10sForceDisabled;
     }
