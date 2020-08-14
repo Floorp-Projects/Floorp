@@ -1528,18 +1528,21 @@ void WebRenderBridgeParent::MaybeCaptureScreenPixels() {
 
   IntSize size(client_size.width, client_size.height);
 
+  bool needsYFlip = false;
   mApi->Readback(TimeStamp::Now(), size, format,
-                 Range<uint8_t>(mem.get<uint8_t>(), buffer_size));
+                 Range<uint8_t>(mem.get<uint8_t>(), buffer_size), &needsYFlip);
 
   Unused << mScreenPixelsTarget->SendScreenPixels(
-      std::move(mem), ScreenIntSize(client_size.width, client_size.height));
+      std::move(mem), ScreenIntSize(client_size.width, client_size.height),
+      needsYFlip);
 
   mScreenPixelsTarget = nullptr;
 }
 #endif
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
-    PTextureParent* aTexture) {
+    PTextureParent* aTexture, bool* aNeedsYFlip) {
+  *aNeedsYFlip = false;
   if (mDestroyed) {
     return IPC_OK();
   }
@@ -1591,7 +1594,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
   FlushSceneBuilds();
   FlushFrameGeneration();
   mApi->Readback(start, size, bufferTexture->GetFormat(),
-                 Range<uint8_t>(buffer, buffer_size));
+                 Range<uint8_t>(buffer, buffer_size), aNeedsYFlip);
 
   return IPC_OK();
 }

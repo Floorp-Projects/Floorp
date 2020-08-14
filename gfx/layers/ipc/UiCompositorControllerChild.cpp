@@ -240,10 +240,10 @@ mozilla::ipc::IPCResult UiCompositorControllerChild::RecvRootFrameMetrics(
 }
 
 mozilla::ipc::IPCResult UiCompositorControllerChild::RecvScreenPixels(
-    ipc::Shmem&& aMem, const ScreenIntSize& aSize) {
+    ipc::Shmem&& aMem, const ScreenIntSize& aSize, bool aNeedsYFlip) {
 #if defined(MOZ_WIDGET_ANDROID)
   if (mWidget) {
-    mWidget->RecvScreenPixels(std::move(aMem), aSize);
+    mWidget->RecvScreenPixels(std::move(aMem), aSize, aNeedsYFlip);
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 

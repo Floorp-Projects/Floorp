@@ -433,8 +433,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void RecvToolbarAnimatorMessageFromCompositor(int32_t) override{};
   void UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset,
                               const CSSToScreenScale& aZoom) override{};
-  void RecvScreenPixels(mozilla::ipc::Shmem&& aMem,
-                        const ScreenIntSize& aSize) override{};
+  void RecvScreenPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize,
+                        bool aNeedsYFlip) override{};
 #endif
 
  protected:

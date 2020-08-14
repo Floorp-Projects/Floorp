@@ -114,7 +114,8 @@ static void DoWebRenderDisableNativeCompositor(
 RenderedFrameId RendererOGL::UpdateAndRender(
     const Maybe<gfx::IntSize>& aReadbackSize,
     const Maybe<wr::ImageFormat>& aReadbackFormat,
-    const Maybe<Range<uint8_t>>& aReadbackBuffer, RendererStats* aOutStats) {
+    const Maybe<Range<uint8_t>>& aReadbackBuffer, bool* aNeedsYFlip,
+    RendererStats* aOutStats) {
   mozilla::widget::WidgetRenderingContext widgetContext;
 
 #if defined(XP_MACOSX)
@@ -164,11 +165,18 @@ RenderedFrameId RendererOGL::UpdateAndRender(
     MOZ_ASSERT(aReadbackSize.isSome());
     MOZ_ASSERT(aReadbackFormat.isSome());
     if (!mCompositor->MaybeReadback(aReadbackSize.ref(), aReadbackFormat.ref(),
-                                    aReadbackBuffer.ref())) {
+                                    aReadbackBuffer.ref(), aNeedsYFlip)) {
       wr_renderer_readback(mRenderer, aReadbackSize.ref().width,
                            aReadbackSize.ref().height, aReadbackFormat.ref(),
                            &aReadbackBuffer.ref()[0],
                            aReadbackBuffer.ref().length());
+
+      // SWGL and ANGLE both draw the right way up, otherwise we will need a
+      // flip.
+      if (aNeedsYFlip) {
+        *aNeedsYFlip =
+            !gfx::gfxVars::UseSoftwareWebRender() && !mCompositor->UseANGLE();
+      }
     }
   }
 
