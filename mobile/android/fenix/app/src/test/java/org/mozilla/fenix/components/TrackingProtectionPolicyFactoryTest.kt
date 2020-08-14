@@ -2,7 +2,9 @@ package org.mozilla.fenix.components
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -10,7 +12,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -85,6 +89,56 @@ class TrackingProtectionPolicyFactoryTest {
         expected.assertPolicyEquals(privateOnly, checkPrivacy = false)
         expected.assertPolicyEquals(normalOnly, checkPrivacy = false)
         expected.assertPolicyEquals(always, checkPrivacy = false)
+    }
+
+    @Test
+    fun `cookiePurging must be available ONLY in nightly or debug`() {
+        mockkObject(Config)
+        for (channel in ReleaseChannel.values()) {
+            every { Config.channel } returns channel
+
+            val shouldCookiePurgingActive = channel.isNightlyOrDebug
+            val customSetting =
+                settingsForCustom(shouldBlockCookiesInCustom = true, blockCookiesSelection = "all")
+            val stringSetting = mockSettings(useStrict = true)
+            val recommendedSetting = mockSettings(useTrackingProtection = true)
+
+            for (setting in arrayOf(recommendedSetting, stringSetting, customSetting)) {
+                val factory = TrackingProtectionPolicyFactory(setting)
+                val privateOnly =
+                    factory.createTrackingProtectionPolicy(normalMode = false, privateMode = true)
+                val normalOnly =
+                    factory.createTrackingProtectionPolicy(normalMode = true, privateMode = false)
+                val always =
+                    factory.createTrackingProtectionPolicy(normalMode = true, privateMode = true)
+
+                assertEquals(shouldCookiePurgingActive, privateOnly.cookiePurging)
+                assertEquals(shouldCookiePurgingActive, normalOnly.cookiePurging)
+                assertEquals(shouldCookiePurgingActive, always.cookiePurging)
+            }
+        }
+    }
+
+    @Test
+    fun `adaptPolicyToChannel MUST only update properties that have changed per given channel`() {
+        mockkObject(Config)
+
+        val policies = arrayOf(
+            TrackingProtectionPolicy.strict(), TrackingProtectionPolicy.recommended(),
+            TrackingProtectionPolicy.select()
+        )
+
+        for (channel in ReleaseChannel.values()) {
+            every { Config.channel } returns channel
+
+            val shouldCookiePurgingActive = channel.isNightlyOrDebug
+
+            for (policy in policies) {
+                val adaptedPolicy = policy.adaptPolicyToChannel()
+                policy.assertPolicyEquals(adaptedPolicy, checkPrivacy = false)
+                assertEquals(shouldCookiePurgingActive, adaptedPolicy.cookiePurging)
+            }
+        }
     }
 
     @Test
