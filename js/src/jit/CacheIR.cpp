@@ -7510,6 +7510,31 @@ AttachDecision CallIRGenerator::tryAttachBailout(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachAssertFloat32(HandleFunction callee) {
+  // Expecting two arguments.
+  if (argc_ != 2) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'assertFloat32' native function.
+  emitNativeCalleeGuard(callee);
+
+  // TODO: Warp doesn't yet optimize Float32 (bug 1655773).
+
+  // NOP when not in IonMonkey.
+  writer.loadUndefinedResult();
+
+  // This stub doesn't need to be monitored, it always returns undefined.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AssertFloat32");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8621,6 +8646,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Testing functions.
     case InlinableNative::TestBailout:
       return tryAttachBailout(callee);
+    case InlinableNative::TestAssertFloat32:
+      return tryAttachAssertFloat32(callee);
 
     default:
       return AttachDecision::NoAction;
