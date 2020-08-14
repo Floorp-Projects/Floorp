@@ -123,8 +123,6 @@ void nsHTTPSOnlyStreamListener::LogUpgradeFailure(nsIRequest* request,
   if (NS_FAILED(rv)) {
     return;
   }
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  uint32_t innerWindowId = loadInfo->GetInnerWindowID();
 
   nsCOMPtr<nsIURI> uri;
   rv = channel->GetURI(getter_AddRefs(uri));
@@ -137,7 +135,9 @@ void nsHTTPSOnlyStreamListener::LogUpgradeFailure(nsIRequest* request,
       NS_ConvertUTF8toUTF16(nsPrintfCString("M%u-C%u",
                                             NS_ERROR_GET_MODULE(aStatus),
                                             NS_ERROR_GET_CODE(aStatus)))};
-  nsHTTPSOnlyUtils::LogLocalizedString(
-      "HTTPSOnlyFailedRequest", params, nsIScriptError::errorFlag,
-      innerWindowId, !!loadInfo->GetOriginAttributes().mPrivateBrowsingId, uri);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyFailedRequest", params,
+                                       nsIScriptError::errorFlag, loadInfo,
+                                       uri);
 }

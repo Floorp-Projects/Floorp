@@ -60,17 +60,15 @@ class nsHTTPSOnlyUtils {
 
   /**
    * Logs localized message to either content console or browser console
-   * @param aName              Localization key
-   * @param aParams            Localization parameters
-   * @param aFlags             Logging Flag (see nsIScriptError)
-   * @param aInnerWindowID     Inner Window ID (Logged on browser console if 0)
-   * @param aFromPrivateWindow If from private window
-   * @param [aURI]             Optional: URI to log
+   * @param aName      Localization key
+   * @param aParams    Localization parameters
+   * @param aFlags     Logging Flag (see nsIScriptError)
+   * @param aLoadInfo  The loadinfo of the request.
+   * @param [aURI]     Optional: URI to log
    */
   static void LogLocalizedString(const char* aName,
                                  const nsTArray<nsString>& aParams,
-                                 uint32_t aFlags, uint64_t aInnerWindowID,
-                                 bool aFromPrivateWindow,
+                                 uint32_t aFlags, nsILoadInfo* aLoadInfo,
                                  nsIURI* aURI = nullptr);
 
   /**
@@ -84,15 +82,13 @@ class nsHTTPSOnlyUtils {
  private:
   /**
    * Logs localized message to either content console or browser console
-   * @param aMessage           Message to log
-   * @param aFlags             Logging Flag (see nsIScriptError)
-   * @param aInnerWindowID     Inner Window ID (Logged on browser console if 0)
-   * @param aFromPrivateWindow If from private window
-   * @param [aURI]             Optional: URI to log
+   * @param aMessage   Message to log
+   * @param aFlags     Logging Flag (see nsIScriptError)
+   * @param aLoadInfo  The loadinfo of the request.
+   * @param [aURI]     Optional: URI to log
    */
   static void LogMessage(const nsAString& aMessage, uint32_t aFlags,
-                         uint64_t aInnerWindowID, bool aFromPrivateWindow,
-                         nsIURI* aURI = nullptr);
+                         nsILoadInfo* aLoadInfo, nsIURI* aURI = nullptr);
 
   /**
    * Checks whether the URI ends with .onion
