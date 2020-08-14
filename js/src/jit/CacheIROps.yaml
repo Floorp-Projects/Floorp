@@ -817,7 +817,7 @@
 
 - name: AddAndStoreFixedSlot
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 6
   args:
     obj: ObjId
@@ -829,7 +829,7 @@
 
 - name: AddAndStoreDynamicSlot
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 6
   args:
     obj: ObjId

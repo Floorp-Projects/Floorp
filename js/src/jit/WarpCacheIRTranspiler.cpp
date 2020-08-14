@@ -152,6 +152,10 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
+  bool emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind kind,
+                                 ObjOperandId objId, uint32_t offsetOffset,
+                                 ValOperandId rhsId, uint32_t newShapeOffset);
+
   void addDataViewData(MDefinition* obj, Scalar::Type type,
                        MDefinition** offset, MInstruction** elements);
 
@@ -1271,6 +1275,43 @@ bool WarpCacheIRTranspiler::emitStoreFixedSlotUndefinedResult(
   pushResult(undef);
 
   return resumeAfter(store);
+}
+
+bool WarpCacheIRTranspiler::emitAddAndStoreSlotShared(
+    MAddAndStoreSlot::Kind kind, ObjOperandId objId, uint32_t offsetOffset,
+    ValOperandId rhsId, uint32_t newShapeOffset) {
+  int32_t offset = int32StubField(offsetOffset);
+  Shape* shape = shapeStubField(newShapeOffset);
+
+  MDefinition* obj = getOperand(objId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  auto* addAndStore =
+      MAddAndStoreSlot::New(alloc(), obj, rhs, kind, offset, shape);
+  addEffectful(addAndStore);
+
+  return resumeAfter(addAndStore);
+}
+
+bool WarpCacheIRTranspiler::emitAddAndStoreFixedSlot(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
+  MOZ_ASSERT(!changeGroup);
+
+  return emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind::FixedSlot, objId,
+                                   offsetOffset, rhsId, newShapeOffset);
+}
+
+bool WarpCacheIRTranspiler::emitAddAndStoreDynamicSlot(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
+  MOZ_ASSERT(!changeGroup);
+
+  return emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind::DynamicSlot, objId,
+                                   offsetOffset, rhsId, newShapeOffset);
 }
 
 bool WarpCacheIRTranspiler::emitStoreDenseElement(ObjOperandId objId,

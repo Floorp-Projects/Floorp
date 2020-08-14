@@ -4982,6 +4982,23 @@ class LLoadElementAndUnbox : public LInstructionHelper<1, 2, 0> {
   }
 };
 
+class LAddAndStoreSlot : public LInstructionHelper<0, 1 + BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(AddAndStoreSlot)
+
+  LAddAndStoreSlot(const LAllocation& obj, const LBoxAllocation& value,
+                   const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setBoxOperand(Value, value);
+    setTemp(0, temp);
+  }
+
+  static const size_t Value = 1;
+
+  const MAddAndStoreSlot* mir() const { return mir_->toAddAndStoreSlot(); }
+};
+
 // Store a boxed value to an object's fixed slot.
 class LStoreFixedSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
  public:
