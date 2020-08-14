@@ -140,81 +140,6 @@ class nsDequeBase {
   nsDequeBase& operator=(const nsDequeBase& aOther) = delete;
   nsDequeBase(const nsDequeBase& aOther) = delete;
 };
-
-// This iterator assumes that the deque itself is const, i.e., it cannot be
-// modified while the iterator is used.
-// Also it is a 'const' iterator in that it provides copies of the deque's
-// elements, and therefore it is not possible to modify the deque's contents
-// by assigning to a dereference of this iterator.
-template <typename Deque>
-class ConstDequeIterator {
- public:
-  ConstDequeIterator(const Deque& aDeque, size_t aIndex)
-      : mDeque(aDeque), mIndex(aIndex) {}
-  ConstDequeIterator& operator++() {
-    ++mIndex;
-    return *this;
-  }
-  bool operator==(const ConstDequeIterator& aOther) const {
-    return mIndex == aOther.mIndex;
-  }
-  bool operator!=(const ConstDequeIterator& aOther) const {
-    return mIndex != aOther.mIndex;
-  }
-  typename Deque::PointerType operator*() const {
-    // Don't allow out-of-deque dereferences.
-    MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
-    return mDeque.ObjectAt(mIndex);
-  }
-
- private:
-  const Deque& mDeque;
-  size_t mIndex;
-};
-
-// It is a 'const' iterator in that it provides copies of the deque's
-// elements, and therefore it is not possible to modify the deque's contents
-// by assigning to a dereference of this iterator.
-// If the deque is modified in other ways, this iterator will stay at the same
-// index, and will handle past-the-end comparisons, but not dereferencing.
-template <typename Deque>
-class ConstIterator {
- public:
-  // Special index for the end iterator, to track the possibly-shifting
-  // deque size.
-  static const size_t EndIteratorIndex = size_t(-1);
-
-  ConstIterator(const Deque& aDeque, size_t aIndex)
-      : mDeque(aDeque), mIndex(aIndex) {}
-  ConstIterator& operator++() {
-    // End-iterator shouldn't be modified.
-    MOZ_ASSERT(mIndex != EndIteratorIndex);
-    ++mIndex;
-    return *this;
-  }
-  bool operator==(const ConstIterator& aOther) const {
-    return EffectiveIndex() == aOther.EffectiveIndex();
-  }
-  bool operator!=(const ConstIterator& aOther) const {
-    return EffectiveIndex() != aOther.EffectiveIndex();
-  }
-  typename Deque::PointerType operator*() const {
-    // Don't allow out-of-deque dereferences.
-    MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
-    return mDeque.ObjectAt(mIndex);
-  }
-
- private:
-  // 0 <= index < deque.GetSize() inside the deque, deque.GetSize() otherwise.
-  // Only used when comparing indices, not to actually access items.
-  size_t EffectiveIndex() const {
-    return (mIndex < mDeque.GetSize()) ? mIndex : mDeque.GetSize();
-  }
-
-  const Deque& mDeque;
-  size_t mIndex;  // May point outside the deque!
-};
-
 }  // namespace detail
 }  // namespace mozilla
 
@@ -248,10 +173,6 @@ class nsDeque : public mozilla::detail::nsDequeBase {
   typedef mozilla::fallible_t fallible_t;
 
  public:
-  using PointerType = T*;
-  using ConstDequeIterator = mozilla::detail::ConstDequeIterator<nsDeque<T>>;
-  using ConstIterator = mozilla::detail::ConstIterator<nsDeque<T>>;
-
   /**
    * Constructs an empty deque.
    *
@@ -354,9 +275,6 @@ class nsDeque : public mozilla::detail::nsDequeBase {
    * @return  item in list, or nullptr if index is outside the deque
    */
   inline T* ObjectAt(size_t aIndex) const {
-    if (NS_WARN_IF(aIndex >= GetSize())) {
-      return nullptr;
-    }
     return static_cast<T*>(nsDequeBase::ObjectAt(aIndex));
   }
 
@@ -388,10 +306,80 @@ class nsDeque : public mozilla::detail::nsDequeBase {
     }
   }
 
+  // This iterator assumes that the deque itself is const, i.e., it cannot be
+  // modified while the iterator is used.
+  // Also it is a 'const' iterator in that it provides copies of the deque's
+  // elements, and therefore it is not possible to modify the deque's contents
+  // by assigning to a dereference of this iterator.
+  class ConstDequeIterator {
+   public:
+    ConstDequeIterator(const nsDeque& aDeque, size_t aIndex)
+        : mDeque(aDeque), mIndex(aIndex) {}
+    ConstDequeIterator& operator++() {
+      ++mIndex;
+      return *this;
+    }
+    bool operator==(const ConstDequeIterator& aOther) const {
+      return mIndex == aOther.mIndex;
+    }
+    bool operator!=(const ConstDequeIterator& aOther) const {
+      return mIndex != aOther.mIndex;
+    }
+    T* operator*() const {
+      // Don't allow out-of-deque dereferences.
+      MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
+      return mDeque.ObjectAt(mIndex);
+    }
+
+   private:
+    const nsDeque& mDeque;
+    size_t mIndex;
+  };
   // If this deque is const, we can provide ConstDequeIterator's.
   ConstDequeIterator begin() const { return ConstDequeIterator(*this, 0); }
   ConstDequeIterator end() const { return ConstDequeIterator(*this, mSize); }
 
+  // It is a 'const' iterator in that it provides copies of the deque's
+  // elements, and therefore it is not possible to modify the deque's contents
+  // by assigning to a dereference of this iterator.
+  // If the deque is modified in other ways, this iterator will stay at the same
+  // index, and will handle past-the-end comparisons, but not dereferencing.
+  class ConstIterator {
+   public:
+    // Special index for the end iterator, to track the possibly-shifting
+    // deque size.
+    static const size_t EndIteratorIndex = size_t(-1);
+
+    ConstIterator(const nsDeque& aDeque, size_t aIndex)
+        : mDeque(aDeque), mIndex(aIndex) {}
+    ConstIterator& operator++() {
+      // End-iterator shouldn't be modified.
+      MOZ_ASSERT(mIndex != EndIteratorIndex);
+      ++mIndex;
+      return *this;
+    }
+    bool operator==(const ConstIterator& aOther) const {
+      return EffectiveIndex() == aOther.EffectiveIndex();
+    }
+    bool operator!=(const ConstIterator& aOther) const {
+      return EffectiveIndex() != aOther.EffectiveIndex();
+    }
+    T* operator*() const {
+      // Don't allow out-of-deque dereferences.
+      MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
+      return mDeque.ObjectAt(mIndex);
+    }
+
+   private:
+    // 0 <= index < deque.GetSize() inside the deque, deque.GetSize() otherwise.
+    // Only used when comparing indices, not to actually access items.
+    size_t EffectiveIndex() const {
+      return (mIndex < mDeque.GetSize()) ? mIndex : mDeque.GetSize();
+    }
+
+    const nsDeque& mDeque;
+    size_t mIndex;  // May point outside the deque!
+  };
   // If this deque is *not* const, we provide ConstIterator's that can handle
   // deque size changes.
   ConstIterator begin() { return ConstIterator(*this, 0); }
@@ -435,100 +423,4 @@ class nsDeque : public mozilla::detail::nsDequeBase {
     mDeallocator = aDeallocator;
   }
 };
-
-/**
- * Specialization of nsDeque for reference counted pointers.
- *
- * Provides builtin reference handling as part of Push/Peek/Pop
- */
-template <typename T>
-class nsRefPtrDeque : private nsDeque<T> {
-  typedef mozilla::fallible_t fallible_t;
-
-  class RefPtrDeallocator : public nsDequeFunctor<T> {
-   public:
-    virtual void operator()(T* aObject) override {
-      RefPtr<T> releaseMe = dont_AddRef(aObject);
-    }
-  };
-
- public:
-  using PointerType = RefPtr<T>;
-  using ConstDequeIterator =
-      mozilla::detail::ConstDequeIterator<nsRefPtrDeque<T>>;
-  using ConstIterator = mozilla::detail::ConstIterator<nsRefPtrDeque<T>>;
-
-  explicit nsRefPtrDeque() : nsDeque<T>(new RefPtrDeallocator()) {}
-
-  inline void PushFront(already_AddRefed<T> aItem) {
-    T* item = aItem.take();
-    nsDeque<T>::PushFront(item);
-  }
-
-  inline void PushFront(T* aItem) { PushFront(do_AddRef(aItem)); }
-
-  inline void Push(T* aItem) { Push(do_AddRef(aItem)); }
-
-  inline void Push(already_AddRefed<T> aItem) {
-    T* item = aItem.take();
-    nsDeque<T>::Push(item);
-  }
-
-  inline already_AddRefed<T> PopFront() {
-    return dont_AddRef(nsDeque<T>::PopFront());
-  }
-
-  inline already_AddRefed<T> Pop() { return dont_AddRef(nsDeque<T>::Pop()); }
-
-  inline T* PeekFront() const { return nsDeque<T>::PeekFront(); }
-
-  inline T* Peek() const { return nsDeque<T>::Peek(); }
-
-  inline T* ObjectAt(size_t aIndex) const {
-    return nsDeque<T>::ObjectAt(aIndex);
-  }
-
-  inline void Erase() { nsDeque<T>::Erase(); }
-
-  // If this deque is const, we can provide ConstDequeIterator's.
-  ConstDequeIterator begin() const { return ConstDequeIterator(*this, 0); }
-  ConstDequeIterator end() const {
-    return ConstDequeIterator(*this, GetSize());
-  }
-
-  // If this deque is *not* const, we provide ConstIterator's that can handle
-  // deque size changes.
-  ConstIterator begin() { return ConstIterator(*this, 0); }
-  ConstIterator end() {
-    return ConstIterator(*this, ConstIterator::EndIteratorIndex);
-  }
-
-  inline size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    return nsDeque<T>::SizeOfExcludingThis(aMallocSizeOf);
-  }
-
-  inline size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    return nsDeque<T>::SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  inline size_t GetSize() const { return nsDeque<T>::GetSize(); }
-
-  /**
-   * Call this method when you want to iterate through all
-   * items in the container, passing a functor along
-   * to call your code.
-   * If the deque is modified during ForEach, iteration will continue based on
-   * item indices; meaning that front operations may effectively skip over
-   * items or visit some items multiple times.
-   *
-   * @param   aFunctor object to call for each member
-   */
-  void ForEach(nsDequeFunctor<T>& aFunctor) const {
-    size_t size = GetSize();
-    for (size_t i = 0; i < size; ++i) {
-      aFunctor(ObjectAt(i));
-    }
-  }
-};
-
 #endif

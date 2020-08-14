@@ -14,37 +14,60 @@
 
 namespace mozilla {
 
+class TransactionStackDeallocator final
+    : public nsDequeFunctor<TransactionItem> {
+  virtual void operator()(TransactionItem* aObject) override {
+    RefPtr<TransactionItem> releaseMe = dont_AddRef(aObject);
+  }
+};
+
 TransactionStack::TransactionStack(Type aType)
-    : nsRefPtrDeque<TransactionItem>(), mType(aType) {}
+    : nsDeque<TransactionItem>(new TransactionStackDeallocator()),
+      mType(aType) {}
 
 TransactionStack::~TransactionStack() { Clear(); }
 
 void TransactionStack::Push(TransactionItem* aTransactionItem) {
-  nsRefPtrDeque<TransactionItem>::Push(aTransactionItem);
+  if (NS_WARN_IF(!aTransactionItem)) {
+    return;
+  }
+
+  RefPtr<TransactionItem> item(aTransactionItem);
+  Push(item.forget());
 }
 
 void TransactionStack::Push(
     already_AddRefed<TransactionItem> aTransactionItem) {
-  nsRefPtrDeque<TransactionItem>::Push(std::move(aTransactionItem));
+  RefPtr<TransactionItem> transactionItem(aTransactionItem);
+  if (NS_WARN_IF(!transactionItem)) {
+    return;
+  }
+
+  nsDeque<TransactionItem>::Push(transactionItem.forget().take());
 }
 
 already_AddRefed<TransactionItem> TransactionStack::Pop() {
-  return nsRefPtrDeque<TransactionItem>::Pop();
+  RefPtr<TransactionItem> item = dont_AddRef(nsDeque<TransactionItem>::Pop());
+  return item.forget();
 }
 
 already_AddRefed<TransactionItem> TransactionStack::PopBottom() {
-  return nsRefPtrDeque<TransactionItem>::PopFront();
+  RefPtr<TransactionItem> item =
+      dont_AddRef(nsDeque<TransactionItem>::PopFront());
+  return item.forget();
 }
 
-already_AddRefed<TransactionItem> TransactionStack::Peek() const {
-  RefPtr<TransactionItem> item = nsRefPtrDeque<TransactionItem>::Peek();
+already_AddRefed<TransactionItem> TransactionStack::Peek() {
+  RefPtr<TransactionItem> item = nsDeque<TransactionItem>::Peek();
   return item.forget();
 }
 
 already_AddRefed<TransactionItem> TransactionStack::GetItemAt(
     size_t aIndex) const {
-  RefPtr<TransactionItem> item =
-      nsRefPtrDeque<TransactionItem>::ObjectAt(aIndex);
+  if (NS_WARN_IF(aIndex >= nsDeque<TransactionItem>::GetSize())) {
+    return nullptr;
+  }
+  RefPtr<TransactionItem> item = nsDeque<TransactionItem>::ObjectAt(aIndex);
   return item.forget();
 }
 
@@ -57,7 +80,7 @@ void TransactionStack::Clear() {
 void TransactionStack::DoTraverse(nsCycleCollectionTraversalCallback& cb) {
   size_t size = GetSize();
   for (size_t i = 0; i < size; ++i) {
-    auto* item = nsRefPtrDeque<TransactionItem>::ObjectAt(i);
+    TransactionItem* item = nsDeque<TransactionItem>::ObjectAt(i);
     if (item) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "transaction stack mDeque[i]");
       cb.NoteNativeChild(item,

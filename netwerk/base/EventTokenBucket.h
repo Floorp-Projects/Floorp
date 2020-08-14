@@ -121,7 +121,7 @@ class EventTokenBucket : public nsITimerCallback,
 
   bool mPaused;
   bool mStopped;
-  nsRefPtrDeque<TokenBucketCancelable> mEvents;
+  nsDeque<TokenBucketCancelable> mEvents;
   bool mTimerArmed;
   TimeStamp mLastUpdate;
 
