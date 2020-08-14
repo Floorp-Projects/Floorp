@@ -5,8 +5,10 @@ use std::cmp::Ordering;
 
 use crate::analysis_main::AnalysisError;
 use crate::data_structures::{BlockIx, InstIx, Range, Set, TypedIxVec};
-use crate::sparse_set::SparseSetU;
+use crate::sparse_set::{SparseSetU, SparseSetUIter};
 use crate::Function;
+
+use smallvec::SmallVec;
 
 //=============================================================================
 // Debugging config.  Set all these to `false` for normal operation.
@@ -167,40 +169,40 @@ fn calc_preord_and_postord<F: Function>(
 ) -> Option<(Vec<BlockIx>, Vec<BlockIx>)> {
     info!("      calc_preord_and_postord: begin");
 
-    // This is per Fig 7.12 of Muchnick 1997
-    //
     let mut pre_ord = Vec::<BlockIx>::new();
     let mut post_ord = Vec::<BlockIx>::new();
 
     let mut visited = TypedIxVec::<BlockIx, bool>::new();
     visited.resize(num_blocks, false);
 
-    // FIXME: change this to use an explicit stack.
-    fn dfs(
-        pre_ord: &mut Vec<BlockIx>,
-        post_ord: &mut Vec<BlockIx>,
-        visited: &mut TypedIxVec<BlockIx, bool>,
-        succ_map: &TypedIxVec<BlockIx, SparseSetU<[BlockIx; 4]>>,
-        bix: BlockIx,
-    ) {
-        debug_assert!(!visited[bix]);
-        visited[bix] = true;
-        pre_ord.push(bix);
-        for succ in succ_map[bix].iter() {
-            if !visited[*succ] {
-                dfs(pre_ord, post_ord, visited, succ_map, *succ);
+    // Set up initial state: entry block on the stack, marked as visited, and placed at the
+    // start of the pre-ord sequence.
+    let mut stack = SmallVec::<[(BlockIx, SparseSetUIter<[BlockIx; 4]>); 64]>::new();
+    let bix_entry = func.entry_block();
+    visited[bix_entry] = true;
+    pre_ord.push(bix_entry);
+    stack.push((bix_entry, succ_map[bix_entry].iter()));
+
+    'outer: while let Some((bix, bix_succ_iter)) = stack.last_mut() {
+        // Consider the block on the top of the stack.  Does it have any successors we
+        // haven't yet visited?
+        while let Some(bix_next_succ) = bix_succ_iter.next() {
+            if !visited[*bix_next_succ] {
+                // Yes.  Push just one of them on the stack, along with a newly initialised
+                // iterator for it, and continue by considering the new stack top.  Because
+                // blocks are only ever pushed onto the stack once, we must also add the
+                // block to the pre-ord sequence at this point.
+                visited[*bix_next_succ] = true;
+                pre_ord.push(*bix_next_succ);
+                stack.push((*bix_next_succ, succ_map[*bix_next_succ].iter()));
+                continue 'outer;
             }
         }
-        post_ord.push(bix);
+        // No.  This is the last time we'll ever hear of it.  So add it to the post-ord
+        // sequence, remove the now-defunct stack-top item, and move on.
+        post_ord.push(*bix);
+        stack.pop();
     }
-
-    dfs(
-        &mut pre_ord,
-        &mut post_ord,
-        &mut visited,
-        &succ_map,
-        func.entry_block(),
-    );
 
     assert!(pre_ord.len() == post_ord.len());
     assert!(pre_ord.len() <= num_blocks as usize);
