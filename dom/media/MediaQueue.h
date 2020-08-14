@@ -19,19 +19,11 @@ namespace mozilla {
 
 class AudioData;
 
-// Thread and type safe wrapper around nsDeque.
 template <class T>
-class MediaQueueDeallocator : public nsDequeFunctor<T> {
-  virtual void operator()(T* aObject) override {
-    RefPtr<T> releaseMe = dont_AddRef(aObject);
-  }
-};
-
-template <class T>
-class MediaQueue : private nsDeque<T> {
+class MediaQueue : private nsRefPtrDeque<T> {
  public:
   MediaQueue()
-      : nsDeque<T>(new MediaQueueDeallocator<T>()),
+      : nsRefPtrDeque<T>(),
         mRecursiveMutex("mediaqueue"),
         mEndOfStream(false) {}
 
@@ -39,21 +31,23 @@ class MediaQueue : private nsDeque<T> {
 
   inline size_t GetSize() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return nsDeque<T>::GetSize();
+    return nsRefPtrDeque<T>::GetSize();
   }
 
   inline void Push(T* aItem) {
     MOZ_DIAGNOSTIC_ASSERT(aItem);
-    Push(do_AddRef(aItem));
+    nsRefPtrDeque<T>::Push(aItem);
   }
 
   inline void Push(already_AddRefed<T> aItem) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     T* item = aItem.take();
+
     MOZ_DIAGNOSTIC_ASSERT(item);
     MOZ_DIAGNOSTIC_ASSERT(item->GetEndTime() >= item->mTime);
-    nsDeque<T>::Push(item);
+    nsRefPtrDeque<T>::Push(dont_AddRef(item));
     mPushEvent.Notify(RefPtr<T>(item));
+
     // Pushing new data after queue has ended means that the stream is active
     // again, so we should not mark it as ended.
     if (mEndOfStream) {
@@ -63,7 +57,7 @@ class MediaQueue : private nsDeque<T> {
 
   inline already_AddRefed<T> PopFront() {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    RefPtr<T> rv = dont_AddRef(nsDeque<T>::PopFront());
+    RefPtr<T> rv = nsRefPtrDeque<T>::PopFront();
     if (rv) {
       MOZ_DIAGNOSTIC_ASSERT(rv->GetEndTime() >= rv->mTime);
       mPopFrontEvent.Notify(rv);
@@ -73,25 +67,22 @@ class MediaQueue : private nsDeque<T> {
 
   inline already_AddRefed<T> PopBack() {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    RefPtr<T> rv = dont_AddRef(nsDeque<T>::Pop());
-    return rv.forget();
+    return nsRefPtrDeque<T>::Pop();
   }
 
   inline RefPtr<T> PeekFront() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return nsDeque<T>::PeekFront();
+    return nsRefPtrDeque<T>::PeekFront();
   }
 
   inline RefPtr<T> PeekBack() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return nsDeque<T>::Peek();
+    return nsRefPtrDeque<T>::Peek();
   }
 
   void Reset() {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    while (GetSize() > 0) {
-      RefPtr<T> x = dont_AddRef(nsDeque<T>::PopFront());
-    }
+    nsRefPtrDeque<T>::Erase();
     mEndOfStream = false;
   }
 
@@ -123,14 +114,14 @@ class MediaQueue : private nsDeque<T> {
     if (GetSize() == 0) {
       return 0;
     }
-    T* last = nsDeque<T>::Peek();
-    T* first = nsDeque<T>::PeekFront();
+    T* last = nsRefPtrDeque<T>::Peek();
+    T* first = nsRefPtrDeque<T>::PeekFront();
     return (last->GetEndTime() - first->mTime).ToMicroseconds();
   }
 
   void LockedForEach(nsDequeFunctor<T>& aFunctor) const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    nsDeque<T>::ForEach(aFunctor);
+    nsRefPtrDeque<T>::ForEach(aFunctor);
   }
 
   // Extracts elements from the queue into aResult, in order.
@@ -140,13 +131,13 @@ class MediaQueue : private nsDeque<T> {
     if (GetSize() == 0) return;
     size_t i;
     for (i = GetSize() - 1; i > 0; --i) {
-      T* v = nsDeque<T>::ObjectAt(i);
+      T* v = nsRefPtrDeque<T>::ObjectAt(i);
       if (v->GetEndTime().ToMicroseconds() < aTime) break;
     }
     // Elements less than i have a end time before aTime. It's also possible
     // that the element at i has a end time before aTime, but that's OK.
     for (; i < GetSize(); ++i) {
-      RefPtr<T> elem = nsDeque<T>::ObjectAt(i);
+      RefPtr<T> elem = nsRefPtrDeque<T>::ObjectAt(i);
       aResult->AppendElement(elem);
     }
   }
@@ -159,7 +150,7 @@ class MediaQueue : private nsDeque<T> {
   void GetFirstElements(uint32_t aMaxElements, nsTArray<RefPtr<T>>* aResult) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     for (size_t i = 0; i < aMaxElements && i < GetSize(); ++i) {
-      *aResult->AppendElement() = nsDeque<T>::ObjectAt(i);
+      *aResult->AppendElement() = nsRefPtrDeque<T>::ObjectAt(i);
     }
   }
 
@@ -169,7 +160,7 @@ class MediaQueue : private nsDeque<T> {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     uint32_t frames = 0;
     for (size_t i = 0; i < GetSize(); ++i) {
-      T* v = nsDeque<T>::ObjectAt(i);
+      T* v = nsRefPtrDeque<T>::ObjectAt(i);
       frames += v->Frames();
     }
     return frames;
