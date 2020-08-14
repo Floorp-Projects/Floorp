@@ -222,7 +222,10 @@ add_task(async function test_search_mode_engine_web() {
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: extraEngine.name,
     },
-    { id: "urlbar-placeholder-search-mode-web", args: null }
+    {
+      id: "urlbar-placeholder-search-mode-web-2",
+      args: { name: extraEngine.name },
+    }
   );
 
   UrlbarUtils.WEB_ENGINE_NAMES.delete(extraEngine.name);
@@ -231,28 +234,31 @@ add_task(async function test_search_mode_engine_web() {
 add_task(async function test_search_mode_engine_other() {
   await doSearchModeTest(
     { engineName: extraEngine.name },
-    { id: "urlbar-placeholder-search-mode-other", args: null }
+    {
+      id: "urlbar-placeholder-search-mode-other-engine",
+      args: { name: extraEngine.name },
+    }
   );
 });
 
 add_task(async function test_search_mode_bookmarks() {
   await doSearchModeTest(
     { source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS },
-    { id: "urlbar-placeholder-search-mode-other", args: null }
+    { id: "urlbar-placeholder-search-mode-other-bookmarks", args: null }
   );
 });
 
 add_task(async function test_search_mode_tabs() {
   await doSearchModeTest(
     { source: UrlbarUtils.RESULT_SOURCE.TABS },
-    { id: "urlbar-placeholder-search-mode-other", args: null }
+    { id: "urlbar-placeholder-search-mode-other-tabs", args: null }
   );
 });
 
 add_task(async function test_search_mode_history() {
   await doSearchModeTest(
     { source: UrlbarUtils.RESULT_SOURCE.HISTORY },
-    { id: "urlbar-placeholder-search-mode-other", args: null }
+    { id: "urlbar-placeholder-search-mode-other-history", args: null }
   );
 });
 
