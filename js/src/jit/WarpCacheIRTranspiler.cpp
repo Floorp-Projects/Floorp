@@ -976,6 +976,19 @@ bool WarpCacheIRTranspiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadInt32ArrayLength(ObjOperandId objId,
+                                                     Int32OperandId resultId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* elements = MElements::New(alloc(), obj);
+  add(elements);
+
+  auto* length = MArrayLength::New(alloc(), elements);
+  add(length);
+
+  return defineOperand(resultId, length);
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(
     ObjOperandId objId, uint32_t getterOffset) {
   MDefinition* obj = getOperand(objId);
@@ -1975,6 +1988,25 @@ bool WarpCacheIRTranspiler::emitPackedArrayShiftResult(ObjOperandId arrayId) {
   bool maybeUndefined = true;
   auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Shift,
                                   needsHoleCheck, maybeUndefined);
+  addEffectful(ins);
+
+  pushResult(ins);
+  return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitPackedArraySliceResult(
+    uint32_t templateObjectOffset, ObjOperandId arrayId, Int32OperandId beginId,
+    Int32OperandId endId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+
+  MDefinition* array = getOperand(arrayId);
+  MDefinition* begin = getOperand(beginId);
+  MDefinition* end = getOperand(endId);
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+
+  auto* ins = MArraySlice::New(alloc(), array, begin, end, templateObj, heap);
   addEffectful(ins);
 
   pushResult(ins);
