@@ -511,7 +511,7 @@
 
 - name: apz.one_touch_pinch.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_ANDROID@
   mirror: always
 
 - name: apz.overscroll.enabled
