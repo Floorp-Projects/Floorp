@@ -21,6 +21,13 @@ job-defaults:
 
     run-on-projects: built-projects
     tier: default
+    fission-run-on-projects:
+        by-test-platform:
+            linux.*64/.*: ['autoland']
+            linux.*64-shippable/.*: ['mozilla-central']
+            windows10-64/.*: ['autoland']
+            windows10-64-shippable/.*: ['mozilla-central']
+            default: []
     fission-tier: 2
     variants: ["fission"]
 
