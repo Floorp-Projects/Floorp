@@ -628,12 +628,12 @@ set_define('ENABLE_SHARED_MEMORY', enable_shared_memory)
 # Support for WebAssembly SIMD
 # =====================================================
 
-@depends('--enable-jit', '--enable-simulator', target, milestone)
-def default_wasm_simd(jit_enabled, simulator, target, milestone):
+@depends('--enable-jit', '--enable-simulator', target)
+def default_wasm_simd(jit_enabled, simulator, target):
     if not jit_enabled or simulator:
         return
 
-    if milestone.is_nightly and target.cpu in ('x86_64', 'x86'):
+    if target.cpu in ('x86_64', 'x86'):
         return True
 
 js_option('--enable-wasm-simd',
