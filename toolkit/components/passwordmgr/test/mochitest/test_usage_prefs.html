@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test usage prefs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: usage prefs collection
+
+<script>
+
+function addLogin() {
+  runInParent(() => {
+    const { Services } =
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+    let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
+              createInstance(Ci.nsILoginInfo);
+    login.init("https://example.com", "https://example.com", null,
+               "testuser", "testpass", "uname", "pword");
+    Services.logins.addLogin(login);
+  });
+}
+
+async function checkUsagePrefs(hasEntry, lastUsed) {
+  lastUsed = Math.floor(lastUsed);
+
+  let parentPrefs = runInParent(() => {
+    addMessageListener("getPrefValues", () => {
+      let prefValues = {};
+      prefValues.hasEntry = Services.prefs.getBoolPref(
+        "signon.usage.hasEntry",
+        false
+      );
+      prefValues.lastUsed = Services.prefs.getIntPref(
+        "signon.usage.lastUsed",
+        0
+      );
+      sendAsyncMessage("prefValues", prefValues);
+    });
+  });
+
+  parentPrefs.sendAsyncMessage("getPrefValues");
+  let prefValues = await new Promise((resolve) => {
+    parentPrefs.addMessageListener("prefValues", (values) => {
+      parentPrefs.removeMessageListener("prefValues");
+      resolve(values);
+    });
+  })
+
+  info(JSON.stringify(prefValues));
+
+  is(
+    prefValues.hasEntry,
+    hasEntry,
+    "hasEntry usage pref is " + hasEntry
+  );
+  ok(
+    lastUsed - prefValues.lastUsed < 10,
+    `lastUsed usage pref (${prefValues.lastUsed}) is within 10 seconds of ${lastUsed}`
+  );
+}
+
+
+runChecksAfterCommonInit(startTest);
+
+/** Test for Login Manager: form fill, multiple forms. **/
+
+async function startTest() {
+  runInParent(() => {
+    Services.prefs.clearUserPref("signon.usage.hasEntry");
+    Services.prefs.clearUserPref("signon.usage.lastUsed");
+  });
+
+  await checkUsagePrefs(false, 0);
+  addLogin();
+  await checkUsagePrefs(true, 0);
+
+  await setFormAndWaitForFieldFilled(`
+    <form id="form1" action="/">
+      <p>This is form 1.</p>
+      <input  type="text"       name="uname">
+      <input  type="password"   name="pword">
+
+      <button type="submit" name="submit">Submit</button>
+      <button type="reset"> Reset </button>
+    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "testuser"});
+
+  is($_(1, "uname").value, "testuser", "Checking for filled username");
+  is($_(1, "pword").value, "testpass", "Checking for filled password");
+
+  SimpleTest.finish();
+}
+</script>
+
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>
+
