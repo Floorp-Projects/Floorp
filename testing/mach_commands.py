@@ -780,7 +780,7 @@ class TestInfoCommand(MachCommandBase):
             self.config_environment
         except BuildEnvironmentNotFoundException:
             print("Looks like configure has not run yet, running it now...")
-            builder = Build(self._mach_context)
+            builder = Build(self._mach_context, None)
             builder.configure()
 
         ti = testinfo.TestInfoReport(verbose)
