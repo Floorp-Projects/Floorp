@@ -1,3 +1,8 @@
+// |jit-test| --no-warp
+
+// Warp has COW arrays disabled (bug 1626854). Re-evaluate after that bug has
+// been fixed.
+
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
