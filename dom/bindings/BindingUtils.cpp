@@ -2545,6 +2545,12 @@ void ConstructJSImplementation(const char* aContractId,
   {
     AutoNoJSAPI nojsapi;
 
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
+    if (!window->IsCurrentInnerWindow()) {
+      aRv.ThrowInvalidStateError("Window no longer active");
+      return;
+    }
+
     // Get the XPCOM component containing the JS implementation.
     nsresult rv;
     nsCOMPtr<nsISupports> implISupports = do_CreateInstance(aContractId, &rv);
@@ -2559,7 +2565,6 @@ void ConstructJSImplementation(const char* aContractId,
     // and our global is a window.
     nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi =
         do_QueryInterface(implISupports);
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     if (gpi) {
       JS::Rooted<JS::Value> initReturn(RootingCx());
       rv = gpi->Init(window, &initReturn);
