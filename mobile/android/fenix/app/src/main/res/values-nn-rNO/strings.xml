@@ -306,6 +306,8 @@
     <string name="preferences_account_settings">Kontoinnstillingar</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Opne lenker i appar</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Ekstern nedlastingshandterar</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Tillegg</string>
 

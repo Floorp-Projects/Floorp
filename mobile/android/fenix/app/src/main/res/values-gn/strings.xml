@@ -306,6 +306,8 @@
     <string name="preferences_account_settings">Mba’ete ñemboheko</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Embojuruja juajuha tembipuru’ípe</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Mboguejy okaygua ñangarekoha</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Moĩmbaha</string>
 

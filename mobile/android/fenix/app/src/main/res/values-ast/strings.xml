@@ -46,13 +46,15 @@
     <!-- Text for the main message -->
     <string name="cfr_message">¿Amestar un atayu p\'abrir llingüetes privaes dende la pantalla d\'aniciu?</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Sí</string>
+    <string name="cfr_pos_button_text">Amestalu</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Non, gracies</string>
 
     <!-- Search widget "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
     <string name="search_widget_cfr_message">Accedi aína a Firefox col amiestu d\'un widget a la pantalla d\'aniciu.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Amestalu</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Agora non</string>
 

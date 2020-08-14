@@ -303,6 +303,8 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Agor dolenni mewn apiau</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Rheolwr llwytho i lawr allanol</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Ychwanegion</string>
 

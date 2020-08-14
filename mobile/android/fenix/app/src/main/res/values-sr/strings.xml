@@ -301,6 +301,8 @@
     <string name="preferences_account_settings">Подешавања налога</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Отвори везе у апликацијама</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Спољни менаџер преузимања</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Додаци</string>
 

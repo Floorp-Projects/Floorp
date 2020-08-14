@@ -313,6 +313,8 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">在应用程序中打开链接</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">外部下载管理器</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">附加组件</string>
 

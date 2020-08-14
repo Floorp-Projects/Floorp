@@ -303,6 +303,8 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Buka tutumbu dina aplikasi</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Manajer undeuran éksternal</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Émbohan</string>
 
