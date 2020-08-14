@@ -43,12 +43,6 @@ if CONFIG['CC_TYPE'] != 'clang-cl':
     # this option.
     SOURCES['tests/test-prettyprinters.cpp'].flags += ['-fno-eliminate-unused-debug-types']
 
-if CONFIG['CC_TYPE'] == 'clang':
-    # clang has poor debuginfo when optimized. Some of the test files have
-    # unrecoverable values even with -Og. gcc is far better about making
-    # optimized code debuggable.
-    CXXFLAGS += ['-O0']
-
 DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [
