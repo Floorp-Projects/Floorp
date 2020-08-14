@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+#include <iterator>
 #include <limits.h>
 #include <string.h>
 #include <stdio.h>
@@ -13,9 +15,13 @@
 #ifdef XP_WIN
 #  define NS_tfopen _wfopen
 #  define OPEN_MODE L"rb"
+#  define NS_tstrlen wcslen
+#  define NS_tstrcpy wcscpy
 #else
 #  define NS_tfopen fopen
 #  define OPEN_MODE "r"
+#  define NS_tstrlen strlen
+#  define NS_tstrcpy strcpy
 #endif
 
 // stack based FILE wrapper to ensure that fclose is called.
@@ -243,4 +249,149 @@ int ReadStrings(const NS_tchar* path, StringTable* results) {
   }
 
   return result;
+}
+
+IniReader::IniReader(const NS_tchar* iniPath,
+                     const char* section /* = nullptr */) {
+  if (iniPath) {
+    mPath = mozilla::MakeUnique<NS_tchar[]>(NS_tstrlen(iniPath) + 1);
+    NS_tstrcpy(mPath.get(), iniPath);
+    mMaybeStatusCode = mozilla::Nothing();
+  } else {
+    mMaybeStatusCode = mozilla::Some(READ_STRINGS_MEM_ERROR);
+  }
+  if (section) {
+    mSection = mozilla::MakeUnique<char[]>(strlen(section) + 1);
+    strcpy(mSection.get(), section);
+  } else {
+    mSection.reset(nullptr);
+  }
+}
+
+bool IniReader::MaybeAddKey(const char* key, size_t& insertionIndex) {
+  if (!key || strlen(key) == 0 || mMaybeStatusCode.isSome()) {
+    return false;
+  }
+  auto existingKey = std::find_if(mKeys.begin(), mKeys.end(),
+                                  [=](mozilla::UniquePtr<char[]>& searchKey) {
+                                    return strcmp(key, searchKey.get()) == 0;
+                                  });
+  if (existingKey != mKeys.end()) {
+    // Key already in list
+    insertionIndex = std::distance(mKeys.begin(), existingKey);
+    return true;
+  }
+
+  // Key not already in list
+  insertionIndex = mKeys.size();
+  mKeys.emplace_back(mozilla::MakeUnique<char[]>(strlen(key) + 1));
+  strcpy(mKeys.back().get(), key);
+  return true;
+}
+
+void IniReader::AddKey(const char* key, mozilla::UniquePtr<char[]>* outputPtr) {
+  size_t insertionIndex;
+  if (!MaybeAddKey(key, insertionIndex)) {
+    return;
+  }
+
+  if (!outputPtr) {
+    return;
+  }
+
+  mNarrowOutputs.emplace_back();
+  mNarrowOutputs.back().keyIndex = insertionIndex;
+  mNarrowOutputs.back().outputPtr = outputPtr;
+}
+
+#ifdef XP_WIN
+void IniReader::AddKey(const char* key,
+                       mozilla::UniquePtr<wchar_t[]>* outputPtr) {
+  size_t insertionIndex;
+  if (!MaybeAddKey(key, insertionIndex)) {
+    return;
+  }
+
+  if (!outputPtr) {
+    return;
+  }
+
+  mWideOutputs.emplace_back();
+  mWideOutputs.back().keyIndex = insertionIndex;
+  mWideOutputs.back().outputPtr = outputPtr;
+}
+
+// Returns true on success, false on failure.
+static bool ConvertToWide(const char* toConvert,
+                          mozilla::UniquePtr<wchar_t[]>* result) {
+  int bufferSize = MultiByteToWideChar(CP_UTF8, 0, toConvert, -1, nullptr, 0);
+  *result = mozilla::MakeUnique<wchar_t[]>(bufferSize);
+  int charsWritten =
+      MultiByteToWideChar(CP_UTF8, 0, toConvert, -1, result->get(), bufferSize);
+  return charsWritten > 0;
+}
+#endif
+
+int IniReader::Read() {
+  if (mMaybeStatusCode.isSome()) {
+    return mMaybeStatusCode.value();
+  }
+
+  if (mKeys.size() < 1) {
+    // If there's nothing to read, just report success and return.
+    mMaybeStatusCode = mozilla::Some(OK);
+    return OK;
+  }
+
+  // First assemble the key list, which will be a character array of
+  // back-to-back null-terminated strings ending with a double null termination.
+  size_t keyListSize = 1;  // For the final null
+  for (const auto& key : mKeys) {
+    keyListSize += strlen(key.get());
+    keyListSize += 1;  // For the terminating null
+  }
+  mozilla::UniquePtr<char[]> keyList = mozilla::MakeUnique<char[]>(keyListSize);
+  char* keyListPtr = keyList.get();
+  for (const auto& key : mKeys) {
+    strcpy(keyListPtr, key.get());
+    // Point keyListPtr directly after the trailing null that strcpy wrote.
+    keyListPtr += strlen(key.get()) + 1;
+  }
+  *keyListPtr = '\0';
+
+  // Now make the array for the resulting data to be stored in
+  mozilla::UniquePtr<mozilla::UniquePtr<char[]>[]> results =
+      mozilla::MakeUnique<mozilla::UniquePtr<char[]>[]>(mKeys.size());
+
+  // Invoke ReadStrings to read the file and store the data for us
+  int statusCode = ReadStrings(mPath.get(), keyList.get(), mKeys.size(),
+                               results.get(), mSection.get());
+  mMaybeStatusCode = mozilla::Some(statusCode);
+
+  if (statusCode != OK) {
+    return statusCode;
+  }
+
+  // Now populate the requested locations with the requested data.
+  for (const auto output : mNarrowOutputs) {
+    char* valueBuffer = results[output.keyIndex].get();
+    if (valueBuffer) {
+      *(output.outputPtr) =
+          mozilla::MakeUnique<char[]>(strlen(valueBuffer) + 1);
+      strcpy(output.outputPtr->get(), valueBuffer);
+    }
+  }
+
+#ifdef XP_WIN
+  for (const auto output : mWideOutputs) {
+    char* valueBuffer = results[output.keyIndex].get();
+    if (valueBuffer) {
+      if (!ConvertToWide(valueBuffer, output.outputPtr)) {
+        statusCode = STRING_CONVERSION_ERROR;
+      }
+    }
+  }
+#endif
+
+  return statusCode;
 }
