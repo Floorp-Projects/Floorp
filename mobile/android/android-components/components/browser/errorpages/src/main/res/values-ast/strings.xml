@@ -49,7 +49,7 @@
     <string name="mozac_browser_errorpages_net_interrupt_title">Interrumpióse la conexón</string>
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>El restolador coneutóse con ésitu porque la conexón interrumpióse mentanto se tresfería información. Volvi tentalo, por favor.</p>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>El restolador coneutóse con ésitu pero la conexón interrumpióse mentanto se tresfería información. Volvi tentalo, por favor.</p>
       <ul>
         <li>Seique\'l sitiu ta temporalmente non disponible o perocupáu. Volvi tentalo nun momentu.</li>
         <li>Si nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
