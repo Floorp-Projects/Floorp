@@ -115,8 +115,8 @@ void WeakRefObject::trace(JSTracer* trc, JSObject* obj) {
     JSObject* target = weakRef->target();
     if (target) {
       TraceManuallyBarrieredEdge(trc, &target, "WeakRefObject::target");
+      weakRef->setPrivateUnbarriered(target);
     }
-    weakRef->setPrivate(target);
   }
 }
 
