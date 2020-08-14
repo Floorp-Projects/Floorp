@@ -50,11 +50,14 @@ class MediaDataDecoderProxy
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  bool CanDecodeBatch() const override;
+  RefPtr<DecodePromise> DecodeBatch(
+      nsTArray<RefPtr<MediaRawData>>&& aSamples) override;
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  nsCString GetDescriptionName() const override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
+  nsCString GetDescriptionName() const override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override;
   ConversionRequired NeedsConversion() const override;
