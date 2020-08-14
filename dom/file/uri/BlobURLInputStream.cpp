@@ -363,22 +363,44 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
     return;
   }
 
-  Maybe<nsID> agentClusterId;
-  Maybe<ClientInfo> clientInfo = loadInfo->GetClientInfo();
-  if (clientInfo.isSome()) {
-    agentClusterId = clientInfo->AgentClusterId();
-  }
-
   if (XRE_IsParentProcess() || !BlobURLSchemeIsHTTPOrHTTPS(mBlobURLSpec)) {
-    RefPtr<BlobImpl> blobImpl;
+    nsIPrincipal* const dataEntryPrincipal =
+        BlobURLProtocolHandler::GetDataEntryPrincipal(mBlobURLSpec,
+                                                      true /* AlsoIfRevoked */);
 
     // Since revoked blobs are also retrieved, it is possible that the blob no
     // longer exists (due to the 5 second timeout) when execution reaches here
-    if (!BlobURLProtocolHandler::GetDataEntry(
-            mBlobURLSpec, getter_AddRefs(blobImpl), loadingPrincipal,
-            triggeringPrincipal, loadInfo->GetOriginAttributes(),
-            agentClusterId, true /* AlsoIfRevoked */)) {
+    if (!dataEntryPrincipal) {
       NS_WARNING("Failed to get data entry principal. URL revoked?");
+      return;
+    }
+
+    // We want to be sure that we stop the creation of the channel if the blob
+    // URL is copy-and-pasted on a different context (ex. private browsing or
+    // containers).
+    //
+    // We also allow the system principal to create the channel regardless of
+    // the OriginAttributes.  This is primarily for the benefit of mechanisms
+    // like the Download API that explicitly create a channel with the system
+    // principal and which is never mutated to have a non-zero
+    // mPrivateBrowsingId or container.
+    if (NS_WARN_IF(!loadingPrincipal ||
+                   !loadingPrincipal->IsSystemPrincipal()) &&
+        NS_WARN_IF(!ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+            loadInfo->GetOriginAttributes(),
+            BasePrincipal::Cast(dataEntryPrincipal)->OriginAttributesRef()))) {
+      return;
+    }
+
+    if (NS_WARN_IF(!triggeringPrincipal->Subsumes(dataEntryPrincipal))) {
+      return;
+    }
+
+    RefPtr<BlobImpl> blobImpl;
+    nsresult rv = NS_GetBlobForBlobURISpec(
+        mBlobURLSpec, getter_AddRefs(blobImpl), true /* AlsoIfRevoked */);
+
+    if (NS_WARN_IF(NS_FAILED(rv)) || (NS_WARN_IF(!blobImpl))) {
       return;
     }
 
@@ -409,7 +431,7 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
   contentChild
       ->SendBlobURLDataRequest(mBlobURLSpec, triggeringPrincipal,
                                loadingPrincipal,
-                               loadInfo->GetOriginAttributes(), agentClusterId)
+                               loadInfo->GetOriginAttributes())
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self](const BlobURLDataRequestResult& aResult) {
