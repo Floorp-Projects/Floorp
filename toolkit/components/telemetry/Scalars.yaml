@@ -1972,23 +1972,6 @@ preferences:
       - 'fennec'
     record_in_processes:
       - main
-  prevent_accessibility_services:
-    bug_numbers:
-      - 1412358
-    description: >
-      Recorded on command event. Boolean stating if the preference checkbox for
-      preventing accessibility from accessing the browser (Privacy & Security)
-      was checked.
-    expires: "62"
-    kind: boolean
-    notification_emails:
-      - yzenevich@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
 
 webrtc.video:
   recv_codec_used:
