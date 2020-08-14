@@ -69,8 +69,18 @@ function getResourceTypeDictionary(watcherOrTargetActor) {
     return ParentProcessResources;
   }
   const { targetType } = watcherOrTargetActor;
+  return getResourceTypeDictionaryForTargetType(targetType);
+}
+
+/**
+ * For a targetType, return the related dictionary.
+ *
+ * @param String targetType
+ *        A targetType string (See Targets.TYPES)
+ */
+function getResourceTypeDictionaryForTargetType(targetType) {
   switch (targetType) {
-    case "frame":
+    case Targets.TYPES.FRAME:
       return FrameTargetResources;
     default:
       throw new Error(`Unsupported target actor typeName '${targetType}'`);
@@ -148,12 +158,12 @@ function getParentProcessResourceTypes(resourceTypes) {
 exports.getParentProcessResourceTypes = getParentProcessResourceTypes;
 
 function getResourceTypesForTargetType(resourceTypes, targetType) {
-  if (targetType == Targets.TYPES.FRAME) {
-    return resourceTypes.filter(resourceType => {
-      return resourceType in FrameTargetResources;
-    });
-  }
-  throw new Error(`Unsupported target type ${targetType}`);
+  const resourceDictionnary = getResourceTypeDictionaryForTargetType(
+    targetType
+  );
+  return resourceTypes.filter(resourceType => {
+    return resourceType in resourceDictionnary;
+  });
 }
 exports.getResourceTypesForTargetType = getResourceTypesForTargetType;
 
