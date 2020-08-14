@@ -545,7 +545,6 @@ void LIRGeneratorX86Shared::lowerAtomicExchangeTypedArrayElement(
 
   LDefinition tempDef = LDefinition::BogusTemp();
   if (ins->arrayType() == Scalar::Uint32) {
-    // This restriction is bug 1077305.
     MOZ_ASSERT(ins->type() == MIRType::Double);
     tempDef = temp();
   }
