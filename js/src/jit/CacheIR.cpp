@@ -8809,6 +8809,8 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
     return true;
   }
 
+  bool isConstructing = IsConstructOp(op_);
+
   // Check for natives to which template objects can be attached. This is
   // done to provide templates to Ion for inlining these natives later on.
   switch (calleeFunc->jitInfo()->inlinableNative) {
@@ -8860,6 +8862,10 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
     }
 
     case InlinableNative::String: {
+      if (!isConstructing) {
+        return true;
+      }
+
       RootedString emptyString(cx_, cx_->runtime()->emptyString);
       res.set(StringObject::create(cx_, emptyString, /* proto = */ nullptr,
                                    TenuredObject));
