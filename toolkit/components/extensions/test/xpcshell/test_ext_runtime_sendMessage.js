@@ -30,6 +30,14 @@ add_task(async function runtimeSendMessageReply() {
         return Promise.reject(new Error(msg));
       } else if (msg == "throw-error") {
         throw new Error(msg);
+      } else if (msg === "respond-uncloneable") {
+        return Promise.resolve(window);
+      } else if (msg === "reject-uncloneable") {
+        return Promise.reject(window);
+      } else if (msg == "reject-undefined") {
+        return Promise.reject();
+      } else if (msg == "throw-undefined") {
+        throw undefined; // eslint-disable-line no-throw-literal
       }
     });
 
@@ -79,6 +87,19 @@ add_task(async function runtimeSendMessageReply() {
       browser.runtime
         .sendMessage("throw-error")
         .catch(error => Promise.resolve({ error })),
+
+      browser.runtime
+        .sendMessage("respond-uncloneable")
+        .catch(error => Promise.resolve({ error })),
+      browser.runtime
+        .sendMessage("reject-uncloneable")
+        .catch(error => Promise.resolve({ error })),
+      browser.runtime
+        .sendMessage("reject-undefined")
+        .catch(error => Promise.resolve({ error })),
+      browser.runtime
+        .sendMessage("throw-undefined")
+        .catch(error => Promise.resolve({ error })),
     ])
       .then(
         ([
@@ -92,6 +113,10 @@ add_task(async function runtimeSendMessageReply() {
           respondNever2,
           respondError,
           throwError,
+          respondUncloneable,
+          rejectUncloneable,
+          rejectUndefined,
+          throwUndefined,
         ]) => {
           browser.test.assertEq(
             "respond-now",
@@ -143,6 +168,27 @@ add_task(async function runtimeSendMessageReply() {
             "throw-error",
             throwError.error.message,
             "Got the expected thrown error response"
+          );
+
+          browser.test.assertEq(
+            "Could not establish connection. Receiving end does not exist.",
+            respondUncloneable.error.message,
+            "An uncloneable response should be ignored"
+          );
+          browser.test.assertEq(
+            "An unexpected error occurred",
+            rejectUncloneable.error.message,
+            "Got the expected error for a rejection with an uncloneable value"
+          );
+          browser.test.assertEq(
+            "An unexpected error occurred",
+            rejectUndefined.error.message,
+            "Got the expected error for a void rejection"
+          );
+          browser.test.assertEq(
+            "An unexpected error occurred",
+            throwUndefined.error.message,
+            "Got the expected error for a void throw"
           );
 
           browser.test.notifyPass("sendMessage");
