@@ -2866,8 +2866,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     nsTArray<BlobURLRegistrationData> registrations;
     BlobURLProtocolHandler::ForEachBlobURL(
         [&](BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
-            const Maybe<nsID>& aAgentClusterId, const nsACString& aURI,
-            bool aRevoked) {
+            const nsACString& aURI, bool aRevoked) {
           nsAutoCString origin;
           nsresult rv = aPrincipal->GetOrigin(origin);
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2891,7 +2890,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
           }
 
           registrations.AppendElement(BlobURLRegistrationData(
-              nsCString(aURI), ipcBlob, aPrincipal, aAgentClusterId, aRevoked));
+              nsCString(aURI), ipcBlob, aPrincipal, aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -5492,9 +5491,10 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(
 }
 
 /* static */
-void ContentParent::BroadcastBlobURLRegistration(
-    const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
-    const Maybe<nsID>& aAgentClusterId, ContentParent* aIgnoreThisCP) {
+void ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
+                                                 BlobImpl* aBlobImpl,
+                                                 nsIPrincipal* aPrincipal,
+                                                 ContentParent* aIgnoreThisCP) {
   nsAutoCString origin;
   nsresult rv = aPrincipal->GetOrigin(origin);
   NS_ENSURE_SUCCESS_VOID(rv);
@@ -5524,8 +5524,7 @@ void ContentParent::BroadcastBlobURLRegistration(
         break;
       }
 
-      Unused << cp->SendBlobURLRegistration(uri, ipcBlob, principal,
-                                            aAgentClusterId);
+      Unused << cp->SendBlobURLRegistration(uri, ipcBlob, principal);
     }
   }
 }
@@ -5554,18 +5553,14 @@ void ContentParent::BroadcastBlobURLUnregistration(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvStoreAndBroadcastBlobURLRegistration(
-    const nsCString& aURI, const IPCBlob& aBlob, const Principal& aPrincipal,
-    const Maybe<nsID>& aAgentClusterId) {
+    const nsCString& aURI, const IPCBlob& aBlob, const Principal& aPrincipal) {
   RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   if (NS_WARN_IF(!blobImpl)) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, aAgentClusterId,
-                                       blobImpl);
-  BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, aAgentClusterId,
-                               this);
-
+  BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
+  BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
   // We want to store this blobURL, so we can unregister it if the child
   // crashes.
   mBlobURLs.AppendElement(aURI);
@@ -5806,8 +5801,7 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
     nsTArray<BlobURLRegistrationData> registrations;
     BlobURLProtocolHandler::ForEachBlobURL(
         [&](BlobImpl* aBlobImpl, nsIPrincipal* aBlobPrincipal,
-            const Maybe<nsID>& aAgentClusterId, const nsACString& aURI,
-            bool aRevoked) {
+            const nsACString& aURI, bool aRevoked) {
           if (!aPrincipal->Subsumes(aBlobPrincipal)) {
             return true;
           }
@@ -5819,7 +5813,7 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
           }
 
           registrations.AppendElement(BlobURLRegistrationData(
-              nsCString(aURI), ipcBlob, aPrincipal, aAgentClusterId, aRevoked));
+              nsCString(aURI), ipcBlob, aPrincipal, aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -6832,24 +6826,60 @@ PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvBlobURLDataRequest(
-    const nsCString& aBlobURL, nsIPrincipal* aTriggeringPrincipal,
-    nsIPrincipal* aLoadingPrincipal, const OriginAttributes& aOriginAttributes,
-    const Maybe<nsID>& aAgentClusterId,
+    const nsCString& aBlobURL, nsIPrincipal* pTriggeringPrincipal,
+    nsIPrincipal* pLoadingPrincipal, const OriginAttributes& aOriginAttributes,
     BlobURLDataRequestResolver&& aResolver) {
   RefPtr<BlobImpl> blobImpl;
+  nsresult rv = NS_GetBlobForBlobURISpec(aBlobURL, getter_AddRefs(blobImpl),
+                                         true /* AlsoIfRevoked */);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aResolver(rv);
+    return IPC_OK();
+  }
+
+  if (NS_WARN_IF(!blobImpl)) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
 
   // Since revoked blobs are also retrieved, it is possible that the blob no
   // longer exists (due to the 5 second timeout) when execution reaches here
-  if (!BlobURLProtocolHandler::GetDataEntry(
-          aBlobURL, getter_AddRefs(blobImpl), aLoadingPrincipal,
-          aTriggeringPrincipal, aOriginAttributes, aAgentClusterId,
-          true /* AlsoIfRevoked */)) {
+  nsIPrincipal* const dataEntryPrincipal =
+      BlobURLProtocolHandler::GetDataEntryPrincipal(aBlobURL,
+                                                    true /* AlsoIfRevoked */);
+
+  if (!dataEntryPrincipal) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  // We want to be sure that we stop the creation of the channel if the blob
+  // URL is copy-and-pasted on a different context (ex. private browsing or
+  // containers).
+  //
+  // We also allow the system principal to create the channel regardless of
+  // the OriginAttributes.  This is primarily for the benefit of mechanisms
+  // like the Download API that explicitly create a channel with the system
+  // principal and which is never mutated to have a non-zero
+  // mPrivateBrowsingId or container.
+
+  if (NS_WARN_IF(!pLoadingPrincipal ||
+                 !pLoadingPrincipal->IsSystemPrincipal()) &&
+      NS_WARN_IF(!ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+          aOriginAttributes,
+          BasePrincipal::Cast(dataEntryPrincipal)->OriginAttributesRef()))) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  if (!pTriggeringPrincipal->Subsumes(dataEntryPrincipal)) {
     aResolver(NS_ERROR_DOM_BAD_URI);
     return IPC_OK();
   }
 
   IPCBlob ipcBlob;
-  nsresult rv = IPCBlobUtils::Serialize(blobImpl, this, ipcBlob);
+  rv = IPCBlobUtils::Serialize(blobImpl, this, ipcBlob);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aResolver(rv);
