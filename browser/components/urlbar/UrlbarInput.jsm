@@ -1096,7 +1096,9 @@ class UrlbarInput {
 
     if (this.searchMode) {
       options.searchMode = this.searchMode;
-      options.sources = [this.searchMode.source];
+      if (this.searchMode.source) {
+        options.sources = [this.searchMode.source];
+      }
     }
 
     // TODO (Bug 1522902): This promise is necessary for tests, because some
@@ -1193,10 +1195,15 @@ class UrlbarInput {
     this._searchModeLabel.removeAttribute("data-l10n-id");
 
     if (engineName) {
-      this.searchMode = {
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        engineName,
-      };
+      this.searchMode = { engineName };
+      if (source) {
+        this.searchMode.source = source;
+      } else if (UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)) {
+        // History results for general-purpose search engines are often not
+        // useful, so we hide them in search mode. See bug 1658646 for
+        // discussion.
+        this.searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
+      }
       this._searchModeIndicatorTitle.textContent = engineName;
       this._searchModeLabel.textContent = engineName;
       this.document.l10n.setAttributes(
@@ -1253,7 +1260,12 @@ class UrlbarInput {
    */
   searchModeShortcut() {
     if (this.view.oneOffsRefresh) {
-      this.setSearchMode({ engineName: Services.search.defaultEngine.name });
+      // We restrict to search results when entering search mode from this
+      // shortcut to honor historical behaviour.
+      this.setSearchMode({
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        engineName: Services.search.defaultEngine.name,
+      });
       this.search("");
     } else {
       this.search(UrlbarTokenizer.RESTRICT.SEARCH);
