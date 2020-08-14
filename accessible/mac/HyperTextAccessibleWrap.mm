@@ -127,6 +127,20 @@ void HyperTextAccessibleWrap::TextForRange(nsAString& aText, int32_t aStartOffse
   }
 }
 
+nsIntRect HyperTextAccessibleWrap::BoundsForRange(int32_t aStartOffset,
+                                                  HyperTextAccessible* aEndContainer,
+                                                  int32_t aEndOffset) {
+  nsIntRect rect;
+  HyperTextIterator iter(this, aStartOffset, aEndContainer, aEndOffset);
+  while (iter.Next()) {
+    nsIntRect stringRect =
+        iter.mCurrentContainer->TextBounds(iter.mCurrentStartOffset, iter.mCurrentEndOffset);
+    rect.UnionRect(rect, stringRect);
+  }
+
+  return rect;
+}
+
 void HyperTextAccessibleWrap::LeftWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
                                          int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
                                          int32_t* aEndOffset) {

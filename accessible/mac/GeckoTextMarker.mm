@@ -8,6 +8,8 @@
 #include "AccessibleOrProxy.h"
 #include "nsCocoaUtils.h"
 
+#include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
+
 #import "GeckoTextMarker.h"
 
 extern "C" {
@@ -118,85 +120,54 @@ bool GeckoTextMarker::IsEditableRoot() {
   return (state & states::EDITABLE) == 0;
 }
 
-void GeckoTextMarker::NormalizeNext() {
-  MOZ_ASSERT(!mContainer.IsNull());
-  if (AtEnd()) {
-    // If this is the end of the current container, mutate to its parent's
-    // end offset.
-    bool unused;
-    uint32_t endOffset = mContainer.IsProxy() ? mContainer.AsProxy()->EndOffset(&unused)
-                                              : mContainer.AsAccessible()->EndOffset();
-
-    if (endOffset != 0) {
-      if (!IsEditableRoot()) {
-        mContainer = mContainer.Parent();
-        mOffset = endOffset;
-
-        // Call NormalizeNext recursively to get top-most link if at the end of one,
-        // or innermost link if at the beginning.
-        NormalizeNext();
-      }
-    }
-  } else {
-    AccessibleOrProxy link;
-
-    if (mContainer.IsProxy()) {
-      ProxyAccessible* proxy = mContainer.AsProxy();
-      link = proxy->LinkAt(proxy->LinkIndexAtOffset(mOffset));
-    } else if (HyperTextAccessible* ht = mContainer.AsAccessible()->AsHyperText()) {
-      link = ht->LinkAt(ht->LinkIndexAtOffset(mOffset));
-    }
-
-    // If there is a link at this offset, mutate into it.
-    if (!link.IsNull()) {
-      mContainer = link;
-      mOffset = 0;
-
-      // Call NormalizeNext recursively to get top-most link if at the end of one,
-      // or innermost link if at the beginning.
-      NormalizeNext();
-    }
+bool GeckoTextMarker::Next() {
+  if (mContainer.IsProxy()) {
+    int32_t nextOffset = 0;
+    uint64_t nextContainerID = 0;
+    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendNextClusterAt(mContainer.AsProxy()->ID(), mOffset,
+                                                                &nextContainerID, &nextOffset);
+    ProxyAccessible* nextContainer = ipcDoc->GetAccessible(nextContainerID);
+    bool moved = nextContainer != mContainer.AsProxy() || nextOffset != mOffset;
+    mContainer = nextContainer;
+    mOffset = nextOffset;
+    return moved;
+  } else if (auto htWrap = ContainerAsHyperTextWrap()) {
+    HyperTextAccessible* nextContainer = nullptr;
+    int32_t nextOffset = 0;
+    htWrap->NextClusterAt(mOffset, &nextContainer, &nextOffset);
+    bool moved = nextContainer != htWrap || nextOffset != mOffset;
+    mContainer = nextContainer;
+    mOffset = nextOffset;
+    return moved;
   }
+
+  return false;
 }
 
-void GeckoTextMarker::NormalizePrevious() {
-  MOZ_ASSERT(!mContainer.IsNull());
-  if (mOffset == 0) {
-    // If we are at the beginning of a container, mutate to its parent's start offset.
-    bool unused;
-    uint32_t startOffset = mContainer.IsProxy() ? mContainer.AsProxy()->StartOffset(&unused)
-                                                : mContainer.AsAccessible()->StartOffset();
-
-    if (startOffset != 0) {
-      if (!IsEditableRoot()) {
-        mContainer = mContainer.Parent();
-        mOffset = startOffset;
-
-        // Call NormalizePrevious recursively to get top-most link if at the start of one,
-        // or innermost link if at the end.
-        NormalizePrevious();
-      }
-    }
-  } else {
-    AccessibleOrProxy link;
-
-    if (mContainer.IsProxy()) {
-      ProxyAccessible* proxy = mContainer.AsProxy();
-      link = proxy->LinkAt(proxy->LinkIndexAtOffset(mOffset - 1));
-    } else if (HyperTextAccessible* ht = mContainer.AsAccessible()->AsHyperText()) {
-      link = ht->GetChildAtOffset(mOffset - 1);
-    }
-
-    // If there is a link preceding this offset, mutate into it.
-    if (!link.IsNull()) {
-      mContainer = link;
-      mOffset = CharacterCount(link);
-
-      // Call NormalizePrevious recursively to get top-most link if at the start of one,
-      // or innermost link if at the end.
-      NormalizePrevious();
-    }
+bool GeckoTextMarker::Previous() {
+  if (mContainer.IsProxy()) {
+    int32_t prevOffset = 0;
+    uint64_t prevContainerID = 0;
+    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendPreviousClusterAt(
+        mContainer.AsProxy()->ID(), mOffset, &prevContainerID, &prevOffset);
+    ProxyAccessible* prevContainer = ipcDoc->GetAccessible(prevContainerID);
+    bool moved = prevContainer != mContainer.AsProxy() || prevOffset != mOffset;
+    mContainer = prevContainer;
+    mOffset = prevOffset;
+    return moved;
+  } else if (auto htWrap = ContainerAsHyperTextWrap()) {
+    HyperTextAccessible* prevContainer = nullptr;
+    int32_t prevOffset = 0;
+    htWrap->PreviousClusterAt(mOffset, &prevContainer, &prevOffset);
+    bool moved = prevContainer != htWrap || prevOffset != mOffset;
+    mContainer = prevContainer;
+    mOffset = prevOffset;
+    return moved;
   }
+
+  return false;
 }
 
 uint32_t GeckoTextMarker::CharacterCount(const AccessibleOrProxy& aContainer) {
@@ -211,26 +182,52 @@ uint32_t GeckoTextMarker::CharacterCount(const AccessibleOrProxy& aContainer) {
   return 0;
 }
 
-GeckoTextMarkerRange GeckoTextMarker::WordRange() {
+GeckoTextMarkerRange GeckoTextMarker::LeftWordRange() {
   MOZ_ASSERT(!mContainer.IsNull());
-  int32_t wordstart_start = 0, wordstart_end = 0, wordend_start = 0, wordend_end = 0;
-  nsAutoString unused;
   if (mContainer.IsProxy()) {
-    mContainer.AsProxy()->GetTextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_START, unused,
-                                          &wordstart_start, &wordstart_end);
-    mContainer.AsProxy()->GetTextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_END, unused,
-                                          &wordend_start, &wordend_end);
-  } else if (HyperTextAccessible* ht = mContainer.AsAccessible()->AsHyperText()) {
-    ht->TextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_START, &wordstart_start,
-                     &wordstart_end, unused);
-    ht->TextAtOffset(mOffset, nsIAccessibleText::BOUNDARY_WORD_END, &wordend_start, &wordend_end,
-                     unused);
+    int32_t startOffset = 0, endOffset = 0;
+    uint64_t startContainerID = 0, endContainerID = 0;
+    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendLeftWordAt(mContainer.AsProxy()->ID(), mOffset,
+                                                             &startContainerID, &startOffset,
+                                                             &endContainerID, &endOffset);
+    return GeckoTextMarkerRange(
+        GeckoTextMarker(ipcDoc->GetAccessible(startContainerID), startOffset),
+        GeckoTextMarker(ipcDoc->GetAccessible(endContainerID), endOffset));
+  } else if (auto htWrap = ContainerAsHyperTextWrap()) {
+    int32_t startOffset = 0, endOffset = 0;
+    HyperTextAccessible* startContainer = nullptr;
+    HyperTextAccessible* endContainer = nullptr;
+    htWrap->LeftWordAt(mOffset, &startContainer, &startOffset, &endContainer, &endOffset);
+    return GeckoTextMarkerRange(GeckoTextMarker(startContainer, startOffset),
+                                GeckoTextMarker(endContainer, endOffset));
   }
 
-  // We use the intersecting boundary of word start, and word end because we don't have
-  // a boundary mode that is non-inclusive of whitespace.
-  return GeckoTextMarkerRange(GeckoTextMarker(mContainer, std::max(wordstart_start, wordend_start)),
-                              GeckoTextMarker(mContainer, std::min(wordstart_end, wordend_end)));
+  return GeckoTextMarkerRange(GeckoTextMarker(), GeckoTextMarker());
+}
+
+GeckoTextMarkerRange GeckoTextMarker::RightWordRange() {
+  MOZ_ASSERT(!mContainer.IsNull());
+  if (mContainer.IsProxy()) {
+    int32_t startOffset = 0, endOffset = 0;
+    uint64_t startContainerID = 0, endContainerID = 0;
+    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendRightWordAt(mContainer.AsProxy()->ID(), mOffset,
+                                                              &startContainerID, &startOffset,
+                                                              &endContainerID, &endOffset);
+    return GeckoTextMarkerRange(
+        GeckoTextMarker(ipcDoc->GetAccessible(startContainerID), startOffset),
+        GeckoTextMarker(ipcDoc->GetAccessible(endContainerID), endOffset));
+  } else if (auto htWrap = ContainerAsHyperTextWrap()) {
+    int32_t startOffset = 0, endOffset = 0;
+    HyperTextAccessible* startContainer = nullptr;
+    HyperTextAccessible* endContainer = nullptr;
+    htWrap->RightWordAt(mOffset, &startContainer, &startOffset, &endContainer, &endOffset);
+    return GeckoTextMarkerRange(GeckoTextMarker(startContainer, startOffset),
+                                GeckoTextMarker(endContainer, endOffset));
+  }
+
+  return GeckoTextMarkerRange(GeckoTextMarker(), GeckoTextMarker());
 }
 
 // GeckoTextMarkerRange
@@ -259,123 +256,15 @@ id GeckoTextMarkerRange::CreateAXTextMarkerRange() {
 
 NSString* GeckoTextMarkerRange::Text() const {
   nsAutoString text;
-  TextInternal(text, mStart.mContainer, mStart.mOffset);
+  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendTextForRange(
+        mStart.mContainer.AsProxy()->ID(), mStart.mOffset, mEnd.mContainer.AsProxy()->ID(),
+        mEnd.mOffset, &text);
+  } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
+    htWrap->TextForRange(text, mStart.mOffset, mEnd.ContainerAsHyperTextWrap(), mEnd.mOffset);
+  }
   return nsCocoaUtils::ToNSString(text);
-}
-
-void GeckoTextMarkerRange::AppendTextTo(const AccessibleOrProxy& aContainer, nsAString& aText,
-                                        uint32_t aStartOffset, uint32_t aEndOffset) const {
-  nsAutoString text;
-  if (aContainer.IsProxy()) {
-    aContainer.AsProxy()->TextSubstring(aStartOffset, aEndOffset, text);
-  } else if (aContainer.AsAccessible()->IsHyperText()) {
-    aContainer.AsAccessible()->AsHyperText()->TextSubstring(aStartOffset, aEndOffset, text);
-  }
-
-  aText.Append(text);
-}
-
-int32_t GeckoTextMarkerRange::StartOffset(const AccessibleOrProxy& aChild) const {
-  if (aChild.IsProxy()) {
-    bool unused;
-    return aChild.AsProxy()->StartOffset(&unused);
-  }
-
-  return aChild.AsAccessible()->StartOffset();
-}
-
-int32_t GeckoTextMarkerRange::EndOffset(const AccessibleOrProxy& aChild) const {
-  if (aChild.IsProxy()) {
-    bool unused;
-    return aChild.AsProxy()->EndOffset(&unused);
-  }
-
-  return aChild.AsAccessible()->EndOffset();
-}
-
-int32_t GeckoTextMarkerRange::LinkCount(const AccessibleOrProxy& aContainer) const {
-  if (aContainer.IsProxy()) {
-    return aContainer.AsProxy()->LinkCount();
-  }
-
-  if (aContainer.AsAccessible()->IsHyperText()) {
-    return aContainer.AsAccessible()->AsHyperText()->LinkCount();
-  }
-
-  return 0;
-}
-
-AccessibleOrProxy GeckoTextMarkerRange::LinkAt(const AccessibleOrProxy& aContainer,
-                                               uint32_t aIndex) const {
-  if (aContainer.IsProxy()) {
-    return aContainer.AsProxy()->LinkAt(aIndex);
-  }
-
-  if (aContainer.AsAccessible()->IsHyperText()) {
-    return aContainer.AsAccessible()->AsHyperText()->LinkAt(aIndex);
-  }
-
-  return AccessibleOrProxy();
-}
-
-bool GeckoTextMarkerRange::TextInternal(nsAString& aText, AccessibleOrProxy aCurrent,
-                                        int32_t aStartIntlOffset) const {
-  int32_t endIntlOffset = aCurrent == mEnd.mContainer ? mEnd.mOffset : -1;
-  if (endIntlOffset == 0) {
-    return false;
-  }
-
-  AccessibleOrProxy next;
-  int32_t linkCount = LinkCount(aCurrent);
-  int32_t linkStartOffset = 0;
-  int32_t end = endIntlOffset;
-  // Find the first link that is at or after the start offset.
-  for (int32_t i = 0; i < linkCount; i++) {
-    AccessibleOrProxy link = LinkAt(aCurrent, i);
-    // If this is remote content there is potential that
-    // the content mutated while we are still in this loop,
-    // so we need to check that we actually got a link.
-    // If we didn't the subtree has changed since this was last called.
-    // We should bail early.
-    if (link.IsNull()) {
-      return false;
-    }
-    MOZ_ASSERT(!link.IsNull());
-    linkStartOffset = StartOffset(link);
-    if (aStartIntlOffset <= linkStartOffset) {
-      next = link;
-      break;
-    }
-  }
-
-  bool endIsBeyondLink = !next.IsNull() && (endIntlOffset < 0 || endIntlOffset > linkStartOffset);
-
-  if (endIsBeyondLink) {
-    end = linkStartOffset;
-  }
-
-  AppendTextTo(aCurrent, aText, aStartIntlOffset, end);
-
-  if (endIsBeyondLink) {
-    if (!TextInternal(aText, next, 0)) {
-      return false;
-    }
-  }
-
-  if (endIntlOffset >= 0) {
-    // If our original end marker is positive, we know we found all the text we
-    // needed within this current node, and our search is complete.
-    return false;
-  }
-
-  next = aCurrent.Parent();
-  if (!next.IsNull()) {
-    // The end offset is passed this link, go back to the parent
-    // and continue from this link's end offset.
-    return TextInternal(aText, next, EndOffset(aCurrent));
-  }
-
-  return true;
 }
 }
 }
