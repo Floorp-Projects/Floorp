@@ -448,13 +448,14 @@ var UrlbarTestUtils = {
     if (expectedSearchMode.engineName) {
       expectedPlaceholderL10n = {
         id: UrlbarUtils.WEB_ENGINE_NAMES.has(expectedSearchMode.engineName)
-          ? "urlbar-placeholder-search-mode-web"
-          : "urlbar-placeholder-search-mode-other",
-        args: null,
+          ? "urlbar-placeholder-search-mode-web-2"
+          : "urlbar-placeholder-search-mode-other-engine",
+        args: { name: expectedSearchMode.engineName },
       };
     } else if (expectedSearchMode.source) {
+      let name = UrlbarUtils.getResultSourceName(expectedSearchMode.source);
       expectedPlaceholderL10n = {
-        id: "urlbar-placeholder-search-mode-other",
+        id: `urlbar-placeholder-search-mode-other-${name}`,
         args: null,
       };
     }
