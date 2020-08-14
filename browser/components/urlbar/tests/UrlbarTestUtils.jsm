@@ -491,13 +491,10 @@ var UrlbarTestUtils = {
     );
 
     let buttons = oneOffs.getSelectableButtons(true);
-    if (!searchMode) {
-      searchMode = { engineName: buttons[0].engine.name };
-      if (UrlbarUtils.WEB_ENGINE_NAMES.has(searchMode.engineName)) {
-        searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
-      }
-    }
-
+    searchMode = searchMode || {
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engineName: buttons[0].engine.name,
+    };
     let oneOff = buttons.find(o =>
       searchMode.engineName
         ? o.engine.name == searchMode.engineName
