@@ -548,7 +548,6 @@ class ContentParent final
 
   static void BroadcastBlobURLRegistration(
       const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
-      const Maybe<nsID>& aAgentClusterId,
       ContentParent* aIgnoreThisCP = nullptr);
 
   static void BroadcastBlobURLUnregistration(
@@ -556,8 +555,7 @@ class ContentParent final
       ContentParent* aIgnoreThisCP = nullptr);
 
   mozilla::ipc::IPCResult RecvStoreAndBroadcastBlobURLRegistration(
-      const nsCString& aURI, const IPCBlob& aBlob, const Principal& aPrincipal,
-      const Maybe<nsID>& aAgentCluster);
+      const nsCString& aURI, const IPCBlob& aBlob, const Principal& aPrincipal);
 
   mozilla::ipc::IPCResult RecvUnstoreAndBroadcastBlobURLUnregistration(
       const nsCString& aURI, const Principal& aPrincipal);
@@ -703,7 +701,6 @@ class ContentParent final
       const nsCString& aBlobURL, nsIPrincipal* pTriggeringPrincipal,
       nsIPrincipal* pLoadingPrincipal,
       const OriginAttributes& aOriginAttributes,
-      const Maybe<nsID>& aAgentClusterId,
       BlobURLDataRequestResolver&& aResolver);
 
  protected:

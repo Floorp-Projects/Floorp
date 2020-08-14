@@ -38,8 +38,8 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
     nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
 
     nsAutoCString url;
-    nsresult rv = BlobURLProtocolHandler::AddDataEntry(
-        mBlobImpl, principal, Some(mWorkerPrivate->AgentClusterId()), url);
+    nsresult rv =
+        BlobURLProtocolHandler::AddDataEntry(mBlobImpl, principal, url);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");
@@ -67,9 +67,18 @@ class RevokeURLRunnable : public WorkerMainThreadRunnable {
 
     NS_ConvertUTF16toUTF8 url(mURL);
 
-    BlobURLProtocolHandler::RemoveDataEntry(
-        url, mWorkerPrivate->GetPrincipal(),
-        Some(mWorkerPrivate->AgentClusterId()));
+    nsIPrincipal* urlPrincipal =
+        BlobURLProtocolHandler::GetDataEntryPrincipal(url);
+
+    nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
+
+    bool subsumes;
+    if (urlPrincipal &&
+        NS_SUCCEEDED(principal->Subsumes(urlPrincipal, &subsumes)) &&
+        subsumes) {
+      BlobURLProtocolHandler::RemoveDataEntry(url);
+    }
+
     return true;
   }
 };
