@@ -102,9 +102,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
   }
 
   /**
-   * Returns whether the user typed a token alias or a restriction token. We use
-   * this value to override the pref to disable search suggestions in the
-   * Urlbar.
+   * Returns whether the user typed a token alias or restriction token, or is in
+   * search mode. We use this value to override the pref to disable search
+   * suggestions in the Urlbar.
    * @param {UrlbarQueryContext} queryContext  The query context object.
    * @returns {boolean} True if the user typed a token alias or search
    *   restriction token.
@@ -116,7 +116,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
         queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) ||
       queryContext.tokens.some(
         t => t.type == UrlbarTokenizer.TYPE.RESTRICT_SEARCH
-      )
+      ) ||
+      (queryContext.searchMode &&
+        queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH))
     );
   }
 

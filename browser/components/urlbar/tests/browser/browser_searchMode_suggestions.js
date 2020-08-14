@@ -142,6 +142,52 @@ add_task(async function nonEmptySearch_nonMatching() {
   });
 });
 
+add_task(async function nonEmptySearch_withHistory() {
+  // URLs with the same host as the search engine.
+  await PlacesTestUtils.addVisits([
+    "http://mochi.test/ciao",
+    "http://mochi.test/ciao1",
+  ]);
+
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "ciao",
+    });
+
+    await UrlbarTestUtils.enterSearchMode(window);
+    Assert.equal(gURLBar.value, "ciao", "Urlbar value should be set.");
+    await checkResults([
+      {
+        isSearchHistory: false,
+        suggestion: undefined,
+      },
+      {
+        isSearchHistory: false,
+        suggestion: "ciaofoo",
+      },
+      {
+        isSearchHistory: false,
+        suggestion: "ciaobar",
+      },
+      {
+        isSearchHistory: false,
+        suggestion: undefined,
+        historyUrl: "http://mochi.test/ciao1",
+      },
+      {
+        isSearchHistory: false,
+        suggestion: undefined,
+        historyUrl: "http://mochi.test/ciao",
+      },
+    ]);
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+  });
+
+  await PlacesUtils.history.clear();
+});
+
 async function checkResults(resultsDetails) {
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
@@ -150,20 +196,29 @@ async function checkResults(resultsDetails) {
   );
   for (let i = 0; i < resultsDetails.length; ++i) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    Assert.equal(
-      result.searchParams.engine,
-      suggestionsEngine.name,
-      "It should be a search result for our suggestion engine."
-    );
-    Assert.equal(
-      result.searchParams.isSearchHistory,
-      resultsDetails[i].isSearchHistory,
-      "Check if it should be a local suggestion result."
-    );
-    Assert.equal(
-      result.searchParams.suggestion,
-      resultsDetails[i].suggestion,
-      "Check the suggestion value"
-    );
+    if (result.searchParams) {
+      Assert.equal(
+        result.searchParams?.engine,
+        suggestionsEngine.name,
+        "It should be a search result for our suggestion engine."
+      );
+      Assert.equal(
+        result.searchParams?.isSearchHistory,
+        resultsDetails[i].isSearchHistory,
+        "Check if it should be a local suggestion result."
+      );
+      Assert.equal(
+        result.searchParams?.suggestion,
+        resultsDetails[i].suggestion,
+        "Check the suggestion value"
+      );
+    }
+    if (resultsDetails[i].historyUrl) {
+      Assert.equal(
+        result.url,
+        resultsDetails[i].historyUrl,
+        "The history result should have the correct URL."
+      );
+    }
   }
 }
