@@ -21,32 +21,22 @@
   <body>
     <div id="report-content">
       <button id="enrollment-button" class="primary"></button>
-      <h1 id="title" data-l10n-id="pioneer-document-title"></h1>
-      <div id="summary" data-l10n-id="pioneer-summary"></div>
-      <div id="details">
-        <p>How it works:</p>
-        <p>Step 1</p>
-          <p>Select the Get Started button. You'll have the chance to review the kinds of data we collect and how we protect your data. You'll also be asked to provide some basic demographic information, like age and geography. (Pioneer is currently open to participants in the US.) You can leave Pioneer at any time.</p>
-          <p>Step 2</p>
-          <p>The Pioneer icon will appear on the Firefox toolbar. Select the icon any time you want to return to this page to update your Pioneer settings, enroll in a study, or leave the program.</p>
-          <p>Step 3</p>
-          <p>A notification dot means there is news about the Pioneer program or an opportunity to enroll in a study. Before you enroll in a study, you can learn more about who is conducting the study, what data they are collecting, and what they hope to learn.</p>
-
-          <p>Your data: why it matters and how we protect it</p>
-          <p>Many technology companies use the data they collect to sell advertising targeted to you or to sell your information outright. Pioneer is different. Our goal: Put your data to work for a better internet. With it, we can better understand pressing issues, develop new products that can fundamentally change the tech landscape, and hand more power and control back to users.</p>
-          <p>You'll know the information we plan to collect and before we collect it.</p>
-          <p>We go to great lengths to secure your data and protect your privacy.</p>
-          <p>You can leave the Pioneer program at any time, and we'll stop collecting data when you do.</p>
-          <p>Other research opportunities</p>
-          <p>As a Pioneer participant, you'll also have the option to enroll in studies led by research teams vetted by Mozilla. The decision to enroll is always up to you. You'll have the opportunity to learn about a study's goals, the data it collects, and its research team before you enroll.</p>
-          <p>You can leave a study at any time while it is still running and this will remove your data from the study. </p>
+      <h1 id="report-title" data-l10n-id="pioneer-document-title"></h1>
+      <div>
+        <p data-l10n-id="pioneer-summary"></p>
       </div>
-      <a id="privacy-policy" href="https://www.mozilla.org/en-US/privacy/faq/" target="_blank">Pioneer Privacy Policy</a>
+      <p>
+        <h2>How it works</h2>
+        <ol>
+          <li>Select the Get Started button. You’ll have the chance to review the kinds of data we collect and how we protect your data. You’ll also be asked to provide some basic demographic information, like age and geography. (Pioneer is currently open to participants in the US.) You can leave Pioneer at any time.</li>
+          <li>The Pioneer icon will appear on the Firefox toolbar. Select the icon any time you want to return to this page to update your Pioneer settings, enroll in a study, or leave the program.</li>
+          <li>A notification dot means there is news about the Pioneer program or an opportunity to enroll in a study. Before you enroll in a study, you can learn more about who is conducting the study, what data they are collecting, and what they hope to learn.</li>
+        </ol>
+      </p>
       <h2 id="header-available-studies"></h2>
       <div id="available-studies"></div>
       <dialog id="join-pioneer-consent-dialog" class="modal" is="trapped-dialog">
         <h3>Pioneer Privacy Consent Notice</h3>
-        <div id="join-pioneer-consent"></div>
         <footer>
           <button id="join-pioneer-cancel-dialog-button">Cancel</button>
           <button id="join-pioneer-accept-dialog-button">Accept and Join Pioneer</button>
@@ -54,7 +44,6 @@
       </dialog>
       <dialog id="leave-pioneer-consent-dialog" class="modal" is="trapped-dialog">
         <h3>Leaving Pioneer</h3>
-        <div id="leave-pioneer-consent"></div>
         <footer>
           <button id="leave-pioneer-cancel-dialog-button">Cancel</button>
           <button id="leave-pioneer-accept-dialog-button">Accept and Leave Pioneer</button>
@@ -62,7 +51,6 @@
       </dialog>
       <dialog id="join-study-consent-dialog" class="modal" is="trapped-dialog">
         <h3>Pioneer Study Privacy Consent Notice</h3>
-        <div id="join-study-consent"></div>
         <footer>
           <button id="join-study-cancel-dialog-button">Cancel</button>
           <button id="join-study-accept-dialog-button">Accept and Join Study</button>
@@ -70,7 +58,6 @@
       </dialog>
       <dialog id="leave-study-consent-dialog" class="modal" is="trapped-dialog">
         <h3>Leaving Study</h3>
-        <div id="leave-study-consent"></div>
         <footer>
           <button id="leave-study-cancel-dialog-button">Cancel</button>
           <button id="leave-study-accept-dialog-button">Accept and Leave Study</button>
