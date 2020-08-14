@@ -34,10 +34,7 @@ namespace js {
 namespace shell {
 
 // Define use of application-specific slots on the shell's global object.
-enum GlobalAppSlot {
-  GlobalAppSlotModuleRegistry,
-  GlobalAppSlotCount
-};
+enum GlobalAppSlot { GlobalAppSlotModuleRegistry, GlobalAppSlotCount };
 static_assert(GlobalAppSlotCount <= JSCLASS_GLOBAL_APPLICATION_SLOTS,
               "Too many applications slots defined for shell global");
 
@@ -140,6 +137,7 @@ extern bool enableToSource;
 extern bool enablePropertyErrorMessageFix;
 extern bool enableIteratorHelpers;
 extern bool enablePrivateClassFields;
+extern bool enablePrivateClassMethods;
 #ifdef JS_GC_ZEAL
 extern uint32_t gZealBits;
 extern uint32_t gZealFrequency;

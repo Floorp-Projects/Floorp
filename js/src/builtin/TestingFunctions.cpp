@@ -168,6 +168,12 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
                       privateFields ? TrueHandleValue : FalseHandleValue)) {
     return false;
   }
+  bool privateMethods = cx->options().privateClassMethods();
+  if (!JS_SetProperty(cx, info, "privateMethods",
+                      privateFields && privateMethods ? TrueHandleValue
+                                                      : FalseHandleValue)) {
+    return false;
+  }
 
   args.rval().setObject(*info);
   return true;

@@ -131,6 +131,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool hideScriptFromDebugger = false;
   bool nonSyntacticScope = false;
   bool privateClassFields = false;
+  bool privateClassMethods = false;
 
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
