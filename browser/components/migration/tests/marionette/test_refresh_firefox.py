@@ -247,6 +247,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
           const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
           return Services.xulStore.getValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed");
         """)
+        if toolbarVisible == "":
+          toolbarVisible = "false"
         self.assertEqual(toolbarVisible, "false")
 
     def checkHistory(self):

@@ -25,12 +25,6 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
   "AboutNewTab",
   "resource:///modules/AboutNewTab.jsm"
 );
@@ -59,6 +53,12 @@ ChromeUtils.defineModuleGetter(
   this,
   "FeatureGate",
   "resource://featuregates/FeatureGate.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -3028,7 +3028,7 @@ BrowserGlue.prototype = {
           // New profiles may have existing bookmarks (imported from another browser or
           // copied into the profile) and we want to show the bookmark toolbar for them
           // in some cases.
-          this._maybeToggleBookmarkToolbarVisibility();
+          PlacesUIUtils.maybeToggleBookmarkToolbarVisibility();
         } catch (ex) {
           Cu.reportError(ex);
         }
@@ -3134,47 +3134,6 @@ BrowserGlue.prototype = {
       null,
       clickCallback
     );
-  },
-
-  /**
-   * Uncollapses PersonalToolbar if its collapsed status is not
-   * persisted, and user customized it or changed default bookmarks.
-   *
-   * If the user does not have a persisted value for the toolbar's
-   * "collapsed" attribute, try to determine whether it's customized.
-   */
-  _maybeToggleBookmarkToolbarVisibility() {
-    const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
-    const NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE = 3;
-    let xulStore = Services.xulStore;
-
-    if (!xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed")) {
-      // We consider the toolbar customized if it has more than NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-      // children, or if it has a persisted currentset value.
-      let toolbarIsCustomized = xulStore.hasValue(
-        BROWSER_DOCURL,
-        "PersonalToolbar",
-        "currentset"
-      );
-      let getToolbarFolderCount = () => {
-        let toolbarFolder = PlacesUtils.getFolderContents(
-          PlacesUtils.bookmarks.toolbarGuid
-        ).root;
-        let toolbarChildCount = toolbarFolder.childCount;
-        toolbarFolder.containerOpen = false;
-        return toolbarChildCount;
-      };
-
-      if (
-        toolbarIsCustomized ||
-        getToolbarFolderCount() > NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-      ) {
-        CustomizableUI.setToolbarVisibility(
-          CustomizableUI.AREA_BOOKMARKS,
-          true
-        );
-      }
-    }
   },
 
   _migrateXULStoreForDocument(fromURL, toURL) {

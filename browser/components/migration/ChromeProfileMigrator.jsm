@@ -31,6 +31,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
+
 /**
  * Converts an array of chrome bookmark objects into one our own places code
  * understands.
@@ -106,7 +112,11 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
         this.getBrowserKey()
       ).replace(/^source-name-/, "");
       let possibleResourcePromises = [
-        GetBookmarksResource(profileFolder, localePropertySuffix),
+        GetBookmarksResource(
+          profileFolder,
+          localePropertySuffix,
+          this.getBrowserKey()
+        ),
         GetHistoryResource(profileFolder),
         GetCookiesResource(profileFolder),
       ];
@@ -204,7 +214,11 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
   },
 });
 
-async function GetBookmarksResource(aProfileFolder, aLocalePropertySuffix) {
+async function GetBookmarksResource(
+  aProfileFolder,
+  aLocalePropertySuffix,
+  aBrowserKey
+) {
   let bookmarksPath = OS.Path.join(aProfileFolder, "Bookmarks");
   if (!(await OS.File.exists(bookmarksPath))) {
     return null;
@@ -224,16 +238,24 @@ async function GetBookmarksResource(aProfileFolder, aLocalePropertySuffix) {
           encoding: "UTF-8",
         });
         let roots = JSON.parse(bookmarkJSON).roots;
+        let histogramBookmarkRoots = 0;
 
         // Importing bookmark bar items
         if (roots.bookmark_bar.children && roots.bookmark_bar.children.length) {
           // Toolbar
+          histogramBookmarkRoots |=
+            MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
           let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
           let bookmarks = convertBookmarks(
             roots.bookmark_bar.children,
             errorGatherer
           );
-          if (!MigrationUtils.isStartupMigration) {
+          if (
+            !MigrationUtils.isStartupMigration &&
+            PlacesUtils.getChildCountForFolder(
+              PlacesUtils.bookmarks.toolbarGuid
+            ) > PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+          ) {
             parentGuid = await MigrationUtils.createImportedBookmarksFolder(
               aLocalePropertySuffix,
               parentGuid
@@ -243,14 +265,21 @@ async function GetBookmarksResource(aProfileFolder, aLocalePropertySuffix) {
             bookmarks,
             parentGuid
           );
+          PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
         }
 
         // Importing bookmark menu items
         if (roots.other.children && roots.other.children.length) {
           // Bookmark menu
+          histogramBookmarkRoots |=
+            MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
           let parentGuid = PlacesUtils.bookmarks.menuGuid;
           let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
-          if (!MigrationUtils.isStartupMigration) {
+          if (
+            !MigrationUtils.isStartupMigration &&
+            PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.menuGuid) >
+              PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+          ) {
             parentGuid = await MigrationUtils.createImportedBookmarksFolder(
               aLocalePropertySuffix,
               parentGuid
@@ -264,6 +293,9 @@ async function GetBookmarksResource(aProfileFolder, aLocalePropertySuffix) {
         if (gotErrors) {
           throw new Error("The migration included errors.");
         }
+        Services.telemetry
+          .getKeyedHistogramById("FX_MIGRATION_BOOKMARKS_ROOTS")
+          .add(aBrowserKey, histogramBookmarkRoots);
       })().then(
         () => aCallback(true),
         () => aCallback(false)

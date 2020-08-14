@@ -1306,4 +1306,11 @@ var MigrationUtils = Object.freeze({
   getSourceIdForTelemetry(sourceName) {
     return this._sourceNameToIdMapping[sourceName] || 0;
   },
+
+  /* Enum of locations where bookmarks were found in the
+     source browser that we import from */
+  SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR: 1,
+  SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU: 2,
+  SOURCE_BOOKMARK_ROOTS_READING_LIST: 4,
+  SOURCE_BOOKMARK_ROOTS_UNFILED: 8,
 });
