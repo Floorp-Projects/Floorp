@@ -46,7 +46,9 @@ class ClearableEditText @JvmOverloads constructor(
      * Displays a clear icon if text has been entered.
      */
     override fun onTextChanged(text: CharSequence?, start: Int, lengthBefore: Int, lengthAfter: Int) {
-        val drawable = if (shouldShowClearButton(lengthAfter)) {
+        // lengthAfter has inconsistent behaviour when there are spaces in the entered text, so we'll use text.length.
+        val textLength = text?.length ?: 0
+        val drawable = if (shouldShowClearButton(textLength)) {
             AppCompatResources.getDrawable(context, R.drawable.ic_clear)?.apply {
                 colorFilter = createBlendModeColorFilterCompat(context.getColorFromAttr(R.attr.primaryText), SRC_IN)
             }
