@@ -1,5 +1,9 @@
 "use strict";
 
+const { CustomizableUI } = ChromeUtils.import(
+  "resource:///modules/CustomizableUI.jsm"
+);
+
 add_task(async function() {
   registerFakePath("AppData", do_get_file("AppData/Roaming/"));
 
@@ -20,37 +24,37 @@ add_task(async function() {
     "Default user should be the last"
   );
 
-  // Wait for the imported bookmarks.  Check that "From 360 Secure Browser"
-  // folders are created on the toolbar.
-  let source = await MigrationUtils.getLocalizedString("source-name-360se");
-  let label = await MigrationUtils.getLocalizedString(
-    "imported-bookmarks-source",
-    { source }
-  );
+  let importedToBookmarksToolbar = false;
+  let itemsSeen = { bookmarks: 0, folders: 0 };
 
-  let expectedParents = [PlacesUtils.toolbarFolderId];
-  let itemCount = 0;
-
-  let gotFolder = false;
   let listener = events => {
     for (let event of events) {
-      if (event.title != label) {
-        itemCount++;
-      }
-      if (
-        event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER &&
-        event.title == "360 \u76f8\u5173"
-      ) {
-        gotFolder = true;
-      }
-      if (expectedParents.length && event.title == label) {
-        let index = expectedParents.indexOf(event.parentId);
-        Assert.ok(index != -1, "Found expected parent");
-        expectedParents.splice(index, 1);
+      itemsSeen[
+        event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER
+          ? "folders"
+          : "bookmarks"
+      ]++;
+      if (event.parentId == PlacesUtils.toolbarFolderId) {
+        importedToBookmarksToolbar = true;
       }
     }
   };
   PlacesUtils.observers.addListener(["bookmark-added"], listener);
+  let observerNotified = false;
+  Services.obs.addObserver((aSubject, aTopic, aData) => {
+    let [toolbar, visibility] = JSON.parse(aData);
+    Assert.equal(
+      toolbar,
+      CustomizableUI.AREA_BOOKMARKS,
+      "Notification should be received for bookmarks toolbar"
+    );
+    Assert.equal(
+      visibility,
+      "true",
+      "Notification should say to reveal the bookmarks toolbar"
+    );
+    observerNotified = true;
+  }, "browser-set-toolbar-visibility");
 
   await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS, {
     id: "default",
@@ -58,13 +62,14 @@ add_task(async function() {
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
   // Check the bookmarks have been imported to all the expected parents.
-  Assert.ok(!expectedParents.length, "No more expected parents");
-  Assert.ok(gotFolder, "Should have seen the folder get imported");
-  Assert.equal(itemCount, 10, "Should import all 10 items.");
+  Assert.ok(importedToBookmarksToolbar, "Bookmarks imported in the toolbar");
+  Assert.equal(itemsSeen.bookmarks, 8, "Should import all bookmarks.");
+  Assert.equal(itemsSeen.folders, 2, "Should import all folders.");
   // Check that the telemetry matches:
   Assert.equal(
     MigrationUtils._importQuantities.bookmarks,
-    itemCount,
+    itemsSeen.bookmarks + itemsSeen.folders,
     "Telemetry reporting correct."
   );
+  Assert.ok(observerNotified, "The observer should be notified upon migration");
 });

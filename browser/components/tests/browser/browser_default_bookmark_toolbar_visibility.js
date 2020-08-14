@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test _maybeToggleBookmarkToolbarVisibility() code running for new profiles.
+ * Test PlacesUIUtils.maybeToggleBookmarkToolbarVisibility() code running for new profiles.
  * Ensure that the bookmarks toolbar is hidden in a default configuration.
  * If new default bookmarks are added to the toolbar then the threshold of > 3
  * in NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE may need to be adjusted there.
