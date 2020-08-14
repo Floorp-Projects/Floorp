@@ -54,7 +54,7 @@ class MachCommands(MachCommandBase):
                 return 1
 
             # Create the Build environment to configure the tree
-            builder = Build(self._mach_context)
+            builder = Build(self._mach_context, None)
 
             rc = builder.configure()
             if rc != 0:
