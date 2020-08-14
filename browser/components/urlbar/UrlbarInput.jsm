@@ -1209,8 +1209,9 @@ class UrlbarInput {
       this.document.l10n.setAttributes(
         this.inputField,
         UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)
-          ? "urlbar-placeholder-search-mode-web"
-          : "urlbar-placeholder-search-mode-other"
+          ? "urlbar-placeholder-search-mode-web-2"
+          : "urlbar-placeholder-search-mode-other-engine",
+        { name: engineName }
       );
     } else if (source) {
       let sourceName = UrlbarUtils.getResultSourceName(source);
@@ -1227,7 +1228,7 @@ class UrlbarInput {
         this.document.l10n.setAttributes(this._searchModeLabel, l10nID);
         this.document.l10n.setAttributes(
           this.inputField,
-          "urlbar-placeholder-search-mode-other"
+          `urlbar-placeholder-search-mode-other-${sourceName}`
         );
       }
     } else {
