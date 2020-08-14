@@ -13,7 +13,7 @@ loadScripts(
 
 function stringForRange(macDoc, range) {
   return macDoc.getParameterizedAttributeValue(
-    "AXStringForTextMarkerRange_",
+    "AXStringForTextMarkerRange",
     range
   );
 }
