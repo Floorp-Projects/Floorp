@@ -480,8 +480,8 @@ nsresult ContentEventHandler::QueryContentRect(
     resultRect.UnionRect(resultRect, frameRect);
   }
 
-  aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
-      resultRect.ToOutsidePixels(presContext->AppUnitsPerDevPixel()));
+  aEvent->mReply.mRect = LayoutDeviceIntRect::FromAppUnitsToOutside(
+      resultRect, presContext->AppUnitsPerDevPixel());
   // Returning empty rect may cause native IME confused, let's make sure to
   // return non-empty rect.
   EnsureNonEmptyRect(aEvent->mReply.mRect);
@@ -2021,8 +2021,8 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
         return rv;
       }
 
-      rect = LayoutDeviceIntRect::FromUnknownRect(charRect.ToOutsidePixels(
-          baseFrame->PresContext()->AppUnitsPerDevPixel()));
+      rect = LayoutDeviceIntRect::FromAppUnitsToOutside(
+          charRect, baseFrame->PresContext()->AppUnitsPerDevPixel());
       // Returning empty rect may cause native IME confused, let's make sure to
       // return non-empty rect.
       EnsureNonEmptyRect(rect);
@@ -2220,8 +2220,8 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
       }
       aEvent->mReply.mWritingMode = rootContentFrame->GetWritingMode();
     }
-    aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
-        rect.ToOutsidePixels(presContext->AppUnitsPerDevPixel()));
+    aEvent->mReply.mRect = LayoutDeviceIntRect::FromAppUnitsToOutside(
+        rect, presContext->AppUnitsPerDevPixel());
     EnsureNonEmptyRect(aEvent->mReply.mRect);
     aEvent->mSucceeded = true;
     return NS_OK;
@@ -2402,8 +2402,8 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
     }
   }
 
-  aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
-      rect.ToOutsidePixels(lastFrame->PresContext()->AppUnitsPerDevPixel()));
+  aEvent->mReply.mRect = LayoutDeviceIntRect::FromAppUnitsToOutside(
+      rect, lastFrame->PresContext()->AppUnitsPerDevPixel());
   // Returning empty rect may cause native IME confused, let's make sure to
   // return non-empty rect.
   EnsureNonEmptyRect(aEvent->mReply.mRect);
@@ -2448,8 +2448,8 @@ nsresult ContentEventHandler::OnQueryCaretRect(
         NS_ENSURE_SUCCESS(rv, rv);
         nscoord appUnitsPerDevPixel =
             caretFrame->PresContext()->AppUnitsPerDevPixel();
-        aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
-            caretRect.ToOutsidePixels(appUnitsPerDevPixel));
+        aEvent->mReply.mRect = LayoutDeviceIntRect::FromAppUnitsToOutside(
+            caretRect, appUnitsPerDevPixel);
         // Returning empty rect may cause native IME confused, let's make sure
         // to return non-empty rect.
         EnsureNonEmptyRect(aEvent->mReply.mRect);
