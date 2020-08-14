@@ -115,6 +115,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
     uint64_t mInnerWindowId;
     uint64_t mOuterWindowId;
     uint64_t mBrowsingContextId;
+    // Note: This field is only used to add crash annotations for bug 1650257,
+    // and should be removed along with the annotation.
+    bool mBrowsingContextIsTop;
 
     FieldValues mFields;
   };
