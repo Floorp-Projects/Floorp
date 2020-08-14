@@ -349,12 +349,10 @@
 
 #pragma mark - ParameterizedTextAttributeGetters
 
-// Bug 1657653: This is too slow for now
-// AXLengthForTextMarkerRange_
+// AXLengthForTextMarkerRange
 - (NSNumber* _Nullable)moxLengthForTextMarkerRange:(id _Nonnull)textMarkerRange;
 
-// Bug 1657653: This is too slow for now
-// AXStringForTextMarkerRange_
+// AXStringForTextMarkerRange
 - (NSString* _Nullable)moxStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
 
 // AXTextMarkerRangeForUnorderedTextMarkers
@@ -378,8 +376,7 @@
 // AXPreviousTextMarkerForTextMarker
 - (id _Nullable)moxPreviousTextMarkerForTextMarker:(id _Nonnull)textMarker;
 
-// Bug 1657653: This is too slow for now
-// AXAttributedStringForTextMarkerRange_
+// AXAttributedStringForTextMarkerRange
 - (NSAttributedString* _Nullable)moxAttributedStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
 
 @end
