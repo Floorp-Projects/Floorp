@@ -31,7 +31,8 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
       nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
-  aRv = BlobURLProtocolHandler::AddDataEntry(aBlob.Impl(), principal, url);
+  aRv = BlobURLProtocolHandler::AddDataEntry(aBlob.Impl(), principal,
+                                             global->GetAgentClusterId(), url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -46,11 +47,18 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
                                     ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   nsCOMPtr<nsIPrincipal> principal =
       nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
-  aRv = BlobURLProtocolHandler::AddDataEntry(&aSource, principal, url);
+  aRv = BlobURLProtocolHandler::AddDataEntry(&aSource, principal,
+                                             global->GetAgentClusterId(), url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
