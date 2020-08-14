@@ -310,9 +310,9 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   manager->SetTargetAPZC(inputBlockId, targets);
 }
 
-// Test that APZEventResult::mHitRegionWithApzAwareListeners is correctly
+// Test that APZEventResult::mHandledByRootApzc is correctly
 // populated.
-TEST_F(APZEventRegionsTester, ApzAwareListenersFlag) {
+TEST_F(APZEventRegionsTester, HandledByRootApzcFlag) {
   // Create simple layer tree containing a dispatch-to-content region
   // that covers part but not all of its area.
   const char* layerTreeSyntax = "c";
@@ -322,6 +322,8 @@ TEST_F(APZEventRegionsTester, ApzAwareListenersFlag) {
   root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm,
                          layers);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
+  ModifyFrameMetrics(
+      root, [](FrameMetrics& metrics) { metrics.SetIsRootContent(true); });
   // away from the scrolling container layer.
   EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
   // bottom half is dispatch-to-content
@@ -331,16 +333,16 @@ TEST_F(APZEventRegionsTester, ApzAwareListenersFlag) {
       MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
-  // Tap the top half and check that we don't report hitting a region
-  // with APZ-aware listeners.
+  // Tap the top half and check that we report that the event was
+  // handled by the root APZC.
   APZEventResult result =
       TouchDown(manager, ScreenIntPoint(50, 25), mcc->Time());
   TouchUp(manager, ScreenIntPoint(50, 25), mcc->Time());
-  EXPECT_FALSE(result.mHitRegionWithApzAwareListeners);
+  EXPECT_TRUE(result.mHandledByRootApzc);
 
-  // Tap the bottom half and check we do report hitting a region with
-  // APZ-aware listeners.
+  // Tap the bottom half and check that we report that we're not
+  // sure whether the event was handled by the root APZC.
   result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
   TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
-  EXPECT_TRUE(result.mHitRegionWithApzAwareListeners);
+  EXPECT_FALSE(result.mHandledByRootApzc);
 }
