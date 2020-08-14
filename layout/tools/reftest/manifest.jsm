@@ -496,14 +496,15 @@ function BuildConditionSandbox(aURL) {
       g.windowUtils.layerManagerType == "Direct3D 9";
     sandbox.layersOpenGL =
       g.windowUtils.layerManagerType == "OpenGL";
+    sandbox.swgl =
+      g.windowUtils.layerManagerType == "WebRender (Software)";
     sandbox.webrender =
-      g.windowUtils.layerManagerType == "WebRender";
+      g.windowUtils.layerManagerType == "WebRender" || sandbox.swgl;
     sandbox.layersOMTC =
       g.windowUtils.layerManagerRemote == true;
     sandbox.advancedLayers =
       g.windowUtils.usingAdvancedLayers == true;
     sandbox.layerChecksEnabled = !sandbox.webrender;
-    sandbox.swgl = sandbox.webrender && prefs.getBoolPref("gfx.webrender.software", false);
 
     sandbox.retainedDisplayList =
       prefs.getBoolPref("layout.display-list.retain");
