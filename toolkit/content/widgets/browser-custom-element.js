@@ -18,6 +18,10 @@
     "resource://gre/modules/BrowserUtils.jsm"
   );
 
+  const { XPCOMUtils } = ChromeUtils.import(
+    "resource://gre/modules/XPCOMUtils.jsm"
+  );
+
   let LazyModules = {};
 
   ChromeUtils.defineModuleGetter(
@@ -44,10 +48,12 @@
     "resource://gre/actors/PopupBlockingParent.jsm"
   );
 
-  ChromeUtils.defineModuleGetter(
-    LazyModules,
-    "XPCOMUtils",
-    "resource://gre/modules/XPCOMUtils.jsm"
+  let lazyPrefs = {};
+  XPCOMUtils.defineLazyPreferenceGetter(
+    lazyPrefs,
+    "sessionHistoryInParent",
+    "fission.sessionHistoryInParent",
+    false
   );
 
   const elementsToDestroyOnUnload = new Set();
@@ -90,7 +96,7 @@
       // between calls to destroy().
       this.progressListeners = [];
 
-      LazyModules.XPCOMUtils.defineLazyGetter(this, "popupBlocker", () => {
+      XPCOMUtils.defineLazyGetter(this, "popupBlocker", () => {
         return new LazyModules.PopupBlocker(this);
       });
 
@@ -1872,10 +1878,12 @@
       // history, and performing the `resumeRedirectedLoad`, in order to get
       // sesssion state set up correctly.
       // FIXME: This probably needs to be hookable by GeckoView.
-      let tabbrowser = this.getTabBrowser();
-      if (tabbrowser) {
-        tabbrowser.finishBrowserRemotenessChange(this, redirectLoadSwitchId);
-        return true;
+      if (!lazyPrefs.sessionHistoryInParent) {
+        let tabbrowser = this.getTabBrowser();
+        if (tabbrowser) {
+          tabbrowser.finishBrowserRemotenessChange(this, redirectLoadSwitchId);
+          return true;
+        }
       }
       return false;
     }
