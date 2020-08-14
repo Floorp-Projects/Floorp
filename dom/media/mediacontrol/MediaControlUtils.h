@@ -99,19 +99,6 @@ inline MediaControlKey ConvertMediaSessionActionToControlKey(
   }
 }
 
-inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
-    MediaSessionPlaybackState aState) {
-  switch (aState) {
-    case MediaSessionPlaybackState::Playing:
-      return MediaSessionPlaybackTestState::Playing;
-    case MediaSessionPlaybackState::Paused:
-      return MediaSessionPlaybackTestState::Paused;
-    default:
-      MOZ_ASSERT(aState == MediaSessionPlaybackState::None);
-      return MediaSessionPlaybackTestState::Stopped;
-  }
-}
-
 inline MediaSessionAction ConvertToMediaSessionAction(uint8_t aActionValue) {
   MOZ_DIAGNOSTIC_ASSERT(aActionValue < uint8_t(MediaSessionAction::EndGuard_));
   return static_cast<MediaSessionAction>(aActionValue);

@@ -29,8 +29,6 @@
 #include "mozilla/dom/InProcessParent.h"
 #include "mozilla/dom/InProcessChild.h"
 #include "mozilla/dom/JSActorService.h"
-#include "mozilla/dom/MediaControlUtils.h"
-#include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/Performance.h"
@@ -1279,15 +1277,6 @@ void ChromeUtils::PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
 }
 
 /* static */
-void ChromeUtils::GenerateMediaControlKey(const GlobalObject& aGlobal,
-                                          MediaControlKey aKey) {
-  RefPtr<MediaControlService> service = MediaControlService::GetService();
-  if (service) {
-    service->GenerateTestMediaControlKey(aKey);
-  }
-}
-
-/* static */
 nsIDOMProcessChild* ChromeUtils::GetDomProcessChild(const GlobalObject&) {
   return nsIDOMProcessChild::GetSingleton();
 }
@@ -1309,45 +1298,6 @@ void ChromeUtils::GetAllDOMProcesses(
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
     aParents.AppendElement(cp);
   }
-}
-
-/* static */
-void ChromeUtils::GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,
-                                                MediaMetadataInit& aMetadata) {
-  if (RefPtr<MediaControlService> service = MediaControlService::GetService()) {
-    MediaMetadataBase metadata = service->GetMainControllerMediaMetadata();
-    aMetadata.mTitle = metadata.mTitle;
-    aMetadata.mArtist = metadata.mArtist;
-    aMetadata.mAlbum = metadata.mAlbum;
-    for (const auto& artwork : metadata.mArtwork) {
-      // If OOM happens resulting in not able to append the element, then we
-      // would get incorrect result and fail on test, so we don't need to throw
-      // an error explicitly.
-      if (MediaImage* image = aMetadata.mArtwork.AppendElement(fallible)) {
-        image->mSrc = artwork.mSrc;
-        image->mSizes = artwork.mSizes;
-        image->mType = artwork.mType;
-      }
-    }
-  }
-}
-
-/* static */
-MediaSessionPlaybackTestState ChromeUtils::GetCurrentMediaSessionPlaybackState(
-    GlobalObject& aGlobal) {
-  static_assert(int(MediaSessionPlaybackState::None) ==
-                    int(MediaSessionPlaybackTestState::Stopped) &&
-                int(MediaSessionPlaybackState::Paused) ==
-                    int(MediaSessionPlaybackTestState::Paused) &&
-                int(MediaSessionPlaybackState::Playing) ==
-                    int(MediaSessionPlaybackTestState::Playing) &&
-                MediaSessionPlaybackStateValues::Count ==
-                    MediaSessionPlaybackTestStateValues::Count);
-  if (RefPtr<MediaControlService> service = MediaControlService::GetService()) {
-    return ConvertToMediaSessionPlaybackTestState(
-        service->GetMainControllerPlaybackState());
-  }
-  return MediaSessionPlaybackTestState::Stopped;
 }
 
 }  // namespace dom
