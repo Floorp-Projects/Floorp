@@ -1,0 +1,18 @@
+{
+  "foo": 1,
+  "blah": 2,
+  "memory_report": {
+    "version": 1,
+    "hasMozMallocUsableSize": true,
+    "reports": [
+      {"process": "P (pid 12345)", "path": "explicit/foobar", "kind": 1, "units": 0, "amount": 400, "description": "Desc."},
+      {"process": "P (pid 12345)", "path": "explicit/zero1", "kind": 1, "units": 0, "amount": 0, "description": "Desc."},
+      {"process": "P (pid 12345)", "path": "heap-allocated", "kind": 2, "units": 0, "amount": 13000000, "description": "Heap allocated."},
+
+      {"process": "webIsolated=https://example.com (pid 12345)", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 2000000, "description": "Desc."},
+      {"process": "webIsolated=https://example.com (pid 12345)", "path": "explicit/a/c/d", "kind": 1, "units": 0, "amount": 3000000, "description": "Desc."},
+      {"process": "webIsolated=https://example.com (pid 12345)", "path": "heap-allocated", "kind": 2, "units": 0, "amount": 12000000, "description": "Heap allocated."}
+    ]
+  }
+}
+
