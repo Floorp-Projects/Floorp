@@ -221,21 +221,21 @@ function isCurrentMetadataEqualTo(metadata) {
  */
 async function isUsingDefaultMetadata(tab, options = {}) {
   let metadata = ChromeUtils.getCurrentActiveMediaMetadata();
-  if (options.isPrivateBrowsing) {
-    is(
-      metadata.title,
-      "Firefox is playing media",
-      "Using generic title to not expose sensitive information"
-    );
-  } else {
-    await SpecialPowers.spawn(tab.linkedBrowser, [metadata.title], title => {
-      is(
-        title,
-        content.document.title,
-        "Using website title as a default title"
-      );
-    });
-  }
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [metadata.title, options.isPrivateBrowsing],
+    (title, isPrivateBrowsing) => {
+      if (isPrivateBrowsing || !content.document.title.length) {
+        is(title, "Firefox is playing media", "Using a generic default title");
+      } else {
+        is(
+          title,
+          content.document.title,
+          "Using website title as a default title"
+        );
+      }
+    }
+  );
   is(metadata.artwork.length, 1, "Default metada contains one artwork");
   ok(
     metadata.artwork[0].src.includes("defaultFavicon.svg"),
