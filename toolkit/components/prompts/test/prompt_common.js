@@ -12,7 +12,13 @@ function hasTabModalPrompts() {
     Services.prefs.getBoolPref(prefName)
   );
 }
-var isTabModal = hasTabModalPrompts();
+var tabModalPromptEnabled = hasTabModalPrompts();
+
+var modalType;
+var tabSubDialogsEnabled = SpecialPowers.Services.prefs.getBoolPref(
+  "prompts.tabChromePromptSubDialog",
+  false
+);
 var isSelectDialog = false;
 var isOSX = "nsILocalFileMac" in SpecialPowers.Ci;
 var isE10S = SpecialPowers.Services.appinfo.processType == 2;
@@ -26,7 +32,7 @@ async function runPromptCombinations(window, testFunc) {
   let util = new PromptTestUtil(window);
   let run = () => {
     info(
-      `Running tests (isTabModal=${isTabModal}, usePromptService=${util.usePromptService}, useBrowsingContext=${util.useBrowsingContext}, useAsync=${util.useAsync})`
+      `Running tests (modalType=${modalType}, usePromptService=${util.usePromptService}, useBrowsingContext=${util.useBrowsingContext}, useAsync=${util.useAsync})`
     );
     return testFunc(util);
   };
@@ -34,8 +40,8 @@ async function runPromptCombinations(window, testFunc) {
   // Prompt service with dom window parent only supports window prompts
   util.usePromptService = true;
   util.useBrowsingContext = false;
-  isTabModal = false;
   util.modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+  modalType = util.modalType;
   util.useAsync = false;
   await run();
 
@@ -48,7 +54,7 @@ async function runPromptCombinations(window, testFunc) {
 
   for (let type of modalTypes) {
     util.modalType = type;
-    isTabModal = type !== Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+    modalType = type;
 
     // Prompt service with browsing context sync
     util.usePromptService = true;
@@ -176,7 +182,7 @@ function handlePromptWithoutChecks(action) {
       gChromeScript.removeMessageListener("promptHandled", handled);
       resolve(msg.promptState);
     });
-    gChromeScript.sendAsyncMessage("handlePrompt", { action, isTabModal });
+    gChromeScript.sendAsyncMessage("handlePrompt", { action, modalType });
   });
 }
 
@@ -189,7 +195,7 @@ function checkPromptState(promptState, expectedState) {
   info(`checkPromptState: Expected: ${expectedState.msg}`);
   // XXX check title? OS X has title in content
   is(promptState.msg, expectedState.msg, "Checking expected message");
-  if (isOSX && !isTabModal) {
+  if (isOSX && modalType !== Ci.nsIPrompt.MODAL_TYPE_CONTENT) {
     ok(!promptState.titleHidden, "Checking title always visible on OS X");
   } else {
     is(
@@ -215,7 +221,10 @@ function checkPromptState(promptState, expectedState) {
   );
   is(promptState.checkMsg, expectedState.checkMsg, "Checking checkbox label");
   is(promptState.checked, expectedState.checked, "Checking checkbox checked");
-  if (!isTabModal) {
+  if (
+    modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW ||
+    (modalType === Ci.nsIPrompt.MODAL_TYPE_TAB && tabSubDialogsEnabled)
+  ) {
     is(
       promptState.iconClass,
       expectedState.iconClass,

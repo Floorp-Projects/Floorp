@@ -1067,7 +1067,7 @@ async function runTests(util) {
   action = {
     buttonClick: "ok",
   };
-  if (!isTabModal && !isE10S) {
+  if (util.modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW && !isE10S) {
     promptDone = handlePrompt(state, action);
 
     promptArgs = ["TestTitle", "This is the alert text."];
@@ -1105,7 +1105,7 @@ async function runTests(util) {
   action = {
     buttonClick: "pollOK",
   };
-  if (!isTabModal) {
+  if (util.modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW) {
     promptDone = handlePrompt(state, action);
 
     flags =
