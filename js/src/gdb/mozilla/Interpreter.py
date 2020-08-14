@@ -16,7 +16,14 @@ class InterpreterTypeCache(object):
     # Cache information about the Interpreter types for this objfile.
     def __init__(self):
         self.tValue = gdb.lookup_type('JS::Value')
-        self.tScriptFrameIterData = gdb.lookup_type('js::ScriptFrameIter::Data')
+        self.tJSOp = gdb.lookup_type('JSOp')
+        try:
+            self.tScriptFrameIterData = gdb.lookup_type('js::ScriptFrameIter::Data')
+        except gdb.error:
+            # Work around problem with gcc optimized debuginfo where it doesn't
+            # seem to be able to see that ScriptFrameIter inherits the
+            # FrameIter::Data type.
+            self.tScriptFrameIterData = gdb.lookup_type('js::FrameIter::Data')
         self.tInterpreterFrame = gdb.lookup_type('js::InterpreterFrame')
         self.tBaselineFrame = gdb.lookup_type('js::jit::BaselineFrame')
         self.tRematerializedFrame = gdb.lookup_type('js::jit::RematerializedFrame')
