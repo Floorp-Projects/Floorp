@@ -261,6 +261,7 @@ add_task(async function spaceToEnterSearchMode() {
       "Panel has no results, therefore should have noresults attribute"
     );
     UrlbarTestUtils.assertSearchMode(win, {
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engineName: engine.name,
     });
     this.Assert.equal(
