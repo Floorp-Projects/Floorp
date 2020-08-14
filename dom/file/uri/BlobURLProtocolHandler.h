@@ -56,11 +56,14 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
                            const Maybe<nsID>& aAgentClusterId,
                            BlobImpl* aBlobImpl);
 
-  // This method revokes a blobURL. Because some operations could still be in
+  // These methods revoke a blobURL. Because some operations could still be in
   // progress, the revoking consists in marking the blobURL as revoked and in
   // removing it after RELEASING_TIMER milliseconds.
   static void RemoveDataEntry(const nsACString& aUri,
                               bool aBroadcastToOTherProcesses = true);
+  // Returns true if the entry was allowed to be removed.
+  static bool RemoveDataEntry(const nsACString& aUri, nsIPrincipal* aPrincipal,
+                              const Maybe<nsID>& aAgentClusterId);
 
   static void RemoveDataEntries();
 
@@ -73,8 +76,6 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
                            const Maybe<nsID>& blobAgentClusterId,
                            bool aAlsoIfRevoked = false);
 
-  static nsIPrincipal* GetDataEntryPrincipal(const nsACString& aUri,
-                                             bool aAlsoIfRevoked = false);
   static void Traverse(const nsACString& aUri,
                        nsCycleCollectionTraversalCallback& aCallback);
 
