@@ -2468,9 +2468,13 @@ bool WarpCacheIRTranspiler::emitAtomicsCompareExchangeResult(
   auto* elements = MArrayBufferViewElements::New(alloc(), obj);
   add(elements);
 
+  bool allowDoubleForUint32 = true;
+  MIRType knownType =
+      MIRTypeForArrayBufferViewRead(elementType, allowDoubleForUint32);
+
   auto* cas = MCompareExchangeTypedArrayElement::New(
       alloc(), elements, index, elementType, expected, replacement);
-  cas->setResultType(MIRType::Int32);
+  cas->setResultType(knownType);
   addEffectful(cas);
 
   pushResult(cas);
@@ -2492,9 +2496,13 @@ bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
   auto* elements = MArrayBufferViewElements::New(alloc(), obj);
   add(elements);
 
+  bool allowDoubleForUint32 = true;
+  MIRType knownType =
+      MIRTypeForArrayBufferViewRead(elementType, allowDoubleForUint32);
+
   auto* exchange = MAtomicExchangeTypedArrayElement::New(
       alloc(), elements, index, value, elementType);
-  exchange->setResultType(MIRType::Int32);
+  exchange->setResultType(knownType);
   addEffectful(exchange);
 
   pushResult(exchange);
@@ -2518,9 +2526,13 @@ bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
   auto* elements = MArrayBufferViewElements::New(alloc(), obj);
   add(elements);
 
+  bool allowDoubleForUint32 = true;
+  MIRType knownType =
+      MIRTypeForArrayBufferViewRead(elementType, allowDoubleForUint32);
+
   auto* binop = MAtomicTypedArrayElementBinop::New(alloc(), op, elements, index,
                                                    elementType, value);
-  binop->setResultType(MIRType::Int32);
+  binop->setResultType(knownType);
   addEffectful(binop);
 
   pushResult(binop);
@@ -2581,9 +2593,13 @@ bool WarpCacheIRTranspiler::emitAtomicsLoadResult(ObjOperandId objId,
   auto* elements = MArrayBufferViewElements::New(alloc(), obj);
   add(elements);
 
+  bool allowDoubleForUint32 = true;
+  MIRType knownType =
+      MIRTypeForArrayBufferViewRead(elementType, allowDoubleForUint32);
+
   auto* load = MLoadUnboxedScalar::New(alloc(), elements, index, elementType,
                                        DoesRequireMemoryBarrier);
-  load->setResultType(MIRType::Int32);
+  load->setResultType(knownType);
   addEffectful(load);
 
   pushResult(load);
