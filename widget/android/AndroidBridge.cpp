@@ -585,6 +585,20 @@ nsAndroidBridge::nsAndroidBridge() {
   AddObservers();
 }
 
+NS_IMETHODIMP
+nsAndroidBridge::GetDispatcherByName(const char* aName,
+                                     nsIAndroidEventDispatcher** aResult) {
+  if (!jni::IsAvailable()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<widget::EventDispatcher> dispatcher = new widget::EventDispatcher();
+  dispatcher->Attach(java::EventDispatcher::ByName(aName),
+                     /* window */ nullptr);
+  dispatcher.forget(aResult);
+  return NS_OK;
+}
+
 nsAndroidBridge::~nsAndroidBridge() {}
 
 NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged(
