@@ -38,8 +38,8 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
     nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
 
     nsAutoCString url;
-    nsresult rv =
-        BlobURLProtocolHandler::AddDataEntry(mBlobImpl, principal, url);
+    nsresult rv = BlobURLProtocolHandler::AddDataEntry(
+        mBlobImpl, principal, Some(mWorkerPrivate->AgentClusterId()), url);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");

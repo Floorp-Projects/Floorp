@@ -528,7 +528,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvBlobURLRegistration(
       const nsCString& aURI, const IPCBlob& aBlob,
-      const IPC::Principal& aPrincipal);
+      const IPC::Principal& aPrincipal, const Maybe<nsID>& aAgentClusterId);
 
   mozilla::ipc::IPCResult RecvBlobURLUnregistration(const nsCString& aURI);
 
