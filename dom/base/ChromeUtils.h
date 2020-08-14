@@ -216,22 +216,11 @@ class ChromeUtils {
   static void PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
                                           ErrorResult& aError);
 
-  static void GenerateMediaControlKey(const GlobalObject& aGlobal,
-                                      MediaControlKey aKey);
-
   static nsIDOMProcessChild* GetDomProcessChild(const GlobalObject&);
 
   static void GetAllDOMProcesses(
       GlobalObject& aGlobal, nsTArray<RefPtr<nsIDOMProcessParent>>& aParents,
       ErrorResult& aRv);
-
-  // This function would only be used for testing.
-  static void GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,
-                                            MediaMetadataInit& aMetadata);
-
-  // This function would only be used for testing.
-  static MediaSessionPlaybackTestState GetCurrentMediaSessionPlaybackState(
-      GlobalObject& aGlobal);
 };
 
 }  // namespace dom
