@@ -21,6 +21,12 @@ from ..build_config import get_components
 
 logger = logging.getLogger(__name__)
 
+# Per https://github.com/git/git/blob/dc04167d378fb29d30e1647ff6ff51dd182bc9a3/t/oid-info/hash-info#L7-L8
+_GIT_ZERO_HASHES = (
+    "0000000000000000000000000000000000000000", # sha1
+    "0000000000000000000000000000000000000000000000000000000000000000", # sha256
+)
+
 ALL_COMPONENTS = object()
 
 def get_components_changed(files_changed):
@@ -84,18 +90,21 @@ def get_affected_components(files_changed, files_affecting_components):
 
 
 def loader(kind, path, config, params, loaded_tasks):
+    # Build everything unless we have an optimization strategy (defined below).
+    files_changed = []
+    affected_components = ALL_COMPONENTS
+
     if params["tasks_for"] == "github-pull-request":
         logger.info("Processing pull request %s" % params["pull_request_number"])
         files_changed = get_files_changed_pr(params["base_repository"], params["pull_request_number"])
         affected_components = get_affected_components(files_changed, config.get("files-affecting-components"))
     elif params["tasks_for"] == "github-push":
-        logger.info("Processing push for commit range %s -> %s" % (params["base_rev"], params["head_rev"]))
-        files_changed = get_files_changed_push(params["base_repository"], params["base_rev"], params["head_rev"])
-        affected_components = get_affected_components(files_changed, config.get("files-affecting-components"))
-    # Unknown tasks_for, can't safely prune tasks
-    else:
-        files_changed = []
-        affected_components = ALL_COMPONENTS
+        if params["base_rev"] in _GIT_ZERO_HASHES:
+            logger.warn("base_rev is a zero hash, meaning there is no previous push. Building every component...")
+        else:
+            logger.info("Processing push for commit range %s -> %s" % (params["base_rev"], params["head_rev"]))
+            files_changed = get_files_changed_push(params["base_repository"], params["base_rev"], params["head_rev"])
+            affected_components = get_affected_components(files_changed, config.get("files-affecting-components"))
 
     logger.info("Files changed: %s" % " ".join(files_changed))
     if affected_components is ALL_COMPONENTS:
