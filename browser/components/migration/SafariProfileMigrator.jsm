@@ -8,6 +8,7 @@ const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -27,6 +28,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "FormHistory",
   "resource://gre/modules/FormHistory.jsm"
 );
@@ -35,6 +41,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 function Bookmarks(aBookmarksFile) {
   this._file = aBookmarksFile;
+  this._histogramBookmarkRoots = 0;
 }
 Bookmarks.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
@@ -57,6 +64,15 @@ Bookmarks.prototype = {
           ? this.READING_LIST_COLLECTION
           : this.ROOT_COLLECTION;
       await this._migrateCollection(children, collection);
+      if (
+        this._histogramBookmarkRoots &
+        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR
+      ) {
+        PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
+      }
+      Services.telemetry
+        .getKeyedHistogramById("FX_MIGRATION_BOOKMARKS_ROOTS")
+        .add("safari", this._histogramBookmarkRoots);
     })().then(
       () => aCallback(true),
       e => {
@@ -127,26 +143,40 @@ Bookmarks.prototype = {
         // Because the former is only an implementation detail in our UI,
         // the unfiled root seems to be the best choice.
         folderGuid = PlacesUtils.bookmarks.unfiledGuid;
+        this._histogramBookmarkRoots |=
+          MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_UNFILED;
         break;
       }
       case this.MENU_COLLECTION: {
         folderGuid = PlacesUtils.bookmarks.menuGuid;
-        if (!MigrationUtils.isStartupMigration) {
+        if (
+          !MigrationUtils.isStartupMigration &&
+          PlacesUtils.getChildCountForFolder(folderGuid) >
+            PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+        ) {
           folderGuid = await MigrationUtils.createImportedBookmarksFolder(
             "Safari",
             folderGuid
           );
         }
+        this._histogramBookmarkRoots |=
+          MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
         break;
       }
       case this.TOOLBAR_COLLECTION: {
         folderGuid = PlacesUtils.bookmarks.toolbarGuid;
-        if (!MigrationUtils.isStartupMigration) {
+        if (
+          !MigrationUtils.isStartupMigration &&
+          PlacesUtils.getChildCountForFolder(folderGuid) >
+            PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+        ) {
           folderGuid = await MigrationUtils.createImportedBookmarksFolder(
             "Safari",
             folderGuid
           );
         }
+        this._histogramBookmarkRoots |=
+          MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
         break;
       }
       case this.READING_LIST_COLLECTION: {
@@ -163,6 +193,8 @@ Bookmarks.prototype = {
             title: readingListTitle,
           })
         ).guid;
+        this._histogramBookmarkRoots |=
+          MigrationUtils.SOURCE_BOOKMARK_ROOTS_READING_LIST;
         break;
       }
       default:

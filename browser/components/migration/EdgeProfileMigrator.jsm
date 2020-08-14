@@ -8,6 +8,7 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -21,6 +22,11 @@ ChromeUtils.defineModuleGetter(
   this,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -389,9 +395,16 @@ EdgeBookmarksMigrator.prototype = {
       throw new Error("Edge seems to be running - its database is locked.");
     }
     let { toplevelBMs, toolbarBMs } = this._fetchBookmarksFromDB();
+    let histogramBookmarkRoots = 0;
     if (toplevelBMs.length) {
+      histogramBookmarkRoots |=
+        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
       let parentGuid = PlacesUtils.bookmarks.menuGuid;
-      if (!MigrationUtils.isStartupMigration) {
+      if (
+        !MigrationUtils.isStartupMigration &&
+        PlacesUtils.getChildCountForFolder(parentGuid) >
+          PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+      ) {
         parentGuid = await MigrationUtils.createImportedBookmarksFolder(
           "Edge",
           parentGuid
@@ -400,15 +413,25 @@ EdgeBookmarksMigrator.prototype = {
       await MigrationUtils.insertManyBookmarksWrapper(toplevelBMs, parentGuid);
     }
     if (toolbarBMs.length) {
+      histogramBookmarkRoots |=
+        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
       let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
-      if (!MigrationUtils.isStartupMigration) {
+      if (
+        !MigrationUtils.isStartupMigration &&
+        PlacesUtils.getChildCountForFolder(parentGuid) >
+          PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
+      ) {
         parentGuid = await MigrationUtils.createImportedBookmarksFolder(
           "Edge",
           parentGuid
         );
       }
       await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
+      PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
     }
+    Services.telemetry
+      .getKeyedHistogramById("FX_MIGRATION_BOOKMARKS_ROOTS")
+      .add("edge", histogramBookmarkRoots);
   },
 
   _fetchBookmarksFromDB() {

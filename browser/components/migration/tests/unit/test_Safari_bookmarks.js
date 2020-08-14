@@ -1,5 +1,9 @@
 "use strict";
 
+const { CustomizableUI } = ChromeUtils.import(
+  "resource:///modules/CustomizableUI.jsm"
+);
+
 add_task(async function() {
   registerFakePath("ULibDir", do_get_file("Library/"));
 
@@ -7,30 +11,24 @@ add_task(async function() {
   // Sanity check for the source.
   Assert.ok(await migrator.isSourceAvailable());
 
-  // Wait for the imported bookmarks.  Check that "From Safari"
-  // folders are created on the toolbar.
-  let source = await MigrationUtils.getLocalizedString("source-name-safari");
-  let label = await MigrationUtils.getLocalizedString(
-    "imported-bookmarks-source",
-    { source }
-  );
-
+  // Wait for the imported bookmarks. We don't check that "From Safari"
+  // folders are created on the toolbar since the profile
+  // we're importing to has less than 3 bookmarks in the destination
+  // so a "From Safari" folder isn't created.
   let expectedParents = [PlacesUtils.toolbarFolderId];
   let itemCount = 0;
 
   let gotFolder = false;
   let listener = events => {
     for (let event of events) {
-      if (event.title != label) {
-        itemCount++;
-      }
+      itemCount++;
       if (
         event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER &&
         event.title == "Stuff"
       ) {
         gotFolder = true;
       }
-      if (expectedParents.length && event.title == label) {
+      if (expectedParents.length) {
         let index = expectedParents.indexOf(event.parentId);
         Assert.ok(index != -1, "Found expected parent");
         expectedParents.splice(index, 1);
@@ -38,6 +36,21 @@ add_task(async function() {
     }
   };
   PlacesUtils.observers.addListener(["bookmark-added"], listener);
+  let observerNotified = false;
+  Services.obs.addObserver((aSubject, aTopic, aData) => {
+    let [toolbar, visibility] = JSON.parse(aData);
+    Assert.equal(
+      toolbar,
+      CustomizableUI.AREA_BOOKMARKS,
+      "Notification should be received for bookmarks toolbar"
+    );
+    Assert.equal(
+      visibility,
+      "true",
+      "Notification should say to reveal the bookmarks toolbar"
+    );
+    observerNotified = true;
+  }, "browser-set-toolbar-visibility");
 
   await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS);
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
@@ -52,4 +65,5 @@ add_task(async function() {
     itemCount,
     "Telemetry reporting correct."
   );
+  Assert.ok(observerNotified, "The observer should be notified upon migration");
 });
