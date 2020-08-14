@@ -231,7 +231,7 @@
 
 - name: GuardGroup
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
