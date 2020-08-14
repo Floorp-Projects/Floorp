@@ -1814,6 +1814,12 @@ pref("dom.ipc.processPrelaunch.enabled", true);
 pref("browser.migrate.chrome.history.limit", 2000);
 pref("browser.migrate.chrome.history.maxAgeInDays", 180);
 
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.migrate.showBookmarksToolbarAfterMigration", true);
+#else
+pref("browser.migrate.showBookmarksToolbarAfterMigration", false);
+#endif
+
 pref("extensions.pocket.api", "api.getpocket.com");
 pref("extensions.pocket.enabled", true);
 pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
