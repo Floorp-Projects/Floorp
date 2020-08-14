@@ -39,10 +39,6 @@ class GeckoViewModule {
     return this.moduleManager.window;
   }
 
-  getActor(aActorName) {
-    return this.moduleManager.getActor(aActorName);
-  }
-
   get browser() {
     return this.moduleManager.browser;
   }

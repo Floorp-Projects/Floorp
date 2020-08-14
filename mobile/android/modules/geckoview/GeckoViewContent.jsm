@@ -25,12 +25,11 @@ class GeckoViewContent extends GeckoViewModule {
       "GeckoView:DisplayMatches",
       "GeckoView:FindInPage",
       "GeckoView:RestoreState",
-      "GeckoView:ScrollBy",
-      "GeckoView:ScrollTo",
       "GeckoView:SetActive",
       "GeckoView:SetFocused",
-      "GeckoView:UpdateInitData",
       "GeckoView:ZoomToInput",
+      "GeckoView:ScrollBy",
+      "GeckoView:ScrollTo",
     ]);
   }
 
@@ -54,6 +53,12 @@ class GeckoViewContent extends GeckoViewModule {
       /* untrusted */ false
     );
 
+    this.messageManager.addMessageListener("GeckoView:DOMFullscreenExit", this);
+    this.messageManager.addMessageListener(
+      "GeckoView:DOMFullscreenRequest",
+      this
+    );
+
     Services.obs.addObserver(this, "oop-frameloader-crashed");
     Services.obs.addObserver(this, "ipc:content-shutdown");
   }
@@ -75,37 +80,17 @@ class GeckoViewContent extends GeckoViewModule {
       /* capture */ true
     );
 
+    this.messageManager.removeMessageListener(
+      "GeckoView:DOMFullscreenExit",
+      this
+    );
+    this.messageManager.removeMessageListener(
+      "GeckoView:DOMFullscreenRequest",
+      this
+    );
+
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
     Services.obs.removeObserver(this, "ipc:content-shutdown");
-  }
-
-  get actor() {
-    return this.getActor("GeckoViewContent");
-  }
-
-  // Goes up the browsingContext chain and sends the message every time
-  // we cross the process boundary so that every process in the chain is
-  // notified.
-  sendToAllChildren(aEvent, aData) {
-    let { browsingContext } = this.actor;
-
-    while (browsingContext) {
-      if (!browsingContext.currentWindowGlobal) {
-        break;
-      }
-
-      const currentPid = browsingContext.currentWindowGlobal.osPid;
-      const parentPid = browsingContext.parent?.currentWindowGlobal.osPid;
-
-      if (currentPid != parentPid) {
-        const actor = browsingContext.currentWindowGlobal.getActor(
-          "GeckoViewContent"
-        );
-        actor.sendAsyncMessage(aEvent, aData);
-      }
-
-      browsingContext = browsingContext.parent;
-    }
   }
 
   // Bundle event handler.
@@ -114,7 +99,7 @@ class GeckoViewContent extends GeckoViewModule {
 
     switch (aEvent) {
       case "GeckoViewContent:ExitFullScreen":
-        this.sendToAllChildren("GeckoView:DOMFullscreenExited");
+        this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenExited");
         break;
       case "GeckoView:ClearMatches": {
         this._clearMatches();
@@ -129,18 +114,13 @@ class GeckoViewContent extends GeckoViewModule {
         break;
       }
       case "GeckoView:ZoomToInput":
-        this.sendToAllChildren(aEvent, aData);
+        this.messageManager.sendAsyncMessage(aEvent, aData);
         break;
       case "GeckoView:ScrollBy":
-        // Unclear if that actually works with oop iframes?
-        this.sendToAllChildren(aEvent, aData);
+        this.messageManager.sendAsyncMessage(aEvent, aData);
         break;
       case "GeckoView:ScrollTo":
-        // Unclear if that actually works with oop iframes?
-        this.sendToAllChildren(aEvent, aData);
-        break;
-      case "GeckoView:UpdateInitData":
-        this.sendToAllChildren(aEvent, aData);
+        this.messageManager.sendAsyncMessage(aEvent, aData);
         break;
       case "GeckoView:SetActive":
         this.browser.docShellIsActive = !!aData.active;
@@ -155,8 +135,7 @@ class GeckoViewContent extends GeckoViewModule {
         }
         break;
       case "GeckoView:RestoreState":
-        // TODO: this needs parent process history to work properly
-        this.actor.sendAsyncMessage("GeckoView:RestoreState", aData);
+        this.messageManager.sendAsyncMessage("GeckoView:RestoreState", aData);
         break;
     }
   }
@@ -181,11 +160,27 @@ class GeckoViewContent extends GeckoViewModule {
       case "MozDOMFullscreen:Entered":
         if (this.browser == aEvent.target) {
           // Remote browser; dispatch to content process.
-          this.sendToAllChildren("GeckoView:DOMFullscreenEntered");
+          this.messageManager.sendAsyncMessage(
+            "GeckoView:DOMFullscreenEntered"
+          );
         }
         break;
       case "MozDOMFullscreen:Exited":
-        this.sendToAllChildren("GeckoView:DOMFullscreenExited");
+        this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenExited");
+        break;
+    }
+  }
+
+  // Message manager event handler.
+  receiveMessage(aMsg) {
+    debug`receiveMessage: ${aMsg.name}`;
+
+    switch (aMsg.name) {
+      case "GeckoView:DOMFullscreenExit":
+        this.window.windowUtils.remoteFrameFullscreenReverted();
+        break;
+      case "GeckoView:DOMFullscreenRequest":
+        this.window.windowUtils.remoteFrameFullscreenChanged(aMsg.target);
         break;
     }
   }

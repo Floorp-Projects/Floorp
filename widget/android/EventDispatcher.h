@@ -58,14 +58,10 @@ class EventDispatcher final
   using NativesBase::DisposeNative;
 
  private:
-  friend class java::EventDispatcher::Natives<EventDispatcher>;
-
   java::EventDispatcher::WeakRef mDispatcher;
   nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
 
   virtual ~EventDispatcher() {}
-
-  void Shutdown();
 
   struct ListenersList {
     nsCOMArray<nsIAndroidEventListener> listeners{/* count */ 1};

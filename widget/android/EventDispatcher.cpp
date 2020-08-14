@@ -952,11 +952,6 @@ void EventDispatcher::Attach(java::EventDispatcher::Param aDispatcher,
   dispatcher->SetAttachedToGecko(java::EventDispatcher::ATTACHED);
 }
 
-void EventDispatcher::Shutdown() {
-  mDispatcher = nullptr;
-  mDOMWindow = nullptr;
-}
-
 void EventDispatcher::Detach() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDispatcher);
@@ -969,7 +964,8 @@ void EventDispatcher::Detach() {
     dispatcher->SetAttachedToGecko(java::EventDispatcher::DETACHED);
   }
 
-  Shutdown();
+  mDispatcher = nullptr;
+  mDOMWindow = nullptr;
 }
 
 bool EventDispatcher::HasGeckoListener(jni::String::Param aEvent) {
