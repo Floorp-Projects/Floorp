@@ -29,7 +29,7 @@
 #include "jit/arm64/vixl/Utils-vixl.h"
 #include "util/Windows.h"
 
-#if defined(XP_IOS)
+#if defined(XP_DARWIN)
 #  include <libkern/OSCacheControl.h>
 #endif
 
@@ -69,7 +69,7 @@ void CPU::SetUp() {
 
 
 uint32_t CPU::GetCacheType() {
-#if defined(__aarch64__) && !defined(_MSC_VER)
+#if defined(__aarch64__) && !defined(_MSC_VER) && !defined(XP_DARWIN)
   uint64_t cache_type_register;
   // Copy the content of the cache type register to a core register.
   __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
@@ -105,8 +105,8 @@ void CPU::EnsureIAndDCacheCoherency(void *address, size_t length) {
   }
 #elif defined(_MSC_VER) && defined(_M_ARM64)
   FlushInstructionCache(GetCurrentProcess(), address, length);
-#elif defined(XP_IOS)
-  sys_icache_invalidate(code, size);
+#elif defined(XP_DARWIN)
+  sys_icache_invalidate(address, length);
 #elif defined(__aarch64__)
   // Implement the cache synchronisation for all targets where AArch64 is the
   // host, even if we're building the simulator for an AAarch64 host. This
