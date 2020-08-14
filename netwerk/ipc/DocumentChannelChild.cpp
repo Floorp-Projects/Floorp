@@ -257,8 +257,9 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   }
 
   nsDocShell* docShell = GetDocShell();
-  if (docShell && aArgs.sessionHistoryInfo().isSome()) {
-    docShell->SetLoadingSessionHistoryInfo(aArgs.sessionHistoryInfo().ref());
+  if (docShell && aArgs.loadingSessionHistoryInfo().isSome()) {
+    docShell->SetLoadingSessionHistoryInfo(
+        aArgs.loadingSessionHistoryInfo().ref());
   }
 
   // transfer any properties. This appears to be entirely a content-side
