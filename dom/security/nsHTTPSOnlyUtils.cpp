@@ -268,18 +268,6 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
   loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
 }
 
-/* static */
-bool nsHTTPSOnlyUtils::IsSafeToAcceptCORSOrMixedContent(
-    nsILoadInfo* aLoadInfo) {
-  // Check if the request is exempt from upgrades
-  if ((aLoadInfo->GetHttpsOnlyStatus() & nsILoadInfo::HTTPS_ONLY_EXEMPT)) {
-    return false;
-  }
-  // Check if HTTPS-Only Mode is enabled for this request
-  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  return nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin);
-}
-
 /* ------ Logging ------ */
 
 /* static */
