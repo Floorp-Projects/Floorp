@@ -936,14 +936,30 @@ DReport.PRESENT_IN_SECOND_ONLY = 2;
 DReport.ADDED_FOR_BALANCE = 3;
 
 /**
+ * Return true if the report contains a webIsolated process,
+ * which is a good indication that Fission is enabled.
+ */
+function hasWebIsolatedProcess(aJSONReports) {
+  for (let jr of aJSONReports) {
+    assert(jr.process !== undefined, "Missing process");
+    if (jr.process.startsWith("webIsolated")) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Make a report map, which has combined path+process strings for keys, and
  * DReport objects for values.
  *
  * @param aJSONReports
  *        The |reports| field of a JSON object.
+ * @param aForgetIsolation
+          If this is true, treat webIsolated processes like web processes.
  * @return The constructed report map.
  */
-function makeDReportMap(aJSONReports) {
+function makeDReportMap(aJSONReports, aForgetIsolation) {
   let dreportMap = {};
   for (let jr of aJSONReports) {
     assert(jr.process !== undefined, "Missing process");
@@ -967,6 +983,10 @@ function makeDReportMap(aJSONReports) {
     let pidSubst = "pid$1NNN";
     let process = jr.process.replace(pidRegex, pidSubst);
     let path = jr.path.replace(pidRegex, pidSubst);
+
+    if (aForgetIsolation && process.startsWith("webIsolated")) {
+      process = "web (pid NNN)";
+    }
 
     // Strip TIDs and threadpool IDs.
     path = path.replace(/\(tid=(\d+)\)/, "(tid=NNN)");
@@ -1103,6 +1123,16 @@ function diffJSONObjects(aJson1, aJson2) {
     return aJson1[aProp];
   }
 
+  // If one report we're diffing contains webIsolated processes, but the other
+  // does not, then we're probably comparing a report with Fission enabled with
+  // one where it is not enabled. In this case, we want to make all of the
+  // webIsolated processes look like plain old web processes to get a better
+  // diff.
+  let hasIsolated1 = hasWebIsolatedProcess(aJson1.reports);
+  let hasIsolated2 = hasWebIsolatedProcess(aJson2.reports);
+  let eitherIsolated = hasIsolated1 || hasIsolated2;
+  let forgetIsolation = hasIsolated1 != hasIsolated2 && eitherIsolated;
+
   return {
     version: simpleProp("version"),
 
@@ -1110,8 +1140,8 @@ function diffJSONObjects(aJson1, aJson2) {
 
     reports: makeJSONReports(
       diffDReportMaps(
-        makeDReportMap(aJson1.reports),
-        makeDReportMap(aJson2.reports)
+        makeDReportMap(aJson1.reports, forgetIsolation),
+        makeDReportMap(aJson2.reports, forgetIsolation)
       )
     ),
   };

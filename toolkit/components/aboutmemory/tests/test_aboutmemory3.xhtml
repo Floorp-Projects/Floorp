@@ -497,6 +497,34 @@ Other Measurements\n\
 End of Main Process (pid NNN)\n\
 ";
 
+  let expectedDiffFiss =
+"\
+P (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+3,000,000 B (100.0%) -- explicit\n\
+├──2,999,700 B (99.99%) ── heap-unclassified\n\
+└────────300 B (00.01%) ── foobar\n\
+\n\
+Other Measurements\n\
+\n\
+3,000,000 B ── heap-allocated\n\
+\n\
+End of P (pid NNN)\n\
+web (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+2,000,000 B (100.0%) -- explicit\n\
+├──1,000,000 B (50.00%) ── a/c/d\n\
+└──1,000,000 B (50.00%) ── heap-unclassified\n\
+\n\
+Other Measurements\n\
+\n\
+2,000,000 B ── heap-allocated\n\
+\n\
+End of web (pid NNN)\n\
+";
+
   let frames = [
     // This loads a pre-existing memory reports file that is valid.
     { filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false, verbose: true },
@@ -518,7 +546,10 @@ End of Main Process (pid NNN)\n\
     { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json", expected: expectedDiffVerbose, dumpFirst: false, verbose: true },
 
     // This diffs two pre-existing crash report files.
-    { filename: "crash-dump-diff1.json", filename2: "crash-dump-diff2.json", expected: expectedDiff2, dumpFirst: false, verbose: true }
+    { filename: "crash-dump-diff1.json", filename2: "crash-dump-diff2.json", expected: expectedDiff2, dumpFirst: false, verbose: true },
+
+    // This diffs a non-Fission and a Fission memory report.
+    { filename: "fiss-diff1.json", filename2: "fiss-diff2.json", expected: expectedDiffFiss, dumpFirst: false, verbose: true }
   ];
 
   SimpleTest.waitForFocus(chain(frames));
