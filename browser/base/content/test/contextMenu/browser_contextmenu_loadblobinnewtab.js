@@ -135,12 +135,6 @@ async function openInNewTabAndReturnContent(selector) {
   return blobDataFromContent;
 }
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["privacy.partition.bloburl_per_agent_cluster", false]],
-  });
-});
-
 add_task(async function test_rightclick_open_bloburl_in_new_tab() {
   let blobDataFromLoadedPage = await rightClickOpenInNewTabAndReturnContent(
     "blob-url-link"
