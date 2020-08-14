@@ -45,3 +45,17 @@ interface MediaController : EventTarget {
   // eg. play(), pause().
   void seekTo(double seekTime, optional boolean fastSeek = false);
 };
+
+[ChromeOnly,Exposed=Window,HeaderFile="mozilla/dom/MediaControlService.h"]
+namespace MediaControlService {
+  // This is used to generate fake media control keys event in testing.
+  void generateMediaControlKey(MediaControlKey aKey);
+
+  // This is used to get the media metadata from the current main controller in
+  // testing.
+  MediaMetadataInit getCurrentActiveMediaMetadata();
+
+  // This is used to get the actual media playback state from the current main
+  // controller in testing.
+  MediaSessionPlaybackState getCurrentMediaSessionPlaybackState();
+};

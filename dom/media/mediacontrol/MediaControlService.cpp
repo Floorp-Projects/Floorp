@@ -48,6 +48,46 @@ RefPtr<MediaControlService> MediaControlService::GetService() {
   return service;
 }
 
+/* static */
+void MediaControlService::GenerateMediaControlKey(const GlobalObject& global,
+                                                  MediaControlKey aKey) {
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  if (service) {
+    service->GenerateTestMediaControlKey(aKey);
+  }
+}
+
+/* static */
+void MediaControlService::GetCurrentActiveMediaMetadata(
+    const GlobalObject& aGlobal, MediaMetadataInit& aMetadata) {
+  if (RefPtr<MediaControlService> service = MediaControlService::GetService()) {
+    MediaMetadataBase metadata = service->GetMainControllerMediaMetadata();
+    aMetadata.mTitle = metadata.mTitle;
+    aMetadata.mArtist = metadata.mArtist;
+    aMetadata.mAlbum = metadata.mAlbum;
+    for (const auto& artwork : metadata.mArtwork) {
+      // If OOM happens resulting in not able to append the element, then we
+      // would get incorrect result and fail on test, so we don't need to throw
+      // an error explicitly.
+      if (MediaImage* image = aMetadata.mArtwork.AppendElement(fallible)) {
+        image->mSrc = artwork.mSrc;
+        image->mSizes = artwork.mSizes;
+        image->mType = artwork.mType;
+      }
+    }
+  }
+}
+
+/* static */
+MediaSessionPlaybackState
+MediaControlService::GetCurrentMediaSessionPlaybackState(
+    GlobalObject& aGlobal) {
+  if (RefPtr<MediaControlService> service = MediaControlService::GetService()) {
+    return service->GetMainControllerPlaybackState();
+  }
+  return MediaSessionPlaybackState::None;
+}
+
 NS_INTERFACE_MAP_BEGIN(MediaControlService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
