@@ -15,7 +15,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.browser_gesture_wrapper.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,7 +31,6 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.components.FenixSnackbar
@@ -77,19 +75,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val components = context.components
 
         return super.initializeUI(view)?.also {
-            // We need to wrap this whole thing in an if here because gestureLayout will not exist
-            // if the feature flag is off
-            if (FeatureFlags.browserChromeGestures) {
-                gestureLayout.addGestureListener(
-                    ToolbarGestureHandler(
-                        activity = requireActivity(),
-                        contentLayout = browserLayout,
-                        tabPreview = tabPreview,
-                        toolbarLayout = browserToolbarView.view,
-                        sessionManager = components.core.sessionManager
-                    )
+            gestureLayout.addGestureListener(
+                ToolbarGestureHandler(
+                    activity = requireActivity(),
+                    contentLayout = browserLayout,
+                    tabPreview = tabPreview,
+                    toolbarLayout = browserToolbarView.view,
+                    sessionManager = components.core.sessionManager
                 )
-            }
+            )
 
             val readerModeAction =
                 BrowserToolbar.ToggleButton(

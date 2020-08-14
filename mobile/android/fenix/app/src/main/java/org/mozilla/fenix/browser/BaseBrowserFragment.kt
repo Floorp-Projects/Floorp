@@ -168,11 +168,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         require(arguments != null)
         customTabSessionId = arguments?.getString(EXTRA_SESSION_ID)
 
-        val view = if (FeatureFlags.browserChromeGestures) {
-            inflater.inflate(R.layout.browser_gesture_wrapper, container, false)
-        } else {
-            inflater.inflate(R.layout.fragment_browser, container, false)
-        }
+        val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         val activity = activity as HomeActivity
         activity.themeManager.applyStatusBarTheme(activity)
