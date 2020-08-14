@@ -16,7 +16,6 @@
 #include "Role.h"
 #include "RootAccessible.h"
 #include "TableAccessible.h"
-#include "TableCellAccessible.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "OuterDocAccessible.h"
