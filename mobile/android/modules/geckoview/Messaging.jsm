@@ -212,18 +212,6 @@ var EventDispatcher = {
   },
 
   /**
-   * Returns a named EventDispatcher, which can communicate with the
-   * corresponding EventDispatcher on the java side.
-   */
-  byName(aName) {
-    if (!IS_PARENT_PROCESS) {
-      return undefined;
-    }
-    const dispatcher = Services.androidBridge.getDispatcherByName(aName);
-    return new DispatcherDelegate(dispatcher);
-  },
-
-  /**
    * Return an EventDispatcher instance for a message manager associated with a
    * window.
    *
