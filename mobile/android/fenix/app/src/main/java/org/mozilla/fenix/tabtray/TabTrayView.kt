@@ -137,12 +137,14 @@ class TabTrayView(
 
         setTopOffset(startingInLandscape)
 
+        val concatAdapter = ConcatAdapter(tabsAdapter)
+
         view.tabsTray.apply {
             layoutManager = LinearLayoutManager(container.context).apply {
                 reverseLayout = true
                 stackFromEnd = true
             }
-            adapter = ConcatAdapter(collectionsButtonAdapter, tabsAdapter)
+            adapter = concatAdapter
 
             tabsTouchHelper = TabsTouchHelper(
                 observable = tabsAdapter,
@@ -153,6 +155,9 @@ class TabTrayView(
 
             tabsAdapter.tabTrayInteractor = interactor
             tabsAdapter.onTabsUpdated = {
+                // Put the 'Add to collections' button after the tabs have loaded.
+                concatAdapter.addAdapter(0, collectionsButtonAdapter)
+
                 if (hasAccessibilityEnabled) {
                     tabsAdapter.notifyDataSetChanged()
                 }
