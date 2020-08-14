@@ -116,23 +116,33 @@ class EmbedderPort {
   constructor(portId, messenger) {
     this.id = portId;
     this.messenger = messenger;
-    EventDispatcher.instance.registerListener(this, [
+    this.dispatcher = EventDispatcher.byName(`port:${portId}`);
+    this.dispatcher.registerListener(this, [
       "GeckoView:WebExtension:PortMessageFromApp",
       "GeckoView:WebExtension:PortDisconnect",
     ]);
   }
   close() {
-    EventDispatcher.instance.unregisterListener(this, [
+    this.dispatcher.unregisterListener(this, [
       "GeckoView:WebExtension:PortMessageFromApp",
       "GeckoView:WebExtension:PortDisconnect",
     ]);
   }
+  onPortDisconnect() {
+    this.dispatcher.sendRequest({
+      type: "GeckoView:WebExtension:Disconnect",
+      sender: this.sender,
+    });
+    this.close();
+  }
+  onPortMessage(holder) {
+    this.dispatcher.sendRequest({
+      type: "GeckoView:WebExtension:PortMessage",
+      data: holder.deserialize({}),
+    });
+  }
   onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
-
-    if (this.id !== aData.portId) {
-      return;
-    }
 
     switch (aEvent) {
       case "GeckoView:WebExtension:PortMessageFromApp": {
@@ -222,22 +232,6 @@ class GeckoViewConnection {
 
   onConnect(portId, messenger) {
     const port = new EmbedderPort(portId, messenger);
-
-    port.onPortMessage = holder =>
-      this._sendMessage({
-        type: "GeckoView:WebExtension:PortMessage",
-        portId: port.id,
-        data: holder.deserialize({}),
-      });
-
-    port.onPortDisconnect = () => {
-      EventDispatcher.instance.sendRequest({
-        type: "GeckoView:WebExtension:Disconnect",
-        sender: this.sender,
-        portId: port.id,
-      });
-      port.close();
-    };
 
     this._sendMessage({
       type: "GeckoView:WebExtension:Connect",
