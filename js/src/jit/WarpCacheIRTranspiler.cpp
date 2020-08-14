@@ -283,6 +283,20 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardGroup(ObjOperandId objId,
+                                           uint32_t groupOffset) {
+  MDefinition* def = getOperand(objId);
+  ObjectGroup* group = groupStubField(groupOffset);
+
+  auto* ins = MGuardObjectGroup::New(alloc(), def, group,
+                                     /* bailOnEquality = */ false,
+                                     BailoutKind::ObjectIdentityOrTypeGuard);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
   MDefinition* def = getOperand(objId);
 
