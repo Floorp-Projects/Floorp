@@ -136,7 +136,8 @@
             android:defaultValue="false"
             android:icon="@drawable/ic_download"
             android:key="@string/pref_key_external_download_manager"
-            android:title="@string/preferences_external_download_manager" />
+            android:title="@string/preferences_external_download_manager"
+            app:isPreferenceVisible="false"/>
 
         <androidx.preference.SwitchPreference
             android:defaultValue="true"

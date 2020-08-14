@@ -302,7 +302,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val leakKey = getPreferenceKey(R.string.pref_key_leakcanary)
         val debuggingKey = getPreferenceKey(R.string.pref_key_remote_debugging)
-        val preferenceExternalDownloadManager = requirePreference<Preference>(R.string.pref_key_make_default_browser)
+        val preferenceExternalDownloadManager =
+            requirePreference<Preference>(R.string.pref_key_external_download_manager)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
         val preferenceMakeDefaultBrowser = requirePreference<Preference>(R.string.pref_key_make_default_browser)
