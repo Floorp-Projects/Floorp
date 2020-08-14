@@ -796,9 +796,9 @@ var DownloadIntegration = {
 
     const PDF_CONTENT_TYPE = "application/pdf";
     if (
+      aDownload.handleInternally ||
       (!useSystemDefault && // No explicit instruction was passed to launch this download using the default system viewer.
-        aDownload.handleInternally) ||
-      (mimeInfo &&
+        mimeInfo &&
         (mimeInfo.type == PDF_CONTENT_TYPE ||
           fileExtension?.toLowerCase() == "pdf") &&
         !mimeInfo.alwaysAskBeforeHandling &&
