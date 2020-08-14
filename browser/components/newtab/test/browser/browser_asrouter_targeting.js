@@ -967,3 +967,10 @@ add_task(async function check_userId() {
     "should read userID from normandy user id pref"
   );
 });
+
+add_task(async function check_profileRestartCount() {
+  ok(
+    !isNaN(ASRouterTargeting.Environment.profileRestartCount),
+    "it should return a number"
+  );
+});
