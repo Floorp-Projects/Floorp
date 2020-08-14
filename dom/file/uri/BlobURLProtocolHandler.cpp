@@ -739,8 +739,9 @@ bool BlobURLProtocolHandler::GetDataEntry(
     return false;
   }
 
-  // Same agent-cluster only.
-  if (aAgentClusterId.isSome() && info->mAgentClusterId.isSome() &&
+  // BlobURLs are openable on the same agent-cluster-id only.
+  if (StaticPrefs::privacy_partition_bloburl_per_agent_cluster() &&
+      aAgentClusterId.isSome() && info->mAgentClusterId.isSome() &&
       !aAgentClusterId.value().Equals(info->mAgentClusterId.value())) {
     return false;
   }
