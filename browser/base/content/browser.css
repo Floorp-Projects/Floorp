@@ -1369,8 +1369,8 @@ toolbarpaletteitem > toolbaritem {
 .previewRendering {
   width: 500px;
   height: 600px;
-  background: #f9f9fa;
   color: #0c0c0d;
+  background-color: #f9f9fa;
   background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
   background-repeat: no-repeat;
   background-size: 60px 60px;
@@ -1378,10 +1378,21 @@ toolbarpaletteitem > toolbaritem {
   display: flex;
   align-items: center;
   justify-content: center;
+  visibility: hidden;
 }
 
-.printPreviewBrowser[isRendering=true] {
-  width: 0;
+.previewStack[isRendering=true] > .previewRendering {
+  visibility: visible;
+}
+
+.printPreviewBrowser {
+  opacity: 1;
+  transition: opacity 60ms;
+}
+
+.previewStack[isRendering=true] > .printPreviewBrowser {
+  opacity: 0;
+  transition: opacity 1ms 250ms;
 }
 
 .print-pending-label {
@@ -1391,7 +1402,7 @@ toolbarpaletteitem > toolbaritem {
 
 @media (prefers-color-scheme: dark) {
   .previewRendering {
-    background: #2A2A2E;
+    background-color: #2A2A2E;
     color: rgb(249, 249, 250);
   }
 }
