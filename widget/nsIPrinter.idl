@@ -35,4 +35,11 @@ interface nsIPrinter : nsISupports
    */
   [implicit_jscontext]
   readonly attribute Promise supportsColor;
+
+  /**
+   * Returns a Promise that resolves to true or false to indicate whether this
+   * printer supports collation.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise supportsCollation;
 };
