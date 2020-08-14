@@ -1238,12 +1238,6 @@ permissions-addon-exceptions =
     .label = Exceptions…
     .accesskey = E
 
-permissions-a11y-privacy-checkbox =
-    .label = Prevent accessibility services from accessing your browser
-    .accesskey = a
-
-permissions-a11y-privacy-link = Learn more
-
 ## Privacy Section - Data Collection
 
 collection-header = { -brand-short-name } Data Collection and Use
