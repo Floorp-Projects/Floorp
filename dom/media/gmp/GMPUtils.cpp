@@ -5,16 +5,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPUtils.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsIFile.h"
-#include "nsCOMPtr.h"
-#include "nsLiteralString.h"
-#include "nsCRTGlue.h"
-#include "mozilla/Base64.h"
-#include "prio.h"
-#include "nsIConsoleService.h"
-#include "mozIGeckoMediaPluginService.h"
+
 #include "GMPService.h"
+#include "mozIGeckoMediaPluginService.h"
+#include "mozilla/Base64.h"
+#include "nsCOMPtr.h"
+#include "nsCRTGlue.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIConsoleService.h"
+#include "nsIFile.h"
+#include "nsLiteralString.h"
+#include "prio.h"
 
 namespace mozilla {
 
@@ -198,10 +199,12 @@ void LogToConsole(const nsAString& aMsg) {
   console->LogStringMessage(msg.get());
 }
 
-RefPtr<AbstractThread> GetGMPAbstractThread() {
+already_AddRefed<nsISerialEventTarget> GetGMPThread() {
   RefPtr<gmp::GeckoMediaPluginService> service =
       gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
-  return service ? service->GetAbstractGMPThread() : nullptr;
+  nsCOMPtr<nsISerialEventTarget> thread =
+      service ? service->GetGMPThread() : nullptr;
+  return thread.forget();
 }
 
 static size_t Align16(size_t aNumber) {

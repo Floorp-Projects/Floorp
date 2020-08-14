@@ -7,8 +7,8 @@
 #ifndef ChromiumCDMVideoDecoder_h_
 #define ChromiumCDMVideoDecoder_h_
 
-#include "PlatformDecoderModule.h"
 #include "ChromiumCDMParent.h"
+#include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
@@ -38,7 +38,7 @@ class ChromiumCDMVideoDecoder
   RefPtr<gmp::ChromiumCDMParent> mCDMParent;
   const VideoInfo mConfig;
   RefPtr<GMPCrashHelper> mCrashHelper;
-  RefPtr<AbstractThread> mGMPThread;
+  nsCOMPtr<nsISerialEventTarget> mGMPThread;
   RefPtr<layers::ImageContainer> mImageContainer;
   MozPromiseHolder<InitPromise> mInitPromise;
   bool mConvertToAnnexB = false;

@@ -5,19 +5,19 @@
 
 #include "GMPServiceChild.h"
 
-#include "base/task.h"
+#include "GMPContentParent.h"
 #include "GMPLog.h"
 #include "GMPParent.h"
-#include "GMPContentParent.h"
+#include "base/task.h"
 #include "mozIGeckoMediaPluginChromeService.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
-#include "nsComponentManagerUtils.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsXPCOMPrivate.h"
 #include "runnable_utils.h"
@@ -50,12 +50,12 @@ RefPtr<GetGMPContentParentPromise>
 GeckoMediaPluginServiceChild::GetContentParent(
     GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
     const nsCString& aAPI, const nsTArray<nsCString>& aTags) {
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
 
   MozPromiseHolder<GetGMPContentParentPromise>* rawHolder =
       new MozPromiseHolder<GetGMPContentParentPromise>();
   RefPtr<GetGMPContentParentPromise> promise = rawHolder->Ensure(__func__);
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  nsCOMPtr<nsISerialEventTarget> thread(GetGMPThread());
 
   nsCString nodeIdString(aNodeIdString);
   nsCString api(aAPI);
@@ -126,12 +126,12 @@ RefPtr<GetGMPContentParentPromise>
 GeckoMediaPluginServiceChild::GetContentParent(
     GMPCrashHelper* aHelper, const NodeId& aNodeId, const nsCString& aAPI,
     const nsTArray<nsCString>& aTags) {
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
 
   MozPromiseHolder<GetGMPContentParentPromise>* rawHolder =
       new MozPromiseHolder<GetGMPContentParentPromise>();
   RefPtr<GetGMPContentParentPromise> promise = rawHolder->Ensure(__func__);
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  nsCOMPtr<nsISerialEventTarget> thread(GetGMPThread());
 
   NodeIdData nodeId(aNodeId.mOrigin, aNodeId.mTopLevelOrigin, aNodeId.mGMPName);
   nsCString api(aAPI);
@@ -288,7 +288,7 @@ void GeckoMediaPluginServiceChild::UpdateGMPCapabilities(
 }
 
 void GeckoMediaPluginServiceChild::BeginShutdown() {
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   mShuttingDownOnGMPThread = true;
 }
 
@@ -318,10 +318,10 @@ NS_IMETHODIMP
 GeckoMediaPluginServiceChild::GetNodeId(
     const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
     const nsAString& aGMPName, UniquePtr<GetNodeIdCallback>&& aCallback) {
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
 
   GetNodeIdCallback* rawCallback = aCallback.release();
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  nsCOMPtr<nsISerialEventTarget> thread(GetGMPThread());
   nsString origin(aOrigin);
   nsString topLevelOrigin(aTopLevelOrigin);
   nsString gmpName(aGMPName);
@@ -366,7 +366,7 @@ GeckoMediaPluginServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
 
 RefPtr<GeckoMediaPluginServiceChild::GetServiceChildPromise>
 GeckoMediaPluginServiceChild::GetServiceChild() {
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
 
   if (!mServiceChild) {
     if (mShuttingDownOnGMPThread) {
@@ -397,7 +397,7 @@ GeckoMediaPluginServiceChild::GetServiceChild() {
 
 void GeckoMediaPluginServiceChild::SetServiceChild(
     UniquePtr<GMPServiceChild>&& aServiceChild) {
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
 
   mServiceChild = std::move(aServiceChild);
 
@@ -410,7 +410,7 @@ void GeckoMediaPluginServiceChild::SetServiceChild(
 
 void GeckoMediaPluginServiceChild::RemoveGMPContentParent(
     GMPContentParent* aGMPContentParent) {
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
 
   if (mServiceChild) {
     mServiceChild->RemoveGMPContentParent(aGMPContentParent);

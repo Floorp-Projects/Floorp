@@ -7,6 +7,8 @@
 #if !defined(PlatformDecoderModule_h_)
 #  define PlatformDecoderModule_h_
 
+#  include <queue>
+
 #  include "DecoderDoctorLogger.h"
 #  include "GMPCrashHelper.h"
 #  include "MediaEventSource.h"
@@ -20,7 +22,6 @@
 #  include "mozilla/layers/KnowsCompositor.h"
 #  include "mozilla/layers/LayersTypes.h"
 #  include "nsTArray.h"
-#  include <queue>
 
 namespace mozilla {
 class TrackInfo;
@@ -297,7 +298,7 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
   // the decoder needs more input, the DecodePromise may be resolved
   // with an empty array of samples to indicate that Decode should be
   // called again before a MediaData is returned.
-  virtual bool CanDecodeBatch() { return false; }
+  virtual bool CanDecodeBatch() const { return false; }
   virtual RefPtr<DecodePromise> DecodeBatch(
       nsTArray<RefPtr<MediaRawData>>&& aSamples) {
     MOZ_CRASH("DecodeBatch not implemented yet");

@@ -68,7 +68,7 @@ RefPtr<ChromiumCDMParent::InitPromise> ChromiumCDMParent::Init(
   RefPtr<ChromiumCDMParent> self = this;
   SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState)
       ->Then(
-          AbstractThread::GetCurrent(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self, aCDMCallback](bool aSuccess) {
             if (!aSuccess) {
               GMP_LOG_DEBUG(
