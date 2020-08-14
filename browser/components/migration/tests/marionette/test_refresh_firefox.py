@@ -248,7 +248,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           return Services.xulStore.getValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed");
         """)
         if toolbarVisible == "":
-          toolbarVisible = "false"
+            toolbarVisible = "false"
         self.assertEqual(toolbarVisible, "false")
 
     def checkHistory(self):
