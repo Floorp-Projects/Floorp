@@ -4,6 +4,12 @@ requestLongerTimeout(3);
 
 const BASE_URI = "http://mochi.test:8888/browser/dom/file/ipc/tests/empty.html";
 
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.partition.bloburl_per_agent_cluster", false]],
+  });
+});
+
 // More than 1mb memory blob childA-parent-childB.
 add_task(async function test_CtoPtoC_big() {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
