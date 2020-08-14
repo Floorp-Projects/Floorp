@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PDocAccessible;
+
+namespace mozilla {
+namespace a11y {
+
+nested(upto inside_sync) sync protocol PDocAccessiblePlatformExt {
+  manager PDocAccessible;
+
+child:
+  async __delete__();
+
+  nested(inside_sync) sync LeftWordAt(uint64_t aID, int32_t aOffset)
+      returns(uint64_t aStartContainer, int32_t aStartOffset,
+              uint64_t aEndContainer, int32_t aEndOffset);
+
+  nested(inside_sync) sync RightWordAt(uint64_t aID, int32_t aOffset)
+      returns(uint64_t aStartContainer, int32_t aStartOffset,
+              uint64_t aEndContainer, int32_t aEndOffset);
+
+  nested(inside_sync) sync NextClusterAt(uint64_t aID, int32_t aOffset)
+      returns(uint64_t aNextContainer, int32_t aNextOffset);
+
+  nested(inside_sync) sync PreviousClusterAt(uint64_t aID, int32_t aOffset)
+      returns(uint64_t aNextContainer, int32_t aNextOffset);
+
+  nested(inside_sync) sync TextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(nsString aText);
+};
+
+}  // namespace a11y
+}  // namespace mozilla
