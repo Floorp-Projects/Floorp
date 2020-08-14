@@ -78,6 +78,11 @@ bool nsPrinterWin::SupportsColor() const {
                                nullptr) == 1;
 }
 
+bool nsPrinterWin::SupportsCollation() const {
+  return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLLATE, nullptr,
+                               nullptr) == 1;
+}
+
 nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
   // Paper names are returned in 64 long character buffers.
   auto paperNames =

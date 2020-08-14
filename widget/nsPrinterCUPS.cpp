@@ -7,7 +7,7 @@
 #include "nsPaper.h"
 #include "nsPrinterBase.h"
 
-using namespace mozilla;
+#include "plstr.h"
 
 nsPrinterCUPS::~nsPrinterCUPS() {
   if (mPrinterInfo) {
@@ -37,6 +37,19 @@ bool nsPrinterCUPS::SupportsDuplex() const {
 
 bool nsPrinterCUPS::SupportsColor() const {
   return Supports(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_COLOR);
+}
+
+bool nsPrinterCUPS::SupportsCollation() const {
+  // We can't depend on cupsGetIntegerOption existing.
+  const char* const value = mShim.cupsGetOption(
+      "printer-type", mPrinter->num_options, mPrinter->options);
+  if (!value) {
+    return false;
+  }
+  // If the value is non-numeric, then atoi will return 0, which will still
+  // cause this function to return false.
+  const int type = atoi(value);
+  return type & CUPS_PRINTER_COLLATE;
 }
 
 bool nsPrinterCUPS::Supports(const char* option, const char* value) const {

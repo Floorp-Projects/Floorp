@@ -14,6 +14,7 @@ class nsPrinterWin final : public nsPrinterBase {
 
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
+  bool SupportsCollation() const final;
   nsTArray<mozilla::PaperInfo> PaperList() const final;
   MarginDouble GetMarginsForPaper(uint64_t aId) const final;
 

@@ -79,6 +79,13 @@ NS_IMETHODIMP nsPrinterBase::GetSupportsColor(JSContext* aCx,
                                      &nsPrinterBase::SupportsColor);
 }
 
+NS_IMETHODIMP nsPrinterBase::GetSupportsCollation(JSContext* aCx,
+                                                  Promise** aResultPromise) {
+  return AsyncPromiseAttributeGetter(aCx, aResultPromise,
+                                     AsyncAttribute::SupportsCollation,
+                                     &nsPrinterBase::SupportsCollation);
+}
+
 NS_IMETHODIMP nsPrinterBase::GetPaperList(JSContext* aCx,
                                           Promise** aResultPromise) {
   return AsyncPromiseAttributeGetter(aCx, aResultPromise,
