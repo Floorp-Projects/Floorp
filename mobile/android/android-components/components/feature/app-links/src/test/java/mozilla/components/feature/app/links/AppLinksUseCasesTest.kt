@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -56,13 +57,19 @@ class AppLinksUseCasesTest {
     private val layerActivity = "com.example2.app.intentActivity"
     private val mailUrl = "mailto:example@example.com"
     private val mailPackage = "com.mail.app"
+    private val appIntentWithPackageAndFallback =
+        "intent://com.example.app#Intent;package=com.example.com;S.browser_fallback_url=https://example.com;end"
 
     @Before
     fun setup() {
         AppLinksUseCases.redirectCache = null
     }
 
-    private fun createContext(vararg urlToPackages: Triple<String, String, String>, default: Boolean = false): Context {
+    private fun createContext(
+        vararg urlToPackages: Triple<String, String, String>,
+        default: Boolean = false,
+        installedApps: List<String> = emptyList()
+    ): Context {
 
         val pm = testContext.packageManager
         val packageManager = shadowOf(pm)
@@ -92,6 +99,13 @@ class AppLinksUseCasesTest {
         `when`(context.packageManager).thenReturn(pm)
         if (!default) {
             `when`(context.packageName).thenReturn(testBrowserPackage)
+        }
+
+        installedApps.forEach { name ->
+            val packageInfo = PackageInfo().apply {
+                packageName = name
+            }
+            packageManager.addPackageNoDefaults(packageInfo)
         }
 
         return context
@@ -133,6 +147,27 @@ class AppLinksUseCasesTest {
         // We will redirect to it if browser option set to true.
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
+    }
+
+    @Test
+    fun `A intent that targets a specific package but installed will not uses market intent`() {
+        val context = createContext(installedApps = listOf("com.example.com"))
+        val subject = AppLinksUseCases(context, { true })
+
+        val redirect = subject.interceptedAppLinkRedirect(appIntentWithPackageAndFallback)
+        assertFalse(redirect.hasMarketplaceIntent())
+        assertTrue(redirect.hasFallback())
+    }
+
+    @Test
+    fun `A intent that targets a specific package but not installed will uses market intent`() {
+        val context = createContext()
+        val subject = AppLinksUseCases(context, { true })
+
+        val redirect = subject.interceptedAppLinkRedirect(appIntentWithPackageAndFallback)
+        assertFalse(redirect.hasExternalApp())
+        assertTrue(redirect.hasMarketplaceIntent())
+        assertTrue(redirect.hasFallback())
     }
 
     @Test
