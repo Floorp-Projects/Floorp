@@ -81,10 +81,8 @@ class WebRenderLayerManager final : public LayerManager {
                       EndTransactionFlags aFlags = END_DEFAULT) override;
 
   LayersBackend GetBackendType() override { return LayersBackend::LAYERS_WR; }
-  void GetBackendName(nsAString& name) override {
-    name.AssignLiteral("WebRender");
-  }
-  const char* Name() const override { return "WebRender"; }
+  void GetBackendName(nsAString& name) override;
+  const char* Name() const override;
 
   void SetRoot(Layer* aLayer) override;
 
