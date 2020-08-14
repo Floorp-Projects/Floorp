@@ -864,7 +864,6 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       );
       // User has selected to not open this mime-type with the system viewer
       mimeInfo.preferredAction = mimeInfo.handleInternally;
-      mimeInfo.alwaysAskBeforeHandling = true;
     }
     handlerSvc.store(mimeInfo);
     DownloadsCommon.openDownload(this.download).catch(Cu.reportError);
