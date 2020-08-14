@@ -15,7 +15,7 @@ use crate::data_structures::{
 };
 use crate::sparse_set::SparseSet;
 use crate::AlgorithmWithDefaults;
-use crate::Function;
+use crate::{Function, Reg};
 
 //=============================================================================
 // Overall analysis return results, for both control- and data-flow analyses.
@@ -30,7 +30,7 @@ pub enum AnalysisError {
 
     /// Some values in the entry block are live in to the function, but are not
     /// declared as such.
-    EntryLiveinValues,
+    EntryLiveinValues(Vec<Reg>),
 
     /// The incoming code has an explicit or implicit mention (use, def or mod)
     /// of a real register, which either (1) isn't listed in the universe at
@@ -60,8 +60,9 @@ impl ToString for AnalysisError {
       AnalysisError::CriticalEdge { from, to } => {
         format!("critical edge detected, from {:?} to {:?}", from, to)
       }
-      AnalysisError::EntryLiveinValues => {
-        "entry block has live-in value not present in function liveins".into()
+      AnalysisError::EntryLiveinValues(regs) => {
+        let regs_string = regs.iter().map(|reg| format!("{:?}", reg)).collect::<Vec<_>>().join(", ");
+        format!("entry block has love-in value not present in function liveins: {}", regs_string)
       }
       AnalysisError::IllegalRealReg(reg) => {
         format!("instructions mention real register {:?}, which either isn't defined in the register universe, or is a 'suggested_scratch' register", reg)
@@ -189,7 +190,9 @@ pub fn run_analysis<F: Function>(
             .collect(),
     );
     if !livein_sets_per_block[func.entry_block()].is_subset_of(&func_liveins) {
-        return Err(AnalysisError::EntryLiveinValues);
+        let mut regs = livein_sets_per_block[func.entry_block()].clone();
+        regs.remove(&func_liveins);
+        return Err(AnalysisError::EntryLiveinValues(regs.to_vec()));
     }
 
     // Add function liveouts to every block ending in a return.
@@ -277,11 +280,6 @@ pub fn run_analysis<F: Function>(
             func,
             &reg_vecs_and_bounds,
             &estimated_frequencies,
-            reg_to_ranges_maps.as_ref().unwrap(),
-            &rlr_env,
-            &vlr_env,
-            &frag_env,
-            /* want_ranges = */ client_wants_stackmaps,
         ))
     } else {
         None
@@ -294,6 +292,7 @@ pub fn run_analysis<F: Function>(
         do_reftypes_analysis(
             &mut rlr_env,
             &mut vlr_env,
+            &frag_env,
             reg_to_ranges_maps.as_ref().unwrap(), /* safe because of logic just above */
             &move_info.as_ref().unwrap(),         /* ditto */
             reftype_class,

@@ -8,10 +8,10 @@ use std::fmt;
 use crate::analysis_control_flow::CFGInfo;
 use crate::data_structures::{
     BlockIx, InstIx, InstPoint, MoveInfo, MoveInfoElem, Point, Queue, RangeFrag, RangeFragIx,
-    RangeFragKind, RangeFragMetrics, RangeId, RealRange, RealRangeIx, RealReg, RealRegUniverse,
-    Reg, RegClass, RegSets, RegToRangesMaps, RegUsageCollector, RegVecBounds, RegVecs,
-    RegVecsAndBounds, SortedRangeFragIxs, SortedRangeFrags, SpillCost, TypedIxVec, VirtualRange,
-    VirtualRangeIx, VirtualReg,
+    RangeFragKind, RangeFragMetrics, RealRange, RealRangeIx, RealReg, RealRegUniverse, Reg,
+    RegClass, RegSets, RegToRangesMaps, RegUsageCollector, RegVecBounds, RegVecs, RegVecsAndBounds,
+    SortedRangeFragIxs, SortedRangeFrags, SpillCost, TypedIxVec, VirtualRange, VirtualRangeIx,
+    VirtualReg,
 };
 use crate::sparse_set::SparseSet;
 use crate::union_find::{ToFromU32, UnionFind};
@@ -1825,6 +1825,26 @@ pub fn compute_reg_to_ranges_maps<F: Function>(
     rlr_env: &TypedIxVec<RealRangeIx, RealRange>,
     vlr_env: &TypedIxVec<VirtualRangeIx, VirtualRange>,
 ) -> RegToRangesMaps {
+    // Arbitrary, but chosen after quite some profiling, so as to minimise both instruction
+    // count and number of `malloc` calls.  Don't mess with this without first collecting
+    // comprehensive measurements.  Note that if you set this above 255, the type of
+    // `r/vreg_approx_frag_counts` below will need to change accordingly.
+    const MANY_FRAGS_THRESH: u8 = 200;
+
+    // Adds `to_add` to `*counter`, taking care not to overflow it in the process.
+    let add_u8_usize_saturate_to_u8 = |counter: &mut u8, mut to_add: usize| {
+        if to_add > 0xFF {
+            to_add = 0xFF;
+        }
+        let mut n = *counter as usize;
+        n += to_add as usize;
+        // n is at max 0x1FE (510)
+        if n > 0xFF {
+            n = 0xFF;
+        }
+        *counter = n as u8;
+    };
+
     // We have in hand the virtual live ranges.  Each of these carries its
     // associated vreg.  So in effect we have a VLR -> VReg mapping.  We now
     // invert that, so as to generate a mapping from VRegs to their containing
@@ -1838,7 +1858,12 @@ pub fn compute_reg_to_ranges_maps<F: Function>(
     // in moves in it, will have cost linear in the size of the input function.
     //
     // NB re the SmallVec.  That has set semantics (no dups).
-    let mut vreg_to_vlrs_map = vec![SmallVec::<[VirtualRangeIx; 3]>::new(); func.get_num_vregs()];
+
+    let num_vregs = func.get_num_vregs();
+    let num_rregs = univ.allocable;
+
+    let mut vreg_approx_frag_counts = vec![0u8; num_vregs];
+    let mut vreg_to_vlrs_map = vec![SmallVec::<[VirtualRangeIx; 3]>::new(); num_vregs];
     for (vlr, n) in vlr_env.iter().zip(0..) {
         let vlrix = VirtualRangeIx::new(n);
         let vreg: VirtualReg = vlr.vreg;
@@ -1850,60 +1875,62 @@ pub fn compute_reg_to_ranges_maps<F: Function>(
         // If this array-indexing fails, it means the client's `.get_num_vregs()` function
         // claims there are fewer virtual regs than we actually observe in the code it gave us.
         // So it's a bug in the client.
-        vreg_to_vlrs_map[vreg.get_index()].push(vlrix);
+        let vreg_index = vreg.get_index();
+        vreg_to_vlrs_map[vreg_index].push(vlrix);
+
+        let vlr_num_frags = vlr.sorted_frags.frags.len();
+        add_u8_usize_saturate_to_u8(&mut vreg_approx_frag_counts[vreg_index], vlr_num_frags);
     }
 
     // Same for the real live ranges.
-    let mut rreg_to_rlrs_map = vec![Vec::<RealRangeIx>::new(); univ.allocable];
+    let mut rreg_approx_frag_counts = vec![0u8; num_rregs];
+    let mut rreg_to_rlrs_map = vec![Vec::<RealRangeIx>::new(); num_rregs];
     for (rlr, n) in rlr_env.iter().zip(0..) {
         let rlrix = RealRangeIx::new(n);
         let rreg: RealReg = rlr.rreg;
         // If this array-indexing fails, it means something has gone wrong with sanitisation of
         // real registers -- that should ensure that we never see a real register with an index
         // greater than `univ.allocable`.  So it's a bug in the allocator's analysis phases.
-        rreg_to_rlrs_map[rreg.get_index()].push(rlrix);
+        let rreg_index = rreg.get_index();
+        rreg_to_rlrs_map[rreg_index].push(rlrix);
+
+        let rlr_num_frags = rlr.sorted_frags.frag_ixs.len();
+        add_u8_usize_saturate_to_u8(&mut rreg_approx_frag_counts[rreg_index], rlr_num_frags);
+    }
+
+    // Create sets indicating which regs have "many" live ranges.  Hopefully very few.
+    // Since the `push`ed-in values are supplied by the `zip(0..)` iterator, they are
+    // guaranteed duplicate-free, as required by the defn of `RegToRangesMaps`.
+    let mut vregs_with_many_frags = Vec::<u32 /*VirtualReg index*/>::with_capacity(16);
+    for (count, vreg_ix) in vreg_approx_frag_counts.iter().zip(0..) {
+        if *count >= MANY_FRAGS_THRESH {
+            vregs_with_many_frags.push(vreg_ix);
+        }
+    }
+
+    let mut rregs_with_many_frags = Vec::<u32 /*RealReg index*/>::with_capacity(64);
+    for (count, rreg_ix) in rreg_approx_frag_counts.iter().zip(0..) {
+        if *count >= MANY_FRAGS_THRESH {
+            rregs_with_many_frags.push(rreg_ix);
+        }
     }
 
     RegToRangesMaps {
         rreg_to_rlrs_map,
         vreg_to_vlrs_map,
+        rregs_with_many_frags,
+        vregs_with_many_frags,
+        many_frags_thresh: MANY_FRAGS_THRESH as usize,
     }
 }
 
-// Collect info about registers (and optionally Virtual/RealRanges) that are
-// connected by moves:
+// Collect info about registers that are connected by moves.
 #[inline(never)]
 pub fn collect_move_info<F: Function>(
     func: &F,
     reg_vecs_and_bounds: &RegVecsAndBounds,
     est_freqs: &TypedIxVec<BlockIx, u32>,
-    reg_to_ranges_maps: &RegToRangesMaps,
-    rlr_env: &TypedIxVec<RealRangeIx, RealRange>,
-    vlr_env: &TypedIxVec<VirtualRangeIx, VirtualRange>,
-    fenv: &TypedIxVec<RangeFragIx, RangeFrag>,
-    want_ranges: bool,
 ) -> MoveInfo {
-    // Helper: find the RealRange or VirtualRange for a register at an InstPoint.
-    let find_range_for_reg = |pt: InstPoint, reg: Reg| {
-        if !want_ranges {
-            return RangeId::invalid_value();
-        }
-        if reg.is_real() {
-            for &rlrix in &reg_to_ranges_maps.rreg_to_rlrs_map[reg.get_index() as usize] {
-                if rlr_env[rlrix].sorted_frags.contains_pt(fenv, pt) {
-                    return RangeId::new_real(rlrix);
-                }
-            }
-        } else {
-            for &vlrix in &reg_to_ranges_maps.vreg_to_vlrs_map[reg.get_index() as usize] {
-                if vlr_env[vlrix].sorted_frags.contains_pt(pt) {
-                    return RangeId::new_virtual(vlrix);
-                }
-            }
-        }
-        RangeId::invalid_value()
-    };
-
     let mut moves = Vec::<MoveInfoElem>::new();
     for b in func.blocks() {
         let block_eef = est_freqs[b];
@@ -1935,18 +1962,9 @@ pub fn collect_move_info<F: Function>(
                         let dst = wreg.to_reg();
                         let src = reg;
                         let est_freq = block_eef;
-
-                        // Find the ranges for source and dest, if requested.
-                        let (src_range, dst_range) = (
-                            find_range_for_reg(InstPoint::new(iix, Point::Use), src),
-                            find_range_for_reg(InstPoint::new(iix, Point::Def), dst),
-                        );
-
                         moves.push(MoveInfoElem {
                             dst,
-                            dst_range,
                             src,
-                            src_range,
                             iix,
                             est_freq,
                         });

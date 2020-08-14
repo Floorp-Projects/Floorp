@@ -633,7 +633,14 @@ fn set_registers<F: Function>(
     let mut checker: Option<CheckerContext> = None;
     let mut insn_blocks: Vec<BlockIx> = vec![];
     if use_checker {
-        checker = Some(CheckerContext::new(func, reg_universe, memory_moves));
+        checker = Some(CheckerContext::new(
+            func,
+            reg_universe,
+            memory_moves,
+            &[],
+            &[],
+            &[],
+        ));
         insn_blocks.resize(func.insns().len(), BlockIx::new(0));
         for block_ix in func.blocks() {
             for insn_ix in func.block_insns(block_ix) {

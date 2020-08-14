@@ -779,12 +779,14 @@ impl RealReg {
     pub fn get_class(self) -> RegClass {
         self.reg.get_class()
     }
+    #[inline(always)]
     pub fn get_index(self) -> usize {
         self.reg.get_index()
     }
     pub fn get_hw_encoding(self) -> usize {
         self.reg.get_hw_encoding() as usize
     }
+    #[inline(always)]
     pub fn to_reg(self) -> Reg {
         self.reg
     }
@@ -819,6 +821,7 @@ pub struct VirtualReg {
     reg: Reg,
 }
 impl Reg /* !!not VirtualReg!! */ {
+    #[inline(always)]
     pub fn to_virtual_reg(self) -> VirtualReg {
         if self.is_virtual() {
             VirtualReg { reg: self }
@@ -831,9 +834,11 @@ impl VirtualReg {
     pub fn get_class(self) -> RegClass {
         self.reg.get_class()
     }
+    #[inline(always)]
     pub fn get_index(self) -> usize {
         self.reg.get_index()
     }
+    #[inline(always)]
     pub fn to_reg(self) -> Reg {
         self.reg
     }
@@ -921,6 +926,7 @@ impl<R: Copy + Clone + PartialEq + Eq + Hash + PartialOrd + Ord + fmt::Debug> Wr
     /// Create a Writable<R> from an R. The client should carefully audit where
     /// it calls this constructor to ensure correctness (see `Writable<..>`
     /// struct documentation).
+    #[inline(always)]
     pub fn from_reg(reg: R) -> Writable<R> {
         Writable { reg }
     }
@@ -939,7 +945,7 @@ impl<R: Copy + Clone + PartialEq + Eq + Hash + PartialOrd + Ord + fmt::Debug> Wr
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum SpillSlot {
     SpillSlot(u32),
 }
@@ -1413,30 +1419,35 @@ pub enum Point {
 }
 
 impl Point {
+    #[inline(always)]
     pub fn is_reload(self) -> bool {
         match self {
             Point::Reload => true,
             _ => false,
         }
     }
+    #[inline(always)]
     pub fn is_use(self) -> bool {
         match self {
             Point::Use => true,
             _ => false,
         }
     }
+    #[inline(always)]
     pub fn is_def(self) -> bool {
         match self {
             Point::Def => true,
             _ => false,
         }
     }
+    #[inline(always)]
     pub fn is_spill(self) -> bool {
         match self {
             Point::Spill => true,
             _ => false,
         }
     }
+    #[inline(always)]
     pub fn is_use_or_def(self) -> bool {
         self.is_use() || self.is_def()
     }
@@ -2097,7 +2108,7 @@ impl fmt::Debug for VirtualRange {
 }
 
 //=============================================================================
-// Some auxiliary/miscellaneous data structures that are useful.
+// Some auxiliary/miscellaneous data structures that are useful: RegToRangesMaps
 
 // Mappings from RealRegs and VirtualRegs to the sets of RealRanges and VirtualRanges that
 // belong to them.  These are needed for BT's coalescing analysis and for the dataflow analysis
@@ -2116,18 +2127,34 @@ pub struct RegToRangesMaps {
     // most VirtualRegs will have just one VirtualRange, and there are a lot of VirtualRegs in
     // general.  So SmallVec is a definite benefit here.
     pub vreg_to_vlrs_map: Vec</*virtual reg ix, */ SmallVec<[VirtualRangeIx; 3]>>,
+
+    // As an optimisation heuristic for BT's coalescing analysis, these indicate which
+    // real/virtual registers have "many" `RangeFrag`s in their live ranges.  For some
+    // definition of "many", perhaps "200 or more".  This is not important for overall
+    // allocation result or correctness: it merely allows the coalescing analysis to switch
+    // between two search strategies, one of which is fast for regs with few `RangeFrag`s (the
+    // vast majority) and the other of which has better asymptotic behaviour for regs with many
+    // `RangeFrag`s (in order to keep out of trouble on some pathological inputs).  These
+    // vectors are duplicate-free but the elements may be in an arbitrary order.
+    pub rregs_with_many_frags: Vec<u32 /*RealReg index*/>,
+    pub vregs_with_many_frags: Vec<u32 /*VirtualReg index*/>,
+
+    // And this indicates what the thresh is actually set to.  A frag will be in
+    // `r/vregs_with_many_frags` if it has `many_frags_thresh` or more RangeFrags.
+    pub many_frags_thresh: usize,
 }
 
-// MoveInfo holds info about registers connected by moves.  For each, we record the source and
-// destination of the move, the insn performing the move, and the estimated execution frequency
-// of the containing block.  The moves are not presented in any particular order, but they are
-// duplicate-free in that each such instruction will be listed only once.
+//=============================================================================
+// Some auxiliary/miscellaneous data structures that are useful: MoveInfo
+
+// `MoveInfoElem` holds info about the two registers connected a move: the source and destination
+// of the move, the insn performing the move, and the estimated execution frequency of the
+// containing block.  In `MoveInfo`, the moves are not presented in any particular order, but
+// they are duplicate-free in that each such instruction will be listed only once.
 
 pub struct MoveInfoElem {
     pub dst: Reg,
-    pub dst_range: RangeId, // possibly RangeId::invalid_value() if not requested
     pub src: Reg,
-    pub src_range: RangeId, // possibly RangeId::invalid_value() if not requested
     pub iix: InstIx,
     pub est_freq: u32,
 }
