@@ -111,6 +111,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
     ; removing it.
     (sysctl-name "kern.hostname")
     (sysctl-name "hw.machine")
+    (sysctl-name "hw.memsize")
     (sysctl-name "hw.model")
     (sysctl-name "hw.ncpu")
     (sysctl-name "hw.activecpu")
