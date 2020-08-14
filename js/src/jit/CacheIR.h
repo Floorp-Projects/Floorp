@@ -1724,6 +1724,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachAtomicsStore(HandleFunction callee);
   AttachDecision tryAttachAtomicsIsLockFree(HandleFunction callee);
   AttachDecision tryAttachBoolean(HandleFunction callee);
+  AttachDecision tryAttachBailout(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
