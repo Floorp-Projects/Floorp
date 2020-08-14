@@ -14,7 +14,6 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
@@ -137,22 +136,6 @@ WebRenderLayerManager::~WebRenderLayerManager() {
 
 CompositorBridgeChild* WebRenderLayerManager::GetCompositorBridgeChild() {
   return WrBridge()->GetCompositorBridgeChild();
-}
-
-void WebRenderLayerManager::GetBackendName(nsAString& name) {
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    name.AssignLiteral("WebRender (Software)");
-  } else {
-    name.AssignLiteral("WebRender");
-  }
-}
-
-const char* WebRenderLayerManager::Name() const {
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    return "WebRender (Software)";
-  } else {
-    return "WebRender";
-  }
 }
 
 uint32_t WebRenderLayerManager::StartFrameTimeRecording(int32_t aBufferSize) {
