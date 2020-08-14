@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>HTTPS-Only Mode - CORS & Mixed Content</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+  <h1>HTTPS-Only Mode</h1>
+  <p>CORS and Mixed Content blocking tests</p>
+  <p></p><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1658594">Bug 1658594</a></p>
+
+  <iframe id="testFrame"></iframe>
+
+  <script class="testbody" type="text/javascript">
+    const iframe = document.getElementById("testFrame");
+    SimpleTest.waitForExplicitFinish();
+
+    (async function() {
+      // Test 1: If HTTPS-Only Mode is disabled the insecure, same-origin
+      // request should fail
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.security.https_only_mode", false]],
+      });
+      await runTest(true, true);
+
+      // Test 2: If HTTPS-Only Mode is enabled the insecure, same-origin
+      // request should succeed because it gets upgraded
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.security.https_only_mode", true]],
+      });
+      await runTest(false, true);
+
+      // Test 3: If HTTPS-Only Mode is enabled but the website exempt from
+      // upgrades the insecure, same-origin request should fail again
+      await SpecialPowers.pushPermissions([
+        { type: "https-only-load-insecure", allow: true, context: document },
+      ]);
+      await runTest(true, true);
+
+      SimpleTest.finish();
+    })();
+
+
+    function runTest(shouldFailSameOrigin, shouldFailCrossOrigin) {
+      return new Promise(resolve => {
+        const handler = msg => {
+          if (msg.data.sameOrigin !== undefined) {
+            // Same-Origin check
+            ok(
+              shouldFailSameOrigin == msg.data.sameOrigin,
+              `Sending a request ${
+                msg.data.sameOrigin ? "failed" : "did not fail"
+              } but should ${shouldFailSameOrigin ? "" : "not"} have.`
+              );
+            // Cross-Origin check
+            ok(
+              shouldFailCrossOrigin == msg.data.crossOrigin,
+              `Sending a request ${
+                msg.data.crossOrigin ? "failed" : "did not fail"
+              } but should ${shouldFailCrossOrigin ? "" : "not"} have.`
+            );
+
+            // Remove handler function and reset src and resolve promise
+            window.removeEventListener("message", handler);
+            iframe.src = "about:blank";
+            resolve();
+          }
+        };
+
+        // Register handler function and set src
+        window.addEventListener("message", handler);
+        iframe.src =
+          "https://example.com/tests/dom/security/test/https-only/file_insecure_fetch.html";
+      });
+    }
+  </script>
+</body>
+
+</html>
