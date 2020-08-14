@@ -274,6 +274,14 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "Android_Hardware", Build.HARDWARE, nameSet)
         sendPart(gzipOs, boundary, "Android_Version",
                 "${Build.VERSION.SDK_INT} (${Build.VERSION.CODENAME})", nameSet)
+
+        if (Build.SUPPORTED_ABIS.isNotEmpty()) {
+            sendPart(gzipOs, boundary, "Android_CPU_ABI", Build.SUPPORTED_ABIS[0], nameSet)
+            if (Build.SUPPORTED_ABIS.size >= 2) {
+                sendPart(gzipOs, boundary, "Android_CPU_ABI2", Build.SUPPORTED_ABIS[1], nameSet)
+            }
+        }
+
         gzipOs.write(("\r\n--$boundary--\r\n").toByteArray())
         gzipOs.flush()
         gzipOs.close()
