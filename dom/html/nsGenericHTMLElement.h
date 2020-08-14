@@ -629,13 +629,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    */
   bool GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr, nsIURI** aURI) const;
 
-  /**
-   * Returns the current disabled state of the element.
-   *
-   * TODO(emilio): Consider moving to Element?
-   */
-  bool IsDisabled() const { return State().HasState(NS_EVENT_STATE_DISABLED); }
-
   bool IsHidden() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::hidden);
   }

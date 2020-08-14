@@ -56,8 +56,7 @@ void nsButtonFrameRenderer::SetDisabled(bool aDisabled, bool aNotify) {
 }
 
 bool nsButtonFrameRenderer::isDisabled() {
-  return mFrame->GetContent()->AsElement()->State().HasState(
-      NS_EVENT_STATE_DISABLED);
+  return mFrame->GetContent()->AsElement()->IsDisabled();
 }
 
 class nsDisplayButtonBoxShadowOuter : public nsPaintedDisplayItem {
