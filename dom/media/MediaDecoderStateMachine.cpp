@@ -3958,8 +3958,7 @@ class VideoQueueMemoryFunctor : public nsDequeFunctor<VideoData> {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
   virtual void operator()(VideoData* aObject) override {
-    const VideoData* v = aObject;
-    mSize += v->SizeOfIncludingThis(MallocSizeOf);
+    mSize += aObject->SizeOfIncludingThis(MallocSizeOf);
   }
 
   size_t mSize;
@@ -3972,8 +3971,7 @@ class AudioQueueMemoryFunctor : public nsDequeFunctor<AudioData> {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
   virtual void operator()(AudioData* aObject) override {
-    const AudioData* audioData = aObject;
-    mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
+    mSize += aObject->SizeOfIncludingThis(MallocSizeOf);
   }
 
   size_t mSize;
