@@ -56,7 +56,6 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
                      JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  void AddToTopLayerIfNeeded();
   void RemoveFromTopLayerIfNeeded();
 };
 
