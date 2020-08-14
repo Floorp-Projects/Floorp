@@ -102,7 +102,7 @@ add_task(async function testNonMediaEntersFullScreen() {
   info(`press 'play' which should not start media`);
   // Use `generateMediaControlKey()` directly because `play` won't affect the
   // controller's playback state (don't need to wait for the change).
-  ChromeUtils.generateMediaControlKey("play");
+  MediaControlService.generateMediaControlKey("play");
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
