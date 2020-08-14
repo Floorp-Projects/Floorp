@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !wasmSimdSupported()
+
 // Fuzz test case.  The initial unreachable will result in the subsequent
 // v8x16.shuffle popping null pointers off the value stack.  Due to a missing
 // isDeadCode() check in WasmIonCompile.cpp the compiler would dereference those

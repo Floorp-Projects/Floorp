@@ -677,7 +677,8 @@ class Decoder {
     }
   }
   MOZ_MUST_USE bool readValType(uint32_t numTypes, bool refTypesEnabled,
-                                bool gcTypesEnabled, ValType* type) {
+                                bool gcTypesEnabled, bool v128Enabled,
+                                ValType* type) {
     static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
     uint8_t code;
     if (!readFixedU8(&code)) {
@@ -688,11 +689,16 @@ class Decoder {
       case uint8_t(TypeCode::F32):
       case uint8_t(TypeCode::F64):
       case uint8_t(TypeCode::I64):
-#ifdef ENABLE_WASM_SIMD
-      case uint8_t(TypeCode::V128):
-#endif
         *type = ValType::fromNonRefTypeCode(TypeCode(code));
         return true;
+#ifdef ENABLE_WASM_SIMD
+      case uint8_t(TypeCode::V128):
+        if (!v128Enabled) {
+          return fail("v128 not enabled");
+        }
+        *type = ValType::fromNonRefTypeCode(TypeCode(code));
+        return true;
+#endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint8_t(TypeCode::FuncRef):
       case uint8_t(TypeCode::AnyRef):
@@ -724,8 +730,9 @@ class Decoder {
   }
   MOZ_MUST_USE bool readValType(const TypeDefVector& types,
                                 bool refTypesEnabled, bool gcTypesEnabled,
-                                ValType* type) {
-    if (!readValType(types.length(), refTypesEnabled, gcTypesEnabled, type)) {
+                                bool v128Enabled, ValType* type) {
+    if (!readValType(types.length(), refTypesEnabled, gcTypesEnabled,
+                     v128Enabled, type)) {
       return false;
     }
     if (type->isTypeIndex() &&
@@ -906,7 +913,7 @@ MOZ_MUST_USE bool DecodeValidatedLocalEntries(Decoder& d,
 
 MOZ_MUST_USE bool DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
                                      bool refTypesEnabled, bool gcTypesEnabled,
-                                     ValTypeVector* locals);
+                                     bool v128Enabled, ValTypeVector* locals);
 
 // Returns whether the given [begin, end) prefix of a module's bytecode starts a
 // code section and, if so, returns the SectionRange of that code section.

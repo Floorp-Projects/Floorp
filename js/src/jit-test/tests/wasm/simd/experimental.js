@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !wasmSimdSupported()
+
 // Experimental opcodes.  We have no text parsing support for these yet.  The
 // tests will be cleaned up and moved into ad-hack.js if the opcodes are
 // adopted.

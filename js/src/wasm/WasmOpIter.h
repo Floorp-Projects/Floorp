@@ -1677,7 +1677,7 @@ inline bool OpIter<Policy>::readRefIsNull(Value* input) {
 template <typename Policy>
 inline bool OpIter<Policy>::readValType(ValType* type) {
   return d_.readValType(env_.types, env_.refTypesEnabled(),
-                        env_.gcTypesEnabled(), type);
+                        env_.gcTypesEnabled(), env_.v128Enabled(), type);
 }
 
 template <typename Policy>
