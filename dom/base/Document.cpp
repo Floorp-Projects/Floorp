@@ -13642,7 +13642,7 @@ void Document::UnsetFullscreenElement() {
 bool Document::SetFullscreenElement(Element* aElement) {
   if (TopLayerPush(aElement)) {
     EventStateManager::SetFullscreenState(aElement, true);
-    NotifyFullScreenChangedForMediaControl(aElement, true);
+    NotifyFullScreenChangedForMediaElement(aElement, true);
     UpdateViewportScrollbarOverrideForFullscreen(this);
     return true;
   }
