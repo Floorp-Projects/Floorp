@@ -32,25 +32,16 @@ namespace widget {
 // used to form a unique image file name.
 static uint32_t gImageNumber = 0;
 
-enum class Method : uint8_t {
-  eRaise,
-  eNext,
-  ePrevious,
-  ePause,
-  ePlayPause,
-  eStop,
-  ePlay,
-};
-
-static inline Maybe<Method> GetSupportedMethod(const gchar* aMethodName) {
-  const std::unordered_map<std::string, Method> map = {
-      {"Raise", Method::eRaise},
-      {"Next", Method::eNext},
-      {"Previous", Method::ePrevious},
-      {"Pause", Method::ePause},
-      {"PlayPause", Method::ePlayPause},
-      {"Stop", Method::eStop},
-      {"Play", Method::ePlay}};
+static inline Maybe<mozilla::dom::MediaControlKey> GetMediaControlKey(
+    const gchar* aMethodName) {
+  const std::unordered_map<std::string, mozilla::dom::MediaControlKey> map = {
+      {"Raise", mozilla::dom::MediaControlKey::Focus},
+      {"Next", mozilla::dom::MediaControlKey::Nexttrack},
+      {"Previous", mozilla::dom::MediaControlKey::Previoustrack},
+      {"Pause", mozilla::dom::MediaControlKey::Pause},
+      {"PlayPause", mozilla::dom::MediaControlKey::Playpause},
+      {"Stop", mozilla::dom::MediaControlKey::Stop},
+      {"Play", mozilla::dom::MediaControlKey::Play}};
 
   auto it = map.find(aMethodName);
   return (it == map.end() ? Nothing() : Some(it->second));
@@ -64,9 +55,9 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
                              gpointer aUserData) {
   MOZ_ASSERT(aUserData);
   MOZ_ASSERT(NS_IsMainThread());
-  Maybe<Method> method = GetSupportedMethod(aMethodName);
 
-  if (method.isNothing()) {
+  Maybe<mozilla::dom::MediaControlKey> key = GetMediaControlKey(aMethodName);
+  if (key.isNothing()) {
     g_dbus_method_invocation_return_error(
         aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_NOT_SUPPORTED,
         "Method %s.%s.%s not supported", aObjectPath, aInterfaceName,
@@ -75,29 +66,7 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
   }
 
   MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
-  switch (method.value()) {
-    case Method::eRaise:
-      handler->Raise();
-      return;
-    case Method::eNext:
-      handler->Next();
-      return;
-    case Method::ePrevious:
-      handler->Previous();
-      return;
-    case Method::ePause:
-      handler->Pause();
-      return;
-    case Method::ePlayPause:
-      handler->PlayPause();
-      return;
-    case Method::eStop:
-      handler->Stop();  // Stop is mandatory
-      return;
-    case Method::ePlay:
-      handler->Play();
-      return;
-  }
+  handler->PressKey(key.value());
 }
 
 enum class Property : uint8_t {
@@ -381,6 +350,12 @@ void MPRISServiceHandler::InitIdentity() {
 const char* MPRISServiceHandler::Identity() const {
   MOZ_ASSERT(mInitialized);
   return mIdentity.get();
+}
+
+void MPRISServiceHandler::PressKey(mozilla::dom::MediaControlKey aKey) const {
+  MOZ_ASSERT(mInitialized);
+  LOG("Press %s", ToMediaControlKeyStr(aKey));
+  EmitEvent(aKey);
 }
 
 void MPRISServiceHandler::SetPlaybackState(
@@ -750,45 +725,10 @@ GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
   return g_variant_builder_end(&builder);
 }
 
-void MPRISServiceHandler::EmitEvent(mozilla::dom::MediaControlKey aKey) {
+void MPRISServiceHandler::EmitEvent(mozilla::dom::MediaControlKey aKey) const {
   for (auto& listener : mListeners) {
     listener->OnActionPerformed(mozilla::dom::MediaControlAction(aKey));
   }
-}
-
-void MPRISServiceHandler::Raise() {
-  LOG("Raise");
-  EmitEvent(mozilla::dom::MediaControlKey::Focus);
-}
-
-void MPRISServiceHandler::Next() {
-  LOG("Next");
-  EmitEvent(mozilla::dom::MediaControlKey::Nexttrack);
-}
-
-void MPRISServiceHandler::Previous() {
-  LOG("Previous");
-  EmitEvent(mozilla::dom::MediaControlKey::Previoustrack);
-}
-
-void MPRISServiceHandler::Pause() {
-  LOG("Pause");
-  EmitEvent(mozilla::dom::MediaControlKey::Pause);
-}
-
-void MPRISServiceHandler::PlayPause() {
-  LOG("PlayPause");
-  EmitEvent(mozilla::dom::MediaControlKey::Playpause);
-}
-
-void MPRISServiceHandler::Stop() {
-  LOG("Stop");
-  EmitEvent(mozilla::dom::MediaControlKey::Stop);
-}
-
-void MPRISServiceHandler::Play() {
-  LOG("Play");
-  EmitEvent(mozilla::dom::MediaControlKey::Play);
 }
 
 }  // namespace widget
