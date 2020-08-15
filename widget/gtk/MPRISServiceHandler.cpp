@@ -69,102 +69,40 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
   MOZ_ASSERT(aUserData);
   MOZ_ASSERT(NS_IsMainThread());
   MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
-  std::string error;
 
   switch (GetMethod(aMethodName)) {
-    case Method::eUnknown:
-      g_dbus_method_invocation_return_error(
-          aInvocation, G_IO_ERROR, G_IO_ERROR_FAILED, "Invalid Method");
-      return;
-    case Method::eQuit:
-      if (handler->CanQuit()) {
-        handler->Quit();
-      } else {
-        error = "Cannot invoke Quit() when CanQuit() returns false";
-      }
-      break;
+    // Supported methods:
     case Method::eRaise:
-      if (handler->CanRaise()) {
-        handler->Raise();
-      } else {
-        error = "Cannot invoke Raise() when CanRaise() returns false";
-      }
-      break;
+      handler->Raise();
+      return;
     case Method::eNext:
-      if (handler->CanGoNext()) {
-        handler->Next();
-      } else {
-        error = "Cannot invoke Next() when CanGoNext() returns false";
-      }
-      break;
+      handler->Next();
+      return;
     case Method::ePrevious:
-      if (handler->CanGoPrevious()) {
-        handler->Previous();
-      } else {
-        error = "Cannot invoke Previous() when CanGoPrevious() returns false";
-      }
-      break;
+      handler->Previous();
+      return;
     case Method::ePause:
-      if (handler->CanPause()) {
-        handler->Pause();
-      } else {
-        error = "Cannot invoke Pause() when CanPause() returns false";
-      }
-      break;
+      handler->Pause();
+      return;
     case Method::ePlayPause:
-      // According to Spec this should only fail if canPause is false, but Play
-      // may be forbidden due to CanPlay. This means in theory even though
-      // CanPlay is false, this method would be able to Play something which
-      // means when CanPause is false, CanPlay _has to be_ false as well.
-      if (handler->CanPlay() && handler->CanPause()) {
-        handler->PlayPause();
-      } else {
-        error =
-            "Cannot invoke PlayPause() when either CanPlay() or CanPause() "
-            "returns false";
-      }
-      break;
+      handler->PlayPause();
+      return;
     case Method::eStop:
       handler->Stop();  // Stop is mandatory
-      break;
+      return;
     case Method::ePlay:
-      if (handler->CanPlay()) {
-        handler->Play();
-      } else {
-        error = "Cannot invoke Play() when CanPlay() returns false";
-      }
-      break;
+      handler->Play();
+      return;
+    // Non-supported methods:
+    case Method::eUnknown:
+    case Method::eQuit:
     case Method::eSeek:
-      if (handler->CanSeek()) {
-        gint64 position;
-        g_variant_get(aParameters, "(x)", &position);
-        handler->Seek(position);
-      } else {
-        error = "Cannot invoke Seek() when CanSeek() returns false";
-      }
-      break;
     case Method::eSetPosition:
-      if (handler->CanSeek()) {
-        gchar* trackId;
-        gint64 position;
-        g_variant_get(aParameters, "(ox)", &trackId, &position);
-        handler->SetPosition(trackId, position);
-      } else {
-        error = "Cannot invoke SetPosition() when CanSeek() returns false";
-      }
-      break;
     case Method::eOpenUri:
-      gchar* uri;
-      g_variant_get(aParameters, "(s)", &uri);
-      if (!handler->OpenUri(uri)) {
-        error = "Could not open URI";
-      }
-      break;
-  }
-
-  if (!error.empty()) {
-    g_dbus_method_invocation_return_error(
-        aInvocation, G_IO_ERROR, G_IO_ERROR_READ_ONLY, "%s", error.c_str());
+      g_dbus_method_invocation_return_error(aInvocation, G_IO_ERROR,
+                                            G_IO_ERROR_FAILED,
+                                            "%s is not supported", aMethodName);
+      return;
   }
 }
 
@@ -193,12 +131,14 @@ enum class Property : uint8_t {
 
 static inline Property GetProperty(const gchar* aPropertyName) {
   const std::unordered_map<std::string, Property> map = {
+      // org.mpris.MediaPlayer2 properties
       {"Identity", Property::eIdentity},
       {"HasTrackList", Property::eHasTrackList},
       {"CanRaise", Property::eCanRaise},
       {"CanQuit", Property::eCanQuit},
       {"SupportedUriSchemes", Property::eSupportedUriSchemes},
       {"SupportedMimeTypes", Property::eSupportedMimeTypes},
+      // org.mpris.MediaPlayer2.Player properties
       {"CanGoNext", Property::eCanGoNext},
       {"CanGoPrevious", Property::eCanGoPrevious},
       {"CanPlay", Property::eCanPlay},
@@ -228,55 +168,42 @@ static GVariant* HandleGetProperty(GDBusConnection* aConnection,
   MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
 
   switch (GetProperty(aPropertyName)) {
-    case Property::eUnknown:
-      g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED, "Unknown Property");
-      return nullptr;
+    // Supported properties:
+    case Property::eSupportedUriSchemes:
+    case Property::eSupportedMimeTypes:
+      // No plan to implement OpenUri for now
+      return g_variant_new_strv(nullptr, 0);
+    case Property::eGetPlaybackStatus:
+      return handler->GetPlaybackStatus();
+    case Property::eGetMetadata:
+      return handler->GetMetadataAsGVariant();
     case Property::eIdentity:
       return g_variant_new_string(handler->Identity());
     case Property::eHasTrackList:
-      return g_variant_new_boolean(handler->HasTrackList());
-    case Property::eCanRaise:
-      return g_variant_new_boolean(handler->CanRaise());
     case Property::eCanQuit:
-      return g_variant_new_boolean(handler->CanQuit());
-    case Property::eSupportedUriSchemes:
-      return handler->SupportedUriSchemes();
-    case Property::eSupportedMimeTypes:
-      return handler->SupportedMimeTypes();
-    case Property::eCanGoNext:
-      return g_variant_new_boolean(handler->CanGoNext());
-    case Property::eCanGoPrevious:
-      return g_variant_new_boolean(handler->CanGoPrevious());
-    case Property::eCanPlay:
-      return g_variant_new_boolean(handler->CanPlay());
-    case Property::eCanPause:
-      return g_variant_new_boolean(handler->CanPause());
     case Property::eCanSeek:
-      return g_variant_new_boolean(handler->CanSeek());
+      return g_variant_new_boolean(false);
+    // Play/Pause would be blocked if CanControl is false
     case Property::eCanControl:
-      return g_variant_new_boolean(handler->CanControl());
+    case Property::eCanRaise:
+    case Property::eCanGoNext:
+    case Property::eCanGoPrevious:
+    case Property::eCanPlay:
+    case Property::eCanPause:
+      return g_variant_new_boolean(true);
+    // Non-supported properties:
+    case Property::eUnknown:
     case Property::eGetVolume:
-      return g_variant_new_double(handler->GetVolume());
     case Property::eGetPosition:
-      return g_variant_new_int64(handler->GetPosition());
     case Property::eGetMinimumRate:
-      return g_variant_new_double(handler->GetMinimumRate());
     case Property::eGetMaximumRate:
-      return g_variant_new_double(handler->GetMaximumRate());
     case Property::eGetRate:
-      return g_variant_new_double(handler->GetRate());
-    case Property::eGetPlaybackStatus:
-      if (GVariant* state = handler->GetPlaybackStatus()) {
-        return state;
-      }
-      g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
-                  "Invalid Playback Status");
+      g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED, "%s is not supported",
+                  aPropertyName);
       return nullptr;
-    case Property::eGetMetadata:
-      return handler->GetMetadataAsGVariant();
   }
 
-  MOZ_ASSERT_UNREACHABLE("Switch Statement incomplete");
+  MOZ_ASSERT_UNREACHABLE("Switch statement is incomplete");
   return nullptr;
 }
 
@@ -288,35 +215,9 @@ static gboolean HandleSetProperty(GDBusConnection* aConnection,
                                   GError** aError, gpointer aUserData) {
   MOZ_ASSERT(aUserData);
   MOZ_ASSERT(NS_IsMainThread());
-  MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
-
-  if (g_strcmp0(aPropertyName, "Volume") == 0) {
-    if (!handler->SetVolume(g_variant_get_double(aValue))) {
-      g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
-                  "Could not set the Volume");
-      return false;
-    }
-  } else if (g_strcmp0(aPropertyName, "Rate") == 0) {
-    if (!handler->SetRate(g_variant_get_double(aValue))) {
-      g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
-                  "Could not set the Rate");
-      return false;
-    }
-  } else {
-    g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED, "Unknown Property");
-    return false;
-  }
-
-  GVariantBuilder
-      propertiesBuilder;  // a builder for the list of changed properties
-  g_variant_builder_init(&propertiesBuilder, G_VARIANT_TYPE_VARDICT);
-  g_variant_builder_add(&propertiesBuilder, "{sv}", aPropertyName, aValue);
-
-  return g_dbus_connection_emit_signal(
-      aConnection, nullptr, aObjectPath, "org.freedesktop.DBus.Properties",
-      "PropertiesChanged",
-      g_variant_new("(sa{sv}as)", aInterfaceName, &propertiesBuilder, nullptr),
-      aError);
+  g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
+              "%s:%s setting is not supported", aInterfaceName, aPropertyName);
+  return false;
 }
 
 static const GDBusInterfaceVTable gInterfaceVTable = {
@@ -481,8 +382,6 @@ void MPRISServiceHandler::Close() {
 
 bool MPRISServiceHandler::IsOpened() const { return mInitialized; }
 
-bool MPRISServiceHandler::HasTrackList() { return false; }
-
 void MPRISServiceHandler::InitIdentity() {
   nsresult rv;
   nsAutoCString appName;
@@ -504,71 +403,6 @@ const char* MPRISServiceHandler::Identity() const {
   return mIdentity.get();
 }
 
-GVariant* MPRISServiceHandler::SupportedUriSchemes() {
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
-  return g_variant_builder_end(&builder);
-}
-
-GVariant* MPRISServiceHandler::SupportedMimeTypes() {
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
-  return g_variant_builder_end(&builder);
-}
-
-constexpr bool MPRISServiceHandler::CanRaise() { return true; }
-
-constexpr bool MPRISServiceHandler::CanQuit() { return false; }
-
-void MPRISServiceHandler::Quit() {
-  MOZ_ASSERT_UNREACHABLE("CanQuit is false, this method is not implemented");
-}
-
-bool MPRISServiceHandler::CanGoNext() const { return true; }
-
-bool MPRISServiceHandler::CanGoPrevious() const { return true; }
-
-bool MPRISServiceHandler::CanPlay() const { return true; }
-
-bool MPRISServiceHandler::CanPause() const { return true; }
-
-// We don't support Seeking or Setting/Getting the Position yet
-bool MPRISServiceHandler::CanSeek() const { return false; }
-
-bool MPRISServiceHandler::CanControl() const {
-  return true;  // we don't support LoopStatus, Shuffle, Rate or Volume, but at
-                // least KDE blocks Play/Pause when CanControl is false.
-}
-
-// We don't support getting the volume (yet) so return a dummy value.
-double MPRISServiceHandler::GetVolume() const { return 1.0f; }
-
-// we don't support setting the volume yet, so this is a no-op
-bool MPRISServiceHandler::SetVolume(double aVolume) {
-  if (aVolume > 1.0f || aVolume < 0.0f) {
-    return false;
-  }
-  LOG("Volume set to %f", aVolume);
-  return true;
-}
-int64_t MPRISServiceHandler::GetPosition() const { return 0; }
-
-constexpr double MPRISServiceHandler::GetMinimumRate() { return 1.0f; }
-
-constexpr double MPRISServiceHandler::GetMaximumRate() { return 1.0f; }
-
-// Getting and Setting the Rate doesn't work yet, so it will be locked to 1.0
-double MPRISServiceHandler::GetRate() const { return 1.0f; }
-
-bool MPRISServiceHandler::SetRate(double aRate) {
-  if (aRate > GetMaximumRate() || aRate < GetMinimumRate()) {
-    return false;
-  }
-
-  LOG("Set Playback Rate to %f", aRate);
-  return true;
-}
-
 void MPRISServiceHandler::SetPlaybackState(
     dom::MediaSessionPlaybackState aState) {
   LOG("SetPlaybackState");
@@ -583,9 +417,6 @@ void MPRISServiceHandler::SetPlaybackState(
   }
 
   GVariant* state = GetPlaybackStatus();
-  if (!state) {
-    return;  // Invalid state
-  }
 
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
@@ -978,22 +809,6 @@ void MPRISServiceHandler::Stop() {
 void MPRISServiceHandler::Play() {
   LOG("Play");
   EmitEvent(mozilla::dom::MediaControlKey::Play);
-}
-
-// Caution, Seek can really be negative, like -1000000 during testing
-void MPRISServiceHandler::Seek(int64_t aOffset) {
-  LOG("Seek(%" PRId64 ")", aOffset);
-}
-
-// The following two methods are untested as my Desktop Widget didn't issue
-// these calls.
-void MPRISServiceHandler::SetPosition(char* aTrackId, int64_t aPosition) {
-  LOG("SetPosition(%s, %" PRId64 ")", aTrackId, aPosition);
-}
-
-bool MPRISServiceHandler::OpenUri(char* aUri) {
-  LOG("OpenUri(%s)", aUri);
-  return false;
 }
 
 }  // namespace widget
