@@ -6553,6 +6553,24 @@ bool CacheIRCompiler::emitCompareObjectUndefinedNullResult(JSOp op,
   return true;
 }
 
+bool CacheIRCompiler::emitCompareDoubleSameValueResult(NumberOperandId lhsId,
+                                                       NumberOperandId rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+  AutoAvailableFloatRegister floatScratch2(*this, FloatReg2);
+
+  allocator.ensureDoubleRegister(masm, lhsId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, rhsId, floatScratch1);
+
+  masm.sameValueDouble(floatScratch0, floatScratch1, floatScratch2, scratch);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitCallPrintString(const char* str) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   masm.printf(str);
