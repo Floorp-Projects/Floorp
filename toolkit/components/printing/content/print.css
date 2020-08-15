@@ -116,6 +116,10 @@ select:not([size]):not([multiple])[iconic] {
   background-position-x: left 3px, right 8px;
 }
 
+#printer-picker[output="pdf"] {
+  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://global/content/portrait.svg");
+}
+
 input[type="checkbox"] {
   margin-inline-end: 8px;
 }
