@@ -1736,6 +1736,18 @@ bool WarpCacheIRTranspiler::emitCompareSymbolResult(JSOp op,
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Symbol);
 }
 
+bool WarpCacheIRTranspiler::emitCompareDoubleSameValueResult(
+    NumberOperandId lhsId, NumberOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* sameValue = MSameValue::New(alloc(), lhs, rhs);
+  add(sameValue);
+
+  pushResult(sameValue);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathHypot2NumberResult(
     NumberOperandId firstId, NumberOperandId secondId) {
   MDefinitionVector vector(alloc());

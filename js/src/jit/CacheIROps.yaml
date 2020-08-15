@@ -2465,6 +2465,14 @@
     op: JSOpImm
     obj: ObjId
 
+- name: CompareDoubleSameValueResult
+  shared: true
+  transpile: true
+  cost_estimate: 3
+  args:
+    lhs: NumberId
+    rhs: NumberId
+
 - name: CallPrintString
   shared: true
   transpile: false
