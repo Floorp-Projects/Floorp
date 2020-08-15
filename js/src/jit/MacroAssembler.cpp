@@ -3280,6 +3280,53 @@ void MacroAssembler::randomDouble(Register rng, FloatRegister dest,
   mulDoublePtr(ImmPtr(&ScaleInv), s0Reg.scratchReg(), dest);
 }
 
+void MacroAssembler::sameValueDouble(FloatRegister left, FloatRegister right,
+                                     FloatRegister temp, Register dest) {
+  Label nonEqual, isSameValue, isNotSameValue;
+  branchDouble(Assembler::DoubleNotEqualOrUnordered, left, right, &nonEqual);
+  {
+    // First, test for being equal to 0.0, which also includes -0.0.
+    loadConstantDouble(0.0, temp);
+    branchDouble(Assembler::DoubleNotEqual, left, temp, &isSameValue);
+
+    // The easiest way to distinguish -0.0 from 0.0 is that 1.0/-0.0
+    // is -Infinity instead of Infinity.
+    Label isNegInf;
+    loadConstantDouble(1.0, temp);
+    divDouble(left, temp);
+    branchDouble(Assembler::DoubleLessThan, temp, left, &isNegInf);
+    {
+      loadConstantDouble(1.0, temp);
+      divDouble(right, temp);
+      branchDouble(Assembler::DoubleGreaterThan, temp, right, &isSameValue);
+      jump(&isNotSameValue);
+    }
+    bind(&isNegInf);
+    {
+      loadConstantDouble(1.0, temp);
+      divDouble(right, temp);
+      branchDouble(Assembler::DoubleLessThan, temp, right, &isSameValue);
+      jump(&isNotSameValue);
+    }
+  }
+  bind(&nonEqual);
+  {
+    // Test if both values are NaN.
+    branchDouble(Assembler::DoubleOrdered, left, left, &isNotSameValue);
+    branchDouble(Assembler::DoubleOrdered, right, right, &isNotSameValue);
+  }
+
+  Label done;
+  bind(&isSameValue);
+  move32(Imm32(1), dest);
+  jump(&done);
+
+  bind(&isNotSameValue);
+  move32(Imm32(0), dest);
+
+  bind(&done);
+}
+
 void MacroAssembler::branchIfNotRegExpPrototypeOptimizable(Register proto,
                                                            Register temp,
                                                            Label* fail) {
