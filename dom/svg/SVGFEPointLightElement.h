@@ -8,7 +8,7 @@
 #define DOM_SVG_SVGFEPOINTLIGHTELEMENT_H_
 
 #include "SVGAnimatedNumber.h"
-#include "SVGFilters.h"
+#include "mozilla/dom/SVGFilters.h"
 
 nsresult NS_NewSVGFEPointLightElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

@@ -7,7 +7,7 @@
 #ifndef DOM_SVG_SVGFEIMAGEELEMENT_H_
 #define DOM_SVG_SVGFEIMAGEELEMENT_H_
 
-#include "SVGFilters.h"
+#include "mozilla/dom/SVGFilters.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 nsresult NS_NewSVGFEImageElement(

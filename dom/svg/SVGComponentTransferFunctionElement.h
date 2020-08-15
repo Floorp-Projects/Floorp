@@ -10,7 +10,7 @@
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedNumber.h"
 #include "SVGAnimatedNumberList.h"
-#include "SVGFilters.h"
+#include "mozilla/dom/SVGFilters.h"
 
 #define NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID \
   {                                                       \

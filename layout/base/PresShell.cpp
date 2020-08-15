@@ -121,7 +121,7 @@
 #include "nsStyleSheetService.h"
 #include "gfxUtils.h"
 #include "mozilla/SMILAnimationController.h"
-#include "mozilla/SVGContentUtils.h"
+#include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGFragmentIdentifier.h"
 #include "nsFrameSelection.h"
@@ -3215,8 +3215,9 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     }
 
     // If the target is an animation element, activate the animation
-    if (content->IsNodeOfType(nsINode::eANIMATION)) {
-      SVGContentUtils::ActivateByHyperlink(content.get());
+    nsCOMPtr<SVGAnimationElement> animationElement = do_QueryInterface(content);
+    if (animationElement) {
+      animationElement->ActivateByHyperlink();
     }
   } else {
     rv = NS_ERROR_FAILURE;

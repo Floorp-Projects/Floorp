@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Keep in (case-insensitive) order:
-#include "ComputedStyle.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/dom/SVGFilters.h"
+#include "ComputedStyle.h"
 #include "nsContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
-#include "SVGObserverUtils.h"
-#include "SVGFilters.h"
 
 nsIFrame* NS_NewSVGFELeafFrame(mozilla::PresShell* aPresShell,
                                mozilla::ComputedStyle* aStyle);
@@ -77,7 +77,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFELeafFrame)
 #ifdef DEBUG
 void SVGFELeafFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                           nsIFrame* aPrevInFlow) {
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eFILTER),
+  nsCOMPtr<SVGFE> filterPrimitive = do_QueryInterface(aContent);
+  NS_ASSERTION(filterPrimitive,
                "Trying to construct an SVGFELeafFrame for a "
                "content element that doesn't support the right interfaces");
 

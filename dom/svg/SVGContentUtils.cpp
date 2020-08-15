@@ -27,7 +27,6 @@
 #include "nsLayoutUtils.h"
 #include "nsMathUtils.h"
 #include "nsWhitespaceTokenizer.h"
-#include "SVGAnimationElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGGeometryProperty.h"
 #include "nsContentUtils.h"
@@ -144,13 +143,6 @@ SVGSVGElement* SVGContentUtils::GetOuterSVGElement(SVGElement* aSVGElement) {
     return static_cast<SVGSVGElement*>(element);
   }
   return nullptr;
-}
-
-void SVGContentUtils::ActivateByHyperlink(nsIContent* aContent) {
-  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eANIMATION),
-             "Expecting an animation element");
-
-  static_cast<SVGAnimationElement*>(aContent)->ActivateByHyperlink();
 }
 
 enum DashState {

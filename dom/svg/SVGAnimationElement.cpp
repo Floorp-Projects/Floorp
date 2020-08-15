@@ -27,6 +27,7 @@ NS_IMPL_ADDREF_INHERITED(SVGAnimationElement, SVGAnimationElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGAnimationElement, SVGAnimationElementBase)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimationElement)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(SVGAnimationElement)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::SVGTests)
 NS_INTERFACE_MAP_END_INHERITING(SVGAnimationElementBase)
 
@@ -279,10 +280,6 @@ nsresult SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
      // next BindToTree call.
 
   return rv;
-}
-
-bool SVGAnimationElement::IsNodeOfType(uint32_t aFlags) const {
-  return !(aFlags & ~eANIMATION);
 }
 
 //----------------------------------------------------------------------

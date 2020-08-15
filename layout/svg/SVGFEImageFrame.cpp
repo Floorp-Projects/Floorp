@@ -6,14 +6,13 @@
 
 // Keep in (case-insensitive) order:
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/SVGFEImageElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "nsContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
 #include "nsLiteralString.h"
-#include "SVGObserverUtils.h"
-#include "SVGFilters.h"
 
 using namespace mozilla::dom;
 
