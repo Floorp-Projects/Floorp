@@ -73,46 +73,16 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
   // state converted into d-bus variants.
   GVariant* GetPlaybackStatus() const;
 
-// Implementations of the MPRIS API Methods/Properties. constexpr'ed properties
-// will be what the user agent doesn't support and thus they are known at
-// compile time.
-  bool HasTrackList();
+  // MPRIS Methods/Properties
   const char* Identity() const;
-  GVariant* SupportedUriSchemes();
-  GVariant* SupportedMimeTypes();
-  constexpr bool CanRaise();
   void Raise();
-  constexpr bool CanQuit();
-  void Quit();
-
-  // :Player::Methods
+  // Player methods
   void Next();
   void Previous();
   void Pause();
   void PlayPause();
   void Stop();
   void Play();
-  void Seek(int64_t aOffset);
-  void SetPosition(char* aTrackId, int64_t aPosition);
-  // bool is our custom addition: return false whether opening fails/is not
-  // supported for that URI it will raise a DBUS Error
-  bool OpenUri(char* aUri);
-
-  double GetRate() const;
-  bool SetRate(double aRate);
-  constexpr double GetMinimumRate();
-  constexpr double GetMaximumRate();
-
-  double GetVolume() const;
-  bool SetVolume(double aVolume);
-  int64_t GetPosition() const;
-
-  bool CanGoNext() const;
-  bool CanGoPrevious() const;
-  bool CanPlay() const;
-  bool CanPause() const;
-  bool CanSeek() const;
-  bool CanControl() const;
 
   void SetMediaMetadata(const dom::MediaMetadataBase& aMetadata) override;
   GVariant* GetMetadataAsGVariant() const;
