@@ -84,6 +84,8 @@ var PrintEventHandler = {
         detail: this.viewSettings,
       })
     );
+
+    document.body.removeAttribute("loading");
   },
 
   async print({ silent } = {}) {
