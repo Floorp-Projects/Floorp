@@ -133,6 +133,11 @@ LayoutDeviceRect ViewportUtils::DocumentRelativeLayoutToVisual(
   return visualToLayout.Inverse().TransformBounds(aRect);
 }
 
+LayoutDeviceRect ViewportUtils::DocumentRelativeLayoutToVisual(
+    const LayoutDeviceIntRect& aRect, PresShell* aShell) {
+  return DocumentRelativeLayoutToVisual(IntRectToRect(aRect), aShell);
+}
+
 CSSRect ViewportUtils::DocumentRelativeLayoutToVisual(const CSSRect& aRect,
                                                       PresShell* aShell) {
   ScrollableLayerGuid::ViewID targetScrollId =
