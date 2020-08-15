@@ -400,29 +400,16 @@ void MPRISServiceHandler::SetPlaybackState(
 
   MediaControlKeySource::SetPlaybackState(aState);
 
-  if (!mConnection) {
-    return;  // No D-Bus Connection, no event
-  }
-
   GVariant* state = GetPlaybackStatus();
-
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&builder, "{sv}", "PlaybackStatus", state);
 
   GVariant* parameters = g_variant_new(
       "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
-  GError* error = nullptr;
-  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
-                                     DBUS_MPRIS_OBJECT_PATH,
-                                     "org.freedesktop.DBus.Properties",
-                                     "PropertiesChanged", parameters, &error)) {
-    LOG("Failed at emitting MPRIS property changes for 'PlaybackStatus': %s",
-        error ? error->message : "Unknown Error");
-    if (error) {
-      g_error_free(error);
-    }
-  }
+
+  LOG("Emitting MPRIS property changes for 'PlaybackStatus'");
+  Unused << EmitPropertiesChangedSignal(parameters);
 }
 
 GVariant* MPRISServiceHandler::GetPlaybackStatus() const {
@@ -475,31 +462,15 @@ void MPRISServiceHandler::SetMediaMetadata(
 }
 
 bool MPRISServiceHandler::EmitMetadataChanged() const {
-  if (!mConnection) {
-    LOG("No D-Bus Connection. Drop the update.");
-    return false;
-  }
-
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&builder, "{sv}", "Metadata", GetMetadataAsGVariant());
 
   GVariant* parameters = g_variant_new(
       "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
-  GError* error = nullptr;
-  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
-                                     DBUS_MPRIS_OBJECT_PATH,
-                                     "org.freedesktop.DBus.Properties",
-                                     "PropertiesChanged", parameters, &error)) {
-    LOG("Failed at emitting MPRIS property changes for 'Metadata': %s:",
-        error ? error->message : "Unknown Error");
-    if (error) {
-      g_error_free(error);
-    }
-    return false;
-  }
 
-  return true;
+  LOG("Emit MPRIS property changes for 'Metadata'");
+  return EmitPropertiesChangedSignal(parameters);
 }
 
 void MPRISServiceHandler::SetMediaMetadataInternal(
@@ -819,11 +790,6 @@ bool MPRISServiceHandler::IsMediaKeySupported(
 
 bool MPRISServiceHandler::EmitSupportedKeyChanged(
     mozilla::dom::MediaControlKey aKey, bool aSupported) const {
-  if (!mConnection) {
-    LOG("No D-Bus Connection. Drop the update");
-    return false;
-  }
-
   auto it = gKeyProperty.find(aKey);
   if (it == gKeyProperty.end()) {
     LOG("No property for %s", ToMediaControlKeyStr(aKey));
@@ -839,13 +805,24 @@ bool MPRISServiceHandler::EmitSupportedKeyChanged(
   GVariant* parameters = g_variant_new(
       "(sa{sv}as)", static_cast<const gchar*>(it->second.interface), &builder,
       nullptr);
+
+  LOG("Emit MPRIS property changes for '%s.%s'", it->second.interface,
+      it->second.property);
+  return EmitPropertiesChangedSignal(parameters);
+}
+
+bool MPRISServiceHandler::EmitPropertiesChangedSignal(GVariant* aParameters) const {
+  if (!mConnection) {
+    LOG("No D-Bus Connection. Cannot emit properties changed signal");
+    return false;
+  }
+
   GError* error = nullptr;
-  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
-                                     DBUS_MPRIS_OBJECT_PATH,
-                                     "org.freedesktop.DBus.Properties",
-                                     "PropertiesChanged", parameters, &error)) {
-    LOG("Failed to emit MPRIS property changes for '%s.%s': %s",
-        it->second.interface, it->second.property,
+  if (!g_dbus_connection_emit_signal(
+          mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
+          "org.freedesktop.DBus.Properties", "PropertiesChanged", aParameters,
+          &error)) {
+    LOG("Failed to emit MPRIS property changes: %s",
         error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
