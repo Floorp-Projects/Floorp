@@ -8,6 +8,12 @@ const {
   Services,
 } = window.docShell.chromeEventHandler.ownerGlobal;
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadPaths",
+  "resource://gre/modules/DownloadPaths.jsm"
+);
+
 const INVALID_INPUT_DELAY_MS = 500;
 
 document.addEventListener(
@@ -27,7 +33,7 @@ window.addEventListener(
 );
 
 var PrintEventHandler = {
-  init() {
+  async init() {
     this.sourceBrowser = this.getSourceBrowser();
     this.previewBrowser = this.getPreviewBrowser();
     this.settings = PrintUtils.getPrintSettings();
@@ -41,21 +47,24 @@ var PrintEventHandler = {
     document.addEventListener("open-system-dialog", () =>
       this.print({ silent: false })
     );
-    this.getPrintDestinations().then(destinations => {
-      document.dispatchEvent(
-        new CustomEvent("available-destinations", {
-          detail: destinations,
-        })
-      );
-    });
+
+    let destinations = await this.getPrintDestinations();
+    document.dispatchEvent(
+      new CustomEvent("available-destinations", {
+        detail: destinations,
+      })
+    );
 
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
     this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
 
+    // Ensure the output format is set properly.
+    this.viewSettings.printerName = this.settings.printerName;
+
     this.settingFlags = {
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
-      printerName: Ci.nsIPrintSettings.kInitSaveAll,
+      printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
       scaling: Ci.nsIPrintSettings.kInitSaveScaling,
       shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
       printFootersHeaders:
@@ -77,13 +86,24 @@ var PrintEventHandler = {
     );
   },
 
-  print({ printerName, silent } = {}) {
+  async print({ silent } = {}) {
     let settings = this.settings;
     settings.printSilent = silent;
 
-    if (printerName) {
-      settings.printerName = printerName;
+    if (settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
+      try {
+        settings.toFileName = await pickFileName(this.sourceBrowser, settings);
+      } catch (e) {
+        // Don't care why just yet.
+        return;
+      }
     }
+
+    if (silent) {
+      // This seems like it should be handled automatically but it isn't.
+      Services.prefs.setStringPref("print_printer", settings.printerName);
+    }
+
     PrintUtils.printWindow(this.previewBrowser.browsingContext, settings);
   },
 
@@ -188,23 +208,31 @@ var PrintEventHandler = {
     const defaultPrinterName = printerList.systemDefaultPrinterName;
     const printers = await printerList.printers;
 
+    let saveToPdfPrinter = {
+      nameId: "printui-destination-pdf-label",
+      value: PrintUtils.SAVE_TO_PDF_PRINTER,
+      selected: lastUsedPrinterName == PrintUtils.SAVE_TO_PDF_PRINTER,
+    };
+
     let defaultIndex = 0;
-    let foundSelected = false;
-    let i = 0;
-    let destinations = printers.map(printer => {
-      printer.QueryInterface(Ci.nsIPrinter);
-      const name = printer.name;
-      const value = name;
-      const selected = name == lastUsedPrinterName;
-      if (selected) {
-        foundSelected = true;
-      }
-      if (name == defaultPrinterName) {
-        defaultIndex = i;
-      }
-      ++i;
-      return { name, value, selected };
-    });
+    let foundSelected = saveToPdfPrinter.selected;
+
+    let destinations = [
+      saveToPdfPrinter,
+      ...printers.map((printer, i) => {
+        printer.QueryInterface(Ci.nsIPrinter);
+        const name = printer.name;
+        const value = name;
+        const selected = name == lastUsedPrinterName;
+        if (selected) {
+          foundSelected = true;
+        }
+        if (name == defaultPrinterName) {
+          defaultIndex = i + 1; // Account for the PDF option.
+        }
+        return { name, value, selected };
+      }),
+    ];
 
     // If there's no valid last selected printer, select the system default, or
     // the first on the list otherwise.
@@ -285,6 +313,16 @@ const PrintSettingsViewProxy = {
         // once we have a text box where the user can specify a range
         break;
 
+      case "printerName":
+        target.printerName = value;
+        target.toFileName = "";
+        if (value == PrintUtils.SAVE_TO_PDF_PRINTER) {
+          target.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+        } else {
+          target.outputFormat = Ci.nsIPrintSettings.kOutputFormatNative;
+        }
+        break;
+
       default:
         target[name] = value;
     }
@@ -339,7 +377,7 @@ function PrintUIControlMixin(superClass) {
 
 class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
   initialize() {
-    this.addEventListener("change", this);
+    super.initialize();
     document.addEventListener("available-destinations", this);
   }
 
@@ -351,17 +389,23 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
         optionData.name,
         "value" in optionData ? optionData.value : optionData.name
       );
+      if (optionData.nameId) {
+        document.l10n.setAttributes(opt, optionData.nameId);
+      }
       if (optionData.selected) {
-        this._currentPrinter = optionData.value;
         opt.selected = true;
       }
       this.options.add(opt);
     }
   }
 
+  update(settings) {
+    let isPdf = settings.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF;
+    this.setAttribute("output", isPdf ? "pdf" : "paper");
+  }
+
   handleEvent(e) {
     if (e.type == "change") {
-      this._currentPrinter = e.target.value;
       this.dispatchSettingsChange({
         printerName: e.target.value,
       });
@@ -670,3 +714,67 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
   }
 }
 customElements.define("page-count", PageCount);
+
+class PrintButton extends PrintUIControlMixin(HTMLButtonElement) {
+  update(settings) {
+    let l10nId =
+      settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
+        ? "printui-primary-button-save"
+        : "printui-primary-button";
+    document.l10n.setAttributes(this, l10nId);
+  }
+}
+customElements.define("print-button", PrintButton, { extends: "button" });
+
+async function pickFileName(sourceBrowser, pageSettings) {
+  let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  let [title] = await document.l10n.formatMessages([
+    { id: "printui-save-to-pdf-title" },
+  ]);
+  title = title.value;
+
+  let filename;
+  if (sourceBrowser.contentTitle != "") {
+    filename = sourceBrowser.contentTitle;
+  } else {
+    let url = new URL(sourceBrowser.currentURI.spec);
+    let path = decodeURIComponent(url.pathname);
+    path = path.replace(/\/$/, "");
+    filename = path.split("/").pop();
+    if (filename == "") {
+      filename = url.hostname;
+    }
+  }
+  filename = DownloadPaths.sanitize(filename);
+
+  picker.init(
+    window.docShell.chromeEventHandler.ownerGlobal,
+    title,
+    Ci.nsIFilePicker.modeSave
+  );
+  picker.appendFilter("PDF", "*.pdf");
+  picker.defaultExtension = "pdf";
+  picker.defaultString = filename;
+
+  let retval = await new Promise(resolve => picker.open(resolve));
+
+  if (retval == 1) {
+    throw new Error({ reason: "cancelled" });
+  } else {
+    // OK clicked (retval == 0) or replace confirmed (retval == 2)
+
+    // Workaround: When trying to replace an existing file that is open in another application (i.e. a locked file),
+    // the print progress listener is never called. This workaround ensures that a correct status is always returned.
+    try {
+      let fstream = Cc[
+        "@mozilla.org/network/file-output-stream;1"
+      ].createInstance(Ci.nsIFileOutputStream);
+      fstream.init(picker.file, 0x2a, 0o666, 0); // ioflags = write|create|truncate, file permissions = rw-rw-rw-
+      fstream.close();
+    } catch (e) {
+      throw new Error({ reason: retval == 0 ? "not_saved" : "not_replaced" });
+    }
+  }
+
+  return picker.file.path;
+}

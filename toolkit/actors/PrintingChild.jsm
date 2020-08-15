@@ -86,7 +86,8 @@ class PrintingChild extends ActorChild {
           Services.wm.getOuterWindowWithId(data.windowID),
           data.simplifiedMode,
           data.changingBrowsers,
-          data.lastUsedPrinterName
+          data.lastUsedPrinterName,
+          data.outputFormat
         );
         break;
       }
@@ -310,7 +311,8 @@ class PrintingChild extends ActorChild {
     contentWindow,
     simplifiedMode,
     changingBrowsers,
-    lastUsedPrinterName
+    lastUsedPrinterName,
+    outputFormat
   ) {
     const { docShell } = this;
     try {
@@ -321,6 +323,10 @@ class PrintingChild extends ActorChild {
         "print.tab_modal.enabled",
         false
       );
+
+      if (outputFormat == printSettings.kOutputFormatPDF) {
+        printSettings.outputFormat = printSettings.kOutputFormatPDF;
+      }
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has

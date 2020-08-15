@@ -68,6 +68,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 var gFocusedElement = null;
 
 var PrintUtils = {
+  SAVE_TO_PDF_PRINTER: "Mozilla Save to PDF",
+
   init() {
     window.messageManager.addMessageListener("Printing:Error", this);
   },
@@ -224,6 +226,7 @@ var PrintUtils = {
           lastUsedPrinterName: printSettings.printerName,
           simplifiedMode: false,
           windowID: sourceBrowser.outerWindowID,
+          outputFormat: printSettings.outputFormat,
         }
       );
     });
@@ -550,11 +553,15 @@ var PrintUtils = {
       aPrintSettings.printerName = aPSSVC.lastUsedPrinterName;
     }
 
-    // First get any defaults from the printer
-    aPSSVC.initPrintSettingsFromPrinter(
-      aPrintSettings.printerName,
-      aPrintSettings
-    );
+    // First get any defaults from the printer. We want to skip this for Save to
+    // PDF since it isn't a real printer and will throw.
+    if (aPrintSettings.printerName != this.SAVE_TO_PDF_PRINTER) {
+      aPSSVC.initPrintSettingsFromPrinter(
+        aPrintSettings.printerName,
+        aPrintSettings
+      );
+    }
+
     // now augment them with any values from last time
     aPSSVC.initPrintSettingsFromPrefs(
       aPrintSettings,
