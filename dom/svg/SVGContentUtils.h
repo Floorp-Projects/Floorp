@@ -86,17 +86,6 @@ class SVGContentUtils {
   static dom::SVGSVGElement* GetOuterSVGElement(dom::SVGElement* aSVGElement);
 
   /**
-   * Activates the animation element aContent as a result of navigation to the
-   * fragment identifier that identifies aContent. aContent must be an instance
-   * of SVGAnimationElement.
-   *
-   * This is just a shim to allow SVGAnimationElement::ActivateByHyperlink to
-   * be called from layout/base without adding to that directory's include
-   * paths.
-   */
-  static void ActivateByHyperlink(nsIContent* aContent);
-
-  /**
    * Moz2D's StrokeOptions requires someone else to own its mDashPattern
    * buffer, which is a pain when you want to initialize a StrokeOptions object
    * in a helper function and pass it out. This sub-class owns the mDashPattern

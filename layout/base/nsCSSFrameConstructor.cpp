@@ -119,6 +119,8 @@
 #undef NOISY_FIRST_LETTER
 
 #include "nsMathMLParts.h"
+#include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/dom/SVGFilters.h"
 #include "mozilla/dom/SVGTests.h"
 #include "mozilla/SVGGradientFrame.h"
 #include "mozilla/SVGUtils.h"
@@ -4931,7 +4933,8 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   }
 
   // We don't need frames for animation elements
-  if (aElement.IsNodeOfType(nsINode::eANIMATION)) {
+  if (nsCOMPtr<SVGAnimationElement> animationElement =
+          do_QueryInterface(const_cast<Element*>(&aElement))) {
     return &sSuppressData;
   }
 
@@ -4985,7 +4988,8 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   // primitives.  If aParentFrame is null, we know that the frame that will
   // be created will be an nsInlineFrame, so it can never be a filter.
   bool parentIsFilter = aParentFrame && aParentFrame->IsSVGFilterFrame();
-  bool filterPrimitive = aElement.IsNodeOfType(nsINode::eFILTER);
+  nsCOMPtr<SVGFE> filterPrimitive =
+      do_QueryInterface(const_cast<Element*>(&aElement));
   if ((parentIsFilter && !filterPrimitive) ||
       (!parentIsFilter && filterPrimitive)) {
     return &sSuppressData;

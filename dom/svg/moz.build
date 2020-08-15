@@ -58,6 +58,7 @@ EXPORTS.mozilla.dom += [
     'SVGFETileElement.h',
     'SVGFETurbulenceElement.h',
     'SVGFilterElement.h',
+    'SVGFilters.h',
     'SVGForeignObjectElement.h',
     'SVGGElement.h',
     'SVGGeometryElement.h',

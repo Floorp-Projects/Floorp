@@ -6,12 +6,12 @@
 
 // Keep in (case-insensitive) order:
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/dom/SVGFilters.h"
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
 #include "nsLiteralString.h"
-#include "SVGObserverUtils.h"
-#include "SVGFilters.h"
 
 nsIFrame* NS_NewSVGFEContainerFrame(mozilla::PresShell* aPresShell,
                                     mozilla::ComputedStyle* aStyle);
@@ -80,7 +80,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 #ifdef DEBUG
 void SVGFEContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                                nsIFrame* aPrevInFlow) {
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eFILTER),
+  nsCOMPtr<SVGFE> filterPrimitive = do_QueryInterface(aContent);
+  NS_ASSERTION(filterPrimitive,
                "Trying to construct an SVGFEContainerFrame for a "
                "content element that doesn't support the right interfaces");
 
