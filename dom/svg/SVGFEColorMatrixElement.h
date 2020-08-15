@@ -9,7 +9,7 @@
 
 #include "SVGAnimatedNumberList.h"
 #include "SVGAnimatedEnumeration.h"
-#include "SVGFilters.h"
+#include "mozilla/dom/SVGFilters.h"
 
 nsresult NS_NewSVGFEColorMatrixElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

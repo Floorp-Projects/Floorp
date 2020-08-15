@@ -214,9 +214,8 @@ void SMILTimeValueSpec::UnregisterFromReferencedElement(Element* aElement) {
 }
 
 SMILTimedElement* SMILTimeValueSpec::GetTimedElement(Element* aElement) {
-  return aElement && aElement->IsNodeOfType(nsINode::eANIMATION)
-             ? &static_cast<SVGAnimationElement*>(aElement)->TimedElement()
-             : nullptr;
+  nsCOMPtr<SVGAnimationElement> animationElement = do_QueryInterface(aElement);
+  return animationElement ? &animationElement->TimedElement() : nullptr;
 }
 
 // Indicates whether we're allowed to register an event-listener

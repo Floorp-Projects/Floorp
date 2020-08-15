@@ -7,7 +7,7 @@
 #ifndef DOM_SVG_SVGFECOMPONENTTRANSFERELEMENT_H_
 #define DOM_SVG_SVGFECOMPONENTTRANSFERELEMENT_H_
 
-#include "SVGFilters.h"
+#include "mozilla/dom/SVGFilters.h"
 
 nsresult NS_NewSVGFEComponentTransferElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
