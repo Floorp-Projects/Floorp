@@ -68,6 +68,7 @@ void MediaControlKeyManager::StartMonitoringControlKeys() {
   if (!mEventSource->IsOpened() && mEventSource->Open()) {
     mEventSource->SetPlaybackState(mPlaybackState);
     mEventSource->SetMediaMetadata(mMetadata);
+    mEventSource->SetSupportedMediaKeys(mSupportedKeys);
     mEventSource->AddListener(this);
   }
 }
