@@ -4011,8 +4011,8 @@ static void linear_row_composite(uint32_t* dest, int span,
 static void linear_composite(Texture& srctex, const IntRect& srcReq, int srcZ,
                              Texture& dsttex, const IntRect& dstReq, int dstZ,
                              bool invertY) {
-  assert(srctex.internal_format == GL_RGBA8 ||
-         srctex.internal_format == GL_R8 || srctex.internal_format == GL_RG8);
+  assert(srctex.bpp() == 4);
+  assert(dsttex.bpp() == 4);
   // Compute valid dest bounds
   IntRect dstBounds = dsttex.sample_bounds(dstReq, invertY);
   // Check if sampling bounds are empty
@@ -4035,8 +4035,6 @@ static void linear_composite(Texture& srctex, const IntRect& srcReq, int srcZ,
   srcUV = linearQuantize(srcUV + 0.5f, 128);
   srcDUV *= 128.0f;
   // Calculate dest pointer from clamped offsets
-  int bpp = dsttex.bpp();
-  assert(bpp == 4);
   int destStride = dsttex.stride();
   char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ, invertY);
   // Inverted Y must step downward along dest rows
@@ -4197,6 +4195,7 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
   Texture& srctex = *lockedSrc;
   Texture& dsttex = *lockedDst;
   assert(srctex.bpp() == 4);
+  assert(dsttex.bpp() == 4);
   const int bpp = 4;
   size_t src_stride = srctex.stride();
   size_t dest_stride = dsttex.stride();
