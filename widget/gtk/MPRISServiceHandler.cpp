@@ -33,7 +33,6 @@ namespace widget {
 static uint32_t gImageNumber = 0;
 
 enum class Method : uint8_t {
-  eQuit,
   eRaise,
   eNext,
   ePrevious,
@@ -41,23 +40,20 @@ enum class Method : uint8_t {
   ePlayPause,
   eStop,
   ePlay,
-  eSeek,
-  eSetPosition,
-  eOpenUri,
-  eUnknown
 };
 
-static inline Method GetMethod(const gchar* aMethodName) {
+static inline Maybe<Method> GetSupportedMethod(const gchar* aMethodName) {
   const std::unordered_map<std::string, Method> map = {
-      {"Quit", Method::eQuit},      {"Raise", Method::eRaise},
-      {"Next", Method::eNext},      {"Previous", Method::ePrevious},
-      {"Pause", Method::ePause},    {"PlayPause", Method::ePlayPause},
-      {"Stop", Method::eStop},      {"Play", Method::ePlay},
-      {"Seek", Method::eSeek},      {"SetPosition", Method::eSetPosition},
-      {"OpenUri", Method::eOpenUri}};
+      {"Raise", Method::eRaise},
+      {"Next", Method::eNext},
+      {"Previous", Method::ePrevious},
+      {"Pause", Method::ePause},
+      {"PlayPause", Method::ePlayPause},
+      {"Stop", Method::eStop},
+      {"Play", Method::ePlay}};
 
   auto it = map.find(aMethodName);
-  return (it == map.end() ? Method::eUnknown : it->second);
+  return (it == map.end() ? Nothing() : Some(it->second));
 }
 
 static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
@@ -68,10 +64,18 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
                              gpointer aUserData) {
   MOZ_ASSERT(aUserData);
   MOZ_ASSERT(NS_IsMainThread());
-  MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
+  Maybe<Method> method = GetSupportedMethod(aMethodName);
 
-  switch (GetMethod(aMethodName)) {
-    // Supported methods:
+  if (method.isNothing()) {
+    g_dbus_method_invocation_return_error(
+        aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_NOT_SUPPORTED,
+        "Method %s.%s.%s not supported", aObjectPath, aInterfaceName,
+        aMethodName);
+    return;
+  }
+
+  MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
+  switch (method.value()) {
     case Method::eRaise:
       handler->Raise();
       return;
@@ -93,16 +97,6 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
     case Method::ePlay:
       handler->Play();
       return;
-    // Non-supported methods:
-    case Method::eUnknown:
-    case Method::eQuit:
-    case Method::eSeek:
-    case Method::eSetPosition:
-    case Method::eOpenUri:
-      g_dbus_method_invocation_return_error(aInvocation, G_IO_ERROR,
-                                            G_IO_ERROR_FAILED,
-                                            "%s is not supported", aMethodName);
-      return;
   }
 }
 
@@ -119,17 +113,11 @@ enum class Property : uint8_t {
   eCanPause,
   eCanSeek,
   eCanControl,
-  eGetVolume,
-  eGetPosition,
-  eGetMinimumRate,
-  eGetMaximumRate,
-  eGetRate,
   eGetPlaybackStatus,
   eGetMetadata,
-  eUnknown
 };
 
-static inline Property GetProperty(const gchar* aPropertyName) {
+static inline Maybe<Property> GetProperty(const gchar* aPropertyName) {
   const std::unordered_map<std::string, Property> map = {
       // org.mpris.MediaPlayer2 properties
       {"Identity", Property::eIdentity},
@@ -145,16 +133,11 @@ static inline Property GetProperty(const gchar* aPropertyName) {
       {"CanPause", Property::eCanPause},
       {"CanSeek", Property::eCanSeek},
       {"CanControl", Property::eCanControl},
-      {"Volume", Property::eGetVolume},
-      {"Position", Property::eGetPosition},
-      {"MinimumRate", Property::eGetMinimumRate},
-      {"MaximumRate", Property::eGetMaximumRate},
-      {"Rate", Property::eGetRate},
       {"PlaybackStatus", Property::eGetPlaybackStatus},
       {"Metadata", Property::eGetMetadata}};
 
   auto it = map.find(aPropertyName);
-  return (it == map.end() ? Property::eUnknown : it->second);
+  return (it == map.end() ? Nothing() : Some(it->second));
 }
 
 static GVariant* HandleGetProperty(GDBusConnection* aConnection,
@@ -165,10 +148,17 @@ static GVariant* HandleGetProperty(GDBusConnection* aConnection,
                                    gpointer aUserData) {
   MOZ_ASSERT(aUserData);
   MOZ_ASSERT(NS_IsMainThread());
-  MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
 
-  switch (GetProperty(aPropertyName)) {
-    // Supported properties:
+  Maybe<Property> property = GetProperty(aPropertyName);
+  if (property.isNothing()) {
+    g_set_error(aError, G_DBUS_ERROR, G_DBUS_ERROR_NOT_SUPPORTED,
+                "%s.%s %s is not supported", aObjectPath, aInterfaceName,
+                aPropertyName);
+    return nullptr;
+  }
+
+  MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
+  switch (property.value()) {
     case Property::eSupportedUriSchemes:
     case Property::eSupportedMimeTypes:
       // No plan to implement OpenUri for now
@@ -191,16 +181,6 @@ static GVariant* HandleGetProperty(GDBusConnection* aConnection,
     case Property::eCanPlay:
     case Property::eCanPause:
       return g_variant_new_boolean(true);
-    // Non-supported properties:
-    case Property::eUnknown:
-    case Property::eGetVolume:
-    case Property::eGetPosition:
-    case Property::eGetMinimumRate:
-    case Property::eGetMaximumRate:
-    case Property::eGetRate:
-      g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED, "%s is not supported",
-                  aPropertyName);
-      return nullptr;
   }
 
   MOZ_ASSERT_UNREACHABLE("Switch statement is incomplete");
