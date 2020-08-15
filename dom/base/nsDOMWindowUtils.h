@@ -14,6 +14,7 @@
 #include "mozilla/BasicEvents.h"
 
 class nsGlobalWindowOuter;
+class nsIDocShell;
 class nsIWidget;
 class nsPresContext;
 class nsView;
@@ -77,6 +78,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
   nsIWidget* GetWidget(nsPoint* aOffset = nullptr);
   nsIWidget* GetWidgetForElement(mozilla::dom::Element* aElement);
 
+  nsIDocShell* GetDocShell();
   mozilla::PresShell* GetPresShell();
   nsPresContext* GetPresContext();
   mozilla::dom::Document* GetDocument();

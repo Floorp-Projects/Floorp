@@ -218,21 +218,27 @@ nsDOMWindowUtils::nsDOMWindowUtils(nsGlobalWindowOuter* aWindow) {
 
 nsDOMWindowUtils::~nsDOMWindowUtils() { OldWindowSize::GetAndRemove(mWindow); }
 
-PresShell* nsDOMWindowUtils::GetPresShell() {
+nsIDocShell* nsDOMWindowUtils::GetDocShell() {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  if (!window) return nullptr;
+  if (!window) {
+    return nullptr;
+  }
+  return window->GetDocShell();
+}
 
-  nsIDocShell* docShell = window->GetDocShell();
-  if (!docShell) return nullptr;
-
+PresShell* nsDOMWindowUtils::GetPresShell() {
+  nsIDocShell* docShell = GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
   return docShell->GetPresShell();
 }
 
 nsPresContext* nsDOMWindowUtils::GetPresContext() {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  if (!window) return nullptr;
-  nsIDocShell* docShell = window->GetDocShell();
-  if (!docShell) return nullptr;
+  nsIDocShell* docShell = GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
   return docShell->GetPresContext();
 }
 
@@ -3179,13 +3185,17 @@ nsresult nsDOMWindowUtils::RemoteFrameFullscreenReverted() {
   return NS_OK;
 }
 
-static void PrepareForFullscreenChange(PresShell* aPresShell,
+static void PrepareForFullscreenChange(nsIDocShell* aDocShell,
                                        const nsSize& aSize,
                                        nsSize* aOldSize = nullptr) {
-  if (!aPresShell) {
+  if (!aDocShell) {
     return;
   }
-  if (nsRefreshDriver* rd = aPresShell->GetRefreshDriver()) {
+  PresShell* presShell = aDocShell->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+  if (nsRefreshDriver* rd = presShell->GetRefreshDriver()) {
     rd->SetIsResizeSuppressed();
     // Since we are suppressing the resize reflow which would originally
     // be triggered by view manager, we need to ensure that the refresh
@@ -3193,11 +3203,21 @@ static void PrepareForFullscreenChange(PresShell* aPresShell,
     rd->ScheduleViewManagerFlush();
   }
   if (!aSize.IsEmpty()) {
-    if (nsViewManager* viewManager = aPresShell->GetViewManager()) {
+    nsCOMPtr<nsIContentViewer> cv;
+    aDocShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) {
+      nsIntRect cvBounds;
+      cv->GetBounds(cvBounds);
+      nscoord auPerDev = presShell->GetPresContext()->AppUnitsPerDevPixel();
       if (aOldSize) {
-        viewManager->GetWindowDimensions(&aOldSize->width, &aOldSize->height);
+        *aOldSize = LayoutDeviceIntSize::ToAppUnits(
+            LayoutDeviceIntSize::FromUnknownSize(cvBounds.Size()), auPerDev);
       }
-      viewManager->SetWindowDimensions(aSize.width, aSize.height);
+      LayoutDeviceIntSize newSize =
+          LayoutDeviceIntSize::FromAppUnitsRounded(aSize, auPerDev);
+
+      cvBounds.SizeTo(newSize.width, newSize.height);
+      cv->SetBounds(cvBounds);
     }
   }
 }
@@ -3217,7 +3237,7 @@ nsDOMWindowUtils::HandleFullscreenRequests(bool* aRetVal) {
     presContext->DeviceContext()->GetRect(screenRect);
   }
   nsSize oldSize;
-  PrepareForFullscreenChange(GetPresShell(), screenRect.Size(), &oldSize);
+  PrepareForFullscreenChange(GetDocShell(), screenRect.Size(), &oldSize);
   OldWindowSize::Set(mWindow, oldSize);
 
   *aRetVal = Document::HandlePendingFullscreenRequests(doc);
@@ -3240,7 +3260,7 @@ nsresult nsDOMWindowUtils::ExitFullscreen() {
   // set the window dimensions in advance. Since the resize message
   // comes after the fullscreen change call, doing so could avoid an
   // extra resize reflow after this point.
-  PrepareForFullscreenChange(GetPresShell(), oldSize);
+  PrepareForFullscreenChange(GetDocShell(), oldSize);
   Document::ExitFullscreenInDocTree(doc);
   return NS_OK;
 }
