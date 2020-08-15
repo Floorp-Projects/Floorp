@@ -2024,8 +2024,14 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
         return rv;
       }
 
+      nsPresContext* presContext = baseFrame->PresContext();
       rect = LayoutDeviceIntRect::FromAppUnitsToOutside(
-          charRect, baseFrame->PresContext()->AppUnitsPerDevPixel());
+          charRect, presContext->AppUnitsPerDevPixel());
+      if (nsPresContext* rootContext =
+              presContext->GetInProcessRootContentDocumentPresContext()) {
+        rect = RoundedOut(ViewportUtils::DocumentRelativeLayoutToVisual(
+            rect, rootContext->PresShell()));
+      }
       // Returning empty rect may cause native IME confused, let's make sure to
       // return non-empty rect.
       EnsureNonEmptyRect(rect);
