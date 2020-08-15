@@ -174,6 +174,8 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
 
   bool EmitSupportedKeyChanged(mozilla::dom::MediaControlKey aKey,
                                bool aSupported) const;
+
+  bool EmitPropertiesChangedSignal(GVariant* aParameters) const;
 };
 
 }  // namespace widget
