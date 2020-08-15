@@ -15,6 +15,10 @@ body {
   background: var(--in-content-box-background);
 }
 
+body[loading] {
+  visibility: hidden;
+}
+
 *[hidden] {
   display: none !important;
 }
