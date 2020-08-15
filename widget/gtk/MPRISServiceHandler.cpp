@@ -66,7 +66,12 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
   }
 
   MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
-  handler->PressKey(key.value());
+  if (!handler->PressKey(key.value())) {
+    g_dbus_method_invocation_return_error(
+        aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
+        "%s.%s.%s is not available now", aObjectPath, aInterfaceName,
+        aMethodName);
+  }
 }
 
 enum class Property : uint8_t {
@@ -85,6 +90,24 @@ enum class Property : uint8_t {
   eGetPlaybackStatus,
   eGetMetadata,
 };
+
+static inline Maybe<mozilla::dom::MediaControlKey> GetPairedKey(
+    Property aProperty) {
+  switch (aProperty) {
+    case Property::eCanRaise:
+      return Some(mozilla::dom::MediaControlKey::Focus);
+    case Property::eCanGoNext:
+      return Some(mozilla::dom::MediaControlKey::Nexttrack);
+    case Property::eCanGoPrevious:
+      return Some(mozilla::dom::MediaControlKey::Previoustrack);
+    case Property::eCanPlay:
+      return Some(mozilla::dom::MediaControlKey::Play);
+    case Property::eCanPause:
+      return Some(mozilla::dom::MediaControlKey::Pause);
+    default:
+      return Nothing();
+  }
+}
 
 static inline Maybe<Property> GetProperty(const gchar* aPropertyName) {
   const std::unordered_map<std::string, Property> map = {
@@ -144,12 +167,15 @@ static GVariant* HandleGetProperty(GDBusConnection* aConnection,
       return g_variant_new_boolean(false);
     // Play/Pause would be blocked if CanControl is false
     case Property::eCanControl:
+      return g_variant_new_boolean(true);
     case Property::eCanRaise:
     case Property::eCanGoNext:
     case Property::eCanGoPrevious:
     case Property::eCanPlay:
     case Property::eCanPause:
-      return g_variant_new_boolean(true);
+      Maybe<mozilla::dom::MediaControlKey> key = GetPairedKey(property.value());
+      MOZ_ASSERT(key.isSome());
+      return g_variant_new_boolean(handler->IsMediaKeySupported(key.value()));
   }
 
   MOZ_ASSERT_UNREACHABLE("Switch statement is incomplete");
@@ -327,6 +353,8 @@ void MPRISServiceHandler::Close() {
   mFetchingUrl = EmptyString();
 
   mNextImageIndex = 0;
+
+  mSupportedKeys = 0;
 }
 
 bool MPRISServiceHandler::IsOpened() const { return mInitialized; }
@@ -352,10 +380,15 @@ const char* MPRISServiceHandler::Identity() const {
   return mIdentity.get();
 }
 
-void MPRISServiceHandler::PressKey(mozilla::dom::MediaControlKey aKey) const {
+bool MPRISServiceHandler::PressKey(mozilla::dom::MediaControlKey aKey) const {
   MOZ_ASSERT(mInitialized);
+  if (!IsMediaKeySupported(aKey)) {
+    LOG("%s is not supported", ToMediaControlKeyStr(aKey));
+    return false;
+  }
   LOG("Press %s", ToMediaControlKeyStr(aKey));
   EmitEvent(aKey);
+  return true;
 }
 
 void MPRISServiceHandler::SetPlaybackState(
@@ -729,6 +762,98 @@ void MPRISServiceHandler::EmitEvent(mozilla::dom::MediaControlKey aKey) const {
   for (auto& listener : mListeners) {
     listener->OnActionPerformed(mozilla::dom::MediaControlAction(aKey));
   }
+}
+
+static uint32_t GetMediaKeyMask(mozilla::dom::MediaControlKey aKey) {
+  return 1 << static_cast<uint8_t>(aKey);
+}
+
+struct InterfaceProperty {
+  const char* interface;
+  const char* property;
+};
+static const std::unordered_map<mozilla::dom::MediaControlKey,
+                                InterfaceProperty>
+    gKeyProperty = {{mozilla::dom::MediaControlKey::Focus,
+                     {DBUS_MPRIS_INTERFACE, "CanRaise"}},
+                    {mozilla::dom::MediaControlKey::Nexttrack,
+                     {DBUS_MPRIS_PLAYER_INTERFACE, "CanGoNext"}},
+                    {mozilla::dom::MediaControlKey::Previoustrack,
+                     {DBUS_MPRIS_PLAYER_INTERFACE, "CanGoPrevious"}},
+                    {mozilla::dom::MediaControlKey::Play,
+                     {DBUS_MPRIS_PLAYER_INTERFACE, "CanPlay"}},
+                    {mozilla::dom::MediaControlKey::Pause,
+                     {DBUS_MPRIS_PLAYER_INTERFACE, "CanPause"}}};
+
+void MPRISServiceHandler::SetSupportedMediaKeys(
+    const MediaKeysArray& aSupportedKeys) {
+  uint32_t supportedKeys = 0;
+  for (const mozilla::dom::MediaControlKey& key : aSupportedKeys) {
+    supportedKeys |= GetMediaKeyMask(key);
+  }
+
+  if (mSupportedKeys == supportedKeys) {
+    LOG("Supported keys stay the same");
+    return;
+  }
+
+  uint32_t oldSupportedKeys = mSupportedKeys;
+  mSupportedKeys = supportedKeys;
+
+  // Emit related property changes
+  for (auto it : gKeyProperty) {
+    bool keyWasSupported = oldSupportedKeys & GetMediaKeyMask(it.first);
+    bool keyIsSupported = mSupportedKeys & GetMediaKeyMask(it.first);
+    if (keyWasSupported != keyIsSupported) {
+      LOG("Emit PropertiesChanged signal: %s.%s=%s", it.second.interface,
+          it.second.property, keyIsSupported ? "true" : "false");
+      EmitSupportedKeyChanged(it.first, keyIsSupported);
+    }
+  }
+}
+
+bool MPRISServiceHandler::IsMediaKeySupported(
+    mozilla::dom::MediaControlKey aKey) const {
+  return mSupportedKeys & GetMediaKeyMask(aKey);
+}
+
+bool MPRISServiceHandler::EmitSupportedKeyChanged(
+    mozilla::dom::MediaControlKey aKey, bool aSupported) const {
+  if (!mConnection) {
+    LOG("No D-Bus Connection. Drop the update");
+    return false;
+  }
+
+  auto it = gKeyProperty.find(aKey);
+  if (it == gKeyProperty.end()) {
+    LOG("No property for %s", ToMediaControlKeyStr(aKey));
+    return false;
+  }
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}",
+                        static_cast<const gchar*>(it->second.property),
+                        g_variant_new_boolean(aSupported));
+
+  GVariant* parameters = g_variant_new(
+      "(sa{sv}as)", static_cast<const gchar*>(it->second.interface), &builder,
+      nullptr);
+  GError* error = nullptr;
+  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
+                                     DBUS_MPRIS_OBJECT_PATH,
+                                     "org.freedesktop.DBus.Properties",
+                                     "PropertiesChanged", parameters, &error)) {
+    LOG("Failed to emit MPRIS property changes for '%s.%s': %s",
+        it->second.interface, it->second.property,
+        error ? error->message : "Unknown Error");
+    if (error) {
+      g_error_free(error);
+    }
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace widget
