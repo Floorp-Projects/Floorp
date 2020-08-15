@@ -76,16 +76,8 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
 // Implementations of the MPRIS API Methods/Properties. constexpr'ed properties
 // will be what the user agent doesn't support and thus they are known at
 // compile time.
-#ifdef MPRIS_FULLSCREEN
-  bool GetFullscreen();
-  void SetFullscreen(bool aFullscreen);
-  bool CanSetFullscreen();
-#endif
   bool HasTrackList();
   const char* Identity() const;
-#ifdef MPRIS_DESKTOP_ENTRY
-  const char* DesktopEntry();
-#endif
   GVariant* SupportedUriSchemes();
   GVariant* SupportedMimeTypes();
   constexpr bool CanRaise();
@@ -106,19 +98,10 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
   // supported for that URI it will raise a DBUS Error
   bool OpenUri(char* aUri);
 
-#ifdef MPRIS_LOOP_STATUS
-  MPRISLoopStatus GetLoopStatus();
-#endif
-
   double GetRate() const;
   bool SetRate(double aRate);
   constexpr double GetMinimumRate();
   constexpr double GetMaximumRate();
-
-#ifdef MPRIS_SHUFFLE
-  bool GetShuffle() const;
-  void SetShuffle(bool aShuffle);
-#endif
 
   double GetVolume() const;
   bool SetVolume(double aVolume);

@@ -18,22 +18,9 @@ extern const gchar introspection_xml[] =
             "<method name=\"Raise\"/>"
             "<method name=\"Quit\"/>"
             "<property name=\"CanQuit\" type=\"b\" access=\"read\"/>"
-        #ifdef MPRIS_FULLSCREEN
-            "<property name=\"Fullscreen\" type=\"b\" access=\"readwrite\">"
-                "<annotation name=\"org.mpris.MediaPlayer2.property.optional\" value=\"true\"/>"
-            "</property>"
-            "<property name=\"CanSetFullscreen\" type=\"b\" access=\"read\">"
-                "<annotation name=\"org.mpris.MediaPlayer2.property.optional\" value=\"true\"/>"
-            "</property>"
-        #endif
             "<property name=\"CanRaise\" type=\"b\" access=\"read\"/>"
             "<property name=\"HasTrackList\" type=\"b\" access=\"read\"/>"
             "<property name=\"Identity\" type=\"s\" access=\"read\"/>"
-        #ifdef MPRIS_DESKTOP_ENTRY
-            "<property name=\"DesktopEntry\" type=\"s\" access=\"read\">"
-                "<annotation name=\"org.mpris.MediaPlayer2.property.optional\" value=\"true\"/>"
-            "</property>"
-        #endif
             "<property name=\"SupportedUriSchemes\" type=\"as\" access=\"read\"/>"
             "<property name=\"SupportedMimeTypes\" type=\"as\" access=\"read\"/>"
         "</interface>"
@@ -58,21 +45,9 @@ extern const gchar introspection_xml[] =
             "<property name=\"PlaybackStatus\" type=\"s\" access=\"read\">"
                 "<annotation name=\"org.freedesktop.DBus.Property.EmitsChangedSignal\" value=\"true\"/>"
             "</property>"
-        #ifdef MPRIS_LOOP_STATUS
-            "<property name=\"LoopStatus\" type=\"s\" access=\"readwrite\">"
-                "<annotation name=\"org.freedesktop.DBus.Property.EmitsChangedSignal\" value=\"true\"/>"
-                "<annotation name=\"org.mpris.MediaPlayer2.property.optional\" value=\"true\"/>"
-            "</property>"
-        #endif
             "<property name=\"Rate\" type=\"d\" access=\"readwrite\">"
                 "<annotation name=\"org.freedesktop.DBus.Property.EmitsChangedSignal\" value=\"true\"/>"
             "</property>"
-        #ifdef MRPIS_SHUFFLE
-            "<property name=\"Shuffle\" type=\"b\" access=\"readwrite\">"
-                "<annotation name=\"org.freedesktop.DBus.Property.EmitsChangedSignal\" value=\"true\"/>"
-                "<annotation name=\"org.mpris.MediaPlayer2.property.optional\" value=\"true\"/>"
-            "</property>"
-        #endif
             "<property name=\"Metadata\" type=\"a{sv}\" access=\"read\">"
                 "<annotation name=\"org.freedesktop.DBus.Property.EmitsChangedSignal\" value=\"true\"/>"
             "</property>"
