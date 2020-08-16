@@ -1002,8 +1002,12 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
   // estimation which is calculated in the while-loop by dividing
   // aColData.mSumBSize into N columns.
   //
-  // The constant is arbitrary. We use a half of line-height first.
-  nscoord extraBlockSize = aReflowInput.CalcLineHeight() / 2;
+  // The constant is arbitrary. We use a half of line-height first. In case a
+  // column container uses *zero* (or a very small) line-height, use a half of
+  // default line-height 1140/2 = 570 app units as the minimum value. Otherwise
+  // we might take more than necessary iterations before finding a feasible
+  // block-size.
+  nscoord extraBlockSize = std::max(570, aReflowInput.CalcLineHeight() / 2);
 
   // We use divide-by-N to estimate the optimal column block-size only if the
   // last column's available block-size is unbounded.
