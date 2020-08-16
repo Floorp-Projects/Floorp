@@ -2922,6 +2922,34 @@ class HTMLEditor final : public TextEditor,
                                  nsIContent& aLeftContent,
                                  nsIContent& aRightContent);
 
+    /**
+     * DeleteNodesEntirelyInRangeButKeepTableStructure() removes nodes which are
+     * entirely in aRange.  Howevers, if some nodes are part of a table,
+     * removes all children of them instead.  I.e., this does not make damage to
+     * table structure at the range, but may remove table entirely if it's
+     * in the range.
+     *
+     * @return                  true if inclusive ancestor block elements at
+     *                          start and end of the range should be joined.
+     */
+    MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
+    DeleteNodesEntirelyInRangeButKeepTableStructure(
+        HTMLEditor& aHTMLEditor, nsRange& aRange,
+        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed);
+
+    /**
+     * DeleteContentButKeepTableStructure() removes aContent if it's an element
+     * which is part of a table structure.  If it's a part of table structure,
+     * removes its all children recursively.  I.e., this may delete all of a
+     * table, but won't break table structure partially.
+     *
+     * @param aContent            The content which or whose all children should
+     *                            be removed.
+     */
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+    DeleteContentButKeepTableStructure(HTMLEditor& aHTMLEditor,
+                                       nsIContent& aContent);
+
     enum class Mode {
       NotInitialized,
       JoinCurrentBlock,
@@ -3029,20 +3057,6 @@ class HTMLEditor final : public TextEditor,
                                  nsIEditor::EStripWrappers aStripWrappers,
                                  AutoRangeArray& aRangesToDelete,
                                  SelectionWasCollapsed aSelectionWasCollapsed);
-
-  /**
-   * DeleteElementsExceptTableRelatedElements() removes elements except
-   * table related elements (except <table> itself) and their contents
-   * from the DOM tree.
-   *
-   * @param aNode               If this is not a table related element, this
-   *                            node will be removed from the DOM tree.
-   *                            Otherwise, this method calls itself recursively
-   *                            with its children.
-   *
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteElementsExceptTableRelatedElements(nsINode& aNode);
 
   /**
    * HandleDeleteSelectionInternal() is a helper method of
