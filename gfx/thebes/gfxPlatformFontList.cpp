@@ -1761,6 +1761,12 @@ eFontPrefLang gfxPlatformFontList::GetFontPrefLangFor(uint32_t aCh) {
     case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F:
     case UBLOCK_KANA_EXTENDED_A:
       return eFontPrefLang_CJKSet;
+    case UBLOCK_MATHEMATICAL_OPERATORS:
+    case UBLOCK_MATHEMATICAL_ALPHANUMERIC_SYMBOLS:
+    case UBLOCK_MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A:
+    case UBLOCK_MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B:
+    case UBLOCK_SUPPLEMENTAL_MATHEMATICAL_OPERATORS:
+      return eFontPrefLang_Mathematics;
     default:
       return eFontPrefLang_Others;
   }
