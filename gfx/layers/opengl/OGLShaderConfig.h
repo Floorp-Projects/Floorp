@@ -81,6 +81,7 @@ class KnownUniform {
     ViewportSize,
     VisibleCenter,
     YuvColorMatrix,
+    YuvOffsetVector,
 
     KnownUniformCount
   };
