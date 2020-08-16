@@ -780,6 +780,8 @@ static inline wr::WrYuvColorSpace ToWrYuvColorSpace(
       return wr::WrYuvColorSpace::Rec709;
     case gfx::YUVColorSpace::BT2020:
       return wr::WrYuvColorSpace::Rec2020;
+    case gfx::YUVColorSpace::Identity:
+      return wr::WrYuvColorSpace::Identity;
     default:
       MOZ_ASSERT_UNREACHABLE("Tried to convert invalid YUVColorSpace.");
   }
