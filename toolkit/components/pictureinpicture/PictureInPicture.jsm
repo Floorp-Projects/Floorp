@@ -62,13 +62,10 @@ class PictureInPictureToggleParent extends JSWindowActorParent {
 
 class PictureInPictureParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
-    let browsingContext = aMessage.target.browsingContext;
-    let browser = browsingContext.top.embedderElement;
-
     switch (aMessage.name) {
       case "PictureInPicture:Request": {
         let videoData = aMessage.data;
-        PictureInPicture.handlePictureInPictureRequest(browser, videoData);
+        PictureInPicture.handlePictureInPictureRequest(this.manager, videoData);
         break;
       }
       case "PictureInPicture:Resize": {
@@ -208,8 +205,9 @@ var PictureInPicture = {
    * A request has come up from content to open a Picture in Picture
    * window.
    *
-   * @param browser (xul:browser)
-   *   The browser that is requesting the Picture in Picture window.
+   * @param wgp (WindowGlobalParent)
+   *   The WindowGlobalParent that is requesting the Picture in Picture
+   *   window.
    *
    * @param videoData (object)
    *   An object containing the following properties:
@@ -224,10 +222,11 @@ var PictureInPicture = {
    *   Resolves once the Picture in Picture window has been created, and
    *   the player component inside it has finished loading.
    */
-  async handlePictureInPictureRequest(browser, videoData) {
+  async handlePictureInPictureRequest(wgp, videoData) {
     // If there's a pre-existing PiP window, close it first.
     await this.closePipWindow({ reason: "new-pip" });
 
+    let browser = wgp.browsingContext.top.embedderElement;
     let parentWin = browser.ownerGlobal;
     this.browser = browser;
     let win = await this.openPipWindow(parentWin, videoData);
@@ -239,7 +238,7 @@ var PictureInPicture = {
     let tab = parentWin.gBrowser.getTabForBrowser(browser);
     tab.setAttribute("pictureinpicture", true);
 
-    win.setupPlayer(gNextWindowID.toString(), browser);
+    win.setupPlayer(gNextWindowID.toString(), wgp);
     gNextWindowID++;
 
     Services.prefs.setBoolPref(
