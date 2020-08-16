@@ -7,7 +7,11 @@
 #include "OGLShaderProgram.h"
 
 #include <stdint.h>  // for uint32_t
-#include <sstream>   // for std::ostringstream
+
+#include <sstream>  // for std::ostringstream
+
+#include "GLContext.h"
+#include "Layers.h"
 #include "gfxEnv.h"
 #include "gfxRect.h"  // for gfxRect
 #include "gfxUtils.h"
@@ -15,8 +19,6 @@
 #include "mozilla/layers/Compositor.h"  // for BlendOpIsMixBlendMode
 #include "nsAString.h"
 #include "nsString.h"  // for nsAutoCString
-#include "Layers.h"
-#include "GLContext.h"
 
 namespace mozilla {
 namespace layers {
@@ -61,6 +63,7 @@ static void AddUniforms(ProgramProfileOGL& aProfile) {
                                              "uViewportSize",
                                              "uVisibleCenter",
                                              "uYuvColorMatrix",
+                                             "uYuvOffsetVector",
                                              nullptr};
 
   for (int i = 0; sKnownUniformNames[i] != nullptr; ++i) {
@@ -403,10 +406,12 @@ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
     fs << "uniform " << sampler2D << " uCbTexture;" << endl;
     fs << "uniform " << sampler2D << " uCrTexture;" << endl;
     fs << "uniform mat3 uYuvColorMatrix;" << endl;
+    fs << "uniform vec3 uYuvOffsetVector;" << endl;
   } else if (aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
     fs << "uniform " << sampler2D << " uYTexture;" << endl;
     fs << "uniform " << sampler2D << " uCbTexture;" << endl;
     fs << "uniform mat3 uYuvColorMatrix;" << endl;
+    fs << "uniform vec3 uYuvOffsetVector;" << endl;
   } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
     fs << "uniform " << sampler2D << " uBlackTexture;" << endl;
     fs << "uniform " << sampler2D << " uWhiteTexture;" << endl;
@@ -487,8 +492,7 @@ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
       if (aConfig.mMultiplier != 1) {
         fs << "  yuv *= " << aConfig.mMultiplier << ".0;" << endl;
       }
-      fs << "  vec3 coeff = vec3(0.06275, 0.50196, 0.50196 );" << endl;
-      fs << "  yuv -= coeff;" << endl;
+      fs << "  yuv -= uYuvOffsetVector;" << endl;
       fs << "  color.rgb = uYuvColorMatrix * yuv;" << endl;
       fs << "  color.a = 1.0;" << endl;
     } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
@@ -1027,6 +1031,13 @@ void ShaderProgramOGL::SetYUVColorSpace(gfx::YUVColorSpace aYUVColorSpace) {
   const float* yuvToRgb =
       gfxUtils::YuvToRgbMatrix3x3ColumnMajor(aYUVColorSpace);
   SetMatrix3fvUniform(KnownUniform::YuvColorMatrix, yuvToRgb);
+  if (aYUVColorSpace == gfx::YUVColorSpace::Identity) {
+    const float identity[] = {0.0, 0.0, 0.0};
+    SetVec3fvUniform(KnownUniform::YuvOffsetVector, identity);
+  } else {
+    const float offset[] = {0.06275, 0.50196, 0.50196};
+    SetVec3fvUniform(KnownUniform::YuvOffsetVector, offset);
+  }
 }
 
 }  // namespace layers
