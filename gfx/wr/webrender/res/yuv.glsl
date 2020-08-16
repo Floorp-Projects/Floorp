@@ -19,6 +19,7 @@
 #define YUV_COLOR_SPACE_REC601      0
 #define YUV_COLOR_SPACE_REC709      1
 #define YUV_COLOR_SPACE_REC2020     2
+#define YUV_COLOR_SPACE_IDENTITY    3
 
 // The constants added to the Y, U and V components are applied in the fragment shader.
 
@@ -64,14 +65,33 @@ const mat3 YuvColorMatrixRec2020 = mat3(
     1.67867410714286 , -0.650424318505057,  0.0
 );
 
+// The matrix is stored in column-major.
+// Identity is stored as GBR
+const mat3 IdentityColorMatrix = mat3(
+    0.0              ,  1.0,                0.0,
+    0.0              ,  0.0,                1.0,
+    1.0              ,  0.0,                0.0
+);
+
 mat3 get_yuv_color_matrix(int color_space) {
     switch (color_space) {
         case YUV_COLOR_SPACE_REC601:
             return YuvColorMatrixRec601;
         case YUV_COLOR_SPACE_REC709:
             return YuvColorMatrixRec709;
+        case YUV_COLOR_SPACE_IDENTITY:
+            return IdentityColorMatrix;
         default:
             return YuvColorMatrixRec2020;
+    }
+}
+
+vec3 get_yuv_offset_vector(int color_space) {
+    switch (color_space) {
+        case YUV_COLOR_SPACE_IDENTITY:
+            return vec3(0.0, 0.0, 0.0);
+        default:
+            return vec3(0.06275, 0.50196, 0.50196);
     }
 }
 
@@ -99,6 +119,7 @@ void write_uv_rect(
 vec4 sample_yuv(
     int format,
     mat3 yuv_color_matrix,
+    vec3 yuv_offset_vector,
     float coefficient,
     vec3 yuv_layers,
     vec2 in_uv_y,
@@ -148,7 +169,7 @@ vec4 sample_yuv(
     }
 
     // See the YuvColorMatrix definition for an explanation of where the constants come from.
-    vec3 rgb = yuv_color_matrix * (yuv_value * coefficient - vec3(0.06275, 0.50196, 0.50196));
+    vec3 rgb = yuv_color_matrix * (yuv_value * coefficient - yuv_offset_vector);
     vec4 color = vec4(rgb, 1.0);
 
     return color;

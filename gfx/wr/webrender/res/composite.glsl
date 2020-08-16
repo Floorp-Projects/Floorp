@@ -8,6 +8,7 @@
 
 #ifdef WR_FEATURE_YUV
 flat varying mat3 vYuvColorMatrix;
+flat varying vec3 vYuvOffsetVector;
 flat varying float vYuvCoefficient;
 flat varying int vYuvFormat;
 flat varying vec3 vYuvLayers;
@@ -59,6 +60,7 @@ void main(void) {
     float yuv_coefficient = aParams.w;
 
     vYuvColorMatrix = get_yuv_color_matrix(yuv_color_space);
+    vYuvOffsetVector = get_yuv_offset_vector(yuv_color_space);
     vYuvCoefficient = yuv_coefficient;
     vYuvFormat = yuv_format;
 
@@ -120,6 +122,7 @@ void main(void) {
     vec4 color = sample_yuv(
         vYuvFormat,
         vYuvColorMatrix,
+        vYuvOffsetVector,
         vYuvCoefficient,
         vYuvLayers,
         vUV_y,
