@@ -3549,6 +3549,66 @@ HTMLEditor::AutoBlockElementsJoiner::JoinBlockElementsInSameParent(
   return EditActionHandled(rv);
 }
 
+Result<bool, nsresult> HTMLEditor::AutoBlockElementsJoiner::
+    DeleteNodesEntirelyInRangeButKeepTableStructure(
+        HTMLEditor& aHTMLEditor, nsRange& aRange,
+        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+
+  // Build a list of direct child nodes in the range
+  AutoTArray<OwningNonNull<nsIContent>, 10> arrayOfTopChildren;
+  DOMSubtreeIterator iter;
+  nsresult rv = iter.Init(aRange);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("DOMSubtreeIterator::Init() failed");
+    return Err(rv);
+  }
+  iter.AppendAllNodesToArray(arrayOfTopChildren);
+
+  // Now that we have the list, delete non-table elements
+  bool join = true;
+  for (auto& content : arrayOfTopChildren) {
+    // XXX After here, the child contents in the array may have been moved
+    //     to somewhere or removed.  We should handle it.
+    //
+    // MOZ_KnownLive because 'arrayOfTopChildren' is guaranteed to
+    // keep it alive.
+    //
+    // Even with https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 fixed
+    // this might need to stay, because 'arrayOfTopChildren' is not const,
+    // so it's not obvious how to prove via static analysis that it won't
+    // change and release us.
+    nsresult rv =
+        DeleteContentButKeepTableStructure(aHTMLEditor, MOZ_KnownLive(content));
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoBlockElementsJoiner::DeleteContentButKeepTableStructure() failed, "
+        "but ignored");
+    // If something visible is deleted, no need to join.  Visible means
+    // all nodes except non-visible textnodes and breaks.
+    // XXX Odd.  Why do we check the visibility after removing the node
+    //     from the DOM tree?
+    if (!join ||
+        aSelectionWasCollapsed == HTMLEditor::SelectionWasCollapsed::No) {
+      continue;
+    }
+    if (content->IsText()) {
+      join = !aHTMLEditor.IsInVisibleTextFrames(*content->AsText());
+      continue;
+    }
+    if (!content->IsElement() ||
+        aHTMLEditor.IsEmptyNode(*content->AsElement())) {
+      continue;
+    }
+    join = content->IsHTMLElement(nsGkAtoms::br) &&
+           !aHTMLEditor.IsVisibleBRElement(content);
+  }
+  return join;
+}
+
 EditActionResult
 HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
@@ -3574,60 +3634,19 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                         &aRangesToDelete.FirstRangeRef());
 
-    // Else blocks not same type, or not siblings.  Delete everything
-    // except table elements.
-    bool join = true;
-
+    bool joinInclusiveAncestorBlockElements = true;
     for (auto& range : aRangesToDelete.Ranges()) {
-      // Build a list of direct child nodes in the range
-      AutoTArray<OwningNonNull<nsIContent>, 10> arrayOfTopChildren;
-      DOMSubtreeIterator iter;
-      nsresult rv = iter.Init(range);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("DOMSubtreeIterator::Init() failed");
-        return result.SetResult(rv);
+      Result<bool, nsresult> deleteResult =
+          DeleteNodesEntirelyInRangeButKeepTableStructure(
+              aHTMLEditor, MOZ_KnownLive(range), aSelectionWasCollapsed);
+      if (deleteResult.isErr()) {
+        NS_WARNING(
+            "AutoBlockElementsJoiner::"
+            "DeleteNodesEntirelyInRangeButKeepTableStructure() failed");
+        return result.SetResult(deleteResult.unwrapErr());
       }
-      iter.AppendAllNodesToArray(arrayOfTopChildren);
-
-      // Now that we have the list, delete non-table elements
-      for (auto& content : arrayOfTopChildren) {
-        // XXX After here, the child contents in the array may have been moved
-        //     to somewhere or removed.  We should handle it.
-        //
-        // MOZ_KnownLive because 'arrayOfTopChildren' is guaranteed to
-        // keep it alive.
-        //
-        // Even with https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 fixed
-        // this might need to stay, because 'arrayOfTopChildren' is not const,
-        // so it's not obvious how to prove via static analysis that it won't
-        // change and release us.
-        nsresult rv = aHTMLEditor.DeleteElementsExceptTableRelatedElements(
-            MOZ_KnownLive(content));
-        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-          return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-        }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "HTMLEditor::DeleteElementsExceptTableRelatedElements() failed, "
-            "but ignored");
-        // If something visible is deleted, no need to join.  Visible means
-        // all nodes except non-visible textnodes and breaks.
-        // XXX Odd.  Why do we check the visibility after removing the node
-        //     from the DOM tree?
-        if (join &&
-            aSelectionWasCollapsed == HTMLEditor::SelectionWasCollapsed::Yes) {
-          if (Text* text = content->GetAsText()) {
-            join = !aHTMLEditor.IsInVisibleTextFrames(*text);
-          } else if (content->IsElement()) {
-            if (aHTMLEditor.IsEmptyNode(*content->AsElement())) {
-              join = true;
-            } else {
-              join = content->IsHTMLElement(nsGkAtoms::br) &&
-                     !aHTMLEditor.IsVisibleBRElement(content);
-            }
-          }
-        }
-      }
+      // XXX Completely odd.  Why don't we join blocks around each range?
+      joinInclusiveAncestorBlockElements &= deleteResult.unwrap();
     }
 
     // Check endpoints for possible text deletion.  We can assume that if
@@ -3664,7 +3683,7 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
       }
     }
 
-    if (join) {
+    if (joinInclusiveAncestorBlockElements) {
       result |= aHTMLEditor.TryToJoinBlocksWithTransaction(
           MOZ_KnownLive(*mLeftContent), MOZ_KnownLive(*mRightContent));
       if (result.Failed()) {
@@ -4972,12 +4991,14 @@ void HTMLEditor::MovePreviousSiblings(nsIContent& aChild,
                        "HTMLEditor::MoveChildrenBetween() failed");
 }
 
-nsresult HTMLEditor::DeleteElementsExceptTableRelatedElements(nsINode& aNode) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+nsresult
+HTMLEditor::AutoBlockElementsJoiner::DeleteContentButKeepTableStructure(
+    HTMLEditor& aHTMLEditor, nsIContent& aContent) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
-  if (!HTMLEditUtils::IsAnyTableElementButNotTable(&aNode)) {
-    nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*aNode.AsContent()));
-    if (NS_WARN_IF(Destroyed())) {
+  if (!HTMLEditUtils::IsAnyTableElementButNotTable(&aContent)) {
+    nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(aContent);
+    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -4986,12 +5007,12 @@ nsresult HTMLEditor::DeleteElementsExceptTableRelatedElements(nsINode& aNode) {
   }
 
   // XXX For performance, this should just call
-  //     DeleteElementsExceptTableRelatedElements() while there are children
-  //     in aNode.  If we need to avoid infinite loop because mutation event
-  //     listeners can add unexpected nodes into aNode, we should just loop
+  //     DeleteContentButKeepTableStructure() while there are children in
+  //     aContent.  If we need to avoid infinite loop because mutation event
+  //     listeners can add unexpected nodes into aContent, we should just loop
   //     only original count of the children.
   AutoTArray<OwningNonNull<nsIContent>, 10> childList;
-  for (nsIContent* child = aNode.GetFirstChild(); child;
+  for (nsIContent* child = aContent.GetFirstChild(); child;
        child = child->GetNextSibling()) {
     childList.AppendElement(*child);
   }
@@ -5000,10 +5021,9 @@ nsresult HTMLEditor::DeleteElementsExceptTableRelatedElements(nsINode& aNode) {
     // MOZ_KnownLive because 'childList' is guaranteed to
     // keep it alive.
     nsresult rv =
-        DeleteElementsExceptTableRelatedElements(MOZ_KnownLive(child));
+        DeleteContentButKeepTableStructure(aHTMLEditor, MOZ_KnownLive(child));
     if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "HTMLEditor::DeleteElementsExceptTableRelatedElements() failed");
+      NS_WARNING("HTMLEditor::DeleteContentButKeepTableStructure() failed");
       return rv;
     }
   }
