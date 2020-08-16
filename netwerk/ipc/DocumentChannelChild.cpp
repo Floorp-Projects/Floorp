@@ -105,9 +105,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     args.timing() = Some(mTiming);
   }
 
-  args.hasValidTransientUserAction() =
-      loadingContext->HasValidTransientUserGestureActivation();
-
   switch (mLoadInfo->GetExternalContentPolicyType()) {
     case nsIContentPolicy::TYPE_DOCUMENT:
     case nsIContentPolicy::TYPE_SUBDOCUMENT: {

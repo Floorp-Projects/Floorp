@@ -449,9 +449,9 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
                                 const Maybe<uint64_t>& aChannelId,
                                 const TimeStamp& aAsyncOpenTime,
                                 nsDOMNavigationTiming* aTiming,
-                                Maybe<ClientInfo>&& aInfo, bool aHasGesture,
-                                bool aUrgentStart, base::ProcessId aPid,
-                                nsresult* aRv) -> RefPtr<OpenPromise> {
+                                Maybe<ClientInfo>&& aInfo, bool aUrgentStart,
+                                base::ProcessId aPid, nsresult* aRv)
+    -> RefPtr<OpenPromise> {
   auto* loadingContext = GetLoadingBrowsingContext();
 
   MOZ_DIAGNOSTIC_ASSERT_IF(loadingContext->GetParent(),
@@ -570,7 +570,8 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
       promise = window->OnLoadRequest(
           aLoadState->URI(), nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
           aLoadState->LoadFlags(), aLoadState->TriggeringPrincipal(),
-          aHasGesture, documentContext->IsTopContent());
+          aLoadState->HasValidUserGestureActivation(),
+          documentContext->IsTopContent());
     }
   }
 
@@ -641,8 +642,8 @@ auto DocumentLoadListener::OpenDocument(
     nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
     const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
     nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-    bool aHasGesture, Maybe<bool> aUriModified, Maybe<bool> aIsXFOError,
-    base::ProcessId aPid, nsresult* aRv) -> RefPtr<OpenPromise> {
+    Maybe<bool> aUriModified, Maybe<bool> aIsXFOError, base::ProcessId aPid,
+    nsresult* aRv) -> RefPtr<OpenPromise> {
   LOG(("DocumentLoadListener [%p] OpenDocument [uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
@@ -661,8 +662,7 @@ auto DocumentLoadListener::OpenDocument(
       browsingContext, std::move(aUriModified), std::move(aIsXFOError));
 
   return Open(aLoadState, loadInfo, loadFlags, aCacheKey, aChannelId,
-              aAsyncOpenTime, aTiming, std::move(aInfo), aHasGesture, false,
-              aPid, aRv);
+              aAsyncOpenTime, aTiming, std::move(aInfo), false, aPid, aRv);
 }
 
 auto DocumentLoadListener::OpenObject(
@@ -670,7 +670,7 @@ auto DocumentLoadListener::OpenObject(
     const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
     nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
     uint64_t aInnerWindowId, nsLoadFlags aLoadFlags,
-    nsContentPolicyType aContentPolicyType, bool aHasGesture, bool aUrgentStart,
+    nsContentPolicyType aContentPolicyType, bool aUrgentStart,
     base::ProcessId aPid, nsresult* aRv) -> RefPtr<OpenPromise> {
   LOG(("DocumentLoadListener [%p] OpenObject [uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
@@ -683,8 +683,8 @@ auto DocumentLoadListener::OpenObject(
       aLoadState, aInnerWindowId, aContentPolicyType, sandboxFlags);
 
   return Open(aLoadState, loadInfo, aLoadFlags, aCacheKey, aChannelId,
-              aAsyncOpenTime, aTiming, std::move(aInfo), aHasGesture,
-              aUrgentStart, aPid, aRv);
+              aAsyncOpenTime, aTiming, std::move(aInfo), aUrgentStart, aPid,
+              aRv);
 }
 
 auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
@@ -763,7 +763,7 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
   nsresult rv;
   return Open(loadState, loadInfo, loadFlags, cacheKey, channelId,
               TimeStamp::Now(), timing, std::move(initialClientInfo), false,
-              false, browsingContext->GetContentParent()->OtherPid(), &rv);
+              browsingContext->GetContentParent()->OtherPid(), &rv);
 }
 
 void DocumentLoadListener::FireStateChange(uint32_t aStateFlags,

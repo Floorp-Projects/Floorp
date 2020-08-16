@@ -9724,12 +9724,15 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                          Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
                          sandboxFlags);
 
+  if (mLoadType != LOAD_ERROR_PAGE &&
+      mBrowsingContext->HasValidTransientUserGestureActivation()) {
+    aLoadState->SetHasValidUserGestureActivation(true);
+  }
+
   // in case this docshell load was triggered by a valid transient user gesture,
   // or also the load originates from external, then we pass that information on
   // to the loadinfo, which allows e.g. setting Sec-Fetch-User request headers.
-  if ((mLoadType != LOAD_ERROR_PAGE &&
-       mBrowsingContext->HasValidTransientUserGestureActivation()) ||
-      aLoadState->HasValidUserGestureActivation() ||
+  if (aLoadState->HasValidUserGestureActivation() ||
       aLoadState->HasLoadFlags(LOAD_FLAGS_FROM_EXTERNAL)) {
     loadInfo->SetHasValidUserGestureActivation(true);
   }

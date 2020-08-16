@@ -159,21 +159,17 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
 
-  const bool hasValidTransientUserGestureActivation =
-      docShell->GetBrowsingContext()->HasValidTransientUserGestureActivation();
-
   RefPtr<DocumentLoadListener::OpenPromise> promise;
   if (isDocumentLoad) {
     promise = mDocumentLoadListener->OpenDocument(
         mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
-        std::move(initialClientInfo), hasValidTransientUserGestureActivation,
-        Some(mUriModified), Some(mIsXFOError), 0 /* ProcessId */, &rv);
+        std::move(initialClientInfo), Some(mUriModified), Some(mIsXFOError),
+        0 /* ProcessId */, &rv);
   } else {
     promise = mDocumentLoadListener->OpenObject(
         mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
         std::move(initialClientInfo), InnerWindowIDForExtantDoc(docShell),
         mLoadFlags, mLoadInfo->InternalContentPolicyType(),
-        hasValidTransientUserGestureActivation,
         UserActivation::IsHandlingUserInput(), 0 /* ProcessId */, &rv);
   }
 
