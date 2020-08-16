@@ -3440,6 +3440,23 @@ bool HTMLEditor::AutoBlockElementsJoiner::PrepareToDeleteNonCollapsedRanges(
     mMode = Mode::DeleteContentInRanges;
     return true;
   }
+
+  // If left block and right block are adjuscent siblings and they are same
+  // type of elements, we can merge them after deleting the selected contents.
+  // MOOSE: this could conceivably screw up a table.. fix me.
+  if (mLeftContent->GetParentNode() == mRightContent->GetParentNode() &&
+      HTMLEditUtils::CanContentsBeJoined(
+          *mLeftContent, *mRightContent,
+          aHTMLEditor.IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
+                                     : StyleDifference::Ignore) &&
+      // XXX What's special about these three types of block?
+      (mLeftContent->IsHTMLElement(nsGkAtoms::p) ||
+       HTMLEditUtils::IsListItem(mLeftContent) ||
+       HTMLEditUtils::IsHeader(*mLeftContent))) {
+    mMode = Mode::JoinBlocksInSameParent;
+    return true;
+  }
+
   mMode = Mode::DeleteNonCollapsedRanges;
   return true;
 }
@@ -3491,6 +3508,48 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::DeleteContentInRanges(
 }
 
 EditActionResult
+HTMLEditor::AutoBlockElementsJoiner::JoinBlockElementsInSameParent(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
+  MOZ_ASSERT(mMode == Mode::JoinBlocksInSameParent);
+  MOZ_ASSERT(mLeftContent);
+  MOZ_ASSERT(mLeftContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetStartContainer()
+                 ->IsInclusiveDescendantOf(mLeftContent));
+  MOZ_ASSERT(mRightContent);
+  MOZ_ASSERT(mRightContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetEndContainer()
+                 ->IsInclusiveDescendantOf(mRightContent));
+  MOZ_ASSERT(mLeftContent->GetParentNode() == mRightContent->GetParentNode());
+
+  nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
+      aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
+    return EditActionHandled(rv);
+  }
+
+  Result<EditorDOMPoint, nsresult> atFirstChildOfTheLastRightNodeOrError =
+      JoinNodesDeepWithTransaction(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
+                                   MOZ_KnownLive(*mRightContent));
+  if (atFirstChildOfTheLastRightNodeOrError.isErr()) {
+    NS_WARNING("HTMLEditor::JoinNodesDeepWithTransaction() failed");
+    return EditActionHandled(atFirstChildOfTheLastRightNodeOrError.unwrapErr());
+  }
+  MOZ_ASSERT(atFirstChildOfTheLastRightNodeOrError.inspect().IsSet());
+
+  rv = aHTMLEditor.CollapseSelectionTo(
+      atFirstChildOfTheLastRightNodeOrError.inspect());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::CollapseSelectionTo() failed");
+  return EditActionHandled(rv);
+}
+
+EditActionResult
 HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
@@ -3507,43 +3566,6 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
   MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
                  ->GetEndContainer()
                  ->IsInclusiveDescendantOf(mRightContent));
-
-  // If left block and right block are adjuscent siblings and they are same
-  // type of elements, we can merge them after deleting the selected contents.
-  // MOOSE: this could conceivably screw up a table.. fix me.
-  if (mLeftContent->GetParentNode() == mRightContent->GetParentNode() &&
-      HTMLEditUtils::CanContentsBeJoined(
-          *mLeftContent, *mRightContent,
-          aHTMLEditor.IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
-                                     : StyleDifference::Ignore) &&
-      // XXX What's special about these three types of block?
-      (mLeftContent->IsHTMLElement(nsGkAtoms::p) ||
-       HTMLEditUtils::IsListItem(mLeftContent) ||
-       HTMLEditUtils::IsHeader(*mLeftContent))) {
-    // First delete the selection
-    nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
-        aDirectionAndAmount, aStripWrappers, aRangesToDelete);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
-      return EditActionHandled(rv);
-    }
-    // Join blocks
-    Result<EditorDOMPoint, nsresult> atFirstChildOfTheLastRightNodeOrError =
-        aHTMLEditor.JoinNodesDeepWithTransaction(MOZ_KnownLive(*mLeftContent),
-                                                 MOZ_KnownLive(*mRightContent));
-    if (atFirstChildOfTheLastRightNodeOrError.isErr()) {
-      NS_WARNING("HTMLEditor::JoinNodesDeepWithTransaction() failed");
-      return EditActionHandled(
-          atFirstChildOfTheLastRightNodeOrError.unwrapErr());
-    }
-    MOZ_ASSERT(atFirstChildOfTheLastRightNodeOrError.inspect().IsSet());
-    // Fix up selection
-    rv = aHTMLEditor.CollapseSelectionTo(
-        atFirstChildOfTheLastRightNodeOrError.inspect());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionTo() failed");
-    return EditActionHandled(rv);
-  }
 
   // Otherwise, delete every nodes in all ranges, then, clean up something.
   EditActionResult result(NS_OK);
@@ -4464,8 +4486,10 @@ EditorDOMPoint HTMLEditor::GetGoodCaretPointFor(
   return EditorDOMPoint(&aContent);
 }
 
-Result<EditorDOMPoint, nsresult> HTMLEditor::JoinNodesDeepWithTransaction(
-    nsIContent& aLeftContent, nsIContent& aRightContent) {
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::AutoBlockElementsJoiner::JoinNodesDeepWithTransaction(
+    HTMLEditor& aHTMLEditor, nsIContent& aLeftContent,
+    nsIContent& aRightContent) {
   // While the rightmost children and their descendants of the left node match
   // the leftmost children and their descendants of the right node, join them
   // up.
@@ -4476,17 +4500,17 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::JoinNodesDeepWithTransaction(
 
   EditorDOMPoint ret;
   const HTMLEditUtils::StyleDifference kCompareStyle =
-      IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
-                     : StyleDifference::Ignore;
+      aHTMLEditor.IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
+                                 : StyleDifference::Ignore;
   while (leftContentToJoin && rightContentToJoin && parentNode &&
          HTMLEditUtils::CanContentsBeJoined(
              *leftContentToJoin, *rightContentToJoin, kCompareStyle)) {
     uint32_t length = leftContentToJoin->Length();
 
     // Do the join
-    nsresult rv =
-        JoinNodesWithTransaction(*leftContentToJoin, *rightContentToJoin);
-    if (NS_WARN_IF(Destroyed())) {
+    nsresult rv = aHTMLEditor.JoinNodesWithTransaction(*leftContentToJoin,
+                                                       *rightContentToJoin);
+    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
