@@ -461,7 +461,6 @@ struct DocumentChannelCreationArgs {
   uint32_t cacheKey;
   nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;
-  bool hasValidTransientUserAction;
   DocumentChannelElementCreationArgs elementCreationArgs;
 };
 

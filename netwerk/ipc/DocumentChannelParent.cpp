@@ -60,9 +60,8 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
       promise = mDocumentLoadListener->OpenDocument(
           loadState, aArgs.cacheKey(), Some(aArgs.channelId()),
           aArgs.asyncOpenTime(), aArgs.timing().refOr(nullptr),
-          std::move(clientInfo), aArgs.hasValidTransientUserAction(),
-          Some(docArgs.uriModified()), Some(docArgs.isXFOError()),
-          IProtocol::OtherPid(), &rv);
+          std::move(clientInfo), Some(docArgs.uriModified()),
+          Some(docArgs.isXFOError()), IProtocol::OtherPid(), &rv);
     } else {
       const ObjectCreationArgs& objectArgs = aArgs.elementCreationArgs();
 
@@ -71,8 +70,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
           aArgs.asyncOpenTime(), aArgs.timing().refOr(nullptr),
           std::move(clientInfo), objectArgs.embedderInnerWindowId(),
           objectArgs.loadFlags(), objectArgs.contentPolicyType(),
-          aArgs.hasValidTransientUserAction(), objectArgs.isUrgentStart(),
-          IProtocol::OtherPid(), &rv);
+          objectArgs.isUrgentStart(), IProtocol::OtherPid(), &rv);
     }
 
     if (NS_FAILED(rv)) {
