@@ -27,6 +27,7 @@ flat varying vec4 vUvBounds_V;
 
 flat varying float vCoefficient;
 flat varying mat3 vYuvColorMatrix;
+flat varying vec3 vYuvOffsetVector;
 flat varying int vFormat;
 
 #ifdef WR_VERTEX_SHADER
@@ -60,6 +61,7 @@ void yuv_brush_vs(
     vCoefficient = prim.coefficient;
 
     vYuvColorMatrix = get_yuv_color_matrix(prim.color_space);
+    vYuvOffsetVector = get_yuv_offset_vector(prim.color_space);
     vFormat = prim.yuv_format;
 
 #ifdef WR_FEATURE_ALPHA_PASS
@@ -94,6 +96,7 @@ Fragment yuv_brush_fs() {
     vec4 color = sample_yuv(
         vFormat,
         vYuvColorMatrix,
+        vYuvOffsetVector,
         vCoefficient,
         vYuvLayers,
         vUv_Y,

@@ -1293,6 +1293,7 @@ pub enum YuvColorSpace {
     Rec601 = 0,
     Rec709 = 1,
     Rec2020 = 2,
+    Identity = 3, // aka RGB as per ISO/IEC 23091-2:2019
 }
 
 #[repr(u8)]
