@@ -2364,23 +2364,6 @@ class HTMLEditor final : public TextEditor,
                                SplitAtEdges aSplitAtEdges);
 
   /**
-   * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".
-   * First, they are joined simply, then, new right node is assumed as the
-   * child at length of the left node before joined and new left node is
-   * assumed as its previous sibling.  Then, they will be joined again.
-   * And then, these steps are repeated.
-   *
-   * @param aLeftContent    The node which will be removed form the tree.
-   * @param aRightContent   The node which will be inserted the contents of
-   *                        aRightContent.
-   * @return                The point of the first child of the last right node.
-   *                        The result is always set if this succeeded.
-   */
-  MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  JoinNodesDeepWithTransaction(nsIContent& aLeftContent,
-                               nsIContent& aRightContent);
-
-  /**
    * TryToJoinBlocksWithTransaction() tries to join two block elements.  The
    * right element is always joined to the left element.  If the elements are
    * the same type and not nested within each other,
@@ -2815,6 +2798,7 @@ class HTMLEditor final : public TextEditor,
               "AutoBlockElementsJoiner::DeleteBRElement() failed");
           return result;
         }
+        case Mode::JoinBlocksInSameParent:
         case Mode::DeleteContentInRanges:
         case Mode::DeleteNonCollapsedRanges:
           MOZ_ASSERT_UNREACHABLE(
@@ -2851,6 +2835,15 @@ class HTMLEditor final : public TextEditor,
           MOZ_ASSERT_UNREACHABLE(
               "This mode should be handled in the other Run()");
           return EditActionResult(NS_ERROR_UNEXPECTED);
+        case Mode::JoinBlocksInSameParent: {
+          EditActionResult result =
+              JoinBlockElementsInSameParent(aHTMLEditor, aDirectionAndAmount,
+                                            aStripWrappers, aRangesToDelete);
+          NS_WARNING_ASSERTION(result.Succeeded(),
+                               "AutoBlockElementsJoiner::"
+                               "JoinBlockElementsInSameParent() failed");
+          return result;
+        }
         case Mode::DeleteContentInRanges: {
           EditActionResult result =
               DeleteContentInRanges(aHTMLEditor, aDirectionAndAmount,
@@ -2892,6 +2885,11 @@ class HTMLEditor final : public TextEditor,
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
         HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint);
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+    JoinBlockElementsInSameParent(HTMLEditor& aHTMLEditor,
+                                  nsIEditor::EDirection aDirectionAndAmount,
+                                  nsIEditor::EStripWrappers aStripWrappers,
+                                  AutoRangeArray& aRangesToDelete);
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult DeleteBRElement(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         const EditorDOMPoint& aCaretPoint);
@@ -2906,10 +2904,29 @@ class HTMLEditor final : public TextEditor,
         AutoRangeArray& aRangesToDelete,
         HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed);
 
+    /**
+     * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".
+     * First, they are joined simply, then, new right node is assumed as the
+     * child at length of the left node before joined and new left node is
+     * assumed as its previous sibling.  Then, they will be joined again.
+     * And then, these steps are repeated.
+     *
+     * @param aLeftContent    The node which will be removed form the tree.
+     * @param aRightContent   The node which will be inserted the contents of
+     *                        aRightContent.
+     * @return                The point of the first child of the last right
+     * node. The result is always set if this succeeded.
+     */
+    MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+    JoinNodesDeepWithTransaction(HTMLEditor& aHTMLEditor,
+                                 nsIContent& aLeftContent,
+                                 nsIContent& aRightContent);
+
     enum class Mode {
       NotInitialized,
       JoinCurrentBlock,
       JoinOtherBlock,
+      JoinBlocksInSameParent,
       DeleteBRElement,
       DeleteContentInRanges,
       DeleteNonCollapsedRanges,
