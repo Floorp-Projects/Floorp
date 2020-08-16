@@ -265,13 +265,11 @@ mozilla::PresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
 
 ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-    RefPtr<nsFrameLoader> frameloader = FrameLoader();
-    if (frameloader) {
+    if (RefPtr<nsFrameLoader> frameloader = FrameLoader()) {
       nsCOMPtr<Document> oldContainerDoc;
       nsIFrame* detachedFrame =
           frameloader->GetDetachedSubdocFrame(getter_AddRefs(oldContainerDoc));
-      nsView* view = detachedFrame ? detachedFrame->GetView() : nullptr;
-      if (view) {
+      if (nsView* view = detachedFrame ? detachedFrame->GetView() : nullptr) {
         nsSize size = view->GetBounds().Size();
         nsPresContext* presContext = detachedFrame->PresContext();
         return ScreenIntSize(presContext->AppUnitsToDevPixels(size.width),
@@ -281,28 +279,26 @@ ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
     // Pick some default size for now.  Using 10x10 because that's what the
     // code used to do.
     return ScreenIntSize(10, 10);
-  } else {
-    nsSize docSizeAppUnits;
-    nsPresContext* presContext = PresContext();
-    if (GetContent()->IsHTMLElement(nsGkAtoms::frame)) {
-      docSizeAppUnits = GetSize();
-    } else {
-      docSizeAppUnits = GetContentRect().Size();
-    }
-    // Adjust subdocument size, according to 'object-fit' and the
-    // subdocument's intrinsic size and ratio.
-    nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
-    if (subDocRoot) {
-      nsRect destRect = nsLayoutUtils::ComputeObjectDestRect(
-          nsRect(nsPoint(), docSizeAppUnits), subDocRoot->GetIntrinsicSize(),
-          subDocRoot->GetIntrinsicRatio(), StylePosition());
-      docSizeAppUnits = destRect.Size();
-    }
-
-    return ScreenIntSize(
-        presContext->AppUnitsToDevPixels(docSizeAppUnits.width),
-        presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
   }
+
+  nsSize docSizeAppUnits;
+  nsPresContext* presContext = PresContext();
+  if (GetContent()->IsHTMLElement(nsGkAtoms::frame)) {
+    docSizeAppUnits = GetSize();
+  } else {
+    docSizeAppUnits = GetContentRect().Size();
+  }
+
+  // Adjust subdocument size, according to 'object-fit' and the subdocument's
+  // intrinsic size and ratio.
+  docSizeAppUnits = nsLayoutUtils::ComputeObjectDestRect(
+                        nsRect(nsPoint(), docSizeAppUnits), GetIntrinsicSize(),
+                        GetIntrinsicRatio(), StylePosition())
+                        .Size();
+
+  return ScreenIntSize(
+      presContext->AppUnitsToDevPixels(docSizeAppUnits.width),
+      presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
 }
 
 static void WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
@@ -557,48 +553,6 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 }
 
-nscoord nsSubDocumentFrame::GetIntrinsicISize() {
-  if (StyleDisplay()->IsContainSize()) {
-    return 0;  // Intrinsic size of 'contain:size' replaced elements is 0,0.
-  }
-
-  if (!IsInline()) {
-    return 0;  // HTML <frame> has no useful intrinsic isize
-  }
-
-  if (mContent->IsXULElement()) {
-    return 0;  // XUL <iframe> and <browser> have no useful intrinsic isize
-  }
-
-  NS_ASSERTION(ObtainIntrinsicSizeFrame() == nullptr,
-               "Intrinsic isize should come from the embedded document.");
-
-  // We must be an HTML <iframe>.  Default to size of 300px x 150px, for IE
-  // compat (and per CSS2.1 draft).
-  WritingMode wm = GetWritingMode();
-  return nsPresContext::CSSPixelsToAppUnits(wm.IsVertical() ? 150 : 300);
-}
-
-nscoord nsSubDocumentFrame::GetIntrinsicBSize() {
-  // <frame> processing does not use this routine, only <iframe>
-  NS_ASSERTION(IsInline(), "Shouldn't have been called");
-
-  if (StyleDisplay()->IsContainSize()) {
-    return 0;  // Intrinsic size of 'contain:size' replaced elements is 0,0.
-  }
-
-  if (mContent->IsXULElement()) {
-    return 0;
-  }
-
-  NS_ASSERTION(ObtainIntrinsicSizeFrame() == nullptr,
-               "Intrinsic bsize should come from the embedded document.");
-
-  // Use size of 300px x 150px, for compatibility with IE, and per CSS2.1 draft.
-  WritingMode wm = GetWritingMode();
-  return nsPresContext::CSSPixelsToAppUnits(wm.IsVertical() ? 300 : 150);
-}
-
 #ifdef DEBUG_FRAME_DUMP
 void nsSubDocumentFrame::List(FILE* out, const char* aPrefix,
                               ListFlags aFlags) const {
@@ -627,8 +581,7 @@ nscoord nsSubDocumentFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
-  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
-  if (subDocRoot) {
+  if (nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame()) {
     result = subDocRoot->GetMinISize(aRenderingContext);
   } else {
     result = GetIntrinsicISize();
@@ -659,19 +612,34 @@ IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
     return IntrinsicSize(0, 0);
   }
 
-  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
-  if (subDocRoot) {
+  if (nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame()) {
     return subDocRoot->GetIntrinsicSize();
   }
-  return nsAtomicContainerFrame::GetIntrinsicSize();
+
+  if (!IsInline()) {
+    return {};  // <frame> elements have no useful intrinsic size.
+  }
+
+  if (mContent->IsXULElement()) {
+    return {};  // XUL <iframe> and <browser> have no useful intrinsic size
+  }
+
+  // We must be an HTML <iframe>.  Default to size of 300px x 150px, for IE
+  // compat (and per CSS2.1 draft)
+  return IntrinsicSize(CSSPixel::ToAppUnits(300), CSSPixel::ToAppUnits(150));
 }
 
 /* virtual */
 AspectRatio nsSubDocumentFrame::GetIntrinsicRatio() {
-  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
-  if (subDocRoot) {
+  // FIXME(emilio): This should probably respect contain: size and return no
+  // ratio in the case subDocRoot is non-null. Otherwise we do it by virtue of
+  // using a zero-size below and reusing GetIntrinsicSize().
+  if (nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame()) {
     return subDocRoot->GetIntrinsicRatio();
   }
+  // NOTE(emilio): Even though we have an intrinsic size, we may not have an
+  // intrinsic ratio. For example `<iframe style="width: 100px">` should not
+  // shrink in the vertical axis to preserve the 300x150 ratio.
   return nsAtomicContainerFrame::GetIntrinsicRatio();
 }
 
@@ -698,16 +666,9 @@ LogicalSize nsSubDocumentFrame::ComputeSize(
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
     ComputeSizeFlags aFlags) {
-  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
-  if (subDocRoot) {
-    return ComputeSizeWithIntrinsicDimensions(
-        aRenderingContext, aWM, subDocRoot->GetIntrinsicSize(),
-        subDocRoot->GetIntrinsicRatio(), aCBSize, aMargin, aBorder, aPadding,
-        aFlags);
-  }
-  return nsAtomicContainerFrame::ComputeSize(aRenderingContext, aWM, aCBSize,
-                                             aAvailableISize, aMargin, aBorder,
-                                             aPadding, aFlags);
+  return ComputeSizeWithIntrinsicDimensions(
+      aRenderingContext, aWM, GetIntrinsicSize(), GetIntrinsicRatio(), aCBSize,
+      aMargin, aBorder, aPadding, aFlags);
 }
 
 void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
@@ -747,15 +708,9 @@ void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
                      aDesiredSize.Height() - bp.TopBottom());
 
     // Size & position the view according to 'object-fit' & 'object-position'.
-    nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
-    IntrinsicSize intrinsSize;
-    AspectRatio intrinsRatio;
-    if (subDocRoot) {
-      intrinsSize = subDocRoot->GetIntrinsicSize();
-      intrinsRatio = subDocRoot->GetIntrinsicRatio();
-    }
     nsRect destRect = nsLayoutUtils::ComputeObjectDestRect(
-        nsRect(offset, innerSize), intrinsSize, intrinsRatio, StylePosition());
+        nsRect(offset, innerSize), GetIntrinsicSize(), GetIntrinsicRatio(),
+        StylePosition());
 
     nsViewManager* vm = mInnerView->GetViewManager();
     vm->MoveViewTo(mInnerView, destRect.x, destRect.y);
