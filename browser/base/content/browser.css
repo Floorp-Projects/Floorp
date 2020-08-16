@@ -61,7 +61,7 @@ body {
 }
 
 /* Prevent shrinking the page content to 0 height and width */
-.browserStack > browser {
+.browserStack {
   min-height: 25px;
   min-width: 25px;
 }

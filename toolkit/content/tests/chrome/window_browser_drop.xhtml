@@ -2,7 +2,8 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Browser Drop Tests"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -229,6 +230,16 @@ function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
 
 ]]>
 </script>
+
+<html:style>
+  /* FIXME: This is just preserving behavior from before bug 1656081.
+   * Without this there's one subtest that fails, but the browser
+   * elements were zero-sized before so... */
+  browser {
+    width: 0;
+    height: 0;
+  }
+</html:style>
 
 <browser id="chromechild" src="about:blank"/>
 <browser id="contentchild" type="content" width="100" height="100"

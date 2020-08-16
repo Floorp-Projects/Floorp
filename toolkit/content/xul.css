@@ -139,6 +139,15 @@ iframe {
   }
 }
 
+/* Allow the browser to shrink below its intrinsic size, to match legacy
+ * behavior */
+browser {
+  align-self: stretch;
+  justify-self: stretch;
+  min-height: 0;
+  min-width: 0;
+}
+
 /*********** popup notification ************/
 popupnotification {
   -moz-box-orient: vertical;

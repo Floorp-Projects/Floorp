@@ -131,8 +131,19 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
   bool IsInline() { return mIsInline; }
 
-  nscoord GetIntrinsicISize();
-  nscoord GetIntrinsicBSize();
+  nscoord GetIntrinsicBSize() {
+    auto size = GetIntrinsicSize();
+    Maybe<nscoord> bSize =
+        GetWritingMode().IsVertical() ? size.width : size.height;
+    return bSize.valueOr(0);
+  }
+
+  nscoord GetIntrinsicISize() {
+    auto size = GetIntrinsicSize();
+    Maybe<nscoord> iSize =
+        GetWritingMode().IsVertical() ? size.height : size.width;
+    return iSize.valueOr(0);
+  }
 
   // Show our document viewer. The document viewer is hidden via a script
   // runner, so that we can save and restore the presentation if we're
