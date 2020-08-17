@@ -51,6 +51,7 @@ data class CollectionCreationState(
     val defaultCollectionNumber: Int = 1
 ) : State
 
+@Suppress("LongParameterList")
 fun createInitialCollectionCreationState(
     browserState: BrowserState,
     tabCollectionStorage: TabCollectionStorage,
@@ -59,7 +60,7 @@ fun createInitialCollectionCreationState(
     tabIds: Array<String>?,
     selectedTabIds: Array<String>?,
     selectedTabCollectionId: Long
-) : CollectionCreationState {
+): CollectionCreationState {
     val tabs = browserState.getTabs(tabIds, publicSuffixList)
     val selectedTabs = if (selectedTabIds != null) {
         browserState.getTabs(selectedTabIds, publicSuffixList).toSet()

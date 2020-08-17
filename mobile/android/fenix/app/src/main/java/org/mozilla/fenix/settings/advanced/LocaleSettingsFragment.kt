@@ -17,7 +17,6 @@ import kotlinx.android.synthetic.main.fragment_locale_settings.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.showToolbar
@@ -40,7 +39,11 @@ class LocaleSettingsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_locale_settings, container, false)
 
-        store = getStore()
+        store = StoreProvider.get(this) {
+            LocaleSettingsStore(
+                createInitialLocaleSettingsState(requireContext())
+            )
+        }
         interactor = LocaleSettingsInteractor(
             controller = DefaultLocaleSettingsController(
                 activity = requireActivity(),
@@ -86,21 +89,6 @@ class LocaleSettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         consumeFrom(store) {
             localeView.update(it)
-        }
-    }
-
-    private fun getStore(): LocaleSettingsStore {
-        val supportedLocales = LocaleManager.getSupportedLocales()
-        val selectedLocale = LocaleManager.getSelectedLocale(requireContext())
-
-        return StoreProvider.get(this) {
-            LocaleSettingsStore(
-                LocaleSettingsState(
-                    supportedLocales,
-                    supportedLocales,
-                    selectedLocale
-                )
-            )
         }
     }
 }

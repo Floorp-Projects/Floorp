@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.settings.advanced
 
+import android.content.Context
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import mozilla.components.support.locale.LocaleManager
 import java.util.Locale
 
 class LocaleSettingsStore(
@@ -26,6 +28,16 @@ data class LocaleSettingsState(
     val searchedLocaleList: List<Locale>,
     val selectedLocale: Locale
 ) : State
+
+fun createInitialLocaleSettingsState(context: Context): LocaleSettingsState {
+    val supportedLocales = LocaleManager.getSupportedLocales()
+
+    return LocaleSettingsState(
+        supportedLocales,
+        supportedLocales,
+        selectedLocale = LocaleManager.getSelectedLocale(context)
+    )
+}
 
 /**
  * Actions to dispatch through the `LocaleSettingsStore` to modify `LocaleSettingsState` through the reducer.

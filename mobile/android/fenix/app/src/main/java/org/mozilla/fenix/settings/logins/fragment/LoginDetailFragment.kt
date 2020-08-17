@@ -38,7 +38,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.simplifiedUrl
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
-import org.mozilla.fenix.settings.logins.LoginsListState
 import org.mozilla.fenix.settings.logins.SavedLogin
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 import org.mozilla.fenix.settings.logins.createInitialLoginsListState

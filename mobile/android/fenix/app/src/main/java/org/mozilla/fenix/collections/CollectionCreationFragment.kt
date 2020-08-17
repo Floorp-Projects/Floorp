@@ -14,10 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
