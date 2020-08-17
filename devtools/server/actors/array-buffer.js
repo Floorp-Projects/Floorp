@@ -28,9 +28,11 @@ const ArrayBufferActor = protocol.ActorClassWithSpec(arrayBufferSpec, {
 
   form: function() {
     return {
-      typeName: this.typeName,
-      length: this.bufferLength,
       actor: this.actorID,
+      length: this.bufferLength,
+      // The `typeName` is read in the source spec when reading "sourcedata"
+      // which can either be an ArrayBuffer actor or a LongString actor.
+      typeName: this.typeName,
     };
   },
 
