@@ -7,9 +7,14 @@
 const { GeckoViewChildModule } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewChildModule.jsm"
 );
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  MediaUtils: "resource://gre/modules/MediaUtils.jsm",
+});
 
 class GeckoViewMediaChild extends GeckoViewChildModule {
   onInit() {
@@ -49,6 +54,7 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
 
   onEnable() {
     debug`onEnable`;
+
     addEventListener("UAWidgetSetupOrChange", this, false);
     addEventListener("MozDOMFullscreen:Entered", this, false);
     addEventListener("MozDOMFullscreen:Exited", this, false);
@@ -135,15 +141,11 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
         break;
       case "MozDOMFullscreen:Entered":
         const element = content && content.document.fullscreenElement;
-        if (this.isMedia(element)) {
-          this.handleFullscreenChange(element);
-        } else {
-          // document.fullscreenElement can be a div container instead of the HTMLMediaElement
-          // in some pages (e.g Vimeo).
-          const childrenMedias = element.getElementsByTagName("video");
-          if (childrenMedias && childrenMedias.length > 0) {
-            this.handleFullscreenChange(childrenMedias[0]);
-          }
+        // document.fullscreenElement can be a div container instead of the
+        // HTMLMediaElement in some pages (e.g Vimeo).
+        const mediaElement = MediaUtils.findVideoElement(element);
+        if (mediaElement) {
+          this.handleFullscreenChange(mediaElement);
         }
         break;
       case "MozDOMFullscreen:Exited":
@@ -172,7 +174,7 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
   }
 
   handleNewMedia(aElement) {
-    if (this.getState(aElement) || !this.isMedia(aElement)) {
+    if (this.getState(aElement) || !MediaUtils.isMediaElement(aElement)) {
       return;
     }
     const state = {
@@ -188,12 +190,10 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
 
   notifyNewMedia(aElement) {
     this.getState(aElement).notified = true;
-    const message = {
-      type: "GeckoView:MediaAdd",
-      id: this.getState(aElement).id,
-    };
+    const message = MediaUtils.getMetadata(aElement) ?? {};
+    message.type = "GeckoView:MediaAdd";
+    message.id = this.getState(aElement).id;
 
-    this.fillMetadata(aElement, message);
     this.eventDispatcher.sendRequest(message);
   }
 
@@ -234,16 +234,6 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
     for (const name of this._mediaEvents) {
       aElement.removeEventListener(name, this._mediaEventCallback);
     }
-  }
-
-  isMedia(aElement) {
-    if (!aElement) {
-      return false;
-    }
-    const elementType = ChromeUtils.getClassName(aElement);
-    return (
-      elementType === "HTMLVideoElement" || elementType === "HTMLAudioElement"
-    );
   }
 
   isObserving(aElement) {
@@ -290,30 +280,6 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
       }
     }
     return false;
-  }
-
-  fillMetadata(aElement, aOut) {
-    aOut.src = aElement.currentSrc || aElement.src;
-    aOut.width = aElement.videoWidth || 0;
-    aOut.height = aElement.videoHeight || 0;
-    aOut.duration = aElement.duration;
-    aOut.seekable = !!aElement.seekable;
-    if (aElement.audioTracks) {
-      aOut.audioTrackCount = aElement.audioTracks.length;
-    } else {
-      aOut.audioTrackCount =
-        aElement.mozHasAudio ||
-        aElement.webkitAudioDecodedByteCount ||
-        ChromeUtils.getClassName(aElement) === "HTMLAudioElement"
-          ? 1
-          : 0;
-    }
-    if (aElement.videoTracks) {
-      aOut.videoTrackCount = aElement.videoTracks.length;
-    } else {
-      aOut.videoTrackCount =
-        ChromeUtils.getClassName(aElement) === "HTMLVideoElement" ? 1 : 0;
-    }
   }
 
   handleMediaEvent(aEvent) {
@@ -388,11 +354,10 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
   }
 
   notifyMetadataChange(aElement) {
-    const message = {
-      type: "GeckoView:MediaMetadataChanged",
-      id: this.getState(aElement).id,
-    };
-    this.fillMetadata(aElement, message);
+    const message = MediaUtils.getMetadata(aElement) ?? {};
+    message.type = "GeckoView:MediaMetadataChanged";
+    message.id = this.getState(aElement).id;
+
     this.eventDispatcher.sendRequest(message);
   }
 
