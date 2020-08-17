@@ -2146,7 +2146,7 @@ nsDOMWindowUtils::SetDesktopModeViewport(bool aDesktopMode) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetOuterWindowID(uint64_t* aWindowID) {
+nsDOMWindowUtils::GetDeprecatedOuterWindowID(uint64_t* aWindowID) {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 

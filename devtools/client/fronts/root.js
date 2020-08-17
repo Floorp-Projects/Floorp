@@ -222,13 +222,10 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
         if (browser.frameLoader.remoteTab) {
           // Tabs in child process
           packet.tabId = browser.frameLoader.remoteTab.tabId;
-        } else if (browser.outerWindowID) {
-          // <xul:browser> tabs in parent process
-          packet.outerWindowID = browser.outerWindowID;
         } else {
-          // <iframe mozbrowser> tabs in parent process
-          const windowUtils = browser.contentWindow.windowUtils;
-          packet.outerWindowID = windowUtils.outerWindowID;
+          // <xul:browser> or <iframe mozbrowser> tabs in parent process
+          packet.outerWindowID =
+            browser.browsingContext.currentWindowGlobal.outerWindowId;
         }
       } else {
         // Throw if a filter object have been passed but without

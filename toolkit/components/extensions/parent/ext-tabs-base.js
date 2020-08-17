@@ -1455,7 +1455,7 @@ class WindowTrackerBase extends EventEmitter {
     });
 
     this._windowIds = new DefaultWeakMap(window => {
-      return window.windowUtils.outerWindowID;
+      return window.docShell.outerWindowID;
     });
   }
 

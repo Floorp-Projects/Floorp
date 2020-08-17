@@ -37,7 +37,7 @@ add_task(async function() {
   await new Promise(resolve => frame.addEventListener("load", resolve, {once: true}));
 
   let win = frame.contentWindow;
-  let winID = SpecialPowers.getDOMWindowUtils(win).outerWindowID;
+  let winID = SpecialPowers.wrap(win).docShell.outerWindowID;
 
   win.eval("obj = {}");
   win.obj.foo = {bar: "baz"};
