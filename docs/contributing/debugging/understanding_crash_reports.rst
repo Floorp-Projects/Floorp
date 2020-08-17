@@ -30,15 +30,11 @@ Stats <https://crash-stats.mozilla.com/documentation/memory_dump_access/>`__.
 Each crash report has the following tabs: Details, Metadata, Modules,
 Raw Dump, Extensions, and (optional) Correlations.
 
-.. _Details_tab:
-
 Details tab
 -----------
 
 The Details tab is the first place to look because it contains the most
 important pieces of information.
-
-.. _Primary_fields:
 
 Primary fields
 ~~~~~~~~~~~~~~
@@ -64,7 +60,7 @@ superusers <http://adrian.gaudebert.fr/blog/post/2014/12/02/socorro-super-search
 The fields present in this tab vary depending on the crash kind. Not all
 fields are always present.
 
-The "Signature" field is the main identifer or label for a crash report.
+The "Signature" field is the main identifier or label for a crash report.
 Rather than considering each crash report in isolation, we want to put
 crash reports into clusters so we can deal with groups of them at once.
 An ideal clustering algorithm would put all crash reports with the same
@@ -165,8 +161,6 @@ memory report are shown in the Details tab, each one having a field name
 starting with "MR:", short for "memory report". The full memory report
 can be obtained in the Raw Dump tab (see below).
 
-.. _Bug-related_information:
-
 Bug-related information
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -182,8 +176,6 @@ fields pre-filled, such as the crash signature.
 
 The "Related Bugs" section shows related bug reports, as determined by
 the crash signature.
-
-.. _Stack_traces:
 
 Stack traces
 ~~~~~~~~~~~~
@@ -229,8 +221,6 @@ problem; many of them will be waiting on some kind of response, as shown
 by a top stack frame containing a function like
 ``NtWaitForSingleObject`` or ``ZwWaitForMultipleObjects``.
 
-.. _Metadata_tab:
-
 Metadata tab
 ------------
 
@@ -239,8 +229,6 @@ containing a table with various fields. These are the fields from the
 raw crash report, ordered alphabetically by field name, but with
 privacy-sensitive fields shown only to users with minidump access. There
 is some overlap with the fields shown in the Details tab.
-
-.. _Modules_tab:
 
 Modules tab
 -----------
@@ -261,8 +249,6 @@ the "Correlations" tab (see below).
 `This page <https://support.mozilla.org/en-US/kb/helping-crashes>`__
 says that files lacking version/debug identifier/debug filename are
 likely to be malware.
-
-.. _Raw_Dump_tab:
 
 Raw Dump tab
 ------------
@@ -290,8 +276,6 @@ These links are to the following items.
    link.
 #. The unredacted crash report, which has additional information.
 
-.. _Extensions_tab:
-
 Extensions tab
 --------------
 
@@ -317,16 +301,12 @@ This information is useful because some crashes are caused by
 extensions. Correlations between extensions and crash signatures can be
 seen in the "Correlations" tab (see below).
 
-.. _Correlations_tab:
-
 Correlations tab
 ----------------
 
 This tab is only shown when crash-stats identifies correlations between
 a crash and modules or extensions that are present, which happens
 occasionally.
-
-.. _See_also:
 
 See also
 --------

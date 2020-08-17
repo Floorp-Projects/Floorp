@@ -17,8 +17,6 @@ Windows debugging tools. Each minidump includes the following data.
 -  (Optional) Other memory regions, if requested by the application.
 -  (Optional) Other platform-specific data.
 
-.. _Accessing_minidumps_from_crash_reports:
-
 Accessing minidumps from crash reports
 --------------------------------------
 
@@ -26,8 +24,6 @@ Minidumps are not available to everyone. For details on how to gain
 access and where to find minidump files for crash reports, consult the
 `crash report
 documentation </en-US/docs/Understanding_crash_reports>`__.
-
-.. _Using_the_MS_Visual_Studio_debugger:
 
 Using the MS Visual Studio debugger
 -----------------------------------
@@ -67,7 +63,7 @@ Then you'll be able to examine:
 the stack trace
    The debugger shows the stack trace.  You can right-click on any frame
    in the stack, and then choose "go to disassembly" or "go to source". 
-   (Choosing "go to dissassembly" from the source view might not get you
+   (Choosing "go to disassembly" from the source view might not get you
    to the right place due to optimizations.)  When looking at the
    source, beware that the debugging information will associate all
    inlined functions as part of the line into which they were inlined,
@@ -104,8 +100,6 @@ local variables
    Studio can't figure something out from the minidump, it might show
    you 00000000 (is this true?).
 
-.. _Using_minidump-2-core_on_Linux:
-
 Using minidump-2-core on Linux
 ------------------------------
 
@@ -128,8 +122,6 @@ to download symbols.
    minidumps from a different CPU architecture than the system it was
    built for. If you want to use it on an ARM dump, for example, you may
    need to build the tool for ARM and run it under QEMU.
-
-.. _Using_other_tools_to_inspect_minidump_data:
 
 Using other tools to inspect minidump data
 ------------------------------------------
@@ -174,13 +166,11 @@ checkout, and that you have built Breakpad in an objdir named
    module, and a -d option to print relative paths to the symbol files
    that would be used instead of the module filenames.
 
-.. _Getting_a_stack_trace_from_a_crashed_B2G_process:
-
 Getting a stack trace from a crashed B2G process
 ------------------------------------------------
 
 #. Get the minidump file in the phone at
-   /data/b2g/mozilla/*.default/minidump/. You can use `adb
+   /data/b2g/mozilla/\*.default/minidump/. You can use `adb
    pull <http://developer.android.com/tools/help/adb.html>`__ for that.
 #. Build the debug symbols using the command ./build.sh buildsymbols
    inside the B2G tree. The symbol files will be generated in
