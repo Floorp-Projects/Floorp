@@ -22,6 +22,17 @@ development process and source code documentation.
 
 
 .. toctree::
+   :caption: Debugging
+   :maxdepth: 1
+   
+   debugging/debugging_a_minidump
+   debugging/debugging_mozilla_with_gdb
+   debugging/debugging_mozilla_with_lldb
+   debugging/debugging_mozilla_with_valgrind
+   debugging/record_and_replay_debugging_firefox
+   debugging/understanding_crash_reports
+
+.. toctree::
    :caption: Additional Information
    :maxdepth: 1
    
