@@ -3085,15 +3085,12 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     }
   }
 
-  // if this character is a variation selector,
-  // use the previous font regardless of whether it supports VS or not.
-  // otherwise the text run will be divided.
-  if (isVarSelector) {
-    if (aPrevMatchedFont) {
-      return aPrevMatchedFont;
-    }
-    // VS alone. it's meaningless to search different fonts
-    return nullptr;
+  // If this character is a variation selector or default-ignorable, use the
+  // previous font regardless of whether it supports the codepoint or not.
+  // (We don't want to unnecessarily split glyph runs, and the character will
+  // not be visibly rendered.)
+  if (isVarSelector || IsDefaultIgnorable(aCh)) {
+    return aPrevMatchedFont;
   }
 
   // 1. check remaining fonts in the font group
