@@ -26,15 +26,6 @@ ChromeUtils.defineModuleGetter(
   "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm"
 );
-var { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
-);
-/* global DownloadIntegration */
-Integration.downloads.defineModuleGetter(
-  this,
-  "DownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.jsm"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "SelectionChangedMenulist",
@@ -1958,18 +1949,7 @@ var gMainPane = {
    * applications menu.
    */
   _loadInternalHandlers() {
-    let internalHandlers = [new PDFHandlerInfoWrapper()];
-
-    let enabledHandlers = Services.prefs
-      .getCharPref("browser.download.viewableInternally.enabledTypes", "")
-      .trim();
-    if (enabledHandlers) {
-      for (let ext of enabledHandlers.split(",")) {
-        internalHandlers.push(
-          new ViewableInternallyHandlerInfoWrapper(ext.trim())
-        );
-      }
-    }
+    var internalHandlers = [new PDFHandlerInfoWrapper()];
     for (let internalHandler of internalHandlers) {
       if (internalHandler.enabled) {
         this._handledTypes[internalHandler.type] = internalHandler;
@@ -2562,7 +2542,7 @@ var gMainPane = {
    * Filter the list when the user enters a filter term into the filter field.
    */
   filter() {
-    this._rebuildView(); // FIXME: Should this be await since bug 1508156?
+    this._rebuildView();
   },
 
   focusFilterBox() {
@@ -3652,9 +3632,8 @@ class HandlerInfoWrapper {
  * menu.
  */
 class InternalHandlerInfoWrapper extends HandlerInfoWrapper {
-  constructor(mimeType, extension) {
-    let type = gMIMEService.getFromTypeAndExtension(mimeType, extension);
-    super(mimeType || type.type, type);
+  constructor(mimeType) {
+    super(mimeType, gMIMEService.getFromTypeAndExtension(mimeType, null));
   }
 
   // Override store so we so we can notify any code listening for registration
@@ -3666,24 +3645,22 @@ class InternalHandlerInfoWrapper extends HandlerInfoWrapper {
   get enabled() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
+
+  get description() {
+    return { id: this._appPrefLabel };
+  }
 }
 
 class PDFHandlerInfoWrapper extends InternalHandlerInfoWrapper {
   constructor() {
-    super(TYPE_PDF, null);
+    super(TYPE_PDF);
+  }
+
+  get _appPrefLabel() {
+    return "applications-type-pdf";
   }
 
   get enabled() {
     return !Services.prefs.getBoolPref(PREF_PDFJS_DISABLED);
-  }
-}
-
-class ViewableInternallyHandlerInfoWrapper extends InternalHandlerInfoWrapper {
-  constructor(extension) {
-    super(null, extension);
-  }
-
-  get enabled() {
-    return DownloadIntegration.shouldViewDownloadInternally(this.type);
   }
 }

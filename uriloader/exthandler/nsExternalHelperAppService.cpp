@@ -539,16 +539,6 @@ static const nsDefaultMimeTypeEntry nonDecodableExtensions[] = {
     {APPLICATION_COMPRESS, "z"},
     {APPLICATION_GZIP, "svgz"}};
 
-/**
- * Primary extensions of types whose descriptions should be overwritten.
- * This extension is concatenated with "ExtHandlerDescription" to look up the
- * description in unknownContentType.properties.
- * NOTE: These MUST be lower-case and ASCII.
- */
-static const char* descriptionOverwriteExtensions[] = {
-    "avif", "pdf", "svg", "webp", "xml",
-};
-
 static StaticRefPtr<nsExternalHelperAppService> sExtHelperAppSvcSingleton;
 
 /**
@@ -2576,6 +2566,28 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     found = found || NS_SUCCEEDED(rv);
   }
 
+  // Next, overwrite with generic description if the extension is PDF
+  // since the file format is supported by Firefox and we don't want
+  // other brands positioning themselves as the sole viewer for a system.
+  if (aFileExt.LowerCaseEqualsASCII("pdf") ||
+      aFileExt.LowerCaseEqualsASCII(".pdf")) {
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStringBundle> unknownContentTypeBundle;
+    rv = bundleService->CreateBundle(
+        "chrome://mozapps/locale/downloads/unknownContentType.properties",
+        getter_AddRefs(unknownContentTypeBundle));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString pdfHandlerDescription;
+      rv = unknownContentTypeBundle->GetStringFromName("pdfHandlerDescription",
+                                                       pdfHandlerDescription);
+      if (NS_SUCCEEDED(rv)) {
+        (*_retval)->SetDescription(pdfHandlerDescription);
+      }
+    }
+  }
+
   // Now, let's see if we can find something in our datastore.
   // This will not overwrite the OS information that interests us
   // (i.e. default application, default app. description)
@@ -2642,37 +2654,6 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
       nsAutoCString fileExt;
       ToLowerCase(aFileExt, fileExt);
       (*_retval)->SetPrimaryExtension(fileExt);
-    }
-  }
-
-  // Overwrite with a generic description if the primary extension for the
-  // type is in our list; these are file formats supported by Firefox and
-  // we don't want other brands positioning themselves as the sole viewer
-  // for a system.
-  nsAutoCString primaryExtension;
-  rv = (*_retval)->GetPrimaryExtension(primaryExtension);
-  if (NS_SUCCEEDED(rv)) {
-    for (const char* ext : descriptionOverwriteExtensions) {
-      if (primaryExtension.Equals(ext)) {
-        nsCOMPtr<nsIStringBundleService> bundleService =
-            do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<nsIStringBundle> unknownContentTypeBundle;
-        rv = bundleService->CreateBundle(
-            "chrome://mozapps/locale/downloads/unknownContentType.properties",
-            getter_AddRefs(unknownContentTypeBundle));
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoCString stringName(ext);
-          stringName.AppendLiteral("ExtHandlerDescription");
-          nsAutoString handlerDescription;
-          rv = unknownContentTypeBundle->GetStringFromName(stringName.get(),
-                                                           handlerDescription);
-          if (NS_SUCCEEDED(rv)) {
-            (*_retval)->SetDescription(handlerDescription);
-          }
-        }
-        break;
-      }
     }
   }
 

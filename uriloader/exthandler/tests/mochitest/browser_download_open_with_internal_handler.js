@@ -391,43 +391,10 @@ add_task(async function test_check_open_with_external_then_internal() {
 });
 
 /**
- * Check that the "Open with internal handler" option is presented
- * for other viewable internally types.
- */
-add_task(
-  async function test_internal_handler_hidden_with_viewable_internally_type() {
-    let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-    let loadingTab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      TEST_PATH + "file_xml_attachment_test.xml"
-    );
-    let dialogWindow = await dialogWindowPromise;
-    is(
-      dialogWindow.location.href,
-      "chrome://mozapps/content/downloads/unknownContentType.xhtml",
-      "Should have seen the unknown content dialogWindow."
-    );
-    let doc = dialogWindow.document;
-    let internalHandlerRadio = doc.querySelector("#handleInternally");
-
-    // Prevent racing with initialization of the dialog and make sure that
-    // the final state of the dialog has the correct visibility of the internal-handler option.
-    await waitForAcceptButtonToGetEnabled(doc);
-
-    ok(!internalHandlerRadio.hidden, "The option should be visible for XML");
-    ok(internalHandlerRadio.selected, "The option should be selected");
-
-    let dialog = doc.querySelector("#unknownContentType");
-    dialog.cancelDialog();
-    BrowserTestUtils.removeTab(loadingTab);
-  }
-);
-
-/**
  * Check that the "Open with internal handler" option is not presented
- * for non-PDF, non-viewable-internally types.
+ * for non-PDF types.
  */
-add_task(async function test_internal_handler_hidden_with_other_type() {
+add_task(async function test_internal_handler_hidden_with_nonpdf_type() {
   let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
   let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

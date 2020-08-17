@@ -170,12 +170,9 @@ add_task(async function dialogShowsCorrectContent() {
   let desc = dialogWin.document.getElementById("appDescription");
   let descL10n = dialogWin.document.l10n.getAttributes(desc);
   is(descL10n.id, "app-manager-handle-file", "Should have right string");
-  let stringBundle = Services.strings.createBundle(
-    "chrome://mozapps/locale/downloads/unknownContentType.properties"
-  );
   is(
     descL10n.args.type,
-    stringBundle.GetStringFromName("pdfExtHandlerDescription"),
+    await dialogWin.document.l10n.formatValue("applications-type-pdf"),
     "Should have PDF string bits."
   );
 
