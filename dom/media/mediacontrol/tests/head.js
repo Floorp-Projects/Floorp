@@ -219,8 +219,8 @@ function isCurrentMetadataEqualTo(metadata) {
  * used in the private browsing mode, `isPrivateBrowsing` should be definded in
  * the `options`.
  */
-async function isUsingDefaultMetadata(tab, options = {}) {
-  const metadata = MediaControlService.getCurrentActiveMediaMetadata();
+async function isGivenTabUsingDefaultMetadata(tab, options = {}) {
+  const metadata = tab.linkedBrowser.browsingContext.mediaController.getMetadata();
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [metadata.title, options.isPrivateBrowsing],
