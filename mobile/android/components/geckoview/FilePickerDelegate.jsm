@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-const { debug, warn } = GeckoViewUtils.initLogging("FilePickerDelegate"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("FilePickerDelegate");
 
 class FilePickerDelegate {
   /* ----------  nsIFilePicker  ---------- */

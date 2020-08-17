@@ -9,7 +9,7 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 
-const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPush"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPush");
 
 ChromeUtils.defineModuleGetter(
   this,

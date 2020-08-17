@@ -136,4 +136,4 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 }
 
-const { debug, warn } = GeckoViewSettings.initLogging("GeckoViewSettings"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewSettings.initLogging("GeckoViewSettings");

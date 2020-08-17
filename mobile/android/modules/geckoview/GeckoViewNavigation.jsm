@@ -574,4 +574,4 @@ class GeckoViewNavigation extends GeckoViewModule {
   }
 }
 
-const { debug, warn } = GeckoViewNavigation.initLogging("GeckoViewNavigation"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewNavigation.initLogging("GeckoViewNavigation");

@@ -349,4 +349,4 @@ class GeckoViewContentChild extends GeckoViewActorChild {
   }
 }
 
-const { debug, warn } = GeckoViewContentChild.initLogging("GeckoViewContent"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewContentChild.initLogging("GeckoViewContent");

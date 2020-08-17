@@ -40,5 +40,5 @@ class GeckoViewScrollChild extends GeckoViewChildModule {
   }
 }
 
-const { debug, warn } = GeckoViewScrollChild.initLogging("GeckoViewScroll"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewScrollChild.initLogging("GeckoViewScroll");
 const module = GeckoViewScrollChild.create(this);

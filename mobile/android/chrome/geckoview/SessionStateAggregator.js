@@ -646,5 +646,5 @@ class SessionStateAggregator extends GeckoViewChildModule {
 
 const { debug, warn } = SessionStateAggregator.initLogging(
   "SessionStateAggregator"
-); // eslint-disable-line no-unused-vars
+);
 const module = SessionStateAggregator.create(this);

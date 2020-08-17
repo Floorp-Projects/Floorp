@@ -25,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-// eslint-disable-next-line no-unused-vars
 const { debug, warn } = GeckoViewUtils.initLogging(
   "GeckoViewContentBlockingController"
 );

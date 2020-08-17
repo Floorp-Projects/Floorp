@@ -45,7 +45,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIMIMEService"
 );
 
-const { debug, warn } = GeckoViewUtils.initLogging("Console"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("Console");
 
 /** Provides common logic between page and browser actions */
 class ExtensionActionHelper {

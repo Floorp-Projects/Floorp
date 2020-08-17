@@ -11,7 +11,7 @@ const { GeckoViewUtils } = ChromeUtils.import(
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompter"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompter");
 
 class GeckoViewPrompter {
   constructor(aParent) {

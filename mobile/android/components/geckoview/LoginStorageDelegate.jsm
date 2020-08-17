@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-const { debug, warn } = GeckoViewUtils.initLogging("LoginStorageDelegate"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("LoginStorageDelegate");
 
 // Sync with  LoginSaveOption.Hint in Autocomplete.java.
 const LoginStorageHint = {

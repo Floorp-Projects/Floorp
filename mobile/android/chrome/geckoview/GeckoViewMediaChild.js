@@ -470,5 +470,5 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
   }
 }
 
-const { debug, warn } = GeckoViewMediaChild.initLogging("GeckoViewMedia"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewMediaChild.initLogging("GeckoViewMedia");
 const module = GeckoViewMediaChild.create(this);

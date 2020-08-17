@@ -9,7 +9,7 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 
-const { debug, warn } = GeckoViewUtils.initLogging("ContentDelegateParent"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("ContentDelegateParent");
 
 class ContentDelegateParent extends JSWindowActorParent {
   async receiveMessage(aMsg) {

@@ -237,7 +237,6 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
   }
 }
 
-// eslint-disable-next-line no-unused-vars
 const { debug, warn } = GeckoViewProcessHangMonitor.initLogging(
   "GeckoViewProcessHangMonitor"
 );
