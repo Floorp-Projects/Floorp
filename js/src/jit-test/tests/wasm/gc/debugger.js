@@ -3,7 +3,7 @@
 (function() {
     let g = newGlobal({newCompartment: true});
     let dbg = new Debugger(g);
-    g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func (param anyref) (result anyref) local.get 0) (export "" (func 0)))')));`);
+    g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func (param externref) (result externref) local.get 0) (export "" (func 0)))')));`);
 })();
 
 (function() {
@@ -12,7 +12,7 @@
 
     let src = `
       (module
-        (func (export "func") (param $ref anyref) (result anyref)
+        (func (export "func") (param $ref externref) (result externref)
             local.get $ref
         )
       )
