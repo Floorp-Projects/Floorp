@@ -166,7 +166,7 @@ add_task(async function sidebar_isOpen() {
   await sendMessage(extension2, "isOpen", { result: false });
 
   info("Test passing a windowId parameter");
-  let windowId = window.windowUtils.outerWindowID;
+  let windowId = window.docShell.outerWindowID;
   let WINDOW_ID_CURRENT = -2;
   await sendMessage(extension1, "isOpen", { arg: { windowId }, result: true });
   await sendMessage(extension2, "isOpen", { arg: { windowId }, result: false });

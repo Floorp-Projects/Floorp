@@ -38,7 +38,7 @@ add_task(async function() {
   }
 
   info("Test browser window");
-  let windowId = window.windowUtils.outerWindowID;
+  let windowId = window.docShell.outerWindowID;
   target = await targetFromURL(
     new URL("http://foo?type=window&id=" + windowId)
   );
