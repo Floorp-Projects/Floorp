@@ -2448,8 +2448,9 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
   // blocks in HandleDeleteNonCollapsedRanges(). We don't really care about
   // collapsed because it will be modified by
   // AutoRangeArray::ExtendAnchorFocusRangeFor() later.
-  // TryToJoinBlocksWithTransaction() should happen if the original selection is
-  // collapsed and the cursor is at the end of a block element, in which case
+  // AutoBlockElementsJoiner::AutoInclusiveAncestorBlockElementsJoiner should
+  // happen if the original selection is collapsed and the cursor is at the end
+  // of a block element, in which case
   // AutoRangeArray::ExtendAnchorFocusRangeFor() would always make the selection
   // not collapsed.
   SelectionWasCollapsed selectionWasCollapsed = aRangesToDelete.IsCollapsed()
@@ -3215,15 +3216,16 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   EditorDOMPoint pointToPutCaret(aCaretPoint);
   {
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
-    result |= aHTMLEditor.TryToJoinBlocksWithTransaction(
-        MOZ_KnownLive(*mLeftContent), MOZ_KnownLive(*mRightContent));
+    AutoInclusiveAncestorBlockElementsJoiner joiner;
+    result |= joiner.Run(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
+                         MOZ_KnownLive(*mRightContent));
     if (result.Failed()) {
-      NS_WARNING("HTMLEditor::TryToJoinBlocksWithTransaction() failed");
+      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
       return result;
     }
   }
 
-  // If TryToJoinBlocksWithTransaction() didn't handle it and it's not
+  // If AutoInclusiveAncestorBlockElementsJoiner didn't handle it and it's not
   // canceled, user may want to modify the start leaf node or the last leaf
   // node of the block.
   if (!result.Handled() && !result.Canceled() &&
@@ -3287,14 +3289,15 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   EditorDOMPoint pointToPutCaret(aCaretPoint);
   {
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
-    result |= aHTMLEditor.TryToJoinBlocksWithTransaction(
-        MOZ_KnownLive(*mLeftContent), MOZ_KnownLive(*mRightContent));
+    AutoInclusiveAncestorBlockElementsJoiner joiner;
+    result |= joiner.Run(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
+                         MOZ_KnownLive(*mRightContent));
     // This should claim that trying to join the block means that
     // this handles the action because the caller shouldn't do anything
     // anymore in this case.
     result.MarkAsHandled();
     if (result.Failed()) {
-      NS_WARNING("HTMLEditor::TryToJoinBlocksWithTransaction() failed");
+      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
       return result;
     }
   }
@@ -3696,10 +3699,11 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     }
 
     if (joinInclusiveAncestorBlockElements) {
-      result |= aHTMLEditor.TryToJoinBlocksWithTransaction(
-          MOZ_KnownLive(*mLeftContent), MOZ_KnownLive(*mRightContent));
+      AutoInclusiveAncestorBlockElementsJoiner joiner;
+      result |= joiner.Run(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
+                           MOZ_KnownLive(*mRightContent));
       if (result.Failed()) {
-        NS_WARNING("HTMLEditor::TryToJoinBlocksWithTransaction() failed");
+        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
         return result;
       }
 
@@ -4595,9 +4599,11 @@ HTMLEditor::AutoBlockElementsJoiner::JoinNodesDeepWithTransaction(
   return ret;
 }
 
-EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
-    nsIContent& aLeftContentInBlock, nsIContent& aRightContentInBlock) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+EditActionResult HTMLEditor::AutoBlockElementsJoiner::
+    AutoInclusiveAncestorBlockElementsJoiner::Run(
+        HTMLEditor& aHTMLEditor, nsIContent& aLeftContentInBlock,
+        nsIContent& aRightContentInBlock) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   RefPtr<Element> leftBlockElement =
       HTMLEditUtils::GetInclusiveAncestorBlockElement(aLeftContentInBlock);
@@ -4682,8 +4688,8 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
                                   &atRightBlockChild)) {
     EditActionResult result = WhiteSpaceVisibilityKeeper::
         MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
-            *this, *leftBlockElement, *rightBlockElement, atRightBlockChild,
-            newListElementTagNameOfRightListElement);
+            aHTMLEditor, *leftBlockElement, *rightBlockElement,
+            atRightBlockChild, newListElementTagNameOfRightListElement);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
                          "MergeFirstLineOfRightBlockElementIntoDescendantLeftBl"
@@ -4704,8 +4710,9 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
                                   &atLeftBlockChild)) {
     EditActionResult result = WhiteSpaceVisibilityKeeper::
         MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
-            *this, *leftBlockElement, *rightBlockElement, atLeftBlockChild,
-            aLeftContentInBlock, newListElementTagNameOfRightListElement);
+            aHTMLEditor, *leftBlockElement, *rightBlockElement,
+            atLeftBlockChild, aLeftContentInBlock,
+            newListElementTagNameOfRightListElement);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
                          "MergeFirstLineOfRightBlockElementIntoAncestorLeftBloc"
@@ -4719,7 +4726,7 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
   // if you backspace from li into p.
   EditActionResult result = WhiteSpaceVisibilityKeeper::
       MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
-          *this, *leftBlockElement, *rightBlockElement,
+          aHTMLEditor, *leftBlockElement, *rightBlockElement,
           newListElementTagNameOfRightListElement);
   NS_WARNING_ASSERTION(
       result.Succeeded(),
