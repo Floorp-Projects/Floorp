@@ -4,8 +4,17 @@
                  type="text/css"?>
 <window onload="runTests()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<iframe height="200" width="600" type="content"></iframe>
-<iframe height="200" width="600" type="content"></iframe>
+  <!-- XXXdholbert this wrapper-div and the 'min-height' below are temporary
+       hacks, to be removed when bug 1602410 lands. They only exist so that
+       the print-preview area can be sufficiently tall for the previewed
+       content to be visible in the top left corner of print-preview, in the
+       face of the "contain"-style scaling & centering that we do.
+    -->
+  <div style="overflow:hidden; height: 200px;">
+    <iframe height="200" width="600" type="content"></iframe>
+    <iframe height="200" width="600" type="content"
+            style="min-height:500px"></iframe>
+  </div>
 <script type="application/javascript">
 <![CDATA[
 // Note: We can't use window.frames directly here because the type="content"
@@ -490,13 +499,23 @@ async function runTest15() {
 // Various image tests.
 async function runTest16() {
   // fuzzy: SVG image in the test pixel-snaps different than <div> in the ref.
-  await compareFiles("printpreview_images.html", "printpreview_images_ref.html", { maxDifferent: 118, maxDifference: 177 });
+  // (And on WebRender, the pixel-snapping seems to shift some pixels over a
+  // bit such that they're fully white vs. fully blue; hence 255 as the allowed
+  // color-channel difference.)
+  // XXXdholbert We should revisit this and adjust these thresholds (hopefully
+  // lower) after bug 1602410 lands.
+  await compareFiles("printpreview_images.html", "printpreview_images_ref.html", { maxDifferent: 118, maxDifference: 255 });
   requestAnimationFrame(function() { setTimeout(runTest17); } );
 }
 
 async function runTest17() {
   // fuzzy: SVG image in the test pixel-snaps different than <div> in the ref.
-  await compareFiles("printpreview_images_sw.html", "printpreview_images_sw_ref.html", { waitForMessage: true, maxDifferent: 118, maxDifference: 177 });
+  // (And on WebRender, the pixel-snapping seems to shift some pixels over a
+  // bit such that they're fully white vs. fully blue; hence 255 as the allowed
+  // color-channel difference.)
+  // XXXdholbert We should revisit this and adjust these thresholds (hopefully
+  // lower) after bug 1602410 lands.
+  await compareFiles("printpreview_images_sw.html", "printpreview_images_sw_ref.html", { waitForMessage: true, maxDifferent: 118, maxDifference: 255 });
   requestAnimationFrame(() => setTimeout(runTest18));
 }
 
