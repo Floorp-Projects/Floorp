@@ -394,13 +394,14 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
     }
   }
 
-  LogicalSize size = aChildFrame->ComputeSize(
+  auto size = aChildFrame->ComputeSize(
       aRenderingContext, aWM, aCBSize, aAvailableISize, marginSize,
       bpSize - paddingSize, paddingSize, flags);
   if (aMarginResult) {
     *aMarginResult = offsets.ComputedLogicalMargin().IStartEnd(aWM);
   }
-  return size.ISize(aWM) + marginSize.ISize(aWM) + bpSize.ISize(aWM);
+  return size.mLogicalSize.ISize(aWM) + marginSize.ISize(aWM) +
+         bpSize.ISize(aWM);
 }
 
 /* virtual */

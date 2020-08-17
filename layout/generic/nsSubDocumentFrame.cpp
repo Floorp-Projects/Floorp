@@ -661,14 +661,15 @@ LogicalSize nsSubDocumentFrame::ComputeAutoSize(
 }
 
 /* virtual */
-LogicalSize nsSubDocumentFrame::ComputeSize(
+nsIFrame::SizeComputationResult nsSubDocumentFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
     ComputeSizeFlags aFlags) {
-  return ComputeSizeWithIntrinsicDimensions(
-      aRenderingContext, aWM, GetIntrinsicSize(), GetIntrinsicRatio(), aCBSize,
-      aMargin, aBorder, aPadding, aFlags);
+  return {ComputeSizeWithIntrinsicDimensions(
+              aRenderingContext, aWM, GetIntrinsicSize(), GetIntrinsicRatio(),
+              aCBSize, aMargin, aBorder, aPadding, aFlags),
+          AspectRatioUsage::None};
 }
 
 void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,

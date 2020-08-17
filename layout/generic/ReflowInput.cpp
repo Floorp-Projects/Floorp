@@ -1672,24 +1672,27 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     }
   }
 
-  LogicalSize computedSize(wm);
+  nsIFrame::SizeComputationResult sizeResult = {
+      LogicalSize(wm), nsIFrame::AspectRatioUsage::None};
   {
     AutoMaybeDisableFontInflation an(mFrame);
 
-    computedSize = mFrame->ComputeSize(
+    sizeResult = mFrame->ComputeSize(
         mRenderingContext, wm, cbSize.ConvertTo(wm, cbwm),
         cbSize.ConvertTo(wm, cbwm).ISize(wm),  // XXX or AvailableISize()?
         ComputedLogicalMargin().Size(wm) + ComputedLogicalOffsets().Size(wm),
         ComputedLogicalBorderPadding().Size(wm) -
             ComputedLogicalPadding().Size(wm),
         ComputedLogicalPadding().Size(wm), computeSizeFlags);
-    ComputedISize() = computedSize.ISize(wm);
-    ComputedBSize() = computedSize.BSize(wm);
+    ComputedISize() = sizeResult.mLogicalSize.ISize(wm);
+    ComputedBSize() = sizeResult.mLogicalSize.BSize(wm);
     NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
     NS_ASSERTION(
         ComputedBSize() == NS_UNCONSTRAINEDSIZE || ComputedBSize() >= 0,
         "Bogus block-size");
   }
+
+  LogicalSize& computedSize = sizeResult.mLogicalSize;
   computedSize = computedSize.ConvertTo(cbwm, wm);
 
   // XXX Now that we have ComputeSize, can we condense many of the
@@ -2421,15 +2424,15 @@ void ReflowInput::InitConstraints(
         cbSize.ISize(wm) = AvailableISize();
       }
 
-      LogicalSize size = mFrame->ComputeSize(
+      auto size = mFrame->ComputeSize(
           mRenderingContext, wm, cbSize, AvailableISize(),
           ComputedLogicalMargin().Size(wm),
           ComputedLogicalBorderPadding().Size(wm) -
               ComputedLogicalPadding().Size(wm),
           ComputedLogicalPadding().Size(wm), computeSizeFlags);
 
-      ComputedISize() = size.ISize(wm);
-      ComputedBSize() = size.BSize(wm);
+      ComputedISize() = size.mLogicalSize.ISize(wm);
+      ComputedBSize() = size.mLogicalSize.BSize(wm);
       NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
       NS_ASSERTION(
           ComputedBSize() == NS_UNCONSTRAINEDSIZE || ComputedBSize() >= 0,

@@ -563,7 +563,7 @@ nsresult nsVideoFrame::GetFrameName(nsAString& aResult) const {
 }
 #endif
 
-LogicalSize nsVideoFrame::ComputeSize(
+nsIFrame::SizeComputationResult nsVideoFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
@@ -582,9 +582,10 @@ LogicalSize nsVideoFrame::ComputeSize(
                             ? AspectRatio::FromSize(size.width, size.height)
                             : AspectRatio();
 
-  return ComputeSizeWithIntrinsicDimensions(
-      aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize, aMargin,
-      aBorder, aPadding, aFlags);
+  return {ComputeSizeWithIntrinsicDimensions(
+              aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize,
+              aMargin, aBorder, aPadding, aFlags),
+          AspectRatioUsage::None};
 }
 
 nscoord nsVideoFrame::GetMinISize(gfxContext* aRenderingContext) {

@@ -2747,9 +2747,24 @@ class nsIFrame : public nsQueryFrame {
    *                 the frame, including actual values resulting from
    *                 percentages.
    * @param aFlags   Flags to further customize behavior (definitions above).
+   *
+   * The return value includes the computed LogicalSize and the enum class which
+   * indicates whether the inline/block size is affected by aspect-ratio or not.
+   * We need this information during reflow because the final size may be
+   * affected by the content size after applying aspect-ratio.
+   * https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
    */
-  virtual mozilla::LogicalSize ComputeSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,
+  enum class AspectRatioUsage : uint8_t {
+    None,
+    ToComputeISize,
+    ToComputeBSize,
+  };
+  struct SizeComputationResult {
+    mozilla::LogicalSize mLogicalSize;
+    AspectRatioUsage mAspectRatioUsage = AspectRatioUsage::None;
+  };
+  virtual SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
       const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags);
