@@ -20,6 +20,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
 
 #define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
@@ -30,7 +31,7 @@ namespace mozilla {
 
 using namespace layers;
 
-AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
+AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                                layers::ImageContainer* aImageContainer,
                                CreateDecoderParams::OptionSet aOptions,
                                layers::KnowsCompositor* aKnowsCompositor)
@@ -48,7 +49,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
                       : VPXDecoder::IsVP9(aConfig.mMimeType)
                             ? StreamType::VP9
                             : StreamType::Unknown),
-      mTaskQueue(aTaskQueue),
+      mTaskQueue(
+          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "AppleVTDecoder")),
       mMaxRefFrames(
           mStreamType != StreamType::H264 ||
                   aOptions.contains(CreateDecoderParams::Option::LowLatency)
@@ -119,15 +122,11 @@ RefPtr<MediaDataDecoder::DecodePromise> AppleVTDecoder::Drain() {
 }
 
 RefPtr<ShutdownPromise> AppleVTDecoder::Shutdown() {
-  if (mTaskQueue) {
-    RefPtr<AppleVTDecoder> self = this;
-    return InvokeAsync(mTaskQueue, __func__, [self]() {
-      self->ProcessShutdown();
-      return ShutdownPromise::CreateAndResolve(true, __func__);
-    });
-  }
-  ProcessShutdown();
-  return ShutdownPromise::CreateAndResolve(true, __func__);
+  RefPtr<AppleVTDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    self->ProcessShutdown();
+    return self->mTaskQueue->BeginShutdown();
+  });
 }
 
 // Helper to fill in a timestamp structure.
@@ -145,7 +144,7 @@ static CMSampleTimingInfo TimingInfoFromSample(MediaRawData* aSample) {
 }
 
 void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
-  AssertOnTaskQueueThread();
+  AssertOnTaskQueue();
 
   if (mIsFlushing) {
     MonitorAutoLock mon(mMonitor);
@@ -232,7 +231,7 @@ void AppleVTDecoder::ProcessShutdown() {
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> AppleVTDecoder::ProcessFlush() {
-  AssertOnTaskQueueThread();
+  AssertOnTaskQueue();
   nsresult rv = WaitForAsynchronousFrames();
   if (NS_FAILED(rv)) {
     LOG("AppleVTDecoder::Flush failed waiting for platform decoder");
@@ -249,7 +248,7 @@ RefPtr<MediaDataDecoder::FlushPromise> AppleVTDecoder::ProcessFlush() {
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> AppleVTDecoder::ProcessDrain() {
-  AssertOnTaskQueueThread();
+  AssertOnTaskQueue();
   nsresult rv = WaitForAsynchronousFrames();
   if (NS_FAILED(rv)) {
     LOG("AppleVTDecoder::Drain failed waiting for platform decoder");

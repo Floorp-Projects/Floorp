@@ -6,10 +6,11 @@
 #if !defined(TheoraDecoder_h_)
 #  define TheoraDecoder_h_
 
+#  include <stdint.h>
+
 #  include "PlatformDecoderModule.h"
 #  include "ogg/ogg.h"
 #  include "theora/theoradec.h"
-#  include <stdint.h>
 
 namespace mozilla {
 
@@ -39,9 +40,9 @@ class TheoraDecoder : public MediaDataDecoder,
 
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
 
-  RefPtr<layers::KnowsCompositor> mImageAllocator;
-  RefPtr<layers::ImageContainer> mImageContainer;
-  RefPtr<TaskQueue> mTaskQueue;
+  const RefPtr<layers::KnowsCompositor> mImageAllocator;
+  const RefPtr<layers::ImageContainer> mImageContainer;
+  const RefPtr<TaskQueue> mTaskQueue;
 
   // Theora header & decoder state
   th_info mTheoraInfo;

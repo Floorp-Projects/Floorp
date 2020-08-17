@@ -47,8 +47,8 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       return nullptr;
     }
     RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(
-        mLib, aParams.mTaskQueue, aParams.VideoConfig(),
-        aParams.mKnowsCompositor, aParams.mImageContainer,
+        mLib, aParams.VideoConfig(), aParams.mKnowsCompositor,
+        aParams.mImageContainer,
         aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency),
         aParams.mOptions.contains(
             CreateDecoderParams::Option::HardwareDecoderNotAllowed));
@@ -57,8 +57,8 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override {
-    RefPtr<MediaDataDecoder> decoder = new FFmpegAudioDecoder<V>(
-        mLib, aParams.mTaskQueue, aParams.AudioConfig());
+    RefPtr<MediaDataDecoder> decoder =
+        new FFmpegAudioDecoder<V>(mLib, aParams.AudioConfig());
     return decoder.forget();
   }
 

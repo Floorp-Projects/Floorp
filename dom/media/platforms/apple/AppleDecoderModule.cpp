@@ -59,17 +59,15 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
   RefPtr<MediaDataDecoder> decoder;
   if (IsVideoSupported(aParams.VideoConfig(), aParams.mOptions)) {
-    decoder = new AppleVTDecoder(aParams.VideoConfig(), aParams.mTaskQueue,
-                                 aParams.mImageContainer, aParams.mOptions,
-                                 aParams.mKnowsCompositor);
+    decoder = new AppleVTDecoder(aParams.VideoConfig(), aParams.mImageContainer,
+                                 aParams.mOptions, aParams.mKnowsCompositor);
   }
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  RefPtr<MediaDataDecoder> decoder =
-      new AppleATDecoder(aParams.AudioConfig(), aParams.mTaskQueue);
+  RefPtr<MediaDataDecoder> decoder = new AppleATDecoder(aParams.AudioConfig());
   return decoder.forget();
 }
 
@@ -139,7 +137,7 @@ bool AppleDecoderModule::CanCreateVP9Decoder() {
     VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
 
     RefPtr<AppleVTDecoder> decoder =
-        new AppleVTDecoder(info, nullptr, nullptr, {}, nullptr);
+        new AppleVTDecoder(info, nullptr, {}, nullptr);
     nsAutoCString reason;
     MediaResult rv = decoder->InitializeSession();
     bool isHardwareAccelerated = decoder->IsHardwareAccelerated(reason);

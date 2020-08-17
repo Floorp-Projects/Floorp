@@ -18,7 +18,7 @@ class AudioTrimmer : public MediaDataDecoder {
  public:
   AudioTrimmer(already_AddRefed<MediaDataDecoder> aDecoder,
                const CreateDecoderParams& aParams)
-      : mDecoder(aDecoder), mTaskQueue(aParams.mTaskQueue) {}
+      : mDecoder(aDecoder) {}
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -39,8 +39,8 @@ class AudioTrimmer : public MediaDataDecoder {
  private:
   RefPtr<DecodePromise> HandleDecodedResult(
       DecodePromise::ResolveOrRejectValue&& aValue, MediaRawData* aRaw);
-  RefPtr<MediaDataDecoder> mDecoder;
-  RefPtr<TaskQueue> mTaskQueue;
+  const RefPtr<MediaDataDecoder> mDecoder;
+  nsCOMPtr<nsISerialEventTarget> mThread;
   AutoTArray<Maybe<media::TimeInterval>, 2> mTrimmers;
 };
 

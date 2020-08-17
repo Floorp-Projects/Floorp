@@ -15,6 +15,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 #include "nsError.h"
 #include "prsystem.h"
@@ -68,7 +69,8 @@ static nsresult InitContext(vpx_codec_ctx_t* aCtx, const VideoInfo& aInfo,
 VPXDecoder::VPXDecoder(const CreateDecoderParams& aParams)
     : mImageContainer(aParams.mImageContainer),
       mImageAllocator(aParams.mKnowsCompositor),
-      mTaskQueue(aParams.mTaskQueue),
+      mTaskQueue(new TaskQueue(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "VPXDecoder")),
       mInfo(aParams.VideoConfig()),
       mCodec(MimeTypeToCodec(aParams.VideoConfig().mMimeType)),
       mLowLatency(
@@ -85,7 +87,7 @@ RefPtr<ShutdownPromise> VPXDecoder::Shutdown() {
   return InvokeAsync(mTaskQueue, __func__, [self]() {
     vpx_codec_destroy(&self->mVPX);
     vpx_codec_destroy(&self->mVPXAlpha);
-    return ShutdownPromise::CreateAndResolve(true, __func__);
+    return self->mTaskQueue->BeginShutdown();
   });
 }
 
@@ -112,7 +114,7 @@ RefPtr<MediaDataDecoder::FlushPromise> VPXDecoder::Flush() {
 
 RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
     MediaRawData* aSample) {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->Data(),
                                            aSample->Size(), nullptr, 0)) {
