@@ -2970,6 +2970,8 @@ class HTMLEditor final : public TextEditor,
      private:
       OwningNonNull<nsIContent> mInclusiveDescendantOfLeftBlockElement;
       OwningNonNull<nsIContent> mInclusiveDescendantOfRightBlockElement;
+      RefPtr<Element> mLeftBlockElement;
+      RefPtr<Element> mRightBlockElement;
     };
 
     enum class Mode {
