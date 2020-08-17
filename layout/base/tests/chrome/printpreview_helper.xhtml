@@ -543,6 +543,12 @@ async function runTest20() {
   is(gWbp.printPreviewCurrentPageNumber, 1,
      "The initial current page number should be 1");
 
+  // Scroll to the second page.
+  gWbp.printPreviewScrollToPage(Ci.nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM, 2);
+
+  is(gWbp.printPreviewCurrentPageNumber, 2,
+     "The current page number should be 2");
+
   // Scroll to the last page.
   gWbp.printPreviewScrollToPage(Ci.nsIWebBrowserPrint.PRINTPREVIEW_END, 0);
 
