@@ -122,8 +122,9 @@ bool CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
 
       next += len;
     }
+
+    spew->endList();  // entries
   }
-  spew->endList();  // entries
 
   return true;
 }
