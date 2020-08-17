@@ -152,7 +152,8 @@ static bool forceDoubleCacheFlush = false;
 #endif
 
 // The override flags parsed from the ARMHWCAP environment variable or from the
-// --arm-hwcap js shell argument.
+// --arm-hwcap js shell argument.  They are stable after startup: there is no
+// longer a programmatic way of setting these from JS.
 volatile uint32_t armHwCapFlags = HWCAP_UNINITIALIZED;
 
 bool ParseARMHwCapFlags(const char* armHwCap) {

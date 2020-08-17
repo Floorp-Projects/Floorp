@@ -130,6 +130,10 @@ class JitContext {
 // Process-wide initialization of JIT data structures.
 MOZ_MUST_USE bool InitializeJit();
 
+// Call this after changing hardware parameters via command line flags (on
+// platforms that support that).
+void ComputeJitSupportFlags();
+
 // Get and set the current JIT context.
 JitContext* GetJitContext();
 JitContext* MaybeGetJitContext();

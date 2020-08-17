@@ -386,12 +386,9 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
     return false;
   }
 
-#ifdef JS_CODEGEN_ARM
-  // Wasm threads require support for atomic operations.
-  if (!HasLDSTREXBHD()) {
+  if (!jit::JitSupportsAtomics()) {
     return false;
   }
-#endif
 
   // Wasm threads require 8-byte lock-free atomics.
   if (!jit::AtomicOperations::isLockfree8()) {
