@@ -4653,7 +4653,6 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
 
   // Special rule here: if we are trying to join list items, and they are in
   // different lists, join the lists instead.
-  Maybe<nsAtom*> newListElementTagNameOfRightListElement;
   if (HTMLEditUtils::IsListItem(mLeftBlockElement) &&
       HTMLEditUtils::IsListItem(mRightBlockElement)) {
     // XXX leftListElement and/or rightListElement may be not list elements.
@@ -4673,7 +4672,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
       MOZ_DIAGNOSTIC_ASSERT(!atChildInBlock.IsSet());
       mLeftBlockElement = leftListElement;
       mRightBlockElement = rightListElement;
-      newListElementTagNameOfRightListElement =
+      mNewListElementTagNameOfRightListElement =
           Some(leftListElement->NodeInfo()->NameAtom());
     }
   }
@@ -4688,7 +4687,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
         MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
             aHTMLEditor, MOZ_KnownLive(*mLeftBlockElement),
             MOZ_KnownLive(*mRightBlockElement), atRightBlockChild,
-            newListElementTagNameOfRightListElement);
+            mNewListElementTagNameOfRightListElement);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
                          "MergeFirstLineOfRightBlockElementIntoDescendantLeftBl"
@@ -4712,7 +4711,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
             aHTMLEditor, MOZ_KnownLive(*mLeftBlockElement),
             MOZ_KnownLive(*mRightBlockElement), atLeftBlockChild,
             MOZ_KnownLive(*mInclusiveDescendantOfLeftBlockElement),
-            newListElementTagNameOfRightListElement);
+            mNewListElementTagNameOfRightListElement);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
                          "MergeFirstLineOfRightBlockElementIntoAncestorLeftBloc"
@@ -4728,7 +4727,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
       MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
           aHTMLEditor, MOZ_KnownLive(*mLeftBlockElement),
           MOZ_KnownLive(*mRightBlockElement),
-          newListElementTagNameOfRightListElement);
+          mNewListElementTagNameOfRightListElement);
   NS_WARNING_ASSERTION(
       result.Succeeded(),
       "WhiteSpaceVisibilityKeeper::"
