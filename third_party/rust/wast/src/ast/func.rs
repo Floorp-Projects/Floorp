@@ -20,7 +20,7 @@ pub struct Func<'a> {
     /// function.
     pub kind: FuncKind<'a>,
     /// The type that this function will have.
-    pub ty: ast::TypeUse<'a>,
+    pub ty: ast::TypeUse<'a, ast::FunctionType<'a>>,
 }
 
 /// Possible ways to define a function in the text format.
@@ -31,19 +31,12 @@ pub enum FuncKind<'a> {
     /// ```text
     /// (func (type 3) (import "foo" "bar"))
     /// ```
-    Import {
-        /// The module that this function is imported from
-        module: &'a str,
-        /// The module field name this function is imported from
-        field: &'a str,
-    },
+    Import(ast::InlineImport<'a>),
 
     /// Almost all functions, those defined inline in a wasm module.
     Inline {
-        /// The list of locals, if any, for this function. Each local has an
-        /// optional identifier for name resolution and name for the custom
-        /// `name` section associated with it.
-        locals: Vec<(Option<ast::Id<'a>>, Option<ast::NameAnnotation<'a>>, ast::ValType<'a>)>,
+        /// The list of locals, if any, for this function.
+        locals: Vec<Local<'a>>,
 
         /// The instructions of the function.
         expression: ast::Expression<'a>,
@@ -57,32 +50,11 @@ impl<'a> Parse<'a> for Func<'a> {
         let name = parser.parse()?;
         let exports = parser.parse()?;
 
-        let (ty, kind) = if parser.peek2::<kw::import>() {
-            let (module, field) = parser.parens(|p| {
-                p.parse::<kw::import>()?;
-                Ok((p.parse()?, p.parse()?))
-            })?;
-            (parser.parse()?, FuncKind::Import { module, field })
+        let (ty, kind) = if let Some(import) = parser.parse()? {
+            (parser.parse()?, FuncKind::Import(import))
         } else {
             let ty = parser.parse()?;
-            let mut locals = Vec::new();
-            while parser.peek2::<kw::local>() {
-                parser.parens(|p| {
-                    p.parse::<kw::local>()?;
-                    if p.is_empty() {
-                        return Ok(());
-                    }
-                    let id: Option<_> = p.parse()?;
-                    let name: Option<_> = p.parse()?;
-                    let ty = p.parse()?;
-                    let parse_more = id.is_none() && name.is_none();
-                    locals.push((id, name, ty));
-                    while parse_more && !p.is_empty() {
-                        locals.push((None, None, p.parse()?));
-                    }
-                    Ok(())
-                })?;
-            }
+            let locals = Local::parse_remainder(parser)?;
             (
                 ty,
                 FuncKind::Inline {
@@ -100,5 +72,44 @@ impl<'a> Parse<'a> for Func<'a> {
             ty,
             kind,
         })
+    }
+}
+
+/// A local for a `func` or `let` instruction.
+///
+/// Each local has an optional identifier for name resolution, an optional name
+/// for the custom `name` section, and a value type.
+#[derive(Debug)]
+pub struct Local<'a> {
+    /// An identifier that this local is resolved with (optionally) for name
+    /// resolution.
+    pub id: Option<ast::Id<'a>>,
+    /// An optional name for this local stored in the custom `name` section.
+    pub name: Option<ast::NameAnnotation<'a>>,
+    /// The value type of this local.
+    pub ty: ast::ValType<'a>,
+}
+
+impl<'a> Local<'a> {
+    pub(crate) fn parse_remainder(parser: Parser<'a>) -> Result<Vec<Local<'a>>> {
+        let mut locals = Vec::new();
+        while parser.peek2::<kw::local>() {
+            parser.parens(|p| {
+                p.parse::<kw::local>()?;
+                if p.is_empty() {
+                    return Ok(());
+                }
+                let id: Option<_> = p.parse()?;
+                let name: Option<_> = p.parse()?;
+                let ty = p.parse()?;
+                let parse_more = id.is_none() && name.is_none();
+                locals.push(Local { id, name, ty });
+                while parse_more && !p.is_empty() {
+                    locals.push(Local { id: None, name: None, ty: p.parse()? });
+                }
+                Ok(())
+            })?;
+        }
+        Ok(locals)
     }
 }

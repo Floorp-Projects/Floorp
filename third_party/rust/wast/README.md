@@ -21,7 +21,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-wast = "17.0"
+wast = "22.0"
 ```
 
 The intent of this crate is to provide utilities, combinators, and built-in
@@ -47,7 +47,7 @@ parsers.
 
 ```toml
 [dependencies]
-wast = { version = "17.0", default-features = false }
+wast = { version = "22.0", default-features = false }
 ```
 
 # License
