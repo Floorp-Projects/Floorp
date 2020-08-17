@@ -33,7 +33,7 @@ add_task(async function testAudioFocusChangesAmongMultipleFrames() {
    */
   const tab = await createTabAndLoad(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   /**
    * Play media for frame1, so the audio focus switches to frame1 because it's
@@ -68,7 +68,7 @@ add_task(async function testAudioFocusChangesAfterPausingAudioFocusOwner() {
    */
   const tab = await createTabAndLoad(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   /**
    * Play media for frame1, so the audio focus switches to frame1 because it's
@@ -84,7 +84,7 @@ add_task(async function testAudioFocusChangesAfterPausingAudioFocusOwner() {
    * which is still playing media.
    */
   await pauseAndWaitUntilMetadataChangedFrom(tab, frame1);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   /**
    * Remove tab and end test.
@@ -101,7 +101,7 @@ add_task(async function testAudioFocusUnchangesAfterPausingAudioFocusOwner() {
    */
   const tab = await createTabAndLoad(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   /**
    * Play media for frame1, so the audio focus switches to frame1 because it's
@@ -136,7 +136,7 @@ add_task(
      */
     const tab = await createTabAndLoad(mainPageURL);
     await playAndWaitUntilMetadataChanged(tab);
-    await isUsingDefaultMetadata(tab);
+    await isGivenTabUsingDefaultMetadata(tab);
 
     /**
      * Play media for frame1, so the audio focus switches to frame1 because it's
@@ -155,7 +155,7 @@ add_task(
       waitUntilDisplayedMetadataChanged(),
       removeFrame(tab, frame1),
     ]);
-    await isUsingDefaultMetadata(tab);
+    await isGivenTabUsingDefaultMetadata(tab);
 
     /**
      * Remove tab and end test.
@@ -211,7 +211,7 @@ add_task(async function testNoAudioFocusAfterRemovingAudioFocusOwner() {
    */
   const tab = await createTabAndLoad(mainPageURL);
   await playAndWaitUntilMetadataChanged(tab);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   /**
    * Play media for frame1, so the audio focus switches to frame1 because it's
@@ -232,7 +232,7 @@ add_task(async function testNoAudioFocusAfterRemovingAudioFocusOwner() {
     waitUntilDisplayedMetadataChanged(),
     removeFrame(tab, frame1),
   ]);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   /**
    * Remove tab and end test.

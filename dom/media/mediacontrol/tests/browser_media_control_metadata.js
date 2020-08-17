@@ -47,7 +47,7 @@ add_task(async function testDefaultMetadataForPageWithoutMediaSession() {
   await playMedia(tab, testVideoId);
 
   info(`should use default metadata because of lacking of media session`);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -62,7 +62,7 @@ add_task(
     await playMedia(tab, testVideoId);
 
     info(`should use default metadata because of lacking of media session`);
-    await isUsingDefaultMetadata(tab);
+    await isGivenTabUsingDefaultMetadata(tab);
 
     info(`remove tab`);
     await BrowserTestUtils.removeTab(tab);
@@ -85,7 +85,7 @@ add_task(async function testDefaultMetadataForPageUsingEmptyMetadata() {
   });
 
   info(`should use default metadata because of empty media metadata`);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -102,7 +102,7 @@ add_task(async function testDefaultMetadataForPageUsingNullMetadata() {
   await setNullMediaMetadata(tab);
 
   info(`should use default metadata because of lacking of media metadata`);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -124,7 +124,7 @@ add_task(async function testMetadataWithEmptyTitleAndArtwork() {
   });
 
   info(`should use default metadata because of empty title and artwork`);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -144,7 +144,7 @@ add_task(async function testMetadataWithoutTitleAndArtwork() {
   });
 
   info(`should use default metadata because of lacking of title and artwork`);
-  await isUsingDefaultMetadata(tab);
+  await isGivenTabUsingDefaultMetadata(tab);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -172,7 +172,7 @@ add_task(async function testMetadataInPrivateBrowsing() {
   await setMediaMetadata(tab, metadata);
 
   info(`should use default metadata because of in private browsing mode`);
-  await isUsingDefaultMetadata(tab, { isPrivateBrowsing: true });
+  await isGivenTabUsingDefaultMetadata(tab, { isPrivateBrowsing: true });
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
