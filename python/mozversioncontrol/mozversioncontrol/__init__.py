@@ -14,6 +14,7 @@ import sys
 
 from mozbuild.util import ensure_subprocess_env
 from mozfile import which
+from mozpack.files import FileListFinder
 
 
 class MissingVCSTool(Exception):
@@ -216,8 +217,14 @@ class Repository(object):
         '''
 
     @abc.abstractmethod
-    def get_files_in_working_directory(self):
-        """Obtain a list of managed files in the working directory."""
+    def get_tracked_files_finder(self):
+        """Obtain a mozpack.files.BaseFinder of managed files in the working
+        directory.
+
+        The Finder will have its list of all files in the repo cached for its
+        entire lifetime, so operations on the Finder will not track with, for
+        example, commits to the repo during the Finder's lifetime.
+        """
 
     @abc.abstractmethod
     def working_directory_clean(self, untracked=False, ignored=False):
@@ -419,10 +426,11 @@ class HgRepository(Repository):
             return
         self._run('forget', *paths)
 
-    def get_files_in_working_directory(self):
+    def get_tracked_files_finder(self):
         # Can return backslashes on Windows. Normalize to forward slashes.
-        return list(p.replace('\\', '/') for p in
-                    self._run(b'files', b'-0').split('\0') if p)
+        files = list(p.replace('\\', '/') for p in
+                     self._run(b'files', b'-0').split('\0') if p)
+        return FileListFinder(files)
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ['status', '--modified', '--added', '--removed',
@@ -549,8 +557,9 @@ class GitRepository(Repository):
             return
         self._run('reset', *paths)
 
-    def get_files_in_working_directory(self):
-        return [p for p in self._run('ls-files', '-z').split('\0') if p]
+    def get_tracked_files_finder(self):
+        files = [p for p in self._run('ls-files', '-z').split('\0') if p]
+        return FileListFinder(files)
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ['status', '--porcelain']

@@ -54,11 +54,10 @@ def check_files():
     with get_repository_from_env() as repo:
         root = repo.path
 
-        for filename in repo.get_files_in_working_directory():
-            if filename.endswith('.msg'):
-                if filename not in ignore_files:
-                    if not check_single_file(os.path.join(root, filename)):
-                        result = False
+        for filename, _ in repo.get_tracked_files_finder().find('**/*.msg'):
+            if filename not in ignore_files:
+                if not check_single_file(os.path.join(root, filename)):
+                    result = False
 
     return result
 
