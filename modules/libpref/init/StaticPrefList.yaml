@@ -3778,12 +3778,12 @@
 
 - name: general.smoothScroll.mouseWheel.durationMaxMS
   type: RelaxedAtomicInt32
-  value: 400
+  value: 200
   mirror: always
 
 - name: general.smoothScroll.mouseWheel.durationMinMS
   type: RelaxedAtomicInt32
-  value: 200
+  value: 50
   mirror: always
 
 - name: general.smoothScroll.other.durationMaxMS
