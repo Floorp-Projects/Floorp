@@ -2972,6 +2972,7 @@ class HTMLEditor final : public TextEditor,
       OwningNonNull<nsIContent> mInclusiveDescendantOfRightBlockElement;
       RefPtr<Element> mLeftBlockElement;
       RefPtr<Element> mRightBlockElement;
+      Maybe<nsAtom*> mNewListElementTagNameOfRightListElement;
     };
 
     enum class Mode {
