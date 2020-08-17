@@ -262,9 +262,16 @@ input[type="text"] {
   content: url("chrome://global/content/portrait.svg");
 }
 
+select:invalid,
 input[type="number"]:invalid {
   border: 1px solid #D70022;
   box-shadow: 0 0 0 1px #D70022, 0 0 0 4px rgba(215, 0, 34, 0.3);
+}
+
+.error-message {
+  font-size: 12px;
+  color: #D70022;
+  margin-top: 4px;
 }
 
 #percent-scale {
