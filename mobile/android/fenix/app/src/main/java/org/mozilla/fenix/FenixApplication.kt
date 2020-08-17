@@ -159,15 +159,15 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     private fun initVisualCompletenessQueueAndQueueTasks() {
-        val taskQueue = components.performance.visualCompletenessQueue
+        val queue = components.performance.visualCompletenessQueue.queue
 
         fun initQueue() {
-            registerActivityLifecycleCallbacks(PerformanceActivityLifecycleCallbacks(taskQueue))
+            registerActivityLifecycleCallbacks(PerformanceActivityLifecycleCallbacks(queue))
         }
 
         fun queueInitExperiments() {
             if (settings().isExperimentationEnabled) {
-                taskQueue.runIfReadyOrQueue {
+                queue.runIfReadyOrQueue {
                     Experiments.initialize(
                         applicationContext = applicationContext,
                         onExperimentsUpdated = {
@@ -188,7 +188,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
 
         fun queueInitStorageAndServices() {
-            components.performance.visualCompletenessQueue.runIfReadyOrQueue {
+            components.performance.visualCompletenessQueue.queue.runIfReadyOrQueue {
                 GlobalScope.launch(Dispatchers.IO) {
                     logger.info("Running post-visual completeness tasks...")
                     logElapsedTime(logger, "Storage initialization") {
@@ -208,7 +208,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         fun queueMetrics() {
             if (SDK_INT >= Build.VERSION_CODES.O) { // required by StorageStatsMetrics.
-                taskQueue.runIfReadyOrQueue {
+                queue.runIfReadyOrQueue {
                     // Because it may be slow to capture the storage stats, it might be preferred to
                     // create a WorkManager task for this metric, however, I ran out of
                     // implementation time and WorkManager is harder to test.

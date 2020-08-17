@@ -21,7 +21,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PROTECTED
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -56,7 +55,6 @@ import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
-import mozilla.components.support.utils.RunWhenReadyQueue
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
@@ -104,6 +102,7 @@ import org.mozilla.fenix.tabtray.TabTrayDialogFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
+import java.lang.ref.WeakReference
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
@@ -122,7 +121,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private var isVisuallyComplete = false
 
-    private var visualCompletenessQueue: RunWhenReadyQueue? = null
     private var privateNotificationObserver: PrivateNotificationFeature<PrivateNotificationService>? = null
 
     private var isToolbarInflated = false
@@ -164,13 +162,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         // Must be after we set the content view
         if (isVisuallyComplete) {
-            rootContainer.doOnPreDraw {
-                // This delay is temporary. We are delaying 5 seconds until the performance
-                // team can locate the real point of visual completeness.
-                it.postDelayed({
-                    visualCompletenessQueue!!.ready()
-                }, delay)
-            }
+            components.performance.visualCompletenessQueue
+                .attachViewToRunVisualCompletenessQueueLater(WeakReference(rootContainer))
         }
 
         sessionObserver = UriOpenedObserver(this)
@@ -678,9 +671,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      * The root container is null at this point, so let the HomeActivity know that
      * we are visually complete.
      */
-    fun postVisualCompletenessQueue(visualCompletenessQueue: RunWhenReadyQueue) {
+    fun setVisualCompletenessQueueReady() {
         isVisuallyComplete = true
-        this.visualCompletenessQueue = visualCompletenessQueue
     }
 
     private fun captureSnapshotTelemetryMetrics() = CoroutineScope(Dispatchers.IO).launch {
@@ -717,7 +709,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         const val PRIVATE_BROWSING_MODE = "private_browsing_mode"
         const val EXTRA_DELETE_PRIVATE_TABS = "notification_delete_and_open"
         const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
-        const val delay = 5000L
         const val START_IN_RECENTS_SCREEN = "start_in_recents_screen"
 
         // PWA must have been used within last 30 days to be considered "recently used" for the

@@ -51,7 +51,7 @@ class PerformanceActivityLifecycleCallbacks(
         if (activity is HomeActivity) {
             // We should delay the visualCompletenessQueue when reaching the HomeActivity
             // to ensure all tasks are delayed until after visual completeness
-            activity.postVisualCompletenessQueue(visualCompletenessQueue)
+            activity.setVisualCompletenessQueueReady()
         } else if (shouldStartVisualCompletenessQueueImmediately()) {
             // If we do not go through the home activity, we have to start the tasks
             // immediately to avoid spending time implementing it.
