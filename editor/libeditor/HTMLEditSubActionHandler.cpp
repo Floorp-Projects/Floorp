@@ -3218,10 +3218,17 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
     AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                     *mRightContent);
-    result |= joiner.Run(aHTMLEditor);
+    result |= joiner.Prepare();
     if (result.Failed()) {
-      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
       return result;
+    }
+    if (!result.Canceled() && !result.Handled()) {
+      result |= joiner.Run(aHTMLEditor);
+      if (result.Failed()) {
+        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+        return result;
+      }
     }
   }
 
@@ -3291,15 +3298,22 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
     AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                     *mRightContent);
-    result |= joiner.Run(aHTMLEditor);
+    result |= joiner.Prepare();
+    if (result.Failed()) {
+      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
+      return result;
+    }
+    if (!result.Canceled() && !result.Handled()) {
+      result |= joiner.Run(aHTMLEditor);
+      if (result.Failed()) {
+        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+        return result;
+      }
+    }
     // This should claim that trying to join the block means that
     // this handles the action because the caller shouldn't do anything
     // anymore in this case.
     result.MarkAsHandled();
-    if (result.Failed()) {
-      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
-      return result;
-    }
   }
   nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -3701,10 +3715,19 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     if (joinInclusiveAncestorBlockElements) {
       AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                       *mRightContent);
-      result |= joiner.Run(aHTMLEditor);
+      EditActionResult preparationResult = joiner.Prepare();
+      result |= preparationResult;
       if (result.Failed()) {
-        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+        NS_WARNING(
+            "AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
         return result;
+      }
+      if (!preparationResult.Canceled() && !preparationResult.Handled()) {
+        result |= joiner.Run(aHTMLEditor);
+        if (result.Failed()) {
+          NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+          return result;
+        }
       }
 
       // If we're joining blocks: if deleting forward the selection should
@@ -4600,9 +4623,7 @@ HTMLEditor::AutoBlockElementsJoiner::JoinNodesDeepWithTransaction(
 }
 
 EditActionResult HTMLEditor::AutoBlockElementsJoiner::
-    AutoInclusiveAncestorBlockElementsJoiner::Run(HTMLEditor& aHTMLEditor) {
-  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
-
+    AutoInclusiveAncestorBlockElementsJoiner::Prepare() {
   mLeftBlockElement = HTMLEditUtils::GetInclusiveAncestorBlockElement(
       mInclusiveDescendantOfLeftBlockElement);
   mRightBlockElement = HTMLEditUtils::GetInclusiveAncestorBlockElement(
@@ -4675,6 +4696,19 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
       mNewListElementTagNameOfRightListElement =
           Some(leftListElement->NodeInfo()->NameAtom());
     }
+  }
+
+  return EditActionIgnored();
+}
+
+EditActionResult HTMLEditor::AutoBlockElementsJoiner::
+    AutoInclusiveAncestorBlockElementsJoiner::Run(HTMLEditor& aHTMLEditor) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(mLeftBlockElement);
+  MOZ_ASSERT(mRightBlockElement);
+
+  if (mLeftBlockElement == mRightBlockElement) {
+    return EditActionIgnored();
   }
 
   // If the left block element is in the right block element, move the hard
