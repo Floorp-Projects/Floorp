@@ -135,11 +135,7 @@ already_AddRefed<File> File::Constructor(const GlobalObject& aGlobal,
                                          const nsAString& aName,
                                          const FilePropertyBag& aBag,
                                          ErrorResult& aRv) {
-  // Normalizing the filename
-  nsString name(aName);
-  name.ReplaceChar('/', ':');
-
-  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(name);
+  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(aName);
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
