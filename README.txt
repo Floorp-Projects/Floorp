@@ -5,10 +5,10 @@ project pages with documentation can be found at:
 
 For information on how to build Mozilla from the source code and create the patch see:
 
-    https://firefox-source-docs.mozilla.org/contributing/how_to_contribute_firefox.html
+    https://firefox-source-docs.mozilla.org/contributing/contribution_quickref.html
 
 If you have a question about developing Mozilla, and can't find the solution
-on https://developer.mozilla.org, you can try asking your question on Matrix at chat.mozilla.org in `Introduction` (https://chat.mozilla.org/#/room/#introduction:mozilla.org) channel.
+on https://firefox-source-docs.mozilla.org/, you can try asking your question on Matrix at chat.mozilla.org in `Introduction` (https://chat.mozilla.org/#/room/#introduction:mozilla.org) channel.
 
 
 Nightly development builds can be downloaded from:
