@@ -1067,22 +1067,12 @@ nsresult ContentChild::ProvideWindowCommon(
     newChild->SetMaxTouchPoints(maxTouchPoints);
     newChild->SetHasSiblings(hasSiblings);
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (nsCOMPtr<nsPIDOMWindowOuter> outer =
-            do_GetInterface(newChild->WebNavigation())) {
-      BrowsingContext* bc = outer->GetBrowsingContext();
-      auto parentBC = parent ? parent->Id() : 0;
-
-      if (aForceNoOpener) {
-        MOZ_DIAGNOSTIC_ASSERT(!*aWindowIsNew || !bc->HadOriginalOpener());
-        MOZ_DIAGNOSTIC_ASSERT(bc->GetOpenerId() == 0);
-      } else {
-        MOZ_DIAGNOSTIC_ASSERT(!*aWindowIsNew ||
-                              bc->HadOriginalOpener() == !!parentBC);
-        MOZ_DIAGNOSTIC_ASSERT(bc->GetOpenerId() == parentBC);
-      }
+    if (aForceNoOpener || !parent) {
+      MOZ_DIAGNOSTIC_ASSERT(!browsingContext->HadOriginalOpener());
+      MOZ_DIAGNOSTIC_ASSERT(browsingContext->GetOpenerId() == 0);
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(browsingContext->HadOriginalOpener());
     }
-#endif
 
     // Unfortunately we don't get a window unless we've shown the frame.  That's
     // pretty bogus; see bug 763602.
