@@ -675,10 +675,35 @@ static inline void init_sampler(S* s, Texture& t) {
 }
 
 template <typename S>
+static inline void null_sampler(S* s) {
+  // For null texture data, just make the sampler provide a 1x1 buffer that is
+  // transparent black. Ensure buffer holds at least a SIMD vector of zero data
+  // for SIMD padding of unaligned loads.
+  static const uint32_t zeroBuf[sizeof(Float) / sizeof(uint32_t)] = {0};
+  s->width = 1;
+  s->height = 1;
+  s->stride = s->width;
+  s->buf = (uint32_t*)zeroBuf;
+  s->format = TextureFormat::RGBA8;
+}
+
+template <typename S>
+static inline void null_filter(S* s) {
+  s->filter = TextureFilter::NEAREST;
+}
+
+template <typename S>
+static inline void null_depth(S* s) {
+  s->depth = 1;
+  s->height_stride = s->stride;
+}
+
+template <typename S>
 S* lookup_sampler(S* s, int texture) {
   Texture& t = ctx->get_texture(s, texture);
   if (!t.buf) {
-    *s = S();
+    null_sampler(s);
+    null_filter(s);
   } else {
     init_sampler(s, t);
     init_filter(s, t);
@@ -690,7 +715,7 @@ template <typename S>
 S* lookup_isampler(S* s, int texture) {
   Texture& t = ctx->get_texture(s, texture);
   if (!t.buf) {
-    *s = S();
+    null_sampler(s);
   } else {
     init_sampler(s, t);
   }
@@ -701,7 +726,9 @@ template <typename S>
 S* lookup_sampler_array(S* s, int texture) {
   Texture& t = ctx->get_texture(s, texture);
   if (!t.buf) {
-    *s = S();
+    null_sampler(s);
+    null_depth(s);
+    null_filter(s);
   } else {
     init_sampler(s, t);
     init_depth(s, t);
