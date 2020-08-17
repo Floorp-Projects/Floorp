@@ -397,8 +397,9 @@ void LIRGeneratorARM::lowerModI(MMod* mod) {
     return;
   }
 
-  LSoftModI* lir = new (alloc()) LSoftModI(
-      useFixedAtStart(mod->lhs(), r0), useFixedAtStart(mod->rhs(), r1), temp());
+  LSoftModI* lir =
+      new (alloc()) LSoftModI(useFixedAtStart(mod->lhs(), r0),
+                              useFixedAtStart(mod->rhs(), r1), tempFixed(r2));
 
   if (mod->fallible()) {
     assignSnapshot(lir, BailoutKind::DoubleOutput);
