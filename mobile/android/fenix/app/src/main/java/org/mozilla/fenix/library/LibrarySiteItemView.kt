@@ -63,8 +63,6 @@ class LibrarySiteItemView @JvmOverloads constructor(
 
     val overflowView: ImageButton get() = overflow_menu
 
-    private var iconUrl: String? = null
-
     init {
         LayoutInflater.from(context).inflate(R.layout.library_site_item, this, true)
 
@@ -86,9 +84,6 @@ class LibrarySiteItemView @JvmOverloads constructor(
     }
 
     fun loadFavicon(url: String) {
-        if (iconUrl == url) return
-
-        iconUrl = url
         context.components.core.icons.loadIntoView(favicon, url)
     }
 
