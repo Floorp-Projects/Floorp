@@ -228,13 +228,6 @@ interface nsIX509Cert : nsISupports {
   [notxpcom, noscript, must_use]
   CERTCertificatePtr getCert();
 
-  /**
-   * Either delete the certificate from all cert databases,
-   * or mark it as untrusted.
-   */
-  [must_use]
-  void markForPermDeletion();
-
   [notxpcom, noscript]
   void SerializeToIPC(in IpcMessagePtr aMsg);
 
