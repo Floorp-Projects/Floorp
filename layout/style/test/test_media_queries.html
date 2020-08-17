@@ -827,6 +827,15 @@ function run() {
     should_be_parseable_if_enabled("prefers-contrast: no-preference");
   }
 
+  {
+    let should_be_parseable_if_enabled = SpecialPowers.getBoolPref('layout.css.prefers-contrast.enabled')
+      ? expression_should_be_parseable
+      : expression_should_not_be_parseable;
+    should_be_parseable_if_enabled("forced-colors");
+    should_be_parseable_if_enabled("forced-colors: none");
+    should_be_parseable_if_enabled("forced-colors: active");
+  }
+
   // OpenType SVG media features
   query_should_not_be_parseable("(-moz-is-glyph)");
   query_should_not_be_parseable("not (-moz-is-glyph)");

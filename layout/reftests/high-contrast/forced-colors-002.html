@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>forced colors none should match with no forced colors</title>
+
+<style>
+    div {
+        width: 100px;
+        height: 100px;
+    }
+    @media(forced-colors: none) {
+        div {
+            outline: 2px solid black;
+        }
+    }
+</style>
+<div></div>
+
