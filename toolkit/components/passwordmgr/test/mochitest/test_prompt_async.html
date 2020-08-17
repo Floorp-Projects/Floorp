@@ -18,7 +18,7 @@
 
       // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
       // Used by prompt_common.js.
-      isTabModal = false;
+      modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
 
       // These are magically defined on the window due to the iframe IDs
       /* global iframe1, iframe2a, iframe2b */

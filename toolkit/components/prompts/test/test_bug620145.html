@@ -35,8 +35,9 @@ add_task(async function runTest() {
   var state, action;
   // The <button> in this test's HTML opens a prompt when clicked.
   // Here we send the events to simulate clicking it.
-  info("isTabModal? " + isTabModal);
-  selectionTest = isTabModal;
+  info("tabModalPromptEnabled? " + tabModalPromptEnabled);
+  selectionTest = tabModalPromptEnabled;
+  modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
 
   state = {
     msg: "hello!",
