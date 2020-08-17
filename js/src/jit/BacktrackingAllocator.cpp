@@ -675,6 +675,14 @@ bool BacktrackingAllocator::buildLivenessInfo() {
           }
         }
 
+        // * For non-call instructions, temps cover both the input and output,
+        //   so temps never alias uses (even at-start uses) or defs.
+        // * For call instructions, temps only cover the input (the output is
+        //   used for the force-spill ranges added above). This means temps
+        //   still don't alias uses but they can alias the (fixed) defs. For now
+        //   we conservatively require temps to have a fixed register for call
+        //   instructions to prevent a footgun.
+        MOZ_ASSERT_IF(ins->isCall(), temp->policy() == LDefinition::FIXED);
         CodePosition to =
             ins->isCall() ? outputOf(*ins) : outputOf(*ins).next();
 
