@@ -21,8 +21,7 @@ pub enum MemoryKind<'a> {
     /// This memory is actually an inlined import definition.
     #[allow(missing_docs)]
     Import {
-        module: &'a str,
-        field: &'a str,
+        import: ast::InlineImport<'a>,
         ty: ast::MemoryType,
     },
 
@@ -30,7 +29,12 @@ pub enum MemoryKind<'a> {
     Normal(ast::MemoryType),
 
     /// The data of this memory, starting from 0, explicitly listed
-    Inline(Vec<&'a [u8]>),
+    Inline {
+        /// Whether or not this will be creating a 32-bit memory
+        is_32: bool,
+        /// The inline data specified for this memory
+        data: Vec<&'a [u8]>,
+    },
 }
 
 impl<'a> Parse<'a> for Memory<'a> {
@@ -41,40 +45,33 @@ impl<'a> Parse<'a> for Memory<'a> {
 
         // Afterwards figure out which style this is, either:
         //
-        //  *   `(data ...)`
         //  *   `(import "a" "b") limits`
+        //  *   `(data ...)`
         //  *   `limits`
         let mut l = parser.lookahead1();
-        let kind = if l.peek::<ast::LParen>() {
-            enum Which<'a, T> {
-                Inline(Vec<T>),
-                Import(&'a str, &'a str),
+        let kind = if let Some(import) = parser.parse()? {
+            MemoryKind::Import {
+                import,
+                ty: parser.parse()?,
             }
-            let result = parser.parens(|parser| {
-                let mut l = parser.lookahead1();
-                if l.peek::<kw::data>() {
-                    parser.parse::<kw::data>()?;
-                    let mut data = Vec::new();
-                    while !parser.is_empty() {
-                        data.push(parser.parse()?);
-                    }
-                    Ok(Which::Inline(data))
-                } else if l.peek::<kw::import>() {
-                    parser.parse::<kw::import>()?;
-                    Ok(Which::Import(parser.parse()?, parser.parse()?))
-                } else {
-                    Err(l.error())
+        } else if l.peek::<ast::LParen>() || parser.peek2::<ast::LParen>() {
+            let is_32 = if parser.parse::<Option<kw::i32>>()?.is_some() {
+                true
+            } else if parser.parse::<Option<kw::i64>>()?.is_some() {
+                false
+            } else {
+                true
+            };
+            let data = parser.parens(|parser| {
+                parser.parse::<kw::data>()?;
+                let mut data = Vec::new();
+                while !parser.is_empty() {
+                    data.push(parser.parse()?);
                 }
+                Ok(data)
             })?;
-            match result {
-                Which::Inline(data) => MemoryKind::Inline(data),
-                Which::Import(module, field) => MemoryKind::Import {
-                    module,
-                    field,
-                    ty: parser.parse()?,
-                },
-            }
-        } else if l.peek::<u32>() {
+            MemoryKind::Inline { data, is_32 }
+        } else if l.peek::<u32>() || l.peek::<kw::i32>() || l.peek::<kw::i64>() {
             MemoryKind::Normal(parser.parse()?)
         } else {
             return Err(l.error());
@@ -156,7 +153,7 @@ impl<'a> Parse<'a> for Data<'a> {
                 parser.parse()
             })?;
             DataKind::Active {
-                memory: memory.unwrap_or(ast::Index::Num(0)),
+                memory: memory.unwrap_or(ast::Index::Num(0, span)),
                 offset,
             }
         };

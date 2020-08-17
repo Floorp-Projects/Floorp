@@ -15,11 +15,11 @@ pub struct Event<'a> {
 }
 
 /// Listing of various types of events that can be defined in a wasm module.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum EventType<'a> {
     /// An exception event, where the payload is the type signature of the event
     /// (constructor parameters, etc).
-    Exception(ast::TypeUse<'a>),
+    Exception(ast::TypeUse<'a, ast::FunctionType<'a>>),
 }
 
 impl<'a> Parse<'a> for Event<'a> {
