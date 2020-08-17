@@ -253,6 +253,14 @@ class BaseBootstrapper(object):
             '%s does not yet implement generate_mobile_android_artifact_mode_mozconfig()'
             % __name__)
 
+    def ensure_mach_environment(self, checkout_root):
+        if checkout_root:
+            mach_binary = os.path.abspath(os.path.join(checkout_root, 'mach'))
+            if not os.path.exists(mach_binary):
+                raise ValueError('mach not found at %s' % mach_binary)
+            cmd = [sys.executable, mach_binary, 'create-mach-environment']
+            subprocess.check_call(cmd, cwd=checkout_root)
+
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         '''
         Install the clang static analysis package

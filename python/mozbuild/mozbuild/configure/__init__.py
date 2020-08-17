@@ -292,7 +292,7 @@ class ConfigureSandbox(dict):
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
                   'list', 'tuple', 'set', 'dict', 'isinstance', 'getattr',
                   'hasattr', 'enumerate', 'range', 'zip', 'AssertionError',
-                  '__build_class__',  # will be None on py2
+                  'ImportError', '__build_class__',  # will be None on py2
                   )
     }, __import__=forbidden_import, str=six.text_type)
 

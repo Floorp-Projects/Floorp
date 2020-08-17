@@ -17,8 +17,6 @@ from distutils.version import LooseVersion
 # NOTE: This script is intended to be run with a vanilla Python install.  We
 # have to rely on the standard library instead of Python 2+3 helpers like
 # the six module.
-from subprocess import CalledProcessError
-
 if sys.version_info < (3,):
     from ConfigParser import (
         Error as ConfigParserError,
@@ -491,6 +489,7 @@ class Bootstrapper(object):
                                                         state_dir_available,
                                                         have_clone,
                                                         checkout_root)
+            self.instance.ensure_mach_environment(checkout_root)
             self._output_mozconfig(application)
             sys.exit(0)
 
@@ -573,15 +572,11 @@ class Bootstrapper(object):
         if not have_clone:
             print(SOURCE_ADVERTISE)
 
-        if state_dir_available:
-            is_telemetry_enabled = self.check_telemetry_opt_in(state_dir)
-            if is_telemetry_enabled:
-                _install_glean()
-
         self.maybe_install_private_packages_or_exit(state_dir,
                                                     state_dir_available,
                                                     have_clone,
                                                     checkout_root)
+        self.instance.ensure_mach_environment(checkout_root)
 
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc')
@@ -880,28 +875,6 @@ def git_clone_firefox(git, dest, watchman=None):
 
     print('Firefox source code available at %s' % dest)
     return True
-
-
-def _install_glean():
-    """Installs glean to the current python environment.
-
-    If the current python instance is a virtualenv, then glean is installed
-    directly.
-    If not, then glean is installed to the Python user install directory.
-    Upgrades glean if it's out-of-date.
-    """
-    pip_call = [sys.executable, '-m', 'pip', 'install', 'glean_sdk~=31.5.0']
-    if not os.environ.get('VIRTUAL_ENV'):
-        # If the user is already using a virtual environment before they invoked
-        # `mach bootstrap`, then we shouldn't add the "--user" flag. This is because
-        # virtual environments don't support the flags since they don't have a
-        # separate "user install directory".
-        pip_call.append('--user')
-
-    try:
-        subprocess.check_output(pip_call)
-    except CalledProcessError:
-        print("Failed to install glean, telemetry will not be gathered")
 
 
 def _warn_if_risky_revision(path):

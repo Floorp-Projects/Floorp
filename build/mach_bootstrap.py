@@ -141,9 +141,6 @@ def search_path(mozilla_dir, packages_txt):
         packages = [line.rstrip().split(':') for line in f]
 
     def handle_package(package):
-        if package[0] == 'in-virtualenv':
-            return
-
         if package[0] == 'optional':
             try:
                 for path in handle_package(package[1:]):
@@ -200,9 +197,10 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # case. For default behavior, we educate users and give them an opportunity
     # to react. We always exit after creating the directory because users don't
     # like surprises.
-    sys.path[0:0] = [os.path.join(mozilla_dir, path)
-                     for path in search_path(mozilla_dir,
-                                             'build/virtualenv_packages.txt')]
+    sys.path[0:0] = [
+        os.path.join(mozilla_dir, path)
+        for path in search_path(mozilla_dir,
+                                'build/mach_virtualenv_packages.txt')]
     import mach.base
     import mach.main
     from mach.util import setenv

@@ -28,7 +28,6 @@ mozilla.pth:third_party/python/fluent.migrate
 mozilla.pth:third_party/python/fluent.syntax
 mozilla.pth:third_party/python/funcsigs
 python2:mozilla.pth:third_party/python/futures
-in-virtualenv:python3:mozilla.pth:third_party/python/glean_parser
 mozilla.pth:third_party/python/importlib_metadata
 mozilla.pth:third_party/python/iso8601
 mozilla.pth:third_party/python/Jinja2/src

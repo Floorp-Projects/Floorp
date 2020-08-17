@@ -306,17 +306,20 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
         manager = VirtualenvManager(
             topsrcdir,
             os.path.join(virtualenvs_root, 'init_py3'), out,
-            os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+            os.path.join(topsrcdir, 'build', 'build_virtualenv_packages.txt'))
 
     # If we're not in the virtualenv, we need to update the path to include some
     # necessary modules for find_program.
-    if normsep(sys.executable) != normsep(manager.python_path):
+    try:
+        import mozfile
+    except ImportError:
         sys.path.insert(
             0, os.path.join(topsrcdir, 'testing', 'mozbase', 'mozfile'))
         sys.path.insert(
             0, os.path.join(topsrcdir, 'third_party', 'python', 'backports'))
     else:
-        python = sys.executable
+        if 'MOZBUILD_VIRTUALENV' in os.environ or not python:
+            python = sys.executable
 
     # If we know the Python executable the caller is asking for then verify its
     # version. If the caller did not ask for a specific executable then find

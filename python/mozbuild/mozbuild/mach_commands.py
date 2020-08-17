@@ -1483,3 +1483,55 @@ class L10NCommands(MachCommandBase):
                 cwd=mozpath.join(self.topsrcdir))
 
         return 0
+
+
+@CommandProvider
+class CreateMachEnvironment(MachCommandBase):
+    """Create the mach virtualenvs."""
+
+    @Command('create-mach-environment', category='devenv',
+             description=(
+                 'Create the `mach` virtualenvs. If executed with python3 (the '
+                 'default when entering from `mach`), create both a python3 '
+                 'and python2.7 virtualenv. If executed with python2, only '
+                 'create the python2.7 virtualenv.'))
+    def create_mach_environment(self):
+        from mozboot.util import get_state_dir
+        from mozbuild.pythonutil import find_python2_executable
+        from mozbuild.virtualenv import VirtualenvManager
+        from six import PY3
+
+        state_dir = get_state_dir()
+        virtualenv_path = os.path.join(state_dir, '_virtualenvs',
+                                       'mach' if PY3 else 'mach_py2')
+        if sys.executable.startswith(virtualenv_path):
+            print('You can only create a mach environment with the system '
+                  'Python. Re-run this `mach` command with the system Python.',
+                  file=sys.stderr)
+            return 1
+
+        manager = VirtualenvManager(
+            self.topsrcdir, virtualenv_path, sys.stdout,
+            os.path.join(self.topsrcdir, 'build',
+                         'mach_virtualenv_packages.txt'),
+            populate_local_paths=False)
+        manager.build(sys.executable)
+
+        manager.install_pip_package('zstandard>=0.9.0,<=0.13.0')
+
+        if PY3:
+            manager.install_pip_package('glean_sdk~=31.5.0')
+            print('Python 3 mach environment created.')
+            python2, _ = find_python2_executable()
+            if not python2:
+                print('WARNING! Could not find a Python 2 executable to create '
+                      'a Python 2 virtualenv', file=sys.stderr)
+                return 0
+            ret = subprocess.call([
+                python2, os.path.join(self.topsrcdir, 'mach'),
+                'create-mach-environment'])
+            if ret:
+                print('WARNING! Failed to create a Python 2 mach environment.',
+                      file=sys.stderr)
+        else:
+            print('Python 2 mach environment created.')

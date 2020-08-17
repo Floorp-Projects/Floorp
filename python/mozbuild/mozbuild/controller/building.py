@@ -1511,6 +1511,12 @@ class BuildDriver(MozbuildObject):
             }, 'Adding make options from {path}\n    {content}')
 
         append_env['OBJDIR'] = mozpath.normsep(self.topobjdir)
+        if (mozpath.normpath(os.path.dirname(sys.executable)) not in
+            [mozpath.normpath(s) for s in
+             os.environ['PATH'].split(os.pathsep)]):
+            append_env['PATH'] = (
+                os.path.dirname(sys.executable) + os.pathsep +
+                os.environ['PATH'])
 
         return self._run_make(srcdir=True,
                               filename='client.mk',
