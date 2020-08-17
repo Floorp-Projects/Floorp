@@ -15,6 +15,13 @@ const EXPERIMENT_PAYLOAD = {
   enabled: true,
   arguments: {
     slug: "test_xman_cfr",
+    bucketConfig: {
+      count: 100,
+      start: 0,
+      total: 100,
+      namespace: "mochitest",
+      randomizationUnit: "normandy_id",
+    },
     branches: [
       {
         slug: "control",
