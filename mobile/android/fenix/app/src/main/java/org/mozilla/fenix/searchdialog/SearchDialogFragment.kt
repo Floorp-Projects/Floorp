@@ -5,10 +5,14 @@
 package org.mozilla.fenix.searchdialog
 
 import android.app.Dialog
+import android.content.DialogInterface
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
 import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
@@ -16,19 +20,33 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import kotlinx.android.synthetic.main.fragment_search.*
+import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
+import kotlinx.android.synthetic.main.fragment_search_dialog.search_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.toolbar
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
+import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_scan_button
+import kotlinx.android.synthetic.main.fragment_search_dialog.view.toolbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.search.SearchEngineSource
+import org.mozilla.fenix.search.SearchFragment
+import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.SearchInteractor
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
@@ -44,6 +62,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private lateinit var store: SearchDialogFragmentStore
     private lateinit var toolbarView: ToolbarView
     private lateinit var awesomeBarView: AwesomeBarView
+
+    private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -134,6 +154,52 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             dismissAllowingStateLoss()
         }
 
+        search_scan_button.setOnClickListener {
+            toolbarView.view.clearFocus()
+            requireComponents.analytics.metrics.track(Event.QRScannerOpened)
+            qrFeature.get()?.scan(R.id.search_wrapper)
+        }
+
+        qrFeature.set(
+            QrFeature(
+                requireContext(),
+                fragmentManager = childFragmentManager,
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
+                },
+                onScanResult = { result ->
+                    search_scan_button.isChecked = false
+                    activity?.let {
+                        AlertDialog.Builder(it).apply {
+                            val spannable = resources.getSpanned(
+                                R.string.qr_scanner_confirmation_dialog_message,
+                                getString(R.string.app_name) to StyleSpan(Typeface.BOLD),
+                                result to StyleSpan(Typeface.ITALIC)
+                            )
+                            setMessage(spannable)
+                            setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
+                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
+                                dialog.cancel()
+                            }
+                            setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
+                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
+                                (activity as HomeActivity)
+                                    .openToBrowserAndLoad(
+                                        searchTermOrURL = result,
+                                        newTab = store.state.tabId == null,
+                                        from = BrowserDirection.FromSearch
+                                    )
+                                dialog.dismiss()
+                            }
+                            create()
+                        }.show()
+                        requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
+                    }
+                }),
+            owner = this,
+            view = view
+        )
+
         consumeFrom(store) {
             awesome_bar?.visibility = if (it.query.isEmpty()) View.INVISIBLE else View.VISIBLE
             toolbarView.update(it)
@@ -142,9 +208,22 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     override fun onBackPressed(): Boolean {
-        view?.hideKeyboard()
-        dismissAllowingStateLoss()
+        return when {
+            qrFeature.onBackPressed() -> {
+                toolbarView.view.edit.focus()
+                view?.search_scan_button?.isChecked = false
+                toolbarView.view.requestFocus()
+                true
+            }
+            else -> {
+                view?.hideKeyboard()
+                dismissAllowingStateLoss()
+                true
+            }
+        }
+    }
 
-        return true
+    companion object {
+        private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }
