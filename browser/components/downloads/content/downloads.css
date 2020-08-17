@@ -99,10 +99,10 @@
 
 /* the system-viewer context menu items are only shown for certain mime-types
    and can be individually enabled via prefs */
-.download-state:not([viewable-internally]) .downloadUseSystemDefaultMenuItem,
+.download-state:not([is-pdf])              .downloadUseSystemDefaultMenuItem,
 .download-state                            .downloadUseSystemDefaultMenuItem:not([enabled]),
 .download-state                            .downloadAlwaysUseSystemDefaultMenuItem:not([enabled]),
-.download-state:not([viewable-internally]) .downloadAlwaysUseSystemDefaultMenuItem
+.download-state:not([is-pdf])              .downloadAlwaysUseSystemDefaultMenuItem
 {
   display: none;
 }

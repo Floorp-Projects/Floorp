@@ -953,8 +953,8 @@ var DownloadsView = {
       "temporary-block",
       element.classList.contains("temporary-block")
     );
-    if (element.hasAttribute("viewable-internally")) {
-      contextMenu.setAttribute("viewable-internally", "true");
+    if (element.hasAttribute("is-pdf")) {
+      contextMenu.setAttribute("is-pdf", "true");
       let alwaysUseSystemViewerItem = contextMenu.querySelector(
         ".downloadAlwaysUseSystemDefaultMenuItem"
       );
@@ -975,7 +975,7 @@ var DownloadsView = {
         DownloadsCommon.openInSystemViewerItemEnabled
       );
     } else {
-      contextMenu.removeAttribute("viewable-internally");
+      contextMenu.removeAttribute("is-pdf");
     }
   },
 
