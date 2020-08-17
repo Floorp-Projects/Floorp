@@ -16,6 +16,7 @@ import android.os.SystemClock
 import android.provider.Browser.EXTRA_APPLICATION_ID
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.pm.isPackageInstalled
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import java.net.URISyntaxException
 
@@ -130,7 +131,8 @@ class AppLinksUseCases(
             }
 
             val marketplaceIntent = intent?.`package`?.let {
-                if (includeInstallAppFallback) {
+                if (includeInstallAppFallback &&
+                        !context.packageManager.isPackageInstalled(it)) {
                     Intent.parseUri(MARKET_INTENT_URI_PACKAGE_PREFIX + it, 0)
                 } else {
                     null
