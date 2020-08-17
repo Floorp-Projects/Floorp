@@ -229,6 +229,114 @@ TEST(ResultExtensions_ToResultInvoke, MemberFunction_NoOutput)
   }
 }
 
+TEST(ResultExtensions_ToResultInvoke, MemberFunction_NoInput_Macro)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInput);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ(TestClass::kTestValue, valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInputFails);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(ResultExtensions_ToResultInvoke, MemberFunction_NoInput_Const_Macro)
+{
+  const TestClass foo;
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInputConst);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ(TestClass::kTestValue, valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInputFailsConst);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(ResultExtensions_ToResultInvoke, MemberFunction_NoInput_Ref_Macro)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInputRef);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ(TestClass::kTestValue, valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInputFailsRef);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(ResultExtensions_ToResultInvoke, MemberFunction_WithInput_Macro)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedWithInput,
+                                         -TestClass::kTestValue);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ(-TestClass::kTestValue, valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedWithInputFails,
+                                         -TestClass::kTestValue);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(ResultExtensions_ToResultInvoke, MemberFunction_NoOutput_Macro)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoOutput,
+                                         -TestClass::kTestValue);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<Ok, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoOutputFails,
+                                         -TestClass::kTestValue);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<Ok, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
 TEST(ResultExtensions_ToResultInvoke, PolymorphicPointerResult_nsCOMPtr_Result)
 {
   TestClass foo;
@@ -278,6 +386,27 @@ TEST(ResultExtensions_ToResultInvoke, RefPtr_MemberFunction_NoInput)
   {
     auto valOrErr =
         ToResultInvoke(foo, &RefCountedTestClass::NonOverloadedNoInputFails);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(ResultExtensions_ToResultInvoke, RefPtr_MemberFunction_NoInput_Macro)
+{
+  auto foo = MakeRefPtr<RefCountedTestClass>();
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInput);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ(TestClass::kTestValue, valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(foo, NonOverloadedNoInputFails);
     static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
     ASSERT_TRUE(valOrErr.isErr());
     ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
