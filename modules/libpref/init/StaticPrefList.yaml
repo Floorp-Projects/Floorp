@@ -6002,6 +6002,13 @@
   mirror: always
   rust: true
 
+# Dictates whether or not the forced-colors media query is enabled.
+- name: layout.css.forced-colors.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for -moz-prefixed animation properties enabled?
 - name: layout.css.prefixes.animations
   type: bool
