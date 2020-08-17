@@ -25,6 +25,8 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s llingüetes abiertes. Toca pa cambiar a otra.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d esbillaes</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Nome</string>
 
@@ -272,6 +274,8 @@
     <string name="preferences_account_settings">Axustes de la cuenta</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir los enllaces nes aplicaciones</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Xestor de descargues esternu</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Complementos</string>
 
@@ -351,6 +355,8 @@
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Informador de casques</string>
 
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Serviciu d\'allugamientu de Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preferences_fenix_health_report">Informe de salú de %s</string>
 
@@ -472,6 +478,8 @@
     <string name="history_delete_all">Desaniciar l\'historial</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">¿De xuru que quies llimpiar l\'historial?</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Desanicióse %1$s</string>
     <!-- History overflow menu copy button -->
     <string name="history_menu_copy_button">Copiar</string>
     <!-- History overflow menu share button -->
@@ -511,6 +519,10 @@
 
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">¿De xuru que quies desaniciar esta carpeta?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s va desaniciar los elementos esbillaos.</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Desanicióse %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Amestar una carpeta</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -552,6 +564,8 @@
     <string name="bookmark_name_label">NOME</string>
     <!-- Bookmark add folder screen title -->
     <string name="bookmark_add_folder_fragment_label">Amiestu d\'una carpeta</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Esbilla d\'una carpeta</string>
     <!-- Bookmark editing error missing title -->
     <string name="bookmark_empty_title_error">Ha tener un títulu</string>
     <!-- Bookmark editing error missing or improper URL -->
@@ -563,6 +577,8 @@
     <string name="bookmark_deletion_snackbar_message">Desanicióse %1$s</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Desaniciáronse los marcadores</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Desaniciando les carpetes esbillaes</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">DESFACER</string>
 
@@ -1143,6 +1159,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Equí van amosase los anicios de sesión y contraseñes que nun se guarden</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Los anicios de sesión y contraseñes d\'estos sitios nun van guardase.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Desaniciar toles esceiciones</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Guetar anicios de sesión</string>
     <!-- Option to sort logins list A-Z, alphabetically -->

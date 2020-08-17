@@ -1186,9 +1186,9 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">사용자 지정 탭에서만</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_cryptominers">크립토마이너</string>
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">암호화폐 채굴기</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">핑거프린터</string>
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">디지털 지문</string>
     <string name="enhanced_tracking_protection_blocked">차단됨</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">허용됨</string>
@@ -1201,11 +1201,11 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">광고 네트워크 및 분석 회사가 여러 사이트에서 사용자 탐색 데이터를 컴파일하는데 사용하는 쿠키를 차단합니다.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_title">크립토마이너</string>
+    <string name="etp_cryptominers_title">암호화폐 채굴기</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">악의적인 스크립트가 디지털 통화를 채굴하기 위해 기기에 액세스하는 것을 방지합니다.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">핑거프린터</string>
+    <string name="etp_fingerprinters_title">디지털 지문</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">추적 목적으로 사용할 수 있는 사용자 기기에 대해 고유하게 식별 가능한 데이터가 수집되지 않도록합니다.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->

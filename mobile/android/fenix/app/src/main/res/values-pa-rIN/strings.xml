@@ -175,8 +175,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">ਸਕੈਨ ਕਰੋ</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">ਖੋਜ ਇੰਜਣ</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">ਖੋਜ ਇੰਜਣ</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">ਖੋਜ ਇੰਜਣ ਸੈਟਿੰਗਾਂ</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -308,6 +308,8 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ਲਿੰਕ ਐਪਾਂ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">ਬਾਹਰੀ ਡਾਊਨਲੋਡ ਮੈਨੇਜਰ</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ਐਡ-ਆਨ</string>
 
@@ -1471,9 +1473,7 @@
     <string name="saved_login_duplicate">ਉਸ ਵਰਤੋਂਕਾਰ ਨਾਲ ਲਾਗਇਨ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Firefox Account ਨਾਲ ਕਨੈਕਟ ਕਰੋ।</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">ਹੋਰ ਡਿਵਾਈਸ ਨਾਲ ਕਨੈਕਟ ਕਰੋ।</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">ਮੁੜ-ਪ੍ਰਮਾਣਿਤ ਕਰੋ।</string>
@@ -1494,13 +1494,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">ਸ਼ਾਰਟਕੱਟ</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">ਇਸ ਨਾਲ ਖੋਜੋ</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">ਇਸ ਵੇਲੇ, ਇਸ ਨਾਲ ਖੋਜੋ:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">ਖੋਜ ਸ਼ਾਰਟਕੱਟ ਵੇਖਾਓ</string>
     </resources>

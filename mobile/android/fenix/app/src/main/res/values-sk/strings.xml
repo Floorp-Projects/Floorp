@@ -308,6 +308,8 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Otvárať odkazy v aplikáciách</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Externý správca preberania súborov</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Doplnky</string>
 

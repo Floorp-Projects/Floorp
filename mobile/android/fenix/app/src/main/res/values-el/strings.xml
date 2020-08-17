@@ -147,8 +147,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Σάρωση</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Μηχανή αναζήτησης</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Μηχανή αναζήτησης</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Ρυθμίσεις μηχανής αναζήτησης</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -542,6 +542,8 @@
     <string name="bookmark_select_folder">Επιλογή φακέλου</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Θέλετε σίγουρα να διαγράψετε αυτό το φάκελο;</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">Το %s θα διαγράψει τα επιλεγμένα στοιχεία.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Ο φάκελος &quot;%1$s&quot; διαγράφηκε</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -1011,6 +1013,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Βιβλιοθήκες που χρησιμοποιούμε</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Μενού εντοπισμού σφαλμάτων: απομένουν %1$d κλικ για ενεργοποίηση</string>
+    <string name="about_debug_menu_toast_done">Το μενού εντοπισμού σφαλμάτων ενεργοποιήθηκε</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 καρτέλα</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1061,6 +1068,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Σύνδεση στο Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Αποθηκευμένες συνδέσεις</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Οι συνδέσεις που αποθηκεύετε ή συγχρονίζετε στο %s θα εμφανίζονται εδώ.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Μάθετε περισσότερα σχετικά με το Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1109,6 +1118,8 @@
     <string name="logins_warning_dialog_later">Αργότερα</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_set_up_now">Ρύθμιση τώρα</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Ξεκλειδώστε τη συσκευή σας</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Όνομα (Α-Ω)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1149,6 +1160,9 @@
     <string name="search_add_custom_engine_error_empty_search_string">Εισάγετε νήμα αναζήτησης</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">Σφάλμα σύνδεσης στο “%s”</string>
+
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Δημιουργήθηκε to %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Καλώς ορίσατε στο νέο %s</string>
@@ -1216,9 +1230,7 @@
     <string name="saved_login_duplicate">Υπάρχει ήδη σύνδεση με αυτό το όνομα χρήστη</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Συνδεθείτε με ένα λογαριασμό Firefox.</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Συνδέστε μια άλλη συσκευή.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Παρακαλούμε επαληθεύστε ξανά την ταυτότητά σας.</string>
@@ -1231,13 +1243,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Συντομεύσεις</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Αναζήτηση με</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Αυτή τη φορά, αναζήτηση με:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Εμφάνιση συντομεύσεων αναζήτησης</string>
     </resources>

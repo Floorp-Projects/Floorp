@@ -300,6 +300,8 @@
     <string name="preferences_account_settings">Paramètres del compte</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Dobrir los ligams dins las aplicacions</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Gestionari de telecargament extèrn</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Moduls complementaris</string>
 
@@ -992,6 +994,11 @@
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Prenètz posicion</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Navegatz d’un biais privat</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Dobrir un sol onglet privat : tocatz l’icòna %s.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Dobrir los paramètres</string>
     <!-- text for the privacy notice onboarding card header -->
