@@ -311,14 +311,14 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       "temporary-block",
       button.classList.contains("temporary-block")
     );
-    // menu items are conditionally displayed via CSS based on a viewable-internally attribute
+    // menu items are conditionally displayed via CSS based on an is-pdf attribute
     DownloadsCommon.log(
-      "DownloadsSubview, updateContextMenu, download is viewable internally? ",
+      "DownloadsSubview, updateContextMenu, download is pdf? ",
       download.target.path,
-      button.hasAttribute("viewable-internally")
+      button.hasAttribute("is-pdf")
     );
-    if (button.hasAttribute("viewable-internally")) {
-      menu.setAttribute("viewable-internally", "true");
+    if (button.hasAttribute("is-pdf")) {
+      menu.setAttribute("is-pdf", "true");
       let alwaysUseSystemViewerItem = menu.querySelector(
         ".downloadAlwaysUseSystemDefaultMenuItem"
       );
@@ -339,7 +339,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
         DownloadsCommon.openInSystemViewerItemEnabled
       );
     } else {
-      menu.removeAttribute("viewable-internally");
+      menu.removeAttribute("is-pdf");
     }
 
     for (let menuitem of menu.getElementsByTagName("menuitem")) {

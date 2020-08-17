@@ -31,17 +31,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHandlerService"
 );
 
-const { Integration } = ChromeUtils.import(
-  "resource://gre/modules/Integration.jsm"
-);
-
-/* global DownloadIntegration */
-Integration.downloads.defineModuleGetter(
-  this,
-  "DownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.jsm"
-);
-
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 var gDownloadElementButtons = {
@@ -476,12 +465,11 @@ DownloadsViewUI.DownloadElementShell.prototype = {
           // This is a completed download, and the target file still exists.
           this.element.setAttribute("exists", "true");
 
-          this.element.toggleAttribute(
-            "viewable-internally",
-            DownloadIntegration.shouldViewDownloadInternally(
-              DownloadsCommon.getMimeInfo(this.download)?.type
-            )
+          const isPDF = DownloadsCommon.isFileOfType(
+            this.download,
+            "application/pdf"
           );
+          this.element.toggleAttribute("is-pdf", isPDF);
 
           let sizeWithUnits = DownloadsViewUI.getSizeWithUnits(this.download);
           if (this.isPanel) {
@@ -753,9 +741,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         return this.download.stopped;
       case "downloadsCmd_openInSystemViewer":
       case "downloadsCmd_alwaysOpenInSystemViewer":
-        return DownloadIntegration.shouldViewDownloadInternally(
-          DownloadsCommon.getMimeInfo(this.download)?.type
-        );
+        return DownloadsCommon.isFileOfType(this.download, "application/pdf");
     }
     return DownloadsViewUI.isCommandName(aCommand) && !!this[aCommand];
   },
