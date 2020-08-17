@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
 import os
 import platform
 import shutil
@@ -35,10 +36,41 @@ defined by the $PATH environment variable and try again.
 here = os.path.abspath(os.path.dirname(__file__))
 
 
+# We can't import six.ensure_binary() or six.ensure_text() because this module
+# has to run stand-alone.  Instead we'll implement an abbreviated version of the
+# checks it does.
+if PY3:
+    text_type = str
+    binary_type = bytes
+else:
+    text_type = unicode
+    binary_type = str
+
+
+def ensure_binary(s, encoding='utf-8'):
+    if isinstance(s, text_type):
+        return s.encode(encoding, errors='strict')
+    elif isinstance(s, binary_type):
+        return s
+    else:
+        raise TypeError("not expecting type '%s'" % type(s))
+
+
+def ensure_text(s, encoding='utf-8'):
+    if isinstance(s, binary_type):
+        return s.decode(encoding, errors='strict')
+    elif isinstance(s, text_type):
+        return s
+    else:
+        raise TypeError("not expecting type '%s'" % type(s))
+
+
 class VirtualenvManager(object):
     """Contains logic for managing virtualenvs for building the tree."""
 
-    def __init__(self, topsrcdir, virtualenv_path, log_handle, manifest_path):
+    def __init__(
+            self, topsrcdir, virtualenv_path, log_handle, manifest_path,
+            parent_site_dir=None, populate_local_paths=True):
         """Create a new manager.
 
         Each manager is associated with a source directory, a path where you
@@ -57,6 +89,11 @@ class VirtualenvManager(object):
 
         self.log_handle = log_handle
         self.manifest_path = manifest_path
+        self.parent_site_dir = parent_site_dir
+        if not self.parent_site_dir:
+            import distutils.sysconfig
+            self.parent_site_dir = distutils.sysconfig.get_python_lib()
+        self.populate_local_paths = populate_local_paths
 
     @property
     def virtualenv_script_path(self):
@@ -277,9 +314,15 @@ class VirtualenvManager(object):
         python2 -- This denotes that the action should only be taken when run
             on python 2.
 
-        in-virtualenv -- This denotes that the action should only be taken when
-            constructing a virtualenv (and not when bootstrapping a `mach`
-            action).
+        inherit-from-parent-environment -- This denotes that we should add the
+            configured site directory of the "parent" to the virtualenv's list
+            of site directories. This can be specified on the command line as
+            --parent-site-dir or passed in the constructor of this class. This
+            defaults to the site-packages directory of the current Python
+            interpreter if not provided.
+
+        set-variable -- Set the given environment variable; e.g.
+            `set-variable FOO=1`.
 
         Note that the Python interpreter running this function should be the
         one from the virtualenv. If it is the system Python or if the
@@ -290,12 +333,28 @@ class VirtualenvManager(object):
 
         packages = self.packages()
         python_lib = distutils.sysconfig.get_python_lib()
+        sitecustomize = open(
+            os.path.join(os.path.dirname(os.__file__), 'sitecustomize.py'),
+            mode='w')
 
         def handle_package(package):
-            if package[0] == 'in-virtualenv':
-                assert len(package) >= 2
-                package = package[1:]
-                # Continue processing normally.
+            if package[0] == 'inherit-from-parent-environment':
+                assert len(package) == 1
+                sitecustomize.write(
+                    'import site\n'
+                    "site.addsitedir(%s)\n" % repr(self.parent_site_dir))
+                return True
+
+            if package[0].startswith('set-variable '):
+                assert len(package) == 1
+                assignment = package[0][len('set-variable '):].strip()
+                var, val = assignment.split('=', 1)
+                var = var if PY3 else ensure_binary(var)
+                val = val if PY3 else ensure_binary(val)
+                sitecustomize.write(
+                    'import os\n'
+                    "os.environ[%s] = %s\n" % (repr(var), repr(val)))
+                return True
 
             if package[0] == 'setup.py':
                 assert len(package) >= 2
@@ -320,16 +379,19 @@ class VirtualenvManager(object):
 
                 src = os.path.join(self.topsrcdir, package[1])
                 assert os.path.isfile(src), "'%s' does not exist" % src
-                submanager = VirtualenvManager(self.topsrcdir,
-                                               self.virtualenv_root,
-                                               self.log_handle,
-                                               src)
+                submanager = VirtualenvManager(
+                    self.topsrcdir, self.virtualenv_root, self.log_handle, src,
+                    parent_site_dir=self.parent_site_dir,
+                    populate_local_paths=self.populate_local_paths)
                 submanager.populate()
 
                 return True
 
             if package[0].endswith('.pth'):
                 assert len(package) == 2
+
+                if not self.populate_local_paths:
+                    return True
 
                 path = os.path.join(self.topsrcdir, package[1])
 
@@ -402,16 +464,15 @@ class VirtualenvManager(object):
             for package in packages:
                 handle_package(package)
 
-            sitecustomize = os.path.join(
-                os.path.dirname(os.__file__), 'sitecustomize.py')
-            with open(sitecustomize, 'w') as f:
-                f.write(
-                    '# Importing mach_bootstrap has the side effect of\n'
-                    '# installing an import hook\n'
-                    'import mach_bootstrap\n'
-                )
+            sitecustomize.write(
+                '# Importing mach_bootstrap has the side effect of\n'
+                '# installing an import hook\n'
+                'import mach_bootstrap\n'
+            )
 
         finally:
+            sitecustomize.close()
+
             os.environ.pop('MACOSX_DEPLOYMENT_TARGET', None)
 
             if old_target is not None:
@@ -447,6 +508,7 @@ class VirtualenvManager(object):
 
         This returns the path of the created virtualenv.
         """
+        import distutils
 
         self.create(python)
 
@@ -466,7 +528,10 @@ class VirtualenvManager(object):
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1635481
         os.environ.pop('__PYVENV_LAUNCHER__', None)
         args = [self.python_path, thismodule, 'populate', self.topsrcdir,
-                self.virtualenv_root, self.manifest_path]
+                self.virtualenv_root, self.manifest_path, '--parent-site-dir',
+                distutils.sysconfig.get_python_lib()]
+        if self.populate_local_paths:
+            args.append('--populate-local-paths')
 
         result = self._log_process_output(args, cwd=self.topsrcdir)
 
@@ -486,8 +551,11 @@ class VirtualenvManager(object):
         """
 
         exec(open(self.activate_path).read(), dict(__file__=self.activate_path))
-        if PY2 and isinstance(os.environ['PATH'], unicode):
-            os.environ['PATH'] = os.environ['PATH'].encode('utf-8')
+        # Activating the virtualenv can make `os.environ` a little janky under
+        # Python 2.
+        env = ensure_subprocess_env(os.environ)
+        os.environ.clear()
+        os.environ.update(env)
 
     def install_pip_package(self, package, vendored=False):
         """Install a package via pip.
@@ -500,12 +568,15 @@ class VirtualenvManager(object):
         If vendored is True, no package index will be used and no dependencies
         will be installed.
         """
-        from pip._internal.req.constructors import install_req_from_line
+        if sys.executable.startswith(self.bin_path):
+            # If we're already running in this interpreter, we can optimize in
+            # the case that the package requirement is already satisfied.
+            from pip._internal.req.constructors import install_req_from_line
 
-        req = install_req_from_line(package)
-        req.check_if_exists(use_user_site=False)
-        if req.satisfied_by is not None:
-            return
+            req = install_req_from_line(package)
+            req.check_if_exists(use_user_site=False)
+            if req.satisfied_by is not None:
+                return
 
         args = [
             'install',
@@ -586,6 +657,8 @@ class VirtualenvManager(object):
         populated from the manifest file. The optional ``python`` argument
         indicates the version of Python for pipenv to use.
         """
+
+        import distutils.sysconfig
         from distutils.version import LooseVersion
 
         pipenv = os.path.join(self.bin_path, 'pipenv')
@@ -668,10 +741,13 @@ class VirtualenvManager(object):
 
         if populate:
             # Populate from the manifest
-            subprocess.check_call([
+            args = [
                 pipenv, 'run', 'python', os.path.join(here, 'virtualenv.py'), 'populate',
-                self.topsrcdir, self.virtualenv_root, self.manifest_path],
-                stderr=subprocess.STDOUT, env=env)
+                self.topsrcdir, self.virtualenv_root, self.manifest_path,
+                '--parent-site-dir', distutils.sysconfig.get_python_lib()]
+            if self.populate_local_paths:
+                args.append('--populate-local-paths')
+            subprocess.check_call(args, stderr=subprocess.STDOUT, env=env)
 
         self.activate()
 
@@ -717,60 +793,46 @@ def ensure_subprocess_env(env, encoding='utf-8'):
         encoding (str): Encoding to use when converting to/from bytes/text
                         (default: utf-8).
     """
-    # We can't import six.ensure_binary() or six.ensure_text() because this module
-    # has to run stand-alone.  Instead we'll implement an abbreviated version of the
-    # checks it does.
-
-    if PY3:
-        text_type = str
-        binary_type = bytes
-    else:
-        text_type = unicode
-        binary_type = str
-
-    def ensure_binary(s):
-        if isinstance(s, text_type):
-            return s.encode(encoding, errors='strict')
-        elif isinstance(s, binary_type):
-            return s
-        else:
-            raise TypeError("not expecting type '%s'" % type(s))
-
-    def ensure_text(s):
-        if isinstance(s, binary_type):
-            return s.decode(encoding, errors='strict')
-        elif isinstance(s, text_type):
-            return s
-        else:
-            raise TypeError("not expecting type '%s'" % type(s))
-
     ensure = ensure_binary if PY2 else ensure_text
 
     try:
-        return {ensure(k): ensure(v) for k, v in env.iteritems()}
+        return {
+            ensure(k, encoding=encoding): ensure(v, encoding=encoding)
+            for k, v in env.iteritems()
+        }
     except AttributeError:
-        return {ensure(k): ensure(v) for k, v in env.items()}
+        return {
+            ensure(k, encoding=encoding): ensure(v, encoding=encoding)
+            for k, v in env.items()
+        }
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        print(
-            'Usage: virtualenv.py /path/to/topsrcdir '
-            '/path/to/virtualenv /path/to/virtualenv_manifest')
-        sys.exit(1)
-
     verify_python_version(sys.stdout)
 
-    topsrcdir, virtualenv_path, manifest_path = sys.argv[1:4]
-    populate = False
+    if len(sys.argv) < 2:
+        print('Too few arguments', file=sys.stderr)
+        sys.exit(1)
 
-    # This should only be called internally.
+    parser = argparse.ArgumentParser()
+    parser.add_argument('topsrcdir')
+    parser.add_argument('virtualenv_path')
+    parser.add_argument('manifest_path')
+    parser.add_argument('--parent-site-dir', default=None)
+    parser.add_argument('--populate-local-paths', action='store_true')
+
     if sys.argv[1] == 'populate':
+        # This should only be called internally.
         populate = True
-        topsrcdir, virtualenv_path, manifest_path = sys.argv[2:]
+        opts = parser.parse_args(sys.argv[2:])
+    else:
+        populate = False
+        opts = parser.parse_args(sys.argv[1:])
 
-    manager = VirtualenvManager(topsrcdir, virtualenv_path,
-                                sys.stdout, manifest_path)
+    manager = VirtualenvManager(
+        opts.topsrcdir, opts.virtualenv_path, sys.stdout, opts.manifest_path,
+        parent_site_dir=opts.parent_site_dir,
+        populate_local_paths=opts.populate_local_paths)
 
     if populate:
         manager.populate()

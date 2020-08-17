@@ -193,9 +193,8 @@ def setup(app):
     # We need to adjust sys.path in order for Python API docs to get generated
     # properly. We leverage the in-tree virtualenv for this.
     topsrcdir = manager.topsrcdir
-    ve = VirtualenvManager(topsrcdir,
-                           os.path.join(app.outdir, '_venv'),
-                           sys.stderr,
-                           os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+    ve = VirtualenvManager(
+        topsrcdir, os.path.join(app.outdir, '_venv'), sys.stderr,
+        os.path.join(topsrcdir, 'build', 'build_virtualenv_packages.txt'))
     ve.ensure()
     ve.activate()
