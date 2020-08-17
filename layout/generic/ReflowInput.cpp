@@ -1695,6 +1695,9 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   LogicalSize& computedSize = sizeResult.mLogicalSize;
   computedSize = computedSize.ConvertTo(cbwm, wm);
 
+  mFlags.mBSizeIsSetByAspectRatio = sizeResult.mAspectRatioUsage ==
+                                    nsIFrame::AspectRatioUsage::ToComputeBSize;
+
   // XXX Now that we have ComputeSize, can we condense many of the
   // branches off of widthIsAuto?
 
@@ -2437,6 +2440,9 @@ void ReflowInput::InitConstraints(
       NS_ASSERTION(
           ComputedBSize() == NS_UNCONSTRAINEDSIZE || ComputedBSize() >= 0,
           "Bogus block-size");
+
+      mFlags.mBSizeIsSetByAspectRatio =
+          size.mAspectRatioUsage == nsIFrame::AspectRatioUsage::ToComputeBSize;
 
       // Exclude inline tables, side captions, outside ::markers, flex and grid
       // items from block margin calculations.
