@@ -495,29 +495,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // This function would be called when its corresponding document is activated
-  // by user gesture, and we would set the flag in the top level browsing
-  // context.
-  void NotifyUserGestureActivation();
-
-  // This function would be called when we want to reset the user gesture
-  // activation flag of the top level browsing context.
-  void NotifyResetUserGestureActivation();
-
-  // Return true if its corresponding document has been activated by user
-  // gesture.
-  bool HasBeenUserGestureActivated();
-
-  // Return true if its corresponding document has transient user gesture
-  // activation and the transient user gesture activation haven't yet timed
-  // out.
-  bool HasValidTransientUserGestureActivation();
-
-  // Return true if the corresponding document has valid transient user gesture
-  // activation and the transient user gesture activation had been consumed
-  // successfully.
-  bool ConsumeTransientUserGestureActivation();
-
   // Return the window proxy object that corresponds to this browsing context.
   inline JSObject* GetWindowProxy() const { return mWindowProxy; }
   inline JSObject* GetUnbarrieredWindowProxy() const {
@@ -731,7 +708,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return true;
   }
 
-  void DidSet(FieldIndex<IDX_UserActivationState>);
   void DidSet(FieldIndex<IDX_IsActive>, bool aOldValue);
 
   // Ensure that we only set the flag on the top level browsingContext.
