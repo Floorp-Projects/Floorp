@@ -14,7 +14,7 @@ var service = SpecialPowers.Cc["@mozilla.org/eventsourceevent/service;1"]
                 .getService(SpecialPowers.Ci.nsIEventSourceEventService);
 ok(!!service, "We have the nsIEventSourceEventService");
 
-var innerId = SpecialPowers.getDOMWindowUtils(window).currentInnerWindowID;
+var innerId = SpecialPowers.wrap(window).windowGlobalChild.innerWindowId;
 ok(innerId, "We have a valid innerWindowID: " + innerId);
 
 var channelId;

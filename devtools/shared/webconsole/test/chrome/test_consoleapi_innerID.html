@@ -22,7 +22,7 @@ function doConsoleCalls(aState)
 {
   const { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   const console = new ConsoleAPI({
-    innerID: window.windowUtils.currentInnerWindowID
+    innerID: window.windowGlobalChild.innerWindowId
   });
 
   const longString = (new Array(DevToolsServer.LONG_STRING_LENGTH + 2)).join("a");

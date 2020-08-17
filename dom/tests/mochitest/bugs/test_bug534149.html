@@ -23,8 +23,10 @@ function getIDs(iframe) {
   // Force inner creation
   win.document;
 
-  var util = SpecialPowers.getDOMWindowUtils(win);
-  return [util.outerWindowID, util.currentInnerWindowID];
+  return [
+    SpecialPowers.getDOMWindowUtils(win).outerWindowID,
+    SpecialPowers.wrap(win).windowGlobalChild.innerWindowId,
+  ];
 }
 
 var i1 = document.createElement("iframe");

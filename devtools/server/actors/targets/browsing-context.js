@@ -72,7 +72,7 @@ loader.lazyRequireGetter(
 );
 
 function getWindowID(window) {
-  return window.windowUtils.currentInnerWindowID;
+  return window.windowGlobalChild.innerWindowId;
 }
 
 function getDocShellChromeEventHandler(docShell) {
@@ -112,7 +112,7 @@ exports.getChildDocShells = getChildDocShells;
  */
 
 function getInnerId(window) {
-  return window.windowUtils.currentInnerWindowID;
+  return window.windowGlobalChild.innerWindowId;
 }
 
 const browsingContextTargetPrototype = {
