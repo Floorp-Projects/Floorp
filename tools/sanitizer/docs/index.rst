@@ -20,6 +20,12 @@ Thread Sanitizer (TSan) is a fast data race detector for C/C++ programs. It uses
 
 :ref:`More information <Thread Sanitizer>`
 
+**Memory Sanitizer**
+
+Memory Sanitizer (MSan) is a fast detector used for uninitialized memory in C/C++ programs. It uses a compile-time instrumentation to ensure that all memory access at runtime uses only memory that has been initialized.
+
+:ref:`More information <Memory Sanitizer>`
+
 **ASan Nightly Project**
 
 The ASan Nightly Project involves building a Firefox Nightly browser with the popular AddressSanitizer tool and enhancing it with remote crash reporting capabilities for any errors detected.
