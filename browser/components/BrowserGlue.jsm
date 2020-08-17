@@ -711,6 +711,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Corroborate: "resource://gre/modules/Corroborate.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   DoHController: "resource:///modules/DoHController.jsm",
+  DownloadsViewableInternally:
+    "resource:///modules/DownloadsViewableInternally.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FirefoxMonitor: "resource:///modules/FirefoxMonitor.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -1124,6 +1126,10 @@ BrowserGlue.prototype = {
         // pdf content handler, and initializes parent side message manager
         // shim for privileged api access.
         PdfJs.init(this._isNewProfile);
+
+        // Allow certain viewable internally types to be opened from downloads.
+        DownloadsViewableInternally.register();
+
         break;
       case "shield-init-complete":
         this._shieldInitComplete = true;
