@@ -31,7 +31,9 @@
  *  lifetime of the SkTypeface. This was introduced as a means to work around
  *  https://crbug.com/413332 .
  */
-SK_API extern SkTypeface* SkCreateTypefaceFromCTFont(CTFontRef, CFTypeRef = NULL);
+SK_API extern SkTypeface* SkCreateTypefaceFromCTFont(CTFontRef, CFTypeRef = NULL,
+                                                     const SkFontStyle* = nullptr,
+                                                     const CTFontSymbolicTraits* = nullptr);
 
 /**
  *  Returns the platform-specific CTFontRef handle for a
