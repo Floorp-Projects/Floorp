@@ -3,8 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebrtcMediaDataDecoderCodec.h"
+
 #include "ImageContainer.h"
 #include "Layers.h"
+#include "MediaDataDecoderProxy.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -143,7 +145,7 @@ int32_t WebrtcMediaDataDecoder::Release() {
 }
 
 bool WebrtcMediaDataDecoder::OnTaskQueue() const {
-  return OwnerThread()->IsCurrentThreadIn();
+  return mTaskQueue->IsOnCurrentThread();
 }
 
 int32_t WebrtcMediaDataDecoder::CreateDecoder() {
@@ -154,17 +156,22 @@ int32_t WebrtcMediaDataDecoder::CreateDecoder() {
     Release();
   }
 
-  mDecoder = mFactory->CreateDecoder(
-      {mInfo, mTaskQueue,
+  RefPtr<MediaDataDecoder> decoder = mFactory->CreateDecoder(
+      {mInfo,
        CreateDecoderParams::OptionSet(
            CreateDecoderParams::Option::LowLatency,
            CreateDecoderParams::Option::FullH264Parsing,
            CreateDecoderParams::Option::ErrorIfNoInitializationData),
        mTrackType, mImageContainer, knowsCompositor});
 
-  if (!mDecoder) {
+  if (!decoder) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+
+  // We need to wrap our decoder in a MediaDataDecoderProxy so that it always
+  // run on an nsISerialEventTarget (which the webrtc code doesn't do)
+  mDecoder =
+      new MediaDataDecoderProxy(decoder.forget(), do_AddRef(mTaskQueue.get()));
 
   media::Await(
       do_AddRef(mThreadPool), mDecoder->Init(),

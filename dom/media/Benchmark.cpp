@@ -8,6 +8,7 @@
 
 #include "BufferMediaResource.h"
 #include "MediaData.h"
+#include "MediaDataDecoderProxy.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"
 #include "WebMDemuxer.h"
@@ -17,11 +18,11 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "nsIGfxInfo.h"
-#include "mozilla/Telemetry.h"
 #include "nsGkAtoms.h"
+#include "nsIGfxInfo.h"
 
 #ifndef MOZ_WIDGET_ANDROID
 #  include "WebMSample.h"
@@ -246,11 +247,15 @@ void BenchmarkPlayback::InitDecoder(UniquePtr<TrackInfo>&& aInfo) {
 
   RefPtr<PDMFactory> platform = new PDMFactory();
   mInfo = std::move(aInfo);
-  mDecoder = platform->CreateDecoder({*mInfo, mDecoderTaskQueue});
-  if (!mDecoder) {
+  RefPtr<MediaDataDecoder> decoder =
+      platform->CreateDecoder(CreateDecoderParams{*mInfo});
+
+  if (!decoder) {
     Error(MediaResult(NS_ERROR_FAILURE, "Failed to create decoder"));
     return;
   }
+  mDecoder = new MediaDataDecoderProxy(decoder.forget(),
+                                       do_AddRef(mDecoderTaskQueue.get()));
   RefPtr<Benchmark> ref(mGlobalState);
   mDecoder->Init()->Then(
       Thread(), __func__,

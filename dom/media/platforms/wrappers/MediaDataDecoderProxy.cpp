@@ -38,6 +38,7 @@ bool MediaDataDecoderProxy::CanDecodeBatch() const {
 
 RefPtr<MediaDataDecoder::DecodePromise> MediaDataDecoderProxy::DecodeBatch(
     nsTArray<RefPtr<MediaRawData>>&& aSamples) {
+  MOZ_ASSERT(!mIsShutdown);
   if (!mProxyThread) {
     return mProxyDecoder->DecodeBatch(std::move(aSamples));
   }
@@ -80,8 +81,16 @@ RefPtr<ShutdownPromise> MediaDataDecoderProxy::Shutdown() {
   if (!mProxyThread) {
     return mProxyDecoder->Shutdown();
   }
+  // We chain another promise to ensure that the proxied decoder gets destructed
+  // on the proxy thread.
   return InvokeAsync(mProxyThread, __func__, [self = RefPtr{this}] {
-    return self->mProxyDecoder->Shutdown();
+    RefPtr<ShutdownPromise> p = self->mProxyDecoder->Shutdown()->Then(
+        self->mProxyThread, __func__,
+        [self](const ShutdownPromise::ResolveOrRejectValue& aResult) {
+          self->mProxyDecoder = nullptr;
+          return ShutdownPromise::CreateAndResolveOrReject(aResult, __func__);
+        });
+    return p;
   });
 }
 

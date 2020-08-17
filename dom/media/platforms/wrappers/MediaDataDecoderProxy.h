@@ -22,30 +22,10 @@ class MediaDataDecoderProxy
       public DecoderDoctorLifeLogger<MediaDataDecoderProxy> {
  public:
   explicit MediaDataDecoderProxy(
-      already_AddRefed<nsISerialEventTarget> aProxyThread)
-      : mProxyThread(aProxyThread)
-#  if defined(DEBUG)
-        ,
-        mIsShutdown(false)
-#  endif
-  {
-  }
-
-  explicit MediaDataDecoderProxy(
-      already_AddRefed<MediaDataDecoder> aProxyDecoder)
-      : mProxyDecoder(aProxyDecoder)
-#  if defined(DEBUG)
-        ,
-        mIsShutdown(false)
-#  endif
-  {
+      already_AddRefed<MediaDataDecoder> aProxyDecoder,
+      already_AddRefed<nsISerialEventTarget> aProxyThread = nullptr)
+      : mProxyDecoder(aProxyDecoder), mProxyThread(aProxyThread) {
     DDLINKCHILD("proxy decoder", mProxyDecoder.get());
-  }
-
-  void SetProxyTarget(MediaDataDecoder* aProxyDecoder) {
-    MOZ_ASSERT(aProxyDecoder);
-    mProxyDecoder = aProxyDecoder;
-    DDLINKCHILD("proxy decoder", aProxyDecoder);
   }
 
   RefPtr<InitPromise> Init() override;
@@ -63,11 +43,12 @@ class MediaDataDecoderProxy
   ConversionRequired NeedsConversion() const override;
 
  private:
+  // Set on construction and clear on the proxy thread if set.
   RefPtr<MediaDataDecoder> mProxyDecoder;
-  nsCOMPtr<nsISerialEventTarget> mProxyThread;
+  const nsCOMPtr<nsISerialEventTarget> mProxyThread;
 
 #  if defined(DEBUG)
-  Atomic<bool> mIsShutdown;
+  Atomic<bool> mIsShutdown = Atomic<bool>(false);
 #  endif
 };
 

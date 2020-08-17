@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteAudioDecoder.h"
 
-#include "RemoteDecoderManagerChild.h"
+#include "MediaDataDecoderProxy.h"
 #include "OpusDecoder.h"
+#include "RemoteDecoderManagerChild.h"
 #include "VorbisDecoder.h"
 #include "WAVDecoder.h"
-
 #include "mozilla/PodOperations.h"
 
 namespace mozilla {
@@ -82,22 +82,27 @@ RemoteAudioDecoderParent::RemoteAudioDecoderParent(
     : RemoteDecoderParent(aParent, aManagerThread, aDecodeTaskQueue),
       mAudioInfo(aAudioInfo) {
   CreateDecoderParams params(mAudioInfo);
-  params.mTaskQueue = mDecodeTaskQueue;
   params.mOptions = aOptions;
   MediaResult error(NS_OK);
   params.mError = &error;
 
+  RefPtr<MediaDataDecoder> decoder;
   if (VorbisDataDecoder::IsVorbis(params.mConfig.mMimeType)) {
-    mDecoder = new VorbisDataDecoder(params);
+    decoder = new VorbisDataDecoder(params);
   } else if (OpusDataDecoder::IsOpus(params.mConfig.mMimeType)) {
-    mDecoder = new OpusDataDecoder(params);
+    decoder = new OpusDataDecoder(params);
   } else if (WaveDataDecoder::IsWave(params.mConfig.mMimeType)) {
-    mDecoder = new WaveDataDecoder(params);
+    decoder = new WaveDataDecoder(params);
   }
 
   if (NS_FAILED(error)) {
     MOZ_ASSERT(aErrorDescription);
     *aErrorDescription = error.Description();
+  }
+
+  if (decoder) {
+    mDecoder = new MediaDataDecoderProxy(decoder.forget(),
+                                         do_AddRef(mDecodeTaskQueue.get()));
   }
 
   *aSuccess = !!mDecoder;

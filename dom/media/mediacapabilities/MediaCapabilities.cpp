@@ -247,7 +247,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
           // MediaDataDecoder keeps a reference to the config object, so we must
           // keep it alive until the decoder has been shutdown.
           CreateDecoderParams params{
-              *config, taskQueue, compositor,
+              *config, compositor,
               CreateDecoderParams::VideoFrameRate(frameRate),
               TrackInfo::kVideoTrack};
           // We want to ensure that all decoder's queries are occurring only

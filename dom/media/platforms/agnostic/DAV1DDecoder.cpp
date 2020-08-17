@@ -6,6 +6,7 @@
 
 #include "DAV1DDecoder.h"
 
+#include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsThreadUtils.h"
 
@@ -18,7 +19,9 @@ namespace mozilla {
 
 DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
     : mInfo(aParams.VideoConfig()),
-      mTaskQueue(aParams.mTaskQueue),
+      mTaskQueue(
+          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "Dav1dDecoder")),
       mImageContainer(aParams.mImageContainer) {}
 
 RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
@@ -281,7 +284,7 @@ RefPtr<ShutdownPromise> DAV1DDecoder::Shutdown() {
   RefPtr<DAV1DDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self]() {
     dav1d_close(&self->mContext);
-    return ShutdownPromise::CreateAndResolve(true, __func__);
+    return self->mTaskQueue->BeginShutdown();
   });
 }
 

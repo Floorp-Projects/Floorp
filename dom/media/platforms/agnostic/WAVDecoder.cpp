@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WAVDecoder.h"
+
 #include "AudioSampleFormat.h"
 #include "BufferReader.h"
+#include "VideoUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/SyncRunnable.h"
-#include "VideoUtils.h"
-#include "WAVDecoder.h"
 
 namespace mozilla {
 
@@ -43,27 +44,21 @@ int16_t DecodeULawSample(uint8_t aValue) {
 }
 
 WaveDataDecoder::WaveDataDecoder(const CreateDecoderParams& aParams)
-    : mInfo(aParams.AudioConfig()), mTaskQueue(aParams.mTaskQueue) {}
+    : mInfo(aParams.AudioConfig()) {}
 
 RefPtr<ShutdownPromise> WaveDataDecoder::Shutdown() {
-  RefPtr<WaveDataDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self]() {
-    return ShutdownPromise::CreateAndResolve(true, __func__);
-  });
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 RefPtr<MediaDataDecoder::InitPromise> WaveDataDecoder::Init() {
+  mThread = GetCurrentSerialEventTarget();
   return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> WaveDataDecoder::Decode(
     MediaRawData* aSample) {
-  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
-                                    &WaveDataDecoder::ProcessDecode, aSample);
-}
-
-RefPtr<MediaDataDecoder::DecodePromise> WaveDataDecoder::ProcessDecode(
-    MediaRawData* aSample) {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   size_t aLength = aSample->Size();
   BufferReader aReader(aSample->Data(), aLength);
   int64_t aOffset = aSample->mOffset;
@@ -141,15 +136,13 @@ RefPtr<MediaDataDecoder::DecodePromise> WaveDataDecoder::ProcessDecode(
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> WaveDataDecoder::Drain() {
-  return InvokeAsync(mTaskQueue, __func__, [] {
-    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-  });
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  return DecodePromise::CreateAndResolve(DecodedData(), __func__);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> WaveDataDecoder::Flush() {
-  return InvokeAsync(mTaskQueue, __func__, []() {
-    return FlushPromise::CreateAndResolve(true, __func__);
-  });
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  return FlushPromise::CreateAndResolve(true, __func__);
 }
 
 /* static */
