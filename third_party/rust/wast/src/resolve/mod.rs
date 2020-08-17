@@ -1,9 +1,88 @@
 use crate::ast::*;
 use crate::Error;
 
+mod deinline_import_export;
 mod expand;
+mod gensym;
 mod names;
-mod tyexpand;
+
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
+pub enum Ns {
+    Func,
+    Table,
+    Global,
+    Memory,
+    Module,
+    Instance,
+    Event,
+    Type,
+}
+
+impl Ns {
+    fn from_item(item: &ItemSig<'_>) -> Ns {
+        match item.kind {
+            ItemKind::Func(_) => Ns::Func,
+            ItemKind::Table(_) => Ns::Table,
+            ItemKind::Memory(_) => Ns::Memory,
+            ItemKind::Global(_) => Ns::Global,
+            ItemKind::Instance(_) => Ns::Instance,
+            ItemKind::Module(_) => Ns::Module,
+            ItemKind::Event(_) => Ns::Event,
+        }
+    }
+
+    fn from_export<'a>(kind: &ExportKind<'a>) -> (Index<'a>, Ns) {
+        match *kind {
+            ExportKind::Func(f) => (f, Ns::Func),
+            ExportKind::Table(f) => (f, Ns::Table),
+            ExportKind::Global(f) => (f, Ns::Global),
+            ExportKind::Memory(f) => (f, Ns::Memory),
+            ExportKind::Instance(f) => (f, Ns::Instance),
+            ExportKind::Module(f) => (f, Ns::Module),
+            ExportKind::Event(f) => (f, Ns::Event),
+            ExportKind::Type(f) => (f, Ns::Type),
+        }
+    }
+
+    fn from_export_mut<'a, 'b>(kind: &'b mut ExportKind<'a>) -> (&'b mut Index<'a>, Ns) {
+        match kind {
+            ExportKind::Func(f) => (f, Ns::Func),
+            ExportKind::Table(f) => (f, Ns::Table),
+            ExportKind::Global(f) => (f, Ns::Global),
+            ExportKind::Memory(f) => (f, Ns::Memory),
+            ExportKind::Instance(f) => (f, Ns::Instance),
+            ExportKind::Module(f) => (f, Ns::Module),
+            ExportKind::Event(f) => (f, Ns::Event),
+            ExportKind::Type(f) => (f, Ns::Type),
+        }
+    }
+
+    fn to_export_kind<'a>(&self, index: Index<'a>) -> ExportKind<'a> {
+        match self {
+            Ns::Func => ExportKind::Func(index),
+            Ns::Table => ExportKind::Table(index),
+            Ns::Global => ExportKind::Global(index),
+            Ns::Memory => ExportKind::Memory(index),
+            Ns::Module => ExportKind::Module(index),
+            Ns::Instance => ExportKind::Instance(index),
+            Ns::Event => ExportKind::Event(index),
+            Ns::Type => ExportKind::Type(index),
+        }
+    }
+
+    fn desc(&self) -> &'static str {
+        match self {
+            Ns::Func => "func",
+            Ns::Table => "table",
+            Ns::Global => "global",
+            Ns::Memory => "memory",
+            Ns::Module => "module",
+            Ns::Instance => "instance",
+            Ns::Event => "event",
+            Ns::Type => "type",
+        }
+    }
+}
 
 pub fn resolve<'a>(module: &mut Module<'a>) -> Result<Names<'a>, Error> {
     let fields = match &mut module.kind {
@@ -11,24 +90,19 @@ pub fn resolve<'a>(module: &mut Module<'a>) -> Result<Names<'a>, Error> {
         _ => return Ok(Default::default()),
     };
 
-    // First up, let's de-inline import/export annotations since this'll
-    // restructure the module and affect how we count indices in future passes
-    // since function definitions turn into imports.
-    //
-    // The first pass switches all inline imports to explicit `Import` items.
-    // This pass also counts all `Import` items per-type to start building up
-    // the index space so we know the corresponding index for each item.
-    //
-    // In a second pass we then remove all inline `export` annotations, again
-    // counting indices as we go along to ensure we always know the index for
-    // what we're exporting.
-    //
-    // The final step is then taking all of the injected `export` fields and
-    // actually pushing them onto our list of fields.
-    let mut expander = expand::Expander::default();
-    expander.process(fields, expand::Expander::deinline_import);
-    expander.process(fields, expand::Expander::deinline_export);
+    // Ensure that each resolution of a module is deterministic in the names
+    // that it generates by resetting our thread-local symbol generator.
+    gensym::reset();
 
+    // First up, de-inline import/export annotations.
+    //
+    // This ensures we only have to deal with inline definitions and to
+    // calculate exports we only have to look for a particular kind of module
+    // field.
+    deinline_import_export::run(fields);
+
+    // With a canonical form of imports make sure that imports are all listed
+    // first.
     for i in 1..fields.len() {
         let span = match &fields[i] {
             ModuleField::Import(i) => i.span,
@@ -44,53 +118,15 @@ pub fn resolve<'a>(module: &mut Module<'a>) -> Result<Names<'a>, Error> {
         return Err(Error::new(span, format!("import after {}", name)));
     }
 
-    // For the second pass we resolve all inline type annotations. This will, in
-    // the order that we see them, append to the list of types. Note that types
-    // are indexed so we're careful to always insert new types just before the
-    // field that we're looking at.
-    //
-    // It's not strictly required that we `move_types_first` here but it gets
-    // our indexing to exactly match wabt's which our test suite is asserting.
-    let mut cur = 0;
-    let mut expander = tyexpand::Expander::default();
-    move_types_first(fields);
-    while cur < fields.len() {
-        expander.expand(&mut fields[cur]);
-        for new in expander.to_prepend.drain(..) {
-            fields.insert(cur, new);
-            cur += 1;
-        }
-        cur += 1;
-    }
+    // Next inject any `alias` declarations and expand `(export $foo)`
+    // annotations. These are all part of the module-linking proposal and we try
+    // to resolve their injection here to keep index spaces stable for later.
+    expand::run(fields)?;
 
     // Perform name resolution over all `Index` items to resolve them all to
     // indices instead of symbolic names.
-    //
-    // For this operation we do need to make sure that imports are sorted first
-    // because otherwise we'll be calculating indices in the wrong order.
-    move_imports_first(fields);
-    let mut resolver = names::Resolver::default();
-    for field in fields.iter_mut() {
-        resolver.register(field)?;
-    }
-    for field in fields.iter_mut() {
-        resolver.resolve(field)?;
-    }
+    let resolver = names::resolve(fields)?;
     Ok(Names { resolver })
-}
-
-fn move_imports_first(fields: &mut [ModuleField<'_>]) {
-    fields.sort_by_key(|f| match f {
-        ModuleField::Import(_) => false,
-        _ => true,
-    });
-}
-
-fn move_types_first(fields: &mut [ModuleField<'_>]) {
-    fields.sort_by_key(|f| match f {
-        ModuleField::Type(_) => false,
-        _ => true,
-    });
 }
 
 /// Representation of the results of name resolution for a module.
@@ -110,7 +146,8 @@ impl<'a> Names<'a> {
     /// looked up in the function namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_func(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.resolve_idx(idx, names::Ns::Func)
+        self.resolver.module().resolve(idx, Ns::Func)?;
+        Ok(())
     }
 
     /// Resolves `idx` within the memory namespace.
@@ -119,7 +156,8 @@ impl<'a> Names<'a> {
     /// looked up in the memory namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_memory(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.resolve_idx(idx, names::Ns::Memory)
+        self.resolver.module().resolve(idx, Ns::Memory)?;
+        Ok(())
     }
 
     /// Resolves `idx` within the table namespace.
@@ -128,7 +166,8 @@ impl<'a> Names<'a> {
     /// looked up in the table namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_table(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.resolve_idx(idx, names::Ns::Table)
+        self.resolver.module().resolve(idx, Ns::Table)?;
+        Ok(())
     }
 
     /// Resolves `idx` within the global namespace.
@@ -137,6 +176,7 @@ impl<'a> Names<'a> {
     /// looked up in the global namespace and converted to a `Num`. If the
     /// `Id` is not defined then an error will be returned.
     pub fn resolve_global(&self, idx: &mut Index<'a>) -> Result<(), Error> {
-        self.resolver.resolve_idx(idx, names::Ns::Global)
+        self.resolver.module().resolve(idx, Ns::Global)?;
+        Ok(())
     }
 }
