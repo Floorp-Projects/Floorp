@@ -119,7 +119,7 @@ class nsPrintJob final : public nsIObserver,
                nsIWebProgressListener* aWebProgressListener);
 
   bool IsDoingPrint() const { return mIsDoingPrinting; }
-  bool IsDoingPrintPreview() const { return mIsDoingPrintPreview; }
+  bool CreatedForPrintPreview() const { return mCreatedForPrintPreview; }
   bool HasEverPrinted() const { return mHasEverPrinted; }
   /// If the returned value is not greater than zero, an error occurred.
   int32_t GetPrintPreviewNumPages();
@@ -129,7 +129,6 @@ class nsPrintJob final : public nsIObserver,
   void SetIsPrinting(bool aIsPrinting);
   bool GetIsPrinting() const { return mIsDoingPrinting; }
   void SetIsPrintPreview(bool aIsPrintPreview);
-  bool GetIsPrintPreview() const { return mIsDoingPrintPreview; }
   bool GetIsCreatingPrintPreview() const { return mIsCreatingPrintPreview; }
 
   std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountPages();
@@ -280,9 +279,9 @@ class nsPrintJob final : public nsIObserver,
 
   float mScreenDPI = 115.0f;
 
+  bool mCreatedForPrintPreview = false;
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;
-  bool mIsDoingPrintPreview = false;
   bool mHasEverPrinted = false;
   bool mProgressDialogIsShown = false;
   bool mDidLoadDataForPrinting = false;

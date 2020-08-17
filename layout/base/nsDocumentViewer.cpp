@@ -1748,7 +1748,7 @@ nsDocumentViewer::Destroy() {
   if (mPrintJob) {
     RefPtr<nsPrintJob> printJob = std::move(mPrintJob);
 #  ifdef NS_PRINT_PREVIEW
-    if (printJob->IsDoingPrintPreview()) {
+    if (printJob->CreatedForPrintPreview()) {
       printJob->FinishPrintPreview();
     }
 #  endif
@@ -3382,7 +3382,7 @@ nsDocumentViewer::GetDoingPrint(bool* aDoingPrint) {
   NS_ENSURE_ARG_POINTER(aDoingPrint);
 
   // XXX shouldn't this be GetDoingPrint() ?
-  *aDoingPrint = mPrintJob ? mPrintJob->IsDoingPrintPreview() : false;
+  *aDoingPrint = mPrintJob ? mPrintJob->CreatedForPrintPreview() : false;
   return NS_OK;
 }
 
@@ -3391,7 +3391,7 @@ NS_IMETHODIMP
 nsDocumentViewer::GetDoingPrintPreview(bool* aDoingPrintPreview) {
   NS_ENSURE_ARG_POINTER(aDoingPrintPreview);
 
-  *aDoingPrintPreview = mPrintJob ? mPrintJob->IsDoingPrintPreview() : false;
+  *aDoingPrintPreview = mPrintJob ? mPrintJob->CreatedForPrintPreview() : false;
   return NS_OK;
 }
 
@@ -3574,7 +3574,7 @@ void nsDocumentViewer::SetIsPrinting(bool aIsPrinting) {
 bool nsDocumentViewer::GetIsPrintPreview() const {
 #ifdef NS_PRINTING
   if (mPrintJob) {
-    return mPrintJob->GetIsPrintPreview();
+    return mPrintJob->CreatedForPrintPreview();
   }
 #endif
   return false;
