@@ -645,9 +645,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     return NS_OK;
   }
 
-  // If https-only mode is enabled we'll upgrade this later anyway
-  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  if (nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin)) {
+  // Check if https-only mode upgrades this later anyway
+  if (nsHTTPSOnlyUtils::IsSafeToAcceptCORSOrMixedContent(aLoadInfo)) {
     *aDecision = ACCEPT;
     return NS_OK;
   }
