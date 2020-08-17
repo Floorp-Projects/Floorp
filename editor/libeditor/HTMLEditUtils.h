@@ -529,6 +529,24 @@ class HTMLEditUtils final {
   }
 
   /**
+   * GetInclusiveAncestorBlockElementExceptHRElement() returns inclusive
+   * ancestor block element except `<hr>` element.
+   */
+  static Element* GetInclusiveAncestorBlockElementExceptHRElement(
+      const nsIContent& aContent, const nsINode* aAncestorLimiter = nullptr) {
+    Element* blockElement =
+        GetInclusiveAncestorBlockElement(aContent, aAncestorLimiter);
+    if (!blockElement || !blockElement->IsHTMLElement(nsGkAtoms::hr)) {
+      return blockElement;
+    }
+    if (!blockElement->GetParentElement()) {
+      return nullptr;
+    }
+    return GetInclusiveAncestorBlockElementExceptHRElement(
+        *blockElement->GetParentElement(), aAncestorLimiter);
+  }
+
+  /**
    * GetInclusiveAncestorEditableBlockElementOrInlineEditingHost() returns
    * inclusive block ancestor element of aContent.  If aContent is in inline
    * editing host, returns the editing host instead.
