@@ -23,7 +23,13 @@ bool DrawTargetOffset::Init(DrawTarget* aDrawTarget, IntPoint aOrigin) {
 }
 
 already_AddRefed<SourceSurface> DrawTargetOffset::Snapshot() {
-  return MakeAndAddRef<SourceSurfaceOffset>(mDrawTarget->Snapshot(), mOrigin);
+  RefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
+
+  if (!snapshot) {
+    return nullptr;
+  }
+
+  return MakeAndAddRef<SourceSurfaceOffset>(snapshot, mOrigin);
 }
 
 void DrawTargetOffset::DetachAllSnapshots() {}
