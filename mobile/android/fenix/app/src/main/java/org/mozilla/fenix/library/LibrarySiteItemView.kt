@@ -75,13 +75,7 @@ class LibrarySiteItemView @JvmOverloads constructor(
      * Change visibility of parts of this view based on what type of item is being represented.
      */
     fun displayAs(mode: ItemType) {
-        favicon.isVisible = mode != ItemType.SEPARATOR
-        title.isVisible = mode != ItemType.SEPARATOR
         url.isVisible = mode == ItemType.SITE
-        overflow_menu.isVisible = mode != ItemType.SEPARATOR
-        separator.isVisible = mode == ItemType.SEPARATOR
-        isClickable = mode != ItemType.SEPARATOR
-        isFocusable = mode != ItemType.SEPARATOR
     }
 
     /**
@@ -136,7 +130,7 @@ class LibrarySiteItemView @JvmOverloads constructor(
     }
 
     enum class ItemType {
-        SITE, FOLDER, SEPARATOR;
+        SITE, FOLDER;
     }
 
     companion object {

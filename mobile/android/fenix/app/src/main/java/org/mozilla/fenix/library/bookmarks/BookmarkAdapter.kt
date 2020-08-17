@@ -22,7 +22,7 @@ import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkNodeViewHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkSeparatorViewHolder
 
 class BookmarkAdapter(private val emptyView: View, private val interactor: BookmarkViewInteractor) :
-    RecyclerView.Adapter<BookmarkNodeViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
@@ -78,43 +78,44 @@ class BookmarkAdapter(private val emptyView: View, private val interactor: Bookm
         override fun getNewListSize(): Int = new.size
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkNodeViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.bookmark_list_item, parent, false) as LibrarySiteItemView
 
         return when (viewType) {
             LibrarySiteItemView.ItemType.SITE.ordinal -> BookmarkItemViewHolder(view, interactor)
             LibrarySiteItemView.ItemType.FOLDER.ordinal -> BookmarkFolderViewHolder(view, interactor)
-            LibrarySiteItemView.ItemType.SEPARATOR.ordinal -> BookmarkSeparatorViewHolder(view, interactor)
+            BookmarkSeparatorViewHolder.LAYOUT_ID -> BookmarkSeparatorViewHolder(view)
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }
     }
 
     override fun getItemViewType(position: Int): Int {
         return when (tree[position].type) {
-            BookmarkNodeType.ITEM -> LibrarySiteItemView.ItemType.SITE
-            BookmarkNodeType.FOLDER -> LibrarySiteItemView.ItemType.FOLDER
-            BookmarkNodeType.SEPARATOR -> LibrarySiteItemView.ItemType.SEPARATOR
+            BookmarkNodeType.ITEM -> LibrarySiteItemView.ItemType.SITE.ordinal
+            BookmarkNodeType.FOLDER -> LibrarySiteItemView.ItemType.FOLDER.ordinal
+            BookmarkNodeType.SEPARATOR -> BookmarkSeparatorViewHolder.LAYOUT_ID
             else -> throw IllegalStateException("Item $tree[position] does not match to a ViewType")
-        }.ordinal
+        }
     }
 
     override fun getItemCount(): Int = tree.size
 
     override fun onBindViewHolder(
-        holder: BookmarkNodeViewHolder,
+        holder: RecyclerView.ViewHolder,
         position: Int,
         payloads: MutableList<Any>
     ) {
         if (payloads.isNotEmpty() && payloads[0] is BookmarkPayload) {
-            holder.bind(tree[position], mode, payloads[0] as BookmarkPayload)
+            (holder as? BookmarkNodeViewHolder)
+                ?.bind(tree[position], mode, payloads[0] as BookmarkPayload)
         } else {
             super.onBindViewHolder(holder, position, payloads)
         }
     }
 
-    override fun onBindViewHolder(holder: BookmarkNodeViewHolder, position: Int) {
-        holder.bind(tree[position], mode)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        (holder as? BookmarkNodeViewHolder)?.bind(tree[position], mode)
     }
 }
 
