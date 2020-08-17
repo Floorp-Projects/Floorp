@@ -9,7 +9,6 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
-#include "u16string.h"
 
 namespace mozilla {
 namespace gfx {
