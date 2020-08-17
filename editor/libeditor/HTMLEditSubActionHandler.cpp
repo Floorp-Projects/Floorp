@@ -3216,9 +3216,9 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   EditorDOMPoint pointToPutCaret(aCaretPoint);
   {
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
-    AutoInclusiveAncestorBlockElementsJoiner joiner;
-    result |= joiner.Run(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
-                         MOZ_KnownLive(*mRightContent));
+    AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
+                                                    *mRightContent);
+    result |= joiner.Run(aHTMLEditor);
     if (result.Failed()) {
       NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
       return result;
@@ -3289,9 +3289,9 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   EditorDOMPoint pointToPutCaret(aCaretPoint);
   {
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
-    AutoInclusiveAncestorBlockElementsJoiner joiner;
-    result |= joiner.Run(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
-                         MOZ_KnownLive(*mRightContent));
+    AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
+                                                    *mRightContent);
+    result |= joiner.Run(aHTMLEditor);
     // This should claim that trying to join the block means that
     // this handles the action because the caller shouldn't do anything
     // anymore in this case.
@@ -3699,9 +3699,9 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     }
 
     if (joinInclusiveAncestorBlockElements) {
-      AutoInclusiveAncestorBlockElementsJoiner joiner;
-      result |= joiner.Run(aHTMLEditor, MOZ_KnownLive(*mLeftContent),
-                           MOZ_KnownLive(*mRightContent));
+      AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
+                                                      *mRightContent);
+      result |= joiner.Run(aHTMLEditor);
       if (result.Failed()) {
         NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
         return result;
@@ -4600,15 +4600,15 @@ HTMLEditor::AutoBlockElementsJoiner::JoinNodesDeepWithTransaction(
 }
 
 EditActionResult HTMLEditor::AutoBlockElementsJoiner::
-    AutoInclusiveAncestorBlockElementsJoiner::Run(
-        HTMLEditor& aHTMLEditor, nsIContent& aLeftContentInBlock,
-        nsIContent& aRightContentInBlock) {
+    AutoInclusiveAncestorBlockElementsJoiner::Run(HTMLEditor& aHTMLEditor) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   RefPtr<Element> leftBlockElement =
-      HTMLEditUtils::GetInclusiveAncestorBlockElement(aLeftContentInBlock);
+      HTMLEditUtils::GetInclusiveAncestorBlockElement(
+          mInclusiveDescendantOfLeftBlockElement);
   RefPtr<Element> rightBlockElement =
-      HTMLEditUtils::GetInclusiveAncestorBlockElement(aRightContentInBlock);
+      HTMLEditUtils::GetInclusiveAncestorBlockElement(
+          mInclusiveDescendantOfRightBlockElement);
 
   // Sanity checks
   if (NS_WARN_IF(!leftBlockElement) || NS_WARN_IF(!rightBlockElement)) {
@@ -4711,7 +4711,8 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
     EditActionResult result = WhiteSpaceVisibilityKeeper::
         MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
             aHTMLEditor, *leftBlockElement, *rightBlockElement,
-            atLeftBlockChild, aLeftContentInBlock,
+            atLeftBlockChild,
+            MOZ_KnownLive(*mInclusiveDescendantOfLeftBlockElement),
             newListElementTagNameOfRightListElement);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
