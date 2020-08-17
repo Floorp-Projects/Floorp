@@ -715,8 +715,8 @@ DownloadsPlacesView.prototype = {
     contextMenu.setAttribute("exists", "true");
     contextMenu.classList.toggle("temporary-block", !!download.hasBlockedData);
 
-    if (element.hasAttribute("is-pdf")) {
-      contextMenu.setAttribute("is-pdf", "true");
+    if (element.hasAttribute("viewable-internally")) {
+      contextMenu.setAttribute("viewable-internally", "true");
       let alwaysUseSystemViewerItem = contextMenu.querySelector(
         ".downloadAlwaysUseSystemDefaultMenuItem"
       );
@@ -737,7 +737,7 @@ DownloadsPlacesView.prototype = {
         DownloadsCommon.openInSystemViewerItemEnabled
       );
     } else {
-      contextMenu.removeAttribute("is-pdf");
+      contextMenu.removeAttribute("viewable-internally");
     }
 
     if (!download.stopped) {
