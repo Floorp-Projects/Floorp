@@ -7,7 +7,6 @@
  * Tests search suggestions in search mode.
  */
 
-const TEST_QUERY = "hello";
 const DEFAULT_ENGINE_NAME = "Test";
 const SUGGESTIONS_ENGINE_NAME = "searchSuggestionEngine.xml";
 
@@ -67,160 +66,280 @@ add_task(async function emptySearch() {
     // the picked engine and no heuristic.
     await checkResults([
       {
-        isSearchHistory: true,
-        suggestion: "hello formHistory 1",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        searchParams: {
+          isSearchHistory: true,
+          suggestion: "hello formHistory 1",
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: true,
-        suggestion: "hello formHistory 2",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        searchParams: {
+          isSearchHistory: true,
+          suggestion: "hello formHistory 2",
+          engine: suggestionsEngine.name,
+        },
       },
     ]);
 
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
 add_task(async function nonEmptySearch() {
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    let query = "hello";
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "hello",
+      value: query,
     });
     await UrlbarTestUtils.enterSearchMode(window);
-    Assert.equal(gURLBar.value, "hello", "Urlbar value should be set.");
+    Assert.equal(gURLBar.value, query, "Urlbar value should be set.");
     // We expect to get the heuristic and all the suggestions.
     await checkResults([
       {
-        isSearchHistory: false,
-        suggestion: undefined,
+        heuristic: true,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: true,
-        suggestion: "hello formHistory 1",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        searchParams: {
+          isSearchHistory: true,
+          suggestion: "hello formHistory 1",
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: true,
-        suggestion: "hello formHistory 2",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        searchParams: {
+          isSearchHistory: true,
+          suggestion: "hello formHistory 2",
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: false,
-        suggestion: `${TEST_QUERY}foo`,
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          suggestion: `${query}foo`,
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: false,
-        suggestion: `${TEST_QUERY}bar`,
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          suggestion: `${query}bar`,
+          engine: suggestionsEngine.name,
+        },
       },
     ]);
 
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
 add_task(async function nonEmptySearch_nonMatching() {
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    let query = "ciao";
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "ciao",
+      value: query,
     });
     await UrlbarTestUtils.enterSearchMode(window);
-    Assert.equal(gURLBar.value, "ciao", "Urlbar value should be set.");
+    Assert.equal(gURLBar.value, query, "Urlbar value should be set.");
     // We expect to get the heuristic and the remote suggestions since the local
     // ones don't match.
     await checkResults([
       {
-        isSearchHistory: false,
-        suggestion: undefined,
+        heuristic: true,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: false,
-        suggestion: "ciaofoo",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          suggestion: `${query}foo`,
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: false,
-        suggestion: "ciaobar",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          suggestion: `${query}bar`,
+          engine: suggestionsEngine.name,
+        },
       },
     ]);
 
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
 add_task(async function nonEmptySearch_withHistory() {
   // URLs with the same host as the search engine.
+  let query = "ciao";
   await PlacesTestUtils.addVisits([
-    "http://mochi.test/ciao",
-    "http://mochi.test/ciao1",
+    `http://mochi.test/${query}`,
+    `http://mochi.test/${query}1`,
   ]);
 
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "ciao",
+      value: query,
     });
 
     await UrlbarTestUtils.enterSearchMode(window);
-    Assert.equal(gURLBar.value, "ciao", "Urlbar value should be set.");
+    Assert.equal(gURLBar.value, query, "Urlbar value should be set.");
     await checkResults([
       {
-        isSearchHistory: false,
-        suggestion: undefined,
+        heuristic: true,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: false,
-        suggestion: "ciaofoo",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          suggestion: `${query}foo`,
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: false,
-        suggestion: "ciaobar",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          suggestion: `${query}bar`,
+          engine: suggestionsEngine.name,
+        },
       },
       {
-        isSearchHistory: false,
-        suggestion: undefined,
-        historyUrl: "http://mochi.test/ciao1",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/${query}1`,
       },
       {
-        isSearchHistory: false,
-        suggestion: undefined,
-        historyUrl: "http://mochi.test/ciao",
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/${query}`,
       },
     ]);
 
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 
   await PlacesUtils.history.clear();
 });
 
-async function checkResults(resultsDetails) {
+add_task(async function nonEmptySearch_url() {
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    let query = "http://www.example.com/";
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: query,
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+
+    // The heuristic result for a search that's a valid URL should be a search
+    // result, not a URL result.
+    await checkResults([
+      {
+        heuristic: true,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchParams: {
+          query,
+          isSearchHistory: false,
+          engine: suggestionsEngine.name,
+        },
+      },
+    ]);
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
+async function checkResults(expectedResults) {
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
-    resultsDetails.length,
+    expectedResults.length,
     "Check results count."
   );
-  for (let i = 0; i < resultsDetails.length; ++i) {
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    if (result.searchParams) {
-      Assert.equal(
-        result.searchParams?.engine,
-        suggestionsEngine.name,
-        "It should be a search result for our suggestion engine."
-      );
-      Assert.equal(
-        result.searchParams?.isSearchHistory,
-        resultsDetails[i].isSearchHistory,
-        "Check if it should be a local suggestion result."
-      );
-      Assert.equal(
-        result.searchParams?.suggestion,
-        resultsDetails[i].suggestion,
-        "Check the suggestion value"
-      );
-    }
-    if (resultsDetails[i].historyUrl) {
-      Assert.equal(
-        result.url,
-        resultsDetails[i].historyUrl,
-        "The history result should have the correct URL."
+  for (let i = 0; i < expectedResults.length; ++i) {
+    info(`Checking result at index ${i}`);
+    let expected = expectedResults[i];
+    let actual = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+
+    // Check each property defined in the expected result against the property
+    // in the actual result.
+    for (let key of Object.keys(expected)) {
+      // For searchParams, remove undefined properties in the actual result so
+      // that the expected result doesn't need to include them.
+      if (key == "searchParams") {
+        let actualSearchParams = actual.searchParams;
+        for (let spKey of Object.keys(actualSearchParams)) {
+          if (actualSearchParams[spKey] === undefined) {
+            delete actualSearchParams[spKey];
+          }
+        }
+      }
+      Assert.deepEqual(
+        actual[key],
+        expected[key],
+        `${key} should match at result index ${i}.`
       );
     }
   }

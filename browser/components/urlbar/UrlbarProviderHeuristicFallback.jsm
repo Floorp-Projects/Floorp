@@ -118,6 +118,17 @@ class ProviderHeuristicFallback extends UrlbarProvider {
   // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
   // scheme isn't specificed.
   _matchUnknownUrl(queryContext) {
+    // The user may have typed something like "word?" to run a search.  We
+    // should not convert that to a URL.  We should also never convert actual
+    // URLs into URL results when search mode is active.
+    if (
+      (queryContext.restrictSource &&
+        queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) ||
+      queryContext.searchMode
+    ) {
+      return null;
+    }
+
     let unescapedSearchString = Services.textToSubURI.unEscapeURIForUI(
       queryContext.searchString
     );
@@ -125,14 +136,6 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     if (!suffix && prefix) {
       // The user just typed a stripped protocol, don't build a non-sense url
       // like http://http/ for it.
-      return null;
-    }
-    // The user may have typed something like "word?" to run a search, we should
-    // not convert that to a url.
-    if (
-      queryContext.restrictSource &&
-      queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH
-    ) {
       return null;
     }
 
