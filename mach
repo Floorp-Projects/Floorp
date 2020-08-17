@@ -10,6 +10,7 @@
 # Embeds a shell script inside a Python triple quote. This pattern is valid
 # shell because `''':'`, `':'` and `:` are all equivalent, and `:` is a no-op.
 ''':'
+# Commands that are to be run with Python 2.
 py2commands="
     android
     awsy-test
@@ -50,52 +51,96 @@ py2commands="
     wpt-update
 "
 
+# Commands that are to be run with the system Python 3 instead of the
+# virtualenv.
+nativecmds="
+    bootstrap
+    create-mach-environment
+"
+
 run_py() {
-    # Try to run a specific Python interpreter. Fall back to the system
-    # default Python if the specific interpreter couldn't be found.
+    # Try to run a specific Python interpreter.
     py_executable="$1"
     shift
     if which "$py_executable" > /dev/null
     then
         exec "$py_executable" "$0" "$@"
-    elif [ "$py_executable" = "python2.7" ]; then
-        exec python "$0" "$@"
     else
         echo "This mach command requires $py_executable, which wasn't found on the system!"
+        case "$py_executable" in
+            python2.7|python3) ;;
+            *)
+                echo "Consider running 'mach bootstrap' or 'mach create-mach-environment' to create the mach virtualenvs, or set MACH_USE_SYSTEM_PYTHON to use the system Python installation over a virtualenv."
+                ;;
+        esac
         exit 1
     fi
 }
 
-first_arg=$1
-if [ "$first_arg" = "help" ]; then
-    # When running `./mach help <command>`, the correct Python for <command>
-    # needs to be used.
-    first_arg=$2
-elif [ "$first_arg" = "mach-completion" ]; then
-    # When running `./mach mach-completion /path/to/mach <command>`, the
-    # correct Python for <command> needs to be used.
-    first_arg=$3
+get_command() {
+    # Parse the name of the mach command out of the arguments. This is necessary
+    # in the presence of global mach arguments that come before the name of the
+    # command, e.g. `mach -v build`. We dispatch to the correct Python
+    # interpreter depending on the command.
+    while true; do
+    case $1 in
+        -v|--verbose) shift;;
+        -l|--log-file)
+            if [ "$#" -lt 2 ]
+            then
+                echo
+                break
+            else
+                shift 2
+            fi
+            ;;
+        --log-interval) shift;;
+        --log-no-times) shift;;
+        -h) shift;;
+        --debug-command) shift;;
+        --settings)
+            if [ "$#" -lt 2 ]
+            then
+                echo
+                break
+            else
+                shift 2
+            fi
+            ;;
+        # When running `./mach help <command>`, the correct Python for <command>
+        # needs to be used.
+        help) echo $2; break;;
+        # When running `./mach mach-completion /path/to/mach <command>`, the
+        # correct Python for <command> needs to be used.
+        mach-completion) echo $3; break;;
+        "") echo; break;;
+        *) echo $1; break;;
+    esac
+    done
+}
+
+state_dir=${MOZBUILD_STATE_PATH:-~/.mozbuild}
+command=$(get_command "$@")
+
+# If MACH_USE_SYSTEM_PYTHON or MOZ_AUTOMATION are set, always use the
+# python{2.7,3} executables and not the virtualenv locations.
+if [ -z ${MACH_USE_SYSTEM_PYTHON} ] && [ -z ${MOZ_AUTOMATION} ]
+then
+    case "$OSTYPE" in
+        cygwin|msys|win32) bin_path=Scripts;;
+        *) bin_path=bin;;
+    esac
+    py2executable=$state_dir/_virtualenvs/mach_py2/$bin_path/python
+    py3executable=$state_dir/_virtualenvs/mach/$bin_path/python
+else
+    py2executable=python2.7
+    py3executable=python3
 fi
 
-if [ -z "$first_arg" ]; then
-    # User ran `./mach` or `./mach help`, use Python 3.
-    run_py python3 "$@"
-fi
-
-case "${first_arg}" in
-    "-"*)
-        # We have global arguments which are tricky to parse from this shell
-        # script. So invoke `mach` with a special --print-command argument to
-        # return the name of the command. This adds extra overhead when using
-        # global arguments, but global arguments are an edge case and this hack
-        # is only needed temporarily for the Python 3 migration. We use Python
-        # 2.7 because using Python 3 hits this error in build tasks:
-        # https://searchfox.org/mozilla-central/rev/c7e8bc4996f9/build/moz.configure/init.configure#319
-        command=`run_py python2.7 --print-command "$@" | tail -n1`
-        ;;
-    *)
-        # In the common case, the first argument is the command.
-        command=${first_arg};
+# Check whether we need to run with the native Python 3 interpreter.
+case " $(echo $nativecmds) " in
+    *\ $command\ *)
+        run_py python3 "$@"
         ;;
 esac
 
@@ -103,15 +148,15 @@ esac
 # with the correct interpreter.
 case " $(echo $py2commands) " in
     *\ $command\ *)
-        run_py python2.7 "$@"
+        run_py "$py2executable" "$@"
         ;;
     *)
-        run_py python3 "$@"
+        run_py "$py3executable" "$@"
         ;;
 esac
 
 # Run Python 3 for everything else.
-run_py python3 "$@"
+run_py "$py3executable" "$@"
 '''
 
 from __future__ import absolute_import, print_function, unicode_literals

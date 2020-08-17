@@ -506,7 +506,15 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
-            'pattern': 'build/virtualenv_packages.txt'
+            'pattern': 'build/build_virtualenv_packages.txt'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'build/common_virtualenv_packages.txt'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'build/mach_virtualenv_packages.txt'
         },
         {
             'source': buildconfig.topsrcdir,

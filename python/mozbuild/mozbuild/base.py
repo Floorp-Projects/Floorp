@@ -282,7 +282,8 @@ class MozbuildObject(ProcessExecutionMixin):
                 os.path.join(self.topobjdir, '_virtualenvs',
                              self._virtualenv_name),
                 sys.stdout,
-                os.path.join(self.topsrcdir, 'build', 'virtualenv_packages.txt')
+                os.path.join(self.topsrcdir, 'build',
+                             'build_virtualenv_packages.txt')
                 )
 
         return self._virtualenv_manager

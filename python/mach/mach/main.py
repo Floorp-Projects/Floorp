@@ -219,16 +219,7 @@ To see more help for a specific command, run:
             self.settings_paths.append(os.environ['MACHRC'])
 
         self.log_manager.register_structured_logger(self.logger)
-        self.global_arguments = []
         self.populate_context_handler = None
-
-    def add_global_argument(self, *args, **kwargs):
-        """Register a global argument with the argument parser.
-
-        Arguments are proxied to ArgumentParser.add_argument()
-        """
-
-        self.global_arguments.append((args, kwargs))
 
     def load_commands_from_directory(self, path):
         """Scan for mach commands from modules in a directory.
@@ -417,18 +408,7 @@ To see more help for a specific command, run:
             return 0
 
         try:
-            try:
-                args = parser.parse_args(argv)
-            except NoCommandError as e:
-                if e.namespace.print_command:
-                    context.get_command = True
-                    args = parser.parse_args(e.namespace.print_command)
-                    if args.command == 'mach-completion':
-                        args = parser.parse_args(e.namespace.print_command[2:])
-                    print(args.command)
-                    return 0
-                else:
-                    raise
+            args = parser.parse_args(argv)
         except NoCommandError:
             print(NO_COMMAND_ERROR)
             return 1
@@ -595,6 +575,8 @@ To see more help for a specific command, run:
                                 usage='%(prog)s [global arguments] '
                                 'command [command arguments]')
 
+        # WARNING!!! If you add a global argument here, also add it to the
+        # global argument handling in the top-level `mach` script.
         # Order is important here as it dictates the order the auto-generated
         # help messages are printed.
         global_group = parser.add_argument_group('Global Arguments')
@@ -626,11 +608,6 @@ To see more help for a specific command, run:
         global_group.add_argument('--settings', dest='settings_file',
                                   metavar='FILENAME', default=None,
                                   help='Path to settings file.')
-        global_group.add_argument('--print-command', nargs=argparse.REMAINDER,
-                                  help=argparse.SUPPRESS)
-
-        for args, kwargs in self.global_arguments:
-            global_group.add_argument(*args, **kwargs)
 
         # We need to be last because CommandAction swallows all remaining
         # arguments and argparse parses arguments in the order they were added.
