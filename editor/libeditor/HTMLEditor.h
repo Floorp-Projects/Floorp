@@ -2950,6 +2950,13 @@ class HTMLEditor final : public TextEditor,
     DeleteContentButKeepTableStructure(HTMLEditor& aHTMLEditor,
                                        nsIContent& aContent);
 
+    /**
+     * DeleteTextAtStartAndEndOfRange() removes text if start and/or end of
+     * aRange is in a text node.
+     */
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+    DeleteTextAtStartAndEndOfRange(HTMLEditor& aHTMLEditor, nsRange& aRange);
+
     enum class Mode {
       NotInitialized,
       JoinCurrentBlock,
