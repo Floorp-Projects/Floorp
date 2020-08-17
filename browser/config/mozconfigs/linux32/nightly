@@ -2,7 +2,4 @@
 
 ac_add_options --with-branding=browser/branding/nightly
 
-# Keep basic GDB symbols around in Nightly builds
-ac_add_options STRIP_FLAGS=--strip-debug
-
 . "$topsrcdir/build/mozconfig.common.override"
