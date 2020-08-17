@@ -1,4 +1,4 @@
-Debugging Mozilla with Valgrind
+Debugging Firefox with Valgrind
 ===============================
 
 This page describes how to use Valgrind (specifically, its Memcheck
