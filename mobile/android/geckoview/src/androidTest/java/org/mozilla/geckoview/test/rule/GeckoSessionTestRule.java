@@ -17,7 +17,6 @@ import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
-import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.WebExtension;
@@ -880,10 +879,6 @@ public class GeckoSessionTestRule implements TestRule {
             return GeckoSession.class.getMethod("setAutofillDelegate", cls)
                    .invoke(session, delegate);
         }
-        if (cls == MediaSession.Delegate.class) {
-            return GeckoSession.class.getMethod("setMediaSessionDelegate", cls)
-                   .invoke(session, delegate);
-        }
         return GeckoSession.class.getMethod("set" + cls.getSimpleName(), cls)
                .invoke(session, delegate);
     }
@@ -901,10 +896,6 @@ public class GeckoSessionTestRule implements TestRule {
         }
         if (cls == Autofill.Delegate.class) {
             return GeckoSession.class.getMethod("getAutofillDelegate")
-                   .invoke(session);
-        }
-        if (cls == MediaSession.Delegate.class) {
-            return GeckoSession.class.getMethod("getMediaSessionDelegate")
                    .invoke(session);
         }
         return GeckoSession.class.getMethod("get" + cls.getSimpleName())

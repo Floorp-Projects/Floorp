@@ -883,18 +883,14 @@ public class GeckoSession implements Parcelable {
         }
     };
 
-    private final MediaSession.Handler mMediaSessionHandler =
-            new MediaSession.Handler(this);
 
     /* package */ int handlersCount;
 
-    private final GeckoSessionHandler<?>[] mSessionHandlers =
-            new GeckoSessionHandler<?>[] {
-                mContentHandler, mHistoryHandler, mMediaHandler,
-                mNavigationHandler, mPermissionHandler, mProcessHangHandler,
-                mProgressHandler, mScrollHandler, mSelectionActionDelegate,
-                mContentBlockingHandler, mMediaSessionHandler
-            };
+    private final GeckoSessionHandler<?>[] mSessionHandlers = new GeckoSessionHandler<?>[] {
+        mContentHandler, mHistoryHandler, mMediaHandler, mNavigationHandler,
+        mPermissionHandler, mProcessHangHandler, mProgressHandler, mScrollHandler,
+        mSelectionActionDelegate, mContentBlockingHandler
+    };
 
     private static class PermissionCallback implements
         PermissionDelegate.Callback, PermissionDelegate.MediaCallback {
@@ -1122,14 +1118,6 @@ public class GeckoSession implements Parcelable {
 
         @WrapForJNI(dispatchTo = "proxy")
         public native void attachAccessibility(SessionAccessibility.NativeProvider sessionAccessibility);
-
-        @WrapForJNI(dispatchTo = "proxy")
-        public native void attachMediaSessionController(
-            final MediaSession.Controller controller, final long id);
-
-        @WrapForJNI(dispatchTo = "proxy")
-        public native void detachMediaSessionController(
-            final MediaSession.Controller controller);
 
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void onReady(final @Nullable NativeQueue queue) {
@@ -2642,81 +2630,6 @@ public class GeckoSession implements Parcelable {
         return mMediaHandler.getDelegate();
     }
 
-    /**
-     * Set the media session delegate.
-     * This will replace the current handler.
-     * @param delegate An implementation of {@link MediaSession.Delegate}.
-     */
-    @AnyThread
-    public void setMediaSessionDelegate(
-            final @Nullable MediaSession.Delegate delegate) {
-        Log.d(LOGTAG, "setMediaSessionDelegate " + mWindow);
-        mMediaSessionHandler.setDelegate(delegate, this);
-    }
-
-    /**
-     * Get the media session delegate.
-     * @return The current media session delegate.
-     */
-    @AnyThread
-    public @Nullable MediaSession.Delegate getMediaSessionDelegate() {
-        return mMediaSessionHandler.getDelegate();
-    }
-
-    @UiThread
-    /* package */ void attachMediaSessionController(
-            final MediaSession.Controller controller) {
-        ThreadUtils.assertOnUiThread();
-
-        if (DEBUG) {
-            Log.d(LOGTAG,
-                    "attachMediaSessionController" +
-                    " isOpen=" + isOpen() +
-                    ", isEnabled=" + mMediaSessionHandler.isEnabled());
-        }
-
-        if (!isOpen() || !mMediaSessionHandler.isEnabled()) {
-            return;
-        }
-
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mWindow.attachMediaSessionController(controller, controller.getId());
-        } else {
-            GeckoThread.queueNativeCallUntil(
-                    GeckoThread.State.PROFILE_READY,
-                    mWindow, "attachMediaSessionController",
-                    MediaSession.Controller.class,
-                    controller,
-                    controller.getId());
-        }
-    }
-
-    @UiThread
-    /* package */ void detachMediaSessionController(
-            final MediaSession.Controller controller) {
-        ThreadUtils.assertOnUiThread();
-
-        if (DEBUG) {
-            Log.d(LOGTAG,
-                    "detachMediaSessionController" +
-                    " isOpen=" + isOpen() +
-                    ", isEnabled=" + mMediaSessionHandler.isEnabled());
-        }
-
-        if (!isOpen() || !mMediaSessionHandler.isEnabled()) {
-            return;
-        }
-
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mWindow.detachMediaSessionController(controller);
-        } else {
-            GeckoThread.queueNativeCallUntil(
-                    GeckoThread.State.PROFILE_READY,
-                    mWindow, "detachMediaSessionController",
-                    MediaSession.Controller.class,
-                    controller);
-        }
-    }
 
     /**
      * Get the current selection action delegate for this GeckoSession.

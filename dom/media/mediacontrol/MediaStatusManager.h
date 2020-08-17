@@ -180,13 +180,8 @@ class MediaStatusManager : public IMediaInfoUpdater {
   MediaEventSource<MediaMetadataBase>& MetadataChangedEvent() {
     return mMetadataChangedEvent;
   }
-
   MediaEventSource<PositionState>& PositionChangedEvent() {
     return mPositionStateChangedEvent;
-  }
-
-  MediaEventSource<MediaSessionPlaybackState>& PlaybackChangedEvent() {
-    return mPlaybackStateChangedEvent;
   }
 
   // Return the actual playback state.
@@ -262,7 +257,6 @@ class MediaStatusManager : public IMediaInfoUpdater {
   MediaEventProducer<nsTArray<MediaSessionAction>>
       mSupportedActionsChangedEvent;
   MediaEventProducer<PositionState> mPositionStateChangedEvent;
-  MediaEventProducer<MediaSessionPlaybackState> mPlaybackStateChangedEvent;
   MediaPlaybackStatus mPlaybackStatusDelegate;
 };
 

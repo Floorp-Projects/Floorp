@@ -649,13 +649,6 @@ function startup() {
         frameScript: "chrome://geckoview/content/GeckoViewAutofillChild.js",
       },
     },
-    {
-      name: "GeckoViewMediaControl",
-      onEnable: {
-        resource: "resource://gre/modules/GeckoViewMediaControl.jsm",
-        frameScript: "chrome://geckoview/content/GeckoViewMediaControlChild.js",
-      },
-    },
   ]);
 
   // TODO: Bug 1569360 Allows actors to temporarely access ModuleManager until
