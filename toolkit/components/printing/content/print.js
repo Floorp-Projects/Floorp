@@ -36,8 +36,6 @@ var PrintEventHandler = {
   async init() {
     this.sourceBrowser = this.getSourceBrowser();
     this.previewBrowser = this.getPreviewBrowser();
-    this.settings = PrintUtils.getPrintSettings();
-    this.updatePrintPreview();
 
     document.addEventListener("print", e => this.print({ silent: true }));
     document.addEventListener("update-print-settings", e =>
@@ -47,20 +45,6 @@ var PrintEventHandler = {
     document.addEventListener("open-system-dialog", () =>
       this.print({ silent: false })
     );
-
-    let destinations = await this.getPrintDestinations();
-    document.dispatchEvent(
-      new CustomEvent("available-destinations", {
-        detail: destinations,
-      })
-    );
-
-    // Some settings are only used by the UI
-    // assigning new values should update the underlying settings
-    this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
-
-    // Ensure the output format is set properly.
-    this.viewSettings.printerName = this.settings.printerName;
 
     this.settingFlags = {
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
@@ -78,6 +62,26 @@ var PrintEventHandler = {
         Ci.nsIPrintSettings.kInitSaveBGColors |
         Ci.nsIPrintSettings.kInitSaveBGImages,
     };
+
+    // First check the available destinations to ensure we get settings for an
+    // accessible printer.
+    let { destinations, selectedPrinter } = await this.getPrintDestinations();
+
+    // Find the settings for the printer we'll select initially.
+    this.settings = PrintUtils.getPrintSettings(selectedPrinter.value);
+    // Wrap the settings with our view model to simplify the UI.
+    this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
+    // Set the printer name through the view model to ensure the PDF flags are
+    // set correctly.
+    this.viewSettings.printerName = this.settings.printerName;
+
+    this.updatePrintPreview();
+
+    document.dispatchEvent(
+      new CustomEvent("available-destinations", {
+        detail: destinations,
+      })
+    );
 
     document.dispatchEvent(
       new CustomEvent("print-settings", {
@@ -210,39 +214,35 @@ var PrintEventHandler = {
     const defaultPrinterName = printerList.systemDefaultPrinterName;
     const printers = await printerList.printers;
 
+    let lastUsedPrinter;
+    let defaultPrinter;
+
     let saveToPdfPrinter = {
       nameId: "printui-destination-pdf-label",
       value: PrintUtils.SAVE_TO_PDF_PRINTER,
-      selected: lastUsedPrinterName == PrintUtils.SAVE_TO_PDF_PRINTER,
     };
-
-    let defaultIndex = 0;
-    let foundSelected = saveToPdfPrinter.selected;
 
     let destinations = [
       saveToPdfPrinter,
-      ...printers.map((printer, i) => {
+      ...printers.map(printer => {
         printer.QueryInterface(Ci.nsIPrinter);
-        const name = printer.name;
-        const value = name;
-        const selected = name == lastUsedPrinterName;
-        if (selected) {
-          foundSelected = true;
+        const { name } = printer;
+        const destination = { name, value: name };
+
+        if (name == lastUsedPrinterName) {
+          lastUsedPrinter = destination;
         }
-        if (name == defaultPrinterName) {
-          defaultIndex = i + 1; // Account for the PDF option.
+        if (name == defaultPrinter) {
+          defaultPrinter = destination;
         }
-        return { name, value, selected };
+
+        return destination;
       }),
     ];
 
-    // If there's no valid last selected printer, select the system default, or
-    // the first on the list otherwise.
-    if (destinations.length && !foundSelected) {
-      destinations[defaultIndex].selected = true;
-    }
+    let selectedPrinter = lastUsedPrinter || defaultPrinter || saveToPdfPrinter;
 
-    return destinations;
+    return { destinations, selectedPrinter };
   },
 };
 
@@ -396,9 +396,6 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
       if (optionData.nameId) {
         document.l10n.setAttributes(opt, optionData.nameId);
       }
-      if (optionData.selected) {
-        opt.selected = true;
-      }
       this.options.add(opt);
     }
   }
@@ -406,6 +403,7 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
   update(settings) {
     let isPdf = settings.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF;
     this.setAttribute("output", isPdf ? "pdf" : "paper");
+    this.value = settings.printerName;
   }
 
   handleEvent(e) {
