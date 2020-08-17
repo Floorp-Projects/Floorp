@@ -166,8 +166,8 @@ bool AllocationIntegrityState::check() {
 
       size_t inputIndex = 0;
       for (LInstruction::InputIterator alloc(*ins); alloc.more();
-           alloc.next()) {
-        LAllocation oldInput = info.inputs[inputIndex++];
+           inputIndex++, alloc.next()) {
+        LAllocation oldInput = info.inputs[inputIndex];
         if (!oldInput.isUse()) {
           continue;
         }
@@ -176,6 +176,28 @@ bool AllocationIntegrityState::check() {
 
         if (safepoint && !oldInput.toUse()->usedAtStart()) {
           checkSafepointAllocation(ins, vreg, **alloc);
+        }
+
+        // Temps must never alias inputs (even at-start uses) unless explicitly
+        // requested.
+        for (size_t i = 0; i < ins->numTemps(); i++) {
+          if (ins->getTemp(i)->isBogusTemp()) {
+            continue;
+          }
+          LAllocation* tempAlloc = ins->getTemp(i)->output();
+
+          // Fixed uses and fixed temps are allowed to alias.
+          if (oldInput.toUse()->isFixedRegister() && info.temps[i].isFixed()) {
+            continue;
+          }
+
+          // MUST_REUSE_INPUT temps will alias their input.
+          if (info.temps[i].policy() == LDefinition::MUST_REUSE_INPUT &&
+              info.temps[i].getReusedInput() == inputIndex) {
+            continue;
+          }
+
+          MOZ_ASSERT(!tempAlloc->aliases(**alloc));
         }
 
         // Start checking at the previous instruction, in case this
