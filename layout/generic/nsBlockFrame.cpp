@@ -1782,6 +1782,19 @@ static nscoord ApplyLineClamp(const ReflowInput& aReflowInput,
   return edge;
 }
 
+static bool ShouldApplyAutomaticMinimumOnBlockAxis(
+    WritingMode aWM, const nsStyleDisplay* aDisplay,
+    const nsStylePosition* aPosition) {
+  // The automatic minimum size in the ratio-dependent axis of a box with a
+  // preferred aspect ratio that is neither a replaced element nor a scroll
+  // container is its min-content size clamped from above by its maximum size.
+  //
+  // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
+  // Note: we only need to check scroll container because replaced element
+  // doesn't go into nsBlockFrame::Reflow().
+  return !aDisplay->IsScrollableOverflow() && aPosition->MinBSize(aWM).IsAuto();
+}
+
 void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
                                     BlockReflowInput& aState,
                                     ReflowOutput& aMetrics,
@@ -1854,10 +1867,25 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
   }
 
   if (NS_UNCONSTRAINEDSIZE != aReflowInput.ComputedBSize()) {
+    // Note: We don't use blockEndEdgeOfChildren because it inclues the previous
+    // margin.
+    nscoord contentBSize = aState.mBCoord + nonCarriedOutBDirMargin;
     finalSize.BSize(wm) =
-        ComputeFinalBSize(aReflowInput, aState.mReflowStatus,
-                          aState.mBCoord + nonCarriedOutBDirMargin,
+        ComputeFinalBSize(aReflowInput, aState.mReflowStatus, contentBSize,
                           borderPadding, aState.mConsumedBSize);
+
+    // If content size is larger than the effective computed block size,
+    // we extend the block size to contain all the content.
+    // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
+    if (aReflowInput.ComputedBSizeIsSetByAspectRatio() &&
+        ShouldApplyAutomaticMinimumOnBlockAxis(wm, aReflowInput.mStyleDisplay,
+                                               aReflowInput.mStylePosition)) {
+      // Note: finalSize.BSize(wm) includes border + padding, so we have to
+      // compare it with contentBSize + border + padding.
+      finalSize.BSize(wm) = std::max(
+          finalSize.BSize(wm), contentBSize + borderPadding.BStartEnd(wm));
+    }
+
     // Don't carry out a block-end margin when our BSize is fixed.
     //
     // Note: this also includes the case that aReflowInput.ComputedBSize() is
