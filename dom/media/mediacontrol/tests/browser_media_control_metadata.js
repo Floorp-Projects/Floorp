@@ -354,10 +354,14 @@ add_task(async function testMetadataAfterTabNavigation() {
  * The following are helper functions.
  */
 function setMediaMetadata(tab, metadata) {
+  const controller = tab.linkedBrowser.browsingContext.mediaController;
   const promise = SpecialPowers.spawn(tab.linkedBrowser, [metadata], data => {
     content.navigator.mediaSession.metadata = new content.MediaMetadata(data);
   });
-  return Promise.all([promise, waitUntilControllerMetadataChanged()]);
+  return Promise.all([
+    promise,
+    new Promise(r => (controller.onmetadatachange = r)),
+  ]);
 }
 
 function setNullMediaMetadata(tab) {

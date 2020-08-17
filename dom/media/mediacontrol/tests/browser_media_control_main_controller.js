@@ -296,6 +296,9 @@ async function setMediaMetadataForTabs(tabs) {
         );
       }
     );
+    // As those controller hasn't been activated yet, we can't listen to
+    // `mediacontroll.onmetadatachange`, which would only be notified after a
+    // controller becomes active.
     await Promise.all([spawn, waitUntilControllerMetadataChanged()]);
   }
 }
