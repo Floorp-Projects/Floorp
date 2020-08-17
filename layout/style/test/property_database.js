@@ -12768,41 +12768,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.overscroll-behavior.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
-  gCSSProperties["offset-block-start"] = {
-    domProp: "offsetBlockStart",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    logical: true,
-    alias_for: "inset-block-start",
-    subproperties: ["inset-block-start"],
-  };
-  gCSSProperties["offset-block-end"] = {
-    domProp: "offsetBlockEnd",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    logical: true,
-    alias_for: "inset-block-end",
-    subproperties: ["inset-block-end"],
-  };
-  gCSSProperties["offset-inline-start"] = {
-    domProp: "offsetInlineStart",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    logical: true,
-    alias_for: "inset-inline-start",
-    subproperties: ["inset-inline-start"],
-  };
-  gCSSProperties["offset-inline-end"] = {
-    domProp: "offsetInlineEnd",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    logical: true,
-    alias_for: "inset-inline-end",
-    subproperties: ["inset-inline-end"],
-  };
-}
-
 {
   const patterns = {
     background: [
