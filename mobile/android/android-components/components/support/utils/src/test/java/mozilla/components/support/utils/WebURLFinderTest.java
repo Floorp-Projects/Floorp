@@ -5,14 +5,15 @@ package mozilla.components.support.utils;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class WebURLFinderTest {
@@ -72,5 +73,17 @@ public class WebURLFinderTest {
         assertEquals("http://test.com/inner#test", find(new String[]{"noschemefirst.com", "http://test.com/inner#test", "http://second.org/fark"}));
         assertEquals("http://test.com", find(new String[]{"javascript:///test.js", "http://test.com"}));
         assertEquals("http://çnn.çơḿ", find(new String[]{"www.cnn.com http://çnn.çơḿ"}));
+    }
+
+    @Test
+    public void testIsWebURL() {
+        assertTrue(WebURLFinder.Companion.isWebURL("http://test.com"));
+
+        assertFalse(WebURLFinder.Companion.isWebURL("#http#://test.com"));
+        assertFalse(WebURLFinder.Companion.isWebURL("file:///sdcard/download"));
+        assertFalse(WebURLFinder.Companion.isWebURL("filE:///sdcard/Download"));
+        assertFalse(WebURLFinder.Companion.isWebURL("javascript:alert('Hi')"));
+        assertFalse(WebURLFinder.Companion.isWebURL("JAVascript:alert('Hi')"));
+
     }
 }

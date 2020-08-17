@@ -9,6 +9,7 @@ package mozilla.components.support.utils
 import android.webkit.URLUtil
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.Locale
 import java.util.LinkedList
 import java.util.regex.Pattern
 
@@ -112,7 +113,7 @@ class WebURLFinder {
                 return false
             }
 
-            return !(URLUtil.isFileUrl(string) || URLUtil.isJavaScriptUrl(string))
+            return !(URLUtil.isFileUrl(string.toLowerCase(Locale.ROOT)) || URLUtil.isJavaScriptUrl(string.toLowerCase(Locale.ROOT)))
         }
 
         private fun candidateWebURLs(strings: Collection<String?>, explicitUnicode: Boolean = false): List<String> {
