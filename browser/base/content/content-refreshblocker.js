@@ -144,7 +144,7 @@ var RefreshBlocker = {
    */
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
     let win = aWebProgress.DOMWindow;
-    let outerWindowID = win.windowUtils.outerWindowID;
+    let outerWindowID = win.docShell.outerWindowID;
 
     let data = {
       URI: aURI.spec,

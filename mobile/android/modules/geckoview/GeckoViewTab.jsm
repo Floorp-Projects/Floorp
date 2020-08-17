@@ -21,9 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 class Tab {
   constructor(window) {
-    this.id = GeckoViewTabBridge.windowIdToTabId(
-      window.windowUtils.outerWindowID
-    );
+    this.id = GeckoViewTabBridge.windowIdToTabId(window.docShell.outerWindowID);
     this.browser = window.browser;
     this.active = false;
   }

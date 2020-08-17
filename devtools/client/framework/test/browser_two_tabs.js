@@ -47,8 +47,8 @@ async function checkGetTab(client, tab1, tab2, targetFront1, targetFront2) {
   if (tab1.linkedBrowser.frameLoader.remoteTab) {
     filter.tabId = tab1.linkedBrowser.frameLoader.remoteTab.tabId;
   } else {
-    const windowUtils = tab1.linkedBrowser.contentWindow.windowUtils;
-    filter.outerWindowID = windowUtils.outerWindowID;
+    const { docShell } = tab1.linkedBrowser.contentWindow;
+    filter.outerWindowID = docShell.outerWindowID;
   }
   front = await getTabTarget(client, filter);
   is(
