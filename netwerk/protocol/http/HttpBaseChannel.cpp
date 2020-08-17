@@ -1439,12 +1439,11 @@ NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t* aWindowId) {
     if (loadContext) {
       nsCOMPtr<mozIDOMWindowProxy> topWindow;
       loadContext->GetTopWindow(getter_AddRefs(topWindow));
-      nsCOMPtr<nsIDOMWindowUtils> windowUtils;
       if (topWindow) {
-        windowUtils = nsGlobalWindowOuter::Cast(topWindow)->WindowUtils();
-      }
-      if (windowUtils) {
-        windowUtils->GetCurrentInnerWindowID(&mContentWindowId);
+        if (nsPIDOMWindowInner* inner =
+                nsPIDOMWindowOuter::From(topWindow)->GetCurrentInnerWindow()) {
+          mContentWindowId = inner->WindowID();
+        }
       }
     }
   }

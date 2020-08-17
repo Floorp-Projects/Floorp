@@ -80,7 +80,7 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
 
   const msg = `The extension "${name}" is not allowed to access ${reportedURIorPrincipal.spec}`;
 
-  const innerWindowId = window.windowUtils.currentInnerWindowID;
+  const innerWindowId = window.windowGlobalChild.innerWindowId;
 
   const errorFlag = 0;
 

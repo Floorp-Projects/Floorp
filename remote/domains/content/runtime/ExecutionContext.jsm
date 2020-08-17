@@ -48,7 +48,7 @@ class ExecutionContext {
     // Here, we assume that debuggee is a window object and we will propably have
     // to adapt that once we cover workers or contexts that aren't a document.
     this.window = debuggee;
-    this.windowId = debuggee.windowUtils.currentInnerWindowID;
+    this.windowId = debuggee.windowGlobalChild.innerWindowId;
     this.id = id;
     this.frameId = debuggee.docShell.browsingContext.id.toString();
     this.isDefault = isDefault;

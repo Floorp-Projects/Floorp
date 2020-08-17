@@ -38,7 +38,7 @@ function hasExpectedProperties(message, exception) {
   is(message.sourceName, location.href, "has correct sourceName/filename");
   ok(message.lineNumber > 0, "has lineNumber");
 
-  is(message.innerWindowID, window.windowUtils.currentInnerWindowID,
+  is(message.innerWindowID, window.windowGlobalChild.innerWindowId,
      "correct innerWindowID");
 }
 

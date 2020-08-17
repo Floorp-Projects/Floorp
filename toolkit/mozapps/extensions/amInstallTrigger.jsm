@@ -37,8 +37,7 @@ function CallbackObject(id, callback, mediator) {
 }
 
 function RemoteMediator(window) {
-  let utils = window.windowUtils;
-  this._windowID = utils.currentInnerWindowID;
+  this._windowID = window.windowGlobalChild.innerWindowId;
 
   this.mm = window.docShell.messageManager;
   this.mm.addWeakMessageListener(MSG_INSTALL_CALLBACK, this);

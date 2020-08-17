@@ -134,9 +134,8 @@ BrowserElementChild.prototype = {
   },
 
   _tryGetInnerWindowID(win) {
-    let utils = win.windowUtils;
     try {
-      return utils.currentInnerWindowID;
+      return win.windowGlobalChild.innerWindowId;
     } catch (e) {
       return null;
     }

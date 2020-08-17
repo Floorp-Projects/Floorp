@@ -74,8 +74,8 @@ class ContextObserver {
 
   handleEvent({ type, target, persisted }) {
     const window = target.defaultView;
-    const frameId = window.docShell.browsingContext.id;
-    const id = window.windowUtils.currentInnerWindowID;
+    const frameId = window.browsingContext.id;
+    const id = window.windowGlobalChild.innerWindowId;
 
     switch (type) {
       case "DOMWindowCreated":

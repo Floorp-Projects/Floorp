@@ -97,7 +97,7 @@ async function promiseBrowserContentUnloaded(browser) {
     browser,
     MSG_WINDOW_DESTROYED,
     MSG_WINDOW_DESTROYED => {
-      let innerWindowId = this.content.windowUtils.currentInnerWindowID;
+      let innerWindowId = this.content.windowGlobalChild.innerWindowId;
       let observer = subject => {
         if (
           innerWindowId === subject.QueryInterface(Ci.nsISupportsPRUint64).data

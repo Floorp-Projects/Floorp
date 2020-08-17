@@ -48,7 +48,7 @@ add_task(async function test_contentscript_devtools_sandbox_metadata() {
 
   let win = window.open("file_sample.html");
 
-  let innerWindowID = SpecialPowers.getDOMWindowUtils(win).currentInnerWindowID;
+  let innerWindowID = SpecialPowers.wrap(win).windowGlobalChild.innerWindowId;
 
   await extension.awaitFinish("contentScript.executed");
 
