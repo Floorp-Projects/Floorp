@@ -3609,6 +3609,40 @@ Result<bool, nsresult> HTMLEditor::AutoBlockElementsJoiner::
   return join;
 }
 
+nsresult HTMLEditor::AutoBlockElementsJoiner::DeleteTextAtStartAndEndOfRange(
+    HTMLEditor& aHTMLEditor, nsRange& aRange) {
+  EditorDOMPoint rangeStart(aRange.StartRef());
+  EditorDOMPoint rangeEnd(aRange.EndRef());
+  if (rangeStart.IsInTextNode() && !rangeStart.IsEndOfContainer()) {
+    // Delete to last character
+    OwningNonNull<Text> textNode = *rangeStart.GetContainerAsText();
+    nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
+        textNode, rangeStart.Offset(),
+        rangeStart.GetContainer()->Length() - rangeStart.Offset());
+    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+      return rv;
+    }
+  }
+  if (rangeEnd.IsInTextNode() && !rangeEnd.IsStartOfContainer()) {
+    // Delete to first character
+    OwningNonNull<Text> textNode = *rangeEnd.GetContainerAsText();
+    nsresult rv =
+        aHTMLEditor.DeleteTextWithTransaction(textNode, 0, rangeEnd.Offset());
+    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
 EditActionResult
 HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
@@ -3653,34 +3687,12 @@ HTMLEditor::AutoBlockElementsJoiner::HandleDeleteNonCollapsedRanges(
     // text node is found, we can delete to end or to begining as
     // appropriate, since the case where both sel endpoints in same text
     // node was already handled (we wouldn't be here)
-    EditorDOMPoint firstRangeStart(aRangesToDelete.FirstRangeRef()->StartRef());
-    EditorDOMPoint firstRangeEnd(aRangesToDelete.FirstRangeRef()->EndRef());
-    if (firstRangeStart.IsInTextNode() && !firstRangeStart.IsEndOfContainer()) {
-      // Delete to last character
-      OwningNonNull<Text> textNode = *firstRangeStart.GetContainerAsText();
-      nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
-          textNode, firstRangeStart.Offset(),
-          firstRangeStart.GetContainer()->Length() - firstRangeStart.Offset());
-      if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-        return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
-        return result.SetResult(rv);
-      }
-    }
-    if (firstRangeEnd.IsInTextNode() && !firstRangeEnd.IsStartOfContainer()) {
-      // Delete to first character
-      OwningNonNull<Text> textNode = *firstRangeEnd.GetContainerAsText();
-      nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
-          textNode, 0, firstRangeEnd.Offset());
-      if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-        return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
-        return result.SetResult(rv);
-      }
+    nsresult rv = DeleteTextAtStartAndEndOfRange(
+        aHTMLEditor, MOZ_KnownLive(aRangesToDelete.FirstRangeRef()));
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "AutoBlockElementsJoiner::DeleteTextAtStartAndEndOfRange() failed");
+      return EditActionHandled(rv);
     }
 
     if (joinInclusiveAncestorBlockElements) {
