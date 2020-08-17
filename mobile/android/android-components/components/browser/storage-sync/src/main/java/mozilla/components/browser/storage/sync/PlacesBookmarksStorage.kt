@@ -34,7 +34,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return The populated root starting from the guid.
      */
     override suspend fun getTree(guid: String, recursive: Boolean): BookmarkNode? {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             reader.getBookmarksTree(guid, recursive)?.asBookmarkNode()
         }
     }
@@ -46,7 +46,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return The bookmark node or null if it does not exist.
      */
     override suspend fun getBookmark(guid: String): BookmarkNode? {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             reader.getBookmark(guid)?.asBookmarkNode()
         }
     }
@@ -58,7 +58,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return The list of bookmarks that match the URL
      */
     override suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode> {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             reader.getBookmarksWithURL(url).map { it.asBookmarkNode() }
         }
     }
@@ -71,7 +71,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return The list of matching bookmark nodes up to the limit number of items.
      */
     override suspend fun searchBookmarks(query: String, limit: Int): List<BookmarkNode> {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             reader.searchBookmarks(query, limit).map { it.asBookmarkNode() }
         }
     }
@@ -88,7 +88,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return The guid of the newly inserted bookmark item.
      */
     override suspend fun addItem(parentGuid: String, url: String, title: String, position: Int?): String {
-        return withContext(scope.coroutineContext) {
+        return withContext(writeScope.coroutineContext) {
             writer.createBookmarkItem(parentGuid, url, title, position)
         }
     }
@@ -104,7 +104,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return The guid of the newly inserted bookmark item.
      */
     override suspend fun addFolder(parentGuid: String, title: String, position: Int?): String {
-        return withContext(scope.coroutineContext) {
+        return withContext(writeScope.coroutineContext) {
             writer.createFolder(parentGuid, title, position)
         }
     }
@@ -119,7 +119,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return The guid of the newly inserted bookmark item.
      */
     override suspend fun addSeparator(parentGuid: String, position: Int?): String {
-        return withContext(scope.coroutineContext) {
+        return withContext(writeScope.coroutineContext) {
             writer.createSeparator(parentGuid, position)
         }
     }
@@ -133,7 +133,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @param info The info to change in the bookmark.
      */
     override suspend fun updateNode(guid: String, info: BookmarkInfo) {
-        return withContext(scope.coroutineContext) {
+        return withContext(writeScope.coroutineContext) {
             writer.updateBookmark(guid, BookmarkUpdateInfo(info.parentGuid, info.position, info.title, info.url))
         }
     }
@@ -145,7 +145,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      *
      * @return Whether the bookmark existed or not.
      */
-    override suspend fun deleteNode(guid: String): Boolean = withContext(scope.coroutineContext) {
+    override suspend fun deleteNode(guid: String): Boolean = withContext(writeScope.coroutineContext) {
         writer.deleteBookmarkNode(guid)
     }
 
@@ -156,7 +156,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return Sync status of OK or Error
      */
     suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
-        return withContext(scope.coroutineContext) {
+        return withContext(writeScope.coroutineContext) {
             syncAndHandleExceptions {
                 places.syncBookmarks(authInfo)
             }

@@ -21,6 +21,7 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.segmentAwareDomainMatch
 import org.json.JSONObject
@@ -31,15 +32,16 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
 @SuppressWarnings("TooManyFunctions")
-open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), HistoryStorage, SyncableStore {
+open class PlacesHistoryStorage(
+    context: Context,
+    crashReporter: CrashReporting? = null
+) : PlacesStorage(context, crashReporter), HistoryStorage, SyncableStore {
 
     override val logger = Logger("PlacesHistoryStorage")
 
     override suspend fun recordVisit(uri: String, visit: PageVisit) {
-        withContext(scope.coroutineContext) {
-            // Ignore exceptions related to uris. This means we may drop some of the data on the floor
-            // if the underlying storage layer refuses it.
-            ignoreUrlExceptions("recordVisit") {
+        withContext(writeScope.coroutineContext) {
+            handlePlacesExceptions("recordVisit") {
                 places.writer().noteObservation(VisitObservation(uri,
                     visitType = visit.visitType.into(),
                     isRedirectSource = when (visit.redirectSource) {
@@ -57,10 +59,10 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
 
     override suspend fun recordObservation(uri: String, observation: PageObservation) {
         // NB: visitType 'UPDATE_PLACE' means "record meta information about this URL".
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             // Ignore exceptions related to uris. This means we may drop some of the data on the floor
             // if the underlying storage layer refuses it.
-            ignoreUrlExceptions("recordObservation") {
+            handlePlacesExceptions("recordObservation") {
                 places.writer().noteObservation(
                         VisitObservation(
                                 url = uri,
@@ -73,11 +75,11 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
     }
 
     override suspend fun getVisited(uris: List<String>): List<Boolean> {
-        return withContext(scope.coroutineContext) { places.reader().getVisited(uris) }
+        return withContext(readScope.coroutineContext) { places.reader().getVisited(uris) }
     }
 
     override suspend fun getVisited(): List<String> {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             places.reader().getVisitedUrlsInRange(
                     start = 0,
                     end = System.currentTimeMillis(),
@@ -87,19 +89,19 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
     }
 
     override suspend fun getDetailedVisits(start: Long, end: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             places.reader().getVisitInfos(start, end, excludeTypes.map { it.into() }).map { it.into() }
         }
     }
 
     override suspend fun getVisitsPaginated(offset: Long, count: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             places.reader().getVisitPage(offset, count, excludeTypes.map { it.into() }).map { it.into() }
         }
     }
 
     override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
-        return withContext(scope.coroutineContext) {
+        return withContext(readScope.coroutineContext) {
             places.reader().getTopFrecentSiteInfos(numItems).map { it.into() }
         }
     }
@@ -131,7 +133,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * history from returning.
      */
     override suspend fun deleteEverything() {
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             places.writer().deleteEverything()
         }
     }
@@ -141,7 +143,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * ones for a URL.
      */
     override suspend fun deleteVisitsSince(since: Long) {
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             places.writer().deleteVisitsSince(since)
         }
     }
@@ -151,7 +153,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * ones for a URL.
      */
     override suspend fun deleteVisitsBetween(startTime: Long, endTime: Long) {
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             places.writer().deleteVisitsBetween(startTime, endTime)
         }
     }
@@ -160,7 +162,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * Sync behaviour: will remove history from remote devices.
      */
     override suspend fun deleteVisitsFor(url: String) {
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             places.writer().deleteVisitsFor(url)
         }
     }
@@ -170,7 +172,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * Otherwise, remote devices are not affected.
      */
     override suspend fun deleteVisit(url: String, timestamp: Long) {
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             places.writer().deleteVisit(url, timestamp)
         }
     }
@@ -181,7 +183,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * Sync behaviour: will not remove history from remote clients.
      */
     override suspend fun prune() {
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             places.writer().pruneDestructively()
         }
     }
@@ -193,7 +195,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * @return Sync status of OK or Error
      */
     suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
-        return withContext(scope.coroutineContext) {
+        return withContext(writeScope.coroutineContext) {
             syncAndHandleExceptions {
                 places.syncHistory(authInfo)
             }
