@@ -67,18 +67,9 @@ class RevokeURLRunnable : public WorkerMainThreadRunnable {
 
     NS_ConvertUTF16toUTF8 url(mURL);
 
-    nsIPrincipal* urlPrincipal =
-        BlobURLProtocolHandler::GetDataEntryPrincipal(url);
-
-    nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
-
-    bool subsumes;
-    if (urlPrincipal &&
-        NS_SUCCEEDED(principal->Subsumes(urlPrincipal, &subsumes)) &&
-        subsumes) {
-      BlobURLProtocolHandler::RemoveDataEntry(url);
-    }
-
+    BlobURLProtocolHandler::RemoveDataEntry(
+        url, mWorkerPrivate->GetPrincipal(),
+        Some(mWorkerPrivate->AgentClusterId()));
     return true;
   }
 };
