@@ -375,8 +375,7 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
 
     case InputStreamParams::TEncryptedFileInputStreamParams:
       serializable = new dom::quota::DecryptingInputStream<
-          dom::quota::IPCStreamCipherStrategy>(
-          dom::quota::IPCStreamCipherStrategy{});
+          dom::quota::IPCStreamCipherStrategy>();
       break;
 
     default:
