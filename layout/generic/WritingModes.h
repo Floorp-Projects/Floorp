@@ -2082,6 +2082,11 @@ const T& StyleRect<T>::End(mozilla::LogicalAxis aAxis,
                       : mozilla::eLogicalSideBEnd);
 }
 
+inline AspectRatio AspectRatio::ConvertToWritingMode(
+    const WritingMode& aWM) const {
+  return aWM.IsVertical() ? Inverted() : *this;
+}
+
 }  // namespace mozilla
 
 // Definitions of inline methods for nsStylePosition, declared in

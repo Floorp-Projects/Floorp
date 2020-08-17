@@ -16,6 +16,8 @@
 
 namespace mozilla {
 
+class WritingMode;
+
 struct AspectRatio {
   AspectRatio() : mRatio(0.0f) {}
   explicit AspectRatio(float aRatio) : mRatio(std::max(aRatio, 0.0f)) {}
@@ -50,6 +52,9 @@ struct AspectRatio {
     return AspectRatio(
         std::max(std::numeric_limits<float>::epsilon(), 1.0f / mRatio));
   }
+
+  [[nodiscard]] inline AspectRatio ConvertToWritingMode(
+      const WritingMode& aWM) const;
 
   bool operator==(const AspectRatio& aOther) const {
     return mRatio == aOther.mRatio;
