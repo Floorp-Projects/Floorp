@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.support.ktx.kotlin.toDate
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -24,6 +25,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.doReturn
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -35,7 +38,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.WEE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.ANY
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.NONE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.USER
-import org.robolectric.Shadows.shadowOf
 import java.io.FileInputStream
 import java.security.InvalidParameterException
 import java.util.Calendar
@@ -549,20 +551,23 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `Calling onFilePrompt must provide a FilePicker PromptRequest`() {
-        val context = testContext
-
+        val context = spy(testContext)
+        val contentResolver = spy(context.contentResolver)
         val mockSession = GeckoEngineSession(runtime)
         var onSingleFileSelectedWasCalled = false
         var onMultipleFilesSelectedWasCalled = false
         var onDismissWasCalled = false
         val mockUri: Uri = mock()
-        val mockFileInput: FileInputStream = mock()
-        val shadowContentResolver = shadowOf(context.contentResolver)
 
-        shadowContentResolver.registerInputStream(mockUri, mockFileInput)
+        doReturn(contentResolver).`when`(context).contentResolver
+        doReturn(mock<FileInputStream>()).`when`(contentResolver).openInputStream(any())
         var filePickerRequest: PromptRequest.File = mock()
 
-        val promptDelegate = GeckoPromptDelegate(mockSession)
+        val promptDelegate = spy(GeckoPromptDelegate(mockSession))
+
+        // Prevent the file from being copied
+        doReturn(0L).`when`(promptDelegate).copyFile(any(), any())
+
         mockSession.register(object : EngineSession.Observer {
             override fun onPromptRequest(promptRequest: PromptRequest) {
                 filePickerRequest = promptRequest as PromptRequest.File
