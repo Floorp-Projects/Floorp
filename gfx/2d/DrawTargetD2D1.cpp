@@ -2184,6 +2184,11 @@ already_AddRefed<ID2D1Image> DrawTargetD2D1::GetImageForSurface(
     const IntRect* aSourceRect, bool aUserSpace) {
   RefPtr<ID2D1Image> image;
   RefPtr<SourceSurface> surface = aSurface->GetUnderlyingSurface();
+
+  if (!surface) {
+    return nullptr;
+  }
+
   switch (surface->GetType()) {
     case SurfaceType::CAPTURE: {
       SourceSurfaceCapture* capture =
