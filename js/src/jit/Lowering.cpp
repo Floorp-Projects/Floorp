@@ -310,10 +310,10 @@ void LIRGenerator::visitCreateThis(MCreateThis* ins) {
 }
 
 void LIRGenerator::visitCreateArgumentsObject(MCreateArgumentsObject* ins) {
-  LAllocation callObj = useFixedAtStart(ins->getCallObject(), CallTempReg0);
+  LAllocation callObj = useRegisterAtStart(ins->getCallObject());
   LCreateArgumentsObject* lir = new (alloc())
-      LCreateArgumentsObject(callObj, tempFixed(CallTempReg1),
-                             tempFixed(CallTempReg2), tempFixed(CallTempReg3));
+      LCreateArgumentsObject(callObj, tempFixed(CallTempReg0),
+                             tempFixed(CallTempReg1), tempFixed(CallTempReg2));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -445,15 +445,14 @@ void LIRGenerator::visitCall(MCall* call) {
       lir = new (alloc()) LCallNative(tempFixed(cxReg), tempFixed(numReg),
                                       tempFixed(vpReg), tempFixed(tmpReg));
     } else {
-      lir = new (alloc())
-          LCallKnown(useFixedAtStart(call->getCallee(), CallTempReg0),
-                     tempFixed(CallTempReg2));
+      lir = new (alloc()) LCallKnown(useRegisterAtStart(call->getCallee()),
+                                     tempFixed(CallTempReg0));
     }
   } else {
     // Call anything, using the most generic code.
     lir = new (alloc())
-        LCallGeneric(useFixedAtStart(call->getCallee(), CallTempReg0),
-                     tempFixed(CallTempReg1), tempFixed(CallTempReg2));
+        LCallGeneric(useRegisterAtStart(call->getCallee()),
+                     tempFixed(CallTempReg0), tempFixed(CallTempReg1));
   }
   defineReturn(lir, call);
   assignSafepoint(lir, call);
@@ -576,10 +575,10 @@ void LIRGenerator::visitGetDynamicName(MGetDynamicName* ins) {
   MDefinition* name = ins->getName();
   MOZ_ASSERT(name->type() == MIRType::String);
 
-  LGetDynamicName* lir = new (alloc()) LGetDynamicName(
-      useFixedAtStart(envChain, CallTempReg0),
-      useFixedAtStart(name, CallTempReg1), tempFixed(CallTempReg2),
-      tempFixed(CallTempReg3), tempFixed(CallTempReg4));
+  LGetDynamicName* lir = new (alloc())
+      LGetDynamicName(useRegisterAtStart(envChain), useRegisterAtStart(name),
+                      tempFixed(CallTempReg0), tempFixed(CallTempReg1),
+                      tempFixed(CallTempReg2));
 
   assignSnapshot(lir, BailoutKind::DynamicNameNotFound);
   defineReturn(lir, ins);
@@ -1581,11 +1580,9 @@ void LIRGenerator::visitPow(MPow* ins) {
 
   LInstruction* lir;
   if (power->type() == MIRType::Int32) {
-    // Note: useRegisterAtStart here is safe, the temp is a GP register so
-    // it will never get the same register.
-    lir = new (alloc())
-        LPowI(useRegisterAtStart(input), useFixedAtStart(power, CallTempReg1),
-              tempFixed(CallTempReg0));
+    lir =
+        new (alloc()) LPowI(useRegisterAtStart(input),
+                            useRegisterAtStart(power), tempFixed(CallTempReg0));
   } else {
     lir =
         new (alloc()) LPowD(useRegisterAtStart(input),
@@ -1620,7 +1617,6 @@ void LIRGenerator::visitMathFunction(MMathFunction* ins) {
 
   LInstruction* lir;
   if (ins->type() == MIRType::Double) {
-    // Note: useRegisterAtStart is safe here, the temp is not a FP register.
     lir = new (alloc()) LMathFunctionD(useRegisterAtStart(ins->input()),
                                        tempFixed(CallTempReg0));
   } else {
@@ -1876,7 +1872,6 @@ void LIRGenerator::visitMod(MMod* ins) {
     LDefinition maybeTemp = gen->compilingWasm() ? LDefinition::BogusTemp()
                                                  : tempFixed(CallTempReg0);
 
-    // Note: useRegisterAtStart is safe here, the temp is not a FP register.
     LModD* lir = new (alloc()) LModD(useRegisterAtStart(ins->lhs()),
                                      useRegisterAtStart(ins->rhs()), maybeTemp);
     defineReturn(lir, ins);
@@ -3531,11 +3526,10 @@ void LIRGenerator::visitArraySlice(MArraySlice* ins) {
   MOZ_ASSERT(ins->begin()->type() == MIRType::Int32);
   MOZ_ASSERT(ins->end()->type() == MIRType::Int32);
 
-  LArraySlice* lir = new (alloc())
-      LArraySlice(useFixedAtStart(ins->object(), CallTempReg0),
-                  useFixedAtStart(ins->begin(), CallTempReg1),
-                  useFixedAtStart(ins->end(), CallTempReg2),
-                  tempFixed(CallTempReg3), tempFixed(CallTempReg4));
+  LArraySlice* lir = new (alloc()) LArraySlice(
+      useRegisterAtStart(ins->object()), useRegisterAtStart(ins->begin()),
+      useRegisterAtStart(ins->end()), tempFixed(CallTempReg0),
+      tempFixed(CallTempReg1));
   if (JitOptions.warpBuilder) {
     assignSnapshot(lir, BailoutKind::ArraySlice);
   }
@@ -4500,9 +4494,9 @@ void LIRGenerator::visitNewTarget(MNewTarget* ins) {
 void LIRGenerator::visitRest(MRest* ins) {
   MOZ_ASSERT(ins->numActuals()->type() == MIRType::Int32);
 
-  LRest* lir = new (alloc()) LRest(
-      useFixedAtStart(ins->numActuals(), CallTempReg0), tempFixed(CallTempReg1),
-      tempFixed(CallTempReg2), tempFixed(CallTempReg3));
+  LRest* lir = new (alloc())
+      LRest(useRegisterAtStart(ins->numActuals()), tempFixed(CallTempReg0),
+            tempFixed(CallTempReg1), tempFixed(CallTempReg2));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
