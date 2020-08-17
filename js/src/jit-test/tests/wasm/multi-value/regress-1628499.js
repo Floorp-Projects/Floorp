@@ -3,10 +3,10 @@
 // |jit-test| skip-if: !wasmReftypesEnabled()
 
 let instance = wasmEvalText(`
-  (func $twoRefs (result anyref anyref)
+  (func $twoRefs (result externref externref)
     (ref.null extern)
     (ref.null extern))
-  (func $fourRefs (export "run") (result anyref anyref anyref anyref anyref anyref)
+  (func $fourRefs (export "run") (result externref externref externref externref externref externref)
     call $twoRefs
     call $twoRefs
     call $twoRefs)

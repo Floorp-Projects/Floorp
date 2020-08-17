@@ -8,7 +8,7 @@
 // types must be allowed to the greatest extent possible.
 //
 // Terminology: A function that takes a Ref parameter or returns a Ref result is
-// "exposed for Ref", as is a global of Ref type.  Anyref is OK though, in all
+// "exposed for Ref", as is a global of Ref type.  ExternRef is OK though, in all
 // cases.
 //
 // To keep it simple we have the following restrictions that can all be checked
@@ -36,7 +36,7 @@
 // Note that
 //
 //  - code generators can work around the restrictions by instead using
-//    functions and globals that use anyref, and by using downcasts to check
+//    functions and globals that use externref, and by using downcasts to check
 //    that the types are indeed correct.  (Though the meaning of downcast will
 //    change as the GC feature evolves.)
 //
@@ -47,7 +47,7 @@ function wasmCompile(text) {
     return new WebAssembly.Module(wasmTextToBinary(text));
 }
 
-// Exported function can't take ref type parameter, but anyref is OK.
+// Exported function can't take ref type parameter, but externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -58,10 +58,10 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (func (export "f") (param anyref) (unreachable)))`),
+      (func (export "f") (param externref) (unreachable)))`),
          "object");
 
-// Exported function can't return ref result, but anyref is OK.
+// Exported function can't return ref result, but externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -72,10 +72,10 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (func (export "f") (result anyref) (ref.null extern)))`),
+      (func (export "f") (result externref) (ref.null extern)))`),
          "object");
 
-// Imported function can't take ref parameter, but anyref is OK.
+// Imported function can't take ref parameter, but externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -86,10 +86,10 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (import "m" "f" (func (param anyref))))`),
+      (import "m" "f" (func (param externref))))`),
          "object");
 
-// Imported function can't return ref type, but anyref is OK.
+// Imported function can't return ref type, but externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -100,10 +100,10 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (import "m" "f" (func (param i32) (result anyref))))`),
+      (import "m" "f" (func (param i32) (result externref))))`),
          "object");
 
-// Imported global can't be of Ref type (irrespective of mutability), though anyref is OK.
+// Imported global can't be of Ref type (irrespective of mutability), though externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -121,15 +121,15 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (import "m" "g" (global (mut anyref))))`),
+      (import "m" "g" (global (mut externref))))`),
          "object");
 
 assertEq(typeof wasmCompile(
     `(module
-      (import "m" "g" (global anyref)))`),
+      (import "m" "g" (global externref)))`),
          "object");
 
-// Exported global can't be of Ref type (irrespective of mutability), though anyref is OK.
+// Exported global can't be of Ref type (irrespective of mutability), though externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -147,15 +147,15 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (global $boxg (export "box") (mut anyref) (ref.null extern)))`),
+      (global $boxg (export "box") (mut externref) (ref.null extern)))`),
          "object");
 
 assertEq(typeof wasmCompile(
     `(module
-      (global $boxg (export "box") anyref (ref.null extern)))`),
+      (global $boxg (export "box") externref (ref.null extern)))`),
          "object");
 
-// Exported table cannot reference functions that are exposed for Ref, but anyref is OK.
+// Exported table cannot reference functions that are exposed for Ref, but externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -179,17 +179,17 @@ assertEq(typeof wasmCompile(
     `(module
       (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
-      (func $f1 (param anyref) (unreachable)))`),
+      (func $f1 (param externref) (unreachable)))`),
          "object");
 
 assertEq(typeof wasmCompile(
     `(module
       (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
-      (func $f1 (result anyref) (ref.null extern)))`),
+      (func $f1 (result externref) (ref.null extern)))`),
          "object");
 
-// Imported table cannot reference functions that are exposed for Ref, though anyref is OK.
+// Imported table cannot reference functions that are exposed for Ref, though externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -213,17 +213,17 @@ assertEq(typeof wasmCompile(
     `(module
       (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
-      (func $f1 (param anyref) (unreachable)))`),
+      (func $f1 (param externref) (unreachable)))`),
          "object");
 
 assertEq(typeof wasmCompile(
     `(module
       (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
-      (func $f1 (result anyref) (ref.null extern)))`),
+      (func $f1 (result externref) (ref.null extern)))`),
          "object");
 
-// Can't call via exported table with type that is exposed for Ref, though anyref is OK.
+// Can't call via exported table with type that is exposed for Ref, though externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -247,7 +247,7 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (type $fn (func (param anyref)))
+      (type $fn (func (param externref)))
       (table (export "tbl") 1 funcref)
       (func (param i32)
        (call_indirect (type $fn) (ref.null extern) (local.get 0))))`),
@@ -255,13 +255,13 @@ assertEq(typeof wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (type $fn (func (result anyref)))
+      (type $fn (func (result externref)))
       (table (export "tbl") 1 funcref)
-      (func (param i32) (result anyref)
+      (func (param i32) (result externref)
        (call_indirect (type $fn) (local.get 0))))`),
          "object");
 
-// Can't call via imported table with type that is exposed for Ref, though anyref is OK.
+// Can't call via imported table with type that is exposed for Ref, though externref is OK.
 
 assertErrorMessage(() => wasmCompile(
     `(module
@@ -285,7 +285,7 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (type $fn (func (param anyref)))
+      (type $fn (func (param externref)))
       (import "m" "tbl" (table 1 funcref))
       (func (param i32)
        (call_indirect (type $fn) (ref.null extern) (local.get 0))))`),
@@ -293,9 +293,9 @@ assertEq(typeof wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (type $fn (func (result anyref)))
+      (type $fn (func (result externref)))
       (import "m" "tbl" (table 1 funcref))
-      (func (param i32) (result anyref)
+      (func (param i32) (result externref)
        (call_indirect (type $fn) (local.get 0))))`),
          "object");
 

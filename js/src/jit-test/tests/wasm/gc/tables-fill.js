@@ -142,11 +142,11 @@ for (var i = 0; i < N; i++)
 testTableFill('funcref', 'funcref', funcs);
 
 
-// Type errors.  Required sig is: (i32, anyref, i32) -> void
+// Type errors.  Required sig is: (i32, externref, i32) -> void
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t 10 anyref)
+      (table $t 10 externref)
       (func $expected-3-args-got-0
         (table.fill $t)
      ))`),
@@ -154,7 +154,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t 10 anyref)
+      (table $t 10 externref)
       (func $expected-3-args-got-1
         (table.fill $t (i32.const 0))
      ))`),
@@ -162,7 +162,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t 10 anyref)
+      (table $t 10 externref)
       (func $expected-3-args-got-2
         (table.fill $t (ref.null extern) (i32.const 0))
      ))`),
@@ -170,7 +170,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t 10 anyref)
+      (table $t 10 externref)
       (func $argty-1-wrong
         (table.fill $t (i32.const 0) (ref.null extern) (f64.const 0))
      ))`),
@@ -179,7 +179,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t 10 anyref)
+      (table $t 10 externref)
       (func $argty-2-wrong
         (table.fill $t (i32.const 0) (f32.const 0) (i32.const 0))
      ))`),
@@ -188,7 +188,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t 10 anyref)
+      (table $t 10 externref)
       (func $argty-3-wrong
         (table.fill $t (i64.const 0) (ref.null extern) (i32.const 0))
      ))`),
@@ -197,7 +197,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t 10 anyref)
+      (table $t 10 externref)
       (func $retty-wrong (result i32)
         (table.fill $t (i32.const 0) (ref.null extern) (i32.const 0))
      ))`),
@@ -207,7 +207,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
        (table 8 funcref)
-       (func (param $v anyref)
+       (func (param $v externref)
          (table.fill (i32.const 0) (local.get $v) (i32.const 0)))
      )`),
      WebAssembly.CompileError,

@@ -17,7 +17,7 @@
           ;; Restriction: cannot expose Refs outside the module, not even
           ;; as a return value.  See ref-restrict.js.
 
-          (func (export "get") (result anyref)
+          (func (export "get") (result externref)
            (global.get $g1))
 
           (func (export "copy")
@@ -78,14 +78,14 @@
     assertErrorMessage(() => ins.x(), WebAssembly.RuntimeError, /dereferencing null pointer/);
 }
 
-// Global value of type anyref for initializer from a WebAssembly.Global,
+// Global value of type externref for initializer from a WebAssembly.Global,
 // just check that it works.
 {
     let bin = wasmTextToBinary(
         `(module
-          (import "" "g" (global $g anyref))
-          (global $glob anyref (global.get $g))
-          (func (export "get") (result anyref)
+          (import "" "g" (global $g externref))
+          (global $glob externref (global.get $g))
+          (func (export "get") (result externref)
            (global.get $glob)))`);
 
     let mod = new WebAssembly.Module(bin);

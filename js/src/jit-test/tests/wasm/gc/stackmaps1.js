@@ -17,19 +17,19 @@ const {Module,Instance} = WebAssembly;
 
 let t =
   `(module
-     (import "" "check3" (func $check3 (param anyref) (param anyref) (param anyref)))
+     (import "" "check3" (func $check3 (param externref) (param externref) (param externref)))
      (type $typeOfFn0
-           (func (param i32) (param anyref) (param i32)
-                 (param anyref) (param anyref) (param i32) (result i32)))
+           (func (param i32) (param externref) (param i32)
+                 (param externref) (param externref) (param i32) (result i32)))
      (table 1 1 funcref)
      (elem (i32.const 0) $fn0)
 
-     (import "" "alloc" (func $alloc (result anyref)))
+     (import "" "alloc" (func $alloc (result externref)))
 
      ;; -- fn 0
      (func $fn0 (export "fn0")
-                 (param $arg1 i32) (param $arg2 anyref) (param $arg3 i32)
-                 (param $arg4 anyref) (param $arg5 anyref) (param $arg6 i32) (result i32)
+                 (param $arg1 i32) (param $arg2 externref) (param $arg3 i32)
+                 (param $arg4 externref) (param $arg5 externref) (param $arg6 i32) (result i32)
        (call $alloc)
        drop
        (i32.add (i32.add (local.get $arg1) (local.get $arg3)) (local.get $arg6))
@@ -40,7 +40,7 @@ let t =
      )
 
      ;; -- fn 1
-     (func $fn1 (export "fn1") (param $arg1 anyref) (result i32)
+     (func $fn1 (export "fn1") (param $arg1 externref) (result i32)
        (local $i i32)
 
        (loop (result i32)
@@ -63,7 +63,7 @@ let t =
      )
 
      ;; -- fn 2
-     (func $fn2 (export "fn2") (param $arg1 anyref) (result i32)
+     (func $fn2 (export "fn2") (param $arg1 externref) (result i32)
        (call $fn1 (local.get $arg1))
      )
    )`;
