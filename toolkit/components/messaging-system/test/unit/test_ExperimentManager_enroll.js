@@ -6,6 +6,12 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );
+const { Sampling } = ChromeUtils.import(
+  "resource://gre/modules/components-utils/Sampling.jsm"
+);
+const { ClientEnvironment } = ChromeUtils.import(
+  "resource://normandy/lib/ClientEnvironment.jsm"
+);
 
 /**
  * The normal case: Enrollment of a new experiment
@@ -135,4 +141,61 @@ add_task(async function test_failure_group_conflict() {
     true,
     "should send failure telemetry if a group conflict exists"
   );
+});
+
+add_task(async function test_sampling_check() {
+  const manager = ExperimentFakes.manager();
+  let recipe = ExperimentFakes.recipe("foo", { bucketConfig: null });
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(Sampling, "bucketSample").resolves(true);
+  sandbox.replaceGetter(ClientEnvironment, "userId", () => 42);
+
+  Assert.ok(
+    !manager.isInBucketAllocation(recipe.bucketConfig),
+    "fails for no bucket config"
+  );
+
+  recipe = ExperimentFakes.recipe("foo2", {
+    bucketConfig: { randomizationUnit: "foo" },
+  });
+
+  Assert.ok(
+    !manager.isInBucketAllocation(recipe.bucketConfig),
+    "fails for unknown randomizationUnit"
+  );
+
+  recipe = ExperimentFakes.recipe("foo3");
+
+  const result = await manager.isInBucketAllocation(recipe.bucketConfig);
+
+  Assert.equal(
+    Sampling.bucketSample.callCount,
+    1,
+    "it should call bucketSample"
+  );
+  Assert.ok(result, "result should be true");
+  const { args } = Sampling.bucketSample.firstCall;
+  Assert.equal(args[0][0], 42, "called with expected randomization id");
+  Assert.equal(
+    args[0][1],
+    recipe.bucketConfig.namespace,
+    "called with expected namespace"
+  );
+  Assert.equal(
+    args[1],
+    recipe.bucketConfig.start,
+    "called with expected start"
+  );
+  Assert.equal(
+    args[2],
+    recipe.bucketConfig.count,
+    "called with expected count"
+  );
+  Assert.equal(
+    args[3],
+    recipe.bucketConfig.total,
+    "called with expected total"
+  );
+
+  sandbox.reset();
 });
