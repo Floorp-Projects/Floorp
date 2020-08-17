@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.6.246';
-const pdfjsBuild = 'e50cb4c9d';
+const pdfjsVersion = '2.6.263';
+const pdfjsBuild = '37e9c97ce';
 ;
 
 /***/ }),
@@ -1912,7 +1912,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.246',
+    apiVersion: '2.6.263',
     source: {
       data: source.data,
       url: source.url,
@@ -3253,6 +3253,11 @@ class WorkerTransport {
           break;
       }
 
+      if (!(reason instanceof Error)) {
+        const msg = "DocException - expected a valid Error.";
+        (0, _util.warn)(msg);
+      }
+
       loadingTask._capability.reject(reason);
     });
     messageHandler.on("PasswordRequest", exception => {
@@ -3828,9 +3833,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.246';
+const version = '2.6.263';
 exports.version = version;
-const build = 'e50cb4c9d';
+const build = '37e9c97ce';
 exports.build = build;
 
 /***/ }),
@@ -4546,6 +4551,7 @@ var CanvasExtraState = function CanvasExtraStateClosure() {
     this.lineWidth = 1;
     this.activeSMask = null;
     this.resumeSMaskCtx = null;
+    this.transferMaps = null;
   }
 
   CanvasExtraState.prototype = {
@@ -4597,7 +4603,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
     this._cachedGetSinglePixelWidth = null;
   }
 
-  function putBinaryImageData(ctx, imgData) {
+  function putBinaryImageData(ctx, imgData, transferMaps = null) {
     if (typeof ImageData !== "undefined" && imgData instanceof ImageData) {
       ctx.putImageData(imgData, 0, 0);
       return;
@@ -4614,6 +4620,25 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
     var src = imgData.data;
     var dest = chunkImgData.data;
     var i, j, thisChunkHeight, elemsInThisChunk;
+    let transferMapRed, transferMapGreen, transferMapBlue, transferMapGray;
+
+    if (transferMaps) {
+      switch (transferMaps.length) {
+        case 1:
+          transferMapRed = transferMaps[0];
+          transferMapGreen = transferMaps[0];
+          transferMapBlue = transferMaps[0];
+          transferMapGray = transferMaps[0];
+          break;
+
+        case 4:
+          transferMapRed = transferMaps[0];
+          transferMapGreen = transferMaps[1];
+          transferMapBlue = transferMaps[2];
+          transferMapGray = transferMaps[3];
+          break;
+      }
+    }
 
     if (imgData.kind === _util.ImageKind.GRAYSCALE_1BPP) {
       var srcLength = src.byteLength;
@@ -4623,13 +4648,19 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       var white = 0xffffffff;
       var black = _util.IsLittleEndianCached.value ? 0xff000000 : 0x000000ff;
 
+      if (transferMapGray) {
+        if (transferMapGray[0] === 0xff && transferMapGray[0xff] === 0) {
+          [white, black] = [black, white];
+        }
+      }
+
       for (i = 0; i < totalChunks; i++) {
         thisChunkHeight = i < fullChunks ? FULL_CHUNK_HEIGHT : partialChunkHeight;
         destPos = 0;
 
         for (j = 0; j < thisChunkHeight; j++) {
           var srcDiff = srcLength - srcPos;
-          var k = 0;
+          let k = 0;
           var kEnd = srcDiff > fullSrcDiff ? width : srcDiff * 8 - 7;
           var kEndUnrolled = kEnd & ~7;
           var mask = 0;
@@ -4665,12 +4696,30 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
         ctx.putImageData(chunkImgData, 0, i * FULL_CHUNK_HEIGHT);
       }
     } else if (imgData.kind === _util.ImageKind.RGBA_32BPP) {
+      const hasTransferMaps = !!(transferMapRed || transferMapGreen || transferMapBlue);
       j = 0;
       elemsInThisChunk = width * FULL_CHUNK_HEIGHT * 4;
 
       for (i = 0; i < fullChunks; i++) {
         dest.set(src.subarray(srcPos, srcPos + elemsInThisChunk));
         srcPos += elemsInThisChunk;
+
+        if (hasTransferMaps) {
+          for (let k = 0; k < elemsInThisChunk; k += 4) {
+            if (transferMapRed) {
+              dest[k + 0] = transferMapRed[dest[k + 0]];
+            }
+
+            if (transferMapGreen) {
+              dest[k + 1] = transferMapGreen[dest[k + 1]];
+            }
+
+            if (transferMapBlue) {
+              dest[k + 2] = transferMapBlue[dest[k + 2]];
+            }
+          }
+        }
+
         ctx.putImageData(chunkImgData, 0, j);
         j += FULL_CHUNK_HEIGHT;
       }
@@ -4678,9 +4727,27 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       if (i < totalChunks) {
         elemsInThisChunk = width * partialChunkHeight * 4;
         dest.set(src.subarray(srcPos, srcPos + elemsInThisChunk));
+
+        if (hasTransferMaps) {
+          for (let k = 0; k < elemsInThisChunk; k += 4) {
+            if (transferMapRed) {
+              dest[k + 0] = transferMapRed[dest[k + 0]];
+            }
+
+            if (transferMapGreen) {
+              dest[k + 1] = transferMapGreen[dest[k + 1]];
+            }
+
+            if (transferMapBlue) {
+              dest[k + 2] = transferMapBlue[dest[k + 2]];
+            }
+          }
+        }
+
         ctx.putImageData(chunkImgData, 0, j);
       }
     } else if (imgData.kind === _util.ImageKind.RGB_24BPP) {
+      const hasTransferMaps = !!(transferMapRed || transferMapGreen || transferMapBlue);
       thisChunkHeight = FULL_CHUNK_HEIGHT;
       elemsInThisChunk = width * thisChunkHeight;
 
@@ -4697,6 +4764,22 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
           dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++];
           dest[destPos++] = 255;
+        }
+
+        if (hasTransferMaps) {
+          for (let k = 0; k < destPos; k += 4) {
+            if (transferMapRed) {
+              dest[k + 0] = transferMapRed[dest[k + 0]];
+            }
+
+            if (transferMapGreen) {
+              dest[k + 1] = transferMapGreen[dest[k + 1]];
+            }
+
+            if (transferMapBlue) {
+              dest[k + 2] = transferMapBlue[dest[k + 2]];
+            }
+          }
         }
 
         ctx.putImageData(chunkImgData, 0, i * FULL_CHUNK_HEIGHT);
@@ -5081,6 +5164,9 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
 
             this.tempSMask = null;
             break;
+
+          case "TR":
+            this.current.transferMaps = value;
         }
       }
     },
@@ -6159,7 +6245,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       } else {
         tmpCanvas = this.cachedCanvases.getCanvas("inlineImage", width, height);
         var tmpCtx = tmpCanvas.context;
-        putBinaryImageData(tmpCtx, imgData);
+        putBinaryImageData(tmpCtx, imgData, this.current.transferMaps);
         imgToPaint = tmpCanvas.canvas;
       }
 
@@ -6216,7 +6302,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       var h = imgData.height;
       var tmpCanvas = this.cachedCanvases.getCanvas("inlineImage", w, h);
       var tmpCtx = tmpCanvas.context;
-      putBinaryImageData(tmpCtx, imgData);
+      putBinaryImageData(tmpCtx, imgData, this.current.transferMaps);
 
       for (var i = 0, ii = map.length; i < ii; i++) {
         var entry = map[i];

@@ -422,6 +422,7 @@ const PDFViewerApplication = {
   contentDispositionFilename: null,
   triggerDelayedFallback: null,
   _saveInProgress: false,
+  _wheelUnusedTicks: 0,
 
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
@@ -1004,8 +1005,9 @@ const PDFViewerApplication = {
       downloadManager.download(blob, url, filename);
     }).catch(() => {
       this.download();
+    }).finally(() => {
+      this._saveInProgress = false;
     });
-    this._saveInProgress = false;
   },
 
   _delayedFallback(featureId) {
@@ -1704,6 +1706,9 @@ const PDFViewerApplication = {
     window.addEventListener("wheel", webViewerWheel, {
       passive: false
     });
+    window.addEventListener("touchstart", webViewerTouchStart, {
+      passive: false
+    });
     window.addEventListener("click", webViewerClick);
     window.addEventListener("keydown", webViewerKeyDown);
     window.addEventListener("keyup", webViewerKeyUp);
@@ -1803,6 +1808,9 @@ const PDFViewerApplication = {
     window.removeEventListener("wheel", webViewerWheel, {
       passive: false
     });
+    window.removeEventListener("touchstart", webViewerTouchStart, {
+      passive: false
+    });
     window.removeEventListener("click", webViewerClick);
     window.removeEventListener("keydown", webViewerKeyDown);
     window.removeEventListener("keyup", webViewerKeyUp);
@@ -1814,6 +1822,17 @@ const PDFViewerApplication = {
     _boundEvents.windowHashChange = null;
     _boundEvents.windowBeforePrint = null;
     _boundEvents.windowAfterPrint = null;
+  },
+
+  accumulateWheelTicks(ticks) {
+    if (this._wheelUnusedTicks > 0 && ticks < 0 || this._wheelUnusedTicks < 0 && ticks > 0) {
+      this._wheelUnusedTicks = 0;
+    }
+
+    this._wheelUnusedTicks += ticks;
+    const wholeTicks = Math.sign(this._wheelUnusedTicks) * Math.floor(Math.abs(this._wheelUnusedTicks));
+    this._wheelUnusedTicks -= wholeTicks;
+    return wholeTicks;
   }
 
 };
@@ -2288,13 +2307,23 @@ function webViewerWheel(evt) {
     }
 
     const previousScale = pdfViewer.currentScale;
-    const delta = (0, _ui_utils.normalizeWheelEventDelta)(evt);
-    const MOUSE_WHEEL_DELTA_PER_PAGE_SCALE = 3.0;
-    const ticks = delta * MOUSE_WHEEL_DELTA_PER_PAGE_SCALE;
+    const delta = (0, _ui_utils.normalizeWheelEventDirection)(evt);
+    let ticks = 0;
+
+    if (evt.deltaMode === WheelEvent.DOM_DELTA_LINE || evt.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+      if (Math.abs(delta) >= 1) {
+        ticks = Math.sign(delta);
+      } else {
+        ticks = PDFViewerApplication.accumulateWheelTicks(delta);
+      }
+    } else {
+      const PIXELS_PER_LINE_SCALE = 30;
+      ticks = PDFViewerApplication.accumulateWheelTicks(delta / PIXELS_PER_LINE_SCALE);
+    }
 
     if (ticks < 0) {
       PDFViewerApplication.zoomOut(-ticks);
-    } else {
+    } else if (ticks > 0) {
       PDFViewerApplication.zoomIn(ticks);
     }
 
@@ -2310,6 +2339,12 @@ function webViewerWheel(evt) {
     }
   } else {
     setZoomDisabledTimeout();
+  }
+}
+
+function webViewerTouchStart(evt) {
+  if (evt.touches.length > 1) {
+    evt.preventDefault();
   }
 }
 
@@ -2698,6 +2733,7 @@ exports.getOutputScale = getOutputScale;
 exports.scrollIntoView = scrollIntoView;
 exports.watchScroll = watchScroll;
 exports.binarySearchFirstItem = binarySearchFirstItem;
+exports.normalizeWheelEventDirection = normalizeWheelEventDirection;
 exports.normalizeWheelEventDelta = normalizeWheelEventDelta;
 exports.waitOnEventOrTimeout = waitOnEventOrTimeout;
 exports.moveToEndOfArray = moveToEndOfArray;
@@ -3135,7 +3171,7 @@ function getPDFFileNameFromURL(url, defaultFilename = "document.pdf") {
   return suggestedFilename || defaultFilename;
 }
 
-function normalizeWheelEventDelta(evt) {
+function normalizeWheelEventDirection(evt) {
   let delta = Math.sqrt(evt.deltaX * evt.deltaX + evt.deltaY * evt.deltaY);
   const angle = Math.atan2(evt.deltaY, evt.deltaX);
 
@@ -3143,6 +3179,11 @@ function normalizeWheelEventDelta(evt) {
     delta = -delta;
   }
 
+  return delta;
+}
+
+function normalizeWheelEventDelta(evt) {
+  let delta = normalizeWheelEventDirection(evt);
   const MOUSE_DOM_DELTA_PIXEL_MODE = 0;
   const MOUSE_DOM_DELTA_LINE_MODE = 1;
   const MOUSE_PIXELS_PER_LINE = 30;
@@ -9923,7 +9964,7 @@ class AnnotationLayerBuilder {
   }
 
   render(viewport, intent = "display") {
-    this.pdfPage.getAnnotations({
+    return this.pdfPage.getAnnotations({
       intent
     }).then(annotations => {
       if (this._cancelled) {
@@ -10078,6 +10119,22 @@ class PDFPageView {
 
     if (this.pdfPage) {
       this.pdfPage.cleanup();
+    }
+  }
+
+  async _renderAnnotationLayer() {
+    let error = null;
+
+    try {
+      await this.annotationLayer.render(this.viewport, "display");
+    } catch (ex) {
+      error = ex;
+    } finally {
+      this.eventBus.dispatch("annotationlayerrendered", {
+        source: this,
+        pageNumber: this.id,
+        error
+      });
     }
   }
 
@@ -10288,7 +10345,7 @@ class PDFPageView {
     }
 
     if (redrawAnnotations && this.annotationLayer) {
-      this.annotationLayer.render(this.viewport, "display");
+      this._renderAnnotationLayer();
     }
   }
 
@@ -10430,7 +10487,7 @@ class PDFPageView {
         this.annotationLayer = this.annotationLayerFactory.createAnnotationLayerBuilder(div, pdfPage, this._annotationStorage, this.imageResourcesPath, this.renderInteractiveForms, this.l10n);
       }
 
-      this.annotationLayer.render(this.viewport, "display");
+      this._renderAnnotationLayer();
     }
 
     div.setAttribute("data-loaded", true);
