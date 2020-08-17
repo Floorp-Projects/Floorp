@@ -207,8 +207,30 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
       case DAV1D_MC_BT709:
         b.mYUVColorSpace = YUVColorSpace::BT709;
         break;
-      default:
+      case DAV1D_MC_IDENTITY:
+        b.mYUVColorSpace = gfx::YUVColorSpace::Identity;
         break;
+      case DAV1D_MC_CHROMAT_NCL:
+      case DAV1D_MC_CHROMAT_CL:
+      case DAV1D_MC_UNKNOWN:  // MIAF specific
+        switch (aPicture.seq_hdr->pri) {
+          case DAV1D_COLOR_PRI_BT601:
+            b.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+            break;
+          case DAV1D_COLOR_PRI_BT709:
+            b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
+            break;
+          case DAV1D_COLOR_PRI_BT2020:
+            b.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+            break;
+          default:
+            b.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+            break;
+        }
+        break;
+      default:
+        LOG("Unsupported color matrix value: %u", aPicture.seq_hdr->mtrx);
+        b.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
     }
   }
   if (b.mYUVColorSpace == YUVColorSpace::UNKNOWN) {
