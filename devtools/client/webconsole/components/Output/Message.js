@@ -422,8 +422,8 @@ class Message extends Component {
         indent,
         inWarningGroup,
       }),
-      icon,
-      collapse,
+      this.props.isBlockedNetworkMessage ? collapse : icon,
+      this.props.isBlockedNetworkMessage ? icon : collapse,
       dom.span(
         { className: "message-body-wrapper" },
         dom.span(
