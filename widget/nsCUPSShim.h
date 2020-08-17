@@ -21,9 +21,7 @@ struct PRLibrary;
 /* Note: this class relies on static initialization. */
 class nsCUPSShim {
  public:
-  bool EnsureInitialized() {
-    return mInited || Init();
-  }
+  bool EnsureInitialized() { return mInited || Init(); }
 
   /**
    * Function pointers for supported functions. These are only
@@ -75,9 +73,9 @@ class nsCUPSShim {
   // boolean and the mutex below make it safe.
   //
   // The boolean can't be Relaxed, because it guards our function pointers.
-  mozilla::Atomic<bool, mozilla::ReleaseAcquire> mInited {false};
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire> mInited{false};
 #ifdef CUPS_SHIM_RUNTIME_LINK
-  mozilla::OffTheBooksMutex mInitMutex {"nsCUPSShim::mInitMutex"};
+  mozilla::OffTheBooksMutex mInitMutex{"nsCUPSShim::mInitMutex"};
   PRLibrary* mCupsLib;
 #endif
 };
