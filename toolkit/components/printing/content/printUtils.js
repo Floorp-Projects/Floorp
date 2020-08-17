@@ -569,13 +569,16 @@ var PrintUtils = {
     );
   },
 
-  getPrintSettings() {
+  getPrintSettings(aPrinterName) {
     var printSettings;
     try {
       var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
       printSettings = PSSVC.globalPrintSettings;
+      if (aPrinterName) {
+        printSettings.printerName = aPrinterName;
+      }
       this._setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
     } catch (e) {
       dump("getPrintSettings: " + e + "\n");
