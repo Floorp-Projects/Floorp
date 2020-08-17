@@ -109,6 +109,8 @@ class _ExperimentManager {
       this.updateEnrollment(recipe);
     } else if (isEnrollmentPaused) {
       log.debug(`Enrollment is paused for "${slug}"`);
+    } else if (!(await this.isInBucketAllocation(recipe.bucketConfig))) {
+      log.debug("Client was not enrolled because of the bucket sampling");
     } else {
       await this.enroll(recipe, source);
     }
@@ -140,6 +142,35 @@ class _ExperimentManager {
     }
 
     this.sessions.delete(sourceToCheck);
+  }
+
+  /**
+   * Bucket configuration specifies a specific percentage of clients that can
+   * be enrolled.
+   * @param {BucketConfig} bucketConfig
+   * @returns {Promise<boolean>}
+   */
+  isInBucketAllocation(bucketConfig) {
+    if (!bucketConfig) {
+      log.debug("Cannot enroll if recipe bucketConfig is not set.");
+      return false;
+    }
+
+    let id;
+    if (bucketConfig.randomizationUnit === "normandy_id") {
+      id = ClientEnvironment.userId;
+    } else {
+      // Others not currently supported.
+      log.debug(`Invalid randomizationUnit: ${bucketConfig.randomizationUnit}`);
+      return false;
+    }
+
+    return Sampling.bucketSample(
+      [id, bucketConfig.namespace],
+      bucketConfig.start,
+      bucketConfig.count,
+      bucketConfig.total
+    );
   }
 
   /**
