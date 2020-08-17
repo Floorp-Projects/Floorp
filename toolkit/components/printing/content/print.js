@@ -415,6 +415,7 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
 
     if (e.type == "available-destinations") {
       this.setOptions(e.detail);
+      this.required = true;
     }
   }
 }
@@ -509,33 +510,52 @@ customElements.define("copy-count-input", CopiesInput, {
   extends: "input",
 });
 
-class PrintUIForm extends PrintUIControlMixin(HTMLElement) {
+class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   initialize() {
     super.initialize();
 
     this.addEventListener("submit", this);
     this.addEventListener("click", this);
+    this.addEventListener("input", this);
   }
 
   handleEvent(e) {
     if (e.target.id == "open-dialog-link") {
       this.dispatchEvent(new Event("open-system-dialog", { bubbles: true }));
+      return;
     }
 
     if (e.type == "submit") {
       e.preventDefault();
       switch (e.submitter.name) {
         case "print":
+          if (!this.checkValidity()) {
+            return;
+          }
           this.dispatchEvent(new Event("print", { bubbles: true }));
           break;
         case "cancel":
           this.dispatchEvent(new Event("cancel-print", { bubbles: true }));
           break;
       }
+    } else if (e.type == "input") {
+      let isValid = this.checkValidity();
+      let section = e.target.closest(".section-block");
+      for (let element of this.elements) {
+        // If we're valid, enable all inputs.
+        // Otherwise, disable the valid inputs other than the cancel button and the elements
+        // in the invalid section.
+        element.disabled =
+          element.hasAttribute("disallowed") ||
+          (!isValid &&
+            element.validity.valid &&
+            element.name != "cancel" &&
+            element.closest(".section-block") != section);
+      }
     }
   }
 }
-customElements.define("print-form", PrintUIForm);
+customElements.define("print-form", PrintUIForm, { extends: "form" });
 
 class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   get templateId() {
@@ -546,10 +566,11 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     super.initialize();
 
     this._percentScale = this.querySelector("#percent-scale");
-    this._percentScale.addEventListener("input", this);
     this._shrinkToFitChoice = this.querySelector("#fit-choice");
     this._scaleChoice = this.querySelector("#percent-scale-choice");
+    this._scaleError = this.querySelector("#error-invalid-scale");
 
+    this._percentScale.addEventListener("input", this);
     this.addEventListener("input", this);
   }
 
@@ -558,6 +579,7 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     this._shrinkToFitChoice.checked = shrinkToFit;
     this._scaleChoice.checked = !shrinkToFit;
     this._percentScale.disabled = shrinkToFit;
+    this._percentScale.toggleAttribute("disallowed", shrinkToFit);
 
     // If the user had an invalid input and switches back to "fit to page",
     // we repopulate the scale field with the stored, valid scaling value.
@@ -568,27 +590,24 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    e.stopPropagation();
-
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
       this.dispatchSettingsChange({
         shrinkToFit: this._shrinkToFitChoice.checked,
       });
+      this._scaleError.hidden = true;
       return;
     }
 
     window.clearTimeout(this.invalidTimeoutId);
 
     if (this._percentScale.checkValidity() && e.type == "input") {
-      // TODO: set the customError element to hidden ( Bug 1656057 )
-
       this.invalidTimeoutId = window.setTimeout(() => {
         this.dispatchSettingsChange({
           scaling: Number(this._percentScale.value / 100),
         });
       }, INVALID_INPUT_DELAY_MS);
     }
-    // TODO: populate a customError element with erorMessage contents
+    this._scaleError.hidden = this._percentScale.validity.valid;
   }
 }
 customElements.define("scale-input", ScaleInput);

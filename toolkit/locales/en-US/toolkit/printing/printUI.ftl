@@ -54,3 +54,7 @@ printui-primary-button-save = Save
 printui-cancel-button = Cancel
 
 printui-loading = Preparing Preview
+
+## Error messages shown when a user has an invalid input
+
+printui-error-invalid-scale = Scale must be a number between 10 and 200.
