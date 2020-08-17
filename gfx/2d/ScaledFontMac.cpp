@@ -160,16 +160,46 @@ ScaledFontMac::~ScaledFontMac() {
   CGFontRelease(mFont);
 }
 
+#define TRUETYPE_TAG(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
+
+bool UnscaledFontMac::CheckForColorGlyphs() {
+  CFArrayRef tags = CGFontCopyTableTags(mFont);
+  if (!tags) {
+    return false;
+  }
+  bool hasColorGlyphs = false;
+  int numTags = (int)CFArrayGetCount(tags);
+  for (int t = 0; t < numTags; t++) {
+    uint32_t tag = (uint32_t)(uintptr_t)CFArrayGetValueAtIndex(tags, t);
+    switch (tag) {
+      case TRUETYPE_TAG('S', 'V', 'G', ' '):
+      case TRUETYPE_TAG('C', 'O', 'L', 'R'):
+      case TRUETYPE_TAG('s', 'b', 'i', 'x'):
+        hasColorGlyphs = true;
+        break;
+    }
+  }
+  CFRelease(tags);
+  return hasColorGlyphs;
+}
+
 #ifdef USE_SKIA
 SkTypeface* ScaledFontMac::CreateSkTypeface() {
+  // We don't rely upon style information in the mac font backend, so avoid
+  // letting the backend try to query that information from the CTFont to
+  // work around potential bugs.
+  auto unscaledMac = static_cast<UnscaledFontMac*>(GetUnscaledFont().get());
+  CTFontSymbolicTraits traits =
+      unscaledMac->HasColorGlyphs() ? kCTFontColorGlyphsTrait : 0;
+  SkFontStyle noStyle;
   if (mCTFont) {
-    return SkCreateTypefaceFromCTFont(mCTFont);
+    return SkCreateTypefaceFromCTFont(mCTFont, nullptr, &noStyle, &traits);
   } else {
-    auto unscaledMac = static_cast<UnscaledFontMac*>(GetUnscaledFont().get());
     bool dataFont = unscaledMac->IsDataFont();
     CTFontRef fontFace =
         CreateCTFontFromCGFontWithVariations(mFont, mSize, !dataFont);
-    SkTypeface* typeface = SkCreateTypefaceFromCTFont(fontFace);
+    SkTypeface* typeface =
+        SkCreateTypefaceFromCTFont(fontFace, nullptr, &noStyle, &traits);
     CFRelease(fontFace);
     return typeface;
   }

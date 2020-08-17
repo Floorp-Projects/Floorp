@@ -23,7 +23,15 @@ class UnscaledFontMac final : public UnscaledFont {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontMac, override)
   explicit UnscaledFontMac(CGFontRef aFont, bool aIsDataFont = false)
-      : mFont(aFont), mIsDataFont(aIsDataFont) {
+      : mFont(aFont),
+        mIsDataFont(aIsDataFont),
+        mHasColorGlyphs(CheckForColorGlyphs()) {
+    CFRetain(mFont);
+  }
+  UnscaledFontMac(CGFontRef aFont, bool aIsDataFont, bool aHasColorGlyphs)
+      : mFont(aFont),
+        mIsDataFont(aIsDataFont),
+        mHasColorGlyphs(aHasColorGlyphs) {
     CFRetain(mFont);
   }
   virtual ~UnscaledFontMac() {
@@ -40,6 +48,8 @@ class UnscaledFontMac final : public UnscaledFont {
   bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
 
   bool IsDataFont() const { return mIsDataFont; }
+
+  bool HasColorGlyphs() const { return mHasColorGlyphs; }
 
   already_AddRefed<ScaledFont> CreateScaledFont(
       Float aGlyphSize, const uint8_t* aInstanceData,
@@ -64,9 +74,12 @@ class UnscaledFontMac final : public UnscaledFont {
       const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
  private:
+  bool CheckForColorGlyphs();
+
   CGFontRef mFont;
   CFArrayRef mAxesCache = nullptr;  // Cached array of variation axis details
   bool mIsDataFont;
+  bool mHasColorGlyphs;
 };
 
 }  // namespace gfx
