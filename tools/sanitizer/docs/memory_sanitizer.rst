@@ -1,4 +1,5 @@
-.. _What_is_Memory_Sanitizer:
+Memory Sanitizer
+================
 
 What is Memory Sanitizer?
 -------------------------
@@ -12,8 +13,6 @@ not able to observe memory initialization in uninstrumented libraries.
 More information on MSan can be found on `the Memory Sanitizer
 wiki <https://github.com/google/sanitizers/wiki/MemorySanitizer>`__.
 
-.. _Public_Builds:
-
 Public Builds
 -------------
 
@@ -21,12 +20,8 @@ Public Builds
 
    **Note:** No public builds are available at this time yet.
 
-.. _Manual_Build:
-
 Manual Build
 ------------
-
-.. _Build_prerequisites:
 
 Build prerequisites
 ~~~~~~~~~~~~~~~~~~~
@@ -35,8 +30,6 @@ Build prerequisites
 
    **Note:** MemorySanitizer requires **64-bit Linux** to work. Other
    platforms/operating systems are not supported.
-
-.. _LLVMClang:
 
 LLVM/Clang
 ^^^^^^^^^^
@@ -47,8 +40,6 @@ recent Clang version, such as Clang 3.7+.
 
 You can find precompiled binaries for LLVM/Clang on `the LLVM releases
 page <https://releases.llvm.org/download.html>`__.
-
-.. _Building_Firefox:
 
 Building Firefox
 ~~~~~~~~~~~~~~~~
@@ -61,16 +52,12 @@ Building Firefox
    configuration provided here is untested and without an appropriately
    instrumented userland, it will cause false positives.**
 
-.. _Getting_the_source:
-
 Getting the source
 ^^^^^^^^^^^^^^^^^^
 
 If you don't have a source code repository clone yet, you need to `get
 yourself a clone of
 Mozilla-central </en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial>`__.
-
-.. _Adjusting_the_build_configuration:
 
 Adjusting the build configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -119,23 +106,17 @@ content in your Mozilla-central directory:
    ac_add_options --enable-optimize="-O2 -gline-tables-only"
    ac_add_options --disable-debug
 
-.. _Starting_the_build_process:
-
 Starting the build process
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Now you start the build process using the regular ``make -f client.mk``
 command.
 
-.. _Starting_Firefox:
-
 Starting Firefox
 ^^^^^^^^^^^^^^^^
 
 After the build has completed, you can start Firefox from the ``objdir``
 as usual.
-
-.. _Building_the_JavaScript_shell:
 
 Building the JavaScript shell
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,8 +165,6 @@ subdirectory with that name.
        make -j 8
    fi
 
-.. _Using_LLVM_Symbolizer_for_fasterbetter_traces:
-
 Using LLVM Symbolizer for faster/better traces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -196,8 +175,6 @@ readily use to immediately output symbolized traces if the program is
 found on the ``PATH``. If your ``llvm-symbolizer`` lives outside the
 ``PATH``, you can set the ``MSAN_SYMBOLIZER_PATH`` environment variable
 to point to your symbolizer binary.
-
-.. _Ignoring_known_issues:
 
 **Ignoring known issues**
 ~~~~~~~~~~~~~~~~~~~~~~~~~

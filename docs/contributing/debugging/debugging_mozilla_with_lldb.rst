@@ -3,8 +3,6 @@ Debugging Mozilla with LLDB
 
 See http://lldb.llvm.org/index.html.
 
-.. _Mozilla-specific_lldb_settings:
-
 Mozilla-specific lldb settings
 ------------------------------
 
@@ -19,7 +17,7 @@ LLDB to debug Gecko <http://mcc.id.au/blog/2014/01/lldb-gecko>`__ blog
 post.
 
 The in-tree ``.lldbinit`` should be loaded automatically in most cases
-when runnning lldb from the command line (e.g. using
+when running lldb from the command line (e.g. using
 ```mach`` </en-US/docs/Mozilla/Developer_guide/mach>`__), but **not**
 when using XCode. See `Debugging on Mac OS
 X </en-US/docs/Debugging_on_Mac_OS_X>`__ for information on setting up
@@ -46,12 +44,8 @@ XCode.
    doesn't fix things then try closing Xcode/lldb, doing a clobber
    build, reopening Xcode/lldb, and restarting your debugging session.
 
-.. _Starting_a_debugging_session:
-
 Starting a debugging session
 ----------------------------
-
-.. _Attaching_to_an_existing_process:
 
 Attaching to an existing process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,8 +57,6 @@ You can attach to Firefox with following command:
    (lldb) process attach --name firefox
 
 Some versions of lldb causes crashes after attaching to Firefox.
-
-.. _Running_a_new_process:
 
 Running a new process
 ~~~~~~~~~~~~~~~~~~~~~

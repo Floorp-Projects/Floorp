@@ -31,8 +31,6 @@ http://stackframe.blogspot.com/ for more details).
 See also the official VMWare documentation
 http://www.vmware.com/pdf/ws7_visualstudio_debug.pdf.
 
-.. _Hardware_Requirements:
-
 Hardware Requirements
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -40,8 +38,6 @@ You need a modern multi-core CPU with VT-x support to get adequate
 performance when replay debugging. We recommend a quad core i7 or Xeon
 chip. We also recommend at least 8 GB RAM and an SSD with at least 256
 GB space.
-
-.. _Setting_up_the_Host_computer:
 
 Setting up the Host computer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,8 +65,6 @@ Install VMWare Workstation 7 for Windows 32-bit and 64-bit, Main
 Installation file with Tools. We've had success with version 7.1.3. This
 must be installed after Visual Studio so that Workstation's Virtual
 Integrated Debugger plugin gets installed into Visual Studio.
-
-.. _Setting_up_the_Guest_Virtual_Machine:
 
 Setting up the Guest Virtual Machine
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,8 +122,6 @@ Turn off "Take snapshots in background" in Workstation > Edit >
 Preferences > Priority. This makes snapshots faster, but blocks the VM
 while taking them.
 
-.. _Record_and_Replay_of_Nightly_Builds:
-
 Record and Replay of Nightly Builds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -146,8 +138,6 @@ relatively easy to use them for record and replay debugging.
    enter the Command as the path to firefox.exe on the host.
 -  Replay! When prompted, you may have to inform MSVC of the location of
    guestdlls and installdir/components.
-
-.. _Building_Firefox_for_Record_Replay:
 
 Building Firefox for Record Replay
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -182,8 +172,6 @@ specifying an object dir, and the following options:
 | You can run now mochitests with:
 | ``$ python mochitest/runtests.py --appname firefox/firefox.exe --utility-path=firefox --certificate-path=certs --autorun --close-when-done --console-level=INFO --log-file=./mochitest-plain.log --file-level=INFO``
 
-.. _Configuring_Visual_Studio_for_Replay_Debugging:
-
 Configuring Visual Studio for Replay Debugging
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -214,8 +202,6 @@ http://msdl.microsoft.com/download/symbols as a symbol location. If you
 run Firefox from MSVC in the Host, and the symbols will be downloaded
 immediately.
 
-.. _Creating_a_Recording:
-
 Creating a Recording
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -234,8 +220,6 @@ You'll want to enable a lot of logging in the modules you're debugging,
 redirect it to a log file, and copy the log file out to your Host after
 you've recorded a test failure. If you don't copy the log file out to
 the Host, you can't view the log file while replaying.
-
-.. _Replaying_a_Recording:
 
 Replaying a Recording
 ~~~~~~~~~~~~~~~~~~~~~
@@ -260,8 +244,6 @@ the path to all the DLLs that the process has loaded. Make sure you've
 got a copy of every DLL loaded in the guest in your GuestDLLs directory
 on the host. There's probably a DLL in the Guest's C:\Windows\SxS
 directory that you need in the Host's GuestDLL folder.
-
-.. _Workflow:
 
 Workflow
 ~~~~~~~~

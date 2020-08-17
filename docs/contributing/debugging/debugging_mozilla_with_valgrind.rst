@@ -4,8 +4,6 @@ Debugging Mozilla with Valgrind
 This page describes how to use Valgrind (specifically, its Memcheck
 tool) to find memory errors.
 
-.. _Supported_platforms:
-
 Supported platforms
 -------------------
 
@@ -24,8 +22,6 @@ of a rough ride.
    leak reports with caution. 
 -  Valgrind has been known to cause kernel panics, for unknown reasons.
 
-.. _Where_to_get_Valgrind:
-
 Where to get Valgrind
 ---------------------
 
@@ -40,12 +36,8 @@ Make sure you have version 3.10.1 or later of Valgrind. Newer versions
 tend to have better compatibility with both Firefox's JITs and newer
 toolchain components (compiler, libc and linker versions).
 
-.. _Basics:
-
 Basics
 ------
-
-.. _Build:
 
 Build
 ~~~~~
@@ -60,16 +52,12 @@ accuracy.
    ac_add_options --enable-valgrind
    ac_add_options --enable-optimize="-g -O2"
 
-.. _Run:
-
 Run
 ~~~
 
 Note that programs run *much* more slowly under Valgrind than they do
 natively. Slow-downs of 20x or 30x aren't unexpected, and it's slower on
 Mac than on Linux. Don't try this on an underpowered machine.
-
-.. _Linux:
 
 Linux
 ^^^^^
@@ -99,8 +87,6 @@ Also, run with the following environment variable set.
 This is necessary to get the Gnome system libraries to use plain
 ``malloc`` instead of pool allocators.
 
-.. _Mac:
-
 Mac
 ^^^
 
@@ -113,12 +99,8 @@ On Mac, run Valgrind with the following options.
 The ``--dsymutil`` option ensures line number information is present in
 stack traces.
 
-.. _Advanced_usage:
-
 Advanced usage
 --------------
-
-.. _Shared_suppression_files:
 
 Shared suppression files
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,8 +108,6 @@ Shared suppression files
 `/build/valgrind/ <http://mxr.mozilla.org/mozilla-central/source/build/valgrind/>`__
 contains the suppression files used by the periodic Valgrind jobs on
 Tinderbox. Some of these files are platform-specific.
-
-.. _Running_mochitests_under_Valgrind:
 
 Running mochitests under Valgrind?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,8 +126,6 @@ As of December 2014 it is possible to do a complete run of
 mochitests-plain on Valgrind in about 8 CPU hours on a Core i4910
 (Haswell) machine.  Maximum process size is 5.4G, of which about 80% is
 in memory.  Runs of small subsets of mochitests take far less memory.
-
-.. _Bits_and_pieces:
 
 Bits and pieces
 ~~~~~~~~~~~~~~~
@@ -173,8 +151,6 @@ The ``--track-origins=yes`` slows down Valgrind greatly, so don't use it
 unless you are hunting down a specific uninitialised value error. But if
 you are hunting down such an error, it's extremely helpful and worth
 waiting for.
-
-.. _Additional_help:
 
 Additional help
 ---------------
