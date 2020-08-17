@@ -698,18 +698,6 @@ bool BacktrackingAllocator::buildLivenessInfo() {
                         use->usedAtStart());
 
 #ifdef DEBUG
-          // Don't allow at-start call uses if there are temps of the same kind,
-          // so that we don't assign the same register. Only allow this when the
-          // use and temp are fixed registers, as they can't alias.
-          if (ins->isCall() && use->usedAtStart()) {
-            for (size_t i = 0; i < ins->numTemps(); i++) {
-              MOZ_ASSERT_IF(
-                  !ins->getTemp(i)->isBogusTemp(),
-                  vreg(ins->getTemp(i)).type() != vreg(use).type() ||
-                      (use->isFixedRegister() && ins->getTemp(i)->isFixed()));
-            }
-          }
-
           // If there are both useRegisterAtStart(x) and useRegister(y)
           // uses, we may assign the same register to both operands
           // (bug 772830). Don't allow this for now.
