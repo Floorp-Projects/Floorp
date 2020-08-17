@@ -232,7 +232,7 @@ var PrintEventHandler = {
         if (name == lastUsedPrinterName) {
           lastUsedPrinter = destination;
         }
-        if (name == defaultPrinter) {
+        if (name == defaultPrinterName) {
           defaultPrinter = destination;
         }
 
