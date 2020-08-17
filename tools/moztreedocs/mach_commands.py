@@ -50,7 +50,7 @@ class Documentation(MachCommandBase):
         self._project = None
         self._version = None
 
-    @Command('doc', category='devenv', virtualenv_name="docs",
+    @Command('doc', category='devenv',
              description='Generate and serve documentation from the tree.')
     @CommandArgument('path', default=None, metavar='DIRECTORY', nargs='?',
                      help='Path to documentation to build and display.')
@@ -80,8 +80,9 @@ class Documentation(MachCommandBase):
         if self.check_jsdoc():
             return die(JSDOC_NOT_FOUND)
 
-        self.activate_virtualenv()
-        self.virtualenv_manager.install_pip_requirements(os.path.join(here, 'requirements.txt'))
+        self.activate_pipenv(
+            os.path.dirname(self.virtualenv_manager.virtualenv_root),
+            pipfile=os.path.join(here, 'Pipfile'))
 
         import webbrowser
         from livereload import Server
