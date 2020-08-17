@@ -1,9 +1,8 @@
-// |jit-test| skip-if: !this.setARMHwCapFlags
+// |jit-test| skip-if: !getBuildConfiguration().arm; test-also=--arm-hwcap=armv7,vfp
 
-// This will disable the idiv instruction and thus make the baseline compiler
-// unavailable, so we must be prepared for a run-time error below in the
-// baseline-only configuration.
-setARMHwCapFlags('vfp,armv7');
+// The command line options disable the idiv instruction and thus make the
+// baseline compiler unavailable, so we must be prepared for a run-time error
+// below in the baseline-only configuration.
 
 // The flags above should be sufficient for there to be a WebAssembly object.
 assertEq(typeof WebAssembly, "object");

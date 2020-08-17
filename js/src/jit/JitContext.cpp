@@ -146,13 +146,17 @@ bool jit::InitializeJit() {
   InitARMFlags();
 #endif
 
-  // Note: these flags need to be initialized after the InitARMFlags call above.
-  JitOptions.supportsFloatingPoint = MacroAssembler::SupportsFloatingPoint();
-  JitOptions.supportsUnalignedAccesses =
-      MacroAssembler::SupportsUnalignedAccesses();
+  // Note: jit flags need to be initialized after the InitARMFlags call above.
+  ComputeJitSupportFlags();
 
   CheckPerf();
   return true;
+}
+
+void jit::ComputeJitSupportFlags() {
+  JitOptions.supportsFloatingPoint = MacroAssembler::SupportsFloatingPoint();
+  JitOptions.supportsUnalignedAccesses =
+      MacroAssembler::SupportsUnalignedAccesses();
 }
 
 bool jit::JitSupportsWasmSimd() {
