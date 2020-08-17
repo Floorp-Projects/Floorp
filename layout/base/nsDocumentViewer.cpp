@@ -3341,17 +3341,40 @@ nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
   }
 
   nsPoint currentScrollPosition = sf->GetScrollPosition();
+  float halfwayPoint =
+      currentScrollPosition.y + float(sf->GetScrollPortRect().height) / 2.0f;
+  float lastDistanceFromHalfwayPoint = std::numeric_limits<float>::max();
   *aNumber = 0;
   float previewScale = seqFrame->GetPrintPreviewScale();
   for (const nsIFrame* sheetFrame : seqFrame->PrincipalChildList()) {
+    nsRect sheetRect = sheetFrame->GetRect();
     (*aNumber)++;
-    nsRect pageRect = sheetFrame->GetRect();
-    if (pageRect.YMost() * previewScale > currentScrollPosition.y) {
-      // This is the first visible page even if the visible rect is just 1px
-      // height.
-      // TODO: We should have a reasonable threshold.
+
+    float bottomOfSheet = sheetRect.YMost() * previewScale;
+    if (bottomOfSheet < halfwayPoint) {
+      // If the bottom of the page is not yet over the halfway point, iterate
+      // the next frame to see if the next frame is over the halfway point and
+      // compare the distance from the halfway point.
+      lastDistanceFromHalfwayPoint = halfwayPoint - bottomOfSheet;
+      continue;
+    }
+
+    float topOfSheet = sheetRect.Y() * previewScale;
+    if (topOfSheet <= halfwayPoint) {
+      // If the top of the page is not yet over the halfway point or on the
+      // point, it's the current page.
       break;
     }
+
+    // Now the page rect is completely over the halfway point, compare the
+    // distances from the halfway point.
+    if ((topOfSheet - halfwayPoint) >= lastDistanceFromHalfwayPoint) {
+      // If the previous page distance is less than or equal to the current page
+      // distance, choose the previous one as the current.
+      (*aNumber)--;
+      MOZ_ASSERT(*aNumber > 0);
+    }
+    break;
   }
 
   MOZ_ASSERT(*aNumber <= pageCount);
