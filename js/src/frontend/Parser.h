@@ -266,13 +266,6 @@ class MOZ_STACK_CLASS ParserSharedBase : public JS::CustomAutoRooter {
 
  public:
   CompilationInfo& getCompilationInfo() { return compilationInfo_; }
-
-  JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
-    return compilationInfo_.liftParserAtomToJSAtom(parserAtom);
-  }
-  const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom) {
-    return compilationInfo_.lowerJSAtomToParserAtom(atom);
-  }
 };
 
 class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
