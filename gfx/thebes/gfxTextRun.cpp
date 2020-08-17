@@ -3202,11 +3202,15 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     }
   }
 
-  // If character is in Private Use Area, don't do matching against pref or
-  // system fonts.
-  // Also don't attempt any fallback for control characters and noncharacters,
-  // or codepoints where global fallback has already noted a failure.
-  if (gfxPlatformFontList::PlatformFontList()->SkipFontFallbackForChar(aCh)) {
+  // If character is in Private Use Area, or is unassigned in Unicode, don't do
+  // matching against pref or system fonts. We only support such codepoints
+  // when used with an explicitly-specified font, as they have no standard/
+  // interoperable meaning.
+  // Also don't attempt any fallback for control characters or noncharacters,
+  // where we won't be rendering a glyph anyhow, or for codepoints where global
+  // fallback has already noted a failure.
+  if (gfxPlatformFontList::PlatformFontList()->SkipFontFallbackForChar(aCh) ||
+      GetGeneralCategory(aCh) == HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED) {
     return nullptr;
   }
 
