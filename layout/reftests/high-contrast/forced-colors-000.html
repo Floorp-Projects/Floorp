@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>forced colors should match when colors are forced</title>
+
+<style>
+    div {
+        width: 100px;
+        height: 100px;
+    }
+    @media(forced-colors: active) {
+        div {
+            outline: 2px solid black;
+        }
+    }
+</style>
+<div></div>
+

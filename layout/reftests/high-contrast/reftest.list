@@ -1,5 +1,5 @@
 # This pref enables high-contrast mode in the testcases here:
-defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true)
+defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true) test-pref(layout.css.forced-colors.enabled,true) test-pref(browser.display.foreground_color,"#000000") test-pref(browser.display.background_color,"#FFFFFF")
 
 # There are several platform-specific fuzzy-if notations below due to
 # anti-aliasing, extra ink overflow, and slightly inacurate reftest
@@ -74,3 +74,17 @@ test-pref(browser.display.document_color_use,0) != prefers-contrast-001.html pre
 
 # a prefers-contrast value of no-preference should match no-preference
 test-pref(browser.display.document_color_use,0) == prefers-contrast-005.html prefers-contrast-black-ref.html
+
+# forced-colors media query
+
+# active
+== forced-colors-000.html prefers-contrast-black-ref.html
+test-pref(browser.display.document_color_use,0) != forced-colors-000.html prefers-contrast-black-ref.html
+
+# none
+test-pref(browser.display.document_color_use,0) == forced-colors-002.html prefers-contrast-black-ref.html
+!= forced-colors-002.html prefers-contrast-black-ref.html
+
+# boolean context
+== forced-colors-001.html prefers-contrast-black-ref.html
+test-pref(browser.display.document_color_use,0) != forced-colors-001.html prefers-contrast-black-ref.html
