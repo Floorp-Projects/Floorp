@@ -68,10 +68,9 @@ class nsNSSCertificate final : public nsIX509Cert,
       /* out */ nsCOMPtr<nsIX509Cert>& aRoot);
 
  private:
-  virtual ~nsNSSCertificate();
+  virtual ~nsNSSCertificate() = default;
 
   mozilla::UniqueCERTCertificate mCert;
-  bool mPermDelete;
   uint32_t mCertType;
   std::vector<nsString> mSubjectAltNames;
   nsresult GetSortableDate(PRTime aTime, nsAString& _aSortableDate);
