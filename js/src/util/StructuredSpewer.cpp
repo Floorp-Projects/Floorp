@@ -72,8 +72,8 @@ void StructuredSpewer::tryToInitializeOutput(const char* path) {
   }
 
   // These logs are structured as a JSON array.
-  output_.put("[");
   json_.emplace(output_);
+  json_->beginList();
 }
 
 // Treat pattern like a glob, and return true if pattern exists
