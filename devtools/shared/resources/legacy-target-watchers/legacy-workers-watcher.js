@@ -19,7 +19,6 @@ class LegacyWorkersWatcher {
   constructor(targetList, onTargetAvailable, onTargetDestroyed) {
     this.targetList = targetList;
     this.rootFront = targetList.rootFront;
-    this.target = targetList.targetFront;
 
     this.onTargetAvailable = onTargetAvailable;
     this.onTargetDestroyed = onTargetDestroyed;
@@ -131,6 +130,9 @@ class LegacyWorkersWatcher {
   }
 
   async listen() {
+    // Listen to the current target front.
+    this.target = this.targetList.targetFront;
+
     if (this.target.isParentProcess) {
       await this.targetList.watchTargets(
         [TargetList.TYPES.PROCESS],
