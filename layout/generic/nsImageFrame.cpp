@@ -531,7 +531,8 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
       return *fromImage;
     }
   }
-  if (aUseMappedRatio && ratio.HasMappedRatio()) {
+  if (aUseMappedRatio && ratio.HasRatio()) {
+    // For aspect-ratio: "auto && <ratio>" case.
     return ratio.ratio.AsRatio().ToLayoutRatio();
   }
   if (aFrame.ShouldShowBrokenImageIcon()) {
