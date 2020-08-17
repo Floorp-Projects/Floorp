@@ -58,7 +58,7 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   virtual IntrinsicSize GetIntrinsicSize() override;
   virtual AspectRatio GetIntrinsicRatio() override;
 
-  virtual LogicalSize ComputeSize(
+  SizeComputationResult ComputeSize(
       gfxContext* aRenderingContext, WritingMode aWritingMode,
       const LogicalSize& aCBSize, nscoord aAvailableISize,
       const LogicalSize& aMargin, const LogicalSize& aBorder,

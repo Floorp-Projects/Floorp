@@ -77,7 +77,7 @@ void nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 /* virtual */
-LogicalSize nsMathMLSelectedFrame::ComputeSize(
+nsIFrame::SizeComputationResult nsMathMLSelectedFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
@@ -92,15 +92,17 @@ LogicalSize nsMathMLSelectedFrame::ComputeSize(
     LogicalSize cbSize = aCBSize - aBorder - aPadding - aMargin;
     SizeComputationInput offsetState(childFrame, aRenderingContext, aWM,
                                      availableISize);
-    LogicalSize size = childFrame->ComputeSize(
+    auto size = childFrame->ComputeSize(
         aRenderingContext, aWM, cbSize, availableISize,
         offsetState.ComputedLogicalMargin().Size(aWM),
         offsetState.ComputedLogicalBorderPadding().Size(aWM) -
             offsetState.ComputedLogicalPadding().Size(aWM),
         offsetState.ComputedLogicalPadding().Size(aWM), aFlags);
-    return size + offsetState.ComputedLogicalBorderPadding().Size(aWM);
+    return {size.mLogicalSize +
+                offsetState.ComputedLogicalBorderPadding().Size(aWM),
+            size.mAspectRatioUsage};
   }
-  return LogicalSize(aWM);
+  return {LogicalSize(aWM), AspectRatioUsage::None};
 }
 
 // Only reflow the selected child ...

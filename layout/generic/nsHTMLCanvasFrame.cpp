@@ -394,7 +394,7 @@ AspectRatio nsHTMLCanvasFrame::GetIntrinsicRatio() {
 }
 
 /* virtual */
-LogicalSize nsHTMLCanvasFrame::ComputeSize(
+nsIFrame::SizeComputationResult nsHTMLCanvasFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
@@ -410,9 +410,10 @@ LogicalSize nsHTMLCanvasFrame::ComputeSize(
     intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
   }
 
-  return ComputeSizeWithIntrinsicDimensions(
-      aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize, aMargin,
-      aBorder, aPadding, aFlags);
+  return {ComputeSizeWithIntrinsicDimensions(
+              aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize,
+              aMargin, aBorder, aPadding, aFlags),
+          AspectRatioUsage::None};
 }
 
 void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,

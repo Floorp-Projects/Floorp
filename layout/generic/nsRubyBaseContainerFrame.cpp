@@ -248,14 +248,15 @@ bool nsRubyBaseContainerFrame::IsFrameOfType(uint32_t aFlags) const {
 bool nsRubyBaseContainerFrame::CanContinueTextRun() const { return true; }
 
 /* virtual */
-LogicalSize nsRubyBaseContainerFrame::ComputeSize(
+nsIFrame::SizeComputationResult nsRubyBaseContainerFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
     ComputeSizeFlags aFlags) {
   // Ruby base container frame is inline,
   // hence don't compute size before reflow.
-  return LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  return {LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+          AspectRatioUsage::None};
 }
 
 /* virtual */
