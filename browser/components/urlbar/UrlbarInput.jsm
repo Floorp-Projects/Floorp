@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -95,6 +96,7 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this.formHistoryName = DEFAULT_FORM_HISTORY_NAME;
     this.lastQueryContextPromise = Promise.resolve();
+    this.searchMode = null;
     this._actionOverrideKeyCount = 0;
     this._autofillPlaceholder = "";
     this._lastSearchString = "";
@@ -283,10 +285,11 @@ class UrlbarInput {
    *
    * @param {nsIURI} [uri]
    *        If this is unspecified, the current URI will be used.
-   * @param {boolean} [updatePopupNotifications]
-   *        Passed though to `setPageProxyState`.
+   * @param {boolean} [dueToTabSwitch]
+   *        True if this is being called due to switching tabs and false
+   *        otherwise.
    */
-  setURI(uri, updatePopupNotifications) {
+  setURI(uri = null, dueToTabSwitch = false) {
     let value = this.window.gBrowser.userTypedValue;
     let valid = false;
 
@@ -339,10 +342,21 @@ class UrlbarInput {
       this.selectionStart = this.selectionEnd = 0;
     }
 
-    this.setPageProxyState(
-      valid ? "valid" : "invalid",
-      updatePopupNotifications
-    );
+    // The proxystate must be set before setting search mode below because
+    // search mode depends on it.
+    this.setPageProxyState(valid ? "valid" : "invalid", dueToTabSwitch);
+
+    // If we're switching tabs, restore the tab's search mode.  Otherwise, if
+    // the URI is valid, exit search mode.  This must happen after setting
+    // proxystate above because search mode depends on it.
+    if (dueToTabSwitch) {
+      let searchMode = this._searchModesByBrowser.get(
+        this.window.gBrowser.selectedBrowser
+      );
+      this.setSearchMode(searchMode || {});
+    } else if (valid) {
+      this.setSearchMode({});
+    }
   }
 
   /**
@@ -1189,6 +1203,18 @@ class UrlbarInput {
       source = null;
     }
 
+    // As an optimization, bail if the given search mode is already active.
+    // Otherwise browser_preferences_usage.js fails due to accessing the
+    // browser.urlbar.placeholderName pref (via BrowserSearch.initPlaceHolder
+    // below) too many times.  That test does not enter search mode, but it
+    // triggers many calls to this method with an empty object via setURI.
+    if (
+      (!this.searchMode && !engineName && !source) ||
+      ObjectUtils.deepEqual(this.searchMode, { engineName, source })
+    ) {
+      return;
+    }
+
     this._searchModeIndicatorTitle.textContent = "";
     this._searchModeLabel.textContent = "";
     this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
@@ -1458,12 +1484,6 @@ class UrlbarInput {
     this._gotFocusChange = this._gotTabSelect = false;
 
     this._resetSearchState();
-
-    // Restore the tab's search mode, if any.
-    let searchMode = this._searchModesByBrowser.get(
-      this.window.gBrowser.selectedBrowser
-    );
-    this.setSearchMode(searchMode || {});
 
     // Switching tabs doesn't always change urlbar focus, so we must try to
     // reopen here too, not just on focus.
@@ -1995,8 +2015,6 @@ class UrlbarInput {
     // occurs in a new tab, we want focus to be restored to the content
     // area when the current tab is re-selected.
     browser.focus();
-
-    this.setSearchMode({});
 
     if (openUILinkWhere != "current") {
       this.handleRevert();

@@ -5203,6 +5203,25 @@ var XULBrowserWindow = {
     }
   },
 
+  /**
+   * An nsIWebProgressListener method called by tabbrowser.  The `aIsSimulated`
+   * parameter is extra and not declared in nsIWebProgressListener, however; see
+   * below.
+   *
+   * @param {nsIWebProgress} aWebProgress
+   *   The nsIWebProgress instance that fired the notification.
+   * @param {nsIRequest} aRequest
+   *   The associated nsIRequest.  This may be null in some cases.
+   * @param {nsIURI} aLocationURI
+   *   The URI of the location that is being loaded.
+   * @param {integer} aFlags
+   *   Flags that indicate the reason the location changed.  See the
+   *   nsIWebProgressListener.LOCATION_CHANGE_* values.
+   * @param {boolean} aIsSimulated
+   *   True when this is called by tabbrowser due to switching tabs and
+   *   undefined otherwise.  This parameter is not declared in
+   *   nsIWebProgressListener.onLocationChange; see bug 1478348.
+   */
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated) {
     var location = aLocationURI ? aLocationURI.spec : "";
 

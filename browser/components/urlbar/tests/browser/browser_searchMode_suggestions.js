@@ -29,6 +29,9 @@ add_task(async function setup() {
   await Services.search.setDefault(defaultEngine);
   await Services.search.moveEngine(suggestionsEngine, 0);
 
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+
   // Add some form history.
   await UrlbarTestUtils.formHistory.add([
     { value: "hello formHistory 1", source: suggestionsEngine.name },
