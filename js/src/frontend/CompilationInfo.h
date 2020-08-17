@@ -289,6 +289,14 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   void trace(JSTracer* trc) final;
 
+  JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
+    return parserAtom->toJSAtom(cx).unwrapOr(nullptr);
+  }
+  const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom) {
+    auto result = parserAtoms.internJSAtom(cx, atom);
+    return result.unwrapOr(nullptr);
+  }
+
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.
   CompilationInfo(const CompilationInfo&) = delete;
