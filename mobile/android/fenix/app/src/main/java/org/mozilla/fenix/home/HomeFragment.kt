@@ -146,7 +146,9 @@ class HomeFragment : Fragment() {
     private val store: BrowserStore
         get() = requireComponents.core.store
 
-    private val onboarding by lazy { FenixOnboarding(requireContext()) }
+    private val onboarding by lazy { StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+        FenixOnboarding(requireContext()) } }
+
     private lateinit var homeFragmentStore: HomeFragmentStore
     private var _sessionControlInteractor: SessionControlInteractor? = null
     protected val sessionControlInteractor: SessionControlInteractor
