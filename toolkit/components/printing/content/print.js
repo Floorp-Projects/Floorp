@@ -320,8 +320,10 @@ const PrintSettingsViewProxy = {
         target.toFileName = "";
         if (value == PrintUtils.SAVE_TO_PDF_PRINTER) {
           target.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+          target.printToFile = true;
         } else {
           target.outputFormat = Ci.nsIPrintSettings.kOutputFormatNative;
+          target.printToFile = false;
         }
         break;
 
