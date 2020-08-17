@@ -321,6 +321,10 @@ const SNAPSHOT_SCHEMA = {
       required: true,
       type: "array",
     },
+    environmentVariables: {
+      required: true,
+      type: "object",
+    },
     modifiedPreferences: {
       required: true,
       type: "object",

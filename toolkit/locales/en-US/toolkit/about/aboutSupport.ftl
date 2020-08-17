@@ -76,6 +76,9 @@ show-dir-label =
         [windows] Open Folder
        *[other] Open Directory
     }
+environment-variables-title = Environment Variables
+environment-variables-name = Name
+environment-variables-value = Value
 experimental-features-title = Experimental Features
 experimental-features-name = Name
 experimental-features-value = Value
