@@ -327,6 +327,13 @@ struct SizeComputationInput {
     // whether there's been a fragment change within the same block formatting
     // context.
     bool mMovedBlockFragments : 1;
+
+    // If the block-size is replacd by aspect-ratio and inline size (i.e.
+    // block axis is the ratio-dependent axis). We set this flag, so we could
+    // apply Automatic content-based minimum sizes after we know the content
+    // size of child fraems.
+    // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
+    bool mBSizeIsSetByAspectRatio : 1;
   };
 
 #ifdef DEBUG
@@ -620,6 +627,10 @@ struct ReflowInput : public SizeComputationInput {
                   ht == NS_UNCONSTRAINEDSIZE
                       ? 0
                       : ht + ComputedPhysicalBorderPadding().TopBottom());
+  }
+
+  bool ComputedBSizeIsSetByAspectRatio() const {
+    return mFlags.mBSizeIsSetByAspectRatio;
   }
 
  private:
