@@ -386,13 +386,3 @@
 #httpsOnlyBox[hidehttpsonly] {
   display: none;
 }
-
-#httpsOnlyShield {
-  list-style-image: url("chrome://browser/skin/controlcenter/https-only.svg");
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.5;
-  width: 64px;
-  height: 64px;
-  margin-inline-end: 10px;
-}

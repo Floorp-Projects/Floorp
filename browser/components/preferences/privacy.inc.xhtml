@@ -1018,14 +1018,9 @@
 <!-- HTTPS-ONLY Mode -->
 <groupbox id="httpsOnlyBox" data-category="panePrivacy" hidden="true" hidehttpsonly="true">
   <label><html:h2 data-l10n-id="httpsonly-header"/></label>
-  <vbox data-subcategory="httpsonly">
-    <hbox align="start">
-      <image id="httpsOnlyShield"/>
-      <vbox flex="1">
-        <label id="httpsOnlyDescription" data-l10n-id="httpsonly-description"/>
-        <label id="httpsOnlyLearnMore" data-l10n-id="httpsonly-learn-more" class="learnMore" is="text-link"/>
-      </vbox>
-    </hbox>
+  <vbox data-subcategory="httpsonly" flex="1">
+    <label id="httpsOnlyDescription" data-l10n-id="httpsonly-description"/>
+    <label id="httpsOnlyLearnMore" data-l10n-id="httpsonly-learn-more" class="learnMore" is="text-link"/>
   </vbox>
   <vbox>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
