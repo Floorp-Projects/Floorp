@@ -9,8 +9,6 @@ Use GDB 5, or higher. A more recent version of GDB can be obtained from
 If you are running less than 256 MB of RAM, be sure to see `Using gdb on
 wimpy computers </en/Using_gdb_on_wimpy_computers>`__.
 
-.. _Where_can_I_find_general_gdb_documentation:
-
 Where can I find general gdb documentation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -21,8 +19,6 @@ can use a graphical front-end to GDB like
 `ddd <https://www.gnu.org/software/ddd/>`__ or
 `insight <https://sourceware.org/insight/>`__. For more information see
 https://sourceware.org/gdb/current/onlinedocs/gdb/
-
-.. _How_do_I_debug_Mozilla_on_Linux.3F:
 
 How do I run Firefox under gdb?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,8 +59,6 @@ See this `old
 version </index.php?title=en/Debugging_Mozilla_with_gdb&revision=43>`__
 for specialized instructions on older builds of Firefox.
 
-.. _How_do_I_pass_arguments_in_prun.3F:
-
 How do I pass arguments in prun?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -75,8 +69,6 @@ to do that:
 
    (gdb) set args https://www.mozilla.org
    (gdb) prun
-
-.. _How_do_I_set_a_breakpoint_in_a_library_that_hasn.27t_been_loaded.3F:
 
 How do I set a breakpoint in a library that hasn't been loaded?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,8 +86,6 @@ loaded <#How_do_I_set_a_breakpoint_when_a_component_is_loaded.3F>`__. If
 you have to set a breakpoint you can set a breakpoint in ``_dl_open``.
 This function is called when a new library is loaded, when you can
 finally set your breakpoint.
-
-.. _How_do_I_set_a_breakpoint_when_a_component_is_loaded.3F:
 
 How do I set a breakpoint when a component is loaded? 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,8 +107,6 @@ an example:
 
    (gdb) set env XPCOM_BREAK_ON_LOAD raptor:necko
    (gdb) prun
-
-.. _Why_can't_I_set_a_breakpoint:
 
 Why can't I set a breakpoint?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,10 +137,6 @@ you wish to break as soon as the library is loaded, see the section on
 loaded <#How_do_I_set_a_breakpoint_when_a_component_is_loaded.3F>`__ and
 `breaking on a library
 load <#How_do_I_set_a_breakpoint_when_a_component_is_loaded.3F>`__.
-
- 
-
-.. _How_do_I_display_PRUnichar.27s.3F:
 
 How do I display PRUnichar's?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -237,8 +221,6 @@ functions. <#This_is_hard._Give_me_a_.gdbinit_that_works.>`__
 -  Define a small helper function "punichar" in #ifdef NS_DEBUG code
    somewhere.
 
-.. _How_do_I_display_an_nsString.3F:
-
 How do I display an nsString?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -262,8 +244,6 @@ returned length of your string):
 You can of course use any of the above unichar-printing routines instead
 of x/s.
 
-.. _This_is_hard._Give_me_a_.gdbinit_that_works.:
-
 This is hard. Give me a .gdbinit that works.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -274,8 +254,6 @@ several function definitions including:
 -  "prun" to start the browser and disable library loading.
 -  "pu" which will display a (PRUnichar \*) string.
 -  "ps" which will display a nsString.
-
-.. _How_do_I_determine_the_concrete_type_of_an_object_pointed_to_by_an_interface_pointer.3F:
 
 How do I determine the concrete type of an object pointed to by an interface pointer?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -303,8 +281,6 @@ loaded? <#How_do_I_see_what_libraries_I_already_have_loaded.3F>`__
 
 Or use the gdb command ``set print object on``.
 
-.. _How_can_I_debug_JavaScript_from_gdb:
-
 How can I debug JavaScript from gdb?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -318,8 +294,6 @@ JS stack in addition to the C++ stack.
 See `https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript </en-US/docs/Mozilla/Debugging/Debugging_JavaScript>`__
 for more JS debugging tricks.
 
-.. _How_can_I_debug_race_conditions_and.2For_how_can_I_make_something_different_happen_at_NS_ASSERTION_time.3F:
-
 How can I debug race conditions and/or how can I make something different happen at NS_ASSERTION time?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -331,13 +305,11 @@ How can I debug race conditions and/or how can I make something different happen
   change the behavior of ``NS_ASSERTION`` (nsDebug::Break) using the
   ``XPCOM_DEBUG_BREAK`` environment variable.
 
-.. _How_do_I_run_the_debugger_in_emacsxemacs:
-
 How do I run the debugger in emacs/xemacs?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Emacs and XEmacs contain modes for doing visual debugging. However, you
-might want to set up environment variables, specifiying the loading of
+might want to set up environment variables, specifying the loading of
 symbols and components. The easiest way to set up these is to use the
 ``run-mozilla.sh`` script, located in the dist/bin directory of your
 build. This script sets up the environment to run the editor, shell,
@@ -358,8 +330,6 @@ wish. For example:
            moz_debug=0
         moz_debugger=
 
-.. _GDB_5_used_to_work_for_me_but_now_Firefox_won't_start._What_can_I_do:
-
 GDB 5 used to work for me, but now Firefox won't start. What can I do?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -370,8 +340,6 @@ through its initialization, then stop before showing a window. A recent
 change to gdb has fixed this. Download and build `the latest version of
 Insight <https://sources.redhat.com/insight/>`__, or if you don't want a
 GUI, `the latest version of gdb <https://sources.redhat.com/gdb/>`__.
-
-.. _.22run.22_or_.22prun.22_in_GDB_fails_with_.22error_in_loading_shared_libraries..22:
 
 "run" or "prun" in GDB fails with "error in loading shared libraries."
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -397,8 +365,6 @@ that file affect your program. You may wish to move the setting of
 environment variables to files that are only run when you sign on, such
 as '.login' or '.profile'.*
 
-.. _Debian.27s_GDB_doesn.27t_work._What_do_I_do.3F:
-
 Debian's GDB doesn't work. What do I do?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -410,8 +376,6 @@ installing that. It has all of the patches necessary for debugging
 threaded software. These fixes are expected to be merged into GDB, which
 will fix the problem for Debian Linux. (via `Bruce
 Mitchener <mailto:bruce@cybersight.com>`__)
-
-.. _Mozilla_is_aborting._Where_do_I_set_a_breakpoint_to_find_out_where_it_is_exiting.3F:
 
 Firefox is aborting. Where do I set a breakpoint to find out where it is exiting?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -425,8 +389,6 @@ can stop at two places:
    (gdb) b abort
    (gdb) b exit
 
-.. _I_keep_getting_a_SIG32_in_the_debugger._How_do_I_fix_it.3F:
-
 I keep getting a SIGSEGV in JS/JIT code under gdb even though there is no crash when gdb is not attached.  How do I fix it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -434,8 +396,6 @@ Set the JS_DISABLE_SLOW_SCRIPT_SIGNALS environment variable (in FF33,
 the shorter and easier-to-remember JS_NO_SIGNALS).  For an explanation,
 read `Jan's blog
 post <https://www.jandemooij.nl/blog/2014/02/18/using-segfaults-to-interrupt-jit-code/>`__.
-
-.. _I_keep_getting_a_SIG32_in_the_debugger._How_do_I_fix_it.3F:
 
 I keep getting a SIG32 in the debugger. How do I fix it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -459,16 +419,12 @@ libpthread is stripped in ``file /lib/libpthread*`` and looking for
 glibc after adding ``"nostrip"`` to your ``FEATURES`` in
 ``/etc/make.conf``.
 
-.. _How_do_I_get_useful_stack_traces_inside_system_libraries.3F:
-
 How do I get useful stack traces inside system libraries?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Many Linux distributions provide separate packages with debugging
 information for system libraries, such as gdb, Valgrind, profiling
 tools, etc., to give useful stack traces via system libraries.
-
-.. _Fedora_8:
 
 Fedora
 ^^^^^^
@@ -504,8 +460,6 @@ This can be done manually using:
     libXrender-debuginfo libbonobo-debuginfo libgnome-debuginfo \
     libselinux-debuginfo pango-debuginfo popt-debuginfo scim-bridge-debuginfo
 
-.. _Ubuntu_8.04:
-
 Ubuntu 8.04
 ^^^^^^^^^^^
 
@@ -519,8 +473,6 @@ though not all of them. To install them, run:
     libgnomevfs2-0-dbg libgnutls13-dbg libgtk2.0-0-dbg libice6-dbg \
     libjpeg62-dbg libpango1.0-0-dbg libpixman-1-0-dbg libstdc++6-4.2-dbg \
     libx11-6-dbg libx11-xcb1-dbg libxcb1-dbg libxft2-dbg zlib1g-dbg
-
-.. _Debugging_electrolysis_(e10s):
 
 Debugging electrolysis (e10s)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -539,8 +491,6 @@ To get the child process id use:
 ::
 
    MOZ_DEBUG_CHILD_PROCESS=1 mach run
-
-.. _See_also:
 
  See also
 ~~~~~~~~~
