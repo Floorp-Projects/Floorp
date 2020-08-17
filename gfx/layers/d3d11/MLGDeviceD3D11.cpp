@@ -830,8 +830,10 @@ bool MLGDeviceD3D11::Initialize() {
   LAZY_PS(ComponentAlphaQuadPS, ComponentAlphaQuad);
   LAZY_PS(ComponentAlphaVertexPS, ComponentAlphaVertex);
   LAZY_PS(TexturedVertexIMC4, TexturedVertexIMC4);
+  LAZY_PS(TexturedVertexIdentityIMC4, TexturedVertexIdentityIMC4);
   LAZY_PS(TexturedVertexNV12, TexturedVertexNV12);
   LAZY_PS(TexturedQuadIMC4, TexturedQuadIMC4);
+  LAZY_PS(TexturedQuadIdentityIMC4, TexturedQuadIdentityIMC4);
   LAZY_PS(TexturedQuadNV12, TexturedQuadNV12);
   LAZY_PS(BlendMultiplyPS, BlendMultiply);
   LAZY_PS(BlendScreenPS, BlendScreen);

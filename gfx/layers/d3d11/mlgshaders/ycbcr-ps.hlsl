@@ -93,3 +93,26 @@ float4 TexturedVertexNV12(const VS_SAMPLEOUTPUT aInput) : SV_Target
   float alpha = ReadMask(aInput.vMaskCoords);
   return CalculateNV12Color(aInput.vTexCoords) * alpha;
 }
+
+float4 TexturedQuadIdentityIMC4(const VS_SAMPLEOUTPUT_CLIPPED aInput) : SV_Target
+{
+  float3 rgb = float3(
+    tCr.Sample(sSampler, aInput.vTexCoords).r,
+    tY.Sample(sSampler, aInput.vTexCoords).r,
+    tCb.Sample(sSampler, aInput.vTexCoords).r);
+  return float4(rgb * vCoefficient, 1.0) * sOpacity;
+}
+
+float4 TexturedVertexIdentityIMC4(const VS_SAMPLEOUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    return float4(0, 0, 0, 0);
+  }
+
+  float alpha = ReadMask(aInput.vMaskCoords);
+  float3 rgb = float3(
+    tCr.Sample(sSampler, aInput.vTexCoords).r,
+    tY.Sample(sSampler, aInput.vTexCoords).r,
+    tCb.Sample(sSampler, aInput.vTexCoords).r);
+  return float4(rgb * vCoefficient, 1.0) * alpha;
+}

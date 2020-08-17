@@ -738,10 +738,17 @@ void VideoRenderPass::SetupPipeline() {
 
   switch (mHost->GetReadFormat()) {
     case SurfaceFormat::YUV: {
-      if (mGeometry == GeometryMode::UnitQuad)
-        mDevice->SetPixelShader(PixelShaderID::TexturedQuadIMC4);
-      else
-        mDevice->SetPixelShader(PixelShaderID::TexturedVertexIMC4);
+      if (colorSpace == YUVColorSpace::Identity) {
+        if (mGeometry == GeometryMode::UnitQuad)
+          mDevice->SetPixelShader(PixelShaderID::TexturedQuadIdentityIMC4);
+        else
+          mDevice->SetPixelShader(PixelShaderID::TexturedVertexIdentityIMC4);
+      } else {
+        if (mGeometry == GeometryMode::UnitQuad)
+          mDevice->SetPixelShader(PixelShaderID::TexturedQuadIMC4);
+        else
+          mDevice->SetPixelShader(PixelShaderID::TexturedVertexIMC4);
+      }
       mDevice->SetPSTexturesYUV(0, mTexture);
       break;
     }
