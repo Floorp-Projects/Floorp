@@ -252,6 +252,8 @@ class PromptParent extends JSWindowActorParent {
         PromptUtils.fireDialogEvent(win, "DOMWillOpenModalDialog", browser);
       }
 
+      args.promptAborted = false;
+
       let bag = PromptUtils.objectToPropBag(args);
 
       if (args.modalType === Services.prompt.MODAL_TYPE_TAB) {
