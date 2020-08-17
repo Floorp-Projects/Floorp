@@ -671,8 +671,8 @@ nsSize nsVideoFrame::GetVideoIntrinsicSize(gfxContext* aRenderingContext) {
     return nsSize(0, 0);
   }
 
-  // Defaulting size to 300x150 if no size given.
-  nsIntSize size(300, 150);
+  nsIntSize size(REPLACED_ELEM_FALLBACK_PX_WIDTH,
+                 REPLACED_ELEM_FALLBACK_PX_HEIGHT);
 
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   if (NS_FAILED(element->GetVideoSize(&size)) && ShouldDisplayPoster()) {
