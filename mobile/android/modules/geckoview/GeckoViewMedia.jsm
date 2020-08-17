@@ -129,4 +129,4 @@ const GeckoViewRecordingMedia = {
   },
 };
 
-const { debug, warn } = GeckoViewMedia.initLogging("GeckoViewMedia"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewMedia.initLogging("GeckoViewMedia");

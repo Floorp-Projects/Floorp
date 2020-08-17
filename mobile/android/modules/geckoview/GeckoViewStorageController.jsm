@@ -11,7 +11,6 @@ const { GeckoViewUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-// eslint-disable-next-line no-unused-vars
 const { debug, warn } = GeckoViewUtils.initLogging(
   "GeckoViewStorageController"
 );

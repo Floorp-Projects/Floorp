@@ -21,4 +21,4 @@ class GeckoViewActorChild extends JSWindowActorChild {
   }
 }
 
-const { debug, warn } = GeckoViewUtils.initLogging("Actor[C]"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("Actor[C]");

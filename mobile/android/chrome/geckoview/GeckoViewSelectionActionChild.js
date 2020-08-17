@@ -301,5 +301,5 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
 
 const { debug, warn } = GeckoViewSelectionActionChild.initLogging(
   "GeckoViewSelectionAction"
-); // eslint-disable-line no-unused-vars
+);
 const module = GeckoViewSelectionActionChild.create(this);

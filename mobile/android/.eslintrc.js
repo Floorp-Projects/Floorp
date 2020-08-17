@@ -27,8 +27,17 @@ module.exports = {
         "chrome/geckoview/**",
         "components/geckoview/**",
         "modules/geckoview/**",
+        "actors/**",
       ],
       rules: {
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "local",
+            varsIgnorePattern: "(debug|warn)",
+          },
+        ],
         "no-restricted-syntax": [
           "error",
           {

@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 
-const { debug, warn } = GeckoViewUtils.initLogging("PromptCollection"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("PromptCollection");
 
 class PromptCollection {
   beforeUnloadCheck(browsingContext) {

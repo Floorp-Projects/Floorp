@@ -75,4 +75,4 @@ WebBrowserChromeChild.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIWebBrowserChrome3",
 ]);
 
-const { debug, warn } = WebBrowserChromeChild.initLogging("WebBrowserChrome"); // eslint-disable-line no-unused-vars
+const { debug, warn } = WebBrowserChromeChild.initLogging("WebBrowserChrome");
