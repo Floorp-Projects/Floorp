@@ -4624,16 +4624,14 @@ HTMLEditor::AutoBlockElementsJoiner::JoinNodesDeepWithTransaction(
 
 EditActionResult HTMLEditor::AutoBlockElementsJoiner::
     AutoInclusiveAncestorBlockElementsJoiner::Prepare() {
-  mLeftBlockElement = HTMLEditUtils::GetInclusiveAncestorBlockElement(
-      mInclusiveDescendantOfLeftBlockElement);
-  mRightBlockElement = HTMLEditUtils::GetInclusiveAncestorBlockElement(
-      mInclusiveDescendantOfRightBlockElement);
+  mLeftBlockElement =
+      HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
+          mInclusiveDescendantOfLeftBlockElement);
+  mRightBlockElement =
+      HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
+          mInclusiveDescendantOfRightBlockElement);
 
-  // Sanity checks
-  if (NS_WARN_IF(!mLeftBlockElement) || NS_WARN_IF(!mRightBlockElement)) {
-    return EditActionIgnored(NS_ERROR_NULL_POINTER);
-  }
-  if (NS_WARN_IF(mLeftBlockElement == mRightBlockElement)) {
+  if (NS_WARN_IF(!IsSet())) {
     return EditActionIgnored(NS_ERROR_UNEXPECTED);
   }
 
@@ -4643,25 +4641,8 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
     return EditActionCanceled();
   }
 
-  // Make sure we don't try to move things into HR's, which look like blocks
-  // but aren't containers
-  if (mLeftBlockElement->IsHTMLElement(nsGkAtoms::hr)) {
-    mLeftBlockElement =
-        HTMLEditUtils::GetAncestorBlockElement(*mLeftBlockElement);
-    if (NS_WARN_IF(!mLeftBlockElement)) {
-      return EditActionIgnored(NS_ERROR_UNEXPECTED);
-    }
-  }
-  if (mRightBlockElement->IsHTMLElement(nsGkAtoms::hr)) {
-    mRightBlockElement =
-        HTMLEditUtils::GetAncestorBlockElement(*mRightBlockElement);
-    if (NS_WARN_IF(!mRightBlockElement)) {
-      return EditActionIgnored(NS_ERROR_UNEXPECTED);
-    }
-  }
-
   // Bail if both blocks the same
-  if (mLeftBlockElement == mRightBlockElement) {
+  if (IsSameBlockElement()) {
     return EditActionIgnored();
   }
 
@@ -4707,7 +4688,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   MOZ_ASSERT(mLeftBlockElement);
   MOZ_ASSERT(mRightBlockElement);
 
-  if (mLeftBlockElement == mRightBlockElement) {
+  if (IsSameBlockElement()) {
     return EditActionIgnored();
   }
 
