@@ -972,7 +972,7 @@ impl TextureCache {
 
         // Keep evicting while memory is above the threshold, and we haven't
         // reached a maximum number of evictions this frame.
-        while self.current_memory_estimate() > self.eviction_threshold_bytes && eviction_count < self.max_evictions_per_frame {
+        while self.should_continue_evicting(eviction_count) {
             match self.lru_cache.pop_oldest() {
                 Some(entry) => {
                     entry.evict();
@@ -990,13 +990,29 @@ impl TextureCache {
         }
     }
 
-    /// Return the total used bytes in standalone and shared textures. This is
-    /// used to determine how many textures need to be evicted to keep texture
-    /// cache memory usage under a reasonable limit. Note that this does not
-    /// include memory allocated to picture cache tiles, which are considered
-    /// separately for the purposes of texture cache eviction.
-    fn current_memory_estimate(&self) -> usize {
-        self.standalone_bytes_allocated + self.shared_bytes_allocated
+    /// Returns true if texture cache eviction loop should continue
+    fn should_continue_evicting(
+        &self,
+        eviction_count: usize,
+    ) -> bool {
+        // Get the total used bytes in standalone and shared textures. Note that
+        // this does not include memory allocated to picture cache tiles, which are
+        // considered separately for the purposes of texture cache eviction.
+        let current_memory_estimate = self.standalone_bytes_allocated + self.shared_bytes_allocated;
+
+        // If current memory usage is below selected threshold, we can stop evicting items
+        if current_memory_estimate < self.eviction_threshold_bytes {
+            return false;
+        }
+
+        // If current memory usage is significantly more than the threshold, keep evicting this frame
+        if current_memory_estimate > 4 * self.eviction_threshold_bytes {
+            return true;
+        }
+
+        // Otherwise, only allow evicting up to a certain number of items per frame. This allows evictions
+        // to be spread over a number of frames, to avoid frame spikes.
+        eviction_count < self.max_evictions_per_frame
     }
 
     // Free a cache entry from the standalone list or shared cache.
