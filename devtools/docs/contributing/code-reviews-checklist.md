@@ -30,26 +30,26 @@ It can also be useful for patch authors: if the changes comply with these guidel
 ## Code review
 
 * Code changes:
- * Review only what was changed by the contributor.
- * Code formatting follows [our ESLint rules](eslint.md) and [coding standards](./coding-standards.md).
- * Code is properly commented, JSDoc is updated, new "public" methods all have JSDoc, see the [comment guidelines](./javascript.md#comments).
- * If Promise code was added/modified, the right promise syntax is used and rejections are handled. See [asynchronous code](./javascript.md#asynchronous-code).
- * If a CSS file is added/modified, it follows [the CSS guidelines](./css.md).
- * If a React or Redux module is added/modified, it follows the [React/Redux guidelines](./javascript.md#react--redux).
- * If DevTools server code that should run in a worker is added/modified then it shouldn't use Services
+  * Review only what was changed by the contributor.
+  * Code formatting follows [our ESLint rules](eslint.md) and [coding standards](./coding-standards.md).
+  * Code is properly commented, JSDoc is updated, new "public" methods all have JSDoc, see the [comment guidelines](./javascript.md#comments).
+  * If Promise code was added/modified, the right promise syntax is used and rejections are handled. See [asynchronous code](./javascript.md#asynchronous-code).
+  * If a CSS file is added/modified, it follows [the CSS guidelines](./css.md).
+  * If a React or Redux module is added/modified, it follows the [React/Redux guidelines](./javascript.md#react--redux).
+  * If DevTools server code that should run in a worker is added/modified then it shouldn't use Services
 * Test changes:
- * The feature or bug is [tested by new tests, or a modification of existing tests](../tests/writing-tests.md).
- * [Test logging](../tests/writing-tests.md#logs-and-comments) is sufficient to help investigating test failures/timeouts.
- * [Test is e10s compliant](../tests/writing-tests.md#e10s-electrolysis) (doesn't try to access web content from the parent process, etc…).
- * Tests are [clean and maintainable](../tests/writing-tests.md#writing-clean-maintainable-test-code).
- * A try push has started (or even better, is green already).
+  * The feature or bug is [tested by new tests, or a modification of existing tests](../tests/writing-tests.md).
+  * [Test logging](../tests/writing-tests.md#logs-and-comments) is sufficient to help investigating test failures/timeouts.
+  * [Test is e10s compliant](../tests/writing-tests.md#e10s-electrolysis) (doesn't try to access web content from the parent process, etc…).
+  * Tests are [clean and maintainable](../tests/writing-tests.md#writing-clean-maintainable-test-code).
+  * A try push has started (or even better, is green already).
 * User facing changes:
- * If a new piece of UI or new user interaction is added/modified, then UX is `ui-review?` on the bug.<!--TODO this needs updating with the new process-->
- * If a user facing string has been added, it is localized and follows [the localization guidelines](../files/adding-files.md#localization-l10n).
- * If a user-facing string has changed meaning, [the key has been updated](https://developer.mozilla.org/en-US/docs/Mozilla/Localization/Localization_content_best_practices#Changing_existing_strings).
- * If a new image is added, it is a SVG image or there is a reason for not using a SVG.
- * If a SVG is added/modified, it follows [the SVG guidelines](../frontend/svgs.md).
- * If a documented feature has been modified, the keyword `dev-doc-needed` is present on the bug.
+  * If any user-facing interfaces are added/modified, double-check the changes with the UX mockups or specs, if available. If there's any confusion, need-info the UX designer.<!--TODO this needs updating with the new process-->
+  * If a user facing string has been added, it is localized and follows [the localization guidelines](../files/adding-files.md#localization-l10n).
+  * If a user-facing string has changed meaning, [the key has been updated](https://developer.mozilla.org/en-US/docs/Mozilla/Localization/Localization_content_best_practices#Changing_existing_strings).
+  * If a new image is added, it is a SVG image or there is a reason for not using a SVG.
+  * If a SVG is added/modified, it follows [the SVG guidelines](../frontend/svgs.md).
+  * If a documented feature has been modified, the keyword `dev-doc-needed` is present on the bug.
 
 ## Finalize the review
 
