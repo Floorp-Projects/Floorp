@@ -139,9 +139,6 @@ class TestCrash(BaseCrashTestCase):
         self.marionette.get_url()
 
 
-    # Disabled until bug 1569928 is fixed; note that Bug 1602757 makes
-    # this basically a perma-fail
-    @unittest.skip("Bug 1569928 - Perma fails with content processes pre-started")
     def test_crash_content_process(self):
         # For a content process crash and MOZ_CRASHREPORTER_SHUTDOWN set the top
         # browsing context will be gone first. As such the raised NoSuchWindowException
