@@ -22,7 +22,7 @@ const domBundle = Services.strings.createBundle(
   "chrome://global/locale/dom/dom.properties"
 );
 
-const { debug, warn } = GeckoViewUtils.initLogging("ShareDelegate"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("ShareDelegate");
 
 class ShareDelegate {
   init(aParent) {

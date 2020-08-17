@@ -163,7 +163,6 @@ class ContentDelegateChild extends GeckoViewActorChild {
   }
 }
 
-// eslint-disable-next-line no-unused-vars
 const { debug, warn } = ContentDelegateChild.initLogging(
   "ContentDelegateChild"
 );

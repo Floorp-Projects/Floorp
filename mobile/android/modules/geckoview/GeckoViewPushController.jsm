@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIPushNotifier"
 );
 
-// eslint-disable-next-line no-unused-vars
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPushController");
 
 function createScopeAndPrincipal(scopeAndAttrs) {

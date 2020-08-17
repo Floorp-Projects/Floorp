@@ -30,4 +30,4 @@ var GeckoViewActorManager = {
   },
 };
 
-const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewActorManager"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewActorManager");
