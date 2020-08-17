@@ -3550,7 +3550,7 @@ void LIRGenerator::visitArrayJoin(MArrayJoin* ins) {
 
   LDefinition tempDef = LDefinition::BogusTemp();
   if (ins->optimizeForArray()) {
-    tempDef = temp();
+    tempDef = tempFixed(CallTempReg0);
   }
 
   LArrayJoin* lir =
@@ -4180,7 +4180,8 @@ void LIRGenerator::visitGuardIsNotDOMProxy(MGuardIsNotDOMProxy* ins) {
 
 void LIRGenerator::visitProxyGet(MProxyGet* ins) {
   MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
-  auto* lir = new (alloc()) LProxyGet(useRegisterAtStart(ins->proxy()), temp());
+  auto* lir = new (alloc())
+      LProxyGet(useRegisterAtStart(ins->proxy()), tempFixed(CallTempReg0));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -4206,8 +4207,9 @@ void LIRGenerator::visitProxyHasProp(MProxyHasProp* ins) {
 void LIRGenerator::visitProxySet(MProxySet* ins) {
   MOZ_ASSERT(ins->proxy()->type() == MIRType::Object);
   MOZ_ASSERT(ins->rhs()->type() == MIRType::Value);
-  auto* lir = new (alloc()) LProxySet(useRegisterAtStart(ins->proxy()),
-                                      useBoxAtStart(ins->rhs()), temp());
+  auto* lir = new (alloc())
+      LProxySet(useRegisterAtStart(ins->proxy()), useBoxAtStart(ins->rhs()),
+                tempFixed(CallTempReg0));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }
