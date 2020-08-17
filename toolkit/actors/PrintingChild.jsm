@@ -326,6 +326,7 @@ class PrintingChild extends ActorChild {
 
       if (outputFormat == printSettings.kOutputFormatPDF) {
         printSettings.outputFormat = printSettings.kOutputFormatPDF;
+        printSettings.printToFile = true;
       }
 
       // If we happen to be on simplified mode, we need to set docURL in order
