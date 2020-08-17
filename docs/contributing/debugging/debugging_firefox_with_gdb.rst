@@ -1,4 +1,4 @@
-Debugging Mozilla with GDB
+Debugging Firefox with GDB
 ==========================
 
 This page details how you can more easily debug Firefox and work around

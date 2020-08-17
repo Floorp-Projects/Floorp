@@ -1,4 +1,4 @@
-Debugging Mozilla with LLDB
+Debugging Firefox with LLDB
 ===========================
 
 See http://lldb.llvm.org/index.html.
