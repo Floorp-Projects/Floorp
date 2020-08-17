@@ -14,6 +14,7 @@
 #include "BufferMediaResource.h"
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
+#include "MediaDataDecoderProxy.h"
 #include "MediaDataDemuxer.h"
 #include "MediaQueue.h"
 #include "PDMFactory.h"
@@ -293,10 +294,12 @@ MediaResult MediaDecodeTask::CreateDecoder(const AudioInfo& info) {
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                   nsPrintfCString("error creating %s decoder",
                                   TrackTypeToStr(TrackInfo::kAudioTrack)));
-  mDecoder = pdm->CreateDecoder(
-      {info, mPDecoderTaskQueue, &result, TrackInfo::kAudioTrack});
+  RefPtr<MediaDataDecoder> decoder =
+      pdm->CreateDecoder({info, &result, TrackInfo::kAudioTrack});
 
-  if (mDecoder) {
+  if (decoder) {
+    mDecoder = new MediaDataDecoderProxy(decoder.forget(),
+                                         do_AddRef(mPDecoderTaskQueue.get()));
     return NS_OK;
   }
 

@@ -9,8 +9,8 @@
 #  include <unistd.h>
 #endif
 
-#include "FFmpegLog.h"
 #include "FFmpegDataDecoder.h"
+#include "FFmpegLog.h"
 #include "mozilla/TaskQueue.h"
 #include "prsystem.h"
 
@@ -19,7 +19,6 @@ namespace mozilla {
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
-                                                TaskQueue* aTaskQueue,
                                                 AVCodecID aCodecID)
     : mLib(aLib),
       mCodecContext(nullptr),
@@ -27,7 +26,9 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
       mFrame(NULL),
       mExtraData(nullptr),
       mCodecID(aCodecID),
-      mTaskQueue(aTaskQueue),
+      mTaskQueue(
+          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "FFmpegDataDecoder")),
       mLastInputDts(media::TimeUnit::FromNegativeInfinity()) {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
@@ -116,15 +117,11 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
 }
 
 RefPtr<ShutdownPromise> FFmpegDataDecoder<LIBAV_VER>::Shutdown() {
-  if (mTaskQueue) {
-    RefPtr<FFmpegDataDecoder<LIBAV_VER>> self = this;
-    return InvokeAsync(mTaskQueue, __func__, [self]() {
-      self->ProcessShutdown();
-      return ShutdownPromise::CreateAndResolve(true, __func__);
-    });
-  }
-  ProcessShutdown();
-  return ShutdownPromise::CreateAndResolve(true, __func__);
+  RefPtr<FFmpegDataDecoder<LIBAV_VER>> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    self->ProcessShutdown();
+    return self->mTaskQueue->BeginShutdown();
+  });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> FFmpegDataDecoder<LIBAV_VER>::Decode(
@@ -210,7 +207,7 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDrain() {
 
 RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessFlush() {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   if (mCodecContext) {
     mLib->avcodec_flush_buffers(mCodecContext);
   }
@@ -241,7 +238,7 @@ void FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown() {
 }
 
 AVFrame* FFmpegDataDecoder<LIBAV_VER>::PrepareFrame() {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 #if LIBAVCODEC_VERSION_MAJOR >= 55
   if (mFrame) {
     mLib->av_frame_unref(mFrame);

@@ -10,6 +10,7 @@
 #include <CoreFoundation/CFDictionary.h>  // For CFDictionaryRef
 #include <CoreMedia/CoreMedia.h>          // For CMVideoFormatDescriptionRef
 #include <VideoToolbox/VideoToolbox.h>    // For VTDecompressionSessionRef
+
 #include "AppleDecoderModule.h"
 #include "PlatformDecoderModule.h"
 #include "ReorderQueue.h"
@@ -24,7 +25,7 @@ DDLoggedTypeDeclNameAndBase(AppleVTDecoder, MediaDataDecoder);
 class AppleVTDecoder : public MediaDataDecoder,
                        public DecoderDoctorLifeLogger<AppleVTDecoder> {
  public:
-  AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
+  AppleVTDecoder(const VideoInfo& aConfig,
                  layers::ImageContainer* aImageContainer,
                  CreateDecoderParams::OptionSet aOptions,
                  layers::KnowsCompositor* aKnowsCompositor);
@@ -79,9 +80,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   void ProcessDecode(MediaRawData* aSample);
   void MaybeResolveBufferedFrames();
 
-  void AssertOnTaskQueueThread() {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  }
+  void AssertOnTaskQueue() { MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn()); }
 
   AppleFrameRef* CreateAppleFrameRef(const MediaRawData* aSample);
   CFDictionaryRef CreateOutputConfiguration();
@@ -110,7 +109,6 @@ class AppleVTDecoder : public MediaDataDecoder,
 
   // Set on reader/decode thread calling Flush() to indicate that output is
   // not required and so input samples on mTaskQueue need not be processed.
-  // Cleared on mTaskQueue in ProcessDrain().
   Atomic<bool> mIsFlushing;
   // Protects mReorderQueue and mPromise.
   Monitor mMonitor;

@@ -16,6 +16,7 @@
 #endif
 #include "GPUVideoImage.h"
 #include "ImageContainer.h"  // for PlanarYCbCrData and BufferRecycleBin
+#include "MediaDataDecoderProxy.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "RemoteDecoderManagerChild.h"
@@ -271,7 +272,6 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
   }
 
   CreateDecoderParams params(mVideoInfo);
-  params.mTaskQueue = mDecodeTaskQueue;
   params.mKnowsCompositor = mKnowsCompositor;
   params.mImageContainer = container;
   params.mRate = CreateDecoderParams::VideoFrameRate(aFramerate);
@@ -279,6 +279,7 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
   MediaResult error(NS_OK);
   params.mError = &error;
 
+  RefPtr<MediaDataDecoder> decoder;
   if (XRE_IsGPUProcess()) {
 #ifdef XP_WIN
     // Ensure everything is properly initialized on the right thread.
@@ -288,7 +289,7 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     // PDM factory logic for picking a decoder.
     RefPtr<WMFDecoderModule> pdm(new WMFDecoderModule());
     pdm->Startup();
-    mDecoder = pdm->CreateVideoDecoder(params);
+    decoder = pdm->CreateVideoDecoder(params);
 #else
     MOZ_ASSERT(false,
                "Can't use RemoteVideoDecoder in the GPU process on non-Windows "
@@ -299,9 +300,9 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
 #ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(params.mConfig.mMimeType)) {
     if (StaticPrefs::media_av1_use_dav1d()) {
-      mDecoder = new DAV1DDecoder(params);
+      decoder = new DAV1DDecoder(params);
     } else {
-      mDecoder = new AOMDecoder(params);
+      decoder = new AOMDecoder(params);
     }
   }
 #endif
@@ -311,6 +312,10 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     *aErrorDescription = error.Description();
   }
 
+  if (decoder) {
+    mDecoder = new MediaDataDecoderProxy(decoder.forget(),
+                                         do_AddRef(mDecodeTaskQueue.get()));
+  }
   *aSuccess = !!mDecoder;
 }
 

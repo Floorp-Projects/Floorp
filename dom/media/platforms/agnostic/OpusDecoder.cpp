@@ -5,17 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OpusDecoder.h"
-#include "OpusParser.h"
-#include "TimeUnits.h"
-#include "VorbisUtils.h"
-#include "VorbisDecoder.h"  // For VorbisLayout
-#include "mozilla/EndianUtils.h"
-#include "mozilla/PodOperations.h"
-#include "mozilla/SyncRunnable.h"
-#include "VideoUtils.h"
 
 #include <inttypes.h>  // For PRId64
 
+#include "OpusParser.h"
+#include "TimeUnits.h"
+#include "VideoUtils.h"
+#include "VorbisDecoder.h"  // For VorbisLayout
+#include "VorbisUtils.h"
+#include "mozilla/EndianUtils.h"
+#include "mozilla/PodOperations.h"
+#include "mozilla/SyncRunnable.h"
 #include "opus/opus.h"
 extern "C" {
 #include "opus/opus_multistream.h"
@@ -29,7 +29,6 @@ namespace mozilla {
 
 OpusDataDecoder::OpusDataDecoder(const CreateDecoderParams& aParams)
     : mInfo(aParams.AudioConfig()),
-      mTaskQueue(aParams.mTaskQueue),
       mOpusDecoder(nullptr),
       mSkip(0),
       mDecodedHeader(false),
@@ -40,6 +39,7 @@ OpusDataDecoder::OpusDataDecoder(const CreateDecoderParams& aParams)
           CreateDecoderParams::Option::DefaultPlaybackDeviceMono)) {}
 
 OpusDataDecoder::~OpusDataDecoder() {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   if (mOpusDecoder) {
     opus_multistream_decoder_destroy(mOpusDecoder);
     mOpusDecoder = nullptr;
@@ -47,10 +47,8 @@ OpusDataDecoder::~OpusDataDecoder() {
 }
 
 RefPtr<ShutdownPromise> OpusDataDecoder::Shutdown() {
-  RefPtr<OpusDataDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self]() {
-    return ShutdownPromise::CreateAndResolve(true, __func__);
-  });
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 void OpusDataDecoder::AppendCodecDelay(MediaByteBuffer* config,
@@ -61,6 +59,7 @@ void OpusDataDecoder::AppendCodecDelay(MediaByteBuffer* config,
 }
 
 RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
+  mThread = GetCurrentSerialEventTarget();
   size_t length = mInfo.mCodecSpecificConfig->Length();
   uint8_t* p = mInfo.mCodecSpecificConfig->Elements();
   if (length < sizeof(uint64_t)) {
@@ -179,12 +178,7 @@ nsresult OpusDataDecoder::DecodeHeader(const unsigned char* aData,
 
 RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
     MediaRawData* aSample) {
-  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
-                                    &OpusDataDecoder::ProcessDecode, aSample);
-}
-
-RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::ProcessDecode(
-    MediaRawData* aSample) {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   uint32_t channels = mOpusParser->mChannels;
 
   if (mPaddingDiscarded) {
@@ -349,29 +343,23 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::ProcessDecode(
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Drain() {
-  RefPtr<OpusDataDecoder> self = this;
-  // InvokeAsync dispatches a task that will be run after any pending decode
-  // completes. As such, once the drain task run, there's nothing more to do.
-  return InvokeAsync(mTaskQueue, __func__, [] {
-    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-  });
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  return DecodePromise::CreateAndResolve(DecodedData(), __func__);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> OpusDataDecoder::Flush() {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   if (!mOpusDecoder) {
     return FlushPromise::CreateAndResolve(true, __func__);
   }
 
-  RefPtr<OpusDataDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-    MOZ_ASSERT(mOpusDecoder);
-    // Reset the decoder.
-    opus_multistream_decoder_ctl(mOpusDecoder, OPUS_RESET_STATE);
-    mSkip = mOpusParser->mPreSkip;
-    mPaddingDiscarded = false;
-    mLastFrameTime.reset();
-    return FlushPromise::CreateAndResolve(true, __func__);
-  });
+  MOZ_ASSERT(mOpusDecoder);
+  // Reset the decoder.
+  opus_multistream_decoder_ctl(mOpusDecoder, OPUS_RESET_STATE);
+  mSkip = mOpusParser->mPreSkip;
+  mPaddingDiscarded = false;
+  mLastFrameTime.reset();
+  return FlushPromise::CreateAndResolve(true, __func__);
 }
 
 /* static */

@@ -37,7 +37,6 @@ class ImageContainer;
 class GpuDecoderModule;
 class MediaDataDecoder;
 class RemoteDecoderModule;
-class TaskQueue;
 class CDMProxy;
 
 static LazyLogModule sPDMLog("PlatformDecoderModule");
@@ -105,7 +104,6 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   }
 
   const TrackInfo& mConfig;
-  TaskQueue* mTaskQueue = nullptr;
   DecoderDoctorDiagnostics* mDiagnostics = nullptr;
   layers::ImageContainer* mImageContainer = nullptr;
   MediaResult* mError = nullptr;
@@ -119,7 +117,6 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   VideoFrameRate mRate;
 
  private:
-  void Set(TaskQueue* aTaskQueue) { mTaskQueue = aTaskQueue; }
   void Set(DecoderDoctorDiagnostics* aDiagnostics) {
     mDiagnostics = aDiagnostics;
   }
@@ -281,6 +278,8 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
   // it can call Shutdown() to cancel this operation. Any initialization
   // that requires blocking the calling thread in this function *must*
   // be done here so that it can be canceled by calling Shutdown()!
+  // Methods Decode, DecodeBatch, Drain, Flush, Shutdown are guaranteed to be
+  // called on the thread where Init() first ran.
   virtual RefPtr<InitPromise> Init() = 0;
 
   // Inserts a sample into the decoder's decode pipeline. The DecodePromise will

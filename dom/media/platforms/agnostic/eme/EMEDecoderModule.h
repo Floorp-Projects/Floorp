@@ -45,9 +45,10 @@ class EMEMediaDataDecoderProxy
     : public MediaDataDecoderProxy,
       public DecoderDoctorLifeLogger<EMEMediaDataDecoderProxy> {
  public:
-  EMEMediaDataDecoderProxy(already_AddRefed<nsISerialEventTarget> aProxyThread,
-                           CDMProxy* aProxy,
-                           const CreateDecoderParams& aParams);
+  EMEMediaDataDecoderProxy(const CreateDecoderParams& aParams,
+                           already_AddRefed<MediaDataDecoder> aProxyDecoder,
+                           already_AddRefed<nsISerialEventTarget> aProxyThread,
+                           CDMProxy* aProxy);
   EMEMediaDataDecoderProxy(const CreateDecoderParams& aParams,
                            already_AddRefed<MediaDataDecoder> aProxyDecoder,
                            CDMProxy* aProxy);

@@ -23,10 +23,9 @@
 
 namespace mozilla {
 
-AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig, TaskQueue* aTaskQueue)
+AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig)
     : mConfig(aConfig),
       mFileStreamError(false),
-      mTaskQueue(aTaskQueue),
       mConverter(nullptr),
       mOutputFormat(),
       mStream(nullptr),
@@ -59,24 +58,14 @@ RefPtr<MediaDataDecoder::InitPromise> AppleATDecoder::Init() {
                     RESULT_DETAIL("Non recognised format")),
         __func__);
   }
+  mThread = GetCurrentSerialEventTarget();
 
   return InitPromise::CreateAndResolve(TrackType::kAudioTrack, __func__);
 }
 
-RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Decode(
-    MediaRawData* aSample) {
-  LOG("mp4 input sample %p %lld us %lld pts%s %llu bytes audio", aSample,
-      aSample->mDuration.ToMicroseconds(), aSample->mTime.ToMicroseconds(),
-      aSample->mKeyframe ? " keyframe" : "",
-      (unsigned long long)aSample->Size());
-  RefPtr<AppleATDecoder> self = this;
-  RefPtr<MediaRawData> sample = aSample;
-  return InvokeAsync(mTaskQueue, __func__,
-                     [self, sample] { return self->ProcessDecode(sample); });
-}
-
-RefPtr<MediaDataDecoder::FlushPromise> AppleATDecoder::ProcessFlush() {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+RefPtr<MediaDataDecoder::FlushPromise> AppleATDecoder::Flush() {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  LOG("Flushing AudioToolbox AAC decoder");
   mQueuedSamples.Clear();
   mDecodedSamples.Clear();
 
@@ -95,29 +84,20 @@ RefPtr<MediaDataDecoder::FlushPromise> AppleATDecoder::ProcessFlush() {
   return FlushPromise::CreateAndResolve(true, __func__);
 }
 
-RefPtr<MediaDataDecoder::FlushPromise> AppleATDecoder::Flush() {
-  LOG("Flushing AudioToolbox AAC decoder");
-  return InvokeAsync(mTaskQueue, this, __func__, &AppleATDecoder::ProcessFlush);
-}
-
 RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Drain() {
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   LOG("Draining AudioToolbox AAC decoder");
-  RefPtr<AppleATDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [] {
-    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-  });
+  return DecodePromise::CreateAndResolve(DecodedData(), __func__);
 }
 
 RefPtr<ShutdownPromise> AppleATDecoder::Shutdown() {
-  RefPtr<AppleATDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self]() {
-    self->ProcessShutdown();
-    return ShutdownPromise::CreateAndResolve(true, __func__);
-  });
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  ProcessShutdown();
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 void AppleATDecoder::ProcessShutdown() {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   if (mStream) {
     OSStatus rv = AudioFileStreamClose(mStream);
@@ -176,9 +156,13 @@ static OSStatus _PassthroughInputDataCallback(
   return noErr;
 }
 
-RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::ProcessDecode(
+RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Decode(
     MediaRawData* aSample) {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
+  LOG("mp4 input sample %p %lld us %lld pts%s %llu bytes audio", aSample,
+      aSample->mDuration.ToMicroseconds(), aSample->mTime.ToMicroseconds(),
+      aSample->mKeyframe ? " keyframe" : "",
+      (unsigned long long)aSample->Size());
 
   MediaResult rv = NS_OK;
   if (!mConverter) {
@@ -207,7 +191,7 @@ RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::ProcessDecode(
 }
 
 MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   // Array containing the queued decoded audio frames, about to be output.
   nsTArray<AudioDataValue> outputData;
@@ -312,7 +296,7 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
 
 MediaResult AppleATDecoder::GetInputAudioDescription(
     AudioStreamBasicDescription& aDesc, const nsTArray<uint8_t>& aExtraData) {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   // Request the properties from CoreAudio using the codec magic cookie
   AudioFormatInfo formatInfo;
@@ -406,7 +390,7 @@ AudioConfig::Channel ConvertChannelLabel(AudioChannelLabel id) {
 // Will set mChannelLayout if a channel layout could properly be identified
 // and is supported.
 nsresult AppleATDecoder::SetupChannelLayout() {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   // Determine the channel layout.
   UInt32 propertySize;
@@ -494,7 +478,7 @@ nsresult AppleATDecoder::SetupChannelLayout() {
 }
 
 MediaResult AppleATDecoder::SetupDecoder(MediaRawData* aSample) {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
   static const uint32_t MAX_FRAMES = 2;
 
   if (mFormatID == kAudioFormatMPEG4AAC && mConfig.mExtendedProfile == 2 &&
@@ -576,7 +560,7 @@ static void _MetadataCallback(void* aAppleATDecoder, AudioFileStreamID aStream,
                               AudioFileStreamPropertyID aProperty,
                               UInt32* aFlags) {
   AppleATDecoder* decoder = static_cast<AppleATDecoder*>(aAppleATDecoder);
-  MOZ_RELEASE_ASSERT(decoder->mTaskQueue->IsCurrentThreadIn());
+  MOZ_RELEASE_ASSERT(decoder->mThread->IsOnCurrentThread());
 
   LOGEX(decoder, "MetadataCallback receiving: '%s'", FourCC2Str(aProperty));
   if (aProperty == kAudioFileStreamProperty_MagicCookieData) {
@@ -608,7 +592,7 @@ static void _SampleCallback(void* aSBR, UInt32 aNumBytes, UInt32 aNumPackets,
 
 nsresult AppleATDecoder::GetImplicitAACMagicCookie(
     const MediaRawData* aSample) {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   // Prepend ADTS header to AAC audio.
   RefPtr<MediaRawData> adtssample(aSample->Clone());
