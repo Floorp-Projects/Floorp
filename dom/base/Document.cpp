@@ -13657,6 +13657,60 @@ void Document::TopLayerPush(Element* aElement) {
   NS_ASSERTION(GetTopLayerTop() == aElement, "Should match");
 }
 
+void Document::SetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
+  Element* root = GetRootElement();
+  MOZ_RELEASE_ASSERT(root, "dialog in document without root?");
+
+  // Add inert to the root element so that the inertness is
+  // applied to the entire document. Since the modal dialog
+  // also inherits the inertness, adding
+  // NS_EVENT_STATE_TOPMOST_MODAL_DIALOG to remove the inertness
+  // explicitly.
+  root->AddStates(NS_EVENT_STATE_MOZINERT);
+  aDialogElement.AddStates(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
+
+  // It's possible that there's another modal dialog has opened
+  // previously which doesn't have the inertness (because we've
+  // removed the inertness explicitly). Since a
+  // new modal dialog is opened, we need to grant the inertness
+  // to the previous one.
+  for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
+    nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
+    if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
+      if (dialog != &aDialogElement) {
+        dialog->RemoveStates(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
+        // It's ok to exit the loop as only one modal dialog should
+        // have the state
+        break;
+      }
+    }
+  }
+}
+
+void Document::UnsetBlockedByModalDialog(HTMLDialogElement& aDialogElement) {
+  aDialogElement.RemoveStates(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
+
+  // The document could still be blocked by another modal dialog.
+  // We need to remove the inertness from this modal dialog.
+  for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
+    nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
+    if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
+      if (dialog != &aDialogElement) {
+        dialog->AddStates(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
+        // Return here because we want to keep the inertness for the
+        // root element as the document is still blocked by a modal
+        // dialog
+        return;
+      }
+    }
+  }
+
+  Element* root = GetRootElement();
+  if (root && !root->GetBoolAttr(nsGkAtoms::inert)) {
+    root->RemoveStates(NS_EVENT_STATE_MOZINERT);
+  }
+}
+
 Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
   if (mTopLayer.IsEmpty()) {
     return nullptr;

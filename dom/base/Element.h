@@ -628,9 +628,10 @@ class Element : public FragmentOrElement {
                                      FlushType aFlushType = FlushType::Layout);
 
  private:
-  // Need to allow the ESM, nsGlobalWindow, and the focus manager to
-  // set our state
+  // Need to allow the ESM, nsGlobalWindow, and the focus manager
+  // and Document to set our state
   friend class mozilla::EventStateManager;
+  friend class mozilla::dom::Document;
   friend class ::nsGlobalWindowInner;
   friend class ::nsGlobalWindowOuter;
   friend class ::nsFocusManager;
@@ -649,7 +650,8 @@ class Element : public FragmentOrElement {
   EventStates StyleStateFromLocks() const;
 
  protected:
-  // Methods for the ESM, nsGlobalWindow and focus manager to manage state bits.
+  // Methods for the ESM, nsGlobalWindow, focus manager and Document to
+  // manage state bits.
   // These will handle setting up script blockers when they notify, so no need
   // to do it in the callers unless desired.  States passed here must only be
   // those in EXTERNALLY_MANAGED_STATES.
