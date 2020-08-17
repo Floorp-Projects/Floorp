@@ -11,6 +11,7 @@
 #include "mozilla/dom/SyncedContextInlines.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsGlobalWindowInner.h"
@@ -26,6 +27,11 @@ namespace dom {
 template class syncedcontext::Transaction<WindowContext>;
 
 static LazyLogModule gWindowContextLog("WindowContext");
+
+extern mozilla::LazyLogModule gUserInteractionPRLog;
+
+#define USER_ACTIVATION_LOG(msg, ...) \
+  MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 using WindowContextByIdMap = nsDataHashtable<nsUint64HashKey, WindowContext*>;
 static StaticAutoPtr<WindowContextByIdMap> gWindowContexts;
@@ -213,6 +219,23 @@ bool WindowContext::CanSet(
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+void WindowContext::DidSet(FieldIndex<IDX_UserActivationState>) {
+  MOZ_ASSERT_IF(!mInProcess, mUserGestureStart.IsNull());
+  USER_ACTIVATION_LOG("Set user gesture activation %" PRIu8
+                      " for %s browsing context 0x%08" PRIx64,
+                      static_cast<uint8_t>(GetUserActivationState()),
+                      XRE_IsParentProcess() ? "Parent" : "Child", Id());
+  if (mInProcess) {
+    USER_ACTIVATION_LOG(
+        "Set user gesture start time for %s browsing context 0x%08" PRIx64,
+        XRE_IsParentProcess() ? "Parent" : "Child", Id());
+    mUserGestureStart =
+        (GetUserActivationState() == UserActivation::State::FullActivated)
+            ? TimeStamp::Now()
+            : TimeStamp();
+  }
+}
+
 void WindowContext::DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>,
                            bool aOldValue) {
   if (!aOldValue && GetHasReportedShadowDOMUsage() && IsInProcess()) {
@@ -302,6 +325,59 @@ void WindowContext::AddMixedContentSecurityState(uint32_t aStateFlags) {
     ContentChild* child = ContentChild::GetSingleton();
     child->SendAddMixedContentSecurityState(this, aStateFlags);
   }
+}
+
+void WindowContext::NotifyUserGestureActivation() {
+  Unused << SetUserActivationState(UserActivation::State::FullActivated);
+}
+
+void WindowContext::NotifyResetUserGestureActivation() {
+  Unused << SetUserActivationState(UserActivation::State::None);
+}
+
+bool WindowContext::HasBeenUserGestureActivated() {
+  return GetUserActivationState() != UserActivation::State::None;
+}
+
+bool WindowContext::HasValidTransientUserGestureActivation() {
+  MOZ_ASSERT(mInProcess);
+
+  if (GetUserActivationState() != UserActivation::State::FullActivated) {
+    MOZ_ASSERT(mUserGestureStart.IsNull(),
+               "mUserGestureStart should be null if the document hasn't ever "
+               "been activated by user gesture");
+    return false;
+  }
+
+  MOZ_ASSERT(!mUserGestureStart.IsNull(),
+             "mUserGestureStart shouldn't be null if the document has ever "
+             "been activated by user gesture");
+  TimeDuration timeout = TimeDuration::FromMilliseconds(
+      StaticPrefs::dom_user_activation_transient_timeout());
+
+  return timeout <= TimeDuration() ||
+         (TimeStamp::Now() - mUserGestureStart) <= timeout;
+}
+
+bool WindowContext::ConsumeTransientUserGestureActivation() {
+  MOZ_ASSERT(mInProcess);
+  MOZ_ASSERT(!IsCached());
+
+  if (!HasValidTransientUserGestureActivation()) {
+    return false;
+  }
+
+  BrowsingContext* top = mBrowsingContext->Top();
+  top->PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
+    WindowContext* windowContext = aBrowsingContext->GetCurrentWindowContext();
+    if (windowContext && windowContext->GetUserActivationState() ==
+                             UserActivation::State::FullActivated) {
+      Unused << windowContext->SetUserActivationState(
+          UserActivation::State::HasBeenActivated);
+    }
+  });
+
+  return true;
 }
 
 bool WindowContext::CanShowPopup() {

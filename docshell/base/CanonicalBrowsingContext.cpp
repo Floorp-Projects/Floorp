@@ -426,14 +426,15 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
 }
 
 void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
-  if (!GetCurrentWindowGlobal()) {
+  WindowContext* windowContext = GetCurrentWindowContext();
+  if (!windowContext) {
     return;
   }
 
   // As this function would only be called when user click the play icon on the
-  // tab bar. That's clear user intent to play, so gesture activate the browsing
+  // tab bar. That's clear user intent to play, so gesture activate the window
   // context so that the block-autoplay logic allows the media to autoplay.
-  NotifyUserGestureActivation();
+  windowContext->NotifyUserGestureActivation();
   AUTOPLAY_LOG("NotifyStartDelayedAutoplayMedia for chrome bc 0x%08" PRIx64,
                Id());
   StartDelayedAutoplayMediaComponents();
