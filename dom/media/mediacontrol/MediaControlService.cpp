@@ -192,7 +192,7 @@ void MediaControlService::NotifyControllerPlaybackStateChanged(
   // The controller is the main controller, propagate its playback state.
   if (GetMainController() == aController) {
     mControllerManager->MainControllerPlaybackStateChanged(
-        aController->GetState());
+        aController->PlaybackState());
     return;
   }
 
@@ -203,7 +203,7 @@ void MediaControlService::NotifyControllerPlaybackStateChanged(
   // controller being controlled, rather than other controller which might not
   // be playing at the time.
   if (GetMainController() != aController &&
-      aController->GetState() == MediaSessionPlaybackState::Playing) {
+      aController->PlaybackState() == MediaSessionPlaybackState::Playing) {
     mControllerManager->UpdateMainControllerIfNeeded(aController);
   }
 }
@@ -258,7 +258,7 @@ MediaSessionPlaybackState MediaControlService::GetMainControllerPlaybackState()
   if (!StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     return MediaSessionPlaybackState::None;
   }
-  return GetMainController() ? GetMainController()->GetState()
+  return GetMainController() ? GetMainController()->PlaybackState()
                              : MediaSessionPlaybackState::None;
 }
 
@@ -392,7 +392,7 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
     LOG_MAINCONTROLLER_INFO("Set controller %" PRId64 " as main controller",
                             mMainController->Id());
     mSource->SetControlledTabBrowsingContextId(Some(mMainController->Id()));
-    mSource->SetPlaybackState(mMainController->GetState());
+    mSource->SetPlaybackState(mMainController->PlaybackState());
     mSource->SetMediaMetadata(mMainController->GetCurrentMediaMetadata());
     mSource->SetSupportedMediaKeys(mMainController->GetSupportedMediaKeys());
     ConnectMainControllerEvents();
