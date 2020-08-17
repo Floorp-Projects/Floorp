@@ -111,7 +111,7 @@ impl TileCacheBuilder {
         let requires_own_slice = is_scrollbar_container || is_clear_prim;
 
         // Also create a new slice if there was a barrier previously set
-        let mut new_tile_cache = self.need_new_tile_cache || requires_own_slice;
+        let mut want_new_tile_cache = self.need_new_tile_cache || requires_own_slice;
 
         // Check if we want to create a new slice based on the current / next scroll root
         let scroll_root = self.find_scroll_root(spatial_node_index, spatial_tree);
@@ -120,7 +120,7 @@ impl TileCacheBuilder {
             .map(|p| p.params.spatial_node_index)
             .unwrap_or(ROOT_SPATIAL_NODE_INDEX);
 
-        new_tile_cache |= match (current_scroll_root, scroll_root) {
+        want_new_tile_cache |= match (current_scroll_root, scroll_root) {
             (ROOT_SPATIAL_NODE_INDEX, ROOT_SPATIAL_NODE_INDEX) => {
                 // Both current slice and this cluster are fixed position, no need to cut
                 false
@@ -164,44 +164,79 @@ impl TileCacheBuilder {
             }
         };
 
-        if new_tile_cache {
+        if want_new_tile_cache {
+            // If the page would create too many slices (an arbitrary definition where
+            // it's assumed the GPU memory + compositing overhead would be too high)
+            // then create a single picture cache for the remaining content. This at
+            // least means that we can cache small content changes efficiently when
+            // scrolling isn't occurring. Scrolling regions will be handled reasonably
+            // efficiently by the dirty rect tracking (since it's likely that if the
+            // page has so many slices there isn't a single major scroll region).
+            const MAX_CACHE_SLICES: usize = 12;
             let slice = self.pending_tile_caches.len();
 
-            let slice_flags = if is_scrollbar_container {
-                SliceFlags::IS_SCROLLBAR
-            } else {
-                SliceFlags::empty()
-            };
+            // If we have exceeded the maximum number of slices, skip creating a new
+            // one and the primitive will be added to the last slice.
+            if slice < MAX_CACHE_SLICES {
+                // When we reach the last valid slice that can be created, it is created as
+                // a fixed slice without shared clips, ensuring that we can safely add any
+                // subsequent primitives to it. This doesn't seem to occur on any real
+                // world content (only contrived test cases), where this acts as a fail safe
+                // to ensure we don't allocate too much GPU memory for surface caches.
+                // However, if we _do_ ever see this occur on real world content, we could
+                // probably consider increasing the max cache slices a bit more than the
+                // current limit.
+                let params = if slice == MAX_CACHE_SLICES-1 {
+                    TileCacheParams {
+                        slice,
+                        slice_flags: SliceFlags::empty(),
+                        spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
+                        background_color: None,
+                        shared_clips: Vec::new(),
+                        shared_clip_chain: ClipChainId::NONE,
+                        virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
+                    }
+                } else {
+                    let slice_flags = if is_scrollbar_container {
+                        SliceFlags::IS_SCROLLBAR
+                    } else {
+                        SliceFlags::empty()
+                    };
 
-            let background_color = if slice == 0 {
-                config.background_color
-            } else {
-                None
-            };
+                    let background_color = if slice == 0 {
+                        config.background_color
+                    } else {
+                        None
+                    };
 
-            let mut shared_clips = Vec::new();
-            add_clips(
-                prim_instance.clip_set.clip_chain_id,
-                &mut shared_clips,
-                clip_store,
-                interners,
-            );
+                    let mut shared_clips = Vec::new();
+                    add_clips(
+                        prim_instance.clip_set.clip_chain_id,
+                        &mut shared_clips,
+                        clip_store,
+                        interners,
+                    );
 
-            self.pending_tile_caches.push(PendingTileCache {
-                prim_list: PrimitiveList::empty(),
-                params: TileCacheParams {
-                    slice,
-                    slice_flags,
-                    spatial_node_index: scroll_root,
-                    background_color,
-                    shared_clips,
-                    shared_clip_chain: ClipChainId::NONE,
-                    virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
-                },
-            });
+                    self.last_checked_clip_chain = prim_instance.clip_set.clip_chain_id;
 
-            self.last_checked_clip_chain = prim_instance.clip_set.clip_chain_id;
-            self.need_new_tile_cache = requires_own_slice;
+                    TileCacheParams {
+                        slice,
+                        slice_flags,
+                        spatial_node_index: scroll_root,
+                        background_color,
+                        shared_clips,
+                        shared_clip_chain: ClipChainId::NONE,
+                        virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
+                    }
+                };
+
+                self.pending_tile_caches.push(PendingTileCache {
+                    prim_list: PrimitiveList::empty(),
+                    params,
+                });
+
+                self.need_new_tile_cache = requires_own_slice;
+            }
         }
 
         let pending_tile_cache = self.pending_tile_caches.last_mut().unwrap();
@@ -248,29 +283,14 @@ impl TileCacheBuilder {
         let mut result = TileCacheConfig::new(self.pending_tile_caches.len());
         let mut root_prim_list = PrimitiveList::empty();
 
-        // If the page would create too many slices (an arbitrary definition where
-        // it's assumed the GPU memory + compositing overhead would be too high)
-        // then just create a single picture cache for the entire content. This at
-        // least means that we can cache small content changes efficiently when
-        // scrolling isn't occurring. Scrolling regions will be handled reasonably
-        // efficiently by the dirty rect tracking (since it's likely that if the
-        // page has so many slices there isn't a single major scroll region).
-        const MAX_CACHE_SLICES: usize = 10;
-
-        if self.pending_tile_caches.len() > MAX_CACHE_SLICES {
-            let mut combined_prim_list = PrimitiveList::empty();
-
-            for pending_tile_cache in self.pending_tile_caches {
-                combined_prim_list.extend(pending_tile_cache.prim_list);
-            }
-
+        for pending_tile_cache in self.pending_tile_caches {
             let prim_instance = create_tile_cache(
-                0,
-                SliceFlags::empty(),
-                ROOT_SPATIAL_NODE_INDEX,
-                combined_prim_list,
-                config.background_color,
-                Vec::new(),
+                pending_tile_cache.params.slice,
+                pending_tile_cache.params.slice_flags,
+                pending_tile_cache.params.spatial_node_index,
+                pending_tile_cache.prim_list,
+                pending_tile_cache.params.background_color,
+                pending_tile_cache.params.shared_clips,
                 interners,
                 prim_store,
                 clip_store,
@@ -282,33 +302,9 @@ impl TileCacheBuilder {
             root_prim_list.add_prim(
                 prim_instance,
                 LayoutRect::zero(),
-                ROOT_SPATIAL_NODE_INDEX,
+                pending_tile_cache.params.spatial_node_index,
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
             );
-        } else {
-            for pending_tile_cache in self.pending_tile_caches {
-                let prim_instance = create_tile_cache(
-                    pending_tile_cache.params.slice,
-                    pending_tile_cache.params.slice_flags,
-                    pending_tile_cache.params.spatial_node_index,
-                    pending_tile_cache.prim_list,
-                    pending_tile_cache.params.background_color,
-                    pending_tile_cache.params.shared_clips,
-                    interners,
-                    prim_store,
-                    clip_store,
-                    &mut result.picture_cache_spatial_nodes,
-                    config,
-                    &mut result.tile_caches,
-                );
-
-                root_prim_list.add_prim(
-                    prim_instance,
-                    LayoutRect::zero(),
-                    pending_tile_cache.params.spatial_node_index,
-                    PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                );
-            }
         }
 
         (result, root_prim_list)
