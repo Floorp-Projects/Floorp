@@ -21,6 +21,7 @@ import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
+import kotlinx.android.synthetic.main.fragment_edit_bookmark.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -31,6 +32,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -38,6 +40,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.placeCursorAtEnd
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setToolbarColors
 import org.mozilla.fenix.ext.toShortUrl
@@ -106,6 +109,12 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                             .actionBookmarkEditFragmentToBookmarkSelectFolderFragment(null)
                     )
                 }
+            }
+
+            view.bookmarkNameEdit.apply {
+                requestFocus()
+                placeCursorAtEnd()
+                showKeyboard()
             }
         }
     }
