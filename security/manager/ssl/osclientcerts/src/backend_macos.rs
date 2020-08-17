@@ -26,6 +26,7 @@ use core_foundation::string::*;
 // etc.. This is easier.
 include!("bindings_macos.rs");
 
+use crate::manager::SlotType;
 use crate::util::*;
 
 #[repr(C)]
@@ -814,7 +815,17 @@ pub enum Object {
 }
 
 impl Object {
-    pub fn matches(&self, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
+    pub fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
+        // The modern/legacy slot distinction in theory enables differentiation
+        // between keys that are from modules that can use modern cryptography
+        // (namely EC keys and RSA-PSS signatures) and those that cannot.
+        // However, the function that would enable this
+        // (SecKeyIsAlgorithmSupported) causes a password dialog to appear on
+        // our test machines, so this backend pretends that everything supports
+        // modern crypto for now.
+        if slot_type != SlotType::Modern {
+            return false;
+        }
         match self {
             Object::Cert(cert) => cert.matches(attrs),
             Object::Key(key) => key.matches(attrs),
