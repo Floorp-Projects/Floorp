@@ -26,7 +26,7 @@ var tests = [
   { payload: (function() { var buffer = ""; for (var i = 0; i < 120; ++i) buffer += i; return buffer; }()) },
 ]
 
-var innerId = window.top.windowUtils.currentInnerWindowID;
+var innerId = window.top.windowGlobalChild.innerWindowId;
 ok(innerId, "We have a valid innerWindowID: " + innerId);
 
 var service = Cc["@mozilla.org/websocketevent/service;1"]

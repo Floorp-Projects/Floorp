@@ -89,7 +89,7 @@ class Runtime extends ContentProcessDomain {
       // after we replied to `enable` request.
       executeSoon(() => {
         this._onContextCreated("context-created", {
-          windowId: this.content.windowUtils.currentInnerWindowID,
+          windowId: this.content.windowGlobalChild.innerWindowId,
           window: this.content,
           isDefault: true,
         });
@@ -325,8 +325,7 @@ class Runtime extends ContentProcessDomain {
 
   _getDefaultContextForWindow(innerWindowId) {
     if (!innerWindowId) {
-      const { windowUtils } = this.content;
-      innerWindowId = windowUtils.currentInnerWindowID;
+      innerWindowId = this.content.windowGlobalChild.innerWindowId;
     }
     const curContexts = this.innerWindowIdToContexts.get(innerWindowId);
     if (curContexts) {

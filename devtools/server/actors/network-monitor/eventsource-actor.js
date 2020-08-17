@@ -46,7 +46,7 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
 
   startListening: function() {
     this.stopListening();
-    this.innerWindowID = this.targetActor.window.windowUtils.currentInnerWindowID;
+    this.innerWindowID = this.targetActor.window.windowGlobalChild.innerWindowId;
     eventSourceEventService.addListener(this.innerWindowID, this);
   },
 
