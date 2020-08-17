@@ -301,7 +301,7 @@ class WebConsole {
       return panel.getMappedExpression(expression);
     }
 
-    if (this.parserService && expression.includes("await ")) {
+    if (expression.includes("await ")) {
       const shouldMapBindings = false;
       const shouldMapAwait = true;
       const res = this.parserService.mapExpression(
