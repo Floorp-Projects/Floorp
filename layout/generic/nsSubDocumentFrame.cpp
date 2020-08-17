@@ -633,12 +633,24 @@ IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
 
 /* virtual */
 AspectRatio nsSubDocumentFrame::GetIntrinsicRatio() {
+  const auto& aspectRatio = StylePosition()->mAspectRatio;
+  if (!aspectRatio.auto_) {
+    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
+  }
+
   // FIXME(emilio): This should probably respect contain: size and return no
   // ratio in the case subDocRoot is non-null. Otherwise we do it by virtue of
   // using a zero-size below and reusing GetIntrinsicSize().
   if (nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame()) {
-    return subDocRoot->GetIntrinsicRatio();
+    if (AspectRatio subDocRatio = subDocRoot->GetIntrinsicRatio()) {
+      return subDocRatio;
+    }
   }
+
+  if (aspectRatio.HasRatio()) {
+    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
+  }
+
   // NOTE(emilio): Even though we have an intrinsic size, we may not have an
   // intrinsic ratio. For example `<iframe style="width: 100px">` should not
   // shrink in the vertical axis to preserve the 300x150 ratio.
