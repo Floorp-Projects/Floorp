@@ -7,6 +7,7 @@
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { InvalidArgumentError } = ChromeUtils.import(
   "chrome://marionette/content/error.js"
@@ -411,7 +412,7 @@ add_test(function test_Capabilities_ctor() {
   equal(false, caps.get("acceptInsecureCerts"));
   ok(caps.get("timeouts") instanceof Timeouts);
   ok(caps.get("proxy") instanceof Proxy);
-  equal(caps.get("setWindowRect"), false); // xpcshell does not populate appinfo
+  equal(caps.get("setWindowRect"), !Services.androidBridge);
   equal(caps.get("strictFileInteractability"), false);
 
   ok(caps.has("rotatable"));
@@ -506,9 +507,19 @@ add_test(function test_Capabilities_fromJSON() {
   caps = fromJSON({ timeouts: timeoutsConfig });
   equal(123, caps.get("timeouts").implicit);
 
-  caps = fromJSON({ setWindowRect: false });
-  equal(false, caps.get("setWindowRect"));
-  Assert.throws(() => fromJSON({ setWindowRect: true }), InvalidArgumentError);
+  if (!Services.androidBridge) {
+    caps = fromJSON({ setWindowRect: true });
+    equal(true, caps.get("setWindowRect"));
+    Assert.throws(
+      () => fromJSON({ setWindowRect: false }),
+      InvalidArgumentError
+    );
+  } else {
+    Assert.throws(
+      () => fromJSON({ setWindowRect: true }),
+      InvalidArgumentError
+    );
+  }
 
   caps = fromJSON({ strictFileInteractability: false });
   equal(false, caps.get("strictFileInteractability"));
