@@ -440,7 +440,7 @@ class Capabilities extends Map {
       ["acceptInsecureCerts", false],
       ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["proxy", new Proxy()],
-      ["setWindowRect", appinfo.name == "firefox"],
+      ["setWindowRect", !Services.androidBridge],
       ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
@@ -541,11 +541,11 @@ class Capabilities extends Map {
 
         case "setWindowRect":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
-          if (appinfo.name == "firefox" && !v) {
+          if (!Services.androidBridge && !v) {
             throw new InvalidArgumentError("setWindowRect cannot be disabled");
-          } else if (appinfo.name != "firefox" && v) {
+          } else if (Services.androidBridge && v) {
             throw new InvalidArgumentError(
-              "setWindowRect is only supported in Firefox desktop"
+              "setWindowRect is only supported on desktop"
             );
           }
           break;
