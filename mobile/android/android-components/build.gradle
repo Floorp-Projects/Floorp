@@ -107,6 +107,14 @@ subprojects {
         apply from: "${rootProject.projectDir}/${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
     }
 
+    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
+        if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
+            ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
+        }
+        ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
+        apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
+    }
+
     // Define a reusable task for updating the version in manifest.json for modules that package
     // a web extension. We automate this to make sure we never forget to update the version, either
     // in local development or for releases. In both cases, we want to make sure the latest version
