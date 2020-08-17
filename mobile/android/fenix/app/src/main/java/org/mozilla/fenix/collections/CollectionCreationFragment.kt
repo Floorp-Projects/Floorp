@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
@@ -22,10 +21,7 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.ext.getMediaStateForSession
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.toShortUrl
-import org.mozilla.fenix.home.Tab
 
 @ExperimentalCoroutinesApi
 class CollectionCreationFragment : DialogFragment() {
@@ -47,27 +43,16 @@ class CollectionCreationFragment : DialogFragment() {
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
         val args: CollectionCreationFragmentArgs by navArgs()
 
-        val store = requireComponents.core.store
-        val publicSuffixList = requireComponents.publicSuffixList
-        val tabs = store.state.getTabs(args.tabIds, publicSuffixList)
-        val selectedTabs = if (args.selectedTabIds != null) {
-            store.state.getTabs(args.selectedTabIds, publicSuffixList).toSet()
-        } else {
-            if (tabs.size == 1) setOf(tabs.first()) else emptySet()
-        }
-
-        val tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections
-        val selectedTabCollection = args.selectedTabCollectionId
-            .let { id -> tabCollections.firstOrNull { it.id == id } }
-
         collectionCreationStore = StoreProvider.get(this) {
             CollectionCreationStore(
-                CollectionCreationState(
-                    tabs = tabs,
-                    selectedTabs = selectedTabs,
+                createInitialCollectionCreationState(
+                    browserState = requireComponents.core.store.state,
+                    tabCollectionStorage = requireComponents.core.tabCollectionStorage,
+                    publicSuffixList = requireComponents.publicSuffixList,
                     saveCollectionStep = args.saveCollectionStep,
-                    tabCollections = tabCollections,
-                    selectedTabCollection = selectedTabCollection
+                    tabIds = args.tabIds,
+                    selectedTabIds = args.selectedTabIds,
+                    selectedTabCollectionId = args.selectedTabCollectionId
                 )
             )
         }
@@ -109,32 +94,4 @@ class CollectionCreationFragment : DialogFragment() {
         }
         return dialog
     }
-}
-
-@VisibleForTesting
-internal fun BrowserState.getTabs(
-    tabIds: Array<String>?,
-    publicSuffixList: PublicSuffixList
-): List<Tab> {
-    return tabIds
-        ?.mapNotNull { id -> findTab(id) }
-        ?.map { it.toTab(this, publicSuffixList) }
-        .orEmpty()
-}
-
-private fun TabSessionState.toTab(
-    state: BrowserState,
-    publicSuffixList: PublicSuffixList,
-    selected: Boolean? = null
-): Tab {
-    val url = readerState.activeUrl ?: content.url
-    return Tab(
-        sessionId = this.id,
-        url = url,
-        hostname = url.toShortUrl(publicSuffixList),
-        title = content.title,
-        selected = selected,
-        icon = content.icon,
-        mediaState = state.getMediaStateForSession(this.id)
-    )
 }
