@@ -23,6 +23,15 @@ class TabTrayFragmentInteractorTest {
     }
 
     @Test
+    fun onTabSettingsClicked() {
+        interactor.onTabSettingsClicked()
+
+        verify {
+            controller.handleTabSettingsClicked()
+        }
+    }
+
+    @Test
     fun onTabTrayDismissed() {
         interactor.onTabTrayDismissed()
         verify { controller.onTabTrayDismissed() }

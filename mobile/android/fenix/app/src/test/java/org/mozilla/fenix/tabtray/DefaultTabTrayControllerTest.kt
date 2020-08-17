@@ -101,6 +101,17 @@ class DefaultTabTrayControllerTest {
     }
 
     @Test
+    fun handleTabSettingsClicked() {
+        controller.handleTabSettingsClicked()
+
+        verify {
+            navController.navigate(
+                TabTrayDialogFragmentDirections.actionGlobalCloseTabSettingsFragment()
+            )
+        }
+    }
+
+    @Test
     fun onNewTabTapped() {
         controller.onNewTabTapped(private = false)
 

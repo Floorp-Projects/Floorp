@@ -68,7 +68,8 @@
         android:id="@+id/action_global_historyFragment"
         app:destination="@id/historyFragment" />
 
-    <action android:id="@+id/action_global_downloadsFragment"
+    <action
+        android:id="@+id/action_global_downloadsFragment"
         app:destination="@id/downloadsFragment" />
     <action
         android:id="@+id/action_global_accountProblemFragment"
@@ -109,6 +110,9 @@
     <action
         android:id="@+id/action_global_tabHistoryDialogFragment"
         app:destination="@id/tabHistoryDialogFragment" />
+    <action
+        android:id="@+id/action_global_closeTabSettingsFragment"
+        app:destination="@id/closeTabsSettingsFragment" />
 
     <dialog
         android:id="@+id/tabTrayDialogFragment"
@@ -526,7 +530,18 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_settingsFragment_to_closeTabsSettingsFragment"
+            app:destination="@id/closeTabsSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
+    <fragment
+        android:id="@+id/closeTabsSettingsFragment"
+        android:name="org.mozilla.fenix.settings.CloseTabsSettingsFragment"
+        android:label="@string/preferences_close_tabs" />
     <fragment
         android:id="@+id/dataChoicesFragment"
         android:name="org.mozilla.fenix.settings.DataChoicesFragment"
@@ -808,7 +823,8 @@
         android:name="org.mozilla.fenix.tabhistory.TabHistoryDialogFragment"
         tools:layout="@layout/fragment_tab_history_dialog" />
 
-    <navigation android:id="@+id/site_permissions_exceptions_graph"
+    <navigation
+        android:id="@+id/site_permissions_exceptions_graph"
         app:startDestination="@id/sitePermissionsExceptionsFragment">
 
         <fragment
@@ -847,7 +863,8 @@
         </fragment>
     </navigation>
 
-    <navigation android:id="@+id/addons_management_graph"
+    <navigation
+        android:id="@+id/addons_management_graph"
         app:startDestination="@id/addonsManagementFragment">
         <fragment
             android:id="@+id/addonsManagementFragment"
@@ -914,7 +931,8 @@
         </fragment>
     </navigation>
 
-    <navigation android:id="@+id/search_engine_graph"
+    <navigation
+        android:id="@+id/search_engine_graph"
         app:startDestination="@id/searchEngineFragment">
         <fragment
             android:id="@+id/searchEngineFragment"

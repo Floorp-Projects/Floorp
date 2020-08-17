@@ -25,6 +25,11 @@ interface TabTrayInteractor {
     fun onShareTabsClicked(private: Boolean)
 
     /**
+     * Called when user clicks the tab settings button.
+     */
+    fun onTabSettingsClicked()
+
+    /**
      * Called when user clicks button to save selected tabs to a collection.
      */
     fun onSaveToCollectionClicked(selectedTabs: Set<Tab>)
@@ -81,6 +86,10 @@ class TabTrayFragmentInteractor(private val controller: TabTrayController) : Tab
 
     override fun onTabTrayDismissed() {
         controller.onTabTrayDismissed()
+    }
+
+    override fun onTabSettingsClicked() {
+        controller.handleTabSettingsClicked()
     }
 
     override fun onShareTabsClicked(private: Boolean) {

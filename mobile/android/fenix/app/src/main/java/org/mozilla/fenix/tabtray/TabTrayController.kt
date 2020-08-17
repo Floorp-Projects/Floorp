@@ -31,6 +31,7 @@ import org.mozilla.fenix.home.HomeFragment
 interface TabTrayController {
     fun onNewTabTapped(private: Boolean)
     fun onTabTrayDismissed()
+    fun handleTabSettingsClicked()
     fun onShareTabsClicked(private: Boolean)
     fun onSyncedTabClicked(syncTab: SyncTab)
     fun onSaveToCollectionClicked(selectedTabs: Set<Tab>)
@@ -86,6 +87,10 @@ class DefaultTabTrayController(
             "DefaultTabTrayController.onNewTabTapped",
             startTime
         )
+    }
+
+    override fun handleTabSettingsClicked() {
+        navController.navigate(TabTrayDialogFragmentDirections.actionGlobalCloseTabSettingsFragment())
     }
 
     override fun onTabTrayDismissed() {

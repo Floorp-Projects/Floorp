@@ -281,6 +281,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
 
             settings().wasDefaultBrowserOnLastResume = settings().isDefaultBrowser()
+
+            if (!settings().manuallyCloseTabs) {
+                components.core.store.state.tabs.filter {
+                    (System.currentTimeMillis() - it.lastAccess) > settings().getTabTimeout()
+                }.forEach {
+                    components.useCases.tabsUseCases.removeTab(it.id)
+                }
+            }
         }
     }
 

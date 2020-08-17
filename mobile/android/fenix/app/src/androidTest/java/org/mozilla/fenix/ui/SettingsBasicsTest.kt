@@ -69,6 +69,7 @@ class SettingsBasicsTest {
             verifyBasicsHeading()
             verifySearchEngineButton()
             verifyDefaultBrowserItem()
+            verifyCloseTabsItem()
             // drill down to submenu
         }.openSearchSubMenu {
             verifyDefaultSearchEngineHeader()
@@ -165,6 +166,17 @@ class SettingsBasicsTest {
             verifyDarkThemeApplied(getUiTheme())
             selectLightMode()
             verifyLightThemeApplied(getUiTheme())
+        }
+    }
+
+    @Test
+    fun changeCloseTabsSetting() {
+        // Goes through the settings and verified the close tabs setting options.
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCloseTabsSubMenu {
+            verifyOptions()
         }
     }
 

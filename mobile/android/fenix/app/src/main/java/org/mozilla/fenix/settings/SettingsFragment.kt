@@ -170,6 +170,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        val tabSettingsPreference =
+            requirePreference<Preference>(R.string.pref_key_close_tabs)
+        tabSettingsPreference.summary = context?.settings()?.getTabTimeoutString()
+
         setupPreferences()
 
         if (shouldUpdateAccountUIState) {
@@ -191,6 +195,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val directions: NavDirections? = when (preference.key) {
             resources.getString(R.string.pref_key_sign_in) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment()
+            }
+            resources.getString(R.string.pref_key_close_tabs) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToCloseTabsSettingsFragment()
             }
             resources.getString(R.string.pref_key_search_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
@@ -301,7 +308,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             requirePreference<Preference>(R.string.pref_key_external_download_manager)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
-        val preferenceMakeDefaultBrowser = requirePreference<Preference>(R.string.pref_key_make_default_browser)
+        val preferenceMakeDefaultBrowser =
+            requirePreference<Preference>(R.string.pref_key_make_default_browser)
 
         if (!Config.channel.isReleased) {
             preferenceLeakCanary?.setOnPreferenceChangeListener { _, newValue ->

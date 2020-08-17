@@ -51,6 +51,7 @@ class SettingsRobot {
     fun verifyAccessibilityButton() = assertAccessibilityButton()
     fun verifySetAsDefaultBrowserButton() = assertSetAsDefaultBrowserButton()
     fun verifyDefaultBrowserItem() = assertDefaultBrowserItem()
+    fun verifyCloseTabsItem() = assertCloseTabsItem()
     fun verifyDefaultBrowserIsDisaled() = assertDefaultBrowserIsDisabled()
     fun clickDefaultBrowserSwitch() = toggleDefaultBrowserSwitch()
     fun verifyAndroidDefaultAppsMenuAppears() = assertAndroidDefaultAppsMenuAppears()
@@ -132,6 +133,15 @@ class SettingsRobot {
 
             SettingsSubMenuThemeRobot().interact()
             return SettingsSubMenuThemeRobot.Transition()
+        }
+
+        fun openCloseTabsSubMenu(interact: SettingsSubMenuTabsRobot.() -> Unit): SettingsSubMenuTabsRobot.Transition {
+
+            fun closeTabsButton() = onView(withText("Close tabs"))
+            closeTabsButton().click()
+
+            SettingsSubMenuTabsRobot().interact()
+            return SettingsSubMenuTabsRobot.Transition()
         }
 
         fun openAccessibilitySubMenu(interact: SettingsSubMenuAccessibilityRobot.() -> Unit): SettingsSubMenuAccessibilityRobot.Transition {
@@ -237,8 +247,11 @@ private fun assertSettingsView() {
 }
 
 // GENERAL SECTION
-private fun assertGeneralHeading() = onView(withText("General"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertGeneralHeading() {
+    scrollToElementByText("General")
+    onView(withText("General"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun assertSearchEngineButton() {
     mDevice.wait(Until.findObject(By.text("Search")), waitingTime)
@@ -284,8 +297,15 @@ private fun assertDefaultBrowserItem() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
+private fun assertCloseTabsItem() {
+    mDevice.wait(Until.findObject(By.text("Close tabs")), waitingTime)
+    onView(withText("Close tabs"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
 // PRIVACY SECTION
 private fun assertPrivacyHeading() {
+    scrollToElementByText("Privacy and security")
     onView(withText("Privacy and security"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }

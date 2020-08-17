@@ -62,6 +62,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
         private const val MIN_DAYS_SINCE_FEEDBACK_PROMPT = 120
 
+        const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
+        const val ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000L
+        const val ONE_MONTH_MS = (60 * 60 * 24 * 365 * 1000L) / 12
+
         private fun Action.toInt() = when (this) {
             Action.BLOCKED -> BLOCKED_INT
             Action.ASK_TO_ALLOW -> ASK_TO_ALLOW_INT
@@ -323,6 +327,48 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_show_search_engine_shortcuts),
         default = false
     )
+
+    var manuallyCloseTabs by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_close_tabs_manually),
+        default = true
+    )
+
+    var closeTabsAfterOneDay by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_close_tabs_after_one_day),
+        default = false
+    )
+
+    var closeTabsAfterOneWeek by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_close_tabs_after_one_week),
+        default = false
+    )
+
+    var closeTabsAfterOneMonth by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_close_tabs_after_one_month),
+        default = false
+    )
+
+    fun getTabTimeout(): Long = when {
+        closeTabsAfterOneDay -> ONE_DAY_MS
+        closeTabsAfterOneWeek -> ONE_WEEK_MS
+        closeTabsAfterOneMonth -> ONE_MONTH_MS
+        else -> System.currentTimeMillis()
+    }
+
+    fun getTabTimeoutString(): String = when {
+        closeTabsAfterOneDay -> {
+            appContext.getString(R.string.close_tabs_after_one_day)
+        }
+        closeTabsAfterOneWeek -> {
+            appContext.getString(R.string.close_tabs_after_one_week)
+        }
+        closeTabsAfterOneMonth -> {
+            appContext.getString(R.string.close_tabs_after_one_week)
+        }
+        else -> {
+            appContext.getString(R.string.close_tabs_manually)
+        }
+    }
 
     val shouldUseDarkTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_dark_theme),

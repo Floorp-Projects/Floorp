@@ -214,6 +214,7 @@ class TabTrayView(
                     is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
                         isPrivateModeSelected
                     )
+                    is TabTrayItemMenu.Item.OpenTabSettings -> interactor.onTabSettingsClicked()
                     is TabTrayItemMenu.Item.SaveToCollection -> interactor.onEnterMultiselect()
                     is TabTrayItemMenu.Item.CloseAllTabs -> interactor.onCloseAllTabsClicked(
                         isPrivateModeSelected
@@ -574,6 +575,7 @@ class TabTrayItemMenu(
 
     sealed class Item {
         object ShareAllTabs : Item()
+        object OpenTabSettings : Item()
         object SaveToCollection : Item()
         object CloseAllTabs : Item()
     }
@@ -596,6 +598,13 @@ class TabTrayItemMenu(
             ) {
                 context.components.analytics.metrics.track(Event.TabsTrayShareAllTabsPressed)
                 onItemTapped.invoke(Item.ShareAllTabs)
+            },
+
+            SimpleBrowserMenuItem(
+                context.getString(R.string.tab_tray_menu_tab_settings),
+                textColorResource = R.color.primary_text_normal_theme
+            ) {
+                onItemTapped.invoke(Item.OpenTabSettings)
             },
 
             SimpleBrowserMenuItem(

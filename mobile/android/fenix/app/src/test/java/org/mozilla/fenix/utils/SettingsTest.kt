@@ -190,6 +190,47 @@ class SettingsTest {
     }
 
     @Test
+    fun shouldManuallyCloseTabs() {
+        // When just created
+        // Then
+        assertTrue(settings.manuallyCloseTabs)
+
+        // When
+        settings.manuallyCloseTabs = false
+
+        // Then
+        assertFalse(settings.shouldUseLightTheme)
+    }
+
+    @Test
+    fun getTabTimeout() {
+        // When just created
+        // Then
+        assertTrue(settings.manuallyCloseTabs)
+
+        // When
+        settings.manuallyCloseTabs = false
+        settings.closeTabsAfterOneDay = true
+
+        // Then
+        assertEquals(settings.getTabTimeout(), Settings.ONE_DAY_MS)
+
+        // When
+        settings.closeTabsAfterOneDay = false
+        settings.closeTabsAfterOneWeek = true
+
+        // Then
+        assertEquals(settings.getTabTimeout(), Settings.ONE_WEEK_MS)
+
+        // When
+        settings.closeTabsAfterOneWeek = false
+        settings.closeTabsAfterOneMonth = true
+
+        // Then
+        assertEquals(settings.getTabTimeout(), Settings.ONE_MONTH_MS)
+    }
+
+    @Test
     fun shouldUseAutoSize() {
         // When just created
         // Then
