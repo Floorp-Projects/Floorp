@@ -20,7 +20,7 @@
 var iframe = document.getElementById("iframe");
 
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
-isTabModal = false;
+modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
 
 const AUTHENTICATE_PATH = new URL("authenticate.sjs", window.location.href).pathname;
 

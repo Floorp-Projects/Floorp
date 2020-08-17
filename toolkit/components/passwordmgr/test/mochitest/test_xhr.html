@@ -41,7 +41,7 @@ function xhrLoad(xmlDoc) {
 }
 
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
-isTabModal = false;
+modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
 
 let prompterParent = runInParent(() => {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
