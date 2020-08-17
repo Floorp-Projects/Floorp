@@ -2577,19 +2577,42 @@ toolbar#nav-bar {
                     break
             return result
 
-        steps = [
-            ("1. Run each test %d times in one browser." % VERIFY_REPEAT,
-             step1),
-            ("2. Run each test %d times in a new browser each time." %
-             VERIFY_REPEAT_SINGLE_BROWSER,
-             step2),
-            ("3. Run each test %d times in one browser, in chaos mode." %
-             VERIFY_REPEAT,
-             step3),
-            ("4. Run each test %d times in a new browser each time, "
-             "in chaos mode." % VERIFY_REPEAT_SINGLE_BROWSER,
-             step4),
-        ]
+        def fission_step(fission_pref):
+            stepOptions = copy.deepcopy(options)
+            stepOptions.extraPrefs.append(fission_pref)
+            stepOptions.keep_open = False
+            stepOptions.runUntilFailure = True
+            stepOptions.profilePath = None
+            result = self.runTests(stepOptions)
+            result = result or (-2 if self.countfail > 0 else 0)
+            self.message_logger.finish()
+            return result
+
+        def fission_step1():
+            return fission_step("fission.autostart=false")
+
+        def fission_step2():
+            return fission_step("fission.autostart=true")
+
+        if options.verify_fission:
+            steps = [
+                ("1. Run each test without fission.", fission_step1),
+                ("2. Run each test with fission.", fission_step2),
+            ]
+        else:
+            steps = [
+                ("1. Run each test %d times in one browser." % VERIFY_REPEAT,
+                 step1),
+                ("2. Run each test %d times in a new browser each time." %
+                 VERIFY_REPEAT_SINGLE_BROWSER,
+                 step2),
+                ("3. Run each test %d times in one browser, in chaos mode." %
+                 VERIFY_REPEAT,
+                 step3),
+                ("4. Run each test %d times in a new browser each time, "
+                 "in chaos mode." % VERIFY_REPEAT_SINGLE_BROWSER,
+                 step4),
+            ]
 
         stepResults = {}
         for (descr, step) in steps:
@@ -2655,6 +2678,7 @@ toolbar#nav-bar {
             "socketprocess_networking": self.extraPrefs.get(
                 'network.http.network_access_on_socket_process.enabled', False),
             "verify": options.verify,
+            "verify_fission": options.verify_fission,
             "webrender": options.enable_webrender,
             "xorigin": options.xOriginTests,
         })
@@ -3273,7 +3297,7 @@ def run_test_harness(parser, options):
     if options.flavor in ('plain', 'browser', 'chrome'):
         options.runByManifest = True
 
-    if options.verify:
+    if options.verify or options.verify_fission:
         result = runner.verifyTests(options)
     else:
         result = runner.runTests(options)
