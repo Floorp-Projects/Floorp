@@ -221,8 +221,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
     return !HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
   }
 
-  mozilla::LogicalSize ComputeSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,
+  SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
       const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) final;

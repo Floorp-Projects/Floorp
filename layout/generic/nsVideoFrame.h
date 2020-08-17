@@ -56,8 +56,8 @@ class nsVideoFrame final : public nsContainerFrame,
   /* get the size of the video's display */
   nsSize GetVideoIntrinsicSize(gfxContext* aRenderingContext);
   mozilla::AspectRatio GetIntrinsicRatio() override;
-  mozilla::LogicalSize ComputeSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,
+  SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
       const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;

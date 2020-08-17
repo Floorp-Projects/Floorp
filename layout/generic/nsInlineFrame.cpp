@@ -243,13 +243,14 @@ void nsInlineFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
 }
 
 /* virtual */
-LogicalSize nsInlineFrame::ComputeSize(
+nsIFrame::SizeComputationResult nsInlineFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
     ComputeSizeFlags aFlags) {
   // Inlines and text don't compute size before reflow.
-  return LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  return {LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+          AspectRatioUsage::None};
 }
 
 nsRect nsInlineFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {

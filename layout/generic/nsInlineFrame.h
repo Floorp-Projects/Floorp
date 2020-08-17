@@ -76,8 +76,8 @@ class nsInlineFrame : public nsContainerFrame {
                                  InlineMinISizeData* aData) override;
   virtual void AddInlinePrefISize(gfxContext* aRenderingContext,
                                   InlinePrefISizeData* aData) override;
-  virtual mozilla::LogicalSize ComputeSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWritingMode,
+  SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
       const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;

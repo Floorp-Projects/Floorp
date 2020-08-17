@@ -614,7 +614,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
   AutoMaybeDisableFontInflation an(aFloat);
   WritingMode wm = aFloatOffsetState.GetWritingMode();
 
-  LogicalSize floatSize = aFloat->ComputeSize(
+  auto floatSize = aFloat->ComputeSize(
       aCBReflowInput.mRenderingContext, wm, aCBReflowInput.ComputedSize(wm),
       aFloatAvailableISize, aFloatOffsetState.ComputedLogicalMargin().Size(wm),
       aFloatOffsetState.ComputedLogicalBorderPadding().Size(wm) -
@@ -623,7 +623,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
       nsIFrame::ComputeSizeFlags::eShrinkWrap);
 
   WritingMode cbwm = aCBReflowInput.GetWritingMode();
-  nscoord floatISize = floatSize.ConvertTo(cbwm, wm).ISize(cbwm);
+  nscoord floatISize = floatSize.mLogicalSize.ConvertTo(cbwm, wm).ISize(cbwm);
   if (floatISize == NS_UNCONSTRAINEDSIZE) {
     return NS_UNCONSTRAINEDSIZE;  // reflow is needed to get the true size
   }
