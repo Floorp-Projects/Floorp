@@ -3121,42 +3121,63 @@ bool js::IsPrototypeOf(JSContext* cx, HandleObject protoObj, JSObject* obj,
 }
 
 JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
-  if (v.isString()) {
-    Rooted<JSString*> str(cx, v.toString());
-    return StringObject::create(cx, str);
+  MOZ_ASSERT(v.isPrimitive());
+
+  switch (v.type()) {
+    case ValueType::String: {
+      Rooted<JSString*> str(cx, v.toString());
+      return StringObject::create(cx, str);
+    }
+    case ValueType::Double:
+    case ValueType::Int32:
+      return NumberObject::create(cx, v.toNumber());
+    case ValueType::Boolean:
+      return BooleanObject::create(cx, v.toBoolean());
+    case ValueType::Symbol: {
+      RootedSymbol symbol(cx, v.toSymbol());
+      return SymbolObject::create(cx, symbol);
+    }
+    case ValueType::BigInt: {
+      RootedBigInt bigInt(cx, v.toBigInt());
+      return BigIntObject::create(cx, bigInt);
+    }
+    case ValueType::Undefined:
+    case ValueType::Null:
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+    case ValueType::Object:
+      break;
   }
-  if (v.isNumber()) {
-    return NumberObject::create(cx, v.toNumber());
-  }
-  if (v.isBoolean()) {
-    return BooleanObject::create(cx, v.toBoolean());
-  }
-  if (v.isSymbol()) {
-    RootedSymbol symbol(cx, v.toSymbol());
-    return SymbolObject::create(cx, symbol);
-  }
-  MOZ_ASSERT(v.isBigInt());
-  RootedBigInt bigInt(cx, v.toBigInt());
-  return BigIntObject::create(cx, bigInt);
+
+  MOZ_CRASH("unexpected type");
 }
 
 // Like PrimitiveToObject, but returns the JSProtoKey of the prototype that
 // would be used without actually creating the object.
 JSProtoKey js::PrimitiveToProtoKey(JSContext* cx, const Value& v) {
-  if (v.isString()) {
-    return JSProto_String;
+  MOZ_ASSERT(v.isPrimitive());
+
+  switch (v.type()) {
+    case ValueType::String:
+      return JSProto_String;
+    case ValueType::Double:
+    case ValueType::Int32:
+      return JSProto_Number;
+    case ValueType::Boolean:
+      return JSProto_Boolean;
+    case ValueType::Symbol:
+      return JSProto_Symbol;
+    case ValueType::BigInt:
+      return JSProto_BigInt;
+    case ValueType::Undefined:
+    case ValueType::Null:
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+    case ValueType::Object:
+      break;
   }
-  if (v.isNumber()) {
-    return JSProto_Number;
-  }
-  if (v.isBoolean()) {
-    return JSProto_Boolean;
-  }
-  if (v.isSymbol()) {
-    return JSProto_Symbol;
-  }
-  MOZ_ASSERT(v.isBigInt());
-  return JSProto_BigInt;
+
+  MOZ_CRASH("unexpected type");
 }
 
 /*
