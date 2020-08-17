@@ -354,6 +354,21 @@ var snapshotFormatters = {
     );
   },
 
+  environmentVariables(data) {
+    if (!data) {
+      return;
+    }
+    $.append(
+      $("environment-variables-tbody"),
+      Object.entries(data).map(([name, value]) => {
+        return $.new("tr", [
+          $.new("td", name, "pref-name"),
+          $.new("td", value, "pref-value"),
+        ]);
+      })
+    );
+  },
+
   modifiedPreferences(data) {
     $.append(
       $("prefs-tbody"),
