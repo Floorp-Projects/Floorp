@@ -33,7 +33,6 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
-#include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
@@ -126,34 +125,28 @@ MOZ_ALWAYS_INLINE const ReservedWordInfo* FindReservedWord<Utf8Unit>(
   return FindReservedWord(Utf8AsUnsignedChars(units), length);
 }
 
-template <typename CharT>
 static const ReservedWordInfo* FindReservedWord(
-    const CharT* chars, size_t length,
-    js::frontend::NameVisibility* visibility) {
+    JSLinearString* str, js::frontend::NameVisibility* visibility) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    const JS::Latin1Char* chars = str->latin1Chars(nogc);
+    size_t length = str->length();
+    if (length > 0 && chars[0] == '#') {
+      *visibility = js::frontend::NameVisibility::Private;
+      return nullptr;
+    }
+    *visibility = js::frontend::NameVisibility::Public;
+    return FindReservedWord(chars, length);
+  }
+
+  const char16_t* chars = str->twoByteChars(nogc);
+  size_t length = str->length();
   if (length > 0 && chars[0] == '#') {
     *visibility = js::frontend::NameVisibility::Private;
     return nullptr;
   }
   *visibility = js::frontend::NameVisibility::Public;
   return FindReservedWord(chars, length);
-}
-
-static const ReservedWordInfo* FindReservedWord(
-    JSLinearString* str, js::frontend::NameVisibility* visibility) {
-  JS::AutoCheckCannotGC nogc;
-  if (str->hasLatin1Chars()) {
-    return FindReservedWord(str->latin1Chars(nogc), str->length(), visibility);
-  }
-  return FindReservedWord(str->twoByteChars(nogc), str->length(), visibility);
-}
-
-static const ReservedWordInfo* FindReservedWord(
-    const js::frontend::ParserAtomEntry* entry,
-    js::frontend::NameVisibility* visibility) {
-  if (entry->hasLatin1Chars()) {
-    return FindReservedWord(entry->latin1Chars(), entry->length(), visibility);
-  }
-  return FindReservedWord(entry->twoByteChars(), entry->length(), visibility);
 }
 
 static uint32_t GetSingleCodePoint(const char16_t** p, const char16_t* end) {

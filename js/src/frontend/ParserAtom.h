@@ -9,7 +9,6 @@
 
 #include "mozilla/DebugOnly.h"      // mozilla::DebugOnly
 #include "mozilla/HashFunctions.h"  // HashString
-#include "mozilla/Range.h"          // mozilla::Range
 #include "mozilla/Variant.h"        // mozilla::Variant
 
 #include "ds/LifoAlloc.h"  // LifoAlloc
@@ -249,12 +248,6 @@ class alignas(alignof(void*)) ParserAtomEntry {
   const char16_t* twoByteChars() const {
     MOZ_ASSERT(hasTwoByteChars());
     return variant_.getUnchecked<char16_t>();
-  }
-  mozilla::Range<const Latin1Char> latin1Range() const {
-    return mozilla::Range(latin1Chars(), length_);
-  }
-  mozilla::Range<const char16_t> twoByteRange() const {
-    return mozilla::Range(twoByteChars(), length_);
   }
 
   bool isIndex(uint32_t* indexp) const;
