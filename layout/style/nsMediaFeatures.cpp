@@ -281,7 +281,7 @@ StyleContrastPref Gecko_MediaFeatures_PrefersContrast(
   // https://github.com/w3c/csswg-drafts/issues/3856#issuecomment-642313572
   // https://github.com/w3c/csswg-drafts/issues/2943
   if (!!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
-    return StyleContrastPref::High;
+    return StyleContrastPref::More;
   }
   return StyleContrastPref::NoPreference;
 }
