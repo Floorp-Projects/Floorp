@@ -5,20 +5,11 @@ export interface Branch {
   value: any;
 }
 
-interface BucketConfig {
-  namespace: string;
-  randomizationUnit: string;
-  start: number;
-  count: number;
-  total: number;
-}
-
 export interface RecipeArgs {
   slug: string;
   isEnrollmentPaused: boolean;
   experimentType?: string;
   branches: Branch[];
-  bucketConfig: BucketConfig;
 }
 
 export interface Recipe {

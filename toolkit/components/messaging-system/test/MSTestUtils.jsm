@@ -31,13 +31,6 @@ const ExperimentFakes = {
   store() {
     return new ExperimentStore("FakeStore", { path: PATH, isParent: true });
   },
-  waitForStoreUpdate(store, slug) {
-    if (!slug) {
-      throw new Error("Must specify an expected recipe update");
-    }
-
-    return new Promise(resolve => store.on(`update:${slug}`, resolve));
-  },
   childStore() {
     return new ExperimentStore("FakeStore", { isParent: false });
   },
@@ -70,13 +63,6 @@ const ExperimentFakes = {
         { slug: "control", value: null },
         { slug: "treatment", value: { title: "hello" } },
       ],
-      bucketConfig: {
-        namespace: "mstest-utils",
-        randomizationUnit: "normandy_id",
-        start: 0,
-        count: 100,
-        total: 1000,
-      },
       userFacingName: "Messaging System recipe",
       userFacingDescription: "Messaging System MSTestUtils recipe",
       ...props,
