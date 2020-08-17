@@ -94,3 +94,21 @@ declTest("sendQuery in-process early lifetime", {
     is(result, 200);
   },
 });
+
+declTest("sendQuery unserializable reply", {
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    let actorParent = parent.getActor("TestWindow");
+    ok(actorParent, "JSWindowActorParent should have value");
+
+    try {
+      await actorParent.sendQuery("noncloneReply", {});
+      ok(false, "expected noncloneReply to be rejected");
+    } catch (error) {
+      ok(
+        error.message.includes("message reply cannot be cloned"),
+        "Error should have the correct message"
+      );
+    }
+  },
+});
