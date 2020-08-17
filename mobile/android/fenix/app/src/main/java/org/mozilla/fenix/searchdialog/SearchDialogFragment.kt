@@ -16,8 +16,10 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
+import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
+import kotlinx.android.synthetic.main.fragment_search_dialog.toolbar
+import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -101,7 +103,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         awesomeBarView = AwesomeBarView(
             requireContext(),
             interactor,
-            view.awesomeBar
+            view.awesome_bar
         )
 
         return view
@@ -118,10 +120,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 clear(toolbar.id, TOP)
                 connect(toolbar.id, BOTTOM, PARENT_ID, BOTTOM)
 
-                clear(awesomeBar.id, TOP)
-                clear(awesomeBar.id, BOTTOM)
-                connect(awesomeBar.id, TOP, PARENT_ID, TOP)
-                connect(awesomeBar.id, BOTTOM, toolbar.id, TOP)
+                clear(awesome_bar.id, TOP)
+                clear(pill_wrapper.id, BOTTOM)
+                connect(awesome_bar.id, TOP, PARENT_ID, TOP)
+                connect(pill_wrapper.id, BOTTOM, toolbar.id, TOP)
 
                 applyTo(search_wrapper)
             }
@@ -133,7 +135,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
 
         consumeFrom(store) {
-            awesomeBar?.visibility = if (it.query.isEmpty()) View.INVISIBLE else View.VISIBLE
+            awesome_bar?.visibility = if (it.query.isEmpty()) View.INVISIBLE else View.VISIBLE
             toolbarView.update(it)
             awesomeBarView.update(it)
         }

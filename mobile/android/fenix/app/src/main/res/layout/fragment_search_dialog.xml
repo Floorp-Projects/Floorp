@@ -30,7 +30,7 @@
         app:layout_constraintTop_toTopOf="parent"/>
     <mozilla.components.browser.awesomebar.BrowserAwesomeBar
         xmlns:mozac="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/awesomeBar"
+        android:id="@+id/awesome_bar"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fadingEdge="horizontal"
@@ -39,11 +39,40 @@
         android:requiresFadingEdge="vertical"
         android:background="?attr/foundation"
         android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/pill_wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         mozac:awesomeBarChipBackgroundColor="@color/photonGreen50"
         mozac:awesomeBarDescriptionTextColor="?secondaryText"
         mozac:awesomeBarTitleTextColor="?primaryText" />
+    <LinearLayout
+        android:id="@+id/pill_wrapper"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/search_fragment_pill_height"
+        android:background="?foundation"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/search_fragment_pill_padding_start"
+        android:paddingTop="@dimen/search_fragment_pill_padding_vertical"
+        android:paddingEnd="@dimen/search_fragment_pill_padding_end"
+        android:paddingBottom="@dimen/search_fragment_pill_padding_vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ToggleButton
+            android:id="@+id/search_scan_button"
+            style="@style/search_pill"
+            android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
+            android:textOff="@string/search_scan_button"
+            android:textOn="@string/search_scan_button"
+            app:drawableStartCompat="@drawable/ic_qr" />
+
+        <ToggleButton
+            android:id="@+id/search_engines_shortcut_button"
+            style="@style/search_pill"
+            android:textOff="@string/search_engine_button"
+            android:textOn="@string/search_engine_button"
+            app:drawableStartCompat="@drawable/ic_search" />
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
