@@ -268,6 +268,11 @@ AspectRatio SVGOuterSVGFrame::GetIntrinsicRatio() {
     return AspectRatio();
   }
 
+  const StyleAspectRatio& aspectRatio = StylePosition()->mAspectRatio;
+  if (!aspectRatio.auto_) {
+    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
+  }
+
   // We only have an intrinsic size/ratio if our width and height attributes
   // are both specified and set to non-percentage values, or we have a viewBox
   // rect: http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
@@ -298,6 +303,11 @@ AspectRatio SVGOuterSVGFrame::GetIntrinsicRatio() {
 
   if (viewbox) {
     return AspectRatio::FromSize(viewbox->width, viewbox->height);
+  }
+
+  if (aspectRatio.HasRatio()) {
+    // For aspect-ratio: "auto && <ratio>" case.
+    return aspectRatio.ratio.AsRatio().ToLayoutRatio();
   }
 
   return SVGDisplayContainerFrame::GetIntrinsicRatio();
