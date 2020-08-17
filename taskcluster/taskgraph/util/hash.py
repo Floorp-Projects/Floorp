@@ -4,8 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from mozbuild.util import memoize
-from mozpack.files import FileFinder
 import mozpack.path as mozpath
+from mozversioncontrol import get_repository_object
 import hashlib
 import io
 import six
@@ -21,6 +21,11 @@ def hash_path(path):
         return hashlib.sha256(fh.read()).hexdigest()
 
 
+@memoize
+def get_file_finder(base_path):
+    return get_repository_object(base_path).get_tracked_files_finder()
+
+
 def hash_paths(base_path, patterns):
     """
     Give a list of path patterns, return a digest of the contents of all
@@ -30,7 +35,7 @@ def hash_paths(base_path, patterns):
     Each file is hashed. The list of all hashes and file paths is then
     itself hashed to produce the result.
     """
-    finder = FileFinder(base_path)
+    finder = get_file_finder(base_path)
     h = hashlib.sha256()
     files = {}
     for pattern in patterns:
