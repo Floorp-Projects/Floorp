@@ -1,8 +1,17 @@
 /* eslint-env mozilla/frame-script */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { clearInterval, setInterval } = ChromeUtils.import(
+const { clearInterval, setInterval, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
+);
+
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
+
+var tabSubDialogsEnabled = Services.prefs.getBoolPref(
+  "prompts.tabChromePromptSubDialog",
+  false
 );
 
 // Define these to make EventUtils happy.
@@ -16,15 +25,16 @@ Services.scriptloader.loadSubScript(
 );
 
 addMessageListener("handlePrompt", msg => {
-  handlePromptWhenItAppears(msg.action, msg.isTabModal, msg.isSelect);
+  handlePromptWhenItAppears(msg.action, msg.modalType, msg.isSelect);
 });
 
-function handlePromptWhenItAppears(action, isTabModal, isSelect) {
-  let interval = setInterval(() => {
-    if (handlePrompt(action, isTabModal, isSelect)) {
-      clearInterval(interval);
-    }
-  }, 100);
+async function handlePromptWhenItAppears(action, modalType, isSelect) {
+  if (!(await handlePrompt(action, modalType, isSelect))) {
+    setTimeout(
+      () => this.handlePromptWhenItAppears(action, modalType, isSelect),
+      100
+    );
+  }
 }
 
 function checkTabModal(prompt, browser) {
@@ -73,11 +83,14 @@ function checkTabModal(prompt, browser) {
   );
 }
 
-function handlePrompt(action, isTabModal, isSelect) {
+async function handlePrompt(action, modalType, isSelect) {
   let ui;
+  let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
 
-  if (isTabModal) {
-    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+  if (
+    modalType === Services.prompt.MODAL_TYPE_CONTENT ||
+    (!tabSubDialogsEnabled && modalType === Services.prompt.MODAL_TYPE_TAB)
+  ) {
     let gBrowser = browserWin.gBrowser;
     let promptManager = gBrowser.getTabModalPromptBox(gBrowser.selectedBrowser);
     let prompts = promptManager.listPrompts();
@@ -100,6 +113,11 @@ function handlePrompt(action, isTabModal, isSelect) {
     }
   }
 
+  let dialogClosed = BrowserTestUtils.waitForEvent(
+    browserWin,
+    "DOMModalDialogClosed"
+  );
+
   let promptState;
   if (isSelect) {
     promptState = getSelectState(ui);
@@ -108,6 +126,13 @@ function handlePrompt(action, isTabModal, isSelect) {
     promptState = getPromptState(ui);
     dismissPrompt(ui, action);
   }
+
+  // Wait until the prompt has been closed before sending callback msg.
+  // Unless the test explicitly doesn't request a button click.
+  if (action.buttonClick !== "none") {
+    await dialogClosed;
+  }
+
   sendAsyncMessage("promptHandled", { promptState });
   return true;
 }
@@ -137,7 +162,7 @@ function getPromptState(ui) {
   state.checkHidden = ui.checkboxContainer.hidden;
   state.checkMsg = state.checkHidden ? "" : ui.checkbox.label;
   state.checked = state.checkHidden ? false : ui.checkbox.checked;
-  // tab-modal prompts don't have an infoIcon
+  // TabModalPrompts don't have an infoIcon
   state.iconClass = ui.infoIcon ? ui.infoIcon.className : null;
   state.textValue = ui.loginTextbox.value;
   state.passValue = ui.password1Textbox.value;
