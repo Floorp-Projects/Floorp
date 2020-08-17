@@ -1076,7 +1076,9 @@ bool BrowsingContext::IsSandboxedFrom(BrowsingContext* aTarget) {
   // If SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION flag is not on, we are not
   // sandboxed from our top if we have user interaction.
   if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION) &&
-      HasValidTransientUserGestureActivation() && aTarget == Top()) {
+      mCurrentWindowContext &&
+      mCurrentWindowContext->HasValidTransientUserGestureActivation() &&
+      aTarget == Top()) {
     return false;
   }
 
@@ -1165,60 +1167,6 @@ JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
     }
   }
   return val.toObjectOrNull();
-}
-
-void BrowsingContext::NotifyUserGestureActivation() {
-  // Return value of setting synced field should be checked. See bug 1656492.
-  Unused << SetUserActivationState(UserActivation::State::FullActivated);
-}
-
-void BrowsingContext::NotifyResetUserGestureActivation() {
-  // Return value of setting synced field should be checked. See bug 1656492.
-  Unused << SetUserActivationState(UserActivation::State::None);
-}
-
-bool BrowsingContext::HasBeenUserGestureActivated() {
-  return GetUserActivationState() != UserActivation::State::None;
-}
-
-bool BrowsingContext::HasValidTransientUserGestureActivation() {
-  MOZ_ASSERT(mIsInProcess);
-
-  if (GetUserActivationState() != UserActivation::State::FullActivated) {
-    MOZ_ASSERT(mUserGestureStart.IsNull(),
-               "mUserGestureStart should be null if the document hasn't ever "
-               "been activated by user gesture");
-    return false;
-  }
-
-  MOZ_ASSERT(!mUserGestureStart.IsNull(),
-             "mUserGestureStart shouldn't be null if the document has ever "
-             "been activated by user gesture");
-  TimeDuration timeout = TimeDuration::FromMilliseconds(
-      StaticPrefs::dom_user_activation_transient_timeout());
-
-  return timeout <= TimeDuration() ||
-         (TimeStamp::Now() - mUserGestureStart) <= timeout;
-}
-
-bool BrowsingContext::ConsumeTransientUserGestureActivation() {
-  MOZ_ASSERT(mIsInProcess);
-
-  if (!HasValidTransientUserGestureActivation()) {
-    return false;
-  }
-
-  BrowsingContext* top = Top();
-  top->PreOrderWalk([&](BrowsingContext* aContext) {
-    if (aContext->GetUserActivationState() ==
-        UserActivation::State::FullActivated) {
-      // Updating user activation state on a discarded context has no effect.
-      Unused << aContext->SetUserActivationState(
-          UserActivation::State::HasBeenActivated);
-    }
-  });
-
-  return true;
 }
 
 bool BrowsingContext::CanSetOriginAttributes() {
@@ -2056,23 +2004,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>) {
   MOZ_ASSERT(IsTop(),
              "Should only set GVAudibleAutoplayRequestStatus in the top-level "
              "browsing context");
-}
-
-void BrowsingContext::DidSet(FieldIndex<IDX_UserActivationState>) {
-  MOZ_ASSERT_IF(!mIsInProcess, mUserGestureStart.IsNull());
-  USER_ACTIVATION_LOG("Set user gesture activation %" PRIu8
-                      " for %s browsing context 0x%08" PRIx64,
-                      static_cast<uint8_t>(GetUserActivationState()),
-                      XRE_IsParentProcess() ? "Parent" : "Child", Id());
-  if (mIsInProcess) {
-    USER_ACTIVATION_LOG(
-        "Set user gesture start time for %s browsing context 0x%08" PRIx64,
-        XRE_IsParentProcess() ? "Parent" : "Child", Id());
-    mUserGestureStart =
-        (GetUserActivationState() == UserActivation::State::FullActivated)
-            ? TimeStamp::Now()
-            : TimeStamp();
-  }
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_IsActive>, bool aOldValue) {
