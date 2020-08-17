@@ -183,6 +183,17 @@ auto ToResultInvokeMemberFunction(T& aObj, const Func& aFunc, Args&&... aArgs) {
     return mozilla::ToResult((aObj.*aFunc)(std::forward<Args>(aArgs)...));
   }
 }
+
+// For use in MOZ_TO_RESULT_INVOKE.
+template <typename T>
+auto DerefHelper(const T&) -> T;
+
+template <template <class> class SmartPtr, typename T,
+          typename = decltype(*std::declval<const SmartPtr<T>>())>
+auto DerefHelper(const SmartPtr<T>&) -> T;
+
+template <typename T>
+using DerefedType = decltype(DerefHelper(std::declval<T>()));
 }  // namespace detail
 
 template <typename T, typename U, typename... XArgs, typename... Args,
@@ -259,6 +270,17 @@ auto ToResultInvoke(const T* const aObj,
   return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 #endif
+
+// Macro version of ToResultInvoke for member functions. The macro has the
+// advantage of not requiring spelling out the type name, at the expense of
+// having a non-standard syntax. It can be used like this:
+//
+//     nsCOMPtr<nsIFile> file;
+//     auto existsOrErr = MOZ_TO_RESULT_INVOKE(file, Exists);
+#define MOZ_TO_RESULT_INVOKE(obj, methodname, ...)                       \
+  ::mozilla::ToResultInvoke(                                             \
+      (obj), &::mozilla::detail::DerefedType<decltype(obj)>::methodname, \
+      ##__VA_ARGS__)
 
 }  // namespace mozilla
 
