@@ -597,6 +597,11 @@ class MochitestArguments(ArgumentContainer):
           "help": "Run tests in verification mode: Run many times in different "
                   "ways, to see if there are intermittent failures.",
           }],
+        [["--verify-fission"],
+         {"action": "store_true",
+          "default": False,
+          "help": "Run tests once without Fission, once with Fission",
+          }],
         [["--verify-max-time"],
          {"type": int,
           "default": 3600,
