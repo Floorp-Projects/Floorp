@@ -15,6 +15,7 @@ EXTRA_JS_MODULES += [
     'DownloadsCommon.jsm',
     'DownloadsSubview.jsm',
     'DownloadsTaskbar.jsm',
+    'DownloadsViewableInternally.jsm',
     'DownloadsViewUI.jsm',
 ]
 
