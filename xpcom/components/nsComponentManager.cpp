@@ -478,6 +478,12 @@ nsresult nsComponentManagerImpl::Init() {
       break;
   }
 
+  // HACK: Bug 1653908 - We spawn the pref service here on the main thread
+  // before any other thread is launched. This is done to work around a race
+  // we don't fully understand yet.
+  nsCOMPtr<nsIPrefService> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+
   if (loadChromeManifests) {
     // This needs to be called very early, before anything in nsLayoutModule is
     // used, and before any calls are made into the JS engine.
