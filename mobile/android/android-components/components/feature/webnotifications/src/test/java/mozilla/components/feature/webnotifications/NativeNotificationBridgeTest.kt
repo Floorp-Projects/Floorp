@@ -100,7 +100,8 @@ class NativeNotificationBridgeTest {
                 resources = listOf(IconRequest.Resource(
                     url = "https://example.com/large.png",
                     type = IconRequest.Resource.Type.MANIFEST_ICON
-                ))
+                )),
+                isPrivate = true
             )
         )
     }
