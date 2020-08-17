@@ -390,6 +390,20 @@
       </panel>
     </html:template>
 
+    <html:template id="dialogStackTemplate">
+      <stack class="dialogStack tab-dialog-box" hidden="true">
+        <vbox class="dialogTemplate dialogOverlay" align="center" topmost="true" hidden="true">
+          <vbox class="dialogBox"
+                pack="end"
+                role="dialog">
+            <browser class="dialogFrame"
+                    autoscroll="false"
+                    disablehistory="true"/>
+          </vbox>
+        </vbox>
+      </stack>
+    </html:template>
+
     <panel id="sidebarMenu-popup"
            class="cui-widget-panel"
            role="group"

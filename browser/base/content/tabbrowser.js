@@ -801,6 +801,14 @@
       return browser.tabModalPromptBox;
     },
 
+    getTabDialogBox(aBrowser) {
+      let browser = aBrowser || this.selectedBrowser;
+      if (!browser.tabDialogBox) {
+        browser.tabDialogBox = new TabDialogBox(browser);
+      }
+      return browser.tabDialogBox;
+    },
+
     getTabFromAudioEvent(aEvent) {
       if (!aEvent.isTrusted) {
         return null;

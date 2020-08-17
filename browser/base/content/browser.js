@@ -73,6 +73,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SiteSpecificBrowser: "resource:///modules/SiteSpecificBrowserService.jsm",
   SiteSpecificBrowserService:
     "resource:///modules/SiteSpecificBrowserService.jsm",
+  SubDialogManager: "resource://gre/modules/SubDialog.jsm",
   TabModalPrompt: "chrome://global/content/tabprompts.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
@@ -423,8 +424,8 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
         window.windowState == window.STATE_MINIMIZED ||
         (gURLBar.getAttribute("pageproxystate") != "valid" &&
           gURLBar.focused) ||
-        (gBrowser &&
-          gBrowser?.selectedBrowser.hasAttribute("tabmodalChromePromptShowing"))
+        gBrowser?.selectedBrowser.hasAttribute("tabmodalChromePromptShowing") ||
+        gBrowser?.selectedBrowser.hasAttribute("tabDialogShowing")
       );
     };
     return new PopupNotifications(
@@ -8834,6 +8835,126 @@ const SafeBrowsingNotificationBox = {
     }
   },
 };
+
+/**
+ * The TabDialogBox supports opening window dialogs as SubDialogs on tab level.
+ * Dialogs will be queued FIFO and cover the web content.
+ * Tab dialogs are closed when the user reloads or leaves the page.
+ * While a dialog is open PopupNotifications, such as permission prompts, are
+ * suppressed.
+ */
+class TabDialogBox {
+  constructor(browser) {
+    this._weakBrowserRef = Cu.getWeakReference(browser);
+
+    // Create parent element for dialogs
+    let template = document.getElementById("dialogStackTemplate");
+    let dialogStack = template.content.cloneNode(true).firstElementChild;
+    this.browser.parentNode.insertBefore(
+      dialogStack,
+      this.browser.nextElementSibling
+    );
+
+    // Initially the stack only contains the template
+    let dialogTemplate = dialogStack.firstElementChild;
+
+    this._dialogManager = new SubDialogManager({
+      dialogStack,
+      dialogTemplate,
+      orderType: SubDialogManager.ORDER_QUEUE,
+      allowDuplicateDialogs: true,
+      dialogOptions: {
+        consumeOutsideClicks: false,
+      },
+    });
+  }
+
+  /**
+   * Open a dialog on tab level.
+   * @param {String} aURL - URL of the dialog to load in the tab box.
+   * @param {String} [aFeatures] - Comma separated list of window features.
+   * @param {*} [aParams] - Parameters to pass to dialog window.
+   * @returns {Promise} - Resolves once the dialog has been closed.
+   */
+  open(aURL, aFeatures = null, aParams = null) {
+    return new Promise(resolve => {
+      if (!this._dialogManager.hasDialogs) {
+        this._onFirstDialogOpen();
+      }
+
+      // Open dialog and resolve once it has been closed
+      this._dialogManager.open(
+        aURL,
+        aFeatures,
+        aParams,
+        // Closing
+        () => {
+          if (!this._dialogManager.hasDialogs) {
+            this._onLastDialogClose();
+          }
+        },
+        // Resolve on closed callback
+        resolve
+      );
+    });
+  }
+
+  _onFirstDialogOpen() {
+    // Hide PopupNotifications to prevent them from covering up dialogs.
+    this.browser.setAttribute("tabDialogShowing", true);
+    UpdatePopupNotificationsVisibility();
+    // Register listeners
+    this.browser.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+    this.tab?.addEventListener("TabClose", this);
+  }
+
+  _onLastDialogClose() {
+    // Show PopupNotifications again.
+    this.browser.removeAttribute("tabDialogShowing");
+    UpdatePopupNotificationsVisibility();
+    // Clean up listeners
+    this.browser.removeProgressListener(this);
+    this.tab?.removeEventListener("TabClose", this);
+  }
+
+  handleEvent(event) {
+    if (event.type !== "TabClose") {
+      return;
+    }
+    this._dialogManager.abortAll();
+  }
+
+  /**
+   * If the user navigates away or refreshes the page, close all dialogs for
+   * the current browser.
+   */
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+    if (
+      !aWebProgress.isTopLevel ||
+      aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT
+    ) {
+      return;
+    }
+    this._dialogManager.abortAll();
+  }
+
+  get tab() {
+    return gBrowser.getTabForBrowser(this.browser);
+  }
+
+  get browser() {
+    let browser = this._weakBrowserRef.get();
+    if (!browser) {
+      throw new Error("Stale dialog box! The associated browser is gone.");
+    }
+    return browser;
+  }
+}
+
+TabDialogBox.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsIWebProgressListener",
+  "nsISupportsWeakReference",
+]);
 
 function TabModalPromptBox(browser) {
   this._weakBrowserRef = Cu.getWeakReference(browser);

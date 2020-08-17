@@ -952,7 +952,7 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   position: absolute;
 }
 
-browser[tabmodalPromptShowing] {
+browser[tabmodalPromptShowing], browser[tabDialogShowing] {
   -moz-user-focus: none !important;
 }
 
@@ -1437,3 +1437,45 @@ toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabsto
   height: 100%;
   z-index: 2;
 }
+
+/**
+ * Tab Dialogs
+ */
+
+.dialogOverlay {
+  visibility: hidden;
+}
+
+.dialogOverlay[topmost="true"] {
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1;
+}
+
+.dialogBox {
+  background-clip: content-box;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
+  display: -moz-box;
+  margin: 0;
+  /* Make dialogs overlap with upper chrome UI */
+  margin-top: -5px;
+  padding: 0;
+  overflow-x: auto;
+}
+
+.dialogBox[resizable="true"] {
+  resize: both;
+  overflow: hidden;
+  min-height: 20em;
+  min-width: 66ch;
+}
+
+.dialogFrame {
+  margin: 0;
+  -moz-box-flex: 1;
+  /* Default dialog dimensions */
+  width: 66ch;
+}
+
+/**
+ * End Tab Dialogs
+ */
