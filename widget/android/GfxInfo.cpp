@@ -576,8 +576,11 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       NS_LossyConvertUTF16toASCII model(mModel);
 
 #ifdef NIGHTLY_BUILD
-      // On nightly enable all Adreno 5xx GPUs
+      // On Nightly enable Webrender on all Adreno 5xx GPUs
       isUnblocked |= gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0;
+
+      // On Nightly enable Webrender on all Mali-Gxx GPUs
+      isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0;
 #endif
       // Enable Webrender on all Adreno 5xx GPUs, excluding 505 and 506.
       isUnblocked |=
