@@ -38,6 +38,9 @@ class TestWindowChild extends JSWindowActorChild {
       case "done":
         this.done(aMessage.data);
         break;
+      case "noncloneReply":
+        // Return a value which is non-cloneable, like a WindowProxy.
+        return this.contentWindow;
     }
 
     return undefined;
