@@ -10,6 +10,7 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Class representing a parcelable saved logins item
@@ -79,6 +80,16 @@ data class LoginsListState(
     val highlightedItem: SavedLoginsSortingStrategyMenu.Item,
     val duplicateLogins: List<SavedLogin>
 ) : State
+
+fun createInitialLoginsListState(settings: Settings) = LoginsListState(
+    isLoading = true,
+    loginList = emptyList(),
+    filteredItems = emptyList(),
+    searchedForText = null,
+    sortingStrategy = settings.savedLoginsSortingStrategy,
+    highlightedItem = settings.savedLoginsMenuHighlightedItem,
+    duplicateLogins = emptyList() // assume on load there are no dupes
+)
 
 /**
  * Handles changes in the saved logins list, including updates and filtering.

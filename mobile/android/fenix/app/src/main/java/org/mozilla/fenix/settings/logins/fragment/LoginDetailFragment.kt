@@ -41,6 +41,7 @@ import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.LoginsListState
 import org.mozilla.fenix.settings.logins.SavedLogin
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
+import org.mozilla.fenix.settings.logins.createInitialLoginsListState
 import org.mozilla.fenix.settings.logins.interactor.LoginDetailInteractor
 import org.mozilla.fenix.settings.logins.togglePasswordReveal
 import org.mozilla.fenix.settings.logins.view.LoginDetailView
@@ -68,15 +69,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
         val view = inflater.inflate(R.layout.fragment_login_detail, container, false)
         savedLoginsStore = StoreProvider.get(this) {
             LoginsFragmentStore(
-                LoginsListState(
-                    isLoading = true,
-                    loginList = listOf(),
-                    filteredItems = listOf(),
-                    searchedForText = null,
-                    sortingStrategy = requireContext().settings().savedLoginsSortingStrategy,
-                    highlightedItem = requireContext().settings().savedLoginsMenuHighlightedItem,
-                    duplicateLogins = listOf() // assume on load there are no dupes
-                )
+                createInitialLoginsListState(requireContext().settings())
             )
         }
         loginDetailView = LoginDetailView(

@@ -33,11 +33,11 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
-import org.mozilla.fenix.settings.logins.LoginsListState
 import org.mozilla.fenix.settings.logins.SavedLogin
-import org.mozilla.fenix.settings.logins.togglePasswordReveal
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
+import org.mozilla.fenix.settings.logins.createInitialLoginsListState
 import org.mozilla.fenix.settings.logins.interactor.EditLoginInteractor
+import org.mozilla.fenix.settings.logins.togglePasswordReveal
 
 /**
  * Displays the editable saved login information for a single website
@@ -69,15 +69,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
         loginsFragmentStore = StoreProvider.get(this) {
             LoginsFragmentStore(
-                LoginsListState(
-                    isLoading = true,
-                    loginList = listOf(),
-                    filteredItems = listOf(),
-                    searchedForText = null,
-                    sortingStrategy = requireContext().settings().savedLoginsSortingStrategy,
-                    highlightedItem = requireContext().settings().savedLoginsMenuHighlightedItem,
-                    duplicateLogins = listOf()
-                )
+                createInitialLoginsListState(requireContext().settings())
             )
         }
 

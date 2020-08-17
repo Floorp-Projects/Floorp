@@ -35,11 +35,11 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
-import org.mozilla.fenix.settings.logins.LoginsListState
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
 import org.mozilla.fenix.settings.logins.SortingStrategy
 import org.mozilla.fenix.settings.logins.controller.LoginsListController
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
+import org.mozilla.fenix.settings.logins.createInitialLoginsListState
 import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 import org.mozilla.fenix.settings.logins.view.SavedLoginsListView
 
@@ -77,15 +77,7 @@ class SavedLoginsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_saved_logins, container, false)
         savedLoginsStore = StoreProvider.get(this) {
             LoginsFragmentStore(
-                LoginsListState(
-                    isLoading = true,
-                    loginList = listOf(),
-                    filteredItems = listOf(),
-                    searchedForText = null,
-                    sortingStrategy = requireContext().settings().savedLoginsSortingStrategy,
-                    highlightedItem = requireContext().settings().savedLoginsMenuHighlightedItem,
-                    duplicateLogins = listOf() // assume on load there are no dupes
-                )
+                createInitialLoginsListState(requireContext().settings())
             )
         }
 

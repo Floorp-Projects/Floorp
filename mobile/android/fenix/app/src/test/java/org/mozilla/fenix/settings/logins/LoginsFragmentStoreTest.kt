@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.logins
 
+import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.concept.storage.Login
 import mozilla.components.support.test.ext.joinBlocking
@@ -12,6 +13,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mozilla.fenix.utils.Settings
 
 class LoginsFragmentStoreTest {
 
@@ -33,6 +35,26 @@ class LoginsFragmentStoreTest {
         highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
         duplicateLogins = listOf()
     )
+
+    @Test
+    fun `create initial state`() {
+        val settings = mockk<Settings>()
+        every { settings.savedLoginsSortingStrategy } returns SortingStrategy.LastUsed
+        every { settings.savedLoginsMenuHighlightedItem } returns SavedLoginsSortingStrategyMenu.Item.LastUsedSort
+
+        assertEquals(
+            LoginsListState(
+                isLoading = true,
+                loginList = emptyList(),
+                filteredItems = emptyList(),
+                searchedForText = null,
+                sortingStrategy = SortingStrategy.LastUsed,
+                highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
+                duplicateLogins = emptyList()
+            ),
+            createInitialLoginsListState(settings)
+        )
+    }
 
     @Test
     fun `convert login to saved login`() {
