@@ -5948,6 +5948,39 @@ IntrinsicSize nsIFrame::GetIntrinsicSize() {
 /* virtual */
 AspectRatio nsIFrame::GetIntrinsicRatio() { return AspectRatio(); }
 
+static nscoord ComputeInlineSizeFromAspectRatio(
+    WritingMode aWM, const StyleAspectRatio& aAspectRatio, nscoord aBlockSize,
+    const LogicalSize& aBoxSizingAdjustment) {
+  MOZ_ASSERT(aAspectRatio.ratio.IsRatio());
+  // FIXME: We have to handle zero and infinity for aspect-ratio later.
+  // https://github.com/w3c/csswg-drafts/issues/4572
+  MOZ_ASSERT(aAspectRatio.HasFiniteRatio(),
+             "Infinite or zero ratio may have undefined behavior when "
+             "computing the size");
+  return aAspectRatio.ratio.AsRatio()
+             .ToLayoutRatio()
+             .ConvertToWritingMode(aWM)
+             .ApplyTo(aBlockSize + aBoxSizingAdjustment.BSize(aWM)) -
+         aBoxSizingAdjustment.ISize(aWM);
+}
+
+static nscoord ComputeBlockSizeFromAspectRatio(
+    WritingMode aWM, const StyleAspectRatio& aAspectRatio, nscoord aInlineSize,
+    const LogicalSize& aBoxSizingAdjustment) {
+  MOZ_ASSERT(aAspectRatio.ratio.IsRatio());
+  // FIXME: We have to handle zero and infinity for aspect-ratio later.
+  // https://github.com/w3c/csswg-drafts/issues/4572
+  MOZ_ASSERT(aAspectRatio.HasFiniteRatio(),
+             "Infinite or zero ratio may have undefined behavior when "
+             "computing the size");
+  return aAspectRatio.ratio.AsRatio()
+             .ToLayoutRatio()
+             .ConvertToWritingMode(aWM)
+             .Inverted()
+             .ApplyTo(aInlineSize + aBoxSizingAdjustment.ISize(aWM)) -
+         aBoxSizingAdjustment.BSize(aWM);
+}
+
 /* virtual */
 LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
                                   WritingMode aWM, const LogicalSize& aCBSize,
@@ -6044,6 +6077,14 @@ LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
     result.ISize(aWM) = ComputeISizeValue(
         aRenderingContext, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
         boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
+  } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
+             !nsLayoutUtils::IsAutoBSize(*blockStyleCoord,
+                                         aCBSize.BSize(aWM))) {
+    auto bSize = nsLayoutUtils::ComputeBSizeValue(
+        aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
+        blockStyleCoord->AsLengthPercentage());
+    result.ISize(aWM) = ComputeInlineSizeFromAspectRatio(
+        aWM, stylePos->mAspectRatio, bSize, boxSizingAdjust);
   } else if (MOZ_UNLIKELY(isGridItem) && !IS_TRUE_OVERFLOW_CONTAINER(this)) {
     // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
     // 'normal' and clamp it to the CB if requested:
@@ -6124,6 +6165,10 @@ LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
       result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
           blockStyleCoord->AsLengthPercentage());
+    } else if (stylePos->mAspectRatio.HasFiniteRatio() &&
+               result.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
+      result.BSize(aWM) = ComputeBlockSizeFromAspectRatio(
+          aWM, stylePos->mAspectRatio, result.ISize(aWM), boxSizingAdjust);
     } else if (MOZ_UNLIKELY(isGridItem) && blockStyleCoord->IsAuto() &&
                !IS_TRUE_OVERFLOW_CONTAINER(this) &&
                !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisInline
