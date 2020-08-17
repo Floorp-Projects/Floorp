@@ -389,11 +389,13 @@ public class MediaSession {
          * @param session The associated GeckoSession.
          * @param mediaSession The media session for the given GeckoSession.
          * @param enabled True when this media session in in fullscreen mode.
+         * @param meta An instance of {@link ElementMetadata}, if enabled.
          */
         default void onFullscreen(
                 @NonNull GeckoSession session,
                 @NonNull MediaSession mediaSession,
-                boolean enabled) {}
+                boolean enabled,
+                @Nullable ElementMetadata meta) {}
 
         /**
          * Notify on changed picture-in-picture mode state.
@@ -409,6 +411,78 @@ public class MediaSession {
                 boolean enabled) {}
     }
 
+
+    /**
+     * The representation of a media element's metadata.
+     */
+    public static class ElementMetadata {
+        /**
+         * The media source URI.
+         */
+        public final @Nullable String source;
+
+        /**
+         * The duration of the media in seconds.
+         */
+        public final double duration;
+
+        /**
+         * The width of the video in device pixels.
+         */
+        public final long width;
+
+        /**
+         * The height of the video in device pixels.
+         */
+        public final long height;
+
+        /**
+         * The number of audio tracks contained in this element.
+         */
+        public final int audioTrackCount;
+
+        /**
+         * The number of video tracks contained in this element.
+         */
+        public final int videoTrackCount;
+
+        /**
+         * ElementMetadata constructor.
+         *
+         * @param source The media URI.
+         * @param duration The media duration in seconds.
+         * @param width The video width in device pixels.
+         * @param height The video height in device pixels.
+         * @param audioTrackCount The audio track count.
+         * @param videoTrackCount The video track count.
+         */
+        public ElementMetadata(
+                @Nullable final String source,
+                final double duration,
+                final long width,
+                final long height,
+                final int audioTrackCount,
+                final int videoTrackCount) {
+            this.source = source;
+            this.duration = duration;
+            this.width = width;
+            this.height = height;
+            this.audioTrackCount = audioTrackCount;
+            this.videoTrackCount = videoTrackCount;
+        }
+
+        /* package */ static @NonNull ElementMetadata fromBundle(
+                final GeckoBundle bundle) {
+            // Sync with MediaUtils.jsm.
+            return new ElementMetadata(
+                    bundle.getString("src"),
+                    bundle.getDouble("duration", 0.0),
+                    bundle.getLong("width", 0),
+                    bundle.getLong("height", 0),
+                    bundle.getInt("audioTrackCount", 0),
+                    bundle.getInt("videoTrackCount", 0));
+        }
+    }
 
     /**
      * The representation of a media session's metadata.
@@ -736,7 +810,10 @@ public class MediaSession {
                 delegate.onFeatures(mSession, mMediaSession, features);
             } else if (FULLSCREEN_EVENT.equals(event)) {
                 final boolean enabled = message.getBoolean("enabled");
-                delegate.onFullscreen(mSession, mMediaSession, enabled);
+                final ElementMetadata meta =
+                        ElementMetadata.fromBundle(
+                                message.getBundle("metadata"));
+                delegate.onFullscreen(mSession, mMediaSession, enabled, meta);
             } else if (PICTURE_IN_PICTURE_EVENT.equals(event)) {
                 final boolean enabled = message.getBoolean("enabled");
                 delegate.onPictureInPicture(mSession, mMediaSession, enabled);

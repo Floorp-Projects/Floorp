@@ -388,7 +388,6 @@ class nsWindow::MediaSessionSupport final
   ControllerPtr mMediaController;
   MediaEventListener mMetadataChangedListener;
   MediaEventListener mPlaybackChangedListener;
-  MediaEventListener mFullscreenChangedListener;
 
  public:
   typedef java::MediaSession::Controller::Natives<MediaSessionSupport> Base;
@@ -536,35 +535,6 @@ class nsWindow::MediaSessionSupport final
     }
   }
 
-  void FullscreenChanged(bool aIsEnabled) {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    const size_t kBundleSize = 1;
-
-    AutoTArray<jni::String::LocalRef, kBundleSize> keys;
-    AutoTArray<jni::Object::LocalRef, kBundleSize> values;
-
-    keys.AppendElement(
-        jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("enabled")));
-    values.AppendElement(aIsEnabled ? java::sdk::Boolean::TRUE()
-                                    : java::sdk::Boolean::FALSE());
-
-    MOZ_ASSERT(kBundleSize == keys.Length());
-    MOZ_ASSERT(kBundleSize == values.Length());
-
-    auto bundleKeys = jni::ObjectArray::New<jni::String>(kBundleSize);
-    auto bundleValues = jni::ObjectArray::New<jni::Object>(kBundleSize);
-
-    for (size_t i = 0; i < kBundleSize; ++i) {
-      bundleKeys->SetElement(i, keys[i]);
-      bundleValues->SetElement(i, values[i]);
-    }
-    auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
-
-    const char16_t kFullscreen[] = u"GeckoView:MediaSession:Fullscreen";
-    Dispatch(kFullscreen, bundle);
-  }
-
   void OnDetach(already_AddRefed<Runnable> aDisposer) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -607,17 +577,11 @@ class nsWindow::MediaSessionSupport final
     mPlaybackChangedListener = mMediaController->PlaybackChangedEvent().Connect(
         AbstractThread::MainThread(), this,
         &MediaSessionSupport::PlaybackChanged);
-
-    mFullscreenChangedListener =
-        mMediaController->FullScreenChangedEvent().Connect(
-            AbstractThread::MainThread(), this,
-            &MediaSessionSupport::FullscreenChanged);
   }
 
   void UnregisterControllerListeners() {
     mMetadataChangedListener.DisconnectIfExists();
     mPlaybackChangedListener.DisconnectIfExists();
-    mFullscreenChangedListener.DisconnectIfExists();
   }
 
   bool IsActive() const {
