@@ -31,6 +31,7 @@ interface MediaController : EventTarget {
   readonly attribute boolean isActive;
   readonly attribute boolean isAudible;
   readonly attribute boolean isPlaying;
+  readonly attribute MediaSessionPlaybackState playbackState;
 
   [Throws]
   MediaMetadataInit getMetadata();
