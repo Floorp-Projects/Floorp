@@ -9,6 +9,9 @@ const { ExperimentStore } = ChromeUtils.import(
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
 );
+const { Sampling } = ChromeUtils.import(
+  "resource://gre/modules/components-utils/Sampling.jsm"
+);
 
 /**
  * onStartup()
@@ -78,11 +81,16 @@ add_task(async function test_onRecipe_track_slug() {
 add_task(async function test_onRecipe_enroll() {
   const manager = ExperimentFakes.manager();
   const sandbox = sinon.createSandbox();
+  sandbox.stub(manager, "isInBucketAllocation").resolves(true);
+  sandbox.stub(Sampling, "bucketSample").resolves(true);
   sandbox.spy(manager, "enroll");
   sandbox.spy(manager, "updateEnrollment");
 
   const fooRecipe = ExperimentFakes.recipe("foo");
-
+  const storeUpdate = ExperimentFakes.waitForStoreUpdate(
+    manager.store,
+    fooRecipe.slug
+  );
   await manager.onStartup();
   await manager.onRecipe(fooRecipe, "test");
 
@@ -91,6 +99,7 @@ add_task(async function test_onRecipe_enroll() {
     true,
     "should call .enroll() the first time a recipe is seen"
   );
+  await storeUpdate;
   Assert.equal(
     manager.store.has("foo"),
     true,
@@ -103,11 +112,19 @@ add_task(async function test_onRecipe_update() {
   const sandbox = sinon.createSandbox();
   sandbox.spy(manager, "enroll");
   sandbox.spy(manager, "updateEnrollment");
+  sandbox.stub(manager, "isInBucketAllocation").resolves(true);
 
   const fooRecipe = ExperimentFakes.recipe("foo");
+  const storeUpdate = ExperimentFakes.waitForStoreUpdate(
+    manager.store,
+    fooRecipe.slug
+  );
 
   await manager.onStartup();
   await manager.onRecipe(fooRecipe, "test");
+  // onRecipe calls enroll which saves the experiment in the store
+  // but none of them wait on disk operations to finish
+  await storeUpdate;
   // Call again after recipe has already been enrolled
   await manager.onRecipe(fooRecipe, "test");
 
