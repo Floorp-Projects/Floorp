@@ -1112,8 +1112,7 @@ class nsTArray_Impl
             typename = std::enable_if_t<std::is_same_v<Alloc, InfallibleAlloc>,
                                         Allocator>>
   self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther) {
-    ReplaceElementsAtInternal<InfallibleAlloc>(0, Length(), aOther.Elements(),
-                                               aOther.Length());
+    AssignInternal<InfallibleAlloc>(aOther.Elements(), aOther.Length());
     return *this;
   }
 
@@ -1417,13 +1416,16 @@ class nsTArray_Impl
   //
   // Mutation methods
   //
+ private:
+  template <typename ActualAlloc, class Item>
+  typename ActualAlloc::ResultType AssignInternal(const Item* aArray,
+                                                  size_type aArrayLen);
 
+ public:
   template <class Allocator, typename ActualAlloc = Alloc>
   [[nodiscard]] typename ActualAlloc::ResultType Assign(
       const nsTArray_Impl<E, Allocator>& aOther) {
-    return ActualAlloc::ConvertBoolToResultType(
-        ReplaceElementsAtInternal<ActualAlloc>(0, Length(), aOther.Elements(),
-                                               aOther.Length()));
+    return AssignInternal<ActualAlloc>(aOther.Elements(), aOther.Length());
   }
 
   template <class Allocator>
@@ -2386,6 +2388,37 @@ class nsTArray_Impl
                                                          aCount, aValues);
   }
 };
+
+template <typename E, class Alloc>
+template <typename ActualAlloc, class Item>
+auto nsTArray_Impl<E, Alloc>::AssignInternal(const Item* aArray,
+                                             size_type aArrayLen) ->
+    typename ActualAlloc::ResultType {
+  static_assert(std::is_same_v<ActualAlloc, InfallibleAlloc> ||
+                std::is_same_v<ActualAlloc, FallibleAlloc>);
+
+  if constexpr (std::is_same_v<ActualAlloc, InfallibleAlloc>) {
+    ClearAndRetainStorage();
+  }
+  // Adjust memory allocation up-front to catch errors in the fallible case.
+  // We might relocate the elements to be destroyed unnecessarily. This could be
+  // optimized, but would make things more complicated.
+  if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
+          aArrayLen, sizeof(elem_type)))) {
+    return ActualAlloc::ConvertBoolToResultType(false);
+  }
+
+  MOZ_ASSERT_IF(base_type::mHdr == EmptyHdr(), aArrayLen == 0);
+  if (base_type::mHdr != EmptyHdr()) {
+    if constexpr (std::is_same_v<ActualAlloc, FallibleAlloc>) {
+      ClearAndRetainStorage();
+    }
+    AssignRange(0, aArrayLen, aArray);
+    base_type::mHdr->mLength = aArrayLen;
+  }
+
+  return ActualAlloc::ConvertBoolToResultType(true);
+}
 
 template <typename E, class Alloc>
 template <typename ActualAlloc, class Item>

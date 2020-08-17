@@ -487,6 +487,28 @@ TEST(TArray, int_Assign)
   ASSERT_EQ(DummyArray(), array2);
 }
 
+TEST(TArray, int_Assign_FromEmpty_ToNonEmpty)
+{
+  nsTArray<int> array;
+  array.AppendElement(42);
+
+  const nsTArray<int> empty;
+  array.Assign(empty);
+
+  ASSERT_TRUE(array.IsEmpty());
+}
+
+TEST(TArray, int_Assign_FromEmpty_ToNonEmpty_Fallible)
+{
+  nsTArray<int> array;
+  array.AppendElement(42);
+
+  const nsTArray<int> empty;
+  ASSERT_TRUE(array.Assign(empty, fallible));
+
+  ASSERT_TRUE(array.IsEmpty());
+}
+
 TEST(TArray, int_AssignmentOperatorSelfAssignment)
 {
   CopyableTArray<int> array;
