@@ -39,11 +39,13 @@ const TEST_TOP_DOMAIN = "example.com";
 
 const TEST_TOP_PAGE = "trackerFrame.html";
 const TRACKER_SERVER = "trackerFrame.sjs";
+const SET_COOKIE_PAGE = "cookieSetterPage.html";
 
 const TEST_PATH = "/tests/toolkit/components/url-classifier/tests/mochitest/";
 
 const TEST_TOP_SITE = "https:///" + TEST_TOP_DOMAIN + TEST_PATH;
 const TRACKER_SITE = "https://" + TRACKER_DOMAIN  + TEST_PATH;
+const TRACKER_SITE2 = "http://" + TRACKER_DOMAIN  + TEST_PATH;
 const TRACKER_SJS = "https://" + TRACKER_DOMAIN + TEST_PATH + TRACKER_SERVER;
 
 // This function ask the server to set the cookie
@@ -52,7 +54,26 @@ async function setupAndRun(hasCookie, topLevelSite = TEST_TOP_SITE) {
     credentials: "include",
   });
 
-  return new Promise(resolve => {
+  window.open(TRACKER_SITE2 + SET_COOKIE_PAGE);
+
+  let p1 = new Promise(resolve => {
+    window.onmessage = function(e) {
+      if (e.data.result == "websocket-unexpected-error") {
+        ok(false, "websocket error when " + e.data.url);
+      } else {
+        let description = "Tracker request " + e.data.id + "received " +
+          (hasCookie ? "with" : "without") + " cookie when " + e.data.url;
+        if (hasCookie) {
+          ok(e.data.result == "foo=bar", description);
+        } else {
+          ok(e.data.result == "(none)", description);
+        }
+        resolve();
+      }
+    };
+  });
+
+  let p2 = new Promise(resolve => {
     let win;
     let query = hasCookie ? "with-cookie" : "without-cookie";
     fetch(TRACKER_SJS + "?callback=" + query).then(r => {
@@ -70,6 +91,8 @@ async function setupAndRun(hasCookie, topLevelSite = TEST_TOP_SITE) {
 
     win = window.open(topLevelSite + TEST_TOP_PAGE);
   });
+
+  return Promise.all([p1, p2]);
 }
 
 async function cleanup(topLevelSite = TEST_TOP_SITE) {
@@ -92,57 +115,75 @@ async function cleanup(topLevelSite = TEST_TOP_SITE) {
   await clearServiceWorker();
 }
 
-async function runTests() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["urlclassifier.trackingAnnotationTable.testEntries", TRACKER_DOMAIN],
-    ["urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple"],
-    ["network.cookie.cookieBehavior", 4],
-    ["privacy.trackingprotection.enabled", false ],
-    ["privacy.trackingprotection.annotate_channels", false],
-    ["browser.send_pings", true],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true],
-  ]});
 
-  await classifierHelper.waitForInit();
-
-  let hasCookie;
-
+async function testAnnotationOff() {
   info("Test all requests should be sent with cookies when ETP is off");
-  hasCookie = true;
-  await setupAndRun(hasCookie);
-  await cleanup();
 
+  let expectCookie = true;
+  await setupAndRun(expectCookie);
+  await cleanup();
+}
+
+async function testAnnotationOn() {
   info("Test all requests should be sent without cookies when ETP is on");
+
   await SpecialPowers.pushPrefEnv({set: [
     [ "privacy.trackingprotection.annotate_channels", true],
   ]});
 
-  hasCookie = false;
-  await setupAndRun(hasCookie);
+  let expectCookie = false;
+  await setupAndRun(expectCookie);
   await cleanup();
+}
 
+async function testInWhitelist() {
   info("Test all requests should be sent with cookies when top-level is in the whitelist");
+
   await classifierHelper.addUrlToDB([{
     url: TEST_TOP_DOMAIN + "/?resource=" + TRACKER_DOMAIN,
     db: "test-trackwhite-simple",
   }]);
 
-  hasCookie = true;
-  await setupAndRun(hasCookie);
+  let expectCookie = true;
+  await setupAndRun(expectCookie);
   await cleanup();
+}
 
+async function testFirstParty() {
   info("Test all requests should be sent with cookies when the tracker is a first-party");
-  hasCookie = true;
-  await setupAndRun(hasCookie, TRACKER_SITE);
-  await cleanup(TRACKER_SITE);
 
-  SimpleTest.finish();
+  let expectCookie = true;
+  await setupAndRun(expectCookie, TRACKER_SITE);
+  await cleanup(TRACKER_SITE);
+}
+
+function runTests() {
+  classifierHelper.waitForInit()
+    .then(testAnnotationOff)
+    .then(testAnnotationOn)
+    .then(testInWhitelist)
+    .then(testFirstParty)
+    .then(function() {
+      SimpleTest.finish();
+    }).catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+      SimpleTest.finish();
+    });
 }
 
 SimpleTest.waitForExplicitFinish();
-runTests();
+SpecialPowers.pushPrefEnv({set: [
+  ["urlclassifier.trackingAnnotationTable.testEntries", TRACKER_DOMAIN],
+  ["urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple"],
+  ["network.cookie.cookieBehavior", 4],
+  ["privacy.trackingprotection.enabled", false ],
+  ["privacy.trackingprotection.annotate_channels", false],
+  ["browser.send_pings", true],
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
+  ["network.websocket.allowInsecureFromHTTPS", true],
+]}, runTests);
 
 </script>
 
