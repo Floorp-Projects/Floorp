@@ -196,8 +196,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     }
 
     this.traits = {
-      // Supports new cached messages structure for 77+
-      newCacheStructure: true,
       // Supports retrieving blocked urls
       blockedUrls: true,
     };
