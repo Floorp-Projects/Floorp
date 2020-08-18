@@ -43,29 +43,13 @@ module.exports = async function({
   // /!\ The actor implementation requires to call startListeners("PageError") first /!\
   let { messages } = await webConsoleFront.getCachedMessages(["PageError"]);
 
-  // On older server (< v77), we're also getting LogMessage cached messages, so we need
-  // to ignore those.
   // On server < v79, we're also getting CSS Messages that we need to filter out.
-  messages = messages.filter(message => {
-    return (
-      (webConsoleFront.traits.newCacheStructure ||
-        !message._type ||
-        message._type == "PageError") &&
-      message.pageError.category !== MESSAGE_CATEGORY.CSS_PARSER
-    );
-  });
+  messages = messages.filter(
+    message => message.pageError.category !== MESSAGE_CATEGORY.CSS_PARSER
+  );
 
-  messages = messages.map(message => {
-    // Handling cached messages for servers older than Firefox 78.
-    // Wrap the message into a `pageError` attribute, to match `pageError` behavior
-    if (message._type) {
-      return {
-        pageError: message,
-        resourceType: ResourceWatcher.TYPES.ERROR_MESSAGE,
-      };
-    }
+  messages.forEach(message => {
     message.resourceType = ResourceWatcher.TYPES.ERROR_MESSAGE;
-    return message;
   });
   // Cached messages don't have the same shape as live messages,
   // so we need to transform them.
