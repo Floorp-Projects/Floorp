@@ -4,13 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 55.0.0-SNAPSHOT (In Development)
+# 56.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/114?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v55.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/116?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+
+# 55.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/115?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v55.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v55.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v55.0.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Fixed issue [#7983](https://github.com/mozilla-mobile/android-components/issues/7983), crash when a file name wasn't provided when uploading a file.
@@ -18,6 +27,12 @@ permalink: /changelog/
 * **service-glean**
   * Glean was updated to v32.1.0
     * The rate limiter now allows 15, rather than 10, pings per minute.
+
+* **storage-sync**
+  * Fixed [issue #8011](https://github.com/mozilla-mobile/android-components/issues/8011) PlacesConnectionBusy: Error executing SQL: database is locked.
+
+* **feature-app-links**
+  * Fixed [issue #8122](https://github.com/mozilla-mobile/android-components/issues/8122) App link redirecting to Play Store, rather than to installed app.
 
 # 54.0.0
 
