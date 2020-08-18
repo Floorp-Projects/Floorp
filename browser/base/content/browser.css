@@ -662,12 +662,12 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   color: -moz-fieldText;
   min-height: 2.6666em;
   border-top: 1px solid rgba(38,38,38,.15);
-  background-color: hsla(0,0%,80%,.35); /* match arrowpanel-dimmed */;
+  background-color: hsla(0,0%,80%,.35); /* match light theme arrowpanel-dimmed */;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"]:hover,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"][selected] {
-  background-color: hsla(0,0%,80%,.5); /* match arrowpanel-dimmed-further */
+  background-color: hsla(0,0%,80%,.5); /* match light theme arrowpanel-dimmed-further */
 }
 
 /* Define the minimum width based on the style of result rows.
