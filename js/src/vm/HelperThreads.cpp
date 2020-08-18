@@ -1179,33 +1179,20 @@ void GlobalHelperThreadState::finishThreads() {
 }
 
 bool GlobalHelperThreadState::ensureContextListForThreadCount() {
+  AutoLockHelperThreadState lock;
+
   if (helperContexts_.length() >= threadCount) {
     return true;
   }
-  AutoLockHelperThreadState lock;
 
-  // SetFakeCPUCount() may cause the context list to contain less contexts
-  // than there are helper threads, which could potentially lead to a crash.
-  // Append more initialized contexts to the list until there are enough.
   while (helperContexts_.length() < threadCount) {
-    UniquePtr<JSContext> cx =
-        js::MakeUnique<JSContext>(nullptr, JS::ContextOptions());
-    if (!cx) {
-      return false;
-    }
-
-    // To initialize context-specific protected data, the context must
-    // temporarily set itself to the main thread. After initialization,
-    // cx can clear itself from the thread.
-    cx->setHelperThread(lock);
-    if (!cx->init(ContextKind::HelperThread)) {
-      return false;
-    }
-    cx->clearHelperThread(lock);
-    if (!helperContexts_.append(cx.release())) {
+    auto cx = js::MakeUnique<JSContext>(nullptr, JS::ContextOptions());
+    if (!cx || !cx->init(ContextKind::HelperThread) ||
+        !helperContexts_.append(cx.release())) {
       return false;
     }
   }
+
   return true;
 }
 
@@ -1222,11 +1209,7 @@ JSContext* GlobalHelperThreadState::getFirstUnusedContext(
 void GlobalHelperThreadState::destroyHelperContexts(
     AutoLockHelperThreadState& lock) {
   while (helperContexts_.length() > 0) {
-    JSContext* cx = helperContexts_.popCopy();
-    // Before cx can be destroyed, it has to set itself to the main thread.
-    // This enables it to pass its context-specific data checks.
-    cx->setHelperThread(lock);
-    js_delete(cx);
+    js_delete(helperContexts_.popCopy());
   }
 }
 
