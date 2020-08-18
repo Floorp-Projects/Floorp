@@ -3136,6 +3136,12 @@ PreferenceServiceReporter::CollectReports(
     sizes.mMisc += mallocSizeOf(gSharedMap);
   }
 
+#ifdef ACCESS_COUNTS
+  if (gAccessCounts) {
+    sizes.mMisc += gAccessCounts->ShallowSizeOfIncludingThis(mallocSizeOf);
+  }
+#endif
+
   MOZ_COLLECT_REPORT("explicit/preferences/hash-table", KIND_HEAP, UNITS_BYTES,
                      sizes.mHashTable, "Memory used by libpref's hash table.");
 
