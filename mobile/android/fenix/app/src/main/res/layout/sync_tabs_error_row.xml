@@ -19,6 +19,7 @@
         android:layout_marginTop="4dp"
         android:textSize="14sp"
         android:textAlignment="viewStart"
+        android:textColor="@color/tab_tray_item_text_normal_theme"
         tools:text="@string/synced_tabs_no_tabs"/>
 
     <com.google.android.material.button.MaterialButton

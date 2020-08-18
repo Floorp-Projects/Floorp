@@ -11,6 +11,7 @@ import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -21,7 +22,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @RunWith(FenixRobolectricTestRunner::class)
 class SyncedTabsAdapterTest {
 
-    private lateinit var listener: (Tab) -> Unit
+    private lateinit var listener: SyncedTabsView.Listener
     private lateinit var adapter: SyncedTabsAdapter
 
     private val oneTabDevice = SyncedDeviceTabs(
@@ -77,10 +78,12 @@ class SyncedTabsAdapterTest {
     fun `updateData() adds items for each device and tab`() {
         assertEquals(0, adapter.itemCount)
 
-        adapter.updateData(listOf(
-            oneTabDevice,
-            threeTabDevice
-        ))
+        adapter.updateData(
+            listOf(
+                oneTabDevice,
+                threeTabDevice
+            )
+        )
 
         assertEquals(5, adapter.itemCount)
         assertEquals(SyncedTabsViewHolder.DeviceViewHolder.LAYOUT_ID, adapter.getItemViewType(0))

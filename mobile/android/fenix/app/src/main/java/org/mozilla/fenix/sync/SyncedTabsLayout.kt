@@ -7,7 +7,6 @@ package org.mozilla.fenix.sync
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.FrameLayout
-import androidx.annotation.StringRes
 import androidx.fragment.app.findFragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
@@ -18,8 +17,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
+import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
+import org.mozilla.fenix.sync.ext.toAdapterItem
+import org.mozilla.fenix.sync.ext.toStringRes
 import java.lang.IllegalStateException
 
 class SyncedTabsLayout @JvmOverloads constructor(
@@ -30,7 +32,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
 
     override var listener: SyncedTabsView.Listener? = null
 
-    private val adapter = SyncedTabsAdapter { listener?.onTabClicked(it) }
+    private val adapter = SyncedTabsAdapter(ListenerDelegate { listener })
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
     init {
@@ -53,8 +55,8 @@ class SyncedTabsLayout @JvmOverloads constructor(
                 null
             }
 
-            val descriptionResId = stringResourceForError(error)
-            val errorItem = getErrorItem(navController, error, descriptionResId)
+            val descriptionResId = error.toStringRes()
+            val errorItem = error.toAdapterItem(descriptionResId, navController)
 
             val errorList: List<SyncedTabsAdapter.AdapterItem> = listOf(errorItem)
             adapter.submitList(errorList)
@@ -96,27 +98,21 @@ class SyncedTabsLayout @JvmOverloads constructor(
             SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE,
             SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> true
         }
+    }
+}
 
-        internal fun stringResourceForError(error: SyncedTabsView.ErrorType) = when (error) {
-            SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE -> R.string.synced_tabs_connect_another_device
-            SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE -> R.string.synced_tabs_enable_tab_syncing
-            SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> R.string.synced_tabs_sign_in_message
-            SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION -> R.string.synced_tabs_reauth
-            SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> R.string.synced_tabs_no_tabs
-        }
+/**
+ * We have to do this weird daisy-chaining of callbacks because the listener is nullable and
+ * when we get a null reference, we never get a new binding to the non-null listener.
+ */
+class ListenerDelegate(
+    private val listener: (() -> SyncedTabsView.Listener?)
+) : SyncedTabsView.Listener {
+    override fun onRefresh() {
+        listener.invoke()?.onRefresh()
+    }
 
-        internal fun getErrorItem(
-            navController: NavController?,
-            error: SyncedTabsView.ErrorType,
-            @StringRes stringResId: Int
-        ): SyncedTabsAdapter.AdapterItem = when (error) {
-            SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE,
-            SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE,
-            SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION,
-            SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> SyncedTabsAdapter.AdapterItem
-                .Error(descriptionResId = stringResId)
-            SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> SyncedTabsAdapter.AdapterItem
-                .Error(descriptionResId = stringResId, navController = navController)
-        }
+    override fun onTabClicked(tab: Tab) {
+        listener.invoke()?.onTabClicked(tab)
     }
 }

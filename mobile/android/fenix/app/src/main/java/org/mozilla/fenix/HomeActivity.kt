@@ -100,6 +100,7 @@ import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirection
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
 import org.mozilla.fenix.sync.SyncedTabsFragmentDirections
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
+import org.mozilla.fenix.tabtray.TabTrayDialogFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
@@ -597,6 +598,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             AddonPermissionsDetailsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromLoginDetailFragment ->
             LoginDetailFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromTabTray ->
+            TabTrayDialogFragmentDirections.actionGlobalBrowser(customTabSessionId)
     }
 
     /**

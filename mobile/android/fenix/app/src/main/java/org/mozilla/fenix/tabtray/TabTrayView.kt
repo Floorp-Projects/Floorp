@@ -16,7 +16,8 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
-import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -35,7 +36,10 @@ import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.browser.tabstray.TabViewHolder
+import mozilla.components.feature.syncedtabs.SyncedTabsFeature
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -58,9 +62,10 @@ class TabTrayView(
     private val interactor: TabTrayInteractor,
     isPrivate: Boolean,
     startingInLandscape: Boolean,
-    lifecycleScope: LifecycleCoroutineScope,
+    lifecycleOwner: LifecycleOwner,
     private val filterTabs: (Boolean) -> Unit
 ) : LayoutContainer, TabLayout.OnTabSelectedListener {
+    val lifecycleScope = lifecycleOwner.lifecycleScope
     val fabView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray_fab, container, true)
 
@@ -79,13 +84,18 @@ class TabTrayView(
     private var tabsTouchHelper: TabsTouchHelper
     private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor, isPrivate)
 
+    private val syncedTabsController = SyncedTabsController(view)
+    private val syncedTabsFeature = ViewBoundFeatureWrapper<SyncedTabsFeature>()
+
     private var hasLoaded = false
 
     override val containerView: View?
         get() = container
 
+    private val components = container.context.components
+
     init {
-        container.context.components.analytics.metrics.track(Event.TabsTrayOpened)
+        components.analytics.metrics.track(Event.TabsTrayOpened)
 
         toggleFabText(isPrivate)
 
@@ -102,7 +112,7 @@ class TabTrayView(
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-                    container.context.components.analytics.metrics.track(Event.TabsTrayClosed)
+                    components.analytics.metrics.track(Event.TabsTrayClosed)
                     interactor.onTabTrayDismissed()
                 }
             }
@@ -135,8 +145,20 @@ class TabTrayView(
 
         setTopOffset(startingInLandscape)
 
-        val concatAdapter = ConcatAdapter(tabsAdapter)
+        syncedTabsFeature.set(
+            feature = SyncedTabsFeature(
+                context = container.context,
+                storage = components.backgroundServices.syncedTabsStorage,
+                accountManager = components.backgroundServices.accountManager,
+                view = syncedTabsController,
+                lifecycleOwner = lifecycleOwner,
+                onTabClicked = ::handleTabClicked
+            ),
+            owner = lifecycleOwner,
+            view = view
+        )
 
+        val concatAdapter = ConcatAdapter(tabsAdapter)
         view.tabsTray.apply {
             layoutManager = LinearLayoutManager(container.context).apply {
                 reverseLayout = true
@@ -155,6 +177,9 @@ class TabTrayView(
             tabsAdapter.onTabsUpdated = {
                 // Put the 'Add to collections' button after the tabs have loaded.
                 concatAdapter.addAdapter(0, collectionsButtonAdapter)
+
+                // Put the Synced Tabs adapter at the end.
+                concatAdapter.addAdapter(0, syncedTabsController.adapter)
 
                 if (hasAccessibilityEnabled) {
                     tabsAdapter.notifyDataSetChanged()
@@ -193,7 +218,7 @@ class TabTrayView(
             }
 
         view.tab_tray_overflow.setOnClickListener {
-            container.context.components.analytics.metrics.track(Event.TabsTrayMenuOpened)
+            components.analytics.metrics.track(Event.TabsTrayMenuOpened)
             menu = tabTrayItemMenu.menuBuilder.build(container.context)
             menu?.show(it)
                 ?.also { pu ->
@@ -207,6 +232,10 @@ class TabTrayView(
         }
 
         adjustNewTabButtonsForNormalMode()
+    }
+
+    private fun handleTabClicked(tab: SyncTab) {
+        interactor.onSyncedTabClicked(tab)
     }
 
     private fun adjustNewTabButtonsForNormalMode() {
@@ -234,7 +263,7 @@ class TabTrayView(
             Event.NewTabTapped
         }
 
-        container.context.components.analytics.metrics.track(eventToSend)
+        components.analytics.metrics.track(eventToSend)
     }
 
     fun expand() {
@@ -261,17 +290,14 @@ class TabTrayView(
         scrollToTab(view.context.components.core.store.state.selectedTabId)
 
         if (isPrivateModeSelected) {
-            container.context.components.analytics.metrics.track(Event.TabsTrayPrivateModeTapped)
+            components.analytics.metrics.track(Event.TabsTrayPrivateModeTapped)
         } else {
-            container.context.components.analytics.metrics.track(Event.TabsTrayNormalModeTapped)
+            components.analytics.metrics.track(Event.TabsTrayNormalModeTapped)
         }
     }
 
-    override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/
-    }
-
-    override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/
-    }
+    override fun onTabReselected(tab: TabLayout.Tab?) = Unit
+    override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
 
     var mode: Mode = Mode.Normal
         private set
@@ -513,7 +539,9 @@ class TabTrayView(
 
             // We offset the tab index by the number of items in the other adapters.
             // We add the offset, because the layoutManager is initialized with `reverseLayout`.
-            val recyclerViewIndex = selectedBrowserTabIndex + collectionsButtonAdapter.itemCount
+            val recyclerViewIndex = selectedBrowserTabIndex +
+                collectionsButtonAdapter.itemCount +
+                syncedTabsController.adapter.itemCount
 
             layoutManager?.scrollToPosition(recyclerViewIndex)
         }

@@ -9,10 +9,12 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -30,6 +32,7 @@ interface TabTrayController {
     fun onNewTabTapped(private: Boolean)
     fun onTabTrayDismissed()
     fun onShareTabsClicked(private: Boolean)
+    fun onSyncedTabClicked(syncTab: SyncTab)
     fun onSaveToCollectionClicked(selectedTabs: Set<Tab>)
     fun onCloseAllTabsClicked(private: Boolean)
     fun handleBackPressed(): Boolean
@@ -59,6 +62,7 @@ interface TabTrayController {
  */
 @Suppress("TooManyFunctions")
 class DefaultTabTrayController(
+    private val activity: HomeActivity,
     private val profiler: Profiler?,
     private val sessionManager: SessionManager,
     private val browsingModeManager: BrowsingModeManager,
@@ -115,6 +119,14 @@ class DefaultTabTrayController(
             data = data.toTypedArray()
         )
         navController.navigate(directions)
+    }
+
+    override fun onSyncedTabClicked(syncTab: SyncTab) {
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = syncTab.active().url,
+            newTab = true,
+            from = BrowserDirection.FromTabTray
+        )
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

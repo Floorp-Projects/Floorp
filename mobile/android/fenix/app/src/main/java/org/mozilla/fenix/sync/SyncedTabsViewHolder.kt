@@ -7,29 +7,36 @@ package org.mozilla.fenix.sync
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.sync_tabs_error_row.view.*
 import kotlinx.android.synthetic.main.sync_tabs_list_item.view.*
 import kotlinx.android.synthetic.main.view_synced_tabs_group.view.*
-import mozilla.components.browser.storage.sync.Tab
+import kotlinx.android.synthetic.main.view_synced_tabs_title.view.*
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.sync.SyncedTabsAdapter.AdapterItem
 
+/**
+ * The various view-holders that can be found in a [SyncedTabsAdapter]. For more
+ * descriptive information on the different types, see the docs for [AdapterItem].
+ */
 sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    abstract fun <T : AdapterItem> bind(item: T, interactor: (Tab) -> Unit)
+    abstract fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener)
 
     class TabViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
 
-        override fun <T : AdapterItem> bind(item: T, interactor: (Tab) -> Unit) {
+        override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
             bindTab(item as AdapterItem.Tab)
 
             itemView.setOnClickListener {
-                interactor(item.tab)
+                interactor.onTabClicked(item.tab)
             }
         }
 
@@ -46,7 +53,7 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
 
     class ErrorViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
 
-        override fun <T : AdapterItem> bind(item: T, interactor: (Tab) -> Unit) {
+        override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
             val errorItem = item as AdapterItem.Error
             setErrorMargins()
 
@@ -69,7 +76,7 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
 
     class DeviceViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
 
-        override fun <T : AdapterItem> bind(item: T, interactor: (Tab) -> Unit) {
+        override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
             bindHeader(item as AdapterItem.Device)
         }
 
@@ -90,6 +97,36 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
 
         companion object {
             const val LAYOUT_ID = R.layout.view_synced_tabs_group
+        }
+    }
+
+    class NoTabsViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
+        override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) = Unit
+
+        companion object {
+            const val LAYOUT_ID = R.layout.view_synced_tabs_no_item
+        }
+    }
+
+    class TitleViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
+
+        override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
+            itemView.refresh_icon.setOnClickListener { v ->
+                val rotation = AnimationUtils.loadAnimation(
+                    itemView.context,
+                    R.anim.full_rotation
+                ).apply {
+                    repeatCount = Animation.ABSOLUTE
+                }
+
+                v.startAnimation(rotation)
+
+                interactor.onRefresh()
+            }
+        }
+
+        companion object {
+            const val LAYOUT_ID = R.layout.view_synced_tabs_title
         }
     }
 

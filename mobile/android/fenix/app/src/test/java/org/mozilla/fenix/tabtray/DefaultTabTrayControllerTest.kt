@@ -26,6 +26,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -34,6 +36,7 @@ import org.mozilla.fenix.ext.sessionsOfType
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultTabTrayControllerTest {
+    private val activity: HomeActivity = mockk(relaxed = true)
     private val profiler: Profiler? = mockk(relaxed = true)
     private val navController: NavController = mockk()
     private val sessionManager: SessionManager = mockk(relaxed = true)
@@ -81,6 +84,7 @@ class DefaultTabTrayControllerTest {
         every { tabCollection.title } returns "Collection title"
 
         controller = DefaultTabTrayController(
+            activity = activity,
             profiler = profiler,
             sessionManager = sessionManager,
             browsingModeManager = browsingModeManager,
@@ -153,6 +157,15 @@ class DefaultTabTrayControllerTest {
 
         verify {
             dismissTabTrayAndNavigateHome(any())
+        }
+    }
+
+    @Test
+    fun onSyncedTabClicked() {
+        controller.onSyncedTabClicked(mockk(relaxed = true))
+
+        verify {
+            activity.openToBrowserAndLoad(any(), true, BrowserDirection.FromTabTray)
         }
     }
 

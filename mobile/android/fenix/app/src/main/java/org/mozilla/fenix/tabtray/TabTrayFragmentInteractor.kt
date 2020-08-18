@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabtray
 
 import mozilla.components.concept.tabstray.Tab
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 
 @Suppress("TooManyFunctions")
 interface TabTrayInteractor {
@@ -32,6 +33,11 @@ interface TabTrayInteractor {
      * Called when user clicks the close all tabs button.
      */
     fun onCloseAllTabsClicked(private: Boolean)
+
+    /**
+     * Called when the user clicks on a synced tab entry.
+     */
+    fun onSyncedTabClicked(syncTab: SyncTab)
 
     /**
      * Called when the physical back button is clicked.
@@ -87,6 +93,10 @@ class TabTrayFragmentInteractor(private val controller: TabTrayController) : Tab
 
     override fun onCloseAllTabsClicked(private: Boolean) {
         controller.onCloseAllTabsClicked(private)
+    }
+
+    override fun onSyncedTabClicked(syncTab: SyncTab) {
+        controller.onSyncedTabClicked(syncTab)
     }
 
     override fun onBackPressed(): Boolean {
