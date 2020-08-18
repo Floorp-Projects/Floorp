@@ -162,6 +162,7 @@ TEST(QuotaCommon_TryVar, Decl)
   QM_TRY_VAR(int32_t x, task(), QM_VOID);
 
   static_assert(std::is_same_v<decltype(x), int32_t>);
+
   EXPECT_EQ(x, 42);
 }
 
@@ -172,6 +173,7 @@ TEST(QuotaCommon_TryVar, ConstDecl)
   QM_TRY_VAR(const int32_t x, task(), QM_VOID);
 
   static_assert(std::is_same_v<decltype(x), const int32_t>);
+
   EXPECT_EQ(x, 42);
 }
 
@@ -184,6 +186,21 @@ TEST(QuotaCommon_TryVar, SameScopeDecl)
 
   QM_TRY_VAR(const int32_t y, task(), QM_VOID);
   EXPECT_EQ(y, 42);
+}
+
+TEST(QuotaCommon_TryVar, ParenDecl)
+{
+  auto task = []() -> Result<std::pair<int32_t, bool>, nsresult> {
+    return std::pair{42, true};
+  };
+
+  QM_TRY_VAR((const auto [x, y]), task(), QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), const int32_t>);
+  static_assert(std::is_same_v<decltype(y), const bool>);
+
+  EXPECT_EQ(x, 42);
+  EXPECT_EQ(y, true);
 }
 
 TEST(QuotaCommon_OkIf, True)
