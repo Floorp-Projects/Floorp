@@ -624,7 +624,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
         }
 
         RootedWasmTableObject obj(cx, &v.toObject().as<WasmTableObject>());
-        if (obj->table().kind() != tables[index].kind) {
+        if (obj->table().elemType() != tables[index].elemType) {
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                    JSMSG_WASM_BAD_TBL_TYPE_LINK);
           return false;
@@ -2465,7 +2465,7 @@ void WasmTableObject::trace(JSTracer* trc, JSObject* obj) {
 /* static */
 WasmTableObject* WasmTableObject::create(JSContext* cx, uint32_t initialLength,
                                          Maybe<uint32_t> maximumLength,
-                                         TableKind tableKind,
+                                         wasm::RefType tableType,
                                          HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmTableObject obj(
@@ -2476,7 +2476,7 @@ WasmTableObject* WasmTableObject::create(JSContext* cx, uint32_t initialLength,
 
   MOZ_ASSERT(obj->isNewborn());
 
-  TableDesc td(tableKind, initialLength, maximumLength,
+  TableDesc td(tableType, initialLength, maximumLength, /*isAsmJS*/ false,
                /*importedOrExported=*/true);
 
   SharedTable table = Table::create(cx, td, obj);
@@ -2534,10 +2534,10 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  TableKind tableKind;
+  RefType tableType;
   if (StringEqualsLiteral(elementLinearStr, "anyfunc") ||
       StringEqualsLiteral(elementLinearStr, "funcref")) {
-    tableKind = TableKind::FuncRef;
+    tableType = RefType::func();
 #ifdef ENABLE_WASM_REFTYPES
   } else if (StringEqualsLiteral(elementLinearStr, "externref")) {
     if (!ReftypesAvailable(cx)) {
@@ -2545,7 +2545,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
                                JSMSG_WASM_BAD_ELEMENT);
       return false;
     }
-    tableKind = TableKind::AnyRef;
+    tableType = RefType::extern_();
 #endif
   } else {
 #ifdef ENABLE_WASM_REFTYPES
@@ -2588,7 +2588,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedWasmTableObject table(
-      cx, WasmTableObject::create(cx, initialLength, maximumLength, tableKind,
+      cx, WasmTableObject::create(cx, initialLength, maximumLength, tableType,
                                   proto));
   if (!table) {
     return false;
@@ -2652,7 +2652,7 @@ bool WasmTableObject::getImpl(JSContext* cx, const CallArgs& args) {
 
   switch (table.repr()) {
     case TableRepr::Func: {
-      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
       RootedFunction fun(cx);
       if (!table.getFuncRef(cx, index, &fun)) {
         return false;
@@ -2695,17 +2695,15 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
   RootedValue fillValue(cx, args[1]);
   RootedFunction fun(cx);
   RootedAnyRef any(cx, AnyRef::null());
-  if (!CheckRefType(cx, ToElemValType(table.kind()).refTypeKind(), fillValue,
-                    &fun, &any)) {
+  if (!CheckRefType(cx, table.elemType().kind(), fillValue, &fun, &any)) {
     return false;
   }
-  switch (table.kind()) {
-    case TableKind::AsmJS:
-      MOZ_CRASH("Should not happen");
-    case TableKind::FuncRef:
+  switch (table.elemType().kind()) {
+    case RefType::Func:
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
       table.fillFuncRef(index, 1, FuncRef::fromJSFunction(fun), cx);
       break;
-    case TableKind::AnyRef:
+    case RefType::Extern:
       table.fillAnyRef(index, 1, any);
       break;
   }
@@ -2757,13 +2755,12 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
   if (!fillValue.isNull()) {
     RootedFunction fun(cx);
     RootedAnyRef any(cx, AnyRef::null());
-    if (!CheckRefType(cx, ToElemValType(table.kind()).refTypeKind(), fillValue,
-                      &fun, &any)) {
+    if (!CheckRefType(cx, table.elemType().kind(), fillValue, &fun, &any)) {
       return false;
     }
     switch (table.repr()) {
       case TableRepr::Func:
-        MOZ_ASSERT(table.kind() == TableKind::FuncRef);
+        MOZ_ASSERT(!table.isAsmJS());
         table.fillFuncRef(oldLength, delta, FuncRef::fromJSFunction(fun), cx);
         break;
       case TableRepr::Ref:

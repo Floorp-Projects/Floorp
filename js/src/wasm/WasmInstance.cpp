@@ -1150,7 +1150,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       table.fillAnyRef(start, len, AnyRef::fromCompiledCode(value));
       break;
     case TableRepr::Func:
-      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
       table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value), cx);
       break;
   }
@@ -1173,7 +1173,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return table.getAnyRef(index).forCompiledCode();
   }
 
-  MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+  MOZ_RELEASE_ASSERT(!table.isAsmJS());
 
   JSContext* cx = TlsContext.get();
   RootedFunction fun(cx);
@@ -1199,7 +1199,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
         table.fillAnyRef(oldSize, delta, ref);
         break;
       case TableRepr::Func:
-        MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+        MOZ_RELEASE_ASSERT(!table.isAsmJS());
         table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
                           TlsContext.get());
         break;
@@ -1225,7 +1225,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       table.fillAnyRef(index, 1, AnyRef::fromCompiledCode(value));
       break;
     case TableRepr::Func:
-      MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
       table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
                         TlsContext.get());
       break;
