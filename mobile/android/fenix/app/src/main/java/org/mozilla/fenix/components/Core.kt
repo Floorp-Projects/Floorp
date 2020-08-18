@@ -37,6 +37,8 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.session.HistoryDelegate
+import mozilla.components.feature.top.sites.DefaultTopSitesStorage
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.feature.webnotifications.WebNotificationFeature
@@ -47,6 +49,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -57,6 +60,8 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.media.MediaService
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.search.telemetry.incontent.InContentTelemetry
+import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.utils.Mockable
 import java.util.concurrent.TimeUnit
 
@@ -250,7 +255,42 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
      */
     val thumbnailStorage by lazy { ThumbnailStorage(context) }
 
-    val topSiteStorage by lazy { TopSiteStorage(context) }
+    val topSiteStorage by lazy {
+        val defaultTopSites = mutableListOf<Pair<String, String>>()
+
+        if (!context.settings().defaultTopSitesAdded) {
+            defaultTopSites.add(
+                Pair(
+                    context.getString(R.string.default_top_site_google),
+                    SupportUtils.GOOGLE_URL
+                )
+            )
+
+            if (LocaleManager.getSelectedLocale(context).language == "en") {
+                defaultTopSites.add(
+                    Pair(
+                        context.getString(R.string.pocket_pinned_top_articles),
+                        SupportUtils.POCKET_TRENDING_URL
+                    )
+                )
+            }
+
+            defaultTopSites.add(
+                Pair(
+                    context.getString(R.string.default_top_site_wikipedia),
+                    SupportUtils.WIKIPEDIA_URL
+                )
+            )
+
+            context.settings().defaultTopSitesAdded = true
+        }
+
+        DefaultTopSitesStorage(
+            PinnedSiteStorage(context),
+            historyStorage,
+            defaultTopSites
+        )
+    }
 
     val permissionStorage by lazy { PermissionStorage(context) }
 
@@ -274,7 +314,8 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
         getSecureAbove22Preferences().getString(PASSWORDS_KEY)
             ?: generateEncryptionKey(KEY_STRENGTH).also {
                 if (context.settings().passwordsEncryptionKeyGenerated &&
-                    isSentryEnabled()) {
+                    isSentryEnabled()
+                ) {
                     // We already had previously generated an encryption key, but we have lost it
                     Sentry.capture("Passwords encryption key for passwords storage was lost and we generated a new one")
                 }
@@ -291,7 +332,7 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
     fun getPreferredColorScheme(): PreferredColorScheme {
         val inDark =
             (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                    Configuration.UI_MODE_NIGHT_YES
+                Configuration.UI_MODE_NIGHT_YES
         return when {
             context.settings().shouldUseDarkTheme -> PreferredColorScheme.Dark
             context.settings().shouldUseLightTheme -> PreferredColorScheme.Light
