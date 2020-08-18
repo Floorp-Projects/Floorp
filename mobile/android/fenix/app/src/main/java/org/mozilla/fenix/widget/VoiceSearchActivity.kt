@@ -34,6 +34,11 @@ class VoiceSearchActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).resolveActivity(packageManager) == null) {
+            finish()
+            return
+        }
+
         // Retrieve the previous intent from the saved state
         previousIntent = savedInstanceState?.get(PREVIOUS_INTENT) as Intent?
         if (previousIntent.isForSpeechProcessing()) {

@@ -215,7 +215,8 @@
             android:name=".crashes.CrashListActivity"
             android:exported="false" />
 
-        <activity android:name=".widget.VoiceSearchActivity" />
+        <activity android:name=".widget.VoiceSearchActivity"
+            android:theme="@style/Theme.AppCompat.Translucent"/>
 
         <activity
             android:name=".settings.account.AuthCustomTabActivity"
