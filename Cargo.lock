@@ -1331,15 +1331,6 @@ dependencies = [
 
 [[package]]
 name = "euclid"
-version = "0.20.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bb7ef65b3777a325d1eeefefab5b6d4959da54747e33bd6258e789640f307ad"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
-name = "euclid"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ab0e07e345fb061928646949fdf5fb888e5d75a57385e7f5856e45be289e745"
@@ -2836,7 +2827,7 @@ version = "0.0.1"
 dependencies = [
  "app_units",
  "cssparser",
- "euclid 0.22.0",
+ "euclid",
  "hashglobe",
  "selectors",
  "servo_arc",
@@ -3586,7 +3577,7 @@ dependencies = [
 name = "peek-poke"
 version = "0.2.0"
 dependencies = [
- "euclid 0.22.0",
+ "euclid",
  "peek-poke-derive 0.2.1",
 ]
 
@@ -3750,7 +3741,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2211e7ccc9b6260779dd9bad59f7b10889d6361974623b9e405afd7e7e764654"
 dependencies = [
  "binary-space-partition",
- "euclid 0.22.0",
+ "euclid",
  "log",
  "num-traits",
 ]
@@ -4699,7 +4690,7 @@ dependencies = [
  "byteorder",
  "cssparser",
  "derive_more",
- "euclid 0.22.0",
+ "euclid",
  "fallible",
  "fxhash",
  "hashbrown",
@@ -4762,7 +4753,7 @@ dependencies = [
  "app_units",
  "bitflags",
  "cssparser",
- "euclid 0.20.14",
+ "euclid",
  "lazy_static",
  "malloc_size_of",
  "malloc_size_of_derive",
@@ -5618,7 +5609,7 @@ dependencies = [
  "core-text",
  "cstr",
  "dwrote",
- "euclid 0.22.0",
+ "euclid",
  "freetype",
  "fxhash",
  "gleam",
@@ -5656,7 +5647,7 @@ dependencies = [
  "core-graphics",
  "crossbeam-channel",
  "derive_more",
- "euclid 0.22.0",
+ "euclid",
  "malloc_size_of_derive",
  "peek-poke 0.2.0",
  "serde",
@@ -5676,7 +5667,7 @@ dependencies = [
  "core-graphics",
  "dirs",
  "dwrote",
- "euclid 0.22.0",
+ "euclid",
  "foreign-types",
  "fxhash",
  "gleam",
@@ -5853,7 +5844,7 @@ name = "wr_malloc_size_of"
 version = "0.0.1"
 dependencies = [
  "app_units",
- "euclid 0.22.0",
+ "euclid",
 ]
 
 [[package]]
