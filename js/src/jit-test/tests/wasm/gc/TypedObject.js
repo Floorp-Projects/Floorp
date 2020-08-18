@@ -46,7 +46,7 @@
                              (type $r (struct (field (mut externref))))
 
                              (func (export "mkp") (result externref)
-                              (struct.new $p (ref.null opt $q)))
+                              (struct.new $p (ref.null $q)))
 
                              (func (export "mkr") (result externref)
                               (struct.new $r (ref.null extern))))`).exports;
@@ -75,7 +75,7 @@
                               (struct.new $q (f64.const 1.5)))
 
                              (func (export "mkp") (result externref)
-                              (struct.new $p (ref.null opt $q) (ref.null extern))))`).exports;
+                              (struct.new $p (ref.null $q) (ref.null extern))))`).exports;
     let q = ins.mkq();
     assertEq(typeof q, "object");
     assertEq(q._0, 1.5);
