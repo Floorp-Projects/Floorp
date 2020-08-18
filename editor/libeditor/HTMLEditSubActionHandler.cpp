@@ -3080,63 +3080,16 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
     // Else continue with normal delete code
   }
 
-  // Found break or image, or hr.
-  // XXX Oddly, this requires `MOZ_KnownLive()` for `&aAtomicContent` here...
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteNode(
-      *this, MOZ_KnownLive(&aAtomicContent));
-  if (NS_WARN_IF(Destroyed())) {
-    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+  nsresult rv =
+      WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
+          *this, aAtomicContent, aCaretPoint);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt("
+        ") failed");
+    return EditActionHandled(rv);
   }
-  if (NS_FAILED(rv)) {
-    NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteNode() failed");
-    return EditActionResult(rv);
-  }
-  // Remember sibling to visnode, if any
-  nsCOMPtr<nsIContent> previousEditableSibling =
-      GetPriorHTMLSibling(&aAtomicContent);
-  // Delete the node, and join like nodes if appropriate
-  rv = DeleteNodeWithTransaction(aAtomicContent);
-  if (NS_WARN_IF(Destroyed())) {
-    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-    return EditActionResult(rv);
-  }
-  // Is there a prior node and are they siblings?
-  nsCOMPtr<nsINode> nextEditableSibling;
-  if (previousEditableSibling) {
-    nextEditableSibling = GetNextHTMLSibling(previousEditableSibling);
-  }
-  // Are they both text nodes?  If so, join them!
-  // XXX This may cause odd behavior if there is non-editable nodes
-  //     around the atomic content.
-  if (aCaretPoint.GetContainer() == nextEditableSibling &&
-      aCaretPoint.GetContainerAsText() &&
-      previousEditableSibling->GetAsText()) {
-    EditorDOMPoint atFirstChildOfRightNode;
-    nsresult rv = JoinNearestEditableNodesWithTransaction(
-        *previousEditableSibling,
-        MOZ_KnownLive(*aCaretPoint.GetContainerAsContent()),
-        &atFirstChildOfRightNode);
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "HTMLEditor::JoinNearestEditableNodesWithTransaction() failed");
-      return EditActionHandled(rv);
-    }
-    if (!atFirstChildOfRightNode.IsSet()) {
-      NS_WARNING(
-          "HTMLEditor::JoinNearestEditableNodesWithTransaction() didn't return "
-          "right node position");
-      return EditActionHandled(NS_ERROR_FAILURE);
-    }
-    // Fix up selection
-    rv = CollapseSelectionTo(atFirstChildOfRightNode);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-      return EditActionHandled(rv);
-    }
-  }
+
   rv = InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
       EditorBase::GetStartPoint(*SelectionRefPtr()));
   NS_WARNING_ASSERTION(
