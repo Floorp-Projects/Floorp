@@ -26,16 +26,16 @@ mk_add_options() {
 }
 
 echo "------BEGIN_ENV_BEFORE_SOURCE"
-$3 $4
+"$3" "$4"
 echo "------END_ENV_BEFORE_SOURCE"
 
 echo "------BEGIN_BEFORE_SOURCE"
 set
 echo "------END_BEFORE_SOURCE"
 
-topsrcdir=$1
+topsrcdir="$1"
 
-. $2
+. "$2"
 
 unset topsrcdir
 
@@ -44,5 +44,5 @@ set
 echo "------END_AFTER_SOURCE"
 
 echo "------BEGIN_ENV_AFTER_SOURCE"
-$3 $4
+"$3" "$4"
 echo "------END_ENV_AFTER_SOURCE"
