@@ -621,7 +621,7 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
       }
       case ValType::Ref: {
         switch (fe.funcType().args()[i].refTypeKind()) {
-          case RefType::Any:
+          case RefType::Extern:
             // Leave Object and Null alone, we will unbox inline.  All we need
             // to do is convert other values to an Object representation.
             if (!arg.isObjectOrNull()) {
