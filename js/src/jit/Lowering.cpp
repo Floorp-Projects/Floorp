@@ -4219,6 +4219,15 @@ void LIRGenerator::visitProxySetByValue(MProxySetByValue* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitMegamorphicLoadSlot(MMegamorphicLoadSlot* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  auto* lir = new (alloc()) LMegamorphicLoadSlot(
+      useRegisterAtStart(ins->object()), tempFixed(CallTempReg0),
+      tempFixed(CallTempReg1), tempFixed(CallTempReg2));
+  assignSnapshot(lir, BailoutKind::MegamorphicAccess);
+  defineReturn(lir, ins);
+}
+
 void LIRGenerator::visitGuardIsNotArrayBufferMaybeShared(
     MGuardIsNotArrayBufferMaybeShared* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

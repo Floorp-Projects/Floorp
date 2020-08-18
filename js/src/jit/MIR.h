@@ -9303,6 +9303,43 @@ class MProxySetByValue
   bool possiblyCalls() const override { return true; }
 };
 
+class MMegamorphicLoadSlot : public MUnaryInstruction,
+                             public SingleObjectPolicy::Data {
+  CompilerPropertyName name_;
+
+  MMegamorphicLoadSlot(MDefinition* obj, PropertyName* name)
+      : MUnaryInstruction(classOpcode, obj), name_(name) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(MegamorphicLoadSlot)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  PropertyName* name() const { return name_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isMegamorphicLoadSlot()) {
+      return false;
+    }
+    if (ins->toMegamorphicLoadSlot()->name() != name()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                          AliasSet::DynamicSlot);
+  }
+
+  bool possiblyCalls() const override { return true; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(name_);
+  }
+};
+
 // Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.
 class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
                                           public SingleObjectPolicy::Data {

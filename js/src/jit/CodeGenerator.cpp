@@ -4563,6 +4563,42 @@ void CodeGenerator::visitProxySetByValue(LProxySetByValue* lir) {
   callVM<Fn, ProxySetPropertyByValue>(lir);
 }
 
+void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
+  Register obj = ToRegister(lir->object());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+  Register temp3 = ToRegister(lir->temp3());
+  ValueOperand output = ToOutValue(lir);
+
+  Label bail;
+  masm.branchIfNonNativeObj(obj, temp1, &bail);
+
+  masm.pushValue(UndefinedValue());
+  masm.moveStackPtrTo(temp3);
+
+  masm.setupUnalignedABICall(temp1);
+  masm.loadJSContext(temp1);
+  masm.passABIArg(temp1);
+  masm.passABIArg(obj);
+  masm.movePtr(ImmGCPtr(lir->mir()->name()), temp2);
+  masm.passABIArg(temp2);
+  masm.passABIArg(temp3);
+
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyPure<true>)));
+
+  MOZ_ASSERT(!output.aliases(ReturnReg));
+  masm.popValue(output);
+
+  masm.branchIfFalseBool(ReturnReg, &bail);
+
+  if (JitOptions.spectreJitToCxxCalls) {
+    masm.speculationBarrier();
+  }
+
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
     LGuardIsNotArrayBufferMaybeShared* guard) {
   Register obj = ToRegister(guard->input());
