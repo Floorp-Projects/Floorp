@@ -3,15 +3,15 @@
 for ( let prefix of ['', '(table $prefix 0 32 funcref)']) {
     let mod = new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (import "m" "item" (func $item (result anyref)))
+       (import "m" "item" (func $item (result externref)))
        ${prefix}
-       (table $tbl 0 anyref)
+       (table $tbl 0 externref)
        (func (export "run") (param $numiters i32)
          (local $i i32)
          (local $j i32)
          (local $last i32)
          (local $iters i32)
-         (local $tmp anyref)
+         (local $tmp externref)
          (local.set $last (table.grow $tbl (ref.null extern) (i32.const 1)))
          (table.set $tbl (local.get $last) (call $item))
          (loop $iter_continue

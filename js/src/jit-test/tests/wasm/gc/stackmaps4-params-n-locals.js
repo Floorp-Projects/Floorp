@@ -22,8 +22,8 @@ function visit(aStuff) {
 let bin = wasmTextToBinary(
 `
 (module
-  (import "" "allocate" (func $allocate (param i32) (result anyref)))
-  (import "" "visit" (func $visit (param anyref) (result i32)))
+  (import "" "allocate" (func $allocate (param i32) (result externref)))
+  (import "" "visit" (func $visit (param externref) (result i32)))
 
   ;; A function with many params and locals, most of which are ref-typed.
   ;; The purpose of having so many is to defeat any reasonable attempt at
@@ -32,13 +32,13 @@ let bin = wasmTextToBinary(
   ;; vs what the stackmap claims the layout to be.
 
   (func $manyParamsAndLocals (export "manyParamsAndLocals")
-    (param $p1 anyref) (param $p2 i32)    (param $p3 anyref)
-    (param $p4 anyref) (param $p5 anyref) (param $p6 anyref)
-    (param $p7 anyref) (param $p8 anyref) (param $p9 i32)
+    (param $p1 externref) (param $p2 i32)    (param $p3 externref)
+    (param $p4 externref) (param $p5 externref) (param $p6 externref)
+    (param $p7 externref) (param $p8 externref) (param $p9 i32)
     (result i32)
-    (local $l1 anyref) (local $l2 anyref) (local $l3 anyref)
-    (local $l4 i32)    (local $l5 anyref) (local $l6 i32)
-    (local $l7 anyref) (local $l8 anyref) (local $l9 anyref)
+    (local $l1 externref) (local $l2 externref) (local $l3 externref)
+    (local $l4 i32)    (local $l5 externref) (local $l6 i32)
+    (local $l7 externref) (local $l8 externref) (local $l9 externref)
 
     (local $i i32)
     (local $runningTotal i32)

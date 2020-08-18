@@ -100,13 +100,13 @@ assertEq(validFuncRefText('(elem 0 (i32.const 0) funcref (ref.func $referenced))
 assertEq(validFuncRefText('(elem funcref (ref.func $referenced))', 'funcref') instanceof WebAssembly.Instance, true);
 
 // reference function can be forward declared via globals
-assertEq(validFuncRefText('(global funcref (ref.func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(global funcref (ref.func $referenced))', 'externref') instanceof WebAssembly.Instance, true);
 
 // reference function can be forward declared via export
-assertEq(validFuncRefText('(export "referenced" (func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(export "referenced" (func $referenced))', 'externref') instanceof WebAssembly.Instance, true);
 
 // reference function cannot be forward declared via start
-assertErrorMessage(() => validFuncRefText('(start $referenced)', 'anyref'), WebAssembly.CompileError, /function index is not declared in a section before the code section/);
+assertErrorMessage(() => validFuncRefText('(start $referenced)', 'externref'), WebAssembly.CompileError, /function index is not declared in a section before the code section/);
 
 // Tests not expressible in the text format.
 

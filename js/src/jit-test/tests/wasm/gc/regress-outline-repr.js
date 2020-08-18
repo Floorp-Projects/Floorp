@@ -27,7 +27,7 @@ const wat = `
       (field (mut i64))
       (field (mut i64))
       (field (mut i64))
-      (field (mut anyref))))
+      (field (mut externref))))
   (type $S2 (struct))
 
   (func $main
