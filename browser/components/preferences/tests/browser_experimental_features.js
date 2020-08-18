@@ -47,3 +47,28 @@ add_task(async function testCanOpenWithPref() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+add_task(async function testSearchFindsExperiments() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.preferences.experimental", true]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
+  let doc = gBrowser.contentDocument;
+
+  let experimentalCategory = doc.getElementById("category-experimental");
+  ok(experimentalCategory, "The category exists");
+  ok(!experimentalCategory.hidden, "The category is not hidden");
+
+  await TestUtils.waitForCondition(
+    () => doc.getElementById("firefoxExperimentalCategory"),
+    "Waiting for experimental features category to get initialized"
+  );
+  await evaluateSearchResults(
+    "advanced configuration",
+    ["pane-experimental-featureGates"],
+    /* include experiments */ true
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
