@@ -2,7 +2,7 @@
 
 # GetAppLinkRedirect
 
-`inner class GetAppLinkRedirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L82)
+`inner class GetAppLinkRedirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L83)
 
 Parse a URL and check if it can be handled by an app elsewhere on the Android device.
 If that app is not available, then a market place intent is also provided.

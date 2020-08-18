@@ -2,7 +2,7 @@
 
 # isInScope
 
-`fun <ERROR CLASS>.isInScope(scopes: `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<<ERROR CLASS>>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/net/Uri.kt#L43)
+`fun <ERROR CLASS>.isInScope(scopes: `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<<ERROR CLASS>>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/net/Uri.kt#L48)
 
 Checks that the given URL is in one of the given URL [scopes](is-in-scope.md#mozilla.components.support.ktx.android.net$isInScope(, kotlin.collections.Iterable(()))/scopes).
 

@@ -2,7 +2,7 @@
 
 # WebURLFinder
 
-`class WebURLFinder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/WebURLFinder.kt#L22)
+`class WebURLFinder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/WebURLFinder.kt#L23)
 
 Regular expressions used in this class are taken from Android's Patterns.java.
 We brought them in to standardize URL matching across Android versions, instead of relying
