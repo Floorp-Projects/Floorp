@@ -4103,7 +4103,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
       // we don't want to erase any files. The failure here will fail origin
       // initialization too.
       if (aName.IsVoid()) {
-        return Err(rv);
+        return connectionOrErr.propagateErr();
       }
 
       // Nuke the database file.
