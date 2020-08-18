@@ -157,6 +157,10 @@ struct RepaintRequest {
 
   const CSSPoint& GetScrollOffset() const { return mScrollOffset; }
 
+  CSSPoint GetLayoutScrollOffset() const { return mLayoutViewport.TopLeft(); }
+
+  const CSSPoint& GetVisualScrollOffset() const { return mScrollOffset; }
+
   const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
 
   ScrollOffsetUpdateType GetScrollUpdateType() const {
