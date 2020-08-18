@@ -10,14 +10,14 @@
                         (field $x f64)
                         (field $y f64)))
 
-          (global $g1 (mut (ref null $point)) (ref.null $point))
-          (global $g2 (mut (ref null $point)) (ref.null $point))
-          (global $g3 (ref null $point) (ref.null $point))
+          (global $g1 (mut (ref opt $point)) (ref.null opt $point))
+          (global $g2 (mut (ref opt $point)) (ref.null opt $point))
+          (global $g3 (ref opt $point) (ref.null opt $point))
 
           ;; Restriction: cannot expose Refs outside the module, not even
           ;; as a return value.  See ref-restrict.js.
 
-          (func (export "get") (result externref)
+          (func (export "get") (result anyref)
            (global.get $g1))
 
           (func (export "copy")
@@ -25,7 +25,7 @@
 
           (func (export "clear")
            (global.set $g1 (global.get $g3))
-           (global.set $g2 (ref.null $point))))`);
+           (global.set $g2 (ref.null opt $point))))`);
 
     let mod = new WebAssembly.Module(bin);
     let ins = new WebAssembly.Instance(mod).exports;
@@ -44,7 +44,7 @@
                         (field $x f64)
                         (field $y f64)))
 
-          (global $glob (mut (ref null $point)) (ref.null $point))
+          (global $glob (mut (ref opt $point)) (ref.null opt $point))
 
           (func (export "init")
            (global.set $glob (struct.new $point (f64.const 0.5) (f64.const 2.75))))
@@ -53,7 +53,7 @@
            (global.set $glob (struct.new $point (f64.const 3.5) (f64.const 37.25))))
 
           (func (export "clear")
-           (global.set $glob (ref.null $point)))
+           (global.set $glob (ref.null opt $point)))
 
           (func (export "x") (result f64)
            (struct.get $point 0 (global.get $glob)))
@@ -78,14 +78,14 @@
     assertErrorMessage(() => ins.x(), WebAssembly.RuntimeError, /dereferencing null pointer/);
 }
 
-// Global value of type externref for initializer from a WebAssembly.Global,
+// Global value of type anyref for initializer from a WebAssembly.Global,
 // just check that it works.
 {
     let bin = wasmTextToBinary(
         `(module
-          (import "" "g" (global $g externref))
-          (global $glob externref (global.get $g))
-          (func (export "get") (result externref)
+          (import "" "g" (global $g anyref))
+          (global $glob anyref (global.get $g))
+          (func (export "get") (result anyref)
            (global.get $glob)))`);
 
     let mod = new WebAssembly.Module(bin);
@@ -101,7 +101,7 @@
     let bin = wasmTextToBinary(
         `(module
           (type $box (struct (field $val i32)))
-          (import "m" "g" (global (mut (ref null $box)))))`);
+          (import "m" "g" (global (mut (ref opt $box)))))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
                        /cannot expose indexed reference type/);
@@ -115,7 +115,7 @@
     let bin = wasmTextToBinary(
         `(module
           (type $box (struct (field $val i32)))
-          (global $boxg (export "box") (mut (ref null $box)) (ref.null $box)))`);
+          (global $boxg (export "box") (mut (ref opt $box)) (ref.null opt $box)))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
                        /cannot expose indexed reference type/);

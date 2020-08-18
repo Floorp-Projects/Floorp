@@ -25,7 +25,12 @@ pub enum GlobalKind<'a> {
     /// ```text
     /// (global i32 (import "foo" "bar"))
     /// ```
-    Import(ast::InlineImport<'a>),
+    Import {
+        /// The module that this function is imported from
+        module: &'a str,
+        /// The module field name this function is imported from
+        field: &'a str,
+    },
 
     /// A global defined inline in the module itself
     Inline(ast::Expression<'a>),
@@ -37,8 +42,12 @@ impl<'a> Parse<'a> for Global<'a> {
         let id = parser.parse()?;
         let exports = parser.parse()?;
 
-        let (ty, kind) = if let Some(import) = parser.parse()? {
-            (parser.parse()?, GlobalKind::Import(import))
+        let (ty, kind) = if parser.peek2::<kw::import>() {
+            let (module, field) = parser.parens(|p| {
+                p.parse::<kw::import>()?;
+                Ok((p.parse()?, p.parse()?))
+            })?;
+            (parser.parse()?, GlobalKind::Import { module, field })
         } else {
             (parser.parse()?, GlobalKind::Inline(parser.parse()?))
         };

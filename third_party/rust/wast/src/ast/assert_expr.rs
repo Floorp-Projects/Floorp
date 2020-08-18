@@ -1,4 +1,4 @@
-use crate::ast::{kw, Float32, Float64, Index, HeapType};
+use crate::ast::{kw, Float32, Float64, Index, RefType};
 use crate::parser::{Parse, Parser, Result};
 
 /// An expression that is valid inside an `assert_return` directive.
@@ -17,7 +17,7 @@ pub enum AssertExpression<'a> {
     F64(NanPattern<Float64>),
     V128(V128Pattern),
 
-    RefNull(Option<HeapType<'a>>),
+    RefNull(RefType<'a>),
     RefExtern(u32),
     RefFunc(Option<Index<'a>>),
 

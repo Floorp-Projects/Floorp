@@ -1,4 +1,4 @@
-use crate::ast::{self, annotation, kw};
+use crate::ast::{self, kw, annotation};
 use crate::parser::{Parse, Parser, Result};
 
 /// A wasm custom section within a module.
@@ -36,9 +36,6 @@ pub enum CustomPlace {
 pub enum CustomPlaceAnchor {
     Type,
     Import,
-    Module,
-    Instance,
-    Alias,
     Func,
     Table,
     Memory,
@@ -46,7 +43,6 @@ pub enum CustomPlaceAnchor {
     Export,
     Start,
     Elem,
-    ModuleCode,
     Code,
     Data,
     Event,
@@ -65,12 +61,7 @@ impl<'a> Parse<'a> for Custom<'a> {
         while !parser.is_empty() {
             data.push(parser.parse()?);
         }
-        Ok(Custom {
-            span,
-            name,
-            place,
-            data,
-        })
+        Ok(Custom { span, name, place, data })
     }
 }
 
@@ -102,67 +93,51 @@ impl<'a> Parse<'a> for CustomPlaceAnchor {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         if parser.peek::<kw::r#type>() {
             parser.parse::<kw::r#type>()?;
-            return Ok(CustomPlaceAnchor::Type);
+            return Ok(CustomPlaceAnchor::Type)
         }
         if parser.peek::<kw::import>() {
             parser.parse::<kw::import>()?;
-            return Ok(CustomPlaceAnchor::Import);
+            return Ok(CustomPlaceAnchor::Import)
         }
         if parser.peek::<kw::func>() {
             parser.parse::<kw::func>()?;
-            return Ok(CustomPlaceAnchor::Func);
+            return Ok(CustomPlaceAnchor::Func)
         }
         if parser.peek::<kw::table>() {
             parser.parse::<kw::table>()?;
-            return Ok(CustomPlaceAnchor::Table);
+            return Ok(CustomPlaceAnchor::Table)
         }
         if parser.peek::<kw::memory>() {
             parser.parse::<kw::memory>()?;
-            return Ok(CustomPlaceAnchor::Memory);
+            return Ok(CustomPlaceAnchor::Memory)
         }
         if parser.peek::<kw::global>() {
             parser.parse::<kw::global>()?;
-            return Ok(CustomPlaceAnchor::Global);
+            return Ok(CustomPlaceAnchor::Global)
         }
         if parser.peek::<kw::export>() {
             parser.parse::<kw::export>()?;
-            return Ok(CustomPlaceAnchor::Export);
+            return Ok(CustomPlaceAnchor::Export)
         }
         if parser.peek::<kw::start>() {
             parser.parse::<kw::start>()?;
-            return Ok(CustomPlaceAnchor::Start);
+            return Ok(CustomPlaceAnchor::Start)
         }
         if parser.peek::<kw::elem>() {
             parser.parse::<kw::elem>()?;
-            return Ok(CustomPlaceAnchor::Elem);
+            return Ok(CustomPlaceAnchor::Elem)
         }
         if parser.peek::<kw::code>() {
             parser.parse::<kw::code>()?;
-            return Ok(CustomPlaceAnchor::Code);
+            return Ok(CustomPlaceAnchor::Code)
         }
         if parser.peek::<kw::data>() {
             parser.parse::<kw::data>()?;
-            return Ok(CustomPlaceAnchor::Data);
+            return Ok(CustomPlaceAnchor::Data)
         }
         if parser.peek::<kw::event>() {
             parser.parse::<kw::event>()?;
-            return Ok(CustomPlaceAnchor::Event);
-        }
-        if parser.peek::<kw::instance>() {
-            parser.parse::<kw::instance>()?;
-            return Ok(CustomPlaceAnchor::Instance);
-        }
-        if parser.peek::<kw::module>() {
-            parser.parse::<kw::module>()?;
-            return Ok(CustomPlaceAnchor::Module);
-        }
-        if parser.peek::<kw::modulecode>() {
-            parser.parse::<kw::modulecode>()?;
-            return Ok(CustomPlaceAnchor::ModuleCode);
-        }
-        if parser.peek::<kw::alias>() {
-            parser.parse::<kw::alias>()?;
-            return Ok(CustomPlaceAnchor::Alias);
+            return Ok(CustomPlaceAnchor::Event)
         }
 
         Err(parser.error("expected a valid section name"))

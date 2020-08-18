@@ -1,13 +1,13 @@
 // |jit-test| skip-if: !wasmReftypesEnabled()
 
-// Moving a JS value through a wasm externref is a pair of boxing/unboxing
+// Moving a JS value through a wasm anyref is a pair of boxing/unboxing
 // conversions that leaves the value unchanged.  There are many cases,
 // along these axes:
 //
 //  - global variables
 //  - tables
 //  - function parameters and returns
-//  - struct fields [for the gc feature], see externref-boxing-struct.js
+//  - struct fields [for the gc feature], see anyref-boxing-struct.js
 
 let VALUES = [null,
               undefined,
@@ -59,8 +59,8 @@ for (let v of VALUES)
     let g = new WebAssembly.Global({value: "externref"}, v);
     let ins = wasmEvalText(
         `(module
-           (import "m" "g" (global $glob externref))
-           (func (export "f") (result externref)
+           (import "m" "g" (global $glob anyref))
+           (func (export "f") (result anyref)
              (global.get $glob)))`,
         {m:{g}});
     assertEq(ins.exports.f(), v);
@@ -73,15 +73,15 @@ for (let v of VALUES)
     let g = new WebAssembly.Global({value: "externref", mutable: true});
     let ins = wasmEvalText(
         `(module
-           (import "m" "g" (global $glob (mut externref)))
-           (func (export "f") (param $v externref)
+           (import "m" "g" (global $glob (mut anyref)))
+           (func (export "f") (param $v anyref)
              (global.set $glob (local.get $v))))`,
         {m:{g}});
     ins.exports.f(v);
     assertEq(g.value, v);
 }
 
-// Tables of externref can receive values via several mechanisms:
+// Tables of anyref can receive values via several mechanisms:
 //
 // - through WebAssembly.Table.prototype.set()
 // - through the table.set, table.copy, and table.grow instructions
@@ -111,8 +111,8 @@ for (let v of VALUES)
     let t = new WebAssembly.Table({element: "externref", initial: 10});
     let ins = wasmEvalText(
         `(module
-           (import "m" "t" (table $t 10 externref))
-           (func (export "f") (param $v externref)
+           (import "m" "t" (table $t 10 anyref))
+           (func (export "f") (param $v anyref)
              (table.set $t (i32.const 3) (local.get $v))))`,
         {m:{t}});
     ins.exports.f(v);
@@ -126,15 +126,15 @@ for (let v of VALUES)
     let t = new WebAssembly.Table({element: "externref", initial: 10});
     let ins = wasmEvalText(
         `(module
-           (import "m" "t" (table $t 10 externref))
-           (func (export "f") (result externref)
+           (import "m" "t" (table $t 10 anyref))
+           (func (export "f") (result anyref)
              (table.get $t (i32.const 3))))`,
         {m:{t}});
     t.set(3, v);
     assertEq(ins.exports.f(), v);
 }
 
-// Imported JS functions can receive externref values as parameters and return
+// Imported JS functions can receive anyref values as parameters and return
 // them.
 
 for (let v of VALUES)
@@ -143,11 +143,11 @@ for (let v of VALUES)
     let receiver = function (w) { assertEq(w, v); };
     let ins = wasmEvalText(
         `(module
-           (import "m" "returner" (func $returner (result externref)))
-           (import "m" "receiver" (func $receiver (param externref)))
-           (func (export "test_returner") (result externref)
+           (import "m" "returner" (func $returner (result anyref)))
+           (import "m" "receiver" (func $receiver (param anyref)))
+           (func (export "test_returner") (result anyref)
              (call $returner))
-           (func (export "test_receiver") (param $v externref)
+           (func (export "test_receiver") (param $v anyref)
              (call $receiver (local.get $v))))`,
         {m:{returner, receiver}});
     assertEq(ins.exports.test_returner(), v);

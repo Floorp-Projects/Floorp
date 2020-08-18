@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 load(libdir + "wasm-binary.js");
 
@@ -18,7 +18,7 @@ const invalidRefBlockType = funcBody({locals:[], body:[
     0x42,
     EndCode,
 ]});
-checkInvalid(invalidRefBlockType, /heap type/);
+checkInvalid(invalidRefBlockType, /ref/);
 
 const invalidTooBigRefType = funcBody({locals:[], body:[
     BlockCode,
@@ -26,4 +26,4 @@ const invalidTooBigRefType = funcBody({locals:[], body:[
     varU32(1000000),
     EndCode,
 ]});
-checkInvalid(invalidTooBigRefType, /heap type/);
+checkInvalid(invalidTooBigRefType, /ref/);
