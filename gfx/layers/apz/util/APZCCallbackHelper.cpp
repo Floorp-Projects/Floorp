@@ -75,9 +75,7 @@ static CSSPoint ScrollFrameTo(nsIScrollableFrame* aFrame,
                               const RepaintRequest& aRequest,
                               bool& aSuccessOut) {
   aSuccessOut = false;
-  CSSPoint targetScrollPosition = aRequest.IsRootContent()
-                                      ? aRequest.GetLayoutViewport().TopLeft()
-                                      : aRequest.GetLayoutScrollOffset();
+  CSSPoint targetScrollPosition = aRequest.GetLayoutScrollOffset();
 
   if (!aFrame) {
     return targetScrollPosition;
@@ -207,7 +205,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
           scrollDelta * aRequest.DisplayportPixelsPerCSSPixel());
     }
   } else if (aRequest.IsRootContent() &&
-             apzScrollOffset != aRequest.GetLayoutViewport().TopLeft()) {
+             apzScrollOffset != aRequest.GetLayoutScrollOffset()) {
     // APZ uses the visual viewport's offset to calculate where to place the
     // display port, so the display port is misplaced when a pinch zoom occurs.
     //
