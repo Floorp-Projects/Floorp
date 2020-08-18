@@ -495,14 +495,14 @@ size_t Export::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
 }
 
 size_t ElemSegment::serializedSize() const {
-  return sizeof(kind) + sizeof(tableIndex) + sizeof(elementType) +
+  return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +
          sizeof(offsetIfActive) + SerializedPodVectorSize(elemFuncIndices);
 }
 
 uint8_t* ElemSegment::serialize(uint8_t* cursor) const {
   cursor = WriteBytes(cursor, &kind, sizeof(kind));
   cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
-  cursor = WriteBytes(cursor, &elementType, sizeof(elementType));
+  cursor = WriteBytes(cursor, &elemType, sizeof(elemType));
   cursor = WriteBytes(cursor, &offsetIfActive, sizeof(offsetIfActive));
   cursor = SerializePodVector(cursor, elemFuncIndices);
   return cursor;
@@ -511,7 +511,7 @@ uint8_t* ElemSegment::serialize(uint8_t* cursor) const {
 const uint8_t* ElemSegment::deserialize(const uint8_t* cursor) {
   (cursor = ReadBytes(cursor, &kind, sizeof(kind))) &&
       (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
-      (cursor = ReadBytes(cursor, &elementType, sizeof(elementType))) &&
+      (cursor = ReadBytes(cursor, &elemType, sizeof(elemType))) &&
       (cursor = ReadBytes(cursor, &offsetIfActive, sizeof(offsetIfActive))) &&
       (cursor = DeserializePodVector(cursor, &elemFuncIndices));
   return cursor;

@@ -370,6 +370,11 @@ static inline bool IsReferenceType(PackedTypeCode ptc) {
   return UnpackTypeCodeTypeAbstracted(ptc) == TypeCode::OptRef;
 }
 
+// An enum that describes the representation classes for tables; The table
+// element type is mapped into this by Table::repr().
+
+enum class TableRepr { Ref, Func };
+
 // The RefType carries more information about types t for which t.isReference()
 // is true.
 
@@ -430,6 +435,22 @@ class RefType {
 
   static RefType extern_() { return RefType(Extern); }
   static RefType func() { return RefType(Func); }
+
+  bool isExtern() const { return kind() == RefType::Extern; }
+  bool isFunc() const { return kind() == RefType::Func; }
+  bool isTypeIndex() const { return kind() == RefType::TypeIndex; }
+
+  TableRepr tableRepr() const {
+    switch (kind()) {
+      case RefType::Extern:
+        return TableRepr::Ref;
+      case RefType::Func:
+        return TableRepr::Func;
+      case RefType::TypeIndex:
+        MOZ_CRASH("NYI");
+    }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("switch is exhaustive");
+  }
 
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
@@ -1968,7 +1989,7 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
 
   Kind kind;
   uint32_t tableIndex;
-  ValType elementType;
+  RefType elemType;
   Maybe<InitExpr> offsetIfActive;
   Uint32Vector elemFuncIndices;  // Element may be NullFuncIndex
 
@@ -1977,8 +1998,6 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
   InitExpr offset() const { return *offsetIfActive; }
 
   size_t length() const { return elemFuncIndices.length(); }
-
-  ValType elemType() const { return elementType; }
 
   WASM_DECLARE_SERIALIZABLE(ElemSegment)
 };
@@ -2792,49 +2811,34 @@ struct Limits {
 // TableDesc describes a table as well as the offset of the table's base pointer
 // in global memory.
 //
-// The TableKind determines the representation:
-//  - AnyRef: a wasm anyref word (wasm::AnyRef)
+// A TableDesc contains the element type and whether the table is for asm.js,
+// which determines the table representation.
+//  - ExternRef: a wasm anyref word (wasm::AnyRef)
 //  - FuncRef: a two-word FunctionTableElem (wasm indirect call ABI)
-//  - AsmJS: a two-word FunctionTableElem (asm.js ABI)
+//  - FuncRef (if `isAsmJS`): a two-word FunctionTableElem (asm.js ABI)
 // Eventually there should be a single unified AnyRef representation.
 
-enum class TableKind { AnyRef, FuncRef, AsmJS };
-
-static inline ValType ToElemValType(TableKind tk) {
-  switch (tk) {
-    case TableKind::AnyRef:
-      return RefType::extern_();
-    case TableKind::FuncRef:
-      return RefType::func();
-    case TableKind::AsmJS:
-      break;
-  }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("switch is exhaustive");
-}
-
 struct TableDesc {
-  TableKind kind;
+  RefType elemType;
   bool importedOrExported;
+  bool isAsmJS;
   uint32_t globalDataOffset;
   uint32_t initialLength;
   Maybe<uint32_t> maximumLength;
 
   TableDesc() = default;
-  TableDesc(TableKind kind, uint32_t initialLength,
-            Maybe<uint32_t> maximumLength, bool importedOrExported = false)
-      : kind(kind),
+  TableDesc(RefType elemType, uint32_t initialLength,
+            Maybe<uint32_t> maximumLength, bool isAsmJS,
+            bool importedOrExported = false)
+      : elemType(elemType),
         importedOrExported(importedOrExported),
+        isAsmJS(isAsmJS),
         globalDataOffset(UINT32_MAX),
         initialLength(initialLength),
         maximumLength(maximumLength) {}
 };
 
 typedef Vector<TableDesc, 0, SystemAllocPolicy> TableDescVector;
-
-// An enum that describes the representation classes for tables; TableKind is
-// mapped into this by Table::repr().
-
-enum class TableRepr { Ref, Func };
 
 // TLS data for a single module instance.
 //
@@ -2957,7 +2961,7 @@ struct TableTls {
   void* functionBase;
 };
 
-// Table element for TableKind::FuncRef which carries both the code pointer and
+// Table element for TableRepr::Func which carries both the code pointer and
 // a tls pointer (and thus anything reachable through the tls, including the
 // instance).
 
