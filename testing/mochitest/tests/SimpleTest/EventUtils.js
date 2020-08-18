@@ -10,6 +10,8 @@
  *  sendWheelAndPaintNoFlush
  *  synthesizeMouse
  *  synthesizeMouseAtCenter
+ *  synthesizeNativeMouseMove
+ *  synthesizeNativeMouseClick
  *  synthesizeWheel
  *  synthesizeWheelAtPoint
  *  synthesizeKey
@@ -137,6 +139,54 @@ function _EU_maybeWrap(o) {
 function _EU_maybeUnwrap(o) {
   var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? o : SpecialPowers.unwrap(o);
+}
+
+function _EU_getPlatform() {
+  if (_EU_isWin()) {
+    return "windows";
+  }
+  if (_EU_isMac()) {
+    return "mac";
+  }
+  if (_EU_isAndroid()) {
+    return "android";
+  }
+  if (_EU_isLinux()) {
+    return "linux";
+  }
+  return "unknown";
+}
+
+function _EU_nativeMouseDownEventMsg() {
+  switch (_EU_getPlatform()) {
+    case "windows":
+      return 2; // MOUSEEVENTF_LEFTDOWN
+    case "mac":
+      return 1; // NSLeftMouseDown
+    case "linux":
+      return 4; // GDK_BUTTON_PRESS
+    case "android":
+      return 5; // ACTION_POINTER_DOWN
+  }
+  throw new Error(
+    "Native mouse-down events not supported on platform " + _EU_getPlatform()
+  );
+}
+
+function _EU_nativeMouseUpEventMsg() {
+  switch (_EU_getPlatform()) {
+    case "windows":
+      return 4; // MOUSEEVENTF_LEFTUP
+    case "mac":
+      return 2; // NSLeftMouseUp
+    case "linux":
+      return 7; // GDK_BUTTON_RELEASE
+    case "android":
+      return 6; // ACTION_POINTER_UP
+  }
+  throw new Error(
+    "Native mouse-up events not supported on platform " + _EU_getPlatform()
+  );
 }
 
 /**
@@ -981,6 +1031,49 @@ function synthesizeNativeMouseMove(
     },
   };
   utils.sendNativeMouseMove(x * scale, y * scale, null, observer);
+}
+
+function synthesizeNativeMouseClick(
+  aTarget,
+  aOffsetX,
+  aOffsetY,
+  aCallback,
+  aWindow = window
+) {
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils) {
+    return;
+  }
+
+  var rect = aTarget.getBoundingClientRect();
+  var x = aOffsetX + window.mozInnerScreenX + rect.left;
+  var y = aOffsetY + window.mozInnerScreenY + rect.top;
+  var scale = utils.screenPixelsPerCSSPixel;
+
+  var observer = {
+    observe: (subject, topic, data) => {
+      if (aCallback && topic == "mouseevent") {
+        aCallback(data);
+      }
+    },
+  };
+  utils.sendNativeMouseEvent(
+    x * scale,
+    y * scale,
+    _EU_nativeMouseDownEventMsg(),
+    0,
+    null,
+    function() {
+      utils.sendNativeMouseEvent(
+        x * scale,
+        y * scale,
+        _EU_nativeMouseUpEventMsg(),
+        0,
+        null,
+        observer
+      );
+    }
+  );
 }
 
 /**

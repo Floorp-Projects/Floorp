@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1303957
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 1303957</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -69,11 +69,11 @@ function runTests() {
       SimpleTest.finish();
     }, { once: true });
 
-    synthesizeNativeMouseEvent(target0, 5, 5, nativeMouseMoveEventMsg(), () => {
-      synthesizeNativeMouseEvent(target0, 10, 10, nativeMouseMoveEventMsg(), () => {
-        synthesizeNativeMouseEvent(target0, 15, 15, nativeMouseMoveEventMsg(), () => {
-          synthesizeNativeMouseEvent(target0, 20, 20, nativeMouseMoveEventMsg(), () => {
-            synthesizeNativeClick(target0, 20, 20);
+    synthesizeNativeMouseMove(target0, 5, 5, () => {
+      synthesizeNativeMouseMove(target0, 10, 10, () => {
+        synthesizeNativeMouseMove(target0, 15, 15, () => {
+          synthesizeNativeMouseMove(target0, 20, 20, () => {
+            synthesizeNativeMouseClick(target0, 20, 20);
           });
         });
       });
