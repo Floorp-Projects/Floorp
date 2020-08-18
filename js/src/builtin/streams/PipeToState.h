@@ -84,6 +84,15 @@ class PipeToState : public NativeObject {
      */
     Slot_LastWriteRequest,
 
+    /**
+     * Either |undefined| or an |AbortSignal| instance specified by the user,
+     * whose controller may be used to externally abort the piping algorithm.
+     *
+     * This signal is user-provided, so it may be a wrapper around an
+     * |AbortSignal| not from the same compartment as this.
+     */
+    Slot_Signal,
+
     SlotCount,
   };
 
@@ -199,6 +208,12 @@ class PipeToState : public NativeObject {
   void updateLastWriteRequest(PromiseObject* writeRequest) {
     MOZ_ASSERT(writeRequest != nullptr);
     setFixedSlot(Slot_LastWriteRequest, JS::ObjectValue(*writeRequest));
+  }
+
+  bool hasSignal() const {
+    JS::Value v = getFixedSlot(Slot_Signal);
+    MOZ_ASSERT(v.isObject() || v.isUndefined());
+    return v.isObject();
   }
 
   bool shuttingDown() const { return flags() & Flag_ShuttingDown; }
