@@ -706,6 +706,8 @@ auto DocumentLoadListener::OpenObject(
 auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
                                         bool aSupportsRedirectToRealChannel)
     -> RefPtr<OpenPromise> {
+  MOZ_ASSERT(mIsDocumentLoad);
+
   // We currently only support passing nullptr for aLoadInfo for
   // top level browsing contexts.
   auto* browsingContext = GetDocumentBrowsingContext();
@@ -1983,8 +1985,7 @@ void DocumentLoadListener::MaybeReportBlockedByURLClassifier(nsresult aStatus) {
 
   RefPtr<WindowGlobalParent> parent = browsingContext->GetParentWindowContext();
   if (parent) {
-    Unused << parent->SendAddBlockedFrameNodeByClassifier(
-        GetLoadingBrowsingContext());
+    Unused << parent->SendAddBlockedFrameNodeByClassifier(browsingContext);
   }
 }
 
@@ -2169,7 +2170,7 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     }
 
     // If we're not switching, then check if we're currently remote.
-    if (auto* bc = GetDocumentBrowsingContext(); bc && bc->GetContentParent()) {
+    if (loadingContext->GetContentParent()) {
       willBeRemote = true;
     }
   }
@@ -2260,7 +2261,7 @@ DocumentLoadListener::OnAfterLastPart(nsresult aStatus) {
 NS_IMETHODIMP
 DocumentLoadListener::GetInterface(const nsIID& aIID, void** result) {
   RefPtr<CanonicalBrowsingContext> browsingContext =
-      GetDocumentBrowsingContext();
+      GetLoadingBrowsingContext();
   if (aIID.Equals(NS_GET_IID(nsILoadContext)) && browsingContext) {
     browsingContext.forget(result);
     return NS_OK;
@@ -2334,6 +2335,8 @@ DocumentLoadListener::Delete() {
 
 NS_IMETHODIMP
 DocumentLoadListener::GetRemoteType(nsACString& aRemoteType) {
+  // FIXME: The remote type here should be pulled from the remote process used
+  // to create this DLL, not from the current `browsingContext`.
   RefPtr<CanonicalBrowsingContext> browsingContext =
       GetDocumentBrowsingContext();
   if (!browsingContext) {
