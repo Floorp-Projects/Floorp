@@ -22,6 +22,16 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIApplicationReputationService
 );
 
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
+/* global DownloadIntegration */
+Integration.downloads.defineModuleGetter(
+  this,
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
+);
+
 // /////////////////////////////////////////////////////////////////////////////
 // // Helper Functions
 
@@ -1272,8 +1282,6 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   shouldShowInternalHandlerOption() {
-    // This is currently available only for PDF files and when
-    // pdf.js is enabled.
     let browsingContext = this.mDialog.BrowsingContext.get(
       this.mLauncher.browsingContextId
     );
@@ -1283,16 +1291,25 @@ nsUnknownContentTypeDialog.prototype = {
       // known extensions for this mimetype.
       primaryExtension = this.mLauncher.MIMEInfo.primaryExtension;
     } catch (e) {}
-    return (
-      !browsingContext?.currentWindowGlobal?.documentPrincipal?.URI?.schemeIs(
-        "resource"
-      ) &&
-      primaryExtension == "pdf" &&
-      !Services.prefs.getBoolPref("pdfjs.disabled", true) &&
-      Services.prefs.getBoolPref(
-        "browser.helperApps.showOpenOptionForPdfJS",
-        false
-      )
+
+    // Only available for PDF files when pdf.js is enabled.
+    // Skip if the current window uses the resource scheme, to avoid
+    // showing the option when using the Download button in pdf.js.
+    if (primaryExtension == "pdf") {
+      return (
+        !browsingContext?.currentWindowGlobal?.documentPrincipal?.URI?.schemeIs(
+          "resource"
+        ) &&
+        !Services.prefs.getBoolPref("pdfjs.disabled", true) &&
+        Services.prefs.getBoolPref(
+          "browser.helperApps.showOpenOptionForPdfJS",
+          false
+        )
+      );
+    }
+
+    return DownloadIntegration.shouldViewDownloadInternally(
+      this.mLauncher.MIMEInfo.MIMEType
     );
   },
 
