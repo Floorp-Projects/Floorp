@@ -608,7 +608,7 @@ BD_ConstantValue global_constantValue(const GlobalDesc* global) {
     case TypeCode::F64:
       v.u.f64 = value.f64();
       break;
-    case TypeCode::OptRef:
+    case TypeCode::NullableRef:
       v.u.r = value.ref().forCompiledCode();
       break;
     default:

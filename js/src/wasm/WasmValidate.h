@@ -231,7 +231,13 @@ struct ModuleEnvironment {
     }
 #if defined(ENABLE_WASM_GC)
     if (gcTypesEnabled()) {
-      // Structs are subtypes of AnyRef.
+      // A subtype must have the same nullability as the supertype or the
+      // supertype must be nullable.
+      if (!(one.isNullable() == two.isNullable() || two.isNullable())) {
+        return false;
+      }
+
+      // Structs are subtypes of ExternRef.
       if (isStructType(one) && two.isExtern()) {
         return true;
       }
@@ -400,7 +406,7 @@ class Encoder {
   MOZ_MUST_USE bool writeValType(ValType type) {
     static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
     if (type.isTypeIndex()) {
-      return writeFixedU8(uint8_t(TypeCode::OptRef)) &&
+      return writeFixedU8(uint8_t(TypeCode::NullableRef)) &&
              writeVarU32(type.refType().typeIndex());
     }
     TypeCode tc = UnpackTypeCodeType(type.packed());
@@ -665,11 +671,24 @@ class Decoder {
   MOZ_MUST_USE ValType uncheckedReadValType() {
     uint8_t code = uncheckedReadFixedU8();
     switch (code) {
-      case uint8_t(TypeCode::OptRef):
-        return RefType::fromTypeIndex(uncheckedReadVarU32());
-      case uint8_t(TypeCode::ExternRef):
       case uint8_t(TypeCode::FuncRef):
-        return RefType::fromTypeCode(TypeCode(code));
+      case uint8_t(TypeCode::ExternRef):
+        return RefType::fromTypeCode(TypeCode(code), true);
+      case uint8_t(TypeCode::Ref):
+      case uint8_t(TypeCode::NullableRef): {
+        bool nullable = code == uint8_t(TypeCode::NullableRef);
+
+        uint8_t nextByte;
+        peekByte(&nextByte);
+
+        if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
+          uint8_t code = uncheckedReadFixedU8();
+          return RefType::fromTypeCode(TypeCode(code), nullable);
+        }
+
+        int32_t x = uncheckedReadVarS32();
+        return RefType::fromTypeIndex(x, nullable);
+      }
       default:
         return ValType::fromNonRefTypeCode(TypeCode(code));
     }
@@ -703,21 +722,42 @@ class Decoder {
         if (!refTypesEnabled) {
           return fail("reference types not enabled");
         }
-        *type = RefType::fromTypeCode(TypeCode(code));
+        *type = RefType::fromTypeCode(TypeCode(code), true);
         return true;
 #  ifdef ENABLE_WASM_GC
-      case uint8_t(TypeCode::OptRef): {
+      case uint8_t(TypeCode::Ref):
+      case uint8_t(TypeCode::NullableRef): {
         if (!gcTypesEnabled) {
-          return fail("(optref T) types not enabled");
+          return fail("(ref T) types not enabled");
         }
-        uint32_t typeIndex;
-        if (!readVarU32(&typeIndex)) {
-          return false;
+        bool nullable = code == uint8_t(TypeCode::NullableRef);
+
+        uint8_t nextByte;
+        if (!peekByte(&nextByte)) {
+          return fail("unable to read heap type");
         }
-        if (typeIndex >= numTypes) {
-          return fail("ref index out of range");
+
+        if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
+          uint8_t code;
+          if (!readFixedU8(&code)) {
+            return false;
+          }
+
+          switch (code) {
+            case uint8_t(TypeCode::FuncRef):
+            case uint8_t(TypeCode::ExternRef):
+              *type = RefType::fromTypeCode(TypeCode(code), nullable);
+              return true;
+            default:
+              return fail("invalid heap type");
+          }
         }
-        *type = RefType::fromTypeIndex(typeIndex);
+
+        int32_t x;
+        if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes) {
+          return fail("invalid heap type index");
+        }
+        *type = RefType::fromTypeIndex(x, nullable);
         return true;
       }
 #  endif
@@ -741,45 +781,26 @@ class Decoder {
   }
   MOZ_MUST_USE bool readRefType(uint32_t numTypes, bool gcTypesEnabled,
                                 RefType* type) {
-    static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-    uint8_t code;
-    if (!readFixedU8(&code)) {
+    ValType valType;
+    if (!readValType(numTypes, true, gcTypesEnabled, &valType)) {
       return false;
     }
-    switch (code) {
-      case uint8_t(TypeCode::FuncRef):
-      case uint8_t(TypeCode::ExternRef):
-        *type = RefType::fromTypeCode(TypeCode(code));
-        return true;
-#ifdef ENABLE_WASM_GC
-      case uint8_t(TypeCode::OptRef): {
-        if (!gcTypesEnabled) {
-          return fail("(optref T) types not enabled");
-        }
-        uint32_t typeIndex;
-        if (!readVarU32(&typeIndex)) {
-          return false;
-        }
-        if (typeIndex >= numTypes) {
-          return fail("ref index out of range");
-        }
-        *type = RefType::fromTypeIndex(typeIndex);
-        return true;
-      }
-#endif
-      default:
-        return fail("bad type");
+    if (!valType.isReference()) {
+      return fail("bad type");
     }
+    *type = valType.refType();
+    return true;
   }
   MOZ_MUST_USE bool readRefType(const TypeDefVector& types, bool gcTypesEnabled,
                                 RefType* type) {
-    if (!readRefType(types.length(), gcTypesEnabled, type)) {
+    ValType valType;
+    if (!readValType(types, true, gcTypesEnabled, &valType)) {
       return false;
     }
-    if (type->kind() == RefType::TypeIndex &&
-        !types[type->typeIndex()].isStructType()) {
-      return fail("type index does not reference a struct type");
+    if (!valType.isReference()) {
+      return fail("bad type");
     }
+    *type = valType.refType();
     return true;
   }
   MOZ_MUST_USE bool readOp(OpBytes* op) {
