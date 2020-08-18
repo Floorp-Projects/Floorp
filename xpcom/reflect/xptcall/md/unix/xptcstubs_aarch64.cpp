@@ -176,26 +176,34 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args,
     return result;
 }
 
+#ifdef __APPLE__
+#define GNU(str)
+#define UNDERSCORE "__"
+#else
+#define GNU(str) str
+#define UNDERSCORE "_"
+#endif
+
 // Load w17 with the constant 'n' and branch to SharedStub().
 # define STUB_ENTRY(n)                                                  \
     __asm__ (                                                           \
-            ".section \".text\" \n\t"                                   \
+            ".text\n\t"                                                 \
             ".align 2\n\t"                                              \
             ".if "#n" < 10 \n\t"                                        \
-            ".globl  _ZN14nsXPTCStubBase5Stub"#n"Ev \n\t"               \
-            ".hidden _ZN14nsXPTCStubBase5Stub"#n"Ev \n\t"               \
-            ".type   _ZN14nsXPTCStubBase5Stub"#n"Ev,@function \n\n"     \
-            "_ZN14nsXPTCStubBase5Stub"#n"Ev: \n\t"                      \
+            ".globl  " UNDERSCORE "ZN14nsXPTCStubBase5Stub"#n"Ev \n\t"  \
+            GNU(".hidden _ZN14nsXPTCStubBase5Stub"#n"Ev \n\t")          \
+            GNU(".type   _ZN14nsXPTCStubBase5Stub"#n"Ev,@function \n\n")\
+            "" UNDERSCORE "ZN14nsXPTCStubBase5Stub"#n"Ev: \n\t"         \
             ".elseif "#n" < 100 \n\t"                                   \
-            ".globl  _ZN14nsXPTCStubBase6Stub"#n"Ev \n\t"               \
-            ".hidden _ZN14nsXPTCStubBase6Stub"#n"Ev \n\t"               \
-            ".type   _ZN14nsXPTCStubBase6Stub"#n"Ev,@function \n\n"     \
-            "_ZN14nsXPTCStubBase6Stub"#n"Ev: \n\t"                      \
+            ".globl  " UNDERSCORE "ZN14nsXPTCStubBase6Stub"#n"Ev \n\t"  \
+            GNU(".hidden _ZN14nsXPTCStubBase6Stub"#n"Ev \n\t")          \
+            GNU(".type   _ZN14nsXPTCStubBase6Stub"#n"Ev,@function \n\n")\
+            "" UNDERSCORE "ZN14nsXPTCStubBase6Stub"#n"Ev: \n\t"         \
             ".elseif "#n" < 1000 \n\t"                                  \
-            ".globl  _ZN14nsXPTCStubBase7Stub"#n"Ev \n\t"               \
-            ".hidden _ZN14nsXPTCStubBase7Stub"#n"Ev \n\t"               \
-            ".type   _ZN14nsXPTCStubBase7Stub"#n"Ev,@function \n\n"     \
-            "_ZN14nsXPTCStubBase7Stub"#n"Ev: \n\t"                      \
+            ".globl  " UNDERSCORE "ZN14nsXPTCStubBase7Stub"#n"Ev \n\t"  \
+            GNU(".hidden _ZN14nsXPTCStubBase7Stub"#n"Ev \n\t")          \
+            GNU(".type   _ZN14nsXPTCStubBase7Stub"#n"Ev,@function \n\n")\
+            UNDERSCORE "ZN14nsXPTCStubBase7Stub"#n"Ev: \n\t"            \
             ".else  \n\t"                                               \
             ".err   \"stub number "#n" >= 1000 not yet supported\"\n"   \
             ".endif \n\t"                                               \
