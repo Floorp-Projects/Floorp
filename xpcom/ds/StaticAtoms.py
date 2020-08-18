@@ -2385,6 +2385,7 @@ STATIC_ATOMS = [
     # Media Controller
     Atom("onactivated", "onactivated"),
     Atom("ondeactivated", "ondeactivated"),
+    Atom("onmetadatachange", "onmetadatachange"),
     Atom("onplaybackstatechange", "onplaybackstatechange"),
     Atom("onpositionstatechange", "onpositionstatechange"),
     Atom("onsupportedkeyschange", "onsupportedkeyschange"),
