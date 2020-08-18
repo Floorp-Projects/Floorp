@@ -2309,7 +2309,7 @@ inline bool OpIter<Policy>::readStructNew(uint32_t* typeIndex,
     }
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex));
+  return push(RefType::fromTypeIndex(*typeIndex, false));
 }
 
 template <typename Policy>
@@ -2328,7 +2328,7 @@ inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
     return false;
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex), ptr)) {
+  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
     return false;
   }
 
@@ -2360,7 +2360,7 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return fail("field is not mutable");
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex), ptr)) {
+  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
     return false;
   }
 
