@@ -13,6 +13,8 @@ const FORM_PAGE_PATH =
 const passwordInputSelector = "#form-basic-password";
 const usernameInputSelector = "#form-basic-username";
 
+requestLongerTimeout(2);
+
 async function task_setup() {
   Services.logins.removeAllLogins();
   LoginTestUtils.resetGeneratedPasswordsCache();
