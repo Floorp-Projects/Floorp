@@ -1099,7 +1099,11 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
   MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
 
   // The stub handles the missing-properties case only if we're seeing one
-  // now, to make sure Ion ICs correctly monitor the undefined type.
+  // now, to make sure Ion ICs correctly monitor the undefined type. Without
+  // TI we don't use type monitoring so always allow |undefined|.
+  if (!IsTypeInferenceEnabled()) {
+    handleMissing = true;
+  }
 
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {

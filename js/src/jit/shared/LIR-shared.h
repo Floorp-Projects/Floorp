@@ -6313,6 +6313,27 @@ class LProxySetByValue
   MProxySetByValue* mir() const { return mir_->toProxySetByValue(); }
 };
 
+class LMegamorphicLoadSlot : public LCallInstructionHelper<BOX_PIECES, 1, 3> {
+ public:
+  LIR_HEADER(MegamorphicLoadSlot)
+
+  LMegamorphicLoadSlot(const LAllocation& obj, const LDefinition& temp1,
+                       const LDefinition& temp2, const LDefinition& temp3)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+
+  MMegamorphicLoadSlot* mir() const { return mir_->toMegamorphicLoadSlot(); }
+};
+
 class LGuardIsNotArrayBufferMaybeShared : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardIsNotArrayBufferMaybeShared)
