@@ -17,8 +17,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
+  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  TopSiteAttribution: "resource:///modules/TopSiteAttribution.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -629,7 +629,7 @@ class UrlbarInput {
 
     this.controller.recordSelectedResult(event, result);
     if (result.payload.sendTopSiteAttributionRequest) {
-      TopSiteAttribution.makeRequest({
+      PartnerLinkAttribution.makeRequest({
         targetURL: result.payload.url,
         source: "urlbar",
       });
