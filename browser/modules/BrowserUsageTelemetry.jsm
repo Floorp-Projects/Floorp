@@ -19,6 +19,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
@@ -239,6 +240,22 @@ let URICountListener = {
     this._restoredURIsMap.set(browser, uri.spec);
   },
 
+  onStateChange(browser, webProgress, request, stateFlags, status) {
+    if (
+      !webProgress.isTopLevel ||
+      !(stateFlags & Ci.nsIWebProgressListener.STATE_STOP) ||
+      !(stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+    ) {
+      return;
+    }
+
+    if (!(request instanceof Ci.nsIChannel) || !this.isHttpURI(request.URI)) {
+      return;
+    }
+
+    BrowserUsageTelemetry._recordSiteOriginsPerLoadedTabs();
+  },
+
   onLocationChange(browser, webProgress, request, uri, flags) {
     if (!(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
       // By default, assume we no longer need to track this tab.
@@ -409,6 +426,7 @@ let BrowserUsageTelemetry = {
   init() {
     this._lastRecordTabCount = 0;
     this._lastRecordLoadedTabCount = 0;
+    this._lastRecordSiteOriginsPerLoadedTabs = 0;
     this._setupAfterRestore();
     this._inited = true;
 
@@ -1382,6 +1400,70 @@ let BrowserUsageTelemetry = {
       "browser.engagement.profile_count",
       valueToReport
     );
+  },
+
+  /**
+   * Record telemetry about the ratio of number of site origins per number of
+   * loaded tabs.
+   *
+   * This will only record the telemetry if it has been five minutes since the
+   * last recording.
+   */
+  _recordSiteOriginsPerLoadedTabs() {
+    const currentTime = Date.now();
+    if (
+      currentTime >
+      this._lastRecordSiteOriginsPerLoadedTabs + MINIMUM_TAB_COUNT_INTERVAL_MS
+    ) {
+      this._lastRecordSiteOriginsPerLoadedTabs = currentTime;
+      // If this is the first load, we discard it because it is likely just the
+      // browser opening for the first time.
+      if (this._lastRecordSiteOriginsPerLoadedTabs === 0) {
+        return;
+      }
+
+      const { loadedTabCount } = getOpenTabsAndWinsCounts();
+      const siteOrigins = BrowserUtils.computeSiteOriginCount(
+        Services.wm.getEnumerator("navigator:browser"),
+        false
+      );
+      const histogramId = this._getSiteOriginHistogram(loadedTabCount);
+      // Telemetry doesn't support float values.
+      Services.telemetry
+        .getHistogramById(histogramId)
+        .add(Math.trunc((100 * siteOrigins) / loadedTabCount));
+    }
+  },
+
+  _siteOriginHistogramIds: [
+    [1, 1, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_1"],
+    [2, 4, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_2_4"],
+    [5, 9, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_5_9"],
+    [10, 14, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_10_14"],
+    [15, 19, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_15_19"],
+    [20, 24, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_20_24"],
+    [25, 29, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_25_29"],
+    [31, 34, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_30_34"],
+    [35, 39, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_35_39"],
+    [40, 44, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_40_44"],
+    [45, 49, "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_45_49"],
+  ],
+
+  /**
+   * Return the appropriate histogram ID for the given loaded tab count.
+   *
+   * Unique site origin telemetry is split across several histograms so that it
+   * can approximate a unique site origin vs loaded tab count curve.
+   *
+   * @param {number} [loadedTabCount] The number of loaded tabs.
+   */
+  _getSiteOriginHistogram(loadedTabCount) {
+    for (const [min, max, histogramId] of this._siteOriginHistogramIds) {
+      if (min <= loadedTabCount && loadedTabCount <= max) {
+        return histogramId;
+      }
+    }
+    return "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_LOADED_TABS_50_PLUS";
   },
 };
 
