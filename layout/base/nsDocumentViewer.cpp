@@ -3132,39 +3132,33 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
 
   // If we are hosting a full-page plugin, tell it to print
   // first. It shows its own native print UI.
-  nsCOMPtr<nsIPluginDocument> pDoc(do_QueryInterface(mDocument));
-  if (pDoc) {
+  if (nsCOMPtr<nsIPluginDocument> pDoc = do_QueryInterface(mDocument)) {
     return pDoc->Print();
   }
 
-  nsresult rv;
-
-  // Our call to nsPrintJob::Print() may cause mPrintJob to be
-  // Release()'d in Destroy().  Therefore, we need to grab the instance with
-  // a local variable, so that it won't be deleted during its own method.
-  RefPtr<nsPrintJob> printJob = mPrintJob;
-  if (!printJob) {
-    printJob = new nsPrintJob();
-
-    rv = printJob->Initialize(this, mContainer, mDocument,
-                              float(AppUnitsPerCSSInch()) /
-                                  float(mDeviceContext->AppUnitsPerDevPixel()));
-    if (NS_FAILED(rv)) {
-      printJob->Destroy();
-      return rv;
-    }
-    mPrintJob = printJob;
-  } else if (printJob->GetIsPrinting()) {
-    // if we are printing another URL, then exit
-    // the reason we check here is because this method can be called while
-    // another is still in here (the printing dialog is a good example).
-    // the only time we can print more than one job at a time is the regression
-    // tests
-    rv = NS_ERROR_NOT_AVAILABLE;
-    printJob->FirePrintingErrorEvent(rv);
+  if (mPrintJob && mPrintJob->GetIsPrinting()) {
+    // If we are printing another URL, then exit.
+    // The reason we check here is because this method can be called while
+    // another is still in here (the printing dialog is a good example).  the
+    // only time we can print more than one job at a time is the regression
+    // tests.
+    nsresult rv = NS_ERROR_NOT_AVAILABLE;
+    RefPtr<nsPrintJob>(mPrintJob)->FirePrintingErrorEvent(rv);
     return rv;
   }
 
+  OnDonePrinting();
+  RefPtr<nsPrintJob> printJob = new nsPrintJob();
+  nsresult rv =
+      printJob->Initialize(this, mContainer, mDocument,
+                           float(AppUnitsPerCSSInch()) /
+                               float(mDeviceContext->AppUnitsPerDevPixel()));
+  if (NS_FAILED(rv)) {
+    printJob->Destroy();
+    return rv;
+  }
+
+  mPrintJob = printJob;
   rv = printJob->Print(mDocument, aPrintSettings, aWebProgressListener);
   if (NS_FAILED(rv)) {
     OnDonePrinting();
@@ -3182,8 +3176,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
              "docshell.initOrReusePrintPreviewViewer!");
 
   NS_ENSURE_ARG_POINTER(aChildDOMWin);
-  nsresult rv = NS_OK;
-
   if (GetIsPrinting()) {
     nsPrintJob::CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
@@ -3208,19 +3200,22 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   // Our call to nsPrintJob::PrintPreview() may cause mPrintJob to be
   // Release()'d in Destroy().  Therefore, we need to grab the instance with
   // a local variable, so that it won't be deleted during its own method.
-  RefPtr<nsPrintJob> printJob = mPrintJob;
-  if (!printJob) {
-    printJob = new nsPrintJob();
+  const bool hadPrintJob = !!mPrintJob;
+  OnDonePrinting();
 
-    rv = printJob->Initialize(this, mContainer, doc,
-                              float(AppUnitsPerCSSInch()) /
-                                  float(mDeviceContext->AppUnitsPerDevPixel()));
-    if (NS_FAILED(rv)) {
-      printJob->Destroy();
-      return rv;
-    }
-    mPrintJob = printJob;
+  RefPtr<nsPrintJob> printJob = new nsPrintJob();
 
+  nsresult rv =
+      printJob->Initialize(this, mContainer, doc,
+                           float(AppUnitsPerCSSInch()) /
+                               float(mDeviceContext->AppUnitsPerDevPixel()));
+  if (NS_FAILED(rv)) {
+    printJob->Destroy();
+    return rv;
+  }
+  mPrintJob = printJob;
+
+  if (!hadPrintJob) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_OPENED, 1);
   }
   rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener);
@@ -3644,11 +3639,10 @@ void nsDocumentViewer::OnDonePrinting() {
   // So, the following clean up does nothing in such case.
   // (Do we need some of this for that case?)
   if (mPrintJob) {
-    RefPtr<nsPrintJob> printJob = mPrintJob;
+    RefPtr<nsPrintJob> printJob = std::move(mPrintJob);
     if (GetIsPrintPreview()) {
       printJob->DestroyPrintingData();
     } else {
-      mPrintJob = nullptr;
       printJob->Destroy();
     }
 
