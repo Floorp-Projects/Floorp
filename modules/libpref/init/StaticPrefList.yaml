@@ -3546,6 +3546,15 @@
   value: false
   mirror: always
 
+# If true, allow process-switching documents loaded by <object> and <embed>
+# elements into a remote process.
+# NOTE: This pref has no impact outside of windows with the
+# `useRemoteSubframes` flag set.
+- name: fission.remoteObjectEmbed
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------

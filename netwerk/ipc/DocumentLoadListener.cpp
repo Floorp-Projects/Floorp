@@ -1654,6 +1654,11 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     return false;
   }
 
+  if (!StaticPrefs::fission_remoteObjectEmbed()) {
+    LOG(("Process Switch Abort: remote <object>/<embed> disabled"));
+    return false;
+  }
+
   mObjectUpgradeHandler->UpgradeObjectLoad()->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [self = RefPtr{this}, remoteType, replaceBrowsingContext, specificGroupId,
