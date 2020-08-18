@@ -33,7 +33,6 @@ using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::DatabaseUsageType;
-using mozilla::dom::quota::FileUsageType;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -85,7 +84,22 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
         return rv;
       }
       MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
-      *aUsageInfo += FileUsageType(Some(fileSize));
+      // FIXME: Separate file usage and database usage in OriginInfo so that the
+      // workaround for treating body file size as database usage can be
+      // removed.
+      //
+      // This is needed because we want to remove the mutex lock for padding
+      // files. The lock is needed because the padding file is accessed on the
+      // QM IO thread while getting origin usage and is accessed on the Cache IO
+      // thread in normal Cache operations.
+      // Using the cached usage in QM while getting origin usage can remove the
+      // access on the QM IO thread and thus we can remove the mutex lock.
+      // However, QM only separates usage types in initialization, and the
+      // separation is gone after that. So, before extending the separation of
+      // usage types in QM, this is a workaround to avoid the file usage
+      // mismatching in our tests. Note that file usage hasn't been exposed to
+      // users yet.
+      *aUsageInfo += DatabaseUsageType(Some(fileSize));
 
       fileDeleted = false;
 
@@ -432,7 +446,9 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
     return usageInfo;
   }
 
-  usageInfo += FileUsageType(Some(paddingSize));
+  // FIXME: Separate file usage and database usage in OriginInfo so that the
+  // workaround for treating padding file size as database usage can be removed.
+  usageInfo += DatabaseUsageType(Some(paddingSize));
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = dir->GetDirectoryEntries(getter_AddRefs(entries));

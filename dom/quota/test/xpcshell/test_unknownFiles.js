@@ -103,7 +103,7 @@ async function testSteps() {
       "The result is nsIQuotaOriginUsageResult instance"
     );
     is(request.result.usage, 115025, "Correct total usage");
-    is(request.result.fileUsage, 231, "Correct file usage");
+    is(request.result.fileUsage, 200, "Correct file usage");
   });
 
   info("Testing clearStoragesForPrincipal functionality");
