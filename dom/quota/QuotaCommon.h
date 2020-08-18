@@ -17,9 +17,7 @@
 #define MOZ_ARG_5(a1, a2, a3, a4, a5, ...) a5
 #define MOZ_ARG_6(a1, a2, a3, a4, a5, a6, ...) a6
 
-#define MOZ_PASTE_HELPER(a, b) a##b
-#define MOZ_PASTE(a, b) MOZ_PASTE_HELPER(a, b)
-#define MOZ_UNIQUE_VAR(base) MOZ_PASTE(base_, __LINE__)
+#define MOZ_UNIQUE_VAR(base) MOZ_CONCAT(base, __LINE__)
 
 #define BEGIN_QUOTA_NAMESPACE \
   namespace mozilla {         \
