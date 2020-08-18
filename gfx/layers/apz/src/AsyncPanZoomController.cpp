@@ -4178,10 +4178,6 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
     // There is no "lastPaintVisualOffset" to subtract here; the visual offset
     // is entirely async.
-    if (mLastContentPaintMetrics.IsScrollable()) {
-      MOZ_ASSERT(mLastContentPaintMetrics.GetScrollOffset() ==
-                 mLastContentPaintMetrics.GetLayoutViewport().TopLeft());
-    }
 
     CSSPoint currentVisualOffset =
         GetEffectiveScrollOffset(aMode, lock) -
