@@ -8,7 +8,8 @@ namespace mozilla {
 namespace widget {
 
 mozilla::dom::MediaControlKeySource* CreateMediaControlKeySource() {
-  // TODO : will implement this in bug 1601510.
+  // GeckoView uses MediaController.webidl for media session events and control,
+  // see bug 1623715.
   return nullptr;
 }
 

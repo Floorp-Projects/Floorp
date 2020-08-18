@@ -192,6 +192,9 @@ class nsWindow final : public nsBaseWidget {
   // Strong referenced by the Java instance.
   NativePtr<mozilla::a11y::SessionAccessibility> mSessionAccessibility;
 
+  class MediaSessionSupport;
+  NativePtr<MediaSessionSupport> mMediaSessionSupport;
+
   class GeckoViewSupport;
   // Object that implements native GeckoView calls and associated states.
   // nullptr for nsWindows that were not opened from GeckoView.
