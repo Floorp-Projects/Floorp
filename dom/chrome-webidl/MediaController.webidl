@@ -32,6 +32,9 @@ interface MediaController : EventTarget {
   readonly attribute boolean isAudible;
   readonly attribute boolean isPlaying;
 
+  [Throws]
+  MediaMetadataInit getMetadata();
+
   [Frozen, Cached, Pure]
   readonly attribute sequence<MediaControlKey> supportedKeys;
 

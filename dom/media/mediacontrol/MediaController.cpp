@@ -50,6 +50,29 @@ void MediaController::GetSupportedKeys(
   }
 }
 
+void MediaController::GetMetadata(MediaMetadataInit& aMetadata,
+                                  ErrorResult& aRv) {
+  if (!IsActive() || mShutdown) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  const MediaMetadataBase metadata = GetCurrentMediaMetadata();
+  aMetadata.mTitle = metadata.mTitle;
+  aMetadata.mArtist = metadata.mArtist;
+  aMetadata.mAlbum = metadata.mAlbum;
+  for (const auto& artwork : metadata.mArtwork) {
+    if (MediaImage* image = aMetadata.mArtwork.AppendElement(fallible)) {
+      image->mSrc = artwork.mSrc;
+      image->mSizes = artwork.mSizes;
+      image->mType = artwork.mType;
+    } else {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+  }
+}
+
 static const MediaControlKey sDefaultSupportedKeys[] = {
     MediaControlKey::Focus,     MediaControlKey::Play, MediaControlKey::Pause,
     MediaControlKey::Playpause, MediaControlKey::Stop,
