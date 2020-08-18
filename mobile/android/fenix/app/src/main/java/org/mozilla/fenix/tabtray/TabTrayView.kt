@@ -60,6 +60,7 @@ class TabTrayView(
     private val container: ViewGroup,
     private val tabsAdapter: FenixTabsAdapter,
     private val interactor: TabTrayInteractor,
+    store: TabTrayDialogFragmentStore,
     isPrivate: Boolean,
     startingInLandscape: Boolean,
     lifecycleOwner: LifecycleOwner,
@@ -78,13 +79,14 @@ class TabTrayView(
 
     private val behavior = BottomSheetBehavior.from(view.tab_wrapper)
 
+    private val concatAdapter = ConcatAdapter(tabsAdapter)
     private val tabTrayItemMenu: TabTrayItemMenu
     private var menu: BrowserMenu? = null
 
     private var tabsTouchHelper: TabsTouchHelper
     private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor, isPrivate)
 
-    private val syncedTabsController = SyncedTabsController(view)
+    private val syncedTabsController = SyncedTabsController(lifecycleOwner, view, store, concatAdapter)
     private val syncedTabsFeature = ViewBoundFeatureWrapper<SyncedTabsFeature>()
 
     private var hasLoaded = false
@@ -160,7 +162,6 @@ class TabTrayView(
             )
         }
 
-        val concatAdapter = ConcatAdapter(tabsAdapter)
         view.tabsTray.apply {
             layoutManager = LinearLayoutManager(container.context).apply {
                 reverseLayout = true

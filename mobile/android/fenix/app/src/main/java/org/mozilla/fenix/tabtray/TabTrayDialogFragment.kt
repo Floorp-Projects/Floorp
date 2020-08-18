@@ -192,6 +192,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                     showAddNewCollectionDialog = ::showAddNewCollectionDialog
                 )
             ),
+            store = tabTrayDialogStore,
             isPrivate = isPrivate,
             startingInLandscape = requireContext().resources.configuration.orientation ==
                     Configuration.ORIENTATION_LANDSCAPE,

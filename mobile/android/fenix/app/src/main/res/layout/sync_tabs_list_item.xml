@@ -6,9 +6,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:paddingTop="6dp"
+    android:paddingBottom="8dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
     android:background="?android:attr/selectableItemBackground">
 
     <TextView
@@ -17,7 +18,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="72dp"
         android:layout_marginEnd="48dp"
-        android:layout_marginTop="6dp"
         android:singleLine="true"
         android:textAlignment="viewStart"
         android:textColor="?primaryText"
