@@ -11305,7 +11305,7 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
         t = ValType::I64;
         break;
       case MIRType::RefOrNull:
-        t = RefType::any();
+        t = RefType::extern_();
         break;
       case MIRType::Pointer:
         // Instance function args can now be uninterpreted pointers (eg, for
@@ -12612,13 +12612,13 @@ bool BaseCompiler::emitStructNarrow() {
 
   // struct.narrow validation ensures that these hold.
 
-  MOZ_ASSERT(inputType.isAnyRef() || env_.isStructType(inputType));
-  MOZ_ASSERT(outputType.isAnyRef() || env_.isStructType(outputType));
-  MOZ_ASSERT_IF(outputType.isAnyRef(), inputType.isAnyRef());
+  MOZ_ASSERT(inputType.isExternRef() || env_.isStructType(inputType));
+  MOZ_ASSERT(outputType.isExternRef() || env_.isStructType(outputType));
+  MOZ_ASSERT_IF(outputType.isExternRef(), inputType.isExternRef());
 
   // AnyRef -> AnyRef is a no-op, just leave the value on the stack.
 
-  if (inputType.isAnyRef() && outputType.isAnyRef()) {
+  if (inputType.isExternRef() && outputType.isExternRef()) {
     return true;
   }
 
@@ -12626,7 +12626,7 @@ bool BaseCompiler::emitStructNarrow() {
 
   // AnyRef -> (optref T) must first unbox; leaves rp or null
 
-  bool mustUnboxAnyref = inputType.isAnyRef();
+  bool mustUnboxAnyref = inputType.isExternRef();
 
   // Dynamic downcast (optref T) -> (optref U), leaves rp or null
   const StructType& outputStruct =
@@ -14309,7 +14309,7 @@ bool BaseCompiler::emitBody() {
         if (!env_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
-        CHECK_NEXT(dispatchComparison(emitCompareRef, RefType::any(),
+        CHECK_NEXT(dispatchComparison(emitCompareRef, RefType::extern_(),
                                       Assembler::Equal));
 #endif
 #ifdef ENABLE_WASM_REFTYPES

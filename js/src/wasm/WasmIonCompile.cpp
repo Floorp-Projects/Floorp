@@ -2598,7 +2598,7 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
     case ValType::Ref:
       switch (value.type().refTypeKind()) {
         case RefType::Func:
-        case RefType::Any:
+        case RefType::Extern:
           MOZ_ASSERT(value.ref().isNull());
           result = f.nullRefConstant();
           break;
@@ -4674,7 +4674,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         if (!f.env().gcTypesEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
-        CHECK(EmitComparison(f, RefType::any(), JSOp::Eq,
+        CHECK(EmitComparison(f, RefType::extern_(), JSOp::Eq,
                              MCompare::Compare_RefOrNull));
 #endif
 #ifdef ENABLE_WASM_REFTYPES
