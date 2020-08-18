@@ -22,6 +22,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "prenv.h"
+#include "GeckoProfiler.h"
 
 namespace base {
 
@@ -168,8 +169,16 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
     // Using posix_fallocate will ensure that there's actually space for this
     // file. Otherwise we end up with a sparse file that can give SIGBUS if we
     // run out of space while writing to it.
-    int rv =
-        HANDLE_RV_EINTR(posix_fallocate(fd.get(), 0, static_cast<off_t>(size)));
+    int rv;
+    {
+      // Avoid repeated interruptions of posix_fallocate by the profiler's
+      // SIGPROF sampling signal. Indicating "thread sleep" here means we'll
+      // get up to one interruption but not more. See bug 1658847 for more.
+      // This has to be scoped outside the HANDLE_RV_EINTR retry loop.
+      AUTO_PROFILER_THREAD_SLEEP;
+      rv = HANDLE_RV_EINTR(
+          posix_fallocate(fd.get(), 0, static_cast<off_t>(size)));
+    }
     if (rv != 0) {
       if (rv == EOPNOTSUPP || rv == EINVAL || rv == ENODEV) {
         // Some filesystems have trouble with posix_fallocate. For now, we must
