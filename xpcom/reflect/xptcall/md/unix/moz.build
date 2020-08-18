@@ -18,6 +18,11 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         SOURCES += [
             'xptcinvoke_asm_x86_64_unix.S',
         ]
+    if CONFIG['CPU_ARCH'] == 'aarch64':
+        SOURCES += [
+            'xptcinvoke_asm_aarch64.S',
+            'xptcstubs_asm_aarch64.S',
+        ]
 
 if CONFIG['OS_ARCH'] == 'GNU':
     if CONFIG['CPU_ARCH'] == 'x86':
@@ -113,9 +118,9 @@ if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD', 'OpenBSD'):
     if CONFIG['CPU_ARCH'] == 'aarch64':
         SOURCES += [
             'xptcinvoke_aarch64.cpp',
-            'xptcinvoke_asm_aarch64.s',
+            'xptcinvoke_asm_aarch64.S',
             'xptcstubs_aarch64.cpp',
-            'xptcstubs_asm_aarch64.s',
+            'xptcstubs_asm_aarch64.S',
         ]
     if CONFIG['CPU_ARCH'] == 'mips64':
         SOURCES += [
