@@ -735,10 +735,6 @@ void MPRISServiceHandler::EmitEvent(mozilla::dom::MediaControlKey aKey) const {
   }
 }
 
-static uint32_t GetMediaKeyMask(mozilla::dom::MediaControlKey aKey) {
-  return 1 << static_cast<uint8_t>(aKey);
-}
-
 struct InterfaceProperty {
   const char* interface;
   const char* property;

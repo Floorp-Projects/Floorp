@@ -148,13 +148,20 @@ bool WindowsSMTCProvider::Open() {
     return false;
   }
 
-  if (!SetControlAttributes(SMTCControlAttributes::EnableAll())) {
-    LOG("Failed to set control attributes");
+  if (!EnableControl(true)) {
+    LOG("Failed to enable SMTC control");
+    return false;
+  }
+
+  if (!UpdateButtons()) {
+    LOG("Failed to initialize the buttons");
+    Unused << EnableControl(false);
     return false;
   }
 
   if (!RegisterEvents()) {
     LOG("Failed to register SMTC key-event listener");
+    Unused << EnableControl(false);
     return false;
   }
 
@@ -167,7 +174,7 @@ void WindowsSMTCProvider::Close() {
   MediaControlKeySource::Close();
   if (mInitialized) {  // Prevent calling Set methods when init failed
     SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
-    SetControlAttributes(SMTCControlAttributes::DisableAll());
+    EnableControl(false);
     mInitialized = false;
   }
 
@@ -183,6 +190,8 @@ void WindowsSMTCProvider::Close() {
   mProcessingUrl = EmptyString();
 
   mNextImageIndex = 0;
+
+  mSupportedKeys = 0;
 }
 
 void WindowsSMTCProvider::SetPlaybackState(
@@ -227,6 +236,25 @@ void WindowsSMTCProvider::SetMediaMetadata(
   LoadThumbnail(aMetadata.mArtwork);
 }
 
+void WindowsSMTCProvider::SetSupportedMediaKeys(
+    const MediaKeysArray& aSupportedKeys) {
+  MOZ_ASSERT(mInitialized);
+
+  uint32_t supportedKeys = 0;
+  for (const mozilla::dom::MediaControlKey& key : aSupportedKeys) {
+    supportedKeys |= GetMediaKeyMask(key);
+  }
+
+  if (supportedKeys == mSupportedKeys) {
+    LOG("Supported keys stay the same");
+    return;
+  }
+
+  LOG("Update supported keys");
+  mSupportedKeys = supportedKeys;
+  UpdateButtons();
+}
+
 void WindowsSMTCProvider::UnregisterEvents() {
   if (mControls && mButtonPressedToken.value != 0) {
     mControls->remove_ButtonPressed(mButtonPressedToken);
@@ -268,9 +296,61 @@ bool WindowsSMTCProvider::RegisterEvents() {
   return true;
 }
 
-void WindowsSMTCProvider::OnButtonPressed(mozilla::dom::MediaControlKey aKey) {
+void WindowsSMTCProvider::OnButtonPressed(
+    mozilla::dom::MediaControlKey aKey) const {
+  if (!IsKeySupported(aKey)) {
+    LOG("key: %s is not supported", ToMediaControlKeyStr(aKey));
+    return;
+  }
+
   for (auto& listener : mListeners) {
     listener->OnActionPerformed(mozilla::dom::MediaControlAction(aKey));
+  }
+}
+
+bool WindowsSMTCProvider::EnableControl(bool aEnabled) const {
+  MOZ_ASSERT(mControls);
+  return SUCCEEDED(mControls->put_IsEnabled(aEnabled));
+}
+
+bool WindowsSMTCProvider::UpdateButtons() const {
+  static const mozilla::dom::MediaControlKey kKeys[] = {
+      mozilla::dom::MediaControlKey::Play, mozilla::dom::MediaControlKey::Pause,
+      mozilla::dom::MediaControlKey::Previoustrack,
+      mozilla::dom::MediaControlKey::Nexttrack};
+
+  bool success = true;
+  for (const mozilla::dom::MediaControlKey& key : kKeys) {
+    if (!EnableKey(key, IsKeySupported(key))) {
+      success = false;
+      LOG("Failed to set %s=%s", ToMediaControlKeyStr(key),
+          IsKeySupported(key) ? "true" : "false");
+    }
+  }
+
+  return success;
+}
+
+bool WindowsSMTCProvider::IsKeySupported(
+    mozilla::dom::MediaControlKey aKey) const {
+  return mSupportedKeys & GetMediaKeyMask(aKey);
+}
+
+bool WindowsSMTCProvider::EnableKey(mozilla::dom::MediaControlKey aKey,
+                                    bool aEnable) const {
+  MOZ_ASSERT(mControls);
+  switch (aKey) {
+    case mozilla::dom::MediaControlKey::Play:
+      return SUCCEEDED(mControls->put_IsPlayEnabled(aEnable));
+    case mozilla::dom::MediaControlKey::Pause:
+      return SUCCEEDED(mControls->put_IsPauseEnabled(aEnable));
+    case mozilla::dom::MediaControlKey::Previoustrack:
+      return SUCCEEDED(mControls->put_IsPreviousEnabled(aEnable));
+    case mozilla::dom::MediaControlKey::Nexttrack:
+      return SUCCEEDED(mControls->put_IsNextEnabled(aEnable));
+    default:
+      LOG("No button for %s", ToMediaControlKeyStr(aKey));
+      return false;
   }
 }
 
@@ -305,29 +385,6 @@ bool WindowsSMTCProvider::InitDisplayAndControls() {
   }
 
   MOZ_ASSERT(mDisplay);
-  return true;
-}
-
-bool WindowsSMTCProvider::SetControlAttributes(
-    SMTCControlAttributes aAttributes) {
-  MOZ_ASSERT(mControls);
-
-  if (FAILED(mControls->put_IsEnabled(aAttributes.mEnabled))) {
-    return false;
-  }
-  if (FAILED(mControls->put_IsPauseEnabled(aAttributes.mPlayPauseEnabled))) {
-    return false;
-  }
-  if (FAILED(mControls->put_IsPlayEnabled(aAttributes.mPlayPauseEnabled))) {
-    return false;
-  }
-  if (FAILED(mControls->put_IsNextEnabled(aAttributes.mNextEnabled))) {
-    return false;
-  }
-  if (FAILED(mControls->put_IsPreviousEnabled(aAttributes.mPreviousEnabled))) {
-    return false;
-  }
-
   return true;
 }
 
