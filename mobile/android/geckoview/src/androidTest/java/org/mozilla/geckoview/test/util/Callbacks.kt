@@ -13,6 +13,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.MediaElement
+import org.mozilla.geckoview.MediaSession
 import org.mozilla.geckoview.WebRequestError
 
 import android.view.inputmethod.CursorAnchorInfo
@@ -24,7 +25,7 @@ class Callbacks private constructor() {
     object Default : All
 
     interface All : AutofillDelegate, ContentBlockingDelegate, ContentDelegate,
-                    HistoryDelegate, MediaDelegate,
+                    HistoryDelegate, MediaDelegate, MediaSessionDelegate,
                     NavigationDelegate, PermissionDelegate, ProgressDelegate,
                     PromptDelegate, ScrollDelegate, SelectionActionDelegate,
                     TextInputDelegate
@@ -40,6 +41,7 @@ class Callbacks private constructor() {
     interface SelectionActionDelegate : GeckoSession.SelectionActionDelegate {}
     interface MediaDelegate: GeckoSession.MediaDelegate {}
     interface HistoryDelegate : GeckoSession.HistoryDelegate {}
+    interface MediaSessionDelegate: MediaSession.Delegate {}
 
     interface TextInputDelegate : GeckoSession.TextInputDelegate {
         override fun restartInput(session: GeckoSession, reason: Int) {
