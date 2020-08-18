@@ -193,12 +193,12 @@ ${If} $TmpVal == "HKCU"
                     "DidRegisterDefaultBrowserAgent"
   ${If} $0 != 0
   ${OrIf} ${Errors}
-    Exec '"$INSTDIR\default-browser-agent.exe" register-task $AppUserModelID'
+    ExecWait '"$INSTDIR\default-browser-agent.exe" register-task $AppUserModelID'
   ${EndIf}
 ${ElseIf} $TmpVal == "HKLM"
   ; If we're the privileged PostUpdate, make sure that the unprivileged one
   ; will have permission to create a task by clearing out the old one first.
-  Exec '"$INSTDIR\default-browser-agent.exe" unregister-task $AppUserModelID'
+  ExecWait '"$INSTDIR\default-browser-agent.exe" unregister-task $AppUserModelID'
 ${EndIf}
 !endif
 
