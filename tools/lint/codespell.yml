@@ -33,7 +33,6 @@ codespell:
         - python/docs/
         - python/mach/docs/
         - python/mozlint/
-        - python/safety/
         - remote/doc/
         - security/manager/locales/en-US/
         - services/sync/locales/en-US/
