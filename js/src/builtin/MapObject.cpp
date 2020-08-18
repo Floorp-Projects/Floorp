@@ -468,6 +468,9 @@ static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
     // other types the hash function only uses the bits of the Value.
     r.rekeyFront(newKey);
   }
+
+  // Clear newKey to avoid the barrier in ~PreBarriered.
+  newKey.unsafeClear();
 }
 
 void MapObject::trace(JSTracer* trc, JSObject* obj) {
