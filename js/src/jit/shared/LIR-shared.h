@@ -6334,6 +6334,30 @@ class LMegamorphicLoadSlot : public LCallInstructionHelper<BOX_PIECES, 1, 3> {
   MMegamorphicLoadSlot* mir() const { return mir_->toMegamorphicLoadSlot(); }
 };
 
+class LMegamorphicLoadSlotByValue
+    : public LCallInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(MegamorphicLoadSlotByValue)
+
+  LMegamorphicLoadSlotByValue(const LAllocation& obj,
+                              const LBoxAllocation& idVal,
+                              const LDefinition& temp)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setBoxOperand(IdIndex, idVal);
+    setTemp(0, temp);
+  }
+
+  static const size_t IdIndex = 1;
+
+  const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+
+  MMegamorphicLoadSlotByValue* mir() const {
+    return mir_->toMegamorphicLoadSlotByValue();
+  }
+};
+
 class LGuardIsNotArrayBufferMaybeShared : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardIsNotArrayBufferMaybeShared)
