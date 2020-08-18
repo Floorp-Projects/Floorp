@@ -420,6 +420,7 @@ void MediaController::HandleActualPlaybackStateChanged() {
   if (RefPtr<MediaControlService> service = MediaControlService::GetService()) {
     service->NotifyControllerPlaybackStateChanged(this);
   }
+  DispatchAsyncEvent(u"playbackstatechange"_ns);
 }
 
 void MediaController::UpdateActivatedStateIfNeeded() {
