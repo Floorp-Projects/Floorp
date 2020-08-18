@@ -41,10 +41,8 @@ const TEST_MULTISTAGE_CONTENT = {
           label: "link top",
           position: "top",
           action: {
-            type: "OPEN_URL",
-            data: {
-              args: "http://example.com/",
-            },
+            type: "SHOW_FIREFOX_ACCOUNTS",
+            data: { entrypoint: "test" },
           },
         },
       },
@@ -426,7 +424,7 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
   const { callCount } = aboutWelcomeActor.onContentMessage;
   ok(
     callCount >= 2,
-    `${callCount} Stub called twice to handle Open_URL and Telemetry`
+    `${callCount} Stub called twice to handle FxA open URL and Telemetry`
   );
 
   let actionCall;
@@ -448,16 +446,19 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
   );
   Assert.equal(
     actionCall.args[1].type,
-    "OPEN_URL",
-    "Special action OPEN_URL event handled"
+    "SHOW_FIREFOX_ACCOUNTS",
+    "Special action SHOW_FIREFOX_ACCOUNTS event handled"
   );
-  ok(
-    actionCall.args[1].data.args.includes(
-      "utm_term=aboutwelcome-default-screen"
-    ),
-    "UTMTerm set in opened URL"
+  Assert.equal(
+    actionCall.args[1].data.extraParams.utm_term,
+    "aboutwelcome-default-screen",
+    "UTMTerm set in FxA URL"
   );
-
+  Assert.equal(
+    actionCall.args[1].data.entrypoint,
+    "test",
+    "EntryPoint set in FxA URL"
+  );
   Assert.equal(
     eventCall.args[0],
     "AWPage:TELEMETRY_EVENT",

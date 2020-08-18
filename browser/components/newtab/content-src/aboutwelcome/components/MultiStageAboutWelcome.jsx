@@ -6,7 +6,10 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { Zap } from "./Zap";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
-import { addUtmParams } from "../../asrouter/templates/FirstRun/addUtmParams";
+import {
+  BASE_PARAMS,
+  addUtmParams,
+} from "../../asrouter/templates/FirstRun/addUtmParams";
 
 export const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = useState(0);
@@ -120,16 +123,28 @@ export class WelcomeScreen extends React.PureComponent {
 
   handleOpenURL(action, flowParams, UTMTerm) {
     let { type, data } = action;
-    let url = new URL(data.args);
-    addUtmParams(url, `aboutwelcome-${UTMTerm}-screen`);
-
-    if (action.addFlowParams && flowParams) {
-      url.searchParams.append("device_id", flowParams.deviceId);
-      url.searchParams.append("flow_id", flowParams.flowId);
-      url.searchParams.append("flow_begin_time", flowParams.flowBeginTime);
+    if (type === "SHOW_FIREFOX_ACCOUNTS") {
+      let params = {
+        ...BASE_PARAMS,
+        utm_term: `aboutwelcome-${UTMTerm}-screen`,
+      };
+      if (action.addFlowParams && flowParams) {
+        params = {
+          ...params,
+          ...flowParams,
+        };
+      }
+      data = { ...data, extraParams: params };
+    } else if (type === "OPEN_URL") {
+      let url = new URL(data.args);
+      addUtmParams(url, `aboutwelcome-${UTMTerm}-screen`);
+      if (action.addFlowParams && flowParams) {
+        url.searchParams.append("device_id", flowParams.deviceId);
+        url.searchParams.append("flow_id", flowParams.flowId);
+        url.searchParams.append("flow_begin_time", flowParams.flowBeginTime);
+      }
+      data = { ...data, args: url.toString() };
     }
-
-    data = { ...data, args: url.toString() };
     AboutWelcomeUtils.handleUserAction({ type, data });
   }
 
@@ -160,7 +175,7 @@ export class WelcomeScreen extends React.PureComponent {
 
     let { action } = targetContent;
 
-    if (action.type === "OPEN_URL") {
+    if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
       this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
       AboutWelcomeUtils.handleUserAction(action);

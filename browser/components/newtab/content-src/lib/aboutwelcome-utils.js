@@ -83,12 +83,10 @@ export const DEFAULT_WELCOME_CONTENT = {
           },
           position: "top",
           action: {
-            type: "OPEN_URL",
+            type: "SHOW_FIREFOX_ACCOUNTS",
             addFlowParams: true,
             data: {
-              args:
-                "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead",
-              where: "current",
+              entrypoint: "activity-stream-firstrun",
             },
           },
         },
