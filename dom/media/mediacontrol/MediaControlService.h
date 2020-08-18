@@ -119,7 +119,6 @@ class MediaControlService final : public nsIObserver {
     void Shutdown();
 
     MediaController* GetMainController() const;
-    MediaController* GetControllerById(uint64_t aId) const;
     bool Contains(MediaController* aController) const;
     uint64_t GetControllersNum() const;
 
