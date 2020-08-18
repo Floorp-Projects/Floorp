@@ -55,6 +55,12 @@ function initializeDefaultPreferences() {
   var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
   var defaultValue;
   for (var key in PdfJsDefaultPreferences) {
+    // Skip prefs that are already defined, so we can enable/disable things
+    // in all.js.
+    let prefType = defaultBranch.getPrefType(key);
+    if (prefType !== Ci.nsIPrefBranch.PREF_INVALID) {
+      continue;
+    }
     defaultValue = PdfJsDefaultPreferences[key];
     switch (typeof defaultValue) {
       case "boolean":
