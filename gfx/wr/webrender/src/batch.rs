@@ -1191,7 +1191,7 @@ impl BatchBuilder {
                                     root_spatial_node_index,
                                 ).into_transform()
                                     .with_destination::<WorldPixel>()
-                                    .then(&euclid::Transform3D::from_scale(ctx.global_device_pixel_scale));
+                                    .post_transform(&euclid::Transform3D::from_scale(ctx.global_device_pixel_scale));
 
                                 let glyph_translation = DeviceVector2D::new(glyph_transform.m41, glyph_transform.m42);
 
@@ -1250,7 +1250,9 @@ impl BatchBuilder {
                             let intersected = match pic_bounding_rect {
                                 // The text run may have been clipped, for example if part of it is offscreen.
                                 // So intersect our result with the original bounding rect.
-                                Some(rect) => rect.intersection(bounding_rect).unwrap_or_else(PictureRect::zero),
+                                Some(rect) => rect
+                                    .intersection(bounding_rect)
+                                    .unwrap_or_else(PictureRect::zero),
                                 // If space mapping went off the rails, fall back to the old behavior.
                                 //TODO: consider skipping the glyph run completely in this case.
                                 None => *bounding_rect,
@@ -2483,14 +2485,14 @@ impl BatchBuilder {
                         let specific_resource_address = cache_item.uv_rect_handle.as_int(gpu_cache);
                         prim_header.specific_prim_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
-                        let segment_local_clip_rect = match prim_header.local_clip_rect.intersection(&segment.local_rect) {
-                            Some(rect) => rect,
-                            None => { continue; }
-                        };
+                        let segment_local_clip_rect = prim_header.local_clip_rect.intersection(&segment.local_rect);
+                        if segment_local_clip_rect.is_none() {
+                            continue;
+                        }
 
                         let segment_prim_header = PrimitiveHeader {
                             local_rect: segment.local_rect,
-                            local_clip_rect: segment_local_clip_rect,
+                            local_clip_rect: segment_local_clip_rect.unwrap(),
                             specific_prim_address: prim_header.specific_prim_address,
                             transform_id: prim_header.transform_id,
                         };

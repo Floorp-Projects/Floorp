@@ -410,7 +410,7 @@ impl SpatialNode {
                             // perspective matrix using the scroll offset.
                             source_transform
                                 .pre_translate(scroll_offset)
-                                .then_translate(-scroll_offset)
+                                .post_translate(-scroll_offset)
                         }
                         ReferenceFrameKind::Perspective { scrolling_relative_to: None } |
                         ReferenceFrameKind::Transform | ReferenceFrameKind::Zoom => source_transform,
@@ -425,7 +425,7 @@ impl SpatialNode {
                     // between our reference frame and this node. Finally, we also include
                     // whatever local transformation this reference frame provides.
                     let relative_transform = resolved_transform
-                        .then_translate(snap_offset(state.parent_accumulated_scroll_offset, state.coordinate_system_relative_scale_offset.scale, global_device_pixel_scale))
+                        .post_translate(snap_offset(state.parent_accumulated_scroll_offset, state.coordinate_system_relative_scale_offset.scale, global_device_pixel_scale))
                         .to_transform()
                         .with_destination::<LayoutPixel>();
 
@@ -462,9 +462,9 @@ impl SpatialNode {
                     if reset_cs_id {
                         // If we break 2D axis alignment or have a perspective component, we need to start a
                         // new incompatible coordinate system with which we cannot share clips without masking.
-                        let transform = relative_transform.then(
-                            &state.coordinate_system_relative_scale_offset.to_transform()
-                        );
+                        let transform = state.coordinate_system_relative_scale_offset
+                            .to_transform()
+                            .pre_transform(&relative_transform);
 
                         // Push that new coordinate system and record the new id.
                         let coord_system = {
@@ -473,7 +473,7 @@ impl SpatialNode {
                             if parent_system.should_flatten {
                                 cur_transform.flatten_z_output();
                             }
-                            let world_transform = cur_transform.then(&parent_system.world_transform);
+                            let world_transform = cur_transform.post_transform(&parent_system.world_transform);
                             let determinant = world_transform.determinant();
                             info.invertible = determinant != 0.0 && !determinant.is_nan();
 
@@ -977,7 +977,7 @@ fn test_cst_perspective_relative_scroll() {
     let mut cst = SpatialTree::new();
     let pipeline_id = PipelineId::dummy();
     let ext_scroll_id = ExternalScrollId(1, pipeline_id);
-    let transform = LayoutTransform::perspective(100.0);
+    let transform = LayoutTransform::create_perspective(100.0);
 
     let root = cst.add_reference_frame(
         None,

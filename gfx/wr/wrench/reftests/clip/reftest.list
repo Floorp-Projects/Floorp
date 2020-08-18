@@ -1,4 +1,4 @@
-    platform(linux,mac) == border-with-rounded-clip.yaml border-with-rounded-clip.png
+platform(linux,mac) == border-with-rounded-clip.yaml border-with-rounded-clip.png
 == clip-mode.yaml clip-mode.png
 == clip-ellipse.yaml clip-ellipse.png
 platform(linux,mac) == clip-45-degree-rotation.yaml clip-45-degree-rotation-ref.png
