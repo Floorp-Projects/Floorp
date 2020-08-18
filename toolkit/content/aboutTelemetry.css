@@ -17,7 +17,7 @@ body {
   padding-top: 0;
   overflow-y: auto;
   margin-bottom: 42px;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .main-content.search > section > *:not(.data) {
@@ -82,7 +82,7 @@ body {
 #newer-ping,
 #ping-date {
   pointer-events: all;
-  -moz-user-select: none;
+  user-select: none;
   cursor: pointer;
   text-align: center;
 }

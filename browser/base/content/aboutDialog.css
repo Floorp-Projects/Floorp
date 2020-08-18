@@ -39,7 +39,7 @@
   font-weight: bold;
   margin-top: 10px;
   margin-inline-start: 0;
-  -moz-user-select: text;
+  user-select: text;
   -moz-user-focus: normal;
   cursor: text;
 }

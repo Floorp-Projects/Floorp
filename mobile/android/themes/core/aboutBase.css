@@ -9,7 +9,7 @@ html {
   font-size: 14px;
   background-color: var(--color_about_background);
   -moz-text-size-adjust: none;
-  -moz-user-select: none;
+  user-select: none;
   --icon-size: 1.8em;
   --icon-margin: 1.35em;
 }
@@ -19,7 +19,7 @@ body {
 }
 
 input {
-  -moz-user-select: text;
+  user-select: text;
 }
 
 .header {

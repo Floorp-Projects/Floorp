@@ -525,7 +525,7 @@ $hover-transition-duration: 150ms;
 
   // prevent text selection of keyword label when clicking to select
   .title {
-    -moz-user-select: none;
+    user-select: none;
   }
 
   // CSS styled checkbox
