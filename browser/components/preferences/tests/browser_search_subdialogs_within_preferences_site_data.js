@@ -16,11 +16,7 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("cookies", [
-    "siteDataGroup",
-    "trackingGroup",
-    "pane-experimental-featureGates",
-  ]);
+  await evaluateSearchResults("cookies", ["siteDataGroup", "trackingGroup"]);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -36,10 +32,7 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("cache", [
-    "siteDataGroup",
-    "pane-experimental-featureGates",
-  ]);
+  await evaluateSearchResults("cache", ["siteDataGroup"]);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
