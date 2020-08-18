@@ -66,6 +66,23 @@ const NOTIFICATION_TIMEOUT_MS = 10 * 1000; // 10 seconds
  */
 const ATTENTION_NOTIFICATION_TIMEOUT_MS = 60 * 1000; // 1 minute
 
+// This reference will be mutated
+let autocompleteSelected = () => {};
+
+const observer = {
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+
+  // nsIObserver
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "autocomplete-did-enter-text": {
+        autocompleteSelected();
+        break;
+      }
+    }
+  },
+};
+
 /**
  * Implements interfaces for prompting the user to enter/save/change login info
  * found in HTML forms.
@@ -218,7 +235,9 @@ class LoginManagerPrompter {
     let wasModifiedEvent = {
       // Values are mutated
       did_edit_un: "false",
+      did_select_un: "false",
       did_edit_pw: "false",
+      did_select_pw: "false",
     };
 
     let updateButtonStatus = element => {
@@ -312,12 +331,42 @@ class LoginManagerPrompter {
 
     let onUsernameInput = () => {
       wasModifiedEvent.did_edit_un = "true";
+      wasModifiedEvent.did_select_un = "false";
       onInput();
+    };
+
+    let onUsernameSelect = () => {
+      wasModifiedEvent.did_edit_un = "false";
+      wasModifiedEvent.did_select_un = "true";
     };
 
     let onPasswordInput = () => {
       wasModifiedEvent.did_edit_pw = "true";
+      wasModifiedEvent.did_select_pw = "false";
       onInput();
+    };
+
+    let onPasswordSelect = () => {
+      wasModifiedEvent.did_edit_pw = "false";
+      wasModifiedEvent.did_select_pw = "true";
+    };
+
+    let initACSelectedTelemetry = () => {
+      autocompleteSelected = () => {
+        let nameField = chromeDoc.getElementById(
+          "password-notification-username"
+        );
+        let passwordField = chromeDoc.getElementById(
+          "password-notification-password"
+        );
+
+        let activeElement = nameField.ownerDocument.activeElement;
+        if (activeElement == nameField) {
+          onUsernameSelect();
+        } else if (activeElement == passwordField) {
+          onPasswordSelect();
+        }
+      };
     };
 
     let onKeyUp = e => {
@@ -682,6 +731,8 @@ class LoginManagerPrompter {
                 possibleValues?.usernames
               );
 
+              initACSelectedTelemetry();
+
               break;
             case "shown": {
               log.debug("shown");
@@ -1044,6 +1095,9 @@ class LoginManagerPrompter {
       .filter(suggestion => !!suggestion.text);
   }
 }
+
+// Add this observer once for the process.
+Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("LoginManagerPrompter");
