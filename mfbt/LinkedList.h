@@ -515,7 +515,15 @@ class LinkedList {
   /**
    * Return the length of elements in the list.
    */
-  size_t length() const { return std::distance(begin(), end()); }
+  size_t length() const {
+    size_t length = 0;
+    ConstRawType element = getFirst();
+    while (element) {
+      length++;
+      element = element->getNext();
+    }
+    return length;
+  }
 
   /*
    * Allow range-based iteration:

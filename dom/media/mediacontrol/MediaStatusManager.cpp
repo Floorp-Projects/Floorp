@@ -297,7 +297,6 @@ void MediaStatusManager::UpdateActualPlaybackState() {
   LOG("UpdateActualPlaybackState : '%s'",
       ToMediaSessionPlaybackStateStr(mActualPlaybackState));
   HandleActualPlaybackStateChanged();
-  mPlaybackStateChangedEvent.Notify(mActualPlaybackState);
 }
 
 void MediaStatusManager::EnableAction(uint64_t aBrowsingContextId,
