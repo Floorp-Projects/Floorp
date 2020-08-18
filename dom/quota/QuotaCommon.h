@@ -19,6 +19,12 @@
 
 #define MOZ_UNIQUE_VAR(base) MOZ_CONCAT(base, __LINE__)
 
+#define MOZ_REMOVE_PAREN(X) MOZ_REMOVE_PAREN_HELPER2(MOZ_REMOVE_PAREN_HELPER X)
+#define MOZ_REMOVE_PAREN_HELPER(...) MOZ_REMOVE_PAREN_HELPER __VA_ARGS__
+#define MOZ_REMOVE_PAREN_HELPER2(...) MOZ_REMOVE_PAREN_HELPER3(__VA_ARGS__)
+#define MOZ_REMOVE_PAREN_HELPER3(...) MOZ_REMOVE_PAREN_HELPER4_##__VA_ARGS__
+#define MOZ_REMOVE_PAREN_HELPER4_MOZ_REMOVE_PAREN_HELPER
+
 #define BEGIN_QUOTA_NAMESPACE \
   namespace mozilla {         \
   namespace dom {             \
@@ -274,7 +280,7 @@
                     __LINE__);                                           \
     return MOZ_UNIQUE_VAR(tryVarResult).propagateErr();                  \
   }                                                                      \
-  target = MOZ_UNIQUE_VAR(tryVarResult).unwrap();
+  MOZ_REMOVE_PAREN(target) = MOZ_UNIQUE_VAR(tryVarResult).unwrap();
 
 // Handles the four args case when a custom return value needs to be returned
 #define QM_TRY_VAR_CUSTOM_RET_VAR(ns, target, expr, customRetVal)        \
@@ -284,7 +290,7 @@
                     __LINE__);                                           \
     return customRetVal;                                                 \
   }                                                                      \
-  target = MOZ_UNIQUE_VAR(tryVarResult).unwrap();
+  MOZ_REMOVE_PAREN(target) = MOZ_UNIQUE_VAR(tryVarResult).unwrap();
 
 // Chooses the final implementation macro for given argument count.
 // It can be used by other modules to define module specific error handling.
