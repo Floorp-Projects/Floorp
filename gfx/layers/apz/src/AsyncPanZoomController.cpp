@@ -4589,7 +4589,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 
   bool needContentRepaint = false;
   RepaintUpdateType contentRepaintType = RepaintUpdateType::eNone;
-  bool viewportUpdated = false;
+  bool viewportSizeUpdated = false;
 
   if ((aIsFirstPaint && aThisLayerTreeUpdated) || isDefault) {
     // Initialize our internal state to something sane when the content
@@ -4628,7 +4628,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       Metrics().SetLayoutViewport(layoutViewport);
 
       needContentRepaint = true;
-      viewportUpdated = true;
+      viewportSizeUpdated = true;
     }
 
     // TODO: Rely entirely on |aScrollMetadata.IsResolutionUpdated()| to
@@ -4637,7 +4637,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
                             aLayerMetrics.GetCompositionBounds().Width()) &&
         Metrics().GetDevPixelsPerCSSPixel() ==
             aLayerMetrics.GetDevPixelsPerCSSPixel() &&
-        !viewportUpdated && !aScrollMetadata.IsResolutionUpdated()) {
+        !viewportSizeUpdated && !aScrollMetadata.IsResolutionUpdated()) {
       // Any change to the pres shell resolution was requested by APZ and is
       // already included in our zoom; however, other components of the
       // cumulative resolution (a parent document's pres-shell resolution, or
@@ -4852,7 +4852,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     ScheduleComposite();
   }
 
-  if (viewportUpdated) {
+  if (viewportSizeUpdated) {
     // While we want to accept the main thread's layout viewport _size_,
     // its position may be out of date in light of async scrolling, to
     // adjust it if necessary to make sure it continues to enclose the
