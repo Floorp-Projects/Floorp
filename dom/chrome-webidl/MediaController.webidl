@@ -41,6 +41,7 @@ interface MediaController : EventTarget {
 
   attribute EventHandler onactivated;
   attribute EventHandler ondeactivated;
+  attribute EventHandler onplaybackstatechange;
   attribute EventHandler onpositionstatechange;
   attribute EventHandler onsupportedkeyschange;
 
