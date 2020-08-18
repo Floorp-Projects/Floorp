@@ -919,6 +919,10 @@ gfxMatrix SVGOuterSVGFrame::GetCanvasTM() {
 template <typename... Args>
 bool SVGOuterSVGFrame::IsContainingWindowElementOfType(
     nsIFrame** aContainingWindowFrame, Args... aArgs) const {
+  if (aContainingWindowFrame) {
+    *aContainingWindowFrame = nullptr;
+  }
+
   if (!mContent->GetParent()) {
     // Our content is the document element
     if (nsCOMPtr<nsIDocShell> docShell = PresContext()->GetDocShell()) {
@@ -935,9 +939,6 @@ bool SVGOuterSVGFrame::IsContainingWindowElementOfType(
         return true;
       }
     }
-  }
-  if (aContainingWindowFrame) {
-    *aContainingWindowFrame = nullptr;
   }
   return false;
 }
