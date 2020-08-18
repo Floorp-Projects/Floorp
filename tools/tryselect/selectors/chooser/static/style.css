@@ -40,7 +40,7 @@ body {
   padding-top: 10px;
   padding-bottom: 10px;
   margin-bottom: 0;
-  -moz-user-select: none;
+  user-select: none;
   user-select: none;
   vertical-align: middle;
 }

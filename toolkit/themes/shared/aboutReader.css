@@ -259,7 +259,7 @@ body.dark blockquote {
 
   font-family: Helvetica, Arial, sans-serif;
   list-style: none;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {

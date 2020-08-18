@@ -15,7 +15,7 @@ vbox, hbox {
   word-spacing: normal;
   letter-spacing: normal;
   text-indent: 0;
-  -moz-user-select: text;
+  user-select: text;
   text-shadow: none;
 
   /* Copy of the type=file part of forms.css below this */

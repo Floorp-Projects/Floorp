@@ -20,7 +20,7 @@
   height: 100%;
   background-color: rgb(72,72,72);
   color: white;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .hoverBox {

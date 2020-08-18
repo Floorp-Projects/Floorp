@@ -31,7 +31,7 @@
 .title {
   font-size: 1.5em;
   font-weight: normal;
-  -moz-user-select: none;
+  user-select: none;
   margin: 0;
 }
 

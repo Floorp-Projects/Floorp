@@ -735,7 +735,7 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
   line-height: 1.4em;
   padding-inline-start: 9px;
   margin: 0;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .category-icon {
@@ -800,7 +800,7 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
   font-weight: 300;
   line-height: 1.3em;
   margin: 0;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 /* List boxes */
@@ -1126,7 +1126,7 @@ html|*.help-icon {
 .sidebar-footer-label {
   margin: 0 4px;
   font-size: .9em;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 @media (max-width: 830px) {

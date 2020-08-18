@@ -843,7 +843,7 @@ main {
       margin-inline-start: 0; } }
 
 .topsite-form .title {
-  -moz-user-select: none; }
+  user-select: none; }
 
 .topsite-form [type='checkbox']:not(:checked),
 .topsite-form [type='checkbox']:checked {

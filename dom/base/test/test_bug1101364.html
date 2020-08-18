@@ -11,17 +11,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1101364
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style>
     #test1 {
-      -moz-user-select: none;
+      user-select: none;
     }
 
     #testDiv, #test2 {
-      -moz-user-select: text;
+      user-select: text;
     }
   </style>
 </head>
 <body id='body'>
 
-<iframe id="test1" srcdoc="<h1 id='test1' style='-moz-user-select:none'>Header</h1><div id='testDiv'>test1</div>"></iframe>
+<iframe id="test1" srcdoc="<h1 id='test1' style='user-select:none'>Header</h1><div id='testDiv'>test1</div>"></iframe>
 <iframe id="test2" srcdoc="<div contenteditable id='test2'>AAA<span id='test2Inner'>BBB</span></div>"></iframe>
 <pre id="test">
 <script class="testbody" type="text/javascript">

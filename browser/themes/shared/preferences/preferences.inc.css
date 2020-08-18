@@ -35,7 +35,7 @@
 }
 
 * {
-  -moz-user-select: text;
+  user-select: text;
 }
 
 /*
@@ -89,7 +89,7 @@ button,
 treecol,
 html|option {
   /* override the * rule */
-  -moz-user-select: none;
+  user-select: none;
 }
 
 /* Buttons get a default min-width in XUL. When they also have flex, they will
@@ -574,7 +574,7 @@ button > hbox > label {
   font-size: .9em;
   font-weight: 600;
   text-align: center;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .close-icon {
@@ -956,7 +956,7 @@ image.update-throbber {
 }
 
 .search-tooltip > span {
-  -moz-user-select: none;
+  user-select: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

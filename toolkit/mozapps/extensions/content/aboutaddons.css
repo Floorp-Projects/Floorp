@@ -111,7 +111,7 @@ body {
 }
 
 .header-name {
-  -moz-user-select: initial;
+  user-select: initial;
 }
 
 .sticky-container {
@@ -235,7 +235,7 @@ addon-card[expanded] .addon.card {
 }
 
 addon-list addon-card > .addon.card {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .addon-card-message,

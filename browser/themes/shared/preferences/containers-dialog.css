@@ -20,7 +20,7 @@
 }
 
 .radio-buttons > radio {
-  -moz-user-select: none;
+  user-select: none;
   outline: 2px solid transparent;
   outline-offset: 4px;
   -moz-outline-radius: 100%;

@@ -472,7 +472,6 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 }
 .CodeMirror-gutter-wrapper {
   -webkit-user-select: none;
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -960,7 +959,6 @@ menuitem {
   line-height: 20px;
   font-weight: 500;
   font-size: 13px;
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -1517,7 +1515,6 @@ html .arrow.expanded svg {
 }
 
 .result-list * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -1621,7 +1618,6 @@ html .arrow.expanded svg {
 }
 .tree {
   -webkit-user-select: none;
-  -moz-user-select: none;
   -ms-user-select: none;
   -o-user-select: none;
   user-select: none;
@@ -1669,7 +1665,6 @@ html[dir="rtl"] .tree .node > div {
 }
 
 .sources-panel * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -1682,7 +1677,6 @@ html[dir="rtl"] .tree .node > div {
   font-size: 1.2em;
   display: flex;
   align-items: baseline;
-  -moz-user-select: none;
   user-select: none;
   justify-content: flex-end;
 }
@@ -1773,7 +1767,6 @@ html .toggle-button-end.vertical svg {
   right: 1px;
   opacity: 1;
   z-index: 100;
-  -moz-user-select: none;
   user-select: none;
   height: 27px;
   box-sizing: border-box;
@@ -1784,7 +1777,6 @@ html .toggle-button-end.vertical svg {
 }
 
 .source-footer .commands * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -1844,7 +1836,6 @@ html .toggle-button-end.vertical svg {
 }
 
 .search-bottom-bar * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -2216,7 +2207,6 @@ html[dir="rtl"] .editor-mount {
   background-color: var(--theme-tab-toolbar-background);
   font-weight: lighter;
   z-index: 100;
-  -moz-user-select: none;
   user-select: none;
 }
 .input-expression {
@@ -2325,7 +2315,6 @@ html[dir="rtl"] .editor-mount {
   color: white;
 }
 .breakpoints-list * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -2470,7 +2459,6 @@ html .breakpoints-list .breakpoint.paused {
 */
 
 .frames ul li * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -2545,7 +2533,6 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 .event-listeners .listener * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -2592,7 +2579,6 @@ html .breakpoints-list .breakpoint.paused {
   width: 100%;
 
   -webkit-user-select: none;
-  -moz-user-select: none;
   -ms-user-select: none;
   -o-user-select: none;
   user-select: none;
@@ -2720,7 +2706,6 @@ html .command-bar > button:disabled {
 }
 
 .secondary-panes * {
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -2738,7 +2723,6 @@ html .command-bar > button:disabled {
   font-style: italic;
   text-align: center;
   padding: 0.5em;
-  -moz-user-select: none;
   user-select: none;
 }
 
@@ -2841,7 +2825,6 @@ html[dir="rtl"] .dropdown {
 }
 
 .source-header * {
-  -moz-user-select: none;
   user-select: none;
 }
 

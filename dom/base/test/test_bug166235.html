@@ -12,11 +12,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235 and Bug 816298</a>
 <p id="test0">This text should be copied.</p>
-<p id="test1">This text should<span style="-moz-user-select: none;"> NOT</span> be copied.</p>
-<p id="test2">This<span style="-moz-user-select: none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
-<p id="test3">This text should<span style="-moz-user-select: -moz-none;"> NOT</span> be copied.</p>
-<p id="test4">This<span style="-moz-user-select: -moz-none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
-<p id="test5">This<span style="-moz-user-select: all"> text should</span> be copied.</p>
+<p id="test1">This text should<span style="user-select: none;"> NOT</span> be copied.</p>
+<p id="test2">This<span style="user-select: none;"><span style="user-select: text"> text should</span> NOT</span> be copied.</p>
+<p id="test3">This text should<span style="user-select: -moz-none;"> NOT</span> be copied.</p>
+<p id="test4">This<span style="user-select: -moz-none;"><span style="user-select: text"> text should</span> NOT</span> be copied.</p>
+<p id="test5">This<span style="user-select: all"> text should</span> be copied.</p>
 <div id="content" style="display: none">
   
 </div>
@@ -104,10 +104,10 @@ var originalStrings = [
 var clipboardHTML = [
   '<p id=\"test0\">This text should be copied.</p>',
   '<p id=\"test1\">This text should be copied.</p>',
-  '<p id=\"test2\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>',
+  '<p id=\"test2\">This<span style=\"user-select: text\"> text should</span> be copied.</p>',
   '<p id=\"test3\">This text should be copied.</p>',
-  '<p id=\"test4\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>',
-  '<p id=\"test5\">This<span style=\"-moz-user-select: all\"> text should</span> be copied.</p>',
+  '<p id=\"test4\">This<span style=\"user-select: text\"> text should</span> be copied.</p>',
+  '<p id=\"test5\">This<span style=\"user-select: all\"> text should</span> be copied.</p>',
 ];
 
 // expected results for clipboard text/unicode
@@ -123,11 +123,11 @@ var clipboardUnicode = [
 // expected results for .innerHTML
 var innerHTMLStrings = [
   'This text should be copied.',
-  'This text should<span style=\"-moz-user-select: none;\"> NOT</span> be copied.',
-  'This<span style=\"-moz-user-select: none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.',
-  'This text should<span style=\"-moz-user-select: -moz-none;\"> NOT</span> be copied.',
-  'This<span style=\"-moz-user-select: -moz-none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.',
-  'This<span style=\"-moz-user-select: all\"> text should</span> be copied.',
+  'This text should<span style=\"user-select: none;\"> NOT</span> be copied.',
+  'This<span style=\"user-select: none;\"><span style=\"user-select: text\"> text should</span> NOT</span> be copied.',
+  'This text should<span style=\"user-select: -moz-none;\"> NOT</span> be copied.',
+  'This<span style=\"user-select: -moz-none;\"><span style=\"user-select: text\"> text should</span> NOT</span> be copied.',
+  'This<span style=\"user-select: all\"> text should</span> be copied.',
 ];
 
 // expected results for pasting into a TEXTAREA

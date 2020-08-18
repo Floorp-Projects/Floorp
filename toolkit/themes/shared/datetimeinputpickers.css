@@ -313,7 +313,7 @@ button.month-year.active::after {
   padding: calc((var(--spinner-item-height) - var(--font-size-default)) / 2) 0;
   margin-bottom: var(--spinner-item-margin-bottom);
   height: var(--spinner-item-height);
-  -moz-user-select: none;
+  user-select: none;
   scroll-snap-align: start;
 }
 
