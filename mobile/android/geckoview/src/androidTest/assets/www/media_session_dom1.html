@@ -1,0 +1,87 @@
+<html>
+  <head><title>MediaSessionDOMTest1</title></head>
+  <body>
+    <script>
+      function updatePositionState(event) {
+        navigator.mediaSession.setPositionState({
+          duration: parseFloat(event.target.duration),
+          position: parseFloat(event.target.currentTime),
+          playbackRate: 1,
+        });
+      }
+
+      function updateMetadata(event) {
+        active.removeEventListener("timeupdate", updatePositionState);
+        active = event.target;
+        updatePositionState(event);
+        active.addEventListener("timeupdate", updatePositionState);
+        navigator.mediaSession.metadata = active.metadata;
+      }
+
+      function getTrack(offset) {
+        console.log("" + active.id + " " + offset);
+        const nextId = Math.min(tracks.length - 1,
+            Math.max(0, parseInt(active.id) + offset));
+        return tracks[nextId];
+      }
+
+      navigator.mediaSession.setActionHandler("play", () => {
+        active.play();
+      });
+
+      navigator.mediaSession.setActionHandler("pause", () => {
+        active.pause();
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        active.pause();
+        getTrack(-1).play();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        active.pause();
+        getTrack(1).play();
+      });
+
+      const audio1 = document.createElement("audio");
+      audio1.src = "audio/owl.mp3";
+      audio1.addEventListener("play", updateMetadata);
+      audio1.metadata = new window.MediaMetadata({
+        title: "hoot",
+        artist: "owl",
+        album: "hoots",
+        artwork: [{src: "owl.png", type: "image/png", sizes: "16x16 32x32"}]
+      });
+      audio1.id = 0;
+
+      const audio2 = document.createElement("audio");
+      audio2.src = "audio/owl.mp3";
+      audio2.addEventListener("play", updateMetadata);
+      audio2.metadata = new window.MediaMetadata({
+        title: "hoot2",
+        artist: "stillowl",
+        album: "dahoots",
+        artwork: [{src: "owl.png", type: "image/png", sizes: "16x16 32x32"}]
+      });
+      audio2.id = 1;
+
+      const audio3 = document.createElement("audio");
+      audio3.src = "audio/owl.mp3";
+      audio3.addEventListener("play", updateMetadata);
+      audio3.metadata = new window.MediaMetadata({
+        title: "hoot3",
+        artist: "immaowl",
+        album: "mahoots",
+        artwork: [{src: "owl.png", type: "image/png", sizes: "16x16 32x32"}]
+      });
+      audio3.id = 2;
+
+      const tracks = [audio1, audio2, audio3];
+      let active = audio1;
+
+      window.onload = () => {
+        getTrack(0).play();
+      };
+    </script>
+  </body>
+</html>
