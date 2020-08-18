@@ -4196,8 +4196,7 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
   if (aComponents.contains(AsyncTransformComponent::eLayout)) {
     CSSPoint lastPaintLayoutOffset;
     if (mLastContentPaintMetrics.IsScrollable()) {
-      lastPaintLayoutOffset =
-          mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
+      lastPaintLayoutOffset = mLastContentPaintMetrics.GetLayoutScrollOffset();
     }
 
     CSSPoint currentLayoutOffset =

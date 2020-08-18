@@ -3778,7 +3778,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
     if (gfxPlatform::UseDesktopZoomingScrollbars()) {
       // As computed by GetCurrentAsyncTransform, asyncScrollY is
       //   asyncScrollY = -(GetEffectiveScrollOffset -
-      //   mLastContentPaintMetrics.GetLayoutViewport().TopLeft()) *
+      //   mLastContentPaintMetrics.GetLayoutScrollOffset()) *
       //   effectiveZoom
       // where GetEffectiveScrollOffset includes the visual viewport offset that
       // the main thread knows about plus any async scrolling to the visual
@@ -3789,7 +3789,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
       // because the main thread positions the scrollbars at the visual viewport
       // offset that it knows about. (aMetrics is mLastContentPaintMetrics)
 
-      asyncScrollY -= ((aMetrics.GetLayoutViewport().TopLeft() -
+      asyncScrollY -= ((aMetrics.GetLayoutScrollOffset() -
                         aMetrics.GetVisualScrollOffset()) *
                        effectiveZoom)
                           .y;
@@ -3838,7 +3838,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
                                               asyncZoomX);
 
     if (gfxPlatform::UseDesktopZoomingScrollbars()) {
-      asyncScrollX -= ((aMetrics.GetLayoutViewport().TopLeft() -
+      asyncScrollX -= ((aMetrics.GetLayoutScrollOffset() -
                         aMetrics.GetVisualScrollOffset()) *
                        effectiveZoom)
                           .x;
