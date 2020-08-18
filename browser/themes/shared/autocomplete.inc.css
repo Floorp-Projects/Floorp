@@ -37,6 +37,11 @@
   background-color: var(--arrowpanel-dimmed);
 }
 
+/* Override items that are always light theme to match page content */
+#PopupAutoComplete > richlistbox > .autocomplete-richlistitem:hover {
+  background-color: hsla(0,0%,80%,.35); /* match light theme arrowpanel-dimmed */
+}
+
 .autocomplete-richlistitem[selected] {
   background-color: Highlight;
   color: HighlightText;
