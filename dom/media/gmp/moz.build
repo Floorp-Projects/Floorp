@@ -19,6 +19,7 @@ EXPORTS += [
     'gmp-api/gmp-entrypoints.h',
     'gmp-api/gmp-errors.h',
     'gmp-api/gmp-platform.h',
+    'gmp-api/gmp-sanitized-cdm-exports.h',
     'gmp-api/gmp-storage.h',
     'gmp-api/gmp-video-codec.h',
     'gmp-api/gmp-video-decode.h',
