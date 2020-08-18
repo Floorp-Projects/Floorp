@@ -1336,6 +1336,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2bb7ef65b3777a325d1eeefefab5b6d4959da54747e33bd6258e789640f307ad"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "euclid"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ab0e07e345fb061928646949fdf5fb888e5d75a57385e7f5856e45be289e745"
+dependencies = [
+ "num-traits",
  "serde",
 ]
 
@@ -2827,7 +2836,7 @@ version = "0.0.1"
 dependencies = [
  "app_units",
  "cssparser",
- "euclid",
+ "euclid 0.22.0",
  "hashglobe",
  "selectors",
  "servo_arc",
@@ -3577,7 +3586,7 @@ dependencies = [
 name = "peek-poke"
 version = "0.2.0"
 dependencies = [
- "euclid",
+ "euclid 0.22.0",
  "peek-poke-derive 0.2.1",
 ]
 
@@ -3736,12 +3745,12 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
 name = "plane-split"
-version = "0.15.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffe16a646a08f4b4dd74035b9ff8e378eb1a4012a74f14f5889e7001cdbece33"
+checksum = "2211e7ccc9b6260779dd9bad59f7b10889d6361974623b9e405afd7e7e764654"
 dependencies = [
  "binary-space-partition",
- "euclid",
+ "euclid 0.22.0",
  "log",
  "num-traits",
 ]
@@ -4690,7 +4699,7 @@ dependencies = [
  "byteorder",
  "cssparser",
  "derive_more",
- "euclid",
+ "euclid 0.22.0",
  "fallible",
  "fxhash",
  "hashbrown",
@@ -4753,7 +4762,7 @@ dependencies = [
  "app_units",
  "bitflags",
  "cssparser",
- "euclid",
+ "euclid 0.20.14",
  "lazy_static",
  "malloc_size_of",
  "malloc_size_of_derive",
@@ -5609,7 +5618,7 @@ dependencies = [
  "core-text",
  "cstr",
  "dwrote",
- "euclid",
+ "euclid 0.22.0",
  "freetype",
  "fxhash",
  "gleam",
@@ -5647,7 +5656,7 @@ dependencies = [
  "core-graphics",
  "crossbeam-channel",
  "derive_more",
- "euclid",
+ "euclid 0.22.0",
  "malloc_size_of_derive",
  "peek-poke 0.2.0",
  "serde",
@@ -5667,7 +5676,7 @@ dependencies = [
  "core-graphics",
  "dirs",
  "dwrote",
- "euclid",
+ "euclid 0.22.0",
  "foreign-types",
  "fxhash",
  "gleam",
@@ -5844,7 +5853,7 @@ name = "wr_malloc_size_of"
 version = "0.0.1"
 dependencies = [
  "app_units",
- "euclid",
+ "euclid 0.22.0",
 ]
 
 [[package]]
