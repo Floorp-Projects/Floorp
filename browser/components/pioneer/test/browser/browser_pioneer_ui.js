@@ -16,8 +16,20 @@ const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
 const PREF_PIONEER_COMPLETED_STUDIES =
   "toolkit.telemetry.pioneer-completed-studies";
 
+const PREF_TEST_CACHED_CONTENT = "toolkit.pioneer.testCachedContent";
 const PREF_TEST_CACHED_ADDONS = "toolkit.pioneer.testCachedAddons";
 const PREF_TEST_ADDONS = "toolkit.pioneer.testAddons";
+
+const CACHED_CONTENT = [
+  {
+    title: "test title\ntest title line 2",
+    summary: "test summary\ntest summary line 2",
+    details: "1. test details\n2. test details line 2\n3. test details line 3",
+    joinPioneerConsent: "test join consent\njoin consent line 2",
+    leavePioneerConsent: "test leave consent\ntest leave consent line 2",
+    privacyPolicy: "http://localhost",
+  },
+];
 
 const CACHED_ADDONS = [
   {
@@ -50,6 +62,8 @@ const CACHED_ADDONS = [
     },
     isDefault: false,
     studyEnded: true,
+    joinStudyConsent: "test123",
+    leaveStudyConsent: "test345",
   },
   {
     addon_id: "pioneer-v2-default-example@mozilla.org",
@@ -81,6 +95,8 @@ const CACHED_ADDONS = [
     },
     isDefault: true,
     studyEnded: false,
+    joinStudyConsent: "test456",
+    leaveStudyConsent: "test789",
   },
   {
     addon_id: "study@partner",
@@ -104,7 +120,7 @@ const CACHED_ADDONS = [
     studyType: "extension",
     authors: {
       name: "Study Partners",
-      url: "https://addons.mozilla.org/en-US/firefox/user/6510522/",
+      url: "http://localhost",
     },
     dataCollectionDetails: ["test123", "test345"],
     moreInfo: {
@@ -112,6 +128,41 @@ const CACHED_ADDONS = [
     },
     isDefault: false,
     studyEnded: false,
+    joinStudyConsent: "test012",
+    leaveStudyConsent: "test345",
+  },
+  {
+    addon_id: "second-study@partner",
+    icons: {
+      "32":
+        "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
+      "64":
+        "https://localhost/user-media/addon_icons/2644/2644632-64.png?modified=4a64e2bc",
+      "128":
+        "https://localhost/user-media/addon_icons/2644/2644632-128.png?modified=4a64e2bc",
+    },
+    name: "Example Second Partner Study",
+    version: "1.0",
+    sourceURI: {
+      spec: "https://localhost",
+    },
+    description: "Study purpose: Testing Pioneer.",
+    privacyPolicy: {
+      spec: "http://localhost",
+    },
+    studyType: "extension",
+    authors: {
+      name: "Second Study Partners",
+      url: "https://localhost",
+    },
+    dataCollectionDetails: ["test123", "test345"],
+    moreInfo: {
+      spec: "http://localhost",
+    },
+    isDefault: false,
+    studyEnded: false,
+    joinStudyConsent: "test678",
+    leaveStudyConsent: "test901",
   },
 ];
 
@@ -119,6 +170,7 @@ const TEST_ADDONS = [
   { id: "pioneer-v2-example@pioneer.mozilla.org" },
   { id: "pioneer-v2-default-example@mozilla.org" },
   { id: "study@partner" },
+  { id: "second-study@parnter" },
 ];
 
 const waitForAnimationFrame = () =>
@@ -127,31 +179,39 @@ const waitForAnimationFrame = () =>
   });
 
 add_task(async function testMockSchema() {
-  const response = await fetch(
-    "resource://testing-common/PioneerStudyAddonsSchema.json"
-  );
-  const schema = await response.json();
-  if (!schema) {
-    throw new Error("Failed to load PioneerStudyAddonsSchema");
-  }
+  for (const [schemaName, values] of [
+    ["PioneerContentSchema", CACHED_CONTENT],
+    ["PioneerStudyAddonsSchema", CACHED_ADDONS],
+  ]) {
+    const response = await fetch(
+      `resource://testing-common/${schemaName}.json`
+    );
 
-  const ajv = new Ajv({ allErrors: true });
-  const validate = ajv.compile(schema);
+    const schema = await response.json();
+    if (!schema) {
+      throw new Error(`Failed to load ${schemaName}`);
+    }
 
-  for (const addon of CACHED_ADDONS) {
-    const valid = validate(addon);
-    if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
+    const ajv = new Ajv({ allErrors: true });
+    const validate = ajv.compile(schema);
+
+    for (const entry of values) {
+      const valid = validate(entry);
+      if (!valid) {
+        throw new Error(JSON.stringify(validate.errors));
+      }
     }
   }
 });
 
 add_task(async function testAboutPage() {
+  const cachedContent = JSON.stringify(CACHED_CONTENT);
   const cachedAddons = JSON.stringify(CACHED_ADDONS);
 
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_TEST_CACHED_ADDONS, cachedAddons],
+      [PREF_TEST_CACHED_CONTENT, cachedContent],
       [PREF_TEST_ADDONS, "[]"],
     ],
     clear: [[PREF_PIONEER_ID, ""]],
@@ -272,6 +332,12 @@ add_task(async function testAboutPage() {
         joinButton.click();
         await waitForAnimationFrame();
 
+        ok(
+          content.document.getElementById("join-study-consent").textContent ==
+            cachedAddon.joinStudyConsent,
+          "Join consent text matches remote settings data."
+        );
+
         const studyCancelButton = content.document.getElementById(
           "join-study-cancel-dialog-button"
         );
@@ -315,6 +381,12 @@ add_task(async function testAboutPage() {
 
         leaveStudyCancelButton.click();
         await waitForAnimationFrame();
+
+        ok(
+          content.document.getElementById("leave-study-consent").textContent ==
+            cachedAddon.leaveStudyConsent,
+          "Leave consent text matches remote settings data."
+        );
 
         ok(
           !joinButton.disabled,
@@ -459,4 +531,31 @@ add_task(async function testPioneerBadge() {
   await BrowserTestUtils.closeWindow(newWin);
   await BrowserTestUtils.removeTab(pioneerTab);
   await BrowserTestUtils.removeTab(blankTab);
+});
+
+add_task(async function testAboutPage() {
+  const cachedContent = JSON.stringify(CACHED_CONTENT);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_TEST_CACHED_CONTENT, cachedContent],
+      [PREF_TEST_ADDONS, "[]"],
+    ],
+    clear: [[PREF_PIONEER_ID, ""]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:pioneer",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      // Check that text was updated from Remote Settings.
+      ok(
+        content.document.getElementById("title").textContent ==
+          "test titletest title line 2",
+        "Title was replaced correctly."
+      );
+    }
+  );
 });
