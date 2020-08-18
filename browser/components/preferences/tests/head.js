@@ -162,7 +162,11 @@ async function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   return { selectedPane };
 }
 
-async function evaluateSearchResults(keyword, searchReults) {
+async function evaluateSearchResults(
+  keyword,
+  searchReults,
+  includeExperiments = false
+) {
   searchReults = Array.isArray(searchReults) ? searchReults : [searchReults];
   searchReults.push("header-searchResults");
 
@@ -179,6 +183,9 @@ async function evaluateSearchResults(keyword, searchReults) {
   let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
   for (let i = 0; i < mainPrefTag.childElementCount; i++) {
     let child = mainPrefTag.children[i];
+    if (!includeExperiments && child.id?.startsWith("pane-experimental")) {
+      continue;
+    }
     if (searchReults.includes(child.id)) {
       is_element_visible(child, `${child.id} should be in search results`);
     } else if (child.id) {
