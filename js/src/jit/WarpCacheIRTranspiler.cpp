@@ -404,6 +404,21 @@ bool WarpCacheIRTranspiler::emitProxySetByValue(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
+                                                          uint32_t nameOffset,
+                                                          bool handleMissing) {
+  MDefinition* obj = getOperand(objId);
+  PropertyName* name = stringStubField(nameOffset)->asAtom().asPropertyName();
+
+  MOZ_ASSERT(handleMissing);
+
+  auto* ins = MMegamorphicLoadSlot::New(alloc(), obj, name);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
