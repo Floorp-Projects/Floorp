@@ -8,7 +8,7 @@ root:
     clip-rect: 10 0 300 300
   - type: stacking-context
     bounds: 30 30 0 0
-    transform: rotate-z(45)
+    transform: rotate-z(-45)
     filters: drop-shadow([15, 0], 0, red)
     clip-node: 2
     items:

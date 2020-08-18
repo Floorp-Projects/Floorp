@@ -289,16 +289,16 @@ impl SpatialTree {
             let child_cs = &self.coord_systems[child.coordinate_system_id.0 as usize];
             let child_transform = child.content_transform
                 .to_transform::<LayoutPixel, LayoutPixel>()
-                .post_transform(&child_cs.world_transform);
+                .then(&child_cs.world_transform);
             let parent_cs = &self.coord_systems[parent.coordinate_system_id.0 as usize];
             let parent_transform = parent.content_transform
                 .to_transform()
-                .post_transform(&parent_cs.world_transform);
+                .then(&parent_cs.world_transform);
 
             let result = parent_transform
                 .inverse()
                 .unwrap_or_default()
-                .post_transform(&child_transform)
+                .then(&child_transform)
                 .with_source::<LayoutPixel>()
                 .with_destination::<LayoutPixel>();
             return CoordinateSpaceMapping::Transform(result);
@@ -319,10 +319,10 @@ impl SpatialTree {
             }
 
             coordinate_system_id = coord_system.parent.expect("invalid parent!");
-            transform = transform.post_transform(&coord_system.transform);
+            transform = transform.then(&coord_system.transform);
         }
 
-        transform = transform.post_transform(
+        transform = transform.then(
             &parent.content_transform
                 .inverse()
                 .to_transform(),
@@ -352,7 +352,7 @@ impl SpatialTree {
             };
             let transform = scale_offset
                 .to_transform()
-                .post_transform(&system.world_transform);
+                .then(&system.world_transform);
 
             CoordinateSpaceMapping::Transform(transform)
         }
@@ -827,21 +827,21 @@ fn test_cst_simple_translation() {
     let child1 = add_reference_frame(
         &mut cst,
         Some(root),
-        LayoutTransform::create_translation(100.0, 0.0, 0.0),
+        LayoutTransform::translation(100.0, 0.0, 0.0),
         LayoutVector2D::zero(),
     );
 
     let child2 = add_reference_frame(
         &mut cst,
         Some(child1),
-        LayoutTransform::create_translation(0.0, 50.0, 0.0),
+        LayoutTransform::translation(0.0, 50.0, 0.0),
         LayoutVector2D::zero(),
     );
 
     let child3 = add_reference_frame(
         &mut cst,
         Some(child2),
-        LayoutTransform::create_translation(200.0, 200.0, 0.0),
+        LayoutTransform::translation(200.0, 200.0, 0.0),
         LayoutVector2D::zero(),
     );
 
@@ -869,21 +869,21 @@ fn test_cst_simple_scale() {
     let child1 = add_reference_frame(
         &mut cst,
         Some(root),
-        LayoutTransform::create_scale(4.0, 1.0, 1.0),
+        LayoutTransform::scale(4.0, 1.0, 1.0),
         LayoutVector2D::zero(),
     );
 
     let child2 = add_reference_frame(
         &mut cst,
         Some(child1),
-        LayoutTransform::create_scale(1.0, 2.0, 1.0),
+        LayoutTransform::scale(1.0, 2.0, 1.0),
         LayoutVector2D::zero(),
     );
 
     let child3 = add_reference_frame(
         &mut cst,
         Some(child2),
-        LayoutTransform::create_scale(2.0, 2.0, 1.0),
+        LayoutTransform::scale(2.0, 2.0, 1.0),
         LayoutVector2D::zero(),
     );
 
@@ -912,28 +912,28 @@ fn test_cst_scale_translation() {
     let child1 = add_reference_frame(
         &mut cst,
         Some(root),
-        LayoutTransform::create_translation(100.0, 50.0, 0.0),
+        LayoutTransform::translation(100.0, 50.0, 0.0),
         LayoutVector2D::zero(),
     );
 
     let child2 = add_reference_frame(
         &mut cst,
         Some(child1),
-        LayoutTransform::create_scale(2.0, 4.0, 1.0),
+        LayoutTransform::scale(2.0, 4.0, 1.0),
         LayoutVector2D::zero(),
     );
 
     let child3 = add_reference_frame(
         &mut cst,
         Some(child2),
-        LayoutTransform::create_translation(200.0, -100.0, 0.0),
+        LayoutTransform::translation(200.0, -100.0, 0.0),
         LayoutVector2D::zero(),
     );
 
     let child4 = add_reference_frame(
         &mut cst,
         Some(child3),
-        LayoutTransform::create_scale(3.0, 2.0, 1.0),
+        LayoutTransform::scale(3.0, 2.0, 1.0),
         LayoutVector2D::zero(),
     );
 
@@ -967,7 +967,7 @@ fn test_cst_translation_rotate() {
     let child1 = add_reference_frame(
         &mut cst,
         Some(root),
-        LayoutTransform::create_rotation(0.0, 0.0, 1.0, Angle::degrees(90.0)),
+        LayoutTransform::rotation(0.0, 0.0, 1.0, Angle::degrees(-90.0)),
         LayoutVector2D::zero(),
     );
 
