@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`PlacesStorage(context: <ERROR CLASS>)`
+`PlacesStorage(context: <ERROR CLASS>, crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null)`
 
 A base class for concrete implementations of PlacesStorages
 

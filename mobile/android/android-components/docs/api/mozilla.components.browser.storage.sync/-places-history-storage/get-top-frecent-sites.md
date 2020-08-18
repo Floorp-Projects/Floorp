@@ -2,7 +2,7 @@
 
 # getTopFrecentSites
 
-`open suspend fun getTopFrecentSites(numItems: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TopFrecentSiteInfo`](../../mozilla.components.concept.storage/-top-frecent-site-info/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesHistoryStorage.kt#L101)
+`open suspend fun getTopFrecentSites(numItems: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TopFrecentSiteInfo`](../../mozilla.components.concept.storage/-top-frecent-site-info/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesHistoryStorage.kt#L103)
 
 Overrides [HistoryStorage.getTopFrecentSites](../../mozilla.components.concept.storage/-history-storage/get-top-frecent-sites.md)
 

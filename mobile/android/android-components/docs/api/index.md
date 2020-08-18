@@ -249,6 +249,7 @@
 | [mozilla.components.support.images.loader](mozilla.components.support.images.loader/index.md) |  |
 | [mozilla.components.support.ktx.android.arch.lifecycle](mozilla.components.support.ktx.android.arch.lifecycle/index.md) |  |
 | [mozilla.components.support.ktx.android.content](mozilla.components.support.ktx.android.content/index.md) |  |
+| [mozilla.components.support.ktx.android.content.pm](mozilla.components.support.ktx.android.content.pm/index.md) |  |
 | [mozilla.components.support.ktx.android.content.res](mozilla.components.support.ktx.android.content.res/index.md) |  |
 | [mozilla.components.support.ktx.android.graphics](mozilla.components.support.ktx.android.graphics/index.md) |  |
 | [mozilla.components.support.ktx.android.net](mozilla.components.support.ktx.android.net/index.md) |  |

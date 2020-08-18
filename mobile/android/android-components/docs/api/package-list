@@ -332,6 +332,7 @@ mozilla.components.support.images.decoder
 mozilla.components.support.images.loader
 mozilla.components.support.ktx.android.arch.lifecycle
 mozilla.components.support.ktx.android.content
+mozilla.components.support.ktx.android.content.pm
 mozilla.components.support.ktx.android.content.res
 mozilla.components.support.ktx.android.graphics
 mozilla.components.support.ktx.android.net

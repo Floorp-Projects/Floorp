@@ -2,4 +2,4 @@
 
 # interceptedAppLinkRedirect
 
-`val interceptedAppLinkRedirect: `[`GetAppLinkRedirect`](-get-app-link-redirect/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L214)
+`val interceptedAppLinkRedirect: `[`GetAppLinkRedirect`](-get-app-link-redirect/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L216)

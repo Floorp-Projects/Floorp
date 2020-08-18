@@ -2,7 +2,7 @@
 
 # AppLinksUseCases
 
-`class AppLinksUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L45)
+`class AppLinksUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L46)
 
 These use cases allow for the detection of, and opening of links that other apps have registered
 an [IntentFilter](#)s to open.

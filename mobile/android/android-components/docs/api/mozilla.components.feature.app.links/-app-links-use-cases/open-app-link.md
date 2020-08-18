@@ -2,4 +2,4 @@
 
 # openAppLink
 
-`val openAppLink: `[`OpenAppLinkRedirect`](-open-app-link-redirect/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L213)
+`val openAppLink: `[`OpenAppLinkRedirect`](-open-app-link-redirect/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L215)

@@ -2,7 +2,7 @@
 
 # PlacesStorage
 
-`abstract class PlacesStorage : `[`Storage`](../../mozilla.components.concept.storage/-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesStorage.kt#L27)
+`abstract class PlacesStorage : `[`Storage`](../../mozilla.components.concept.storage/-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesStorage.kt#L29)
 
 A base class for concrete implementations of PlacesStorages
 
@@ -10,12 +10,13 @@ A base class for concrete implementations of PlacesStorages
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PlacesStorage(context: <ERROR CLASS>)`<br>A base class for concrete implementations of PlacesStorages |
+| [&lt;init&gt;](-init-.md) | `PlacesStorage(context: <ERROR CLASS>, crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null)`<br>A base class for concrete implementations of PlacesStorages |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [crashReporter](crash-reporter.md) | `val crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`?` |
 | [logger](logger.md) | `abstract val logger: `[`Logger`](../../mozilla.components.support.base.log.logger/-logger/index.md) |
 
 ### Functions
@@ -23,7 +24,7 @@ A base class for concrete implementations of PlacesStorages
 | Name | Summary |
 |---|---|
 | [cleanup](cleanup.md) | `open fun cleanup(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Cleans up background work and database connections |
-| [ignoreUrlExceptions](ignore-url-exceptions.md) | `fun ignoreUrlExceptions(operation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Runs [block](ignore-url-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$ignoreUrlExceptions(kotlin.String, kotlin.Function0((kotlin.Unit)))/block) described by [operation](ignore-url-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$ignoreUrlExceptions(kotlin.String, kotlin.Function0((kotlin.Unit)))/operation), ignoring and logging any thrown [UrlParseFailed](#) exceptions. |
+| [handlePlacesExceptions](handle-places-exceptions.md) | `fun handlePlacesExceptions(operation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Runs [block](handle-places-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$handlePlacesExceptions(kotlin.String, kotlin.Function0((kotlin.Unit)))/block) described by [operation](handle-places-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$handlePlacesExceptions(kotlin.String, kotlin.Function0((kotlin.Unit)))/operation), ignoring non-fatal exceptions. |
 | [runMaintenance](run-maintenance.md) | `open suspend fun runMaintenance(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Internal database maintenance tasks. Ideally this should be called once a day. |
 | [syncAndHandleExceptions](sync-and-handle-exceptions.md) | `fun syncAndHandleExceptions(syncBlock: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md)<br>Runs a [syncBlock](sync-and-handle-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$syncAndHandleExceptions(kotlin.Function0((kotlin.Unit)))/syncBlock), re-throwing any panics that may be encountered. |
 | [warmUp](warm-up.md) | `open suspend fun warmUp(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Make sure underlying database connections are established. |

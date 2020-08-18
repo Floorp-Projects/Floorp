@@ -2,7 +2,7 @@
 
 # OpenAppLinkRedirect
 
-`inner class OpenAppLinkRedirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L183)
+`inner class OpenAppLinkRedirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksUseCases.kt#L185)
 
 Open an external app with the redirect created by the [GetAppLinkRedirect](../-get-app-link-redirect/index.md).
 

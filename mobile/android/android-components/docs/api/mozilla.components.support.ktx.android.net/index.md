@@ -13,6 +13,8 @@
 
 | Name | Summary |
 |---|---|
+| [getFileExtension](get-file-extension.md) | `fun <ERROR CLASS>.getFileExtension(contentResolver: <ERROR CLASS>): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Return a file extension for [this](get-file-extension/-this-.md) give Uri (only supports content:// schemes). |
+| [getFileName](get-file-name.md) | `fun <ERROR CLASS>.getFileName(contentResolver: <ERROR CLASS>): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Return a file name for [this](get-file-name/-this-.md) give Uri. |
 | [isInScope](is-in-scope.md) | `fun <ERROR CLASS>.isInScope(scopes: `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<<ERROR CLASS>>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks that the given URL is in one of the given URL [scopes](is-in-scope.md#mozilla.components.support.ktx.android.net$isInScope(, kotlin.collections.Iterable(()))/scopes). |
 | [isUnderPrivateAppDirectory](is-under-private-app-directory.md) | `fun <ERROR CLASS>.isUnderPrivateAppDirectory(context: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Indicate if the [this](is-under-private-app-directory/-this-.md) uri is under the application private directory. |
 | [sameOriginAs](same-origin-as.md) | `fun <ERROR CLASS>.sameOriginAs(other: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks that Uri has the same origin as [other](same-origin-as.md#mozilla.components.support.ktx.android.net$sameOriginAs(, )/other). |

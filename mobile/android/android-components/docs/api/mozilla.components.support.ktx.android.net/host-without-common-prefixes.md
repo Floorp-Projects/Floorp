@@ -2,7 +2,7 @@
 
 # hostWithoutCommonPrefixes
 
-`val <ERROR CLASS>.hostWithoutCommonPrefixes: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/net/Uri.kt#L19)
+`val <ERROR CLASS>.hostWithoutCommonPrefixes: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/net/Uri.kt#L24)
 
 Returns the host without common prefixes like "www" or "m".
 
