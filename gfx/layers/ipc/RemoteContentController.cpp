@@ -243,7 +243,7 @@ void RemoteContentController::UpdateOverscrollVelocity(
     }
 #endif
 
-    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
     RefPtr<GeckoContentController> rootController =
         CompositorBridgeParent::GetGeckoContentControllerForRoot(
             aGuid.mLayersId);
@@ -268,7 +268,7 @@ void RemoteContentController::UpdateOverscrollOffset(
     }
 #endif
 
-    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
     RefPtr<GeckoContentController> rootController =
         CompositorBridgeParent::GetGeckoContentControllerForRoot(
             aGuid.mLayersId);
