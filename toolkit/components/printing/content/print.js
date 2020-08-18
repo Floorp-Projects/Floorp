@@ -442,59 +442,6 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
 }
 customElements.define("orientation-input", OrientationInput);
 
-class PhotonNumber extends HTMLElement {
-  connectedCallback() {
-    this.attachShadow({ mode: "open" });
-    let slot = document.createElement("slot");
-    this.upButton = this.makeButton("up");
-    this.downButton = this.makeButton("down");
-    let styles = document.createElement("link");
-    styles.rel = "stylesheet";
-    styles.href = "chrome://global/content/photon-number.css";
-    let buttons = document.createElement("div");
-    buttons.append(this.upButton, this.downButton);
-    let wrapper = document.createElement("span");
-    wrapper.classList.add("wrapper");
-    wrapper.append(slot, buttons);
-    this.shadowRoot.append(wrapper, styles);
-  }
-
-  makeButton(direction) {
-    let button = document.createElement("button");
-    button.setAttribute("step", direction);
-    button.tabIndex = "-1";
-    button.addEventListener("click", this);
-    button.addEventListener("mousedown", this);
-    return button;
-  }
-
-  get input() {
-    return this.querySelector("input[type=number]");
-  }
-
-  handleEvent(e) {
-    if (e.type == "mousedown") {
-      // Prevent mousedown pulling focus from the input when the spinner is
-      // clicked, this was causing a focus style flicker on macOS.
-      e.preventDefault();
-    } else if (e.type == "click") {
-      // TODO: You can hold down on a regular spinner to make it count up/down.
-      let step = e.originalTarget.getAttribute("step");
-      switch (step) {
-        case "up":
-          this.input.stepUp();
-          this.input.focus();
-          break;
-        case "down":
-          this.input.stepDown();
-          this.input.focus();
-          break;
-      }
-    }
-  }
-}
-customElements.define("photon-number", PhotonNumber);
-
 class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
   update(settings) {
     this.value = settings.numCopies;
