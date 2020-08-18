@@ -1035,7 +1035,6 @@ class GCRuntime {
       weakCachesToSweep;
   MainThreadData<bool> hasMarkedGrayRoots;
   MainThreadData<bool> abortSweepAfterCurrentGroup;
-  MainThreadData<bool> sweepMarkTaskStarted;
   MainThreadOrGCTaskData<IncrementalProgress> sweepMarkResult;
 
 #ifdef DEBUG
