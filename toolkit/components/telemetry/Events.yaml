@@ -2,21 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-top_sites:
-  search_override_exp:
+partner_link:
+  interaction:
     objects: ["click", "attribution"]
     release_channel_collection: opt-out
     products:
       - "firefox"
     record_in_processes: ["main"]
     description: >
-      This is recorded when using a search top site that has been overridden to a URL as part of an experiment.
-    bug_numbers: [1637217, 1644442]
+      This is recorded when clicking a partner link.
+    bug_numbers: [1637217, 1644442, 1643426]
     notification_emails:
       - "dao@mozilla.com"
-    expiry_version: "80"
+    expiry_version: never
     extra_keys:
-      searchProvider: Name of the search provider, e.g. "amazon" or "google".
+      partner: Name of the partner, e.g. "amazon" or "google".
       source: Which part of the UI request came from, i.e. "newtab" or "urlbar".
 
 activity_stream:
