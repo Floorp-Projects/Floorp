@@ -40,6 +40,8 @@
     <string name="tab_tray_collection_button_multiselect_content_description">Geselecteerde tabbladen in collectie opslaan</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">%1$s geselecteerd</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Selectie %1$s ongedaan gemaakt</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Geselecteerd</string>
 

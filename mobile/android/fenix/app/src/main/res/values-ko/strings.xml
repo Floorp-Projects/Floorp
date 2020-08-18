@@ -30,16 +30,16 @@
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d개 선택됨</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
-    <string name="tab_tray_add_new_collection">새 컬렉션 추가</string>
+    <string name="tab_tray_add_new_collection">새 모음집 추가</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">이름</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
-    <string name="tab_tray_select_collection">컬렉션 선택</string>
+    <string name="tab_tray_select_collection">모음집 선택</string>
 
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">다중 선택 모드 종료</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-    <string name="tab_tray_collection_button_multiselect_content_description">선택한 탭을 컬렉션에 저장</string>
+    <string name="tab_tray_collection_button_multiselect_content_description">선택한 탭을 모음집에 저장</string>
 
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">%1$s 선택됨</string>
@@ -49,7 +49,7 @@
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">다중 선택 모드 종료됨</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">다중 선택 모드로 전환됨, 컬렉션에 저장할 탭을 선택하세요</string>
+    <string name="tab_tray_enter_multiselect_content_description">다중 선택 모드로 전환됨, 모음집에 저장할 탭을 선택하세요</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">선택됨</string>
 
@@ -137,7 +137,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">새 탭</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection_2">컬렉션에 저장</string>
+    <string name="browser_menu_save_to_collection_2">모음집에 저장</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">공유</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -497,7 +497,7 @@
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">탭 열기</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">컬렉션에 저장</string>
+    <string name="tab_tray_menu_item_save">모음집에 저장</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">모든 탭 공유</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -509,7 +509,7 @@
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">탭 모드 전환</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
-    <string name="remove_tab_from_collection">컬렉션에서 탭 삭제</string>
+    <string name="remove_tab_from_collection">모음집에서 탭 삭제</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">탭 닫기</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -521,7 +521,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">탭 공유</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection1">탭을 컬렉션에 저장</string>
+    <string name="tabs_menu_save_to_collection1">탭을 모음집에 저장</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">탭 메뉴</string>
     <!-- Tab menu item to share the tab -->
@@ -536,11 +536,11 @@
     <string name="current_session_image">현재 세션 이미지</string>
 
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">컬렉션에 저장</string>
+    <string name="save_to_collection">모음집에 저장</string>
     <!-- Text for the menu button to delete a collection -->
-    <string name="collection_delete">컬렉션 삭제</string>
+    <string name="collection_delete">모음집 삭제</string>
     <!-- Text for the menu button to rename a collection -->
-    <string name="collection_rename">컬렉션 이름 변경</string>
+    <string name="collection_rename">모음집 이름 변경</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">열린 탭</string>
 
@@ -751,25 +751,25 @@
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
-    <string name="collections_header">컬렉션</string>
+    <string name="collections_header">모음집</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
-    <string name="collection_menu_button_content_description">컬렉션 메뉴</string>
+    <string name="collection_menu_button_content_description">모음집 메뉴</string>
 
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">중요한 것들을 모으세요</string>
+    <string name="no_collections_header1">중요한 것들 수집하기</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">나중에 빠르게 액세스 할 수 있도록 유사한 검색, 사이트 및 탭을 그룹화하세요.</string>
+    <string name="no_collections_description1">나중에 빠르게 접근할 수 있도록 유사한 검색, 사이트 및 탭을 모아 보세요.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">탭 선택</string>
 
     <!-- Title for the "select collection" step of the collection creator -->
-    <string name="create_collection_select_collection">컬렉션 선택</string>
+    <string name="create_collection_select_collection">모음집 선택</string>
 
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">컬렉션 이름</string>
+    <string name="create_collection_name_collection">모음집 이름</string>
 
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">새 컬렉션 추가</string>
+    <string name="create_collection_add_new_collection">새 모음집 추가</string>
 
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">모두 선택</string>
@@ -790,7 +790,7 @@
     <string name="create_collection_tabs_saved">탭이 저장되었습니다!</string>
 
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
-    <string name="create_collection_tabs_saved_new_collection">컬렉션 저장됨!</string>
+    <string name="create_collection_tabs_saved_new_collection">모음집 저장됨!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">탭이 저장되었습니다!</string>
 
@@ -804,7 +804,7 @@
     <string name="create_collection_view">보기</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
-    <string name="create_collection_default_name">컬렉션 %d개</string>
+    <string name="create_collection_default_name">모음집 %d개</string>
 
     <!-- Share -->
     <!-- Share screen header -->
@@ -864,10 +864,10 @@
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">제공:</string>
     <!-- Text shown in snackbar when user deletes a collection -->
-    <string name="snackbar_collection_deleted">컬렉션 삭제됨</string>
+    <string name="snackbar_collection_deleted">모음집 삭제됨</string>
 
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">컬렉션 이름 변경됨</string>
+    <string name="snackbar_collection_renamed">모음집 이름 변경됨</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">탭 삭제됨</string>
 
@@ -904,9 +904,9 @@
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s 파일을 삭제하시겠습니까?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">이 탭을 삭제하면 전체 컬렉션이 삭제됩니다. 언제든지 새 컬렉션을 만들 수 있습니다.</string>
+    <string name="delete_tab_and_collection_dialog_message">이 탭을 삭제하면 전체 모음집이 삭제됩니다. 언제든지 새 모음집을 만들 수 있습니다.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title">%1$s 컬렉션을 삭제하시겠습니까?</string>
+    <string name="delete_tab_and_collection_dialog_title">%1$s 모음집을 삭제하시겠습니까?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">삭제</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->

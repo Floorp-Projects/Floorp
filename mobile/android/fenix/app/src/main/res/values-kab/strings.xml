@@ -306,6 +306,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Ldi iseɣwan deg isnasen</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Amsefrak n usider azɣaray</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Izegrar</string>
 
