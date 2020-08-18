@@ -92,6 +92,7 @@ class MediaController final : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(activated);
   IMPL_EVENT_HANDLER(deactivated);
   IMPL_EVENT_HANDLER(supportedkeyschange);
+  IMPL_EVENT_HANDLER(playbackstatechange);
   IMPL_EVENT_HANDLER(positionstatechange);
 
   // IMediaController's methods
