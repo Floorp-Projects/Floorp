@@ -96,6 +96,9 @@ MediaController::MediaController(uint64_t aBrowsingContextId)
   mPositionStateChangedListener = PositionChangedEvent().Connect(
       AbstractThread::MainThread(), this,
       &MediaController::HandlePositionStateChanged);
+  mMetadataChangedListener =
+      MetadataChangedEvent().Connect(AbstractThread::MainThread(), this,
+                                     &MediaController::HandleMetadataChanged);
 }
 
 MediaController::~MediaController() {
@@ -206,6 +209,7 @@ void MediaController::Shutdown() {
   mShutdown = true;
   mSupportedActionsChangedListener.DisconnectIfExists();
   mPositionStateChangedListener.DisconnectIfExists();
+  mMetadataChangedListener.DisconnectIfExists();
 }
 
 void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
@@ -465,6 +469,16 @@ void MediaController::HandlePositionStateChanged(const PositionState& aState) {
   RefPtr<PositionStateEvent> event =
       PositionStateEvent::Constructor(this, u"positionstatechange"_ns, init);
   DispatchAsyncEvent(event);
+}
+
+void MediaController::HandleMetadataChanged(
+    const MediaMetadataBase& aMetadata) {
+  // The reason we don't append metadata with `metadatachange` event is that
+  // allocating artwork might fail if the memory is not enough, but for the
+  // event we are not able to throw an error. Therefore, we want to the listener
+  // to use `getMetadata()` to get metadata, because it would throw an error if
+  // we fail to allocate artwork.
+  DispatchAsyncEvent(u"metadatachange"_ns);
 }
 
 void MediaController::DispatchAsyncEvent(const nsAString& aName) {

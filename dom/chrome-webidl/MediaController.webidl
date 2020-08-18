@@ -41,6 +41,9 @@ interface MediaController : EventTarget {
 
   attribute EventHandler onactivated;
   attribute EventHandler ondeactivated;
+
+  // Following events would only be dispatched after controller is active.
+  attribute EventHandler onmetadatachange;
   attribute EventHandler onplaybackstatechange;
   attribute EventHandler onpositionstatechange;
   attribute EventHandler onsupportedkeyschange;
