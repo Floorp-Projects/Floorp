@@ -207,6 +207,10 @@ inline bool IsValidImageUrl(const nsAString& aUrl) {
          StringBeginsWith(aUrl, u"https://"_ns);
 }
 
+inline uint32_t GetMediaKeyMask(mozilla::dom::MediaControlKey aKey) {
+  return 1 << static_cast<uint8_t>(aKey);
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
