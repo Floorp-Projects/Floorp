@@ -108,6 +108,7 @@ class _RemoteSettingsExperimentLoader {
    */
   async checkTargeting(recipe, customContext = {}) {
     const context = TargetingContext.combineContexts(
+      { experiment: recipe },
       customContext,
       ASRouterTargeting.Environment
     );
