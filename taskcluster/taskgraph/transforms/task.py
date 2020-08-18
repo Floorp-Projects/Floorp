@@ -41,6 +41,7 @@ from taskgraph.util.scriptworker import (
 )
 from taskgraph.util.signed_artifacts import get_signed_artifacts
 from taskgraph.util.workertypes import worker_type_implementation
+from taskgraph.transforms.job.common import get_expiration
 from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 from taskgraph import GECKO, MAX_DEPENDENCIES
 from ..util import docker as dockerutil
@@ -98,6 +99,7 @@ task_description_schema = Schema({
     # (e.g., "14 days").  Defaults are set based on the project.
     Optional('expires-after'): text_type,
     Optional('deadline-after'): text_type,
+    Optional('expiration-policy'): text_type,
 
     # custom routes for this task; the default treeherder routes will be added
     # automatically
@@ -415,6 +417,8 @@ def verify_index(config, index):
         # name of the produced artifact (root of the names for
         # type=directory)
         'name': text_type,
+
+        'expires-after': text_type,
     }],
 
     # environment variables
@@ -434,7 +438,7 @@ def verify_index(config, index):
     # should be purged
     Optional('purge-caches-exit-status'): [int],
 
-    # Wether any artifacts are assigned to this worker
+    # Whether any artifacts are assigned to this worker
     Optional('skip-artifacts'): bool,
 })
 def build_docker_worker_payload(config, task, task_def):
@@ -545,11 +549,15 @@ def build_docker_worker_payload(config, task, task_def):
 
     if 'artifacts' in worker:
         artifacts = {}
+        expires_policy = get_expiration(config, task.get('expiration-policy', 'default'))
         for artifact in worker['artifacts']:
+            expires = artifact.get('expires-after', expires_policy)
+            if expires > task_def['expires']['relative-datestamp']:
+                expires = task_def['expires']['relative-datestamp']
             artifacts[artifact['name']] = {
                 'path': artifact['path'],
                 'type': artifact['type'],
-                'expires': task_def['expires'],  # always expire with the task
+                'expires': {'relative-datestamp': expires},
             }
         payload['artifacts'] = artifacts
 
@@ -665,7 +673,9 @@ def build_docker_worker_payload(config, task, task_def):
         'path': text_type,
 
         # if not specified, path is used for artifact name
-        Optional('name'): text_type
+        Optional('name'): text_type,
+
+        'expires-after': text_type,
     }],
 
     # Directories and/or files to be mounted.
@@ -777,10 +787,13 @@ def build_generic_worker_payload(config, task, task_def):
 
     artifacts = []
 
+    expires_policy = get_expiration(config, task.get('expiration-policy', 'default'))
     for artifact in worker.get('artifacts', []):
+        expires = artifact.get('expires-after', expires_policy)
         a = {
             'path': artifact['path'],
             'type': artifact['type'],
+            'expires': {'relative-datestamp': expires},
         }
         if 'name' in artifact:
             a['name'] = artifact['name']
@@ -1690,6 +1703,25 @@ def try_task_config_routes(config, tasks):
 
 
 @transforms.add
+def set_task_and_artifact_expiry(config, jobs):
+    """Set the default expiry for tasks and their artifacts.
+
+    These values are read from ci/config.yml
+    """
+    for job in jobs:
+        expires = get_expiration(config, job.get('expiration-policy', 'default'))
+        if 'expires-after' not in job:
+            job['expires-after'] = expires
+
+        if 'artifacts' in job['worker']:
+            for a in job['worker']['artifacts']:
+                if 'expires-after' not in a:
+                    a['expires-after'] = expires
+
+        yield job
+
+
+@transforms.add
 def build_task(config, tasks):
     for task in tasks:
         level = str(config.params['level'])
@@ -1749,9 +1781,6 @@ def build_task(config, tasks):
                     TREEHERDER_ROUTE_ROOT, config.params["project"], branch_rev,
                 )
             )
-
-        if 'expires-after' not in task:
-            task['expires-after'] = '28 days' if config.params.is_try() else '1 year'
 
         if 'deadline-after' not in task:
             task['deadline-after'] = '1 day'

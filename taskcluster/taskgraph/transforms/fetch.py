@@ -179,6 +179,7 @@ def make_task(config, jobs):
                     'type': 'directory',
                     'name': artifact_prefix,
                     'path': '/builds/worker/artifacts',
+                    'expires-after': expires,
                 }],
             },
         }
