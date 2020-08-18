@@ -10,6 +10,7 @@
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/IfEmitter.h"        // IfEmitter
+#include "frontend/ParseNode.h"        // AccessorType
 #include "frontend/SharedContext.h"    // SharedContext
 #include "gc/AllocKind.h"              // AllocKind
 #include "js/Id.h"                     // jsid
@@ -262,48 +263,35 @@ bool PropertyEmitter::emitInitHomeObject() {
   return true;
 }
 
-bool PropertyEmitter::emitInitProp(JS::Handle<JSAtom*> key) {
-  return emitInit(isClass_ ? JSOp::InitHiddenProp : JSOp::InitProp, key);
+bool PropertyEmitter::emitInit(AccessorType accessorType, HandleAtom key) {
+  switch (accessorType) {
+    case AccessorType::None:
+      return emitInit(isClass_ ? JSOp::InitHiddenProp : JSOp::InitProp, key);
+    case AccessorType::Getter:
+      return emitInit(
+          isClass_ ? JSOp::InitHiddenPropGetter : JSOp::InitPropGetter, key);
+    case AccessorType::Setter:
+      return emitInit(
+          isClass_ ? JSOp::InitHiddenPropSetter : JSOp::InitPropSetter, key);
+    default:
+      MOZ_CRASH("Invalid op");
+  }
 }
 
-bool PropertyEmitter::emitInitGetter(JS::Handle<JSAtom*> key) {
-  return emitInit(isClass_ ? JSOp::InitHiddenPropGetter : JSOp::InitPropGetter,
-                  key);
-}
-
-bool PropertyEmitter::emitInitSetter(JS::Handle<JSAtom*> key) {
-  return emitInit(isClass_ ? JSOp::InitHiddenPropSetter : JSOp::InitPropSetter,
-                  key);
-}
-
-bool PropertyEmitter::emitInitIndexProp() {
-  return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElem
-                                          : JSOp::InitElem);
-}
-
-bool PropertyEmitter::emitInitIndexGetter() {
-  return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElemGetter
-                                          : JSOp::InitElemGetter);
-}
-
-bool PropertyEmitter::emitInitIndexSetter() {
-  return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElemSetter
-                                          : JSOp::InitElemSetter);
-}
-
-bool PropertyEmitter::emitInitComputedProp() {
-  return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElem
-                                          : JSOp::InitElem);
-}
-
-bool PropertyEmitter::emitInitComputedGetter() {
-  return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElemGetter
-                                          : JSOp::InitElemGetter);
-}
-
-bool PropertyEmitter::emitInitComputedSetter() {
-  return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElemSetter
-                                          : JSOp::InitElemSetter);
+bool PropertyEmitter::emitInitIndexOrComputed(AccessorType accessorType) {
+  switch (accessorType) {
+    case AccessorType::None:
+      return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElem
+                                              : JSOp::InitElem);
+    case AccessorType::Getter:
+      return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElemGetter
+                                              : JSOp::InitElemGetter);
+    case AccessorType::Setter:
+      return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElemSetter
+                                              : JSOp::InitElemSetter);
+    default:
+      MOZ_CRASH("Invalid op");
+  }
 }
 
 bool PropertyEmitter::emitInit(JSOp op, JS::Handle<JSAtom*> key) {
