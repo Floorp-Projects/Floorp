@@ -15,3 +15,20 @@ async function waitForPdfJS(browser, url) {
   });
   return loadPromise;
 }
+
+async function waitForPdfJSAnnotationLayer(browser, url) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["pdfjs.eventBusDispatchToDOM", true]],
+  });
+  let loadPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "annotationlayerrendered",
+    false,
+    null,
+    true
+  );
+  await SpecialPowers.spawn(browser, [url], contentUrl => {
+    content.location = contentUrl;
+  });
+  return loadPromise;
+}
