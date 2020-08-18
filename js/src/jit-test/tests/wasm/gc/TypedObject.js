@@ -41,7 +41,7 @@
 {
     let ins = wasmEvalText(`(module
                              (type $q (struct (field (mut f64))))
-                             (type $p (struct (field (mut (ref opt $q)))))
+                             (type $p (struct (field (mut (ref null $q)))))
 
                              (type $r (struct (field (mut externref))))
 
@@ -69,7 +69,7 @@
 {
     let ins = wasmEvalText(`(module
                              (type $q (struct (field (mut f64))))
-                             (type $p (struct (field (mut (ref opt $q))) (field (mut externref))))
+                             (type $p (struct (field (mut (ref null $q))) (field (mut externref))))
 
                              (func (export "mkq") (result externref)
                               (struct.new $q (f64.const 1.5)))
@@ -127,9 +127,9 @@
           (type $p (struct (field i64)))
           (type $q (struct (field i32) (field i32)))
           (func $f (param externref) (result i32)
-           (ref.is_null (struct.narrow externref (ref opt $q) (local.get 0))))
+           (ref.is_null (struct.narrow externref (ref null $q) (local.get 0))))
           (func $g (param externref) (result i32)
-           (ref.is_null (struct.narrow externref (ref opt $p) (local.get 0))))
+           (ref.is_null (struct.narrow externref (ref null $p) (local.get 0))))
           (func (export "t1") (result i32)
            (call $f (struct.new $p (i64.const 0))))
           (func (export "t2") (result i32)
