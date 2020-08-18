@@ -7093,7 +7093,8 @@ static bool DoesLayerHaveOutOfDateFrameMetrics(Layer* aLayer) {
       return true;
     }
     nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
-    if (metrics.GetScrollOffset() != CSSPoint::FromAppUnits(scrollPosition)) {
+    if (metrics.GetLayoutScrollOffset() !=
+        CSSPoint::FromAppUnits(scrollPosition)) {
       return true;
     }
   }

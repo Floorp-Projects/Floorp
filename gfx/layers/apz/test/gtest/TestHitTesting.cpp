@@ -690,5 +690,5 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
 
   // Test that the subframe hasn't scrolled.
   EXPECT_EQ(CSSPoint(0, 0),
-            ApzcOf(layers[2], 0)->GetFrameMetrics().GetScrollOffset());
+            ApzcOf(layers[2], 0)->GetFrameMetrics().GetVisualScrollOffset());
 }

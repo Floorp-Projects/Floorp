@@ -65,9 +65,9 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   // function as normal.
   bool finished = mAnimationPhysics->IsFinished(now);
   nsPoint sampledDest = mAnimationPhysics->PositionAt(now);
-  ParentLayerPoint displacement =
-      (CSSPoint::FromAppUnits(sampledDest) - aFrameMetrics.GetScrollOffset()) *
-      zoom;
+  ParentLayerPoint displacement = (CSSPoint::FromAppUnits(sampledDest) -
+                                   aFrameMetrics.GetVisualScrollOffset()) *
+                                  zoom;
 
   if (finished) {
     mApzc.mX.SetVelocity(0);

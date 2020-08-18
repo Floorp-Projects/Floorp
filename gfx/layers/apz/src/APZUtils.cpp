@@ -12,7 +12,7 @@ namespace mozilla {
 namespace layers {
 
 void ExpectedGeckoMetrics::UpdateFrom(const FrameMetrics& aMetrics) {
-  mScrollOffset = aMetrics.GetScrollOffset();
+  mScrollOffset = aMetrics.GetVisualScrollOffset();
   mZoom = aMetrics.GetZoom();
   mDevPixelsPerCSSPixel = aMetrics.GetDevPixelsPerCSSPixel();
 }

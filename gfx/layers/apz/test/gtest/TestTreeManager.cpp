@@ -241,7 +241,7 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
-    aMetrics.SetScrollOffset(CSSPoint(300, 300));
+    aMetrics.SetLayoutScrollOffset(CSSPoint(300, 300));
     aMetrics.SetScrollGeneration(1);
     aMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
   });
@@ -273,7 +273,7 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
-    aMetrics.SetScrollOffset(CSSPoint(300, 300));
+    aMetrics.SetLayoutScrollOffset(CSSPoint(300, 300));
     aMetrics.SetScrollGeneration(1);
     aMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
   });

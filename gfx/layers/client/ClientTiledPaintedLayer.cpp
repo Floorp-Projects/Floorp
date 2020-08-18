@@ -218,7 +218,7 @@ void ClientTiledPaintedLayer::BeginPaint() {
 
   // Calculate the scroll offset since the last transaction
   mPaintData.mScrollOffset =
-      displayportMetrics.GetScrollOffset() * displayportMetrics.GetZoom();
+      displayportMetrics.GetLayoutScrollOffset() * displayportMetrics.GetZoom();
   TILING_LOG("TILING %p: Scroll offset %s\n", this,
              Stringify(mPaintData.mScrollOffset).c_str());
 }
@@ -244,11 +244,13 @@ bool ClientTiledPaintedLayer::IsScrollingOnCompositor(
   // is so small then we have nothing to gain from using paint heuristics.
   float COORDINATE_EPSILON = 1.f;
 
-  return !FuzzyEqualsAdditive(compositorMetrics.GetScrollOffset().x,
-                              aParentMetrics.GetScrollOffset().x,
+  // XXX Suspicious comparison between layout and visual scroll offsets.
+  // This may not do the right thing when we're zoomed in.
+  return !FuzzyEqualsAdditive(compositorMetrics.GetVisualScrollOffset().x,
+                              aParentMetrics.GetLayoutScrollOffset().x,
                               COORDINATE_EPSILON) ||
-         !FuzzyEqualsAdditive(compositorMetrics.GetScrollOffset().y,
-                              aParentMetrics.GetScrollOffset().y,
+         !FuzzyEqualsAdditive(compositorMetrics.GetVisualScrollOffset().y,
+                              aParentMetrics.GetLayoutScrollOffset().y,
                               COORDINATE_EPSILON);
 }
 

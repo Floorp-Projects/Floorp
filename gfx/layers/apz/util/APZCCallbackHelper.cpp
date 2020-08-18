@@ -77,7 +77,7 @@ static CSSPoint ScrollFrameTo(nsIScrollableFrame* aFrame,
   aSuccessOut = false;
   CSSPoint targetScrollPosition = aRequest.IsRootContent()
                                       ? aRequest.GetLayoutViewport().TopLeft()
-                                      : aRequest.GetScrollOffset();
+                                      : aRequest.GetLayoutScrollOffset();
 
   if (!aFrame) {
     return targetScrollPosition;
@@ -171,10 +171,10 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
       if (!APZCCallbackHelper::IsScrollInProgress(sf)) {
         if (RefPtr<PresShell> presShell = GetPresShell(aContent)) {
           APZCCH_LOG("Setting VV offset to %s on presShell %p\n",
-                     Stringify(aRequest.GetScrollOffset()).c_str(),
+                     Stringify(aRequest.GetVisualScrollOffset()).c_str(),
                      presShell.get());
           if (presShell->SetVisualViewportOffset(
-                  CSSPoint::ToAppUnits(aRequest.GetScrollOffset()),
+                  CSSPoint::ToAppUnits(aRequest.GetVisualScrollOffset()),
                   presShell->GetLayoutViewportOffset())) {
             sf->MarkEverScrolled();
           }
@@ -184,7 +184,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
   }
   bool scrollUpdated = false;
   ScreenMargin displayPortMargins = aRequest.GetDisplayPortMargins();
-  CSSPoint apzScrollOffset = aRequest.GetScrollOffset();
+  CSSPoint apzScrollOffset = aRequest.GetVisualScrollOffset();
   CSSPoint actualScrollOffset = ScrollFrameTo(sf, aRequest, scrollUpdated);
   CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
 

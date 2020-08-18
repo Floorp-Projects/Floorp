@@ -213,6 +213,10 @@ void UiCompositorControllerParent::NotifyFirstPaint() {
 
 void UiCompositorControllerParent::NotifyUpdateScreenMetrics(
     const FrameMetrics& aMetrics) {
+  // XXX this has a WebRender call site which passes in an APZ FrameMetrics
+  // (whose GetScrollOffset() is the visual scroll offset) and a Layers
+  // call site which passes in a Layer tree FrameMetrics (whose
+  // GetScrollOffset() is the layout scroll offset). Which does it want?
 #if defined(MOZ_WIDGET_ANDROID)
   CSSToScreenScale scale = ViewTargetAs<ScreenPixel>(
       aMetrics.GetZoom().ToScaleFactor(),

@@ -105,8 +105,8 @@ static AsyncTransform ComputeViewTransform(
   // used in place of mLastContentPaintMetrics, because they should be
   // equivalent, modulo race conditions while transactions are inflight.
 
-  ParentLayerPoint translation = (aCompositorMetrics.GetScrollOffset() -
-                                  aContentMetrics.GetScrollOffset()) *
+  ParentLayerPoint translation = (aCompositorMetrics.GetVisualScrollOffset() -
+                                  aContentMetrics.GetLayoutScrollOffset()) *
                                  aCompositorMetrics.GetZoom();
   return AsyncTransform(aCompositorMetrics.GetAsyncZoom(), -translation);
 }
@@ -166,10 +166,15 @@ bool SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   // display-port. If we abort updating when we shouldn't, we can end up
   // with blank regions on the screen and we open up the risk of entering
   // an endless updating cycle.
-  if (fabsf(contentMetrics.GetScrollOffset().x -
-            compositorMetrics.GetScrollOffset().x) <= 2 &&
-      fabsf(contentMetrics.GetScrollOffset().y -
-            compositorMetrics.GetScrollOffset().y) <= 2 &&
+  // XXX Suspicious comparisons between layout and visual scroll offsets.
+  // This may not do the right thing when we're zoomed in.
+  // However, note that the code as written will err on the side of returning
+  // false (whenever we're zoomed in and there's a persistent nonzero offset
+  // between the layout and visual viewports), which is the safer option.
+  if (fabsf(contentMetrics.GetLayoutScrollOffset().x -
+            compositorMetrics.GetVisualScrollOffset().x) <= 2 &&
+      fabsf(contentMetrics.GetLayoutScrollOffset().y -
+            compositorMetrics.GetVisualScrollOffset().y) <= 2 &&
       fabsf(contentMetrics.GetDisplayPort().X() -
             compositorMetrics.GetDisplayPort().X()) <= 2 &&
       fabsf(contentMetrics.GetDisplayPort().Y() -
@@ -223,13 +228,13 @@ bool SharedFrameMetricsHelper::AboutToCheckerboard(
   CSSRect painted = (aContentMetrics.GetCriticalDisplayPort().IsEmpty()
                          ? aContentMetrics.GetDisplayPort()
                          : aContentMetrics.GetCriticalDisplayPort()) +
-                    aContentMetrics.GetScrollOffset();
+                    aContentMetrics.GetLayoutScrollOffset();
   painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));
 
   // Inflate the rect by the danger zone. See the description of the danger zone
   // prefs in AsyncPanZoomController.cpp for an explanation of this.
   CSSRect showing =
-      CSSRect(aCompositorMetrics.GetScrollOffset(),
+      CSSRect(aCompositorMetrics.GetVisualScrollOffset(),
               aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
   showing.Inflate(LayerSize(StaticPrefs::apz_danger_zone_x(),
                             StaticPrefs::apz_danger_zone_y()) /
