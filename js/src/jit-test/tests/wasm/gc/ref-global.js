@@ -10,9 +10,9 @@
                         (field $x f64)
                         (field $y f64)))
 
-          (global $g1 (mut (ref opt $point)) (ref.null opt $point))
-          (global $g2 (mut (ref opt $point)) (ref.null opt $point))
-          (global $g3 (ref opt $point) (ref.null opt $point))
+          (global $g1 (mut (ref null $point)) (ref.null opt $point))
+          (global $g2 (mut (ref null $point)) (ref.null opt $point))
+          (global $g3 (ref null $point) (ref.null opt $point))
 
           ;; Restriction: cannot expose Refs outside the module, not even
           ;; as a return value.  See ref-restrict.js.
@@ -44,7 +44,7 @@
                         (field $x f64)
                         (field $y f64)))
 
-          (global $glob (mut (ref opt $point)) (ref.null opt $point))
+          (global $glob (mut (ref null $point)) (ref.null opt $point))
 
           (func (export "init")
            (global.set $glob (struct.new $point (f64.const 0.5) (f64.const 2.75))))
@@ -101,7 +101,7 @@
     let bin = wasmTextToBinary(
         `(module
           (type $box (struct (field $val i32)))
-          (import "m" "g" (global (mut (ref opt $box)))))`);
+          (import "m" "g" (global (mut (ref null $box)))))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
                        /cannot expose indexed reference type/);
@@ -115,7 +115,7 @@
     let bin = wasmTextToBinary(
         `(module
           (type $box (struct (field $val i32)))
-          (global $boxg (export "box") (mut (ref opt $box)) (ref.null opt $box)))`);
+          (global $boxg (export "box") (mut (ref null $box)) (ref.null opt $box)))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
                        /cannot expose indexed reference type/);

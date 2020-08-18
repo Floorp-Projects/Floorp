@@ -61,7 +61,7 @@ for (let v of VALUES)
            (func (export "make") (result externref)
              (struct.new $S (ref.null extern)))
            (func (export "get") (param $o externref) (result externref)
-             (struct.get $S 0 (struct.narrow externref (ref opt $S) (local.get $o)))))`);
+             (struct.get $S 0 (struct.narrow externref (ref null $S) (local.get $o)))))`);
     let x = ins.exports.make();
     x._0 = v;
     assertEq(ins.exports.get(x), v);
@@ -77,7 +77,7 @@ for (let v of VALUES)
            (func (export "make") (result externref)
              (struct.new $S (ref.null extern)))
            (func (export "get") (param $o externref) (result externref)
-             (struct.get $S 0 (struct.narrow externref (ref opt $S) (local.get $o)))))`);
+             (struct.get $S 0 (struct.narrow externref (ref null $S) (local.get $o)))))`);
     let constructor = ins.exports.make().constructor;
     let x = new constructor({_0: v});
     assertEq(ins.exports.get(x), v);

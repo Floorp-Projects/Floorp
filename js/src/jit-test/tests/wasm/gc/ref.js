@@ -5,15 +5,15 @@
 var text = `(module
       (type $cons (struct
                    (field $car i32)
-                   (field $cdr (ref opt $cons))))
+                   (field $cdr (ref null $cons))))
 
       (type $odd (struct
                   (field $odd.x i32)
-                  (field $to_even (ref opt $even))))
+                  (field $to_even (ref null $even))))
 
       (type $even (struct
                    (field $even.x i32)
-                   (field $to_odd (ref opt $odd))))
+                   (field $to_odd (ref null $odd))))
 
       ;; Use externref on the API since struct types cannot be exposed outside the module yet.
 
@@ -22,11 +22,11 @@ var text = `(module
       ;; The bodies do nothing since we have no operations on structs yet.
       ;; Note none of these functions are exported, as they use Ref types in their signatures.
 
-      (func (param (ref opt $cons)) (result i32)
+      (func (param (ref null $cons)) (result i32)
        (i32.const 0))
 
-      (func $cdr (param $p (ref opt $cons)) (result (ref opt $cons))
-       (local $l (ref opt $cons))
+      (func $cdr (param $p (ref null $cons)) (result (ref null $cons))
+       (local $l (ref null $cons))
        ;; store null value of correct type
        (local.set $l (ref.null opt $cons))
        ;; store local of correct type
@@ -35,24 +35,24 @@ var text = `(module
        (local.set $l (call $cdr (local.get $p)))
        ;; TODO: eventually also a test with global.get
        ;; blocks and if with result type
-       (block (result (ref opt $cons))
-        (if (result (ref opt $cons)) (i32.eqz (i32.const 0))
+       (block (result (ref null $cons))
+        (if (result (ref null $cons)) (i32.eqz (i32.const 0))
             (unreachable)
             (ref.null opt $cons))))
 
-      (func (param (ref opt $even)) (result (ref opt $odd))
+      (func (param (ref null $even)) (result (ref null $odd))
        (ref.null opt $odd))
 
-      (func (param (ref opt $odd)) (result (ref opt $even))
+      (func (param (ref null $odd)) (result (ref null $even))
        (ref.null opt $even))
 
-      (func (param (ref opt $cons))
+      (func (param (ref null $cons))
        (call $cdr (local.get 0))
        drop
        (call $imp (local.get 0))
        drop)
 
-      (func (param (ref opt $cons))
+      (func (param (ref null $cons))
        (drop (ref.eq (local.get 0) (ref.null opt $cons)))
        (drop (ref.eq (ref.null opt $cons) (local.get 0)))
        (drop (ref.eq (local.get 0) (ref.null opt $cons)))
@@ -68,7 +68,7 @@ wasmValidateText(text);
 new WebAssembly.Module(wasmTextToBinary(`
 (module
  (type $s (struct))
- (func $null (param (ref opt $s)) (result i32)
+ (func $null (param (ref null $s)) (result i32)
    (ref.is_null (local.get 0))))
 `))
 
@@ -77,7 +77,7 @@ new WebAssembly.Module(wasmTextToBinary(`
 new WebAssembly.Module(wasmTextToBinary(`
 (module
  (type $s (struct (field i32)))
- (func $f (param (ref opt $s)) (call $g (local.get 0)))
+ (func $f (param (ref null $s)) (call $g (local.get 0)))
  (func $g (param externref) (unreachable)))
 `));
 
@@ -85,7 +85,7 @@ new WebAssembly.Module(wasmTextToBinary(`
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (func (param (ref opt $odd)) (unreachable)))
+ (func (param (ref null $odd)) (unreachable)))
 `),
 SyntaxError, /failed to find type/);
 
@@ -96,27 +96,27 @@ wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
- (func $f (param (ref opt $s)) (unreachable))
- (func $g (param (ref opt $t)) (call $f (local.get 0)))
+ (func $f (param (ref null $s)) (unreachable))
+ (func $g (param (ref null $t)) (call $f (local.get 0)))
 )`);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field f32))) ;; Incompatible type
- (func $f (param (ref opt $s)) (unreachable))
- (func $g (param (ref opt $t)) (call $f (local.get 0)))
+ (func $f (param (ref null $s)) (unreachable))
+ (func $g (param (ref null $t)) (call $f (local.get 0)))
 )`),
-WebAssembly.CompileError, /expression has type optref.*but expected optref/);
+WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field (mut i32)))) ;; Incompatible mutability
- (func $f (param (ref opt $s)) (unreachable))
- (func $g (param (ref opt $t)) (call $f (local.get 0)))
+ (func $f (param (ref null $s)) (unreachable))
+ (func $g (param (ref null $t)) (call $f (local.get 0)))
 )`),
-WebAssembly.CompileError, /expression has type optref.*but expected optref/);
+WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
 
 // Ref type mismatch in assignment to local but the prefix rule allows
 // the assignment to succeed if the structs are the same.
@@ -125,25 +125,25 @@ wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
- (func $f (param (ref opt $s)) (local (ref opt $t)) (local.set 1 (local.get 0))))
+ (func $f (param (ref null $s)) (local (ref null $t)) (local.set 1 (local.get 0))))
 `)
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field f32)))
- (func $f (param (ref opt $s)) (local (ref opt $t)) (local.set 1 (local.get 0))))
+ (func $f (param (ref null $s)) (local (ref null $t)) (local.set 1 (local.get 0))))
 `),
-WebAssembly.CompileError, /expression has type optref.*but expected optref/);
+WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field (mut i32))))
- (func $f (param (ref opt $s)) (unreachable))
- (func $g (param (ref opt $t)) (call $f (local.get 0)))
+ (func $f (param (ref null $s)) (unreachable))
+ (func $g (param (ref null $t)) (call $f (local.get 0)))
 )`),
-WebAssembly.CompileError, /expression has type optref.*but expected optref/);
+WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
 
 // Ref type mismatch in return but the prefix rule allows the return
 // to succeed if the structs are the same.
@@ -152,38 +152,38 @@ wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
- (func $f (param (ref opt $s)) (result (ref opt $t)) (local.get 0)))
+ (func $f (param (ref null $s)) (result (ref null $t)) (local.get 0)))
 `);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field f32)))
- (func $f (param (ref opt $s)) (result (ref opt $t)) (local.get 0)))
+ (func $f (param (ref null $s)) (result (ref null $t)) (local.get 0)))
 `),
-WebAssembly.CompileError, /expression has type optref.*but expected optref/);
+WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field (mut i32))))
- (func $f (param (ref opt $s)) (result (ref opt $t)) (local.get 0)))
+ (func $f (param (ref null $s)) (result (ref null $t)) (local.get 0)))
 `),
-WebAssembly.CompileError, /expression has type optref.*but expected optref/);
+WebAssembly.CompileError, /expression has type ref null.*but expected ref null/);
 
 // Ref type can't reference a function type
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $x (func (param i32)))
- (func $f (param (ref opt $x)) (unreachable)))
+ (func $f (param (ref null $x)) (unreachable)))
 `),
 WebAssembly.CompileError, /ref does not reference a struct type/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type (func (param i32)))
- (func $f (param (ref opt 0)) (unreachable)))
+ (func $f (param (ref null 0)) (unreachable)))
 `),
 WebAssembly.CompileError, /does not reference a struct type/);
 
@@ -193,6 +193,6 @@ assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (func $f (param externref) (call $g (local.get 0)))
- (func $g (param (ref opt $s)) (unreachable)))
+ (func $g (param (ref null $s)) (unreachable)))
 `),
-WebAssembly.CompileError, /expression has type externref but expected optref/);
+WebAssembly.CompileError, /expression has type externref but expected ref null/);
