@@ -9649,7 +9649,7 @@
 
 - name: webgl.enable-surface-texture
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: webgl.enable-webgl2
