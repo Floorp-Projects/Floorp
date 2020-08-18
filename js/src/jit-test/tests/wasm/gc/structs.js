@@ -224,9 +224,9 @@ assertEq(withfloats._4, 0x1337);
 
 var stress = wasmTextToBinary(
     `(module
-      (type $node (struct (field i32) (field (ref opt $node))))
+      (type $node (struct (field i32) (field (ref null $node))))
       (func (export "iota1") (param $n i32) (result externref)
-       (local $list (ref opt $node))
+       (local $list (ref null $node))
        (block $exit
         (loop $loop
          (br_if $exit (i32.eqz (local.get $n)))
@@ -257,21 +257,21 @@ assertEq(the_list, null);
                       (field (mut i32))))
 
           (func (export "set") (param externref)
-           (local (ref opt $big))
-           (local.set 1 (struct.narrow externref (ref opt $big) (local.get 0)))
+           (local (ref null $big))
+           (local.set 1 (struct.narrow externref (ref null $big) (local.get 0)))
            (struct.set $big 1 (local.get 1) (i64.const 0x3333333376544567)))
 
           (func (export "set2") (param $p externref)
            (struct.set $big 1
-            (struct.narrow externref (ref opt $big) (local.get $p))
+            (struct.narrow externref (ref null $big) (local.get $p))
             (i64.const 0x3141592653589793)))
 
           (func (export "low") (param $p externref) (result i32)
-           (i32.wrap/i64 (struct.get $big 1 (struct.narrow externref (ref opt $big) (local.get $p)))))
+           (i32.wrap/i64 (struct.get $big 1 (struct.narrow externref (ref null $big) (local.get $p)))))
 
           (func (export "high") (param $p externref) (result i32)
            (i32.wrap/i64 (i64.shr_u
-                          (struct.get $big 1 (struct.narrow externref (ref opt $big) (local.get $p)))
+                          (struct.get $big 1 (struct.narrow externref (ref null $big) (local.get $p)))
                           (i64.const 32))))
 
           (func (export "mk") (result externref)
@@ -314,7 +314,7 @@ assertEq(the_list, null);
                       (field (mut i64))
                       (field (mut i32))))
 
-          (global $g (mut (ref opt $big)) (ref.null opt $big))
+          (global $g (mut (ref null $big)) (ref.null opt $big))
 
           (func (export "make") (result externref)
            (global.set $g
@@ -382,9 +382,9 @@ assertEq(the_list, null);
 
 var bin = wasmTextToBinary(
     `(module
-      (type $cons (struct (field i32) (field (ref opt $cons))))
+      (type $cons (struct (field i32) (field (ref null $cons))))
 
-      (global $g (mut (ref opt $cons)) (ref.null opt $cons))
+      (global $g (mut (ref null $cons)) (ref.null opt $cons))
 
       (func (export "push") (param i32)
        (global.set $g (struct.new $cons (local.get 0) (global.get $g))))
@@ -427,7 +427,7 @@ assertErrorMessage(() => ins.pop(),
           (func (export "mk") (result externref)
            (struct.new $Node (i32.const 37)))
           (func (export "f") (param $n externref) (result externref)
-           (struct.narrow externref (ref opt $Node) (local.get $n))))`).exports;
+           (struct.narrow externref (ref null $Node) (local.get $n))))`).exports;
     var n = ins.mk();
     assertEq(ins.f(n), n);
     assertEq(ins.f(wrapWithProto(n, {})), null);
@@ -444,10 +444,10 @@ assertErrorMessage(() => ins.pop(),
                     (field $x i32)
                     (field $y i32)))
 
-          (func $f (param $p (ref opt $s)) (result i32)
+          (func $f (param $p (ref null $s)) (result i32)
            (struct.get $s $x (local.get $p)))
 
-          (func $g (param $p (ref opt $s)) (result i32)
+          (func $g (param $p (ref null $s)) (result i32)
            (struct.get $s $y (local.get $p)))
 
           (func (export "testf") (param $n i32) (result i32)
@@ -524,7 +524,7 @@ wasmEvalText(`
  (module
    (type $p (struct (field i32)))
    (type $q (struct (field i32)))
-   (func $f (result (ref opt $p))
+   (func $f (result (ref null $p))
     (struct.new $q (i32.const 0))))
 `);
 
