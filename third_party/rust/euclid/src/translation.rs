@@ -271,7 +271,7 @@ where
     T: Zero + One,
 {
     fn into(self) -> Transform2D<T, Src, Dst> {
-        Transform2D::create_translation(self.x, self.y)
+        Transform2D::translation(self.x, self.y)
     }
 }
 
@@ -287,12 +287,6 @@ where
 impl<T: fmt::Debug, Src, Dst> fmt::Debug for Translation2D<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Translation({:?},{:?})", self.x, self.y)
-    }
-}
-
-impl<T: fmt::Display, Src, Dst> fmt::Display for Translation2D<T, Src, Dst> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({},{})", self.x, self.y)
     }
 }
 
@@ -586,7 +580,7 @@ where
     T: Zero + One,
 {
     fn into(self) -> Transform3D<T, Src, Dst> {
-        Transform3D::create_translation(self.x, self.y, self.z)
+        Transform3D::translation(self.x, self.y, self.z)
     }
 }
 
@@ -602,12 +596,6 @@ where
 impl<T: fmt::Debug, Src, Dst> fmt::Debug for Translation3D<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Translation({:?},{:?},{:?})", self.x, self.y, self.z)
-    }
-}
-
-impl<T: fmt::Display, Src, Dst> fmt::Display for Translation3D<T, Src, Dst> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({},{},{})", self.x, self.y, self.z)
     }
 }
 
