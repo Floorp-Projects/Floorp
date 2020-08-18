@@ -16,13 +16,12 @@
 #include "NamespaceImports.h"
 
 #include "builtin/SelfHostingDefines.h"
+#include "js/Class.h"  // JSClass, JSClassOps, js::ClassSpec
 #include "js/Value.h"
 #include "vm/JSObject.h"
 #include "vm/List.h"
 #include "vm/NativeObject.h"
 
-struct JS_PUBLIC_API JSClass;
-struct JSClassOps;
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSFreeOp;
 
