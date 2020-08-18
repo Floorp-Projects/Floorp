@@ -95,12 +95,15 @@ function setGuessedPlaybackState(tab, state) {
   return Promise.resolve();
 }
 
-function isActualPlaybackStateEqualTo(tab, expectedState) {
-  const currentState = MediaControlService.getCurrentMediaSessionPlaybackState();
+async function isActualPlaybackStateEqualTo(tab, expectedState) {
+  const controller = tab.linkedBrowser.browsingContext.mediaController;
+  if (controller.playbackState != expectedState) {
+    await new Promise(r => (controller.onplaybackstatechange = r));
+  }
   is(
-    currentState,
+    controller.playbackState,
     expectedState,
-    `current state '${currentState}'' is equal to '${expectedState}'`
+    `current state '${controller.playbackState}' is equal to '${expectedState}'`
   );
 }
 
