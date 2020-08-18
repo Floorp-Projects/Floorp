@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 SearchTestUtils.initXPCShellAddonManager(this);
-SearchTestUtils.init(Assert, registerCleanupFunction);
 
 const NAME = "Test Alias Engine";
 
