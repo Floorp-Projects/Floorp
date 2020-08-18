@@ -384,18 +384,36 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       type,
       data
     } = action;
-    let url = new URL(data.args);
-    Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_4__["addUtmParams"])(url, `aboutwelcome-${UTMTerm}-screen`);
 
-    if (action.addFlowParams && flowParams) {
-      url.searchParams.append("device_id", flowParams.deviceId);
-      url.searchParams.append("flow_id", flowParams.flowId);
-      url.searchParams.append("flow_begin_time", flowParams.flowBeginTime);
+    if (type === "SHOW_FIREFOX_ACCOUNTS") {
+      let params = { ..._asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_4__["BASE_PARAMS"],
+        utm_term: `aboutwelcome-${UTMTerm}-screen`
+      };
+
+      if (action.addFlowParams && flowParams) {
+        params = { ...params,
+          ...flowParams
+        };
+      }
+
+      data = { ...data,
+        extraParams: params
+      };
+    } else if (type === "OPEN_URL") {
+      let url = new URL(data.args);
+      Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_4__["addUtmParams"])(url, `aboutwelcome-${UTMTerm}-screen`);
+
+      if (action.addFlowParams && flowParams) {
+        url.searchParams.append("device_id", flowParams.deviceId);
+        url.searchParams.append("flow_id", flowParams.flowId);
+        url.searchParams.append("flow_begin_time", flowParams.flowBeginTime);
+      }
+
+      data = { ...data,
+        args: url.toString()
+      };
     }
 
-    data = { ...data,
-      args: url.toString()
-    };
     _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].handleUserAction({
       type,
       data
@@ -429,7 +447,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       action
     } = targetContent;
 
-    if (action.type === "OPEN_URL") {
+    if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
       this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
       _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].handleUserAction(action); // Wait until migration closes to complete the action
@@ -821,11 +839,10 @@ const DEFAULT_WELCOME_CONTENT = {
         },
         position: "top",
         action: {
-          type: "OPEN_URL",
+          type: "SHOW_FIREFOX_ACCOUNTS",
           addFlowParams: true,
           data: {
-            args: "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead",
-            where: "current"
+            entrypoint: "activity-stream-firstrun"
           }
         }
       }

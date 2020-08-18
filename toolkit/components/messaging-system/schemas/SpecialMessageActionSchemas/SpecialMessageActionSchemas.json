@@ -333,6 +333,10 @@
                 "entrypoint": {
                   "type": "string",
                   "description": "Adds entrypoint={your value} to the FXA URL"
+                },
+                "extraParams": {
+                  "type": "object",
+                  "description": "Any extra parameter that will be added to the FXA URL. E.g. {foo: bar} would result in <FXA_url>?foo=bar'"
                 }
               },
               "required": [
