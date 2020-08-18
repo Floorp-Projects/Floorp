@@ -57,6 +57,7 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsSandboxFlags.h"
+#include "nsQueryObject.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -955,6 +956,46 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
     return NS_BINDING_ABORTED;
   }
 
+  nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
+  NS_ASSERTION(chan, "Why is our request not a channel?");
+
+  nsresult status = NS_OK;
+  bool success = IsSuccessfulRequest(aRequest, &status);
+
+  // If we have already switched to type document, we're doing a
+  // process-switching DocumentChannel load. We should be able to pass down the
+  // load to our inner listener, but should also make sure to update our local
+  // state.
+  if (mType == eType_Document) {
+    if (!mFinalListener) {
+      MOZ_ASSERT_UNREACHABLE(
+          "Already are eType_Document, but don't have final listener yet?");
+      return NS_BINDING_ABORTED;
+    }
+
+    // If the load looks successful, fix up some of our local state before
+    // forwarding the request to the final URI loader.
+    //
+    // Forward load errors down to the document loader, so we don't tear down
+    // the nsDocShell ourselves.
+    if (success) {
+      LOG(("OBJLC [%p]: OnStartRequest: DocumentChannel request succeeded\n",
+           this));
+      nsCString channelType;
+      MOZ_ALWAYS_SUCCEEDS(mChannel->GetContentType(channelType));
+
+      if (GetTypeOfContent(channelType, mSkipFakePlugins) != eType_Document) {
+        MOZ_CRASH("DocumentChannel request with non-document MIME");
+      }
+      mContentType = channelType;
+
+      MOZ_ALWAYS_SUCCEEDS(
+          NS_GetFinalChannelURI(mChannel, getter_AddRefs(mURI)));
+    }
+
+    return mFinalListener->OnStartRequest(aRequest);
+  }
+
   // Otherwise we should be state loading, and call LoadObject with the channel
   if (mType != eType_Loading) {
     MOZ_ASSERT_UNREACHABLE("Should be type loading at this point");
@@ -964,12 +1005,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
   NS_ASSERTION(!mFinalListener, "mFinalListener exists already?");
 
   mChannelLoaded = true;
-
-  nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-  NS_ASSERTION(chan, "Why is our request not a channel?");
-
-  nsresult status = NS_OK;
-  bool success = IsSuccessfulRequest(aRequest, &status);
 
   if (status == NS_ERROR_BLOCKED_URI) {
     nsCOMPtr<nsIConsoleService> console(
@@ -1183,6 +1218,12 @@ ObjectInterfaceRequestorShim::GetInterface(const nsIID& aIID, void** aResult) {
     NS_ADDREF(sink);
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIObjectLoadingContent))) {
+    nsIObjectLoadingContent* olc = mContent;
+    *aResult = olc;
+    NS_ADDREF(olc);
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -1198,6 +1239,20 @@ nsObjectLoadingContent::AsyncOnChannelRedirect(
   }
 
   mChannel = aNewChannel;
+
+  if (mFinalListener) {
+    nsCOMPtr<nsIChannelEventSink> sink(do_QueryInterface(mFinalListener));
+    MOZ_RELEASE_ASSERT(sink, "mFinalListener isn't nsIChannelEventSink?");
+    if (mType != eType_Document) {
+      MOZ_ASSERT_UNREACHABLE(
+          "Not a DocumentChannel load, but we're getting a "
+          "AsyncOnChannelRedirect with a mFinalListener?");
+      return NS_BINDING_ABORTED;
+    }
+
+    return sink->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, cb);
+  }
+
   cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
@@ -1585,7 +1640,20 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   // channel for a previous load.
   bool newChannel = useChannel && mType == eType_Loading;
 
-  if (newChannel && mChannel) {
+  RefPtr<DocumentChannel> documentChannel = do_QueryObject(mChannel);
+  if (newChannel && documentChannel) {
+    // If we've got a DocumentChannel which is marked as loaded using
+    // `mChannelLoaded`, we are currently in the middle of a
+    // `UpgradeLoadToDocument`.
+    //
+    // As we don't have the real mime-type from the channel, handle this by
+    // using `newMime`.
+    newMime = TEXT_HTML;
+
+    MOZ_DIAGNOSTIC_ASSERT(
+        GetTypeOfContent(newMime, mSkipFakePlugins) == eType_Document,
+        "How is text/html not eType_Document?");
+  } else if (newChannel && mChannel) {
     nsCString channelType;
     rv = mChannel->GetContentType(channelType);
     if (NS_FAILED(rv)) {
@@ -2134,7 +2202,9 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
 
       rv = uriLoader->OpenChannel(mChannel, nsIURILoader::DONT_RETARGET, req,
                                   getter_AddRefs(finalListener));
-      // finalListener will receive OnStartRequest below
+      // finalListener will receive OnStartRequest either below, or if
+      // `mChannel` is a `DocumentChannel`, it will be received after
+      // RedirectToRealChannel.
     } break;
     case eType_Loading:
       // If our type remains Loading, we need a channel to proceed
@@ -2224,7 +2294,17 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     NS_ASSERTION(mType != eType_Null && mType != eType_Loading,
                  "We should not have a final listener with a non-loaded type");
     mFinalListener = finalListener;
-    rv = finalListener->OnStartRequest(mChannel);
+
+    // If we're a DocumentChannel load, hold off on firing the `OnStartRequest`
+    // callback, as we haven't received it yet from our caller.
+    RefPtr<DocumentChannel> documentChannel = do_QueryObject(mChannel);
+    if (documentChannel) {
+      MOZ_ASSERT(
+          mType == eType_Document,
+          "We have a DocumentChannel here but aren't loading a document?");
+    } else {
+      rv = finalListener->OnStartRequest(mChannel);
+    }
   }
 
   if (NS_FAILED(rv) && mIsLoading) {
@@ -2994,6 +3074,49 @@ nsObjectLoadingContent::SkipFakePlugins() {
     return LoadObject(true, true);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsObjectLoadingContent::UpgradeLoadToDocument(
+    nsIChannel* aRequest, BrowsingContext** aBrowsingContext) {
+  AUTO_PROFILER_LABEL("nsObjectLoadingContent::UpgradeLoadToDocument", NETWORK);
+
+  LOG(("OBJLC [%p]: UpgradeLoadToDocument", this));
+
+  if (aRequest != mChannel || !aRequest) {
+    // happens when a new load starts before the previous one got here.
+    return NS_BINDING_ABORTED;
+  }
+
+  // We should be state loading.
+  if (mType != eType_Loading) {
+    MOZ_ASSERT_UNREACHABLE("Should be type loading at this point");
+    return NS_BINDING_ABORTED;
+  }
+  MOZ_ASSERT(!mChannelLoaded, "mChannelLoaded set already?");
+  MOZ_ASSERT(!mFinalListener, "mFinalListener exists already?");
+
+  mChannelLoaded = true;
+
+  // We don't need to check for errors here, unlike in `OnStartRequest`, as
+  // `UpgradeLoadToDocument` is only called when the load is going to become a
+  // process-switching load. As we never process switch for failed object loads,
+  // we know our channel status is successful.
+
+  // Call `LoadObject` to trigger our nsObjectLoadingContext to switch into the
+  // specified new state.
+  nsresult rv = LoadObject(true, false, aRequest);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  if (!bc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bc.forget(aBrowsingContext);
   return NS_OK;
 }
 

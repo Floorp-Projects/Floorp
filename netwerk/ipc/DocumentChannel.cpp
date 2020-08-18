@@ -27,6 +27,7 @@
 #include "nsDocShellLoadState.h"
 #include "nsHttpHandler.h"
 #include "nsIInputStreamChannel.h"
+#include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
@@ -298,18 +299,21 @@ DocumentChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
 }
 
 NS_IMETHODIMP DocumentChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
+  // Setting load flags for TYPE_OBJECT is OK, so long as the channel to parent
+  // isn't opened yet, or we're only setting the `LOAD_DOCUMENT_URI` flag.
   auto contentPolicy = mLoadInfo->GetExternalContentPolicyType();
-  // Setting load flags for TYPE_OBJECT is permissible before channel to parent
-  // is opened.
-  if (contentPolicy != nsIContentPolicy::TYPE_OBJECT || mWasOpened) {
-    MOZ_CRASH("DocumentChannel::SetLoadFlags: Don't set flags after creation");
-    NS_ERROR(
-        "DocumentChannel::SetLoadFlags: "
-        "Don't set flags after creation");
-  } else {
+  if (contentPolicy == nsIContentPolicy::TYPE_OBJECT) {
+    if (mWasOpened) {
+      MOZ_DIAGNOSTIC_ASSERT(
+          aLoadFlags == (mLoadFlags | nsIChannel::LOAD_DOCUMENT_URI),
+          "After the channel has been opened, can only set the "
+          "`LOAD_DOCUMENT_URI` flag.");
+    }
     mLoadFlags = aLoadFlags;
+    return NS_OK;
   }
-  return NS_OK;
+
+  MOZ_CRASH("DocumentChannel::SetLoadFlags: Don't set flags after creation");
 }
 
 NS_IMETHODIMP DocumentChannel::GetOriginalURI(nsIURI** aOriginalURI) {
@@ -347,6 +351,15 @@ NS_IMETHODIMP DocumentChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
 }
 
 NS_IMETHODIMP DocumentChannel::GetContentType(nsACString& aContentType) {
+  // We may be trying to load HTML object data, and have determined that we're
+  // going to be performing a document load. In that case, fake the "text/html"
+  // content type for nsObjectLoadingContent.
+  if ((mLoadFlags & nsIRequest::LOAD_HTML_OBJECT_DATA) &&
+      (mLoadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
+    aContentType = TEXT_HTML;
+    return NS_OK;
+  }
+
   NS_ERROR("If we get here, something is broken");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

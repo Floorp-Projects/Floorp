@@ -170,7 +170,8 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
         mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
         std::move(initialClientInfo), InnerWindowIDForExtantDoc(docShell),
         mLoadFlags, mLoadInfo->InternalContentPolicyType(),
-        UserActivation::IsHandlingUserInput(), 0 /* ProcessId */, &rv);
+        UserActivation::IsHandlingUserInput(), 0 /* ProcessId */,
+        nullptr /* ObjectUpgradeHandler */, &rv);
   }
 
   if (NS_FAILED(rv)) {
