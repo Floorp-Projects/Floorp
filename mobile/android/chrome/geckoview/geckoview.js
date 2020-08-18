@@ -653,6 +653,7 @@ function startup() {
       name: "GeckoViewMediaControl",
       onEnable: {
         resource: "resource://gre/modules/GeckoViewMediaControl.jsm",
+        frameScript: "chrome://geckoview/content/GeckoViewMediaControlChild.js",
       },
     },
   ]);
