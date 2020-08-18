@@ -5213,7 +5213,7 @@ function runBug1375825Test()
   is(ret.text, "h", "runBug1375825Test #1 (7, 1), \"" + contenteditable.innerHTML + "\": should have queried a rect for 'h'");
 
   // #2
-  contenteditable.innerHTML = "abc<span style=\"-moz-user-select: all;\">defgh</span>";
+  contenteditable.innerHTML = "abc<span style=\"user-select: all;\">defgh</span>";
 
   ret = synthesizeQueryTextRect(2, 1);
   if (!checkQueryContentResult(ret, "runBug1375825Test #2 (2, 1), \"" + contenteditable.innerHTML + "\"")) {

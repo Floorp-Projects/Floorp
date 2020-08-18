@@ -10,7 +10,7 @@
   position: absolute;
   inset-inline-start: 0;
   z-index: 1001;
-  -moz-user-select: none;
+  user-select: none;
   cursor: default;
 }
 

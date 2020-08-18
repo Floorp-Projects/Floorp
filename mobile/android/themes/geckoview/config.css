@@ -34,7 +34,7 @@ html,
 body {
     margin: 0;
     padding: 0;
-    -moz-user-select: none;
+    user-select: none;
     font-family: sans-serif;
     -moz-text-size-adjust: none;
     background-color: var(--background-color);

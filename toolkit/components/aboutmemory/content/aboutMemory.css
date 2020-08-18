@@ -28,7 +28,7 @@ pre {
 
 div.ancillary {
   margin: 0.5em 0;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 div.section {
@@ -66,7 +66,7 @@ div.sidebarItem {
   border-radius: 10px;
   background: -moz-Field;
   color: -moz-FieldText;
-  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+  user-select: none;  /* no need to include this when cutting+pasting */
 }
 
 input.filterInput {
@@ -131,7 +131,7 @@ h3 {
 a.upDownArrow {
   font-size: 130%;
   text-decoration: none;
-  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+  user-select: none;  /* no need to include this when cutting+pasting */
 }
 
 .accuracyWarning, .badInputWarning, .invalid {
@@ -161,17 +161,17 @@ a.upDownArrow {
 }
 
 .noselect {
-  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+  user-select: none;  /* no need to include this when cutting+pasting */
 }
 
 .option {
   font-size: 80%;
-  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+  user-select: none;  /* no need to include this when cutting+pasting */
 }
 
 .legend {
   font-size: 80%;
-  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+  user-select: none;  /* no need to include this when cutting+pasting */
 }
 
 .debug {

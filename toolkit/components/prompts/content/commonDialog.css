@@ -26,7 +26,7 @@
 
 #infoBody {
   -moz-user-focus: normal;
-  -moz-user-select: text;
+  user-select: text;
   cursor: text !important;
   white-space: pre-wrap;
   unicode-bidi: plaintext;

@@ -348,7 +348,7 @@ treecolpicker {
 
 treechildren {
   display: -moz-box;
-  -moz-user-select: none;
+  user-select: none;
   -moz-box-flex: 1;
 }
 
@@ -453,7 +453,7 @@ tooltip[titletip="true"] {
 /********** textbox **********/
 
 search-textbox {
-  -moz-user-select: text;
+  user-select: text;
   text-shadow: none;
 }
 

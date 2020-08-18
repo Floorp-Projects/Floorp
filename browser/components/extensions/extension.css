@@ -17,7 +17,7 @@ body {
   font: caption;
   margin: 0;
   padding: 0;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 body * {
@@ -139,7 +139,7 @@ button.browser-style.default.focused {
 }
 
 .browser-style > label {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .browser-style.disabled > label {
