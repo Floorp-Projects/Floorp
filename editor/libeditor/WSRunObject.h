@@ -1226,12 +1226,6 @@ class WhiteSpaceVisibilityKeeper final {
     return rv;
   }
 
-  // PrepareToDeleteNode fixes up ws before and after aContent in preparation
-  // for aContent to be deleted.  Example of fixup: trailingws before
-  // aContent needs to be removed.
-  MOZ_CAN_RUN_SCRIPT static nsresult PrepareToDeleteNode(
-      HTMLEditor& aHTMLEditor, nsIContent* aContent);
-
   // PrepareToSplitAcrossBlocks fixes up ws before and after
   // {aSplitNode,aSplitOffset} in preparation for a block parent to be split.
   // Note that the aSplitNode and aSplitOffset are adjusted in response to
