@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height,width=device-width,initial-scale=1.0">
+    <style type="text/css">
+body {
+   background-color: white;
+   margin: 0;
+}
+
+#one {
+   background-color: red;
+   width: 100%;
+   height: 33vh;
+}
+
+#two {
+   background-color: green;
+   width: 100%;
+   height: 33vh;
+}
+
+#three {
+  background-color: blue;
+  width: 100%;
+  height: 33vh;
+}
+    </style>
+  </head>
+  <body>
+    <div id="one"></div>
+    <div id="two"></div>
+    <div id="three"></div>
+    <script>
+      document.getElementById('two').addEventListener('touchstart', e => {
+        console.log('preventing default');
+        e.preventDefault();
+      });
+
+      document.getElementById('three').addEventListener('touchstart', e => {
+        console.log('not preventing default');
+      });
+    </script>
+  </body>
+</html>
