@@ -64,82 +64,6 @@ class OutputBuffer {
   size_t cursor_ = 0;
 };
 
-// This is similar to OutputBuffer, but with a fixed-size buffer, rather than
-// a dynamically growing one. This is currently used in order to share
-// StartupCache data across processes.
-class PreallocatedOutputBuffer {
- public:
-  explicit PreallocatedOutputBuffer(Range<uint8_t>& buffer) : data(buffer) {}
-
-  uint8_t* write(size_t size) {
-    MOZ_ASSERT(checkCapacity(size));
-
-    auto buf = &data[cursor_];
-    cursor_ += size;
-    return buf;
-  }
-
-  bool codeUint8(const uint8_t& val) {
-    if (checkCapacity(sizeof val)) {
-      *write(sizeof val) = val;
-    }
-    return !error_;
-  }
-
-  template <typename T>
-  bool codeUint8(const EnumSet<T>& val) {
-    return codeUint8(val.serialize());
-  }
-
-  bool codeUint16(const uint16_t& val) {
-    if (checkCapacity(sizeof val)) {
-      LittleEndian::writeUint16(write(sizeof val), val);
-    }
-    return !error_;
-  }
-
-  bool codeUint32(const uint32_t& val) {
-    if (checkCapacity(sizeof val)) {
-      LittleEndian::writeUint32(write(sizeof val), val);
-    }
-    return !error_;
-  }
-
-  bool codeString(const nsCString& str) {
-    uint16_t len = CheckedUint16(str.Length()).value();
-    if (codeUint16(len)) {
-      if (checkCapacity(len)) {
-        memcpy(write(len), str.get(), len);
-      }
-    }
-    return !error_;
-  }
-
-  bool error() { return error_; }
-
-  bool finished() { return error_ || !remainingCapacity(); }
-
-  size_t remainingCapacity() { return data.length() - cursor_; }
-
-  bool checkCapacity(size_t size) {
-    if (size > remainingCapacity()) {
-      error_ = true;
-    }
-    return !error_;
-  }
-
-  size_t cursor() const { return cursor_; }
-
-  const uint8_t* Get() const { return data.begin().get(); }
-
- private:
-  bool error_ = false;
-
- public:
-  Range<uint8_t>& data;
-  size_t cursor_ = 0;
-};
-
 class InputBuffer {
  public:
   explicit InputBuffer(const Range<uint8_t>& buffer) : data(buffer) {}
@@ -199,6 +123,11 @@ class InputBuffer {
 
   size_t remainingCapacity() { return data.length() - cursor_; }
 
+  size_t cursor() const { return cursor_; }
+
+  const uint8_t* Get() const { return data.begin().get(); }
+
+ private:
   bool checkCapacity(size_t size) {
     if (size > remainingCapacity()) {
       error_ = true;
@@ -206,11 +135,6 @@ class InputBuffer {
     return !error_;
   }
 
-  size_t cursor() const { return cursor_; }
-
-  const uint8_t* Get() const { return data.begin().get(); }
-
- private:
   bool error_ = false;
 
  public:

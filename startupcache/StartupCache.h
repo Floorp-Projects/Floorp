@@ -11,6 +11,7 @@
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
+#include "nsTStringHasher.h"  // mozilla::DefaultHasher<nsCString>
 #include "nsZipArchive.h"
 #include "nsITimer.h"
 #include "nsIMemoryReporter.h"
@@ -21,13 +22,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/Compression.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/Omnijar.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/UniquePtrExtensions.h"
 
 /**
  * The StartupCache is a persistent cache of simple key-value pairs,
@@ -80,189 +78,47 @@
  */
 
 namespace mozilla {
-namespace dom {
-class ContentParent;
-}
-namespace ipc {
-class GeckoChildProcessHost;
-}  // namespace ipc
 
 namespace scache {
 
-class StartupCacheChild;
-
-#ifdef XP_UNIX
-
-// Please see bug 1440207 about improving the problem of random fixed FDs,
-// which the addition of the below constant exacerbates.
-static const int kStartupCacheFd = 11;
-#endif
-
-// We use INT_MAX here just to simplify the sorting - we want to push
-// unrequested entries to the back, and have requested entries in the order
-// they came in.
-static const int kStartupCacheEntryNotRequested = INT_MAX;
-static const int kStartupcacheEntryNotInSharedData = -1;
-
-// Keys must be of length `kStartupCacheKeyLengthCap - 1` or shorter, which
-// will bring them to `kStartupCacheKeyLengthCap` or shorter with a null
-// terminator.
-static const int kStartupCacheKeyLengthCap = 1024;
-
-// StartupCache entries can be backed by a buffer which they allocate as
-// soon as they are requested, into which they decompress the contents out
-// of the memory mapped file, *or* they can be backed by a contiguous buffer
-// which we allocate up front and decompress into, in order to share it with
-// child processes. This class is a helper class to hold a buffer which the
-// entry itself may or may not own.
-//
-// Side note: it may be appropriate for StartupCache entries to never own
-// their underlying buffers. We explicitly work to ensure that anything the
-// StartupCache returns to a caller survives for the lifetime of the
-// application, so it may be preferable to have a set of large contiguous
-// buffers which we allocate on demand, and fill up with cache entry contents,
-// but at that point we're basically implementing our own hacky pseudo-malloc,
-// for relatively uncertain performance gains. For the time being, we just
-// keep the existing model unchanged.
-class MaybeOwnedCharPtr {
- private:
-  char* mPtr;
-  bool mOwned;
-
- public:
-  ~MaybeOwnedCharPtr() {
-    if (mOwned) {
-      delete[] mPtr;
-    }
-  }
-
-  // MaybeOwnedCharPtr(const MaybeOwnedCharPtr& other);
-  // MaybeOwnedCharPtr& operator=(const MaybeOwnedCharPtr& other);
-
-  MaybeOwnedCharPtr(MaybeOwnedCharPtr&& other)
-      : mPtr(std::exchange(other.mPtr, nullptr)),
-        mOwned(std::exchange(other.mOwned, false)) {}
-
-  MaybeOwnedCharPtr& operator=(MaybeOwnedCharPtr&& other) {
-    std::swap(mPtr, other.mPtr);
-    std::swap(mOwned, other.mOwned);
-    return *this;
-  }
-
-  MaybeOwnedCharPtr& operator=(decltype(nullptr)) {
-    if (mOwned) {
-      delete[] mPtr;
-    }
-    mPtr = nullptr;
-    mOwned = false;
-    return *this;
-  }
-
-  operator char*() const { return mPtr; }
-
-  explicit operator bool() const { return !!mPtr; }
-
-  char* get() const { return mPtr; }
-
-  bool IsOwned() const { return mOwned; }
-
-  explicit MaybeOwnedCharPtr(char* aBytes) : mPtr(aBytes), mOwned(false) {}
-
-  explicit MaybeOwnedCharPtr(UniquePtr<char[]>&& aBytes)
-      : mPtr(aBytes.release()), mOwned(true) {}
-
-  explicit MaybeOwnedCharPtr(size_t size)
-      : mPtr(new char[size]), mOwned(true) {}
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-    if (!mOwned) {
-      return 0;
-    }
-    return mallocSizeOf(mPtr);
-  }
-};
-
-struct StartupCacheKeyHasher {
-  using Key = MaybeOwnedCharPtr;
-  using Lookup = const char*;
-
-  static HashNumber hash(const Lookup& aLookup) { return HashString(aLookup); }
-
-  static bool match(const Key& aKey, const Lookup& aLookup) {
-    return strcmp(aKey.get(), aLookup) == 0;
-  }
-};
-
-enum class StartupCacheEntryFlags {
-  Shared,
-  RequestedByChild,
-  AddedThisSession,
-
-  // We want to track whether code outside the StartupCache has requested
-  // and gotten access to a pointer to this item's underlying buffer, and
-  // this flag is the mechanism for doing that.
-  DoNotFree,
-};
-
 struct StartupCacheEntry {
-  MaybeOwnedCharPtr mData;
+  UniquePtr<char[]> mData;
   uint32_t mOffset;
   uint32_t mCompressedSize;
   uint32_t mUncompressedSize;
-  int32_t mSharedDataOffset;
   int32_t mHeaderOffsetInFile;
   int32_t mRequestedOrder;
-  EnumSet<StartupCacheEntryFlags> mFlags;
+  bool mRequested;
 
   MOZ_IMPLICIT StartupCacheEntry(uint32_t aOffset, uint32_t aCompressedSize,
-                                 uint32_t aUncompressedSize,
-                                 EnumSet<StartupCacheEntryFlags> aFlags)
+                                 uint32_t aUncompressedSize)
       : mData(nullptr),
         mOffset(aOffset),
         mCompressedSize(aCompressedSize),
         mUncompressedSize(aUncompressedSize),
-        mSharedDataOffset(kStartupcacheEntryNotInSharedData),
         mHeaderOffsetInFile(0),
-        mRequestedOrder(kStartupCacheEntryNotRequested),
-        mFlags(aFlags) {}
+        mRequestedOrder(0),
+        mRequested(false) {}
 
   StartupCacheEntry(UniquePtr<char[]> aData, size_t aLength,
-                    int32_t aRequestedOrder,
-                    EnumSet<StartupCacheEntryFlags> aFlags)
+                    int32_t aRequestedOrder)
       : mData(std::move(aData)),
         mOffset(0),
         mCompressedSize(0),
         mUncompressedSize(aLength),
-        mSharedDataOffset(kStartupcacheEntryNotInSharedData),
         mHeaderOffsetInFile(0),
-        mRequestedOrder(aRequestedOrder),
-        mFlags(aFlags) {}
+        mRequestedOrder(0),
+        mRequested(true) {}
 
   struct Comparator {
-    using Value = std::pair<const MaybeOwnedCharPtr*, StartupCacheEntry*>;
+    using Value = std::pair<const nsCString*, StartupCacheEntry*>;
 
     bool Equals(const Value& a, const Value& b) const {
-      // This is a bit ugly. Here and below, just note that we want entries
-      // with the RequestedByChild flag to be sorted before any other entries,
-      // because we're going to want to decompress them and send them down to
-      // child processes pretty early during startup.
-      return a.second->mFlags.contains(
-                 StartupCacheEntryFlags::RequestedByChild) ==
-                 b.second->mFlags.contains(
-                     StartupCacheEntryFlags::RequestedByChild) &&
-             a.second->mRequestedOrder == b.second->mRequestedOrder;
+      return a.second->mRequestedOrder == b.second->mRequestedOrder;
     }
 
     bool LessThan(const Value& a, const Value& b) const {
-      bool requestedByChildA =
-          a.second->mFlags.contains(StartupCacheEntryFlags::RequestedByChild);
-      bool requestedByChildB =
-          b.second->mFlags.contains(StartupCacheEntryFlags::RequestedByChild);
-      if (requestedByChildA == requestedByChildB) {
-        return a.second->mRequestedOrder < b.second->mRequestedOrder;
-      } else {
-        return requestedByChildA;
-      }
+      return a.second->mRequestedOrder < b.second->mRequestedOrder;
     }
   };
 };
@@ -275,27 +131,10 @@ class StartupCacheListener final : public nsIObserver {
   NS_DECL_NSIOBSERVER
 };
 
-// This mirrors a bit of logic in the script preloader. Basically, there's
-// certainly some overhead in child processes sending us lists of requested
-// startup cache items, so we want to limit that. Accordingly, we only
-// request to be notified of requested cache items for the first occurrence
-// of each process type, enumerated below.
-enum class ProcessType : uint8_t {
-  Uninitialized,
-  Parent,
-  Web,
-  Extension,
-  PrivilegedAbout,
-};
-
 class StartupCache : public nsIMemoryReporter {
   friend class StartupCacheListener;
-  friend class StartupCacheChild;
 
  public:
-  using Table =
-      HashMap<MaybeOwnedCharPtr, StartupCacheEntry, StartupCacheKeyHasher>;
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
@@ -308,10 +147,11 @@ class StartupCache : public nsIMemoryReporter {
   nsresult GetBuffer(const char* id, const char** outbuf, uint32_t* length);
 
   // Stores a buffer. Caller yields ownership.
-  nsresult PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t length,
-                     bool isFromChildProcess = false);
+  nsresult PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
+                     uint32_t length);
 
-  void InvalidateCache();
+  // Removes the cache file.
+  void InvalidateCache(bool memoryOnly = false);
 
   // For use during shutdown - this will write the startupcache's data
   // to disk if the timer hasn't already gone off.
@@ -329,36 +169,16 @@ class StartupCache : public nsIMemoryReporter {
   nsresult GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
                                       nsIObjectOutputStream** outStream);
 
-  static ProcessType GetChildProcessType(const nsACString& remoteType);
+  static StartupCache* GetSingletonNoInit();
   static StartupCache* GetSingleton();
-
-  // This will get the StartupCache up and running to get cached entries, but
-  // it won't init some of the deferred things which require later services
-  // to be up and running.
-  static nsresult PartialInitSingleton(nsIFile* aProfileLocalDir);
-
-  // If the startup cache singleton exists (initialized via
-  // PartialInitSingleton), this will ensure that all of the ancillary
-  // requirements of the startup cache are met.
-  static nsresult FullyInitSingleton();
-
-  static nsresult InitChildSingleton(char* aScacheHandleStr,
-                                     char* aScacheSizeStr);
-
   static void DeleteSingleton();
-  static void InitContentChild(dom::ContentParent& parent);
-
-  void AddStartupCacheCmdLineArgs(ipc::GeckoChildProcessHost& procHost,
-                                  const nsACString& aRemoteType,
-                                  std::vector<std::string>& aExtraOpts);
-  nsresult ParseStartupCacheCmdLineArgs(char* aScacheHandleStr,
-                                        char* aScacheSizeStr);
 
   // This measures all the heap memory used by the StartupCache, i.e. it
   // excludes the mapping.
   size_t HeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   bool ShouldCompactCache();
+  nsresult ResetStartupWriteTimerCheckingReadCount();
   nsresult ResetStartupWriteTimer();
   bool StartupWriteComplete();
 
@@ -369,15 +189,7 @@ class StartupCache : public nsIMemoryReporter {
   friend class StartupCacheInfo;
 
   Result<Ok, nsresult> LoadArchive();
-  nsresult PartialInit(nsIFile* aProfileLocalDir);
-  nsresult FullyInit();
-  nsresult InitChild(StartupCacheChild* cacheChild);
-
-  // Removes the cache file.
-  void InvalidateCacheImpl(bool memoryOnly = false);
-
-  nsresult ResetStartupWriteTimerCheckingReadCount();
-  nsresult ResetStartupWriteTimerImpl();
+  nsresult Init();
 
   // Returns a file pointer for the cache file with the given name in the
   // current profile.
@@ -389,69 +201,37 @@ class StartupCache : public nsIMemoryReporter {
   // Writes the cache to disk
   Result<Ok, nsresult> WriteToDisk();
 
-  Result<Ok, nsresult> DecompressEntry(StartupCacheEntry& aEntry);
-
-  Result<Ok, nsresult> LoadEntriesOffDisk();
-
-  Result<Ok, nsresult> LoadEntriesFromSharedMemory();
-
   void WaitOnPrefetchThread();
   void StartPrefetchMemoryThread();
 
+  static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);
-  static void SendEntriesTimeout(nsITimer* aTimer, void* aClosure);
   void MaybeWriteOffMainThread();
   static void ThreadedPrefetch(void* aClosure);
 
-  EnumSet<ProcessType> mInitializedProcesses{};
-  nsCString mContentStartupFinishedTopic;
-
-  Table mTable;
+  HashMap<nsCString, StartupCacheEntry> mTable;
   // owns references to the contents of tables which have been invalidated.
   // In theory grows forever if the cache is continually filled and then
   // invalidated, but this should not happen in practice.
   nsTArray<decltype(mTable)> mOldTables;
   nsCOMPtr<nsIFile> mFile;
   loader::AutoMemMap mCacheData;
-  loader::AutoMemMap mSharedData;
-  UniqueFileHandle mSharedDataHandle;
-
-  // This lock must protect a few members of the StartupCache. Essentially,
-  // we want to protect everything accessed by GetBuffer and PutBuffer. This
-  // includes:
-  // - mTable
-  // - mCacheData
-  // - mDecompressionContext
-  // - mCurTableReferenced
-  // - mOldTables
-  // - mWrittenOnce
-  // - gIgnoreDiskCache
-  // - mFile
-  // - mWriteTimer
-  // - mStartupWriteInitiated
-  mutable Mutex mLock;
+  Mutex mTableLock;
 
   nsCOMPtr<nsIObserverService> mObserverService;
   RefPtr<StartupCacheListener> mListener;
-  nsCOMPtr<nsITimer> mWriteTimer;
-  nsCOMPtr<nsITimer> mSendEntriesTimer;
+  nsCOMPtr<nsITimer> mTimer;
 
   Atomic<bool> mDirty;
   Atomic<bool> mWrittenOnce;
   bool mCurTableReferenced;
-  bool mLoaded;
-  bool mFullyInitialized;
   uint32_t mRequestedCount;
-  uint32_t mPrefetchSize;
-  uint32_t mSharedDataSize;
   size_t mCacheEntriesBaseOffset;
 
   static StaticRefPtr<StartupCache> gStartupCache;
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   static bool gFoundDiskCacheOnInit;
-
-  Atomic<StartupCacheChild*> mChildActor;
   PRThread* mPrefetchThread;
   UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;
 #ifdef DEBUG
