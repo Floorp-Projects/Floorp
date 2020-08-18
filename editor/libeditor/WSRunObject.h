@@ -1390,6 +1390,17 @@ class WhiteSpaceVisibilityKeeper final {
                                 const EditorDOMPoint& aPoint);
 
   /**
+   * DeleteContentNodeAndJoinTextNodesAroundIt() deletes aContentToDelete and
+   * may remove/replace white-spaces around it.  Then, if deleting content makes
+   * 2 text nodes around it are adjacent siblings, this joins them and put
+   * selection at the joined point.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  DeleteContentNodeAndJoinTextNodesAroundIt(HTMLEditor& aHTMLEditor,
+                                            nsIContent& aContentToDelete,
+                                            const EditorDOMPoint& aCaretPoint);
+
+  /**
    * NormalizeVisibleWhiteSpacesAt() tries to normalize visible white-space
    * sequence around aPoint.
    */

@@ -1085,6 +1085,63 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
   return NS_OK;
 }
 
+// static
+nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
+    HTMLEditor& aHTMLEditor, nsIContent& aContentToDelete,
+    const EditorDOMPoint& aCaretPoint) {
+  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteNode(
+      aHTMLEditor, &aContentToDelete);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteNode() failed");
+    return rv;
+  }
+
+  nsCOMPtr<nsIContent> previousEditableSibling =
+      aHTMLEditor.GetPriorHTMLSibling(&aContentToDelete);
+  // Delete the node, and join like nodes if appropriate
+  rv = aHTMLEditor.DeleteNodeWithTransaction(aContentToDelete);
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    return rv;
+  }
+  // Are they both text nodes?  If so, join them!
+  // XXX This may cause odd behavior if there is non-editable nodes
+  //     around the atomic content.
+  if (!aCaretPoint.IsInTextNode() || !previousEditableSibling ||
+      !previousEditableSibling->IsText()) {
+    return NS_OK;
+  }
+
+  nsIContent* nextEditableSibling =
+      aHTMLEditor.GetNextHTMLSibling(previousEditableSibling);
+  if (aCaretPoint.GetContainer() != nextEditableSibling) {
+    return NS_OK;
+  }
+  EditorDOMPoint atFirstChildOfRightNode;
+  rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(
+      *previousEditableSibling,
+      MOZ_KnownLive(*aCaretPoint.GetContainerAsText()),
+      &atFirstChildOfRightNode);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::JoinNearestEditableNodesWithTransaction() failed");
+    return rv;
+  }
+  if (!atFirstChildOfRightNode.IsSet()) {
+    NS_WARNING(
+        "HTMLEditor::JoinNearestEditableNodesWithTransaction() didn't return "
+        "right node position");
+    return NS_ERROR_FAILURE;
+  }
+  // Fix up selection
+  rv = aHTMLEditor.CollapseSelectionTo(atFirstChildOfRightNode);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::CollapseSelectionTo() failed");
+  return rv;
+}
+
 template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
