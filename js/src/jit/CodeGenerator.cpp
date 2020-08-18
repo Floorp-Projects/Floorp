@@ -4668,6 +4668,46 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
+  Register obj = ToRegister(lir->object());
+  ValueOperand idVal = ToValue(lir, LMegamorphicHasProp::IdIndex);
+  Register temp = ToRegister(lir->temp());
+  Register output = ToRegister(lir->output());
+
+  // idVal will be in vp[0], result will be stored in vp[1].
+  masm.subFromStackPtr(Imm32(sizeof(Value)));
+  masm.pushValue(idVal);
+  masm.moveStackPtrTo(idVal.scratchReg());
+
+  masm.setupUnalignedABICall(temp);
+  masm.loadJSContext(temp);
+  masm.passABIArg(temp);
+  masm.passABIArg(obj);
+  masm.passABIArg(idVal.scratchReg());
+  if (lir->mir()->hasOwn()) {
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<true>));
+  } else {
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<false>));
+  }
+
+  MOZ_ASSERT(!idVal.aliases(temp));
+  masm.mov(ReturnReg, temp);
+  masm.popValue(idVal);
+
+  Label bail, ok;
+  masm.branchIfTrueBool(temp, &ok);
+  masm.addToStackPtr(Imm32(sizeof(Value)));  // Discard result Value.
+  masm.jump(&bail);
+
+  masm.bind(&ok);
+  masm.unboxBoolean(Address(masm.getStackPointer(), 0), output);
+  masm.addToStackPtr(Imm32(sizeof(Value)));
+
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
     LGuardIsNotArrayBufferMaybeShared* guard) {
   Register obj = ToRegister(guard->input());
