@@ -148,6 +148,7 @@ class GlobalHelperThreadState {
 
   // GC tasks needing to be done in parallel.
   GCParallelTaskList gcParallelWorklist_;
+  size_t gcParallelThreadCount;
 
   // Global list of JSContext for GlobalHelperThreadState to use.
   ContextVector helperContexts_;
@@ -165,15 +166,16 @@ class GlobalHelperThreadState {
   size_t maxPromiseHelperThreads() const;
   size_t maxParseThreads() const;
   size_t maxCompressionThreads() const;
-  size_t maxGCParallelThreads() const;
+  size_t maxGCParallelThreads(const AutoLockHelperThreadState& lock) const;
 
   GlobalHelperThreadState();
 
   bool ensureInitialized();
+  bool ensureThreadCount(size_t minimumThreadCount);
   void finish();
-  void finishThreads();
+  void finishThreads(HelperThreadVector& threads);
 
-  MOZ_MUST_USE bool ensureContextListForThreadCount();
+  MOZ_MUST_USE bool ensureContextList(size_t count);
   JSContext* getFirstUnusedContext(AutoLockHelperThreadState& locked);
   void destroyHelperContexts(AutoLockHelperThreadState& lock);
 
@@ -278,6 +280,13 @@ class GlobalHelperThreadState {
 
   GCParallelTaskList& gcParallelWorklist(const AutoLockHelperThreadState&) {
     return gcParallelWorklist_;
+  }
+
+  void setGCParallelThreadCount(size_t count,
+                                const AutoLockHelperThreadState&) {
+    MOZ_ASSERT(count >= 1);
+    MOZ_ASSERT(count <= threadCount);
+    gcParallelThreadCount = count;
   }
 
   bool canStartWasmCompile(const AutoLockHelperThreadState& lock,
@@ -417,7 +426,8 @@ struct HelperThread {
     return maybeCurrentTaskAs<GCParallelTask*>();
   }
 
-  void destroy();
+  void setTerminate(const AutoLockHelperThreadState& lock);
+  void join();
 
   static void ThreadMain(void* arg);
   void threadLoop();

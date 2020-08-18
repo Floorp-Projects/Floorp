@@ -625,7 +625,10 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("zoneAllocDelayKB", JSGC_ZONE_ALLOC_DELAY_KB, true)                    \
   _("mallocThresholdBase", JSGC_MALLOC_THRESHOLD_BASE, true)               \
   _("mallocGrowthFactor", JSGC_MALLOC_GROWTH_FACTOR, true)                 \
-  _("chunkBytes", JSGC_CHUNK_BYTES, false)
+  _("chunkBytes", JSGC_CHUNK_BYTES, false)                                 \
+  _("helperThreadRatio", JSGC_HELPER_THREAD_RATIO, true)                   \
+  _("maxHelperThreads", JSGC_MAX_HELPER_THREADS, true)                     \
+  _("helperThreadCount", JSGC_HELPER_THREAD_COUNT, false)
 
 static const struct ParamInfo {
   const char* name;
