@@ -12,6 +12,11 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **concept-tabstray**
+  * Added `onTabsUpdated` to `TabsTray.Observer` for notifying observers when one or more tabs have been added/removed.
+
+* **browser-tabstray**
+  * Added the convenience function `TabsAdapter.doOnTabsUpdated` for performing actions only once when the tabs are updated.
 
 # 55.0.0
 

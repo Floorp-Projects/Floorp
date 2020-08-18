@@ -16,6 +16,11 @@ interface TabsTray : Observable<TabsTray.Observer> {
      */
     interface Observer {
         /**
+         * One or many tabs have been added or removed.
+         */
+        fun onTabsUpdated() = Unit
+
+        /**
          * A new tab has been selected.
          */
         fun onTabSelected(tab: Tab)

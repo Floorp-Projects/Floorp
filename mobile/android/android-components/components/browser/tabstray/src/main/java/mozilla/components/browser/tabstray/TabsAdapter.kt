@@ -54,6 +54,8 @@ open class TabsAdapter(
 
     override fun updateTabs(tabs: Tabs) {
         this.tabs = tabs
+
+        notifyObservers { onTabsUpdated() }
     }
 
     override fun onTabsInserted(position: Int, count: Int) = notifyItemRangeInserted(position, count)

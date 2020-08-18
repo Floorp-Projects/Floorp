@@ -114,4 +114,25 @@ class TabsAdapterTest {
         adapter.onTabsChanged(42, 78)
         verify(adapter).notifyItemRangeChanged(42, 78)
     }
+
+    @Test
+    fun `tabs updated notifies observers`() {
+        val adapter = TabsAdapter()
+        val observer: TabsTray.Observer = mock()
+
+        adapter.register(observer)
+
+        adapter.updateTabs(
+            Tabs(
+                list = listOf(
+                    Tab("A", "https://www.mozilla.org"),
+                    Tab("B", "https://www.firefox.com"),
+                    Tab("C", "https://getpocket.com")
+                ),
+                selectedIndex = 0
+            )
+        )
+
+        verify(observer).onTabsUpdated()
+    }
 }
