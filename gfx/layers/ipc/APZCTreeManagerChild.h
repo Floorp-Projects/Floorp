@@ -62,6 +62,9 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
 
   APZInputBridge* InputBridge() override;
 
+  void AddInputBlockCallback(uint64_t aInputBlockId,
+                             InputBlockCallback&& aCallback) override;
+
   void AddIPDLReference();
   void ReleaseIPDLReference();
   void ActorDestroy(ActorDestroyReason aWhy) override;
