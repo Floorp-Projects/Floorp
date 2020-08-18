@@ -7,6 +7,7 @@
 #ifndef vm_Runtime_h
 #define vm_Runtime_h
 
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DoublyLinkedList.h"
@@ -43,6 +44,7 @@
 #ifdef DEBUG
 #  include "js/Proxy.h"  // For AutoEnterPolicy
 #endif
+#include "js/Stream.h"  // JS::AbortSignalIsAborted
 #include "js/Symbol.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -452,17 +454,27 @@ struct JSRuntime {
 
  private:
   js::WriteOnceData<const JSClass*> abortSignalClass_;
+  js::WriteOnceData<JS::AbortSignalIsAborted> abortSignalIsAborted_;
 
  public:
-  void initAbortSignalHandling(const JSClass* clasp) {
+  void initAbortSignalHandling(const JSClass* clasp,
+                               JS::AbortSignalIsAborted isAborted) {
     MOZ_ASSERT(clasp != nullptr,
                "doesn't make sense for an embedder to provide a null class "
                "when specifying AbortSignal handling");
+    MOZ_ASSERT(isAborted != nullptr, "must pass a valid function pointer");
 
     abortSignalClass_ = clasp;
+    abortSignalIsAborted_ = isAborted;
   }
 
   const JSClass* maybeAbortSignalClass() const { return abortSignalClass_; }
+
+  bool abortSignalIsAborted(JSObject* obj) {
+    MOZ_ASSERT(abortSignalIsAborted_ != nullptr,
+               "must call initAbortSignalHandling first");
+    return abortSignalIsAborted_(obj);
+  }
 
  private:
   // List of non-ephemeron weak containers to sweep during

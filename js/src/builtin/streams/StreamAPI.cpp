@@ -604,6 +604,8 @@ JS_PUBLIC_API JSObject* JS::ReadableStreamDefaultReaderRead(
   return js::ReadableStreamDefaultReaderRead(cx, unwrappedReader);
 }
 
-void JS::InitAbortSignalHandling(const JSClass* clasp, JSContext* cx) {
-  cx->runtime()->initAbortSignalHandling(clasp);
+void JS::InitAbortSignalHandling(const JSClass* clasp,
+                                 AbortSignalIsAborted isAborted,
+                                 JSContext* cx) {
+  cx->runtime()->initAbortSignalHandling(clasp, isAborted);
 }

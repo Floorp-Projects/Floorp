@@ -37,6 +37,7 @@
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::UnwrapStreamFromWriter
 #include "vm/JSContext-inl.h"  // JSContext::check
 #include "vm/JSObject-inl.h"   // js::NewBuiltinClassInstance
+#include "vm/Realm-inl.h"      // js::AutoRealm
 
 using mozilla::Maybe;
 using mozilla::Nothing;
@@ -1105,6 +1106,38 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
 }
 
 /**
+ * Stream spec, 4.8.1. ReadableStreamPipeTo ( source, dest,
+ *                                            preventClose, preventAbort,
+ *                                            preventCancel[, signal] )
+ * Step 14.1 abortAlgorithm.
+ */
+static MOZ_MUST_USE bool PerformAbortAlgorithm(JSContext* cx,
+                                               Handle<PipeToState*> state) {
+  cx->check(state);
+
+  // Step 14.1: Let abortAlgorithm be the following steps:
+  // Step 14.1.1: Let error be a new "AbortError" DOMException.
+  // Step 14.1.2: Let actions be an empty ordered set.
+  // Step 14.1.3: If preventAbort is false, append the following action to
+  //              actions:
+  // Step 14.1.3.1: If dest.[[state]] is "writable", return
+  //                ! WritableStreamAbort(dest, error).
+  // Step 14.1.3.2: Otherwise, return a promise resolved with undefined.
+  // Step 14.1.4: If preventCancel is false, append the following action action
+  //              to actions:
+  // Step 14.1.4.1: If source.[[state]] is "readable", return
+  //                ! ReadableStreamCancel(source, error).
+  // Step 14.1.4.2: Otherwise, return a promise resolved with undefined.
+  // Step 14.1.5: Shutdown with an action consisting of getting a promise to
+  //              wait for all of the actions in actions, and with error.
+  // XXX jwalden
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
+                            "abortAlgorithm steps");
+  return false;
+}
+
+/**
  * Stream spec, 3.4.11. ReadableStreamPipeTo ( source, dest,
  *                                             preventClose, preventAbort,
  *                                             preventCancel, signal )
@@ -1127,8 +1160,7 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
   //         AbortSignal interface.
   MOZ_ASSERT(state->getFixedSlot(Slot_Signal).isUndefined());
   if (signal) {
-    // Sadly, we can't assert |signal| is an |AbortSignal| here because it could
-    // have become a nuked CCW since it was type-checked.
+    // |signal| is double-checked to be an |AbortSignal| further down.
     state->initFixedSlot(Slot_Signal, ObjectValue(*signal));
   }
 
@@ -1186,11 +1218,42 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
   // Step 12 ("Let promise be a new promise.") was performed by the caller and
   // |promise| was its result.
 
+  // XXX This used to be step 13 but is now step 14, all the step-comments of
+  //     the overall algorithm need renumbering.
   // Step 13: If signal is not undefined,
-  // XXX jwalden need JSAPI to add an algorithm/steps to an AbortSignal
   if (signal) {
+    // Step 14.2: If signal’s aborted flag is set, perform abortAlgorithm and
+    //         return promise.
+    bool aborted;
+    {
+      // Sadly, we can't assert |signal| is an |AbortSignal| here because it
+      // could have become a nuked CCW since it was type-checked.
+      JSObject* unwrappedSignal = UnwrapSignalFromPipeToState(cx, state);
+      if (!unwrappedSignal) {
+        return nullptr;
+      }
+
+      JSRuntime* rt = cx->runtime();
+      MOZ_ASSERT(unwrappedSignal->hasClass(rt->maybeAbortSignalClass()));
+
+      AutoRealm ar(cx, unwrappedSignal);
+      aborted = rt->abortSignalIsAborted(unwrappedSignal);
+    }
+    if (aborted) {
+      if (!PerformAbortAlgorithm(cx, state)) {
+        return nullptr;
+      }
+
+      // Returning |state| here will cause |promise| to be returned by the
+      // overall algorithm.
+      return state;
+    }
+
+    // Step 14.3: Add abortAlgorithm to signal.
+    // XXX jwalden need JSAPI to add an algorithm/steps to an AbortSignal
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAM_PIPETO_BAD_SIGNAL);
+                              JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
+                              "adding abortAlgorithm to signal");
     return nullptr;
   }
 
