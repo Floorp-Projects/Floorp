@@ -1308,8 +1308,14 @@ nsUnknownContentTypeDialog.prototype = {
       );
     }
 
-    return DownloadIntegration.shouldViewDownloadInternally(
-      this.mLauncher.MIMEInfo.MIMEType
+    return (
+      Services.prefs.getBoolPref(
+        "browser.helperApps.showOpenOptionForViewableInternally",
+        false
+      ) &&
+      DownloadIntegration.shouldViewDownloadInternally(
+        this.mLauncher.MIMEInfo.MIMEType
+      )
     );
   },
 

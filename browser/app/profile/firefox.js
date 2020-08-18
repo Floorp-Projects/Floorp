@@ -402,8 +402,11 @@ pref("browser.download.autohideButton", true);
 
 // This controls the visibility of the radio button in the
 // Unknown Content Type (Helper App) dialog that will open
-// the content in the browser.
+// the content in the browser for PDF and for other
+// Viewable Internally types
+// (see browser.download.viewableInternally.enabledTypes)
 pref("browser.helperApps.showOpenOptionForPdfJS", true);
+pref("browser.helperApps.showOpenOptionForViewableInternally", true);
 
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
