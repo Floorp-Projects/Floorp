@@ -375,6 +375,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
                : nullptr;
   }
 
+  const EditorDOMPoint& ScanStartRef() const { return mScanStartPoint; }
+
   /**
    * GetStartReasonContent() and GetEndReasonContent() return a node which
    * was found by scanning from mScanStartPoint backward or  forward.  If there
