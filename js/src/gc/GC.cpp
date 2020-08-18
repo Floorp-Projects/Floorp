@@ -910,7 +910,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepZone(nullptr),
       hasMarkedGrayRoots(false),
       abortSweepAfterCurrentGroup(false),
-      sweepMarkTaskStarted(false),
       sweepMarkResult(IncrementalProgress::NotFinished),
       startedCompacting(false),
       relocatedArenasToRelease(nullptr),
@@ -5543,7 +5542,9 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
 
 IncrementalProgress GCRuntime::markDuringSweeping(JSFreeOp* fop,
                                                   SliceBudget& budget) {
-  if (sweepMarkTaskStarted || marker.isDrained()) {
+  MOZ_ASSERT(sweepMarkTask.isIdle());
+
+  if (marker.isDrained()) {
     return Finished;
   }
 
@@ -5552,7 +5553,6 @@ IncrementalProgress GCRuntime::markDuringSweeping(JSFreeOp* fop,
     MOZ_ASSERT(sweepMarkTask.isIdle(lock));
     sweepMarkTask.setBudget(budget);
     sweepMarkTask.startOrRunIfIdle(lock);
-    sweepMarkTaskStarted = true;
     return Finished;  // This means don't yield to the mutator here.
   }
 
@@ -5633,12 +5633,15 @@ void js::gc::SweepMarkTask::run() {
 }
 
 IncrementalProgress GCRuntime::joinSweepMarkTask() {
-  MOZ_ASSERT_IF(!sweepMarkTaskStarted, sweepMarkTask.isIdle());
-  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
+  AutoLockHelperThreadState lock;
+  if (sweepMarkTask.isIdle(lock)) {
+    return Finished;
+  }
 
-  IncrementalProgress result =
-      sweepMarkTaskStarted ? sweepMarkResult : Finished;
-  sweepMarkTaskStarted = false;
+  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK, lock);
+
+  IncrementalProgress result = sweepMarkResult;
+  sweepMarkResult = Finished;
   return result;
 }
 
@@ -6254,14 +6257,15 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   // Then continue running sweep actions.
 
   SweepAction::Args args{this, &fop, budget};
-  IncrementalProgress progress = sweepActions->run(args);
+  IncrementalProgress sweepProgress = sweepActions->run(args);
+  IncrementalProgress markProgress = joinSweepMarkTask();
 
-  if (sweepMarkTaskStarted && joinSweepMarkTask() == NotFinished) {
-    progress = NotFinished;
+  if (sweepProgress == Finished && markProgress == Finished) {
+    return Finished;
   }
 
-  MOZ_ASSERT_IF(progress == NotFinished, isIncremental);
-  return progress;
+  MOZ_ASSERT(isIncremental);
+  return NotFinished;
 }
 
 bool GCRuntime::allCCVisibleZonesWereCollected() {
