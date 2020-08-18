@@ -179,6 +179,8 @@
 
     <string name="pref_key_wait_first_paint" translatable="false">pref_key_wait_first_paint</string>
 
+    <string name="pref_key_synced_tabs_tabs_tray" translatable="false">pref_key_synced_tabs_tabs_tray</string>
+
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 
     <string name="pref_key_open_tabs_count" translatable="false">pref_key_open_tabs_count</string>

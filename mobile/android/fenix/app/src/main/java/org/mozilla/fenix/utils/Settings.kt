@@ -109,6 +109,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.waitUntilPaintToDraw
     )
 
+    var syncedTabsInTabsTray by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_synced_tabs_tabs_tray),
+        default = false,
+        featureFlag = FeatureFlags.syncedTabsInTabsTray
+    )
+
     var forceEnableZoom by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_accessibility_force_enable_zoom),
         default = false

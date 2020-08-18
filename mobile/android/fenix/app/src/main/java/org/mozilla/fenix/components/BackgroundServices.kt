@@ -32,7 +32,6 @@ import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -85,11 +84,8 @@ class BackgroundServices(
     )
 
     @VisibleForTesting
-    val supportedEngines = if (FeatureFlags.syncedTabs) {
+    val supportedEngines =
         setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords, SyncEngine.Tabs)
-    } else {
-        setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
-    }
     private val syncConfig = SyncConfig(supportedEngines, syncPeriodInMinutes = 240L) // four hours
 
     init {
@@ -98,10 +94,7 @@ class BackgroundServices(
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
-
-        if (FeatureFlags.syncedTabs) {
-            GlobalSyncableStoreProvider.configureStore(SyncEngine.Tabs to remoteTabsStorage)
-        }
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Tabs to remoteTabsStorage)
     }
 
     private val telemetryAccountObserver = TelemetryAccountObserver(

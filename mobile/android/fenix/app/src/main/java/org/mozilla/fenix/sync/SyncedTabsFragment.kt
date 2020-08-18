@@ -13,6 +13,7 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -21,6 +22,11 @@ import org.mozilla.fenix.library.LibraryPageFragment
 
 class SyncedTabsFragment : LibraryPageFragment<Tab>() {
     private val syncedTabsFeature = ViewBoundFeatureWrapper<SyncedTabsFeature>()
+
+    init {
+        // Sanity-check: Remove this class when the feature flag is always enabled.
+        FeatureFlags.syncedTabsInTabsTray
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

@@ -145,18 +145,20 @@ class TabTrayView(
 
         setTopOffset(startingInLandscape)
 
-        syncedTabsFeature.set(
-            feature = SyncedTabsFeature(
-                context = container.context,
-                storage = components.backgroundServices.syncedTabsStorage,
-                accountManager = components.backgroundServices.accountManager,
-                view = syncedTabsController,
-                lifecycleOwner = lifecycleOwner,
-                onTabClicked = ::handleTabClicked
-            ),
-            owner = lifecycleOwner,
-            view = view
-        )
+        if (view.context.settings().syncedTabsInTabsTray) {
+            syncedTabsFeature.set(
+                feature = SyncedTabsFeature(
+                    context = container.context,
+                    storage = components.backgroundServices.syncedTabsStorage,
+                    accountManager = components.backgroundServices.accountManager,
+                    view = syncedTabsController,
+                    lifecycleOwner = lifecycleOwner,
+                    onTabClicked = ::handleTabClicked
+                ),
+                owner = lifecycleOwner,
+                view = view
+            )
+        }
 
         val concatAdapter = ConcatAdapter(tabsAdapter)
         view.tabsTray.apply {

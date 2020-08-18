@@ -36,6 +36,8 @@
     <string name="preferences_debug_settings_use_new_search_experience">Use New Search Experience</string>
     <!-- Label for the wait until first paint preference -->
     <string name="preferences_debug_settings_wait_first_paint">Wait Until First Paint To Show Page Content</string>
+    <!-- Label for showing Synced Tabs in the tabs tray -->
+    <string name="preferences_debug_synced_tabs_tabs_tray">Show Synced Tabs in the tabs tray</string>
 
     <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
     <string name="link_text_view_type_announcement" translatable="false">link</string>

@@ -20,14 +20,11 @@ object FeatureFlags {
     const val loginsEdit = true
 
     /**
-     * Enable tab sync feature
+     * Shows Synced Tabs in the tabs tray.
+     *
+     * Tracking issue: https://github.com/mozilla-mobile/fenix/issues/13892
      */
-    const val syncedTabs = true
-
-    /**
-     * Enables new tab tray pref
-     */
-    val tabTray = Config.channel.isNightlyOrDebug
+    val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
 
     /**
      * Enables viewing tab history

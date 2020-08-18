@@ -24,7 +24,6 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -177,12 +176,14 @@ class DefaultToolbarMenu(
             ?.browsingModeManager?.mode == BrowsingMode.Normal
         val shouldDeleteDataOnQuit = context.components.settings
             .shouldDeleteBrowsingDataOnQuit
+        val syncedTabsInTabsTray = context.components.settings
+            .syncedTabsInTabsTray
 
         val menuItems = listOfNotNull(
             if (FeatureFlags.viewDownloads) downloadsItem else null,
             historyItem,
             bookmarksItem,
-            if (FeatureFlags.syncedTabs) syncedTabs else null,
+            if (syncedTabsInTabsTray) null else syncedTabs,
             settings,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
             BrowserMenuDivider(),

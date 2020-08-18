@@ -36,7 +36,6 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
@@ -271,9 +270,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             isChecked = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { true }
         }
         requirePreference<CheckBoxPreference>(R.string.pref_key_sync_tabs).apply {
-            isVisible = FeatureFlags.syncedTabs
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.Tabs)
-            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Tabs) { FeatureFlags.syncedTabs }
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Tabs) { true }
         }
     }
 
