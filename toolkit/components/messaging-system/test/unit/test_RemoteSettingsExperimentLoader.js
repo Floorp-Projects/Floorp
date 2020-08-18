@@ -161,3 +161,27 @@ add_task(async function test_checkTargeting() {
     "should return false for falsey expression"
   );
 });
+
+add_task(async function test_checkExperimentSelfReference() {
+  const loader = ExperimentFakes.rsLoader();
+  const PASS_FILTER_RECIPE = {
+    targeting:
+      "experiment.arguments.slug == 'foo' && experiment.arguments.branches[0].slug == 'control'",
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+  const FAIL_FILTER_RECIPE = {
+    targeting: "experiment.arguments.slug == 'bar'",
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+
+  equal(
+    await loader.checkTargeting(PASS_FILTER_RECIPE),
+    true,
+    "Should return true for matching on slug name and branch"
+  );
+  equal(
+    await loader.checkTargeting(FAIL_FILTER_RECIPE),
+    false,
+    "Should fail targeting"
+  );
+});
