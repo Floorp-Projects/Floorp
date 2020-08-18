@@ -2764,6 +2764,24 @@ uint64_t GetTemporaryStorageLimit(uint64_t aAvailableSpaceBytes) {
   return availableSpaceKB * .50 * 1024;
 }
 
+void RecordQuotaLoadTime(TimeStamp aStartTime, TimeStamp aEndTime) {
+  const auto key = [aStartTime, aEndTime]() {
+    // XXX File a bug if we have data for this key.
+    // We found negative values in our query in STMO for
+    // ScalarID::QM_REPOSITORIES_INITIALIZATION_TIME. This shouldn't happen
+    // because the documentation for TimeStamp::Now() says it returns a
+    // monotonically increasing number.
+    if (aStartTime > aEndTime) {
+      return "TimeStampError"_ns;
+    }
+
+    return "Normal"_ns;
+  }();
+
+  Telemetry::AccumulateTimeDelta(Telemetry::QM_QUOTA_INFO_LOAD_TIME_V0, key,
+                                 aStartTime, aEndTime);
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -4323,6 +4341,8 @@ nsresult QuotaManager::LoadQuota() {
   MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(!mTemporaryStorageInitialized);
 
+  const auto startTime = TimeStamp::Now();
+
   auto LoadQuotaFromCache = [&]() {
     nsCOMPtr<mozIStorageStatement> stmt;
     nsresult rv = mStorageConnection->CreateStatement(
@@ -4532,8 +4552,6 @@ nsresult QuotaManager::LoadQuota() {
 
   auto autoRemoveQuota = MakeScopeExit([&] { RemoveQuota(); });
 
-  TimeStamp startTime = TimeStamp::Now();
-
   if (!loadQuotaFromCache ||
       !StaticPrefs::dom_quotaManager_loadQuotaFromCache() ||
       NS_WARN_IF(NS_FAILED(LoadQuotaFromCache()))) {
@@ -4569,16 +4587,14 @@ nsresult QuotaManager::LoadQuota() {
 #endif
   }
 
-  const auto now = TimeStamp::Now();
-  Telemetry::AccumulateTimeDelta(
-      Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME_V2, startTime, now);
-
   if (mCacheUsable) {
     rv = InvalidateCache(mStorageConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
+
+  RecordQuotaLoadTime(startTime, TimeStamp::Now());
 
   autoRemoveQuota.release();
 

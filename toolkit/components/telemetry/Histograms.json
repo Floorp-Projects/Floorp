@@ -14877,17 +14877,18 @@
     "description": "The number of times autoplay media (audio and video), which has been blocked by autoplay policy, played exactly 7 seconds or more, or less than 7 seconds after it has been resumed from the blocked state. If media's duration is less than 7 seconds and it played to the end before user pauses it, it would be in another category which is different from 'play >= 7 seconds' and 'play < 7 seconds'.",
     "releaseChannelCollection": "opt-out"
   },
-  "QM_REPOSITORIES_INITIALIZATION_TIME_V2": {
+  "QM_QUOTA_INFO_LOAD_TIME_V0": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "77",
-    "bug_numbers": [1580238],
+    "expires_in_version": "87",
+    "bug_numbers": [1609625],
     "kind": "exponential",
-    "high": 120000,
+    "keyed": true,
+    "high": 180000,
     "n_buckets": 60,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["ttung@mozilla.com"],
-    "description": "Time (ms) for the QuotaManager to initialize repositories."
+    "alert_emails": ["ttung@mozilla.com", "storage-telemetry@mozilla.com"],
+    "description": "Time (ms) for the QuotaManager to load quota information."
   },
   "QM_FIRST_INITIALIZATION_ATTEMPT": {
     "record_in_processes": ["main"],
