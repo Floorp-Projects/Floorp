@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.service
 import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.Crash
@@ -62,7 +63,7 @@ private const val KEY_CRASH_ID = "CrashID"
  * @param serverUrl The URL of the server.
  * @param versionName The version of the application.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class MozillaSocorroService(
     private val applicationContext: Context,
     private val appName: String,
@@ -70,7 +71,8 @@ class MozillaSocorroService(
     private val version: String = BuildConfig.MOZILLA_VERSION,
     private val buildId: String = BuildConfig.MOZ_APP_BUILDID,
     private val vendor: String = BuildConfig.MOZ_APP_VENDOR,
-    private var serverUrl: String? = null,
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var serverUrl: String? = null,
     private var versionName: String = DEFAULT_VERSION_NAME,
     private val releaseChannel: String = BuildConfig.MOZ_UPDATE_CHANNEL
 ) : CrashReporterService {
@@ -99,8 +101,12 @@ class MozillaSocorroService(
         }
 
         if (serverUrl == null) {
-            serverUrl = "https://crash-reports.mozilla.com/submit?id=$appId&version=$versionName" +
-                "&android_component_version=${AcBuild.version}"
+            serverUrl = Uri.parse("https://crash-reports.mozilla.com/submit")
+                .buildUpon()
+                .appendQueryParameter("id", appId)
+                .appendQueryParameter("version", versionName)
+                .appendQueryParameter("android_component_version", AcBuild.version)
+                .build().toString()
         }
     }
 

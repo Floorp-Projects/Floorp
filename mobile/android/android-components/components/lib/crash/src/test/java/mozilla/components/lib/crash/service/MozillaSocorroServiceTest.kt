@@ -47,6 +47,19 @@ class MozillaSocorroServiceTest {
     }
 
     @Test
+    fun `MozillaSocorroService generated server URL have no spaces`() {
+        val service = MozillaSocorroService(
+            testContext,
+            "Test App",
+            versionName = "test version name"
+        )
+
+        assertFalse(service.serverUrl!!.contains(" "))
+        assertFalse(service.serverUrl!!.contains("}"))
+        assertFalse(service.serverUrl!!.contains("{"))
+    }
+
+    @Test
     fun `MozillaSocorroService send uncaught exception crashes`() {
         val service = spy(MozillaSocorroService(
             testContext,
