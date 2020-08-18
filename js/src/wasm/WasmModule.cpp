@@ -801,7 +801,7 @@ bool Module::instantiateLocalTable(JSContext* cx, const TableDesc& td,
     RootedObject proto(
         cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
     tableObj.set(WasmTableObject::create(cx, td.initialLength, td.maximumLength,
-                                         td.elemType, proto));
+                                         td.kind, proto));
     if (!tableObj) {
       return false;
     }
@@ -1209,7 +1209,7 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
               cx, cx->global(), ReferenceType::TYPE_OBJECT);
           break;
         case RefType::Func:
-        case RefType::Extern:
+        case RefType::Any:
           t = GlobalObject::getOrCreateReferenceTypeDescr(
               cx, cx->global(), ReferenceType::TYPE_WASM_ANYREF);
           break;

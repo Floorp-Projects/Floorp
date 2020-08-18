@@ -29,16 +29,16 @@ function testAddNextThreeInts(text, imports) {
 testAddNextThreeInts(`
       (module
         (func $boxNextInt (import "imports" "boxNextInt")
-          (result externref))
+          (result anyref))
         (func $unboxInt (import "imports" "unboxInt")
-          (param externref) (result i32))
+          (param anyref) (result i32))
 
-        (func $boxNextThreeInts (result externref externref externref)
+        (func $boxNextThreeInts (result anyref anyref anyref)
           call $boxNextInt
           call $boxNextInt
           call $boxNextInt)
 
-        (func $unboxThreeInts (param externref externref externref) (result i32 i32 i32)
+        (func $unboxThreeInts (param anyref anyref anyref) (result i32 i32 i32)
           local.get 0
           call $unboxInt
           local.get 1
@@ -56,9 +56,9 @@ testAddNextThreeInts(`
 testAddNextThreeInts(`
       (module
         (func $boxNextThreeInts (import "imports" "boxNextThreeInts")
-          (result externref externref externref))
+          (result anyref anyref anyref))
         (func $unboxThreeInts (import "imports" "unboxThreeInts")
-          (param externref externref externref) (result i32 i32 i32))
+          (param anyref anyref anyref) (result i32 i32 i32))
 
         (func $addNextThreeInts (export "addNextThreeInts") (result i32)
           call $boxNextThreeInts
@@ -71,9 +71,9 @@ testAddNextThreeInts(`
     let i = wasmEvalText(`
       (module
         (func $boxNextThreeInts (import "imports" "boxNextThreeInts")
-          (result externref externref externref))
+          (result anyref anyref anyref))
 
-        (func (export "boxNextThreeInts") (result externref externref externref)
+        (func (export "boxNextThreeInts") (result anyref anyref anyref)
           call $boxNextThreeInts))`,
                          {imports: {boxNextThreeInts}});
     testAddNextThreeIntsInner(() => {

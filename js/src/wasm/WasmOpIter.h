@@ -487,7 +487,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readStructNarrow(ValType* inputType, ValType* outputType,
                                      Value* ptr);
   MOZ_MUST_USE bool readValType(ValType* type);
-  MOZ_MUST_USE bool readHeapType(bool nullable, RefType* type);
+  MOZ_MUST_USE bool readRefType(RefType* type);
   MOZ_MUST_USE bool readReferenceType(ValType* type, const char* const context);
 
 #ifdef ENABLE_WASM_SIMD
@@ -565,7 +565,7 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
   }
 
   if (actual.isReference() && expected.isReference() &&
-      env_.isRefSubtypeOf(actual.refType(), expected.refType())) {
+      env_.isRefSubtypeOf(actual, expected)) {
     return true;
   }
 
@@ -1658,7 +1658,7 @@ inline bool OpIter<Policy>::readRefNull() {
   MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
 
   RefType type;
-  if (!readHeapType(true, &type)) {
+  if (!readRefType(&type)) {
     return false;
   }
   return push(type);
@@ -1681,8 +1681,8 @@ inline bool OpIter<Policy>::readValType(ValType* type) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readHeapType(bool nullable, RefType* type) {
-  return d_.readHeapType(env_.types, env_.gcTypesEnabled(), nullable, type);
+inline bool OpIter<Policy>::readRefType(RefType* type) {
+  return d_.readRefType(env_.types, env_.gcTypesEnabled(), type);
 }
 
 template <typename Policy>
@@ -1762,7 +1762,7 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     }
     return fail("table index out of range for call_indirect");
   }
-  if (!env_.tables[*tableIndex].elemType.isFunc()) {
+  if (env_.tables[*tableIndex].kind != TableKind::FuncRef) {
     return fail("indirect calls must go through a table of 'funcref'");
   }
 
@@ -2007,8 +2007,8 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
         *srcMemOrTableIndex >= env_.tables.length()) {
       return fail("table index out of range for table.copy");
     }
-    ValType dstElemType = env_.tables[*dstMemOrTableIndex].elemType;
-    ValType srcElemType = env_.tables[*srcMemOrTableIndex].elemType;
+    ValType dstElemType = ToElemValType(env_.tables[*dstMemOrTableIndex].kind);
+    ValType srcElemType = ToElemValType(env_.tables[*srcMemOrTableIndex].kind);
     if (!checkIsSubtypeOf(srcElemType, dstElemType)) {
       return false;
     }
@@ -2138,8 +2138,8 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");
     }
-    if (!checkIsSubtypeOf(env_.elemSegments[*segIndex]->elemType,
-                          env_.tables[*dstTableIndex].elemType)) {
+    if (!checkIsSubtypeOf(env_.elemSegments[*segIndex]->elemType(),
+                          ToElemValType(env_.tables[*dstTableIndex].kind))) {
       return false;
     }
   }
@@ -2162,7 +2162,7 @@ inline bool OpIter<Policy>::readTableFill(uint32_t* tableIndex, Value* start,
   if (!popWithType(ValType::I32, len)) {
     return false;
   }
-  if (!popWithType(env_.tables[*tableIndex].elemType, val)) {
+  if (!popWithType(ToElemValType(env_.tables[*tableIndex].kind), val)) {
     return false;
   }
   if (!popWithType(ValType::I32, start)) {
@@ -2187,7 +2187,7 @@ inline bool OpIter<Policy>::readTableGet(uint32_t* tableIndex, Value* index) {
     return false;
   }
 
-  infalliblePush(env_.tables[*tableIndex].elemType);
+  infalliblePush(ToElemValType(env_.tables[*tableIndex].kind));
   return true;
 }
 
@@ -2206,7 +2206,7 @@ inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex,
   if (!popWithType(ValType::I32, delta)) {
     return false;
   }
-  if (!popWithType(env_.tables[*tableIndex].elemType, initValue)) {
+  if (!popWithType(ToElemValType(env_.tables[*tableIndex].kind), initValue)) {
     return false;
   }
 
@@ -2226,7 +2226,7 @@ inline bool OpIter<Policy>::readTableSet(uint32_t* tableIndex, Value* index,
     return fail("table index out of range for table.set");
   }
 
-  if (!popWithType(env_.tables[*tableIndex].elemType, value)) {
+  if (!popWithType(ToElemValType(env_.tables[*tableIndex].kind), value)) {
     return false;
   }
   if (!popWithType(ValType::I32, index)) {
@@ -2309,7 +2309,7 @@ inline bool OpIter<Policy>::readStructNew(uint32_t* typeIndex,
     }
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeIndex(*typeIndex));
 }
 
 template <typename Policy>
@@ -2328,7 +2328,7 @@ inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
     return false;
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+  if (!popWithType(RefType::fromTypeIndex(*typeIndex), ptr)) {
     return false;
   }
 
@@ -2360,7 +2360,7 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return fail("field is not mutable");
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+  if (!popWithType(RefType::fromTypeIndex(*typeIndex), ptr)) {
     return false;
   }
 
@@ -2394,8 +2394,8 @@ inline bool OpIter<Policy>::readStructNarrow(ValType* inputType,
     if (!outputStruct.hasPrefix(inputStruct)) {
       return fail("invalid narrowing operation");
     }
-  } else if (outputType->isExternRef()) {
-    if (!inputType->isExternRef()) {
+  } else if (outputType->isAnyRef()) {
+    if (!inputType->isAnyRef()) {
       return fail("invalid type combination in struct.narrow");
     }
   }

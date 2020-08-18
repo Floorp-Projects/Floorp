@@ -27,23 +27,23 @@ function checkInvalid(body, errorMessage) {
 
           (type $wabbit (struct
                          (field $x (mut i32))
-                         (field $left (mut (ref null $wabbit)))
-                         (field $right (mut (ref null $wabbit)))))
+                         (field $left (mut (ref opt $wabbit)))
+                         (field $right (mut (ref opt $wabbit)))))
 
-          (global $g (mut (ref null $wabbit)) (ref.null $wabbit))
+          (global $g (mut (ref opt $wabbit)) (ref.null opt $wabbit))
 
           (global $k (mut i32) (i32.const 0))
 
           (func (export "init") (param $n i32)
                 (global.set $g (call $make (local.get $n))))
 
-          (func $make (param $n i32) (result (ref null $wabbit))
+          (func $make (param $n i32) (result (ref opt $wabbit))
                 (local $tmp i32)
                 (local.set $tmp (global.get $k))
                 (global.set $k (i32.add (local.get $tmp) (i32.const 1)))
-                (if (result (ref null $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
-                    (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit))
-                    (block (result (ref null $wabbit))
+                (if (result (ref opt $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
+                    (struct.new $wabbit (local.get $tmp) (ref.null opt $wabbit) (ref.null opt $wabbit))
+                    (block (result (ref opt $wabbit))
                       (struct.new $wabbit
                                   (local.get $tmp)
                                   (call $make (i32.sub (local.get $n) (i32.const 1)))
@@ -52,7 +52,7 @@ function checkInvalid(body, errorMessage) {
           (func (export "accumulate") (result i32)
                 (call $accum (global.get $g)))
 
-          (func $accum (param $w (ref null $wabbit)) (result i32)
+          (func $accum (param $w (ref opt $wabbit)) (result i32)
                 (if (result i32) (ref.is_null (local.get $w))
                     (i32.const 0)
                     (i32.add (struct.get $wabbit 0 (local.get $w))
@@ -62,8 +62,8 @@ function checkInvalid(body, errorMessage) {
           (func (export "reverse")
                 (call $reverse (global.get $g)))
 
-          (func $reverse (param $w (ref null $wabbit))
-                (local $tmp (ref null $wabbit))
+          (func $reverse (param $w (ref opt $wabbit))
+                (local $tmp (ref opt $wabbit))
                 (if (i32.eqz (ref.is_null (local.get $w)))
                     (block
                      (struct.set $wabbit 0 (local.get $w) (i32.mul (i32.const 2) (struct.get $wabbit 0 (local.get $w))))
@@ -76,7 +76,7 @@ function checkInvalid(body, errorMessage) {
           (func (export "print")
                 (call $pr (global.get $g)))
 
-          (func $pr (param $w (ref null $wabbit))
+          (func $pr (param $w (ref opt $wabbit))
                 (if (i32.eqz (ref.is_null (local.get $w)))
                     (block
                      (call $print_lp)
@@ -110,15 +110,15 @@ function checkInvalid(body, errorMessage) {
     }
 }
 
-// Sanity check for struct.set: we /can/ store a (ref null T) into a (ref null U) field
+// Sanity check for struct.set: we /can/ store a (ref opt T) into a (ref opt U) field
 // with struct.set if T <: U; this should fall out of normal coercion but good
 // to test.
 
 wasmEvalText(
     `(module
-      (type $node (struct (field (mut (ref null $node)))))
-      (type $nix (struct (field (mut (ref null $node))) (field i32)))
-      (func $f (param $p (ref null $node)) (param $q (ref null $nix))
+      (type $node (struct (field (mut (ref opt $node)))))
+      (type $nix (struct (field (mut (ref opt $node))) (field i32)))
+      (func $f (param $p (ref opt $node)) (param $q (ref opt $nix))
        (struct.set $node 0 (local.get $p) (local.get $q))))`);
 
 // struct.narrow: if the pointer's null we get null
@@ -127,10 +127,10 @@ assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
-      (func (export "test") (result externref)
-       (call $f (ref.null $node))))`).exports.test(),
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get $p)))
+      (func (export "test") (result anyref)
+       (call $f (ref.null opt $node))))`).exports.test(),
          null);
 
 // struct.narrow: if the downcast succeeds we get the original pointer
@@ -139,10 +139,10 @@ assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get $p)))
       (func (export "test") (result i32)
-       (local $n (ref null $node))
+       (local $n (ref opt $node))
        (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
@@ -153,10 +153,10 @@ assertEq(wasmEvalText(
     `(module
       (type $node (struct (field (mut i32))))
       (type $node2 (struct (field (mut i32)) (field f32)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get $p)))
       (func (export "test") (result i32)
-       (local $n (ref null $node))
+       (local $n (ref opt $node))
        (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
@@ -173,15 +173,15 @@ assertEq(wasmEvalText(
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (type $node2a (struct (field i32) (field (ref null $node))))
-      (type $node2b (struct (field i32) (field (ref null $node))))
+      (type $node2a (struct (field i32) (field (ref opt $node))))
+      (type $node2b (struct (field i32) (field (ref opt $node))))
 
-      (func $f (param $p (ref null $node)) (result (ref null $node2b))
-       (struct.narrow (ref null $node) (ref null $node2b) (local.get $p)))
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2b))
+       (struct.narrow (ref opt $node) (ref opt $node2b) (local.get $p)))
 
       (func (export "test") (result i32)
-       (local $n (ref null $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null $node)))
+       (local $n (ref opt $node))
+       (local.set $n (struct.new $node2a (i32.const 0) (ref.null opt $node)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -189,15 +189,15 @@ assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $nodeCopy (struct (field i32)))
-      (type $node2a (struct (field i32) (field (ref null $node))))
-      (type $node2b (struct (field i32) (field (ref null $nodeCopy))))
+      (type $node2a (struct (field i32) (field (ref opt $node))))
+      (type $node2b (struct (field i32) (field (ref opt $nodeCopy))))
 
-      (func $f (param $p (ref null $node)) (result (ref null $node2b))
-       (struct.narrow (ref null $node) (ref null $node2b) (local.get $p)))
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2b))
+       (struct.narrow (ref opt $node) (ref opt $node2b) (local.get $p)))
 
       (func (export "test") (result i32)
-       (local $n (ref null $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null $node2a)))
+       (local $n (ref opt $node))
+       (local.set $n (struct.new $node2a (i32.const 0) (ref.null opt $node2a)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          0);
 
@@ -209,10 +209,10 @@ assertEq(wasmEvalText(
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (type $node3 (struct (field i32) (field f32) (field f64)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get $p)))
       (func (export "test") (result i32)
-       (local $n (ref null $node))
+       (local $n (ref opt $node))
        (local.set $n (struct.new $node3 (i32.const 0) (f32.const 12) (f64.const 17)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
@@ -224,33 +224,33 @@ assertEq(wasmEvalText(
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (type $snort (struct (field i32) (field f64)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
-      (func (export "test") (result externref)
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get $p)))
+      (func (export "test") (result anyref)
        (call $f (struct.new $snort (i32.const 0) (f64.const 12)))))`).exports.test(),
          null);
 
-// struct.narrow: externref -> struct when the externref is the right struct;
-// special case since externref requires unboxing
+// struct.narrow: anyref -> struct when the anyref is the right struct;
+// special case since anyref requires unboxing
 
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p externref) (result (ref null $node))
-       (struct.narrow externref (ref null $node) (local.get $p)))
+      (func $f (param $p anyref) (result (ref opt $node))
+       (struct.narrow anyref (ref opt $node) (local.get $p)))
       (func (export "test") (result i32)
-       (local $n (ref null $node))
+       (local $n (ref opt $node))
        (local.set $n (struct.new $node (i32.const 0)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
-// struct.narrow: externref -> struct when the externref is some random gunk.
+// struct.narrow: anyref -> struct when the anyref is some random gunk.
 
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func (export "test") (param $p externref) (result externref)
-       (struct.narrow externref (ref null $node) (local.get $p))))`).exports.test({hi:37}),
+      (func (export "test") (param $p anyref) (result anyref)
+       (struct.narrow anyref (ref opt $node) (local.get $p))))`).exports.test({hi:37}),
          null);
 
 // Types are private to an instance and struct.narrow can't break this
@@ -259,10 +259,10 @@ assertEq(wasmEvalText(
     let txt =
         `(module
           (type $node (struct (field i32)))
-          (func (export "make") (param $n i32) (result externref)
+          (func (export "make") (param $n i32) (result anyref)
            (struct.new $node (local.get $n)))
-          (func (export "coerce") (param $p externref) (result i32)
-           (ref.is_null (struct.narrow externref (ref null $node) (local.get $p)))))`;
+          (func (export "coerce") (param $p anyref) (result i32)
+           (ref.is_null (struct.narrow anyref (ref opt $node) (local.get $p)))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(txt));
     let ins1 = new WebAssembly.Instance(mod).exports;
     let ins2 = new WebAssembly.Instance(mod).exports;
@@ -278,7 +278,7 @@ assertEq(wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node))
+      (func $f (param $p (ref opt $node))
        (struct.set $node 0 (local.get $p) (i32.const 37))))`),
                    WebAssembly.CompileError,
                    /field is not mutable/);
@@ -288,7 +288,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field (mut i32))))
-      (func $f (param $p (ref null $node))
+      (func $f (param $p (ref opt $node))
        (struct.set $node 0 (local.get $p) (f32.const 37))))`),
                    WebAssembly.CompileError,
                    /expression has type f32 but expected i32/);
@@ -298,7 +298,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node)) (result i32)
+      (func $f (param $p (ref opt $node)) (result i32)
        (struct.get $node 1 (local.get $p))))`),
                    WebAssembly.CompileError,
                    /field index out of range/);
@@ -308,7 +308,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field (mut i32))))
-      (func $f (param $p (ref null $node))
+      (func $f (param $p (ref opt $node))
        (struct.set $node 1 (local.get $p) (i32.const 37))))`),
                    WebAssembly.CompileError,
                    /field index out of range/);
@@ -319,7 +319,7 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $snort (struct (field f64)))
-      (func $f (param $p (ref null $snort)) (result i32)
+      (func $f (param $p (ref opt $snort)) (result i32)
        (struct.get $node 0 (local.get $p))))`),
                    WebAssembly.CompileError,
                    /expression has type.*but expected.*/);
@@ -330,7 +330,7 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field (mut i32))))
       (type $snort (struct (field f64)))
-      (func $f (param $p (ref null $snort)) (result i32)
+      (func $f (param $p (ref opt $snort)) (result i32)
        (struct.set $node 0 (local.get $p) (i32.const 0))))`),
                    WebAssembly.CompileError,
                    /expression has type.*but expected.*/);
@@ -342,8 +342,8 @@ assertErrorMessage(() => wasmEvalText(
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (type $snort (struct (field f64)))
-      (func $f (param $p (ref null $snort)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get 0))))`),
+      (func $f (param $p (ref opt $snort)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /expression has type.*but expected.*/);
 
@@ -353,8 +353,8 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $node2 (struct (field (mut i32)) (field f32)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get 0))))`),
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid narrowing operation/);
 
@@ -362,8 +362,8 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field (mut i32))))
       (type $node2 (struct (field i32) (field f32)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (struct.narrow (ref null $node) (ref null $node2) (local.get 0))))`),
+      (func $f (param $p (ref opt $node)) (result (ref opt $node2))
+       (struct.narrow (ref opt $node) (ref opt $node2) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid narrowing operation/);
 
@@ -372,16 +372,16 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node)) (result externref)
-       (struct.narrow i32 externref (local.get 0))))`),
+      (func $f (param $p (ref opt $node)) (result anyref)
+       (struct.narrow i32 anyref (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid reference type/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node)) (result externref)
-       (struct.narrow externref i32 (local.get 0))))`),
+      (func $f (param $p (ref opt $node)) (result anyref)
+       (struct.narrow anyref i32 (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid reference type/);
 
@@ -390,8 +390,8 @@ assertErrorMessage(() => wasmEvalText(
 checkInvalid(funcBody({locals:[],
                        body:[
                            RefNullCode,
-                           ExternRefCode,
-                           GcPrefix, StructNarrow, I32Code, ExternRefCode,
+                           AnyrefCode,
+                           GcPrefix, StructNarrow, I32Code, AnyrefCode,
                            DropCode
                        ]}),
              /invalid reference type for struct.narrow/);
@@ -399,19 +399,19 @@ checkInvalid(funcBody({locals:[],
 checkInvalid(funcBody({locals:[],
                        body:[
                            RefNullCode,
-                           ExternRefCode,
-                           GcPrefix, StructNarrow, ExternRefCode, I32Code,
+                           AnyrefCode,
+                           GcPrefix, StructNarrow, AnyrefCode, I32Code,
                            DropCode
                        ]}),
              /invalid reference type for struct.narrow/);
 
-// target type is externref so source type must be externref as well (no upcasts)
+// target type is anyref so source type must be anyref as well (no upcasts)
 
 assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (func $f (param $p (ref null $node)) (result externref)
-       (struct.narrow (ref null $node) externref (local.get 0))))`),
+      (func $f (param $p (ref opt $node)) (result anyref)
+       (struct.narrow (ref opt $node) anyref (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid type combination in struct.narrow/);
 
@@ -421,8 +421,8 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
-      (func $f (param $p (ref null $node2)) (result externref)
-       (struct.narrow (ref null $node2) (ref null $node) (local.get 0))))`),
+      (func $f (param $p (ref opt $node2)) (result anyref)
+       (struct.narrow (ref opt $node2) (ref opt $node) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /invalid narrowing operation/);
 
@@ -433,8 +433,8 @@ assertErrorMessage(function() {
         `(module
           (type $node (struct (field i32)))
           (func (export "test")
-           (drop (call $f (ref.null $node))))
-          (func $f (param $p (ref null $node)) (result i32)
+           (drop (call $f (ref.null opt $node))))
+          (func $f (param $p (ref opt $node)) (result i32)
            (struct.get $node 0 (local.get $p))))`);
     ins.exports.test();
 },
@@ -448,8 +448,8 @@ assertErrorMessage(function() {
         `(module
           (type $node (struct (field (mut i32))))
           (func (export "test")
-           (call $f (ref.null $node)))
-          (func $f (param $p (ref null $node))
+           (call $f (ref.null opt $node)))
+          (func $f (param $p (ref opt $node))
            (struct.set $node 0 (local.get $p) (i32.const 0))))`);
     ins.exports.test();
 },
