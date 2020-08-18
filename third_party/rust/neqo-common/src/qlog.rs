@@ -61,19 +61,12 @@ impl NeqoQlog {
     where
         F: FnOnce() -> Option<qlog::event::Event>,
     {
-        if let Some(inner) = self.inner.borrow_mut().as_mut() {
+        self.add_event_with_stream(|s| {
             if let Some(evt) = f() {
-                let res = inner.streamer.add_event(evt);
-                if let Err(e) = res {
-                    crate::do_log!(
-                        ::log::Level::Error,
-                        "Qlog streaming failed with error {}; closing qlog.",
-                        e
-                    );
-                    *self.inner.borrow_mut() = None;
-                }
+                s.add_event(evt)?;
             }
-        }
+            Ok(())
+        });
     }
 
     /// If logging enabled, closure is given the Qlog stream to write events and
