@@ -2560,14 +2560,16 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
           //       the caret point and use `HandleDeleteNonCollapsedRanges()`
           //       instead after we would create delete range computation
           //       method at switching to the new white-space normalizer.
-          nsresult rv = DeleteNodeWithTransaction(
-              MOZ_KnownLive(*scanFromCaretPointResult.BRElementPtr()));
-          if (NS_WARN_IF(Destroyed())) {
-            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-          }
+          nsresult rv = WhiteSpaceVisibilityKeeper::
+              DeleteContentNodeAndJoinTextNodesAroundIt(
+                  *this,
+                  MOZ_KnownLive(*scanFromCaretPointResult.BRElementPtr()),
+                  caretPoint);
           if (NS_FAILED(rv)) {
-            NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-            return EditActionResult(rv);
+            NS_WARNING(
+                "WhiteSpaceVisibilityKeeper::"
+                "DeleteContentNodeAndJoinTextNodesAroundIt() failed");
+            return EditActionHandled(rv);
           }
           if (SelectionRefPtr()->RangeCount() != 1) {
             NS_WARNING(
