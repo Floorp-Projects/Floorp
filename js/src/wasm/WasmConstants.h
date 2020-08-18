@@ -62,14 +62,12 @@ enum class TypeCode {
   // A function pointer with any signature
   FuncRef = 0x70,  // SLEB128(-0x10)
 
-  // A reference to any host value.
-  ExternRef = 0x6f,  // SLEB128(-0x11)
+  // A reference to any host type. This is exposed to JS as 'externref' and
+  // will eventually be renamed in code as well.
+  AnyRef = 0x6f,  // SLEB128(-0x11)
 
-  // Type constructor for nullable reference types.
-  NullableRef = 0x6c,  // SLEB128(-0x14)
-
-  // Type constructor for non-nullable reference types.
-  Ref = 0x6b,  // SLEB128(-0x15)
+  // Type constructor for reference types.
+  OptRef = 0x6c,
 
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
@@ -88,16 +86,6 @@ enum class TypeCode {
 // reference typecode then the logic in that function MUST change.
 
 static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::V128;
-
-// An arbitrary reference type used as the result of
-// UnpackTypeCodeTypeAbstracted() when a value type is a reference.
-
-static constexpr TypeCode AbstractReferenceTypeCode = TypeCode::ExternRef;
-
-// A type code used to represent (ref null? typeindex) whether or not the type
-// is encoded with 'Ref' or 'NullableRef'.
-
-static constexpr TypeCode AbstractReferenceTypeIndexCode = TypeCode::Ref;
 
 enum class FuncTypeIdDescKind { None, Immediate, Global };
 

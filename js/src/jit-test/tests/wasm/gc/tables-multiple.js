@@ -44,7 +44,7 @@ var ins = wasmEvalText(
     `(module
       (table $t0 (import "m" "t") 2 funcref)
       (table $t1 (export "t1") 2 funcref)
-      (table 1 externref)
+      (table 1 anyref)
       (table $t2 (export "t2") 3 funcref))`,
     {m:{t: new WebAssembly.Table({element:"funcref", initial:2})}}).exports;
 
@@ -67,19 +67,19 @@ var ins = wasmEvalText(
       (func $id_i32 (param i32) (result i32) (local.get 0))
       (elem (table $t0) (i32.const 1) func $id_i32)
 
-      (table $t1 (import "m" "t1") 3 externref)
+      (table $t1 (import "m" "t1") 3 anyref)
 
       (table $t2 (import "m" "t2") 4 funcref)
       (type $id_f64_t (func (param f64) (result f64)))
       (func $id_f64 (param f64) (result f64) (local.get 0))
       (elem (table $t2) (i32.const 3) func $id_f64)
 
-      (table $t3 (import "m" "t3") 5 externref)
+      (table $t3 (import "m" "t3") 5 anyref)
 
       (func (export "f0") (param i32) (result i32)
        (call_indirect $t0 (type $id_i32_t) (local.get 0) (i32.const 1)))
 
-      (func (export "f1") (param externref)
+      (func (export "f1") (param anyref)
        (table.set $t1 (i32.const 2) (local.get 0)))
 
       (func (export "f2") (param f64) (result f64)
@@ -109,8 +109,8 @@ var exp = {m:{t0: new WebAssembly.Table({element:"externref", initial:2}),
               t1: new WebAssembly.Table({element:"externref", initial:3})}};
 var ins = wasmEvalText(
     `(module
-      (table $t0 (import "m" "t0") 2 externref)
-      (table $t1 (import "m" "t1") 3 externref)
+      (table $t0 (import "m" "t0") 2 anyref)
+      (table $t1 (import "m" "t1") 3 anyref)
       (func (export "f") (result i32)
        (table.grow $t1 (ref.null extern) (i32.const 5)))
       (func (export "size0") (result i32)
@@ -130,8 +130,8 @@ var exp = {m:{t0: new WebAssembly.Table({element:"externref", initial:2}),
               t1: new WebAssembly.Table({element:"externref", initial:3})}};
 var ins = wasmEvalText(
     `(module
-      (table $t0 (import "m" "t0") 2 externref)
-      (table $t1 (import "m" "t1") 3 externref)
+      (table $t0 (import "m" "t0") 2 anyref)
+      (table $t1 (import "m" "t1") 3 anyref)
       (func (export "f") (param $dest i32) (param $src i32) (param $len i32)
        (table.copy $t1 $t0 (local.get $dest) (local.get $src) (local.get $len))))`,
     exp);
@@ -146,16 +146,16 @@ assertEq(exp.m.t1.get(2), exp.m.t0.get(1));
 
 var ins = wasmEvalText(
     `(module
-      (table $t0 2 externref)
-      (table $t1 2 externref)
+      (table $t0 2 anyref)
+      (table $t1 2 anyref)
       (func (export "copy") (param $dest i32) (param $src i32) (param $len i32)
        local.get $dest
        local.get $src
        local.get $len
        table.copy $t1 $t0)
-      (func (export "set") (param $n i32) (param $v externref)
+      (func (export "set") (param $n i32) (param $v anyref)
        (table.set $t0 (local.get $n) (local.get $v)))
-      (func (export "get") (param $n i32) (result externref)
+      (func (export "get") (param $n i32) (result anyref)
        (table.get $t1 (local.get $n))))`,
     exp);
 
@@ -219,8 +219,8 @@ var exp = {m: {t0: tbl, t1:tbl}};
 
 var ins = wasmEvalText(
     `(module
-      (import "m" "t0" (table $t0 1 externref))
-      (import "m" "t1" (table $t1 1 externref))
+      (import "m" "t0" (table $t0 1 anyref))
+      (import "m" "t1" (table $t1 1 anyref))
       (table $t2 (export "t2") 1 funcref)
       (func (export "f") (result i32)
        (table.grow $t0 (ref.null extern) (i32.const 1)))
@@ -321,44 +321,44 @@ assertErrorMessage(() => ins2.exports.do1(12, 2.0),
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 externref)
-      (table $t1 2 externref)
-      (func $f (result externref)
+      (table $t0 2 anyref)
+      (table $t1 2 anyref)
+      (func $f (result anyref)
        (table.get 2 (i32.const 0))))`),
                    WebAssembly.CompileError,
                    /table index out of range for table.get/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 externref)
-      (table $t1 2 externref)
-      (func $f (param externref)
+      (table $t0 2 anyref)
+      (table $t1 2 anyref)
+      (func $f (param anyref)
        (table.set 2 (i32.const 0) (local.get 0))))`),
                    WebAssembly.CompileError,
                    /table index out of range for table.set/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 externref)
-      (table $t1 2 externref)
-      (func $f (param externref)
+      (table $t0 2 anyref)
+      (table $t1 2 anyref)
+      (func $f (param anyref)
        (table.copy 0 2 (i32.const 0) (i32.const 0) (i32.const 2))))`),
                    WebAssembly.CompileError,
                    /table index out of range for table.copy/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 externref)
-      (table $t1 2 externref)
-      (func $f (param externref)
+      (table $t0 2 anyref)
+      (table $t1 2 anyref)
+      (func $f (param anyref)
        (table.copy 2 0 (i32.const 0) (i32.const 0) (i32.const 2))))`),
                    WebAssembly.CompileError,
                    /table index out of range for table.copy/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 externref)
-      (table $t1 2 externref)
+      (table $t0 2 anyref)
+      (table $t1 2 anyref)
       (func $f (result i32)
        (table.size 2)))`),
                    WebAssembly.CompileError,
@@ -366,8 +366,8 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 externref)
-      (table $t1 2 externref)
+      (table $t0 2 anyref)
+      (table $t1 2 anyref)
       (func $f (result i32)
        (table.grow 2 (ref.null extern) (i32.const 1))))`),
                    WebAssembly.CompileError,
@@ -430,7 +430,7 @@ assertErrorMessage(() => wasmEvalText(
 // Make sure that dead code doesn't prevent compilation.
 wasmEvalText(
     `(module
-       (table (export "t") 10 externref)
+       (table (export "t") 10 anyref)
        (func (param i32)
          (return)
          (table.get (get_local 0))
@@ -440,7 +440,7 @@ wasmEvalText(
 
 wasmEvalText(
     `(module
-       (table (export "t") 10 externref)
+       (table (export "t") 10 anyref)
        (func (param i32) (param i32)
          (return)
          (table.grow (get_local 1))
@@ -450,8 +450,8 @@ wasmEvalText(
 
 wasmEvalText(
     `(module
-       (table (export "t") 10 externref)
-       (func (param i32) (param externref)
+       (table (export "t") 10 anyref)
+       (func (param i32) (param anyref)
          (return)
          (table.set (get_local 0) (get_local 1))
         )
@@ -459,7 +459,7 @@ wasmEvalText(
 
 wasmEvalText(
     `(module
-       (table (export "t") 10 externref)
+       (table (export "t") 10 anyref)
        (func
          (return)
          (table.size)
@@ -469,7 +469,7 @@ wasmEvalText(
 
 wasmEvalText(
     `(module
-       (table (export "t") 10 externref)
+       (table (export "t") 10 anyref)
        (func
          (return)
          (table.copy (i32.const 0) (i32.const 1))

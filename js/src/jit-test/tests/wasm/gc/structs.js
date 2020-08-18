@@ -19,7 +19,7 @@ var bin = wasmTextToBinary(
 
       (type $int_node (struct
                        (field $intbox_val (mut i32))
-                       (field $intbox_next (mut externref))))
+                       (field $intbox_next (mut anyref))))
 
       ;; Test all the types.
 
@@ -32,8 +32,8 @@ var bin = wasmTextToBinary(
                    (field $omni_f32m (mut f32))
                    (field $omni_f64 f64)
                    (field $omni_f64m (mut f64))
-                   (field $omni_externref externref)
-                   (field $omni_externrefm (mut externref))))
+                   (field $omni_anyref anyref)
+                   (field $omni_anyrefm (mut anyref))))
 
       ;; Various ways to reference a type in the middle of the
       ;; type array, make sure we get the right one
@@ -58,10 +58,10 @@ var bin = wasmTextToBinary(
 
       ;; Useful for testing to ensure that the type is not type #0 here.
 
-      (func (export "mk_point") (result externref)
+      (func (export "mk_point") (result anyref)
        (struct.new $point (i32.const 37) (i32.const 42)))
 
-      (func (export "mk_int_node") (param i32) (param externref) (result externref)
+      (func (export "mk_int_node") (param i32) (param anyref) (result anyref)
        (struct.new $int_node (local.get 0) (local.get 1)))
 
       ;; Too big to fit in an InlineTypedObject.
@@ -120,7 +120,7 @@ var bin = wasmTextToBinary(
                      (field $ay i32)
                      (field $az i32)))
 
-      (func (export "mk_bigger") (result externref)
+      (func (export "mk_bigger") (result anyref)
             (struct.new $bigger
                        (i32.const 0)
                        (i32.const 1)
@@ -178,13 +178,13 @@ var bin = wasmTextToBinary(
       (type $withfloats (struct
                          (field $f1 f32)
                          (field $f2 f64)
-                         (field $f3 externref)
+                         (field $f3 anyref)
                          (field $f4 f32)
                          (field $f5 i32)))
 
       (func (export "mk_withfloats")
-            (param f32) (param f64) (param externref) (param f32) (param i32)
-            (result externref)
+            (param f32) (param f64) (param anyref) (param f32) (param i32)
+            (result anyref)
             (struct.new $withfloats (local.get 0) (local.get 1) (local.get 2) (local.get 3) (local.get 4)))
 
      )`)
@@ -224,9 +224,9 @@ assertEq(withfloats._4, 0x1337);
 
 var stress = wasmTextToBinary(
     `(module
-      (type $node (struct (field i32) (field (ref null $node))))
-      (func (export "iota1") (param $n i32) (result externref)
-       (local $list (ref null $node))
+      (type $node (struct (field i32) (field (ref opt $node))))
+      (func (export "iota1") (param $n i32) (result anyref)
+       (local $list (ref opt $node))
        (block $exit
         (loop $loop
          (br_if $exit (i32.eqz (local.get $n)))
@@ -256,25 +256,25 @@ assertEq(the_list, null);
                       (field (mut i64))
                       (field (mut i32))))
 
-          (func (export "set") (param externref)
-           (local (ref null $big))
-           (local.set 1 (struct.narrow externref (ref null $big) (local.get 0)))
+          (func (export "set") (param anyref)
+           (local (ref opt $big))
+           (local.set 1 (struct.narrow anyref (ref opt $big) (local.get 0)))
            (struct.set $big 1 (local.get 1) (i64.const 0x3333333376544567)))
 
-          (func (export "set2") (param $p externref)
+          (func (export "set2") (param $p anyref)
            (struct.set $big 1
-            (struct.narrow externref (ref null $big) (local.get $p))
+            (struct.narrow anyref (ref opt $big) (local.get $p))
             (i64.const 0x3141592653589793)))
 
-          (func (export "low") (param $p externref) (result i32)
-           (i32.wrap/i64 (struct.get $big 1 (struct.narrow externref (ref null $big) (local.get $p)))))
+          (func (export "low") (param $p anyref) (result i32)
+           (i32.wrap/i64 (struct.get $big 1 (struct.narrow anyref (ref opt $big) (local.get $p)))))
 
-          (func (export "high") (param $p externref) (result i32)
+          (func (export "high") (param $p anyref) (result i32)
            (i32.wrap/i64 (i64.shr_u
-                          (struct.get $big 1 (struct.narrow externref (ref null $big) (local.get $p)))
+                          (struct.get $big 1 (struct.narrow anyref (ref opt $big) (local.get $p)))
                           (i64.const 32))))
 
-          (func (export "mk") (result externref)
+          (func (export "mk") (result anyref)
            (struct.new $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb)))
 
          )`;
@@ -314,9 +314,9 @@ assertEq(the_list, null);
                       (field (mut i64))
                       (field (mut i32))))
 
-          (global $g (mut (ref null $big)) (ref.null $big))
+          (global $g (mut (ref opt $big)) (ref.null opt $big))
 
-          (func (export "make") (result externref)
+          (func (export "make") (result anyref)
            (global.set $g
             (struct.new $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb)))
            (global.get $g))
@@ -382,9 +382,9 @@ assertEq(the_list, null);
 
 var bin = wasmTextToBinary(
     `(module
-      (type $cons (struct (field i32) (field (ref null $cons))))
+      (type $cons (struct (field i32) (field (ref opt $cons))))
 
-      (global $g (mut (ref null $cons)) (ref.null $cons))
+      (global $g (mut (ref opt $cons)) (ref.null opt $cons))
 
       (func (export "push") (param i32)
        (global.set $g (struct.new $cons (local.get 0) (global.get $g))))
@@ -416,7 +416,7 @@ assertErrorMessage(() => ins.pop(),
                    WebAssembly.RuntimeError,
                    /dereferencing null pointer/);
 
-// Check that a wrapped object cannot be unboxed from externref even if the wrapper
+// Check that a wrapped object cannot be unboxed from anyref even if the wrapper
 // points to the right type.  This is a temporary restriction, until we're able
 // to avoid dealing with wrappers inside the engine.
 
@@ -424,10 +424,10 @@ assertErrorMessage(() => ins.pop(),
     var ins = wasmEvalText(
         `(module
           (type $Node (struct (field i32)))
-          (func (export "mk") (result externref)
+          (func (export "mk") (result anyref)
            (struct.new $Node (i32.const 37)))
-          (func (export "f") (param $n externref) (result externref)
-           (struct.narrow externref (ref null $Node) (local.get $n))))`).exports;
+          (func (export "f") (param $n anyref) (result anyref)
+           (struct.narrow anyref (ref opt $Node) (local.get $n))))`).exports;
     var n = ins.mk();
     assertEq(ins.f(n), n);
     assertEq(ins.f(wrapWithProto(n, {})), null);
@@ -444,10 +444,10 @@ assertErrorMessage(() => ins.pop(),
                     (field $x i32)
                     (field $y i32)))
 
-          (func $f (param $p (ref null $s)) (result i32)
+          (func $f (param $p (ref opt $s)) (result i32)
            (struct.get $s $x (local.get $p)))
 
-          (func $g (param $p (ref null $s)) (result i32)
+          (func $g (param $p (ref opt $s)) (result i32)
            (struct.get $s $y (local.get $p)))
 
           (func (export "testf") (param $n i32) (result i32)
@@ -479,7 +479,7 @@ assertErrorMessage(() => wasmTextToBinary(
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (type $r (struct (field i32)))
-  (func $f (param f64) (result externref)
+  (func $f (param f64) (result anyref)
     (struct.new $r (local.get 0)))
 )`)),
 WebAssembly.CompileError, /type mismatch/);
@@ -489,7 +489,7 @@ WebAssembly.CompileError, /type mismatch/);
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (type $r (struct (field i32) (field i32)))
-  (func $f (result externref)
+  (func $f (result anyref)
     (struct.new $r (i32.const 0)))
 )`)),
 WebAssembly.CompileError, /popping value from empty stack/);
@@ -499,7 +499,7 @@ WebAssembly.CompileError, /popping value from empty stack/);
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (type $r (struct (field i32) (field i32)))
-  (func $f (result externref)
+  (func $f (result anyref)
     (i32.const 0)
     (i32.const 1)
     (i32.const 2)
@@ -512,7 +512,7 @@ WebAssembly.CompileError, /unused values/);
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (type (func (param i32) (result i32)))
-  (func $f (result externref)
+  (func $f (result anyref)
     (struct.new 0))
 )`)),
 WebAssembly.CompileError, /not a struct type/);
@@ -524,7 +524,7 @@ wasmEvalText(`
  (module
    (type $p (struct (field i32)))
    (type $q (struct (field i32)))
-   (func $f (result (ref null $p))
+   (func $f (result (ref opt $p))
     (struct.new $q (i32.const 0))))
 `);
 
@@ -601,7 +601,7 @@ WebAssembly.CompileError, /signature index references non-signature/);
           (type $s (struct
                     (field i32)
                     (field (mut i64))))
-          (func (export "make") (result externref)
+          (func (export "make") (result anyref)
            (struct.new $s (i32.const 37) (i64.const 42))))`).exports;
     let v = ins.make();
     assertErrorMessage(() => v._0 = 12,

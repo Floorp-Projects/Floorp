@@ -10,17 +10,17 @@ function Baguette(calories) {
 const { validate, CompileError } = WebAssembly;
 
 assertErrorMessage(() => wasmEvalText(`(module
-    (func (result externref)
+    (func (result anyref)
         i32.const 42
     )
 )`), CompileError, mismatchError('i32', 'externref'));
 
 assertErrorMessage(() => wasmEvalText(`(module
-    (func (result externref)
+    (func (result anyref)
         i32.const 0
         ref.null extern
         i32.const 42
-        select (result externref)
+        select (result anyref)
     )
 )`), CompileError, /type mismatch/);
 
@@ -38,15 +38,15 @@ assertErrorMessage(() => wasmEvalText(`(module
 
 let simpleTests = [
     "(module (func (drop (ref.null extern))))",
-    "(module (func $test (local externref)))",
-    "(module (func $test (param externref)))",
-    "(module (func $test (result externref) (ref.null extern)))",
-    "(module (func $test (block (result externref) (unreachable)) unreachable))",
-    "(module (func $test (result i32) (local externref) (ref.is_null (local.get 0))))",
-    `(module (import "a" "b" (func (param externref))))`,
-    `(module (import "a" "b" (func (result externref))))`,
-    `(module (global externref (ref.null extern)))`,
-    `(module (global (mut externref) (ref.null extern)))`,
+    "(module (func $test (local anyref)))",
+    "(module (func $test (param anyref)))",
+    "(module (func $test (result anyref) (ref.null extern)))",
+    "(module (func $test (block (result anyref) (unreachable)) unreachable))",
+    "(module (func $test (result i32) (local anyref) (ref.is_null (local.get 0))))",
+    `(module (import "a" "b" (func (param anyref))))`,
+    `(module (import "a" "b" (func (result anyref))))`,
+    `(module (global anyref (ref.null extern)))`,
+    `(module (global (mut anyref) (ref.null extern)))`,
 ];
 
 for (let src of simpleTests) {
@@ -76,7 +76,7 @@ let { exports } = wasmEvalText(`(module
         ref.is_null
     )
 
-    (func (export "is_null_local") (result i32) (local externref)
+    (func (export "is_null_local") (result i32) (local anyref)
         ref.null extern
         local.set 0
         i32.const 58
@@ -91,22 +91,22 @@ assertEq(exports.is_null(), 1);
 assertEq(exports.is_null_spill(), 1);
 assertEq(exports.is_null_local(), 1);
 
-// ExternRef param and result in wasm functions.
+// Anyref param and result in wasm functions.
 
 exports = wasmEvalText(`(module
-    (func (export "is_null") (param $ref externref) (result i32)
+    (func (export "is_null") (param $ref anyref) (result i32)
         local.get $ref
         ref.is_null
     )
 
-    (func (export "ref_or_null") (param $ref externref) (param $selector i32) (result externref)
+    (func (export "ref_or_null") (param $ref anyref) (param $selector i32) (result anyref)
         local.get $ref
         ref.null extern
         local.get $selector
-        select (result externref)
+        select (result anyref)
     )
 
-    (func $recursive (export "nested") (param $ref externref) (param $i i32) (result externref)
+    (func $recursive (export "nested") (param $ref anyref) (param $i i32) (result anyref)
         ;; i == 10 => ret $ref
         local.get $i
         i32.const 10
@@ -152,7 +152,7 @@ assertEq(ref.calories, baguette.calories);
 (function() {
     assertEq(wasmEvalText(`(module
     (memory 0 64)
-    (func (export "f") (param externref) (result i32)
+    (func (export "f") (param anyref) (result i32)
         i32.const 10
         memory.grow
         drop
@@ -166,18 +166,18 @@ assertEq(ref.calories, baguette.calories);
 function assertJoin(body) {
     let val = { i: -1 };
     assertEq(wasmEvalText(`(module
-        (func (export "test") (param $ref externref) (param $i i32) (result externref)
+        (func (export "test") (param $ref anyref) (param $i i32) (result anyref)
             ${body}
         )
     )`).exports.test(val), val);
     assertEq(val.i, -1);
 }
 
-assertJoin("(block (result externref) local.get $ref)");
-assertJoin("(block $out (result externref) local.get $ref br $out)");
-assertJoin("(loop (result externref) local.get $ref)");
+assertJoin("(block (result anyref) local.get $ref)");
+assertJoin("(block $out (result anyref) local.get $ref br $out)");
+assertJoin("(loop (result anyref) local.get $ref)");
 
-assertJoin(`(block $out (result externref) (loop $top (result externref)
+assertJoin(`(block $out (result anyref) (loop $top (result anyref)
     local.get $i
     i32.const 1
     i32.add
@@ -207,7 +207,7 @@ assertJoin(`(block $out (loop $top
     )) unreachable
 `);
 
-assertJoin(`(block $out (result externref) (loop $top
+assertJoin(`(block $out (result anyref) (loop $top
     local.get $ref
     local.get $i
     i32.const 1
@@ -220,7 +220,7 @@ assertJoin(`(block $out (result externref) (loop $top
     ) unreachable)
 `);
 
-assertJoin(`(block $out (result externref) (block $unreachable (result externref) (loop $top
+assertJoin(`(block $out (result anyref) (block $unreachable (result anyref) (loop $top
     local.get $ref
     local.get $i
     i32.const 1
@@ -232,11 +232,11 @@ assertJoin(`(block $out (result externref) (block $unreachable (result externref
 
 let x = { i: 42 }, y = { f: 53 };
 exports = wasmEvalText(`(module
-    (func (export "test") (param $lhs externref) (param $rhs externref) (param $i i32) (result externref)
+    (func (export "test") (param $lhs anyref) (param $rhs anyref) (param $i i32) (result anyref)
         local.get $lhs
         local.get $rhs
         local.get $i
-        select (result externref)
+        select (result anyref)
     )
 )`).exports;
 
@@ -252,7 +252,7 @@ assertEq(result.i, 42);
 assertEq(result.f, undefined);
 assertEq(y.f, 53);
 
-// ExternRef in params/result of imported functions.
+// Anyref in params/result of imported functions.
 
 let firstBaguette = new Baguette(13),
     secondBaguette = new Baguette(37);
@@ -286,17 +286,17 @@ let imports = {
 };
 
 exports = wasmEvalText(`(module
-    (import "funcs" "ret" (func $ret (result externref)))
-    (import "funcs" "param" (func $param (param externref)))
+    (import "funcs" "ret" (func $ret (result anyref)))
+    (import "funcs" "param" (func $param (param anyref)))
 
-    (func (export "param") (param $x externref) (param $y externref)
+    (func (export "param") (param $x anyref) (param $y anyref)
         local.get $y
         local.get $x
         call $param
         call $param
     )
 
-    (func (export "ret") (result externref)
+    (func (export "ret") (result anyref)
         call $ret
     )
 )`, imports).exports;
@@ -314,13 +314,13 @@ assertEq(exports.ret(), imports.myBaguette);
 // Check lazy stubs generation.
 
 exports = wasmEvalText(`(module
-    (import "funcs" "mirror" (func $mirror (param externref) (result externref)))
-    (import "funcs" "augment" (func $augment (param externref) (result externref)))
+    (import "funcs" "mirror" (func $mirror (param anyref) (result anyref)))
+    (import "funcs" "augment" (func $augment (param anyref) (result anyref)))
 
     (global $count_f (mut i32) (i32.const 0))
     (global $count_g (mut i32) (i32.const 0))
 
-    (func $f (param $param externref) (result externref)
+    (func $f (param $param anyref) (result anyref)
         i32.const 1
         global.get $count_f
         i32.add
@@ -330,7 +330,7 @@ exports = wasmEvalText(`(module
         call $augment
     )
 
-    (func $g (param $param externref) (result externref)
+    (func $g (param $param anyref) (result anyref)
         i32.const 1
         global.get $count_g
         i32.add
@@ -342,9 +342,9 @@ exports = wasmEvalText(`(module
 
     (table (export "table") 10 funcref)
     (elem (i32.const 0) $f $g $mirror $augment)
-    (type $table_type (func (param externref) (result externref)))
+    (type $table_type (func (param anyref) (result anyref)))
 
-    (func (export "call_indirect") (param $i i32) (param $ref externref) (result externref)
+    (func (export "call_indirect") (param $i i32) (param $ref anyref) (result anyref)
         local.get $ref
         local.get $i
         call_indirect (type $table_type)
@@ -395,9 +395,9 @@ assertEq(exports.count_g(), 1);
 
 // Globals.
 
-// ExternRef globals in wasm modules.
+// Anyref globals in wasm modules.
 
-assertErrorMessage(() => wasmEvalText(`(module (global (import "glob" "externref") externref))`, { glob: { externref: new WebAssembly.Global({ value: 'i32' }, 42) } }),
+assertErrorMessage(() => wasmEvalText(`(module (global (import "glob" "externref") anyref))`, { glob: { externref: new WebAssembly.Global({ value: 'i32' }, 42) } }),
     WebAssembly.LinkError,
     /imported global type mismatch/);
 
@@ -415,29 +415,29 @@ imports = {
 };
 
 exports = wasmEvalText(`(module
-    (global $g_imp_imm_null  (import "constants" "imm_null") externref)
-    (global $g_imp_imm_bread (import "constants" "imm_bread") externref)
+    (global $g_imp_imm_null  (import "constants" "imm_null") anyref)
+    (global $g_imp_imm_bread (import "constants" "imm_bread") anyref)
 
-    (global $g_imp_mut_null   (import "constants" "mut_null") (mut externref))
-    (global $g_imp_mut_bread  (import "constants" "mut_bread") (mut externref))
+    (global $g_imp_mut_null   (import "constants" "mut_null") (mut anyref))
+    (global $g_imp_mut_bread  (import "constants" "mut_bread") (mut anyref))
 
-    (global $g_imm_null     externref (ref.null extern))
-    (global $g_imm_getglob  externref (global.get $g_imp_imm_bread))
-    (global $g_mut         (mut externref) (ref.null extern))
+    (global $g_imm_null     anyref (ref.null extern))
+    (global $g_imm_getglob  anyref (global.get $g_imp_imm_bread))
+    (global $g_mut         (mut anyref) (ref.null extern))
 
-    (func (export "imm_null")      (result externref) global.get $g_imm_null)
-    (func (export "imm_getglob")   (result externref) global.get $g_imm_getglob)
+    (func (export "imm_null")      (result anyref) global.get $g_imm_null)
+    (func (export "imm_getglob")   (result anyref) global.get $g_imm_getglob)
 
-    (func (export "imp_imm_null")  (result externref) global.get $g_imp_imm_null)
-    (func (export "imp_imm_bread") (result externref) global.get $g_imp_imm_bread)
-    (func (export "imp_mut_null")  (result externref) global.get $g_imp_mut_null)
-    (func (export "imp_mut_bread") (result externref) global.get $g_imp_mut_bread)
+    (func (export "imp_imm_null")  (result anyref) global.get $g_imp_imm_null)
+    (func (export "imp_imm_bread") (result anyref) global.get $g_imp_imm_bread)
+    (func (export "imp_mut_null")  (result anyref) global.get $g_imp_mut_null)
+    (func (export "imp_mut_bread") (result anyref) global.get $g_imp_mut_bread)
 
-    (func (export "set_imp_null")  (param externref) local.get 0 global.set $g_imp_mut_null)
-    (func (export "set_imp_bread") (param externref) local.get 0 global.set $g_imp_mut_bread)
+    (func (export "set_imp_null")  (param anyref) local.get 0 global.set $g_imp_mut_null)
+    (func (export "set_imp_bread") (param anyref) local.get 0 global.set $g_imp_mut_bread)
 
-    (func (export "set_mut") (param externref) local.get 0 global.set $g_mut)
-    (func (export "get_mut") (result externref) global.get $g_mut)
+    (func (export "set_mut") (param anyref) local.get 0 global.set $g_mut)
+    (func (export "get_mut") (result anyref) global.get $g_mut)
 )`, imports).exports;
 
 assertEq(exports.imp_imm_null(), imports.constants.imm_null);
@@ -476,7 +476,7 @@ wasmEvalText(
 
 wasmEvalText(
     `(module
-       (func (param externref)
+       (func (param anyref)
          (return)
          (ref.is_null (get_local 0))
          (drop)

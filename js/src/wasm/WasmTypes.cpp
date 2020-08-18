@@ -260,7 +260,7 @@ static bool IsImmediateType(ValType vt) {
     case ValType::Ref:
       switch (vt.refTypeKind()) {
         case RefType::Func:
-        case RefType::Extern:
+        case RefType::Any:
           return true;
         case RefType::TypeIndex:
           return false;
@@ -287,7 +287,7 @@ static unsigned EncodeImmediateType(ValType vt) {
       switch (vt.refTypeKind()) {
         case RefType::Func:
           return 5;
-        case RefType::Extern:
+        case RefType::Any:
           return 6;
         case RefType::TypeIndex:
           break;
@@ -495,14 +495,14 @@ size_t Export::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
 }
 
 size_t ElemSegment::serializedSize() const {
-  return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +
+  return sizeof(kind) + sizeof(tableIndex) + sizeof(elementType) +
          sizeof(offsetIfActive) + SerializedPodVectorSize(elemFuncIndices);
 }
 
 uint8_t* ElemSegment::serialize(uint8_t* cursor) const {
   cursor = WriteBytes(cursor, &kind, sizeof(kind));
   cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
-  cursor = WriteBytes(cursor, &elemType, sizeof(elemType));
+  cursor = WriteBytes(cursor, &elementType, sizeof(elementType));
   cursor = WriteBytes(cursor, &offsetIfActive, sizeof(offsetIfActive));
   cursor = SerializePodVector(cursor, elemFuncIndices);
   return cursor;
@@ -511,7 +511,7 @@ uint8_t* ElemSegment::serialize(uint8_t* cursor) const {
 const uint8_t* ElemSegment::deserialize(const uint8_t* cursor) {
   (cursor = ReadBytes(cursor, &kind, sizeof(kind))) &&
       (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
-      (cursor = ReadBytes(cursor, &elemType, sizeof(elemType))) &&
+      (cursor = ReadBytes(cursor, &elementType, sizeof(elementType))) &&
       (cursor = ReadBytes(cursor, &offsetIfActive, sizeof(offsetIfActive))) &&
       (cursor = DeserializePodVector(cursor, &elemFuncIndices));
   return cursor;
@@ -1016,38 +1016,17 @@ UniqueChars wasm::ToString(ValType type) {
       literal = "f64";
       break;
     case ValType::Ref:
-      if (type.isNullable() && !type.isTypeIndex()) {
-        switch (type.refTypeKind()) {
-          case RefType::Extern:
-            literal = "externref";
-            break;
-          case RefType::Func:
-            literal = "funcref";
-            break;
-          case RefType::TypeIndex:
-            MOZ_ASSERT_UNREACHABLE();
-        }
-      } else {
-        const char* heapType = nullptr;
-        switch (type.refTypeKind()) {
-          case RefType::Extern:
-            heapType = "externref";
-            break;
-          case RefType::Func:
-            heapType = "funcref";
-            break;
-          case RefType::TypeIndex:
-            return JS_smprintf("ref %s%d", type.isNullable() ? "null " : " ",
-                               type.refType().typeIndex());
-        }
-        return JS_smprintf("ref %s%s", type.isNullable() ? "null " : " ",
-                           heapType);
+      switch (type.refTypeKind()) {
+        case RefType::Any:
+          literal = "externref";
+          break;
+        case RefType::Func:
+          literal = "funcref";
+          break;
+        case RefType::TypeIndex:
+          return JS_smprintf("optref %d", type.refType().typeIndex());
       }
       break;
   }
   return JS_smprintf("%s", literal);
-}
-
-UniqueChars wasm::ToString(const Maybe<ValType>& type) {
-  return type ? ToString(type.ref()) : JS_smprintf("%s", "void");
 }

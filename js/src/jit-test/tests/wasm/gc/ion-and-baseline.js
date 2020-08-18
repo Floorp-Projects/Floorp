@@ -20,15 +20,15 @@ var refmod = new WebAssembly.Module(wasmTextToBinary(
       ;; Just a dummy
       (type $s (struct (field i32)))
 
-      (type $htype (func (param externref)))
-      (type $itype (func (result externref)))
+      (type $htype (func (param anyref)))
+      (type $itype (func (result anyref)))
 
       (elem (i32.const 0) $f $g)
 
-      (func $f (param externref)
+      (func $f (param anyref)
        (call $print (i32.const 1)))
 
-      (func $g (result externref)
+      (func $g (result anyref)
        (call $print (i32.const 2))
        (ref.null extern))
 

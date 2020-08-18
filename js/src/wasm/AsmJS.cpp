@@ -1714,7 +1714,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
     if (!seg) {
       return false;
     }
-    seg->elemType = RefType::func();
     seg->tableIndex = tableIndex;
     seg->offsetIfActive = Some(InitExpr::fromConstant(LitVal(uint32_t(0))));
     seg->elemFuncIndices = std::move(elems);
@@ -1996,8 +1995,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     }
 
     env_.asmJSSigToTableIndex[sigIndex] = env_.tables.length();
-    if (!env_.tables.emplaceBack(RefType::func(), mask + 1, Nothing(),
-                                 /*isAsmJS*/ true)) {
+    if (!env_.tables.emplaceBack(TableKind::AsmJS, mask + 1, Nothing())) {
       return false;
     }
 
@@ -5859,7 +5857,7 @@ static bool CheckReturnType(FunctionValidatorShared& f, ParseNode* usepn,
 
   if (f.returnedType() != type) {
     return f.failf(usepn, "%s incompatible with previous return of type %s",
-                   ToString(type).get(), ToString(f.returnedType()).get());
+                   ToCString(type), ToCString(f.returnedType()));
   }
 
   return true;

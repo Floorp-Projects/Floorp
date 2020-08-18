@@ -301,7 +301,6 @@ reexport! {
 
 #[cfg(feature = "wasm-module")]
 reexport! {
-    mod alias;
     mod assert_expr;
     mod custom;
     mod event;
@@ -310,10 +309,8 @@ reexport! {
     mod func;
     mod global;
     mod import;
-    mod instance;
     mod memory;
     mod module;
-    mod nested_module;
     mod table;
     mod types;
     mod wast;
@@ -322,7 +319,6 @@ reexport! {
 /// Common keyword used to parse WebAssembly text files.
 pub mod kw {
     custom_keyword!(after);
-    custom_keyword!(alias);
     custom_keyword!(any);
     custom_keyword!(anyfunc);
     custom_keyword!(anyref);
@@ -343,11 +339,9 @@ pub mod kw {
     custom_keyword!(before);
     custom_keyword!(binary);
     custom_keyword!(block);
-    custom_keyword!(catch);
     custom_keyword!(code);
     custom_keyword!(data);
     custom_keyword!(declare);
-    custom_keyword!(r#do = "do");
     custom_keyword!(elem);
     custom_keyword!(end);
     custom_keyword!(event);
@@ -379,22 +373,20 @@ pub mod kw {
     custom_keyword!(i8);
     custom_keyword!(i8x16);
     custom_keyword!(import);
-    custom_keyword!(instance);
-    custom_keyword!(instantiate);
     custom_keyword!(invoke);
     custom_keyword!(item);
     custom_keyword!(last);
     custom_keyword!(local);
     custom_keyword!(memory);
     custom_keyword!(module);
-    custom_keyword!(modulecode);
     custom_keyword!(nan_arithmetic = "nan:arithmetic");
     custom_keyword!(nan_canonical = "nan:canonical");
     custom_keyword!(null);
     custom_keyword!(nullref);
     custom_keyword!(offset);
+    custom_keyword!(opt);
+    custom_keyword!(optref);
     custom_keyword!(param);
-    custom_keyword!(parent);
     custom_keyword!(passive);
     custom_keyword!(quote);
     custom_keyword!(r#else = "else");
@@ -413,7 +405,6 @@ pub mod kw {
     custom_keyword!(r#struct = "struct");
     custom_keyword!(table);
     custom_keyword!(then);
-    custom_keyword!(r#try = "try");
     custom_keyword!(v128);
 }
 

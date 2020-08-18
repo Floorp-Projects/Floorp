@@ -24,7 +24,7 @@ let { release_or_beta } = getBuildConfiguration();
 let nightly = !release_or_beta;
 
 let nightlyOnlyFeatures = [
-  ['gc', wasmGcEnabled(), `(module (type $s (struct)) (func (param (ref null $s))))`],
+  ['gc', wasmGcEnabled(), `(module (type $s (struct)) (func (param (ref opt $s))))`],
   ['simd', wasmSimdSupported(), `(module (memory 1 1) (func i32.const 0 i8x16.splat drop))`],
 ];
 

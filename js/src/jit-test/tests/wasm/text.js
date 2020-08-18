@@ -51,6 +51,7 @@ wasmEvalText('(module (func) (table $t funcref (elem 0 0 0)))');
 const { Table } = WebAssembly;
 const table = new Table({initial:1, element:"funcref"});
 assertErrorMessage(() => wasmEvalText('(module (table $t (import) 1 funcref))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (table $t (import "mod") 1 funcref))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (table $t (import "mod" "field") 1 funcref (elem 1 2 3)))'), SyntaxError, parsingError);
 wasmEvalText('(module (table $t (import "mod" "field") 1 funcref))', {mod: {field: table}});
 
@@ -63,6 +64,7 @@ assertEq(wasmEvalText('(module (func) (table $t (export "tbl") funcref (elem 0 0
 // Functions.
 assertErrorMessage(() => wasmEvalText('(module (func $t import))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (func $t (import)))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (func $t (import "mod")))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (func $t (import "mod" "func" (local i32))))'), SyntaxError, parsingError);
 
 const func = i => 42 + i;
@@ -97,6 +99,7 @@ assertErrorMessage(() => wasmEvalText('(module (global $t (export "g") i32))'), 
 wasmEvalText('(module (global $t (export "g") i32 (i32.const 42)))');
 
 assertErrorMessage(() => wasmEvalText('(module (global $t (import) i32))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (global $t (import "mod") i32))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (global $t (import "mod" "field")))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (global $t (import "mod" "field")) i32 (i32.const 42))'), SyntaxError, parsingError);
 wasmEvalText('(module (global $t (import "mod" "field") i32))', { mod: {field: 42} });
@@ -116,6 +119,7 @@ wasmEvalText('(module (memory $t (export "g") 0))');
 
 const mem = new WebAssembly.Memory({ initial: 1 });
 assertErrorMessage(() => wasmEvalText('(module (memory $t (import) 1))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (memory $t (import "mod") 1))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (memory $t (import "mod" "field")))'), SyntaxError, parsingError);
 wasmEvalText('(module (memory $t (import "mod" "field") 1))', { mod: {field: mem} });
 

@@ -10,16 +10,16 @@ g23.eval(`
 let bin = wasmTextToBinary(`
      (type $wabbit (struct
         (field $x (mut i32))
-        (field $left (mut (ref null $wabbit)))
-        (field $right (mut (ref null $wabbit)))
+        (field $left (mut (ref opt $wabbit)))
+        (field $right (mut (ref opt $wabbit)))
      ))
-     (global $g (mut (ref null $wabbit)) (ref.null $wabbit))
+     (global $g (mut (ref opt $wabbit)) (ref.null opt $wabbit))
      (func (export "init") (param $n i32)
        (global.set $g (call $make (local.get $n)))
      )
-     (func $make (param $n i32) (result (ref null $wabbit))
+     (func $make (param $n i32) (result (ref opt $wabbit))
        (local $tmp i32)
-       (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit))
+       (struct.new $wabbit (local.get $tmp) (ref.null opt $wabbit) (ref.null opt $wabbit))
      )
 `);
 let mod = new WebAssembly.Module(bin);

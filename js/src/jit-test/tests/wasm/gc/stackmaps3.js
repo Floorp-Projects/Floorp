@@ -24,26 +24,26 @@ const DEBUG = false;
 
 let t =
   `(module
-     (import "" "mkCons" (func $mkCons (param externref) (param externref) (result externref)))
-     (import "" "mkBoxedInt" (func $mkBoxedInt (result externref)))
+     (import "" "mkCons" (func $mkCons (param anyref) (param anyref) (result anyref)))
+     (import "" "mkBoxedInt" (func $mkBoxedInt (result anyref)))
 
-     (func $mkNil (result externref)
+     (func $mkNil (result anyref)
        ref.null extern
      )
 
      (func $mkConsIgnoringScalar
-              (param $hd externref) (param i32) (param $tl externref)
-              (result externref)
+              (param $hd anyref) (param i32) (param $tl anyref)
+              (result anyref)
         (local.get $hd)
         (local.get $tl)
         call $mkCons
      )
 
-     (func $mkList (export "mkList") (result externref)
+     (func $mkList (export "mkList") (result anyref)
         call $mkList20
      )
 
-     (func $mkList20 (result externref)
+     (func $mkList20 (result anyref)
        ;; create 20 pointers to boxed ints on the stack, plus a few
        ;; scalars for added confusion
        (local $scalar99 i32)
