@@ -26,8 +26,11 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/a11y/SessionAccessibility.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -89,6 +92,7 @@ using mozilla::dom::ContentParent;
 #include "mozilla/java/GeckoResultWrappers.h"
 #include "mozilla/java/GeckoSessionNatives.h"
 #include "mozilla/java/GeckoSystemStateListenerWrappers.h"
+#include "mozilla/java/MediaSessionNatives.h"
 #include "mozilla/java/PanZoomControllerNatives.h"
 #include "mozilla/java/SessionAccessibilityWrappers.h"
 #include "ScreenHelperAndroid.h"
@@ -363,7 +367,391 @@ class nsWindow::GeckoViewSupport final
                      int32_t aFlags, mozilla::jni::String::Param aTriggeringUri,
                      bool aHasUserGesture, bool aIsTopLevel) const
       -> java::GeckoResult::LocalRef;
+
+  void AttachMediaSessionController(const GeckoSession::Window::LocalRef& inst,
+                                    jni::Object::Param aController,
+                                    const int64_t aId);
+  void DetachMediaSessionController(const GeckoSession::Window::LocalRef& inst,
+                                    jni::Object::Param aController);
 };
+
+class nsWindow::MediaSessionSupport final
+    : public mozilla::java::MediaSession::Controller::Natives<
+          MediaSessionSupport> {
+  using LockedWindowPtr = WindowPtr<MediaSessionSupport>::Locked;
+  using MediaKeysArray = nsTArray<MediaControlKey>;
+
+  typedef RefPtr<mozilla::dom::MediaController> ControllerPtr;
+
+  WindowPtr<MediaSessionSupport> mWindow;
+  mozilla::java::MediaSession::Controller::WeakRef mJavaController;
+  ControllerPtr mMediaController;
+  MediaEventListener mMetadataChangedListener;
+  MediaEventListener mPlaybackChangedListener;
+  MediaEventListener mFullscreenChangedListener;
+
+ public:
+  typedef java::MediaSession::Controller::Natives<MediaSessionSupport> Base;
+
+  using Base::AttachNative;
+  using Base::DisposeNative;
+
+  MediaSessionSupport(
+      NativePtr<MediaSessionSupport>* aPtr, nsWindow* aWindow,
+      const java::MediaSession::Controller::LocalRef& aController)
+      : mWindow(aPtr, aWindow),
+        mJavaController(aController),
+        mMediaController(nullptr) {
+    MOZ_ASSERT(mWindow);
+  }
+
+  bool Dispatch(const char16_t aType[],
+                java::GeckoBundle::Param aBundle = nullptr) {
+    widget::EventDispatcher* dispatcher = mWindow->GetEventDispatcher();
+
+    if (!dispatcher) {
+      return false;
+    }
+
+    dispatcher->Dispatch(aType, aBundle);
+
+    return true;
+  }
+
+  void PipChanged(const bool aEnabled) {
+    const size_t kBundleSize = 1;
+
+    AutoTArray<jni::String::LocalRef, kBundleSize> keys;
+    AutoTArray<jni::Object::LocalRef, kBundleSize> values;
+
+    keys.AppendElement(
+        jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("enabled")));
+    values.AppendElement(aEnabled ? java::sdk::Boolean::TRUE()
+                                  : java::sdk::Boolean::FALSE());
+
+    MOZ_ASSERT(kBundleSize == keys.Length());
+    MOZ_ASSERT(kBundleSize == values.Length());
+
+    auto bundleKeys = jni::ObjectArray::New<jni::String>(kBundleSize);
+    auto bundleValues = jni::ObjectArray::New<jni::Object>(kBundleSize);
+
+    for (size_t i = 0; i < kBundleSize; ++i) {
+      bundleKeys->SetElement(i, keys[i]);
+      bundleValues->SetElement(i, values[i]);
+    }
+    auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
+
+    const char16_t kPictureInPicture[] =
+        u"GeckoView:MediaSession:PictureInPicture";
+    Dispatch(kPictureInPicture, bundle);
+  }
+
+  void MetadataChanged(const dom::MediaMetadataBase& aMetadata) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    const size_t kBundleSize = 4;
+
+    AutoTArray<jni::String::LocalRef, kBundleSize> keys;
+    AutoTArray<jni::Object::LocalRef, kBundleSize> values;
+
+    keys.AppendElement(
+        jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("title")));
+    values.AppendElement(jni::StringParam(aMetadata.mTitle));
+
+    keys.AppendElement(
+        jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("artist")));
+    values.AppendElement(jni::StringParam(aMetadata.mArtist));
+
+    keys.AppendElement(
+        jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("album")));
+    values.AppendElement(jni::StringParam(aMetadata.mAlbum));
+
+    auto images =
+        jni::ObjectArray::New<java::GeckoBundle>(aMetadata.mArtwork.Length());
+
+    for (size_t i = 0; i < aMetadata.mArtwork.Length(); ++i) {
+      const auto& image = aMetadata.mArtwork[i];
+
+      const size_t kImageBundleSize = 3;
+      auto imageKeys = jni::ObjectArray::New<jni::String>(kImageBundleSize);
+      auto imageValues = jni::ObjectArray::New<jni::String>(kImageBundleSize);
+
+      imageKeys->SetElement(
+          0, jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("src")));
+      imageValues->SetElement(0, jni::StringParam(image.mSrc));
+
+      imageKeys->SetElement(
+          1, jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("type")));
+      imageValues->SetElement(1, jni::StringParam(image.mType));
+
+      imageKeys->SetElement(
+          2, jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("sizes")));
+      imageValues->SetElement(2, jni::StringParam(image.mSizes));
+
+      images->SetElement(i, java::GeckoBundle::New(imageKeys, imageValues));
+    }
+
+    keys.AppendElement(
+        jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("artwork")));
+    values.AppendElement(images);
+
+    MOZ_ASSERT(kBundleSize == keys.Length());
+    MOZ_ASSERT(kBundleSize == values.Length());
+
+    auto bundleKeys = jni::ObjectArray::New<jni::String>(kBundleSize);
+    auto bundleValues = jni::ObjectArray::New<jni::Object>(kBundleSize);
+
+    for (size_t i = 0; i < kBundleSize; ++i) {
+      bundleKeys->SetElement(i, keys[i]);
+      bundleValues->SetElement(i, values[i]);
+    }
+    auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
+
+    const char16_t kMetadata[] = u"GeckoView:MediaSession:Metadata";
+    Dispatch(kMetadata, bundle);
+  }
+
+  void PlaybackChanged(const MediaSessionPlaybackState& aState) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    const char16_t kPlaybackNone[] = u"GeckoView:MediaSession:Playback:None";
+    const char16_t kPlaybackPaused[] =
+        u"GeckoView:MediaSession:Playback:Paused";
+    const char16_t kPlaybackPlaying[] =
+        u"GeckoView:MediaSession:Playback:Playing";
+
+    switch (aState) {
+      case MediaSessionPlaybackState::None:
+        Dispatch(kPlaybackNone);
+        break;
+      case MediaSessionPlaybackState::Paused:
+        Dispatch(kPlaybackPaused);
+        break;
+      case MediaSessionPlaybackState::Playing:
+        Dispatch(kPlaybackPlaying);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid MediaSessionPlaybackState");
+        break;
+    }
+  }
+
+  void FullscreenChanged(bool aIsEnabled) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    const size_t kBundleSize = 1;
+
+    AutoTArray<jni::String::LocalRef, kBundleSize> keys;
+    AutoTArray<jni::Object::LocalRef, kBundleSize> values;
+
+    keys.AppendElement(
+        jni::StringParam(NS_LITERAL_STRING_FROM_CSTRING("enabled")));
+    values.AppendElement(aIsEnabled ? java::sdk::Boolean::TRUE()
+                                    : java::sdk::Boolean::FALSE());
+
+    MOZ_ASSERT(kBundleSize == keys.Length());
+    MOZ_ASSERT(kBundleSize == values.Length());
+
+    auto bundleKeys = jni::ObjectArray::New<jni::String>(kBundleSize);
+    auto bundleValues = jni::ObjectArray::New<jni::Object>(kBundleSize);
+
+    for (size_t i = 0; i < kBundleSize; ++i) {
+      bundleKeys->SetElement(i, keys[i]);
+      bundleValues->SetElement(i, values[i]);
+    }
+    auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
+
+    const char16_t kFullscreen[] = u"GeckoView:MediaSession:Fullscreen";
+    Dispatch(kFullscreen, bundle);
+  }
+
+  void OnDetach(already_AddRefed<Runnable> aDisposer) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    RefPtr<Runnable> disposer = aDisposer;
+
+    SetNativeController(nullptr);
+
+    if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+      auto controller = java::MediaSession::Controller::GlobalRef(
+          mJavaController);
+      if (!controller) {
+        return;
+      }
+
+      uiThread->Dispatch(NS_NewRunnableFunction(
+          "MEdiaSessionSupport::OnDetach",
+          [controller, disposer = std::move(disposer)] {
+            controller->OnDetached();
+            disposer->Run();
+          }));
+    }
+  }
+
+  const java::MediaSession::Controller::Ref& GetJavaController() const {
+    return mJavaController;
+  }
+
+  void SetNativeController(mozilla::dom::MediaController* aController) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mMediaController == aController) {
+      return;
+    }
+
+    MOZ_ASSERT(!mMediaController || !aController);
+
+    if (mMediaController) {
+      UnregisterControllerListeners();
+    }
+
+    mMediaController = aController;
+
+    if (mMediaController) {
+      MetadataChanged(mMediaController->GetCurrentMediaMetadata());
+      PlaybackChanged(mMediaController->PlaybackState());
+
+      RegisterControllerListeners();
+    }
+  }
+
+  void RegisterControllerListeners() {
+    mMetadataChangedListener = mMediaController->MetadataChangedEvent().Connect(
+        AbstractThread::MainThread(), this,
+        &MediaSessionSupport::MetadataChanged);
+
+    mPlaybackChangedListener = mMediaController->PlaybackChangedEvent().Connect(
+        AbstractThread::MainThread(), this,
+        &MediaSessionSupport::PlaybackChanged);
+
+    mFullscreenChangedListener =
+        mMediaController->FullScreenChangedEvent().Connect(
+            AbstractThread::MainThread(), this,
+            &MediaSessionSupport::FullscreenChanged);
+  }
+
+  void UnregisterControllerListeners() {
+    mMetadataChangedListener.DisconnectIfExists();
+    mPlaybackChangedListener.DisconnectIfExists();
+    mFullscreenChangedListener.DisconnectIfExists();
+  }
+
+  bool IsActive() const {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    return mMediaController && mMediaController->IsActive();
+  }
+
+  void Pause() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->Pause();
+  }
+
+  void Stop() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->Stop();
+  }
+
+  void Play() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->Play();
+  }
+
+  void Focus() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->Focus();
+  }
+
+  void NextTrack() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->NextTrack();
+  }
+
+  void PreviousTrack() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->PrevTrack();
+  }
+
+  void SeekTo(double aTime, bool aFast) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->SeekTo(aTime, aFast);
+  }
+
+  void SeekForward(double aOffset) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->SeekForward();
+  }
+
+  void SeekBackward(double aOffset) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->SeekBackward();
+  }
+
+  void SkipAd() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+    mMediaController->SkipAd();
+  }
+
+  void MuteAudio(bool aMute) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!IsActive()) {
+      return;
+    }
+
+    RefPtr<dom::BrowsingContext> bc =
+        dom::BrowsingContext::Get(mMediaController->Id());
+    if (!bc) {
+      return;
+    }
+
+    Unused << bc->SetMuted(aMute);
+  }
+};
+
+template <>
+const char nsWindow::NativePtr<nsWindow::MediaSessionSupport>::sName[] =
+    "MediaSessionSupport";
 
 /**
  * PanZoomController handles its native calls on the UI thread, so make
@@ -1332,6 +1720,11 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport() {
     window.mSessionAccessibility.Detach(
         window.mSessionAccessibility->GetJavaAccessibility());
   }
+
+  if (window.mMediaSessionSupport) {
+    window.mMediaSessionSupport.Detach(
+        window.mMediaSessionSupport->GetJavaController());
+  }
 }
 
 /* static */
@@ -1495,11 +1888,46 @@ void nsWindow::GeckoViewSupport::AttachAccessibility(
                                       sessionAccessibility);
 }
 
+void nsWindow::GeckoViewSupport::AttachMediaSessionController(
+    const GeckoSession::Window::LocalRef& inst, jni::Object::Param aController,
+    const int64_t aId) {
+  if (window.mMediaSessionSupport) {
+    window.mMediaSessionSupport.Detach(
+        window.mMediaSessionSupport->GetJavaController());
+  }
+
+  auto controller = java::MediaSession::Controller::LocalRef(
+      jni::GetGeckoThreadEnv(),
+      java::MediaSession::Controller::Ref::From(aController));
+  window.mMediaSessionSupport.Attach(controller, &window, controller);
+
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aId);
+  RefPtr<dom::MediaController> nativeController =
+      bc->Canonical()->GetMediaController();
+  MOZ_ASSERT(nativeController);
+
+  window.mMediaSessionSupport->SetNativeController(nativeController);
+
+  DispatchToUiThread("GeckoViewSupport::AttachMediaSessionController",
+                     [controller = java::MediaSession::Controller::GlobalRef(
+                          controller)] { controller->OnAttached(); });
+}
+
+void nsWindow::GeckoViewSupport::DetachMediaSessionController(
+    const GeckoSession::Window::LocalRef& inst,
+    jni::Object::Param aController) {
+  if (window.mMediaSessionSupport) {
+    window.mMediaSessionSupport.Detach(
+        window.mMediaSessionSupport->GetJavaController());
+  }
+}
+
 void nsWindow::InitNatives() {
   jni::InitConversionStatics();
   nsWindow::GeckoViewSupport::Base::Init();
   nsWindow::LayerViewSupport::Init();
   nsWindow::NPZCSupport::Init();
+  nsWindow::MediaSessionSupport::Init();
 
   GeckoEditableSupport::Init();
   a11y::SessionAccessibility::Init();
