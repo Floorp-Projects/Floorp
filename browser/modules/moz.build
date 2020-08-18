@@ -73,6 +73,9 @@ with Files("LiveBookmarkMigrator.jsm"):
 with Files("OpenInTabsUtils.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
+with Files("PartnerLinkAttribution.jsm"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
 with Files("PermissionUI.jsm"):
    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
@@ -139,6 +142,7 @@ EXTRA_JS_MODULES += [
     'NewTabPagePreloading.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
+    'PartnerLinkAttribution.jsm',
     'PermissionUI.jsm',
     'PingCentre.jsm',
     'ProcessHangMonitor.jsm',
@@ -149,7 +153,6 @@ EXTRA_JS_MODULES += [
     'TabsList.jsm',
     'TabUnloader.jsm',
     'ThemeVariableMap.jsm',
-    'TopSiteAttribution.jsm',
     'TransientPrefs.jsm',
     'webrtcUI.jsm',
     'ZoomUI.jsm',

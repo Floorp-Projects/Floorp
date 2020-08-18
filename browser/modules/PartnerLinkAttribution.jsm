@@ -6,7 +6,7 @@
 
 Cu.importGlobalProperties(["fetch"]);
 
-var EXPORTED_SYMBOLS = ["TopSiteAttribution"];
+var EXPORTED_SYMBOLS = ["PartnerLinkAttribution"];
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -20,7 +20,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Region.jsm"
 );
 
-var TopSiteAttribution = {
+var PartnerLinkAttribution = {
   async makeRequest({ targetURL, source }) {
     let searchProvider = targetURL.match(/^https?:\/\/(?:www.)?([^.]*)/)[1];
 
