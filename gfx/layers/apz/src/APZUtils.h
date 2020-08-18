@@ -141,14 +141,14 @@ class ExpectedGeckoMetrics {
   ExpectedGeckoMetrics() = default;
   void UpdateFrom(const FrameMetrics& aMetrics);
 
-  const CSSPoint& GetScrollOffset() const { return mScrollOffset; }
+  const CSSPoint& GetVisualScrollOffset() const { return mVisualScrollOffset; }
   const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
   const CSSToLayoutDeviceScale& GetDevPixelsPerCSSPixel() const {
     return mDevPixelsPerCSSPixel;
   }
 
  private:
-  CSSPoint mScrollOffset;
+  CSSPoint mVisualScrollOffset;
   CSSToParentLayerScale2D mZoom;
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 };

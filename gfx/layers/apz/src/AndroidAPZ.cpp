@@ -262,7 +262,7 @@ bool StackScrollerFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
   mPreviousOffset = offset;
 
   mApzc.SetVelocityVector(velocity);
-  mApzc.SetScrollOffset(offset / aFrameMetrics.GetZoom());
+  mApzc.SetVisualScrollOffset(offset / aFrameMetrics.GetZoom());
 
   // If we hit a bounds while flinging, send the velocity so that the bounce
   // animation can play.

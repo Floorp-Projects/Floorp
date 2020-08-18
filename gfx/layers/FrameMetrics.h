@@ -45,7 +45,7 @@ namespace layers {
  */
 struct ScrollUpdateInfo {
   uint32_t mScrollGeneration;
-  CSSPoint mScrollOffset;
+  CSSPoint mLayoutScrollOffset;
   CSSPoint mBaseScrollOffset;
   bool mIsRelative;
 };
@@ -296,7 +296,7 @@ struct FrameMetrics {
     CSSPoint origin = GetVisualScrollOffset();
     CSSPoint delta =
         (aOther.GetLayoutScrollOffset() - aOther.mBaseScrollOffset);
-    ClampAndSetScrollOffset(origin + delta);
+    ClampAndSetVisualScrollOffset(origin + delta);
     mScrollGeneration = aOther.mScrollGeneration;
     return GetVisualScrollOffset() - origin;
   }
@@ -334,7 +334,7 @@ struct FrameMetrics {
   }
 
   void UpdatePendingScrollInfo(const ScrollUpdateInfo& aInfo) {
-    SetLayoutScrollOffset(aInfo.mScrollOffset);
+    SetLayoutScrollOffset(aInfo.mLayoutScrollOffset);
     mBaseScrollOffset = aInfo.mBaseScrollOffset;
     mScrollGeneration = aInfo.mScrollGeneration;
     mScrollUpdateType = ePending;
@@ -401,7 +401,7 @@ struct FrameMetrics {
   }
 
   // Set scroll offset, first clamping to the scroll range.
-  void ClampAndSetScrollOffset(const CSSPoint& aScrollOffset) {
+  void ClampAndSetVisualScrollOffset(const CSSPoint& aScrollOffset) {
     SetVisualScrollOffset(CalculateScrollRange().ClampPoint(aScrollOffset));
   }
 

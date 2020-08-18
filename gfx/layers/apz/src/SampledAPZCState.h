@@ -24,7 +24,7 @@ class SampledAPZCState {
   bool operator!=(const SampledAPZCState& aOther) const;
 
   CSSRect GetLayoutViewport() const { return mLayoutViewport; }
-  CSSPoint GetScrollOffset() const { return mScrollOffset; }
+  CSSPoint GetVisualScrollOffset() const { return mVisualScrollOffset; }
   CSSToParentLayerScale2D GetZoom() const { return mZoom; }
   Maybe<CompositionPayload> TakeScrollPayload();
 
@@ -32,14 +32,14 @@ class SampledAPZCState {
   void UpdateZoomProperties(const FrameMetrics& aMetrics);
 
   /**
-   * Re-clamp mScrollOffset to the scroll range specified by the provided
+   * Re-clamp mVisualScrollOffset to the scroll range specified by the provided
    * metrics. This only needs to be called if the scroll offset changes
    * outside of AsyncPanZoomController::SampleCompositedAsyncTransform().
    * It also recalculates mLayoutViewport so that it continues to enclose
    * the visual viewport. This only needs to be called if the
    * layout viewport changes outside of SampleCompositedAsyncTransform().
    */
-  void ClampScrollOffset(const FrameMetrics& aMetrics);
+  void ClampVisualScrollOffset(const FrameMetrics& aMetrics);
 
   void ZoomBy(const gfxSize& aScale);
 
@@ -47,7 +47,7 @@ class SampledAPZCState {
   // These variables cache the layout viewport, scroll offset, and zoom stored
   // in |Metrics()| at the time this class was constructed.
   CSSRect mLayoutViewport;
-  CSSPoint mScrollOffset;
+  CSSPoint mVisualScrollOffset;
   CSSToParentLayerScale2D mZoom;
   // An optional payload that rides along with the sampled state.
   Maybe<CompositionPayload> mScrollPayload;
