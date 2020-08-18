@@ -244,13 +244,11 @@ bool ClientTiledPaintedLayer::IsScrollingOnCompositor(
   // is so small then we have nothing to gain from using paint heuristics.
   float COORDINATE_EPSILON = 1.f;
 
-  // XXX Suspicious comparison between layout and visual scroll offsets.
-  // This may not do the right thing when we're zoomed in.
   return !FuzzyEqualsAdditive(compositorMetrics.GetVisualScrollOffset().x,
-                              aParentMetrics.GetLayoutScrollOffset().x,
+                              aParentMetrics.GetVisualScrollOffset().x,
                               COORDINATE_EPSILON) ||
          !FuzzyEqualsAdditive(compositorMetrics.GetVisualScrollOffset().y,
-                              aParentMetrics.GetLayoutScrollOffset().y,
+                              aParentMetrics.GetVisualScrollOffset().y,
                               COORDINATE_EPSILON);
 }
 
