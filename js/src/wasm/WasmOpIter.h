@@ -487,7 +487,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readStructNarrow(ValType* inputType, ValType* outputType,
                                      Value* ptr);
   MOZ_MUST_USE bool readValType(ValType* type);
-  MOZ_MUST_USE bool readRefType(RefType* type);
+  MOZ_MUST_USE bool readHeapType(bool nullable, RefType* type);
   MOZ_MUST_USE bool readReferenceType(ValType* type, const char* const context);
 
 #ifdef ENABLE_WASM_SIMD
@@ -1658,7 +1658,7 @@ inline bool OpIter<Policy>::readRefNull() {
   MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
 
   RefType type;
-  if (!readRefType(&type)) {
+  if (!readHeapType(true, &type)) {
     return false;
   }
   return push(type);
@@ -1681,8 +1681,8 @@ inline bool OpIter<Policy>::readValType(ValType* type) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readRefType(RefType* type) {
-  return d_.readRefType(env_.types, env_.gcTypesEnabled(), type);
+inline bool OpIter<Policy>::readHeapType(bool nullable, RefType* type) {
+  return d_.readHeapType(env_.types, env_.gcTypesEnabled(), nullable, type);
 }
 
 template <typename Policy>
