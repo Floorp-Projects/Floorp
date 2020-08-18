@@ -1,4 +1,4 @@
-use crate::ast::{self, kw, annotation};
+use crate::ast::{self, annotation, kw};
 use crate::parser::{Parse, Parser, Result};
 
 pub use crate::resolve::Names;
@@ -166,11 +166,15 @@ pub enum ModuleField<'a> {
     Memory(ast::Memory<'a>),
     Global(ast::Global<'a>),
     Export(ast::Export<'a>),
+    ExportAll(ast::Span, ast::Id<'a>),
     Start(ast::Index<'a>),
     Elem(ast::Elem<'a>),
     Data(ast::Data<'a>),
     Event(ast::Event<'a>),
     Custom(ast::Custom<'a>),
+    Instance(ast::Instance<'a>),
+    NestedModule(ast::NestedModule<'a>),
+    Alias(ast::Alias<'a>),
 }
 
 impl<'a> ModuleField<'a> {
@@ -204,6 +208,10 @@ impl<'a> Parse<'a> for ModuleField<'a> {
             return Ok(ModuleField::Global(parser.parse()?));
         }
         if parser.peek::<kw::export>() {
+            if parser.peek2::<ast::Id>() {
+                let span = parser.parse::<kw::export>()?.0;
+                return Ok(ModuleField::ExportAll(span, parser.parse()?));
+            }
             return Ok(ModuleField::Export(parser.parse()?));
         }
         if parser.peek::<kw::start>() {
@@ -221,6 +229,15 @@ impl<'a> Parse<'a> for ModuleField<'a> {
         }
         if parser.peek::<annotation::custom>() {
             return Ok(ModuleField::Custom(parser.parse()?));
+        }
+        if parser.peek::<kw::instance>() {
+            return Ok(ModuleField::Instance(parser.parse()?));
+        }
+        if parser.peek::<kw::module>() {
+            return Ok(ModuleField::NestedModule(parser.parse()?));
+        }
+        if parser.peek::<kw::alias>() {
+            return Ok(ModuleField::Alias(parser.parse()?));
         }
         Err(parser.error("expected valid module field"))
     }

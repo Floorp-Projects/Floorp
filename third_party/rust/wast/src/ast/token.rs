@@ -44,10 +44,23 @@ impl Span {
 #[derive(Copy, Clone)]
 pub struct Id<'a> {
     name: &'a str,
+    gen: u32,
     span: Span,
 }
 
 impl<'a> Id<'a> {
+    fn new(name: &'a str, span: Span) -> Id<'a> {
+        Id { name, gen: 0, span }
+    }
+
+    pub(crate) fn gensym(span: Span, gen: u32) -> Id<'a> {
+        Id {
+            name: "gensym",
+            gen,
+            span,
+        }
+    }
+
     /// Returns the underlying name of this identifier.
     ///
     /// The name returned does not contain the leading `$`.
@@ -59,17 +72,22 @@ impl<'a> Id<'a> {
     pub fn span(&self) -> Span {
         self.span
     }
+
+    pub(crate) fn is_gensym(&self) -> bool {
+        self.gen != 0
+    }
 }
 
 impl<'a> Hash for Id<'a> {
     fn hash<H: Hasher>(&self, hasher: &mut H) {
         self.name.hash(hasher);
+        self.gen.hash(hasher);
     }
 }
 
 impl<'a> PartialEq for Id<'a> {
     fn eq(&self, other: &Id<'a>) -> bool {
-        self.name == other.name
+        self.name == other.name && self.gen == other.gen
     }
 }
 
@@ -79,13 +97,7 @@ impl<'a> Parse<'a> for Id<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.step(|c| {
             if let Some((name, rest)) = c.id() {
-                return Ok((
-                    Id {
-                        name,
-                        span: c.cur_span(),
-                    },
-                    rest,
-                ));
+                return Ok((Id::new(name, c.cur_span()), rest));
             }
             Err(c.error("expected an identifier"))
         })
@@ -116,14 +128,31 @@ impl Peek for Id<'_> {
 ///
 /// The emission phase of a module will ensure that `Index::Id` is never used
 /// and switch them all to `Index::Num`.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum Index<'a> {
     /// A numerical index that this references. The index space this is
     /// referencing is implicit based on where this [`Index`] is stored.
-    Num(u32),
+    Num(u32, Span),
     /// A human-readable identifier this references. Like `Num`, the namespace
     /// this references is based on where this is stored.
     Id(Id<'a>),
+}
+
+impl Index<'_> {
+    /// Returns the source location where this `Index` was defined.
+    pub fn span(&self) -> Span {
+        match self {
+            Index::Num(_, span) => *span,
+            Index::Id(id) => id.span(),
+        }
+    }
+
+    pub(crate) fn is_resolved(&self) -> bool {
+        match self {
+            Index::Num(..) => true,
+            _ => false,
+        }
+    }
 }
 
 impl<'a> Parse<'a> for Index<'a> {
@@ -132,7 +161,8 @@ impl<'a> Parse<'a> for Index<'a> {
         if l.peek::<Id>() {
             Ok(Index::Id(parser.parse()?))
         } else if l.peek::<u32>() {
-            Ok(Index::Num(parser.parse()?))
+            let (val, span) = parser.parse()?;
+            Ok(Index::Num(val, span))
         } else {
             Err(l.error())
         }
@@ -146,6 +176,33 @@ impl Peek for Index<'_> {
 
     fn display() -> &'static str {
         "an index"
+    }
+}
+
+impl PartialEq for Index<'_> {
+    fn eq(&self, other: &Index<'_>) -> bool {
+        match (self, other) {
+            (Index::Num(a, _), Index::Num(b, _)) => a == b,
+            (Index::Id(a), Index::Id(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Index<'_> {}
+
+impl Hash for Index<'_> {
+    fn hash<H: Hasher>(&self, hasher: &mut H) {
+        match self {
+            Index::Num(a, _) => {
+                0u8.hash(hasher);
+                a.hash(hasher);
+            }
+            Index::Id(a) => {
+                1u8.hash(hasher);
+                a.hash(hasher);
+            }
+        }
     }
 }
 
@@ -179,6 +236,12 @@ macro_rules! integers {
     ($($i:ident($u:ident))*) => ($(
         impl<'a> Parse<'a> for $i {
             fn parse(parser: Parser<'a>) -> Result<Self> {
+                Ok(parser.parse::<($i, Span)>()?.0)
+            }
+        }
+
+        impl<'a> Parse<'a> for ($i, Span) {
+            fn parse(parser: Parser<'a>) -> Result<Self> {
                 parser.step(|c| {
                     if let Some((i, rest)) = c.integer() {
                         let (s, base) = i.val();
@@ -187,7 +250,7 @@ macro_rules! integers {
                                 $u::from_str_radix(s, base).map(|i| i as $i)
                             });
                         return match val {
-                            Ok(n) => Ok((n, rest)),
+                            Ok(n) => Ok(((n, c.cur_span()), rest)),
                             Err(_) => Err(c.error(concat!(
                                 "invalid ",
                                 stringify!($i),
