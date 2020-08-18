@@ -68,7 +68,6 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.BrowserDirection
@@ -511,7 +510,6 @@ class HomeFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         subscribeToTabCollections()
-        subscribeToTopSites()
 
         val context = requireContext()
         val components = context.components
@@ -844,17 +842,6 @@ class HomeFragment : Fragment() {
             homeFragmentStore.dispatch(HomeFragmentAction.CollectionsChange(it))
         }.also { observer ->
             requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
-        }
-    }
-
-    private fun subscribeToTopSites(): Observer<List<TopSite>> {
-        return Observer<List<TopSite>> { topSites ->
-            requireComponents.core.topSiteStorage.cachedTopSites = topSites
-            context?.settings()?.preferences?.edit()
-                ?.putInt(getString(R.string.pref_key_top_sites_size), topSites.size)?.apply()
-            homeFragmentStore.dispatch(HomeFragmentAction.TopSitesChange(topSites))
-        }.also { observer ->
-            requireComponents.core.topSiteStorage.getTopSites().observe(this, observer)
         }
     }
 
