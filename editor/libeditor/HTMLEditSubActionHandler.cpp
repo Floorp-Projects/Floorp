@@ -3059,22 +3059,14 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
       }
 
       // Delete the <br>
-      nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteNode(
-          *this, MOZ_KnownLive(forwardScanFromCaretResult.BRElementPtr()));
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_FAILED(rv)) {
-        NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteNode() failed");
-        return EditActionHandled(rv);
-      }
-      rv = DeleteNodeWithTransaction(
-          MOZ_KnownLive(*forwardScanFromCaretResult.BRElementPtr()));
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::DeleteNodeWithTransaction() failed");
+      nsresult rv =
+          WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
+              *this, MOZ_KnownLive(*forwardScanFromCaretResult.BRElementPtr()),
+              aCaretPoint);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "WhiteSpaceVisibilityKeeper::"
+          "DeleteContentNodeAndJoinTextNodesAroundIt() failed");
       return EditActionHandled(rv);
     }
     // Else continue with normal delete code
