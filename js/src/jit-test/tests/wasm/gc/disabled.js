@@ -6,13 +6,13 @@ const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|(Structure|referenc
 
 let simpleTests = [
     "(module (func (drop (ref.null extern))))",
-    "(module (func $test (local anyref)))",
-    "(module (func $test (param anyref)))",
-    "(module (func $test (result anyref) (ref.null extern)))",
-    "(module (func $test (block (result anyref) (unreachable)) unreachable))",
-    "(module (func $test (result i32) (local anyref) (ref.is_null (local.get 0))))",
-    `(module (import "a" "b" (func (param anyref))))`,
-    `(module (import "a" "b" (func (result anyref))))`,
+    "(module (func $test (local externref)))",
+    "(module (func $test (param externref)))",
+    "(module (func $test (result externref) (ref.null extern)))",
+    "(module (func $test (block (result externref) (unreachable)) unreachable))",
+    "(module (func $test (result i32) (local externref) (ref.is_null (local.get 0))))",
+    `(module (import "a" "b" (func (param externref))))`,
+    `(module (import "a" "b" (func (result externref))))`,
     `(module (type $s (struct)))`,
 ];
 

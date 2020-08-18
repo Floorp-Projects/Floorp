@@ -15,9 +15,9 @@ var text = `(module
                    (field $even.x i32)
                    (field $to_odd (ref opt $odd))))
 
-      ;; Use anyref on the API since struct types cannot be exposed outside the module yet.
+      ;; Use externref on the API since struct types cannot be exposed outside the module yet.
 
-      (import "m" "f" (func $imp (param anyref) (result anyref)))
+      (import "m" "f" (func $imp (param externref) (result externref)))
 
       ;; The bodies do nothing since we have no operations on structs yet.
       ;; Note none of these functions are exported, as they use Ref types in their signatures.
@@ -72,13 +72,13 @@ new WebAssembly.Module(wasmTextToBinary(`
    (ref.is_null (local.get 0))))
 `))
 
-// Automatic upcast to anyref
+// Automatic upcast to externref
 
 new WebAssembly.Module(wasmTextToBinary(`
 (module
  (type $s (struct (field i32)))
  (func $f (param (ref opt $s)) (call $g (local.get 0)))
- (func $g (param anyref) (unreachable)))
+ (func $g (param externref) (unreachable)))
 `));
 
 // Misc failure modes
@@ -187,12 +187,12 @@ assertErrorMessage(() => wasmEvalText(`
 `),
 WebAssembly.CompileError, /does not reference a struct type/);
 
-// No automatic downcast from anyref
+// No automatic downcast from externref
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
- (func $f (param anyref) (call $g (local.get 0)))
+ (func $f (param externref) (call $g (local.get 0)))
  (func $g (param (ref opt $s)) (unreachable)))
 `),
 WebAssembly.CompileError, /expression has type externref but expected optref/);

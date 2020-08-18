@@ -2,8 +2,8 @@
 
 gczeal(14, 1);
 let { exports } = wasmEvalText(`(module
-    (global $anyref (import "glob" "externref") anyref)
-    (func (export "get") (result anyref) global.get $anyref)
+    (global $externref (import "glob" "externref") externref)
+    (func (export "get") (result externref) global.get $externref)
 )`, {
     glob: {
         externref: { sentinel: "lol" },

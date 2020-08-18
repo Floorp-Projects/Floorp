@@ -6,7 +6,7 @@
     let ins = wasmEvalText(`(module
                              (type $p (struct (field f64) (field (mut i32))))
 
-                             (func (export "mkp") (result anyref)
+                             (func (export "mkp") (result externref)
                               (struct.new $p (f64.const 1.5) (i32.const 33))))`).exports;
 
     let p = ins.mkp();
@@ -24,7 +24,7 @@
     let ins = wasmEvalText(`(module
                              (type $p (struct (field f64)))
 
-                             (func (export "mkp") (result anyref)
+                             (func (export "mkp") (result externref)
                               (struct.new $p (f64.const 1.5))))`).exports;
 
     let p = ins.mkp();
@@ -36,19 +36,19 @@
 // MVA v1 restriction: structs that expose ref-typed fields should not be
 // constructible from JS.
 //
-// However, if the fields are anyref the structs can be constructed from JS.
+// However, if the fields are externref the structs can be constructed from JS.
 
 {
     let ins = wasmEvalText(`(module
                              (type $q (struct (field (mut f64))))
                              (type $p (struct (field (mut (ref opt $q)))))
 
-                             (type $r (struct (field (mut anyref))))
+                             (type $r (struct (field (mut externref))))
 
-                             (func (export "mkp") (result anyref)
+                             (func (export "mkp") (result externref)
                               (struct.new $p (ref.null opt $q)))
 
-                             (func (export "mkr") (result anyref)
+                             (func (export "mkr") (result externref)
                               (struct.new $r (ref.null extern))))`).exports;
 
     assertEq(typeof ins.mkp().constructor, "function");
@@ -64,17 +64,17 @@
 // MVA v1 restriction: structs that expose ref-typed fields make those fields
 // immutable from JS even if we're trying to store the correct type.
 //
-// However, anyref fields are mutable from JS.
+// However, externref fields are mutable from JS.
 
 {
     let ins = wasmEvalText(`(module
                              (type $q (struct (field (mut f64))))
-                             (type $p (struct (field (mut (ref opt $q))) (field (mut anyref))))
+                             (type $p (struct (field (mut (ref opt $q))) (field (mut externref))))
 
-                             (func (export "mkq") (result anyref)
+                             (func (export "mkq") (result externref)
                               (struct.new $q (f64.const 1.5)))
 
-                             (func (export "mkp") (result anyref)
+                             (func (export "mkp") (result externref)
                               (struct.new $p (ref.null opt $q) (ref.null extern))))`).exports;
     let q = ins.mkq();
     assertEq(typeof q, "object");
@@ -97,7 +97,7 @@
 {
     let ins = wasmEvalText(`(module
                              (type $p (struct (field (mut i64))))
-                             (func (export "mkp") (result anyref)
+                             (func (export "mkp") (result externref)
                               (struct.new $p (i64.const 0x1234567887654321))))`).exports;
 
     let p = ins.mkp();
@@ -126,10 +126,10 @@
         `(module
           (type $p (struct (field i64)))
           (type $q (struct (field i32) (field i32)))
-          (func $f (param anyref) (result i32)
-           (ref.is_null (struct.narrow anyref (ref opt $q) (local.get 0))))
-          (func $g (param anyref) (result i32)
-           (ref.is_null (struct.narrow anyref (ref opt $p) (local.get 0))))
+          (func $f (param externref) (result i32)
+           (ref.is_null (struct.narrow externref (ref opt $q) (local.get 0))))
+          (func $g (param externref) (result i32)
+           (ref.is_null (struct.narrow externref (ref opt $p) (local.get 0))))
           (func (export "t1") (result i32)
            (call $f (struct.new $p (i64.const 0))))
           (func (export "t2") (result i32)

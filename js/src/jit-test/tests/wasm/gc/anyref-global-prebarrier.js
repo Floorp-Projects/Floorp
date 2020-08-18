@@ -10,8 +10,8 @@ if (opts['ion.enable'] || opts['baseline.enable'])
 const { startProfiling, endProfiling, assertEqPreciseStacks, isSingleStepProfilingEnabled } = WasmHelpers;
 
 let e = wasmEvalText(`(module
-    (global $g (mut anyref) (ref.null extern))
-    (func (export "set") (param anyref) local.get 0 global.set $g)
+    (global $g (mut externref) (ref.null extern))
+    (func (export "set") (param externref) local.get 0 global.set $g)
 )`).exports;
 
 let obj = { field: null };
