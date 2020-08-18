@@ -1893,6 +1893,9 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
   if (!refTypesEnabled && !tableElemType.isFunc()) {
     return d.fail("expected 'funcref' element type");
   }
+  if (!tableElemType.isNullable()) {
+    return d.fail("non-nullable references not supported in tables");
+  }
 
   Limits limits;
   if (!DecodeLimits(d, &limits)) {
@@ -1959,6 +1962,10 @@ static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
   if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, v128Enabled,
                      type)) {
     return d.fail("expected global type");
+  }
+
+  if (type->isReference() && !type->isNullable()) {
+    return d.fail("non-nullable references not supported in globals");
   }
 
   uint8_t flags;

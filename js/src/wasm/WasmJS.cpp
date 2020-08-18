@@ -431,10 +431,15 @@ bool wasm::CodeCachingAvailable(JSContext* cx) {
   return StreamingCompilationAvailable(cx) && IonAvailable(cx);
 }
 
-bool wasm::CheckRefType(JSContext* cx, RefType::Kind targetTypeKind,
-                        HandleValue v, MutableHandleFunction fnval,
+bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
+                        MutableHandleFunction fnval,
                         MutableHandleAnyRef refval) {
-  switch (targetTypeKind) {
+  if (!targetType.isNullable() && v.isNull()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_REF_NONNULLABLE_VALUE);
+    return false;
+  }
+  switch (targetType.kind()) {
     case RefType::Func:
       if (!CheckFuncRefValue(cx, v, fnval)) {
         return false;
@@ -489,7 +494,7 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
     case ValType::Ref: {
       RootedFunction fun(cx);
       RootedAnyRef any(cx, AnyRef::null());
-      if (!CheckRefType(cx, targetType.refTypeKind(), v, &fun, &any)) {
+      if (!CheckRefType(cx, targetType.refType(), v, &fun, &any)) {
         return false;
       }
       switch (targetType.refTypeKind()) {
@@ -2695,7 +2700,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
   RootedValue fillValue(cx, args[1]);
   RootedFunction fun(cx);
   RootedAnyRef any(cx, AnyRef::null());
-  if (!CheckRefType(cx, table.elemType().kind(), fillValue, &fun, &any)) {
+  if (!CheckRefType(cx, table.elemType(), fillValue, &fun, &any)) {
     return false;
   }
   switch (table.elemType().kind()) {
@@ -2706,6 +2711,8 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
     case RefType::Extern:
       table.fillAnyRef(index, 1, any);
       break;
+    case RefType::TypeIndex:
+      MOZ_CRASH("Ref NYI");
   }
 
   args.rval().setUndefined();
@@ -2755,7 +2762,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
   if (!fillValue.isNull()) {
     RootedFunction fun(cx);
     RootedAnyRef any(cx, AnyRef::null());
-    if (!CheckRefType(cx, table.elemType().kind(), fillValue, &fun, &any)) {
+    if (!CheckRefType(cx, table.elemType(), fillValue, &fun, &any)) {
       return false;
     }
     switch (table.repr()) {

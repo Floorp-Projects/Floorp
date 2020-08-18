@@ -167,7 +167,7 @@ uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
 
 bool IsSharedWasmMemoryObject(JSObject* obj);
 
-// Check a value against the given reference type kind.  If the targetTypeKind
+// Check a value against the given reference type.  If the targetType
 // is RefType::Extern then the test always passes, but the value may be boxed.
 // If the test passes then the value is stored either in fnval (for
 // RefType::Func) or in refval (for other types); this split is not strictly
@@ -175,8 +175,8 @@ bool IsSharedWasmMemoryObject(JSObject* obj);
 //
 // This can return false if the type check fails, or if a boxing into AnyRef
 // throws an OOM.
-MOZ_MUST_USE bool CheckRefType(JSContext* cx, RefType::Kind targetTypeKind,
-                               HandleValue v, MutableHandleFunction fnval,
+MOZ_MUST_USE bool CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
+                               MutableHandleFunction fnval,
                                MutableHandleAnyRef refval);
 
 }  // namespace wasm

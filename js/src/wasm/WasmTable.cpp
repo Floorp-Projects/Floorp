@@ -56,6 +56,9 @@ Table::Table(JSContext* cx, const TableDesc& desc,
 /* static */
 SharedTable Table::create(JSContext* cx, const TableDesc& desc,
                           HandleWasmTableObject maybeObject) {
+  // We don't support non-nullable references in tables yet.
+  MOZ_RELEASE_ASSERT(desc.elemType.isNullable());
+
   switch (desc.elemType.tableRepr()) {
     case TableRepr::Func: {
       UniqueFuncRefArray functions(
