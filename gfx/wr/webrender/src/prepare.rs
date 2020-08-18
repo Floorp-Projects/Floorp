@@ -1798,7 +1798,7 @@ fn get_clipped_device_rect(
 ) -> Option<DeviceRect> {
     let unclipped_raster_rect = {
         let world_rect = *unclipped * Scale::new(1.0);
-        let raster_rect = world_rect * device_pixel_scale.inv();
+        let raster_rect = world_rect * device_pixel_scale.inverse();
 
         raster_rect.cast_unit()
     };
