@@ -25,6 +25,10 @@ add_task(async function setup() {
   // there are no results.
   await PlacesUtils.bookmarks.eraseEverything();
 
+  // Also clear history so that using the alias of our test engine doesn't
+  // inadvertently return any history results due to bug 1658646.
+  await PlacesUtils.history.clear();
+
   // Add a top site so we're guaranteed the view has at least one result to
   // show initially with an empty search.  Otherwise the view won't even open.
   await SpecialPowers.pushPrefEnv({
