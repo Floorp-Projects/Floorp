@@ -2613,6 +2613,16 @@ void nsJSContext::EnsureStatics() {
       "javascript.options.mem.gc_max_empty_chunk_count",
       (void*)JSGC_MAX_EMPTY_CHUNK_COUNT);
 
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.gc_helper_thread_ratio",
+      (void*)JSGC_HELPER_THREAD_RATIO);
+
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.gc_max_helper_threads",
+      (void*)JSGC_MAX_HELPER_THREADS);
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs) {
     MOZ_CRASH();
