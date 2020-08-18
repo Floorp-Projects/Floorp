@@ -87,6 +87,8 @@ class SyncedTabsAdapterKtTest {
         val syncedDeviceList = listOf(noTabDevice)
         val adapterData = syncedDeviceList.toAdapterList()
 
-        assertEquals(0, adapterData.count())
+        assertEquals(2, adapterData.count())
+        assertTrue(adapterData[0] is SyncedTabsAdapter.AdapterItem.Device)
+        assertTrue(adapterData[1] is SyncedTabsAdapter.AdapterItem.NoTabs)
     }
 }

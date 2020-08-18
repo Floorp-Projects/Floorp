@@ -7,16 +7,16 @@ package org.mozilla.fenix.sync.ext
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import org.mozilla.fenix.sync.SyncedTabsAdapter.AdapterItem
 
-fun List<SyncedDeviceTabs>.toAdapterList(
-): MutableList<AdapterItem> {
-    val allDeviceTabs = mutableListOf<AdapterItem>()
+/**
+ * Converts a list of [SyncedDeviceTabs] into a list of [AdapterItem].
+ */
+fun List<SyncedDeviceTabs>.toAdapterList() = asSequence().flatMap { (device, tabs) ->
 
-    forEach { (device, tabs) ->
-        if (tabs.isNotEmpty()) {
-            allDeviceTabs.add(AdapterItem.Device(device))
-            tabs.mapTo(allDeviceTabs) { AdapterItem.Tab(it) }
-        }
+    val deviceTabs = if (tabs.isEmpty()) {
+        sequenceOf(AdapterItem.NoTabs(device))
+    } else {
+        tabs.asSequence().map { AdapterItem.Tab(it) }
     }
 
-    return allDeviceTabs
-}
+    sequenceOf(AdapterItem.Device(device)) + deviceTabs
+}.toList()
