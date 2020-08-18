@@ -233,6 +233,12 @@ class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
   }
 }
 
+class ImportableLearnMoreAutocompleteItem extends AutocompleteItem {
+  constructor() {
+    super("importableLearnMore");
+  }
+}
+
 class ImportableLoginsAutocompleteItem extends AutocompleteItem {
   constructor(browserId, hostname) {
     super("importableLogins");
@@ -361,6 +367,7 @@ function LoginAutoCompleteResult(
           browserId => new ImportableLoginsAutocompleteItem(browserId, hostname)
         )
       );
+      this._rows.push(new ImportableLearnMoreAutocompleteItem());
     }
 
     this._rows.push(
@@ -769,6 +776,12 @@ let gAutoCompleteListener = {
 
     let loginManager = window.windowGlobalChild.getActor("LoginManager");
     switch (selectedRowStyle) {
+      case "importableLearnMore":
+        loginManager.sendAsyncMessage(
+          "PasswordManager:OpenImportableLearnMore",
+          {}
+        );
+        break;
       case "importableLogins":
         loginManager.sendAsyncMessage(
           "PasswordManager:OpenMigrationWizard",

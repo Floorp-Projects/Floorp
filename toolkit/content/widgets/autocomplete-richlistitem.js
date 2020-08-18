@@ -618,6 +618,46 @@
     }
   }
 
+  class MozAutocompleteImportableLearnMoreRichlistitem extends MozElements.MozAutocompleteRichlistitem {
+    constructor() {
+      super();
+      MozXULElement.insertFTLIfNeeded("toolkit/main-window/autocomplete.ftl");
+
+      this.addEventListener("click", event => {
+        window.openTrustedLinkIn(
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+            "password-import",
+          "tab",
+          { relatedToCurrent: true }
+        );
+      });
+    }
+
+    static get markup() {
+      return `
+      <image class="ac-type-icon"/>
+      <image class="ac-site-icon"/>
+      <vbox class="ac-title" align="left">
+        <description class="ac-text-overflow-container">
+          <description class="ac-title-text"
+                       data-l10n-id="autocomplete-import-learn-more"/>
+        </description>
+      </vbox>
+      <hbox class="ac-separator" align="center">
+        <description class="ac-separator-text" value="—"/>
+      </hbox>
+      <hbox class="ac-url" align="center">
+        <description class="ac-text-overflow-container">
+          <description class="ac-url-text"/>
+        </description>
+      </hbox>
+    `;
+    }
+
+    // Override to avoid clearing out fluent description.
+    _setUpDescription() {}
+  }
+
   class MozAutocompleteTwoLineRichlistitem extends MozElements.MozRichlistitem {
     connectedCallback() {
       if (this.delayConnectedCallback()) {
@@ -749,26 +789,6 @@
 
       this.addEventListener("click", event => {
         const browserId = this.getAttribute("ac-value");
-
-        // Handle clicks on the info icon to show support article.
-        if (event.target.classList.contains("ac-info-icon")) {
-          window.openTrustedLinkIn(
-            Services.urlFormatter.formatURLPref("app.support.baseURL") +
-              "password-import",
-            "tab",
-            {
-              relatedToCurrent: true,
-            }
-          );
-          Services.telemetry.recordEvent(
-            "exp_import",
-            "event",
-            "info",
-            browserId
-          );
-          return;
-        }
-
         if (event.button != 0) {
           return;
         }
@@ -797,8 +817,6 @@
           <div class="label-row line1-label" data-l10n-name="line1" />
           <div class="label-row line2-label" data-l10n-name="line2" />
         </div>
-        <xul:image class="ac-info-icon"
-                   data-l10n-id="autocomplete-import-logins-info" />
       </div>
     `;
     }
@@ -858,6 +876,14 @@
   customElements.define(
     "autocomplete-generated-password-richlistitem",
     MozAutocompleteGeneratedPasswordRichlistitem,
+    {
+      extends: "richlistitem",
+    }
+  );
+
+  customElements.define(
+    "autocomplete-importable-learn-more-richlistitem",
+    MozAutocompleteImportableLearnMoreRichlistitem,
     {
       extends: "richlistitem",
     }
