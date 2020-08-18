@@ -32,7 +32,7 @@ bitflags = "1.2"
 byteorder = "1.0"
 cfg-if = "0.1.2"
 cstr = "0.1.2"
-euclid = { version = "0.20.0", features = ["serde"] }
+euclid = { version = "0.22.0", features = ["serde"] }
 fxhash = "0.2.1"
 gleam = "0.12.1"
 image_loader = { optional = true, version = "0.23", package = "image", default-features = false, features = ["png"] }
@@ -40,7 +40,7 @@ lazy_static = "1"
 log = "0.4"
 malloc_size_of_derive = "0.1"
 num-traits = "0.2"
-plane-split = "0.15"
+plane-split = "0.17"
 png = { optional = true, version = "0.16" }
 rayon = "1"
 ron = { optional = true, version = "0.5" }

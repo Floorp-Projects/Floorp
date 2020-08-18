@@ -2781,7 +2781,7 @@ impl Device {
         debug_assert!(self.shader_is_ready);
 
         self.gl
-            .uniform_matrix_4fv(program.u_transform, false, &transform.to_row_major_array());
+            .uniform_matrix_4fv(program.u_transform, false, &transform.to_array());
     }
 
     pub fn switch_mode(&self, mode: i32) {

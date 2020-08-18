@@ -3,7 +3,7 @@
 root:
   items:
     - type: stacking-context
-      transform: rotate(30)
+      transform: rotate(-30)
       transform-origin: 80 80
       items:
         -
@@ -38,7 +38,7 @@ root:
       items:
         - type: "stacking-context"
           transform-origin: 235 235
-          transform: rotate-x(15)
+          transform: rotate-x(-15)
           items:
             -
               type: "shadow"

@@ -10,14 +10,14 @@ root:
       items:
         - type: stacking-context
           bounds: [0, 0, 600, 600]
-          transform: rotate-y(60.0)
+          transform: rotate-y(-60.0)
           items:
             - type: rect
               bounds: [0, 0, 600, 600]
               color: [255, 0, 0, 0.5]
         - type: stacking-context
           bounds: [0, 0, 600, 600]
-          transform: rotate-y(-60.0)
+          transform: rotate-y(60.0)
           items:
             - type: rect
               bounds: [0, 0, 600, 600]

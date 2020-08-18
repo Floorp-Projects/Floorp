@@ -284,7 +284,7 @@ impl ScaleOffset {
     }
 
     pub fn to_transform<F, T>(&self) -> Transform3D<f32, F, T> {
-        Transform3D::row_major(
+        Transform3D::new(
             self.scale.x,
             0.0,
             0.0,
@@ -387,13 +387,10 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
 
     fn inverse_project(&self, target: &Point2D<f32, Dst>) -> Option<Point2D<f32, Src>> {
         let m: Transform2D<f32, Src, Dst>;
-        m = Transform2D::column_major(
-            self.m11 - target.x * self.m14,
-            self.m21 - target.x * self.m24,
-            self.m41 - target.x * self.m44,
-            self.m12 - target.y * self.m14,
-            self.m22 - target.y * self.m24,
-            self.m42 - target.y * self.m44,
+        m = Transform2D::new(
+            self.m11 - target.x * self.m14, self.m12 - target.y * self.m14,
+            self.m21 - target.x * self.m24, self.m22 - target.y * self.m24,
+            self.m41 - target.x * self.m44, self.m42 - target.y * self.m44,
         );
         m.inverse().map(|inv| Point2D::new(inv.m31, inv.m32))
     }
@@ -476,10 +473,12 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
     }
 
     fn cast_unit<NewSrc, NewDst>(&self) -> Transform3D<f32, NewSrc, NewDst> {
-        Transform3D::row_major(self.m11, self.m12, self.m13, self.m14,
-                               self.m21, self.m22, self.m23, self.m24,
-                               self.m31, self.m32, self.m33, self.m34,
-                               self.m41, self.m42, self.m43, self.m44)
+        Transform3D::new(
+            self.m11, self.m12, self.m13, self.m14,
+            self.m21, self.m22, self.m23, self.m24,
+            self.m31, self.m32, self.m33, self.m34,
+            self.m41, self.m42, self.m43, self.m44,
+        )
     }
 }
 
@@ -607,6 +606,9 @@ pub fn extract_inner_rect_safe<U>(
 }
 
 #[cfg(test)]
+use euclid::vec3;
+
+#[cfg(test)]
 pub mod test {
     use super::*;
     use euclid::default::{Point2D, Transform3D};
@@ -619,7 +621,7 @@ pub mod test {
         let p0 = Point2D::new(1.0, 2.0);
         // an identical transform doesn't need any inverse projection
         assert_eq!(m0.inverse_project(&p0), Some(p0));
-        let m1 = Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(PI / 3.0));
+        let m1 = Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(-PI / 3.0));
         // rotation by 60 degrees would imply scaling of X component by a factor of 2
         assert_eq!(m1.inverse_project(&p0), Some(Point2D::new(2.0, 2.0)));
     }
@@ -632,18 +634,18 @@ pub mod test {
 
     #[test]
     fn scale_offset_convert() {
-        let xref = LayoutTransform::create_translation(130.0, 200.0, 0.0);
+        let xref = LayoutTransform::translation(130.0, 200.0, 0.0);
         validate_convert(&xref);
 
-        let xref = LayoutTransform::create_scale(13.0, 8.0, 1.0);
+        let xref = LayoutTransform::scale(13.0, 8.0, 1.0);
         validate_convert(&xref);
 
-        let xref = LayoutTransform::create_scale(0.5, 0.5, 1.0)
+        let xref = LayoutTransform::scale(0.5, 0.5, 1.0)
                         .pre_translate(LayoutVector3D::new(124.0, 38.0, 0.0));
         validate_convert(&xref);
 
-        let xref = LayoutTransform::create_translation(50.0, 240.0, 0.0)
-                        .pre_transform(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
+        let xref = LayoutTransform::scale(30.0, 11.0, 1.0)
+            .then_translate(vec3(50.0, 240.0, 0.0));
         validate_convert(&xref);
     }
 
@@ -660,23 +662,24 @@ pub mod test {
 
     #[test]
     fn scale_offset_inverse() {
-        let xref = LayoutTransform::create_translation(130.0, 200.0, 0.0);
+        let xref = LayoutTransform::translation(130.0, 200.0, 0.0);
         validate_inverse(&xref);
 
-        let xref = LayoutTransform::create_scale(13.0, 8.0, 1.0);
+        let xref = LayoutTransform::scale(13.0, 8.0, 1.0);
         validate_inverse(&xref);
 
-        let xref = LayoutTransform::create_scale(0.5, 0.5, 1.0)
-                        .pre_translate(LayoutVector3D::new(124.0, 38.0, 0.0));
+        let xref = LayoutTransform::translation(124.0, 38.0, 0.0).
+            then_scale(0.5, 0.5, 1.0);
+
         validate_inverse(&xref);
 
-        let xref = LayoutTransform::create_translation(50.0, 240.0, 0.0)
-                        .pre_transform(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
+        let xref = LayoutTransform::scale(30.0, 11.0, 1.0)
+            .then_translate(vec3(50.0, 240.0, 0.0));
         validate_inverse(&xref);
     }
 
     fn validate_accumulate(x0: &LayoutTransform, x1: &LayoutTransform) {
-        let x = x0.pre_transform(x1);
+        let x = x1.then(&x0);
 
         let s0 = ScaleOffset::from_transform(x0).unwrap();
         let s1 = ScaleOffset::from_transform(x1).unwrap();
@@ -688,8 +691,8 @@ pub mod test {
 
     #[test]
     fn scale_offset_accumulate() {
-        let x0 = LayoutTransform::create_translation(130.0, 200.0, 0.0);
-        let x1 = LayoutTransform::create_scale(7.0, 3.0, 1.0);
+        let x0 = LayoutTransform::translation(130.0, 200.0, 0.0);
+        let x1 = LayoutTransform::scale(7.0, 3.0, 1.0);
 
         validate_accumulate(&x0, &x1);
     }
@@ -798,7 +801,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     pub fn to_transform(&self) -> Cow<Transform3D<f32, Src, Dst>> {
         match *self {
             FastTransform::Offset(offset) => Cow::Owned(
-                Transform3D::create_translation(offset.x, offset.y, 0.0)
+                Transform3D::translation(offset.x, offset.y, 0.0)
             ),
             FastTransform::Transform { ref transform, .. } => Cow::Borrowed(transform),
         }
@@ -817,7 +820,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
-    pub fn post_transform<NewDst>(&self, other: &FastTransform<Dst, NewDst>) -> FastTransform<Src, NewDst> {
+    pub fn then<NewDst>(&self, other: &FastTransform<Dst, NewDst>) -> FastTransform<Src, NewDst> {
         match *self {
             FastTransform::Offset(offset) => match *other {
                 FastTransform::Offset(other_offset) => {
@@ -835,15 +838,15 @@ impl<Src, Dst> FastTransform<Src, Dst> {
                 FastTransform::Offset(other_offset) => {
                     FastTransform::with_transform(
                         transform
-                            .post_translate(other_offset.to_3d())
+                            .then_translate(other_offset.to_3d())
                             .with_destination::<NewDst>()
                     )
                 }
                 FastTransform::Transform { transform: ref other_transform, inverse: ref other_inverse, is_2d: other_is_2d } => {
                     FastTransform::Transform {
-                        transform: transform.post_transform(other_transform),
+                        transform: transform.then(other_transform),
                         inverse: inverse.as_ref().and_then(|self_inv|
-                            other_inverse.as_ref().map(|other_inv| self_inv.pre_transform(other_inv))
+                            other_inverse.as_ref().map(|other_inv| other_inv.then(self_inv))
                         ),
                         is_2d: is_2d & other_is_2d,
                     }
@@ -856,7 +859,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         &self,
         other: &FastTransform<NewSrc, Src>
     ) -> FastTransform<NewSrc, Dst> {
-        other.post_transform(self)
+        other.then(self)
     }
 
     pub fn pre_translate(&self, other_offset: Vector2D<f32, Src>) -> Self {
@@ -868,13 +871,13 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
-    pub fn post_translate(&self, other_offset: Vector2D<f32, Dst>) -> Self {
+    pub fn then_translate(&self, other_offset: Vector2D<f32, Dst>) -> Self {
         match *self {
             FastTransform::Offset(offset) => {
                 FastTransform::Offset(offset + other_offset * Scale::<_, _, Src>::new(1.0))
             }
             FastTransform::Transform { ref transform, .. } => {
-                let transform = transform.post_translate(other_offset.to_3d());
+                let transform = transform.then_translate(other_offset.to_3d());
                 FastTransform::with_transform(transform)
             }
         }
