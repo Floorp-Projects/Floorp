@@ -118,7 +118,7 @@ assertErrorMessage(() => new WebAssembly.Module(
                                               typeCode: I32Code,
                                               elems: [] }])])),
                    WebAssembly.CompileError,
-                   /segments with element expressions can only contain references/);
+                   /bad type/);
 
 // Test case for bug 1596026: when taking the ref.func of an imported function,
 // the value obtained should not be the JS function.  This would assert (even in
@@ -168,7 +168,7 @@ function checkPassiveElemSegment(mangle, err) {
 }
 
 checkPassiveElemSegment("");
-checkPassiveElemSegment("type", /segments with element expressions can only contain references/);
+checkPassiveElemSegment("type", /bad type/);
 checkPassiveElemSegment("ref.func", /failed to read initializer operation/);
 checkPassiveElemSegment("end", /failed to read end of initializer expression/);
 
