@@ -617,6 +617,25 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1654888 - UA override for ebuyer.com
+     * Webcompat issue #52463 - https://webcompat.com/issues/52463
+     *
+     * This site returns desktop site based on server side UA detection.
+     * Spoofing as Chrome allows to get mobile experience
+     */
+    id: "bug1654888",
+    platform: "android",
+    domain: "ebuyer.com",
+    bug: "1654888",
+    config: {
+      matches: ["*://*.ebuyer.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
 ];
 
 const UAHelpers = {

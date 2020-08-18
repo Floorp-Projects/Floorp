@@ -112,43 +112,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1623375",
-    platform: "android",
-    domain: "Salesforce communities",
-    bug: "1623375",
-    contentScripts: {
-      matches: [].concat(
-        [
-          "https://faq.usps.com/*",
-          "https://help.duo.com/*",
-          "https://my211.force.com/*",
-          "https://support.paypay.ne.jp/*",
-          "https://usps.force.com/*",
-          "https://help.twitch.tv/*",
-          "https://support.sonos.com/*",
-          "https://us.community.sony.com/*",
-          "https://help.shopee.ph/*",
-          "https://exclusions.ustr.gov/*",
-          "https://help.doordash.com/*",
-          "https://community.snowflake.com/*",
-          "https://tivoidp.tivo.com/*",
-          "https://cloudreadykb.neverware.com/*",
-        ],
-        InterventionHelpers.matchPatternsForTLDs(
-          "*://support.ancestry.",
-          "/*",
-          ["ca", "co.uk", "com", "com.au", "de", "fr", "it", "mx", "se"]
-        )
-      ),
-      js: [
-        {
-          file:
-            "injections/js/bug1623375-salesforce-communities-hide-unsupported.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1551672",
     platform: "android",
     domain: "Sites using PDK 5 video",
@@ -160,15 +123,12 @@ const AVAILABLE_INJECTIONS = [
     customFunc: "pdk5fix",
   },
   {
-    id: "bug1577870",
+    id: "bug1583366",
     platform: "desktop",
     domain: "Download prompt for files with no content-type",
-    bug: "1577870",
+    bug: "1583366",
     data: {
-      urls: [
-        "https://ads-us.rd.linksynergy.com/as.php*",
-        "https://www.office.com/logout?sid*",
-      ],
+      urls: ["https://ads-us.rd.linksynergy.com/as.php*"],
       contentType: {
         name: "content-type",
         value: "text/html; charset=utf-8",
@@ -412,22 +372,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1641998",
-    platform: "desktop",
-    domain: "twitter.com",
-    bug: "1641998",
-    contentScripts: {
-      matches: ["https://twitter.com/i/videos/tweet/*"],
-      allFrames: true,
-      js: [
-        {
-          file:
-            "injections/js/bug1641998-embedded-twitter-videos-etp-indexeddb.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1651917",
     platform: "android",
     domain: "teletrader.com",
@@ -438,6 +382,76 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/css/bug1651917-teletrader.com.body-transform-origin.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1653075",
+    platform: "desktop",
+    domain: "livescience.com",
+    bug: "1653075",
+    contentScripts: {
+      matches: ["*://*.livescience.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1653075-livescience.com-scrollbar-width.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1654865",
+    platform: "android",
+    domain: "sports.ndtv.com",
+    bug: "1654865",
+    contentScripts: {
+      matches: ["*://sports.ndtv.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1654865-sports.ndtv.com-float-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1654877",
+    platform: "android",
+    domain: "preev.com",
+    bug: "1654877",
+    contentScripts: {
+      matches: ["*://preev.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1654877-preev.com-moz-appearance-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1655049",
+    platform: "android",
+    domain: "dev.to",
+    bug: "1655049",
+    contentScripts: {
+      matches: ["*://dev.to/*"],
+      css: [
+        {
+          file: "injections/css/bug1655049-dev.to-unclickable-button-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1654907",
+    platform: "android",
+    domain: "reactine.ca",
+    bug: "1654907",
+    contentScripts: {
+      matches: ["*://*.reactine.ca/*"],
+      css: [
+        {
+          file: "injections/css/bug1654907-reactine.ca-hide-unsupported.css",
         },
       ],
     },

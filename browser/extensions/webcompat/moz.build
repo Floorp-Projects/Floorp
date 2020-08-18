@@ -65,6 +65,11 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug1644830-missingmail.usps.com-checkboxes-not-visible.css',
   'injections/css/bug1645064-s-kanava.fi-invisible-charts.css',
   'injections/css/bug1651917-teletrader.com.body-transform-origin.css',
+  'injections/css/bug1653075-livescience.com-scrollbar-width.css',
+  'injections/css/bug1654865-sports.ndtv.com-float-fix.css',
+  'injections/css/bug1654877-preev.com-moz-appearance-fix.css',
+  'injections/css/bug1654907-reactine.ca-hide-unsupported.css',
+  'injections/css/bug1655049-dev.to-unclickable-button-fix.css',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
@@ -76,8 +81,6 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
   'injections/js/bug1579159-m.tailieu.vn-pdfjs-worker-disable.js',
   'injections/js/bug1605611-maps.google.com-directions-time.js',
   'injections/js/bug1610358-pcloud.com-appVersion-change.js',
-  'injections/js/bug1623375-salesforce-communities-hide-unsupported.js',
-  'injections/js/bug1641998-embedded-twitter-videos-etp-indexeddb.js',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['shims'] += [
@@ -88,6 +91,7 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['shims'] += [
   'shims/facebook-sdk.js',
   'shims/google-analytics-ecommerce-plugin.js',
   'shims/google-analytics-legacy.js',
+  'shims/google-analytics-tag-manager.js',
   'shims/google-analytics.js',
   'shims/google-publisher-tags.js',
   'shims/live-test-shim.js',

@@ -9,6 +9,5 @@
  * right, and thus invisible.
  */
 .mrc-custom-checkbox-container input {
-  top: 0;
-  left: 0;
+  margin-left: -3rem;
 }
