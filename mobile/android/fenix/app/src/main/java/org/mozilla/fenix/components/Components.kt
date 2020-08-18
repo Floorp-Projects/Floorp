@@ -53,7 +53,8 @@ class Components(private val context: Context) {
             core.sessionManager,
             core.store,
             search.searchEngineManager,
-            core.webAppShortcutManager
+            core.webAppShortcutManager,
+            core.topSiteStorage
         )
     }
     val intentProcessors by lazy {

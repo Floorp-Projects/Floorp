@@ -20,6 +20,8 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.top.sites.TopSitesStorage
+import mozilla.components.feature.top.sites.TopSitesUseCases
 import org.mozilla.fenix.utils.Mockable
 
 /**
@@ -34,7 +36,8 @@ class UseCases(
     private val sessionManager: SessionManager,
     private val store: BrowserStore,
     private val searchEngineManager: SearchEngineManager,
-    private val shortcutManager: WebAppShortcutManager
+    private val shortcutManager: WebAppShortcutManager,
+    private val topSitesStorage: TopSitesStorage
 ) {
     /**
      * Use cases that provide engine interactions for a given browser session.
@@ -69,4 +72,9 @@ class UseCases(
     val engineSessionUseCases by lazy { EngineSessionUseCases(sessionManager) }
 
     val trackingProtectionUseCases by lazy { TrackingProtectionUseCases(store, engine) }
+
+    /**
+     * Use cases that provide top sites management.
+     */
+    val topSitesUseCase by lazy { TopSitesUseCases(topSitesStorage) }
 }

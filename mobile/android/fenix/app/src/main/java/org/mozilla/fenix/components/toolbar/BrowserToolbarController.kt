@@ -34,7 +34,6 @@ import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
@@ -75,7 +74,6 @@ class DefaultBrowserToolbarController(
     private val bookmarkTapped: (Session) -> Unit,
     private val scope: CoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage,
-    private val topSiteStorage: TopSiteStorage,
     private val onTabCounterClicked: () -> Unit,
     private val onCloseTab: (Session) -> Unit
 ) : BrowserToolbarController {
@@ -245,7 +243,9 @@ class DefaultBrowserToolbarController(
                 scope.launch {
                     ioScope.launch {
                         currentSession?.let {
-                            topSiteStorage.addTopSite(it.title, it.url)
+                            with(activity.components.useCases.topSitesUseCase) {
+                                addPinnedSites(it.title, it.url)
+                            }
                         }
                     }.join()
 

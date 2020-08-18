@@ -209,7 +209,6 @@ class HomeFragment : Fragment() {
                 metrics = components.analytics.metrics,
                 sessionManager = sessionManager,
                 tabCollectionStorage = components.core.tabCollectionStorage,
-                topSiteStorage = components.core.topSiteStorage,
                 addTabUseCase = components.useCases.tabsUseCases.addTab,
                 fragmentStore = homeFragmentStore,
                 navController = findNavController(),

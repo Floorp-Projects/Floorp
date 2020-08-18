@@ -241,7 +241,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
                 scope = viewLifecycleOwner.lifecycleScope,
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
-                topSiteStorage = requireComponents.core.topSiteStorage,
                 onTabCounterClicked = {
                     thumbnailsFeature.get()?.requestScreenshot()
                     findNavController().nav(
