@@ -429,7 +429,7 @@ class HgRepository(Repository):
     def get_tracked_files_finder(self):
         # Can return backslashes on Windows. Normalize to forward slashes.
         files = list(p.replace('\\', '/') for p in
-                     self._run(b'files', b'-0').split('\0') if p)
+                     self._run('files', '-0').split('\0') if p)
         return FileListFinder(files)
 
     def working_directory_clean(self, untracked=False, ignored=False):
