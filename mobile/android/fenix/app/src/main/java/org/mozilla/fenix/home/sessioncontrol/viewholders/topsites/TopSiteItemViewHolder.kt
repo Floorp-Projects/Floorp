@@ -14,6 +14,7 @@ import kotlinx.android.synthetic.main.top_site_item.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
@@ -39,7 +40,7 @@ class TopSiteItemViewHolder(
         }
 
         top_site_item.setOnClickListener {
-            interactor.onSelectTopSite(topSite.url, topSite.isDefault)
+            interactor.onSelectTopSite(topSite.url, topSite.type === DEFAULT)
         }
 
         top_site_item.setOnLongClickListener {

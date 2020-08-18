@@ -31,6 +31,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_top_frecent_sites).apply {
+            isVisible = FeatureFlags.topFrecentSite
+            isChecked = context.settings().showTopFrecentSites
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_wait_first_paint).apply {
             isVisible = FeatureFlags.waitUntilPaintToDraw
             isChecked = context.settings().waitToShowPageUntilFirstPaint

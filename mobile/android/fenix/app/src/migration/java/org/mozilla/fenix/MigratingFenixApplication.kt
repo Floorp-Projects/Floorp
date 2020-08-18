@@ -28,7 +28,7 @@ class MigratingFenixApplication : FenixApplication() {
             .migrateHistory(this.components.core.lazyHistoryStorage)
             .migrateBookmarks(
                 this.components.core.lazyBookmarksStorage,
-                this.components.core.topSiteStorage.storage
+                this.components.core.pinnedSiteStorage
             )
             .migrateLogins(this.components.core.lazyPasswordsStorage)
             .migrateFxa(lazy { this.components.backgroundServices.accountManager })

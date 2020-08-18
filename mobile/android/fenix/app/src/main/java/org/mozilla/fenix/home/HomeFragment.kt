@@ -68,7 +68,10 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.TopSitesConfig
+import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -96,6 +99,7 @@ import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.DefaultTopSitesView
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
@@ -159,6 +163,8 @@ class HomeFragment : Fragment() {
     private var sessionControlView: SessionControlView? = null
     private lateinit var currentMode: CurrentMode
 
+    private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
@@ -192,14 +198,22 @@ class HomeFragment : Fragment() {
                     collections = components.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
-                    topSites = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
-                        components.core.topSiteStorage.cachedTopSites
-                    },
+                    topSites = components.core.topSiteStorage.cachedTopSites,
                     tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip(),
                     showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome
                 )
             )
         }
+
+        topSitesFeature.set(
+            feature = TopSitesFeature(
+                view = DefaultTopSitesView(homeFragmentStore),
+                storage = components.core.topSiteStorage,
+                config = ::getTopSitesConfig
+            ),
+            owner = this,
+            view = view
+        )
 
         _sessionControlInteractor = SessionControlInteractor(
             DefaultSessionControlController(
@@ -232,6 +246,15 @@ class HomeFragment : Fragment() {
 
         activity.themeManager.applyStatusBarTheme(activity)
         return view
+    }
+
+    /**
+     * Returns a [TopSitesConfig] which specifies how many top sites to display and whether or
+     * not frequently visited sites should be displayed.
+     */
+    private fun getTopSitesConfig(): TopSitesConfig {
+        val settings = requireContext().settings()
+        return TopSitesConfig(settings.topSitesMaxLimit, settings.showTopFrecentSites)
     }
 
     /**

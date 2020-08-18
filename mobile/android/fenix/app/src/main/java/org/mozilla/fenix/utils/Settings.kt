@@ -54,6 +54,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         const val showLoginsSecureWarningMaxCount = 1
         const val trackingProtectionOnboardingMaximumCount = 1
         const val pwaVisitsToShowPromptMaxCount = 3
+        const val topSitesMaxCount = 16
         const val FENIX_PREFERENCES = "fenix_preferences"
 
         private const val showSearchWidgetCFRMaxCount = 3
@@ -101,6 +102,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_use_new_search_experience),
         default = false,
         featureFlag = FeatureFlags.newSearchExperience
+    )
+
+    var showTopFrecentSites by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),
+        default = false,
+        featureFlag = FeatureFlags.topFrecentSite
     )
 
     var waitToShowPageUntilFirstPaint by featureFlagPreference(
@@ -827,6 +834,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val topSitesSize by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_top_sites_size),
         default = 0
+    )
+
+    val topSitesMaxLimit by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_top_sites_max_limit),
+        default = topSitesMaxCount
     )
 
     fun setOpenTabsCount(count: Int) {

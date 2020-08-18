@@ -255,6 +255,8 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
      */
     val thumbnailStorage by lazy { ThumbnailStorage(context) }
 
+    val pinnedSiteStorage by lazy { PinnedSiteStorage(context) }
+
     val topSiteStorage by lazy {
         val defaultTopSites = mutableListOf<Pair<String, String>>()
 
@@ -286,7 +288,7 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
         }
 
         DefaultTopSitesStorage(
-            PinnedSiteStorage(context),
+            pinnedSiteStorage,
             historyStorage,
             defaultTopSites
         )
