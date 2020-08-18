@@ -99,7 +99,6 @@
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
-#include "mozilla/scache/StartupCacheChild.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "nsBaseDragService.h"
@@ -1920,22 +1919,6 @@ mozilla::ipc::IPCResult ContentChild::RecvPScriptCacheConstructor(
   }
 
   static_cast<loader::ScriptCacheChild*>(actor)->Init(fd, wantCacheData);
-  return IPC_OK();
-}
-
-scache::PStartupCacheChild* ContentChild::AllocPStartupCacheChild() {
-  return new scache::StartupCacheChild();
-}
-
-bool ContentChild::DeallocPStartupCacheChild(
-    scache::PStartupCacheChild* cache) {
-  delete static_cast<scache::StartupCacheChild*>(cache);
-  return true;
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvPStartupCacheConstructor(
-    scache::PStartupCacheChild* actor) {
-  static_cast<scache::StartupCacheChild*>(actor)->Init();
   return IPC_OK();
 }
 

@@ -238,13 +238,6 @@ class ContentChild final : public PContentChild,
       PScriptCacheChild*, const FileDescOrError& cacheFile,
       const bool& wantCacheData) override;
 
-  PStartupCacheChild* AllocPStartupCacheChild();
-
-  bool DeallocPStartupCacheChild(PStartupCacheChild*);
-
-  virtual mozilla::ipc::IPCResult RecvPStartupCacheConstructor(
-      PStartupCacheChild*) override;
-
   PNeckoChild* AllocPNeckoChild();
 
   bool DeallocPNeckoChild(PNeckoChild*);
