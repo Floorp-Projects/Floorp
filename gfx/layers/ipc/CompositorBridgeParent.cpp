@@ -1147,8 +1147,16 @@ void CompositorBridgeParent::AllocateAPZCTreeManagerParent(
 }
 
 PAPZParent* CompositorBridgeParent::AllocPAPZParent(const LayersId& aLayersId) {
+  // This is the CompositorBridgeParent for a window, and so should only be
+  // creating a PAPZ instance if it lives in the GPU process. Instances that
+  // live in the UI process should going through SetControllerForLayerTree.
+  MOZ_RELEASE_ASSERT(XRE_IsGPUProcess());
+
+  // We should only ever get this if APZ is enabled on this compositor.
+  MOZ_RELEASE_ASSERT(mOptions.UseAPZ());
+
   // The main process should pass in 0 because we assume mRootLayerTreeID
-  MOZ_ASSERT(!aLayersId.IsValid());
+  MOZ_RELEASE_ASSERT(!aLayersId.IsValid());
 
   RemoteContentController* controller = new RemoteContentController();
 
@@ -1159,7 +1167,7 @@ PAPZParent* CompositorBridgeParent::AllocPAPZParent(const LayersId& aLayersId) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state =
       sIndirectLayerTrees[mRootLayerTreeID];
-  MOZ_ASSERT(!state.mController);
+  MOZ_RELEASE_ASSERT(!state.mController);
   state.mController = controller;
 
   return controller;
