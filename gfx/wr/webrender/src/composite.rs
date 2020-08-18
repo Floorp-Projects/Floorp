@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering, ExternalImageId};
-use api::units::*;
+use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, WorldRect};
+use api::units::{DevicePixelScale, DevicePoint, PictureRect, TexelRect, DevicePixel};
 use crate::batch::{resolve_image, get_buffer_kind};
 use euclid::Transform3D;
 use crate::gpu_cache::GpuCache;
@@ -572,7 +573,7 @@ impl CompositeState {
                     surface_id: tile_cache.native_surface.as_ref().map(|s| s.opaque),
                     offset: tile_cache.device_position,
                     clip_rect: device_clip_rect,
-                    transform: CompositorSurfaceTransform::translation(tile_cache.device_position.x,
+                    transform: CompositorSurfaceTransform::create_translation(tile_cache.device_position.x,
                                                                               tile_cache.device_position.y,
                                                                               0.0),
                     image_dependencies: [ImageDependency::INVALID; 3],
@@ -748,7 +749,7 @@ impl CompositeState {
                     surface_id: tile_cache.native_surface.as_ref().map(|s| s.alpha),
                     offset: tile_cache.device_position,
                     clip_rect: device_clip_rect,
-                    transform: CompositorSurfaceTransform::translation(tile_cache.device_position.x,
+                    transform: CompositorSurfaceTransform::create_translation(tile_cache.device_position.x,
                                                                               tile_cache.device_position.y,
                                                                               0.0),
                     image_dependencies: [ImageDependency::INVALID; 3],

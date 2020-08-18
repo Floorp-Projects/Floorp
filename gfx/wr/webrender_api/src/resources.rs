@@ -291,12 +291,13 @@ fn compute_valid_tiles_if_bounds_change(
     new_rect: &DeviceIntRect,
     tile_size: u16,
 ) -> Option<TileRange> {
-    let intersection = match prev_rect.intersection(new_rect) {
-        Some(rect) => rect,
-        None => {
-            return Some(TileRange::zero());
-        }
-    };
+    let intersection = prev_rect.intersection(new_rect);
+
+    if intersection.is_none() {
+        return Some(TileRange::zero());
+    }
+
+    let intersection = intersection.unwrap_or_else(DeviceIntRect::zero);
 
     let left = prev_rect.min_x() != new_rect.min_x();
     let right = prev_rect.max_x() != new_rect.max_x();

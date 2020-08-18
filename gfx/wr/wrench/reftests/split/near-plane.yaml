@@ -9,7 +9,7 @@ root:
       items:
         - type: stacking-context
           bounds: [0, 0, 600, 600]
-          transform: rotate-x(-60.0)
+          transform: rotate-x(60.0)
           items:
             - type: rect
               bounds: [000, 0, 600, 600]

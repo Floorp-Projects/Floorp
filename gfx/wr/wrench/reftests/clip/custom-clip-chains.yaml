@@ -30,7 +30,7 @@ root:
     -
       bounds: [0, 0, 200, 200]
       type: stacking-context
-      transform: rotate(-90)
+      transform: rotate(90)
       items:
        - type: clip
          id: 3

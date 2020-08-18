@@ -134,7 +134,7 @@ impl SwTile {
         } else {
             self.valid_rect.translate(origin.to_vector())
         };
-        let device_rect = transform.outer_transformed_rect(&bounds.to_f32().cast_unit()).unwrap().round_out().to_i32();
+        let device_rect = transform.transform_rect(&bounds.to_f32().cast_unit()).unwrap().round_out().to_i32();
         device_rect.cast_unit().intersection(clip_rect)
     }
 
@@ -161,7 +161,7 @@ impl SwTile {
         clip_rect: &DeviceIntRect,
     ) -> Option<(DeviceIntRect, DeviceIntRect, bool)> {
         let valid = self.valid_rect.translate(self.origin(surface).to_vector());
-        let valid = transform.outer_transformed_rect(&valid.to_f32().cast_unit()).unwrap().round_out().to_i32();
+        let valid = transform.transform_rect(&valid.to_f32().cast_unit()).unwrap().round_out().to_i32();
         valid.cast_unit().intersection(clip_rect).map(|r| (r.translate(-valid.origin.to_vector().cast_unit()), r, transform.m22 < 0.0))
     }
 }

@@ -3,7 +3,7 @@ root:
   items:
     - type: stacking-context
       bounds: [0, 100, 300, 300]
-      transform: scale-x(0.1) rotate-z(-45)
+      transform: scale-x(0.1) rotate-z(45)
       filter-primitives:
       - type: blur
         radius: 10
