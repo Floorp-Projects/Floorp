@@ -2118,9 +2118,10 @@ pub struct RegToRangesMaps {
     // This maps RealReg indices to the set of RealRangeIxs for that RealReg.  Valid indices are
     // real register indices for all non-sanitised real regs; that is,
     // 0 .. RealRegUniverse::allocable, for ".." having the Rust meaning.  The Vecs of
-    // RealRangeIxs are duplicate-free.  They are Vec rather than SmallVec because they are often
-    // large, so SmallVec would just be a disadvantage here.
-    pub rreg_to_rlrs_map: Vec</*real reg ix, */ Vec<RealRangeIx>>,
+    // RealRangeIxs are duplicate-free.  The SmallVec capacity of 6 was chosen after quite
+    // some profiling, of CL/x64/newBE compiling ZenGarden.wasm -- a huge input, with many
+    // relatively small functions.  Profiling was performed in August 2020, using Valgrind/DHAT.
+    pub rreg_to_rlrs_map: Vec</*real reg ix, */ SmallVec<[RealRangeIx; 6]>>,
 
     // This maps VirtualReg indices to the set of VirtualRangeIxs for that VirtualReg.  Valid
     // indices are 0 .. Function::get_num_vregs().  For functions mostly translated from SSA,

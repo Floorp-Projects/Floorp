@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "regalloc"
-version = "0.0.29"
+version = "0.0.30"
 authors = ["The Regalloc.rs Developers"]
 description = "Modular register allocation algorithms"
 license = "Apache-2.0 WITH LLVM-exception"
