@@ -4284,10 +4284,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
                  mAppData->directory, gSafeMode || !startupCacheValid);
   }
 
-  if (!startupCacheValid) {
-    StartupCache::IgnoreDiskCache();
-  }
-  StartupCache::PartialInitSingleton(mProfLD);
+  if (!startupCacheValid) StartupCache::IgnoreDiskCache();
 
   if (flagFile) {
     flagFile->Remove(true);
