@@ -392,10 +392,6 @@ struct FrameMetrics {
 
   bool IsRootContent() const { return mIsRootContent; }
 
-  void SetScrollOffset(const CSSPoint& aScrollOffset) {
-    mScrollOffset = aScrollOffset;
-  }
-
   void SetBaseScrollOffset(const CSSPoint& aScrollOffset) {
     mBaseScrollOffset = aScrollOffset;
   }
@@ -404,8 +400,6 @@ struct FrameMetrics {
   void ClampAndSetVisualScrollOffset(const CSSPoint& aScrollOffset) {
     SetVisualScrollOffset(CalculateScrollRange().ClampPoint(aScrollOffset));
   }
-
-  const CSSPoint& GetScrollOffset() const { return mScrollOffset; }
 
   const CSSPoint& GetBaseScrollOffset() const { return mBaseScrollOffset; }
 

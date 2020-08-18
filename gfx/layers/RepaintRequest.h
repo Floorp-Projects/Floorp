@@ -155,8 +155,6 @@ struct RepaintRequest {
 
   bool IsRootContent() const { return mIsRootContent; }
 
-  const CSSPoint& GetScrollOffset() const { return mScrollOffset; }
-
   CSSPoint GetLayoutScrollOffset() const { return mLayoutViewport.TopLeft(); }
 
   const CSSPoint& GetVisualScrollOffset() const { return mScrollOffset; }
