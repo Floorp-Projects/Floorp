@@ -43,7 +43,6 @@
 #ifdef DEBUG
 #  include "js/Proxy.h"  // For AutoEnterPolicy
 #endif
-#include "js/Stream.h"
 #include "js/Symbol.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -62,6 +61,8 @@
 #include "vm/Stack.h"
 #include "vm/SymbolType.h"
 #include "wasm/WasmTypes.h"
+
+struct JSClass;
 
 namespace js {
 
@@ -448,6 +449,20 @@ struct JSRuntime {
  public:
   const JSClass* maybeWindowProxyClass() const { return windowProxyClass_; }
   void setWindowProxyClass(const JSClass* clasp) { windowProxyClass_ = clasp; }
+
+ private:
+  js::WriteOnceData<const JSClass*> abortSignalClass_;
+
+ public:
+  void initAbortSignalHandling(const JSClass* clasp) {
+    MOZ_ASSERT(clasp != nullptr,
+               "doesn't make sense for an embedder to provide a null class "
+               "when specifying AbortSignal handling");
+
+    abortSignalClass_ = clasp;
+  }
+
+  const JSClass* maybeAbortSignalClass() const { return abortSignalClass_; }
 
  private:
   // List of non-ephemeron weak containers to sweep during
