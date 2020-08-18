@@ -11,6 +11,9 @@ export MOZILLA_OFFICIAL=1
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
+# Keep basic GDB symbols around in debug builds
+ac_add_options STRIP_FLAGS=--strip-debug
+
 ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
