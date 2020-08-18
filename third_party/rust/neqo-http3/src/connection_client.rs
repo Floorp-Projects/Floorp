@@ -205,6 +205,8 @@ impl Http3Client {
         if *self.conn.zero_rtt_state() == ZeroRttState::Sending {
             self.base_handler
                 .set_0rtt_settings(&mut self.conn, settings)?;
+            self.events
+                .connection_state_change(self.base_handler.state());
             self.push_handler
                 .borrow_mut()
                 .maybe_send_max_push_id_frame(&mut self.base_handler);
@@ -1117,10 +1119,12 @@ mod tests {
     // The data frame payload from HTTP_RESPONSE_2 is:
     const EXPECTED_RESPONSE_DATA_2_FRAME_1: &[u8] = &[0x61, 0x62, 0x63];
 
-    fn connect_and_send_request(close_sending_side: bool) -> (Http3Client, TestServer, u64) {
-        let (mut client, mut server) = connect();
-        let request_stream_id = make_request(&mut client, close_sending_side);
-        assert_eq!(request_stream_id, 0);
+    fn make_request_and_exchange_pkts(
+        client: &mut Http3Client,
+        server: &mut TestServer,
+        close_sending_side: bool,
+    ) -> u64 {
+        let request_stream_id = make_request(client, close_sending_side);
 
         let out = client.process(None, now());
         let _ = server.conn.process(out.dgram(), now());
@@ -1145,6 +1149,14 @@ mod tests {
         }
         let out = server.conn.process(None, now());
         client.process(out.dgram(), now());
+        request_stream_id
+    }
+
+    fn connect_and_send_request(close_sending_side: bool) -> (Http3Client, TestServer, u64) {
+        let (mut client, mut server) = connect();
+        let request_stream_id =
+            make_request_and_exchange_pkts(&mut client, &mut server, close_sending_side);
+        assert_eq!(request_stream_id, 0);
 
         (client, server, request_stream_id)
     }
@@ -3246,6 +3258,8 @@ mod tests {
             .expect("Set resumption token.");
 
         assert_eq!(client.state(), Http3State::ZeroRtt);
+        let zerortt_event = |e| matches!(e, Http3ClientEvent::StateChange(Http3State::ZeroRtt));
+        assert!(client.events().any(zerortt_event));
 
         (client, server)
     }
@@ -3354,6 +3368,8 @@ mod tests {
         client
             .set_resumption_token(now(), &token)
             .expect("Set resumption token.");
+        let zerortt_event = |e| matches!(e, Http3ClientEvent::StateChange(Http3State::ZeroRtt));
+        assert!(client.events().any(zerortt_event));
 
         // Send ClientHello.
         let client_hs = client.process(None, now());
@@ -5357,5 +5373,65 @@ mod tests {
             .encoder
             .recv_if_encoder_stream(&mut server.conn, CLIENT_SIDE_DECODER_STREAM_ID);
         assert_eq!(server.encoder.stats().stream_cancelled_recv, 0);
+    }
+
+    #[test]
+    fn multiple_streams_in_decoder_blocked_state() {
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        setup_server_side_encoder(&mut client, &mut server);
+
+        let headers = vec![
+            (String::from(":status"), String::from("200")),
+            (String::from("my-header"), String::from("my-header")),
+            (String::from("content-length"), String::from("0")),
+        ];
+        let encoded_headers = server
+            .encoder
+            .encode_header_block(&mut server.conn, &headers, request_stream_id)
+            .unwrap();
+        let hframe = HFrame::Headers {
+            header_block: encoded_headers.to_vec(),
+        };
+
+        // Delay encoder instruction so that the stream will be blocked.
+        let encoder_insts = server.conn.process(None, now());
+
+        // Send response headers.
+        let mut d = Encoder::default();
+        hframe.encode(&mut d);
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            &d,
+            true,
+        );
+
+        // Headers are blocked waiting for the encoder instructions.
+        let header_ready_event = |e| matches!(e, Http3ClientEvent::HeaderReady { .. });
+        assert!(!client.events().any(header_ready_event));
+
+        // Make another request.
+        let request2 = make_request_and_exchange_pkts(&mut client, &mut server, true);
+        // Send response headers.
+        server_send_response_and_exchange_packet(&mut client, &mut server, request2, &d, true);
+
+        // Headers on the second request are blocked as well are blocked
+        // waiting for the encoder instructions.
+        assert!(!client.events().any(header_ready_event));
+
+        // Now make the encoder instructions available.
+        let _ = client.process(encoder_insts.dgram(), now());
+
+        // Header blocks for both streams should be ready.
+        let mut count_responses = 0;
+        while let Some(e) = client.next_event() {
+            if let Http3ClientEvent::HeaderReady { stream_id, .. } = e {
+                assert!((stream_id == request_stream_id) || (stream_id == request2));
+                count_responses += 1;
+            }
+        }
+        assert_eq!(count_responses, 2);
     }
 }

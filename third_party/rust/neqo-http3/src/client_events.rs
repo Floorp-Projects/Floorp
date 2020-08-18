@@ -181,9 +181,14 @@ impl Http3ClientEvents {
 
     /// Add a new `StateChange` event.
     pub(crate) fn connection_state_change(&self, state: Http3State) {
-        // If closing, existing events no longer relevant.
         match state {
+            // If closing, existing events no longer relevant.
             Http3State::Closing { .. } | Http3State::Closed(_) => self.events.borrow_mut().clear(),
+            Http3State::Connected => {
+                self.remove(|evt| {
+                    matches!(evt, Http3ClientEvent::StateChange(Http3State::ZeroRtt))
+                });
+            }
             _ => (),
         }
         self.insert(Http3ClientEvent::StateChange(state));

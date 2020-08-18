@@ -45,7 +45,7 @@ pub fn connection_tparams_set(qlog: &mut NeqoQlog, tph: &TransportParametersHand
             } else {
                 None
             },
-            if remote.get_empty(tparams::DISABLE_MIGRATION).is_some() {
+            if remote.get_empty(tparams::DISABLE_MIGRATION) {
                 Some(true)
             } else {
                 None

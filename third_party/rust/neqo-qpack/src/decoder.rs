@@ -198,7 +198,7 @@ impl QPackDecoder {
                     let r = self
                         .blocked_streams
                         .iter()
-                        .filter_map(|(id, req)| if *id <= stream_id { Some(*req) } else { None })
+                        .filter_map(|(id, req)| if *id == stream_id { Some(*req) } else { None })
                         .collect::<Vec<_>>();
                     if !r.is_empty() {
                         debug_assert!(r.len() == 1);

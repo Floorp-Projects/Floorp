@@ -44,6 +44,7 @@ tpids! {
     ACTIVE_CONNECTION_ID_LIMIT = 0x0e,
     INITIAL_SOURCE_CONNECTION_ID = 0x0f,
     RETRY_SOURCE_CONNECTION_ID = 0x10,
+    GREASE_QUIC_BIT = 0x2ab2,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -122,7 +123,7 @@ impl TransportParameter {
                 _ => return Err(Error::TransportParameterError),
             },
 
-            DISABLE_MIGRATION => Self::Empty,
+            DISABLE_MIGRATION | GREASE_QUIC_BIT => Self::Empty,
             // Skip.
             _ => return Ok(None),
         };
@@ -247,21 +248,17 @@ impl TransportParameters {
 
     pub fn set_empty(&mut self, tp: TransportParameterId) {
         match tp {
-            DISABLE_MIGRATION => {
+            DISABLE_MIGRATION | GREASE_QUIC_BIT => {
                 self.set(tp, TransportParameter::Empty);
             }
             _ => panic!("Transport parameter not known or not type empty"),
         }
     }
 
-    pub fn get_empty(&self, tipe: TransportParameterId) -> Option<TransportParameter> {
-        let default = match tipe {
-            DISABLE_MIGRATION => None,
-            _ => panic!("Transport parameter not known or not an Empty"),
-        };
+    pub fn get_empty(&self, tipe: TransportParameterId) -> bool {
         match self.params.get(&tipe) {
-            None => default,
-            Some(TransportParameter::Empty) => Some(TransportParameter::Empty),
+            None => false,
+            Some(TransportParameter::Empty) => true,
             _ => panic!("Internal error"),
         }
     }
