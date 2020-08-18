@@ -51,7 +51,7 @@
 #include "js/GCAPI.h"
 #include "js/MemoryFunctions.h"
 #include "js/MemoryMetrics.h"
-#include "js/Stream.h"  // JS::InitAbortSignalHandling
+#include "js/Stream.h"  // JS::AbortSignalIsAborted, JS::InitAbortSignalHandling
 #include "js/UbiNode.h"
 #include "js/UbiNodeUtils.h"
 #include "js/friend/UsageStatistics.h"  // JS_TELEMETRY_*, JS_SetAccumulateTelemetryCallback
@@ -2999,7 +2999,16 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
 
   js::SetWindowProxyClass(cx, &OuterWindowProxyClass);
 
-  { JS::InitAbortSignalHandling(dom::AbortSignal_Binding::GetJSClass(), cx); }
+  {
+    JS::AbortSignalIsAborted isAborted = [](JSObject* obj) {
+      dom::AbortSignal* domObj = dom::UnwrapDOMObject<dom::AbortSignal>(obj);
+      MOZ_ASSERT(domObj);
+      return domObj->Aborted();
+    };
+
+    JS::InitAbortSignalHandling(dom::AbortSignal_Binding::GetJSClass(),
+                                isAborted, cx);
+  }
 
   js::SetXrayJitInfo(&gXrayJitInfo);
   JS::SetProcessLargeAllocationFailureCallback(
