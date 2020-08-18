@@ -86,6 +86,11 @@ enum class TypeCode {
 
 static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::V128;
 
+// An arbitrary reference type used as the result of
+// UnpackTypeCodeTypeAbstracted() when a value type is a reference.
+
+static constexpr TypeCode AbstractReferenceTypeCode = TypeCode::ExternRef;
+
 enum class FuncTypeIdDescKind { None, Immediate, Global };
 
 // A wasm::Trap represents a wasm-defined trap that can occur during execution
