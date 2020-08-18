@@ -96,6 +96,8 @@ class TrackingProtectionOverlay(
         trackingOnboardingDialog.apply {
             setContentView(layout)
             setCancelable(false)
+            // removing title or setting it as an empty string does not prevent a11y services from assigning one
+            setTitle(" ")
         }
 
         trackingOnboardingDialog.window?.let {
