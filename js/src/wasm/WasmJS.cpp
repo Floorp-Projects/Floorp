@@ -1161,8 +1161,8 @@ static JSString* FuncTypeToString(JSContext* cx, const FuncType& funcType) {
       return nullptr;
     }
 
-    const char* argStr = ToCString(arg);
-    if (!buf.append(argStr, strlen(argStr))) {
+    UniqueChars argStr = ToString(arg);
+    if (!buf.append(argStr.get(), strlen(argStr.get()))) {
       return nullptr;
     }
 
@@ -1179,8 +1179,8 @@ static JSString* FuncTypeToString(JSContext* cx, const FuncType& funcType) {
       return nullptr;
     }
 
-    const char* resultStr = ToCString(result);
-    if (!buf.append(resultStr, strlen(resultStr))) {
+    UniqueChars resultStr = ToString(result);
+    if (!buf.append(resultStr.get(), strlen(resultStr.get()))) {
       return nullptr;
     }
 

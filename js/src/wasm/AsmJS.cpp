@@ -5859,7 +5859,7 @@ static bool CheckReturnType(FunctionValidatorShared& f, ParseNode* usepn,
 
   if (f.returnedType() != type) {
     return f.failf(usepn, "%s incompatible with previous return of type %s",
-                   ToCString(type), ToCString(f.returnedType()));
+                   ToString(type).get(), ToString(f.returnedType()).get());
   }
 
   return true;
