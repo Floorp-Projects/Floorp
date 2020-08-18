@@ -188,12 +188,6 @@ nsProfiler::ResumeSampling() {
 }
 
 NS_IMETHODIMP
-nsProfiler::AddMarker(const char* aMarker) {
-  PROFILER_ADD_MARKER(aMarker, OTHER);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsProfiler::ClearAllPages() {
   profiler_clear_all_pages();
   return NS_OK;

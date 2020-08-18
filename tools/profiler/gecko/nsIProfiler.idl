@@ -47,7 +47,6 @@ interface nsIProfiler : nsISupports
   boolean IsSamplingPaused();
   void PauseSampling();
   void ResumeSampling();
-  void AddMarker(in string aMarker);
 
   /*
    * Resolves the returned promise after at least one full periodic sampling.
