@@ -551,7 +551,8 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
     WriteParam(aMsg, aParam.mStatus);
     WriteParam(aMsg, aParam.mTargetGuid);
     WriteParam(aMsg, aParam.mInputBlockId);
-    WriteParam(aMsg, aParam.mHandledByRootApzc);
+    WriteParam(aMsg, aParam.mHitRegionWithApzAwareListeners);
+    WriteParam(aMsg, aParam.mTargetIsRoot);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -559,7 +560,8 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
     return (ReadParam(aMsg, aIter, &aResult->mStatus) &&
             ReadParam(aMsg, aIter, &aResult->mTargetGuid) &&
             ReadParam(aMsg, aIter, &aResult->mInputBlockId) &&
-            ReadParam(aMsg, aIter, &aResult->mHandledByRootApzc));
+            ReadParam(aMsg, aIter, &aResult->mHitRegionWithApzAwareListeners) &&
+            ReadParam(aMsg, aIter, &aResult->mTargetIsRoot));
   }
 };
 
