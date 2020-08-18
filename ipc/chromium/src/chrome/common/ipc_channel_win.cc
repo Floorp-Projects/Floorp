@@ -116,12 +116,12 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   mozilla::LogIPCMessage::LogDispatchWithPid(msg.get(), other_pid_);
 
-  output_queue_.push(std::move(msg));
+  output_queue_.Push(std::move(msg));
   output_queue_length_++;
 }
 
 void Channel::ChannelImpl::OutputQueuePop() {
-  output_queue_.pop();
+  mozilla::UniquePtr<Message> message = output_queue_.Pop();
   output_queue_length_--;
 }
 
@@ -147,7 +147,7 @@ void Channel::ChannelImpl::Close() {
     MessageLoopForIO::current()->WaitForIOCompletion(INFINITE, this);
   }
 
-  while (!output_queue_.empty()) {
+  while (!output_queue_.IsEmpty()) {
     OutputQueuePop();
   }
 
@@ -162,8 +162,8 @@ bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
   DLOG(INFO) << "sending message @" << message.get() << " on channel @" << this
-             << " with type " << message->type() << " (" << output_queue_.size()
-             << " in queue)";
+             << " with type " << message->type() << " ("
+             << output_queue_.Count() << " in queue)";
 #endif
 
 #ifdef FUZZING
@@ -487,8 +487,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
       return false;
     }
     // Message was sent.
-    DCHECK(!output_queue_.empty());
-    Message* m = output_queue_.front().get();
+    DCHECK(!output_queue_.IsEmpty());
+    Message* m = output_queue_.FirstElement().get();
 
     MOZ_RELEASE_ASSERT(partial_write_iter_.isSome());
     Pickle::BufferList::IterImpl& iter = partial_write_iter_.ref();
@@ -504,12 +504,12 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     }
   }
 
-  if (output_queue_.empty()) return true;
+  if (output_queue_.IsEmpty()) return true;
 
   if (INVALID_HANDLE_VALUE == pipe_) return false;
 
   // Write to pipe...
-  Message* m = output_queue_.front().get();
+  Message* m = output_queue_.FirstElement().get();
 
   if (partial_write_iter_.isNothing()) {
     Pickle::BufferList::IterImpl iter(m->Buffers());
@@ -564,7 +564,7 @@ void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
     if (waiting_connect_) {
       if (!ProcessConnection()) return;
       // We may have some messages queued up to send...
-      if (!output_queue_.empty() && !output_state_.is_pending)
+      if (!output_queue_.IsEmpty() && !output_state_.is_pending)
         ProcessOutgoingMessages(NULL, 0);
       if (input_state_.is_pending) return;
       // else, fall-through and look for incoming messages...
