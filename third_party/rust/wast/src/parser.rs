@@ -251,6 +251,16 @@ pub trait Peek {
     /// being too big).
     fn peek(cursor: Cursor<'_>) -> bool;
 
+    /// The same as `peek`, except it checks the token immediately following
+    /// the current token.
+    fn peek2(mut cursor: Cursor<'_>) -> bool {
+        if cursor.advance_token().is_some() {
+            Self::peek(cursor)
+        } else {
+            false
+        }
+    }
+
     /// Returns a human-readable name of this token to display when generating
     /// errors about this token missing.
     fn display() -> &'static str;
@@ -273,6 +283,7 @@ pub struct ParseBuffer<'a> {
     input: &'a str,
     cur: Cell<usize>,
     known_annotations: RefCell<HashMap<String, usize>>,
+    depth: Cell<usize>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -332,6 +343,7 @@ impl ParseBuffer<'_> {
         let ret = ParseBuffer {
             tokens: tokens.into_boxed_slice(),
             cur: Cell::new(0),
+            depth: Cell::new(0),
             input,
             known_annotations: Default::default(),
         };
@@ -448,21 +460,21 @@ impl<'a> Parser<'a> {
     /// [spec]: https://webassembly.github.io/spec/core/text/types.html#table-types
     ///
     /// ```text
-    /// tabletype ::= lim:limits et:elemtype
+    /// tabletype ::= lim:limits et:reftype
     /// ```
     ///
     /// so to parse a [`TableType`] we recursively need to parse a [`Limits`]
-    /// and a [`TableElemType`]
+    /// and a [`RefType`]
     ///
     /// ```
     /// # use wast::*;
     /// # use wast::parser::*;
-    /// struct TableType {
+    /// struct TableType<'a> {
     ///     limits: Limits,
-    ///     elem: TableElemType,
+    ///     elem: RefType<'a>,
     /// }
     ///
-    /// impl<'a> Parse<'a> for TableType {
+    /// impl<'a> Parse<'a> for TableType<'a> {
     ///     fn parse(parser: Parser<'a>) -> Result<Self> {
     ///         // parse the `lim` then `et` in sequence
     ///         Ok(TableType {
@@ -475,7 +487,7 @@ impl<'a> Parser<'a> {
     ///
     /// [`Limits`]: crate::ast::Limits
     /// [`TableType`]: crate::ast::TableType
-    /// [`TableElemType`]: crate::ast::TableElemType
+    /// [`RefType`]: crate::ast::RefType
     pub fn parse<T: Parse<'a>>(self) -> Result<T> {
         T::parse(self)
     }
@@ -648,6 +660,7 @@ impl<'a> Parser<'a> {
     /// }
     /// ```
     pub fn parens<T>(self, f: impl FnOnce(Parser<'a>) -> Result<T>) -> Result<T> {
+        self.buf.depth.set(self.buf.depth.get() + 1);
         let before = self.buf.cur.get();
         let res = self.step(|cursor| {
             let mut cursor = match cursor.lparen() {
@@ -662,10 +675,19 @@ impl<'a> Parser<'a> {
                 None => Err(cursor.error("expected `)`")),
             }
         });
+        self.buf.depth.set(self.buf.depth.get() - 1);
         if res.is_err() {
             self.buf.cur.set(before);
         }
         return res;
+    }
+
+    /// Return the depth of nested parens we've parsed so far.
+    ///
+    /// This is a low-level method that is only useful for implementing
+    /// recursion limits in custom parsers.
+    pub fn parens_depth(&self) -> usize {
+        self.buf.depth.get()
     }
 
     fn cursor(self) -> Cursor<'a> {
@@ -707,6 +729,11 @@ impl<'a> Parser<'a> {
     /// Returns the span of the current token
     pub fn cur_span(&self) -> Span {
         self.cursor().cur_span()
+    }
+
+    /// Returns the span of the previous token
+    pub fn prev_span(&self) -> Span {
+        self.cursor().prev_span().unwrap_or(Span::from_offset(0))
     }
 
     /// Registers a new known annotation with this parser to allow parsing
@@ -871,6 +898,16 @@ impl<'a> Cursor<'a> {
             None => self.parser.buf.input.len(),
         };
         Span { offset }
+    }
+
+    /// Returns the span of the previous `Token` token.
+    ///
+    /// Does not take into account whitespace or comments.
+    pub(crate) fn prev_span(&self) -> Option<Span> {
+        let (token, _) = self.parser.buf.tokens.get(self.cur.checked_sub(1)?)?;
+        Some(Span {
+            offset: self.parser.buf.input_pos(token.src()),
+        })
     }
 
     /// Same as [`Parser::error`], but works with the current token in this

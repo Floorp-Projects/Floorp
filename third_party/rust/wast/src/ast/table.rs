@@ -21,18 +21,17 @@ pub enum TableKind<'a> {
     /// This table is actually an inlined import definition.
     #[allow(missing_docs)]
     Import {
-        module: &'a str,
-        field: &'a str,
-        ty: ast::TableType,
+        import: ast::InlineImport<'a>,
+        ty: ast::TableType<'a>,
     },
 
     /// A typical memory definition which simply says the limits of the table
-    Normal(ast::TableType),
+    Normal(ast::TableType<'a>),
 
     /// The elem segments of this table, starting from 0, explicitly listed
     Inline {
         /// The element type of this table.
-        elem: ast::TableElemType,
+        elem: ast::RefType<'a>,
         /// The element table entries to have, and the length of this list is
         /// the limits of the table as well.
         payload: ElemPayload<'a>,
@@ -51,7 +50,7 @@ impl<'a> Parse<'a> for Table<'a> {
         //  *   `(import "a" "b") limits`
         //  *   `limits`
         let mut l = parser.lookahead1();
-        let kind = if l.peek::<ast::TableElemType>() {
+        let kind = if l.peek::<ast::RefType>() {
             let elem = parser.parse()?;
             let payload = parser.parens(|p| {
                 p.parse::<kw::elem>()?;
@@ -65,14 +64,9 @@ impl<'a> Parse<'a> for Table<'a> {
             TableKind::Inline { elem, payload }
         } else if l.peek::<u32>() {
             TableKind::Normal(parser.parse()?)
-        } else if l.peek::<ast::LParen>() {
-            let (module, field) = parser.parens(|p| {
-                p.parse::<kw::import>()?;
-                Ok((p.parse()?, p.parse()?))
-            })?;
+        } else if let Some(import) = parser.parse()? {
             TableKind::Import {
-                module,
-                field,
+                import,
                 ty: parser.parse()?,
             }
         } else {
@@ -130,7 +124,7 @@ pub enum ElemPayload<'a> {
     /// represented as expressions using `ref.func` and `ref.null`.
     Exprs {
         /// The desired type of each expression below.
-        ty: ast::TableElemType,
+        ty: ast::RefType<'a>,
         /// The expressions, currently optional function indices, in this
         /// segment.
         exprs: Vec<Option<ast::Index<'a>>>,
@@ -142,14 +136,14 @@ impl<'a> Parse<'a> for Elem<'a> {
         let span = parser.parse::<kw::elem>()?.0;
         let id = parser.parse()?;
 
-        let kind = if parser.peek::<u32>() || parser.peek::<ast::LParen>() {
+        let kind = if parser.peek::<u32>() || (parser.peek::<ast::LParen>() && !parser.peek::<ast::RefType>()) {
             let table = if parser.peek2::<kw::table>() {
                 Some(parser.parens(|p| {
                     p.parse::<kw::table>()?;
                     p.parse()
                 })?)
             } else if parser.peek::<u32>() {
-                Some(ast::Index::Num(parser.parse()?))
+                Some(parser.parse()?)
             } else {
                 None
             };
@@ -160,7 +154,7 @@ impl<'a> Parse<'a> for Elem<'a> {
                 parser.parse()
             })?;
             ElemKind::Active {
-                table: table.unwrap_or(ast::Index::Num(0)),
+                table: table.unwrap_or(ast::Index::Num(0, span)),
                 offset,
             }
         } else if parser.peek::<kw::declare>() {
@@ -186,15 +180,15 @@ impl<'a> Parse<'a> for ElemPayload<'a> {
 }
 
 impl<'a> ElemPayload<'a> {
-    fn parse_tail(parser: Parser<'a>, ty: Option<ast::TableElemType>) -> Result<Self> {
+    fn parse_tail(parser: Parser<'a>, ty: Option<ast::RefType<'a>>) -> Result<Self> {
         let ty = match ty {
             None => {
                 parser.parse::<Option<kw::func>>()?;
-                ast::TableElemType::Funcref
+                ast::RefType::func()
             }
             Some(ty) => ty,
         };
-        if let ast::TableElemType::Funcref = ty {
+        if let ast::HeapType::Func = ty.heap {
             if parser.peek::<ast::Index>() {
                 let mut elems = Vec::new();
                 while !parser.is_empty() {
@@ -221,12 +215,15 @@ impl<'a> ElemPayload<'a> {
     }
 }
 
-fn parse_ref_func<'a>(parser: Parser<'a>, ty: ast::TableElemType) -> Result<Option<ast::Index<'a>>> {
+fn parse_ref_func<'a>(
+    parser: Parser<'a>,
+    ty: ast::RefType<'a>,
+) -> Result<Option<ast::Index<'a>>> {
     let mut l = parser.lookahead1();
     if l.peek::<kw::ref_null>() {
         parser.parse::<kw::ref_null>()?;
-        let null_ty: ast::RefType = parser.parse()?;
-        if null_ty != ty.into() {
+        let null_ty: ast::HeapType = parser.parse()?;
+        if ty.heap != null_ty {
             return Err(parser.error("elem segment item doesn't match elem segment type"));
         }
         Ok(None)
