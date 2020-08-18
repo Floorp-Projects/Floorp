@@ -486,7 +486,7 @@ impl<'a> SceneBuilder<'a> {
                                     match rotation {
                                         Rotation::Degree0 |
                                         Rotation::Degree180 => {
-                                            LayoutTransform::create_scale(
+                                            LayoutTransform::scale(
                                                 content_size.width / scale_from.width,
                                                 content_size.height / scale_from.height,
                                                 1.0
@@ -494,7 +494,7 @@ impl<'a> SceneBuilder<'a> {
                                         },
                                         Rotation::Degree90 |
                                         Rotation::Degree270 => {
-                                            LayoutTransform::create_scale(
+                                            LayoutTransform::scale(
                                                 content_size.height / scale_from.width,
                                                 content_size.width / scale_from.height,
                                                 1.0
@@ -509,12 +509,12 @@ impl<'a> SceneBuilder<'a> {
                                 if vertical_flip {
                                     let content_size = &self.iframe_size.last().unwrap();
                                     transform = transform
-                                        .post_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
+                                        .then_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
                                         .pre_scale(1.0, -1.0, 1.0);
                                 }
 
                                 let rotate = rotation.to_matrix(**content_size);
-                                let transform = transform.post_transform(&rotate);
+                                let transform = transform.then(&rotate);
 
                                 PropertyBinding::Value(transform)
                             },
