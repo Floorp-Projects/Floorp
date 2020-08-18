@@ -266,8 +266,8 @@ struct FrameMetrics {
    * the content frame metrics.
    */
   bool HasPendingScroll(const FrameMetrics& aContentFrameMetrics) const {
-    // XXX Suspicious comparison between visual and layout scroll offsets
-    return GetVisualScrollOffset() != aContentFrameMetrics.mBaseScrollOffset;
+    return GetVisualScrollOffset() !=
+           aContentFrameMetrics.GetVisualScrollOffset();
   }
 
   void ApplyScrollUpdateFrom(const FrameMetrics& aOther) {
