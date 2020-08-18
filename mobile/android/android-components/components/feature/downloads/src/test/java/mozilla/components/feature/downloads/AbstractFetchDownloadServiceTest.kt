@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
+import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -57,7 +58,6 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
-import org.junit.Ignore
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -171,13 +171,16 @@ class AbstractFetchDownloadServiceTest {
             job = null,
             state = downloadState,
             foregroundServiceId = 1,
-            downloadDeleted = false
+            downloadDeleted = false,
+            currentBytesCopied = 5,
+            status = DOWNLOADING
         )
 
         service.verifyDownload(downloadJobState)
 
-        verify(service).setDownloadJobStatus(downloadJobState, DownloadState.Status.FAILED)
-        verify(service).updateDownloadState(downloadState.copy(status = DownloadState.Status.FAILED))
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
+        verify(service).setDownloadJobStatus(downloadJobState, FAILED)
+        verify(service).updateDownloadState(downloadState.copy(status = FAILED))
     }
 
     @Test
@@ -192,12 +195,15 @@ class AbstractFetchDownloadServiceTest {
         val downloadJobState = DownloadJobState(
             job = null,
             state = downloadState,
+            currentBytesCopied = 5,
+            status = DownloadState.Status.PAUSED,
             foregroundServiceId = 1,
             downloadDeleted = false
         )
 
         service.verifyDownload(downloadJobState)
 
+        assertEquals(DownloadState.Status.PAUSED, service.getDownloadJobStatus(downloadJobState))
         verify(service, times(0)).setDownloadJobStatus(downloadJobState, DownloadState.Status.FAILED)
         verify(service, times(0)).updateDownloadState(downloadState.copy(status = DownloadState.Status.FAILED))
     }
@@ -214,14 +220,17 @@ class AbstractFetchDownloadServiceTest {
         val downloadJobState = DownloadJobState(
             job = null,
             state = downloadState,
+            currentBytesCopied = 50,
+            status = DOWNLOADING,
             foregroundServiceId = 1,
             downloadDeleted = false
         )
 
         service.verifyDownload(downloadJobState)
 
-        verify(service, times(0)).setDownloadJobStatus(downloadJobState, DownloadState.Status.FAILED)
-        verify(service, times(0)).updateDownloadState(downloadState.copy(status = DownloadState.Status.FAILED))
+        assertNotEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
+        verify(service, times(0)).setDownloadJobStatus(downloadJobState, FAILED)
+        verify(service, times(0)).updateDownloadState(downloadState.copy(status = FAILED))
     }
 
     @Test
@@ -236,14 +245,17 @@ class AbstractFetchDownloadServiceTest {
         val downloadJobState = DownloadJobState(
             job = null,
             state = downloadState,
+            currentBytesCopied = 50,
+            status = DownloadState.Status.CANCELLED,
             foregroundServiceId = 1,
             downloadDeleted = false
         )
 
         service.verifyDownload(downloadJobState)
 
-        verify(service, times(0)).setDownloadJobStatus(downloadJobState, DownloadState.Status.FAILED)
-        verify(service, times(0)).updateDownloadState(downloadState.copy(status = DownloadState.Status.FAILED))
+        assertNotEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
+        verify(service, times(0)).setDownloadJobStatus(downloadJobState, FAILED)
+        verify(service, times(0)).updateDownloadState(downloadState.copy(status = FAILED))
     }
 
     @Test
@@ -258,14 +270,16 @@ class AbstractFetchDownloadServiceTest {
         val downloadJobState = DownloadJobState(
             job = null,
             state = downloadState,
+            currentBytesCopied = 50,
+            status = DownloadState.Status.COMPLETED,
             foregroundServiceId = 1,
             downloadDeleted = false
         )
 
         service.verifyDownload(downloadJobState)
 
-        verify(service, times(0)).setDownloadJobStatus(downloadJobState, DownloadState.Status.FAILED)
-        verify(service, times(0)).updateDownloadState(downloadState.copy(status = DownloadState.Status.FAILED))
+        verify(service, times(0)).setDownloadJobStatus(downloadJobState, FAILED)
+        verify(service, times(0)).updateDownloadState(downloadState.copy(status = FAILED))
     }
 
     @Test
@@ -278,6 +292,8 @@ class AbstractFetchDownloadServiceTest {
         val downloadJobState = DownloadJobState(
                 job = null,
                 state = downloadState,
+                currentBytesCopied = 50,
+                status = DOWNLOADING,
                 foregroundServiceId = 1,
                 downloadDeleted = false
         )
@@ -400,9 +416,8 @@ class AbstractFetchDownloadServiceTest {
 
         // Simulate a pause
         var downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
-        val newState = downloadJobState.state.copy(currentBytesCopied = 1)
-        service.downloadJobs[newState.id]?.state = newState
-        browserStore.dispatch(DownloadAction.UpdateDownloadAction(newState))
+        downloadJobState.currentBytesCopied = 1
+        service.setDownloadJobStatus(downloadJobState, DownloadState.Status.PAUSED)
 
         service.setDownloadJobStatus(downloadJobState, DownloadState.Status.PAUSED)
         service.downloadJobs[providedDownload.value.state.id]?.job?.cancel()
@@ -431,7 +446,6 @@ class AbstractFetchDownloadServiceTest {
         verify(service).startDownloadJob(providedDownload.value)
     }
 
-    @Ignore("https://github.com/mozilla-mobile/android-components/issues/8042")
     @Test
     fun `broadcastReceiver handles ACTION_TRY_AGAIN`() = runBlocking {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
@@ -456,7 +470,7 @@ class AbstractFetchDownloadServiceTest {
 
         // Simulate a failure
         var downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
-        service.setDownloadJobStatus(downloadJobState, DownloadState.Status.FAILED)
+        service.setDownloadJobStatus(downloadJobState, FAILED)
         service.downloadJobs[providedDownload.value.state.id]?.job?.cancel()
 
         val tryAgainIntent = Intent(ACTION_TRY_AGAIN).apply {
@@ -506,7 +520,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
-        assertEquals(DownloadState.Status.FAILED, service.getDownloadJobStatus(downloadJobState))
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -590,6 +604,7 @@ class AbstractFetchDownloadServiceTest {
                 status = DOWNLOADING)
         val downloadState = DownloadJobState(
                 state = download,
+                status = DOWNLOADING,
                 foregroundServiceId = Random.nextInt()
         )
         val notification = mock<Notification>()
@@ -610,6 +625,7 @@ class AbstractFetchDownloadServiceTest {
                 fileName = "file.txt", status = DOWNLOADING)
         val downloadState = DownloadJobState(
                 state = download,
+                status = DOWNLOADING,
                 foregroundServiceId = Random.nextInt()
         )
         val notification = mock<Notification>()
@@ -630,6 +646,7 @@ class AbstractFetchDownloadServiceTest {
                 status = DOWNLOADING)
         val downloadState = DownloadJobState(
                 state = download,
+                status = DOWNLOADING,
                 foregroundServiceId = Random.nextInt()
         )
 
@@ -685,6 +702,7 @@ class AbstractFetchDownloadServiceTest {
                 status = DOWNLOADING)
         val downloadState = DownloadJobState(
                 state = download,
+                status = DOWNLOADING,
                 foregroundServiceId = Random.nextInt()
         )
 
@@ -702,6 +720,7 @@ class AbstractFetchDownloadServiceTest {
                 status = DOWNLOADING)
         val downloadState = DownloadJobState(
                 state = download,
+                status = DOWNLOADING,
                 foregroundServiceId = Random.nextInt()
         )
 
@@ -723,6 +742,7 @@ class AbstractFetchDownloadServiceTest {
                 status = DOWNLOADING)
         val downloadState = DownloadJobState(
                 state = download,
+                status = DOWNLOADING,
                 foregroundServiceId = Random.nextInt()
         )
 
@@ -754,11 +774,13 @@ class AbstractFetchDownloadServiceTest {
         val downloadState1 = DownloadJobState(
                 state = DownloadState(id = 1, url = "https://example.com/file.txt", fileName = "file.txt",
                         status = DownloadState.Status.COMPLETED),
+                status = DownloadState.Status.COMPLETED,
                 foregroundServiceId = Random.nextInt()
         )
         val downloadState2 = DownloadJobState(
                 state = DownloadState(id = 2, url = "https://example.com/file.txt", fileName = "file.txt",
                         status = DOWNLOADING),
+                status = DOWNLOADING,
                 foregroundServiceId = Random.nextInt()
         )
 
@@ -779,11 +801,13 @@ class AbstractFetchDownloadServiceTest {
         val downloadState1 = DownloadJobState(
             state = DownloadState(id = 1, url = "https://example.com/file.txt", fileName = "file.txt",
                     status = DOWNLOADING),
+            status = DOWNLOADING,
             foregroundServiceId = Random.nextInt()
         )
         val downloadState2 = DownloadJobState(
             state = DownloadState(id = 2, url = "https://example.com/file.txt", fileName = "file.txt",
                     status = DOWNLOADING),
+            status = DOWNLOADING,
             foregroundServiceId = Random.nextInt()
         )
 
@@ -885,8 +909,8 @@ class AbstractFetchDownloadServiceTest {
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
-        service.setDownloadJobStatus(downloadJobState, DownloadState.Status.FAILED)
-        assertEquals(DownloadState.Status.FAILED, service.getDownloadJobStatus(downloadJobState))
+        service.setDownloadJobStatus(downloadJobState, FAILED)
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
 
         testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
@@ -942,7 +966,7 @@ class AbstractFetchDownloadServiceTest {
         verify(service).performDownload(providedDownload.capture())
 
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
-        assertEquals(DownloadState.Status.FAILED, service.getDownloadJobStatus(downloadJobState))
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -998,7 +1022,7 @@ class AbstractFetchDownloadServiceTest {
     fun `updateDownloadState must update the download state in the store and in the downloadJobs`() {
         val download = DownloadState("https://example.com/file.txt", "file1.txt",
                 status = DOWNLOADING)
-        val downloadJob = DownloadJobState(state = mock())
+        val downloadJob = DownloadJobState(state = mock(), status = DOWNLOADING)
         val mockStore = mock<BrowserStore>()
         val service = spy(object : AbstractFetchDownloadService() {
             override val httpClient = client
@@ -1054,6 +1078,7 @@ class AbstractFetchDownloadServiceTest {
         val downloadState = DownloadJobState(
                 state = download,
                 foregroundServiceId = Random.nextInt(),
+                status = DOWNLOADING,
                 job = CoroutineScope(IO).launch { while (true) { } }
         )
 
@@ -1128,7 +1153,7 @@ class AbstractFetchDownloadServiceTest {
             override val store = browserStore
         })
 
-        val downloadJobState = DownloadJobState(state = download)
+        val downloadJobState = DownloadJobState(state = download, status = DownloadState.Status.COMPLETED)
 
         doReturn(testContext).`when`(service).context
         service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState)
@@ -1295,7 +1320,7 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `keeps track of how many seconds have passed since the last update to a notification`() = runBlocking {
-        val downloadJobState = DownloadJobState(state = mock())
+        val downloadJobState = DownloadJobState(state = mock(), status = DOWNLOADING)
         val oneSecond = 1000L
 
         downloadJobState.lastNotificationUpdate = System.currentTimeMillis()
@@ -1315,7 +1340,7 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `is a notification under the time limit for updates`() = runBlocking {
-        val downloadJobState = DownloadJobState(state = mock())
+        val downloadJobState = DownloadJobState(state = mock(), status = DOWNLOADING)
         val oneSecond = 1000L
 
         downloadJobState.lastNotificationUpdate = System.currentTimeMillis()
@@ -1329,7 +1354,7 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `try to update a notification`() = runBlocking {
-        val downloadJobState = DownloadJobState(state = mock())
+        val downloadJobState = DownloadJobState(state = mock(), status = DOWNLOADING)
         val oneSecond = 1000L
 
         downloadJobState.lastNotificationUpdate = System.currentTimeMillis()
