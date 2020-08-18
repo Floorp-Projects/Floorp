@@ -77,7 +77,7 @@ dictionary BundleGenerator {
  *    - formatMessages     - format multiple compound messages
  *
  */
-[ChromeOnly, Exposed=Window]
+[Func="IsChromeOrUAWidget", Exposed=Window]
 interface Localization {
   /**
    * Constructor arguments:
