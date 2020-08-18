@@ -856,6 +856,10 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                 if (CompositorBridgeParent* bridge =
                         compositor->GetCompositorBridgeParent()) {
                   LayersId rootLayerTreeId = bridge->RootLayerTreeId();
+                  // XXX: This should be using the APZ metrics, not the
+                  // layer tree metrics. (And possibly, both this code and
+                  // the WR equivalent should be using the "effective"
+                  // metrics matching the values being composited.)
                   if (mIsFirstPaint || FrameMetricsHaveUpdated(metrics)) {
                     if (RefPtr<UiCompositorControllerParent> uiController =
                             UiCompositorControllerParent::
@@ -1114,12 +1118,8 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
 #if defined(MOZ_WIDGET_ANDROID)
 bool AsyncCompositionManager::FrameMetricsHaveUpdated(
     const FrameMetrics& aMetrics) {
-  // XXX This is used to debounce calls to
-  // UiCompositorControllerParent::NotifyUpdateScreenMetrics().
-  // It should check whichever of the layout or visual scroll offset
-  // that ends up using.
-  return RoundedToInt(mLastMetrics.GetScrollOffset()) !=
-             RoundedToInt(aMetrics.GetScrollOffset()) ||
+  return RoundedToInt(mLastMetrics.GetVisualScrollOffset()) !=
+             RoundedToInt(aMetrics.GetVisualScrollOffset()) ||
          mLastMetrics.GetZoom() != aMetrics.GetZoom();
 }
 #endif
