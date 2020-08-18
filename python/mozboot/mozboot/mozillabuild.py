@@ -126,9 +126,13 @@ def is_windefender_affecting_srcdir(srcdir):
     srcdir = os.path.normcase(os.path.abspath(srcdir))
     for exclusion_path in get_windefender_exclusion_paths():
         exclusion_path = os.path.normcase(os.path.abspath(exclusion_path))
-        if os.path.commonpath([exclusion_path, srcdir]) == exclusion_path:
-            # exclusion_path is an ancestor of srcdir
-            return False
+        try:
+            if os.path.commonpath([exclusion_path, srcdir]) == exclusion_path:
+                # exclusion_path is an ancestor of srcdir
+                return False
+        except ValueError:
+            # ValueError: Paths don't have the same drive - can't be ours
+            pass
     return True
 
 
