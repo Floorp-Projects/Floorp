@@ -26,8 +26,9 @@ const PREF_PIONEER_COMPLETED_STUDIES =
   "toolkit.telemetry.pioneer-completed-studies";
 
 /**
- * This is the Remote Settings key that we use to get the list of available studies.
+ * Remote Settings keys for general content, and available studies.
  */
+const CONTENT_COLLECTION_KEY = "pioneer-content-v1";
 const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons-v1";
 
 const STUDY_LEAVE_REASONS = {
@@ -35,6 +36,7 @@ const STUDY_LEAVE_REASONS = {
   STUDY_ENDED: "study-ended",
 };
 
+const PREF_TEST_CACHED_CONTENT = "toolkit.pioneer.testCachedContent";
 const PREF_TEST_CACHED_ADDONS = "toolkit.pioneer.testCachedAddons";
 const PREF_TEST_ADDONS = "toolkit.pioneer.testAddons";
 
@@ -206,6 +208,20 @@ async function showAvailableStudies(cachedAddons) {
         `${joinOrLeave}-study-consent-dialog`
       );
       dialog.setAttribute("addon-id", cachedAddon.addon_id);
+      const consentText = dialog.querySelector(
+        `[id=${joinOrLeave}-study-consent]`
+      );
+
+      // Clears out any existing children with a single #text node.
+      consentText.textContent = "";
+      for (const line of cachedAddon[`${joinOrLeave}StudyConsent`].split(
+        "\n"
+      )) {
+        const p = document.createElement("p");
+        p.textContent = line;
+        consentText.appendChild(p);
+      }
+
       dialog.showModal();
       dialog.scrollTop = 0;
     });
@@ -255,7 +271,7 @@ async function showAvailableStudies(cachedAddons) {
   }
 
   const availableStudies = document.getElementById("header-available-studies");
-  document.l10n.setAttributes(availableStudies, "pioneer-available-studies");
+  document.l10n.setAttributes(availableStudies, "pioneer-current-studies");
 }
 
 async function updateStudy(studyAddonId) {
@@ -468,12 +484,43 @@ function removeBadge() {
   }
 }
 
+// Updates Pioneer HTML page contents from RemoteSettings.
+function updateContents(contents) {
+  for (const section of [
+    "title",
+    "summary",
+    "details",
+    "joinPioneerConsent",
+    "leavePioneerConsent",
+  ]) {
+    if (contents && section in contents) {
+      // Generate a corresponding dom-id style ID for a camel-case domId style JS attribute.
+      const domId = section
+        .split(/(?=[A-Z])/)
+        .join("-")
+        .toLowerCase();
+      // Clears out any existing children with a single #text node.
+      document.getElementById(domId).textContent = "";
+      contents[section].textContent = "";
+      for (const line of contents[section].split("\n")) {
+        const p = document.createElement("p");
+        p.textContent = line;
+        document.getElementById(domId).appendChild(p);
+      }
+    }
+  }
+  if ("privacyPolicy" in contents) {
+    document.getElementById("privacy-policy").href = contents.privacyPolicy;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async domEvent => {
   showEnrollmentStatus();
 
   document.addEventListener("focus", removeBadge);
   removeBadge();
 
+  let cachedContent;
   let cachedAddons;
   if (Cu.isInAutomation) {
     let testCachedAddons = Services.prefs.getStringPref(
@@ -483,8 +530,22 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
     if (testCachedAddons) {
       cachedAddons = JSON.parse(testCachedAddons);
     }
+
+    let testCachedContent = Services.prefs.getStringPref(
+      PREF_TEST_CACHED_CONTENT,
+      null
+    );
+    if (testCachedContent) {
+      cachedContent = JSON.parse(testCachedContent);
+    }
   } else {
+    cachedContent = await RemoteSettings(CONTENT_COLLECTION_KEY).get();
     cachedAddons = await RemoteSettings(STUDY_ADDON_COLLECTION_KEY).get();
+  }
+
+  // Replace existing contents immediately on page load.
+  for (const contents of cachedContent) {
+    updateContents(contents);
   }
 
   for (const cachedAddon of cachedAddons) {
