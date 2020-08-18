@@ -300,6 +300,35 @@ function testClasses() {
     assertClass("class NAME extends {}[foo] { constructor() { } }",
                 [ctorPlaceholder], memExpr(objExpr([]), ident("foo")));
 
+    if (getRealmConfiguration().privateMethods) {
+      // #constructor is an invalid private method name.
+      assertClassError("class NAME { #constructor() { } }", SyntaxError);
+
+      const method = ["#method() { }", simpleMethod("#method", "method", false)];
+      const generator = ["*#method() { }", simpleMethod("#method", "method", true)];
+      const getter = ["get #method() { }", simpleMethod("#method", "get", false)];
+      const setter = ["set #method(x) { }", simpleMethod("#method", "set", false, ["x"])];
+      for (const [source, parsed] of [method, generator, getter, setter]) {
+        assertClass(`class NAME { constructor() { } ${source} }`, [ctorPlaceholder, parsed]);
+      }
+
+      // Private getters and setters of the same name are allowed.
+      assertClass(`class NAME { constructor() { } ${getter[0]} ${setter[0]} }`,
+                  [ctorPlaceholder, getter[1], setter[1]]);
+      assertClass(`class NAME { constructor() { } ${setter[0]} ${getter[0]} }`,
+                  [ctorPlaceholder, setter[1], getter[1]]);
+
+      // Private method names can't be used multiple times, other than for a getter/setter pair.
+      for (const [source1, _] of [method, generator, getter, setter]) {
+        for (const [source2, _] of [method, generator]) {
+          assertClassError(`class NAME { constructor() { } ${source1} ${source2} }`, SyntaxError);
+        }
+      }
+
+      assertClassError(`class NAME { constructor() { } ${setter[0]} ${setter[0]} }`, SyntaxError);
+      assertClassError(`class NAME { constructor() { } ${getter[0]} ${getter[0]} }`, SyntaxError);
+    }
+
     /* SuperProperty */
     // NOTE: Some of these tests involve object literals, as SuperProperty is a
     // valid production in any method definition, including in objectl
