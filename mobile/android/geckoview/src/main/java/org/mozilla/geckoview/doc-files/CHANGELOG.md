@@ -25,9 +25,11 @@ exclude: true
   of the default implementations. ([bug 1647883]({{bugzilla}}1647883))
 - Added `strictSocialTrackingProtection` to [`ContentBlocking.Settings.Builder`][80.1] and `getStrictSocialTrackingProtection`
   to [`ContentBlocking.Settings`][80.2].
+- Added [`MediaSession`][80.3] API for session-based media events and control.
 
 [80.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
 [80.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
+[80.3]: {{javadoc_uri}}/MediaSession.html
 
 ## v79
 - Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab` ==
@@ -759,4 +761,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: b7c6af9e586923fd7c9be735ea7244365a663c2e
+[api-version]: a3245a37268efa5b1bbf787a3aca046670d36cdb
