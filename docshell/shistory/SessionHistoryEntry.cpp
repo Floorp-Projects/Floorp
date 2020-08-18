@@ -805,6 +805,8 @@ void SessionHistoryEntry::AddChild(SessionHistoryEntry* aChild, int32_t aOffset,
           "Adding a child where we already have a child? This may misbehave");
       oldChild->SetParent(nullptr);
     }
+  } else {
+    mChildren.SetLength(aOffset + 1);
   }
 
   mChildren.ReplaceElementAt(aOffset, aChild);
