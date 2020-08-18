@@ -91,7 +91,6 @@ context of a new frame (e.g an <iframe> element):
 .. parsed-literal::
    iframe = client.find_element(By.TAG_NAME, 'iframe')
    client.switch_to_frame(iframe)
-   assert iframe == client.get_active_frame()
 
 Finally Marionette can switch between `chrome` and `content` scope. Chrome is a
 privileged scope where you can access things like the Firefox UI itself.
