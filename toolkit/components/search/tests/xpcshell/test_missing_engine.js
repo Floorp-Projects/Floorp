@@ -58,7 +58,7 @@ function listenFor(name, key) {
 let configurationStub;
 
 add_task(async function setup() {
-  SearchTestUtils.useMockIdleService(registerCleanupFunction);
+  SearchTestUtils.useMockIdleService();
   await AddonTestUtils.promiseStartupManager();
 });
 

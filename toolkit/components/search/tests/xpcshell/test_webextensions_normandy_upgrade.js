@@ -38,7 +38,7 @@ add_task(async function setup() {
   await useTestEngines("test-extensions", null, CONFIG_DEFAULT);
   await AddonTestUtils.promiseStartupManager();
   registerCleanupFunction(AddonTestUtils.promiseShutdownManager);
-  SearchTestUtils.useMockIdleService(registerCleanupFunction);
+  SearchTestUtils.useMockIdleService();
   await Services.search.init();
 });
 
