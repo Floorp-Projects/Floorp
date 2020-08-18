@@ -224,7 +224,6 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
   AppendToString(aStream, m.GetCompositionBounds(), "{ [cb=");
   AppendToString(aStream, m.GetScrollableRect(), "] [sr=");
   AppendToString(aStream, m.GetVisualScrollOffset(), "] [s=");
-  AppendToString(aStream, m.GetVisualViewportOffset(), "] [vs=");
   if (m.GetDoSmoothScroll()) {
     AppendToString(aStream, m.GetSmoothScrollOffset(), "] [ss=");
   }

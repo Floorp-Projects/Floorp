@@ -110,7 +110,6 @@ struct FrameMetrics {
         mExtraResolution(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
-        mVisualViewportOffset(0, 0),
         mVisualScrollUpdateType(eNone),
         mIsRootContent(false),
         mIsRelative(false),
@@ -141,7 +140,6 @@ struct FrameMetrics {
            mExtraResolution == aOther.mExtraResolution &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
-           mVisualViewportOffset == aOther.mVisualViewportOffset &&
            mVisualScrollUpdateType == aOther.mVisualScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
            mIsRelative == aOther.mIsRelative &&
@@ -531,13 +529,6 @@ struct FrameMetrics {
   }
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
-  void SetVisualViewportOffset(const CSSPoint& aVisualViewportOffset) {
-    mVisualViewportOffset = aVisualViewportOffset;
-  }
-  const CSSPoint& GetVisualViewportOffset() const {
-    return mVisualViewportOffset;
-  }
-
   void SetVisualScrollUpdateType(ScrollOffsetUpdateType aUpdateType) {
     mVisualScrollUpdateType = aUpdateType;
   }
@@ -722,16 +713,9 @@ struct FrameMetrics {
   // if the APZC receiving this metrics should update its local copy.
   ScrollOffsetUpdateType mScrollUpdateType;
 
-  // These fields are used when the main thread wants to set a visual viewport
-  // offset that's distinct from the layout viewport offset.
-  // In this case, mVisualScrollUpdateType is set to eMainThread, and
-  // mVisualViewportOffset is set to desired visual viewport offset (relative
-  // to the document, like mScrollOffset).
-  // TODO: Get rid of mVisualViewportOffset: between mViewport.TopLeft() and
-  //       mScrollOffset, we have enough storage for the two scroll offsets.
-  //       However, to avoid confusion, that first requires refactoring
-  //       existing to consistently use the two fields for those two purposes.
-  CSSPoint mVisualViewportOffset;
+  // Theis field is set to eMainThread when the main thread wants APZ to
+  // scroll to a visual viewport offset that's distinct from the layout
+  // viewport offset.
   ScrollOffsetUpdateType mVisualScrollUpdateType;
 
   // 'fixed layer margins' on the main-thread. This is only used for the

@@ -210,7 +210,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mExtraResolution);
     WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mScrollUpdateType);
-    WriteParam(aMsg, aParam.mVisualViewportOffset);
     WriteParam(aMsg, aParam.mVisualScrollUpdateType);
     WriteParam(aMsg, aParam.mFixedLayerMargins);
     WriteParam(aMsg, aParam.mPureRelativeOffset);
@@ -243,7 +242,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
         ReadParam(aMsg, aIter, &aResult->mExtraResolution) &&
         ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
         ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
-        ReadParam(aMsg, aIter, &aResult->mVisualViewportOffset) &&
         ReadParam(aMsg, aIter, &aResult->mVisualScrollUpdateType) &&
         ReadParam(aMsg, aIter, &aResult->mFixedLayerMargins) &&
         ReadParam(aMsg, aIter, &aResult->mPureRelativeOffset) &&
