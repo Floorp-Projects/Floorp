@@ -7,17 +7,12 @@
 #ifndef jsfriendapi_h
 #define jsfriendapi_h
 
-#include "mozilla/Atomics.h"
-#include "mozilla/Casting.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
-#include "js/CallNonGenericMethod.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/ErrorReport.h"
@@ -27,21 +22,6 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-#ifndef JS_STACK_GROWTH_DIRECTION
-#  ifdef __hppa
-#    define JS_STACK_GROWTH_DIRECTION (1)
-#  else
-#    define JS_STACK_GROWTH_DIRECTION (-1)
-#  endif
-#endif
-
-#if JS_STACK_GROWTH_DIRECTION > 0
-#  define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) < (limit)))
-#else
-#  define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) > (limit)))
-#endif
-
-struct JSErrorFormatString;
 struct JSJitInfo;
 
 namespace JS {
@@ -53,7 +33,6 @@ class ExceptionStack;
 
 namespace js {
 class JS_FRIEND_API BaseProxyHandler;
-class InterpreterFrame;
 } /* namespace js */
 
 extern JS_FRIEND_API void JS_SetGrayGCRootsTracer(JSContext* cx,

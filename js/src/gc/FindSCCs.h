@@ -7,12 +7,14 @@
 #ifndef gc_FindSCCs_h
 #define gc_FindSCCs_h
 
-#include <algorithm>
-#include <utility>
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "jsfriendapi.h"
+#include <algorithm>  // std::min
+#include <stdint.h>   // uintptr_t
 
-#include "js/HashTable.h"
+#include "js/AllocPolicy.h"         // js::SystemAllocPolicy
+#include "js/friend/StackLimits.h"  // JS_CHECK_STACK_SIZE
+#include "js/HashTable.h"           // js::HashSet, js::DefaultHasher
 
 namespace js {
 namespace gc {
