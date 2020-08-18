@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>test for embedding a cross-origin document</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+
+
+<script>
+// Get the path of the current test, without hostname or filename.
+const testPath = window.location.href.replace("http://mochi.test:8888", "");
+const testDir = testPath.substring(0, testPath.lastIndexOf('/') + 1);
+
+add_task(async function() {
+  info("Loading image in embed");
+  let embed = document.createElement("embed");
+  document.body.appendChild(embed);
+
+  info("x-site image load from element");
+  embed.setAttribute("src", "http://example.com" + testDir + "green.png");
+  await new Promise(resolve => embed.addEventListener("load", resolve, { once: true }));
+  is(
+    SpecialPowers.wrap(embed).displayedType,
+    SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_IMAGE,
+    "image load should have image type"
+  );
+  ok(!SpecialPowers.wrap(embed).frameLoader, "should not have frameloader");
+  ok(!SpecialPowers.wrap(embed).browsingContext, "should not have bc");
+
+  info("x-site document load from element");
+  embed.setAttribute("src", "http://example.com" + testDir + "file_empty.html");
+  await new Promise(resolve => embed.addEventListener("load", resolve, { once: true }));
+  is(
+    SpecialPowers.wrap(embed).displayedType,
+    SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_DOCUMENT,
+    "document load should have document type"
+  );
+  ok(SpecialPowers.wrap(embed).frameLoader, "should have frameloader");
+  ok(SpecialPowers.wrap(embed).browsingContext, "should have bc");
+
+  info("load x-site document in iframe & compare processes");
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("src", "http://example.com" + testDir + "file_empty.html");
+  document.body.appendChild(iframe);
+  await new Promise(resolve => iframe.addEventListener("load", resolve, { once: true }));
+
+  let embedRemoteType = await SpecialPowers.spawn(embed, [], () => Services.appinfo.remoteType);
+  let iframeRemoteType = await SpecialPowers.spawn(iframe, [], () => Services.appinfo.remoteType);
+  is(iframeRemoteType, embedRemoteType, "remote types should match");
+
+  info("x-site image load from docshell");
+  SpecialPowers.spawn(embed, ["http://example.com" + testDir + "green.png"], uri => {
+    content.location.href = uri;
+  })
+  await new Promise(resolve => embed.addEventListener("load", resolve, { once: true }));
+  is(
+    SpecialPowers.wrap(embed).displayedType,
+    SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_DOCUMENT,
+    "image load via location should have document type"
+  );
+  ok(SpecialPowers.wrap(embed).frameLoader, "should have frameloader");
+  ok(SpecialPowers.wrap(embed).browsingContext, "should have bc");
+
+  info("x-site image load from element");
+  embed.setAttribute("src", "http://example.com" + testDir + "green.png");
+  await new Promise(resolve => embed.addEventListener("load", resolve, { once: true }));
+  is(
+    SpecialPowers.wrap(embed).displayedType,
+    SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_IMAGE,
+    "image load should have image type"
+  );
+  ok(!SpecialPowers.wrap(embed).frameLoader, "should not have frameloader");
+  ok(!SpecialPowers.wrap(embed).browsingContext, "should not have bc");
+});
+</script>
+</body>
+</html>
