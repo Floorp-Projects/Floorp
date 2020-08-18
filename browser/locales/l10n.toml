@@ -134,10 +134,6 @@ locales = [
     l10n = "{l}browser/extensions/fxmonitor/**"
 
 [[paths]]
-    reference = "browser/extensions/webcompat-reporter/locales/en-US/**"
-    l10n = "{l}browser/extensions/webcompat-reporter/**"
-
-[[paths]]
     reference = "browser/extensions/report-site-issue/locales/en-US/**"
     l10n = "{l}browser/extensions/report-site-issue/**"
 
@@ -155,11 +151,6 @@ locales = [
 [[paths]]
     reference = "devtools/startup/locales/en-US/**"
     l10n = "{l}devtools/startup/**"
-
-# for Firefox 60 and older and cross-channel
-[[paths]]
-    reference = "devtools/shim/locales/en-US/**"
-    l10n = "{l}devtools/shim/**"
 
 # Filters
 # The filters below are evaluated one after the other, in the given order.
