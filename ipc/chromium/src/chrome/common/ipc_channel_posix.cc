@@ -520,17 +520,17 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
                               // no connection?
   is_blocked_on_write_ = false;
 
-  if (output_queue_.empty()) return true;
+  if (output_queue_.IsEmpty()) return true;
 
   if (pipe_ == -1) return false;
 
   // Write out all the messages we can till the write blocks or there are no
   // more outgoing messages.
-  while (!output_queue_.empty()) {
+  while (!output_queue_.IsEmpty()) {
 #ifdef FUZZING
     mozilla::ipc::Faulty::instance().MaybeCollectAndClosePipe(pipe_);
 #endif
-    Message* msg = output_queue_.front().get();
+    Message* msg = output_queue_.FirstElement().get();
 
     struct msghdr msgh = {0};
 
@@ -709,8 +709,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
   DLOG(INFO) << "sending message @" << message.get() << " on channel @" << this
-             << " with type " << message->type() << " (" << output_queue_.size()
-             << " in queue)";
+             << " with type " << message->type() << " ("
+             << output_queue_.Count() << " in queue)";
 #endif
 
 #ifdef FUZZING
@@ -787,7 +787,7 @@ void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
 
   MOZ_DIAGNOSTIC_ASSERT(!closed_);
   msg->AssertAsLargeAsHeader();
-  output_queue_.push(std::move(msg));
+  output_queue_.Push(std::move(msg));
   output_queue_length_++;
 }
 
@@ -795,7 +795,7 @@ void Channel::ChannelImpl::OutputQueuePop() {
   // Clear any reference to the front of output_queue_ before we destroy it.
   partial_write_iter_.reset();
 
-  output_queue_.pop();
+  mozilla::UniquePtr<Message> message = output_queue_.Pop();
   output_queue_length_--;
 }
 
@@ -831,7 +831,7 @@ void Channel::ChannelImpl::Close() {
     client_pipe_ = -1;
   }
 
-  while (!output_queue_.empty()) {
+  while (!output_queue_.IsEmpty()) {
     OutputQueuePop();
   }
 
