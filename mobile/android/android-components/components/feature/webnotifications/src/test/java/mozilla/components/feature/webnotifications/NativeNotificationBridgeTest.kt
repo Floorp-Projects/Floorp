@@ -86,7 +86,7 @@ class NativeNotificationBridgeTest {
     @Test
     fun `icon is loaded from BrowserIcons`() = runBlockingTest {
         bridge.convertToAndroidNotification(
-            blankNotification.copy(iconUrl = "https://example.com/large.png"),
+            blankNotification.copy(sourceUrl = "https://example.com", iconUrl = "https://example.com/large.png"),
             testContext,
             TEST_CHANNEL,
             null,
@@ -95,7 +95,7 @@ class NativeNotificationBridgeTest {
 
         verify(icons).loadIcon(
             IconRequest(
-                url = "https://example.com/large.png",
+                url = "https://example.com",
                 size = IconRequest.Size.DEFAULT,
                 resources = listOf(IconRequest.Resource(
                     url = "https://example.com/large.png",
