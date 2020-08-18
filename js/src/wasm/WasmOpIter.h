@@ -565,7 +565,7 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
   }
 
   if (actual.isReference() && expected.isReference() &&
-      env_.isRefSubtypeOf(actual, expected)) {
+      env_.isRefSubtypeOf(actual.refType(), expected.refType())) {
     return true;
   }
 
@@ -1762,7 +1762,7 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     }
     return fail("table index out of range for call_indirect");
   }
-  if (env_.tables[*tableIndex].kind != TableKind::FuncRef) {
+  if (!env_.tables[*tableIndex].elemType.isFunc()) {
     return fail("indirect calls must go through a table of 'funcref'");
   }
 
@@ -2007,8 +2007,8 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
         *srcMemOrTableIndex >= env_.tables.length()) {
       return fail("table index out of range for table.copy");
     }
-    ValType dstElemType = ToElemValType(env_.tables[*dstMemOrTableIndex].kind);
-    ValType srcElemType = ToElemValType(env_.tables[*srcMemOrTableIndex].kind);
+    ValType dstElemType = env_.tables[*dstMemOrTableIndex].elemType;
+    ValType srcElemType = env_.tables[*srcMemOrTableIndex].elemType;
     if (!checkIsSubtypeOf(srcElemType, dstElemType)) {
       return false;
     }
@@ -2138,8 +2138,8 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");
     }
-    if (!checkIsSubtypeOf(env_.elemSegments[*segIndex]->elemType(),
-                          ToElemValType(env_.tables[*dstTableIndex].kind))) {
+    if (!checkIsSubtypeOf(env_.elemSegments[*segIndex]->elemType,
+                          env_.tables[*dstTableIndex].elemType)) {
       return false;
     }
   }
@@ -2162,7 +2162,7 @@ inline bool OpIter<Policy>::readTableFill(uint32_t* tableIndex, Value* start,
   if (!popWithType(ValType::I32, len)) {
     return false;
   }
-  if (!popWithType(ToElemValType(env_.tables[*tableIndex].kind), val)) {
+  if (!popWithType(env_.tables[*tableIndex].elemType, val)) {
     return false;
   }
   if (!popWithType(ValType::I32, start)) {
@@ -2187,7 +2187,7 @@ inline bool OpIter<Policy>::readTableGet(uint32_t* tableIndex, Value* index) {
     return false;
   }
 
-  infalliblePush(ToElemValType(env_.tables[*tableIndex].kind));
+  infalliblePush(env_.tables[*tableIndex].elemType);
   return true;
 }
 
@@ -2206,7 +2206,7 @@ inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex,
   if (!popWithType(ValType::I32, delta)) {
     return false;
   }
-  if (!popWithType(ToElemValType(env_.tables[*tableIndex].kind), initValue)) {
+  if (!popWithType(env_.tables[*tableIndex].elemType, initValue)) {
     return false;
   }
 
@@ -2226,7 +2226,7 @@ inline bool OpIter<Policy>::readTableSet(uint32_t* tableIndex, Value* index,
     return fail("table index out of range for table.set");
   }
 
-  if (!popWithType(ToElemValType(env_.tables[*tableIndex].kind), value)) {
+  if (!popWithType(env_.tables[*tableIndex].elemType, value)) {
     return false;
   }
   if (!popWithType(ValType::I32, index)) {
