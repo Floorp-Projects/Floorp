@@ -9,16 +9,16 @@
     android:orientation="vertical">
 
     <ImageView
-        android:visibility="gone"
         android:id="@+id/drop_down_triangle"
         android:layout_width="@dimen/cfr_triangle_width"
         android:layout_height="@dimen/cfr_triangle_height"
+        android:layout_gravity="start"
         android:layout_marginStart="@dimen/cfr_triangle_margin_edge"
         android:importantForAccessibility="no"
         android:rotation="0"
+        android:visibility="gone"
         app:srcCompat="@drawable/ic_cfr_triangle"
-        app:tint="#0250BB"
-        android:layout_gravity="start" />
+        app:tint="#0250BB" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/message"
@@ -34,12 +34,12 @@
             android:layout_marginTop="4dp"
             android:layout_marginEnd="8dp"
             android:clickable="true"
-            android:focusable="true"
             android:contentDescription="@string/onboarding_close"
-            app:srcCompat="@drawable/ic_close"
-            app:tint="@color/primary_text_dark_theme"
+            android:focusable="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_close"
+            app:tint="@color/primary_text_dark_theme" />
 
         <TextView
             android:id="@+id/onboarding_message"
@@ -52,21 +52,21 @@
             android:text="@string/etp_onboarding_cfr_message"
             android:textColor="@color/primary_text_dark_theme"
             android:textSize="16sp"
+            app:fontFamily="@font/metropolis_medium"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/close_onboarding"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:fontFamily="@font/metropolis_medium" />
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
         android:id="@+id/pop_up_triangle"
         android:layout_width="@dimen/cfr_triangle_width"
         android:layout_height="@dimen/cfr_triangle_height"
+        android:layout_gravity="start"
         android:layout_marginStart="@dimen/cfr_triangle_margin_edge"
         android:importantForAccessibility="no"
         android:rotation="180"
         app:srcCompat="@drawable/ic_cfr_triangle"
-        app:tint="#0250BB"
-        android:layout_gravity="start" />
+        app:tint="#0250BB" />
 </LinearLayout>
