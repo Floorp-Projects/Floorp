@@ -169,6 +169,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::ToObject:
     case MDefinition::Opcode::MegamorphicLoadSlot:
     case MDefinition::Opcode::MegamorphicLoadSlotByValue:
+    case MDefinition::Opcode::MegamorphicStoreSlot:
     case MDefinition::Opcode::CompareExchangeTypedArrayElement:
     case MDefinition::Opcode::AtomicExchangeTypedArrayElement:
     case MDefinition::Opcode::AtomicTypedArrayElementBinop:

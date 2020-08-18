@@ -433,6 +433,22 @@ bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotByValueResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMegamorphicStoreSlot(ObjOperandId objId,
+                                                     uint32_t nameOffset,
+                                                     ValOperandId rhsId,
+                                                     bool needsTypeBarrier) {
+  MDefinition* obj = getOperand(objId);
+  PropertyName* name = stringStubField(nameOffset)->asAtom().asPropertyName();
+  MDefinition* rhs = getOperand(rhsId);
+
+  MOZ_ASSERT(!needsTypeBarrier);
+
+  auto* ins = MMegamorphicStoreSlot::New(alloc(), obj, name, rhs);
+  addEffectful(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);

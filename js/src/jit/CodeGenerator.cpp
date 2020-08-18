@@ -4640,6 +4640,34 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
+  Register obj = ToRegister(lir->object());
+  ValueOperand rhs = ToValue(lir, LMegamorphicStoreSlot::RhsIndex);
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+
+  masm.pushValue(rhs);
+  masm.moveStackPtrTo(rhs.scratchReg());
+
+  masm.setupUnalignedABICall(temp1);
+  masm.loadJSContext(temp1);
+  masm.passABIArg(temp1);
+  masm.passABIArg(obj);
+  masm.movePtr(ImmGCPtr(lir->mir()->name()), temp2);
+  masm.passABIArg(temp2);
+  masm.passABIArg(rhs.scratchReg());
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<false>)));
+
+  MOZ_ASSERT(!rhs.aliases(temp1));
+  masm.mov(ReturnReg, temp1);
+  masm.popValue(rhs);
+
+  Label bail;
+  masm.branchIfFalseBool(temp1, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
     LGuardIsNotArrayBufferMaybeShared* guard) {
   Register obj = ToRegister(guard->input());
