@@ -520,7 +520,7 @@ impl Document {
     }
 
     fn has_pixels(&self) -> bool {
-        !self.view.scene.device_rect.size.is_empty_or_negative()
+        !self.view.scene.device_rect.size.is_empty()
     }
 
     fn process_frame_msg(
