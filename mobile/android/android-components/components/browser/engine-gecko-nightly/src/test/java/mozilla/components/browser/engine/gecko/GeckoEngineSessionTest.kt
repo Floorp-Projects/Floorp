@@ -2194,6 +2194,25 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onPaintStatusReset notifies observers`() {
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observed = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPaintStatusReset() {
+                observed = true
+            }
+        })
+
+        contentDelegate.value.onPaintStatusReset(mock())
+        assertTrue(observed)
+    }
+
+    @Test
     fun `onCrash notifies observers about crash`() {
         val engineSession = GeckoEngineSession(mock(),
             geckoSessionProvider = geckoSessionProvider)
