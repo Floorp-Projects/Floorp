@@ -22,11 +22,11 @@ ChromeUtils.defineModuleGetter(
 
 var PartnerLinkAttribution = {
   async makeRequest({ targetURL, source }) {
-    let searchProvider = targetURL.match(/^https?:\/\/(?:www.)?([^.]*)/)[1];
+    let partner = targetURL.match(/^https?:\/\/(?:www.)?([^.]*)/)[1];
 
     function record(objectString, value = "") {
-      recordTelemetryEvent("search_override_exp", objectString, value, {
-        searchProvider,
+      recordTelemetryEvent("interaction", objectString, value, {
+        partner,
         source,
       });
     }
@@ -35,7 +35,7 @@ var PartnerLinkAttribution = {
     const attributionUrl = Services.prefs.getStringPref(
       Services.prefs.getBoolPref("browser.topsites.useRemoteSetting")
         ? "browser.topsites.attributionURL"
-        : `browser.newtabpage.searchTileOverride.${searchProvider}.attributionURL`,
+        : `browser.newtabpage.searchTileOverride.${partner}.attributionURL`,
       ""
     );
     if (!attributionUrl) {
@@ -52,9 +52,9 @@ var PartnerLinkAttribution = {
 };
 
 function recordTelemetryEvent(method, objectString, value, extra) {
-  Services.telemetry.setEventRecordingEnabled("top_sites", true);
+  Services.telemetry.setEventRecordingEnabled("partner_link", true);
   Services.telemetry.recordEvent(
-    "top_sites",
+    "partner_link",
     method,
     objectString,
     value,
