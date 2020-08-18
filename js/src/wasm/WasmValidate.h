@@ -731,33 +731,11 @@ class Decoder {
           return fail("(ref T) types not enabled");
         }
         bool nullable = code == uint8_t(TypeCode::NullableRef);
-
-        uint8_t nextByte;
-        if (!peekByte(&nextByte)) {
-          return fail("unable to read heap type");
+        RefType refType;
+        if (!readHeapType(numTypes, true, nullable, &refType)) {
+          return false;
         }
-
-        if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
-          uint8_t code;
-          if (!readFixedU8(&code)) {
-            return false;
-          }
-
-          switch (code) {
-            case uint8_t(TypeCode::FuncRef):
-            case uint8_t(TypeCode::ExternRef):
-              *type = RefType::fromTypeCode(TypeCode(code), nullable);
-              return true;
-            default:
-              return fail("invalid heap type");
-          }
-        }
-
-        int32_t x;
-        if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes) {
-          return fail("invalid heap type index");
-        }
-        *type = RefType::fromTypeIndex(x, nullable);
+        *type = refType;
         return true;
       }
 #  endif
@@ -775,6 +753,55 @@ class Decoder {
     }
     if (type->isTypeIndex() &&
         !types[type->refType().typeIndex()].isStructType()) {
+      return fail("type index does not reference a struct type");
+    }
+    return true;
+  }
+  MOZ_MUST_USE bool readHeapType(uint32_t numTypes, bool gcTypesEnabled,
+                                 bool nullable, RefType* type) {
+    uint8_t nextByte;
+    if (!peekByte(&nextByte)) {
+      return fail("expected heap type code");
+    }
+
+    if ((nextByte & SLEB128SignMask) == SLEB128SignBit) {
+      uint8_t code;
+      if (!readFixedU8(&code)) {
+        return false;
+      }
+
+      switch (code) {
+        case uint8_t(TypeCode::FuncRef):
+        case uint8_t(TypeCode::ExternRef):
+          *type = RefType::fromTypeCode(TypeCode(code), nullable);
+          return true;
+        default:
+          return fail("invalid heap type");
+      }
+    }
+
+#ifndef ENABLE_WASM_GC
+    return fail("invalid heap type");
+#else
+    if (!gcTypesEnabled) {
+      return fail("(ref T) types not enabled");
+    }
+
+    int32_t x;
+    if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes) {
+      return fail("invalid heap type index");
+    }
+    *type = RefType::fromTypeIndex(x, nullable);
+    return true;
+#endif
+  }
+  MOZ_MUST_USE bool readHeapType(const TypeDefVector& types,
+                                 bool gcTypesEnabled, bool nullable,
+                                 RefType* type) {
+    if (!readHeapType(types.length(), gcTypesEnabled, nullable, type)) {
+      return false;
+    }
+    if (type->isTypeIndex() && !types[type->typeIndex()].isStructType()) {
       return fail("type index does not reference a struct type");
     }
     return true;
