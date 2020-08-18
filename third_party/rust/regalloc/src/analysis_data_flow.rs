@@ -1884,7 +1884,7 @@ pub fn compute_reg_to_ranges_maps<F: Function>(
 
     // Same for the real live ranges.
     let mut rreg_approx_frag_counts = vec![0u8; num_rregs];
-    let mut rreg_to_rlrs_map = vec![Vec::<RealRangeIx>::new(); num_rregs];
+    let mut rreg_to_rlrs_map = vec![SmallVec::<[RealRangeIx; 6]>::new(); num_rregs];
     for (rlr, n) in rlr_env.iter().zip(0..) {
         let rlrix = RealRangeIx::new(n);
         let rreg: RealReg = rlr.rreg;
