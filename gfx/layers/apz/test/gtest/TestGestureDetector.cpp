@@ -22,7 +22,7 @@ class APZCGestureDetectorTester : public APZCBasicTester {
     FrameMetrics fm;
     fm.SetCompositionBounds(ParentLayerRect(200, 200, 100, 200));
     fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
-    fm.SetScrollOffset(CSSPoint(300, 300));
+    fm.SetVisualScrollOffset(CSSPoint(300, 300));
     fm.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
     // APZC only allows zooming on the root scrollable frame.
     fm.SetIsRootContent(true);
@@ -121,8 +121,8 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
 
   // Verify that we scrolled
   FrameMetrics finalMetrics = apzc->GetFrameMetrics();
-  EXPECT_EQ(zoomedMetrics.GetScrollOffset().y - (panDistance / newZoom),
-            finalMetrics.GetScrollOffset().y);
+  EXPECT_EQ(zoomedMetrics.GetVisualScrollOffset().y - (panDistance / newZoom),
+            finalMetrics.GetVisualScrollOffset().y);
 
   // Clear out any remaining fling animation and pending tasks
   apzc->AdvanceAnimationsUntilEnd();
@@ -209,8 +209,9 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
   // Verify that we scrolled
   FrameMetrics finalMetrics = apzc->GetFrameMetrics();
   float zoom = finalMetrics.GetZoom().ToScaleFactor().scale;
-  EXPECT_EQ(originalMetrics.GetScrollOffset().y - (panDistance * 2 / zoom),
-            finalMetrics.GetScrollOffset().y);
+  EXPECT_EQ(
+      originalMetrics.GetVisualScrollOffset().y - (panDistance * 2 / zoom),
+      finalMetrics.GetVisualScrollOffset().y);
 
   // Clear out any remaining fling animation and pending tasks
   apzc->AdvanceAnimationsUntilEnd();

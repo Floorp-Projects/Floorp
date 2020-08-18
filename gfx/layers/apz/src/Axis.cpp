@@ -368,7 +368,7 @@ ParentLayerCoord Axis::GetScrollRangeEnd() const {
 
 ParentLayerCoord Axis::GetOrigin() const {
   ParentLayerPoint origin =
-      GetFrameMetrics().GetScrollOffset() * GetFrameMetrics().GetZoom();
+      GetFrameMetrics().GetVisualScrollOffset() * GetFrameMetrics().GetZoom();
   return GetPointOffset(origin);
 }
 

@@ -324,7 +324,7 @@ void RenderMinimap(ContainerT* aContainer, const RefPtr<APZSampler>& aSampler,
   LayerRect visualRect =
       ParentLayerRect(scrollOffset, compositionBounds.Size()) /
       LayerToParentLayerScale(1);
-  LayerRect dp = (fm.GetDisplayPort() + fm.GetScrollOffset()) *
+  LayerRect dp = (fm.GetDisplayPort() + fm.GetLayoutScrollOffset()) *
                  fm.LayersPixelsPerCSSPixel();
   Maybe<LayerRect> layoutRect;
   Maybe<LayerRect> cdp;
@@ -333,7 +333,7 @@ void RenderMinimap(ContainerT* aContainer, const RefPtr<APZSampler>& aSampler,
     layoutRect = Some(viewport * fm.LayersPixelsPerCSSPixel());
   }
   if (!fm.GetCriticalDisplayPort().IsEmpty()) {
-    cdp = Some((fm.GetCriticalDisplayPort() + fm.GetScrollOffset()) *
+    cdp = Some((fm.GetCriticalDisplayPort() + fm.GetLayoutScrollOffset()) *
                fm.LayersPixelsPerCSSPixel());
   }
 

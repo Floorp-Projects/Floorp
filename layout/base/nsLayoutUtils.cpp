@@ -3501,7 +3501,7 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
   metrics.SetLayoutViewport(
       CSSRect::FromAppUnits(nsRect(aScrollFrame->GetScrollPosition(),
                                    aScrollFrame->GetScrollPortRect().Size())));
-  metrics.SetScrollOffset(
+  metrics.SetVisualScrollOffset(
       isRcdRsf ? CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset())
                : metrics.GetLayoutViewport().TopLeft());
 
@@ -9276,7 +9276,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
     CSSPoint apzScrollPosition =
         CSSPoint::FromAppUnits(scrollableFrame->GetApzScrollPosition());
-    metrics.SetScrollOffset(scrollPosition);
+    metrics.SetVisualScrollOffset(scrollPosition);
     metrics.SetBaseScrollOffset(apzScrollPosition);
     metrics.SetVisualViewportOffset(
         aIsRootContent && presShell->IsVisualViewportOffsetSet()
@@ -9891,7 +9891,7 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
 
   CSSPoint frameScrollOffset =
       CSSPoint::FromAppUnits(frame->GetScrollPosition());
-  CSSPoint scrollDelta = aMetrics.GetScrollOffset() - frameScrollOffset;
+  CSSPoint scrollDelta = aMetrics.GetVisualScrollOffset() - frameScrollOffset;
   ScreenMargin displayPortMargins =
       APZCCallbackHelper::AdjustDisplayPortForScrollDelta(
           aMetrics.GetDisplayPortMargins(),

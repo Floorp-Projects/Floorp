@@ -21,7 +21,7 @@ void FrameMetrics::RecalculateLayoutViewportOffset() {
   // For subframes, the visual and layout viewports coincide, so just
   // keep the layout viewport offset in sync with the visual one.
   if (!mIsRootContent) {
-    mLayoutViewport.MoveTo(mScrollOffset);
+    mLayoutViewport.MoveTo(GetVisualScrollOffset());
     return;
   }
   // For the root, the two viewports can diverge, but the layout
