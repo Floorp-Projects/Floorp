@@ -65,8 +65,8 @@ if CONFIG['MOZ_NEW_XULSTORE']:
 if CONFIG['MOZ_NEW_CERT_STORAGE']:
     gkrust_features += ['new_cert_storage']
 
-if CONFIG['FUZZING_INTERFACES']:
-    gkrust_features += ['fuzzing_interfaces']
+if CONFIG['LIBFUZZER']:
+    gkrust_features += ['libfuzzer']
 
 if CONFIG['MOZ_WEBRTC']:
     gkrust_features += ['webrtc']

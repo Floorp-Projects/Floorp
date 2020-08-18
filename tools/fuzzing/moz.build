@@ -18,10 +18,10 @@ if not CONFIG['JS_STANDALONE']:
     'ipc',
   ]
 
-if not CONFIG['JS_STANDALONE'] and CONFIG['FUZZING_INTERFACES']:
-  DIRS += [
-    'rust',
-  ]
+  if CONFIG['LIBFUZZER']:
+    DIRS += [
+      'rust',
+    ]
 
 if CONFIG['LIBFUZZER']:
   DIRS += [
