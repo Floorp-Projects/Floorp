@@ -2090,3 +2090,10 @@ def android_package_name(value, moz_app_name):
     return 'org.mozilla.%s' % moz_app_name
 
 set_config('ANDROID_PACKAGE_NAME', android_package_name)
+
+
+# Miscellaneous options
+# ==============================================================
+option(env='MOZ_WINCONSOLE', nargs='?',
+       help='Whether we can create a console window.')
+set_define('MOZ_WINCONSOLE', True, when=depends('MOZ_WINCONSOLE')(lambda x: x))
