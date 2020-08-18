@@ -450,14 +450,7 @@ MediaController* MediaControlService::ControllerManager::GetMainController()
 }
 
 uint64_t MediaControlService::ControllerManager::GetControllersNum() const {
-  size_t length = 0;
-  const auto* element =
-      static_cast<ConstLinkedListControllerPtr>(mControllers.getFirst());
-  while (element) {
-    length++;
-    element = element->getNext();
-  }
-  return length;
+  return mControllers.length();
 }
 
 bool MediaControlService::ControllerManager::Contains(
