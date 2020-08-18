@@ -6381,6 +6381,27 @@ class LMegamorphicStoreSlot
   MMegamorphicStoreSlot* mir() const { return mir_->toMegamorphicStoreSlot(); }
 };
 
+class LMegamorphicHasProp
+    : public LCallInstructionHelper<1, 1 + BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(MegamorphicHasProp)
+
+  LMegamorphicHasProp(const LAllocation& obj, const LBoxAllocation& idVal,
+                      const LDefinition& temp)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setBoxOperand(IdIndex, idVal);
+    setTemp(0, temp);
+  }
+
+  static const size_t IdIndex = 1;
+
+  const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+
+  MMegamorphicHasProp* mir() const { return mir_->toMegamorphicHasProp(); }
+};
+
 class LGuardIsNotArrayBufferMaybeShared : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardIsNotArrayBufferMaybeShared)

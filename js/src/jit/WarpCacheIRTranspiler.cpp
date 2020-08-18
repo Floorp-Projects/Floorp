@@ -449,6 +449,19 @@ bool WarpCacheIRTranspiler::emitMegamorphicStoreSlot(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitMegamorphicHasPropResult(ObjOperandId objId,
+                                                         ValOperandId idId,
+                                                         bool hasOwn) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* id = getOperand(idId);
+
+  auto* ins = MMegamorphicHasProp::New(alloc(), obj, id, hasOwn);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);

@@ -9400,6 +9400,40 @@ class MMegamorphicStoreSlot
   }
 };
 
+class MMegamorphicHasProp
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  bool hasOwn_;
+
+  MMegamorphicHasProp(MDefinition* obj, MDefinition* idVal, bool hasOwn)
+      : MBinaryInstruction(classOpcode, obj, idVal), hasOwn_(hasOwn) {
+    setResultType(MIRType::Boolean);
+  }
+
+ public:
+  INSTRUCTION_HEADER(MegamorphicHasProp)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, idVal))
+
+  bool hasOwn() const { return hasOwn_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isMegamorphicHasProp()) {
+      return false;
+    }
+    if (ins->toMegamorphicHasProp()->hasOwn() != hasOwn()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                          AliasSet::DynamicSlot);
+  }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.
 class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
                                           public SingleObjectPolicy::Data {
