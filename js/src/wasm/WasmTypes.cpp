@@ -1016,17 +1016,38 @@ UniqueChars wasm::ToString(ValType type) {
       literal = "f64";
       break;
     case ValType::Ref:
-      switch (type.refTypeKind()) {
-        case RefType::Extern:
-          literal = "externref";
-          break;
-        case RefType::Func:
-          literal = "funcref";
-          break;
-        case RefType::TypeIndex:
-          return JS_smprintf("optref %d", type.refType().typeIndex());
+      if (type.isNullable() && !type.isTypeIndex()) {
+        switch (type.refTypeKind()) {
+          case RefType::Extern:
+            literal = "externref";
+            break;
+          case RefType::Func:
+            literal = "funcref";
+            break;
+          case RefType::TypeIndex:
+            MOZ_ASSERT_UNREACHABLE();
+        }
+      } else {
+        const char* heapType = nullptr;
+        switch (type.refTypeKind()) {
+          case RefType::Extern:
+            heapType = "externref";
+            break;
+          case RefType::Func:
+            heapType = "funcref";
+            break;
+          case RefType::TypeIndex:
+            return JS_smprintf("ref %s%d", type.isNullable() ? "null " : " ",
+                               type.refType().typeIndex());
+        }
+        return JS_smprintf("ref %s%s", type.isNullable() ? "null " : " ",
+                           heapType);
       }
       break;
   }
   return JS_smprintf("%s", literal);
+}
+
+UniqueChars wasm::ToString(const Maybe<ValType>& type) {
+  return type ? ToString(type.ref()) : JS_smprintf("%s", "void");
 }

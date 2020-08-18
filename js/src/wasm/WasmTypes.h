@@ -748,34 +748,7 @@ static inline jit::MIRType ToMIRType(const Maybe<ValType>& t) {
 
 extern UniqueChars ToString(ValType type);
 
-static inline const char* ToCString(ValType type) {
-  switch (type.kind()) {
-    case ValType::I32:
-      return "i32";
-    case ValType::I64:
-      return "i64";
-    case ValType::V128:
-      return "v128";
-    case ValType::F32:
-      return "f32";
-    case ValType::F64:
-      return "f64";
-    case ValType::Ref:
-      switch (type.refTypeKind()) {
-        case RefType::Extern:
-          return "externref";
-        case RefType::Func:
-          return "funcref";
-        case RefType::TypeIndex:
-          return "optref";
-      }
-  }
-  MOZ_CRASH("bad value type");
-}
-
-static inline const char* ToCString(const Maybe<ValType>& type) {
-  return type ? ToCString(type.ref()) : "void";
-}
+extern UniqueChars ToString(const Maybe<ValType>& type);
 
 // An AnyRef is a boxed value that can represent any wasm reference type and any
 // host type that the host system allows to flow into and out of wasm
