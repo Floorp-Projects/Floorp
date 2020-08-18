@@ -1,7 +1,7 @@
 // |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 // table.set in bounds with i32 x externref - works, no value generated
-// table.set with (ref opt T) - works
+// table.set with (ref null T) - works
 // table.set with null - works
 // table.set out of bounds - fails
 
@@ -15,7 +15,7 @@
            (func (export "set_null") (param i32)
              (table.set (local.get 0) (ref.null extern)))
            (func (export "set_ref") (param i32) (param externref)
-             (table.set (local.get 0) (struct.narrow externref (ref opt $dummy) (local.get 1))))
+             (table.set (local.get 0) (struct.narrow externref (ref null $dummy) (local.get 1))))
            (func (export "make_struct") (result externref)
              (struct.new $dummy (i32.const 37))))`);
     let x = {};
