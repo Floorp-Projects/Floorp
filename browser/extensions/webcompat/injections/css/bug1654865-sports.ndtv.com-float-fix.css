@@ -1,0 +1,13 @@
+/**
+ * sports.ndtv.com - content is of the articles is not displayed
+ * Bug #1654865 - https://bugzilla.mozilla.org/show_bug.cgi?id=1654865
+ * WebCompat issue #55377 - https://webcompat.com/issues/55377
+ *
+ * The content has width:0, due to uncleared float and negative margin combination,
+ * which is https://bugzilla.mozilla.org/show_bug.cgi?id=1400958
+ * Adding clear: both; to the element located above the affected div
+ * the fixes the issue
+ */
+.t-brd {
+  clear: both;
+}

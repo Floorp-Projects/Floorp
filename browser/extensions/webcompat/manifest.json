@@ -1,9 +1,8 @@
-
 {
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "13.2.0",
+  "version": "14.0.0",
 
   "applications": {
     "gecko": {
@@ -132,6 +131,7 @@
     "shims/facebook-sdk.js",
     "shims/google-analytics-ecommerce-plugin.js",
     "shims/google-analytics-legacy.js",
+    "shims/google-analytics-tag-manager.js",
     "shims/google-analytics.js",
     "shims/google-publisher-tags.js",
     "shims/live-test-shim.js",
@@ -142,4 +142,3 @@
     "shims/rich-relevance.js"
   ]
 }
-
