@@ -5836,6 +5836,81 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+static MDefinition* SkipObjectGuards(MDefinition* ins) {
+  // These instructions don't modify the object and just guard specific
+  // properties.
+  while (true) {
+    if (ins->isGuardShape()) {
+      ins = ins->toGuardShape()->object();
+      continue;
+    }
+    if (ins->isGuardObjectGroup()) {
+      ins = ins->toGuardObjectGroup()->object();
+      continue;
+    }
+
+    break;
+  }
+
+  return ins;
+}
+
+MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
+  MDefinition* ins = dependency();
+  if (!ins) {
+    return this;
+  }
+
+  if (!ins->block()->dominates(block())) {
+    return this;
+  }
+
+  if (ins->isAddAndStoreSlot()) {
+    auto* add = ins->toAddAndStoreSlot();
+
+    if (SkipObjectGuards(add->object()) != SkipObjectGuards(object()) ||
+        add->shape() != shape()) {
+      return this;
+    }
+
+    // TODO(Warp): Here and below add MAssertShape.
+    return object();
+  }
+
+  if (ins->isAllocateAndStoreSlot()) {
+    auto* allocate = ins->toAllocateAndStoreSlot();
+
+    if (SkipObjectGuards(allocate->object()) != SkipObjectGuards(object()) ||
+        allocate->shape() != shape()) {
+      return this;
+    }
+
+    return object();
+  }
+
+  if (ins->isStart()) {
+    // The guard doesn't depend on any other instruction that is modifying
+    // the object operand, so check it directly.
+    auto* obj = SkipObjectGuards(object());
+    if (!obj->isNewObject()) {
+      return this;
+    }
+
+    JSObject* templateObject = obj->toNewObject()->templateObject();
+    if (!templateObject) {
+      return this;
+    }
+
+    if (templateObject->shape() != shape()) {
+      return this;
+    }
+
+    return object();
+  }
+
+  return this;
+}
+
 MDefinition* MGuardValue::foldsTo(TempAllocator& alloc) {
   if (MConstant* cst = value()->maybeConstantValue()) {
     if (cst->toJSValue() == expected()) {

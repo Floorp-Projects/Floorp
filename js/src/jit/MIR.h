@@ -9082,6 +9082,7 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
     }
     return congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
   }
