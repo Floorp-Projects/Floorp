@@ -14,12 +14,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
 });
+
+Cu.importGlobalProperties(["fetch"]);
 
 var EXPORTED_SYMBOLS = ["SearchTestUtils"];
 
@@ -77,11 +78,6 @@ var SearchTestUtils = Object.freeze({
     });
   },
 
-  parseJsonFromStream(aInputStream) {
-    let bytes = NetUtil.readInputStream(aInputStream, aInputStream.available());
-    return JSON.parse(new TextDecoder().decode(bytes));
-  },
-
   /**
    * Load engines from test data located in particular folders.
    *
@@ -106,11 +102,8 @@ var SearchTestUtils = Object.freeze({
     if (config) {
       sinon.stub(settings, "get").returns(config);
     } else {
-      let chan = NetUtil.newChannel({
-        uri: "resource://search-extensions/engines.json",
-        loadUsingSystemPrincipal: true,
-      });
-      let json = this.parseJsonFromStream(chan.open());
+      let response = await fetch(`resource://search-extensions/engines.json`);
+      let json = await response.json();
       sinon.stub(settings, "get").returns(json.data);
     }
   },
@@ -278,12 +271,12 @@ var SearchTestUtils = Object.freeze({
    *
    * @param {Fun} registerCleanupFunction
    */
-  useMockIdleService(registerCleanupFunction) {
+  useMockIdleService() {
     let fakeIdleService = MockRegistrar.register(
       "@mozilla.org/widget/useridleservice;1",
       SearchTestUtils.idleService
     );
-    registerCleanupFunction(() => {
+    gTestGlobals.registerCleanupFunction(() => {
       MockRegistrar.unregister(fakeIdleService);
     });
   },
