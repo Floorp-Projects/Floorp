@@ -1360,12 +1360,6 @@ class Marionette(object):
         self._send_message("WebDriver:SwitchToWindow", {"handle": handle, "focus": focus})
         self.window = handle
 
-    def get_active_frame(self):
-        """Returns an :class:`~marionette_driver.marionette.HTMLElement`
-        representing the frame Marionette is currently acting on."""
-        return self._send_message("WebDriver:GetActiveFrame",
-                                  key="value")
-
     def switch_to_default_content(self):
         """Switch the current context to page's default content."""
         return self.switch_to_frame()

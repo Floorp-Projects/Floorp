@@ -1211,7 +1211,6 @@ async function refresh(msg) {
     // We need to move to the top frame before navigating
     curContainer.frame = content;
     sendSyncMessage("Marionette:switchedToFrame", {
-      frameValue: null,
       browsingContextId: curContainer.id,
     });
 
@@ -1477,10 +1476,8 @@ function switchToShadowRoot(el) {
  */
 function switchToParentFrame(msg) {
   curContainer.frame = curContainer.frame.parent;
-  let parentElement = seenEls.add(curContainer.frame);
 
   sendSyncMessage("Marionette:switchedToFrame", {
-    frameValue: parentElement.uuid,
     browsingContextId: curContainer.id,
   });
 
@@ -1502,7 +1499,6 @@ function switchToFrame({ json }) {
   let { commandID, element, focus, id } = json;
 
   let foundFrame;
-  let frameWebEl;
   let wantedFrame = null;
 
   // check if curContainer.frame reference is dead
@@ -1519,7 +1515,6 @@ function switchToFrame({ json }) {
   if (id == null && !element) {
     curContainer.frame = content;
     sendSyncMessage("Marionette:switchedToFrame", {
-      frameValue: null,
       browsingContextId: curContainer.id,
     });
 
@@ -1578,13 +1573,11 @@ function switchToFrame({ json }) {
           frameEl = frames[id].frameElement;
           if (frameEl !== null) {
             foundFrame = frameEl.contentWindow;
-            frameWebEl = seenEls.add(frameEl.wrappedJSObject);
           } else {
             // If foundFrame is null at this point then we have the top
             // level browsing context so should treat it accordingly.
             curContainer.frame = content;
             sendSyncMessage("Marionette:switchedToFrame", {
-              frameValue: null,
               browsingContextId: curContainer.id,
             });
 
@@ -1617,13 +1610,7 @@ function switchToFrame({ json }) {
 
   curContainer.frame = foundFrame;
 
-  // send a synchronous message to let the server update the currently active
-  // frame element (for getActiveFrame)
-  if (!frameWebEl) {
-    frameWebEl = seenEls.add(foundFrame.wrappedJSObject);
-  }
   sendSyncMessage("Marionette:switchedToFrame", {
-    frameValue: frameWebEl.uuid,
     browsingContextId: curContainer.id,
   });
 

@@ -151,7 +151,6 @@ this.GeckoDriver = function(server) {
   this.curFrame = null;
   // browsing context of current content frame
   this.currentFrameBrowsingContext = null;
-  this.currentFrameElement = null;
   this.observing = null;
   this._browserIds = new WeakMap();
 
@@ -1754,26 +1753,6 @@ GeckoDriver.prototype.setWindowHandle = async function(
   if (focus) {
     await this.curBrowser.focusWindow();
   }
-};
-
-GeckoDriver.prototype.getActiveFrame = function() {
-  assert.open(this.getCurrentWindow());
-
-  let frame = null;
-
-  switch (this.context) {
-    case Context.Chrome:
-      // no frame means top-level
-      if (this.curFrame) {
-        frame = this.curBrowser.seenEls.add(this.curFrame.frameElement);
-      }
-      break;
-
-    case Context.Content:
-      frame = this.currentFrameElement;
-  }
-
-  return frame;
 };
 
 /**
@@ -3557,30 +3536,9 @@ GeckoDriver.prototype.uninstallAddon = function(cmd) {
 GeckoDriver.prototype.receiveMessage = function(message) {
   switch (message.name) {
     case "Marionette:switchedToFrame":
-      if (message.json.restorePrevious) {
-        this.currentFrameElement = this.previousFrameElement;
-      } else {
-        // we don't arbitrarily save previousFrameElement, since
-        // we allow frame switching after modals appear, which would
-        // override this value and we'd lose our reference
-        if (message.json.storePrevious) {
-          this.previousFrameElement = new ChromeWebElement(
-            this.currentFrameElement
-          );
-        }
-        if (message.json.frameValue) {
-          this.currentFrameElement = new ChromeWebElement(
-            message.json.frameValue
-          );
-        } else {
-          this.currentFrameElement = null;
-        }
-        if (message.json.browsingContextId) {
-          this.currentFrameBrowsingContext = BrowsingContext.get(
-            message.json.browsingContextId
-          );
-        }
-      }
+      this.currentFrameBrowsingContext = BrowsingContext.get(
+        message.json.browsingContextId
+      );
       break;
 
     case "Marionette:Register":
@@ -3878,7 +3836,6 @@ GeckoDriver.prototype.commands = {
   "WebDriver:Forward": GeckoDriver.prototype.goForward,
   "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreenWindow,
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,
-  "WebDriver:GetActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "WebDriver:GetAlertText": GeckoDriver.prototype.getTextFromDialog,
   "WebDriver:GetCapabilities": GeckoDriver.prototype.getSessionCapabilities,
   "WebDriver:GetChromeWindowHandle":
