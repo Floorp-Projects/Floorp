@@ -98,10 +98,10 @@ public class PanZoomController {
         }
 
         @WrapForJNI(calledFrom = "ui")
-        private native void handleMotionEvent(
+        private native @InputResult int handleMotionEvent(
                int action, int actionIndex, long time, int metaState,  float screenX, float screenY,
                int pointerId[], float x[], float y[], float orientation[], float pressure[],
-               float toolMajor[], float toolMinor[], GeckoResult<Integer> result);
+               float toolMajor[], float toolMinor[]);
 
         @WrapForJNI(calledFrom = "ui")
         private native @InputResult int handleScrollEvent(
@@ -150,15 +150,10 @@ public class PanZoomController {
 
     /* package */ final NativeProvider mNative = new NativeProvider();
 
-    private void handleMotionEvent(final MotionEvent event) {
-        handleMotionEvent(event, null);
-    }
-
-    private void handleMotionEvent(final MotionEvent event, final GeckoResult<Integer> result) {
+    private @InputResult int handleMotionEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_MOTION, event));
-            result.complete(INPUT_RESULT_HANDLED);
-            return;
+            return INPUT_RESULT_HANDLED;
         }
 
         final int action = event.getActionMasked();
@@ -167,8 +162,7 @@ public class PanZoomController {
         if (action == MotionEvent.ACTION_DOWN) {
             mLastDownTime = event.getDownTime();
         } else if (mLastDownTime != event.getDownTime()) {
-            result.complete(INPUT_RESULT_UNHANDLED);
-            return;
+            return INPUT_RESULT_UNHANDLED;
         }
 
         final int[] pointerId = new int[count];
@@ -206,9 +200,9 @@ public class PanZoomController {
             mSession.onScreenOriginChanged((int)screenX, (int)screenY);
         }
 
-        mNative.handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
-                                  event.getMetaState(), screenX, screenY, pointerId, x, y,
-                                  orientation, pressure, toolMajor, toolMinor, result);
+        return mNative.handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
+                                         event.getMetaState(), screenX, screenY, pointerId, x, y,
+                                         orientation, pressure, toolMajor, toolMinor);
     }
 
     private @InputResult int handleScrollEvent(final MotionEvent event) {
@@ -320,41 +314,15 @@ public class PanZoomController {
      * display surface.
      *
      * @param event MotionEvent to process.
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) constants indicating how the event was handled.
      */
-    public void onTouchEvent(final @NonNull MotionEvent event) {
+    public @InputResult int onTouchEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         if (!sTreatMouseAsTouch && event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
-            return;
+            return handleMouseEvent(event);
         }
-        handleMotionEvent(event);
-    }
-
-    /**
-     * Process a touch event through the pan-zoom controller. Treat any mouse events as
-     * "touch" rather than as "mouse". Pointer coordinates should be relative to the
-     * display surface.
-     *
-     * NOTE: It is highly recommended to only call this with ACTION_DOWN or in otherwise
-     * limited capacity. Returning a GeckoResult for every touch event will generate
-     * a lot of allocations and unnecessary GC pressure. Instead, prefer to call
-     * {@link #onTouchEvent(MotionEvent)}.
-     *
-     * @param event MotionEvent to process.
-     * @return A GeckoResult resolving to one of the
-     *         {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) constants indicating
-     *         how the event was handled.
-     */
-    public @NonNull GeckoResult<Integer> onTouchEventForResult(final @NonNull MotionEvent event) {
-        ThreadUtils.assertOnUiThread();
-
-        if (!sTreatMouseAsTouch && event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
-            return GeckoResult.fromValue(handleMouseEvent(event));
-        }
-
-        final GeckoResult<Integer> result = new GeckoResult<>();
-        handleMotionEvent(event, result);
-        return result;
+        return handleMotionEvent(event);
     }
 
     /**
@@ -363,14 +331,15 @@ public class PanZoomController {
      * display surface.
      *
      * @param event MotionEvent to process.
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) constants indicating how the event was handled.
      */
-    public void onMouseEvent(final @NonNull MotionEvent event) {
+    public @InputResult int onMouseEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
-            return;
+            return handleMouseEvent(event);
         }
-        handleMotionEvent(event);
+        return handleMotionEvent(event);
     }
 
     @Override
@@ -384,8 +353,9 @@ public class PanZoomController {
      * display surface.
      *
      * @param event MotionEvent to process.
+     * @return One of the {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) indicating how the event was handled.
      */
-    public void onMotionEvent(final @NonNull MotionEvent event) {
+    public @InputResult int onMotionEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         final int action = event.getActionMasked();
@@ -395,13 +365,15 @@ public class PanZoomController {
             } else if ((InputDevice.getDevice(event.getDeviceId()) != null) &&
                        (InputDevice.getDevice(event.getDeviceId()).getSources() &
                         InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD) {
-                return;
+                return INPUT_RESULT_UNHANDLED;
             }
-            handleScrollEvent(event);
+            return handleScrollEvent(event);
         } else if ((action == MotionEvent.ACTION_HOVER_MOVE) ||
                    (action == MotionEvent.ACTION_HOVER_ENTER) ||
                    (action == MotionEvent.ACTION_HOVER_EXIT)) {
-            handleMouseEvent(event);
+            return handleMouseEvent(event);
+        } else {
+            return INPUT_RESULT_UNHANDLED;
         }
     }
 

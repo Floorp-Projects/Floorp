@@ -16,13 +16,9 @@ exclude: true
 ## v81
 - Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
   to [`ContentBlocking.Settings`][81.2].
-⚠️ - Changed [`GeckoView.onTouchEventForResult`][81.3] to return a `GeckoResult`, as it now
-makes a round-trip to Gecko. The result will be more accurate now, since how content treats
-the event is now considered.
 
 [81.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
 [81.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
-[81.3]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult-android.view.MotionEvent-
 
 ## v80
 - Removed `GeckoSession.hashCode` and `GeckoSession.equals` overrides in favor
@@ -765,4 +761,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 9ee462cf1333c166efa9749ee87bbfd7675dfb81
+[api-version]: a3245a37268efa5b1bbf787a3aca046670d36cdb
