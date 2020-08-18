@@ -63,28 +63,6 @@ template WSRunScanner::TextFragmentData::TextFragmentData(
 template WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointInText& aPoint, const Element* aEditingHost);
 
-nsresult WhiteSpaceVisibilityKeeper::PrepareToDeleteNode(
-    HTMLEditor& aHTMLEditor, nsIContent* aContent) {
-  if (NS_WARN_IF(!aContent)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  EditorRawDOMPoint atContent(aContent);
-  if (!atContent.IsSet()) {
-    NS_WARNING("aContent was an orphan node");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsresult rv = WhiteSpaceVisibilityKeeper::
-      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
-          aHTMLEditor, EditorDOMRange(atContent, atContent.NextPoint()));
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "WhiteSpaceVisibilityKeeper::"
-      "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
-  return rv;
-}
-
 nsresult WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
     HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aSplitNode,
     int32_t* aSplitOffset) {
@@ -1089,10 +1067,18 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
 nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
     HTMLEditor& aHTMLEditor, nsIContent& aContentToDelete,
     const EditorDOMPoint& aCaretPoint) {
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteNode(
-      aHTMLEditor, &aContentToDelete);
+  EditorDOMPoint atContent(&aContentToDelete);
+  if (!atContent.IsSet()) {
+    NS_WARNING("Deleting content node was an orphan node");
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
+          aHTMLEditor, EditorDOMRange(atContent, atContent.NextPoint()));
   if (NS_FAILED(rv)) {
-    NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteNode() failed");
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::"
+        "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
     return rv;
   }
 
