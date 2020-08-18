@@ -1276,7 +1276,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         if (!env.gcTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
-        CHECK(iter.readComparison(RefType::any(), &nothing, &nothing));
+        CHECK(iter.readComparison(RefType::extern_(), &nothing, &nothing));
       }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
@@ -1689,7 +1689,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
             offset = layout.addReference(ReferenceType::TYPE_OBJECT);
             break;
           case RefType::Func:
-          case RefType::Any:
+          case RefType::Extern:
             offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
             break;
         }
@@ -1893,7 +1893,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
   if (elementType == uint8_t(TypeCode::FuncRef)) {
     tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
-  } else if (elementType == uint8_t(TypeCode::AnyRef)) {
+  } else if (elementType == uint8_t(TypeCode::ExternRef)) {
     if (!refTypesEnabled) {
       return d.fail("expected 'funcref' element type");
     }
@@ -1947,7 +1947,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Func:
-        case RefType::Any:
+        case RefType::Extern:
           break;
         case RefType::TypeIndex:
 #ifdef WASM_PRIVATE_REFTYPES
@@ -2689,8 +2689,8 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
             case uint8_t(TypeCode::FuncRef):
               elemType = RefType::func();
               break;
-            case uint8_t(TypeCode::AnyRef):
-              elemType = RefType::any();
+            case uint8_t(TypeCode::ExternRef):
+              elemType = RefType::extern_();
               break;
             default:
               return d.fail(
@@ -2768,7 +2768,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
           return d.fail("failed to read initializer operation");
         }
 
-        RefType initType = RefType::any();
+        RefType initType = RefType::extern_();
         switch (op.b0) {
           case uint16_t(Op::RefFunc):
             initType = RefType::func();
