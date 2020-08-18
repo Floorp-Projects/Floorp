@@ -403,6 +403,16 @@ struct FrameMetrics {
 
   const CSSPoint& GetBaseScrollOffset() const { return mBaseScrollOffset; }
 
+  CSSPoint GetLayoutScrollOffset() const { return mLayoutViewport.TopLeft(); }
+  void SetLayoutScrollOffset(const CSSPoint& aLayoutScrollOffset) {
+    mLayoutViewport.MoveTo(aLayoutScrollOffset);
+  }
+
+  const CSSPoint& GetVisualScrollOffset() const { return mScrollOffset; }
+  void SetVisualScrollOffset(const CSSPoint& aVisualScrollOffset) {
+    mScrollOffset = aVisualScrollOffset;
+  }
+
   void SetSmoothScrollOffset(const CSSPoint& aSmoothScrollDestination) {
     mSmoothScrollOffset = aSmoothScrollDestination;
   }
