@@ -878,8 +878,9 @@ class nsWindow::NPZCSupport final
         WheelDeltaAdjustmentStrategy::eNone);
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret = result.mHandledByRootApzc ? INPUT_RESULT_HANDLED
-                                            : INPUT_RESULT_HANDLED_CONTENT;
+    int32_t ret = (result.mHandledByRootApzc == Some(true))
+                      ? INPUT_RESULT_HANDLED
+                      : INPUT_RESULT_HANDLED_CONTENT;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return ret;
@@ -1000,8 +1001,9 @@ class nsWindow::NPZCSupport final
                      GetEventTimeStamp(aTime), GetModifiers(aMetaState));
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret = result.mHandledByRootApzc ? INPUT_RESULT_HANDLED
-                                            : INPUT_RESULT_HANDLED_CONTENT;
+    int32_t ret = (result.mHandledByRootApzc == Some(true))
+                      ? INPUT_RESULT_HANDLED
+                      : INPUT_RESULT_HANDLED_CONTENT;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return ret;
@@ -1125,8 +1127,9 @@ class nsWindow::NPZCSupport final
     }
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret = result.mHandledByRootApzc ? INPUT_RESULT_HANDLED
-                                            : INPUT_RESULT_HANDLED_CONTENT;
+    int32_t ret = (result.mHandledByRootApzc == Some(true))
+                      ? INPUT_RESULT_HANDLED
+                      : INPUT_RESULT_HANDLED_CONTENT;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
       return ret;

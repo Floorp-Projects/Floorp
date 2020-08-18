@@ -25,7 +25,6 @@ namespace layers {
 
 APZEventResult::APZEventResult()
     : mStatus(nsEventStatus_eIgnore),
-      mHandledByRootApzc(false),
       mInputBlockId(InputBlockState::NO_BLOCK_ID) {}
 
 static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
