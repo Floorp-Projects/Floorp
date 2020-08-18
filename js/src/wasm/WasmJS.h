@@ -103,7 +103,7 @@ bool StreamingCompilationAvailable(JSContext* cx);
 // optimizing compiler tier.
 bool CodeCachingAvailable(JSContext* cx);
 
-// General reference types (anyref, funcref) and operations on them.
+// General reference types (externref, funcref) and operations on them.
 bool ReftypesAvailable(JSContext* cx);
 
 // Experimental (ref T) types and structure types.
@@ -168,10 +168,10 @@ uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
 bool IsSharedWasmMemoryObject(JSObject* obj);
 
 // Check a value against the given reference type kind.  If the targetTypeKind
-// is RefType::Any then the test always passes, but the value may be boxed.  If
-// the test passes then the value is stored either in fnval (for RefType::Func)
-// or in refval (for other types); this split is not strictly necessary but is
-// convenient for the users of this function.
+// is RefType::Extern then the test always passes, but the value may be boxed.
+// If the test passes then the value is stored either in fnval (for
+// RefType::Func) or in refval (for other types); this split is not strictly
+// necessary but is convenient for the users of this function.
 //
 // This can return false if the type check fails, or if a boxing into AnyRef
 // throws an OOM.

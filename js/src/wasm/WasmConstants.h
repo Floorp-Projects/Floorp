@@ -62,9 +62,8 @@ enum class TypeCode {
   // A function pointer with any signature
   FuncRef = 0x70,  // SLEB128(-0x10)
 
-  // A reference to any host type. This is exposed to JS as 'externref' and
-  // will eventually be renamed in code as well.
-  AnyRef = 0x6f,  // SLEB128(-0x11)
+  // A reference to any host value.
+  ExternRef = 0x6f,  // SLEB128(-0x11)
 
   // Type constructor for reference types.
   OptRef = 0x6c,
