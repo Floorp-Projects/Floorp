@@ -215,6 +215,7 @@ HttpBaseChannel::HttpBaseChannel()
       mAsyncOpenWaitingForStreamLength(false),
       mUpgradableToSecure(true),
       mHasNonEmptySandboxingFlag(false),
+      mTaintedOriginFlag(false),
       mTlsFlags(0),
       mSuspendCount(0),
       mInitialRwin(0),
@@ -3873,6 +3874,9 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     CallQueryInterface(newChannel, realChannel.StartAssignment());
     if (realChannel) {
       realChannel->SetTopWindowURI(mTopWindowURI);
+
+      realChannel->mTaintedOriginFlag =
+          ShouldTaintReplacementChannelOrigin(newURI);
     }
 
     // update the DocumentURI indicator since we are being redirected.
@@ -3953,6 +3957,34 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
   // This channel has been redirected. Don't report timing info.
   mTimingEnabled = false;
   return NS_OK;
+}
+
+bool HttpBaseChannel::ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI) {
+  if (mTaintedOriginFlag) {
+    return true;
+  }
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  bool isPrivateWin = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  nsresult rv = ssm->CheckSameOriginURI(aNewURI, mURI, false, isPrivateWin);
+  if (NS_SUCCEEDED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> originURI;
+  if (mLoadInfo->GetLoadingPrincipal()) {
+    originURI = mLoadInfo->GetLoadingPrincipal()->GetURI();
+  } else {
+    MOZ_ASSERT(mLoadInfo->GetExternalContentPolicyType() ==
+                   nsIContentPolicy::TYPE_DOCUMENT,
+               "Missing loading principal allowed only on document loads");
+
+    // Use our original URI instead, the first URI in the redirect chain.
+    originURI = mOriginalURI;
+  }
+
+  rv = ssm->CheckSameOriginURI(originURI, mURI, false, isPrivateWin);
+  return NS_FAILED(rv);
 }
 
 // Redirect Tracking
