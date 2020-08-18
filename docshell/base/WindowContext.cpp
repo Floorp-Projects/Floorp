@@ -304,7 +304,9 @@ void WindowContext::Discard() {
   }
 
   mIsDiscarded = true;
-  gWindowContexts->Remove(InnerWindowId());
+  if (gWindowContexts) {
+    gWindowContexts->Remove(InnerWindowId());
+  }
   mBrowsingContext->UnregisterWindowContext(this);
   Group()->Unregister(this);
 }
