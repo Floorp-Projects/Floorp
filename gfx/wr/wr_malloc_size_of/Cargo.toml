@@ -11,4 +11,4 @@ path = "lib.rs"
 
 [dependencies]
 app_units = "0.7"
-euclid = "0.20"
+euclid = "0.22"

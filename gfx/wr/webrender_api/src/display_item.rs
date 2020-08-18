@@ -740,23 +740,23 @@ impl Rotation {
     ) -> LayoutTransform {
         let (shift_center_to_origin, angle) = match self {
             Rotation::Degree0 => {
-              (LayoutTransform::create_translation(-size.width / 2., -size.height / 2., 0.), Angle::degrees(0.))
+              (LayoutTransform::translation(-size.width / 2., -size.height / 2., 0.), Angle::degrees(0.))
             },
             Rotation::Degree90 => {
-              (LayoutTransform::create_translation(-size.height / 2., -size.width / 2., 0.), Angle::degrees(90.))
+              (LayoutTransform::translation(-size.height / 2., -size.width / 2., 0.), Angle::degrees(90.))
             },
             Rotation::Degree180 => {
-              (LayoutTransform::create_translation(-size.width / 2., -size.height / 2., 0.), Angle::degrees(180.))
+              (LayoutTransform::translation(-size.width / 2., -size.height / 2., 0.), Angle::degrees(180.))
             },
             Rotation::Degree270 => {
-              (LayoutTransform::create_translation(-size.height / 2., -size.width / 2., 0.), Angle::degrees(270.))
+              (LayoutTransform::translation(-size.height / 2., -size.width / 2., 0.), Angle::degrees(270.))
             },
         };
-        let shift_origin_to_center = LayoutTransform::create_translation(size.width / 2., size.height / 2., 0.);
+        let shift_origin_to_center = LayoutTransform::translation(size.width / 2., size.height / 2., 0.);
 
-        LayoutTransform::create_rotation(0., 0., -1.0, angle)
-            .pre_transform(&shift_center_to_origin)
-            .post_transform(&shift_origin_to_center)
+        shift_center_to_origin
+            .then(&LayoutTransform::rotation(0., 0., 1.0, angle))
+            .then(&shift_origin_to_center)
     }
 }
 

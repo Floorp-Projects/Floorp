@@ -8,7 +8,7 @@ root:
       items:
         - type: "stacking-context"
           transform-origin: 0 250
-          transform: rotate-x(15)
+          transform: rotate-x(-15)
           filter-primitives:
           - type: drop-shadow
             color: red
