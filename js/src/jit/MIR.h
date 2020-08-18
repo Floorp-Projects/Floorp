@@ -9340,6 +9340,30 @@ class MMegamorphicLoadSlot : public MUnaryInstruction,
   }
 };
 
+class MMegamorphicLoadSlotByValue
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  MMegamorphicLoadSlotByValue(MDefinition* obj, MDefinition* idVal)
+      : MBinaryInstruction(classOpcode, obj, idVal) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(MegamorphicLoadSlotByValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, idVal))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                          AliasSet::DynamicSlot);
+  }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.
 class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
                                           public SingleObjectPolicy::Data {

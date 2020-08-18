@@ -419,6 +419,20 @@ bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotByValueResult(
+    ObjOperandId objId, ValOperandId idId, bool handleMissing) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* id = getOperand(idId);
+
+  MOZ_ASSERT(handleMissing);
+
+  auto* ins = MMegamorphicLoadSlotByValue::New(alloc(), obj, id);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
