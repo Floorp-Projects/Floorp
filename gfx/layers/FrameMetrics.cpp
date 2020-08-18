@@ -18,9 +18,14 @@ namespace layers {
 const ScrollableLayerGuid::ViewID ScrollableLayerGuid::NULL_SCROLL_ID = 0;
 
 void FrameMetrics::RecalculateLayoutViewportOffset() {
+  // For subframes, the visual and layout viewports coincide, so just
+  // keep the layout viewport offset in sync with the visual one.
   if (!mIsRootContent) {
+    mLayoutViewport.MoveTo(mScrollOffset);
     return;
   }
+  // For the root, the two viewports can diverge, but the layout
+  // viewport needs to keep enclosing the visual viewport.
   KeepLayoutViewportEnclosingVisualViewport(GetVisualViewport(),
                                             mScrollableRect, mLayoutViewport);
 }
