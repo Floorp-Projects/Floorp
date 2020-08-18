@@ -83,7 +83,7 @@ rustflags_neon += -C target_feature=+neon,-d16
 endif
 
 rustflags_sancov =
-ifdef FUZZING_INTERFACES
+ifdef LIBFUZZER
 ifndef MOZ_TSAN
 # These options should match what is implicitly enabled for `clang -fsanitize=fuzzer`
 #   here: https://github.com/llvm/llvm-project/blob/release/8.x/clang/lib/Driver/SanitizerArgs.cpp#L354
