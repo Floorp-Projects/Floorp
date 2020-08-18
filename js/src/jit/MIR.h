@@ -9364,6 +9364,42 @@ class MMegamorphicLoadSlotByValue
   bool possiblyCalls() const override { return true; }
 };
 
+class MMegamorphicStoreSlot
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  CompilerPropertyName name_;
+
+  MMegamorphicStoreSlot(MDefinition* obj, PropertyName* name, MDefinition* rhs)
+      : MBinaryInstruction(classOpcode, obj, rhs), name_(name) {}
+
+ public:
+  INSTRUCTION_HEADER(MegamorphicStoreSlot)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, rhs))
+
+  PropertyName* name() const { return name_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isMegamorphicStoreSlot()) {
+      return false;
+    }
+    if (ins->toMegamorphicStoreSlot()->name() != name()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                           AliasSet::DynamicSlot);
+  }
+
+  bool possiblyCalls() const override { return true; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(name_);
+  }
+};
+
 // Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.
 class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
                                           public SingleObjectPolicy::Data {

@@ -6358,6 +6358,29 @@ class LMegamorphicLoadSlotByValue
   }
 };
 
+class LMegamorphicStoreSlot
+    : public LCallInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 2> {
+ public:
+  LIR_HEADER(MegamorphicStoreSlot)
+
+  LMegamorphicStoreSlot(const LAllocation& obj, const LBoxAllocation& rhs,
+                        const LDefinition& temp1, const LDefinition& temp2)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setBoxOperand(RhsIndex, rhs);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  static const size_t RhsIndex = 1;
+
+  const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+
+  MMegamorphicStoreSlot* mir() const { return mir_->toMegamorphicStoreSlot(); }
+};
+
 class LGuardIsNotArrayBufferMaybeShared : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardIsNotArrayBufferMaybeShared)
