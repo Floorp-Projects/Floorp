@@ -23,6 +23,8 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
+struct JSClass;
+
 namespace JS {
 
 /**
@@ -499,6 +501,26 @@ class JS_PUBLIC_API WritableStreamUnderlyingSink {
    */
   virtual void finalize() = 0;
 };
+
+/**
+ * Dictate all details of handling of |AbortSignal| objects for SpiderMonkey to
+ * use.  This should only be performed once, for a single context associated
+ * with a |JSRuntime|.
+ *
+ * The |ReadableStream.prototype.pipeTo| function accepts a |signal| argument
+ * that may be used to abort the piping operation.  This argument must be either
+ * |undefined| (in other words, the piping operation can't be aborted) or an
+ * |AbortSignal| instance.  |AbortSignal| is defined by WebIDL and the DOM in
+ * the web embedding.  Therefore, embedders must use this function to specify
+ * how such objects can be recognized and how to perform various essential
+ * actions upon them.
+ *
+ * If this function isn't called, and a situation arises where an "is this an
+ * |AbortSignal|?" question must be asked, that question will simply be answered
+ * "no".
+ */
+extern JS_PUBLIC_API void InitAbortSignalHandling(const JSClass* clasp,
+                                                  JSContext* cx);
 
 }  // namespace JS
 

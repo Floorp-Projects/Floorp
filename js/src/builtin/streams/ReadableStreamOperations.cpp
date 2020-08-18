@@ -35,6 +35,7 @@
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithValue
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::Unwrap{Callee,Internal}Slot
+#include "vm/JSContext-inl.h"    // JSContext::check
 #include "vm/JSObject-inl.h"  // js::IsCallable, js::NewObjectWithClassProto
 #include "vm/Realm-inl.h"     // js::AutoRealm
 
@@ -619,6 +620,8 @@ PromiseObject* js::ReadableStreamPipeTo(JSContext* cx,
                                         bool preventClose, bool preventAbort,
                                         bool preventCancel,
                                         Handle<JSObject*> signal) {
+  cx->check(signal);
+
   // Step 1. Assert: ! IsReadableStream(source) is true.
   // Step 2. Assert: ! IsWritableStream(dest) is true.
   // Step 3. Assert: Type(preventClose) is Boolean, Type(preventAbort) is

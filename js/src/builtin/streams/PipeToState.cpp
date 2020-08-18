@@ -6,7 +6,7 @@
 
 /* ReadableStream.prototype.pipeTo state. */
 
-#include "builtin/streams/PipeToState.h"
+#include "builtin/streams/PipeToState-inl.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
@@ -27,7 +27,9 @@
 #include "js/Promise.h"     // JS::AddPromiseReactions
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/Value.h"  // JS::{,Int32,Magic,Object}Value, JS::UndefinedHandleValue
+#include "vm/JSContext.h"      // JSContext
 #include "vm/PromiseObject.h"  // js::PromiseObject
+#include "vm/Runtime.h"        // JSRuntime
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream, js::UnwrapStreamFromReader
@@ -1114,25 +1116,27 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
     Handle<WritableStream*> unwrappedDest, bool preventClose, bool preventAbort,
     bool preventCancel, Handle<JSObject*> signal) {
   cx->check(promise);
+  cx->check(signal);
+
+  Rooted<PipeToState*> state(cx, NewBuiltinClassInstance<PipeToState>(cx));
+  if (!state) {
+    return nullptr;
+  }
 
   // Step 4. Assert: signal is undefined or signal is an instance of the
   //         AbortSignal interface.
-#ifdef DEBUG
+  MOZ_ASSERT(state->getFixedSlot(Slot_Signal).isUndefined());
   if (signal) {
-    // XXX jwalden need to add JSAPI hooks to recognize AbortSignal instances
+    // Sadly, we can't assert |signal| is an |AbortSignal| here because it could
+    // have become a nuked CCW since it was type-checked.
+    state->initFixedSlot(Slot_Signal, ObjectValue(*signal));
   }
-#endif
 
   // Step 5: Assert: ! IsReadableStreamLocked(source) is false.
   MOZ_ASSERT(!unwrappedSource->locked());
 
   // Step 6: Assert: ! IsWritableStreamLocked(dest) is false.
   MOZ_ASSERT(!unwrappedDest->isLocked());
-
-  Rooted<PipeToState*> state(cx, NewBuiltinClassInstance<PipeToState>(cx));
-  if (!state) {
-    return nullptr;
-  }
 
   MOZ_ASSERT(state->getFixedSlot(Slot_Promise).isUndefined());
   state->initFixedSlot(Slot_Promise, ObjectValue(*promise));
@@ -1184,6 +1188,11 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
 
   // Step 13: If signal is not undefined,
   // XXX jwalden need JSAPI to add an algorithm/steps to an AbortSignal
+  if (signal) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_READABLESTREAM_PIPETO_BAD_SIGNAL);
+    return nullptr;
+  }
 
   // Step 14: In parallel, using reader and writer, read all chunks from source
   //          and write them to dest.
