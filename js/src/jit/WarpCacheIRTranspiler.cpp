@@ -462,6 +462,20 @@ bool WarpCacheIRTranspiler::emitMegamorphicHasPropResult(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMegamorphicSetElement(ObjOperandId objId,
+                                                      ValOperandId idId,
+                                                      ValOperandId rhsId,
+                                                      bool strict) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* id = getOperand(idId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MCallSetElement::New(alloc(), obj, id, rhs, strict);
+  addEffectful(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
