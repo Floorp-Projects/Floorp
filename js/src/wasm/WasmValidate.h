@@ -699,7 +699,7 @@ class Decoder {
     static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
     uint8_t code;
     if (!readFixedU8(&code)) {
-      return false;
+      return fail("expected type code");
     }
     switch (code) {
       case uint8_t(TypeCode::I32):
