@@ -107,10 +107,6 @@ else
     AC_CHECK_PROGS(OTOOL, otool, :)
 fi
 
-if test -n "$MOZ_WINCONSOLE"; then
-    AC_DEFINE(MOZ_WINCONSOLE)
-fi
-
 MOZ_TOOL_VARIABLES
 
 dnl ========================================================
