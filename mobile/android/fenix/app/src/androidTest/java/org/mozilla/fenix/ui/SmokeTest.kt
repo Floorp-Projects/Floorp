@@ -16,6 +16,7 @@ import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.ui.robots.clickUrlbar
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -251,6 +252,71 @@ class SmokeTest {
                 verifyEnhancedTrackingProtectionSwitch()
                 // Turning off TP Switch results in adding the WebPage to exception list
                 clickEnhancedTrackingProtectionSwitchOffOn()
+            }
+        }
+    }
+
+    @Test
+    fun verifySearchEngineCanBeChangedTemporarilyUsingShortcuts() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openSearch {
+            verifyKeyboardVisibility()
+            clickSearchEngineButton()
+            verifySearchEngineList()
+            changeDefaultSearchEngine("Amazon.com")
+            verifySearchEngineIcon("Amazon.com")
+        }.goToSearchEngine {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabDrawer {
+            // Changing search engine to Bing
+        }.openHomeScreen {
+        }.openSearch {
+            clickSearchEngineButton()
+            mDevice.waitForIdle()
+            changeDefaultSearchEngine("Bing")
+            verifySearchEngineIcon("Bing")
+        }.goToSearchEngine {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabDrawer {
+            // Changing search engine to DuckDuckGo
+        }.openHomeScreen {
+        }.openSearch {
+            clickSearchEngineButton()
+            mDevice.waitForIdle()
+            changeDefaultSearchEngine("DuckDuckGo")
+            verifySearchEngineIcon("DuckDuckGo")
+        }.goToSearchEngine {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabDrawer {
+            // Changing search engine to Twitter
+        }.openHomeScreen {
+        }.openSearch {
+            clickSearchEngineButton()
+            mDevice.waitForIdle()
+            changeDefaultSearchEngine("Twitter")
+            verifySearchEngineIcon("Twitter")
+        }.goToSearchEngine {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabDrawer {
+            // Changing search engine to Wikipedia
+        }.openHomeScreen {
+        }.openSearch {
+            clickSearchEngineButton()
+            changeDefaultSearchEngine("Wikipedia")
+            verifySearchEngineIcon("Wikipedia")
+        }.goToSearchEngine {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabDrawer {
+            // Checking whether the next search will be with default or not
+        }.openHomeScreen {
+        }.openSearch {
+        }.goToSearchEngine {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openNavigationToolbar {
+            clickUrlbar {
+                verifyDefaultSearchEngine("Google")
             }
         }
     }

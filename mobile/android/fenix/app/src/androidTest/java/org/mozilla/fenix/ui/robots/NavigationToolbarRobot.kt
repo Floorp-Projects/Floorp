@@ -239,6 +239,12 @@ fun navigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationTo
     return NavigationToolbarRobot.Transition()
 }
 
+fun clickUrlbar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+    urlBar().click()
+    SearchRobot().interact()
+    return SearchRobot.Transition()
+}
+
 private fun assertSuggestionsAreEqualTo(suggestionSize: Int, searchTerm: String) {
     mDevice.waitForIdle()
     awesomeBar().perform(typeText(searchTerm))
