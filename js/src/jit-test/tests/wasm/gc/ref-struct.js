@@ -30,7 +30,7 @@ function checkInvalid(body, errorMessage) {
                          (field $left (mut (ref null $wabbit)))
                          (field $right (mut (ref null $wabbit)))))
 
-          (global $g (mut (ref null $wabbit)) (ref.null opt $wabbit))
+          (global $g (mut (ref null $wabbit)) (ref.null $wabbit))
 
           (global $k (mut i32) (i32.const 0))
 
@@ -42,7 +42,7 @@ function checkInvalid(body, errorMessage) {
                 (local.set $tmp (global.get $k))
                 (global.set $k (i32.add (local.get $tmp) (i32.const 1)))
                 (if (result (ref null $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
-                    (struct.new $wabbit (local.get $tmp) (ref.null opt $wabbit) (ref.null opt $wabbit))
+                    (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit))
                     (block (result (ref null $wabbit))
                       (struct.new $wabbit
                                   (local.get $tmp)
@@ -130,7 +130,7 @@ assertEq(wasmEvalText(
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
       (func (export "test") (result externref)
-       (call $f (ref.null opt $node))))`).exports.test(),
+       (call $f (ref.null $node))))`).exports.test(),
          null);
 
 // struct.narrow: if the downcast succeeds we get the original pointer
@@ -181,7 +181,7 @@ assertEq(wasmEvalText(
 
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null opt $node)))
+       (local.set $n (struct.new $node2a (i32.const 0) (ref.null $node)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -197,7 +197,7 @@ assertEq(wasmEvalText(
 
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null opt $node2a)))
+       (local.set $n (struct.new $node2a (i32.const 0) (ref.null $node2a)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          0);
 
@@ -433,7 +433,7 @@ assertErrorMessage(function() {
         `(module
           (type $node (struct (field i32)))
           (func (export "test")
-           (drop (call $f (ref.null opt $node))))
+           (drop (call $f (ref.null $node))))
           (func $f (param $p (ref null $node)) (result i32)
            (struct.get $node 0 (local.get $p))))`);
     ins.exports.test();
@@ -448,7 +448,7 @@ assertErrorMessage(function() {
         `(module
           (type $node (struct (field (mut i32))))
           (func (export "test")
-           (call $f (ref.null opt $node)))
+           (call $f (ref.null $node)))
           (func $f (param $p (ref null $node))
            (struct.set $node 0 (local.get $p) (i32.const 0))))`);
     ins.exports.test();

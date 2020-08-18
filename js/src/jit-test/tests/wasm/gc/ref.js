@@ -28,7 +28,7 @@ var text = `(module
       (func $cdr (param $p (ref null $cons)) (result (ref null $cons))
        (local $l (ref null $cons))
        ;; store null value of correct type
-       (local.set $l (ref.null opt $cons))
+       (local.set $l (ref.null $cons))
        ;; store local of correct type
        (local.set $l (local.get $p))
        ;; store call result of correct type
@@ -38,13 +38,13 @@ var text = `(module
        (block (result (ref null $cons))
         (if (result (ref null $cons)) (i32.eqz (i32.const 0))
             (unreachable)
-            (ref.null opt $cons))))
+            (ref.null $cons))))
 
       (func (param (ref null $even)) (result (ref null $odd))
-       (ref.null opt $odd))
+       (ref.null $odd))
 
       (func (param (ref null $odd)) (result (ref null $even))
-       (ref.null opt $even))
+       (ref.null $even))
 
       (func (param (ref null $cons))
        (call $cdr (local.get 0))
@@ -53,10 +53,10 @@ var text = `(module
        drop)
 
       (func (param (ref null $cons))
-       (drop (ref.eq (local.get 0) (ref.null opt $cons)))
-       (drop (ref.eq (ref.null opt $cons) (local.get 0)))
-       (drop (ref.eq (local.get 0) (ref.null opt $cons)))
-       (drop (ref.eq (ref.null opt $cons) (local.get 0))))
+       (drop (ref.eq (local.get 0) (ref.null $cons)))
+       (drop (ref.eq (ref.null $cons) (local.get 0)))
+       (drop (ref.eq (local.get 0) (ref.null $cons)))
+       (drop (ref.eq (ref.null $cons) (local.get 0))))
      )`;
 
 // Validation
