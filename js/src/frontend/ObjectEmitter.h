@@ -16,6 +16,7 @@
 #include "frontend/BytecodeOffset.h"  // BytecodeOffset
 #include "frontend/EmitterScope.h"    // EmitterScope
 #include "frontend/NameOpEmitter.h"   // NameOpEmitter
+#include "frontend/ParseNode.h"       // AccessorType
 #include "frontend/TDZCheckCache.h"   // TDZCheckCache
 #include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
 #include "vm/BytecodeUtil.h"          // JSOp
@@ -82,9 +83,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //    |                                            |               |
   //    |    +-------------------------------------- +               |
   //    |    |                                                       |
-  //    |    | emitInitProp                                          |
-  //    |    | emitInitGetter                                        |
-  //    |    | emitInitSetter                                        |
+  //    |    | emitInit                                              |
   //    |    +------------------------------------------------------>+
   //    |                                                            ^
   //    | [index property/method/accessor]                           |
@@ -109,9 +108,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //    |                                                         |  |
   //    |      +--------------------------------------------------+  |
   //    |      |                                                     |
-  //    |      | emitInitIndexProp                                   |
-  //    |      | emitInitIndexGetter                                 |
-  //    |      | emitInitIndexSetter                                 |
+  //    |      | emitInitIndexOrComputed                             |
   //    |      +---------------------------------------------------->+
   //    |                                                            |
   //    | [computed property/method/accessor]                        |
@@ -136,9 +133,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //    |                                                         |  |
   //    |      +--------------------------------------------------+  |
   //    |      |                                                     |
-  //    |      | emitInitComputedProp                                |
-  //    |      | emitInitComputedGetter                              |
-  //    |      | emitInitComputedSetter                              |
+  //    |      | emitInitIndexOrComputed                             |
   //    |      +---------------------------------------------------->+
   //    |                                                            ^
   //    |                                                            |
@@ -185,9 +180,8 @@ class MOZ_STACK_CLASS PropertyEmitter {
     // After calling prepareForSpreadOperand.
     SpreadOperand,
 
-    // After calling one of emitInitProp, emitInitGetter, emitInitSetter,
-    // emitInitIndexOrComputedProp, emitInitIndexOrComputedGetter,
-    // emitInitIndexOrComputedSetter, emitMutateProto, or emitSpread.
+    // After calling one of emitInit, emitInitIndexOrComputed, emitMutateProto,
+    // or emitSpread.
     Init,
   };
   PropertyState propertyState_ = PropertyState::Start;
@@ -241,17 +235,9 @@ class MOZ_STACK_CLASS PropertyEmitter {
 
   // @param key
   //        Property key
-  MOZ_MUST_USE bool emitInitProp(JS::Handle<JSAtom*> key);
-  MOZ_MUST_USE bool emitInitGetter(JS::Handle<JSAtom*> key);
-  MOZ_MUST_USE bool emitInitSetter(JS::Handle<JSAtom*> key);
+  MOZ_MUST_USE bool emitInit(AccessorType accessorType, HandleAtom key);
 
-  MOZ_MUST_USE bool emitInitIndexProp();
-  MOZ_MUST_USE bool emitInitIndexGetter();
-  MOZ_MUST_USE bool emitInitIndexSetter();
-
-  MOZ_MUST_USE bool emitInitComputedProp();
-  MOZ_MUST_USE bool emitInitComputedGetter();
-  MOZ_MUST_USE bool emitInitComputedSetter();
+  MOZ_MUST_USE bool emitInitIndexOrComputed(AccessorType accessorType);
 
  private:
   MOZ_MUST_USE MOZ_ALWAYS_INLINE bool prepareForProp(

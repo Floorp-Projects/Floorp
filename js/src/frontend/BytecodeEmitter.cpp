@@ -101,6 +101,20 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
          kind == ParseNodeKind::Function;
 }
 
+static bool NeedsFieldInitializer(ParseNode* member, bool isStatic) {
+  return member->is<ClassField>() &&
+         member->as<ClassField>().isStatic() == isStatic;
+}
+
+static bool NeedsMethodInitializer(ParseNode* member, bool isStatic) {
+  if (isStatic) {
+    return false;
+  }
+  return member->is<ClassMethod>() &&
+         member->as<ClassMethod>().name().isKind(ParseNodeKind::PrivateName) &&
+         !member->as<ClassMethod>().isStatic();
+}
+
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
                                  CompilationInfo& compilationInfo,
                                  EmitterMode emitterMode)
@@ -8607,8 +8621,10 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     ParseNode* propVal = prop->right();
     AccessorType accessorType;
     if (prop->is<ClassMethod>()) {
-      if (key->isKind(ParseNodeKind::PrivateName)) {
-        // Private methods are separately added to the .initializers array.
+      if (!prop->as<ClassMethod>().isStatic() &&
+          key->isKind(ParseNodeKind::PrivateName)) {
+        // Private instance methods are separately added to the .initializers
+        // array.
         continue;
       }
 
@@ -8715,27 +8731,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         return false;
       }
 
-      switch (accessorType) {
-        case AccessorType::None:
-          if (!pe.emitInitIndexProp()) {
-            //      [stack] CTOR? OBJ
-            return false;
-          }
-          break;
-        case AccessorType::Getter:
-          if (!pe.emitInitIndexGetter()) {
-            //      [stack] CTOR? OBJ
-            return false;
-          }
-          break;
-        case AccessorType::Setter:
-          if (!pe.emitInitIndexSetter()) {
-            //      [stack] CTOR? OBJ
-            return false;
-          }
-          break;
-        default:
-          MOZ_CRASH("Invalid op");
+      if (!pe.emitInitIndexOrComputed(accessorType)) {
+        return false;
       }
 
       continue;
@@ -8764,33 +8761,15 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
       RootedAtom keyAtom(cx, key->as<NameNode>().atom());
 
-      switch (accessorType) {
-        case AccessorType::None:
-          if (!pe.emitInitProp(keyAtom)) {
-            //      [stack] CTOR? OBJ
-            return false;
-          }
-          break;
-        case AccessorType::Getter:
-          if (!pe.emitInitGetter(keyAtom)) {
-            //      [stack] CTOR? OBJ
-            return false;
-          }
-          break;
-        case AccessorType::Setter:
-          if (!pe.emitInitSetter(keyAtom)) {
-            //      [stack] CTOR? OBJ
-            return false;
-          }
-          break;
-        default:
-          MOZ_CRASH("Invalid op");
+      if (!pe.emitInit(accessorType, keyAtom)) {
+        return false;
       }
 
       continue;
     }
 
-    MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName));
+    MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName) ||
+               key->isKind(ParseNodeKind::PrivateName));
 
     //              [stack] CTOR? OBJ
 
@@ -8798,9 +8777,16 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       //            [stack] CTOR? OBJ CTOR?
       return false;
     }
-    if (!emitTree(key->as<UnaryNode>().kid())) {
-      //            [stack] CTOR? OBJ CTOR? KEY
-      return false;
+    if (key->is<NameNode>()) {
+      if (!emitGetPrivateName(&key->as<NameNode>())) {
+        //            [stack] CTOR? OBJ CTOR? KEY
+        return false;
+      }
+    } else {
+      if (!emitTree(key->as<UnaryNode>().kid())) {
+        //            [stack] CTOR? OBJ CTOR? KEY
+        return false;
+      }
     }
     if (!pe.prepareForComputedPropValue()) {
       //            [stack] CTOR? OBJ CTOR? KEY
@@ -8811,27 +8797,24 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       return false;
     }
 
-    switch (accessorType) {
-      case AccessorType::None:
-        if (!pe.emitInitComputedProp()) {
-          //        [stack] CTOR? OBJ
-          return false;
-        }
-        break;
-      case AccessorType::Getter:
-        if (!pe.emitInitComputedGetter()) {
-          //        [stack] CTOR? OBJ
-          return false;
-        }
-        break;
-      case AccessorType::Setter:
-        if (!pe.emitInitComputedSetter()) {
-          //        [stack] CTOR? OBJ
-          return false;
-        }
-        break;
-      default:
-        MOZ_CRASH("Invalid op");
+    if (!pe.emitInitIndexOrComputed(accessorType)) {
+      return false;
+    }
+
+    if (key->isKind(ParseNodeKind::PrivateName) &&
+        key->as<NameNode>().privateNameKind() == PrivateNameKind::Setter) {
+      if (!emitGetPrivateName(&key->as<NameNode>())) {
+        //          [stack] THIS NAME
+        return false;
+      }
+      if (!emitAtomOp(JSOp::GetIntrinsic, cx->parserNames().NoPrivateGetter)) {
+        //          [stack] THIS NAME FUN
+        return false;
+      }
+      if (!emit1(JSOp::InitHiddenElemGetter)) {
+        //          [stack] THIS
+        return false;
+      }
     }
   }
 
@@ -9052,23 +9035,17 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralStencil* data,
 mozilla::Maybe<MemberInitializers> BytecodeEmitter::setupMemberInitializers(
     ListNode* classMembers, FieldPlacement placement) {
   bool isStatic = placement == FieldPlacement::Static;
-  auto isClassField = [isStatic](ParseNode* propdef) {
-    return propdef->is<ClassField>() &&
-           propdef->as<ClassField>().isStatic() == isStatic;
-  };
-  auto isPrivateMethod = [isStatic](ParseNode* propdef) {
-    return propdef->is<ClassMethod>() &&
-           propdef->as<ClassMethod>().name().isKind(
-               ParseNodeKind::PrivateName) &&
-           propdef->as<ClassMethod>().isStatic() == isStatic;
-  };
 
-  size_t numFields =
-      std::count_if(classMembers->contents().begin(),
-                    classMembers->contents().end(), isClassField);
-  size_t numPrivateMethods =
-      std::count_if(classMembers->contents().begin(),
-                    classMembers->contents().end(), isPrivateMethod);
+  size_t numFields = std::count_if(
+      classMembers->contents().begin(), classMembers->contents().end(),
+      [&isStatic](ParseNode* member) {
+        return NeedsFieldInitializer(member, isStatic);
+      });
+  size_t numPrivateMethods = std::count_if(
+      classMembers->contents().begin(), classMembers->contents().end(),
+      [&isStatic](ParseNode* member) {
+        return NeedsMethodInitializer(member, isStatic);
+      });
 
   // If there are more initializers than can be represented, return invalid.
   if (numFields + numPrivateMethods > MemberInitializers::MaxInitializers) {
@@ -9228,7 +9205,7 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
 bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
                                                     ListNode* obj) {
   for (ParseNode* propdef : obj->contents()) {
-    if (!propdef->is<ClassMethod>()) {
+    if (!propdef->is<ClassMethod>() || propdef->as<ClassMethod>().isStatic()) {
       continue;
     }
     ParseNode* propName = &propdef->as<ClassMethod>().name();
@@ -10315,11 +10292,8 @@ bool BytecodeEmitter::emitClass(
                  cx->parserNames().dotInitializers);
 
       auto needsInitializer = [](ParseNode* propdef) {
-        return (propdef->is<ClassField>() &&
-                !propdef->as<ClassField>().isStatic()) ||
-               (propdef->is<ClassMethod>() &&
-                propdef->as<ClassMethod>().name().isKind(
-                    ParseNodeKind::PrivateName));
+        return NeedsFieldInitializer(propdef, false) ||
+               NeedsMethodInitializer(propdef, false);
       };
 
       // As an optimization omit the |.initializers| binding when no instance

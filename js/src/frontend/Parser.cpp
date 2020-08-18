@@ -7221,9 +7221,8 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
   Maybe<FunctionNodeType> initializerIfPrivate = Nothing();
   if (handler_.isPrivateName(propName)) {
-    if (!options().privateClassMethods || isStatic) {
+    if (!options().privateClassMethods) {
       // Private methods are not enabled.
-      // Static private methods are not supported.
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
       return false;
     }
@@ -7242,42 +7241,49 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     if (!noteDeclaredPrivateName(propName, privateName, propType, pos())) {
       return false;
     }
-    classInitializedMembers.privateMethods++;
 
-    // Synthesize a name for the lexical variable that will store the
-    // private method body.
-    StringBuffer storedMethodName(cx_);
-    if (!storedMethodName.append(propAtom)) {
-      return false;
-    }
-    switch (atype) {
-      case AccessorType::None:
-        if (!storedMethodName.append(".method")) {
-          return false;
-        }
-        break;
-      case AccessorType::Getter:
-        if (!storedMethodName.append(".getter")) {
-          return false;
-        }
-        break;
-      case AccessorType::Setter:
-        if (!storedMethodName.append(".setter")) {
-          return false;
-        }
-        break;
-      default:
-        MOZ_CRASH("Invalid private method accessor type");
-    }
-    RootedAtom storedMethodAtom(cx_, storedMethodName.finishAtom());
-    RootedPropertyName storedMethodProp(cx_,
-                                        storedMethodAtom->asPropertyName());
-    if (!noteDeclaredName(storedMethodProp, DeclarationKind::Const, pos())) {
-      return false;
-    }
+    // Private non-static methods are stamped onto every instance using
+    // initializers. Private static methods are stored directly on the
+    // constructor during class evaluation; see
+    // BytecodeEmitter::emitPropertyList.
+    if (!isStatic) {
+      classInitializedMembers.privateMethods++;
 
-    initializerIfPrivate =
-        Some(privateMethodInitializer(propAtom, storedMethodAtom));
+      // Synthesize a name for the lexical variable that will store the
+      // private method body.
+      StringBuffer storedMethodName(cx_);
+      if (!storedMethodName.append(propAtom)) {
+        return false;
+      }
+      switch (atype) {
+        case AccessorType::None:
+          if (!storedMethodName.append(".method")) {
+            return false;
+          }
+          break;
+        case AccessorType::Getter:
+          if (!storedMethodName.append(".getter")) {
+            return false;
+          }
+          break;
+        case AccessorType::Setter:
+          if (!storedMethodName.append(".setter")) {
+            return false;
+          }
+          break;
+        default:
+          MOZ_CRASH("Invalid private method accessor type");
+      }
+      RootedAtom storedMethodAtom(cx_, storedMethodName.finishAtom());
+      RootedPropertyName storedMethodProp(cx_,
+                                          storedMethodAtom->asPropertyName());
+      if (!noteDeclaredName(storedMethodProp, DeclarationKind::Const, pos())) {
+        return false;
+      }
+
+      initializerIfPrivate =
+          Some(privateMethodInitializer(propAtom, storedMethodAtom));
+    }
   }
 
   Node method = handler_.newClassMethodDefinition(
