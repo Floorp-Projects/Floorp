@@ -4244,7 +4244,7 @@ CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
     AsyncTransformConsumer aMode,
     const RecursiveMutexAutoLock& aProofOfLock) const {
   if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return mLastContentPaintMetrics.GetVisualViewportOffset();
+    return mLastContentPaintMetrics.GetVisualScrollOffset();
   }
   if (aMode == eForCompositing) {
     return mSampledState.front().GetScrollOffset();
@@ -4831,8 +4831,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   if (visualScrollOffsetUpdated) {
     APZC_LOG("%p updating visual scroll offset from %s to %s\n", this,
              ToString(Metrics().GetVisualScrollOffset()).c_str(),
-             ToString(aLayerMetrics.GetVisualViewportOffset()).c_str());
-    Metrics().ClampAndSetScrollOffset(aLayerMetrics.GetVisualViewportOffset());
+             ToString(aLayerMetrics.GetVisualScrollOffset()).c_str());
+    Metrics().ClampAndSetScrollOffset(aLayerMetrics.GetVisualScrollOffset());
 
     // The rest of this branch largely follows the code in the
     // |if (scrollOffsetUpdated)| branch above.
