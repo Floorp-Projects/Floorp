@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+from marionette_driver import By
 from marionette_driver.errors import JavascriptException
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
@@ -27,12 +28,13 @@ class TestSwitchFrameChrome(WindowManagerMixin, MarionetteTestCase):
         self.assertIn("test.xhtml", self.marionette.get_url(), "Initial navigation has failed")
         self.marionette.switch_to_frame(0)
         self.assertIn("test2.xhtml", self.marionette.get_url(), "Switching by index failed")
-        iframe_element = self.marionette.get_active_frame()
+        self.marionette.find_element(By.ID, "testBox")
         self.marionette.switch_to_frame()
-        self.assertEqual(None, self.marionette.get_active_frame(), "Switching by null failed")
         self.assertIn("test.xhtml", self.marionette.get_url(), "Switching by null failed")
-        self.marionette.switch_to_frame(iframe_element)
+        iframe = self.marionette.find_element(By.ID, "iframe")
+        self.marionette.switch_to_frame(iframe)
         self.assertIn("test2.xhtml", self.marionette.get_url(), "Switching by element failed")
+        self.marionette.find_element(By.ID, "testBox")
 
     def test_stack_trace(self):
         self.assertIn("test.xhtml", self.marionette.get_url(), "Initial navigation has failed")
