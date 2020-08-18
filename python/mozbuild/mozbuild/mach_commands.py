@@ -1426,6 +1426,14 @@ class L10NCommands(MachCommandBase):
     @CommandArgument('--verbose', action='store_true',
                      help='Log informative status messages.')
     def package_l10n(self, verbose=False, locales=[]):
+        if 'RecursiveMake' not in self.substs['BUILD_BACKENDS']:
+            print('Artifact builds do not support localization. '
+                  'If you know what you are doing, you can use:\n'
+                  'ac_add_options --disable-compile-environment\n'
+                  'export BUILD_BACKENDS=FasterMake,RecursiveMake\n'
+                  'in your mozconfig.')
+            return 1
+
         if 'en-US' not in locales:
             self.log(logging.WARN, 'package-multi-locale', {'locales': locales},
                      'List of locales does not include default locale "en-US": '
