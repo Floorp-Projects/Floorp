@@ -3,16 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-        .section ".text"
-            .globl _NS_InvokeByIndex
+#ifdef __APPLE__
+#define SYM(x) _ ## x
+#else
+#define SYM(x) x
+#endif
+
+            .text
+            .align 2
+            .globl SYM(_NS_InvokeByIndex)
+#ifndef __APPLE__
             .type  _NS_InvokeByIndex,@function
+#endif
 
 /*
  * _NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
  *                   uint32_t paramCount, nsXPTCVariant* params)
  */
 
-_NS_InvokeByIndex:
+SYM(_NS_InvokeByIndex):
             .cfi_startproc
             # set up frame
             stp         x29, x30, [sp,#-32]!
@@ -44,7 +53,7 @@ _NS_InvokeByIndex:
 
             # start of stack area passed to invoke_copy_to_stack
             mov         x0, sp
-            bl          invoke_copy_to_stack
+            bl          SYM(invoke_copy_to_stack)
 
             # load arguments passed in r0-r7
             ldp         x6, x7, [sp, #48]
@@ -76,6 +85,8 @@ _NS_InvokeByIndex:
             ret
             .cfi_endproc
 
+#ifndef __APPLE__
             .size _NS_InvokeByIndex, . - _NS_InvokeByIndex
 
             .section .note.GNU-stack, "", @progbits
+#endif
