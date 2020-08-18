@@ -635,9 +635,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIEventTarget> mCurrentThread;
 
  private:
-  // WHATWG Fetch Standard 4.4. HTTP-redirect fetch, step 10
-  bool ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI);
-
   // Proxy release all members above on main thread.
   void ReleaseMainThreadOnlyReferences();
 
@@ -823,9 +820,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   // True if the docshell's sandboxing flag set is not empty.
   uint32_t mHasNonEmptySandboxingFlag : 1;
-
-  // Tainted origin flag of a request, specified by WHATWG Fetch Standard 2.2.5.
-  uint32_t mTaintedOriginFlag : 1;
 
   // An opaque flags for non-standard behavior of the TLS system.
   // It is unlikely this will need to be set outside of telemetry studies
