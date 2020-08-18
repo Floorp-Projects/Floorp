@@ -181,10 +181,6 @@ input[type="text"] {
   overflow: auto;
 }
 
-#copies-count {
-  width: 3em;
-}
-
 #more-settings {
   border-top: 1px solid var(--in-content-border-color);
 }
@@ -277,4 +273,45 @@ input[type="number"]:invalid {
 #percent-scale {
   appearance: textfield;
   margin-inline-start: 4px;
+}
+
+#copies-count {
+  width: 4em;
+  height: 20px;
+}
+
+input[type="number"].photon-number {
+  padding: 0;
+  padding-inline-start: 4px;
+  margin: 0;
+}
+
+input[type="number"].photon-number::-moz-number-spin-box {
+  height: 100%;
+  max-height: 100%;
+  border-inline-start: 1px solid var(--in-content-box-border-color);
+  width: 1em;
+}
+
+input[type="number"].photon-number:hover::-moz-number-spin-box {
+  border-color: var(--in-content-border-hover);
+}
+
+input[type="number"].photon-number::-moz-number-spin-up,
+input[type="number"].photon-number::-moz-number-spin-down {
+  border: 0;
+  border-radius: 0;
+  background-color: var(--in-content-button-background);
+  background-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  background-size: 8px;
+  background-position: center;
+}
+
+input[type="number"].photon-number::-moz-number-spin-up {
+  scale: 1 -1;
+}
+
+input[type="number"].photon-number::-moz-number-spin-up:hover,
+input[type="number"].photon-number::-moz-number-spin-down:hover {
+  background-color: var(--in-content-button-background-hover);
 }
