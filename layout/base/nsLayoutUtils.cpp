@@ -9272,16 +9272,18 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
           scrollableFrame, aForFrame)));
 
   if (scrollableFrame) {
-    CSSPoint scrollPosition =
+    CSSPoint layoutScrollOffset =
         CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
     CSSPoint apzScrollPosition =
         CSSPoint::FromAppUnits(scrollableFrame->GetApzScrollPosition());
-    metrics.SetVisualScrollOffset(scrollPosition);
-    metrics.SetBaseScrollOffset(apzScrollPosition);
-    metrics.SetVisualViewportOffset(
+    CSSPoint visualScrollOffset =
         aIsRootContent && presShell->IsVisualViewportOffsetSet()
             ? CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset())
-            : scrollPosition);
+            : layoutScrollOffset;
+    metrics.SetVisualScrollOffset(visualScrollOffset);
+    metrics.SetBaseScrollOffset(apzScrollPosition);
+    // FIXME: This is redundant now.
+    metrics.SetVisualViewportOffset(visualScrollOffset);
 
     if (aIsRootContent) {
       if (aLayerManager->GetIsFirstPaint() &&
@@ -9336,7 +9338,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     }
 
     CSSRect viewport = metrics.GetLayoutViewport();
-    viewport.MoveTo(scrollPosition);
+    viewport.MoveTo(layoutScrollOffset);
     metrics.SetLayoutViewport(viewport);
 
     nsPoint smoothScrollPosition = scrollableFrame->LastScrollDestination();
