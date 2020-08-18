@@ -85,21 +85,6 @@
     };
 </script>
 
-<!-- WebSocket -->
-<script>
-  function createWebSocket(url) {
-   var ws = new WebSocket(url);
-    ws.onmessage = function(e) {
-      window.opener.postMessage({result: e.data, id:"websocket", url}, "*");
-      ws.close();
-    };
-    ws.onerror = function(e) {
-      window.opener.postMessage({result: "websocket-unexpected-error", url}, "*");
-    };
-  }
-  createWebSocket("ws://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/file_echo_cookie?id=websocket");
-</script>
-
 </div>
 </body>
 </html>
