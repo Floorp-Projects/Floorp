@@ -40,13 +40,11 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
-import mozilla.components.feature.search.SearchAdapter
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -414,7 +412,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     ): View? = when (name) {
         EngineView::class.java.name -> components.core.engine.createView(context, attrs).apply {
             selectionActionDelegate = DefaultSelectionActionDelegate(
-                getSearchAdapter(components.core.store),
+                BrowserStoreSearchAdapter(
+                    components.core.store,
+                    tabId = getIntentSessionId(intent.toSafeIntent())
+                ),
                 resources = context.resources,
                 shareTextClicked = { share(it) },
                 emailTextClicked = { email(it) },
@@ -506,9 +507,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         super.onUserLeaveHint()
     }
-
-    protected open fun getSearchAdapter(store: BrowserStore): SearchAdapter =
-        BrowserStoreSearchAdapter(store)
 
     protected open fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)

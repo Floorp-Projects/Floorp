@@ -4,19 +4,15 @@
 
 package org.mozilla.fenix.customtabs
 
-import android.content.Intent
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import mozilla.components.browser.session.runWithSession
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.pwa.ext.getWebAppManifest
-import mozilla.components.feature.search.SearchAdapter
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -27,12 +23,6 @@ import java.security.InvalidParameterException
  * such as custom tabs and progressive web apps.
  */
 open class ExternalAppBrowserActivity : HomeActivity() {
-
-    private val openInFenixIntent by lazy {
-        Intent(this, IntentReceiverActivity::class.java).apply {
-            action = Intent.ACTION_VIEW
-        }
-    }
 
     final override fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)
@@ -70,19 +60,6 @@ open class ExternalAppBrowserActivity : HomeActivity() {
             else -> throw InvalidParameterException(
                 "Tried to navigate to ExternalAppBrowserFragment from $from"
             )
-        }
-    }
-
-    override fun getSearchAdapter(store: BrowserStore): SearchAdapter {
-        val baseAdapter = super.getSearchAdapter(store)
-        return object : SearchAdapter {
-
-            override fun sendSearch(isPrivate: Boolean, text: String) {
-                baseAdapter.sendSearch(isPrivate, text)
-                startActivity(openInFenixIntent)
-            }
-
-            override fun isPrivateSession() = baseAdapter.isPrivateSession()
         }
     }
 
