@@ -26,8 +26,9 @@ const PACKET_TYPE_RETRY: u8 = 0x03;
 
 pub const PACKET_BIT_LONG: u8 = 0x80;
 const PACKET_BIT_SHORT: u8 = 0x00;
-const PACKET_BIT_KEY_PHASE: u8 = 0x04;
 const PACKET_BIT_FIXED_QUIC: u8 = 0x40;
+const PACKET_BIT_SPIN: u8 = 0x20;
+const PACKET_BIT_KEY_PHASE: u8 = 0x04;
 
 const PACKET_HP_MASK_LONG: u8 = 0x0f;
 const PACKET_HP_MASK_SHORT: u8 = 0x1f;
@@ -171,6 +172,18 @@ impl PacketBuilder {
         }
     }
 
+    fn is_long(&self) -> bool {
+        self[self.header.start] & 0x80 == PACKET_BIT_LONG
+    }
+
+    /// Add unpredictable values for unprotected parts of the packet.
+    pub fn scramble(&mut self, quic_bit: bool) {
+        let mask = if quic_bit { PACKET_BIT_FIXED_QUIC } else { 0 }
+            | if self.is_long() { 0 } else { PACKET_BIT_SPIN };
+        let first = self.header.start;
+        self[first] ^= random(1)[0] & mask;
+    }
+
     /// For an Initial packet, encode the token.
     /// If you fail to do this, then you will not get a valid packet.
     pub fn initial_token(&mut self, token: &[u8]) {
@@ -186,7 +199,7 @@ impl PacketBuilder {
     /// The length is filled in after calling `build`.
     pub fn pn(&mut self, pn: PacketNumber, pn_len: usize) {
         // Reserve space for a length in long headers.
-        if (self.encoder[self.header.start] & 0x80) == PACKET_BIT_LONG {
+        if self.is_long() {
             self.offsets.len = self.encoder.len();
             self.encoder.encode(&[0; 2]);
         }
@@ -395,27 +408,23 @@ impl<'a> PublicPacket<'a> {
         let first = Self::opt(decoder.decode_byte())?;
 
         if first & 0x80 == PACKET_BIT_SHORT {
-            return if first & 0x40 == PACKET_BIT_FIXED_QUIC {
-                let dcid = Self::opt(dcid_decoder.decode_cid(&mut decoder))?;
-                if decoder.remaining() < SAMPLE_OFFSET + SAMPLE_SIZE {
-                    return Err(Error::InvalidPacket);
-                }
-                let header_len = decoder.offset();
-                Ok((
-                    Self {
-                        packet_type: PacketType::Short,
-                        dcid,
-                        scid: None,
-                        token: &[],
-                        header_len,
-                        quic_version: None,
-                        data,
-                    },
-                    &[],
-                ))
-            } else {
-                Err(Error::InvalidPacket)
-            };
+            let dcid = Self::opt(dcid_decoder.decode_cid(&mut decoder))?;
+            if decoder.remaining() < SAMPLE_OFFSET + SAMPLE_SIZE {
+                return Err(Error::InvalidPacket);
+            }
+            let header_len = decoder.offset();
+            return Ok((
+                Self {
+                    packet_type: PacketType::Short,
+                    dcid,
+                    scid: None,
+                    token: &[],
+                    header_len,
+                    quic_version: None,
+                    data,
+                },
+                &[],
+            ));
         }
 
         // Generic long header.
@@ -457,9 +466,6 @@ impl<'a> PublicPacket<'a> {
             ));
         };
 
-        if (first & PACKET_BIT_FIXED_QUIC) != PACKET_BIT_FIXED_QUIC {
-            return Err(Error::InvalidPacket);
-        }
         if dcid.len() > MAX_CONNECTION_ID_LEN || scid.len() > MAX_CONNECTION_ID_LEN {
             return Err(Error::InvalidPacket);
         }
@@ -822,6 +828,28 @@ mod tests {
     }
 
     #[test]
+    fn scramble_short() {
+        fixture_init();
+        let mut firsts = Vec::new();
+        for _ in 0..64 {
+            let mut builder =
+                PacketBuilder::short(Encoder::new(), true, &ConnectionId::from(SERVER_CID));
+            builder.scramble(true);
+            builder.pn(0, 1);
+            firsts.push(builder[0]);
+        }
+        let is_set = |bit| move |v| v & bit == bit;
+        // There should be at least one value with the QUIC bit set:
+        assert!(firsts.iter().any(is_set(PACKET_BIT_FIXED_QUIC)));
+        // ... but not all:
+        assert!(!firsts.iter().all(is_set(PACKET_BIT_FIXED_QUIC)));
+        // There should be at least one value with the spin bit set:
+        assert!(firsts.iter().any(is_set(PACKET_BIT_SPIN)));
+        // ... but not all:
+        assert!(!firsts.iter().all(is_set(PACKET_BIT_SPIN)));
+    }
+
+    #[test]
     fn decode_short() {
         fixture_init();
         let (packet, remainder) = PublicPacket::decode(SAMPLE_SHORT, &cid_mgr()).unwrap();
@@ -886,6 +914,53 @@ mod tests {
             "the first packet should be a prefix"
         );
         assert_eq!(encoder.len(), 45 + 29);
+    }
+
+    #[test]
+    fn build_long() {
+        const EXPECTED: &[u8] = &[
+            0xe5, 0xff, 0x00, 0x00, 0x1d, 0x00, 0x00, 0x40, 0x14, 0xa8, 0x9d, 0xbf, 0x74, 0x70,
+            0x32, 0xda, 0xba, 0xfb, 0x87, 0x61, 0xb8, 0x31, 0x90, 0xf3, 0x25, 0x52, 0x0b, 0xbe,
+            0xdb,
+        ];
+
+        fixture_init();
+        let mut builder = PacketBuilder::long(
+            Encoder::new(),
+            PacketType::Handshake,
+            QuicVersion::default(),
+            &ConnectionId::from(&[][..]),
+            &ConnectionId::from(&[][..]),
+        );
+        builder.pn(0, 1);
+        builder.encode(&[1, 2, 3]);
+        let packet = builder.build(&mut CryptoDxState::test_default()).unwrap();
+        assert_eq!(&packet[..], EXPECTED);
+    }
+
+    #[test]
+    fn scramble_long() {
+        fixture_init();
+        let mut found_unset = false;
+        let mut found_set = false;
+        for _ in 1..64 {
+            let mut builder = PacketBuilder::long(
+                Encoder::new(),
+                PacketType::Handshake,
+                QuicVersion::default(),
+                &ConnectionId::from(&[][..]),
+                &ConnectionId::from(&[][..]),
+            );
+            builder.pn(0, 1);
+            builder.scramble(true);
+            if (builder[0] & PACKET_BIT_FIXED_QUIC) == 0 {
+                found_unset = true;
+            } else {
+                found_set = true;
+            }
+        }
+        assert!(found_unset);
+        assert!(found_set);
     }
 
     #[test]
@@ -962,7 +1037,8 @@ mod tests {
     #[test]
     fn build_retry_multiple() {
         // Run the build_retry test a few times.
-        // This increases the chance that the full comparison happens.
+        // Odds are approximately 1 in 8 that the full comparison doesn't happen
+        // for a given version.
         for _ in 0..32 {
             build_retry_27();
             build_retry_28();
