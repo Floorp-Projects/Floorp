@@ -52,6 +52,13 @@ child:
   // and notifies the listener via a redirect to the new channel.
   async RedirectToRealChannel(RedirectToRealChannelArgs args, Endpoint<PStreamFilterParent>[] aEndpoint)
       returns (nsresult rv);
+
+  // May only be called on a DocumentChannel created by nsObjectLoadingContent
+  // for an object or embed element load.
+  //
+  // Promotes the load from an object load to a proper document load, and
+  // returns the `BrowsingContext` which should be used to host the final load.
+  async UpgradeObjectLoad() returns (MaybeDiscardedBrowsingContext frameContext);
 };
 
 } // namespace net

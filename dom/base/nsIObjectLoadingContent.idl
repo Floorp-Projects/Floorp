@@ -5,11 +5,14 @@
 
 #include "nsISupports.idl"
 
+interface nsIChannel;
 interface nsIRequest;
 interface nsIFrame;
 interface nsIObjectFrame;
 interface nsIPluginTag;
 interface nsIURI;
+
+webidl BrowsingContext;
 
 %{C++
 class nsNPAPIPluginInstance;
@@ -168,4 +171,10 @@ interface nsIObjectLoadingContent : nsISupports
    * Disable the use of fake plugins and reload the tag if necessary.
    */
   void skipFakePlugins();
+
+  /**
+   * Switch the tag into the TYPE_DOCUMENT state, and returns the
+   * BrowsingContext which the load should complete in.
+   */
+  [noscript] BrowsingContext upgradeLoadToDocument(in nsIChannel channel);
 };

@@ -48,6 +48,9 @@ class DocumentChannelChild final : public DocumentChannel,
       nsTArray<Endpoint<extensions::PStreamFilterParent>>&& aEndpoints,
       RedirectToRealChannelResolver&& aResolve);
 
+  mozilla::ipc::IPCResult RecvUpgradeObjectLoad(
+      UpgradeObjectLoadResolver&& aResolve);
+
  private:
   void DeleteIPDL() override {
     if (CanSend()) {

@@ -20,7 +20,9 @@ namespace net {
  * An actor that forwards all changes across to DocumentChannelChild, the
  * nsIChannel implementation owned by a content process docshell.
  */
-class DocumentChannelParent final : public PDocumentChannelParent {
+class DocumentChannelParent final
+    : public PDocumentChannelParent,
+      public DocumentLoadListener::ObjectUpgradeHandler {
  public:
   NS_INLINE_DECL_REFCOUNTING(DocumentChannelParent, override);
 
@@ -43,6 +45,8 @@ class DocumentChannelParent final : public PDocumentChannelParent {
   }
 
  private:
+  RefPtr<ObjectUpgradePromise> UpgradeObjectLoad() override;
+
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(
       nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
