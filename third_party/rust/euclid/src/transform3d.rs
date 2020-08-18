@@ -15,11 +15,9 @@ use crate::homogen::HomogeneousVector;
 #[cfg(feature = "mint")]
 use mint;
 use crate::trig::Trig;
-use crate::point::{Point2D, point2, Point3D, point3};
+use crate::point::{Point2D, point2, Point3D};
 use crate::vector::{Vector2D, Vector3D, vec2, vec3};
 use crate::rect::Rect;
-use crate::box2d::Box2D;
-use crate::box3d::Box3D;
 use crate::transform2d::Transform2D;
 use crate::scale::Scale;
 use crate::num::{One, Zero};
@@ -30,9 +28,9 @@ use core::cmp::{Eq, PartialEq};
 use core::hash::{Hash};
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde;
 
-/// A 3d transform stored as a column-major 4 by 4 matrix.
+/// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
 ///
 /// Transforms can be parametrized over the source and destination units, to describe a
 /// transformation from a space to another.
@@ -40,27 +38,14 @@ use serde::{Deserialize, Serialize};
 /// takes a `Point3D<f32, WorldSpace>` and returns a `Point3D<f32, ScreenSpace>`.
 ///
 /// Transforms expose a set of convenience methods for pre- and post-transformations.
-/// Pre-transformations (`pre_*` methods) correspond to adding an operation that is
-/// applied before the rest of the transformation, while post-transformations (`then_*`
-/// methods) add an operation that is applied after.
+/// A pre-transformation corresponds to adding an operation that is applied before
+/// the rest of the transformation, while a post-transformation adds an operation
+/// that is applied after.
 ///
-/// When translating Transform3D into general matrix representations, consider that the
-/// representation follows the column major notation with column vectors.
-///
-/// ```text
-///  |x'|   | m11 m12 m13 m14 |   |x|
-///  |y'|   | m21 m22 m23 m24 |   |y|
-///  |z'| = | m31 m32 m33 m34 | x |y|
-///  |w |   | m41 m42 m43 m44 |   |1|
-/// ```
-///
-/// The translation terms are m41, m42 and m43.
+/// These transforms are for working with _row vectors_, so the matrix math for transforming
+/// a vector is `v * T`. If your library is using column vectors, use `row_major` functions when you
+/// are asked for `column_major` representations and vice versa.
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "serde",
-    serde(bound(serialize = "T: Serialize", deserialize = "T: Deserialize<'de>"))
-)]
 pub struct Transform3D<T, Src, Dst> {
     pub m11: T, pub m12: T, pub m13: T, pub m14: T,
     pub m21: T, pub m22: T, pub m23: T, pub m24: T,
@@ -93,6 +78,45 @@ impl<T: Clone, Src, Dst> Clone for Transform3D<T, Src, Dst> {
             m44: self.m44.clone(),
             _unit: PhantomData,
         }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T, Src, Dst> serde::Deserialize<'de> for Transform3D<T, Src, Dst>
+    where T: serde::Deserialize<'de>
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: serde::Deserializer<'de>
+    {
+        let (
+            m11, m12, m13, m14,
+            m21, m22, m23, m24,
+            m31, m32, m33, m34,
+            m41, m42, m43, m44,
+        ) = serde::Deserialize::deserialize(deserializer)?;
+        Ok(Transform3D {
+            m11, m12, m13, m14,
+            m21, m22, m23, m24,
+            m31, m32, m33, m34,
+            m41, m42, m43, m44,
+            _unit: PhantomData
+        })
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<T, Src, Dst> serde::Serialize for Transform3D<T, Src, Dst>
+    where T: serde::Serialize
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer
+    {
+        (
+            &self.m11, &self.m12, &self.m13, &self.m14,
+            &self.m21, &self.m22, &self.m23, &self.m24,
+            &self.m31, &self.m32, &self.m33, &self.m34,
+            &self.m41, &self.m42, &self.m43, &self.m44,
+        ).serialize(serializer)
     }
 }
 
@@ -146,31 +170,22 @@ impl<T, Src, Dst> Hash for Transform3D<T, Src, Dst>
 
 
 impl<T, Src, Dst> Transform3D<T, Src, Dst> {
-    /// Create a transform specifying all of it's component as a 4 by 4 matrix.
+    /// Create a transform specifying its components in row-major order.
     ///
-    /// Components are specified following column-major-column-vector matrix notation.
-    /// For example, the translation terms m41, m42, m43 are the 13rd, 14th and 15th parameters.
+    /// For example, the translation terms m41, m42, m43 on the last row with the
+    /// row-major convention) are the 13rd, 14th and 15th parameters.
     ///
-    /// ```
-    /// use euclid::default::Transform3D;
-    /// let tx = 1.0;
-    /// let ty = 2.0;
-    /// let tz = 3.0;
-    /// let translation = Transform3D::new(
-    ///   1.0, 0.0, 0.0, 0.0,
-    ///   0.0, 1.0, 0.0, 0.0,
-    ///   0.0, 0.0, 1.0, 0.0,
-    ///   tx,  ty,  tz,  1.0,
-    /// );
-    /// ```
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `column_major`
     #[inline]
     #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
-    pub const fn new(
-        m11: T, m12: T, m13: T, m14: T,
-        m21: T, m22: T, m23: T, m24: T,
-        m31: T, m32: T, m33: T, m34: T,
-        m41: T, m42: T, m43: T, m44: T,
-    ) -> Self {
+    pub const fn row_major(
+            m11: T, m12: T, m13: T, m14: T,
+            m21: T, m22: T, m23: T, m24: T,
+            m31: T, m32: T, m33: T, m34: T,
+            m41: T, m42: T, m43: T, m44: T)
+         -> Self {
         Transform3D {
             m11, m12, m13, m14,
             m21, m22, m23, m24,
@@ -180,11 +195,8 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
         }
     }
 
-    /// Create a transform representing a 2d transformation from the components
-    /// of a 2 by 3 matrix transformation.
-    ///
-    /// Components follow the column-major-column-vector notation (m41 and m42
-    /// representating the translation terms).
+    /// Create a 4 by 4 transform representing a 2d transformation, specifying its components
+    /// in row-major order:
     ///
     /// ```text
     /// m11  m12   0   0
@@ -193,14 +205,14 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// m41  m42   0   1
     /// ```
     #[inline]
-    pub fn new_2d(m11: T, m12: T, m21: T, m22: T, m41: T, m42: T) -> Self
+    pub fn row_major_2d(m11: T, m12: T, m21: T, m22: T, m41: T, m42: T) -> Self
     where
         T: Zero + One,
     {
         let _0 = || T::zero();
         let _1 = || T::one();
 
-        Self::new(
+        Self::row_major(
             m11,  m12,  _0(), _0(),
             m21,  m22,  _0(), _0(),
             _0(), _0(), _1(), _0(),
@@ -208,6 +220,30 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
        )
     }
 
+    /// Create a transform specifying its components in column-major order.
+    ///
+    /// For example, the translation terms m41, m42, m43 on the last column with the
+    /// column-major convention) are the 4th, 8th and 12nd parameters.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `row_major`
+    #[inline]
+    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+    pub const fn column_major(
+            m11: T, m21: T, m31: T, m41: T,
+            m12: T, m22: T, m32: T, m42: T,
+            m13: T, m23: T, m33: T, m43: T,
+            m14: T, m24: T, m34: T, m44: T)
+         -> Self {
+        Transform3D {
+            m11, m12, m13, m14,
+            m21, m22, m23, m24,
+            m31, m32, m33, m34,
+            m41, m42, m43, m44,
+            _unit: PhantomData,
+        }
+    }
 
     /// Returns `true` if this transform can be represented with a `Transform2D`.
     ///
@@ -227,16 +263,14 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
 }
 
 impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
-    /// Returns an array containing this transform's terms.
+    /// Returns an array containing this transform's terms in row-major order (the order
+    /// in which the transform is actually laid out in memory).
     ///
-    /// The terms are laid out in the same order as they are
-    /// specified in `Transform3D::new`, that is following the
-    /// column-major-column-vector matrix notation.
-    ///
-    /// For example the translation terms are found on the
-    /// 13th, 14th and 15th slots of the array.
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `to_column_major_array`
     #[inline]
-    pub fn to_array(&self) -> [T; 16] {
+    pub fn to_row_major_array(&self) -> [T; 16] {
         [
             self.m11, self.m12, self.m13, self.m14,
             self.m21, self.m22, self.m23, self.m24,
@@ -245,16 +279,13 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
         ]
     }
 
-    /// Returns an array containing this transform's terms transposed.
+    /// Returns an array containing this transform's terms in column-major order.
     ///
-    /// The terms are laid out in transposed order from the same order of
-    /// `Transform3D::new` and `Transform3D::to_array`, that is following
-    /// the row-major-column-vector matrix notation.
-    ///
-    /// For example the translation terms are found at indices 3, 7 and 11
-    /// of the array.
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `to_row_major_array`
     #[inline]
-    pub fn to_array_transposed(&self) -> [T; 16] {
+    pub fn to_column_major_array(&self) -> [T; 16] {
         [
             self.m11, self.m21, self.m31, self.m41,
             self.m12, self.m22, self.m32, self.m42,
@@ -263,10 +294,16 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
         ]
     }
 
-    /// Equivalent to `to_array` with elements packed four at a time
-    /// in an array of arrays.
+    /// Returns an array containing this transform's 4 rows in (in row-major order)
+    /// as arrays.
+    ///
+    /// This is a convenience method to interface with other libraries like glium.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `to_column_arrays`
     #[inline]
-    pub fn to_arrays(&self) -> [[T; 4]; 4] {
+    pub fn to_row_arrays(&self) -> [[T; 4]; 4] {
         [
             [self.m11, self.m12, self.m13, self.m14],
             [self.m21, self.m22, self.m23, self.m24],
@@ -275,10 +312,16 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
         ]
     }
 
-    /// Equivalent to `to_array_transposed` with elements packed
-    /// four at a time in an array of arrays.
+    /// Returns an array containing this transform's 4 columns in (in row-major order,
+    /// or 4 rows in column-major order) as arrays.
+    ///
+    /// This is a convenience method to interface with other libraries like glium.
+    ///
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), then please use `to_row_arrays`
     #[inline]
-    pub fn to_arrays_transposed(&self) -> [[T; 4]; 4] {
+    pub fn to_column_arrays(&self) -> [[T; 4]; 4] {
         [
             [self.m11, self.m21, self.m31, self.m41],
             [self.m12, self.m22, self.m32, self.m42],
@@ -287,15 +330,14 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
         ]
     }
 
-    /// Create a transform providing its components via an array
-    /// of 16 elements instead of as individual parameters.
+    /// Creates a transform from an array of 16 elements in row-major order.
     ///
-    /// The order of the components corresponds to the
-    /// column-major-column-vector matrix notation (the same order
-    /// as `Transform3D::new`).
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), please provide column-major data to this function.
     #[inline]
     pub fn from_array(array: [T; 16]) -> Self {
-        Self::new(
+        Self::row_major(
             array[0],  array[1],  array[2],  array[3],
             array[4],  array[5],  array[6],  array[7],
             array[8],  array[9],  array[10], array[11],
@@ -303,15 +345,14 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
         )
     }
 
-    /// Equivalent to `from_array` with elements packed four at a time
-    /// in an array of arrays.
+    /// Creates a transform from 4 rows of 4 elements (row-major order).
     ///
-    /// The order of the components corresponds to the
-    /// column-major-column-vector matrix notation (the same order
-    /// as `Transform3D::new`).
+    /// Beware: This library is written with the assumption that row vectors
+    /// are being used. If your matrices use column vectors (i.e. transforming a vector
+    /// is `T * v`), please provide column-major data to tis function.
     #[inline]
-    pub fn from_arrays(array: [[T; 4]; 4]) -> Self {
-        Self::new(
+    pub fn from_row_arrays(array: [[T; 4]; 4]) -> Self {
+        Self::row_major(
             array[0][0], array[0][1], array[0][2], array[0][3],
             array[1][0], array[1][1], array[1][2], array[1][3],
             array[2][0], array[2][1], array[2][2], array[2][3],
@@ -322,7 +363,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Tag a unitless value with units.
     #[inline]
     pub fn from_untyped(m: &Transform3D<T, UnknownUnit, UnknownUnit>) -> Self {
-        Transform3D::new(
+        Transform3D::row_major(
             m.m11, m.m12, m.m13, m.m14,
             m.m21, m.m22, m.m23, m.m24,
             m.m31, m.m32, m.m33, m.m34,
@@ -333,7 +374,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Drop the units, preserving only the numeric value.
     #[inline]
     pub fn to_untyped(&self) -> Transform3D<T, UnknownUnit, UnknownUnit> {
-        Transform3D::new(
+        Transform3D::row_major(
             self.m11, self.m12, self.m13, self.m14,
             self.m21, self.m22, self.m23, self.m24,
             self.m31, self.m32, self.m33, self.m34,
@@ -344,7 +385,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Returns the same transform with a different source unit.
     #[inline]
     pub fn with_source<NewSrc>(&self) -> Transform3D<T, NewSrc, Dst> {
-        Transform3D::new(
+        Transform3D::row_major(
             self.m11, self.m12, self.m13, self.m14,
             self.m21, self.m22, self.m23, self.m24,
             self.m31, self.m32, self.m33, self.m34,
@@ -355,7 +396,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Returns the same transform with a different destination unit.
     #[inline]
     pub fn with_destination<NewDst>(&self) -> Transform3D<T, Src, NewDst> {
-        Transform3D::new(
+        Transform3D::row_major(
             self.m11, self.m12, self.m13, self.m14,
             self.m21, self.m22, self.m23, self.m24,
             self.m31, self.m32, self.m33, self.m34,
@@ -370,7 +411,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     ///
     /// [`self.is_2d()`]: #method.is_2d
     pub fn to_2d(&self) -> Transform2D<T, Src, Dst> {
-        Transform2D::new(
+        Transform2D::row_major(
             self.m11, self.m12,
             self.m21, self.m22,
             self.m41, self.m42
@@ -392,7 +433,7 @@ where
     /// ```
     #[inline]
     pub fn identity() -> Self {
-        Self::translation(T::zero(), T::zero(), T::zero())
+        Self::create_translation(T::zero(), T::zero(), T::zero())
     }
 
     /// Intentional not public, because it checks for exact equivalence
@@ -409,7 +450,7 @@ where
     /// Create a 2d skew transform.
     ///
     /// See <https://drafts.csswg.org/css-transforms/#funcdef-skew>
-    pub fn skew(alpha: Angle<T>, beta: Angle<T>) -> Self
+    pub fn create_skew(alpha: Angle<T>, beta: Angle<T>) -> Self
     where
         T: Trig,
     {
@@ -417,7 +458,7 @@ where
         let _1 = || T::one();
         let (sx, sy) = (beta.radians.tan(), alpha.radians.tan());
 
-        Self::new(
+        Self::row_major(
             _1(), sx,   _0(), _0(),
             sy,   _1(), _0(), _0(),
             _0(), _0(), _1(), _0(),
@@ -433,14 +474,14 @@ where
     /// 0   0   1 -1/d
     /// 0   0   0   1
     /// ```
-    pub fn perspective(d: T) -> Self
+    pub fn create_perspective(d: T) -> Self
     where
         T: Neg<Output = T> + Div<Output = T>,
     {
         let _0 = || T::zero();
         let _1 = || T::one();
 
-        Self::new(
+        Self::row_major(
             _1(), _0(), _0(),  _0(),
             _0(), _1(), _0(),  _0(),
             _0(), _0(), _1(), -_1() / d,
@@ -460,28 +501,38 @@ where
     ///
     /// Assuming row vectors, this is equivalent to self * mat
     #[must_use]
-    pub fn then<NewDst>(&self, other: &Transform3D<T, Dst, NewDst>) -> Transform3D<T, Src, NewDst> {
-        Transform3D::new(
-            self.m11 * other.m11  +  self.m12 * other.m21  +  self.m13 * other.m31  +  self.m14 * other.m41,
-            self.m11 * other.m12  +  self.m12 * other.m22  +  self.m13 * other.m32  +  self.m14 * other.m42,
-            self.m11 * other.m13  +  self.m12 * other.m23  +  self.m13 * other.m33  +  self.m14 * other.m43,
-            self.m11 * other.m14  +  self.m12 * other.m24  +  self.m13 * other.m34  +  self.m14 * other.m44,
+    pub fn post_transform<NewDst>(&self, mat: &Transform3D<T, Dst, NewDst>) -> Transform3D<T, Src, NewDst> {
+        Transform3D::row_major(
+            self.m11 * mat.m11  +  self.m12 * mat.m21  +  self.m13 * mat.m31  +  self.m14 * mat.m41,
+            self.m11 * mat.m12  +  self.m12 * mat.m22  +  self.m13 * mat.m32  +  self.m14 * mat.m42,
+            self.m11 * mat.m13  +  self.m12 * mat.m23  +  self.m13 * mat.m33  +  self.m14 * mat.m43,
+            self.m11 * mat.m14  +  self.m12 * mat.m24  +  self.m13 * mat.m34  +  self.m14 * mat.m44,
 
-            self.m21 * other.m11  +  self.m22 * other.m21  +  self.m23 * other.m31  +  self.m24 * other.m41,
-            self.m21 * other.m12  +  self.m22 * other.m22  +  self.m23 * other.m32  +  self.m24 * other.m42,
-            self.m21 * other.m13  +  self.m22 * other.m23  +  self.m23 * other.m33  +  self.m24 * other.m43,
-            self.m21 * other.m14  +  self.m22 * other.m24  +  self.m23 * other.m34  +  self.m24 * other.m44,
+            self.m21 * mat.m11  +  self.m22 * mat.m21  +  self.m23 * mat.m31  +  self.m24 * mat.m41,
+            self.m21 * mat.m12  +  self.m22 * mat.m22  +  self.m23 * mat.m32  +  self.m24 * mat.m42,
+            self.m21 * mat.m13  +  self.m22 * mat.m23  +  self.m23 * mat.m33  +  self.m24 * mat.m43,
+            self.m21 * mat.m14  +  self.m22 * mat.m24  +  self.m23 * mat.m34  +  self.m24 * mat.m44,
 
-            self.m31 * other.m11  +  self.m32 * other.m21  +  self.m33 * other.m31  +  self.m34 * other.m41,
-            self.m31 * other.m12  +  self.m32 * other.m22  +  self.m33 * other.m32  +  self.m34 * other.m42,
-            self.m31 * other.m13  +  self.m32 * other.m23  +  self.m33 * other.m33  +  self.m34 * other.m43,
-            self.m31 * other.m14  +  self.m32 * other.m24  +  self.m33 * other.m34  +  self.m34 * other.m44,
+            self.m31 * mat.m11  +  self.m32 * mat.m21  +  self.m33 * mat.m31  +  self.m34 * mat.m41,
+            self.m31 * mat.m12  +  self.m32 * mat.m22  +  self.m33 * mat.m32  +  self.m34 * mat.m42,
+            self.m31 * mat.m13  +  self.m32 * mat.m23  +  self.m33 * mat.m33  +  self.m34 * mat.m43,
+            self.m31 * mat.m14  +  self.m32 * mat.m24  +  self.m33 * mat.m34  +  self.m34 * mat.m44,
 
-            self.m41 * other.m11  +  self.m42 * other.m21  +  self.m43 * other.m31  +  self.m44 * other.m41,
-            self.m41 * other.m12  +  self.m42 * other.m22  +  self.m43 * other.m32  +  self.m44 * other.m42,
-            self.m41 * other.m13  +  self.m42 * other.m23  +  self.m43 * other.m33  +  self.m44 * other.m43,
-            self.m41 * other.m14  +  self.m42 * other.m24  +  self.m43 * other.m34  +  self.m44 * other.m44,
+            self.m41 * mat.m11  +  self.m42 * mat.m21  +  self.m43 * mat.m31  +  self.m44 * mat.m41,
+            self.m41 * mat.m12  +  self.m42 * mat.m22  +  self.m43 * mat.m32  +  self.m44 * mat.m42,
+            self.m41 * mat.m13  +  self.m42 * mat.m23  +  self.m43 * mat.m33  +  self.m44 * mat.m43,
+            self.m41 * mat.m14  +  self.m42 * mat.m24  +  self.m43 * mat.m34  +  self.m44 * mat.m44,
         )
+    }
+
+    /// Returns the multiplication of the two matrices such that mat's transformation
+    /// applies before self's transformation.
+    ///
+    /// Assuming row vectors, this is equivalent to mat * self
+    #[inline]
+    #[must_use]
+    pub fn pre_transform<NewSrc>(&self, mat: &Transform3D<T, NewSrc, Src>) -> Transform3D<T, NewSrc, Dst> {
+        mat.post_transform(self)
     }
 }
 
@@ -499,11 +550,11 @@ where
     /// x y z 1
     /// ```
     #[inline]
-    pub fn translation(x: T, y: T, z: T) -> Self {
+    pub fn create_translation(x: T, y: T, z: T) -> Self {
         let _0 = || T::zero();
         let _1 = || T::one();
 
-        Self::new(
+        Self::row_major(
             _1(), _0(), _0(), _0(),
             _0(), _1(), _0(), _0(),
             _0(), _0(), _1(), _0(),
@@ -517,16 +568,16 @@ where
     where
         T: Copy + Add<Output = T> + Mul<Output = T>,
     {
-        Transform3D::translation(v.x, v.y, v.z).then(self)
+        self.pre_transform(&Transform3D::create_translation(v.x, v.y, v.z))
     }
 
     /// Returns a transform with a translation applied after self's transformation.
     #[must_use]
-    pub fn then_translate(&self, v: Vector3D<T, Dst>) -> Self
+    pub fn post_translate(&self, v: Vector3D<T, Dst>) -> Self
     where
         T: Copy + Add<Output = T> + Mul<Output = T>,
     {
-        self.then(&Transform3D::translation(v.x, v.y, v.z))
+        self.post_transform(&Transform3D::create_translation(v.x, v.y, v.z))
     }
 }
 
@@ -537,7 +588,7 @@ where
 {
     /// Create a 3d rotation transform from an angle / axis.
     /// The supplied axis must be normalized.
-    pub fn rotation(x: T, y: T, z: T, theta: Angle<T>) -> Self {
+    pub fn create_rotation(x: T, y: T, z: T, theta: Angle<T>) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
         let _2 = _1 + _1;
 
@@ -549,20 +600,19 @@ where
         let sc = half_theta.sin() * half_theta.cos();
         let sq = half_theta.sin() * half_theta.sin();
 
-        Transform3D::new(
+        Transform3D::row_major(
             _1 - _2 * (yy + zz) * sq,
-            _2 * (x * y * sq + z * sc),
-            _2 * (x * z * sq - y * sc),
-            _0,
-
-
             _2 * (x * y * sq - z * sc),
-            _1 - _2 * (xx + zz) * sq,
-            _2 * (y * z * sq + x * sc),
+            _2 * (x * z * sq + y * sc),
             _0,
 
-            _2 * (x * z * sq + y * sc),
+            _2 * (x * y * sq + z * sc),
+            _1 - _2 * (xx + zz) * sq,
             _2 * (y * z * sq - x * sc),
+            _0,
+
+            _2 * (x * z * sq - y * sc),
+            _2 * (y * z * sq + x * sc),
             _1 - _2 * (xx + yy) * sq,
             _0,
 
@@ -575,14 +625,14 @@ where
 
     /// Returns a transform with a rotation applied after self's transformation.
     #[must_use]
-    pub fn then_rotate(&self, x: T, y: T, z: T, theta: Angle<T>) -> Self {
-        self.then(&Transform3D::rotation(x, y, z, theta))
+    pub fn post_rotate(&self, x: T, y: T, z: T, theta: Angle<T>) -> Self {
+        self.post_transform(&Transform3D::create_rotation(x, y, z, theta))
     }
 
     /// Returns a transform with a rotation applied before self's transformation.
     #[must_use]
     pub fn pre_rotate(&self, x: T, y: T, z: T, theta: Angle<T>) -> Self {
-        Transform3D::rotation(x, y, z, theta).then(self)
+        self.pre_transform(&Transform3D::create_rotation(x, y, z, theta))
     }
 }
 
@@ -600,11 +650,11 @@ where
     /// 0 0 0 1
     /// ```
     #[inline]
-    pub fn scale(x: T, y: T, z: T) -> Self {
+    pub fn create_scale(x: T, y: T, z: T) -> Self {
         let _0 = || T::zero();
         let _1 = || T::one();
 
-        Self::new(
+        Self::row_major(
              x,   _0(), _0(), _0(),
             _0(),  y,   _0(), _0(),
             _0(), _0(),  z,   _0(),
@@ -618,7 +668,7 @@ where
     where
         T: Copy + Add<Output = T> + Mul<Output = T>,
     {
-        Transform3D::new(
+        Transform3D::row_major(
             self.m11 * x, self.m12 * x, self.m13 * x, self.m14 * x,
             self.m21 * y, self.m22 * y, self.m23 * y, self.m24 * y,
             self.m31 * z, self.m32 * z, self.m33 * z, self.m34 * z,
@@ -628,11 +678,11 @@ where
 
     /// Returns a transform with a scale applied after self's transformation.
     #[must_use]
-    pub fn then_scale(&self, x: T, y: T, z: T) -> Self
+    pub fn post_scale(&self, x: T, y: T, z: T) -> Self
     where
         T: Copy + Add<Output = T> + Mul<Output = T>,
     {
-        self.then(&Transform3D::scale(x, y, z))
+        self.post_transform(&Transform3D::create_scale(x, y, z))
     }
 }
 
@@ -644,6 +694,8 @@ where
     /// Returns the homogeneous vector corresponding to the transformed 2d point.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
+    ///
+    /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
     pub fn transform_point2d_homogeneous(
         &self, p: Point2D<T, Src>
@@ -660,6 +712,8 @@ where
     /// or `None` otherwise.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
+    ///
+    /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
     pub fn transform_point2d(&self, p: Point2D<T, Src>) -> Option<Point2D<T, Dst>>
     where
@@ -680,6 +734,8 @@ where
     /// Returns the given 2d vector transformed by this matrix.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
+    ///
+    /// Assuming row vectors, this is equivalent to `v * self`
     #[inline]
     pub fn transform_vector2d(&self, v: Vector2D<T, Src>) -> Vector2D<T, Dst> {
         vec2(
@@ -691,6 +747,8 @@ where
     /// Returns the homogeneous vector corresponding to the transformed 3d point.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
+    ///
+    /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
     pub fn transform_point3d_homogeneous(
         &self, p: Point3D<T, Src>
@@ -707,6 +765,8 @@ where
     /// or `None` otherwise.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
+    ///
+    /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
     pub fn transform_point3d(&self, p: Point3D<T, Src>) -> Option<Point3D<T, Dst>>
     where
@@ -718,6 +778,8 @@ where
     /// Returns the given 3d vector transformed by this matrix.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
+    ///
+    /// Assuming row vectors, this is equivalent to `v * self`
     #[inline]
     pub fn transform_vector3d(&self, v: Vector3D<T, Src>) -> Vector3D<T, Dst> {
         vec3(
@@ -729,7 +791,7 @@ where
 
     /// Returns a rectangle that encompasses the result of transforming the given rectangle by this
     /// transform, if the transform makes sense for it, or `None` otherwise.
-    pub fn outer_transformed_rect(&self, rect: &Rect<T, Src>) -> Option<Rect<T, Dst>>
+    pub fn transform_rect(&self, rect: &Rect<T, Src>) -> Option<Rect<T, Dst>>
     where
         T: Sub<Output = T> + Div<Output = T> + Zero + PartialOrd,
     {
@@ -740,38 +802,6 @@ where
             self.transform_point2d(max)?,
             self.transform_point2d(point2(max.x, min.y))?,
             self.transform_point2d(point2(min.x, max.y))?,
-        ]))
-    }
-
-    /// Returns a 2d box that encompasses the result of transforming the given box by this
-    /// transform, if the transform makes sense for it, or `None` otherwise.
-    pub fn outer_transformed_box2d(&self, b: &Box2D<T, Src>) -> Option<Box2D<T, Dst>>
-    where
-        T: Sub<Output = T> + Div<Output = T> + Zero + PartialOrd,
-    {
-        Some(Box2D::from_points(&[
-            self.transform_point2d(b.min)?,
-            self.transform_point2d(b.max)?,
-            self.transform_point2d(point2(b.max.x, b.min.y))?,
-            self.transform_point2d(point2(b.min.x, b.max.y))?,
-        ]))
-    }
-
-    /// Returns a 3d box that encompasses the result of transforming the given box by this
-    /// transform, if the transform makes sense for it, or `None` otherwise.
-    pub fn outer_transformed_box3d(&self, b: &Box3D<T, Src>) -> Option<Box3D<T, Dst>>
-    where
-        T: Sub<Output = T> + Div<Output = T> + Zero + PartialOrd,
-    {
-        Some(Box3D::from_points(&[
-            self.transform_point3d(point3(b.min.x, b.min.y, b.min.z))?,
-            self.transform_point3d(point3(b.min.x, b.min.y, b.max.z))?,
-            self.transform_point3d(point3(b.min.x, b.max.y, b.min.z))?,
-            self.transform_point3d(point3(b.min.x, b.max.y, b.max.z))?,
-            self.transform_point3d(point3(b.max.x, b.min.y, b.min.z))?,
-            self.transform_point3d(point3(b.max.x, b.min.y, b.max.z))?,
-            self.transform_point3d(point3(b.max.x, b.max.y, b.min.z))?,
-            self.transform_point3d(point3(b.max.x, b.max.y, b.max.z))?,
         ]))
     }
 }
@@ -797,7 +827,7 @@ where T: Copy +
 
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
         let _2 = _1 + _1;
-        Transform3D::new(
+        Transform3D::row_major(
             _2 / (right - left), _0                 , _0                , _0,
             _0                 , _2 / (top - bottom), _0                , _0,
             _0                 , _0                 , -_2 / (far - near), _0,
@@ -833,7 +863,7 @@ where T: Copy +
 
         // todo(gw): this could be made faster by special casing
         // for simpler transform types.
-        let m = Transform3D::new(
+        let m = Transform3D::row_major(
             self.m23*self.m34*self.m42 - self.m24*self.m33*self.m42 +
             self.m24*self.m32*self.m43 - self.m22*self.m34*self.m43 -
             self.m23*self.m32*self.m44 + self.m22*self.m33*self.m44,
@@ -934,7 +964,7 @@ where T: Copy +
     /// Multiplies all of the transform's component by a scalar and returns the result.
     #[must_use]
     pub fn mul_s(&self, x: T) -> Self {
-        Transform3D::new(
+        Transform3D::row_major(
             self.m11 * x, self.m12 * x, self.m13 * x, self.m14 * x,
             self.m21 * x, self.m22 * x, self.m23 * x, self.m24 * x,
             self.m31 * x, self.m32 * x, self.m33 * x, self.m34 * x,
@@ -944,7 +974,7 @@ where T: Copy +
 
     /// Convenience function to create a scale transform from a `Scale`.
     pub fn from_scale(scale: Scale<T, Src, Dst>) -> Self {
-        Transform3D::scale(scale.get(), scale.get(), scale.get())
+        Transform3D::create_scale(scale.get(), scale.get(), scale.get())
     }
 }
 
@@ -1010,7 +1040,7 @@ impl<T: NumCast + Copy, Src, Dst> Transform3D<T, Src, Dst> {
              Some(m21), Some(m22), Some(m23), Some(m24),
              Some(m31), Some(m32), Some(m33), Some(m34),
              Some(m41), Some(m42), Some(m43), Some(m44)) => {
-                Some(Transform3D::new(m11, m12, m13, m14,
+                Some(Transform3D::row_major(m11, m12, m13, m14,
                                                  m21, m22, m23, m24,
                                                  m31, m32, m33, m34,
                                                  m41, m42, m43, m44))
@@ -1078,7 +1108,7 @@ where T: Copy + fmt::Debug +
         if self.is_identity() {
             write!(f, "[I]")
         } else {
-            self.to_array().fmt(f)
+            self.to_row_major_array().fmt(f)
         }
     }
 }
@@ -1124,61 +1154,62 @@ mod tests {
 
     #[test]
     pub fn test_translation() {
-        let t1 = Mf32::translation(1.0, 2.0, 3.0);
+        let t1 = Mf32::create_translation(1.0, 2.0, 3.0);
         let t2 = Mf32::identity().pre_translate(vec3(1.0, 2.0, 3.0));
-        let t3 = Mf32::identity().then_translate(vec3(1.0, 2.0, 3.0));
+        let t3 = Mf32::identity().post_translate(vec3(1.0, 2.0, 3.0));
         assert_eq!(t1, t2);
         assert_eq!(t1, t3);
 
         assert_eq!(t1.transform_point3d(point3(1.0, 1.0, 1.0)), Some(point3(2.0, 3.0, 4.0)));
         assert_eq!(t1.transform_point2d(point2(1.0, 1.0)), Some(point2(2.0, 3.0)));
 
-        assert_eq!(t1.then(&t1), Mf32::translation(2.0, 4.0, 6.0));
+        assert_eq!(t1.post_transform(&t1), Mf32::create_translation(2.0, 4.0, 6.0));
 
         assert!(!t1.is_2d());
-        assert_eq!(Mf32::translation(1.0, 2.0, 3.0).to_2d(), Transform2D::translation(1.0, 2.0));
+        assert_eq!(Mf32::create_translation(1.0, 2.0, 3.0).to_2d(), Transform2D::create_translation(1.0, 2.0));
     }
 
     #[test]
     pub fn test_rotation() {
-        let r1 = Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
+        let r1 = Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
         let r2 = Mf32::identity().pre_rotate(0.0, 0.0, 1.0, rad(FRAC_PI_2));
-        let r3 = Mf32::identity().then_rotate(0.0, 0.0, 1.0, rad(FRAC_PI_2));
+        let r3 = Mf32::identity().post_rotate(0.0, 0.0, 1.0, rad(FRAC_PI_2));
         assert_eq!(r1, r2);
         assert_eq!(r1, r3);
 
-        assert!(r1.transform_point3d(point3(1.0, 2.0, 3.0)).unwrap().approx_eq(&point3(-2.0, 1.0, 3.0)));
-        assert!(r1.transform_point2d(point2(1.0, 2.0)).unwrap().approx_eq(&point2(-2.0, 1.0)));
+        assert!(r1.transform_point3d(point3(1.0, 2.0, 3.0)).unwrap().approx_eq(&point3(2.0, -1.0, 3.0)));
+        assert!(r1.transform_point2d(point2(1.0, 2.0)).unwrap().approx_eq(&point2(2.0, -1.0)));
 
-        assert!(r1.then(&r1).approx_eq(&Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2*2.0))));
+        assert!(r1.post_transform(&r1).approx_eq(&Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2*2.0))));
 
         assert!(r1.is_2d());
-        assert!(r1.to_2d().approx_eq(&Transform2D::rotation(rad(FRAC_PI_2))));
+        assert!(r1.to_2d().approx_eq(&Transform2D::create_rotation(rad(FRAC_PI_2))));
     }
 
     #[test]
     pub fn test_scale() {
-        let s1 = Mf32::scale(2.0, 3.0, 4.0);
+        let s1 = Mf32::create_scale(2.0, 3.0, 4.0);
         let s2 = Mf32::identity().pre_scale(2.0, 3.0, 4.0);
-        let s3 = Mf32::identity().then_scale(2.0, 3.0, 4.0);
+        let s3 = Mf32::identity().post_scale(2.0, 3.0, 4.0);
         assert_eq!(s1, s2);
         assert_eq!(s1, s3);
 
         assert!(s1.transform_point3d(point3(2.0, 2.0, 2.0)).unwrap().approx_eq(&point3(4.0, 6.0, 8.0)));
         assert!(s1.transform_point2d(point2(2.0, 2.0)).unwrap().approx_eq(&point2(4.0, 6.0)));
 
-        assert_eq!(s1.then(&s1), Mf32::scale(4.0, 9.0, 16.0));
+        assert_eq!(s1.post_transform(&s1), Mf32::create_scale(4.0, 9.0, 16.0));
 
         assert!(!s1.is_2d());
-        assert_eq!(Mf32::scale(2.0, 3.0, 0.0).to_2d(), Transform2D::scale(2.0, 3.0));
+        assert_eq!(Mf32::create_scale(2.0, 3.0, 0.0).to_2d(), Transform2D::create_scale(2.0, 3.0));
     }
 
 
     #[test]
-    pub fn test_pre_then_scale() {
-        let m = Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2)).then_translate(vec3(6.0, 7.0, 8.0));
-        let s = Mf32::scale(2.0, 3.0, 4.0);
-        assert_eq!(m.then(&s), m.then_scale(2.0, 3.0, 4.0));
+    pub fn test_pre_post_scale() {
+        let m = Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2)).post_translate(vec3(6.0, 7.0, 8.0));
+        let s = Mf32::create_scale(2.0, 3.0, 4.0);
+        assert_eq!(m.post_transform(&s), m.post_scale(2.0, 3.0, 4.0));
+        assert_eq!(m.pre_transform(&s), m.pre_scale(2.0, 3.0, 4.0));
     }
 
 
@@ -1187,7 +1218,7 @@ mod tests {
         let (left, right, bottom, top) = (0.0f32, 1.0f32, 0.1f32, 1.0f32);
         let (near, far) = (-1.0f32, 1.0f32);
         let result = Mf32::ortho(left, right, bottom, top, near, far);
-        let expected = Mf32::new(
+        let expected = Mf32::row_major(
              2.0,  0.0,         0.0, 0.0,
              0.0,  2.22222222,  0.0, 0.0,
              0.0,  0.0,        -1.0, 0.0,
@@ -1199,20 +1230,38 @@ mod tests {
     #[test]
     pub fn test_is_2d() {
         assert!(Mf32::identity().is_2d());
-        assert!(Mf32::rotation(0.0, 0.0, 1.0, rad(0.7854)).is_2d());
-        assert!(!Mf32::rotation(0.0, 1.0, 0.0, rad(0.7854)).is_2d());
+        assert!(Mf32::create_rotation(0.0, 0.0, 1.0, rad(0.7854)).is_2d());
+        assert!(!Mf32::create_rotation(0.0, 1.0, 0.0, rad(0.7854)).is_2d());
     }
 
     #[test]
-    pub fn test_new_2d() {
-        let m1 = Mf32::new_2d(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
-        let m2 = Mf32::new(
+    pub fn test_row_major_2d() {
+        let m1 = Mf32::row_major_2d(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+        let m2 = Mf32::row_major(
             1.0, 2.0, 0.0, 0.0,
             3.0, 4.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             5.0, 6.0, 0.0, 1.0
         );
         assert_eq!(m1, m2);
+    }
+
+    #[test]
+    fn test_column_major() {
+        assert_eq!(
+            Mf32::row_major(
+                1.0,  2.0,  3.0,  4.0,
+                5.0,  6.0,  7.0,  8.0,
+                9.0,  10.0, 11.0, 12.0,
+                13.0, 14.0, 15.0, 16.0,
+            ),
+            Mf32::column_major(
+                1.0,  5.0,  9.0,  13.0,
+                2.0,  6.0,  10.0, 14.0,
+                3.0,  7.0,  11.0, 15.0,
+                4.0,  8.0,  12.0, 16.0,
+            )
+        );
     }
 
     #[test]
@@ -1224,34 +1273,30 @@ mod tests {
 
     #[test]
     pub fn test_inverse_scale() {
-        let m1 = Mf32::scale(1.5, 0.3, 2.1);
+        let m1 = Mf32::create_scale(1.5, 0.3, 2.1);
         let m2 = m1.inverse().unwrap();
-        assert!(m1.then(&m2).approx_eq(&Mf32::identity()));
-        assert!(m2.then(&m1).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
     }
 
     #[test]
     pub fn test_inverse_translate() {
-        let m1 = Mf32::translation(-132.0, 0.3, 493.0);
+        let m1 = Mf32::create_translation(-132.0, 0.3, 493.0);
         let m2 = m1.inverse().unwrap();
-        assert!(m1.then(&m2).approx_eq(&Mf32::identity()));
-        assert!(m2.then(&m1).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
     }
 
     #[test]
     pub fn test_inverse_rotate() {
-        let m1 = Mf32::rotation(0.0, 1.0, 0.0, rad(1.57));
+        let m1 = Mf32::create_rotation(0.0, 1.0, 0.0, rad(1.57));
         let m2 = m1.inverse().unwrap();
-        assert!(m1.then(&m2).approx_eq(&Mf32::identity()));
-        assert!(m2.then(&m1).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
     }
 
     #[test]
     pub fn test_inverse_transform_point_2d() {
-        let m1 = Mf32::translation(100.0, 200.0, 0.0);
+        let m1 = Mf32::create_translation(100.0, 200.0, 0.0);
         let m2 = m1.inverse().unwrap();
-        assert!(m1.then(&m2).approx_eq(&Mf32::identity()));
-        assert!(m2.then(&m1).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
 
         let p1 = point2(1000.0, 2000.0);
         let p2 = m1.transform_point2d(p1);
@@ -1263,24 +1308,28 @@ mod tests {
 
     #[test]
     fn test_inverse_none() {
-        assert!(Mf32::scale(2.0, 0.0, 2.0).inverse().is_none());
-        assert!(Mf32::scale(2.0, 2.0, 2.0).inverse().is_some());
+        assert!(Mf32::create_scale(2.0, 0.0, 2.0).inverse().is_none());
+        assert!(Mf32::create_scale(2.0, 2.0, 2.0).inverse().is_some());
     }
 
     #[test]
     pub fn test_pre_post() {
-        let m1 = default::Transform3D::identity().then_scale(1.0, 2.0, 3.0).then_translate(vec3(1.0, 2.0, 3.0));
+        let m1 = default::Transform3D::identity().post_scale(1.0, 2.0, 3.0).post_translate(vec3(1.0, 2.0, 3.0));
         let m2 = default::Transform3D::identity().pre_translate(vec3(1.0, 2.0, 3.0)).pre_scale(1.0, 2.0, 3.0);
         assert!(m1.approx_eq(&m2));
 
-        let r = Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
-        let t = Mf32::translation(2.0, 3.0, 0.0);
+        let r = Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
+        let t = Mf32::create_translation(2.0, 3.0, 0.0);
 
         let a = point3(1.0, 1.0, 1.0);
 
-        assert!(r.then(&t).transform_point3d(a).unwrap().approx_eq(&point3(1.0, 4.0, 1.0)));
-        assert!(t.then(&r).transform_point3d(a).unwrap().approx_eq(&point3(-4.0, 3.0, 1.0)));
-        assert!(t.then(&r).transform_point3d(a).unwrap().approx_eq(&r.transform_point3d(t.transform_point3d(a).unwrap()).unwrap()));
+        assert!(r.post_transform(&t).transform_point3d(a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
+        assert!(t.post_transform(&r).transform_point3d(a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
+        assert!(t.post_transform(&r).transform_point3d(a).unwrap().approx_eq(&r.transform_point3d(t.transform_point3d(a).unwrap()).unwrap()));
+
+        assert!(r.pre_transform(&t).transform_point3d(a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
+        assert!(t.pre_transform(&r).transform_point3d(a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
+        assert!(t.pre_transform(&r).transform_point3d(a).unwrap().approx_eq(&t.transform_point3d(r.transform_point3d(a).unwrap()).unwrap()));
     }
 
     #[test]
@@ -1292,17 +1341,17 @@ mod tests {
 
     #[test]
     pub fn test_transform_associativity() {
-        let m1 = Mf32::new(3.0, 2.0, 1.5, 1.0,
+        let m1 = Mf32::row_major(3.0, 2.0, 1.5, 1.0,
                                  0.0, 4.5, -1.0, -4.0,
                                  0.0, 3.5, 2.5, 40.0,
                                  0.0, 3.0, 0.0, 1.0);
-        let m2 = Mf32::new(1.0, -1.0, 3.0, 0.0,
+        let m2 = Mf32::row_major(1.0, -1.0, 3.0, 0.0,
                                  -1.0, 0.5, 0.0, 2.0,
                                  1.5, -2.0, 6.0, 0.0,
                                  -2.5, 6.0, 1.0, 1.0);
 
         let p = point3(1.0, 3.0, 5.0);
-        let p1 = m1.then(&m2).transform_point3d(p).unwrap();
+        let p1 = m2.pre_transform(&m1).transform_point3d(p).unwrap();
         let p2 = m2.transform_point3d(m1.transform_point3d(p).unwrap()).unwrap();
         assert!(p1.approx_eq(&p2));
     }
@@ -1311,14 +1360,14 @@ mod tests {
     pub fn test_is_identity() {
         let m1 = default::Transform3D::identity();
         assert!(m1.is_identity());
-        let m2 = m1.then_translate(vec3(0.1, 0.0, 0.0));
+        let m2 = m1.post_translate(vec3(0.1, 0.0, 0.0));
         assert!(!m2.is_identity());
     }
 
     #[test]
     pub fn test_transform_vector() {
         // Translation does not apply to vectors.
-        let m = Mf32::translation(1.0, 2.0, 3.0);
+        let m = Mf32::create_translation(1.0, 2.0, 3.0);
         let v1 = vec3(10.0, -10.0, 3.0);
         assert_eq!(v1, m.transform_vector3d(v1));
         // While it does apply to points.
@@ -1333,25 +1382,25 @@ mod tests {
     #[test]
     pub fn test_is_backface_visible() {
         // backface is not visible for rotate-x 0 degree.
-        let r1 = Mf32::rotation(1.0, 0.0, 0.0, rad(0.0));
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(0.0));
         assert!(!r1.is_backface_visible());
         // backface is not visible for rotate-x 45 degree.
-        let r1 = Mf32::rotation(1.0, 0.0, 0.0, rad(PI * 0.25));
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(PI * 0.25));
         assert!(!r1.is_backface_visible());
         // backface is visible for rotate-x 180 degree.
-        let r1 = Mf32::rotation(1.0, 0.0, 0.0, rad(PI));
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(PI));
         assert!(r1.is_backface_visible());
         // backface is visible for rotate-x 225 degree.
-        let r1 = Mf32::rotation(1.0, 0.0, 0.0, rad(PI * 1.25));
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(PI * 1.25));
         assert!(r1.is_backface_visible());
         // backface is not visible for non-inverseable matrix
-        let r1 = Mf32::scale(2.0, 0.0, 2.0);
+        let r1 = Mf32::create_scale(2.0, 0.0, 2.0);
         assert!(!r1.is_backface_visible());
     }
 
     #[test]
     pub fn test_homogeneous() {
-        let m = Mf32::new(
+        let m = Mf32::row_major(
             1.0, 2.0, 0.5, 5.0,
             3.0, 4.0, 0.25, 6.0,
             0.5, -1.0, 1.0, -1.0,
@@ -1382,7 +1431,7 @@ mod tests {
     #[cfg(feature = "mint")]
     #[test]
     pub fn test_mint() {
-        let m1 = Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
+        let m1 = Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
         let mm: mint::RowMatrix4<_> = m1.into();
         let m2 = Mf32::from(mm);
 

@@ -1,7 +1,7 @@
 root:
   items:
     - type: stacking-context
-      transform: scale(5.0) rotate(-45)
+      transform: scale(5.0) rotate(45)
       transform-origin: 300 300
       raster-space: local(1.0)
       items:
@@ -10,7 +10,7 @@ root:
         size: 20
         font: "FreeSans.ttf"
     - type: stacking-context
-      transform: scale(5.0) rotate(-45)
+      transform: scale(5.0) rotate(45)
       transform-origin: 0 400
       items:
       - text: "Screen"
@@ -18,7 +18,7 @@ root:
         size: 20
         font: "FreeSans.ttf"
     - type: stacking-context
-      transform: scale(5.0) rotate(-45)
+      transform: scale(5.0) rotate(45)
       transform-origin: -80 240
       raster-space: local(5.0)
       items:

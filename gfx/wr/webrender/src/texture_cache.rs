@@ -1222,7 +1222,7 @@ impl TextureCache {
         &mut self,
         params: &CacheAllocParams,
     ) -> CacheEntry {
-        assert!(!params.descriptor.size.is_empty());
+        assert!(!params.descriptor.size.is_empty_or_negative());
 
         // If this image doesn't qualify to go in the shared (batching) cache,
         // allocate a standalone entry.

@@ -506,9 +506,8 @@ where
 
         match (*self, *other) {
             (All, rect) | (rect, All)  => rect,
-            (Partial(rect1), Partial(rect2)) => {
-                Partial(rect1.intersection(&rect2).unwrap_or_else(Rect::zero))
-            }
+            (Partial(rect1), Partial(rect2)) => Partial(rect1.intersection(&rect2)
+                                                                   .unwrap_or_else(Rect::zero))
         }
     }
 
@@ -517,10 +516,9 @@ where
         use crate::DirtyRect::*;
 
         match *self {
-            All => *rect,
-            Partial(dirty_rect) => {
-                dirty_rect.intersection(rect).unwrap_or_else(Rect::zero)
-            }
+            All              => *rect,
+            Partial(dirty_rect) => dirty_rect.intersection(rect)
+                                               .unwrap_or_else(Rect::zero),
         }
     }
 }

@@ -6598,7 +6598,7 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
         Err(..) => return false,
     };
 
-    *result = m.to_array();
+    *result = m.to_row_major_array();
     *contain_3d = is_3d;
     true
 }
