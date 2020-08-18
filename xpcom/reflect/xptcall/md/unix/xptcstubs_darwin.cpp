@@ -11,6 +11,8 @@
 #include "xptcstubs_ppc_rhapsody.cpp"
 #elif defined(__arm__)
 #include "xptcstubs_arm.cpp"
+#elif defined(__aarch64__)
+#include "xptcstubs_aarch64.cpp"
 #else
 #error unknown cpu architecture
 #endif
