@@ -388,8 +388,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
     // functions, regardless of the segment's type.  In the future, if we make
     // the representation of AnyRef segments different, we will have to consider
     // function values in those segments specially.
-    bool isAsmJS =
-        seg->active() && env_->tables[seg->tableIndex].kind == TableKind::AsmJS;
+    bool isAsmJS = seg->active() && env_->tables[seg->tableIndex].isAsmJS;
     if (!isAsmJS) {
       for (uint32_t funcIndex : seg->elemFuncIndices) {
         if (funcIndex != NullFuncIndex) {
