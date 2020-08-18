@@ -10,12 +10,12 @@
 
 use crate::num::One;
 
-use crate::{Point2D, Rect, Size2D, Vector2D};
+use crate::{Point2D, Point3D, Rect, Size2D, Vector2D, Box2D, Box3D};
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
-use core::ops::{Add, Div, Mul, Neg, Sub};
+use core::ops::{Add, Div, Mul, Sub};
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -56,6 +56,15 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
         Scale(x, PhantomData)
     }
 
+    /// Creates an identity scale (1.0).
+    #[inline]
+    pub fn identity() -> Self
+    where
+        T: One
+    {
+        Scale::new(T::one())
+    }
+
     /// Returns the given point transformed by this scale.
     ///
     /// # Example
@@ -70,11 +79,20 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
     /// assert_eq!(to_mm.transform_point(point2(42, -42)), point2(420, -420));
     /// ```
     #[inline]
-    pub fn transform_point(&self, point: Point2D<T, Src>) -> Point2D<T::Output, Dst>
+    pub fn transform_point(self, point: Point2D<T, Src>) -> Point2D<T::Output, Dst>
     where
-        T: Clone + Mul,
+        T: Copy + Mul,
     {
-        Point2D::new(point.x * self.get(), point.y * self.get())
+        Point2D::new(point.x * self.0, point.y * self.0)
+    }
+
+    /// Returns the given point transformed by this scale.
+    #[inline]
+    pub fn transform_point3d(self, point: Point3D<T, Src>) -> Point3D<T::Output, Dst>
+    where
+        T: Copy + Mul,
+    {
+        Point3D::new(point.x * self.0, point.y * self.0, point.z * self.0)
     }
 
     /// Returns the given vector transformed by this scale.
@@ -91,11 +109,11 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
     /// assert_eq!(to_mm.transform_vector(vec2(42, -42)), vec2(420, -420));
     /// ```
     #[inline]
-    pub fn transform_vector(&self, vec: Vector2D<T, Src>) -> Vector2D<T::Output, Dst>
+    pub fn transform_vector(self, vec: Vector2D<T, Src>) -> Vector2D<T::Output, Dst>
     where
-        T: Clone + Mul,
+        T: Copy + Mul,
     {
-        Vector2D::new(vec.x * self.get(), vec.y * self.get())
+        Vector2D::new(vec.x * self.0, vec.y * self.0)
     }
 
     /// Returns the given vector transformed by this scale.
@@ -112,11 +130,11 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
     /// assert_eq!(to_mm.transform_size(size2(42, -42)), size2(420, -420));
     /// ```
     #[inline]
-    pub fn transform_size(&self, size: Size2D<T, Src>) -> Size2D<T::Output, Dst>
+    pub fn transform_size(self, size: Size2D<T, Src>) -> Size2D<T::Output, Dst>
     where
-        T: Clone + Mul,
+        T: Copy + Mul,
     {
-        Size2D::new(size.width * self.get(), size.height * self.get())
+        Size2D::new(size.width * self.0, size.height * self.0)
     }
 
     /// Returns the given rect transformed by this scale.
@@ -133,7 +151,7 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
     /// assert_eq!(to_mm.transform_rect(&rect(1, 2, 42, -42)), rect(10, 20, 420, -420));
     /// ```
     #[inline]
-    pub fn transform_rect(&self, rect: &Rect<T, Src>) -> Rect<T::Output, Dst>
+    pub fn transform_rect(self, rect: &Rect<T, Src>) -> Rect<T::Output, Dst>
     where
         T: Copy + Mul,
     {
@@ -143,13 +161,28 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
         )
     }
 
-    /// Returns the inverse of this scale.
+    /// Returns the given box transformed by this scale.
     #[inline]
-    pub fn inverse(&self) -> Scale<T::Output, Dst, Src>
+    pub fn transform_box2d(self, b: &Box2D<T, Src>) -> Box2D<T::Output, Dst>
     where
-        T: Clone + Neg,
+        T: Copy + Mul,
     {
-        Scale::new(-self.get())
+        Box2D {
+            min: self.transform_point(b.min),
+            max: self.transform_point(b.max),
+        }
+    }
+
+    /// Returns the given box transformed by this scale.
+    #[inline]
+    pub fn transform_box3d(self, b: &Box3D<T, Src>) -> Box3D<T::Output, Dst>
+    where
+        T: Copy + Mul,
+    {
+        Box3D {
+            min: self.transform_point3d(b.min),
+            max: self.transform_point3d(b.max),
+        }
     }
 
     /// Returns `true` if this scale has no effect.
@@ -170,18 +203,17 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
     /// assert_eq!(mm_per_mm, Scale::one());
     /// ```
     #[inline]
-    pub fn is_identity(&self) -> bool
+    pub fn is_identity(self) -> bool
     where
         T: PartialEq + One,
     {
         self.0 == T::one()
     }
-}
 
-impl<T: Clone, Src, Dst> Scale<T, Src, Dst> {
+    /// Returns the underlying scalar scale factor.
     #[inline]
-    pub fn get(&self) -> T {
-        self.0.clone()
+    pub fn get(self) -> T {
+        self.0
     }
 
     /// The inverse Scale (1.0 / self).
@@ -195,18 +227,18 @@ impl<T: Clone, Src, Dst> Scale<T, Src, Dst> {
     ///
     /// let cm_per_mm: Scale<f32, Cm, Mm> = Scale::new(0.1);
     ///
-    /// assert_eq!(cm_per_mm.inv(), Scale::new(10.0));
+    /// assert_eq!(cm_per_mm.inverse(), Scale::new(10.0));
     /// ```
-    pub fn inv(&self) -> Scale<T::Output, Dst, Src>
+    pub fn inverse(self) -> Scale<T::Output, Dst, Src>
     where
         T: One + Div,
     {
         let one: T = One::one();
-        Scale::new(one / self.0.clone())
+        Scale::new(one / self.0)
     }
 }
 
-impl<T: NumCast + Clone, Src, Dst> Scale<T, Src, Dst> {
+impl<T: NumCast, Src, Dst> Scale<T, Src, Dst> {
     /// Cast from one numeric representation to another, preserving the units.
     ///
     /// # Panics
@@ -235,7 +267,7 @@ impl<T: NumCast + Clone, Src, Dst> Scale<T, Src, Dst> {
     /// let to_em: Scale<i32, Mm, Em> = Scale::new(10e20).cast();
     /// ```
     #[inline]
-    pub fn cast<NewT: NumCast>(&self) -> Scale<NewT, Src, Dst> {
+    pub fn cast<NewT: NumCast>(self) -> Scale<NewT, Src, Dst> {
         self.try_cast().unwrap()
     }
 
@@ -258,14 +290,9 @@ impl<T: NumCast + Clone, Src, Dst> Scale<T, Src, Dst> {
     /// // Integer to small to store that number
     /// assert_eq!(to_em.try_cast::<i32>(), None);
     /// ```
-    pub fn try_cast<NewT: NumCast>(&self) -> Option<Scale<NewT, Src, Dst>> {
-        NumCast::from(self.get()).map(Scale::new)
+    pub fn try_cast<NewT: NumCast>(self) -> Option<Scale<NewT, Src, Dst>> {
+        NumCast::from(self.0).map(Scale::new)
     }
-}
-
-impl<Src, Dst> Scale<f32, Src, Dst> {
-    /// Identity scaling, could be used to safely transit from one space to another.
-    pub const ONE: Self = Scale(1.0, PhantomData);
 }
 
 // scale0 * scale1
@@ -324,19 +351,13 @@ impl<T: Ord, Src, Dst> Ord for Scale<T, Src, Dst> {
 
 impl<T: Clone, Src, Dst> Clone for Scale<T, Src, Dst> {
     fn clone(&self) -> Scale<T, Src, Dst> {
-        Scale::new(self.get())
+        Scale::new(self.0.clone())
     }
 }
 
 impl<T: Copy, Src, Dst> Copy for Scale<T, Src, Dst> {}
 
 impl<T: fmt::Debug, Src, Dst> fmt::Debug for Scale<T, Src, Dst> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl<T: fmt::Display, Src, Dst> fmt::Display for Scale<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
@@ -374,7 +395,7 @@ mod tests {
         let mm_per_inch: Scale<f32, Inch, Mm> = Scale::new(25.4);
         let cm_per_mm: Scale<f32, Mm, Cm> = Scale::new(0.1);
 
-        let mm_per_cm: Scale<f32, Cm, Mm> = cm_per_mm.inv();
+        let mm_per_cm: Scale<f32, Cm, Mm> = cm_per_mm.inverse();
         assert_eq!(mm_per_cm.get(), 10.0);
 
         let one: Scale<f32, Mm, Mm> = cm_per_mm * mm_per_cm;

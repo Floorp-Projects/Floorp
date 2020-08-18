@@ -165,6 +165,13 @@ impl<T, U> SideOffsets2D<T, U> {
         }
     }
 
+    /// Constructor, setting all sides to zero.
+    pub fn zero() -> Self
+        where T: Zero,
+    {
+        SideOffsets2D::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
+    }
+
     /// Returns `true` if all side offsets are zero.
     pub fn is_zero(&self) -> bool
     where
@@ -173,29 +180,30 @@ impl<T, U> SideOffsets2D<T, U> {
         let zero = T::zero();
         self.top == zero && self.right == zero && self.bottom == zero && self.left == zero
     }
-}
 
-impl<T: Copy, U> SideOffsets2D<T, U> {
     /// Constructor setting the same value to all sides, taking a scalar value directly.
-    pub fn new_all_same(all: T) -> Self {
+    pub fn new_all_same(all: T) -> Self
+        where T : Copy
+    {
         SideOffsets2D::new(all, all, all, all)
     }
 
     /// Constructor setting the same value to all sides, taking a typed Length.
-    pub fn from_length_all_same(all: Length<T, U>) -> Self {
+    pub fn from_length_all_same(all: Length<T, U>) -> Self
+        where T : Copy
+    {
         SideOffsets2D::new_all_same(all.0)
     }
-}
 
-impl<T, U> SideOffsets2D<T, U>
-where
-    T: Add<T, Output = T> + Copy,
-{
-    pub fn horizontal(&self) -> T {
+    pub fn horizontal(&self) -> T
+        where T: Copy + Add<T, Output = T>
+    {
         self.left + self.right
     }
 
-    pub fn vertical(&self) -> T {
+    pub fn vertical(&self) -> T
+        where T: Copy + Add<T, Output = T>
+    {
         self.top + self.bottom
     }
 }
@@ -215,97 +223,90 @@ where
     }
 }
 
-impl<T: Zero, U> SideOffsets2D<T, U> {
-    /// Constructor, setting all sides to zero.
-    pub fn zero() -> Self {
-        SideOffsets2D::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
-    }
-}
-
-impl<T: Clone + Mul, U> Mul<T> for SideOffsets2D<T, U> {
+impl<T: Copy + Mul, U> Mul<T> for SideOffsets2D<T, U> {
     type Output = SideOffsets2D<T::Output, U>;
 
     #[inline]
     fn mul(self, scale: T) -> Self::Output {
         SideOffsets2D::new(
-            self.top * scale.clone(),
-            self.right * scale.clone(),
-            self.bottom * scale.clone(),
+            self.top * scale,
+            self.right * scale,
+            self.bottom * scale,
             self.left * scale,
         )
     }
 }
 
-impl<T: Clone + MulAssign, U> MulAssign<T> for SideOffsets2D<T, U> {
+impl<T: Copy + MulAssign, U> MulAssign<T> for SideOffsets2D<T, U> {
     #[inline]
     fn mul_assign(&mut self, other: T) {
-        self.top *= other.clone();
-        self.right *= other.clone();
-        self.bottom *= other.clone();
+        self.top *= other;
+        self.right *= other;
+        self.bottom *= other;
         self.left *= other;
     }
 }
 
-impl<T: Clone + Mul, U1, U2> Mul<Scale<T, U1, U2>> for SideOffsets2D<T, U1> {
+impl<T: Copy + Mul, U1, U2> Mul<Scale<T, U1, U2>> for SideOffsets2D<T, U1> {
     type Output = SideOffsets2D<T::Output, U2>;
 
     #[inline]
     fn mul(self, scale: Scale<T, U1, U2>) -> Self::Output {
         SideOffsets2D::new(
-            self.top * scale.0.clone(),
-            self.right * scale.0.clone(),
-            self.bottom * scale.0.clone(),
+            self.top * scale.0,
+            self.right * scale.0,
+            self.bottom * scale.0,
             self.left * scale.0,
         )
     }
 }
 
-impl<T: Clone + MulAssign, U> MulAssign<Scale<T, U, U>> for SideOffsets2D<T, U> {
+impl<T: Copy + MulAssign, U> MulAssign<Scale<T, U, U>> for SideOffsets2D<T, U> {
     #[inline]
     fn mul_assign(&mut self, other: Scale<T, U, U>) {
         *self *= other.0;
     }
 }
 
-impl<T: Clone + Div, U> Div<T> for SideOffsets2D<T, U> {
+impl<T: Copy + Div, U> Div<T> for SideOffsets2D<T, U> {
     type Output = SideOffsets2D<T::Output, U>;
 
     #[inline]
     fn div(self, scale: T) -> Self::Output {
         SideOffsets2D::new(
-            self.top / scale.clone(),
-            self.right / scale.clone(),
-            self.bottom / scale.clone(),
+            self.top / scale,
+            self.right / scale,
+            self.bottom / scale,
             self.left / scale,
         )
     }
 }
 
-impl<T: Clone + DivAssign, U> DivAssign<T> for SideOffsets2D<T, U> {
+impl<T: Copy + DivAssign, U> DivAssign<T> for SideOffsets2D<T, U> {
     #[inline]
     fn div_assign(&mut self, other: T) {
-        self.top /= other.clone();
-        self.right /= other.clone();
-        self.bottom /= other.clone();
+        self.top /= other;
+        self.right /= other;
+        self.bottom /= other;
         self.left /= other;
     }
 }
 
-impl<T: Clone + Div, U1, U2> Div<Scale<T, U1, U2>> for SideOffsets2D<T, U2> {
+impl<T: Copy + Div, U1, U2> Div<Scale<T, U1, U2>> for SideOffsets2D<T, U2> {
     type Output = SideOffsets2D<T::Output, U1>;
 
     #[inline]
     fn div(self, scale: Scale<T, U1, U2>) -> Self::Output {
         SideOffsets2D::new(
-            self.top / scale.0.clone(),
-            self.right / scale.0.clone(),
-            self.bottom / scale.0.clone(),
+            self.top / scale.0,
+            self.right / scale.0,
+            self.bottom / scale.0,
             self.left / scale.0,
         )
     }
 }
 
-impl<T: Clone + DivAssign, U> DivAssign<Scale<T, U, U>> for SideOffsets2D<T, U> {
+impl<T: Copy + DivAssign, U> DivAssign<Scale<T, U, U>> for SideOffsets2D<T, U> {
     fn div_assign(&mut self, other: Scale<T, U, U>) {
         *self /= other.0;
     }
