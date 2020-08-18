@@ -440,7 +440,7 @@ bool wasm::CheckRefType(JSContext* cx, RefType::Kind targetTypeKind,
         return false;
       }
       break;
-    case RefType::Any:
+    case RefType::Extern:
       if (!BoxAnyRef(cx, v, refval)) {
         return false;
       }
@@ -496,7 +496,7 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
         case RefType::Func:
           val.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
           return true;
-        case RefType::Any:
+        case RefType::Extern:
           val.set(Val(targetType.refType(), any));
           return true;
         case RefType::TypeIndex:
@@ -535,7 +535,7 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
         case RefType::Func:
           out.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref())));
           return true;
-        case RefType::Any:
+        case RefType::Extern:
           out.set(UnboxAnyRef(val.ref()));
           return true;
         case RefType::TypeIndex:
@@ -681,7 +681,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
             }
           } else {
             MOZ_ASSERT(global.type().isReference());
-            if (!global.type().isAnyRef() && !v.isObjectOrNull()) {
+            if (!global.type().isExternRef() && !v.isObjectOrNull()) {
               return ThrowBadImportType(cx, import.field.get(),
                                         "Object-or-null value required for "
                                         "non-externref reference type");
@@ -2866,7 +2866,7 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
     case ValType::Ref:
       switch (global->type().refTypeKind()) {
         case RefType::Func:
-        case RefType::Any:
+        case RefType::Extern:
           if (!global->cell()->ref.isNull()) {
             // TODO/AnyRef-boxing: With boxed immediates and strings, the write
             // barrier is going to have to be more complicated.
@@ -2930,7 +2930,7 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
     case ValType::Ref:
       switch (val.type().refTypeKind()) {
         case RefType::Func:
-        case RefType::Any:
+        case RefType::Extern:
           MOZ_ASSERT(cell->ref.isNull(), "no prebarriers needed");
           cell->ref = val.ref();
           if (!cell->ref.isNull()) {
@@ -3024,7 +3024,7 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     globalType = RefType::func();
   } else if (ReftypesAvailable(cx) &&
              StringEqualsLiteral(typeLinearStr, "externref")) {
-    globalType = RefType::any();
+    globalType = RefType::extern_();
 #endif
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -3059,8 +3059,8 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
         case RefType::Func:
           globalVal = Val(RefType::func(), AnyRef::null());
           break;
-        case RefType::Any:
-          globalVal = Val(RefType::any(), AnyRef::null());
+        case RefType::Extern:
+          globalVal = Val(RefType::extern_(), AnyRef::null());
           break;
         case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");
@@ -3122,7 +3122,7 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
       switch (
           args.thisv().toObject().as<WasmGlobalObject>().type().refTypeKind()) {
         case RefType::Func:
-        case RefType::Any:
+        case RefType::Extern:
           args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
           return true;
         case RefType::TypeIndex:
@@ -3218,7 +3218,7 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
     case ValType::Ref:
       switch (this->type().refTypeKind()) {
         case RefType::Func:
-        case RefType::Any: {
+        case RefType::Extern: {
           AnyRef prevPtr = cell->ref;
           // TODO/AnyRef-boxing: With boxed immediates and strings, the write
           // barrier is going to have to be more complicated.
@@ -3263,8 +3263,8 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
         case RefType::Func:
           outval.set(Val(RefType::func(), cell->ref));
           return;
-        case RefType::Any:
-          outval.set(Val(RefType::any(), cell->ref));
+        case RefType::Extern:
+          outval.set(Val(RefType::extern_(), cell->ref));
           return;
         case RefType::TypeIndex:
           MOZ_CRASH("Ref NYI");

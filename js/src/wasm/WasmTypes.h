@@ -286,7 +286,7 @@ class Opcode {
 
 // A PackedTypeCode represents a TypeCode paired with a refTypeIndex (valid only
 // for TypeCode::OptRef).  PackedTypeCode is guaranteed to be POD.  The TypeCode
-// spans the full range of type codes including the specialized AnyRef, and
+// spans the full range of type codes including the specialized ExternRef, and
 // FuncRef.
 //
 // PackedTypeCode is an enum class, as opposed to the more natural
@@ -376,7 +376,7 @@ static inline bool IsReferenceType(PackedTypeCode ptc) {
 class RefType {
  public:
   enum Kind {
-    Any = uint8_t(TypeCode::AnyRef),
+    Extern = uint8_t(TypeCode::ExternRef),
     Func = uint8_t(TypeCode::FuncRef),
     TypeIndex = uint8_t(TypeCode::OptRef)
   };
@@ -388,7 +388,7 @@ class RefType {
   bool isValid() const {
     switch (UnpackTypeCodeType(ptc_)) {
       case TypeCode::FuncRef:
-      case TypeCode::AnyRef:
+      case TypeCode::ExternRef:
         MOZ_ASSERT(UnpackTypeCodeIndexUnchecked(ptc_) == NoRefTypeIndex);
         return true;
       case TypeCode::OptRef:
@@ -428,7 +428,7 @@ class RefType {
 
   PackedTypeCode packed() const { return ptc_; }
 
-  static RefType any() { return RefType(Any); }
+  static RefType extern_() { return RefType(Extern); }
   static RefType func() { return RefType(Func); }
 
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
@@ -450,7 +450,7 @@ class ValType {
       case TypeCode::F32:
       case TypeCode::F64:
       case TypeCode::V128:
-      case TypeCode::AnyRef:
+      case TypeCode::ExternRef:
       case TypeCode::FuncRef:
       case TypeCode::OptRef:
         return true;
@@ -551,7 +551,9 @@ class ValType {
     return PackedTypeCodeToBits(tc_);
   }
 
-  bool isAnyRef() const { return UnpackTypeCodeType(tc_) == TypeCode::AnyRef; }
+  bool isExternRef() const {
+    return UnpackTypeCodeType(tc_) == TypeCode::ExternRef;
+  }
 
   bool isFuncRef() const {
     return UnpackTypeCodeType(tc_) == TypeCode::FuncRef;
@@ -588,12 +590,12 @@ class ValType {
   }
 
   // Some types are encoded as JS::Value when they escape from Wasm (when passed
-  // as parameters to imports or returned from exports).  For AnyRef the Value
-  // encoding is pretty much a requirement.  For other types it's a choice that
-  // may (temporarily) simplify some code.
+  // as parameters to imports or returned from exports).  For ExternRef the
+  // Value encoding is pretty much a requirement.  For other types it's a choice
+  // that may (temporarily) simplify some code.
   bool isEncodedAsJSValueOnEscape() const {
     switch (typeCode()) {
-      case TypeCode::AnyRef:
+      case TypeCode::ExternRef:
       case TypeCode::FuncRef:
         return true;
       default:
@@ -710,7 +712,7 @@ static inline const char* ToCString(ValType type) {
       return "f64";
     case ValType::Ref:
       switch (type.refTypeKind()) {
-        case RefType::Any:
+        case RefType::Extern:
           return "externref";
         case RefType::Func:
           return "funcref";
@@ -728,10 +730,10 @@ static inline const char* ToCString(const Maybe<ValType>& type) {
 // An AnyRef is a boxed value that can represent any wasm reference type and any
 // host type that the host system allows to flow into and out of wasm
 // transparently.  It is a pointer-sized datum that has the same representation
-// as all its subtypes (funcref, eqref, (ref T), et al) due to the non-coercive
-// subtyping of the wasm type system.  Its current representation is a plain
-// JSObject*, and the private JSObject subtype WasmValueBox is used to box
-// non-object non-null JS values.
+// as all its subtypes (funcref, externref, eqref, (ref T), et al) due to the
+// non-coercive subtyping of the wasm type system.  Its current representation
+// is a plain JSObject*, and the private JSObject subtype WasmValueBox is used
+// to box non-object non-null JS values.
 //
 // The C++/wasm boundary always uses a 'void*' type to express AnyRef values, to
 // emphasize the pointer-ness of the value.  The C++ code must transform the
@@ -1184,7 +1186,7 @@ class FuncType {
   // but are guarded against separately.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && !arg.isAnyRef()) {
+      if (arg.isReference() && !arg.isExternRef()) {
         return true;
       }
     }
@@ -1200,7 +1202,7 @@ class FuncType {
   // excluded per spec but are guarded against separately.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && !arg.isAnyRef()) {
+      if (arg.isReference() && !arg.isExternRef()) {
         return true;
       }
     }
@@ -1221,7 +1223,7 @@ class FuncType {
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && !result.isAnyRef()) {
+      if (result.isReference() && !result.isExternRef()) {
         return true;
       }
     }
@@ -2801,7 +2803,7 @@ enum class TableKind { AnyRef, FuncRef, AsmJS };
 static inline ValType ToElemValType(TableKind tk) {
   switch (tk) {
     case TableKind::AnyRef:
-      return RefType::any();
+      return RefType::extern_();
     case TableKind::FuncRef:
       return RefType::func();
     case TableKind::AsmJS:
@@ -3322,7 +3324,7 @@ class DebugFrame {
           return;
         case ValType::Ref:
           switch (type.refTypeKind()) {
-            case RefType::Any:
+            case RefType::Extern:
             case RefType::Func:
             case RefType::TypeIndex:
               return;

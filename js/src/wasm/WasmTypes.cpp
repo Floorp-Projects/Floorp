@@ -260,7 +260,7 @@ static bool IsImmediateType(ValType vt) {
     case ValType::Ref:
       switch (vt.refTypeKind()) {
         case RefType::Func:
-        case RefType::Any:
+        case RefType::Extern:
           return true;
         case RefType::TypeIndex:
           return false;
@@ -287,7 +287,7 @@ static unsigned EncodeImmediateType(ValType vt) {
       switch (vt.refTypeKind()) {
         case RefType::Func:
           return 5;
-        case RefType::Any:
+        case RefType::Extern:
           return 6;
         case RefType::TypeIndex:
           break;
@@ -1017,7 +1017,7 @@ UniqueChars wasm::ToString(ValType type) {
       break;
     case ValType::Ref:
       switch (type.refTypeKind()) {
-        case RefType::Any:
+        case RefType::Extern:
           literal = "externref";
           break;
         case RefType::Func:

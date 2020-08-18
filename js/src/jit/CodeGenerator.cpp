@@ -14775,7 +14775,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
       case wasm::ValType::Ref:
         switch (sig.args()[i].refTypeKind()) {
-          case wasm::RefType::Any:
+          case wasm::RefType::Extern:
             // AnyRef is boxed on the JS side, so passed as a pointer here.
             argMir = ToMIRType(sig.args()[i]);
             break;
@@ -14845,7 +14845,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::Ref:
         switch (results[0].refTypeKind()) {
-          case wasm::RefType::Any:
+          case wasm::RefType::Extern:
           case wasm::RefType::Func:
             // The wasm stubs layer unboxes anything that needs to be unboxed
             // and leaves it in a Value.  A FuncRef we could in principle leave
