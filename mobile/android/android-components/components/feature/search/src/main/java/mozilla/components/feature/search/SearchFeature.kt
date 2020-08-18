@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.lib.state.ext.flowScoped
@@ -23,25 +23,31 @@ import mozilla.components.support.utils.ext.toNullablePair
  * then consumes them.
  *
  * NOTE: that this only consumes SearchRequests, and will not hook up the [store] to a source of
- * SearchRequests. See [SelectionActionDelegate] for use in generating SearchRequests.
+ * SearchRequests. See [mozilla.components.concept.engine.selection.SelectionActionDelegate] for use
+ * in generating SearchRequests.
  */
 class SearchFeature(
     private val store: BrowserStore,
-    private val performSearch: (SearchRequest) -> Unit
+    private val tabId: String? = null,
+    private val performSearch: (SearchRequest, tabId: String) -> Unit
 ) : LifecycleAwareFeature {
+
     private var scope: CoroutineScope? = null
 
     override fun start() {
         scope = store.flowScoped { flow ->
             flow
-                .map { it.selectedTab?.content?.searchRequest to it.selectedTabId }
+                .map { state ->
+                    val tab = state.findTabOrCustomTabOrSelectedTab(tabId)
+                    tab?.content?.searchRequest to tab?.id
+                }
                 // Do nothing if searchRequest or sessionId is null
                 .mapNotNull { pair -> pair.toNullablePair() }
                 // We may see repeat values if other state changes before we handle the request.
                 // Filter these out.
                 .distinctUntilChangedBy { (searchRequest, _) -> searchRequest }
                 .collect { (searchRequest, sessionId) ->
-                    performSearch(searchRequest)
+                    performSearch(searchRequest, sessionId)
                     store.dispatch(ContentAction.ConsumeSearchRequestAction(sessionId))
                 }
         }

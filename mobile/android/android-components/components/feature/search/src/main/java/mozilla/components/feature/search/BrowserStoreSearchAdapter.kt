@@ -5,7 +5,7 @@
 package mozilla.components.feature.search
 
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.search.SearchRequest
 
@@ -15,18 +15,27 @@ import mozilla.components.concept.engine.search.SearchRequest
  * This class uses the [browserStore] to determine when private mode is active, and updates the
  * [browserStore] whenever a new search has been requested.
  *
- * NOTE: this will add [SearchRequest]s to [browserStore.state] when [sendSearch] is called. Client
+ * NOTE: this will add [SearchRequest]s to [BrowserStore.state] when [sendSearch] is called. Client
  * code is responsible for consuming these requests and displaying something to the user.
  *
  * NOTE: client code is responsible for sending [ContentAction.ConsumeSearchRequestAction]s
  * after consuming events. See [SearchFeature] for a component that will handle this for you.
+ *
+ * @param browserStore The application's [BrowserStore].
+ * @param tabId ID of the tab that requests the search, or null to use the selected tab.
  */
-class BrowserStoreSearchAdapter(private val browserStore: BrowserStore) : SearchAdapter {
+class BrowserStoreSearchAdapter(
+    private val browserStore: BrowserStore,
+    private val tabId: String? = null
+) : SearchAdapter {
 
     override fun sendSearch(isPrivate: Boolean, text: String) {
-        val selectedTabId = browserStore.state.selectedTabId ?: return
-        browserStore.dispatch(ContentAction.UpdateSearchRequestAction(selectedTabId, SearchRequest(isPrivate, text)))
+        val selectedTabId = tabId ?: browserStore.state.selectedTabId ?: return
+        browserStore.dispatch(
+            ContentAction.UpdateSearchRequestAction(selectedTabId, SearchRequest(isPrivate, text))
+        )
     }
 
-    override fun isPrivateSession(): Boolean = browserStore.state.selectedTab?.content?.private ?: false
+    override fun isPrivateSession(): Boolean =
+        browserStore.state.findTabOrCustomTabOrSelectedTab(tabId)?.content?.private ?: false
 }
