@@ -363,11 +363,11 @@ static inline uint32_t UnpackTypeCodeIndexUnchecked(PackedTypeCode ptc) {
 
 static inline TypeCode UnpackTypeCodeTypeAbstracted(PackedTypeCode ptc) {
   TypeCode c = UnpackTypeCodeType(ptc);
-  return c < LowestPrimitiveTypeCode ? TypeCode::OptRef : c;
+  return c < LowestPrimitiveTypeCode ? AbstractReferenceTypeCode : c;
 }
 
 static inline bool IsReferenceType(PackedTypeCode ptc) {
-  return UnpackTypeCodeTypeAbstracted(ptc) == TypeCode::OptRef;
+  return UnpackTypeCodeTypeAbstracted(ptc) == AbstractReferenceTypeCode;
 }
 
 // An enum that describes the representation classes for tables; The table
@@ -488,7 +488,7 @@ class ValType {
     F32 = uint8_t(TypeCode::F32),
     F64 = uint8_t(TypeCode::F64),
     V128 = uint8_t(TypeCode::V128),
-    Ref = uint8_t(TypeCode::OptRef),
+    Ref = uint8_t(AbstractReferenceTypeCode),
   };
 
  private:
