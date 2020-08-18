@@ -15,6 +15,11 @@ const testPath = window.location.href.replace("http://mochi.test:8888", "");
 const testDir = testPath.substring(0, testPath.lastIndexOf('/') + 1);
 
 add_task(async function() {
+  // FIXME: Remove when bug 1658342 is fixed
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.remoteObjectEmbed", true]],
+  });
+
   info("Loading image in embed");
   let embed = document.createElement("embed");
   document.body.appendChild(embed);
