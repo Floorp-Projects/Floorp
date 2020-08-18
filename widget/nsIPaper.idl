@@ -14,14 +14,22 @@ interface nsIPaper : nsISupports
   readonly attribute AString name;
 
   /**
-   * The width of the paper in points.
+   * The width of the paper assuming portrait orientation, in points.
+   * That is, the length of the shorter edges of the paper.
    */
   readonly attribute double width;
 
   /**
-   * The height of the paper in points.
+   * The height of the paper assuming portrait orientation, in points.
+   * That is, the length of the longer edges of the paper.
    */
   readonly attribute double height;
 
+  /**
+   * The Promise resolves with an nsIPaperMargin object. The margin widths contained
+   * in that object's top/bottom/left/right properties are relative to the paper in
+   * portrait oriantation. That is, top and bottom are the margins for the short edges,
+   * and left and right are the margins for the long edges.
+   */
   [implicit_jscontext] readonly attribute Promise unwriteableMargin;
 };
