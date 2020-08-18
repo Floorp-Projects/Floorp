@@ -357,6 +357,13 @@ pref("print.use_simplify_page", false);
   pref("print.tab_modal.enabled", false);
 #endif
 
+// Enable fillable forms in the PDF viewer.
+#ifdef EARLY_BETA_OR_EARLIER
+  pref("pdfjs.renderInteractiveForms", true);
+#else
+  pref("pdfjs.renderInteractiveForms", false);
+#endif
+
 // Disable support for MathML
 pref("mathml.disabled",    false);
 
