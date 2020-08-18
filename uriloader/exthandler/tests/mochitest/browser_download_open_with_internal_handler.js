@@ -46,6 +46,7 @@ add_task(async function setup() {
     set: [
       ["security.dialog_enable_delay", 0],
       ["browser.helperApps.showOpenOptionForPdfJS", true],
+      ["browser.helperApps.showOpenOptionForViewableInternally", true],
     ],
   });
 
@@ -467,9 +468,9 @@ add_task(async function test_internal_handler_hidden_with_other_type() {
 
 /**
  * Check that the "Open with internal handler" option is not presented
- * when the feature is disabled.
+ * when the feature is disabled for PDFs.
  */
-add_task(async function test_internal_handler_hidden_with_pref_disabled() {
+add_task(async function test_internal_handler_hidden_with_pdf_pref_disabled() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.helperApps.showOpenOptionForPdfJS", false]],
   });
@@ -503,3 +504,39 @@ add_task(async function test_internal_handler_hidden_with_pref_disabled() {
     BrowserTestUtils.removeTab(loadingTab);
   }
 });
+
+/**
+ * Check that the "Open with internal handler" option is not presented
+ * for other viewable internally types when disabled.
+ */
+add_task(
+  async function test_internal_handler_hidden_with_viewable_internally_pref_disabled() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.helperApps.showOpenOptionForViewableInternally", false]],
+    });
+    let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+    let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TEST_PATH + "file_xml_attachment_test.xml"
+    );
+    let dialogWindow = await dialogWindowPromise;
+    is(
+      dialogWindow.location.href,
+      "chrome://mozapps/content/downloads/unknownContentType.xhtml",
+      "Should have seen the unknown content dialogWindow."
+    );
+    let doc = dialogWindow.document;
+
+    await waitForAcceptButtonToGetEnabled(doc);
+
+    let internalHandlerRadio = doc.querySelector("#handleInternally");
+    ok(
+      internalHandlerRadio.hidden,
+      "The option should be hidden for XML when the pref is false"
+    );
+
+    let dialog = doc.querySelector("#unknownContentType");
+    dialog.cancelDialog();
+    BrowserTestUtils.removeTab(loadingTab);
+  }
+);
