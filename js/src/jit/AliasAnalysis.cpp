@@ -116,6 +116,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::StoreDataViewElement:
     case MDefinition::Opcode::SetInitializedLength:
     case MDefinition::Opcode::AddAndStoreSlot:
+    case MDefinition::Opcode::AllocateAndStoreSlot:
     case MDefinition::Opcode::ArrayLength:
     case MDefinition::Opcode::SetArrayLength:
     case MDefinition::Opcode::Slots:

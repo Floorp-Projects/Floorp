@@ -10003,6 +10003,39 @@ class MAddAndStoreSlot
   }
 };
 
+class MAllocateAndStoreSlot
+    : public MBinaryInstruction,
+      public MixPolicy<SingleObjectPolicy, BoxPolicy<1>>::Data {
+ private:
+  CompilerShape shape_;
+  uint32_t slotOffset_;
+  uint32_t numNewSlots_;
+
+  MAllocateAndStoreSlot(MDefinition* obj, MDefinition* value,
+                        uint32_t slotOffset, Shape* shape, uint32_t numNewSlots)
+      : MBinaryInstruction(classOpcode, obj, value),
+        shape_(shape),
+        slotOffset_(slotOffset),
+        numNewSlots_(numNewSlots) {}
+
+ public:
+  INSTRUCTION_HEADER(AllocateAndStoreSlot)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, value))
+
+  Shape* shape() const { return shape_; }
+  uint32_t slotOffset() const { return slotOffset_; }
+  uint32_t numNewSlots() const { return numNewSlots_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::ObjectFields | AliasSet::DynamicSlot);
+  }
+  bool possiblyCalls() const override { return true; }
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(shape_);
+  }
+};
+
 // Store to vp[slot] (slots that are not inline in an object).
 class MStoreDynamicSlot : public MBinaryInstruction,
                           public NoFloatPolicy<1>::Data {

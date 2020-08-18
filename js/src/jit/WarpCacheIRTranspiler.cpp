@@ -1386,6 +1386,29 @@ bool WarpCacheIRTranspiler::emitAddAndStoreDynamicSlot(
                                    offsetOffset, rhsId, newShapeOffset);
 }
 
+bool WarpCacheIRTranspiler::emitAllocateAndStoreDynamicSlot(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
+    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
+    uint32_t numNewSlotsOffset) {
+  MOZ_ASSERT(!changeGroup);
+
+  int32_t offset = int32StubField(offsetOffset);
+  Shape* shape = shapeStubField(newShapeOffset);
+  uint32_t numNewSlots = uint32StubField(numNewSlotsOffset);
+
+  MDefinition* obj = getOperand(objId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  auto* allocateAndStore =
+      MAllocateAndStoreSlot::New(alloc(), obj, rhs, offset, shape, numNewSlots);
+  addEffectful(allocateAndStore);
+
+  return resumeAfter(allocateAndStore);
+}
+
 bool WarpCacheIRTranspiler::emitStoreDenseElement(ObjOperandId objId,
                                                   Int32OperandId indexId,
                                                   ValOperandId rhsId) {

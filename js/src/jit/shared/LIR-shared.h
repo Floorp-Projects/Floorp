@@ -4999,6 +4999,27 @@ class LAddAndStoreSlot : public LInstructionHelper<0, 1 + BOX_PIECES, 1> {
   const MAddAndStoreSlot* mir() const { return mir_->toAddAndStoreSlot(); }
 };
 
+class LAllocateAndStoreSlot
+    : public LCallInstructionHelper<0, 1 + BOX_PIECES, 2> {
+ public:
+  LIR_HEADER(AllocateAndStoreSlot)
+
+  LAllocateAndStoreSlot(const LAllocation& obj, const LBoxAllocation& value,
+                        const LDefinition& temp1, const LDefinition& temp2)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setBoxOperand(Value, value);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  static const size_t Value = 1;
+
+  const MAllocateAndStoreSlot* mir() const {
+    return mir_->toAllocateAndStoreSlot();
+  }
+};
+
 // Store a boxed value to an object's fixed slot.
 class LStoreFixedSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
  public:
