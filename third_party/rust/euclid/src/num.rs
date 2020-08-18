@@ -70,34 +70,12 @@ pub trait Ceil: Copy {
     fn ceil(self) -> Self;
 }
 
-macro_rules! num_int {
-    ($ty:ty) => {
-        impl Round for $ty {
-            #[inline]
-            fn round(self) -> $ty {
-                self
-            }
-        }
-        impl Floor for $ty {
-            #[inline]
-            fn floor(self) -> $ty {
-                self
-            }
-        }
-        impl Ceil for $ty {
-            #[inline]
-            fn ceil(self) -> $ty {
-                self
-            }
-        }
-    };
-}
 macro_rules! num_float {
     ($ty:ty) => {
         impl Round for $ty {
             #[inline]
             fn round(self) -> $ty {
-                num_traits::Float::round(self)
+                (self + 0.5).floor()
             }
         }
         impl Floor for $ty {
@@ -114,14 +92,5 @@ macro_rules! num_float {
         }
     };
 }
-
-num_int!(i16);
-num_int!(u16);
-num_int!(i32);
-num_int!(u32);
-num_int!(i64);
-num_int!(u64);
-num_int!(isize);
-num_int!(usize);
 num_float!(f32);
 num_float!(f64);

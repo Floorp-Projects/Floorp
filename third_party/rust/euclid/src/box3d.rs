@@ -9,7 +9,6 @@
 
 use super::UnknownUnit;
 use crate::approxord::{max, min};
-use crate::nonempty::NonEmpty;
 use crate::num::*;
 use crate::point::{point3, Point3D};
 use crate::scale::Scale;
@@ -70,16 +69,6 @@ impl<T: fmt::Debug, U> fmt::Debug for Box3D<T, U> {
     }
 }
 
-impl<T: fmt::Display, U> fmt::Display for Box3D<T, U> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Box3D(")?;
-        fmt::Display::fmt(&self.min, f)?;
-        write!(f, ", ")?;
-        fmt::Display::fmt(&self.max, f)?;
-        write!(f, ")")
-    }
-}
-
 impl<T, U> Box3D<T, U> {
     /// Constructor.
     #[inline]
@@ -101,9 +90,9 @@ where
         self.max.x < self.min.x || self.max.y < self.min.y || self.max.z < self.min.z
     }
 
-    /// Returns true if the size is zero or negative.
+    /// Returns true if the size is zero, negative or NaN.
     #[inline]
-    pub fn is_empty_or_negative(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         !(self.max.x > self.min.x && self.max.y > self.min.y && self.max.z > self.min.z)
     }
 
@@ -135,7 +124,7 @@ where
     /// nonempty but this box3d is empty.
     #[inline]
     pub fn contains_box(&self, other: &Self) -> bool {
-        other.is_empty_or_negative()
+        other.is_empty()
             || (self.min.x <= other.min.x
                 && other.max.x <= self.max.x
                 && self.min.y <= other.min.y
@@ -150,24 +139,26 @@ where
     T: Copy + PartialOrd,
 {
     #[inline]
-    pub fn to_non_empty(&self) -> Option<NonEmpty<Self>> {
-        if self.is_empty_or_negative() {
+    pub fn to_non_empty(&self) -> Option<Self> {
+        if self.is_empty() {
             return None;
         }
 
-        Some(NonEmpty(*self))
+        Some(*self)
     }
 
     #[inline]
-    pub fn try_intersection(&self, other: &Self) -> Option<NonEmpty<Self>> {
-        if !self.intersects(other) {
+    pub fn intersection(&self, other: &Self) -> Option<Self> {
+        let b = self.intersection_unchecked(other);
+
+        if b.is_empty() {
             return None;
         }
 
-        Some(NonEmpty(self.intersection(other)))
+        Some(b)
     }
 
-    pub fn intersection(&self, other: &Self) -> Self {
+    pub fn intersection_unchecked(&self, other: &Self) -> Self {
         let intersection_min = Point3D::new(
             max(self.min.x, other.min.x),
             max(self.min.y, other.min.y),
@@ -375,35 +366,24 @@ where
     }
 }
 
-impl<T, U> Box3D<T, U>
-where
-    T: PartialEq,
-{
-    /// Returns true if the volume is zero.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.min.x == self.max.x || self.min.y == self.max.y || self.min.z == self.max.z
-    }
-}
-
-impl<T: Clone + Mul, U> Mul<T> for Box3D<T, U> {
+impl<T: Copy + Mul, U> Mul<T> for Box3D<T, U> {
     type Output = Box3D<T::Output, U>;
 
     #[inline]
     fn mul(self, scale: T) -> Self::Output {
-        Box3D::new(self.min * scale.clone(), self.max * scale)
+        Box3D::new(self.min * scale, self.max * scale)
     }
 }
 
-impl<T: Clone + MulAssign, U> MulAssign<T> for Box3D<T, U> {
+impl<T: Copy + MulAssign, U> MulAssign<T> for Box3D<T, U> {
     #[inline]
     fn mul_assign(&mut self, scale: T) {
-        self.min *= scale.clone();
+        self.min *= scale;
         self.max *= scale;
     }
 }
 
-impl<T: Clone + Div, U> Div<T> for Box3D<T, U> {
+impl<T: Copy + Div, U> Div<T> for Box3D<T, U> {
     type Output = Box3D<T::Output, U>;
 
     #[inline]
@@ -412,15 +392,15 @@ impl<T: Clone + Div, U> Div<T> for Box3D<T, U> {
     }
 }
 
-impl<T: Clone + DivAssign, U> DivAssign<T> for Box3D<T, U> {
+impl<T: Copy + DivAssign, U> DivAssign<T> for Box3D<T, U> {
     #[inline]
     fn div_assign(&mut self, scale: T) {
-        self.min /= scale.clone();
+        self.min /= scale;
         self.max /= scale;
     }
 }
 
-impl<T: Clone + Mul, U1, U2> Mul<Scale<T, U1, U2>> for Box3D<T, U1> {
+impl<T: Copy + Mul, U1, U2> Mul<Scale<T, U1, U2>> for Box3D<T, U1> {
     type Output = Box3D<T::Output, U2>;
 
     #[inline]
@@ -429,7 +409,7 @@ impl<T: Clone + Mul, U1, U2> Mul<Scale<T, U1, U2>> for Box3D<T, U1> {
     }
 }
 
-impl<T: Clone + MulAssign, U> MulAssign<Scale<T, U, U>> for Box3D<T, U> {
+impl<T: Copy + MulAssign, U> MulAssign<Scale<T, U, U>> for Box3D<T, U> {
     #[inline]
     fn mul_assign(&mut self, scale: Scale<T, U, U>) {
         self.min *= scale.clone();
@@ -437,7 +417,7 @@ impl<T: Clone + MulAssign, U> MulAssign<Scale<T, U, U>> for Box3D<T, U> {
     }
 }
 
-impl<T: Clone + Div, U1, U2> Div<Scale<T, U1, U2>> for Box3D<T, U2> {
+impl<T: Copy + Div, U1, U2> Div<Scale<T, U1, U2>> for Box3D<T, U2> {
     type Output = Box3D<T::Output, U1>;
 
     #[inline]
@@ -446,7 +426,7 @@ impl<T: Clone + Div, U1, U2> Div<Scale<T, U1, U2>> for Box3D<T, U2> {
     }
 }
 
-impl<T: Clone + DivAssign, U> DivAssign<Scale<T, U, U>> for Box3D<T, U> {
+impl<T: Copy + DivAssign, U> DivAssign<Scale<T, U, U>> for Box3D<T, U> {
     #[inline]
     fn div_assign(&mut self, scale: Scale<T, U, U>) {
         self.min /= scale.clone();
@@ -738,7 +718,7 @@ mod tests {
     fn test_round() {
         let b =
             Box3D::from_points(&[point3(-25.5, -40.4, -70.9), point3(60.3, 36.5, 89.8)]).round();
-        assert!(b.min.x == -26.0);
+        assert!(b.min.x == -25.0);
         assert!(b.min.y == -40.0);
         assert!(b.min.z == -71.0);
         assert!(b.max.x == 60.0);
@@ -795,10 +775,10 @@ mod tests {
     }
 
     #[test]
-    fn test_intersection() {
+    fn test_intersection_unchecked() {
         let b1 = Box3D::from_points(&[point3(-15.0, -20.0, -20.0), point3(10.0, 20.0, 20.0)]);
         let b2 = Box3D::from_points(&[point3(-10.0, 20.0, 20.0), point3(15.0, -20.0, -20.0)]);
-        let b = b1.intersection(&b2);
+        let b = b1.intersection_unchecked(&b2);
         assert!(b.max.x == 10.0);
         assert!(b.max.y == 20.0);
         assert!(b.max.z == 20.0);
@@ -809,14 +789,14 @@ mod tests {
     }
 
     #[test]
-    fn test_try_intersection() {
+    fn test_intersection() {
         let b1 = Box3D::from_points(&[point3(-15.0, -20.0, -20.0), point3(10.0, 20.0, 20.0)]);
         let b2 = Box3D::from_points(&[point3(-10.0, 20.0, 20.0), point3(15.0, -20.0, -20.0)]);
-        assert!(b1.try_intersection(&b2).is_some());
+        assert!(b1.intersection(&b2).is_some());
 
         let b1 = Box3D::from_points(&[point3(-15.0, -20.0, -20.0), point3(-10.0, 20.0, 20.0)]);
         let b2 = Box3D::from_points(&[point3(10.0, 20.0, 20.0), point3(15.0, -20.0, -20.0)]);
-        assert!(b1.try_intersection(&b2).is_none());
+        assert!(b1.intersection(&b2).is_none());
     }
 
     #[test]
@@ -891,11 +871,11 @@ mod tests {
     #[test]
     fn test_nan_empty_or_negative() {
         use std::f32::NAN;
-        assert!(Box3D { min: point3(NAN, 2.0, 1.0), max: point3(1.0, 3.0, 5.0) }.is_empty_or_negative());
-        assert!(Box3D { min: point3(0.0, NAN, 1.0), max: point3(1.0, 2.0, 5.0) }.is_empty_or_negative());
-        assert!(Box3D { min: point3(1.0, -2.0, NAN), max: point3(3.0, 2.0, 5.0) }.is_empty_or_negative());
-        assert!(Box3D { min: point3(1.0, -2.0, 1.0), max: point3(NAN, 2.0, 5.0) }.is_empty_or_negative());
-        assert!(Box3D { min: point3(1.0, -2.0, 1.0), max: point3(0.0, NAN, 5.0) }.is_empty_or_negative());
-        assert!(Box3D { min: point3(1.0, -2.0, 1.0), max: point3(0.0, 1.0, NAN) }.is_empty_or_negative());
+        assert!(Box3D { min: point3(NAN, 2.0, 1.0), max: point3(1.0, 3.0, 5.0) }.is_empty());
+        assert!(Box3D { min: point3(0.0, NAN, 1.0), max: point3(1.0, 2.0, 5.0) }.is_empty());
+        assert!(Box3D { min: point3(1.0, -2.0, NAN), max: point3(3.0, 2.0, 5.0) }.is_empty());
+        assert!(Box3D { min: point3(1.0, -2.0, 1.0), max: point3(NAN, 2.0, 5.0) }.is_empty());
+        assert!(Box3D { min: point3(1.0, -2.0, 1.0), max: point3(0.0, NAN, 5.0) }.is_empty());
+        assert!(Box3D { min: point3(1.0, -2.0, 1.0), max: point3(0.0, 1.0, NAN) }.is_empty());
     }
 }
