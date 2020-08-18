@@ -2949,6 +2949,11 @@ void APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled) {
   GestureEventListener::SetLongTapEnabled(aLongTapEnabled);
 }
 
+void APZCTreeManager::AddInputBlockCallback(uint64_t aInputBlockId,
+                                            InputBlockCallback&& aCallback) {
+  mInputQueue->AddInputBlockCallback(aInputBlockId, std::move(aCallback));
+}
+
 void APZCTreeManager::FindScrollThumbNode(
     const AsyncDragMetrics& aDragMetrics,
     HitTestingTreeNodeAutoLock& aOutThumbNode) {
