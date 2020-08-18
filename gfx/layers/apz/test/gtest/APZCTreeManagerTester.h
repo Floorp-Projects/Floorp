@@ -91,7 +91,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
     }
     metrics.SetCompositionBounds(aCompositionBounds);
     metrics.SetScrollableRect(aScrollableRect);
-    metrics.SetScrollOffset(CSSPoint(0, 0));
+    metrics.SetLayoutScrollOffset(CSSPoint(0, 0));
     metadata.SetPageScrollAmount(LayoutDeviceIntSize(50, 100));
     metadata.SetLineScrollAmount(LayoutDeviceIntSize(5, 10));
     return metadata;

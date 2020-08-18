@@ -14,7 +14,7 @@ TEST_F(APZCBasicTester, Overzoom) {
   FrameMetrics fm;
   fm.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
   fm.SetScrollableRect(CSSRect(0, 0, 125, 150));
-  fm.SetScrollOffset(CSSPoint(10, 0));
+  fm.SetVisualScrollOffset(CSSPoint(10, 0));
   fm.SetZoom(CSSToParentLayerScale2D(1.0, 1.0));
   fm.SetIsRootContent(true);
   apzc->SetFrameMetrics(fm);
@@ -29,8 +29,8 @@ TEST_F(APZCBasicTester, Overzoom) {
   EXPECT_EQ(0.8f, fm.GetZoom().ToScaleFactor().scale);
   // bug 936721 - PGO builds introduce rounding error so
   // use a fuzzy match instead
-  EXPECT_LT(std::abs(fm.GetScrollOffset().x), 1e-5);
-  EXPECT_LT(std::abs(fm.GetScrollOffset().y), 1e-5);
+  EXPECT_LT(std::abs(fm.GetVisualScrollOffset().x), 1e-5);
+  EXPECT_LT(std::abs(fm.GetVisualScrollOffset().y), 1e-5);
 }
 
 TEST_F(APZCBasicTester, SimpleTransform) {
@@ -87,7 +87,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   FrameMetrics& metrics = metadata.GetMetrics();
   metrics.SetCompositionBounds(ParentLayerRect(0, 0, 24, 24));
   metrics.SetDisplayPort(CSSRect(-1, -1, 6, 6));
-  metrics.SetScrollOffset(CSSPoint(10, 10));
+  metrics.SetVisualScrollOffset(CSSPoint(10, 10));
   metrics.SetLayoutViewport(CSSRect(10, 10, 8, 8));
   metrics.SetScrollableRect(CSSRect(0, 0, 50, 50));
   metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(2, 2));
@@ -445,14 +445,14 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
 
   // Take note of the scroll offset before the interruption.
   CSSPoint scrollOffsetBeforeInterruption =
-      apzc->GetFrameMetrics().GetScrollOffset();
+      apzc->GetFrameMetrics().GetVisualScrollOffset();
 
   // Have the main thread interrupt the touch-drag by sending
   // a main thread scroll update to a nearby location.
   CSSPoint mainThreadOffset = scrollOffsetBeforeInterruption;
   mainThreadOffset.y -= 5;
   ScrollMetadata metadata = apzc->GetScrollMetadata();
-  metadata.GetMetrics().SetScrollOffset(mainThreadOffset);
+  metadata.GetMetrics().SetLayoutScrollOffset(mainThreadOffset);
   metadata.GetMetrics().SetScrollGeneration(1);
   metadata.GetMetrics().SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
   apzc->NotifyLayersUpdated(metadata, false, true);
@@ -466,11 +466,12 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
 
   // Check that the portion of the touch-drag that occurred after
   // the interruption caused additional scrolling.
-  CSSPoint finalScrollOffset = apzc->GetFrameMetrics().GetScrollOffset();
+  CSSPoint finalScrollOffset = apzc->GetFrameMetrics().GetVisualScrollOffset();
   EXPECT_GT(finalScrollOffset.y, scrollOffsetBeforeInterruption.y);
 
   // Now do the same thing, but for a visual scroll update.
-  scrollOffsetBeforeInterruption = apzc->GetFrameMetrics().GetScrollOffset();
+  scrollOffsetBeforeInterruption =
+      apzc->GetFrameMetrics().GetVisualScrollOffset();
   mainThreadOffset = scrollOffsetBeforeInterruption;
   mainThreadOffset.y -= 5;
   metadata = apzc->GetScrollMetadata();
@@ -483,7 +484,7 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
     mcc->AdvanceByMillis(1);
     TouchMove(apzc, touchPos, mcc->Time());
   }
-  finalScrollOffset = apzc->GetFrameMetrics().GetScrollOffset();
+  finalScrollOffset = apzc->GetFrameMetrics().GetVisualScrollOffset();
   EXPECT_GT(finalScrollOffset.y, scrollOffsetBeforeInterruption.y);
 
   // Clean up by ending the touch gesture.

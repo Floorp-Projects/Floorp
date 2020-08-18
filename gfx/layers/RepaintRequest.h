@@ -68,7 +68,7 @@ struct RepaintRequest {
         mCompositionBounds(aOther.GetCompositionBounds()),
         mCumulativeResolution(aOther.GetCumulativeResolution()),
         mDevPixelsPerCSSPixel(aOther.GetDevPixelsPerCSSPixel()),
-        mScrollOffset(aOther.GetScrollOffset()),
+        mScrollOffset(aOther.GetVisualScrollOffset()),
         mZoom(aOther.GetZoom()),
         mScrollGeneration(aOther.GetScrollGeneration()),
         mDisplayPortMargins(aOther.GetDisplayPortMargins()),

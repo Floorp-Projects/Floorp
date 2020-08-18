@@ -14,7 +14,7 @@ SampledAPZCState::SampledAPZCState() {}
 
 SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics)
     : mLayoutViewport(aMetrics.GetLayoutViewport()),
-      mScrollOffset(aMetrics.GetScrollOffset()),
+      mScrollOffset(aMetrics.GetVisualScrollOffset()),
       mZoom(aMetrics.GetZoom()) {
   RemoveFractionalAsyncDelta();
 }
@@ -22,7 +22,7 @@ SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics)
 SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics,
                                    Maybe<CompositionPayload>&& aPayload)
     : mLayoutViewport(aMetrics.GetLayoutViewport()),
-      mScrollOffset(aMetrics.GetScrollOffset()),
+      mScrollOffset(aMetrics.GetVisualScrollOffset()),
       mZoom(aMetrics.GetZoom()),
       mScrollPayload(std::move(aPayload)) {
   RemoveFractionalAsyncDelta();
@@ -45,7 +45,7 @@ Maybe<CompositionPayload> SampledAPZCState::TakeScrollPayload() {
 
 void SampledAPZCState::UpdateScrollProperties(const FrameMetrics& aMetrics) {
   mLayoutViewport = aMetrics.GetLayoutViewport();
-  mScrollOffset = aMetrics.GetScrollOffset();
+  mScrollOffset = aMetrics.GetVisualScrollOffset();
 }
 
 void SampledAPZCState::UpdateZoomProperties(const FrameMetrics& aMetrics) {

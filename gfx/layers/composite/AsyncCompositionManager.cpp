@@ -1114,10 +1114,13 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
 #if defined(MOZ_WIDGET_ANDROID)
 bool AsyncCompositionManager::FrameMetricsHaveUpdated(
     const FrameMetrics& aMetrics) {
+  // XXX This is used to debounce calls to
+  // UiCompositorControllerParent::NotifyUpdateScreenMetrics().
+  // It should check whichever of the layout or visual scroll offset
+  // that ends up using.
   return RoundedToInt(mLastMetrics.GetScrollOffset()) !=
              RoundedToInt(aMetrics.GetScrollOffset()) ||
          mLastMetrics.GetZoom() != aMetrics.GetZoom();
-  ;
 }
 #endif
 

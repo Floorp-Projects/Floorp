@@ -251,7 +251,9 @@ struct FrameMetrics {
     return scrollRange;
   }
 
-  void ScrollBy(const CSSPoint& aPoint) { mScrollOffset += aPoint; }
+  void ScrollBy(const CSSPoint& aPoint) {
+    SetVisualScrollOffset(GetVisualScrollOffset() + aPoint);
+  }
 
   void ZoomBy(float aScale) { ZoomBy(gfxSize(aScale, aScale)); }
 
@@ -266,11 +268,15 @@ struct FrameMetrics {
    * the content frame metrics.
    */
   bool HasPendingScroll(const FrameMetrics& aContentFrameMetrics) const {
-    return mScrollOffset != aContentFrameMetrics.mBaseScrollOffset;
+    // XXX Suspicious comparison between visual and layout scroll offsets
+    return GetVisualScrollOffset() != aContentFrameMetrics.mBaseScrollOffset;
   }
 
   void ApplyScrollUpdateFrom(const FrameMetrics& aOther) {
-    mScrollOffset = aOther.mScrollOffset;
+    // Note that we set this (APZ) metrics' visual scroll offset to
+    // the incoming (Gecko) metrics' layout scroll offset.
+    // This will change in bug 1543485.
+    SetVisualScrollOffset(aOther.GetLayoutScrollOffset());
     mScrollGeneration = aOther.mScrollGeneration;
   }
 
@@ -289,11 +295,12 @@ struct FrameMetrics {
    */
   CSSPoint ApplyRelativeScrollUpdateFrom(const FrameMetrics& aOther) {
     MOZ_ASSERT(aOther.IsRelative());
-    CSSPoint origin = mScrollOffset;
-    CSSPoint delta = (aOther.mScrollOffset - aOther.mBaseScrollOffset);
-    ClampAndSetScrollOffset(mScrollOffset + delta);
+    CSSPoint origin = GetVisualScrollOffset();
+    CSSPoint delta =
+        (aOther.GetLayoutScrollOffset() - aOther.mBaseScrollOffset);
+    ClampAndSetScrollOffset(origin + delta);
     mScrollGeneration = aOther.mScrollGeneration;
-    return mScrollOffset - origin;
+    return GetVisualScrollOffset() - origin;
   }
 
   /**
@@ -306,8 +313,8 @@ struct FrameMetrics {
       const FrameMetrics& aOther, const Maybe<CSSPoint>& aExistingDestination) {
     MOZ_ASSERT(aOther.IsRelative());
     CSSPoint delta = (aOther.mSmoothScrollOffset - aOther.mBaseScrollOffset);
-    ClampAndSetSmoothScrollOffset(aExistingDestination.valueOr(mScrollOffset) +
-                                  delta);
+    ClampAndSetSmoothScrollOffset(
+        aExistingDestination.valueOr(GetVisualScrollOffset()) + delta);
     mScrollGeneration = aOther.mScrollGeneration;
     mDoSmoothScroll = aOther.mDoSmoothScroll;
   }
@@ -320,15 +327,16 @@ struct FrameMetrics {
     // pureRelativeSmoothScrollRequested is handled for the explanation for the
     // logic in this function.
     ClampAndSetSmoothScrollOffset(
-        (aApplyToSmoothScroll ? mSmoothScrollOffset
-                              : aExistingDestination.valueOr(mScrollOffset)) +
+        (aApplyToSmoothScroll
+             ? mSmoothScrollOffset
+             : aExistingDestination.valueOr(GetVisualScrollOffset())) +
         *aOther.mPureRelativeOffset);
     mScrollGeneration = aOther.mScrollGeneration;
     mDoSmoothScroll = true;
   }
 
   void UpdatePendingScrollInfo(const ScrollUpdateInfo& aInfo) {
-    mScrollOffset = aInfo.mScrollOffset;
+    SetLayoutScrollOffset(aInfo.mScrollOffset);
     mBaseScrollOffset = aInfo.mBaseScrollOffset;
     mScrollGeneration = aInfo.mScrollGeneration;
     mScrollUpdateType = ePending;
@@ -396,7 +404,7 @@ struct FrameMetrics {
 
   // Set scroll offset, first clamping to the scroll range.
   void ClampAndSetScrollOffset(const CSSPoint& aScrollOffset) {
-    SetScrollOffset(CalculateScrollRange().ClampPoint(aScrollOffset));
+    SetVisualScrollOffset(CalculateScrollRange().ClampPoint(aScrollOffset));
   }
 
   const CSSPoint& GetScrollOffset() const { return mScrollOffset; }
@@ -486,7 +494,8 @@ struct FrameMetrics {
   const CSSRect& GetLayoutViewport() const { return mLayoutViewport; }
 
   CSSRect GetVisualViewport() const {
-    return CSSRect(mScrollOffset, CalculateCompositedSizeInCssPixels());
+    return CSSRect(GetVisualScrollOffset(),
+                   CalculateCompositedSizeInCssPixels());
   }
 
   void SetExtraResolution(const ScreenToLayerScale2D& aExtraResolution) {
