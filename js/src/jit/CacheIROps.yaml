@@ -841,7 +841,7 @@
 
 - name: AllocateAndStoreDynamicSlot
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 6
   args:
     obj: ObjId

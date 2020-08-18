@@ -3922,6 +3922,16 @@ void LIRGenerator::visitAddAndStoreSlot(MAddAndStoreSlot* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitAllocateAndStoreSlot(MAllocateAndStoreSlot* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LAllocateAndStoreSlot(
+      useRegisterAtStart(ins->object()), useBoxAtStart(ins->value()),
+      tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+  assignSnapshot(lir, BailoutKind::DuringVMCall);
+  add(lir, ins);
+}
+
 void LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 

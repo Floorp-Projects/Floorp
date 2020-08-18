@@ -4686,6 +4686,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
   // shape guard below) to ensure class is unchanged. This group guard may also
   // imply maybeInterpretedFunction() for the special-case of function
   // prototype property set.
+  // TODO(Warp): Figure out if this can be removed without TI.
   writer.guardGroup(objId, oldGroup);
 
   // If we are adding a property to an object for which the new script
