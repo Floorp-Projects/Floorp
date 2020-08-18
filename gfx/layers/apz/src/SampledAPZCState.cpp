@@ -14,7 +14,7 @@ SampledAPZCState::SampledAPZCState() {}
 
 SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics)
     : mLayoutViewport(aMetrics.GetLayoutViewport()),
-      mScrollOffset(aMetrics.GetVisualScrollOffset()),
+      mVisualScrollOffset(aMetrics.GetVisualScrollOffset()),
       mZoom(aMetrics.GetZoom()) {
   RemoveFractionalAsyncDelta();
 }
@@ -22,7 +22,7 @@ SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics)
 SampledAPZCState::SampledAPZCState(const FrameMetrics& aMetrics,
                                    Maybe<CompositionPayload>&& aPayload)
     : mLayoutViewport(aMetrics.GetLayoutViewport()),
-      mScrollOffset(aMetrics.GetVisualScrollOffset()),
+      mVisualScrollOffset(aMetrics.GetVisualScrollOffset()),
       mZoom(aMetrics.GetZoom()),
       mScrollPayload(std::move(aPayload)) {
   RemoveFractionalAsyncDelta();
@@ -32,7 +32,8 @@ bool SampledAPZCState::operator==(const SampledAPZCState& aOther) const {
   // The payload doesn't factor into equality, that just comes along for
   // the ride.
   return mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
-         mScrollOffset == aOther.mScrollOffset && mZoom == aOther.mZoom;
+         mVisualScrollOffset == aOther.mVisualScrollOffset &&
+         mZoom == aOther.mZoom;
 }
 
 bool SampledAPZCState::operator!=(const SampledAPZCState& aOther) const {
@@ -45,17 +46,19 @@ Maybe<CompositionPayload> SampledAPZCState::TakeScrollPayload() {
 
 void SampledAPZCState::UpdateScrollProperties(const FrameMetrics& aMetrics) {
   mLayoutViewport = aMetrics.GetLayoutViewport();
-  mScrollOffset = aMetrics.GetVisualScrollOffset();
+  mVisualScrollOffset = aMetrics.GetVisualScrollOffset();
 }
 
 void SampledAPZCState::UpdateZoomProperties(const FrameMetrics& aMetrics) {
   mZoom = aMetrics.GetZoom();
 }
 
-void SampledAPZCState::ClampScrollOffset(const FrameMetrics& aMetrics) {
-  mScrollOffset = aMetrics.CalculateScrollRange().ClampPoint(mScrollOffset);
+void SampledAPZCState::ClampVisualScrollOffset(const FrameMetrics& aMetrics) {
+  mVisualScrollOffset =
+      aMetrics.CalculateScrollRange().ClampPoint(mVisualScrollOffset);
   FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
-      CSSRect(mScrollOffset, aMetrics.CalculateCompositedSizeInCssPixels()),
+      CSSRect(mVisualScrollOffset,
+              aMetrics.CalculateCompositedSizeInCssPixels()),
       aMetrics.GetScrollableRect(), mLayoutViewport);
 }
 
@@ -77,14 +80,14 @@ void SampledAPZCState::RemoveFractionalAsyncDelta() {
   // a snapshot of APZ state (decoupling it from APZ assumptions) and provides
   // it as an input to the compositor (so all compositor state should be
   // internally consistent based on this input).
-  if (mLayoutViewport.TopLeft() == mScrollOffset) {
+  if (mLayoutViewport.TopLeft() == mVisualScrollOffset) {
     return;
   }
   ParentLayerPoint paintedOffset = mLayoutViewport.TopLeft() * mZoom;
-  ParentLayerPoint asyncOffset = mScrollOffset * mZoom;
+  ParentLayerPoint asyncOffset = mVisualScrollOffset * mZoom;
   if (FuzzyEqualsAdditive(paintedOffset.x, asyncOffset.x, COORDINATE_EPSILON) &&
       FuzzyEqualsAdditive(paintedOffset.y, asyncOffset.y, COORDINATE_EPSILON)) {
-    mScrollOffset = mLayoutViewport.TopLeft();
+    mVisualScrollOffset = mLayoutViewport.TopLeft();
   }
 }
 
