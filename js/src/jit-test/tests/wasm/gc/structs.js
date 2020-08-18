@@ -314,7 +314,7 @@ assertEq(the_list, null);
                       (field (mut i64))
                       (field (mut i32))))
 
-          (global $g (mut (ref null $big)) (ref.null opt $big))
+          (global $g (mut (ref null $big)) (ref.null $big))
 
           (func (export "make") (result externref)
            (global.set $g
@@ -384,7 +384,7 @@ var bin = wasmTextToBinary(
     `(module
       (type $cons (struct (field i32) (field (ref null $cons))))
 
-      (global $g (mut (ref null $cons)) (ref.null opt $cons))
+      (global $g (mut (ref null $cons)) (ref.null $cons))
 
       (func (export "push") (param i32)
        (global.set $g (struct.new $cons (local.get 0) (global.get $g))))
