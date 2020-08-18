@@ -19,5 +19,4 @@ autocomplete-import-logins-chromium-edge =
 
 ##
 
-autocomplete-import-logins-info =
-    .tooltiptext = Learn more
+autocomplete-import-learn-more = Learn more

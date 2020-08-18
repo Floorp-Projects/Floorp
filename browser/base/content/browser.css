@@ -677,12 +677,9 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   min-width: 17em;
 }
 
+#PopupAutoComplete[resultstyles~="importableLogins"],
 #PopupAutoComplete[resultstyles~="generatedPassword"] {
   min-width: 22em;
-}
-
-#PopupAutoComplete[resultstyles~="importableLogins"] {
-  min-width: 24em;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
