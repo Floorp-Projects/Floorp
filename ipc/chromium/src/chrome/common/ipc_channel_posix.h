@@ -11,7 +11,6 @@
 
 #include <sys/socket.h>  // for CMSG macros
 
-#include <queue>
 #include <string>
 #include <vector>
 #include <list>
@@ -21,6 +20,7 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Queue.h"
 #include "mozilla/UniquePtr.h"
 
 namespace IPC {
@@ -97,7 +97,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   Listener* listener_;
 
   // Messages to be sent are queued here.
-  std::queue<mozilla::UniquePtr<Message>> output_queue_;
+  mozilla::Queue<mozilla::UniquePtr<Message>, 64> output_queue_;
 
   // We read from the pipe into these buffers.
   size_t input_buf_offset_;
@@ -158,7 +158,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   uint32_t last_pending_fd_id_;
 #endif
 
-  // This variable is updated so it matches output_queue_.size(), except we can
+  // This variable is updated so it matches output_queue_.Count(), except we can
   // read output_queue_length_ from any thread (if we're OK getting an
   // occasional out-of-date or bogus value).  We use output_queue_length_ to
   // implement Unsound_NumQueuedMessages.

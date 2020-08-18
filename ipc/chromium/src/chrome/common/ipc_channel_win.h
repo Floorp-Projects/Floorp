@@ -9,7 +9,6 @@
 
 #include "chrome/common/ipc_channel.h"
 
-#include <queue>
 #include <string>
 
 #include "base/message_loop.h"
@@ -17,6 +16,7 @@
 #include "nsISupportsImpl.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Queue.h"
 #include "mozilla/UniquePtr.h"
 
 namespace IPC {
@@ -85,7 +85,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   Listener* listener_;
 
   // Messages to be sent are queued here.
-  std::queue<mozilla::UniquePtr<Message>> output_queue_;
+  mozilla::Queue<mozilla::UniquePtr<Message>, 64> output_queue_;
 
   // If sending a message blocks then we use this iterator to keep track of
   // where in the message we are. It gets reset when the message is finished
@@ -117,7 +117,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // record this when generating logs of IPC messages.
   int32_t other_pid_ = -1;
 
-  // This variable is updated so it matches output_queue_.size(), except we can
+  // This variable is updated so it matches output_queue_.Count(), except we can
   // read output_queue_length_ from any thread (if we're OK getting an
   // occasional out-of-date or bogus value).  We use output_queue_length_ to
   // implement Unsound_NumQueuedMessages.
