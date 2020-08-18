@@ -28,20 +28,6 @@ using ABI::Windows::Storage::Streams::IRandomAccessStream;
 using ABI::Windows::Storage::Streams::IRandomAccessStreamReference;
 using Microsoft::WRL::ComPtr;
 
-struct SMTCControlAttributes {
-  bool mEnabled;
-  bool mPlayPauseEnabled;
-  bool mNextEnabled;
-  bool mPreviousEnabled;
-
-  static constexpr SMTCControlAttributes EnableAll() {
-    return {true, true, true, true};
-  }
-  static constexpr SMTCControlAttributes DisableAll() {
-    return {false, false, false, false};
-  }
-};
-
 class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WindowsSMTCProvider, override)
 
@@ -58,20 +44,23 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   void SetMediaMetadata(
       const mozilla::dom::MediaMetadataBase& aMetadata) override;
 
-  // TODO : modify the virtual control interface based on the supported keys
-  void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override {}
+  void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override;
 
  private:
   ~WindowsSMTCProvider();
   void UnregisterEvents();
   bool RegisterEvents();
-  void OnButtonPressed(mozilla::dom::MediaControlKey aKey);
+
+  void OnButtonPressed(mozilla::dom::MediaControlKey aKey) const;
+  // Enable the SMTC interface
+  bool EnableControl(bool aEnabled) const;
+  // Sets the play, pause, next, previous buttons on the SMTC interface by
+  // mSupportedKeys
+  bool UpdateButtons() const;
+  bool IsKeySupported(mozilla::dom::MediaControlKey aKey) const;
+  bool EnableKey(mozilla::dom::MediaControlKey aKey, bool aEnable) const;
 
   bool InitDisplayAndControls();
-
-  // Sets the state of the UI Panel (enabled, can use PlayPause, Next, Previous
-  // Buttons)
-  bool SetControlAttributes(SMTCControlAttributes aAttributes);
 
   // Sets the Metadata for the currently playing media and sets the playback
   // type to "MUSIC"
@@ -94,6 +83,10 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   void CancelPendingStoreAsyncOperation() const;
 
   bool mInitialized = false;
+
+  // A bit table indicating what keys are enabled
+  uint32_t mSupportedKeys = 0;
+
   ComPtr<ISMTC> mControls;
   ComPtr<ISMTCDisplayUpdater> mDisplay;
 
