@@ -33,5 +33,6 @@ EXTRA_JS_MODULES += [
     'GeckoViewUtils.jsm',
     'GeckoViewWebExtension.jsm',
     'LoadURIDelegate.jsm',
+    'MediaUtils.jsm',
     'Messaging.jsm',
 ]
