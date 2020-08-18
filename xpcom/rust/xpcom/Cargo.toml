@@ -1,7 +1,7 @@
 [package]
 name = "xpcom"
 version = "0.1.0"
-authors = ["michael@thelayzells.com"]
+authors = ["Nika Layzell <nika@thelayzells.com>"]
 
 [dependencies]
 libc = "0.2"
