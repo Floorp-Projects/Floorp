@@ -10,6 +10,7 @@ with Files('**'):
 BROWSER_CHROME_MANIFESTS += [
     'schemas/SpecialMessageActionSchemas/test/browser/browser.ini',
     'schemas/TriggerActionSchemas/test/browser/browser.ini',
+    'test/browser/browser.ini',
 ]
 
 SPHINX_TREES['docs'] = 'schemas'
