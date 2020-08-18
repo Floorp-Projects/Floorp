@@ -838,6 +838,40 @@ var BrowserUtils = {
     });
   },
 
+  computeSiteOriginCount(aWindows, aIsGeckoView) {
+    // Geckoview and Desktop work differently. On desktop, aBrowser objects
+    // holds an array of tabs which we can use to get the <browser> objects.
+    // In Geckoview, it is apps' responsibility to keep track of the tabs, so
+    // there isn't an easy way for us to get the tabs.
+    let tabs = [];
+    if (aIsGeckoView) {
+      // To get all active windows; Each tab has its own window
+      tabs = aWindows;
+    } else {
+      for (const win of aWindows) {
+        tabs = tabs.concat(win.gBrowser.tabs);
+      }
+    }
+
+    let topLevelBCs = [];
+
+    for (const tab of tabs) {
+      let browser;
+      if (aIsGeckoView) {
+        browser = tab.browser;
+      } else {
+        browser = tab.linkedBrowser;
+      }
+
+      if (browser.browsingContext) {
+        // This is the top level browsingContext
+        topLevelBCs.push(browser.browsingContext);
+      }
+    }
+
+    return CanonicalBrowsingContext.countSiteOrigins(topLevelBCs);
+  },
+
   _recordSiteOriginTelemetry(aWindows, aIsGeckoView) {
     let currentTime = Date.now();
 
@@ -863,41 +897,9 @@ var BrowserUtils = {
 
     this._lastRecordSiteOrigin = currentTime;
 
-    // Geckoview and Desktop work differently. On desktop, aBrowser objects
-    // holds an array of tabs which we can use to get the <browser> objects.
-    // In Geckoview, it is apps' responsibility to keep track of the tabs, so
-    // there isn't an easy way for us to get the tabs.
-    let tabs = [];
-    if (aIsGeckoView) {
-      // To get all active windows; Each tab has its own window
-      tabs = aWindows;
-    } else {
-      for (const win of aWindows) {
-        tabs = tabs.concat(win.gBrowser.tabs);
-      }
-    }
-
-    let topLevelBC = [];
-
-    for (const tab of tabs) {
-      let browser;
-      if (aIsGeckoView) {
-        browser = tab.browser;
-      } else {
-        browser = tab.linkedBrowser;
-      }
-
-      if (browser.browsingContext) {
-        // This is the top level browsingContext
-        topLevelBC.push(browser.browsingContext);
-      }
-    }
-
-    const count = CanonicalBrowsingContext.countSiteOrigins(topLevelBC);
-
     Services.telemetry
       .getHistogramById("FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_ALL_TABS")
-      .add(count);
+      .add(this.computeSiteOriginCount(aWindows, aIsGeckoView));
   },
 
   /**
