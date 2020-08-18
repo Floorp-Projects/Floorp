@@ -36,15 +36,9 @@ var PrintEventHandler = {
   async init() {
     this.sourceBrowser = this.getSourceBrowser();
     this.previewBrowser = this.getPreviewBrowser();
-
-    document.addEventListener("print", e => this.print({ silent: true }));
-    document.addEventListener("update-print-settings", e =>
-      this.updateSettings(e.detail)
-    );
-    document.addEventListener("cancel-print", () => this.cancelPrint());
-    document.addEventListener("open-system-dialog", () =>
-      this.print({ silent: false })
-    );
+    this.settings = null;
+    this._printerSettingsChangedFlags = 0;
+    this._nonFlaggedChangedSettings = {};
 
     this.settingFlags = {
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
@@ -67,14 +61,16 @@ var PrintEventHandler = {
     // accessible printer.
     let { destinations, selectedPrinter } = await this.getPrintDestinations();
 
-    // Find the settings for the printer we'll select initially.
-    this.settings = PrintUtils.getPrintSettings(selectedPrinter.value);
-    // Wrap the settings with our view model to simplify the UI.
-    this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
-    // Set the printer name through the view model to ensure the PDF flags are
-    // set correctly.
-    this.viewSettings.printerName = this.settings.printerName;
+    document.addEventListener("print", e => this.print({ silent: true }));
+    document.addEventListener("update-print-settings", e =>
+      this.updateSettings(e.detail)
+    );
+    document.addEventListener("cancel-print", () => this.cancelPrint());
+    document.addEventListener("open-system-dialog", () =>
+      this.print({ silent: false })
+    );
 
+    this.refreshSettings(selectedPrinter.value);
     this.updatePrintPreview();
 
     document.dispatchEvent(
@@ -88,8 +84,20 @@ var PrintEventHandler = {
         detail: this.viewSettings,
       })
     );
-
     document.body.removeAttribute("loading");
+  },
+
+  refreshSettings(printerName) {
+    this.settings = PrintUtils.getPrintSettings(printerName);
+    // restore settings which do not have a corresponding flag
+    Object.assign(this.settings, this._nonFlaggedChangedSettings);
+
+    // Some settings are only used by the UI
+    // assigning new values should update the underlying settings
+    this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
+
+    // Ensure the output format is set properly
+    this.viewSettings.printerName = this.settings.printerName;
   },
 
   async print({ silent } = {}) {
@@ -118,7 +126,7 @@ var PrintEventHandler = {
   },
 
   updateSettings(changedSettings = {}) {
-    let isChanged = false;
+    let didSettingsChange = false;
     let flags = 0;
     for (let [setting, value] of Object.entries(changedSettings)) {
       if (this.viewSettings[setting] != value) {
@@ -126,8 +134,12 @@ var PrintEventHandler = {
 
         if (setting in this.settingFlags) {
           flags |= this.settingFlags[setting];
+        } else {
+          // some settings have no corresponding flag,
+          // but we may want to restore them if the current printer changes
+          this._nonFlaggedChangedSettings[setting] = value;
         }
-        isChanged = true;
+        didSettingsChange = true;
         Services.telemetry.keyedScalarAdd(
           "printing.settings_changed",
           setting,
@@ -136,13 +148,27 @@ var PrintEventHandler = {
       }
     }
 
-    if (isChanged) {
+    let printerChanged = flags & this.settingFlags.printerName;
+    if (didSettingsChange) {
       let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
+      this._printerSettingsChangedFlags |= flags;
+
+      if (printerChanged) {
+        // If the user has changed settings with the old printer, stash them all
+        // so they can be restored on top of the new printer's settings
+        flags |= this._printerSettingsChangedFlags;
+      }
 
       if (flags) {
         PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
+      }
+      if (printerChanged) {
+        this.refreshSettings(this.settings.printerName);
+      }
+
+      if (flags || printerChanged) {
         this.updatePrintPreview();
       }
 
@@ -386,9 +412,8 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
   }
 
   setOptions(optionValues = []) {
-    this._options = optionValues;
     this.textContent = "";
-    for (let optionData of this._options) {
+    for (let optionData of optionValues) {
       let opt = new Option(
         optionData.name,
         "value" in optionData ? optionData.value : optionData.name
@@ -396,6 +421,7 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
       if (optionData.nameId) {
         document.l10n.setAttributes(opt, optionData.nameId);
       }
+      // option selectedness is set via update() and assignment to this.value
       this.options.add(opt);
     }
   }
@@ -411,9 +437,7 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
       this.dispatchSettingsChange({
         printerName: e.target.value,
       });
-    }
-
-    if (e.type == "available-destinations") {
+    } else if (e.type == "available-destinations") {
       this.setOptions(e.detail);
       this.required = true;
     }
