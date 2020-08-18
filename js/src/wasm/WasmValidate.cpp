@@ -2285,7 +2285,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
     case uint16_t(Op::RefNull): {
       MOZ_ASSERT_IF(env->isStructType(expected), env->gcTypesEnabled());
       RefType initType;
-      if (!d.readRefType(env->types, env->gcTypesEnabled(), &initType)) {
+      if (!d.readHeapType(env->types, env->gcTypesEnabled(), true, &initType)) {
         return false;
       }
       if (!expected.isReference() ||
