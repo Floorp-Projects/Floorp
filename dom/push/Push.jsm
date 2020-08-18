@@ -60,7 +60,12 @@ Push.prototype = {
 
     this._principal = win.document.nodePrincipal;
 
-    this._topLevelPrincipal = win.top.document.nodePrincipal;
+    try {
+      this._topLevelPrincipal = win.top.document.nodePrincipal;
+    } catch (error) {
+      // Accessing the top-level document might fails if cross-origin
+      this._topLevelPrincipal = undefined;
+    }
   },
 
   __init(scope) {
