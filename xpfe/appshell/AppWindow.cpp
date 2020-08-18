@@ -62,6 +62,10 @@
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/EventDispatcher.h"
 
+#ifdef XP_WIN
+#  include "mozilla/EarlyBlankWindow.h"
+#endif
+
 #ifdef MOZ_NEW_XULSTORE
 #  include "mozilla/XULStore.h"
 #endif
@@ -1744,18 +1748,17 @@ nsresult AppWindow::GetPersistentValue(const nsAtom* aAttr, nsAString& aValue) {
   return NS_OK;
 }
 
-nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
-                                       const nsAString& aValue) {
+nsresult AppWindow::GetDocXulStoreKeys(nsString& aUriSpec,
+                                       nsString& aWindowElementId) {
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
   if (!docShellElement) {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString windowElementId;
-  docShellElement->GetId(windowElementId);
+  docShellElement->GetId(aWindowElementId);
   // Match the behavior of XULPersist and only persist values if the element
   // has an ID.
-  if (windowElementId.IsEmpty()) {
+  if (aWindowElementId.IsEmpty()) {
     return NS_OK;
   }
 
@@ -1770,7 +1773,45 @@ nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  NS_ConvertUTF8toUTF16 uri(utf8uri);
+
+  aUriSpec = NS_ConvertUTF8toUTF16(utf8uri);
+
+  return NS_OK;
+}
+
+nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
+    const LayoutDeviceIntRect& aRect) {
+#ifdef XP_WIN
+  nsAutoString uri;
+  nsAutoString windowElementId;
+  nsresult rv = GetDocXulStoreKeys(uri, windowElementId);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!uri.EqualsLiteral("chrome://browser/content/browser.xhtml") ||
+      !windowElementId.EqualsLiteral("main-window")) {
+    return NS_OK;
+  }
+
+  PersistEarlyBlankWindowValues(aRect.X(), aRect.Y(), aRect.Width(),
+                                aRect.Height(),
+                                mWindow->GetDefaultScale().scale);
+#endif
+
+  return NS_OK;
+}
+
+nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
+                                       const nsAString& aValue) {
+  nsAutoString uri;
+  nsAutoString windowElementId;
+  nsresult rv = GetDocXulStoreKeys(uri, windowElementId);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsAutoString maybeConvertedValue(aValue);
   if (aAttr == nsGkAtoms::width || aAttr == nsGkAtoms::height) {
@@ -1877,6 +1918,8 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
       }
     }
   }
+
+  Unused << MaybeSaveEarlyWindowPersistentValues(rect);
 
   if (mPersistentAttributesDirty & PAD_MISC) {
     nsSizeMode sizeMode = mWindow->SizeMode();
