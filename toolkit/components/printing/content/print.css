@@ -165,10 +165,6 @@ input[type="radio"]:not(:disabled):focus {
   box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
 }
 
-input[type="radio"]:disabled {
-  opacity: 0.5;
-}
-
 input[type="number"],
 input[type="text"] {
   padding: 2px;
