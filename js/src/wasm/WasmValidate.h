@@ -224,9 +224,7 @@ struct ModuleEnvironment {
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();
   }
-  bool isRefSubtypeOf(ValType one, ValType two) const {
-    MOZ_ASSERT(one.isReference());
-    MOZ_ASSERT(two.isReference());
+  bool isRefSubtypeOf(RefType one, RefType two) const {
     // Anything's a subtype of itself.
     if (one == two) {
       return true;
@@ -234,7 +232,7 @@ struct ModuleEnvironment {
 #if defined(ENABLE_WASM_GC)
     if (gcTypesEnabled()) {
       // Structs are subtypes of AnyRef.
-      if (isStructType(one) && two.isExternRef()) {
+      if (isStructType(one) && two.isExtern()) {
         return true;
       }
       // Struct One is a subtype of struct Two if Two is a prefix of One.

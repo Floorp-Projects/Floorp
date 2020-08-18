@@ -1714,6 +1714,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
     if (!seg) {
       return false;
     }
+    seg->elemType = RefType::func();
     seg->tableIndex = tableIndex;
     seg->offsetIfActive = Some(InitExpr::fromConstant(LitVal(uint32_t(0))));
     seg->elemFuncIndices = std::move(elems);
@@ -1995,7 +1996,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     }
 
     env_.asmJSSigToTableIndex[sigIndex] = env_.tables.length();
-    if (!env_.tables.emplaceBack(TableKind::AsmJS, mask + 1, Nothing())) {
+    if (!env_.tables.emplaceBack(RefType::func(), mask + 1, Nothing(),
+                                 /*isAsmJS*/ true)) {
       return false;
     }
 

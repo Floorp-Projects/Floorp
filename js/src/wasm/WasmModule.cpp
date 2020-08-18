@@ -801,7 +801,7 @@ bool Module::instantiateLocalTable(JSContext* cx, const TableDesc& td,
     RootedObject proto(
         cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
     tableObj.set(WasmTableObject::create(cx, td.initialLength, td.maximumLength,
-                                         td.kind, proto));
+                                         td.elemType, proto));
     if (!tableObj) {
       return false;
     }
