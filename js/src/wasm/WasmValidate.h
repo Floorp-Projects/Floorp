@@ -234,7 +234,7 @@ struct ModuleEnvironment {
 #if defined(ENABLE_WASM_GC)
     if (gcTypesEnabled()) {
       // Structs are subtypes of AnyRef.
-      if (isStructType(one) && two.isAnyRef()) {
+      if (isStructType(one) && two.isExternRef()) {
         return true;
       }
       // Struct One is a subtype of struct Two if Two is a prefix of One.
@@ -669,7 +669,7 @@ class Decoder {
     switch (code) {
       case uint8_t(TypeCode::OptRef):
         return RefType::fromTypeIndex(uncheckedReadVarU32());
-      case uint8_t(TypeCode::AnyRef):
+      case uint8_t(TypeCode::ExternRef):
       case uint8_t(TypeCode::FuncRef):
         return RefType::fromTypeCode(TypeCode(code));
       default:
@@ -701,7 +701,7 @@ class Decoder {
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint8_t(TypeCode::FuncRef):
-      case uint8_t(TypeCode::AnyRef):
+      case uint8_t(TypeCode::ExternRef):
         if (!refTypesEnabled) {
           return fail("reference types not enabled");
         }
@@ -750,7 +750,7 @@ class Decoder {
     }
     switch (code) {
       case uint8_t(TypeCode::FuncRef):
-      case uint8_t(TypeCode::AnyRef):
+      case uint8_t(TypeCode::ExternRef):
         *type = RefType::fromTypeCode(TypeCode(code));
         return true;
 #ifdef ENABLE_WASM_GC

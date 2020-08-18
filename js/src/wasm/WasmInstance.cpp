@@ -203,7 +203,7 @@ static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
       switch (type.refTypeKind()) {
         case RefType::Func:
           return ToWebAssemblyValue_funcref<Debug>(cx, val, (void**)loc);
-        case RefType::Any:
+        case RefType::Extern:
           return ToWebAssemblyValue_anyref<Debug>(cx, val, (void**)loc);
         case RefType::TypeIndex:
           return ToWebAssemblyValue_typeref<Debug>(cx, val, (void**)loc);
@@ -310,7 +310,7 @@ static bool ToJSValue(JSContext* cx, const void* src, ValType type,
         case RefType::Func:
           return ToJSValue_funcref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
-        case RefType::Any:
+        case RefType::Extern:
           return ToJSValue_anyref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
         case RefType::TypeIndex:
@@ -546,7 +546,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
           break;
         case ValType::Ref:
           switch (importArgs[i].refTypeKind()) {
-            case RefType::Any:
+            case RefType::Extern:
               // We don't know what type the value will be, so we can't really
               // check whether the callee will accept it.  It doesn't make much
               // sense to see if the callee accepts all of the types an AnyRef
@@ -2174,7 +2174,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
           }
           break;
         }
-        case RefType::Any: {
+        case RefType::Extern: {
           RootedAnyRef ref(cx, AnyRef::fromCompiledCode(ptr));
           ASSERT_ANYREF_IS_JSOBJECT;
           if (!refs.emplaceBack(ref.get().asJSObject())) {
