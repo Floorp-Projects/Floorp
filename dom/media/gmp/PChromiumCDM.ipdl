@@ -8,7 +8,7 @@ include GMPTypes;
 
 include "GMPMessageUtils.h";
 
-using cdm::HdcpVersion from "content_decryption_module.h";
+using cdm::HdcpVersion from "gmp-sanitized-cdm-exports.h";
 
 include "GMPMessageUtils.h";
 
