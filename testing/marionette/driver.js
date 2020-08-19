@@ -1760,6 +1760,18 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
+  if (MarionettePrefs.useActors) {
+    const { browsingContext } = await this.getActor().switchToParentFrame();
+
+    if (this.context == Context.Chrome) {
+      this.chromeBrowsingContext = browsingContext;
+    } else {
+      this.contentBrowsingContext = browsingContext;
+    }
+
+    return;
+  }
+
   await this.listener.switchToParentFrame();
 };
 
@@ -1780,13 +1792,35 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.switchToFrame = async function(cmd) {
-  const { element, focus = false, id } = cmd.parameters;
+  const { element: el, focus = false, id } = cmd.parameters;
 
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
   if (typeof id == "number") {
     assert.unsignedShort(id, `Expected id to be unsigned short, got ${id}`);
+  }
+
+  // Bug 1495063: Elements should be passed as WebElement reference
+  let byFrame;
+  if (typeof el == "string") {
+    byFrame = WebElement.fromUUID(el, this.context);
+  } else if (el) {
+    byFrame = WebElement.fromJSON(el);
+  }
+
+  if (MarionettePrefs.useActors) {
+    const { browsingContext } = await this.getActor().switchToFrame(
+      byFrame || id
+    );
+
+    if (this.context == Context.Chrome) {
+      this.chromeBrowsingContext = browsingContext;
+    } else {
+      this.contentBrowsingContext = browsingContext;
+    }
+
+    return;
   }
 
   const checkLoad = function(win) {
@@ -1807,14 +1841,6 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
   };
 
   if (this.context == Context.Chrome) {
-    // Bug 1495063: Elements should be passed as WebElement reference
-    let byFrame;
-    if (typeof element == "string") {
-      byFrame = WebElement.fromUUID(element, Context.Chrome);
-    } else if (element) {
-      byFrame = WebElement.fromJSON(element);
-    }
-
     const childContexts = this.getBrowsingContext().children;
 
     let browsingContext;

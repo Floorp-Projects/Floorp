@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { element } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error, NoSuchFrameError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
 const { evaluate } = ChromeUtils.import(
   "chrome://marionette/content/evaluate.js"
 );
@@ -80,6 +82,12 @@ class MarionetteFrameChild extends JSWindowActorChild {
           break;
         case "MarionetteFrameParent:getElementProperty":
           result = await this.getElementProperty(data);
+          break;
+        case "MarionetteFrameParent:switchToFrame":
+          result = await this.switchToFrame(data);
+          break;
+        case "MarionetteFrameParent:switchToParentFrame":
+          result = await this.switchToParentFrame();
           break;
       }
 
@@ -152,5 +160,52 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const el = this.seenEls.get(webEl);
 
     return typeof el[name] != "undefined" ? el[name] : null;
+  }
+
+  /**
+   * Switch to the specified frame.
+   *
+   * @param {Object=} options
+   * @param {(number|WebElement)=} options.id
+   *     Identifier of the frame to switch to. If it's a number treat it as
+   *     the index for all the existing frames. If it's a WebElement switch
+   *     to this specific frame. If not specified or `null` switch to the
+   *     top-level browsing context.
+   */
+  async switchToFrame(options = {}) {
+    const { id } = options;
+
+    const childContexts = this.browsingContext.children;
+    let browsingContext;
+
+    if (id == null) {
+      browsingContext = this.browsingContext.top;
+    } else if (typeof id == "number") {
+      if (id < 0 || id >= childContexts.length) {
+        throw new NoSuchFrameError(`Unable to locate frame with index: ${id}`);
+      }
+      browsingContext = childContexts[id];
+      this.seenEls.add(browsingContext.embedderElement);
+    } else {
+      const frameElement = this.seenEls.get(id);
+      const context = childContexts.find(context => {
+        return context.embedderElement === frameElement;
+      });
+      if (!context) {
+        throw new NoSuchFrameError(`Unable to locate frame for element: ${id}`);
+      }
+      browsingContext = context;
+    }
+
+    return { browsingContextId: browsingContext.id };
+  }
+
+  /**
+   * Switch to the parent frame.
+   */
+  async switchToParentFrame() {
+    const browsingContext = this.browsingContext.parent || this.browsingContext;
+
+    return { browsingContextId: browsingContext.id };
   }
 }
