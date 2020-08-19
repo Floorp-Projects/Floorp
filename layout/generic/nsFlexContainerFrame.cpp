@@ -4080,8 +4080,7 @@ static nscoord GetLargestLineMainSize(nsTArray<FlexLine>& aLines) {
 
 nscoord nsFlexContainerFrame::ComputeMainSize(
     const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aTentativeMainSize, nscoord aAvailableBSizeForContent,
-    nsTArray<FlexLine>& aLines, nsReflowStatus& aStatus) const {
+    nscoord aTentativeMainSize, nsTArray<FlexLine>& aLines) const {
   if (aAxisTracker.IsRowOriented()) {
     // Row-oriented --> our main axis is the inline axis, so our main size
     // is our inline size (which should already be resolved).
@@ -4090,29 +4089,10 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
 
   if (aTentativeMainSize != NS_UNCONSTRAINEDSIZE) {
     // Column-oriented case, with fixed BSize:
-    if (aAvailableBSizeForContent == NS_UNCONSTRAINEDSIZE ||
-        aTentativeMainSize < aAvailableBSizeForContent) {
-      // Not in a fragmenting context, OR no need to fragment because we have
-      // more available BSize than we need. Either way, we don't need to clamp.
-      // (Note that the reflow input has already done the appropriate
-      // min/max-BSize clamping.)
-      return aTentativeMainSize;
-    }
-
-    // Fragmenting *and* our fixed BSize is larger than available BSize:
-    // Mark incomplete so we get a next-in-flow, and take up all of the
-    // available BSize (or the amount of BSize required by our children, if
-    // that's larger; but of course not more than our own computed BSize).
-    // XXXdholbert For now, we don't support pushing children to our next
-    // continuation or splitting children, so "amount of BSize required by
-    // our children" is just the main-size (BSize) of our longest flex line.
-    aStatus.SetIncomplete();
-    nscoord largestLineOuterSize = GetLargestLineMainSize(aLines);
-
-    if (largestLineOuterSize <= aAvailableBSizeForContent) {
-      return aAvailableBSizeForContent;
-    }
-    return std::min(aTentativeMainSize, largestLineOuterSize);
+    // Just use our fixed block-size because we always assume the available
+    // block-size is unconstrained, and the reflow input has already done the
+    // appropriate min/max-BSize clamping.
+    return aTentativeMainSize;
   }
 
   // Column-oriented case, with size-containment:
@@ -4124,7 +4104,6 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
   // Column-oriented case, with auto BSize:
   // Resolve auto BSize to the largest FlexLine length, clamped to our
   // computed min/max main-size properties.
-  // XXXdholbert Handle constrained-aAvailableBSizeForContent case here.
   nscoord largestLineOuterSize = GetLargestLineMainSize(aLines);
   return NS_CSS_MINMAX(largestLineOuterSize, aReflowInput.ComputedMinBSize(),
                        aReflowInput.ComputedMaxBSize());
@@ -4132,8 +4111,7 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
 
 nscoord nsFlexContainerFrame::ComputeCrossSize(
     const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aSumLineCrossSizes, nscoord aAvailableBSizeForContent,
-    bool* aIsDefinite, nsReflowStatus& aStatus) const {
+    nscoord aSumLineCrossSizes, bool* aIsDefinite) const {
   MOZ_ASSERT(aIsDefinite, "outparam pointer must be non-null");
 
   if (aAxisTracker.IsColumnOriented()) {
@@ -4151,27 +4129,11 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
   if (effectiveComputedBSize != NS_UNCONSTRAINEDSIZE) {
     // Row-oriented case (cross axis is block-axis), with fixed BSize:
     *aIsDefinite = true;
-    if (aAvailableBSizeForContent == NS_UNCONSTRAINEDSIZE ||
-        effectiveComputedBSize < aAvailableBSizeForContent) {
-      // Not in a fragmenting context, OR no need to fragment because we have
-      // more available BSize than we need. Either way, just use our fixed
-      // BSize.  (Note that the reflow input has already done the appropriate
-      // min/max-BSize clamping.)
-      return effectiveComputedBSize;
-    }
 
-    // Fragmenting *and* our fixed BSize is too tall for available BSize:
-    // Mark incomplete so we get a next-in-flow, and take up all of the
-    // available BSize (or the amount of BSize required by our children, if
-    // that's larger; but of course not more than our own computed BSize).
-    // XXXdholbert For now, we don't support pushing children to our next
-    // continuation or splitting children, so "amount of BSize required by
-    // our children" is just the sum of our FlexLines' BSizes (cross sizes).
-    aStatus.SetIncomplete();
-    if (aSumLineCrossSizes <= aAvailableBSizeForContent) {
-      return aAvailableBSizeForContent;
-    }
-    return std::min(effectiveComputedBSize, aSumLineCrossSizes);
+    // Just use our fixed block-size because we always assume the available
+    // block-size is unconstrained, and the reflow input has already done the
+    // appropriate min/max-BSize clamping.
+    return effectiveComputedBSize;
   }
 
   // Row-oriented case, with size-containment:
@@ -4184,7 +4146,6 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
   // Row-oriented case (cross axis is block axis), with auto BSize:
   // Shrink-wrap our line(s), subject to our min-size / max-size
   // constraints in that (block) axis.
-  // XXXdholbert Handle constrained-aAvailableBSizeForContent case here.
   *aIsDefinite = false;
   return NS_CSS_MINMAX(aSumLineCrossSizes, aReflowInput.ComputedMinBSize(),
                        aReflowInput.ComputedMaxBSize());
@@ -4422,23 +4383,17 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     // algorithm suggests we wrap the flex line at the block-end edge of a
     // column/page, but we do not implement it intentionally. This brings the
     // layout result closer to the one as if there's no fragmentation.
-    //
-    // TODO: Remove availableBSizeForContent since it's always unconstrained.
-    const nscoord availableBSizeForContent = NS_UNCONSTRAINEDSIZE;
-
-    DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
-                 flexContainerAscent, availableBSizeForContent, lines, struts,
-                 placeholders, axisTracker, mainGapSize, crossGapSize,
-                 hasLineClampEllipsis, containerInfo);
+    DoFlexLayout(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
+                 flexContainerAscent, lines, struts, placeholders, axisTracker,
+                 mainGapSize, crossGapSize, hasLineClampEllipsis,
+                 containerInfo);
 
     if (!struts.IsEmpty()) {
       // We're restarting flex layout, with new knowledge of collapsed items.
-      aStatus.Reset();
       lines.Clear();
       placeholders.Clear();
-      DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize,
-                   contentBoxCrossSize, flexContainerAscent,
-                   availableBSizeForContent, lines, struts, placeholders,
+      DoFlexLayout(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
+                   flexContainerAscent, lines, struts, placeholders,
                    axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
                    containerInfo);
     }
@@ -4457,24 +4412,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   const nscoord consumedBSize = ConsumedBSize(wm);
   const nscoord effectiveContentBSize =
       contentBoxSize.BSize(wm) - consumedBSize;
-
-  // XXX: DoFlexLayout() calls ComputeMainSize() and ComputeCrossSize() that can
-  // set aStatus to incomplete in one of their codepaths if the
-  // aAvailableBSizeForContent is constrained. However, when fragmenting a
-  // single-line flex container or a multi-line row-oriented flex container, we
-  // want to run the flex algorithm without regards to pagination, so we pass
-  // unconstrained available block-size to DoFlexLayout(). Thus, aStatus
-  // shouldn't be modified. This assertion is to ensure that aStatus remains
-  // clean.
-  //
-  // TODO: We should remove aStatus parameter from DoFlexLayout(),
-  // ComputeMainSize(), and ComputeCrossSize() if it is proven not needed after
-  // completing the support of flex item fragmentation. After that, this
-  // assertion can be removed as well.
-  MOZ_ASSERT(
-      aStatus.IsEmpty(),
-      "DoFlexLayout shouldn't modify aStatus if it is given unconstrained "
-      "page size!");
 
   // Check if we may need a next-in-flow. If so, we'll need to skip block-end
   // border and padding.
@@ -4878,14 +4815,12 @@ bool nsFlexContainerFrame::IsUsedFlexBasisContent(
 }
 
 void nsFlexContainerFrame::DoFlexLayout(
-    const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
-    nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
-    nscoord& aFlexContainerAscent, nscoord aAvailableBSizeForContent,
+    const ReflowInput& aReflowInput, nscoord& aContentBoxMainSize,
+    nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
     nsTArray<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
     nsTArray<nsIFrame*>& aPlaceholders, const FlexboxAxisTracker& aAxisTracker,
     nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
     ComputedFlexContainerInfo* const aContainerInfo) {
-  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aLines.IsEmpty(), "Caller should pass an empty array for lines!");
   MOZ_ASSERT(aPlaceholders.IsEmpty(),
              "Caller should pass an empty array for placeholders!");
@@ -4924,8 +4859,7 @@ void nsFlexContainerFrame::DoFlexLayout(
   }
 
   aContentBoxMainSize =
-      ComputeMainSize(aReflowInput, aAxisTracker, aContentBoxMainSize,
-                      aAvailableBSizeForContent, aLines, aStatus);
+      ComputeMainSize(aReflowInput, aAxisTracker, aContentBoxMainSize, aLines);
 
   uint32_t lineIndex = 0;
   for (FlexLine& line : aLines) {
@@ -4989,8 +4923,7 @@ void nsFlexContainerFrame::DoFlexLayout(
 
   bool isCrossSizeDefinite;
   aContentBoxCrossSize = ComputeCrossSize(
-      aReflowInput, aAxisTracker, sumLineCrossSizes, aAvailableBSizeForContent,
-      &isCrossSizeDefinite, aStatus);
+      aReflowInput, aAxisTracker, sumLineCrossSizes, &isCrossSizeDefinite);
 
   // Set up state for cross-axis alignment, at a high level (outside the
   // scope of a particular flex line)
