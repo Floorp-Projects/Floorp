@@ -170,7 +170,7 @@ void ForwardedInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 }
 
-void ForwardedInputTrack::SetEnabledImpl(DisabledTrackMode aMode) {
+void ForwardedInputTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
   bool enabled = aMode == DisabledTrackMode::ENABLED;
   TRACK_LOG(LogLevel::Info, ("ForwardedInputTrack %p was explicitly %s", this,
                              enabled ? "enabled" : "disabled"));
@@ -189,7 +189,7 @@ void ForwardedInputTrack::SetEnabledImpl(DisabledTrackMode aMode) {
       listener->IncreaseDisabled(aMode);
     }
   }
-  MediaTrack::SetEnabledImpl(aMode);
+  MediaTrack::SetDisabledTrackModeImpl(aMode);
 }
 
 void ForwardedInputTrack::AddDirectListenerImpl(
