@@ -17,10 +17,6 @@ user_pref("media.mediasource.mp4.enabled", true);
 user_pref("media.mediasource.webm.enabled", true);
 user_pref("media.av1.enabled", true);
 user_pref("media.eme.enabled", true);
-// Enable some form preferences for testing
-user_pref("dom.experimental_forms", true);
-user_pref("dom.forms.color", true);
-user_pref("dom.forms.datetime", true);
 user_pref("dom.forms.datetime.others", true);
 // Enable Gamepad
 user_pref("dom.gamepad.enabled", true);

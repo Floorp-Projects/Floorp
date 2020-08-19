@@ -1,4 +1,3 @@
-defaults pref(dom.forms.datetime,true)
 needs-focus == input-load.html input-ref.html
 needs-focus == input-create.html input-ref.html
 needs-focus == input-number.html input-number-ref.html
