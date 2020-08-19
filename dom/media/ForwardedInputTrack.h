@@ -26,7 +26,7 @@ class ForwardedInputTrack : public ProcessedMediaTrack {
   void RemoveInput(MediaInputPort* aPort) override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
-  void SetEnabledImpl(DisabledTrackMode aMode) override;
+  void SetDisabledTrackModeImpl(DisabledTrackMode aMode) override;
 
   friend class MediaTrackGraphImpl;
 
