@@ -276,15 +276,15 @@ impl AggregateDevice {
         let mut cloned_condvar_pair = condvar_pair.clone();
         let data_ptr = &mut cloned_condvar_pair as *mut Arc<(Mutex<AudioObjectID>, Condvar)>;
 
-        assert_eq!(
-            audio_object_add_property_listener(
-                device_id,
-                &address,
-                devices_changed_callback,
-                data_ptr as *mut c_void,
-            ),
-            NO_ERR
+        let status = audio_object_add_property_listener(
+            device_id,
+            &address,
+            devices_changed_callback,
+            data_ptr as *mut c_void,
         );
+        if status != NO_ERR {
+            return Err(status);
+        }
 
         let _teardown = finally(|| {
             assert_eq!(
