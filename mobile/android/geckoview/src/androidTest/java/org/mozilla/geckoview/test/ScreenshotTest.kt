@@ -156,6 +156,37 @@ class ScreenshotTest : BaseSessionTest() {
 
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
+    fun capturePixelsSessionDeactivatedActivated() {
+        val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        sessionRule.session.loadTestPath(COLORS_HTML_PATH)
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onFirstContentfulPaint(session: GeckoSession) {
+            }
+        })
+
+        sessionRule.session.setActive(false)
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onPaintStatusReset(session: GeckoSession) {
+            }
+        })
+
+         sessionRule.session.setActive(true)
+         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+             @AssertCalled(count = 1)
+             override fun onFirstContentfulPaint(session: GeckoSession) {
+             }
+         })
+
+        sessionRule.display?.let {
+            assertScreenshotResult(it.capturePixels(), screenshotFile)
+        }
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
     fun screenshotToBitmap() {
         val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
 

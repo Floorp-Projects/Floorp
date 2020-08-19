@@ -229,6 +229,22 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
+    @WithDisplay(width = 10, height = 10)
+    @Test fun paintStatusReset() {
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onFirstContentfulPaint(session: GeckoSession) {
+            }
+        })
+        mainSession.setActive(false)
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onPaintStatusReset(session: GeckoSession) {
+            }
+        })
+    }
+
     @Test fun webAppManifestPref() {
         val initialState = sessionRule.runtime.settings.getWebManifestEnabled()
         val jsToRun = "document.querySelector('link[rel=manifest]').relList.supports('manifest');"
