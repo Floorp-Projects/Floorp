@@ -864,7 +864,8 @@ void MediaTrackGraphImpl::ProcessInputData() {
       mInputDeviceUsers.GetValue(mInputDeviceID);
   MOZ_ASSERT(listeners);
   for (auto& listener : *listeners) {
-    listener->NotifyInputData(this, mInputData, mInputFrames, GraphRate(), mInputChannelCount);
+    listener->NotifyInputData(this, mInputData, mInputFrames, GraphRate(),
+                              mInputChannelCount);
   }
 
   mInputData = nullptr;
@@ -2315,7 +2316,7 @@ void MediaTrack::RunAfterPendingUpdates(
   graph->AppendMessage(MakeUnique<Message>(this, runnable.forget()));
 }
 
-void MediaTrack::SetEnabledImpl(DisabledTrackMode aMode) {
+void MediaTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
   if (aMode == DisabledTrackMode::ENABLED) {
     mDisabledMode = DisabledTrackMode::ENABLED;
     for (const auto& l : mTrackListeners) {
@@ -2334,12 +2335,12 @@ void MediaTrack::SetEnabledImpl(DisabledTrackMode aMode) {
   }
 }
 
-void MediaTrack::SetEnabled(DisabledTrackMode aMode) {
+void MediaTrack::SetDisabledTrackMode(DisabledTrackMode aMode) {
   class Message : public ControlMessage {
    public:
     Message(MediaTrack* aTrack, DisabledTrackMode aMode)
         : ControlMessage(aTrack), mMode(aMode) {}
-    void Run() override { mTrack->SetEnabledImpl(mMode); }
+    void Run() override { mTrack->SetDisabledTrackModeImpl(mMode); }
     DisabledTrackMode mMode;
   };
   if (mMainThreadDestroyed) {
@@ -2823,7 +2824,7 @@ void SourceMediaTrack::End() {
   }
 }
 
-void SourceMediaTrack::SetEnabledImpl(DisabledTrackMode aMode) {
+void SourceMediaTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
   {
     MutexAutoLock lock(mMutex);
     for (const auto& l : mDirectTrackListeners) {
@@ -2842,7 +2843,7 @@ void SourceMediaTrack::SetEnabledImpl(DisabledTrackMode aMode) {
       }
     }
   }
-  MediaTrack::SetEnabledImpl(aMode);
+  MediaTrack::SetDisabledTrackModeImpl(aMode);
 }
 
 void SourceMediaTrack::RemoveAllDirectListenersImpl() {

@@ -329,7 +329,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
 
   // A disabled track has video replaced by black, and audio replaced by
   // silence.
-  void SetEnabled(DisabledTrackMode aMode);
+  void SetDisabledTrackMode(DisabledTrackMode aMode);
 
   // End event will be notified by calling methods of aListener. It is the
   // responsibility of the caller to remove aListener before it is destroyed.
@@ -411,7 +411,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   virtual void AddDirectListenerImpl(
       already_AddRefed<DirectMediaTrackListener> aListener);
   virtual void RemoveDirectListenerImpl(DirectMediaTrackListener* aListener);
-  virtual void SetEnabledImpl(DisabledTrackMode aMode);
+  virtual void SetDisabledTrackModeImpl(DisabledTrackMode aMode);
 
   void AddConsumer(MediaInputPort* aPort) { mConsumers.AppendElement(aPort); }
   void RemoveConsumer(MediaInputPort* aPort) {
@@ -671,7 +671,7 @@ class SourceMediaTrack : public MediaTrack {
 
   // Overriding allows us to hold the mMutex lock while changing the track
   // enable status
-  void SetEnabledImpl(DisabledTrackMode aMode) override;
+  void SetDisabledTrackModeImpl(DisabledTrackMode aMode) override;
 
   // Overriding allows us to ensure mMutex is locked while changing the track
   // enable status
