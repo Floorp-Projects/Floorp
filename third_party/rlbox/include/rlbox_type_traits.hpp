@@ -43,10 +43,6 @@ template<typename T>
 constexpr bool is_one_level_ptr_v =
   std::is_pointer_v<T> && !std::is_pointer_v<std::remove_pointer_t<T>>;
 
-template<typename T_To, typename T_From>
-constexpr bool is_same_or_same_ref_v =
-  std::is_same_v<T_To, T_From>&& std::is_reference_v<T_To&, T_From>;
-
 template<typename T_This, typename T_Target>
 using add_const_if_this_const_t =
   std::conditional_t<std::is_const_v<std::remove_pointer_t<T_This>>,
