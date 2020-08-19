@@ -2086,8 +2086,7 @@ AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
   return AttachDecision::Attach;
 }
 
-static bool CanAttachStringChar(HandleValue val, HandleValue idVal,
-                                StringChar kind) {
+static bool CanAttachStringChar(HandleValue val, HandleValue idVal) {
   if (!val.isString() || !idVal.isInt32()) {
     return false;
   }
@@ -2119,20 +2118,14 @@ static bool CanAttachStringChar(HandleValue val, HandleValue idVal,
     return false;
   }
 
-  if (kind == StringChar::CodeAt) {
-    return true;
-  }
-
-  // For charAt we need to have StaticString for that code-point.
-  return str->asLinear().latin1OrTwoByteChar(index) <
-         StaticStrings::UNIT_STATIC_LIMIT;
+  return true;
 }
 
 AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
                                                        ValOperandId indexId) {
   MOZ_ASSERT(idVal_.isInt32());
 
-  if (!CanAttachStringChar(val_, idVal_, StringChar::At)) {
+  if (!CanAttachStringChar(val_, idVal_)) {
     return AttachDecision::NoAction;
   }
 
@@ -6217,7 +6210,7 @@ AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
     return AttachDecision::NoAction;
   }
 
-  if (!CanAttachStringChar(thisval_, args_[0], kind)) {
+  if (!CanAttachStringChar(thisval_, args_[0])) {
     return AttachDecision::NoAction;
   }
 
