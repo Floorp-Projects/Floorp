@@ -60,22 +60,22 @@ impl Example for App {
 
             // now put some content into it.
             // start with a white background
-            let mut info = CommonItemProperties::new((0, 0).to(1000, 1000), space_and_clip1);
-            info.hit_info = Some((0, 1));
+            let info = CommonItemProperties::new((0, 0).to(1000, 1000), space_and_clip1);
+            builder.push_hit_test(&info, (0, 1));
             builder.push_rect(&info, info.clip_rect, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
             // let's make a 50x50 blue square as a visual reference
-            let mut info = CommonItemProperties::new((0, 0).to(50, 50), space_and_clip1);
-            info.hit_info = Some((0, 2));
+            let info = CommonItemProperties::new((0, 0).to(50, 50), space_and_clip1);
+            builder.push_hit_test(&info, (0, 2));
             builder.push_rect(&info, info.clip_rect, ColorF::new(0.0, 0.0, 1.0, 1.0));
 
             // and a 50x50 green square next to it with an offset clip
             // to see what that looks like
-            let mut info = CommonItemProperties::new(
+            let info = CommonItemProperties::new(
                 (50, 0).to(100, 50).intersection(&(60, 10).to(110, 60)).unwrap(),
                 space_and_clip1,
             );
-            info.hit_info = Some((0, 3));
+            builder.push_hit_test(&info, (0, 3));
             builder.push_rect(&info, info.clip_rect, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
             // Below the above rectangles, set up a nested scrollbox. It's still in
@@ -92,17 +92,17 @@ impl Example for App {
 
             // give it a giant gray background just to distinguish it and to easily
             // visually identify the nested scrollbox
-            let mut info = CommonItemProperties::new(
+            let info = CommonItemProperties::new(
                 (-1000, -1000).to(5000, 5000),
                 space_and_clip2,
             );
-            info.hit_info = Some((0, 4));
+            builder.push_hit_test(&info, (0, 4));
             builder.push_rect(&info, info.clip_rect, ColorF::new(0.5, 0.5, 0.5, 1.0));
 
             // add a teal square to visualize the scrolling/clipping behaviour
             // as you scroll the nested scrollbox
-            let mut info = CommonItemProperties::new((0, 200).to(50, 250), space_and_clip2);
-            info.hit_info = Some((0, 5));
+            let info = CommonItemProperties::new((0, 200).to(50, 250), space_and_clip2);
+            builder.push_hit_test(&info, (0, 5));
             builder.push_rect(&info, info.clip_rect, ColorF::new(0.0, 1.0, 1.0, 1.0));
 
             // Add a sticky frame. It will "stick" twice while scrolling, once
@@ -118,14 +118,14 @@ impl Example for App {
                 LayoutVector2D::new(0.0, 0.0)
             );
 
-            let mut info = CommonItemProperties::new(
+            let info = CommonItemProperties::new(
                 (50, 350).by(50, 50),
                 SpaceAndClipInfo {
                     spatial_id: sticky_id,
                     clip_id: space_and_clip2.clip_id,
                 },
             );
-            info.hit_info = Some((0, 6));
+            builder.push_hit_test(&info, (0, 6));
             builder.push_rect(
                 &info,
                 info.clip_rect,
@@ -134,11 +134,11 @@ impl Example for App {
 
             // just for good measure add another teal square further down and to
             // the right, which can be scrolled into view by the user
-            let mut info = CommonItemProperties::new(
+            let info = CommonItemProperties::new(
                 (250, 350).to(300, 400),
                 space_and_clip2,
             );
-            info.hit_info = Some((0, 7));
+            builder.push_hit_test(&info, (0, 7));
             builder.push_rect(&info, info.clip_rect, ColorF::new(0.0, 1.0, 1.0, 1.0));
 
             builder.pop_stacking_context();

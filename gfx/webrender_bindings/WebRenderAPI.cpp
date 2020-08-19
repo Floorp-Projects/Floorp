@@ -32,6 +32,30 @@ using layers::Stringify;
 MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderMallocSizeOf)
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(WebRenderMallocEnclosingSizeOf)
 
+enum SideBitsPacked {
+  eSideBitsPackedTop = 0x1000,
+  eSideBitsPackedRight = 0x2000,
+  eSideBitsPackedBottom = 0x4000,
+  eSideBitsPackedLeft = 0x8000
+};
+
+static uint16_t SideBitsToHitInfoBits(SideBits aSideBits) {
+  uint16_t ret = 0;
+  if (aSideBits & SideBits::eTop) {
+    ret |= eSideBitsPackedTop;
+  }
+  if (aSideBits & SideBits::eRight) {
+    ret |= eSideBitsPackedRight;
+  }
+  if (aSideBits & SideBits::eBottom) {
+    ret |= eSideBitsPackedBottom;
+  }
+  if (aSideBits & SideBits::eLeft) {
+    ret |= eSideBitsPackedLeft;
+  }
+  return ret;
+}
+
 class NewRenderer : public RendererEvent {
  public:
   NewRenderer(wr::DocumentHandle** aDocHandle,
@@ -391,13 +415,6 @@ void WebRenderAPI::UpdateDebugFlags(uint32_t aFlags) {
 void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
   wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
-
-enum SideBitsPacked {
-  eSideBitsPackedTop = 0x1000,
-  eSideBitsPackedRight = 0x2000,
-  eSideBitsPackedBottom = 0x4000,
-  eSideBitsPackedLeft = 0x8000
-};
 
 SideBits ExtractSideBitsFromHitInfoBits(uint16_t& aHitInfoBits) {
   SideBits sideBits = SideBits::eNone;
@@ -1113,14 +1130,24 @@ void DisplayListBuilder::PushRoundedRect(const wr::LayoutRect& aBounds,
                                    &spaceAndClip, aColor);
 }
 
-void DisplayListBuilder::PushHitTest(const wr::LayoutRect& aBounds,
-                                     const wr::LayoutRect& aClip,
-                                     bool aIsBackfaceVisible) {
+void DisplayListBuilder::PushHitTest(
+    const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
+    bool aIsBackfaceVisible,
+    const layers::ScrollableLayerGuid::ViewID& aScrollId,
+    gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
   WRDL_LOG("PushHitTest b=%s cl=%s\n", mWrState, Stringify(aBounds).c_str(),
            Stringify(clip).c_str());
+
+  static_assert(gfx::DoesCompositorHitTestInfoFitIntoBits<12>(),
+                "CompositorHitTestFlags MAX value has to be less than number "
+                "of bits in uint16_t minus 4 for SideBitsPacked");
+
+  uint16_t hitInfoBits = static_cast<uint16_t>(aHitInfo.serialize()) |
+                         SideBitsToHitInfoBits(aSideBits);
+
   wr_dp_push_hit_test(mWrState, aBounds, clip, aIsBackfaceVisible,
-                      &mCurrentSpaceAndClipChain);
+                      &mCurrentSpaceAndClipChain, aScrollId, hitInfoBits);
 }
 
 void DisplayListBuilder::PushRectWithAnimation(
@@ -1519,38 +1546,6 @@ Maybe<SideBits> DisplayListBuilder::GetContainingFixedPosSideBits(
              ? mActiveFixedPosTracker->GetSideBitsForASR(aAsr)
              : Nothing();
 }
-
-uint16_t SideBitsToHitInfoBits(SideBits aSideBits) {
-  uint16_t ret = 0;
-  if (aSideBits & SideBits::eTop) {
-    ret |= eSideBitsPackedTop;
-  }
-  if (aSideBits & SideBits::eRight) {
-    ret |= eSideBitsPackedRight;
-  }
-  if (aSideBits & SideBits::eBottom) {
-    ret |= eSideBitsPackedBottom;
-  }
-  if (aSideBits & SideBits::eLeft) {
-    ret |= eSideBitsPackedLeft;
-  }
-  return ret;
-}
-
-void DisplayListBuilder::SetHitTestInfo(
-    const layers::ScrollableLayerGuid::ViewID& aScrollId,
-    gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits) {
-  static_assert(gfx::DoesCompositorHitTestInfoFitIntoBits<12>(),
-                "CompositorHitTestFlags MAX value has to be less than number "
-                "of bits in uint16_t minus 4 for SideBitsPacked");
-
-  uint16_t hitInfoBits = static_cast<uint16_t>(aHitInfo.serialize()) |
-                         SideBitsToHitInfoBits(aSideBits);
-
-  wr_set_item_tag(mWrState, aScrollId, hitInfoBits);
-}
-
-void DisplayListBuilder::ClearHitTestInfo() { wr_clear_item_tag(mWrState); }
 
 DisplayListBuilder::FixedPosScrollTargetTracker::FixedPosScrollTargetTracker(
     DisplayListBuilder& aBuilder, const ActiveScrolledRoot* aAsr,
