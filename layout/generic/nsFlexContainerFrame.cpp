@@ -3872,9 +3872,9 @@ bool nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
 
 void nsFlexContainerFrame::GenerateFlexLines(
     const ReflowInput& aReflowInput, nscoord aContentBoxMainSize,
-    nscoord aColumnWrapThreshold, const nsTArray<StrutInfo>& aStruts,
-    const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
-    bool aHasLineClampEllipsis, nsTArray<nsIFrame*>& aPlaceholders, /* out */
+    const nsTArray<StrutInfo>& aStruts, const FlexboxAxisTracker& aAxisTracker,
+    nscoord aMainGapSize, bool aHasLineClampEllipsis,
+    nsTArray<nsIFrame*>& aPlaceholders, /* out */
     nsTArray<FlexLine>& aLines /* out */) {
   MOZ_ASSERT(aLines.IsEmpty(), "Expecting outparam to start out empty");
 
@@ -3906,14 +3906,6 @@ void nsFlexContainerFrame::GenerateFlexLines(
           aReflowInput.ComputedMaxISize(), aReflowInput.ComputedMaxBSize());
 
       wrapThreshold = flexContainerMaxMainSize;
-    }
-
-    // Also: if we're column-oriented and paginating in the block dimension,
-    // we may need to wrap to a new flex line sooner (before we grow past the
-    // available BSize, potentially running off the end of the page).
-    if (aAxisTracker.IsColumnOriented() &&
-        aColumnWrapThreshold != NS_UNCONSTRAINEDSIZE) {
-      wrapThreshold = std::min(wrapThreshold, aColumnWrapThreshold);
     }
   }
 
@@ -4392,7 +4384,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   const LogicalSize availableSizeForItems =
       ComputeAvailableSizeForItems(aReflowInput, borderPadding);
-  const nscoord columnWrapThreshold = availableSizeForItems.BSize(wm);
 
   nscoord contentBoxMainSize =
       GetMainSizeFromReflowInput(aReflowInput, axisTracker);
@@ -4423,21 +4414,22 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   AutoTArray<nsIFrame*, 1> placeholders;
 
   if (!GetPrevInFlow()) {
-    // When fragmenting a single-line flex container, or a multi-line
-    // row-oriented flex container, we want to run the flex algorithm without
+    // When fragmenting a flex container, we run the flex algorithm without
     // regards to pagination in order to compute the flex container's desired
     // content-box size. https://drafts.csswg.org/css-flexbox-1/#pagination-algo
     //
-    // XXX: We do want to consider pagination when fragmenting a multi-line
-    // column-oriented flex container, so we'll presumably need to use a
-    // constrained availableBSizeForContent value for that case.
+    // Note: For a multi-line column-oriented flex container, the sample
+    // algorithm suggests we wrap the flex line at the block-end edge of a
+    // column/page, but we do not implement it intentionally. This brings the
+    // layout result closer to the one as if there's no fragmentation.
+    //
+    // TODO: Remove availableBSizeForContent since it's always unconstrained.
     const nscoord availableBSizeForContent = NS_UNCONSTRAINEDSIZE;
 
     DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize, contentBoxCrossSize,
-                 flexContainerAscent, availableBSizeForContent,
-                 columnWrapThreshold, lines, struts, placeholders, axisTracker,
-                 mainGapSize, crossGapSize, hasLineClampEllipsis,
-                 containerInfo);
+                 flexContainerAscent, availableBSizeForContent, lines, struts,
+                 placeholders, axisTracker, mainGapSize, crossGapSize,
+                 hasLineClampEllipsis, containerInfo);
 
     if (!struts.IsEmpty()) {
       // We're restarting flex layout, with new knowledge of collapsed items.
@@ -4446,9 +4438,9 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       placeholders.Clear();
       DoFlexLayout(aReflowInput, aStatus, contentBoxMainSize,
                    contentBoxCrossSize, flexContainerAscent,
-                   availableBSizeForContent, columnWrapThreshold, lines, struts,
-                   placeholders, axisTracker, mainGapSize, crossGapSize,
-                   hasLineClampEllipsis, containerInfo);
+                   availableBSizeForContent, lines, struts, placeholders,
+                   axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
+                   containerInfo);
     }
   } else {
     auto* data = FirstInFlow()->GetProperty(SharedFlexData::Prop());
@@ -4889,19 +4881,17 @@ void nsFlexContainerFrame::DoFlexLayout(
     const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
     nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
     nscoord& aFlexContainerAscent, nscoord aAvailableBSizeForContent,
-    nscoord aColumnWrapThreshold, nsTArray<FlexLine>& aLines,
-    nsTArray<StrutInfo>& aStruts, nsTArray<nsIFrame*>& aPlaceholders,
-    const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
-    nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+    nsTArray<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
+    nsTArray<nsIFrame*>& aPlaceholders, const FlexboxAxisTracker& aAxisTracker,
+    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
     ComputedFlexContainerInfo* const aContainerInfo) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aLines.IsEmpty(), "Caller should pass an empty array for lines!");
   MOZ_ASSERT(aPlaceholders.IsEmpty(),
              "Caller should pass an empty array for placeholders!");
 
-  GenerateFlexLines(aReflowInput, aContentBoxMainSize, aColumnWrapThreshold,
-                    aStruts, aAxisTracker, aMainGapSize, aHasLineClampEllipsis,
-                    aPlaceholders, aLines);
+  GenerateFlexLines(aReflowInput, aContentBoxMainSize, aStruts, aAxisTracker,
+                    aMainGapSize, aHasLineClampEllipsis, aPlaceholders, aLines);
 
   if ((aLines.Length() == 1 && aLines[0].IsEmpty()) ||
       aReflowInput.mStyleDisplay->IsContainLayout()) {

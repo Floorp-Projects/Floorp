@@ -322,17 +322,12 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                                  fragmentation usually starts out by
    *                                  performing flex layout without regard to
    *                                  pagination.
-   * @param aColumnWrapThreshold the block-size threshold to wrap to a new line.
-   *                             Used only by multi-line column-oriented flex
-   *                             container if the available block-size is
-   *                             constrained.
    */
   void DoFlexLayout(const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
                     nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
                     nscoord& aFlexContainerAscent,
                     nscoord aAvailableBSizeForContent,
-                    nscoord aColumnWrapThreshold, nsTArray<FlexLine>& aLines,
-                    nsTArray<StrutInfo>& aStruts,
+                    nsTArray<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
                     nsTArray<nsIFrame*>& aPlaceholders,
                     const FlexboxAxisTracker& aAxisTracker,
                     nscoord aMainGapSize, nscoord aCrossGapSize,
@@ -447,7 +442,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    */
   void GenerateFlexLines(const ReflowInput& aReflowInput,
                          nscoord aContentBoxMainSize,
-                         nscoord aColumnWrapThreshold,
                          const nsTArray<StrutInfo>& aStruts,
                          const FlexboxAxisTracker& aAxisTracker,
                          nscoord aMainGapSize, bool aHasLineClampEllipsis,

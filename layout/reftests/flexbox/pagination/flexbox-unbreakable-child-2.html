@@ -8,7 +8,7 @@
   <head>
     <style>
     .multicol {
-      height: 40px;
+      height: 38px;
       width: 100px;
       column-width: 60px;
       column-fill: auto;
@@ -21,7 +21,6 @@
       flex-wrap: wrap;
       align-content: flex-start;
       background: yellow;
-      border: 1px dashed black;
     }
     .item {
       width: 40px;
@@ -44,8 +43,6 @@
 
     <!-- auto-height container, with enough children that our last flex line
          overflows (in the cross axis) -->
-    <!-- XXXdholbert Ultimately (in bug 939897 probably) we should push the
-         overflowing flex line to a continuation of the flex container -->
     <div class="multicol">
       <div class="flexContainer">
         <div class="item">1</div>
@@ -67,8 +64,6 @@
 
     <!-- fixed-height container, with enough children that our last flex line
          overflows (in the cross axis) -->
-    <!-- XXXdholbert Ultimately (in bug 939897 probably) we should push the
-         overflowing flex line to a continuation of the flex container -->
     <div class="multicol">
       <div class="flexContainer" style="height: 70px">
         <div class="item">1</div>
