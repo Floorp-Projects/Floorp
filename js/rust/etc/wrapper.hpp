@@ -15,6 +15,8 @@ typedef uint32_t HashNumber;
 #include "jsfriendapi.h"
 #include "js/Array.h"
 #include "js/ArrayBuffer.h"
+#include "js/CallArgs.h"
+#include "js/CallNonGenericMethod.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/ContextOptions.h"
