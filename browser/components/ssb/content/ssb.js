@@ -14,6 +14,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsSupport: "resource:///modules/ssb/WindowsSupport.jsm",
 });
 
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "PrintUtils",
+  "chrome://global/content/printUtils.js"
+);
+
 let gSSBBrowser = null;
 var gSSB = null;
 
@@ -136,6 +142,10 @@ class BrowserDOMWindow {
   openURI(uri, openWindowInfo, where, flags, triggeringPrincipal, csp) {
     console.error("openURI should never be called from a remote browser");
     throw Components.Exception("", Cr.NS_ERROR_FAILURE);
+  }
+
+  print(aBrowsingContext) {
+    PrintUtils.startPrintWindow(aBrowsingContext);
   }
 
   /**

@@ -103,6 +103,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "AudioChannelService.h"
@@ -5185,27 +5186,42 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return;
   }
 
-  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1");
-  if (!printSettingsService) {
-    // we currently return here in headless mode - should we?
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
-
-  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
-      do_GetInterface(static_cast<nsIInterfaceRequestor*>(this));
-  if (!webBrowserPrint) {
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
-
-  nsAutoSyncOperation sync(GetCurrentInnerWindowInternal()
-                               ? GetCurrentInnerWindowInternal()->mDoc.get()
-                               : nullptr);
+  RefPtr kungFuDeathGrip = this;
+  nsAutoSyncOperation sync(mDoc);
   EnterModalState();
-  webBrowserPrint->Print(nullptr, nullptr);
-  LeaveModalState();
+  auto leave = MakeScopeExit([&] { LeaveModalState(); });
+
+  if (StaticPrefs::print_tab_modal_enabled()) {
+    RefPtr<BrowsingContext> bc = GetBrowsingContext();
+    if (!bc || bc->IsDiscarded()) {
+      return;
+    }
+
+    if (bc->IsAwaitingPrint()) {
+      // Already printing.
+      return;
+    }
+
+    MOZ_ALWAYS_SUCCEEDS(bc->SetIsAwaitingPrint(true));
+    SpinEventLoopUntil(
+        [&] { return bc->IsDiscarded() || !bc->IsAwaitingPrint(); });
+  } else {
+    nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+        do_GetService("@mozilla.org/gfx/printsettings-service;1");
+    if (!printSettingsService) {
+      // we currently return here in headless mode - should we?
+      aError.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
+    }
+
+    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
+        do_GetInterface(static_cast<nsIInterfaceRequestor*>(this));
+    if (!webBrowserPrint) {
+      aError.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
+    }
+    webBrowserPrint->Print(nullptr, nullptr);
+  }
 #endif  // NS_PRINTING
 }
 

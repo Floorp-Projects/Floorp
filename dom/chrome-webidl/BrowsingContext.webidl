@@ -96,6 +96,8 @@ interface BrowsingContext {
 
   [SetterThrows] attribute float textZoom;
 
+  [SetterThrows] attribute boolean isAwaitingPrint;
+
   /**
    * Whether this docshell should save entries in global history.
    */
