@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <meta charset="utf-8">
+  <title>CSS Flexbox Test: Fragmentation of height:auto multi-line column-reverse flex container with height:auto flex items</title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <link rel="help" href="https://drafts.csswg.org/css-flexbox-1/#pagination">
+  <link rel="match" href="flexbox-multi-column-1-ref.html">
+  <meta name="assert" content="This test verifies fragmentation of height:auto flex items in a height:auto multi-line column flex container, with various combinations of margin/border/padding, alignments, and row-gap.">
+
+  <style>
+  .multicol {
+    height: 50px;
+    width: 190px;
+    column-width: 40px;
+    column-fill: auto;
+    column-gap: 10px;
+    border: 5px solid orange;
+    margin-bottom: 5px; /* Just to separate each sub-testcase visually. */
+  }
+  .flexContainer {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column-reverse;
+    background: gray;
+    /* border-width is 0 by default; some sub-testcases will increase it. */
+    border: 0 solid lightgray;
+  }
+  .border-padding {
+    border-width: 10px 0;
+    padding: 5px 0;
+  }
+
+  /* Note: flex items are in visual order as "CMYK": cyan, magenta, yellow, black. */
+  footer {
+    background: cyan;
+  }
+  footer > div {
+    height: 50px;
+  }
+  article, nav, header {
+    width: 30px;
+  }
+  article {
+    background: magenta;
+    align-self: flex-start;
+  }
+  article > div {
+    height: 25px;
+  }
+  nav {
+    background: yellow;
+    align-self: center;
+  }
+  nav > div {
+    height: 25px;
+  }
+  header {
+    background: black;
+    align-self: flex-end;
+  }
+  header > div {
+    height: 50px;
+  }
+  </style>
+
+  <body>
+    <!-- Basic one without any margin/border/padding. -->
+    <div class="multicol">
+      <div class="flexContainer">
+        <header><div></div></header><nav><div></div></nav>
+        <article><div></div></article><footer><div></div></footer>
+      </div>
+    </div>
+
+    <!-- Test a container with margin-top. -->
+    <div class="multicol">
+      <div class="flexContainer" style="margin-top: 25px">
+        <header><div></div></header><nav><div></div></nav>
+        <article><div></div></article><footer><div></div></footer>
+      </div>
+    </div>
+
+    <!-- Test a container not at the top of the column/page. -->
+    <div class="multicol">
+      <div style="height: 25px"></div>
+      <div class="flexContainer">
+        <header><div></div></header><nav><div></div></nav>
+        <article><div></div></article><footer><div></div></footer>
+      </div>
+    </div>
+
+    <!-- Test a container with border and padding. -->
+    <div class="multicol">
+      <div class="flexContainer border-padding">
+        <header><div></div></header><nav><div></div></nav>
+        <article><div></div></article><footer><div></div></footer>
+      </div>
+    </div>
+
+    <!-- Test a container with border, padding, and row-gap. -->
+    <div class="multicol">
+      <div class="flexContainer border-padding" style="row-gap: 5px">
+        <header><div></div></header><nav><div></div></nav>
+        <article><div></div></article><footer><div></div></footer>
+      </div>
+    </div>
+  </body>
+</html>
