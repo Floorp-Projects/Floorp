@@ -22,9 +22,9 @@ post.
 
 The in-tree ``.lldbinit`` should be loaded automatically in most cases
 when running lldb from the command line (e.g. using
-```mach`` </en-US/docs/Mozilla/Developer_guide/mach>`__), but **not**
+```mach`` <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/mach>`__), but **not**
 when using XCode. See `Debugging on Mac OS
-X </en-US/docs/Debugging_on_Mac_OS_X>`__ for information on setting up
+X <https://developer.mozilla.org/en-US/docs/Debugging_on_Mac_OS_X>`__ for information on setting up
 XCode.
 
 .. warning::
@@ -37,7 +37,7 @@ XCode.
    lldb will not stop at them). To fix this add the following to your
    $HOME/.lldbinit file:
 
-   .. code:: eval
+   .. code::
 
       # Mozilla's use of UNIFIED_SOURCES to include multiple source files into a
       # single compiled file breaks lldb breakpoint setting. This works around that.
@@ -56,7 +56,7 @@ Attaching to an existing process
 
 You can attach to Firefox with following command:
 
-.. code:: eval
+.. code::
 
    (lldb) process attach --name firefox
 
@@ -68,13 +68,13 @@ Running a new process
 To start Firefox under the debugger, run ``lldb`` followed by "--",
 followed by the command line you'd like to run, like this:
 
-::
+.. code:: bash
 
    $ lldb -- obj-ff-dbg/dist/Nightly.app/Contents/MacOS/firefox-bin -no-remote -profile /path/to/profile
 
 Then set breakpoints you need and start the process:
 
-::
+.. code::
 
    (lldb) breakpoint set --name nsInProcessTabChildGlobal::InitTabChildGlobal
    Breakpoint created: 1: name = 'nsInProcessTabChildGlobal::InitTabChildGlobal', locations = 0 (pending)

@@ -26,31 +26,28 @@ Accessing minidumps from crash reports
 
 Minidumps are not available to everyone. For details on how to gain
 access and where to find minidump files for crash reports, consult the
-`crash report
-documentation </en-US/docs/Understanding_crash_reports>`__.
+:ref:`crash report documentation <Understanding Crash Reports>`
 
 Using the MS Visual Studio debugger
 -----------------------------------
 
 #. Set up the debugger to `use the Mozilla symbol
-   server </en/Using_the_Mozilla_symbol_server>`__ and `source
-   server </en-US/docs/Mozilla/Using_the_Mozilla_source_server>`__\ `. </en/Using_the_Mozilla_symbol_server>`__
+   server <https://developer.mozilla.org/en/Using_the_Mozilla_symbol_server>`__ and `source
+   server <https://developer.mozilla.org/en-US/docs/Mozilla/Using_the_Mozilla_source_server>`__\.
 #. Double-click on the minidump file to open it in the debugger.
 #. When it loads, click the green icon in the visual studio debugger
    toolbar that looks like a play button.
 
-.. note::
-
-   For Firefox releases older than Firefox 41, you will also need to
-   install the relevant release of Firefox (for example from
-   `here <https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/>`__),
-   and add the directory it is in (e.g., "C:\Program Files\Mozilla
-   Firefox 3.6 Beta 1\") to the same dialog in which you set up the
-   symbol server (in case the binary location in the minidump is not the
-   same as the one on your machine). Note that you can install the
-   relevant release anywhere. Just make sure to configure the symbol
-   server to the directory where you installed it. For releases from 41
-   onward, the binaries are available on the symbol server.
+For Firefox releases older than Firefox 41, you will also need to
+install the relevant release of Firefox (for example from
+`here <https://ftp.mozilla.org/pub/mozilla.org/firefox/releases/>`__),
+and add the directory it is in (e.g., "C:\Program Files\Mozilla
+Firefox 3.6 Beta 1\") to the same dialog in which you set up the
+symbol server (in case the binary location in the minidump is not the
+same as the one on your machine). Note that you can install the
+relevant release anywhere. Just make sure to configure the symbol
+server to the directory where you installed it. For releases from 41
+onward, the binaries are available on the symbol server.
 
 If this doesn't work, downloading the exact build and crashreporter
 symbols full files. These can be found in treeherder / build folder.
@@ -118,15 +115,13 @@ build Breakpad, the binary will be at
 path to a Linux minidump will generate a core file on stdout which can
 then be loaded in gdb as usual. You will need to manually download the
 matching Firefox binaries, but then you can use the `GDB Python
-script </en/Using_the_Mozilla_symbol_server#Downloading_symbols_on_Linux_Mac_OS_X>`__
+script <https://developer.mozilla.org/en/Using_the_Mozilla_symbol_server#Downloading_symbols_on_Linux_Mac_OS_X>`__
 to download symbols.
 
-.. note::
-
-   The ``minidump-2-core`` source does not currently handle processing
-   minidumps from a different CPU architecture than the system it was
-   built for. If you want to use it on an ARM dump, for example, you may
-   need to build the tool for ARM and run it under QEMU.
+The ``minidump-2-core`` source does not currently handle processing
+minidumps from a different CPU architecture than the system it was
+built for. If you want to use it on an ARM dump, for example, you may
+need to build the tool for ARM and run it under QEMU.
 
 Using other tools to inspect minidump data
 ------------------------------------------
@@ -186,7 +181,7 @@ Getting a stack trace from a crashed B2G process
    `minidump_stackwalk <https://code.google.com/p/google-breakpad/wiki/LinuxStarterGuide>`__
    breakpad tool to get the stack trace.
 
-.. code:: brush:
+.. code:: bash
 
    Example:
 

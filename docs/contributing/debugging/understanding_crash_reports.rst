@@ -211,7 +211,7 @@ Stack frame entries take on a variety of forms.
 -  Addresses such as ``@0xe1a850ac`` may indicate an address that wasn't
    part of any legitimate code. If an address such as this occurs in the
    first stack frame, the crash may be
-   `exploitable </en-US/docs/Mozilla/Security/Exploitable_crashes>`__.
+   `exploitable <https://developer.mozilla.org/en-US/docs/Mozilla/Security/Exploitable_crashes>`__.
 
 Stack traces for other threads can be viewed by clicking on the small
 "Show other threads" link.
@@ -271,8 +271,7 @@ some links, as the following screenshot shows.
 These links are to the following items.
 
 #. A minidump. Minidumps can be extremely useful in understanding a
-   crash report; see `this
-   page </en-US/docs/Mozilla/Debugging/Debugging_a_minidump>`__ for an
+   crash report; see :ref:`this page <Debugging A Minidump>` for an
    explanation how to use them.
 #. The aforementioned JSON raw crash report.
 #. The memory report contained within the crash report. Only crash
@@ -319,7 +318,7 @@ See also
    reports <https://air.mozilla.org/a-talk-about-understanding-crash-reports/>`__,
    by David Baron, from March 2016.
 -  `A guide to searching crash
-   reports </en-US/docs/A_guide_to_searching_crash_reports>`__
+   reports <https://developer.mozilla.org/en-US/docs/A_guide_to_searching_crash_reports>`__
 
 .. |Example fields in the "Details" tab of a crash report| image:: https://mdn.mozillademos.org/files/13579/Details1.png
 .. |Information relating to bug reports in the "Details" tab of a crash report| image:: https://mdn.mozillademos.org/files/13581/Details2.png

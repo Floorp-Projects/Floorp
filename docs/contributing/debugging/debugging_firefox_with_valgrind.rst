@@ -68,7 +68,7 @@ Linux
 
 On Linux, run Valgrind with the following options.
 
-::
+.. code::
 
    --smc-check=all-non-file --vex-iropt-register-updates=allregs-at-mem-access --show-mismatched-frees=no --read-inline-info=yes
 
@@ -84,7 +84,7 @@ the presence of inlining.
 
 Also, run with the following environment variable set.
 
-::
+.. code::
 
    G_SLICE=always-malloc
 
@@ -96,7 +96,7 @@ Mac
 
 On Mac, run Valgrind with the following options.
 
-::
+.. code::
 
    --smc-check=all-non-file --vex-iropt-register-updates=allregs-at-mem-access --show-mismatched-frees=no --dsymutil=yes
 
@@ -118,12 +118,12 @@ Running mochitests under Valgrind?
 
 To run a mochitest under Valgrind, use the following command.
 
-::
+.. code:: bash
 
-   ./mach mochitest-plain --debugger="valgrind" --debugger-args="$VALGRIND_OPTIONS" relative/path/to/tests
+   $ ./mach mochitest-plain --debugger="valgrind" --debugger-args="$VALGRIND_OPTIONS" relative/path/to/tests
 
 Where ``$VALGRIND_OPTIONS`` are the options described
-`above </en-US/docs/Mozilla/Testing/Valgrind#Run>`__. You might also
+:ref:`above <Debugging Firefox With Valgrind>`. You might also
 need ``--trace-children=yes`` to trace into child processes.
 
 As of December 2014 it is possible to do a complete run of

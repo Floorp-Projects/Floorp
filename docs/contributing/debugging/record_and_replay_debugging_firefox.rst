@@ -62,7 +62,7 @@ debugging. The only known solution at this time is to use VS2005 or
 VS2010 instead.
 
 Follow the steps in `Windows Build
-Prerequisites </En/Developer_Guide/Build_Instructions/Windows_Prerequisites>`__
+Prerequisites <https://developer.mozilla.org/En/Developer_Guide/Build_Instructions/Windows_Prerequisites>`__
 to get a working build setup on the Host.
 
 Install VMWare Workstation 7 for Windows 32-bit and 64-bit, Main
@@ -130,7 +130,7 @@ Record and Replay of Nightly Builds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Because nightly builds have debug information available from the Mozilla
-`symbol server </en/Using_the_Mozilla_symbol_server>`__, it is
+`symbol server <https://developer.mozilla.org/en/Using_the_Mozilla_symbol_server>`__, it is
 relatively easy to use them for record and replay debugging.
 
 -  Create a shared directory which is available on both the host and
