@@ -185,12 +185,20 @@ class VideoOutput : public DirectMediaTrackListener {
                                  bool aEnabled) override {
     MutexAutoLock lock(mMutex);
     mEnabled = aEnabled;
-    // Since mEnabled will affect whether frames are real, or black, we assign
-    // new FrameIDs whenever this changes.
-    for (auto& idChunkPair : mFrames) {
-      idChunkPair.first = mVideoFrameContainer->NewFrameID();
+    DropPastFrames();
+    if (!mEnabled || mFrames.Length() > 1) {
+      // Re-send frames when disabling, as new frames may not arrive. When
+      // enabling we keep them black until new frames arrive, or re-send if we
+      // already have frames in the future.
+      //
+      // Since mEnabled will affect whether
+      // frames are real, or black, we assign new FrameIDs whenever we re-send
+      // frames after an mEnabled change.
+      for (auto& idChunkPair : mFrames) {
+        idChunkPair.first = mVideoFrameContainer->NewFrameID();
+      }
+      SendFramesEnsureLocked();
     }
-    SendFramesEnsureLocked();
   }
 
   Mutex mMutex;
