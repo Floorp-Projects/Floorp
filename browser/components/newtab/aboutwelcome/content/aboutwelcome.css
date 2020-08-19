@@ -101,7 +101,7 @@ body {
   --welcome-button-text-color: #FFF;
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
-  --about-welcome-media-fade: linear-gradient(transparent, transparent 40%, #F9F9FA);
+  --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #F9F9FA, #F9F9FA);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   position: relative;
