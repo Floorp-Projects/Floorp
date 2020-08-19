@@ -1,3 +1,9 @@
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+
 let INSECURE_BASE_URL =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content/",
@@ -49,10 +55,41 @@ function shouldConsoleError() {
   });
 }
 
+async function resetDownloads() {
+  // Removes all downloads from the download List
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
+  let downloads = await publicList.getAll();
+  for (let download of downloads) {
+    publicList.remove(download);
+    await download.finalize(true);
+  }
+}
+
+async function shouldNotifyDownloadUI() {
+  // Waits until a Blocked download was added to the Download List
+  let list = await Downloads.getList(Downloads.ALL);
+  await new Promise(res => {
+    const view = {
+      onDownloadAdded: aDownload => {
+        let { error } = aDownload;
+        if (
+          error.becauseBlockedByReputationCheck &&
+          error.reputationCheckVerdict == Downloads.Error.BLOCK_VERDICT_INSECURE
+        ) {
+          res(true);
+          list.removeView(view);
+        }
+      },
+    };
+    list.addView(view);
+  });
+}
+
 async function runTest(url, link, checkFunction, decscription) {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.block_download_insecure", true]],
   });
+  await resetDownloads();
 
   let tab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.selectedTab = tab;
@@ -92,7 +129,7 @@ add_task(async function() {
   await runTest(
     SECURE_BASE_URL,
     "insecure",
-    shouldConsoleError,
+    () => Promise.all([shouldNotifyDownloadUI(), shouldConsoleError()]),
     "Secure -> Insecure should Error"
   );
   await runTest(
