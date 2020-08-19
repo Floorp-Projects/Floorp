@@ -37,7 +37,6 @@ body[loading] {
   display: flex;
   flex-direction: column;
   width: 100%;
-  box-sizing: border-box;
   min-height: 1.8em;
   margin-block: 2px;
 }
@@ -47,7 +46,6 @@ body[loading] {
 .col > input {
   margin-inline: 0 0;
   max-width: 100%;
-  box-sizing: border-box;
   display: inline-block;
 }
 
@@ -275,19 +273,15 @@ input[type="number"]:invalid {
 }
 
 #percent-scale {
-  appearance: textfield;
   margin-inline-start: 4px;
-}
-
-#copies-count {
-  width: 4em;
-  height: 20px;
 }
 
 input[type="number"].photon-number {
   padding: 0;
   padding-inline-start: 4px;
   margin: 0;
+  height: 20px;
+  width: 4em;
 }
 
 input[type="number"].photon-number::-moz-number-spin-box {
@@ -309,6 +303,8 @@ input[type="number"].photon-number::-moz-number-spin-down {
   background-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
   background-size: 8px;
   background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 input[type="number"].photon-number::-moz-number-spin-up {

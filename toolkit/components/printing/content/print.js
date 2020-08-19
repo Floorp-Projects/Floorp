@@ -581,14 +581,16 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
       return;
     }
 
-    window.clearTimeout(this.invalidTimeoutId);
+    if (e.type == "input") {
+      window.clearTimeout(this.invalidTimeoutId);
 
-    if (this._percentScale.checkValidity() && e.type == "input") {
-      this.invalidTimeoutId = window.setTimeout(() => {
-        this.dispatchSettingsChange({
-          scaling: Number(this._percentScale.value / 100),
-        });
-      }, INVALID_INPUT_DELAY_MS);
+      if (this._percentScale.checkValidity()) {
+        this.invalidTimeoutId = window.setTimeout(() => {
+          this.dispatchSettingsChange({
+            scaling: Number(this._percentScale.value / 100),
+          });
+        }, INVALID_INPUT_DELAY_MS);
+      }
     }
     this._scaleError.hidden = this._percentScale.validity.valid;
   }
