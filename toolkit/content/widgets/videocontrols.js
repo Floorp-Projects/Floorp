@@ -2773,7 +2773,7 @@ this.VideoControlsImplWidget = class {
                       tabindex="-1"/>
               <div id="volumeStack" class="volumeStack progressContainer" role="none">
                 <input type="range" id="volumeControl" class="volumeControl" min="0" max="100" step="1" tabindex="-1"
-                       aria-label="&volumeScrubber.label;"/>
+                       data-l10n-id="videocontrols-volume-control"/>
               </div>
               <button id="castingButton" class="button castingButton"
                       aria-label="&castingButton.castingLabel;"/>
