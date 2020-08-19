@@ -1325,18 +1325,13 @@ nsresult HTMLEditor::ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
 
 static nsresult ImgFromData(const nsACString& aType, const nsACString& aData,
                             nsString& aOutput) {
-  nsAutoCString data64;
-  nsresult rv = Base64Encode(aData, data64);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Base64Encode() failed");
-    return rv;
-  }
-
   aOutput.AssignLiteral("<IMG src=\"data:");
   AppendUTF8toUTF16(aType, aOutput);
   aOutput.AppendLiteral(";base64,");
-  if (!AppendASCIItoUTF16(data64, aOutput, fallible_t())) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = Base64EncodeAppend(aData, aOutput);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Base64Encode() failed");
+    return rv;
   }
   aOutput.AppendLiteral("\" alt=\"\" >");
   return NS_OK;
