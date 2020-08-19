@@ -20,6 +20,7 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
 import kotlinx.android.synthetic.main.fragment_search_dialog.search_scan_button
@@ -33,6 +34,7 @@ import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.BrowserDirection
@@ -140,7 +142,11 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             interactor.onSearchShortcutsButtonClicked()
         }
 
+        search_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
+
         search_scan_button.setOnClickListener {
+            if (!requireContext().hasCamera()) { return@setOnClickListener }
+
             toolbarView.view.clearFocus()
             requireComponents.analytics.metrics.track(Event.QRScannerOpened)
             qrFeature.get()?.scan(R.id.search_wrapper)
