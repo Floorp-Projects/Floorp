@@ -7,7 +7,6 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.usecases.EngineSessionUseCases
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -42,7 +41,7 @@ class UseCases(
     /**
      * Use cases that provide engine interactions for a given browser session.
      */
-    val sessionUseCases by lazy { SessionUseCases(sessionManager) }
+    val sessionUseCases by lazy { SessionUseCases(store, sessionManager) }
 
     /**
      * Use cases that provide tab management.
@@ -52,7 +51,7 @@ class UseCases(
     /**
      * Use cases that provide search engine integration.
      */
-    val searchUseCases by lazy { SearchUseCases(context, searchEngineManager, sessionManager) }
+    val searchUseCases by lazy { SearchUseCases(context, store, searchEngineManager, sessionManager) }
 
     /**
      * Use cases that provide settings management.
@@ -68,8 +67,6 @@ class UseCases(
     val downloadUseCases by lazy { DownloadsUseCases(store) }
 
     val contextMenuUseCases by lazy { ContextMenuUseCases(store) }
-
-    val engineSessionUseCases by lazy { EngineSessionUseCases(sessionManager) }
 
     val trackingProtectionUseCases by lazy { TrackingProtectionUseCases(store, engine) }
 

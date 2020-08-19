@@ -8,15 +8,17 @@ import androidx.navigation.NavController
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import org.junit.Test
 import org.mozilla.fenix.R
 
 class TabHistoryControllerTest {
 
+    private val store: BrowserStore = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
-    private val sessionUseCases = SessionUseCases(sessionManager)
+    private val sessionUseCases = SessionUseCases(store, sessionManager)
     private val goToHistoryIndexUseCase = sessionUseCases.goToHistoryIndex
     private val controller = DefaultTabHistoryController(
         navController = navController,

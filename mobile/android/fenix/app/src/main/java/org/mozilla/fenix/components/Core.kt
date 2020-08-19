@@ -15,7 +15,9 @@ import kotlinx.coroutines.withContext
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -140,8 +142,12 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
                 DownloadMiddleware(context, DownloadService::class.java),
                 ReaderViewMiddleware(),
                 ThumbnailsMiddleware(thumbnailStorage)
-            )
+            ) + EngineMiddleware.create(engine, ::findSessionById)
         )
+    }
+
+    private fun findSessionById(tabId: String): Session? {
+        return sessionManager.findSessionById(tabId)
     }
 
     /**
@@ -190,7 +196,7 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
 
                 // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
                 // the app is used.
-                sessionStorage.autoSave(sessionManager)
+                sessionStorage.autoSave(store)
                     .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
                     .whenGoingToBackground()
                     .whenSessionsChange()

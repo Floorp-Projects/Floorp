@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.crash.CrashReporter
@@ -309,7 +310,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         runOnlyInMainProcess {
             components.core.icons.onTrimMemory(level)
-            components.core.sessionManager.onTrimMemory(level)
+            components.core.store.dispatch(SystemAction.LowMemoryAction(level))
         }
     }
 
