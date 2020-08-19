@@ -86,5 +86,11 @@
  */
 #define MOZ_ARG_1(a1, ...) a1
 #define MOZ_ARG_2(a1, a2, ...) a2
+#define MOZ_ARG_3(a1, a2, a3, ...) a3
+#define MOZ_ARG_4(a1, a2, a3, a4, ...) a4
+#define MOZ_ARG_5(a1, a2, a3, a4, a5, ...) a5
+#define MOZ_ARG_6(a1, a2, a3, a4, a5, a6, ...) a6
+#define MOZ_ARG_7(a1, a2, a3, a4, a5, a6, a7, ...) a7
+#define MOZ_ARG_8(a1, a2, a3, a4, a5, a6, a7, a8, ...) a8
 
 #endif /* mozilla_MacroArgs_h */

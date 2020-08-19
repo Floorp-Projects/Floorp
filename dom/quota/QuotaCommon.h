@@ -13,10 +13,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-// TODO: Maybe move this to mfbt/MacroArgs.h
-#define MOZ_ARG_5(a1, a2, a3, a4, a5, ...) a5
-#define MOZ_ARG_6(a1, a2, a3, a4, a5, a6, ...) a6
-
 #define MOZ_UNIQUE_VAR(base) MOZ_CONCAT(base, __LINE__)
 
 #define MOZ_REMOVE_PAREN(X) MOZ_REMOVE_PAREN_HELPER2(MOZ_REMOVE_PAREN_HELPER X)

@@ -26,7 +26,13 @@ static_assert(MOZ_PASTE_PREFIX_AND_ARG_COUNT(, MOZ_ARGS_AFTER_1(a, b, c)) == 2,
 static_assert(MOZ_ARGS_AFTER_2(a, b, 3) == 3,
               "MOZ_ARGS_AFTER_2(a, b, 3) should expand to '3'");
 
-static_assert(MOZ_ARG_1(10, 20, 30) == 10, "");
-static_assert(MOZ_ARG_2(10, 20, 30) == 20, "");
+static_assert(MOZ_ARG_1(10, 20, 30, 40, 50, 60, 70, 80, 90) == 10, "");
+static_assert(MOZ_ARG_2(10, 20, 30, 40, 50, 60, 70, 80, 90) == 20, "");
+static_assert(MOZ_ARG_3(10, 20, 30, 40, 50, 60, 70, 80, 90) == 30, "");
+static_assert(MOZ_ARG_4(10, 20, 30, 40, 50, 60, 70, 80, 90) == 40, "");
+static_assert(MOZ_ARG_5(10, 20, 30, 40, 50, 60, 70, 80, 90) == 50, "");
+static_assert(MOZ_ARG_6(10, 20, 30, 40, 50, 60, 70, 80, 90) == 60, "");
+static_assert(MOZ_ARG_7(10, 20, 30, 40, 50, 60, 70, 80, 90) == 70, "");
+static_assert(MOZ_ARG_8(10, 20, 30, 40, 50, 60, 70, 80, 90) == 80, "");
 
 int main() { return 0; }
