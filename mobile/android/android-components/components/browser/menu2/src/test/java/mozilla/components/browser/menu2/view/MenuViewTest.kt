@@ -4,11 +4,15 @@
 
 package mozilla.components.browser.menu2.view
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu2.R
+import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 import mozilla.components.support.test.any
@@ -34,11 +38,13 @@ class MenuViewTest {
         DecorativeTextMenuCandidate("World")
     )
     private lateinit var menuView: MenuView
+    private lateinit var cardView: CardView
     private lateinit var recyclerView: RecyclerView
 
     @Before
     fun setup() {
         menuView = spy(MenuView(testContext))
+        cardView = menuView.findViewById(R.id.mozac_browser_menu_cardView)
         recyclerView = menuView.findViewById(R.id.mozac_browser_menu_recyclerView)
     }
 
@@ -76,5 +82,11 @@ class MenuViewTest {
 
         assertTrue(layoutManager.stackFromEnd)
         verify(menuView, never()).scrollOnceToTheBottom(any())
+    }
+
+    @Test
+    fun `setStyle changes background color`() {
+        menuView.setStyle(MenuStyle(backgroundColor = Color.BLUE))
+        assertEquals(ColorStateList.valueOf(Color.BLUE), cardView.cardBackgroundColor)
     }
 }

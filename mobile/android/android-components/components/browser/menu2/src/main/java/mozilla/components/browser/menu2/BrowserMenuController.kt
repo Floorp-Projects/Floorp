@@ -11,6 +11,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.browser.menu2.ext.displayPopup
 import mozilla.components.browser.menu2.view.MenuView
 import mozilla.components.concept.menu.MenuController
+import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.concept.menu.Orientation
 import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.MenuCandidate
@@ -22,9 +23,11 @@ import mozilla.components.support.base.observer.ObserverRegistry
 /**
  * Controls a popup menu composed of MenuCandidate objects.
  * @param visibleSide Sets the menu to open with either the start or end visible.
+ * @param style Custom styling for this menu controller.
  */
 class BrowserMenuController(
-    private val visibleSide: Side = Side.START
+    private val visibleSide: Side = Side.START,
+    private val style: MenuStyle? = null
 ) : MenuController, Observable<MenuController.Observer> by ObserverRegistry() {
 
     private var currentPopupInfo: PopupMenuInfo? = null
@@ -48,6 +51,7 @@ class BrowserMenuController(
             // Show nested list if present, or the standard menu candidates list.
             submitList(menuCandidates)
             setVisibleSide(visibleSide)
+            style?.let { setStyle(it) }
         }
 
         return MenuPopupWindow(view).apply {

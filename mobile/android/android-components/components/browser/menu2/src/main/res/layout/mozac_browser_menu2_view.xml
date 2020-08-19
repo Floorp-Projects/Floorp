@@ -11,6 +11,7 @@
 
     <androidx.cardview.widget.CardView
         style="@style/Mozac.Browser.Menu2"
+        android:id="@+id/mozac_browser_menu_cardView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:cardCornerRadius="@dimen/mozac_browser_menu2_corner_radius"
