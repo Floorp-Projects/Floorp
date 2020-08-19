@@ -202,66 +202,6 @@ describe("ActivityStream", () => {
       assert.calledWith(global.Services.prefs.clearUserPref, "oldPrefName");
     });
   });
-  describe("_updateDynamicPrefs Discovery Stream", () => {
-    it("should be true with expected en-US geo and locale", () => {
-      sandbox.stub(global.Region, "home").returns("US");
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsBCP47")
-        .get(() => "en-US");
-
-      as._updateDynamicPrefs();
-
-      assert.isTrue(
-        JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).enabled
-      );
-    });
-    it("should be true with expected en-CA geo and locale", () => {
-      sandbox.stub(global.Region, "home").returns("CA");
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsBCP47")
-        .get(() => "en-CA");
-
-      as._updateDynamicPrefs();
-
-      assert.isTrue(
-        JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).enabled
-      );
-    });
-    it("should be true with expected de geo and locale", () => {
-      sandbox.stub(global.Region, "home").returns("DE");
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsBCP47")
-        .get(() => "de-DE");
-
-      as._updateDynamicPrefs();
-
-      assert.isTrue(
-        JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).enabled
-      );
-    });
-    it("should enable spocs based on region based pref", () => {
-      const getStringPrefStub = sandbox.stub(
-        global.Services.prefs,
-        "getStringPref"
-      );
-      sandbox.stub(global.Region, "home").returns("CA");
-      getStringPrefStub
-        .withArgs(
-          "browser.newtabpage.activity-stream.discoverystream.region-spocs-config"
-        )
-        .returns("US,CA");
-
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsBCP47")
-        .get(() => "en-CA");
-
-      as._updateDynamicPrefs();
-
-      assert.isTrue(
-        JSON.parse(PREFS_CONFIG.get("discoverystream.config").value).show_spocs
-      );
-    });
-  });
   describe("discoverystream.region-basic-layout config", () => {
     let getStringPrefStub;
     beforeEach(() => {
@@ -316,7 +256,7 @@ describe("ActivityStream", () => {
 
       appLocaleAsBCP47Stub.get(() => "en-US");
 
-      sandbox.stub(global.Region, "home").returns("US");
+      sandbox.stub(global.Region, "home").get(() => "US");
 
       getStringPrefStub
         .withArgs(
@@ -326,7 +266,7 @@ describe("ActivityStream", () => {
     });
     it("should be false with no geo/locale", () => {
       appLocaleAsBCP47Stub.get(() => "");
-      sandbox.stub(global.Region, "home").returns("");
+      sandbox.stub(global.Region, "home").get(() => "");
 
       as._updateDynamicPrefs();
 
@@ -365,12 +305,25 @@ describe("ActivityStream", () => {
     });
     it("should be true with updated pref change", () => {
       appLocaleAsBCP47Stub.get(() => "en-GB");
-      sandbox.stub(global.Region, "home").returns("GB");
+      sandbox.stub(global.Region, "home").get(() => "GB");
       getStringPrefStub
         .withArgs(
           "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
         )
-        .returns("US,CA,GB");
+        .returns("GB");
+
+      as._updateDynamicPrefs();
+
+      assert.isTrue(PREFS_CONFIG.get("feeds.system.topstories").value);
+    });
+    it("should be true with allowed locale in non US region", () => {
+      appLocaleAsBCP47Stub.get(() => "en-CA");
+      sandbox.stub(global.Region, "home").get(() => "DE");
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.locale-list-config"
+        )
+        .returns("en-US,en-CA,en-GB");
 
       as._updateDynamicPrefs();
 
