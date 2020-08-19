@@ -4491,6 +4491,7 @@ browser.search:
     bug_numbers:
       - 1614777
       - 1619954
+      - 1656135
     description: >
       Records bytes that have been transferred for search requests, including
       top-level documents, sub-resources, iframes and search suggestions.
@@ -4499,11 +4500,11 @@ browser.search:
         <search-provider-name>-pb
         sggt-<search-engine-id>
         sggt-<search-engine-id>-pb
-    expires: "82"
+    expires: "89"
     keyed: true
     kind: uint
     notification_emails:
-      - gachen@mozilla.com
+      - tihuang@mozilla.com
     products:
       - 'firefox'
     record_in_processes:
