@@ -24,12 +24,14 @@ function message(m) {
 }
 
 var gStreams = [];
-var gVideoEvents = [];
 
-async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
-  const opts = {video: aVideo, audio: aAudio};
+function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
+  var opts = {video: aVideo, audio: aAudio};
   if (aShare) {
-    opts.video = { mediaSource: aShare };
+    opts.video = {
+      mozMediaSource: aShare,
+      mediaSource: aShare,
+    };
   }
   if (useFakeStreams) {
     opts.fake = true;
@@ -49,19 +51,11 @@ async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
     opts.fake = true;
   }
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia(opts)
-    gStreams.push(stream);
-    const track = stream.getVideoTracks()[0];
-    if (track) {
-      for (const name of ["mute", "unmute", "ended"]) {
-        track.addEventListener(name, () => gVideoEvents.push(name));
-      }
-    }
-    message("ok");
-  } catch (err) {
-    message("error: " + err);
-  }
+  navigator.mediaDevices.getUserMedia(opts)
+    .then(stream => {
+      gStreams.push(stream);
+      message("ok");
+    }, err => message("error: " + err));
 }
 message("pending");
 
@@ -73,7 +67,6 @@ function closeStream() {
     }
   }
   gStreams = [];
-  gVideoEvents = [];
   message("closed");
 }
 </script>

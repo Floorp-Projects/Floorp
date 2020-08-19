@@ -1130,8 +1130,8 @@ class HTMLMediaElement::MediaElementTrackSource
     if (!mTrack) {
       return;
     }
-    mTrack->SetDisabledTrackMode(aEnabled ? DisabledTrackMode::ENABLED
-                                          : DisabledTrackMode::SILENCE_FREEZE);
+    mTrack->SetEnabled(aEnabled ? DisabledTrackMode::ENABLED
+                                : DisabledTrackMode::SILENCE_FREEZE);
   }
 
   void SetPrincipal(RefPtr<nsIPrincipal> aPrincipal) {

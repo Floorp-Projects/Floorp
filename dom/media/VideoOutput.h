@@ -185,29 +185,12 @@ class VideoOutput : public DirectMediaTrackListener {
                                  bool aEnabled) override {
     MutexAutoLock lock(mMutex);
     mEnabled = aEnabled;
-    DropPastFrames();
-    if (!mEnabled || mFrames.Length() > 1) {
-      // Re-send frames when disabling, as new frames may not arrive. When
-      // enabling we keep them black until new frames arrive, or re-send if we
-      // already have frames in the future. If we're disabling and there are no
-      // frames available yet, we invent one. Unfortunately with a hardcoded
-      // size.
-      //
-      // Since mEnabled will affect whether
-      // frames are real, or black, we assign new FrameIDs whenever we re-send
-      // frames after an mEnabled change.
-      for (auto& idChunkPair : mFrames) {
-        idChunkPair.first = mVideoFrameContainer->NewFrameID();
-      }
-      if (mFrames.IsEmpty()) {
-        VideoSegment v;
-        v.AppendFrame(nullptr, gfx::IntSize(640, 480), PRINCIPAL_HANDLE_NONE,
-                      true, TimeStamp::Now());
-        mFrames.AppendElement(std::make_pair(mVideoFrameContainer->NewFrameID(),
-                                             *v.GetLastChunk()));
-      }
-      SendFramesEnsureLocked();
+    // Since mEnabled will affect whether frames are real, or black, we assign
+    // new FrameIDs whenever this changes.
+    for (auto& idChunkPair : mFrames) {
+      idChunkPair.first = mVideoFrameContainer->NewFrameID();
     }
+    SendFramesEnsureLocked();
   }
 
   Mutex mMutex;
