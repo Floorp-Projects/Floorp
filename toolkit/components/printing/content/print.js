@@ -37,11 +37,14 @@ var PrintEventHandler = {
     this.sourceBrowser = this.getSourceBrowser();
     this.previewBrowser = this.getPreviewBrowser();
     this.settings = null;
+    this.defaultSettings = null;
     this._printerSettingsChangedFlags = 0;
     this._nonFlaggedChangedSettings = {};
 
     this.settingFlags = {
+      margins: Ci.nsIPrintSettings.kInitSaveMargins,
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
+      printInColor: Ci.nsIPrintSettings.kInitSaveInColor,
       printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
       scaling: Ci.nsIPrintSettings.kInitSaveScaling,
       shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
@@ -84,11 +87,13 @@ var PrintEventHandler = {
         detail: this.viewSettings,
       })
     );
+
     document.body.removeAttribute("loading");
   },
 
   refreshSettings(printerName) {
     this.settings = PrintUtils.getPrintSettings(printerName);
+    this.defaultSettings = PrintUtils.getPrintSettings(printerName, true);
     // restore settings which do not have a corresponding flag
     Object.assign(this.settings, this._nonFlaggedChangedSettings);
 
@@ -274,6 +279,33 @@ var PrintEventHandler = {
 
     return { destinations, selectedPrinter };
   },
+
+  getMarginPresets(marginSize) {
+    // NOTE: In the future these values should be pulled from the current nsIPaper object
+    switch (marginSize) {
+      case "minimum":
+        return {
+          marginTop: this.defaultSettings.unwriteableMarginTop,
+          marginLeft: this.defaultSettings.unwriteableMarginLeft,
+          marginBottom: this.defaultSettings.unwriteableMarginBottom,
+          marginRight: this.defaultSettings.unwriteableMarginRight,
+        };
+      case "none":
+        return {
+          marginTop: 0,
+          marginLeft: 0,
+          marginBottom: 0,
+          marginRight: 0,
+        };
+      default:
+        return {
+          marginTop: this.defaultSettings.marginTop,
+          marginLeft: this.defaultSettings.marginLeft,
+          marginBottom: this.defaultSettings.marginBottom,
+          marginRight: this.defaultSettings.marginRight,
+        };
+    }
+  },
 };
 
 const PrintSettingsViewProxy = {
@@ -301,6 +333,27 @@ const PrintSettingsViewProxy = {
 
   get(target, name) {
     switch (name) {
+      case "margins":
+        let marginSettings = {
+          marginTop: target.marginTop,
+          marginLeft: target.marginLeft,
+          marginBottom: target.marginBottom,
+          marginRight: target.marginRight,
+        };
+        // see if they match the minimum first
+        for (let presetName of ["minimum", "none"]) {
+          let marginPresets = PrintEventHandler.getMarginPresets(presetName);
+          if (
+            Object.keys(marginSettings).every(
+              name => marginSettings[name] == marginPresets[name]
+            )
+          ) {
+            return presetName;
+          }
+        }
+        // Fall back to the default for any other values
+        return "default";
+
       case "printBackgrounds":
         return target.printBGImages || target.printBGColors;
 
@@ -321,6 +374,17 @@ const PrintSettingsViewProxy = {
 
   set(target, name, value) {
     switch (name) {
+      case "margins":
+        if (!["default", "minimum", "none"].includes(value)) {
+          console.warn("Unexpected margin preset name: ", value);
+          value = "default";
+        }
+        let marginPresets = PrintEventHandler.getMarginPresets(value);
+        for (let [settingName, presetValue] of Object.entries(marginPresets)) {
+          target[settingName] = presetValue;
+        }
+        break;
+
       case "printBackgrounds":
         target.printBGImages = value;
         target.printBGColors = value;
@@ -409,10 +473,10 @@ function PrintUIControlMixin(superClass) {
   };
 }
 
-class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
-  initialize() {
-    super.initialize();
-    document.addEventListener("available-destinations", this);
+class PrintSettingSelect extends PrintUIControlMixin(HTMLSelectElement) {
+  connectedCallback() {
+    this.settingName = this.dataset.settingName;
+    super.connectedCallback();
   }
 
   setOptions(optionValues = []) {
@@ -431,15 +495,56 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
   }
 
   update(settings) {
-    let isPdf = settings.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF;
-    this.setAttribute("output", isPdf ? "pdf" : "paper");
-    this.value = settings.printerName;
+    this.value = settings[this.settingName];
   }
 
   handleEvent(e) {
     if (e.type == "change") {
       this.dispatchSettingsChange({
-        printerName: e.target.value,
+        [this.settingName]: e.target.value,
+      });
+    }
+  }
+}
+customElements.define("setting-select", PrintSettingSelect, {
+  extends: "select",
+});
+
+class DestinationPicker extends PrintSettingSelect {
+  initialize() {
+    super.initialize();
+    document.addEventListener("available-destinations", this);
+  }
+
+  update(settings) {
+    super.update(settings);
+    let isPdf = settings.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF;
+    this.setAttribute("output", isPdf ? "pdf" : "paper");
+  }
+
+  handleEvent(e) {
+    super.handleEvent(e);
+
+    if (e.type == "available-destinations") {
+      this.setOptions(e.detail);
+    }
+  }
+}
+customElements.define("destination-picker", DestinationPicker, {
+  extends: "select",
+});
+
+class ColorModePicker extends PrintSettingSelect {
+  update(settings) {
+    let value = settings[this.settingName];
+    this.value = value ? "color" : "bw";
+  }
+
+  handleEvent(e) {
+    if (e.type == "change") {
+      // turn our string value into the expected boolean
+      this.dispatchSettingsChange({
+        [this.settingName]: this.value == "color",
       });
     } else if (e.type == "available-destinations") {
       this.setOptions(e.detail);
@@ -447,7 +552,7 @@ class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
     }
   }
 }
-customElements.define("destination-picker", DestinationPicker, {
+customElements.define("color-mode-select", ColorModePicker, {
   extends: "select",
 });
 

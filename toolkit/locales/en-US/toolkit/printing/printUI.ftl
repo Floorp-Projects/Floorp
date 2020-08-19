@@ -47,6 +47,15 @@ printui-options = Options
 printui-headers-footers-checkbox = Print headers and footers
 printui-backgrounds-checkbox = Print backgrounds
 
+printui-color-mode-label = Color mode
+printui-color-mode-color = Color
+printui-color-mode-bw = Black and white
+
+printui-margins = Margins
+printui-margins-default = Default
+printui-margins-min = Minimum
+printui-margins-none = None
+
 printui-system-dialog-link = Print using the system dialog…
 
 printui-primary-button = Print

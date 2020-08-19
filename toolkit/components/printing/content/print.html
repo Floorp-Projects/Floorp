@@ -68,13 +68,13 @@
         <section id="destination" class="section-block">
           <label for="printer-picker" class="block-label" data-l10n-id="printui-destination-label"></label>
           <div class="printer-picker-wrapper">
-            <select is="destination-picker" id="printer-picker" iconic></select>
+            <select is="destination-picker" id="printer-picker" data-setting-name="printerName" iconic></select>
           </div>
         </section>
         <section id="settings">
           <section id="copies" class="section-block">
             <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <input id="copies-count" is="copy-count-input" type="number" min="1" class="copy-count-input photon-number" autocomplete="off">
+            <input id="copies-count" is="copy-count-input" data-setting-name="numCopies" type="number" min="1" class="copy-count-input photon-number" autocomplete="off">
           </section>
 
           <section id="orientation" class="section-block">
@@ -87,6 +87,14 @@
             <div id="page-range-input" is="page-range-input" class="page-range-input row"></div>
           </section>
 
+          <section id="color-mode" class="section-block">
+            <label for="color-mode-picker" class="block-label" data-l10n-id="printui-color-mode-label"></label>
+            <select is="color-mode-select" id="color-mode-picker" class="row" data-setting-name="printInColor">
+              <option value="color" selected data-l10n-id="printui-color-mode-color"></option>
+              <option value="bw" data-l10n-id="printui-color-mode-bw"></option>
+            </select>
+          </section>
+
           <details id="more-settings" class="twisty">
             <summary class="block-label section-block" is="twisty-summary"
                      data-open-l10n-id="printui-less-settings"
@@ -94,6 +102,15 @@
             <section id="scale" class="section-block">
               <label id="scale-label" class="block-label" data-l10n-id="printui-scale"></label>
               <scale-input></scale-input>
+            </section>
+
+            <section id="margins" class="section-block">
+              <label for="margins-picker" class="block-label" data-l10n-id="printui-margins"></label>
+              <select is="setting-select" id="margins-picker" class="row" data-setting-name="margins">
+                <option value="default" data-l10n-id="printui-margins-default"></option>
+                <option value="minimum" data-l10n-id="printui-margins-min"></option>
+                <option value="none" data-l10n-id="printui-margins-none"></option>
+              </select>
             </section>
 
             <section id="more-settings-options" class="section-block">
