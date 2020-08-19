@@ -623,11 +623,7 @@ void AudioWorkletNode::InitializeParameters(
   for (size_t i = 0; i < parameterDescriptors->Length(); i++) {
     auto& paramEntry = (*parameterDescriptors)[i];
     RefPtr<AudioParam> param = nullptr;
-    // There are no ways to remove elements from ParamMapForWorkletName, so the
-    // string contained in it and used here have a lifetime that is strictly
-    // longer than the lifetime of the AudioParam constructed below.
-    // Additionally, AudioParam keep a reference to their AudioNode.
-    CreateAudioParam(param, audioParamIndex++, paramEntry.mName.get(),
+    CreateAudioParam(param, audioParamIndex++, paramEntry.mName,
                      paramEntry.mDefaultValue, paramEntry.mMinValue,
                      paramEntry.mMaxValue);
     AudioParamMap_Binding::MaplikeHelpers::Set(mParameters, paramEntry.mName,

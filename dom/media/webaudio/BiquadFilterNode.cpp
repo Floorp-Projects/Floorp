@@ -225,12 +225,12 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
     : AudioNode(aContext, 2, ChannelCountMode::Max,
                 ChannelInterpretation::Speakers),
       mType(BiquadFilterType::Lowpass) {
-  CreateAudioParam(mFrequency, BiquadFilterNodeEngine::FREQUENCY, u"frequency",
-                   350.f, -(aContext->SampleRate() / 2),
+  CreateAudioParam(mFrequency, BiquadFilterNodeEngine::FREQUENCY,
+                   u"frequency"_ns, 350.f, -(aContext->SampleRate() / 2),
                    aContext->SampleRate() / 2);
-  CreateAudioParam(mDetune, BiquadFilterNodeEngine::DETUNE, u"detune", 0.f);
-  CreateAudioParam(mQ, BiquadFilterNodeEngine::Q, u"Q", 1.f);
-  CreateAudioParam(mGain, BiquadFilterNodeEngine::GAIN, u"gain", 0.f);
+  CreateAudioParam(mDetune, BiquadFilterNodeEngine::DETUNE, u"detune"_ns, 0.f);
+  CreateAudioParam(mQ, BiquadFilterNodeEngine::Q, u"Q"_ns, 1.f);
+  CreateAudioParam(mGain, BiquadFilterNodeEngine::GAIN, u"gain"_ns, 0.f);
 
   uint64_t windowID = 0;
   if (aContext->GetParentObject()) {
