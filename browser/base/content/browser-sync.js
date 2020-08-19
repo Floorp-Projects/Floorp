@@ -1321,42 +1321,72 @@ var gSync = {
   // Returns true if the disconnection happened (ie, if the user didn't decline
   // when asked to confirm)
   async disconnect({ confirm = true, disconnectAccount = true } = {}) {
-    if (confirm && !(await this._confirmDisconnect(disconnectAccount))) {
+    if (disconnectAccount) {
+      let deleteLocalData = false;
+      if (confirm) {
+        let options = await this._confirmFxaAndSyncDisconnect();
+        if (!options.userConfirmedDisconnect) {
+          return false;
+        }
+        deleteLocalData = options.deleteLocalData;
+      }
+      return this._disconnectFxaAndSync(deleteLocalData);
+    }
+
+    if (confirm && !(await this._confirmSyncDisconnect())) {
       return false;
     }
-    // Record telemetry.
-    await fxAccounts.telemetry.recordDisconnection(
-      disconnectAccount ? null : "sync",
-      "ui"
+    return this._disconnectSync();
+  },
+
+  // Prompt the user to confirm disconnect from FxA and sync with the option
+  // to delete syncable data from the device.
+  async _confirmFxaAndSyncDisconnect() {
+    let options = {
+      userConfirmedDisconnect: false,
+    };
+
+    window.openDialog(
+      "chrome://browser/content/browser-fxaSignout.xhtml",
+      "_blank",
+      "chrome,modal,centerscreen,resizable=no",
+      { hideDeleteDataOption: !UIState.get().syncEnabled },
+      options
     );
 
-    await Weave.Service.promiseInitialized;
-    await Weave.Service.startOver();
-    if (disconnectAccount) {
-      await fxAccounts.signOut();
-    }
+    return options;
+  },
+
+  async _disconnectFxaAndSync(deleteLocalData) {
+    const { SyncDisconnect } = ChromeUtils.import(
+      "resource://services-sync/SyncDisconnect.jsm"
+    );
+    // Record telemetry.
+    await fxAccounts.telemetry.recordDisconnection(null, "ui");
+
+    await SyncDisconnect.disconnect(deleteLocalData).catch(e => {
+      console.error("Failed to disconnect.", e);
+    });
+
     return true;
   },
 
-  /**
-   * Prompts the user whether or not they want to proceed with
-   * disconnecting from their Firefox Account or Sync.
-   * @param {Boolean} disconnectAccount True if we are disconnecting both Sync and FxA.
-   * @returns {Boolean} True if the user confirmed.
-   */
-  async _confirmDisconnect(disconnectAccount) {
-    const l10nPrefix = `${
-      disconnectAccount ? "fxa" : "sync"
-    }-disconnect-dialog`;
+  // Prompt the user to confirm disconnect from sync. In this case the data
+  // on the device is not deleted.
+  async _confirmSyncDisconnect() {
+    const l10nPrefix = "sync-disconnect-dialog";
+
     const [title, body, button] = await document.l10n.formatValues([
       { id: `${l10nPrefix}-title` },
       { id: `${l10nPrefix}-body` },
       { id: "sync-disconnect-dialog-button" },
     ]);
-    // buttonPressed will be 0 for disconnect, 1 for cancel.
+
     const flags =
       Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
       Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1;
+
+    // buttonPressed will be 0 for disconnect, 1 for cancel.
     const buttonPressed = Services.prompt.confirmEx(
       window,
       title,
@@ -1369,6 +1399,15 @@ var gSync = {
       {}
     );
     return buttonPressed == 0;
+  },
+
+  async _disconnectSync() {
+    await fxAccounts.telemetry.recordDisconnection("sync", "ui");
+
+    await Weave.Service.promiseInitialized;
+    await Weave.Service.startOver();
+
+    return true;
   },
 
   // doSync forces a sync - it *does not* return a promise as it is called
