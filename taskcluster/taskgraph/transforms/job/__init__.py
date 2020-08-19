@@ -350,8 +350,8 @@ def make_task_description(config, jobs):
     import_sibling_modules(exceptions=('common.py',))
 
     for job in jobs:
-        # only docker-worker uses a fixed absolute path to find directories
-        if job['worker']['implementation'] == 'docker-worker':
+        # always-optimized tasks never execute, so have no workdir
+        if job['run']['using'] != 'always-optimized':
             job['run'].setdefault('workdir', '/builds/worker')
 
         taskdesc = copy.deepcopy(job)
