@@ -734,3 +734,10 @@
     transition: none;
   }
 }
+
+.a11y-only {
+  position: absolute;
+  left: -10000px;
+  width: 100px;
+  height: 100px;
+}

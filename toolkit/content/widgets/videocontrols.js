@@ -1323,6 +1323,14 @@ this.VideoControlsImplWidget = class {
         }
         this.bufferBar.max = duration;
         this.bufferBar.value = endTime;
+        // Progress bars are automatically reported by screen readers even when
+        // they aren't focused, which intrudes on the audio being played.
+        // Ideally, we'd just change the a11y role of bufferBar, but there's
+        // no role which will let us just expose text via an ARIA attribute.
+        // Therefore, we hide bufferBar for a11y and expose the info as
+        // off-screen text.
+        this.bufferA11yVal.textContent =
+          (this.bufferBar.position * 100).toFixed() + "%";
       },
 
       _controlsHiddenByTimeout: false,
@@ -2375,6 +2383,7 @@ this.VideoControlsImplWidget = class {
         this.volumeControl = this.shadowRoot.getElementById("volumeControl");
         this.progressBar = this.shadowRoot.getElementById("progressBar");
         this.bufferBar = this.shadowRoot.getElementById("bufferBar");
+        this.bufferA11yVal = this.shadowRoot.getElementById("bufferA11yVal");
         this.scrubberStack = this.shadowRoot.getElementById("scrubberStack");
         this.scrubber = this.shadowRoot.getElementById("scrubber");
         this.durationLabel = this.shadowRoot.getElementById("durationLabel");
@@ -2741,7 +2750,11 @@ this.VideoControlsImplWidget = class {
               <div id="scrubberStack" class="scrubberStack progressContainer" role="none">
                 <div class="progressBackgroundBar stackItem" role="none">
                   <div class="progressStack" role="none">
-                    <progress id="bufferBar" class="bufferBar" value="0" max="100" tabindex="-1"></progress>
+                    <progress id="bufferBar" class="bufferBar" value="0" max="100" aria-hidden="true"></progress>
+                    <span class="a11y-only" role="status" aria-live="off">
+                      <span data-l10n-id="videocontrols-buffer-bar-label"></span>
+                      <span id="bufferA11yVal"></span>
+                    </span>
                     <progress id="progressBar" class="progressBar" value="0" max="100" aria-hidden="true"></progress>
                   </div>
                 </div>

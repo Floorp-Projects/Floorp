@@ -4,3 +4,7 @@
 
 videocontrols-scrubber =
     .aria-label = Position
+# This label is used by screenreaders and other assistive technology to indicate
+# to users how much of the video has been loaded from the network. It will be
+# followed by the percentage of the video that has loaded (e.g. "Loading: 13%").
+videocontrols-buffer-bar-label = Loading:
