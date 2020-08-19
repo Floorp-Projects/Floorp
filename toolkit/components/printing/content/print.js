@@ -554,7 +554,10 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 
     // If the user had an invalid input and switches back to "fit to page",
     // we repopulate the scale field with the stored, valid scaling value.
-    if (!this._percentScale.value || this._shrinkToFitChoice.checked) {
+    if (
+      !this._percentScale.value ||
+      (this._shrinkToFitChoice.checked && !this._percentScale.checkValidity())
+    ) {
       // Only allow whole numbers. 0.14 * 100 would have decimal places, etc.
       this._percentScale.value = parseInt(scaling * 100, 10);
     }
@@ -562,8 +565,13 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 
   handleEvent(e) {
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
+      let scale =
+        e.target == this._shrinkToFitChoice
+          ? 1
+          : Number(this._percentScale.value / 100);
       this.dispatchSettingsChange({
         shrinkToFit: this._shrinkToFitChoice.checked,
+        scaling: scale,
       });
       this._scaleError.hidden = true;
       return;
