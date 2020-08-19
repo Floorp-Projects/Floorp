@@ -2991,21 +2991,13 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
   return EditActionHandled();
 }
 
-EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
+Result<bool, nsresult> HTMLEditor::ShouldDeleteHRElement(
     nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
-    const EditorDOMPoint& aCaretPoint,
-    const WSRunScanner& aWSRunScannerAtCaret) {
+    const EditorDOMPoint& aCaretPoint) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aHRElement.IsHTMLElement(nsGkAtoms::hr));
-  MOZ_ASSERT(&aHRElement != aWSRunScannerAtCaret.GetEditingHost());
 
   if (aDirectionAndAmount != nsIEditor::ePrevious) {
-    EditActionResult result = HandleDeleteCollapsedSelectionAtAtomicContent(
-        aHRElement, aCaretPoint, aWSRunScannerAtCaret);
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent() failed");
-    return result;
+    return true;
   }
 
   // Only if the caret is positioned at the end-of-hr-line position, we
@@ -3031,11 +3023,30 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
   bool interLineIsRight = SelectionRefPtr()->GetInterlinePosition(error);
   if (error.Failed()) {
     NS_WARNING("Selection::GetInterlinePosition() failed");
-    return EditActionResult(error.StealNSResult());
+    nsresult rv = error.StealNSResult();
+    return Err(rv);
   }
 
-  if (aCaretPoint.GetContainer() == atHRElement.GetContainer() &&
-      aCaretPoint.Offset() - 1 == atHRElement.Offset() && !interLineIsRight) {
+  return !interLineIsRight &&
+         aCaretPoint.GetContainer() == atHRElement.GetContainer() &&
+         aCaretPoint.Offset() - 1 == atHRElement.Offset();
+}
+
+EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
+    nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
+    const EditorDOMPoint& aCaretPoint,
+    const WSRunScanner& aWSRunScannerAtCaret) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aHRElement.IsHTMLElement(nsGkAtoms::hr));
+  MOZ_ASSERT(&aHRElement != aWSRunScannerAtCaret.GetEditingHost());
+
+  Result<bool, nsresult> canDeleteHRElement =
+      ShouldDeleteHRElement(aDirectionAndAmount, aHRElement, aCaretPoint);
+  if (canDeleteHRElement.isErr()) {
+    NS_WARNING("HTMLEditor::ShouldDeleteHRElement() failed");
+    return EditActionHandled(canDeleteHRElement.unwrapErr());
+  }
+  if (canDeleteHRElement.inspect()) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtAtomicContent(
         aHRElement, aCaretPoint, aWSRunScannerAtCaret);
     NS_WARNING_ASSERTION(
