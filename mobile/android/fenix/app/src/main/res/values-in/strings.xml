@@ -1402,7 +1402,7 @@
     <string name="search_delete_search_engine_success_message">%s dihapus</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Selamat datang ke %s yang benar-benar baru</string>
+    <string name="migration_title">Selamat datang di %s terbaru</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
     <string name="migration_description">Sebuah peramban yang telah didesain ulang sepenuhnya, dengan peningkatan kinerja dan fitur untuk membantu anda dalam melakukan sesuatu secara daring.\n\nHarap tunggu selama kami memperbarui %s dengan milik anda</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->

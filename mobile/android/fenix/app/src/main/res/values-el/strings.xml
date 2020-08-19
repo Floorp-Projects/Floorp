@@ -34,6 +34,11 @@
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Επιλογή συλλογής</string>
 
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Τέλος λειτουργίας πολλαπλής επιλογής</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Αποθήκευση επιλεγμένων καρτελών στη συλλογή</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Το %1$s αναπτύσσεται από τη Mozilla.</string>
 
@@ -255,6 +260,8 @@
     <string name="developer_tools_category">Εργαλεία προγραμματιστή</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Απομακρυσμένος εντοπισμός σφαλμάτων μέσω USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Εμφάνιση μηχανών αναζήτησης</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Εμφάνιση προτάσεων αναζήτησης</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -271,6 +278,8 @@
     <string name="preferences_account_settings">Ρυθμίσεις λογαριασμού</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Άνοιγμα συνδέσμων σε εφαρμογές</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Εξωτερική διαχείριση λήψεων</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Πρόσθετα</string>
 
@@ -322,17 +331,25 @@
     <string name="preferences_tracking_protection">Προστασία από καταγραφή</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Εξαιρέσεις</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Ενεργοποίηση για όλες τις σελίδες</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Μάθετε περισσότερα</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Τηλεμετρία</string>
 
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Δεδομένα χρήσης και τεχνικά δεδομένα</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Δεδομένα μάρκετινγκ</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Πειράματα</string>
 
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Επιτρέπει στη Mozilla την εγκατάσταση και συλλογή δεδομένων για πειραματικές λειτουργίες</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Αναφορά καταρρεύσεων</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Υπηρεσία τοποθεσίας Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
@@ -645,6 +662,8 @@
     <string name="tracking_protection_off">Ανενεργό</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Αποδοχή ήχου και βίντεο</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Η αναπαραγωγή ήχων/βίντεο θα γίνεται σε Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Φραγή ήχου μόνο</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
@@ -661,6 +680,8 @@
     <string name="collection_menu_button_content_description">Μενού συλλογής</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header1">Συλλέξτε όλα όσα έχουν σημασία για εσάς</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Ομαδοποιήστε παρόμοιες αναζητήσεις, σελίδες και καρτέλες για γρήγορη πρόσβαση αργότερα.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Επιλέξτε καρτέλες</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -681,6 +702,12 @@
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tab_selected">Επιλέχθηκε %d καρτέλα</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Οι καρτέλες αποθηκεύτηκαν!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Η συλλογή αποθηκεύτηκε!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Η καρτέλα αποθηκεύτηκε!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Κλείσιμο</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
@@ -718,8 +745,12 @@
     <string name="sync_offline">Εκτός σύνδεσης</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Σύνδεση άλλης συσκευής</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Για να στείλετε μια καρτέλα, συνδεθείτε στο Firefox σε άλλη μία τουλάχιστον συσκευή.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Το κατάλαβα</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Αδυναμία κοινοποίησης σε αυτή την εφαρμογή</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Αποστολή σε συσκευή</string>
 
@@ -847,17 +878,29 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Το Firefox Preview είναι πλέον το Firefox Nightly</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">
+        Το Firefox Nightly ενημερώνεται κάθε βράδυ και διαθέτει νέες, πειραματικές λειτουργίες.
+        Ωστόσο, ενδέχεται να είναι λιγότερο σταθερό. Κάντε λήψη του beta προγράμματος περιήγησής μας για μια πιο σταθερή εμπειρία.</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Λήψη του Firefox για Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Το Firefox Nightly έχει μετακινηθεί</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">
+        Αυτή η εφαρμογή δεν θα λαμβάνει πλέον ενημερώσεις ασφαλείας. Σταματήστε τη χρήση αυτής της εφαρμογής και μεταβείτε στο νέο Nightly.
+        \n\nΓια να μεταφέρετε τους σελιδοδείκτες, τις συνδέσεις και το ιστορικό σας σε άλλη εφαρμογή, δημιουργήστε ένα λογαριασμό Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Εναλλαγή στο νέο Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Το Firefox Nightly έχει μετακινηθεί</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">
+        Αυτή η εφαρμογή δεν θα λαμβάνει πλέον ενημερώσεις ασφαλείας. Αποκτήστε το νέο Nightly και σταματήστε τη χρήση αυτής της εφαρμογής.
+        \n\nΓια να μεταφέρετε τους σελιδοδείκτες, τις συνδέσεις και το ιστορικό σας σε άλλη εφαρμογή, δημιουργήστε ένα λογαριασμό Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Αποκτήστε το νέο Nightly</string>
 
@@ -872,6 +915,11 @@
     <string name="onboarding_feature_section_header">Γνωρίστε το %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Δείτε τι νέο υπάρχει</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Έχετε ερωτήσεις σχετικά με το επανασχεδιασμένο %s; Θέλετε να μάθετε τι έχει αλλάξει;</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Λάβετε απαντήσεις εδώ</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Αξιοποιήστε στο έπακρο το %s.</string>
@@ -888,6 +936,9 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Αυτόματο απόρρητο</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Οι ρυθμίσεις απορρήτου και ασφάλειας αποκλείουν ιχνηλάτες, κακόβουλο λογισμικό και εταιρείες που σας ακολουθούν.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Τυπική (προεπιλογή)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -900,6 +951,8 @@
     <string name="onboarding_private_browsing_button">Άνοιγμα ρυθμίσεων</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Το απόρρητό σας</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Διαβάστε τη σημείωση απορρήτου μας</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Κλείσιμο</string>
 
@@ -918,6 +971,10 @@
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Φωτεινό θέμα</string>
 
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Οι καρτέλες απεστάλησαν!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Η καρτέλα απεστάλη!</string>
     <!-- Text shown in snackbar when sharing tabs failed  -->
     <string name="sync_sent_tab_error_snackbar">Δεν ήταν δυνατή η αποστολή</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
@@ -933,10 +990,17 @@
 
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Χρήση email</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Το Firefox θα σταματήσει να συγχρονίζεται με το λογαριασμό σας, αλλά δεν θα διαγράψει τα δεδομένα περιήγησης από αυτή τη συσκευή.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">Το %s θα σταματήσει να συγχρονίζεται με το λογαριασμό σας, αλλά δεν θα διαγράψει τα δεδομένα περιήγησης από αυτή τη συσκευή.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Αποσύνδεση</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Ακύρωση</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Δεν είναι δυνατή η επεξεργασία προεπιλεγμένων φακέλων</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
@@ -951,12 +1015,22 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Μάθετε περισσότερα</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Τυπική (προεπιλογή)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Φραγή λιγότερων ιχνηλατών. Οι σελίδες θα φορτώνονται κανονικά.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Τι αποκλείει η τυπική προστασία από καταγραφή</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Αυστηρή</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Φραγή περισσότερων ιχνηλατών, διαφημίσεων και αναδυόμενων παραθύρων. Οι σελίδες φορτώνονται ταχύτερα, αλλά ορισμένα μέρη ενδέχεται να μην λειτουργούν.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Τι αποκλείει η αυστηρή προστασία από καταγραφή</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Προσαρμοσμένη</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description_2">Επιλέξτε ιχνηλάτες και σενάρια για αποκλεισμό.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Τι αποκλείει η προσαρμοσμένη προστασία από καταγραφή</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
@@ -980,6 +1054,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
+    <string name="enhanced_tracking_protection_blocked">Αποκλείεται</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Επιτρέπεται</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Ιχνηλάτες κοινωνικών δικτύων</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
@@ -990,6 +1067,15 @@
     <string name="etp_fingerprinters_title">Fingerprinters</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Περιεχόμενο καταγραφής</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Η προστασία είναι ΕΝΕΡΓΗ για αυτή τη σελίδα</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Η προστασία είναι ΑΝΕΝΕΡΓΗ για αυτή τη σελίδα</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Η ενισχυμένη προστασία από καταγραφή είναι ανενεργή για αυτή τη σελίδα</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Πλοήγηση προς τα πίσω</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Τα δικαιώματά σας</string>
 
@@ -1088,6 +1174,8 @@
     <string name="preferences_passwords_saved_logins_username">Όνομα χρήστη</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Κωδικός πρόσβασης</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Εισάγετε ξανά το PIN σας</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning">Αυτή η σύνδεση δεν είναι ασφαλής. Οι λογαριασμοί που εισάγονται εδώ ενδέχεται να παραβιαστούν.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
