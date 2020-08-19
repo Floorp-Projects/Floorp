@@ -284,10 +284,12 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     def should_skip_telemetry_submission(handler):
         # The user is performing a maintenance command.
-        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup',
-                            # We call mach environment in client.mk which would cause the
-                            # data submission to block the forward progress of make.
-                            'environment'):
+        if handler.name in (
+                'bootstrap', 'doctor', 'mach-commands', 'vcs-setup',
+                'create-mach-environment',
+                # We call mach environment in client.mk which would cause the
+                # data submission to block the forward progress of make.
+                'environment'):
             return True
 
         # Never submit data when running in automation or when running tests.
