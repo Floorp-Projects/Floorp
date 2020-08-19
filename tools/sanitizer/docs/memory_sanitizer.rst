@@ -1,15 +1,19 @@
 Memory Sanitizer
 ================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 What is Memory Sanitizer?
 -------------------------
 
-Memory Sanitizer (MSan) is a fast detector used for uninitialized memory
+Memory Sanitizer (MSan) is a fast detector used for uninitialized memory
 in C/C++ programs. It uses a compile-time instrumentation to ensure that
 all memory access at runtime uses only memory that has been initialized.
 Unlike most other sanitizers, MSan can easily cause false positives if
-not all libraries are instrumented. This happens because MSan is
-not able to observe memory initialization in uninstrumented libraries.
+not all libraries are instrumented. This happens because MSan is
+not able to observe memory initialization in uninstrumented libraries.
 More information on MSan can be found on `the Memory Sanitizer
 wiki <https://github.com/google/sanitizers/wiki/MemorySanitizer>`__.
 
@@ -148,21 +152,21 @@ subdirectory with that name.
    #! /bin/sh
 
    if [ -z $1 ] ; then
-       echo "usage: $0 <dirname>"
+       echo "usage: $0 <dirname>"
    elif [ -d $1 ] ; then
-       echo "directory $1 already exists"
+       echo "directory $1 already exists"
    else
-       autoconf2.13
-       mkdir $1
-       cd $1
-       LLVM_ROOT="/path/to/llvm"
-       CC="$LLVM_ROOT/build/bin/clang" \
-       CXX="$LLVM_ROOT/build/bin/clang++" \
-       CFLAGS="-fsanitize=memory" \
-       CXXFLAGS="-fsanitize=memory" \
+       autoconf2.13
+       mkdir $1
+       cd $1
+       LLVM_ROOT="/path/to/llvm"
+       CC="$LLVM_ROOT/build/bin/clang" \
+       CXX="$LLVM_ROOT/build/bin/clang++" \
+       CFLAGS="-fsanitize=memory" \
+       CXXFLAGS="-fsanitize=memory" \
        LDFLAGS=""-fsanitize=memory" \
-               ../configure --enable-debug --enable-optimize --enable-memory-sanitizer --disable-jemalloc --enable-posix-nspr-emulation
-       make -j 8
+               ../configure --enable-debug --enable-optimize --enable-memory-sanitizer --disable-jemalloc --enable-posix-nspr-emulation
+       make -j 8
    fi
 
 Using LLVM Symbolizer for faster/better traces
