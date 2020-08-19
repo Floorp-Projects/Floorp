@@ -4,16 +4,21 @@
 
 package mozilla.components.browser.menu
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.PopupWindow
+import androidx.cardview.widget.CardView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.menu.view.DynamicWidthRecyclerView
+import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -68,6 +73,33 @@ class BrowserMenuTest {
         assertNotNull(popup)
         assertEquals(anchor, menu.currAnchor)
         assertTrue(menu.isShown)
+    }
+
+    @Test
+    fun `show assigns width and background color`() {
+        val items = listOf(SimpleBrowserMenuItem("Hello") {})
+
+        val adapter = BrowserMenuAdapter(testContext, items)
+
+        val menu = BrowserMenu(adapter)
+
+        val anchor = Button(testContext)
+        val popup = menu.show(anchor, style = MenuStyle(
+            backgroundColor = Color.RED,
+            minWidth = 20,
+            maxWidth = 500
+        ))
+
+        assertNotNull(popup)
+        assertEquals(anchor, menu.currAnchor)
+        assertTrue(menu.isShown)
+
+        val cardView = popup.contentView.findViewById<CardView>(R.id.mozac_browser_menu_menuView)
+        val recyclerView = popup.contentView.findViewById<DynamicWidthRecyclerView>(R.id.mozac_browser_menu_recyclerView)
+
+        assertEquals(ColorStateList.valueOf(Color.RED), cardView.cardBackgroundColor)
+        assertEquals(20, recyclerView.minWidth)
+        assertEquals(500, recyclerView.maxWidth)
     }
 
     @Test

@@ -7,28 +7,21 @@ package mozilla.components.browser.menu.view
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
+import androidx.annotation.Px
 import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu.R
-import mozilla.components.support.ktx.android.util.dpToPx
 
 /**
- * [RecylerView] with automatically set width between widthMin / widthMax xml attributes.
+ * [RecyclerView] with automatically set width between widthMin / widthMax xml attributes.
  */
 class DynamicWidthRecyclerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : RecyclerView(context, attrs) {
-    @VisibleForTesting internal var minWidth: Int = -1
-    @VisibleForTesting internal var maxWidth: Int = -1
 
-    init {
-        context.obtainStyledAttributes(attrs, R.styleable.DynamicWidthRecyclerView).apply {
-            minWidth = getDimension(R.styleable.DynamicWidthRecyclerView_minWidth, minWidth.toFloat()).toInt()
-            maxWidth = getDimension(R.styleable.DynamicWidthRecyclerView_maxWidth, maxWidth.toFloat()).toInt()
-            recycle()
-        }
-    }
+    @Px var minWidth: Int = -1
+    @Px var maxWidth: Int = -1
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     override fun onMeasure(widthSpec: Int, heightSpec: Int) {
@@ -44,49 +37,38 @@ class DynamicWidthRecyclerView @JvmOverloads constructor(
         }
     }
 
-    @VisibleForTesting()
+    @VisibleForTesting
     internal fun setReconciledDimensions(
         desiredWidth: Int,
         desiredHeight: Int
     ) {
+        val minimumTapArea = resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_material_min_tap_area)
+        val minimumItemWidth = resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_material_min_item_width)
+
         val reconciledWidth = desiredWidth
             .coerceAtLeast(minWidth)
             // Follow material guidelines where the minimum width is 112dp.
-            .coerceAtLeast(getMaterialMinimumItemWidthInPx())
+            .coerceAtLeast(minimumItemWidth)
             .coerceAtMost(maxWidth)
             // Leave at least 48dp as a tappable “exit area” available whenever the menu is open.
-            .coerceAtMost(getScreenWidth() - getMaterialMinimumTapAreaInPx())
+            .coerceAtMost(getScreenWidth() - minimumTapArea)
 
         callSetMeasuredDimension(reconciledWidth, desiredHeight)
     }
 
-    @VisibleForTesting()
+    @VisibleForTesting
     internal fun getScreenWidth(): Int = resources.displayMetrics.widthPixels
 
-    @VisibleForTesting()
-    internal fun getMaterialMinimumTapAreaInPx() =
-        MATERIAL_MINIMUM_TAP_AREA_DP.dpToPx(resources.displayMetrics)
-
-    @VisibleForTesting()
-    internal fun getMaterialMinimumItemWidthInPx() =
-        MATERIAL_MINIMUM_ITEM_WIDTH_DP.dpToPx(resources.displayMetrics)
-
     @SuppressLint("WrongCall")
-    @VisibleForTesting()
+    @VisibleForTesting
     // Used for testing protected super.onMeasure(..) calls will be executed.
     internal fun callParentOnMeasure(widthSpec: Int, heightSpec: Int) {
         super.onMeasure(widthSpec, heightSpec)
     }
 
-    @VisibleForTesting()
+    @VisibleForTesting
     // Used for testing final protected setMeasuredDimension(..) calls were executed
     internal fun callSetMeasuredDimension(width: Int, height: Int) {
         setMeasuredDimension(width, height)
-    }
-
-    @VisibleForTesting()
-    internal companion object {
-        const val MATERIAL_MINIMUM_TAP_AREA_DP = 48
-        const val MATERIAL_MINIMUM_ITEM_WIDTH_DP = 112
     }
 }

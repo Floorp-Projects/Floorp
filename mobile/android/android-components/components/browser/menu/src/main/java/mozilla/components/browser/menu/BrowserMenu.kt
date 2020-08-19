@@ -16,12 +16,15 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
+import androidx.cardview.widget.CardView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.PopupWindowCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu.BrowserMenu.Orientation.DOWN
 import mozilla.components.browser.menu.BrowserMenu.Orientation.UP
+import mozilla.components.browser.menu.view.DynamicWidthRecyclerView
+import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.support.ktx.android.view.isRTL
 import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 
@@ -39,6 +42,7 @@ open class BrowserMenu internal constructor(
     /**
      * @param anchor the view on which to pin the popup window.
      * @param orientation the preferred orientation to show the popup window.
+     * @param style Custom styling for this menu.
      * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible otherwise,
      *  the top of the menu is always visible.
      */
@@ -46,6 +50,7 @@ open class BrowserMenu internal constructor(
     open fun show(
         anchor: View,
         orientation: Orientation = DOWN,
+        style: MenuStyle? = null,
         endOfMenuAlwaysVisible: Boolean = false,
         onDismiss: () -> Unit = {}
     ): PopupWindow {
@@ -53,21 +58,27 @@ open class BrowserMenu internal constructor(
 
         adapter.menu = this
 
-        menuList = view.findViewById<RecyclerView>(R.id.mozac_browser_menu_recyclerView).apply {
+        menuList = view.findViewById<DynamicWidthRecyclerView>(R.id.mozac_browser_menu_recyclerView).apply {
             layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false).also {
                 setEndOfMenuAlwaysVisibleCompact(endOfMenuAlwaysVisible, it)
             }
             adapter = this@BrowserMenu.adapter
+            minWidth = style?.minWidth ?: resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_width_min)
+            maxWidth = style?.maxWidth ?: resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_width_max)
         }
 
-        menuList?.setAccessibilityDelegate(object : View.AccessibilityDelegate() {
+        view.findViewById<CardView>(R.id.mozac_browser_menu_menuView).apply {
+            style?.backgroundColor?.let { setCardBackgroundColor(it) }
+        }
+
+        menuList?.accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(host: View?, info: AccessibilityNodeInfo?) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
                     adapter.interactiveCount, 0, false
                 )
             }
-        })
+        }
 
         return PopupWindow(
             view,

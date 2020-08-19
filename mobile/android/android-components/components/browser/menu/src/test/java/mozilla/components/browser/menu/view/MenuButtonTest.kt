@@ -75,7 +75,7 @@ class MenuButtonTest {
         menuButton.menuBuilder = menuBuilder
         menuButton.performClick()
 
-        verify(menu).show(eq(menuButton), any(), anyBoolean(), any())
+        verify(menu).show(eq(menuButton), any(), any(), anyBoolean(), any())
 
         menuButton.menuBuilder = mock()
         verify(menu).dismiss()
@@ -90,7 +90,7 @@ class MenuButtonTest {
 
         verify(menuController).show(menuButton)
         verify(menuBuilder, never()).build(testContext)
-        verify(menu, never()).show(any(), any(), anyBoolean(), any())
+        verify(menu, never()).show(any(), any(), any(), anyBoolean(), any())
     }
 
     @Test
@@ -100,7 +100,7 @@ class MenuButtonTest {
         menuButton.performClick()
         menuButton.performClick()
 
-        verify(menu, times(1)).show(eq(menuButton), any(), anyBoolean(), any())
+        verify(menu, times(1)).show(eq(menuButton), any(), any(), anyBoolean(), any())
         verify(menu, times(1)).dismiss()
     }
 
@@ -123,7 +123,7 @@ class MenuButtonTest {
         menuButton.menuBuilder = menuBuilder
         menuButton.performClick()
 
-        verify(menu).show(eq(menuButton), any(), anyBoolean(), any())
+        verify(menu).show(eq(menuButton), any(), any(), anyBoolean(), any())
 
         menuButton.invalidateBrowserMenu()
         verify(menu).invalidate()
