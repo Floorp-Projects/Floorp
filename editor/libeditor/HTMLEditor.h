@@ -2641,6 +2641,14 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aCaretPoint,
       const WSRunScanner& aWSRunScannerAtCaret);
 
+  /**
+   * ShouldDeleteHRElement() checks whether aHRElement should be deleted
+   * when selection is collapsed at aCaretPoint.
+   */
+  Result<bool, nsresult> ShouldDeleteHRElement(
+      nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
+      const EditorDOMPoint& aCaretPoint) const;
+
   class MOZ_STACK_CLASS AutoEmptyBlockAncestorDeleter final {
    public:
     /**
