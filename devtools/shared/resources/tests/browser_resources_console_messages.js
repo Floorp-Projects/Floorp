@@ -12,15 +12,8 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 add_task(async function() {
-  info("Test console messages legacy listener");
   await testConsoleMessagesResources();
   await testConsoleMessagesResourcesWithIgnoreExistingResources();
-
-  info("Test console messages server listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
-  await testConsoleMessagesResources();
-  await testConsoleMessagesResourcesWithIgnoreExistingResources();
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
 });
 
 async function testConsoleMessagesResources() {
