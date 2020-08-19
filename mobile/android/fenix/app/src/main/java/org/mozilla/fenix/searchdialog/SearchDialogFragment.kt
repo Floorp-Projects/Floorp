@@ -20,7 +20,6 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
 import kotlinx.android.synthetic.main.fragment_search_dialog.search_scan_button
@@ -30,7 +29,6 @@ import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_engines
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.toolbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -44,9 +42,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.search.SearchEngineSource
-import org.mozilla.fenix.search.SearchFragment
-import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.SearchInteractor
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
@@ -134,21 +129,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (view.context.settings().toolbarPosition == ToolbarPosition.BOTTOM) {
-            ConstraintSet().apply {
-                clone(search_wrapper)
-
-                clear(toolbar.id, TOP)
-                connect(toolbar.id, BOTTOM, PARENT_ID, BOTTOM)
-
-                clear(awesome_bar.id, TOP)
-                clear(pill_wrapper.id, BOTTOM)
-                connect(awesome_bar.id, TOP, PARENT_ID, TOP)
-                connect(pill_wrapper.id, BOTTOM, toolbar.id, TOP)
-
-                applyTo(search_wrapper)
-            }
-        }
+        setupConstraints(view)
 
         search_wrapper.setOnClickListener {
             it.hideKeyboard()
@@ -208,8 +189,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         consumeFrom(store) {
             val shouldShowAwesomebar =
                 !firstUpdate &&
-                it.query.isNotBlank()
-                || it.showSearchShortcuts
+                it.query.isNotBlank() ||
+                it.showSearchShortcuts
+
             awesome_bar?.visibility = if (shouldShowAwesomebar) View.VISIBLE else View.INVISIBLE
             toolbarView.update(it)
             awesomeBarView.update(it)
@@ -229,6 +211,24 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 view?.hideKeyboard()
                 dismissAllowingStateLoss()
                 true
+            }
+        }
+    }
+
+    private fun setupConstraints(view: View) {
+        if (view.context.settings().toolbarPosition == ToolbarPosition.BOTTOM) {
+            ConstraintSet().apply {
+                clone(search_wrapper)
+
+                clear(toolbar.id, TOP)
+                connect(toolbar.id, BOTTOM, PARENT_ID, BOTTOM)
+
+                clear(awesome_bar.id, TOP)
+                clear(pill_wrapper.id, BOTTOM)
+                connect(awesome_bar.id, TOP, PARENT_ID, TOP)
+                connect(pill_wrapper.id, BOTTOM, toolbar.id, TOP)
+
+                applyTo(search_wrapper)
             }
         }
     }
