@@ -109,7 +109,7 @@ class GainNodeEngine final : public AudioNodeEngine {
 GainNode::GainNode(AudioContext* aContext)
     : AudioNode(aContext, 2, ChannelCountMode::Max,
                 ChannelInterpretation::Speakers) {
-  CreateAudioParam(mGain, GainNodeEngine::GAIN, u"gain", 1.0f);
+  CreateAudioParam(mGain, GainNodeEngine::GAIN, u"gain"_ns, 1.0f);
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
   mTrack = AudioNodeTrack::Create(
       aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());

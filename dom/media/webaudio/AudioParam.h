@@ -23,7 +23,7 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   virtual ~AudioParam();
 
  public:
-  AudioParam(AudioNode* aNode, uint32_t aIndex, const char16_t* aName,
+  AudioParam(AudioNode* aNode, uint32_t aIndex, const nsAString& aName,
              float aDefaultValue,
              float aMinValue = std::numeric_limits<float>::lowest(),
              float aMaxValue = std::numeric_limits<float>::max());
@@ -224,7 +224,7 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   // For every InputNode, there is a corresponding entry in mOutputParams of the
   // InputNode's mInputNode.
   nsTArray<AudioNode::InputNode> mInputNodes;
-  const char16_t* mName;
+  const nsString mName;
   // The input port used to connect the AudioParam's track to its node's track
   RefPtr<MediaInputPort> mNodeTrackPort;
   const uint32_t mIndex;
