@@ -1403,7 +1403,7 @@ var PushService = {
 
   _forEachPrincipal(principal, callback) {
     return this._db.forEachOrigin(
-      principal.URI.prePath,
+      principal.prePath,
       ChromeUtils.originAttributesToSuffix(principal.originAttributes),
       callback
     );
