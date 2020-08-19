@@ -256,12 +256,12 @@ class AudioNode : public DOMEventTargetHelper, public nsSupportsWeakReference {
 
   // The reference pointing out all audio params which belong to this node.
   nsTArray<RefPtr<AudioParam>> mParams;
-  // Use this function to create a AudioParam, which will automatically add the
-  // new AudioParam to `mParams`.
-  void CreateAudioParam(RefPtr<AudioParam>& aParam, uint32_t aIndex,
-                        const nsAString& aName, float aDefaultValue,
-                        float aMinValue = std::numeric_limits<float>::lowest(),
-                        float aMaxValue = std::numeric_limits<float>::max());
+  // Use this function to create an AudioParam, so as to automatically add
+  // the new AudioParam to `mParams`.
+  AudioParam* CreateAudioParam(
+      uint32_t aIndex, const nsAString& aName, float aDefaultValue,
+      float aMinValue = std::numeric_limits<float>::lowest(),
+      float aMaxValue = std::numeric_limits<float>::max());
 
  private:
   // For every InputNode, there is a corresponding entry in mOutputNodes of the

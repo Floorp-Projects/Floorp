@@ -604,12 +604,11 @@ void AudioNode::SetPassThrough(bool aPassThrough) {
   }
 }
 
-void AudioNode::CreateAudioParam(RefPtr<AudioParam>& aParam, uint32_t aIndex,
-                                 const nsAString& aName, float aDefaultValue,
-                                 float aMinValue, float aMaxValue) {
-  aParam =
-      new AudioParam(this, aIndex, aName, aDefaultValue, aMinValue, aMaxValue);
-  mParams.AppendElement(aParam);
+AudioParam* AudioNode::CreateAudioParam(uint32_t aIndex, const nsAString& aName,
+                                        float aDefaultValue, float aMinValue,
+                                        float aMaxValue) {
+  return *mParams.AppendElement(
+      new AudioParam(this, aIndex, aName, aDefaultValue, aMinValue, aMaxValue));
 }
 
 }  // namespace dom
