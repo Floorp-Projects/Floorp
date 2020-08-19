@@ -19,10 +19,14 @@ const INVALID_INPUT_DELAY_MS = 500;
 document.addEventListener(
   "DOMContentLoaded",
   e => {
-    PrintEventHandler.init();
+    document.mozSubdialogReady = PrintEventHandler.init();
   },
   { once: true }
 );
+
+window.addEventListener("dialogclosing", () => {
+  PrintEventHandler.unload();
+});
 
 window.addEventListener(
   "unload",
@@ -35,7 +39,7 @@ window.addEventListener(
 var PrintEventHandler = {
   async init() {
     this.sourceBrowser = this.getSourceBrowser();
-    this.previewBrowser = this.getPreviewBrowser();
+    this.previewBrowser = this._createPreviewBrowser();
     this.settings = null;
     this.defaultSettings = null;
     this._printerSettingsChangedFlags = 0;
@@ -89,6 +93,40 @@ var PrintEventHandler = {
     );
 
     document.body.removeAttribute("loading");
+  },
+
+  unload() {
+    this.previewBrowser.messageManager.sendAsyncMessage(
+      "Printing:Preview:Exit"
+    );
+  },
+
+  _createPreviewBrowser() {
+    // Create a preview browser.
+    let printPreviewBrowser = gBrowser.createBrowser({
+      remoteType: this.sourceBrowser.remoteType,
+      initialBrowsingContextGroupId: this.sourceBrowser.browsingContext.group
+        .id,
+      skipLoad: false,
+    });
+    printPreviewBrowser.classList.add("printPreviewBrowser");
+
+    // Create the stack for the loading indicator.
+    let ourBrowser = window.docShell.chromeEventHandler;
+    let doc = ourBrowser.ownerDocument;
+    let previewStack = doc.importNode(
+      doc.getElementById("printPreviewStackTemplate").content,
+      true
+    ).firstElementChild;
+
+    previewStack.append(printPreviewBrowser);
+    ourBrowser.parentElement.prepend(previewStack);
+
+    printPreviewBrowser.loadURI("about:printpreview", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+
+    return printPreviewBrowser;
   },
 
   refreshSettings(printerName) {
