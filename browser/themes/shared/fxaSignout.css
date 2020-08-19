@@ -1,0 +1,43 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+.sign-out-icon {
+    list-style-image: url(chrome://browser/skin/sign-out.svg);
+    max-height: 14px;
+    padding-inline-start: 15px;
+}
+
+.signout-header-row {
+    margin-bottom: 10px;
+}
+
+.sign-out-header {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.sign-out-header-details {
+    margin-inline-start: 5px;
+}
+
+.sign-out-body {
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.signout-delete-data-body {
+    margin-top: 10px;
+}
+
+.delete-local-data-row {
+    margin-inline-start: 20px;
+}
+
+.delete-local-data-label {
+    margin-top: 7px;
+    margin-inline-start: 0px;
+    padding-inline-start: 0px;
+    font-size: 11px;
+}
