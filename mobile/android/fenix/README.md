@@ -105,21 +105,23 @@ you want these variants to be:
 #### Performance Build Variants
 For accurate performance measurements, read this section!
 
-If you want to analyze performance during **local development** (note: there is a non-trivial performance impact - see caveats):
-- Recommendation: use a debuggable variant (see "local.properties helpers" below) with local Leanplum, Adjust, & Sentry API tokens: contact the front-end perf group for access to them
-- Rationale: There are numerous performance-impacting differences between debug and release variants so we need a release variant. To profile, we also need debuggable, which is disabled by default for release variants. If API tokens are not provided, the SDKs may change their behavior in non-trivial ways.
-- Caveats:
-  - debuggable has a non-trivial & variable impact on performance but is needed to take profiles.
-  - Random experiment opt-in & feature flags may impact performance (see [perf-frontend-issues#45](https://github.com/mozilla-mobile/perf-frontend-issues/issues/45) for mitigation).
-  - This is slower to build than debug builds because it does additional tasks (e.g. minification) similar to other release builds
+To analyze performance during **local development** build a production variant locally (this could either be the Nightly, beta or release).  Otherwise, you could also grab a pre-existing APK if you don't need to test some local changes. Then, use the Firefox profiler to profile what you need!
 
-If you want to run **performance tests/benchmarks** in automation or locally:
-- Recommendation: production builds. If debuggable is required, use recommendation above but note the caveat above. If your needs are not met, please contact the front-end perf group to identify a new solution.
-- Rationale: like the rationale above, we need release variants so the choice is based on the debuggable flag.
+For more information on how to use the profiler or how to use the build, refer to this [how to measure performance with the build](https://wiki.mozilla.org/Performance/How_to_get_started_on_Fenix)
 
-For additional context on these recommendations, see [the perf build variant analysis](https://docs.google.com/document/d/1aW-m0HYncTDDiRz_2x6EjcYkjBpL9SHhhYix13Vil30/edit#).
+If you want to run **performance tests/benchmarks** in automation or locally use a production build since it is much closer in behavior compared to what users see in the wild.
 
-Before you can install any release variants, **you will need to sign them:** see [Automatically signing release builds](#automatically-sign-release-builds) for details.
+Before you can install any release builds, **You will need to sign production build variants:** see [Automatically signing release builds](#automatically-sign-release-builds) for details.
+
+##### Known disabled-by-default features
+Some features are disabled by default when Fenix is built locally. This can be problematic at times for checking performance since you might want to know how your code behaves with those features.
+The known features that are disabled by default are:
+- Sentry
+- Leanplum
+- Adjust
+- Mozilla Location Services (also known as MLS)
+- Firebase Push Services
+- Telemetry (only disabled by default in debug builds)
 
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd
