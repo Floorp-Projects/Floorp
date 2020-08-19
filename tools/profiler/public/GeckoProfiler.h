@@ -1204,7 +1204,7 @@ class MOZ_RAII AutoProfilerLabel {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     // Get the ProfilingStack from TLS.
-    ProfilingStackOwner* profilingStackOwner = sProfilingStackOwnerTLS.get();
+    ProfilingStackOwner* profilingStackOwner = ProfilingStackOwnerTLS::Get();
     Push(profilingStackOwner ? &profilingStackOwner->ProfilingStack() : nullptr,
          aLabel, aDynamicString, aCategoryPair, aFlags);
   }
@@ -1250,7 +1250,33 @@ class MOZ_RAII AutoProfilerLabel {
 
  public:
   // See the comment on the definition in platform.cpp for details about this.
-  static MOZ_THREAD_LOCAL(ProfilingStackOwner*) sProfilingStackOwnerTLS;
+  class ProfilingStackOwnerTLS {
+   public:
+    static bool Init() {
+      // Only one call to MOZ_THREAD_LOCAL::init() is needed, we cache the
+      // result for later calls to Init(), in particular before using get() and
+      // set().
+      static const bool ok = sProfilingStackOwnerTLS.init();
+      return ok;
+    }
+
+    static ProfilingStackOwner* Get() {
+      if (!Init()) {
+        return nullptr;
+      }
+      return sProfilingStackOwnerTLS.get();
+    }
+
+    static void Set(ProfilingStackOwner* aProfilingStackOwner) {
+      MOZ_RELEASE_ASSERT(Init(),
+                         "ProfilingStackOwnerTLS::Set() should only be called "
+                         "after a successful Init()");
+      sProfilingStackOwnerTLS.set(aProfilingStackOwner);
+    }
+
+   private:
+    static MOZ_THREAD_LOCAL(ProfilingStackOwner*) sProfilingStackOwnerTLS;
+  };
 };
 
 class MOZ_RAII AutoProfilerTracing {
