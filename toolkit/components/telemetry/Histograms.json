@@ -12177,9 +12177,10 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 4,
+    "releaseChannelCollection": "opt-out",
     "description": "Status of the shield icon for each top-level pageload (outside of Private Browsing mode) when tracking protection is enabled (0 = there was a page load, this is used as a baseline, 1 = shield crossed out because CB was disabled on this page by the user, 2 = shield shown because some content was blocked)",
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "bug_numbers": [1058133]
+    "bug_numbers": [1058133, 1659762]
   },
   "TRACKING_PROTECTION_EVENTS": {
     "record_in_processes": ["main", "content"],
