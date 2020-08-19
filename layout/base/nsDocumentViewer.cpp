@@ -3337,6 +3337,12 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
     return NS_OK;
   }
 
+  // If it is "End" then just scroll to the `scrollTopMax` position.
+  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_END) {
+    sf->ScrollTo(nsPoint(0, sf->GetScrollRange().YMost()), ScrollMode::Instant);
+    return NS_OK;
+  }
+
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
   auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
   if (!seqFrame) {
@@ -3349,12 +3355,6 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   int32_t pageNum = 1;
   nsIFrame* fndPageFrame = nullptr;
   nsIFrame* currentPage = nullptr;
-
-  // If it is "End" then just do a "goto" to the last page
-  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_END) {
-    aType = nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM;
-    aPageNum = pageCount;
-  }
 
   // Now, locate the current page we are on and
   // and the page of the page number
