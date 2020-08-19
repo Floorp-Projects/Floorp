@@ -9,7 +9,7 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
-import androidx.core.content.ContextCompat
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
 
 fun SpannableString.setTextSize(context: Context, textSize: Int) =
@@ -23,10 +23,7 @@ fun SpannableString.setTextSize(context: Context, textSize: Int) =
 fun SpannableString.setTextColor(context: Context, colorResId: Int) =
     this.setSpan(
         ForegroundColorSpan(
-            ContextCompat.getColor(
-                context,
-                colorResId
-            )
+            context.getColorFromAttr(colorResId)
         ),
         0,
         this.length,

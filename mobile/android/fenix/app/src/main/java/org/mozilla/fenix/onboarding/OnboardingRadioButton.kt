@@ -71,14 +71,14 @@ class OnboardingRadioButton(
 
         val spannableTitle = SpannableString(resources.getString(title))
         spannableTitle.setTextSize(context, TITLE_TEXT_SIZE)
-        spannableTitle.setTextColor(context, R.color.primary_state_list_text_color)
+        spannableTitle.setTextColor(context, R.attr.primaryText)
 
         builder.append(spannableTitle)
 
         if (description != 0) {
             val spannableDescription = SpannableString(resources.getString(description))
             spannableDescription.setTextSize(context, DESCRIPTION_TEXT_SIZE)
-            spannableDescription.setTextColor(context, R.color.secondary_state_list_text_color)
+            spannableDescription.setTextColor(context, R.attr.secondaryText)
             builder.append("\n")
             builder.append(spannableDescription)
         }
