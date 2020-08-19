@@ -83,7 +83,7 @@ class PrintingChild extends ActorChild {
     switch (message.name) {
       case "Printing:Preview:Enter": {
         this.enterPrintPreview(
-          Services.wm.getOuterWindowWithId(data.windowID),
+          BrowsingContext.get(data.browsingContextId),
           data.simplifiedMode,
           data.changingBrowsers,
           data.lastUsedPrinterName,
@@ -308,14 +308,16 @@ class PrintingChild extends ActorChild {
   }
 
   enterPrintPreview(
-    contentWindow,
+    browsingContext,
     simplifiedMode,
     changingBrowsers,
     lastUsedPrinterName,
     outputFormat
   ) {
     const { docShell } = this;
+
     try {
+      let contentWindow = browsingContext.window;
       let printSettings = this.getPrintSettings(lastUsedPrinterName);
 
       // Disable the progress dialog for generating previews.
@@ -347,6 +349,7 @@ class PrintingChild extends ActorChild {
           this.mm.sendAsyncMessage("Printing:Preview:Entered", {
             failed: true,
           });
+          browsingContext.isAwaitingPrint = false;
           return;
         }
         try {
@@ -365,6 +368,8 @@ class PrintingChild extends ActorChild {
             failed: true,
           });
         }
+
+        browsingContext.isAwaitingPrint = false;
       };
 
       // If printPreviewInitializingInfo.entered is not set we are still in the
@@ -384,6 +389,7 @@ class PrintingChild extends ActorChild {
       // In that case, we inform the parent to bail out of print preview.
       Cu.reportError(error);
       this.mm.sendAsyncMessage("Printing:Preview:Entered", { failed: true });
+      browsingContext.isAwaitingPrint = false;
     }
   }
 
