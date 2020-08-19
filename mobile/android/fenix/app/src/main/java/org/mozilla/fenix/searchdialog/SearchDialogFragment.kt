@@ -20,13 +20,13 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
 import kotlinx.android.synthetic.main.fragment_search_dialog.search_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.toolbar
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
+import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_engines_shortcut_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.toolbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,6 +62,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private lateinit var store: SearchDialogFragmentStore
     private lateinit var toolbarView: ToolbarView
     private lateinit var awesomeBarView: AwesomeBarView
+    private var firstUpdate = true
 
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
@@ -154,6 +155,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             dismissAllowingStateLoss()
         }
 
+        view.search_engines_shortcut_button.setOnClickListener {
+            interactor.onSearchShortcutsButtonClicked()
+        }
+
         search_scan_button.setOnClickListener {
             toolbarView.view.clearFocus()
             requireComponents.analytics.metrics.track(Event.QRScannerOpened)
@@ -201,9 +206,14 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         )
 
         consumeFrom(store) {
-            awesome_bar?.visibility = if (it.query.isEmpty()) View.INVISIBLE else View.VISIBLE
+            val shouldShowAwesomebar =
+                !firstUpdate &&
+                it.query.isNotBlank()
+                || it.showSearchShortcuts
+            awesome_bar?.visibility = if (shouldShowAwesomebar) View.VISIBLE else View.INVISIBLE
             toolbarView.update(it)
             awesomeBarView.update(it)
+            firstUpdate = false
         }
     }
 
