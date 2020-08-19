@@ -6,20 +6,17 @@ package org.mozilla.fenix.library.bookmarks
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Context
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
-import io.mockk.Runs
+import io.mockk.MockKAnnotations
 import io.mockk.called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import io.mockk.slot
-import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,6 +24,8 @@ import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -35,31 +34,27 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.bookmarkStorage
-import org.mozilla.fenix.ext.components
 
-@Suppress("TooManyFunctions", "LargeClass")
 @ExperimentalCoroutinesApi
 class BookmarkControllerTest {
 
-    private lateinit var controller: BookmarkController
-
-    private val bookmarkStore = spyk(BookmarkFragmentStore(BookmarkFragmentState(null)))
-    private val context: Context = mockk(relaxed = true)
     private val scope = TestCoroutineScope()
-    private val clipboardManager: ClipboardManager = mockk(relaxUnitFun = true)
-    private val navController: NavController = mockk(relaxed = true)
-    private val sharedViewModel: BookmarksSharedViewModel = mockk()
-    private val loadBookmarkNode: suspend (String) -> BookmarkNode? = mockk(relaxed = true)
-    private val showSnackbar: (String) -> Unit = mockk(relaxed = true)
-    private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = mockk(relaxed = true)
-    private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit = mockk(relaxed = true)
-    private val invokePendingDeletion: () -> Unit = mockk(relaxed = true)
 
-    private val homeActivity: HomeActivity = mockk(relaxed = true)
-    private val services: Services = mockk(relaxed = true)
+    @MockK private lateinit var bookmarkStore: BookmarkFragmentStore
+    @MockK private lateinit var sharedViewModel: BookmarksSharedViewModel
+    @MockK(relaxUnitFun = true) private lateinit var clipboardManager: ClipboardManager
+    @MockK(relaxed = true) private lateinit var homeActivity: HomeActivity
+    @MockK(relaxed = true) private lateinit var bookmarkStorage: BookmarksStorage
+    @MockK(relaxed = true) private lateinit var accountManager: FxaAccountManager
+    @MockK(relaxed = true) private lateinit var navController: NavController
+    @MockK(relaxed = true) private lateinit var loadBookmarkNode: suspend (String) -> BookmarkNode?
+    @MockK(relaxed = true) private lateinit var showSnackbar: (String) -> Unit
+    @MockK(relaxed = true) private lateinit var deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit
+    @MockK(relaxed = true) private lateinit var deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit
+    @MockK(relaxed = true) private lateinit var invokePendingDeletion: () -> Unit
+
+    private lateinit var controller: BookmarkController
 
     private val item =
         BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
@@ -89,15 +84,20 @@ class BookmarkControllerTest {
 
     @Before
     fun setup() {
-        every { homeActivity.components.services } returns services
-        every { navController.currentDestination } returns NavDestination("").apply {
-            id = R.id.bookmarkFragment
+        MockKAnnotations.init(this)
+        loadBookmarkNode = mockk(relaxed = true)
+
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.bookmarkFragment
         }
+        every { bookmarkStore.state } returns BookmarkFragmentState(null)
         every { bookmarkStore.dispatch(any()) } returns mockk()
         every { sharedViewModel.selectedFolder = any() } just runs
 
         controller = DefaultBookmarkController(
             activity = homeActivity,
+            bookmarkStorage = bookmarkStorage,
+            accountManager = accountManager,
             navController = navController,
             clipboardManager = clipboardManager,
             scope = scope,
@@ -211,12 +211,12 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleBookmarkSelected should show a toast when selecting a root folder`() {
-        val errorMessage = context.getString(R.string.bookmark_cannot_edit_root)
+        every { homeActivity.resources.getString(R.string.bookmark_cannot_edit_root) } returns "Can't edit default folders"
 
         controller.handleBookmarkSelected(root)
 
         verify {
-            showSnackbar(errorMessage)
+            showSnackbar("Can't edit default folders")
         }
     }
 
@@ -240,25 +240,24 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleCopyUrl should copy bookmark url to clipboard and show a toast`() {
-        val urlCopiedMessage = context.getString(R.string.url_copied)
+        every { homeActivity.resources.getString(R.string.url_copied) } returns "URL copied"
 
         controller.handleCopyUrl(item)
 
         verifyOrder {
             ClipData.newPlainText(item.url, item.url)
-            showSnackbar(urlCopiedMessage)
+            showSnackbar("URL copied")
         }
     }
 
     @Test
     fun `handleBookmarkSharing should navigate to the 'Share' fragment`() {
-        val navDirectionsSlot = slot<NavDirections>()
-        every { navController.navigate(capture(navDirectionsSlot), null) } just Runs
-
         controller.handleBookmarkSharing(item)
 
         verify {
-            navController.navigate(navDirectionsSlot.captured, null)
+            navController.navigate(withArg<NavDirections> {
+                assertEquals(R.id.action_global_shareFragment, it.actionId)
+            }, null)
         }
     }
 
@@ -313,8 +312,7 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleRequestSync dispatches actions in the correct order`() {
-        every { homeActivity.components.backgroundServices.accountManager } returns mockk(relaxed = true)
-        coEvery { homeActivity.bookmarkStorage.getBookmark(any()) } returns tree
+        coEvery { bookmarkStorage.getBookmark(any()) } returns tree
         coEvery { loadBookmarkNode.invoke(any()) } returns tree
 
         controller.handleRequestSync()

@@ -14,14 +14,14 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.SyncReason
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.bookmarkStorage
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 
 /**
@@ -52,6 +52,8 @@ interface BookmarkController {
 @Suppress("TooManyFunctions")
 class DefaultBookmarkController(
     private val activity: HomeActivity,
+    private val bookmarkStorage: BookmarksStorage,
+    private val accountManager: FxaAccountManager,
     private val navController: NavController,
     private val clipboardManager: ClipboardManager?,
     private val scope: CoroutineScope,
@@ -143,14 +145,14 @@ class DefaultBookmarkController(
         scope.launch {
             store.dispatch(BookmarkFragmentAction.StartSync)
             invokePendingDeletion()
-            activity.components.backgroundServices.accountManager.syncNow(SyncReason.User)
+            accountManager.syncNow(SyncReason.User)
             // The current bookmark node we are viewing may be made invalid after syncing so we
             // check if the current node is valid and if it isn't we find the nearest valid ancestor
             // and open it
             val validAncestorGuid = store.state.guidBackstack.findLast { guid ->
-                activity.bookmarkStorage.getBookmark(guid) != null
+                bookmarkStorage.getBookmark(guid) != null
             } ?: BookmarkRoot.Mobile.id
-            val node = activity.bookmarkStorage.getBookmark(validAncestorGuid)!!
+            val node = bookmarkStorage.getBookmark(validAncestorGuid)!!
             handleBookmarkExpand(node)
             store.dispatch(BookmarkFragmentAction.FinishSync)
         }
@@ -160,12 +162,12 @@ class DefaultBookmarkController(
         invokePendingDeletion.invoke()
         scope.launch {
             val parentGuid = store.state.guidBackstack.findLast { guid ->
-                store.state.tree?.guid != guid && activity.bookmarkStorage.getBookmark(guid) != null
+                store.state.tree?.guid != guid && bookmarkStorage.getBookmark(guid) != null
             }
             if (parentGuid == null) {
                 navController.popBackStack()
             } else {
-                val parent = activity.bookmarkStorage.getBookmark(parentGuid)!!
+                val parent = bookmarkStorage.getBookmark(parentGuid)!!
                 handleBookmarkExpand(parent)
             }
         }

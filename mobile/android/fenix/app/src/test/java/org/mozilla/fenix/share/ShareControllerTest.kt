@@ -83,11 +83,13 @@ class ShareControllerTest {
 
     @Test
     fun `handleShareToApp should start a new sharing activity and close this`() = runBlocking {
+        val appPackageName = "package"
+        val appClassName = "activity"
         val appShareOption = AppShareOption(
             name = "app",
             icon = mockk(),
-            packageName = "package",
-            activityName = "activity"
+            packageName = appPackageName,
+            activityName = appClassName
         )
         val shareIntent = slot<Intent>()
         // Our share Intent uses `FLAG_ACTIVITY_NEW_TASK` but when resolving the startActivity call
@@ -108,8 +110,8 @@ class ShareControllerTest {
         assertEquals(textToShare, shareIntent.captured.extras!![Intent.EXTRA_TEXT])
         assertEquals("text/plain", shareIntent.captured.type)
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, shareIntent.captured.flags)
-        assertEquals("package", shareIntent.captured.component!!.packageName)
-        assertEquals("activity", shareIntent.captured.component!!.className)
+        assertEquals(appPackageName, shareIntent.captured.component!!.packageName)
+        assertEquals(appClassName, shareIntent.captured.component!!.className)
 
         verify { recentAppStorage.updateRecentApp(appShareOption.activityName) }
         verifyOrder {

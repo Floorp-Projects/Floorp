@@ -88,6 +88,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         _bookmarkInteractor = BookmarkFragmentInteractor(
             bookmarksController = DefaultBookmarkController(
                 activity = requireActivity() as HomeActivity,
+                bookmarkStorage = requireComponents.core.bookmarksStorage,
+                accountManager = requireComponents.backgroundServices.accountManager,
                 navController = findNavController(),
                 clipboardManager = requireContext().getSystemService(),
                 scope = viewLifecycleOwner.lifecycleScope,
