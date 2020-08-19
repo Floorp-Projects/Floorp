@@ -9,6 +9,10 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+// Bug 1620686 - This test requests a lot of fullscreen and picture-in-picture
+// for media elements which needs longer time to run.
+requestLongerTimeout(2);
+
 // This array contains the elements' id in `file_non_eligible_media.html`.
 const gNonEligibleElementIds = [
   "muted",
