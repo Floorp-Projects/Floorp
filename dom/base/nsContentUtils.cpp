@@ -8280,11 +8280,12 @@ class StringBuilder {
     if (!mLength.isValid()) {
       return false;
     }
-    nsresult rv;
-    BulkAppender appender(aOut.BulkWrite(mLength.value(), 0, true, rv));
-    if (NS_FAILED(rv)) {
+    auto appenderOrErr = aOut.BulkWrite(mLength.value(), 0, true);
+    if (appenderOrErr.isErr()) {
       return false;
     }
+
+    BulkAppender appender{appenderOrErr.unwrap()};
 
     for (StringBuilder* current = this; current;
          current = current->mNext.get()) {

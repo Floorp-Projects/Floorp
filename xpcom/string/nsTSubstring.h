@@ -1191,11 +1191,6 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    * performed when the string is already mutable and the requested
    * capacity is smaller than the current capacity.
    *
-   * aRv takes a reference to an nsresult that will be set to
-   * NS_OK on success or to NS_ERROR_OUT_OF_MEMORY on failure,
-   * because mozilla::Result cannot wrap move-only types at
-   * this time.
-   *
    * If this method returns successfully, you must not access
    * the string except through the returned BulkWriteHandle
    * until either the BulkWriteHandle goes out of scope or
@@ -1211,10 +1206,8 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    *     content has been written, which results in a
    *     cache-friendly linear write pattern.
    */
-  mozilla::BulkWriteHandle<T> NS_FASTCALL BulkWrite(size_type aCapacity,
-                                                    size_type aPrefixToPreserve,
-                                                    bool aAllowShrinking,
-                                                    nsresult& aRv);
+  mozilla::Result<mozilla::BulkWriteHandle<T>, nsresult> NS_FASTCALL BulkWrite(
+      size_type aCapacity, size_type aPrefixToPreserve, bool aAllowShrinking);
 
   /**
    * THIS IS NOT REALLY A PUBLIC METHOD! DO NOT CALL FROM OUTSIDE
