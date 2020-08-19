@@ -16,7 +16,6 @@ ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/App
 ChromeUtils.defineModuleGetter(this, "AttributionCode", "resource:///modules/AttributionCode.jsm");
 ChromeUtils.defineModuleGetter(this, "WindowsVersionInfo", "resource://gre/modules/components-utils/WindowsVersionInfo.jsm");
 ChromeUtils.defineModuleGetter(this, "NormandyUtils", "resource://normandy/lib/NormandyUtils.jsm");
-
 /* eslint-enable prettier/prettier */
 
 var EXPORTED_SYMBOLS = ["ClientEnvironmentBase"];
@@ -81,6 +80,10 @@ class ClientEnvironmentBase {
       get(target, prop, receiver) {
         if (prop == "main") {
           return target.main;
+        }
+        if (prop == "then") {
+          // this isn't a Promise, but it's not a problem to check
+          return undefined;
         }
         throw new Error(
           `Live telemetry only includes the main ping, not the ${prop} ping`
