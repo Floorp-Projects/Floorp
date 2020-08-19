@@ -616,20 +616,14 @@ void AudioWorkletNode::InitializeParameters(
       context->GetParamMapForWorkletName(mNodeName);
   MOZ_ASSERT(parameterDescriptors);
 
-  mParameters = new AudioParamMap(this);
   size_t audioParamIndex = 0;
   aParamTimelines->SetCapacity(parameterDescriptors->Length());
 
   for (size_t i = 0; i < parameterDescriptors->Length(); i++) {
     auto& paramEntry = (*parameterDescriptors)[i];
-    RefPtr<AudioParam> param = CreateAudioParam(
-        audioParamIndex++, paramEntry.mName, paramEntry.mDefaultValue,
-        paramEntry.mMinValue, paramEntry.mMaxValue);
-    AudioParamMap_Binding::MaplikeHelpers::Set(mParameters, paramEntry.mName,
-                                               *param, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+    CreateAudioParam(audioParamIndex++, paramEntry.mName,
+                     paramEntry.mDefaultValue, paramEntry.mMinValue,
+                     paramEntry.mMaxValue);
     aParamTimelines->AppendElement(paramEntry);
   }
 }
@@ -841,7 +835,20 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   return audioWorkletNode.forget();
 }
 
-AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) const {
+AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) {
+  if (!mParameters) {
+    RefPtr<AudioParamMap> parameters = new AudioParamMap(this);
+    nsAutoString name;
+    for (const auto& audioParam : mParams) {
+      audioParam->GetName(name);
+      AudioParamMap_Binding::MaplikeHelpers::Set(parameters, name, *audioParam,
+                                                 aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+    }
+    mParameters = std::move(parameters);
+  }
   return mParameters.get();
 }
 

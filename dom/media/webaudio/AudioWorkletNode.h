@@ -30,7 +30,7 @@ class AudioWorkletNode : public AudioNode {
       const nsAString& aName, const AudioWorkletNodeOptions& aOptions,
       ErrorResult& aRv);
 
-  AudioParamMap* GetParameters(ErrorResult& aRv) const;
+  AudioParamMap* GetParameters(ErrorResult& aRv);
 
   MessagePort* Port() const { return mPort; };
 
