@@ -8618,7 +8618,7 @@ RecordQuotaInfoLoadTimeHelper::Run() {
       // because the documentation for TimeStamp::Now() says it returns a
       // monotonically increasing number.
       if (*mStartTime > *mEndTime) {
-        return "TimeStampError1"_ns;
+        return "TimeStampErr1"_ns;
       }
 
       if (*mInitializedTime > gLastOSWake) {
