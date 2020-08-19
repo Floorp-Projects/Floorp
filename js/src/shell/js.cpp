@@ -5165,7 +5165,8 @@ static bool FrontendTest(JSContext* cx,
         break;
       }
       case DumpType::Stencil: {
-        SourceExtent extent = SourceExtent::makeGlobalExtent(length, options);
+        SourceExtent extent = SourceExtent::makeGlobalExtent(
+            length, options.lineno, options.column);
         Directives directives(options.forceStrictMode());
         GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
                                      directives, extent);
