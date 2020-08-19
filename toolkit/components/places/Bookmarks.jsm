@@ -1505,7 +1505,6 @@ var Bookmarks = Object.freeze({
       behavior = {
         parentGuid: { requiredIf: b => b.hasOwnProperty("index") },
         index: {
-          requiredIf: b => b.hasOwnProperty("parentGuid"),
           validIf: b =>
             (typeof b.index == "number" && b.index >= 0) ||
             b.index == this.DEFAULT_INDEX,
@@ -1527,11 +1526,12 @@ var Bookmarks = Object.freeze({
         results = await fetchBookmarksByURL(fetchInfo, options);
       } else if (fetchInfo.hasOwnProperty("guid")) {
         results = await fetchBookmark(fetchInfo, options);
-      } else if (
-        fetchInfo.hasOwnProperty("parentGuid") &&
-        fetchInfo.hasOwnProperty("index")
-      ) {
-        results = await fetchBookmarkByPosition(fetchInfo, options);
+      } else if (fetchInfo.hasOwnProperty("parentGuid")) {
+        if (fetchInfo.hasOwnProperty("index")) {
+          results = await fetchBookmarkByPosition(fetchInfo, options);
+        } else {
+          results = await fetchBookmarksByParentGUID(fetchInfo, options);
+        }
       } else if (fetchInfo.hasOwnProperty("guidPrefix")) {
         results = await fetchBookmarksByGUIDPrefix(fetchInfo, options);
       } else if (fetchInfo.hasOwnProperty("tags")) {
@@ -2530,6 +2530,39 @@ async function fetchBookmarksByURL(info, options = {}) {
   }
   return PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: fetchBookmarksByURL",
+    query
+  );
+}
+
+async function fetchBookmarksByParentGUID(info, options = {}) {
+  let query = async function(db) {
+    let rows = await db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
+              h.url AS url,
+              NULL AS _id,
+              NULL AS _parentId,
+              NULL AS _childCount,
+              NULL AS _grandParentId,
+              NULL AS _syncStatus
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE p.guid = :parentGuid
+       ORDER BY b.position ASC
+      `,
+      { parentGuid: info.parentGuid }
+    );
+
+    return rows.length ? rowsToItemsArray(rows) : null;
+  };
+
+  if (options.concurrent) {
+    let db = await PlacesUtils.promiseDBConnection();
+    return query(db);
+  }
+  return PlacesUtils.withConnectionWrapper(
+    "Bookmarks.jsm: fetchBookmarksByParentGUID",
     query
   );
 }
