@@ -8464,6 +8464,14 @@
   value: false
   mirror: always
 
+# Whether tab_modal print UI is enabled.
+#
+# The tab modal print dialog is currently only for early beta or nightly.
+- name: print.tab_modal.enabled
+  type: RelaxedAtomicBool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "privacy."
 #---------------------------------------------------------------------------

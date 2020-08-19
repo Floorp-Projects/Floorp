@@ -138,9 +138,22 @@ interface nsIBrowserDOMWindow : nsISupports
                              in short aWhere, in long aFlags,
                              in AString aName);
 
+
+  /**
+   * Requests printing of a given browsing context. Note that the browsing
+   * context may not directly correspond to a tab, it could be from a nested
+   * frame instead.
+   *
+   * @param aSourceBrowsingContext the browsing context that we're interested
+   *        in printing.
+   *
+   * @return void, but note that you MUST set `aSourceBrowsingContext.isAwaitingPrint`
+   *         to `false` as a result of this operation.
+   */
+  void print(in BrowsingContext aSourceBrowsingContext);
+
   /**
    * Load a URI.
-
    * @param aURI the URI to open. null is not allowed. To create the window
    *        without loading the URI, use createContentWindow instead.
    * @param aWhere see possible values described above.

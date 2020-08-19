@@ -195,7 +195,7 @@ var PrintEventHandler = {
 
   async _updatePrintPreview() {
     let numPages = await PrintUtils.updatePrintPreview(
-      this.sourceBrowser,
+      this.getSourceBrowsingContext(),
       this.previewBrowser,
       this.settings
     );
@@ -213,17 +213,21 @@ var PrintEventHandler = {
     }
   },
 
-  getSourceBrowser() {
+  getSourceBrowsingContext() {
     let params = new URLSearchParams(location.search);
     let browsingContextId = params.get("browsingContextId");
     if (!browsingContextId) {
       return null;
     }
-    let browsingContext = BrowsingContext.get(browsingContextId);
+    return BrowsingContext.get(browsingContextId);
+  },
+
+  getSourceBrowser() {
+    let browsingContext = this.getSourceBrowsingContext();
     if (!browsingContext) {
       return null;
     }
-    return browsingContext.embedderElement;
+    return browsingContext.top.embedderElement;
   },
 
   getPreviewBrowser() {

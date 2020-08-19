@@ -6019,6 +6019,10 @@ nsBrowserAccess.prototype = {
     );
   },
 
+  print(aBrowsingContext) {
+    PrintUtils.startPrintWindow(aBrowsingContext);
+  },
+
   openURI(aURI, aOpenWindowInfo, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
     if (!aURI) {
       Cu.reportError("openURI should only be called with a valid URI");
