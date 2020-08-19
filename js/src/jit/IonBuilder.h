@@ -426,8 +426,6 @@ class MOZ_STACK_CLASS IonBuilder {
       bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
   AbortReasonOr<Ok> compareTryBinaryStub(bool* emitted, MDefinition* left,
                                          MDefinition* right);
-  AbortReasonOr<Ok> compareTryCharacter(bool* emitted, JSOp op,
-                                        MDefinition* left, MDefinition* right);
 
   // jsop_newarray helpers.
   AbortReasonOr<Ok> newArrayTryTemplateObject(bool* emitted,
