@@ -622,10 +622,9 @@ void AudioWorkletNode::InitializeParameters(
 
   for (size_t i = 0; i < parameterDescriptors->Length(); i++) {
     auto& paramEntry = (*parameterDescriptors)[i];
-    RefPtr<AudioParam> param = nullptr;
-    CreateAudioParam(param, audioParamIndex++, paramEntry.mName,
-                     paramEntry.mDefaultValue, paramEntry.mMinValue,
-                     paramEntry.mMaxValue);
+    RefPtr<AudioParam> param = CreateAudioParam(
+        audioParamIndex++, paramEntry.mName, paramEntry.mDefaultValue,
+        paramEntry.mMinValue, paramEntry.mMaxValue);
     AudioParamMap_Binding::MaplikeHelpers::Set(mParameters, paramEntry.mName,
                                                *param, aRv);
     if (NS_WARN_IF(aRv.Failed())) {

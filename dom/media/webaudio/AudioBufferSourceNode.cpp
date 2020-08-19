@@ -586,8 +586,8 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
       mLoop(false),
       mStartCalled(false),
       mBufferSet(false) {
-  CreateAudioParam(mPlaybackRate, PLAYBACKRATE, u"playbackRate"_ns, 1.0f);
-  CreateAudioParam(mDetune, DETUNE, u"detune"_ns, 0.0f);
+  mPlaybackRate = CreateAudioParam(PLAYBACKRATE, u"playbackRate"_ns, 1.0f);
+  mDetune = CreateAudioParam(DETUNE, u"detune"_ns, 0.0f);
   AudioBufferSourceNodeEngine* engine =
       new AudioBufferSourceNodeEngine(this, aContext->Destination());
   mTrack = AudioNodeTrack::Create(aContext, engine,
