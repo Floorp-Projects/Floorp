@@ -28,9 +28,9 @@ class XMLHttpRequestStringBuffer final {
 
   uint32_t UnsafeLength() const { return mData.Length(); }
 
-  mozilla::Result<mozilla::BulkWriteHandle<char16_t>, nsresult> UnsafeBulkWrite(
-      uint32_t aCapacity) {
-    return mData.BulkWrite(aCapacity, UnsafeLength(), false);
+  mozilla::BulkWriteHandle<char16_t> UnsafeBulkWrite(uint32_t aCapacity,
+                                                     nsresult& aRv) {
+    return mData.BulkWrite(aCapacity, UnsafeLength(), false, aRv);
   }
 
   void Append(const nsAString& aString) {
@@ -168,9 +168,9 @@ uint32_t XMLHttpRequestStringWriterHelper::Length() const {
   return mBuffer->UnsafeLength();
 }
 
-mozilla::Result<mozilla::BulkWriteHandle<char16_t>, nsresult>
-XMLHttpRequestStringWriterHelper::BulkWrite(uint32_t aCapacity) {
-  return mBuffer->UnsafeBulkWrite(aCapacity);
+mozilla::BulkWriteHandle<char16_t> XMLHttpRequestStringWriterHelper::BulkWrite(
+    uint32_t aCapacity, nsresult& aRv) {
+  return mBuffer->UnsafeBulkWrite(aCapacity, aRv);
 }
 
 // ---------------------------------------------------------------------------
