@@ -1578,22 +1578,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   if (mMimeInfo) {
     mMimeInfo->GetMIMEType(MIMEType);
   }
-  // Now get the URI
-  if (aChannel) {
-    aChannel->GetURI(getter_AddRefs(mSourceUrl));
-  }
 
-  mDownloadClassification =
-      nsContentSecurityUtils::ClassifyDownload(aChannel, MIMEType);
-  if (mDownloadClassification != nsITransfer::DOWNLOAD_ACCEPTABLE) {
-    // If the download is rated as forbidden,
-    // we need to silently cancel the request to make sure
-    // it wont show up in the download ui.
+  if (!nsContentSecurityUtils::IsDownloadAllowed(aChannel, MIMEType)) {
     mCanceled = true;
     request->Cancel(NS_ERROR_ABORT);
-    if (mDownloadClassification != nsITransfer::DOWNLOAD_FORBIDDEN) {
-      CreateFailedTransfer();
-    }
     return NS_OK;
   }
 
@@ -1625,6 +1613,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
         mMaybeCloseWindowHelper->SetShouldCloseWindow(tmp);
       }
     }
+  }
+
+  // Now get the URI
+  if (aChannel) {
+    aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
   // retarget all load notifications to our docloader instead of the original
@@ -2187,12 +2180,11 @@ nsresult nsExternalAppHandler::CreateTransfer() {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, target, EmptyString(), mMimeInfo, mTimeDownloadStarted,
         mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
-        mDownloadClassification, mBrowsingContext, mHandleInternally);
+        mBrowsingContext, mHandleInternally);
   } else {
     rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
-                        channel && NS_UsePrivateBrowsing(channel),
-                        mDownloadClassification);
+                        channel && NS_UsePrivateBrowsing(channel));
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2256,13 +2248,12 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
         mTimeDownloadStarted, nullptr, this,
-        channel && NS_UsePrivateBrowsing(channel), mDownloadClassification,
-        mBrowsingContext, mHandleInternally);
+        channel && NS_UsePrivateBrowsing(channel), mBrowsingContext,
+        mHandleInternally);
   } else {
     rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
                         mTimeDownloadStarted, nullptr, this,
-                        channel && NS_UsePrivateBrowsing(channel),
-                        mDownloadClassification);
+                        channel && NS_UsePrivateBrowsing(channel));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -334,13 +334,6 @@ class nsExternalAppHandler final : public nsIStreamListener,
   uint32_t mReason;
 
   /**
-   * Indicates if the nsContentSecurityUtils rate this download as
-   * acceptable, potentialy unwanted or illigal request.
-   *
-   */
-  int32_t mDownloadClassification;
-
-  /**
    * Track the executable-ness of the temporary file.
    */
   bool mTempFileIsExecutable;
