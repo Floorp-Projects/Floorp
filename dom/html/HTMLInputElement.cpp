@@ -1284,7 +1284,7 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       mAutocompleteInfoState = nsContentUtils::eAutocompleteAttrState_Unknown;
     }
 
-    if (mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) {
+    if (CreatesDateTimeWidget()) {
       if (aName == nsGkAtoms::value || aName == nsGkAtoms::readonly ||
           aName == nsGkAtoms::tabindex || aName == nsGkAtoms::required ||
           aName == nsGkAtoms::disabled) {
@@ -2926,7 +2926,7 @@ void HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify) {
 }
 
 void HTMLInputElement::Blur(ErrorResult& aError) {
-  if (mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) {
+  if (CreatesDateTimeWidget()) {
     if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
       AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
           dateTimeBoxElement, u"MozBlurInnerTextBox"_ns, CanBubble::eNo,
@@ -2941,7 +2941,7 @@ void HTMLInputElement::Blur(ErrorResult& aError) {
 
 void HTMLInputElement::Focus(const FocusOptions& aOptions,
                              CallerType aCallerType, ErrorResult& aError) {
-  if (mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) {
+  if (CreatesDateTimeWidget()) {
     if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
       AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
           dateTimeBoxElement, u"MozFocusInnerTextBox"_ns, CanBubble::eNo,
@@ -3201,8 +3201,7 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     }
   }
 
-  if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
-      aVisitor.mEvent->mMessage == eFocus &&
+  if (CreatesDateTimeWidget() && aVisitor.mEvent->mMessage == eFocus &&
       aVisitor.mEvent->mOriginalTarget == this) {
     // If original target is this and not the inner text control, we should
     // pass the focus to the inner text control.
@@ -3266,8 +3265,7 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   // inside of the same element).
   //
   // FIXME(emilio): Is this still needed now that we use Shadow DOM for this?
-  if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
-      aVisitor.mEvent->IsTrusted() &&
+  if (CreatesDateTimeWidget() && aVisitor.mEvent->IsTrusted() &&
       (aVisitor.mEvent->mMessage == eFocus ||
        aVisitor.mEvent->mMessage == eFocusIn ||
        aVisitor.mEvent->mMessage == eFocusOut ||
@@ -4202,8 +4200,7 @@ nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   // And now make sure our state is up to date
   UpdateState(false);
 
-  if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
-      IsInComposedDoc()) {
+  if (CreatesDateTimeWidget() && IsInComposedDoc()) {
     // Construct Shadow Root so web content can be hidden in the DOM.
     AttachAndSetUAShadowRoot();
   }
@@ -4234,8 +4231,7 @@ void HTMLInputElement::UnbindFromTree(bool aNullParent) {
     WillRemoveFromRadioGroup();
   }
 
-  if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
-      IsInComposedDoc()) {
+  if (CreatesDateTimeWidget() && IsInComposedDoc()) {
     NotifyUAWidgetTeardown();
   }
 
@@ -4459,15 +4455,15 @@ void HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify) {
   }
 
   if (IsInComposedDoc()) {
-    if (oldType == NS_FORM_INPUT_TIME || oldType == NS_FORM_INPUT_DATE) {
-      if (mType != NS_FORM_INPUT_TIME && mType != NS_FORM_INPUT_DATE) {
+    if (CreatesDateTimeWidget(oldType)) {
+      if (!CreatesDateTimeWidget()) {
         // Switch away from date/time type.
         NotifyUAWidgetTeardown();
       } else {
         // Switch between date and time.
         NotifyUAWidgetSetupOrChange();
       }
-    } else if (mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) {
+    } else if (CreatesDateTimeWidget()) {
       // Switch to date/time type.
       AttachAndSetUAShadowRoot();
     }

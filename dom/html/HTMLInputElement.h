@@ -1368,7 +1368,7 @@ class HTMLInputElement final : public TextControlElement,
 
   /*
    * Returns if the current type is one of the date/time input types: date,
-   * time and month. TODO: week and datetime-local.
+   * time, month, week and datetime-local.
    */
   static bool IsDateTimeInputType(uint8_t aType);
 
@@ -1592,6 +1592,11 @@ class HTMLInputElement final : public TextControlElement,
    * Checks if aDateTimeInputType should be supported.
    */
   static bool IsDateTimeTypeSupported(uint8_t aDateTimeInputType);
+
+  static bool CreatesDateTimeWidget(uint8_t aType) {
+    return aType == NS_FORM_INPUT_TIME || aType == NS_FORM_INPUT_DATE;
+  }
+  bool CreatesDateTimeWidget() const { return CreatesDateTimeWidget(mType); }
 
   struct nsFilePickerFilter {
     nsFilePickerFilter() : mFilterMask(0) {}
