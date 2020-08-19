@@ -497,10 +497,13 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
     if (*str != '"') {
       // The value is a token, not a quoted string.
       valueStart = str;
-      for (valueEnd = str;
-           *valueEnd && !nsCRT::IsAsciiSpace(*valueEnd) && *valueEnd != ';';
-           valueEnd++)
+      for (valueEnd = str; *valueEnd && *valueEnd != ';'; valueEnd++) {
         ;
+      }
+      // ignore trailing whitespace:
+      while (valueEnd > valueStart && nsCRT::IsAsciiSpace(*(valueEnd - 1))) {
+        valueEnd--;
+      }
       str = valueEnd;
     } else {
       isQuotedString = true;
