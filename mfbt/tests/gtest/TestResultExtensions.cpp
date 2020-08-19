@@ -412,3 +412,9 @@ TEST(ResultExtensions_ToResultInvoke, RefPtr_MemberFunction_NoInput_Macro)
     ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
   }
 }
+
+TEST(ResultExtensions_ToResultInvoke, nsCOMPtr_NS_IMETHOD_bool_Result)
+{
+  nsCOMPtr<nsIFile> file = MakeAndAddRef<nsLocalFile>();
+  ASSERT_TRUE(ToResultInvoke(file, &nsIFile::Equals, file).isOk());
+}
