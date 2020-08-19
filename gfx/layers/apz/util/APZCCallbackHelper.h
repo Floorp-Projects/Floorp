@@ -10,7 +10,6 @@
 #include "LayersTypes.h"
 #include "Units.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "nsRefreshObservers.h"

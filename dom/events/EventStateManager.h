@@ -15,7 +15,7 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/layers/APZUtils.h"
+#include "mozilla/layers/APZPublicUtils.h"
 #include "Units.h"
 #include "WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 

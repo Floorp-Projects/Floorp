@@ -7,6 +7,11 @@
 #ifndef mozilla_layers_APZUtils_h
 #define mozilla_layers_APZUtils_h
 
+// This file is for APZ-related utilities that are used by code in gfx/layers
+// only. For APZ-related utilities used by the Rest of the World (widget/,
+// layout/, dom/, IPDL protocols, etc.), use APZPublicUtils.h.
+// Do not include this header from source files outside of gfx/layers.
+
 #include <stdint.h>  // for uint32_t
 #include <type_traits>
 #include "gfxTypes.h"
@@ -21,31 +26,7 @@
 
 namespace mozilla {
 
-struct ExternalPixel;
-
-template <>
-struct IsPixel<ExternalPixel> : std::true_type {};
-
-typedef gfx::CoordTyped<ExternalPixel> ExternalCoord;
-typedef gfx::IntCoordTyped<ExternalPixel> ExternalIntCoord;
-typedef gfx::PointTyped<ExternalPixel> ExternalPoint;
-typedef gfx::IntPointTyped<ExternalPixel> ExternalIntPoint;
-typedef gfx::SizeTyped<ExternalPixel> ExternalSize;
-typedef gfx::IntSizeTyped<ExternalPixel> ExternalIntSize;
-typedef gfx::RectTyped<ExternalPixel> ExternalRect;
-typedef gfx::IntRectTyped<ExternalPixel> ExternalIntRect;
-typedef gfx::MarginTyped<ExternalPixel> ExternalMargin;
-typedef gfx::IntMarginTyped<ExternalPixel> ExternalIntMargin;
-typedef gfx::IntRegionTyped<ExternalPixel> ExternalIntRegion;
-
-typedef gfx::Matrix4x4Typed<ExternalPixel, ParentLayerPixel>
-    ExternalToParentLayerMatrix4x4;
-
-struct ExternalPixel {};
-
 namespace layers {
-
-class AsyncPanZoomController;
 
 enum CancelAnimationFlags : uint32_t {
   Default = 0x0,             /* Cancel all animations */
@@ -78,11 +59,6 @@ enum class ScrollSource {
   // Keyboard
   Keyboard,
 };
-
-MOZ_DEFINE_ENUM_CLASS_WITH_BASE(APZWheelAction, uint8_t, (
-    Scroll,
-    PinchZoom
-))
 // clang-format on
 
 // Epsilon to be used when comparing 'float' coordinate values
@@ -137,22 +113,6 @@ constexpr AsyncTransformComponents LayoutAndVisual(
     AsyncTransformComponent::eLayout, AsyncTransformComponent::eVisual);
 
 namespace apz {
-
-/**
- * Initializes the global state used in AsyncPanZoomController.
- * This is normally called when it is first needed in the constructor
- * of APZCTreeManager, but can be called manually to force it to be
- * initialized earlier.
- */
-void InitializeGlobalState();
-
-/**
- * See AsyncPanZoomController::CalculatePendingDisplayPort. This
- * function simply delegates to that one, so that non-layers code
- * never needs to include AsyncPanZoomController.h
- */
-const ScreenMargin CalculatePendingDisplayPort(
-    const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity);
 
 /**
  * Is aAngle within the given threshold of the horizontal axis?
