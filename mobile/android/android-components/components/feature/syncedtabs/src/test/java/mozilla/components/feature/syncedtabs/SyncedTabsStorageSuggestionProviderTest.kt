@@ -4,17 +4,20 @@
 
 package mozilla.components.feature.syncedtabs
 
+import android.graphics.drawable.Drawable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
+import mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,15 +25,21 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SyncedTabsStorageSuggestionProviderTest {
     private lateinit var syncedTabs: SyncedTabsStorage
+    private lateinit var indicatorIcon: DeviceIndicators
+    private lateinit var indicatorIconDesktop: Drawable
+    private lateinit var indicatorIconMobile: Drawable
 
     @Before
     fun setup() {
         syncedTabs = mock()
+        indicatorIcon = mock()
+        indicatorIconDesktop = mock()
+        indicatorIconMobile = mock()
     }
 
     @Test
     fun `matches remote tabs`() = runBlocking {
-        val provider = SyncedTabsStorageSuggestionProvider(syncedTabs, mock())
+        val provider = SyncedTabsStorageSuggestionProvider(syncedTabs, mock(), mock(), indicatorIcon)
         val deviceTabs1 = SyncedDeviceTabs(
             Device(
                 id = "client1",
@@ -83,6 +92,8 @@ class SyncedTabsStorageSuggestionProviderTest {
             )
         )
         whenever(syncedTabs.getSyncedDeviceTabs()).thenReturn(listOf(deviceTabs1, deviceTabs2))
+        whenever(indicatorIcon.desktop).thenReturn(indicatorIconDesktop)
+        whenever(indicatorIcon.mobile).thenReturn(indicatorIconMobile)
 
         val suggestions = provider.onInputChanged("bobo")
         assertEquals(3, suggestions.size)
@@ -92,5 +103,14 @@ class SyncedTabsStorageSuggestionProviderTest {
         assertEquals("Foo Client", suggestions[1].description)
         assertEquals("BOBO in CAPS", suggestions[2].title)
         assertEquals("Bar Client", suggestions[2].description)
+        assertEquals(setOf(Flag.SYNC_TAB), suggestions[0].flags)
+        assertEquals(setOf(Flag.SYNC_TAB), suggestions[1].flags)
+        assertEquals(setOf(Flag.SYNC_TAB), suggestions[2].flags)
+        assertEquals(indicatorIconDesktop, suggestions[0].indicatorIcon)
+        assertEquals(indicatorIconDesktop, suggestions[1].indicatorIcon)
+        assertEquals(indicatorIconMobile, suggestions[2].indicatorIcon)
+        assertNotNull(suggestions[0].indicatorIcon)
+        assertNotNull(suggestions[1].indicatorIcon)
+        assertNotNull(suggestions[2].indicatorIcon)
     }
 }
