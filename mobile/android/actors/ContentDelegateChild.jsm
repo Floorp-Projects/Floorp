@@ -163,6 +163,12 @@ class ContentDelegateChild extends GeckoViewActorChild {
         });
         break;
       }
+      case "MozPaintStatusReset": {
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:PaintStatusReset",
+        });
+        break;
+      }
     }
   }
 }

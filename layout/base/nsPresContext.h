@@ -1032,6 +1032,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool HadContentfulPaint() const { return mHadContentfulPaint; }
   void NotifyNonBlankPaint();
   void NotifyContentfulPaint();
+  void NotifyPaintStatusReset();
   void NotifyDOMContentFlushed();
 
   bool UsesExChUnits() const { return mUsesExChUnits; }

@@ -2366,6 +2366,16 @@ void nsPresContext::NotifyContentfulPaint() {
   }
 }
 
+void nsPresContext::NotifyPaintStatusReset() {
+  mHadNonBlankPaint = false;
+  mHadContentfulPaint = false;
+#if defined(MOZ_WIDGET_ANDROID)
+  (new AsyncEventDispatcher(mDocument, u"MozPaintStatusReset"_ns,
+                            CanBubble::eYes, ChromeOnlyDispatch::eYes))
+      ->PostDOMEvent();
+#endif
+}
+
 void nsPresContext::NotifyDOMContentFlushed() {
   NS_ENSURE_TRUE_VOID(mPresShell);
   if (IsRootContentDocument()) {

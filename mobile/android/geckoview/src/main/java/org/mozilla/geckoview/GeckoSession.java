@@ -356,6 +356,7 @@ public class GeckoSession implements Parcelable {
                 "GeckoView:FullScreenExit",
                 "GeckoView:WebAppManifest",
                 "GeckoView:FirstContentfulPaint",
+                "GeckoView:PaintStatusReset",
             }
         ) {
             @Override
@@ -413,6 +414,8 @@ public class GeckoSession implements Parcelable {
                     }
                 } else if ("GeckoView:FirstContentfulPaint".equals(event)) {
                     delegate.onFirstContentfulPaint(GeckoSession.this);
+                } else if ("GeckoView:PaintStatusReset".equals(event)) {
+                    delegate.onPaintStatusReset(GeckoSession.this);
                 }
             }
         };
@@ -3334,9 +3337,10 @@ public class GeckoSession implements Parcelable {
         /**
          * Notification that the first content paint has occurred.
          * This callback is invoked for the first content paint after
-         * a page has been loaded. The function {@link #onFirstComposite(GeckoSession)}
-         * will be called once the compositor has started rendering. However, it is
-         * possible for the compositor to start rendering before there is any content to render.
+         * a page has been loaded, or after a {@link #onPaintStatusReset(GeckoSession)}
+         * event. The function {@link #onFirstComposite(GeckoSession)} will be called
+         * once the compositor has started rendering. However, it is possible for the
+         * compositor to start rendering before there is any content to render.
          * onFirstContentfulPaint() is called once some content has been rendered. It may be nothing
          * more than the page background color. It is not an indication that the whole page has
          * been rendered.
@@ -3344,6 +3348,21 @@ public class GeckoSession implements Parcelable {
          */
         @UiThread
         default void onFirstContentfulPaint(@NonNull GeckoSession session) {}
+
+        /**
+         * Notification that the paint status has been reset.
+         *
+         * This callback is invoked whenever the painted content is no longer being
+         * displayed. This can occur in response to the session being paused.
+         * After this has fired the compositor may continue rendering, but may not
+         * render the page content. This callback can therefore be used in conjunction
+         * with {@link #onFirstContentfulPaint(GeckoSession)} to determine when there is
+         * valid content being rendered.
+         *
+         * @param session The GeckoSession that had the paint status reset event.
+         */
+        @UiThread
+        default void onPaintStatusReset(@NonNull GeckoSession session) {}
 
         /**
          * This is fired when the loaded document has a valid Web App Manifest present.

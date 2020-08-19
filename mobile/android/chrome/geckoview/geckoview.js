@@ -571,6 +571,7 @@ function startup() {
                 "MozDOMFullscreen:Exited": {},
                 "MozDOMFullscreen:Request": {},
                 MozFirstContentfulPaint: {},
+                MozPaintStatusReset: {},
                 contextmenu: { capture: true },
               },
               allFrames: true,
