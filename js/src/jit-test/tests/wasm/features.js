@@ -25,7 +25,6 @@ let nightly = !release_or_beta;
 
 let nightlyOnlyFeatures = [
   ['gc', wasmGcEnabled(), `(module (type $s (struct)) (func (param (ref null $s))))`],
-  ['simd', wasmSimdSupported(), `(module (memory 1 1) (func i32.const 0 i8x16.splat drop))`],
 ];
 
 for (let [name, enabled, test] of nightlyOnlyFeatures) {
@@ -34,6 +33,26 @@ for (let [name, enabled, test] of nightlyOnlyFeatures) {
     wasmEvalText(test);
   } else {
     assertErrorMessage(() => wasmEvalText(test), WebAssembly.CompileError, /./);
+  }
+}
+
+// These are features that are enabled in beta/release but may be disabled at
+// run-time for other reasons.  The best we can do for these features is to say
+// that if one claims to be supported then it must work, and otherwise there
+// must be a CompileError.
+
+let releasedFeaturesMaybeDisabledAnyway = [
+  // SIMD will be disabled dynamically on x86/x64 if the hardware isn't SSE4.1+.
+  ['simd', wasmSimdSupported(), `(module (func (result v128) i32.const 0 i8x16.splat))`]
+];
+
+for (let [name, enabled, test] of releasedFeaturesMaybeDisabledAnyway) {
+  if (release_or_beta) {
+    if (enabled) {
+      wasmEvalText(test);
+    } else {
+      assertErrorMessage(() => wasmEvalText(test), WebAssembly.CompileError, /./);
+    }
   }
 }
 
