@@ -16,12 +16,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ellipsize="none"
-        android:gravity="center_vertical"
         android:lineSpacingExtra="6dp"
         android:paddingHorizontal="4dp"
         android:paddingTop="4dp"
         android:scrollHorizontally="false"
+        android:textAlignment="viewStart"
         android:textColor="?primaryText"
+        android:textDirection="locale"
         android:textSize="14sp"
         tools:text="@string/private_browsing_placeholder_description_2" />
 
