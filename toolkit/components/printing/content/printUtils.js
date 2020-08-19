@@ -65,6 +65,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "PRINT_ALWAYS_SILENT",
+  "print.always_print_silent",
+  false
+);
+
 var gFocusedElement = null;
 
 var PrintUtils = {
@@ -239,7 +246,7 @@ var PrintUtils = {
    *        The BrowsingContext of the window to print.
    */
   startPrintWindow(aBrowsingContext) {
-    if (PRINT_TAB_MODAL) {
+    if (PRINT_TAB_MODAL && !PRINT_ALWAYS_SILENT) {
       this._openTabModalPrint(aBrowsingContext);
     } else {
       this.printWindow(aBrowsingContext);
