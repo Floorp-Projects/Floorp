@@ -5205,11 +5205,6 @@ static bool FrontendTest(JSContext* cx,
 
     switch (dumpType) {
       case DumpType::ParseNode: {
-        pn = parser.parse();
-        if (!pn) {
-          return false;
-        }
-
 #if defined(DEBUG)
         js::Fprinter out(stderr);
         DumpParseTree(pn, out);
