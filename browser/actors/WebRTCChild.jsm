@@ -122,20 +122,6 @@ class WebRTCChild extends JSWindowActorChild {
           aMessage.data
         );
         break;
-      case "webrtc:MuteCamera":
-        Services.obs.notifyObservers(
-          null,
-          "getUserMedia:muteVideo",
-          aMessage.data
-        );
-        break;
-      case "webrtc:UnmuteCamera":
-        Services.obs.notifyObservers(
-          null,
-          "getUserMedia:unmuteVideo",
-          aMessage.data
-        );
-        break;
     }
   }
 }
