@@ -9,8 +9,7 @@
 
 #include <unordered_map>
 
-#include "base/platform_thread.h"                    // for PlatformThreadId
-#include "mozilla/layers/AsyncCompositionManager.h"  // for AsyncTransform
+#include "base/platform_thread.h"  // for PlatformThreadId
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/SampleTime.h"
 #include "mozilla/StaticMutex.h"
