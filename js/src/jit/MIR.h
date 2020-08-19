@@ -5846,6 +5846,7 @@ class MCharCodeAt
  public:
   INSTRUCTION_HEADER(CharCodeAt)
   TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, string), (1, index))
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
@@ -5855,6 +5856,8 @@ class MCharCodeAt
     // Strings are immutable, so there is no implicit dependency.
     return AliasSet::None();
   }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 
   void computeRange(TempAllocator& alloc) override;
 
