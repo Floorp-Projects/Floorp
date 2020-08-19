@@ -79,12 +79,17 @@ function enterAndLeaveFullScreen(tab, elementId) {
   return SpecialPowers.spawn(tab.linkedBrowser, [elementId], elementId => {
     return new Promise(r => {
       const element = content.document.getElementById(elementId);
+      ok(!content.document.fullscreenElement, "no fullscreen element");
       element.requestFullscreen();
       element.onfullscreenchange = () => {
-        element.onfullscreenchange = null;
-        element.onfullscreenerror = null;
-        content.document.exitFullscreen();
-        r();
+        if (content.document.fullscreenElement) {
+          element.onfullscreenerror = null;
+          content.document.exitFullscreen();
+        } else {
+          element.onfullscreenchange = null;
+          element.onfullscreenerror = null;
+          r();
+        }
       };
       element.onfullscreenerror = () => {
         // Retry until the element successfully enters fullscreen.
