@@ -115,6 +115,8 @@ const REGION_SPOCS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-spocs-config";
 const REGION_LAYOUT_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-layout-config";
+const LOCALE_LIST_CONFIG =
+  "browser.newtabpage.activity-stream.discoverystream.locale-list-config";
 
 // Determine if spocs should be shown for a geo/locale
 function showSpocs({ geo }) {
@@ -581,7 +583,12 @@ const FEEDS_DATA = [
     getValue: ({ geo, locale }) => {
       const preffedRegionsString =
         Services.prefs.getStringPref(REGION_STORIES_CONFIG) || "";
+      const preffedLocaleListString =
+        Services.prefs.getStringPref(LOCALE_LIST_CONFIG) || "";
       const preffedRegions = preffedRegionsString.split(",").map(s => s.trim());
+      const preffedLocales = preffedLocaleListString
+        .split(",")
+        .map(s => s.trim());
       const locales = {
         US: ["en-CA", "en-GB", "en-US"],
         CA: ["en-CA", "en-GB", "en-US"],
@@ -602,7 +609,8 @@ const FEEDS_DATA = [
         JP: ["ja", "ja-JP-mac"],
       }[geo];
       return (
-        preffedRegions.includes(geo) && !!locales && locales.includes(locale)
+        (locale && preffedLocales.includes(locale)) ||
+        (preffedRegions.includes(geo) && !!locales && locales.includes(locale))
       );
     },
   },
