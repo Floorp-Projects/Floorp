@@ -271,23 +271,12 @@
         />
     </menulist>
 
-    <html:template id="printTabModalTemplate">
-      <vbox id="printTabModalTemplate" class="tabSubDialogBoxContainer printDialogContainer" hidden="true">
-        <vbox class="dialogBox" pack="end" role="dialog" aria-labelledby="dialogTitle">
-          <hbox class="dialogTitleBar" align="center" hidden="true">
-            <label class="dialogTitle" flex="1"/>
-            <button class="dialogClose close-icon"/>
-          </hbox>
-          <hbox class="printTabModalView">
-            <stack class="previewStack">
-              <vbox class="previewRendering">
-                <h1 class="print-pending-label" data-l10n-id="printui-loading"></h1>
-              </vbox>
-            </stack>
-            <browser class="printSettingsBrowser dialogFrame" hidden="true"/>
-          </hbox>
+    <html:template id="printPreviewStackTemplate">
+      <stack class="previewStack" rendering="true">
+        <vbox class="previewRendering">
+          <h1 class="print-pending-label" data-l10n-id="printui-loading"></h1>
         </vbox>
-      </vbox>
+      </stack>
     </html:template>
 
     <html:template id="invalidFormTemplate">
@@ -393,13 +382,12 @@
     <html:template id="dialogStackTemplate">
       <stack class="dialogStack tab-dialog-box" hidden="true">
         <vbox class="dialogTemplate dialogOverlay" align="center" topmost="true" hidden="true">
-          <vbox class="dialogBox"
-                pack="end"
+          <hbox class="dialogBox"
                 role="dialog">
             <browser class="dialogFrame"
-                    autoscroll="false"
-                    disablehistory="true"/>
-          </vbox>
+                     autoscroll="false"
+                     disablehistory="true"/>
+          </hbox>
         </vbox>
       </stack>
     </html:template>
