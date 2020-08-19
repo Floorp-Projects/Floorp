@@ -3261,35 +3261,6 @@ bool CacheIRCompiler::emitLoadStringLengthResult(StringOperandId strId) {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
-                                               Int32OperandId indexId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  Register str = allocator.useRegister(masm, strId);
-  Register index = allocator.useRegister(masm, indexId);
-  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Bounds check, load string char.
-  masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
-                            scratch1, failure->label());
-  masm.loadStringChar(str, index, scratch1, scratch2, failure->label());
-
-  // Load StaticString for this char.
-  masm.boundsCheck32PowerOfTwo(scratch1, StaticStrings::UNIT_STATIC_LIMIT,
-                               failure->label());
-  masm.movePtr(ImmPtr(&cx_->staticStrings().unitStaticTable), scratch2);
-  masm.loadPtr(BaseIndex(scratch2, scratch1, ScalePointer), scratch2);
-
-  EmitStoreResult(masm, scratch2, JSVAL_TYPE_STRING, output);
-  return true;
-}
-
 bool CacheIRCompiler::emitLoadStringCharCodeResult(StringOperandId strId,
                                                    Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
