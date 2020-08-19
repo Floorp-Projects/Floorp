@@ -589,6 +589,7 @@ class MediaStreamTrack : public DOMEventTargetHelper, public SupportsWeakPtr {
 
   /**
    * Sets this track's muted state without raising any events.
+   * Only really set by cloning. See MutedChanged for runtime changes.
    */
   void SetMuted(bool aMuted) { mMuted = aMuted; }
 
