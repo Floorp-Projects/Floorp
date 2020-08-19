@@ -614,7 +614,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   }
 
   uint32_t len = data.length();
-  SourceExtent extent = SourceExtent::makeGlobalExtent(len, options);
+  SourceExtent extent =
+      SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
   frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
                                          compilationInfo.directives, extent);
   JSScript* script =

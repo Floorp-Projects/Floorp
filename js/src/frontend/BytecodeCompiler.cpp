@@ -524,8 +524,8 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata.get();
 
   uint32_t len = this->sourceBuffer_.length();
-  SourceExtent extent =
-      SourceExtent::makeGlobalExtent(len, compilationInfo.options);
+  SourceExtent extent = SourceExtent::makeGlobalExtent(
+      len, compilationInfo.options.lineno, compilationInfo.options.column);
   ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
