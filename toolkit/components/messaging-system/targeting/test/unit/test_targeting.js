@@ -1,3 +1,6 @@
+const { ClientEnvironment } = ChromeUtils.import(
+  "resource://normandy/lib/ClientEnvironment.jsm"
+);
 const { TargetingContext } = ChromeUtils.import(
   "resource://messaging-system/targeting/Targeting.jsm"
 );
@@ -203,4 +206,14 @@ add_task(async function test_telemetry_event_error() {
 
   TelemetryTestUtils.assertEvents(expectedEvents);
   Services.telemetry.clearEvents();
+});
+
+// Make sure that when using the Normandy-style ClientEnvironment context,
+// `liveTelemetry` works. `liveTelemetry` is a particularly tricky object to
+// proxy, so it's useful to check specifically.
+add_task(async function test_live_telemetry() {
+  let ctx = { env: ClientEnvironment };
+  let targeting = new TargetingContext();
+  // This shouldn't throw.
+  await targeting.eval("env.liveTelemetry.main", ctx);
 });
