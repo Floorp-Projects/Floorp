@@ -2982,6 +2982,13 @@ void BrowserChild::ClearCachedResources() {
   MOZ_ASSERT(lm);
 
   lm->ClearCachedResources();
+
+  if (nsCOMPtr<Document> document = GetTopLevelDocument()) {
+    nsPresContext* presContext = document->GetPresContext();
+    if (presContext) {
+      presContext->NotifyPaintStatusReset();
+    }
+  }
 }
 
 void BrowserChild::InvalidateLayers() {

@@ -748,6 +748,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onFullScreen(@NonNull GeckoSession, boolean);
     method @UiThread default public void onKill(@NonNull GeckoSession);
     method @UiThread default public void onMetaViewportFitChange(@NonNull GeckoSession, @NonNull String);
+    method @UiThread default public void onPaintStatusReset(@NonNull GeckoSession);
     method @UiThread @Nullable default public GeckoResult<SlowScriptResponse> onSlowScript(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onTitleChange(@NonNull GeckoSession, @Nullable String);
     method @UiThread default public void onWebAppManifest(@NonNull GeckoSession, @NonNull JSONObject);
