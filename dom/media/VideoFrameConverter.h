@@ -139,22 +139,14 @@ class VideoFrameConverter {
                   ("VideoFrameConverter Track is now %s",
                    aTrackEnabled ? "enabled" : "disabled"));
           mTrackEnabled = aTrackEnabled;
-          if (!aTrackEnabled) {
-            // After disabling we immediately send a frame as black, so it can
-            // be seen quickly, even if no frames are flowing.
-            if (mLastFrameConverted) {
-              // This track has already seen frames so we re-send the last one
-              // as black.
-              ProcessVideoFrame(
-                  FrameToProcess{nullptr, TimeStamp::Now(),
-                                 gfx::IntSize(mLastFrameConverted->width(),
-                                              mLastFrameConverted->height()),
-                                 true});
-            } else {
-              // This track has not yet seen any frame. We make one up.
-              ProcessVideoFrame(FrameToProcess{nullptr, TimeStamp::Now(),
-                                               gfx::IntSize(640, 480), true});
-            }
+          if (!aTrackEnabled && mLastFrameConverted) {
+            // After disabling, we re-send the last frame as black in case the
+            // source had already stopped and no frame is coming soon.
+            ProcessVideoFrame(
+                FrameToProcess{nullptr, TimeStamp::Now(),
+                               gfx::IntSize(mLastFrameConverted->width(),
+                                            mLastFrameConverted->height()),
+                               true});
           }
         }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
