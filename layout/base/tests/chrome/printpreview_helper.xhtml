@@ -581,6 +581,61 @@ async function runTest20() {
 
 async function runTest21() {
   await compareFiles("data:text/html,<audio controls>", "data:text/html,<audio controls >"); // Shouldn't crash.
+  requestAnimationFrame(() => setTimeout(runTest22));
+}
+
+async function runTest22() {
+  // Similar to above runtTest20 but more specific for the logic to choose
+  // the current page in the new print preview UI so this test works only
+  // in the new print preview.
+  if (SpecialPowers.getBoolPref("print.tab_modal.enabled")) {
+    frameElts[0].contentDocument.body.innerHTML =
+      '<style>div { page-break-after: always; max-height: 2in; }</style>' +
+      '<div>1</div>' +
+      '<div>2</div>' +
+      '<div>3</div>' +
+      '<div>4</div>' +
+      '<div>5</div>' +
+      '<div>6</div>' +
+      '<div>7</div>' +
+      '<div>8</div>' +
+      '<div>9</div>' +
+      '<div>10</div>';
+
+    await printpreview({ settings: { paperHeight: 3 } });
+
+    const initialCurrentPageNumber = gWbp.printPreviewCurrentPageNumber;
+
+    // NOTE: In the cases the page hight is less than the half height of the
+    // print preview scroll port height, the initial current page number will
+    // not be 1.
+    ok(initialCurrentPageNumber >= 1,
+       "The initial current page number should be equal to or greater than 1");
+
+    const totalPageNumber = gWbp.printPreviewNumPages;
+    for (let n = initialCurrentPageNumber;
+         n <= totalPageNumber - initialCurrentPageNumber;
+         n++) {
+      // Scroll to the given page number and check the current page number.
+      gWbp.printPreviewScrollToPage(
+        Ci.nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM, n);
+      is(gWbp.printPreviewCurrentPageNumber, n,
+         `The current page number should be ${n}`);
+    }
+
+    // Scroll to the end of the scroll region.
+    gWbp.printPreviewScrollToPage(Ci.nsIWebBrowserPrint.PRINTPREVIEW_END, 0);
+
+    // Same as the initial current page number case, the last page might not
+    // be the current page if the page height is less than the half of the scroll
+    // port.
+    is(gWbp.printPreviewCurrentPageNumber,
+       totalPageNumber + 1 - initialCurrentPageNumber,
+       `The current page number should be ${totalPageNumber + 1 - initialCurrentPageNumber}`);
+
+    exitprintpreview();
+  }
+
   finish();
 }
 
