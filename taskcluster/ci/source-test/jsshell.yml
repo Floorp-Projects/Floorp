@@ -26,7 +26,6 @@ job-defaults:
         tier: 2
     run:
         using: mach
-        workdir: /home/cltbld
         mach: jsshell-bench --perfherder={shell} --binary=$MOZ_FETCHES_DIR/$JSSHELL {test}
     run-on-projects:
         by-shell:
