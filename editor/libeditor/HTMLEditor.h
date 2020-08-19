@@ -2607,8 +2607,6 @@ class HTMLEditor final : public TextEditor,
    * `HandleDeleteCollapsedSelectionAtHRElement()`.
    * Note that don't call this for invisible `<br>` element.
    *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
    * @param aAtomicContent      The atomic content to be deleted.
    * @param aCaretPoint         The caret point (i.e., selection start or
    *                            end).
@@ -2617,9 +2615,7 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteCollapsedSelectionAtAtomicContent(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers, nsIContent& aAtomicContent,
-      const EditorDOMPoint& aCaretPoint,
+      nsIContent& aAtomicContent, const EditorDOMPoint& aCaretPoint,
       const WSRunScanner& aWSRunScannerAtCaret);
 
   /**
@@ -2633,7 +2629,6 @@ class HTMLEditor final : public TextEditor,
    *     odd.
    *
    * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
    * @param aHRElement          The `<hr>` element to be removed.
    * @param aCaretPoint         The caret point (i.e., selection start or
    *                            end).
@@ -2642,8 +2637,7 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteCollapsedSelectionAtHRElement(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers, Element& aHRElement,
+      nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
       const EditorDOMPoint& aCaretPoint,
       const WSRunScanner& aWSRunScannerAtCaret);
 
