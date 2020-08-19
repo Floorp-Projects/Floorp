@@ -487,15 +487,7 @@ nsresult FileReader::GetAsDataURL(Blob* aBlob, const char* aFileData,
   }
   aResult.AppendLiteral(";base64,");
 
-  nsCString encodedData;
-  nsresult rv = Base64Encode(Substring(aFileData, aDataLen), encodedData);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!AppendASCIItoUTF16(encodedData, aResult, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
+  return Base64EncodeAppend(aFileData, aDataLen, aResult);
 }
 
 /* virtual */

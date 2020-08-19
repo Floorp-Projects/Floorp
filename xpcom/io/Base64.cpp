@@ -359,37 +359,60 @@ nsresult Base64Encode(const char* aBinary, uint32_t aBinaryLen,
   return NS_OK;
 }
 
-template <typename T>
-static nsresult Base64EncodeHelper(const T& aBinary, T& aBase64) {
-  // Check for overflow.
-  if (aBinary.Length() > (UINT32_MAX / 4) * 3) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aBinary.IsEmpty()) {
-    aBase64.Truncate();
+template <bool Append = false, typename T, typename U>
+static nsresult Base64EncodeHelper(const T* const aBinary,
+                                   const size_t aBinaryLen, U& aBase64) {
+  if (aBinaryLen == 0) {
+    if (!Append) {
+      aBase64.Truncate();
+    }
     return NS_OK;
   }
 
-  uint32_t base64Len = ((aBinary.Length() + 2) / 3) * 4;
+  const uint32_t prefixLen = Append ? aBase64.Length() : 0;
+  const auto base64LenOrErr = [aBinaryLen,
+                               prefixLen]() -> Result<uint32_t, nsresult> {
+    // XXX(sg) Necessary to silence bad warning about unused lambda capture when
+    // Append is false.
+    (void)prefixLen;
+    CheckedUint32 res = aBinaryLen;
+    // base 64 encoded length is 4/3rds the length of the input data, rounded up
+    res += 2;
+    res /= 3;
+    res *= 4;
+    res += prefixLen;
+    if (!res.isValid()) {
+      return Err(NS_ERROR_FAILURE);
+    }
+    return res.value();
+  }();
+  if (base64LenOrErr.isErr()) {
+    return base64LenOrErr.inspectErr();
+  }
+  const uint32_t base64Len = base64LenOrErr.inspect();
 
   nsresult rv;
-  auto handle = aBase64.BulkWrite(base64Len, 0, false, rv);
+  auto handle = aBase64.BulkWrite(base64Len, prefixLen, false, rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  Encode(aBinary.BeginReading(), aBinary.Length(), handle.Elements());
+  Encode(aBinary, aBinaryLen, handle.Elements() + prefixLen);
   handle.Finish(base64Len, false);
   return NS_OK;
 }
 
+nsresult Base64EncodeAppend(const char* aBinary, uint32_t aBinaryLen,
+                            nsAString& aBase64) {
+  return Base64EncodeHelper<true>(aBinary, aBinaryLen, aBase64);
+}
+
 nsresult Base64Encode(const nsACString& aBinary, nsACString& aBase64) {
-  return Base64EncodeHelper(aBinary, aBase64);
+  return Base64EncodeHelper(aBinary.BeginReading(), aBinary.Length(), aBase64);
 }
 
 nsresult Base64Encode(const nsAString& aBinary, nsAString& aBase64) {
-  return Base64EncodeHelper(aBinary, aBase64);
+  return Base64EncodeHelper(aBinary.BeginReading(), aBinary.Length(), aBase64);
 }
 
 template <typename T, typename U, typename Decoder>
