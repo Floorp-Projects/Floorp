@@ -607,10 +607,7 @@ async function webdriverSendKeysToElement(
 
     event.input(el);
     event.change(el);
-  } else if (
-    (el.type == "date" || el.type == "time") &&
-    Preferences.get("dom.forms.datetime")
-  ) {
+  } else if (el.type == "date" || el.type == "time") {
     interaction.setFormControlValue(el, value);
   } else {
     event.sendKeysToElement(value, el, win);
@@ -626,10 +623,7 @@ async function legacySendKeysToElement(el, value, a11y) {
 
     event.input(el);
     event.change(el);
-  } else if (
-    (el.type == "date" || el.type == "time") &&
-    Preferences.get("dom.forms.datetime")
-  ) {
+  } else if (el.type == "date" || el.type == "time") {
     interaction.setFormControlValue(el, value);
   } else {
     let visibilityCheckEl = el;

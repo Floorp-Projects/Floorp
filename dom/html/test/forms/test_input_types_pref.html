@@ -20,71 +20,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764481
 
   var testData = [
     {
-      prefs: [["dom.forms.color", false]],
-      inputType: "color",
-      expectedType: "text"
-    }, {
-      prefs: [["dom.forms.color", true]],
-      inputType: "color",
-      expectedType: "color"
-    }, {
-      prefs: [["dom.experimental_forms", false], ["dom.forms.datetime", false]],
-      inputType: "date",
-      expectedType: "text"
-    }, {
-      prefs: [["dom.experimental_forms", true], ["dom.forms.datetime", false]],
-      inputType: "date",
-      expectedType: "date"
-    }, {
-      prefs: [["dom.experimental_forms", false], ["dom.forms.datetime", true]],
-      inputType: "date",
-      expectedType: "date"
-    }, {
-      prefs: [["dom.experimental_forms", false], ["dom.forms.datetime", false]],
-      inputType: "time",
-      expectedType: "text"
-    }, {
-      prefs: [["dom.experimental_forms", true], ["dom.forms.datetime", false]],
-      inputType: "time",
-      expectedType: "time"
-    }, {
-      prefs: [["dom.experimental_forms", false], ["dom.forms.datetime", true]],
-      inputType: "time",
-      expectedType: "time"
-    }, {
-      prefs: [["dom.forms.datetime", false], ["dom.forms.datetime.others", false]],
+      prefs: [["dom.forms.datetime.others", false]],
       inputType: "month",
       expectedType: "text"
     }, {
-      prefs: [["dom.forms.datetime", true], ["dom.forms.datetime.others", false]],
+      prefs: [["dom.forms.datetime.others", false]],
       inputType: "month",
       expectedType: "text"
     }, {
-      prefs: [["dom.forms.datetime", false], ["dom.forms.datetime.others", true]],
+      prefs: [["dom.forms.datetime.others", true]],
       inputType: "month",
       expectedType: "month"
     }, {
-      prefs: [["dom.forms.datetime", false], ["dom.forms.datetime.others", false]],
+      prefs: [["dom.forms.datetime.others", false]],
       inputType: "week",
       expectedType: "text"
     }, {
-      prefs: [["dom.forms.datetime", true], ["dom.forms.datetime.others", false]],
+      prefs: [["dom.forms.datetime.others", false]],
       inputType: "week",
       expectedType: "text"
     }, {
-      prefs: [["dom.forms.datetime", false], ["dom.forms.datetime.others", true]],
+      prefs: [["dom.forms.datetime.others", true]],
       inputType: "week",
       expectedType: "week"
     }, {
-      prefs: [["dom.forms.datetime", false], ["dom.forms.datetime.others", false]],
+      prefs: [["dom.forms.datetime.others", false]],
       inputType: "datetime-local",
       expectedType: "text"
     }, {
-      prefs: [["dom.forms.datetime", true], ["dom.forms.datetime.others", false]],
+      prefs: [["dom.forms.datetime.others", false]],
       inputType: "datetime-local",
       expectedType: "text"
     }, {
-      prefs: [["dom.forms.datetime", false], ["dom.forms.datetime.others", true]],
+      prefs: [["dom.forms.datetime.others", true]],
       inputType: "datetime-local",
       expectedType: "datetime-local"
     }

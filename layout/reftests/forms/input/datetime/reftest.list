@@ -1,5 +1,3 @@
-defaults pref(dom.forms.datetime,true)
-
 != time-simple-unthemed.html time-simple-unthemed-ref.html
 != time-large-font.html time-basic.html
 != time-width-height.html time-basic.html
