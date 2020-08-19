@@ -34,12 +34,17 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/layers/RenderTrace.h"
 #include <algorithm>
 
 using mozilla::Unused;
 using mozilla::dom::ContentChild;
 using mozilla::dom::ContentParent;
+using mozilla::gfx::DataSourceSurface;
+using mozilla::gfx::IntSize;
+using mozilla::gfx::Matrix;
+using mozilla::gfx::SurfaceFormat;
 
 #include "nsWindow.h"
 
@@ -1025,15 +1030,17 @@ class nsWindow::NPZCSupport final
     }
   }
 
-  int32_t HandleMotionEvent(
+  void HandleMotionEvent(
       const java::PanZoomController::NativeProvider::LocalRef& aInstance,
       int32_t aAction, int32_t aActionIndex, int64_t aTime, int32_t aMetaState,
       float aScreenX, float aScreenY, jni::IntArray::Param aPointerId,
       jni::FloatArray::Param aX, jni::FloatArray::Param aY,
       jni::FloatArray::Param aOrientation, jni::FloatArray::Param aPressure,
-      jni::FloatArray::Param aToolMajor, jni::FloatArray::Param aToolMinor) {
+      jni::FloatArray::Param aToolMajor, jni::FloatArray::Param aToolMinor,
+      jni::Object::Param aResult) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
+    auto returnResult = java::GeckoResult::Ref::From(aResult);
     RefPtr<IAPZCTreeManager> controller;
 
     if (LockedWindowPtr window{mWindow}) {
@@ -1041,7 +1048,11 @@ class nsWindow::NPZCSupport final
     }
 
     if (!controller) {
-      return INPUT_RESULT_UNHANDLED;
+      if (returnResult) {
+        returnResult->Complete(
+            java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+      }
+      return;
     }
 
     nsTArray<int32_t> pointerId(aPointerId->GetElements());
@@ -1070,7 +1081,11 @@ class nsWindow::NPZCSupport final
         type = MultiTouchInput::MULTITOUCH_CANCEL;
         break;
       default:
-        return INPUT_RESULT_UNHANDLED;
+        if (returnResult) {
+          returnResult->Complete(
+              java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+        }
+        return;
     }
 
     MultiTouchInput input(type, aTime, GetEventTimeStamp(aTime), 0);
@@ -1127,12 +1142,15 @@ class nsWindow::NPZCSupport final
     }
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
-    int32_t ret = (result.mHandledByRootApzc == Some(true))
-                      ? INPUT_RESULT_HANDLED
-                      : INPUT_RESULT_HANDLED_CONTENT;
+    int32_t handled = (result.mHandledByRootApzc == Some(true))
+                          ? INPUT_RESULT_HANDLED
+                          : INPUT_RESULT_HANDLED_CONTENT;
 
     if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-      return ret;
+      if (returnResult) {
+        returnResult->Complete(java::sdk::Integer::ValueOf(handled));
+      }
+      return;
     }
 
     // Dispatch APZ input event on Gecko thread.
@@ -1142,15 +1160,40 @@ class nsWindow::NPZCSupport final
       window->DispatchHitTest(touchEvent);
     });
 
-    switch (result.mStatus) {
-      case nsEventStatus_eIgnore:
-        return INPUT_RESULT_UNHANDLED;
-      case nsEventStatus_eConsumeDoDefault:
-        return ret;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
-        return INPUT_RESULT_UNHANDLED;
+    if (!returnResult) {
+      // We don't care how APZ handled the event so we're done here.
+      return;
     }
+
+    if (result.mHandledByRootApzc != Nothing()) {
+      // We know conclusively that the root APZ handled this or not and
+      // don't need to do any more work.
+      switch (result.mStatus) {
+        case nsEventStatus_eIgnore:
+          returnResult->Complete(
+              java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+          break;
+        case nsEventStatus_eConsumeDoDefault:
+          returnResult->Complete(java::sdk::Integer::ValueOf(handled));
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
+          returnResult->Complete(
+              java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+          break;
+      }
+      return;
+    }
+
+    // Wait to see if APZ handled the event or not...
+    controller->AddInputBlockCallback(
+        result.mInputBlockId,
+        [returnResult = java::GeckoResult::GlobalRef(returnResult)](
+            uint64_t aInputBlockId, bool aHandledByRootApzc) {
+          returnResult->Complete(java::sdk::Integer::ValueOf(
+              aHandledByRootApzc ? INPUT_RESULT_HANDLED
+                                 : INPUT_RESULT_HANDLED_CONTENT));
+        });
   }
 };
 
