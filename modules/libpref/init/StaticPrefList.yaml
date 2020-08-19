@@ -7405,6 +7405,13 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# Turn off any cameras (but not mics) while in the background. This is desirable
+# on mobile.
+- name: media.getusermedia.camera.background.mute.enabled
+  type: bool
+  value: @IS_ANDROID@
+  mirror: always
+
 # WebRTC prefs follow
 
 # Enables RTCPeerConnection support. Note that, when true, this pref enables
