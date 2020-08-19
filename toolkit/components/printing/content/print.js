@@ -770,9 +770,10 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   initialize() {
     super.initialize();
 
-    this.startRange = this.querySelector("#custom-range-start");
-    this.endRange = this.querySelector("#custom-range-end");
-    this.rangePicker = this.querySelector("#range-picker");
+    this._startRange = this.querySelector("#custom-range-start");
+    this._endRange = this.querySelector("#custom-range-end");
+    this._rangePicker = this.querySelector("#range-picker");
+    this._rangeError = this.querySelector("#error-invalid-range");
 
     this.addEventListener("input", this);
     document.addEventListener("page-count", this);
@@ -788,50 +789,66 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
   handleEvent(e) {
     if (e.type == "page-count") {
-      this.startRange.max = this.endRange.max = this._numPages =
+      this._startRange.max = this._endRange.max = this._numPages =
         e.detail.totalPages;
-      this.startRange.disabled = this.endRange.disabled = false;
-      if (!this.endRange.checkValidity()) {
-        this.endRange.value = this._numPages;
+      this._startRange.disabled = this._endRange.disabled = false;
+      if (!this._endRange.checkValidity()) {
+        this._endRange.value = this._numPages;
         this.dispatchSettingsChange({
-          endPageRange: this.endRange.value,
+          endPageRange: this._endRange.value,
         });
         this.endRange.dispatchEvent(new Event("change", { bubbles: true }));
       }
-    } else if (e.target == this.rangePicker) {
+      return;
+    }
+
+    if (e.target == this._rangePicker) {
       let printAll = e.target.value == "all";
-      this.startRange.required = this.endRange.required = !printAll;
+      this._startRange.required = this._endRange.required = !printAll;
       this.querySelector(".range-group").hidden = printAll;
       if (printAll) {
         this.dispatchSettingsChange({
           printAllOrCustomRange: "all",
         });
       } else {
-        this.startRange.value = 1;
-        this.endRange.value = this._numPages || 1;
+        this._startRange.value = 1;
+        this._endRange.value = this._numPages || 1;
 
         this.dispatchSettingsChange({
           printAllOrCustomRange: "custom",
-          startPageRange: this.startRange.value,
-          endPageRange: this.endRange.value,
+          startPageRange: this._startRange.value,
+          endPageRange: this._endRange.value,
         });
       }
-    } else if (e.target == this.startRange || e.target == this.endRange) {
-      if (this.startRange.checkValidity()) {
-        this.endRange.min = this.startRange.value;
+      this._rangeError.hidden = true;
+      return;
+    }
+
+    if (e.target == this._startRange || e.target == this._endRange) {
+      if (this._startRange.checkValidity()) {
+        this._endRange.min = this._startRange.value;
       }
-      if (this.endRange.checkValidity()) {
-        this.startRange.max = this.endRange.value;
+      if (this._endRange.checkValidity()) {
+        this._startRange.max = this._endRange.value;
       }
-      if (this.startRange.checkValidity() && this.endRange.checkValidity()) {
-        if (this.startRange.value && this.endRange.value) {
+      if (this._startRange.checkValidity() && this._endRange.checkValidity()) {
+        if (this._startRange.value && this._endRange.value) {
           this.dispatchSettingsChange({
-            startPageRange: this.startRange.value,
-            endPageRange: this.endRange.value,
+            startPageRange: this._startRange.value,
+            endPageRange: this._endRange.value,
           });
         }
       }
     }
+    document.l10n.setAttributes(
+      this._rangeError,
+      "printui-error-invalid-range",
+      {
+        numPages: this._numPages,
+      }
+    );
+    this._rangeError.hidden =
+      this._endRange.validity.valid && this._startRange.validity.valid;
   }
 }
 customElements.define("page-range-input", PageRangeInput);

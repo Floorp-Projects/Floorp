@@ -73,3 +73,7 @@ printui-loading = Preparing Preview
 ## Error messages shown when a user has an invalid input
 
 printui-error-invalid-scale = Scale must be a number between 10 and 200.
+
+# Variables
+# $numPages (integer) - Number of pages
+printui-error-invalid-range = Range must be a number between 1 and { $numPages }.
