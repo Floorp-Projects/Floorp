@@ -156,7 +156,8 @@ ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
     : AudioScheduledSourceNode(aContext, 2, ChannelCountMode::Max,
                                ChannelInterpretation::Speakers),
       mStartCalled(false) {
-  CreateAudioParam(mOffset, ConstantSourceNodeEngine::OFFSET, u"offset", 1.0f);
+  CreateAudioParam(mOffset, ConstantSourceNodeEngine::OFFSET, u"offset"_ns,
+                   1.0f);
   ConstantSourceNodeEngine* engine =
       new ConstantSourceNodeEngine(this, aContext->Destination());
   mTrack = AudioNodeTrack::Create(aContext, engine,
