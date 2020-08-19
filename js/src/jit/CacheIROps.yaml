@@ -448,14 +448,6 @@
     sym: SymbolId
     expected: SymbolField
 
-- name: GuardSpecificNativeFunction
-  shared: true
-  transpile: false
-  cost_estimate: 1
-  args:
-    obj: ObjId
-    native: JSNativeImm
-
 - name: GuardMagicValue
   shared: true
   transpile: true
@@ -640,13 +632,11 @@
   args:
     fun: ObjId
 
-- name: GuardFunApply
+- name: GuardFunApplyArray
   shared: false
   transpile: false
   cost_estimate: 3
   args:
-    argc: Int32Id
-    flags: CallFlagsImm
 
 - name: LoadObject
   shared: true
