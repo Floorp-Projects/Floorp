@@ -2,4 +2,11 @@
 
 ac_add_options --with-branding=browser/branding/nightly
 
+# STRIP_FLAGS is only valid for builds that strip;
+# Some builds like valgrind or code coverage disable stripping.
+if [ -z "$NOSTRIP_BUILD" ]; then
+  # Keep basic GDB symbols around in Nightly builds
+  ac_add_options STRIP_FLAGS=--strip-debug
+fi
+
 . "$topsrcdir/build/mozconfig.common.override"
