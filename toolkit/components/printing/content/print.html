@@ -22,7 +22,12 @@
         <option value="all" selected data-l10n-id="printui-page-range-all"></option>
         <option value="custom" data-l10n-id="printui-page-range-custom"></option>
       </select>
-      <input id="custom-range" name="page-range" pattern="\d(-\d)?" type="text" hidden data-l10n-id="printui-page-custom-range">
+      <div class="range-group" hidden="true">
+        <label data-l10n-id="printui-range-start" class="range-group-separator" for="custom-range-start"></label>
+        <input id="custom-range-start" type="number" min="1" step="1" class="range-group-input" disabled>
+        <label data-l10n-id="printui-range-end" class="range-group-separator" for="custom-range-end"></label>
+        <input id="custom-range-end" type="number" min="1" step="1" class="range-group-input" disabled>
+      </div>
     </template>
 
     <template id="orientation-template">
@@ -82,7 +87,7 @@
             <div is="orientation-input" class="toggle-group" role="radiogroup" aria-labelledby="orientation-label"></div>
           </section>
 
-          <section id="pages" class="section-block" hidden>
+          <section id="pages" class="section-block">
             <label for="page-range-input" class="block-label" data-l10n-id="printui-page-range-label"></label>
             <div id="page-range-input" is="page-range-input" class="page-range-input row"></div>
           </section>

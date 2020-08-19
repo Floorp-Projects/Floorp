@@ -87,7 +87,10 @@ class PrintingChild extends ActorChild {
           data.simplifiedMode,
           data.changingBrowsers,
           data.lastUsedPrinterName,
-          data.outputFormat
+          data.outputFormat,
+          data.startPageRange,
+          data.endPageRange,
+          data.printRange
         );
         break;
       }
@@ -312,7 +315,10 @@ class PrintingChild extends ActorChild {
     simplifiedMode,
     changingBrowsers,
     lastUsedPrinterName,
-    outputFormat
+    outputFormat,
+    startPageRange,
+    endPageRange,
+    printRange
   ) {
     const { docShell } = this;
 
@@ -330,6 +336,11 @@ class PrintingChild extends ActorChild {
         printSettings.outputFormat = printSettings.kOutputFormatPDF;
         printSettings.printToFile = true;
       }
+
+      // TODO: waiting on the print preview to be updated in Bug 1659005
+      printSettings.startPageRange = startPageRange;
+      printSettings.endPageRange = endPageRange;
+      printSettings.printRange = printRange;
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
