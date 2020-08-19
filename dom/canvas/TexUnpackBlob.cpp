@@ -487,14 +487,12 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
   const auto format = FormatForPackingInfo(pi);
   const auto bytesPerPixel = webgl::BytesPerPixel(pi);
 
-  const uint8_t dummy = 0;
   const uint8_t* uploadPtr = nullptr;
   if (mDesc.cpuData) {
     const auto range = mDesc.cpuData->Data();
     uploadPtr = range.begin().get();
     if (!uploadPtr) {
       MOZ_ASSERT(!range.length());
-      uploadPtr = &dummy;
     }
   }
 
