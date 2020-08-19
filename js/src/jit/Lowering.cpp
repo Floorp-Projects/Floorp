@@ -1898,8 +1898,8 @@ void LIRGenerator::visitConcat(MConcat* ins) {
 }
 
 void LIRGenerator::visitCharCodeAt(MCharCodeAt* ins) {
-  MDefinition* str = ins->getOperand(0);
-  MDefinition* idx = ins->getOperand(1);
+  MDefinition* str = ins->string();
+  MDefinition* idx = ins->index();
 
   MOZ_ASSERT(str->type() == MIRType::String);
   MOZ_ASSERT(idx->type() == MIRType::Int32);

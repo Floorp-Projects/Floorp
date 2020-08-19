@@ -765,7 +765,6 @@ class MOZ_STACK_CLASS IonBuilder {
   // String natives.
   InliningResult inlineStringObject(CallInfo& callInfo);
   InliningResult inlineStrCharCodeAt(CallInfo& callInfo);
-  InliningResult inlineConstantCharCodeAt(CallInfo& callInfo);
   InliningResult inlineStrFromCharCode(CallInfo& callInfo);
   InliningResult inlineStrFromCodePoint(CallInfo& callInfo);
   InliningResult inlineStrCharAt(CallInfo& callInfo);

@@ -1660,6 +1660,30 @@ MDefinition* MConcat::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MCharCodeAt::foldsTo(TempAllocator& alloc) {
+  MDefinition* string = this->string();
+  if (!string->isConstant()) {
+    return this;
+  }
+
+  MDefinition* index = this->index();
+  if (index->isSpectreMaskIndex()) {
+    index = index->toSpectreMaskIndex()->index();
+  }
+  if (!index->isConstant()) {
+    return this;
+  }
+
+  JSAtom* atom = &string->toConstant()->toString()->asAtom();
+  int32_t idx = index->toConstant()->toInt32();
+  if (idx < 0 || uint32_t(idx) >= atom->length()) {
+    return this;
+  }
+
+  char16_t ch = atom->latin1OrTwoByteChar(idx);
+  return MConstant::New(alloc, Int32Value(ch));
+}
+
 static bool EnsureFloatInputOrConvert(MUnaryInstruction* owner,
                                       TempAllocator& alloc) {
   MDefinition* input = owner->input();
