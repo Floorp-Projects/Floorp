@@ -35,6 +35,7 @@ FRAGMENT(JSObject, simple) {
   use(funcPtr);
   use(&plainRef);
   use(&funcRef);
+  use(JS_GetClass((JSObject*)&funcRef));
   use(plainRaw);
   use(funcRaw);
 }
