@@ -1,6 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+async function setCameraMuted(mute) {
+  const windowId = gBrowser.selectedBrowser.innerWindowID;
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ mute, windowId }],
+    function(args) {
+      Services.obs.notifyObservers(
+        content.window,
+        args.mute ? "getUserMedia:muteVideo" : "getUserMedia:unmuteVideo",
+        JSON.stringify(args.windowId)
+      );
+    }
+  );
+}
+
 function setTrackEnabled(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -63,7 +78,7 @@ var gTests = [
   {
     desc:
       "getUserMedia audio+video: disabling the stream shows the paused indicator",
-    run: async function checkPaused() {
+    run: async function checkDisabled() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true);
@@ -96,8 +111,7 @@ var gTests = [
       observerPromise = expectObserverCalled("recording-device-events", 2);
       await setTrackEnabled(false, false);
 
-      // It sometimes takes a bit longer before the change propagates to the UI,
-      // wait for it to avoid intermittents.
+      // Wait for capture state to propagate to the UI asynchronously.
       await BrowserTestUtils.waitForCondition(
         () =>
           window.gIdentityHandler._sharingState.webRTC.camera ==
@@ -157,7 +171,7 @@ var gTests = [
   {
     desc:
       "getUserMedia audio+video: disabling the original tracks and stopping enabled clones shows the paused indicator",
-    run: async function checkPausedAfterCloneStop() {
+    run: async function checkDisabledAfterCloneStop() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true);
@@ -197,8 +211,7 @@ var gTests = [
       // Stop the clones. This should disable the sharing indicators.
       await stopClonedTracks(true, true);
 
-      // It sometimes takes a bit longer before the change propagates to the UI,
-      // wait for it to avoid intermittents.
+      // Wait for capture state to propagate to the UI asynchronously.
       await BrowserTestUtils.waitForCondition(
         () =>
           window.gIdentityHandler._sharingState.webRTC.camera ==
@@ -260,7 +273,7 @@ var gTests = [
   {
     desc:
       "getUserMedia screen: disabling the stream shows the paused indicator",
-    run: async function checkScreenPaused() {
+    run: async function checkScreenDisabled() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, null, "screen");
@@ -302,8 +315,7 @@ var gTests = [
       observerPromise = expectObserverCalled("recording-device-events");
       await setTrackEnabled(null, false);
 
-      // It sometimes takes a bit longer before the change propagates to the UI,
-      // wait for it to avoid intermittents.
+      // Wait for capture state to propagate to the UI asynchronously.
       await BrowserTestUtils.waitForCondition(
         () =>
           window.gIdentityHandler._sharingState.webRTC.screen == "ScreenPaused",
@@ -323,6 +335,80 @@ var gTests = [
       );
       await observerPromise;
       await checkSharingUI({ screen: "Screen" });
+      await closeStream();
+    },
+  },
+
+  {
+    desc:
+      "getUserMedia audio+video: muting the camera shows the muted indicator",
+    run: async function checkMuted() {
+      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(true, true);
+      await promise;
+      await observerPromise;
+      checkDeviceSelectors(true, true);
+
+      let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
+      await promiseMessage("ok", () => {
+        PopupNotifications.panel.firstElementChild.button.click();
+      });
+      await observerPromise1;
+      await observerPromise2;
+      Assert.deepEqual(
+        await getMediaCaptureState(),
+        { audio: true, video: true },
+        "expected camera and microphone to be shared"
+      );
+      await indicator;
+      await checkSharingUI({
+        video: STATE_CAPTURE_ENABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+
+      // Mute camera.
+      observerPromise = expectObserverCalled("recording-device-events");
+      await setCameraMuted(true);
+
+      // Wait for capture state to propagate to the UI asynchronously.
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_DISABLED,
+        "video should be muted"
+      );
+
+      await observerPromise;
+
+      // The identity UI should show only camera as disabled.
+      await checkSharingUI({
+        video: STATE_CAPTURE_DISABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+
+      // Unmute video again.
+      observerPromise = expectObserverCalled("recording-device-events");
+      await setCameraMuted(false);
+
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_ENABLED,
+        "video should be enabled"
+      );
+
+      await observerPromise;
+
+      // Both streams should show as running.
+      await checkSharingUI({
+        video: STATE_CAPTURE_ENABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
       await closeStream();
     },
   },
