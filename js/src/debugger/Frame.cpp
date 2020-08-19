@@ -925,7 +925,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     options.setForceStrictMode();
   }
 
-  SourceExtent extent = SourceExtent::makeGlobalExtent(chars.length(), options);
+  SourceExtent extent = SourceExtent::makeGlobalExtent(
+      chars.length(), options.lineno, options.column);
 
   SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
