@@ -16,7 +16,8 @@ namespace mozilla {
 
 namespace dom {
 class Document;
-}
+class BrowsingContext;
+}  // namespace dom
 
 class MediaDecoder;
 
@@ -35,7 +36,7 @@ class BackgroundVideoDecodingPermissionObserver final : public nsIObserver {
   ~BackgroundVideoDecodingPermissionObserver();
   void EnableEvent() const;
   void DisableEvent() const;
-  already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const;
+  dom::BrowsingContext* GetOwnerBC() const;
   dom::Document* GetOwnerDoc() const;
   bool IsValidEventSender(nsISupports* aSubject) const;
 

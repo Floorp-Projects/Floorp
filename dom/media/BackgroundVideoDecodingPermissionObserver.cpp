@@ -6,6 +6,7 @@
 #include "BackgroundVideoDecodingPermissionObserver.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "MediaDecoder.h"
 #include "nsContentUtils.h"
@@ -92,13 +93,10 @@ BackgroundVideoDecodingPermissionObserver::
 }
 
 void BackgroundVideoDecodingPermissionObserver::EnableEvent() const {
+  // If we can't get document or outer window, then you can't reach the chrome
+  // <browser> either, so we don't need want to dispatch the event.
   dom::Document* doc = GetOwnerDoc();
-  if (!doc) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
-  if (!ownerTop) {
+  if (!doc || !doc->GetWindow()) {
     return;
   }
 
@@ -109,13 +107,10 @@ void BackgroundVideoDecodingPermissionObserver::EnableEvent() const {
 }
 
 void BackgroundVideoDecodingPermissionObserver::DisableEvent() const {
+  // If we can't get document or outer window, then you can't reach the chrome
+  // <browser> either, so we don't need want to dispatch the event.
   dom::Document* doc = GetOwnerDoc();
-  if (!doc) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
-  if (!ownerTop) {
+  if (!doc || !doc->GetWindow()) {
     return;
   }
 
@@ -125,25 +120,10 @@ void BackgroundVideoDecodingPermissionObserver::DisableEvent() const {
   asyncDispatcher->PostDOMEvent();
 }
 
-already_AddRefed<nsPIDOMWindowOuter>
-BackgroundVideoDecodingPermissionObserver::GetOwnerWindow() const {
+dom::BrowsingContext* BackgroundVideoDecodingPermissionObserver::GetOwnerBC()
+    const {
   dom::Document* doc = GetOwnerDoc();
-  if (!doc) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> innerWin = doc->GetInnerWindow();
-  if (!innerWin) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> outerWin = innerWin->GetOuterWindow();
-  if (!outerWin) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> topWin = outerWin->GetInProcessTop();
-  return topWin.forget();
+  return doc ? doc->GetBrowsingContext() : nullptr;
 }
 
 dom::Document* BackgroundVideoDecodingPermissionObserver::GetOwnerDoc() const {
@@ -161,22 +141,12 @@ bool BackgroundVideoDecodingPermissionObserver::IsValidEventSender(
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> senderOuter = senderInner->GetOuterWindow();
-  if (!senderOuter) {
+  RefPtr<dom::BrowsingContext> senderBC = senderInner->GetBrowsingContext();
+  if (!senderBC) {
     return false;
   }
-
-  nsCOMPtr<nsPIDOMWindowOuter> senderTop = senderOuter->GetInProcessTop();
-  if (!senderTop) {
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
-  if (!ownerTop) {
-    return false;
-  }
-
-  return ownerTop == senderTop;
+  // Valid sender should be in the same browsing context tree as where owner is.
+  return GetOwnerBC() ? GetOwnerBC()->Top() == senderBC->Top() : false;
 }
 
 NS_IMPL_ISUPPORTS(BackgroundVideoDecodingPermissionObserver, nsIObserver)
