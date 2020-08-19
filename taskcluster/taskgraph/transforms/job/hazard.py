@@ -38,7 +38,7 @@ haz_run_schema = Schema({
     Optional('secrets'): Any(bool, [text_type]),
 
     # Base work directory used to set up the task.
-    Required('workdir'): text_type,
+    Optional('workdir'): text_type,
 })
 
 
