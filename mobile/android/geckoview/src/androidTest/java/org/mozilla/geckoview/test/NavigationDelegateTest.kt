@@ -1458,9 +1458,9 @@ class NavigationDelegateTest : BaseSessionTest() {
                 controller.install("https://example.org/tests/junit/page-history.xpi"))
 
         assertThat("baseUrl should be a valid extension URL",
-                extension.metaData!!.baseUrl, startsWith("moz-extension://"))
+                extension.metaData.baseUrl, startsWith("moz-extension://"))
 
-        val url = extension.metaData!!.baseUrl + "page.html"
+        val url = extension.metaData.baseUrl + "page.html"
         val isRemote = sessionRule.getPrefs("extensions.webextensions.remote")[0] as Boolean
         processSwitchingTest(url, isRemote)
 
