@@ -2774,6 +2774,10 @@ this.VideoControlsImplWidget = class {
       </div>`,
       "application/xml"
     );
+    this.l10n = new this.window.DOMLocalization([
+      "toolkit/global/videocontrols.ftl",
+    ]);
+    this.l10n.connectRoot(this.shadowRoot);
     this.shadowRoot.importNodeAndAppendChildAt(
       this.shadowRoot,
       parserDoc.documentElement,
@@ -2790,6 +2794,8 @@ this.VideoControlsImplWidget = class {
     this.Utils.terminate();
     this.TouchUtils.terminate();
     this.Utils.updateOrientationState(false);
+    this.l10n.disconnectRoot(this.shadowRoot);
+    this.l10n = null;
   }
 
   onPrefChange(prefName, prefValue) {
