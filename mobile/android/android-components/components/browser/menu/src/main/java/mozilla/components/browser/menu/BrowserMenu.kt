@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.menu
 
-import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
@@ -46,7 +45,7 @@ open class BrowserMenu internal constructor(
      * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible otherwise,
      *  the top of the menu is always visible.
      */
-    @SuppressLint("InflateParams")
+    @Suppress("InflateParams", "ComplexMethod")
     open fun show(
         anchor: View,
         orientation: Orientation = DOWN,

@@ -79,6 +79,9 @@ class MenuView @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Sets the background color for the menu view.
+     */
     fun setStyle(style: MenuStyle) {
         style.backgroundColor?.let { cardView.setCardBackgroundColor(it) }
     }
