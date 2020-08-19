@@ -442,6 +442,223 @@ var gTests = [
       await closeStream();
     },
   },
+
+  {
+    desc: "getUserMedia audio+video: disabling & muting camera in combination",
+    // Test the following combinations of disabling and muting camera:
+    // 1. Disable video track only.
+    // 2. Mute camera & disable audio (to have a condition to wait for)
+    // 3. Enable both audio and video tracks (only audio should flow).
+    // 4. Unmute camera again (video should flow).
+    // 5. Mute camera & disable both tracks.
+    // 6. Unmute camera & enable audio (only audio should flow)
+    // 7. Enable video track again (video should flow).
+    run: async function checkDisabledMutedCombination() {
+      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(true, true);
+      await promise;
+      await observerPromise;
+      checkDeviceSelectors(true, true);
+
+      let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
+      await promiseMessage("ok", () => {
+        PopupNotifications.panel.firstElementChild.button.click();
+      });
+      await observerPromise1;
+      await observerPromise2;
+      Assert.deepEqual(
+        await getMediaCaptureState(),
+        { audio: true, video: true },
+        "expected camera and microphone to be shared"
+      );
+      await indicator;
+      await checkSharingUI({
+        video: STATE_CAPTURE_ENABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+
+      // 1. Disable video track only.
+      observerPromise = expectObserverCalled("recording-device-events");
+      await setTrackEnabled(null, false);
+
+      // Wait for capture state to propagate to the UI asynchronously.
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_DISABLED,
+        "video should be disabled"
+      );
+
+      await observerPromise;
+
+      // The identity UI should show only video as disabled.
+      await checkSharingUI({
+        video: STATE_CAPTURE_DISABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+      is(await getVideoTrackMuted(), false, "video track still unmuted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        [],
+        "no video track events fired yet"
+      );
+
+      // 2. Mute camera & disable audio (to have a condition to wait for)
+      observerPromise = expectObserverCalled("recording-device-events", 2);
+      await setCameraMuted(true);
+      await setTrackEnabled(false, null);
+
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.microphone ==
+          STATE_CAPTURE_DISABLED,
+        "audio should be disabled"
+      );
+
+      await observerPromise;
+
+      // The identity UI should show both as disabled.
+      await checkSharingUI({
+        video: STATE_CAPTURE_DISABLED,
+        audio: STATE_CAPTURE_DISABLED,
+      });
+      is(await getVideoTrackMuted(), true, "video track is muted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        ["mute"],
+        "mute is still fired even though track was disabled"
+      );
+
+      // 3. Enable both audio and video tracks (only audio should flow).
+      observerPromise = expectObserverCalled("recording-device-events", 2);
+      await setTrackEnabled(true, true);
+
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.microphone ==
+          STATE_CAPTURE_ENABLED,
+        "audio should be enabled"
+      );
+
+      await observerPromise;
+
+      // The identity UI should show only audio as enabled, as video is muted.
+      await checkSharingUI({
+        video: STATE_CAPTURE_DISABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+      is(await getVideoTrackMuted(), true, "video track is still muted");
+      Assert.deepEqual(await getVideoTrackEvents(), ["mute"], "no new events");
+
+      // 4. Unmute camera again (video should flow).
+      observerPromise = expectObserverCalled("recording-device-events");
+      await setCameraMuted(false);
+
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_ENABLED,
+        "video should be enabled"
+      );
+
+      await observerPromise;
+
+      // Both streams should show as running.
+      await checkSharingUI({
+        video: STATE_CAPTURE_ENABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+      is(await getVideoTrackMuted(), false, "video track is unmuted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        ["mute", "unmute"],
+        "unmute fired"
+      );
+
+      // 5. Mute camera & disable both tracks.
+      observerPromise = expectObserverCalled("recording-device-events", 3);
+      await setCameraMuted(true);
+      await setTrackEnabled(false, false);
+
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_DISABLED,
+        "video should be disabled"
+      );
+
+      await observerPromise;
+
+      // The identity UI should show both as disabled.
+      await checkSharingUI({
+        video: STATE_CAPTURE_DISABLED,
+        audio: STATE_CAPTURE_DISABLED,
+      });
+      is(await getVideoTrackMuted(), true, "video track is muted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        ["mute", "unmute", "mute"],
+        "mute fired afain"
+      );
+
+      // 6. Unmute camera & enable audio (only audio should flow)
+      observerPromise = expectObserverCalled("recording-device-events", 2);
+      await setCameraMuted(false);
+      await setTrackEnabled(true, null);
+
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.microphone ==
+          STATE_CAPTURE_ENABLED,
+        "audio should be enabled"
+      );
+
+      await observerPromise;
+
+      // Only audio should show as running, as video track is still disabled.
+      await checkSharingUI({
+        video: STATE_CAPTURE_DISABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+      is(await getVideoTrackMuted(), false, "video track is unmuted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        ["mute", "unmute", "mute", "unmute"],
+        "unmute fired even though track is disabled"
+      );
+
+      // 7. Enable video track again (video should flow).
+      observerPromise = expectObserverCalled("recording-device-events");
+      await setTrackEnabled(null, true);
+
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_ENABLED,
+        "video should be enabled"
+      );
+
+      await observerPromise;
+
+      // The identity UI should show both as running again.
+      await checkSharingUI({
+        video: STATE_CAPTURE_ENABLED,
+        audio: STATE_CAPTURE_ENABLED,
+      });
+      is(await getVideoTrackMuted(), false, "video track remains unmuted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        ["mute", "unmute", "mute", "unmute"],
+        "no new events fired"
+      );
+      await closeStream();
+    },
+  },
 ];
 
 add_task(async function test() {
