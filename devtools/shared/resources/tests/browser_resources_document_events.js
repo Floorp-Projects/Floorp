@@ -11,13 +11,6 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 add_task(async function() {
-  info("Test document event legacy listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
-  await testDocumentEventResources();
-  await testDocumentEventResourcesWithIgnoreExistingResources();
-
-  info("Test document event server listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
   await testDocumentEventResources();
   await testDocumentEventResourcesWithIgnoreExistingResources();
 });

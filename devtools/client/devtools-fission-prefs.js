@@ -42,7 +42,8 @@ const PREFERENCES = [
   ],
   [
     "devtools.testing.enableServerWatcherSupport",
-    "Enable server-side Resource watchers",
+    "Enable experimental server-side resources (see watcher actor to get the " +
+      "list of impacted resources",
   ],
 ];
 

@@ -6,7 +6,6 @@
 
 const protocol = require("devtools/shared/protocol");
 const { watcherSpec } = require("devtools/shared/specs/watcher");
-const Services = require("Services");
 
 const Resources = require("devtools/server/actors/resources/index");
 const {
@@ -83,11 +82,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   form() {
-    const enableServerWatcher = Services.prefs.getBoolPref(
-      "devtools.testing.enableServerWatcherSupport",
-      false
-    );
-
     const hasBrowserElement = !!this.browserElement;
 
     return {
@@ -96,25 +90,26 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         // FF77+ supports frames in Watcher actor
         frame: true,
         resources: {
-          // FF79+ supports console and platform messages, FF80+ supports error and css messages,
-          // but this isn't enabled yet.
-          // We will implement a few other resources before enabling it in bug 1642295.
-          // This is to prevent having to handle backward compat if we have to change Watcher
-          // Actor API while implementing other resources.
-          // In bug 1642295, we will only enable it for content toolboxes because we don't support
-          // content process targets yet. Bug 1620248 should help supporting them and enable
-          // this more broadly.
-          [Resources.TYPES.CONSOLE_MESSAGE]:
-            enableServerWatcher && hasBrowserElement,
-          [Resources.TYPES.CSS_CHANGE]:
-            enableServerWatcher && hasBrowserElement,
-          [Resources.TYPES.CSS_MESSAGE]:
-            enableServerWatcher && hasBrowserElement,
-          [Resources.TYPES.DOCUMENT_EVENT]:
-            enableServerWatcher && hasBrowserElement,
-          [Resources.TYPES.ERROR_MESSAGE]:
-            enableServerWatcher && hasBrowserElement,
-          [Resources.TYPES.PLATFORM_MESSAGE]: enableServerWatcher,
+          // FF81+ (bug 1642295) added support for:
+          // - CONSOLE_MESSAGE
+          // - CSS_CHANGE
+          // - CSS_MESSAGE
+          // - DOCUMENT_EVENT
+          // - ERROR_MESSAGE
+          // - PLATFORM_MESSAGE
+          //
+          // We enabled them for content toolboxes only because we don't support
+          // content process targets yet. Bug 1620248 should help supporting
+          // them and enable this more broadly.
+          //
+          // New server-side resources can be gated behind
+          // `devtools.testing.enableServerWatcherSupport` if needed.
+          [Resources.TYPES.CONSOLE_MESSAGE]: hasBrowserElement,
+          [Resources.TYPES.CSS_CHANGE]: hasBrowserElement,
+          [Resources.TYPES.CSS_MESSAGE]: hasBrowserElement,
+          [Resources.TYPES.DOCUMENT_EVENT]: hasBrowserElement,
+          [Resources.TYPES.ERROR_MESSAGE]: hasBrowserElement,
+          [Resources.TYPES.PLATFORM_MESSAGE]: true,
         },
       },
     };

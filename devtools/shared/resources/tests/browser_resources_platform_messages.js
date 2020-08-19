@@ -15,13 +15,6 @@ add_task(async function() {
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
-  info("Test platform messages legacy listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
-  await testPlatformMessagesResources();
-  await testPlatformMessagesResourcesWithIgnoreExistingResources();
-
-  info("Test platform messages server listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
   await testPlatformMessagesResources();
   await testPlatformMessagesResourcesWithIgnoreExistingResources();
 });
