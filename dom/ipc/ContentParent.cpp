@@ -618,6 +618,8 @@ static const char* sObserverTopics[] = {
     NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
     NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC,
     NS_IPC_CAPTIVE_PORTAL_SET_STATE,
+    "application-background",
+    "application-foreground",
     "memory-pressure",
     "child-gc-request",
     "child-cc-request",
@@ -3291,6 +3293,10 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
   // listening for memory pressure event
   if (!strcmp(aTopic, "memory-pressure")) {
     Unused << SendFlushMemory(nsDependentString(aData));
+  } else if (!strcmp(aTopic, "application-background")) {
+    Unused << SendApplicationBackground();
+  } else if (!strcmp(aTopic, "application-foreground")) {
+    Unused << SendApplicationForeground();
   } else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
     NS_ConvertUTF16toUTF8 dataStr(aData);
     const char* offline = dataStr.get();
