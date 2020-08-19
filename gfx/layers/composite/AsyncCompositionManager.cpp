@@ -392,6 +392,17 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
                            aClipPartsCache, aGeckoFixedLayerMargins);
 }
 
+// Determine the amount of overlap between the 1D vector |aTranslation|
+// and the interval [aMin, aMax].
+static gfxFloat IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin,
+                                gfxFloat aMax) {
+  if (aTranslation > 0) {
+    return std::max(0.0, std::min(aMax, aTranslation) - std::max(aMin, 0.0));
+  }
+
+  return std::min(0.0, std::max(aMin, aTranslation) - std::min(aMax, 0.0));
+}
+
 void AsyncCompositionManager::AdjustFixedOrStickyLayer(
     Layer* aTransformedSubtreeRoot, Layer* aFixedOrSticky, SideBits aStuckSides,
     ScrollableLayerGuid::ViewID aTransformScrollId,
@@ -506,14 +517,12 @@ void AsyncCompositionManager::AdjustFixedOrStickyLayer(
     const LayerRectAbsolute& stickyInner = layer->GetStickyScrollRangeInner();
 
     LayerPoint originalTranslation = translation;
-    translation.y = apz::IntervalOverlap(translation.y, stickyOuter.Y(),
-                                         stickyOuter.YMost()) -
-                    apz::IntervalOverlap(translation.y, stickyInner.Y(),
-                                         stickyInner.YMost());
-    translation.x = apz::IntervalOverlap(translation.x, stickyOuter.X(),
-                                         stickyOuter.XMost()) -
-                    apz::IntervalOverlap(translation.x, stickyInner.X(),
-                                         stickyInner.XMost());
+    translation.y =
+        IntervalOverlap(translation.y, stickyOuter.Y(), stickyOuter.YMost()) -
+        IntervalOverlap(translation.y, stickyInner.Y(), stickyInner.YMost());
+    translation.x =
+        IntervalOverlap(translation.x, stickyOuter.X(), stickyOuter.XMost()) -
+        IntervalOverlap(translation.x, stickyInner.X(), stickyInner.XMost());
     unconsumedTranslation = translation - originalTranslation;
   }
 
