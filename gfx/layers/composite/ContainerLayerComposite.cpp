@@ -14,13 +14,14 @@
 #include "mozilla/RefPtr.h"      // for RefPtr
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/UniquePtr.h"               // for UniquePtr
-#include "mozilla/gfx/BaseRect.h"            // for BaseRect
-#include "mozilla/gfx/Matrix.h"              // for Matrix4x4
-#include "mozilla/gfx/Point.h"               // for Point, IntPoint
-#include "mozilla/gfx/Rect.h"                // for IntRect, Rect
-#include "mozilla/layers/APZSampler.h"       // for APZSampler
-#include "mozilla/layers/Compositor.h"       // for Compositor, etc
+#include "mozilla/UniquePtr.h"                      // for UniquePtr
+#include "mozilla/gfx/BaseRect.h"                   // for BaseRect
+#include "mozilla/gfx/Matrix.h"                     // for Matrix4x4
+#include "mozilla/gfx/Point.h"                      // for Point, IntPoint
+#include "mozilla/gfx/Rect.h"                       // for IntRect, Rect
+#include "mozilla/layers/APZSampler.h"              // for APZSampler
+#include "mozilla/layers/Compositor.h"              // for Compositor, etc
+#include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticFlags::CONTAINER
 #include "mozilla/layers/Effects.h"          // for Effect, EffectChain, etc
 #include "mozilla/layers/TextureHost.h"      // for CompositingRenderTarget
