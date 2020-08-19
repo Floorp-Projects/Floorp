@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DebugCommand, DocumentId, ExternalImageData, ExternalImageId, PrimitiveFlags};
-use api::{ImageFormat, ItemTag, NotificationRequest, Shadow, FilterOp};
+use api::{ImageFormat, NotificationRequest, Shadow, FilterOp};
 use api::units::*;
 use api;
 use crate::composite::NativeSurfaceOperation;
@@ -588,7 +588,6 @@ pub struct LayoutPrimitiveInfo {
     pub rect: LayoutRect,
     pub clip_rect: LayoutRect,
     pub flags: PrimitiveFlags,
-    pub hit_info: Option<ItemTag>,
 }
 
 impl LayoutPrimitiveInfo {
@@ -597,7 +596,6 @@ impl LayoutPrimitiveInfo {
             rect,
             clip_rect,
             flags: PrimitiveFlags::default(),
-            hit_info: None,
         }
     }
 }

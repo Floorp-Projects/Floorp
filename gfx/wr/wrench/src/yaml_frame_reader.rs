@@ -482,7 +482,6 @@ impl YamlFrameReader {
             clip_id: ClipId::invalid(),
             spatial_id: SpatialId::new(0, PipelineId::dummy()),
             flags: PrimitiveFlags::default(),
-            hit_info: None,
         };
         self.add_stacking_context_from_yaml(&mut builder, wrench, yaml, true, &mut info);
         self.display_lists.push(builder.finalize());
@@ -997,7 +996,12 @@ impl YamlFrameReader {
             &info.clip_rect
         );
 
-        dl.push_hit_test(&info);
+        if let Some(tag) = self.to_hit_testing_tag(&item["hit-testing-tag"]) {
+            dl.push_hit_test(
+                &info,
+                tag,
+            );
+        }
     }
 
     fn handle_line(
@@ -1742,7 +1746,6 @@ impl YamlFrameReader {
                 clip_rect,
                 clip_id: space_and_clip.clip_id,
                 spatial_id: space_and_clip.spatial_id,
-                hit_info: self.to_hit_testing_tag(&item["hit-testing-tag"]),
                 flags,
             };
 

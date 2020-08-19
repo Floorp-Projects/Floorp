@@ -9,7 +9,7 @@ use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, G
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
 use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
-use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDisplayItem, ImageMask};
+use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDisplayItem, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation};
 use api::image_tiling::simplify_repeated_primitive;
@@ -783,7 +783,6 @@ impl<'a> SceneBuilder<'a> {
             rect,
             clip_rect,
             flags: common.flags,
-            hit_info: common.hit_info,
         };
 
         (layout, unsnapped_rect.unwrap_or(unsnapped_clip_rect), spatial_node_index, clip_chain_id)
@@ -915,11 +914,14 @@ impl<'a> SceneBuilder<'a> {
                     &info.bounds,
                 );
 
-                self.add_solid_rectangle(
+                self.add_primitive(
                     spatial_node_index,
                     clip_chain_id,
                     &layout,
-                    info.color,
+                    Vec::new(),
+                    PrimitiveKeyKind::Rectangle {
+                        color: info.color.into(),
+                    },
                 );
             }
             DisplayItem::HitTest(ref info) => {
@@ -930,11 +932,14 @@ impl<'a> SceneBuilder<'a> {
                     None,
                 );
 
-                self.add_solid_rectangle(
+                // Don't add transparent rectangles to the draw list,
+                // but do consider them for hit testing. This allows
+                // specifying invisible hit testing areas.
+                self.add_primitive_to_hit_testing_list(
+                    &layout,
                     spatial_node_index,
                     clip_chain_id,
-                    &layout,
-                    PropertyBinding::Value(ColorF::TRANSPARENT),
+                    info.tag,
                 );
             }
             DisplayItem::ClearRectangle(ref info) => {
@@ -1344,12 +1349,8 @@ impl<'a> SceneBuilder<'a> {
         info: &LayoutPrimitiveInfo,
         spatial_node_index: SpatialNodeIndex,
         clip_chain_id: ClipChainId,
+        tag: ItemTag,
     ) {
-        let tag = match info.hit_info {
-            Some(tag) => tag,
-            None => return,
-        };
-
         // We want to get a range of clip chain roots that apply to this
         // hit testing primitive.
 
@@ -1507,11 +1508,6 @@ impl<'a> SceneBuilder<'a> {
         self.register_chase_primitive_by_rect(
             &info.rect,
             &prim_instance,
-        );
-        self.add_primitive_to_hit_testing_list(
-            info,
-            spatial_node_index,
-            clip_chain_id,
         );
         self.add_primitive_to_draw_list(
             prim_instance,
@@ -2494,41 +2490,6 @@ impl<'a> SceneBuilder<'a> {
         _rect: &LayoutRect,
         _prim_instance: &PrimitiveInstance,
     ) {
-    }
-
-    pub fn add_solid_rectangle(
-        &mut self,
-        spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId,
-        info: &LayoutPrimitiveInfo,
-        color: PropertyBinding<ColorF>,
-    ) {
-        match color {
-            PropertyBinding::Value(value) => {
-                if value.a == 0.0 {
-                    // Don't add transparent rectangles to the draw list,
-                    // but do consider them for hit testing. This allows
-                    // specifying invisible hit testing areas.
-                    self.add_primitive_to_hit_testing_list(
-                        info,
-                        spatial_node_index,
-                        clip_chain_id,
-                    );
-                    return;
-                }
-            },
-            PropertyBinding::Binding(..) => {},
-        }
-
-        self.add_primitive(
-            spatial_node_index,
-            clip_chain_id,
-            info,
-            Vec::new(),
-            PrimitiveKeyKind::Rectangle {
-                color: color.into(),
-            },
-        );
     }
 
     pub fn add_clear_rectangle(

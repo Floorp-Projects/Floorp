@@ -456,7 +456,9 @@ class DisplayListBuilder final {
                        const wr::LayoutRect& aClip, bool aIsBackfaceVisible,
                        const wr::ColorF& aColor);
   void PushHitTest(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
-                   bool aIsBackfaceVisible);
+                   bool aIsBackfaceVisible,
+                   const layers::ScrollableLayerGuid::ViewID& aScrollId,
+                   gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits);
   void PushClearRect(const wr::LayoutRect& aBounds);
   void PushClearRectWithComplexRegion(const wr::LayoutRect& aBounds,
                                       const wr::ComplexClipRegion& aRegion);
@@ -637,13 +639,6 @@ class DisplayListBuilder final {
       const ActiveScrolledRoot* aAsr);
 
   Maybe<SideBits> GetContainingFixedPosSideBits(const ActiveScrolledRoot* aAsr);
-
-  // Set the hit-test info to be used for all display items until the next call
-  // to SetHitTestInfo or ClearHitTestInfo.
-  void SetHitTestInfo(const layers::ScrollableLayerGuid::ViewID& aScrollId,
-                      gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits);
-  // Clears the hit-test info so that subsequent display items will not have it.
-  void ClearHitTestInfo();
 
   already_AddRefed<gfxContext> GetTextContext(
       wr::IpcResourceUpdateQueue& aResources,

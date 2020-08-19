@@ -72,10 +72,6 @@ pub struct CommonItemProperties {
     pub clip_id: ClipId,
     /// The coordinate-space the item is in (yes, it can be really granular)
     pub spatial_id: SpatialId,
-    /// Opaque bits for our clients to use for hit-testing. This is the most
-    /// dubious "common" field, but because it's an Option, it usually only
-    /// wastes a single byte (for None).
-    pub hit_info: Option<ItemTag>,
     /// Various flags describing properties of this primitive.
     pub flags: PrimitiveFlags,
 }
@@ -90,7 +86,6 @@ impl CommonItemProperties {
             clip_rect,
             spatial_id: space_and_clip.spatial_id,
             clip_id: space_and_clip.clip_id,
-            hit_info: None,
             flags: PrimitiveFlags::default(),
         }
     }
@@ -342,6 +337,7 @@ pub struct ClearRectangleDisplayItem {
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct HitTestDisplayItem {
     pub common: CommonItemProperties,
+    pub tag: ItemTag,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
