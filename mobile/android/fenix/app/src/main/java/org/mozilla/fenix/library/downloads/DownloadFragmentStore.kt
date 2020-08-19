@@ -16,7 +16,13 @@ import mozilla.components.lib.state.Store
  * @property size The size in bytes of the download item
  * @property contentType The type of file the download is
  */
-data class DownloadItem(val id: Long, val fileName: String?, val filePath: String, val size: String, val contentType: String?)
+data class DownloadItem(
+    val id: Long,
+    val fileName: String?,
+    val filePath: String,
+    val size: String,
+    val contentType: String?
+)
 
 /**
  * The [Store] for holding the [DownloadFragmentState] and applying [DownloadFragmentAction]s.
