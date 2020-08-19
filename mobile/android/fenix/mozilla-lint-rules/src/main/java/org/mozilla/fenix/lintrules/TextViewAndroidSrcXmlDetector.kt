@@ -23,7 +23,7 @@ import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Element
 
 /**
- * A custom lint check that prohibits not using the app:srcCompat for ImageViews
+ * A custom lint check that prohibits not using the android:drawableX to define drawables in TextViews
  */
 class TextViewAndroidSrcXmlDetector : ResourceXmlDetector() {
     companion object {
