@@ -68,7 +68,7 @@ toolchain_run_schema = Schema({
     ): text_type,
 
     # Base work directory used to set up the task.
-    Optional('workdir'): text_type,
+    Required('workdir'): text_type,
 })
 
 

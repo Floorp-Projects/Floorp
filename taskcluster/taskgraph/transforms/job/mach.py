@@ -30,7 +30,7 @@ mach_schema = Schema({
     Required('comm-checkout'): bool,
 
     # Base work directory used to set up the task.
-    Optional('workdir'): text_type,
+    Required('workdir'): text_type,
 })
 
 

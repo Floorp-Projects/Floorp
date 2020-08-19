@@ -49,6 +49,7 @@ config = {
     ],
     "tooltool_cache": os.environ.get("TOOLTOOL_CACHE"),
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
+    "avds_dir": "/builds/worker/workspace/build/.android",
     # "log_format": "%(levelname)8s - %(message)s",
     "log_tbpl_level": "info",
     "log_raw_level": "info",
