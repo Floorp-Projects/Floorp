@@ -812,15 +812,30 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane, int aWidth, int aHeight,
   return true;
 }
 
+void DMABufSurfaceYUV::UpdateYUVPlane(int aPlane, void* aPixelData,
+                                      int aLineSize) {
+  if (aLineSize == mWidth[aPlane] &&
+      (int)mMappedRegionStride[aPlane] == mWidth[aPlane]) {
+    memcpy(mMappedRegion[aPlane], aPixelData, aLineSize * mHeight[aPlane]);
+  } else {
+    char* src = (char*)aPixelData;
+    char* dest = (char*)mMappedRegion[aPlane];
+    for (int i = 0; i < mHeight[aPlane]; i++) {
+      memcpy(dest, src, mWidth[aPlane]);
+      src += aLineSize;
+      dest += mMappedRegionStride[aPlane];
+    }
+  }
+}
+
 bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
   if (mSurfaceType != SURFACE_YUV420) {
     NS_WARNING("UpdateYUVData can upload YUV420 surface type only!");
     return false;
   }
 
-  if (mBufferPlaneCount != 3 || aLineSizes[0] != mWidth[0] ||
-      aLineSizes[1] != mWidth[1] || aLineSizes[2] != mWidth[2]) {
-    NS_WARNING("DMABufSurfaceYUV size does not match!");
+  if (mBufferPlaneCount != 3) {
+    NS_WARNING("DMABufSurfaceYUV planes does not match!");
     return false;
   }
 
@@ -830,29 +845,23 @@ bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
     Unmap(2);
   });
 
-  char* yData = (char*)MapInternal(0, 0, mWidth[0], mHeight[0], nullptr,
-                                   GBM_BO_TRANSFER_WRITE, 0);
-  if (!yData || (int)mMappedRegionStride[0] != mWidth[0]) {
-    NS_WARNING("DMABufSurfaceYUV plane 1 size stride does not match!");
-    return false;
-  }
-  char* uData = (char*)MapInternal(0, 0, mWidth[1], mHeight[1], nullptr,
-                                   GBM_BO_TRANSFER_WRITE, 1);
-  if (!uData || (int)mMappedRegionStride[1] != mWidth[1]) {
-    NS_WARNING("DMABufSurfaceYUV plane 2 size stride does not match!");
-    return false;
-  }
-  char* vData = (char*)MapInternal(0, 0, mWidth[2], mHeight[2], nullptr,
-                                   GBM_BO_TRANSFER_WRITE, 2);
-  if (!vData || (int)mMappedRegionStride[2] != mWidth[2]) {
-    NS_WARNING("DMABufSurfaceYUV plane 3 size stride does not match!");
-    return false;
+  // Map planes
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    MapInternal(0, 0, mWidth[i], mHeight[i], nullptr, GBM_BO_TRANSFER_WRITE, i);
+    if (!mMappedRegion[i]) {
+      NS_WARNING("DMABufSurfaceYUV plane can't be mapped!");
+      return false;
+    }
+    if ((int)mMappedRegionStride[i] < mWidth[i]) {
+      NS_WARNING("DMABufSurfaceYUV plane size stride does not match!");
+      return false;
+    }
   }
 
   // Copy planes
-  memcpy(yData, aPixelData[0], aLineSizes[0] * mHeight[0]);
-  memcpy(uData, aPixelData[1], aLineSizes[1] * mHeight[1]);
-  memcpy(vData, aPixelData[2], aLineSizes[2] * mHeight[2]);
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    UpdateYUVPlane(i, aPixelData[i], aLineSizes[i]);
+  }
 
   return true;
 }

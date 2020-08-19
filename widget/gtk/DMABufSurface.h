@@ -280,6 +280,7 @@ class DMABufSurfaceYUV : public DMABufSurface {
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
   bool Create(int aWidth, int aHeight, void** aPixelData, int* aLineSizes);
   bool CreateYUVPlane(int aPlane, int aWidth, int aHeight, int aDrmFormat);
+  void UpdateYUVPlane(int aPlane, void* aPixelData, int aLineSize);
 
   void ImportSurfaceDescriptor(
       const mozilla::layers::SurfaceDescriptorDMABuf& aDesc);
