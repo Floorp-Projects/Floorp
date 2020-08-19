@@ -19,14 +19,6 @@ add_task(async function invalid_input_throws() {
   );
 
   Assert.throws(
-    () =>
-      PlacesUtils.bookmarks.fetch({
-        guid: "123456789012",
-        parentGuid: "012345678901",
-      }),
-    /The following properties were expected: index/
-  );
-  Assert.throws(
     () => PlacesUtils.bookmarks.fetch({ guid: "123456789012", index: 0 }),
     /The following properties were expected: parentGuid/
   );
@@ -507,4 +499,48 @@ add_task(async function fetch_concurrent() {
   Assert.equal(gAccumulator.results.length, 1);
   Assert.deepEqual(gAccumulator.results[0], bm1);
   Assert.deepEqual(bm1, bm4);
+});
+
+add_task(async function fetch_by_parent() {
+  let folder1 = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "a folder",
+  });
+  checkBookmarkObject(folder1);
+
+  let bm1 = await PlacesUtils.bookmarks.insert({
+    parentGuid: folder1.guid,
+    url: "http://bm1.example.com/",
+    title: "bookmark 1",
+  });
+  checkBookmarkObject(bm1);
+
+  let bm2 = await PlacesUtils.bookmarks.insert({
+    parentGuid: folder1.guid,
+    url: "http://bm2.example.com/",
+    title: "bookmark 2",
+  });
+  checkBookmarkObject(bm2);
+
+  let bm3 = await PlacesUtils.bookmarks.insert({
+    parentGuid: folder1.guid,
+    url: "http://bm3.example.com/",
+    title: "bookmark 3",
+    index: 0,
+  });
+  checkBookmarkObject(bm2);
+
+  await PlacesUtils.bookmarks.fetch(
+    { parentGuid: folder1.guid },
+    gAccumulator.callback
+  );
+
+  Assert.equal(gAccumulator.results.length, 3);
+
+  Assert.equal(bm3.url.href, gAccumulator.results[0].url.href);
+  Assert.equal(bm1.url.href, gAccumulator.results[1].url.href);
+  Assert.equal(bm2.url.href, gAccumulator.results[2].url.href);
+
+  await PlacesUtils.bookmarks.remove(folder1);
 });
