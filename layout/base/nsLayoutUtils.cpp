@@ -61,7 +61,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
-#include "mozilla/layers/APZUtils.h"  // for apz::CalculatePendingDisplayPort
+#include "mozilla/layers/APZPublicUtils.h"  // for apz::CalculatePendingDisplayPort
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/PAPZ.h"
 #include "mozilla/layers/StackingContextHelper.h"
