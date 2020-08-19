@@ -55,6 +55,9 @@ nsPageSequenceFrame::nsPageSequenceFrame(ComputedStyle* aStyle,
       mTotalPages(-1),
       mCalledBeginPage(false),
       mCurrentCanvasListSetup(false) {
+  nscoord halfInch = PresContext()->CSSTwipsToAppUnits(NS_INCHES_TO_TWIPS(0.5));
+  mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
+
   mPageData = MakeUnique<nsSharedPageData>();
   mPageData->mHeadFootFont =
       *PresContext()
@@ -215,15 +218,27 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   }
 
   // See if we can get a Print Settings from the Context
-  if (!mPageData->mPrintSettings) {
+  if (!mPageData->mPrintSettings &&
+      aPresContext->Medium() == nsGkAtoms::print) {
     mPageData->mPrintSettings = aPresContext->GetPrintSettings();
   }
 
-  // FIXME: This should probably be an assert of sorts, can we really get here
-  // without any print settings?
+  // now get out margins & edges
   if (mPageData->mPrintSettings) {
     nsIntMargin unwriteableTwips;
     mPageData->mPrintSettings->GetUnwriteableMarginInTwips(unwriteableTwips);
+    NS_ASSERTION(unwriteableTwips.left >= 0 && unwriteableTwips.top >= 0 &&
+                     unwriteableTwips.right >= 0 &&
+                     unwriteableTwips.bottom >= 0,
+                 "Unwriteable twips should be non-negative");
+
+    nsIntMargin marginTwips;
+    mPageData->mPrintSettings->GetMarginInTwips(marginTwips);
+    mMargin = nsPresContext::CSSTwipsToAppUnits(marginTwips + unwriteableTwips);
+
+    int16_t printType;
+    mPageData->mPrintSettings->GetPrintRange(&printType);
+    mPrintRangeType = printType;
 
     nsIntMargin edgeTwips;
     mPageData->mPrintSettings->GetEdgeInTwips(edgeTwips);
@@ -238,6 +253,16 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     mPageData->mEdgePaperMargin =
         nsPresContext::CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);
   }
+
+  // *** Special Override ***
+  // If this is a sub-sdoc (meaning it doesn't take the whole page)
+  // and if this Document is in the upper left hand corner
+  // we need to suppress the top margin or it will reflow too small
+
+  nsSize pageSize = aPresContext->GetPageSize();
+
+  mPageData->mReflowSize = pageSize;
+  mPageData->mReflowMargin = mMargin;
 
   // We use the CSS "margin" property on the -moz-printed-sheet pseudoelement
   // to determine the space between each printed sheet in print preview.
@@ -260,7 +285,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     // Reflow the sheet
     ReflowInput kidReflowInput(
         aPresContext, aReflowInput, kidFrame,
-        LogicalSize(kidFrame->GetWritingMode(), aPresContext->GetPageSize()));
+        LogicalSize(kidFrame->GetWritingMode(), pageSize));
     ReflowOutput kidReflowOutput(kidReflowInput);
     nsReflowStatus status;
 
@@ -425,9 +450,8 @@ nsresult nsPageSequenceFrame::StartPrint(nsPresContext* aPresContext,
   aPrintSettings->GetEndPageRange(&mToPageNum);
   aPrintSettings->GetPageRanges(mPageRanges);
 
-  int16_t printType;
-  aPrintSettings->GetPrintRange(&printType);
-  mDoingPageRange = nsIPrintSettings::kRangeSpecifiedPageRange == printType;
+  mDoingPageRange =
+      nsIPrintSettings::kRangeSpecifiedPageRange == mPrintRangeType;
 
   // If printing a range of pages make sure at least the starting page
   // number is valid
