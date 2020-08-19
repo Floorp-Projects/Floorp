@@ -329,7 +329,7 @@ class LoginManagerParent extends JSWindowActorParent {
       // Used by tests to detect that a form-fill has occurred. This redirects
       // to the top-level browsing context.
       case "PasswordManager:formProcessed": {
-        let topActor = this.browsingContext.currentWindowGlobal.getActor(
+        let topActor = this.browsingContext.top.currentWindowGlobal.getActor(
           "LoginManager"
         );
         topActor.sendAsyncMessage("PasswordManager:formProcessed", {
