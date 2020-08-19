@@ -163,16 +163,16 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
     : AudioNode(aContext, 2, ChannelCountMode::Clamped_max,
                 ChannelInterpretation::Speakers),
       mReduction(0) {
-  CreateAudioParam(mThreshold, DynamicsCompressorNodeEngine::THRESHOLD,
-                   u"threshold"_ns, -24.f, -100.f, 0.f);
-  CreateAudioParam(mKnee, DynamicsCompressorNodeEngine::KNEE, u"knee"_ns, 30.f,
-                   0.f, 40.f);
-  CreateAudioParam(mRatio, DynamicsCompressorNodeEngine::RATIO, u"ratio"_ns,
-                   12.f, 1.f, 20.f);
-  CreateAudioParam(mAttack, DynamicsCompressorNodeEngine::ATTACK, u"attack"_ns,
-                   0.003f, 0.f, 1.f);
-  CreateAudioParam(mRelease, DynamicsCompressorNodeEngine::RELEASE,
-                   u"release"_ns, 0.25f, 0.f, 1.f);
+  mThreshold = CreateAudioParam(DynamicsCompressorNodeEngine::THRESHOLD,
+                                u"threshold"_ns, -24.f, -100.f, 0.f);
+  mKnee = CreateAudioParam(DynamicsCompressorNodeEngine::KNEE, u"knee"_ns, 30.f,
+                           0.f, 40.f);
+  mRatio = CreateAudioParam(DynamicsCompressorNodeEngine::RATIO, u"ratio"_ns,
+                            12.f, 1.f, 20.f);
+  mAttack = CreateAudioParam(DynamicsCompressorNodeEngine::ATTACK, u"attack"_ns,
+                             0.003f, 0.f, 1.f);
+  mRelease = CreateAudioParam(DynamicsCompressorNodeEngine::RELEASE,
+                              u"release"_ns, 0.25f, 0.f, 1.f);
   DynamicsCompressorNodeEngine* engine =
       new DynamicsCompressorNodeEngine(this, aContext->Destination());
   mTrack = AudioNodeTrack::Create(

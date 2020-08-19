@@ -281,15 +281,15 @@ PannerNode::PannerNode(AudioContext* aContext)
       mConeInnerAngle(360.),
       mConeOuterAngle(360.),
       mConeOuterGain(0.) {
-  CreateAudioParam(mPositionX, PannerNode::POSITIONX, u"PositionX"_ns, 0.f);
-  CreateAudioParam(mPositionY, PannerNode::POSITIONY, u"PositionY"_ns, 0.f);
-  CreateAudioParam(mPositionZ, PannerNode::POSITIONZ, u"PositionZ"_ns, 0.f);
-  CreateAudioParam(mOrientationX, PannerNode::ORIENTATIONX, u"OrientationX"_ns,
-                   1.0f);
-  CreateAudioParam(mOrientationY, PannerNode::ORIENTATIONY, u"OrientationY"_ns,
-                   0.f);
-  CreateAudioParam(mOrientationZ, PannerNode::ORIENTATIONZ, u"OrientationZ"_ns,
-                   0.f);
+  mPositionX = CreateAudioParam(PannerNode::POSITIONX, u"PositionX"_ns, 0.f);
+  mPositionY = CreateAudioParam(PannerNode::POSITIONY, u"PositionY"_ns, 0.f);
+  mPositionZ = CreateAudioParam(PannerNode::POSITIONZ, u"PositionZ"_ns, 0.f);
+  mOrientationX =
+      CreateAudioParam(PannerNode::ORIENTATIONX, u"OrientationX"_ns, 1.0f);
+  mOrientationY =
+      CreateAudioParam(PannerNode::ORIENTATIONY, u"OrientationY"_ns, 0.f);
+  mOrientationZ =
+      CreateAudioParam(PannerNode::ORIENTATIONZ, u"OrientationZ"_ns, 0.f);
   mTrack = AudioNodeTrack::Create(
       aContext,
       new PannerNodeEngine(this, aContext->Destination(),
