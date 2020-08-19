@@ -2506,6 +2506,24 @@ mozilla::ipc::IPCResult ContentChild::RecvShutdownA11y() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvApplicationForeground() {
+  // Rebroadcast the "application-foreground"
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "application-foreground", nullptr);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvApplicationBackground() {
+  // Rebroadcast the "application-background"
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "application-background", nullptr);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvGarbageCollect() {
   // Rebroadcast the "child-gc-request" so that workers will GC.
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();

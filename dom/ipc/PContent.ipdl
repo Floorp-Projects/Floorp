@@ -614,6 +614,8 @@ child:
 
     async FlushMemory(nsString reason);
 
+    async ApplicationBackground();
+    async ApplicationForeground();
     async GarbageCollect();
     async CycleCollect();
     async UnlinkGhosts();

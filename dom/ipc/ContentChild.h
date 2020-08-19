@@ -380,6 +380,8 @@ class ContentChild final : public PContentChild,
                                            const uint32_t& aMsaaID);
   mozilla::ipc::IPCResult RecvShutdownA11y();
 
+  mozilla::ipc::IPCResult RecvApplicationForeground();
+  mozilla::ipc::IPCResult RecvApplicationBackground();
   mozilla::ipc::IPCResult RecvGarbageCollect();
   mozilla::ipc::IPCResult RecvCycleCollect();
   mozilla::ipc::IPCResult RecvUnlinkGhosts();
