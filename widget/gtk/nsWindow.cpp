@@ -1004,6 +1004,16 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
   ApplySizeConstraints();
 }
 
+void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+    // TODO - compare mShell GdkWindow size and mContainer GdkWindow size
+    // instead of GetCSDDecorationSize() call.
+    GtkBorder decorationSize = GetCSDDecorationSize(!mIsTopLevel);
+    *aWidth += decorationSize.left + decorationSize.right;
+    *aHeight += decorationSize.top + decorationSize.bottom;
+  }
+}
+
 void nsWindow::ApplySizeConstraints(void) {
   if (mShell) {
     GdkGeometry geometry;
@@ -1018,10 +1028,12 @@ void nsWindow::ApplySizeConstraints(void) {
 
     uint32_t hints = 0;
     if (mSizeConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
+      AddCSDDecorationSize(&geometry.min_width, &geometry.min_height);
       hints |= GDK_HINT_MIN_SIZE;
     }
     if (mSizeConstraints.mMaxSize !=
         LayoutDeviceIntSize(NS_MAXSIZE, NS_MAXSIZE)) {
+      AddCSDDecorationSize(&geometry.max_width, &geometry.max_height);
       hints |= GDK_HINT_MAX_SIZE;
     }
 
@@ -8098,19 +8110,13 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
   }
 
   if (aShouldLock) {
-    float width = (float)DevicePixelsToGdkCoordRoundDown(mBounds.width);
-    float height = (float)DevicePixelsToGdkCoordRoundDown(mBounds.height);
+    int decWidth = 0, decHeight = 0;
+    AddCSDDecorationSize(&decWidth, &decHeight);
 
-    // TODO - compare mShell GdkWindow size and mContainer GdkWindow size
-    // instead of GetCSDDecorationSize() call.
-    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
-      GtkBorder decorationSize = GetCSDDecorationSize(
-          gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
-      LOG(("Addind decoration size l:%d t:%d r:%d b:%d\n", decorationSize.left,
-           decorationSize.top, decorationSize.right, decorationSize.bottom));
-      width += decorationSize.left + decorationSize.right;
-      height += decorationSize.top + decorationSize.bottom;
-    }
+    float width =
+        (float)DevicePixelsToGdkCoordRoundDown(mBounds.width) + decWidth;
+    float height =
+        (float)DevicePixelsToGdkCoordRoundDown(mBounds.height) + decHeight;
 
     mAspectRatio = width / height;
     LOG(("nsWindow::LockAspectRatio() [%p] width %f height %f aspect %f\n",

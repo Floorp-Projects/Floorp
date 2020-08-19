@@ -497,6 +497,8 @@ class nsWindow final : public nsBaseWidget {
 
   GtkTextDirection GetTextDirection();
 
+  void AddCSDDecorationSize(int* aWidth, int* aHeight);
+
 #ifdef MOZ_X11
   typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
                 GTK_WIDGET_COMPOSIDED_DISABLED = 1,
