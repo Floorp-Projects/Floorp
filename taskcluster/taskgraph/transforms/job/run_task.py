@@ -54,7 +54,7 @@ run_task_schema = Schema({
     Required('command'): Any([taskref_or_string], taskref_or_string),
 
     # Base work directory used to set up the task.
-    Optional('workdir'): text_type,
+    Required('workdir'): text_type,
 
     # If not false, tooltool downloads will be enabled via relengAPIProxy
     # for either just public files, or all files. Only supported on
