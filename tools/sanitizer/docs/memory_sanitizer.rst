@@ -20,9 +20,7 @@ wiki <https://github.com/google/sanitizers/wiki/MemorySanitizer>`__.
 Public Builds
 -------------
 
-.. note::
-
-   **Note:** No public builds are available at this time yet.
+**Note:** No public builds are available at this time yet.
 
 Manual Build
 ------------
@@ -30,10 +28,8 @@ Manual Build
 Build prerequisites
 ~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-   **Note:** MemorySanitizer requires **64-bit Linux** to work. Other
-   platforms/operating systems are not supported.
+**Note:** MemorySanitizer requires **64-bit Linux** to work. Other
+platforms/operating systems are not supported.
 
 LLVM/Clang
 ^^^^^^^^^^
@@ -61,7 +57,7 @@ Getting the source
 
 If you don't have a source code repository clone yet, you need to `get
 yourself a clone of
-Mozilla-central </en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial>`__.
+Mozilla-central <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial>`__.
 
 Adjusting the build configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -69,7 +65,7 @@ Adjusting the build configuration
 Create the build configuration file ``.mozconfig`` with the following
 content in your Mozilla-central directory:
 
-::
+.. code::
 
    mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/objdir-ff-msan
    mk_add_options MOZ_MAKE_FLAGS=-j12
@@ -125,11 +121,9 @@ as usual.
 Building the JavaScript shell
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-   **Note:** Unlike Firefox itself, the JavaScript shell does **not**
-   require an instrumented userland. Calls to external libraries like
-   zlib are handled with special annotations inside the engine.
+**Note:** Unlike Firefox itself, the JavaScript shell does **not**
+require an instrumented userland. Calls to external libraries like
+zlib are handled with special annotations inside the engine.
 
 .. warning::
 
@@ -147,7 +141,7 @@ execute this script in the ``js/src/`` subdirectory and pass a directory
 name as the first parameter. The build will then be created in a new
 subdirectory with that name.
 
-::
+.. code::
 
    #! /bin/sh
 
@@ -179,10 +173,3 @@ readily use to immediately output symbolized traces if the program is
 found on the ``PATH``. If your ``llvm-symbolizer`` lives outside the
 ``PATH``, you can set the ``MSAN_SYMBOLIZER_PATH`` environment variable
 to point to your symbolizer binary.
-
-**Ignoring known issues**
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. note::
-
-   **TODO**
