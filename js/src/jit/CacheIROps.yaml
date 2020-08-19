@@ -1711,7 +1711,7 @@
     getter: ObjectField
 
 - name: LoadStringCharResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 2
   args:
