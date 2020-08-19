@@ -136,23 +136,6 @@ using AsyncTransformComponents = EnumSet<AsyncTransformComponent>;
 constexpr AsyncTransformComponents LayoutAndVisual(
     AsyncTransformComponent::eLayout, AsyncTransformComponent::eVisual);
 
-class ExpectedGeckoMetrics {
- public:
-  ExpectedGeckoMetrics() = default;
-  void UpdateFrom(const FrameMetrics& aMetrics);
-
-  const CSSPoint& GetVisualScrollOffset() const { return mVisualScrollOffset; }
-  const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
-  const CSSToLayoutDeviceScale& GetDevPixelsPerCSSPixel() const {
-    return mDevPixelsPerCSSPixel;
-  }
-
- private:
-  CSSPoint mVisualScrollOffset;
-  CSSToParentLayerScale2D mZoom;
-  CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
-};
-
 namespace apz {
 
 /**
