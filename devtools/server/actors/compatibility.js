@@ -101,7 +101,7 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
   },
 
   _getTargetBrowsers() {
-    const targetsString = Services.prefs.getCharPref(TARGET_BROWSER_PREF);
+    const targetsString = Services.prefs.getCharPref(TARGET_BROWSER_PREF, "");
     return targetsString
       ? JSON.parse(targetsString)
       : this._getDefaultTargetBrowsers();
