@@ -1,6 +1,10 @@
 Debugging Firefox with LLDB
 ===========================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 See http://lldb.llvm.org/index.html.
 
 Mozilla-specific lldb settings
@@ -74,8 +78,8 @@ Then set breakpoints you need and start the process:
 
    (lldb) breakpoint set --name nsInProcessTabChildGlobal::InitTabChildGlobal
    Breakpoint created: 1: name = 'nsInProcessTabChildGlobal::InitTabChildGlobal', locations = 0 (pending)
-   WARNING:  Unable to resolve breakpoint to any actual locations.
+   WARNING: Unable to resolve breakpoint to any actual locations.
 
    (lldb) r
    Process 7602 launched: '/.../obj-ff-opt/dist/Nightly.app/Contents/MacOS/firefox-bin' (x86_64)
-   1 location  added to breakpoint 1
+   1 location added to breakpoint 1

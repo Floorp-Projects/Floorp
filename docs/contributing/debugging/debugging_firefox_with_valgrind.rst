@@ -1,6 +1,10 @@
 Debugging Firefox with Valgrind
 ===============================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 This page describes how to use Valgrind (specifically, its Memcheck
 tool) to find memory errors.
 
@@ -19,7 +23,7 @@ of a rough ride.
 -  Expect lower performance and a somewhat higher false positive error
    rate than on Linux.
 -  Valgrind's handling of malloc zones on Yosemite is imperfect. Regard
-   leak reports with caution. 
+   leak reports with caution.
 -  Valgrind has been known to cause kernel panics, for unknown reasons.
 
 Where to get Valgrind
@@ -123,16 +127,16 @@ Where ``$VALGRIND_OPTIONS`` are the options described
 need ``--trace-children=yes`` to trace into child processes.
 
 As of December 2014 it is possible to do a complete run of
-mochitests-plain on Valgrind in about 8 CPU hours on a Core i4910
-(Haswell) machine.  Maximum process size is 5.4G, of which about 80% is
-in memory.  Runs of small subsets of mochitests take far less memory.
+mochitests-plain on Valgrind in about 8 CPU hours on a Core i4910
+(Haswell) machine.  Maximum process size is 5.4G, of which about 80% is
+in memory.  Runs of small subsets of mochitests take far less memory.
 
 Bits and pieces
 ~~~~~~~~~~~~~~~
 
 For un-released Linux distros (Fedora Rawhide, etc.) you'll need to use
 a version of Valgrind trunk build, because fixes for the latest gcc and
-glibc versions appear there first.  Without them you'll be flooded with
+glibc versions appear there first.  Without them you'll be flooded with
 false errors from Memcheck, and have debuginfo reading problems.
 
 On Linux, code compiled by LLVM at high optimisation levels can cause
@@ -141,9 +145,9 @@ Memcheck to report false uninitialised value errors. See
 workaround. On Mac, Valgrind has this workaround built in.
 
 You can make stack traces easier to read by asking for source file names
-to be given relative to the root of your source tree.  Do this by using
+to be given relative to the root of your source tree.  Do this by using
 ``--fullpath-after=`` to specify the rightmost part of the absolute path
-that you don't want to see.  For example, if your source tree is rooted
+that you don't want to see.  For example, if your source tree is rooted
 at ``/home/sewardj/MC-20-12-2014``, use ``--fullpath-after=2014/`` to
 get path names relative to the source directory.
 
@@ -162,10 +166,10 @@ Manual <http://valgrind.org/docs/manual/manual.html>`__ is also useful.
 
 If Valgrind asserts, crashes, doesn't do what you expect, or otherwise
 acts up, first of all read this page and make sure you have both Firefox
-and Valgrind correctly configured.  If that's all OK, try using the
+and Valgrind correctly configured.  If that's all OK, try using the
 `Valgrind trunk from
-SVN <http://www.valgrind.org/downloads/repository.html>`__.  Oftentimes
-bugs are fixed in the trunk before most users fall across them.  If that
+SVN <http://www.valgrind.org/downloads/repository.html>`__.  Oftentimes
+bugs are fixed in the trunk before most users fall across them.  If that
 doesn't help, consider `filing a bug
 report <http://www.valgrind.org/support/bug_reports.html>`__, and/or
 mailing Julian Seward or Nick Nethercote.

@@ -1,15 +1,19 @@
 Debugging Firefox with GDB
 ==========================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 This page details how you can more easily debug Firefox and work around
 some GDB problems.
 
 Use GDB 5, or higher. A more recent version of GDB can be obtained from
 `sourceware <https://sourceware.org/gdb/>`__ or your Linux distro repo.
-If you are running less than 256 MB of RAM, be sure to see `Using gdb on
+If you are running less than 256 MB of RAM, be sure to see `Using gdb on
 wimpy computers </en/Using_gdb_on_wimpy_computers>`__.
 
-Where can I find general gdb documentation?
+Where can I find general gdb documentation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using GDB is beyond the scope of this document. Documentation is likely
@@ -25,9 +29,9 @@ How do I run Firefox under gdb?
 
 The preferred method, is using the
 `mach </en-US/docs/Developer_Guide/mach>`__ command-line tool to run the
-debugger, which can bypass several optional defaults.  Use "mach help
-run" to get more details.  If inside the source directory, you would use
-"./mach".  If you have previously `added mach to your
+debugger, which can bypass several optional defaults. Use "mach help
+run" to get more details. If inside the source directory, you would use
+"./mach". If you have previously `added mach to your
 path </en-US/docs/Developer_Guide/mach#Adding_mach_to_your_shell's_search_path>`__,
 then just use "mach". Please note that `mach is aware of
 mozconfigs </en-US/docs/Developer_Guide/mach#mach_and_mozconfigs>`__.
@@ -75,9 +79,9 @@ How do I set a breakpoint in a library that hasn't been loaded?
 
 GDB 6.1 and above has support for "pending breakpoints". This is
 controlled by the "``set breakpoint pending``" setting, and is enabled
-by default.  If a breakpoint cannot be immediately resolved, it will be
+by default.  If a breakpoint cannot be immediately resolved, it will be
 re-checked each time a shared library is loaded, by the process being
-debugged. If your GDB is older than this, you should upgrade.
+debugged. If your GDB is older than this, you should upgrade.
 
 In older versions, there isn't a way to set breakpoints in a library
 that has not yet been loaded. See more on `setting a breakpoint when a
@@ -87,7 +91,7 @@ you have to set a breakpoint you can set a breakpoint in ``_dl_open``.
 This function is called when a new library is loaded, when you can
 finally set your breakpoint.
 
-How do I set a breakpoint when a component is loaded? 
+How do I set a breakpoint when a component is loaded? 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
@@ -149,7 +153,7 @@ One suggestion is this:
    $47 = {114, 100, 102, 58, 110, 117, 108, 108, 0, 0, 8, 0, 0, 0, 37432,
    16514}
 
- 
+ 
 
 .. code:: eval
 
@@ -285,13 +289,13 @@ How can I debug JavaScript from gdb?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have JavaScript Engine code on the stack, you'll probably want a
-JS stack in addition to the C++ stack.
+JS stack in addition to the C++ stack.
 
 ::
 
    (gdb) call DumpJSStack() 
 
-See `https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript </en-US/docs/Mozilla/Debugging/Debugging_JavaScript>`__
+See `https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript </en-US/docs/Mozilla/Debugging/Debugging_JavaScript>`__
 for more JS debugging tricks.
 
 How can I debug race conditions and/or how can I make something different happen at NS_ASSERTION time?
@@ -389,11 +393,11 @@ can stop at two places:
    (gdb) b abort
    (gdb) b exit
 
-I keep getting a SIGSEGV in JS/JIT code under gdb even though there is no crash when gdb is not attached.  How do I fix it?
+I keep getting a SIGSEGV in JS/JIT code under gdb even though there is no crash when gdb is not attached.  How do I fix it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Set the JS_DISABLE_SLOW_SCRIPT_SIGNALS environment variable (in FF33,
-the shorter and easier-to-remember JS_NO_SIGNALS).  For an explanation,
+the shorter and easier-to-remember JS_NO_SIGNALS).  For an explanation,
 read `Jan's blog
 post <https://www.jandemooij.nl/blog/2014/02/18/using-segfaults-to-interrupt-jit-code/>`__.
 
@@ -492,7 +496,7 @@ To get the child process id use:
 
    MOZ_DEBUG_CHILD_PROCESS=1 mach run
 
- See also
+ See also
 ~~~~~~~~~
 
 -  `Debugging </En/Debugging>`__
@@ -519,4 +523,4 @@ To get the child process id use:
       contributors; content available under a `Creative Commons
       license <https://www.mozilla.org/foundation/licensing/website-content.html>`__
 
- 
+ 
