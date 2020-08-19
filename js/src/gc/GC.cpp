@@ -6783,6 +6783,12 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Mark:
+      if (mightSweepInThisSlice(budget.isUnlimited())) {
+        // Trace wrapper rooters before marking if we might start sweeping in
+        // this slice.
+        rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
+      }
+
       {
         gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK);
         if (markUntilBudgetExhausted(budget) == NotFinished) {
@@ -6828,7 +6834,9 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Sweep:
-      rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
+      if (initialState == State::Sweep) {
+        rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
+      }
 
       if (performSweepActions(budget) == NotFinished) {
         break;
