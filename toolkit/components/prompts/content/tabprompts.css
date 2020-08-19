@@ -92,32 +92,7 @@ tabmodalprompt label[value=""] {
   width: 100%;
 }
 
-/**
- * Tab modal SubDialog hosted overlay.
- */
-.tabSubDialogBoxContainer {
-  display: flex;
-  justify-content: center;
-  position: absolute;
-  /* TODO: figure out which element is preventing this from showing */
-  z-index: 1;
-  width: 100%;
-  margin-top: -3px;
-}
-
-.tabSubDialogBoxContainer .dialogBox {
-  box-shadow: 0 2px 8px rgba(12,12,13,.3);
-  outline: 1px solid rgba(12,12,13,.2);
-  background-color: var(--toolbar-bgcolor);
-  color: var(--toolbar-color);
-}
-
 .printPreviewBrowser {
   width: 500px;
-  height: 600px;
-}
-
-.printSettingsBrowser {
-  width: 250px;
   height: 600px;
 }

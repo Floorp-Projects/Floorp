@@ -122,14 +122,15 @@ var PrintUtils = {
     return null;
   },
 
-  /**
-   * Retrieve the template contents for the tab modal print UI.
-   */
-  _tabModalTemplate() {
-    return document.importNode(
-      document.getElementById("printTabModalTemplate").content,
-      true
-    ).firstElementChild;
+  getPreviewBrowser(sourceBrowser) {
+    let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
+    for (let dialog of dialogBox._dialogManager._dialogs) {
+      let browser = dialog._box.querySelector(".printPreviewBrowser");
+      if (browser) {
+        return browser;
+      }
+    }
+    return null;
   },
 
   /**
@@ -139,57 +140,19 @@ var PrintUtils = {
    *        The BrowsingContext of the window to print.
    */
   async _openTabModalPrint(aBrowsingContext) {
-    const { SubDialog } = ChromeUtils.import(
-      "resource://gre/modules/SubDialog.jsm"
-    );
+    let sourceBrowser = aBrowsingContext.embedderElement;
+    let previewBrowser = this.getPreviewBrowser(sourceBrowser);
 
-    let container = gBrowser.getBrowserContainer(
-      aBrowsingContext.embedderElement
-    );
-    if (container.querySelector(".printDialogContainer")) {
+    if (previewBrowser) {
       // Don't open another dialog if we're already printing.
       aBrowsingContext.isAwaitingPrint = false;
       return;
     }
 
-    let dialog = new SubDialog({
-      id: `printModal${aBrowsingContext.id}`,
-      template: this._tabModalTemplate(),
-      parentElement: container,
-      dialogOptions: {
-        consumeOutsideClicks: false,
-      },
-    });
-
-    // Move the overlay so it overlaps the chrome and content.
-    container.prepend(dialog._overlay);
-    container.querySelector(".printSettingsBrowser").hidden = false;
-
-    // Store the dialog on the overlay for access in the tests.
-    dialog._overlay._dialog = dialog;
-    let sourceBrowser = aBrowsingContext.top.embedderElement;
-    let printPreviewBrowser = gBrowser.createBrowser({
-      remoteType: sourceBrowser.remoteType,
-      initialBrowsingContextGroupId: aBrowsingContext.group.id,
-      skipLoad: false,
-    });
-    printPreviewBrowser.classList.add("printPreviewBrowser");
-    let stack = container.querySelector(".previewStack");
-    stack.setAttribute("isRendering", "true");
-    stack.append(printPreviewBrowser);
-    printPreviewBrowser.loadURI("about:printpreview", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-
-    await dialog.open(
+    let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
+    dialogBox.open(
       `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`,
-      "resizable=no",
-      null,
-      () => {
-        printPreviewBrowser.messageManager.sendAsyncMessage(
-          "Printing:Preview:Exit"
-        );
-      }
+      "resizable=no"
     );
   },
 
@@ -214,7 +177,7 @@ var PrintUtils = {
     printSettings
   ) {
     let stack = printPreviewBrowser.parentElement;
-    stack.setAttribute("isRendering", true);
+    stack.setAttribute("rendering", true);
 
     return new Promise(resolve => {
       printPreviewBrowser.messageManager.addMessageListener(
@@ -225,7 +188,7 @@ var PrintUtils = {
             done
           );
 
-          stack.removeAttribute("isRendering");
+          stack.removeAttribute("rendering");
 
           resolve(message.data.numPages);
         }

@@ -1378,7 +1378,7 @@ toolbarpaletteitem > toolbaritem {
   visibility: hidden;
 }
 
-.previewStack[isRendering=true] > .previewRendering {
+.previewStack[rendering=true] > .previewRendering {
   visibility: visible;
 }
 
@@ -1387,7 +1387,7 @@ toolbarpaletteitem > toolbaritem {
   transition: opacity 60ms;
 }
 
-.previewStack[isRendering=true] > .printPreviewBrowser {
+.previewStack[rendering=true] > .printPreviewBrowser {
   opacity: 0;
   transition: opacity 1ms 250ms;
 }

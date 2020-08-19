@@ -582,11 +582,10 @@ SubDialog.prototype = {
     // frame is targeted, so we don't close the wrong dialog.
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE && !aEvent.defaultPrevented) {
       if (
-        (this._window.isChromeWindow &&
-          aEvent.currentTarget == this._frame.contentDocument) ||
+        (this._window.isChromeWindow && aEvent.currentTarget == this._box) ||
         (!this._window.isChromeWindow && aEvent.currentTarget == this._window)
       ) {
-        this.close(aEvent);
+        this._frame.contentWindow.close();
         return;
       }
     }
@@ -737,7 +736,7 @@ SubDialog.prototype = {
   _trapFocus() {
     let fm = Services.focus;
     fm.moveFocus(this._frame.contentWindow, null, fm.MOVEFOCUS_FIRST, 0);
-    this._frame.contentDocument.addEventListener("keydown", this, true);
+    this._box.addEventListener("keydown", this, true);
     this._closeButton?.addEventListener("keydown", this);
 
     if (!this._window.isChromeWindow) {
@@ -746,7 +745,7 @@ SubDialog.prototype = {
   },
 
   _untrapFocus() {
-    this._frame.contentDocument.removeEventListener("keydown", this, true);
+    this._box.removeEventListener("keydown", this, true);
     this._closeButton?.removeEventListener("keydown", this);
     this._window.removeEventListener("focus", this, true);
   },
