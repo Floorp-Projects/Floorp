@@ -1271,6 +1271,10 @@ this.VideoControlsImplWidget = class {
 
         this.scrubber.value = currentTime;
         this.positionDurationBox.position = positionTime;
+        this.scrubber.setAttribute(
+          "aria-valuetext",
+          this.positionDurationBox.textContent.trim()
+        );
         this.updateScrubberProgress();
       },
 
@@ -2738,10 +2742,10 @@ this.VideoControlsImplWidget = class {
                 <div class="progressBackgroundBar stackItem" role="none">
                   <div class="progressStack" role="none">
                     <progress id="bufferBar" class="bufferBar" value="0" max="100" tabindex="-1"></progress>
-                    <progress id="progressBar" class="progressBar" value="0" max="100" tabindex="-1"></progress>
+                    <progress id="progressBar" class="progressBar" value="0" max="100" aria-hidden="true"></progress>
                   </div>
                 </div>
-                <input type="range" id="scrubber" class="scrubber" tabindex="-1"/>
+                <input type="range" id="scrubber" class="scrubber" tabindex="-1" data-l10n-id="videocontrols-scrubber"/>
               </div>
               <bdi id="positionLabel" class="positionLabel" role="presentation"></bdi>
               <bdi id="durationLabel" class="durationLabel" role="presentation"></bdi>
