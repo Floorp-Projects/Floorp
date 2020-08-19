@@ -562,7 +562,11 @@ var PrintUtils = {
     return undefined;
   },
 
-  _setPrinterDefaultsForSelectedPrinter(aPSSVC, aPrintSettings) {
+  _setPrinterDefaultsForSelectedPrinter(
+    aPSSVC,
+    aPrintSettings,
+    defaultsOnly = false
+  ) {
     if (!aPrintSettings.printerName) {
       aPrintSettings.printerName = aPSSVC.lastUsedPrinterName;
     }
@@ -576,15 +580,17 @@ var PrintUtils = {
       );
     }
 
-    // now augment them with any values from last time
-    aPSSVC.initPrintSettingsFromPrefs(
-      aPrintSettings,
-      true,
-      aPrintSettings.kInitSaveAll
-    );
+    if (!defaultsOnly) {
+      // now augment them with any values from last time
+      aPSSVC.initPrintSettingsFromPrefs(
+        aPrintSettings,
+        true,
+        aPrintSettings.kInitSaveAll
+      );
+    }
   },
 
-  getPrintSettings(aPrinterName) {
+  getPrintSettings(aPrinterName, defaultsOnly) {
     var printSettings;
     try {
       var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
@@ -594,7 +600,11 @@ var PrintUtils = {
       if (aPrinterName) {
         printSettings.printerName = aPrinterName;
       }
-      this._setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
+      this._setPrinterDefaultsForSelectedPrinter(
+        PSSVC,
+        printSettings,
+        defaultsOnly
+      );
     } catch (e) {
       dump("getPrintSettings: " + e + "\n");
     }
