@@ -249,8 +249,30 @@ input[type="text"] {
   margin: 0;
 }
 
-.page-range-input:not(.custom-input-selected) #custom-range {
-  display: none;
+.range-group-input {
+  width: 3em;
+  height: max-content;
+  appearance: textfield !important;
+  margin-inline: 5px;
+}
+
+.range-part-label {
+  height: max-content;
+  margin-top: 8px;
+}
+
+.range-group {
+  align-items: center;
+  display: inline-flex;
+}
+
+#range-picker {
+  margin-bottom: 8px;
+}
+
+input[type="number"]:invalid {
+  border: 1px solid #D70022;
+  box-shadow: 0 0 0 1px #D70022, 0 0 0 4px rgba(215, 0, 34, 0.3);
 }
 
 .toggle-group #landscape + .toggle-group-label::before {

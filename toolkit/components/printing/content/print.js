@@ -63,6 +63,13 @@ var PrintEventHandler = {
         Ci.nsIPrintSettings.kInitSaveBGColors |
         Ci.nsIPrintSettings.kInitSaveBGImages,
     };
+    // These settings do not have an associated pref value or flag, but
+    // changing them requires us to update the print preview.
+    this._nonFlaggedUpdatePreviewSettings = [
+      "printAllOrCustomRange",
+      "startPageRange",
+      "endPageRange",
+    ];
 
     // First check the available destinations to ensure we get settings for an
     // accessible printer.
@@ -170,6 +177,7 @@ var PrintEventHandler = {
 
   updateSettings(changedSettings = {}) {
     let didSettingsChange = false;
+    let updatePreviewWithoutFlag = false;
     let flags = 0;
     for (let [setting, value] of Object.entries(changedSettings)) {
       if (this.viewSettings[setting] != value) {
@@ -183,6 +191,10 @@ var PrintEventHandler = {
           this._nonFlaggedChangedSettings[setting] = value;
         }
         didSettingsChange = true;
+        updatePreviewWithoutFlag |= this._nonFlaggedUpdatePreviewSettings.includes(
+          setting
+        );
+
         Services.telemetry.keyedScalarAdd(
           "printing.settings_changed",
           setting,
@@ -210,8 +222,7 @@ var PrintEventHandler = {
       if (printerChanged) {
         this.refreshSettings(this.settings.printerName);
       }
-
-      if (flags || printerChanged) {
+      if (flags || printerChanged || updatePreviewWithoutFlag) {
         this.updatePrintPreview();
       }
 
@@ -237,13 +248,21 @@ var PrintEventHandler = {
   },
 
   async _updatePrintPreview() {
-    let numPages = await PrintUtils.updatePrintPreview(
+    let totalPages = await PrintUtils.updatePrintPreview(
       this.getSourceBrowsingContext(),
       this.previewBrowser,
       this.settings
     );
+
+    let numPages = totalPages;
+    // Adjust number of pages if the user specifies the pages they want printed
+    if (
+      this.settings.printRange == Ci.nsIPrintSettings.kRangeSpecifiedPageRange
+    ) {
+      numPages = this.settings.endPageRange - this.settings.startPageRange + 1;
+    }
     document.dispatchEvent(
-      new CustomEvent("page-count", { detail: { numPages } })
+      new CustomEvent("page-count", { detail: { numPages, totalPages } })
     );
 
     if (this._queuedPreviewUpdatePromise) {
@@ -443,8 +462,6 @@ const PrintSettingsViewProxy = {
           value == "all"
             ? Ci.nsIPrintSettings.kRangeAllPages
             : Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
-        // TODO: There's also kRangeSelection, which should come into play
-        // once we have a text box where the user can specify a range
         break;
 
       case "printerName":
@@ -614,6 +631,11 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
 customElements.define("orientation-input", OrientationInput);
 
 class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
+  initialize() {
+    super.initialize();
+    this.addEventListener("input", this);
+  }
+
   update(settings) {
     this.value = settings.numCopies;
   }
@@ -632,6 +654,7 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   initialize() {
     super.initialize();
 
+    this.addEventListener("change", this);
     this.addEventListener("submit", this);
     this.addEventListener("click", this);
     this.addEventListener("input", this);
@@ -656,9 +679,12 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
           this.dispatchEvent(new Event("cancel-print", { bubbles: true }));
           break;
       }
-    } else if (e.type == "input") {
+    } else if (e.type == "change" || e.type == "input") {
       let isValid = this.checkValidity();
       let section = e.target.closest(".section-block");
+      document
+        .querySelector("#sheet-count")
+        .toggleAttribute("loading", !isValid);
       for (let element of this.elements) {
         // If we're valid, enable all inputs.
         // Otherwise, disable the valid inputs other than the cancel button and the elements
@@ -741,19 +767,71 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 customElements.define("scale-input", ScaleInput);
 
 class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
+  initialize() {
+    super.initialize();
+
+    this.startRange = this.querySelector("#custom-range-start");
+    this.endRange = this.querySelector("#custom-range-end");
+    this.rangePicker = this.querySelector("#range-picker");
+
+    this.addEventListener("input", this);
+    document.addEventListener("page-count", this);
+  }
+
   get templateId() {
     return "page-range-template";
   }
 
   update(settings) {
-    let rangePicker = this.querySelector("#range-picker");
-    rangePicker.value = settings.printAllOrCustomRange;
+    this.toggleAttribute("all-pages", settings.printRange == 0);
   }
 
   handleEvent(e) {
-    this.dispatchSettingsChange({
-      printAllOrCustomRange: e.target.value,
-    });
+    if (e.type == "page-count") {
+      this.startRange.max = this.endRange.max = this._numPages =
+        e.detail.totalPages;
+      this.startRange.disabled = this.endRange.disabled = false;
+      if (!this.endRange.checkValidity()) {
+        this.endRange.value = this._numPages;
+        this.dispatchSettingsChange({
+          endPageRange: this.endRange.value,
+        });
+        this.endRange.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    } else if (e.target == this.rangePicker) {
+      let printAll = e.target.value == "all";
+      this.startRange.required = this.endRange.required = !printAll;
+      this.querySelector(".range-group").hidden = printAll;
+      if (printAll) {
+        this.dispatchSettingsChange({
+          printAllOrCustomRange: "all",
+        });
+      } else {
+        this.startRange.value = 1;
+        this.endRange.value = this._numPages || 1;
+
+        this.dispatchSettingsChange({
+          printAllOrCustomRange: "custom",
+          startPageRange: this.startRange.value,
+          endPageRange: this.endRange.value,
+        });
+      }
+    } else if (e.target == this.startRange || e.target == this.endRange) {
+      if (this.startRange.checkValidity()) {
+        this.endRange.min = this.startRange.value;
+      }
+      if (this.endRange.checkValidity()) {
+        this.startRange.max = this.endRange.value;
+      }
+      if (this.startRange.checkValidity() && this.endRange.checkValidity()) {
+        if (this.startRange.value && this.endRange.value) {
+          this.dispatchSettingsChange({
+            startPageRange: this.startRange.value,
+            endPageRange: this.endRange.value,
+          });
+        }
+      }
+    }
   }
 }
 customElements.define("page-range-input", PageRangeInput);

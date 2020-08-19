@@ -202,6 +202,9 @@ var PrintUtils = {
           simplifiedMode: false,
           browsingContextId: sourceBrowsingContext.id,
           outputFormat: printSettings.outputFormat,
+          startPageRange: printSettings.startPageRange,
+          endPageRange: printSettings.endPageRange,
+          printRange: printSettings.printRange,
         }
       );
     });
