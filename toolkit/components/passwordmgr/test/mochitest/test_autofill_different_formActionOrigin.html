@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test autofill on an HTTPS page using upgraded HTTP logins wtih different formActionOrigin</title>
+  <title>Test autofill on an HTTPS page using upgraded HTTP logins with different formActionOrigin</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
@@ -66,6 +66,33 @@ add_task(async function test_formActionOrigin_different_shouldnt_autofill() {
   let uname = iframeDoc.getElementById("form-basic-username");
   let pword = iframeDoc.getElementById("form-basic-password");
   checkLoginForm(uname, "", pword, "");
+});
+
+add_task(async function test_formActionOrigin_subdomain_should_autofill() {
+  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+    new nsLoginInfo("https://example.com", "https://sub.example.com", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  let iframeDoc = iframe.contentDocument;
+  let uname = iframeDoc.getElementById("form-basic-username");
+  let pword = iframeDoc.getElementById("form-basic-password");
+  checkLoginForm(uname, "name2", pword, "pass2");
+
+});
+
+add_task(async function test_origin_subdomain_should_not_autofill() {
+  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+    new nsLoginInfo("https://sub.example.com", "https://example.com", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  let iframeDoc = iframe.contentDocument;
+  let uname = iframeDoc.getElementById("form-basic-username");
+  let pword = iframeDoc.getElementById("form-basic-password");
+
+  checkLoginForm(uname, "", pword, "");
+
 });
 
 </script>
