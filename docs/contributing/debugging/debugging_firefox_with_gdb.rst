@@ -11,7 +11,7 @@ some GDB problems.
 Use GDB 5, or higher. A more recent version of GDB can be obtained from
 `sourceware <https://sourceware.org/gdb/>`__ or your Linux distro repo.
 If you are running less than 256 MB of RAM, be sure to see `Using gdb on
-wimpy computers </en/Using_gdb_on_wimpy_computers>`__.
+wimpy computers <https://developer.mozilla.org/en/Using_gdb_on_wimpy_computers>`__.
 
 Where can I find general gdb documentation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,15 +28,15 @@ How do I run Firefox under gdb?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The preferred method, is using the
-`mach </en-US/docs/Developer_Guide/mach>`__ command-line tool to run the
+`mach <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach>`__ command-line tool to run the
 debugger, which can bypass several optional defaults. Use "mach help
 run" to get more details. If inside the source directory, you would use
 "./mach". If you have previously `added mach to your
-path </en-US/docs/Developer_Guide/mach#Adding_mach_to_your_shell's_search_path>`__,
+path <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach#Adding_mach_to_your_shell's_search_path>`__,
 then just use "mach". Please note that `mach is aware of
-mozconfigs </en-US/docs/Developer_Guide/mach#mach_and_mozconfigs>`__.
+mozconfigs <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach#mach_and_mozconfigs>`__.
 
-.. code:: eval
+.. code:: bash
 
    $ ./mach run --debug [arguments to pass to firefox]
 
@@ -45,7 +45,7 @@ options via the command line parser, taking care to adhere to shell
 splitting rules. For example, if you wanted to run the command 'show
 args' when gdb starts, you would use:
 
-.. code:: eval
+.. code:: bash
 
    $ ./mach run --debug --debugger-args "-ex 'show args'"
 
@@ -55,13 +55,9 @@ mach sets an environment variable (see below) to stop the JS engine from
 generating synthetic segfaults to support the slower script dialoging
 mechanism.
 
-.. code:: eval
+.. code::
 
-   $ gdb OBJDIR/dist/bin/firefox
-
-See this `old
-version </index.php?title=en/Debugging_Mozilla_with_gdb&revision=43>`__
-for specialized instructions on older builds of Firefox.
+   (gdb) OBJDIR/dist/bin/firefox
 
 How do I pass arguments in prun?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,7 +65,7 @@ How do I pass arguments in prun?
 Set the arguments in GDB before calling prun. Here's an example on how
 to do that:
 
-.. code:: eval
+.. code::
 
    (gdb) set args https://www.mozilla.org
    (gdb) prun
@@ -94,10 +90,8 @@ finally set your breakpoint.
 How do I set a breakpoint when a component is loaded? 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-   In Firefox Version 57 (and possibly earlier) XPCOM_BREAK_ON_LOAD does
-   not seem to exist.
+In Firefox Version 57 (and possibly earlier) XPCOM_BREAK_ON_LOAD does
+not seem to exist.
 
 There's a facility in XPCOM which allows you to set an environment
 variable to drop into the debugger when loading a certain component. You
@@ -107,7 +101,7 @@ load. For example, if you wish to stop when a library named ``raptor``
 or ``necko`` is loaded, you set the variable to ``raptor:necko``. Here's
 an example:
 
-.. code:: eval
+.. code::
 
    (gdb) set env XPCOM_BREAK_ON_LOAD raptor:necko
    (gdb) prun
@@ -122,7 +116,7 @@ through until the libraries are loaded, with a call to
 ``InitCOMGlue()``, you should be able to set breakpoints on many more
 symbols, source files, and continue running.
 
-::
+.. code::
 
    (gdb) break main
    (gdb) run
@@ -147,7 +141,7 @@ How do I display PRUnichar's?
 
 One suggestion is this:
 
-.. code:: eval
+.. code::
 
    (gdb) print ((PRUnichar*)uri.mBuffer)[0]@16
    $47 = {114, 100, 102, 58, 110, 117, 108, 108, 0, 0, 8, 0, 0, 0, 37432,
@@ -155,7 +149,7 @@ One suggestion is this:
 
  
 
-.. code:: eval
+.. code::
 
    (gdb) print aURI
    $1 = (const PRUnichar *) 0x855e6e0
@@ -168,7 +162,7 @@ One suggestion is this:
 
 -  Define helper functions in your .gdbinit
 
-.. code:: brush:
+.. code::
 
    # Define a "pu" command to display PRUnichar * strings (100 chars max)
    # Also allows an optional argument for how many chars to print as long as
@@ -232,14 +226,14 @@ You can call the ToNewCString() method on the nsString. It leaks a
 little memory but it shouldn't hurt anything if you only do it a few
 times in one gdb session. (via akkana@netscape.com)
 
-.. code:: eval
+.. code::
 
    (gdb) p string.ToNewCString()
 
 Another method (via bent) is the following (replace ``n`` with: the
 returned length of your string):
 
-::
+.. code::
 
    (gdb) p string.Length()
    $1 = n
@@ -266,7 +260,7 @@ You can determine the concrete type of any object pointed to, by an
 XPCOM interface pointer, by looking at the mangled name of the symbol
 for the object's vtable:
 
-.. code:: eval
+.. code::
 
    (gdb) p aKidFrame
    $1 = (nsIFrame *) 0x85058d4
@@ -291,11 +285,11 @@ How can I debug JavaScript from gdb?
 If you have JavaScript Engine code on the stack, you'll probably want a
 JS stack in addition to the C++ stack.
 
-::
+.. code::
 
    (gdb) call DumpJSStack() 
 
-See `https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript </en-US/docs/Mozilla/Debugging/Debugging_JavaScript>`__
+See `https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript <https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript>`__
 for more JS debugging tricks.
 
 How can I debug race conditions and/or how can I make something different happen at NS_ASSERTION time?
@@ -320,7 +314,7 @@ build. This script sets up the environment to run the editor, shell,
 debugger, or defining a preferred setup and running any commands you
 wish. For example:
 
-.. code:: eval
+.. code:: bash
 
    $ ./run-mozilla.sh /bin/bash
    MOZILLA_FIVE_HOME=/home/USER/src/mozilla/build/dist/bin
@@ -350,7 +344,7 @@ GUI, `the latest version of gdb <https://sources.redhat.com/gdb/>`__.
 
 Running mozilla-bin inside GDB fails with an error message like:
 
-.. code:: eval
+.. code::
 
    Starting program:
    /u/dmose/s/mozilla/mozilla-all/mozilla/dist/bin/./mozilla-bin
@@ -388,7 +382,7 @@ On Linux there are two possible symbols that are causing this:
 ``PR_ASSERT()`` and ``NS_ASSERTION()``. To see where it's asserting you
 can stop at two places:
 
-.. code:: eval
+.. code::
 
    (gdb) b abort
    (gdb) b exit
@@ -446,16 +440,16 @@ You can finally install debuginfo packages with yum or other package
 management tools. The best way is install the ``yum-utils`` package, and
 then use the ``debuginfo-install`` command to install all the debuginfo:
 
-::
+.. code:: bash
 
-   # yum install yum-utils
-   # debuginfo-install firefox 
+   $ yum install yum-utils
+   $ debuginfo-install firefox
 
 This can be done manually using:
 
-.. code:: eval
+.. code:: bash
 
-    # yum install GConf2-debuginfo ORBit2-debuginfo atk-debuginfo \
+    $ yum install GConf2-debuginfo ORBit2-debuginfo atk-debuginfo \
     cairo-debuginfo dbus-debuginfo dbus-glib-debuginfo expat-debuginfo \
     fontconfig-debuginfo freetype-debuginfo gcc-debuginfo glib2-debuginfo \
     glibc-debuginfo gnome-vfs2-debuginfo gtk2-debuginfo gtk2-engines-debuginfo \
@@ -463,20 +457,6 @@ This can be done manually using:
     libXfixes-debuginfo libXft-debuginfo libXi-debuginfo libXinerama-debuginfo \
     libXrender-debuginfo libbonobo-debuginfo libgnome-debuginfo \
     libselinux-debuginfo pango-debuginfo popt-debuginfo scim-bridge-debuginfo
-
-Ubuntu 8.04
-^^^^^^^^^^^
-
-Ubuntu provides similar debug symbol packages for many of its libraries,
-though not all of them. To install them, run:
-
-.. code:: eval
-
-    $ sudo apt-get install libatk1.0-dbg libc6-dbg libcairo2-dbg \
-    libfontconfig1-dbg libgcc1-dbg libglib2.0-0-dbg libgnomeui-0-dbg \
-    libgnomevfs2-0-dbg libgnutls13-dbg libgtk2.0-0-dbg libice6-dbg \
-    libjpeg62-dbg libpango1.0-0-dbg libpixman-1-0-dbg libstdc++6-4.2-dbg \
-    libx11-6-dbg libx11-xcb1-dbg libxcb1-dbg libxft2-dbg zlib1g-dbg
 
 Debugging electrolysis (e10s)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -492,14 +472,14 @@ for a more up-to-date blog post.
 
 To get the child process id use:
 
-::
+.. code::
 
    MOZ_DEBUG_CHILD_PROCESS=1 mach run
 
- See also
+See also
 ~~~~~~~~~
 
--  `Debugging </En/Debugging>`__
+-  `Debugging <https://developer.mozilla.org/En/Debugging>`__
 -  `Performance tools <https://wiki.mozilla.org/Performance:Tools>`__
 -  `Fun with
    gdb <https://blog.mozilla.com/sfink/2011/02/22/fun-with-gdb/>`__ by
