@@ -66,6 +66,12 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // letting go of the resources to avoid memory leak.
+        adapter = null
+    }
+
     private fun bindRecyclerView(view: View) {
         val managementView = AddonsManagementView(
             navController = findNavController(),
