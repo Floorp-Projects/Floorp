@@ -2489,8 +2489,7 @@ bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
-bool IonCacheIRCompiler::emitGuardFunApply(Int32OperandId argcId,
-                                           CallFlags flags) {
+bool IonCacheIRCompiler::emitGuardFunApplyArray() {
   MOZ_CRASH("Call ICs not used in ion");
 }
 

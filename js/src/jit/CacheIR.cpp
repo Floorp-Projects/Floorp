@@ -8356,7 +8356,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
     return AttachDecision::NoAction;
   }
-  auto* target = &thisval_.toObject().as<JSFunction>();
+  RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
 
   bool isScripted = target->hasJitEntry();
   MOZ_ASSERT_IF(!isScripted, target->isNativeWithoutJitEntry());
@@ -8382,28 +8382,48 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   ValOperandId calleeValId =
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
-  writer.guardSpecificNativeFunction(calleeObjId, fun_apply);
+  writer.guardSpecificFunction(calleeObjId, calleeFunc);
 
-  // Guard that |this| is a function.
+  // Guard that |this| is an object.
   ValOperandId thisValId =
       writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
   ObjOperandId thisObjId = writer.guardToObject(thisValId);
-  writer.guardClass(thisObjId, GuardClassKind::JSFunction);
 
-  // Guard that function is not a class constructor.
-  writer.guardNotClassConstructor(thisObjId);
+  if (format == CallFlags::FunApplyArgs) {
+    ValOperandId arg1 = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+    writer.guardMagicValue(arg1, JS_OPTIMIZED_ARGUMENTS);
+    writer.guardFrameHasNoArgumentsObject();
+  } else {
+    MOZ_ASSERT(format == CallFlags::FunApplyArray);
+    writer.guardFunApplyArray();
+  }
 
   CallFlags targetFlags(format);
-  writer.guardFunApply(argcId, targetFlags);
+  if (mode_ == ICState::Mode::Specialized) {
+    // Ensure that |this| is the expected target function.
+    writer.guardSpecificFunction(thisObjId, target);
 
-  if (isScripted) {
-    // Guard that function is scripted.
-    writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
-    writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+    if (isScripted) {
+      writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+    } else {
+      writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags);
+    }
   } else {
-    // Guard that function is native.
-    writer.guardFunctionHasNoJitEntry(thisObjId);
-    writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
+    // Guard that |this| is a function.
+    writer.guardClass(thisObjId, GuardClassKind::JSFunction);
+
+    // Guard that function is not a class constructor.
+    writer.guardNotClassConstructor(thisObjId);
+
+    if (isScripted) {
+      // Guard that function is scripted.
+      writer.guardFunctionHasJitEntry(thisObjId, /*constructing =*/false);
+      writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+    } else {
+      // Guard that function is native.
+      writer.guardFunctionHasNoJitEntry(thisObjId);
+      writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
+    }
   }
 
   writer.typeMonitorResult();
