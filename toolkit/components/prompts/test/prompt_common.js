@@ -195,7 +195,11 @@ function checkPromptState(promptState, expectedState) {
   info(`checkPromptState: Expected: ${expectedState.msg}`);
   // XXX check title? OS X has title in content
   is(promptState.msg, expectedState.msg, "Checking expected message");
-  if (isOSX && modalType !== Ci.nsIPrompt.MODAL_TYPE_CONTENT) {
+  if (
+    isOSX &&
+    (modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW ||
+      (tabSubDialogsEnabled && modalType === Ci.nsIPrompt.MODAL_TYPE_TAB))
+  ) {
     ok(!promptState.titleHidden, "Checking title always visible on OS X");
   } else {
     is(
