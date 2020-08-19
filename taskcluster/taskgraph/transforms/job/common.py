@@ -82,20 +82,21 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     is_mac = worker['os'] == 'macosx'
     is_win = worker['os'] == 'windows'
     is_linux = worker['os'] == 'linux' or 'linux-bitbar'
+    is_docker = worker['implementation'] == 'docker-worker'
     assert is_mac or is_win or is_linux
 
     if is_win:
         checkoutdir = './build'
         geckodir = '{}/src'.format(checkoutdir)
         hgstore = 'y:/hg-shared'
-    elif is_mac:
-        checkoutdir = './checkouts'
-        geckodir = '{}/gecko'.format(checkoutdir)
-        hgstore = '{}/hg-shared'.format(checkoutdir)
-    else:
+    elif is_docker:
         checkoutdir = '{workdir}/checkouts'.format(**job['run'])
         geckodir = '{}/gecko'.format(checkoutdir)
         hgstore = '{}/hg-store'.format(checkoutdir)
+    else:
+        checkoutdir = './checkouts'
+        geckodir = '{}/gecko'.format(checkoutdir)
+        hgstore = '{}/hg-shared'.format(checkoutdir)
 
     cache_name = 'checkouts'
 

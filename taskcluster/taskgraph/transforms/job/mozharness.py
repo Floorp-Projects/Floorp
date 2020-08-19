@@ -116,7 +116,7 @@ mozharness_run_schema = Schema({
     Required('comm-checkout'): bool,
 
     # Base work directory used to set up the task.
-    Required('workdir'): text_type,
+    Optional('workdir'): text_type,
 })
 
 
