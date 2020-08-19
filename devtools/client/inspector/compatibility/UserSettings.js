@@ -67,7 +67,7 @@ function getDefaultTargetBrowsers() {
 }
 
 function getTargetBrowsers() {
-  const targetsString = Services.prefs.getCharPref(TARGET_BROWSER_PREF);
+  const targetsString = Services.prefs.getCharPref(TARGET_BROWSER_PREF, "");
   return targetsString ? JSON.parse(targetsString) : getDefaultTargetBrowsers();
 }
 
