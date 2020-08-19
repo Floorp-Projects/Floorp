@@ -170,6 +170,20 @@ nsresult EncodeInputStream_Encoder(nsIInputStream* aStream, void* aClosure,
   return NS_OK;
 }
 
+mozilla::Result<uint32_t, nsresult> CalculateBase64EncodedLength(
+    const size_t aBinaryLen, const uint32_t aPrefixLen = 0) {
+  mozilla::CheckedUint32 res = aBinaryLen;
+  // base 64 encoded length is 4/3rds the length of the input data, rounded up
+  res += 2;
+  res /= 3;
+  res *= 4;
+  res += aPrefixLen;
+  if (!res.isValid()) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+  return res.value();
+}
+
 template <typename T>
 nsresult EncodeInputStream(nsIInputStream* aInputStream, T& aDest,
                            uint32_t aCount, uint32_t aOffset) {
@@ -186,14 +200,14 @@ nsresult EncodeInputStream(nsIInputStream* aInputStream, T& aDest,
     aCount = (uint32_t)count64;
   }
 
-  uint64_t countlong = (count64 + 2) / 3 * 4;  // +2 due to integer math.
-  if (countlong + aOffset > UINT32_MAX) {
+  const auto base64LenOrErr = CalculateBase64EncodedLength(count64, aOffset);
+  if (base64LenOrErr.isErr()) {
+    // XXX For some reason, it was NS_ERROR_OUT_OF_MEMORY here instead of
+    // NS_ERROR_FAILURE, so we keep that.
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  uint32_t count = uint32_t(countlong);
-
-  if (!aDest.SetLength(count + aOffset, mozilla::fallible)) {
+  if (!aDest.SetLength(base64LenOrErr.inspect(), mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -332,19 +346,19 @@ nsresult Base64EncodeInputStream(nsIInputStream* aInputStream, nsAString& aDest,
 
 nsresult Base64Encode(const char* aBinary, uint32_t aBinaryLen,
                       char** aBase64) {
-  // Check for overflow.
-  if (aBinaryLen > (UINT32_MAX / 4) * 3) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (aBinaryLen == 0) {
     *aBase64 = (char*)moz_xmalloc(1);
     (*aBase64)[0] = '\0';
     return NS_OK;
   }
 
+  const auto base64LenOrErr = CalculateBase64EncodedLength(aBinaryLen);
+  if (base64LenOrErr.isErr()) {
+    return base64LenOrErr.inspectErr();
+  }
+  const uint32_t base64Len = base64LenOrErr.inspect();
+
   *aBase64 = nullptr;
-  uint32_t base64Len = ((aBinaryLen + 2) / 3) * 4;
 
   // Add one byte for null termination.
   UniqueFreePtr<char[]> base64((char*)malloc(base64Len + 1));
@@ -370,22 +384,8 @@ static nsresult Base64EncodeHelper(const T* const aBinary,
   }
 
   const uint32_t prefixLen = Append ? aBase64.Length() : 0;
-  const auto base64LenOrErr = [aBinaryLen,
-                               prefixLen]() -> Result<uint32_t, nsresult> {
-    // XXX(sg) Necessary to silence bad warning about unused lambda capture when
-    // Append is false.
-    (void)prefixLen;
-    CheckedUint32 res = aBinaryLen;
-    // base 64 encoded length is 4/3rds the length of the input data, rounded up
-    res += 2;
-    res /= 3;
-    res *= 4;
-    res += prefixLen;
-    if (!res.isValid()) {
-      return Err(NS_ERROR_FAILURE);
-    }
-    return res.value();
-  }();
+  const auto base64LenOrErr =
+      CalculateBase64EncodedLength(aBinaryLen, prefixLen);
   if (base64LenOrErr.isErr()) {
     return base64LenOrErr.inspectErr();
   }
@@ -681,13 +681,12 @@ nsresult Base64URLEncode(uint32_t aBinaryLen, const uint8_t* aBinary,
     return NS_OK;
   }
 
-  // Check for overflow.
-  if (aBinaryLen > (UINT32_MAX / 4) * 3) {
-    return NS_ERROR_FAILURE;
-  }
-
   // Allocate a buffer large enough to hold the encoded string with padding.
-  uint32_t base64Len = ((aBinaryLen + 2) / 3) * 4;
+  const auto base64LenOrErr = CalculateBase64EncodedLength(aBinaryLen);
+  if (base64LenOrErr.isErr()) {
+    return base64LenOrErr.inspectErr();
+  }
+  const uint32_t base64Len = base64LenOrErr.inspect();
 
   auto handleOrErr = aBase64.BulkWrite(base64Len, 0, false);
   if (handleOrErr.isErr()) {
