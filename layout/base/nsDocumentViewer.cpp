@@ -403,7 +403,8 @@ class nsDocumentViewer final : public nsIContentViewer,
 
   nsresult PrintPreviewScrollToPageForOldUI(int16_t aType, int32_t aPageNum);
 
-  int32_t GetCurrentPageNumberInPrintPreview() const;
+  std::tuple<const nsIFrame*, int32_t> GetCurrentSheetFrameAndPageNumber()
+      const;
 
  protected:
   // Returns the current viewmanager.  Might be null.
@@ -3406,21 +3407,22 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   return NS_OK;
 }
 
-int32_t nsDocumentViewer::GetCurrentPageNumberInPrintPreview() const {
+std::tuple<const nsIFrame*, int32_t>
+nsDocumentViewer::GetCurrentSheetFrameAndPageNumber() const {
   MOZ_ASSERT(mPrintJob);
   MOZ_ASSERT(GetIsPrintPreview() && !mPrintJob->GetIsCreatingPrintPreview());
 
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
   auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
   if (!seqFrame) {
-    return 0;
+    return {nullptr, 0};
   }
 
   nsIScrollableFrame* sf =
       mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
   if (!sf) {
     // No scrollable contents, returns 1 even if there are multiple pages.
-    return 1;
+    return {seqFrame->PrincipalChildList().FirstChild(), 1};
   }
 
   nsPoint currentScrollPosition = sf->GetScrollPosition();
@@ -3428,10 +3430,12 @@ int32_t nsDocumentViewer::GetCurrentPageNumberInPrintPreview() const {
       currentScrollPosition.y + float(sf->GetScrollPortRect().height) / 2.0f;
   float lastDistanceFromHalfwayPoint = std::numeric_limits<float>::max();
   int32_t pageNumber = 0;
+  const nsIFrame* currentSheet = nullptr;
   float previewScale = seqFrame->GetPrintPreviewScale();
   for (const nsIFrame* sheetFrame : seqFrame->PrincipalChildList()) {
     nsRect sheetRect = sheetFrame->GetRect();
     pageNumber++;
+    currentSheet = sheetFrame;
 
     float bottomOfSheet = sheetRect.YMost() * previewScale;
     if (bottomOfSheet < halfwayPoint) {
@@ -3456,12 +3460,14 @@ int32_t nsDocumentViewer::GetCurrentPageNumberInPrintPreview() const {
       // distance, choose the previous one as the current.
       pageNumber--;
       MOZ_ASSERT(pageNumber > 0);
+      currentSheet = currentSheet->GetPrevInFlow();
+      MOZ_ASSERT(currentSheet);
     }
     break;
   }
 
   MOZ_ASSERT(pageNumber <= pageCount);
-  return pageNumber;
+  return {currentSheet, pageNumber};
 }
 
 NS_IMETHODIMP
@@ -3472,7 +3478,8 @@ nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
     return NS_ERROR_FAILURE;
   }
 
-  int32_t currentPageNumber = GetCurrentPageNumberInPrintPreview();
+  auto [currentFrame, currentPageNumber] = GetCurrentSheetFrameAndPageNumber();
+  Unused << currentFrame;
   if (!currentPageNumber) {
     return NS_ERROR_FAILURE;
   }
