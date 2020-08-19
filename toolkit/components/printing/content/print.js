@@ -314,6 +314,10 @@ var PrintEventHandler = {
       value: PrintUtils.SAVE_TO_PDF_PRINTER,
     };
 
+    if (lastUsedPrinterName == PrintUtils.SAVE_TO_PDF_PRINTER) {
+      lastUsedPrinter = saveToPdfPrinter;
+    }
+
     let destinations = [
       saveToPdfPrinter,
       ...printers.map(printer => {
