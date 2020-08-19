@@ -11,17 +11,17 @@ namespace layers {
 
 namespace apz {
 
-/*static*/ bool IsCloseToHorizontal(float aAngle, float aThreshold) {
+bool IsCloseToHorizontal(float aAngle, float aThreshold) {
   return (aAngle < aThreshold || aAngle > (M_PI - aThreshold));
 }
 
-/*static*/ bool IsCloseToVertical(float aAngle, float aThreshold) {
+bool IsCloseToVertical(float aAngle, float aThreshold) {
   return (fabs(aAngle - (M_PI / 2)) < aThreshold);
 }
 
-/*static*/ bool IsStuckAtBottom(gfxFloat aTranslation,
-                                const LayerRectAbsolute& aInnerRange,
-                                const LayerRectAbsolute& aOuterRange) {
+bool IsStuckAtBottom(gfxFloat aTranslation,
+                     const LayerRectAbsolute& aInnerRange,
+                     const LayerRectAbsolute& aOuterRange) {
   // The item will be stuck at the bottom if the async scroll delta is in
   // the range [aOuterRange.Y(), aInnerRange.Y()]. Since the translation
   // is negated with repect to the async scroll delta (i.e. scrolling down
@@ -30,13 +30,39 @@ namespace apz {
   return aOuterRange.Y() <= -aTranslation && -aTranslation <= aInnerRange.Y();
 }
 
-/*static*/ bool IsStuckAtTop(gfxFloat aTranslation,
-                             const LayerRectAbsolute& aInnerRange,
-                             const LayerRectAbsolute& aOuterRange) {
+bool IsStuckAtTop(gfxFloat aTranslation, const LayerRectAbsolute& aInnerRange,
+                  const LayerRectAbsolute& aOuterRange) {
   // Same as IsStuckAtBottom, except we want to check for the range
   // [aInnerRange.YMost(), aOuterRange.YMost()].
   return aInnerRange.YMost() <= -aTranslation &&
          -aTranslation <= aOuterRange.YMost();
+}
+
+ScreenPoint ComputeFixedMarginsOffset(
+    const ScreenMargin& aCompositorFixedLayerMargins, SideBits aFixedSides,
+    const ScreenMargin& aGeckoFixedLayerMargins) {
+  // Work out the necessary translation, in screen space.
+  ScreenPoint translation;
+
+  ScreenMargin effectiveMargin =
+      aCompositorFixedLayerMargins - aGeckoFixedLayerMargins;
+  if ((aFixedSides & SideBits::eLeftRight) == SideBits::eLeftRight) {
+    translation.x += (effectiveMargin.left - effectiveMargin.right) / 2;
+  } else if (aFixedSides & SideBits::eRight) {
+    translation.x -= effectiveMargin.right;
+  } else if (aFixedSides & SideBits::eLeft) {
+    translation.x += effectiveMargin.left;
+  }
+
+  if ((aFixedSides & SideBits::eTopBottom) == SideBits::eTopBottom) {
+    translation.y += (effectiveMargin.top - effectiveMargin.bottom) / 2;
+  } else if (aFixedSides & SideBits::eBottom) {
+    translation.y -= effectiveMargin.bottom;
+  } else if (aFixedSides & SideBits::eTop) {
+    translation.y += effectiveMargin.top;
+  }
+
+  return translation;
 }
 
 }  // namespace apz
