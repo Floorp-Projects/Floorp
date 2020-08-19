@@ -54,4 +54,5 @@ RecyclerView adapter implementation to display a list/grid of tabs.
 
 | Name | Summary |
 |---|---|
+| [doOnTabsUpdated](../../mozilla.components.browser.tabstray.ext/do-on-tabs-updated.md) | `fun `[`TabsAdapter`](./index.md)`.doOnTabsUpdated(action: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Performs the given action when the [TabsTray.Observer.onTabsUpdated](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/on-tabs-updated.md) is invoked. |
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

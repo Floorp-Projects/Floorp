@@ -12,6 +12,7 @@ Interface to be implemented by classes that want to observe a tabs tray.
 |---|---|
 | [onTabClosed](on-tab-closed.md) | `abstract fun onTabClosed(tab: `[`Tab`](../../-tab/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A tab has been closed. |
 | [onTabSelected](on-tab-selected.md) | `abstract fun onTabSelected(tab: `[`Tab`](../../-tab/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A new tab has been selected. |
+| [onTabsUpdated](on-tabs-updated.md) | `open fun onTabsUpdated(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>One or many tabs have been added or removed. |
 
 ### Inheritors
 

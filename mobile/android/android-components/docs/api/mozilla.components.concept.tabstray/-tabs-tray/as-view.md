@@ -2,7 +2,7 @@
 
 # asView
 
-`open fun asView(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/tabstray/src/main/java/mozilla/components/concept/tabstray/TabsTray.kt#L64)
+`open fun asView(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/tabstray/src/main/java/mozilla/components/concept/tabstray/TabsTray.kt#L69)
 
 Convenience method to cast the implementation of this interface to an Android View object.
 

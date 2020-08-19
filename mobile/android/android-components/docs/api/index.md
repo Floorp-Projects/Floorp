@@ -65,6 +65,7 @@
 | [mozilla.components.browser.storage.memory](mozilla.components.browser.storage.memory/index.md) |  |
 | [mozilla.components.browser.storage.sync](mozilla.components.browser.storage.sync/index.md) |  |
 | [mozilla.components.browser.tabstray](mozilla.components.browser.tabstray/index.md) |  |
+| [mozilla.components.browser.tabstray.ext](mozilla.components.browser.tabstray.ext/index.md) |  |
 | [mozilla.components.browser.tabstray.thumbnail](mozilla.components.browser.tabstray.thumbnail/index.md) |  |
 | [mozilla.components.browser.thumbnails](mozilla.components.browser.thumbnails/index.md) |  |
 | [mozilla.components.browser.thumbnails.loader](mozilla.components.browser.thumbnails.loader/index.md) |  |
