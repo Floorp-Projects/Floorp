@@ -88,4 +88,24 @@ class MarionetteFrameParent extends JSWindowActorParent {
       webEl,
     });
   }
+
+  async switchToFrame(id) {
+    const {
+      browsingContextId,
+    } = await this.sendQuery("MarionetteFrameParent:switchToFrame", { id });
+
+    return {
+      browsingContext: BrowsingContext.get(browsingContextId),
+    };
+  }
+
+  async switchToParentFrame() {
+    const { browsingContextId } = await this.sendQuery(
+      "MarionetteFrameParent:switchToParentFrame"
+    );
+
+    return {
+      browsingContext: BrowsingContext.get(browsingContextId),
+    };
+  }
 }
