@@ -575,6 +575,18 @@ JSLinearString* StringFromCharCode(JSContext* cx, int32_t code) {
   return NewStringCopyNDontDeflate<CanGC>(cx, &c, 1);
 }
 
+JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code) {
+  AutoUnsafeCallWithABI unsafe;
+
+  char16_t c = char16_t(code);
+
+  if (StaticStrings::hasUnit(c)) {
+    return cx->staticStrings().getUnit(c);
+  }
+
+  return NewStringCopyNDontDeflate<NoGC>(cx, &c, 1);
+}
+
 JSString* StringFromCodePoint(JSContext* cx, int32_t codePoint) {
   RootedValue rval(cx, Int32Value(codePoint));
   if (!str_fromCodePoint_one_arg(cx, rval, &rval)) {

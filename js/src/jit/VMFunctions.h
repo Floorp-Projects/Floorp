@@ -903,6 +903,7 @@ MOZ_MUST_USE bool SetArrayLength(JSContext* cx, HandleObject obj,
 MOZ_MUST_USE bool CharCodeAt(JSContext* cx, HandleString str, int32_t index,
                              uint32_t* code);
 JSLinearString* StringFromCharCode(JSContext* cx, int32_t code);
+JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code);
 JSString* StringFromCodePoint(JSContext* cx, int32_t codePoint);
 
 MOZ_MUST_USE bool SetProperty(JSContext* cx, HandleObject obj,
