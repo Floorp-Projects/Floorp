@@ -218,7 +218,7 @@ struct DeviceState {
   // true if mDevice is currently muted.
   // A device that is either muted or disabled is turned off and not capturing.
   // MainThread only.
-  bool mDeviceMuted = false;
+  bool mDeviceMuted;
 
   // true if the application has currently enabled mDevice.
   // MainThread only.
@@ -319,7 +319,8 @@ class SourceListener : public SupportsWeakPtr {
   void Activate(RefPtr<MediaDevice> aAudioDevice,
                 RefPtr<LocalTrackSource> aAudioTrackSource,
                 RefPtr<MediaDevice> aVideoDevice,
-                RefPtr<LocalTrackSource> aVideoTrackSource);
+                RefPtr<LocalTrackSource> aVideoTrackSource,
+                bool aStartVideoMuted, bool aStartAudioMuted);
 
   /**
    * Posts a task to initialize and start all associated devices.
@@ -527,7 +528,8 @@ class GetUserMediaWindowListener {
 
     mInactiveListeners.RemoveElement(aListener);
     aListener->Activate(std::move(aAudioDevice), std::move(aAudioTrackSource),
-                        std::move(aVideoDevice), std::move(aVideoTrackSource));
+                        std::move(aVideoDevice), std::move(aVideoTrackSource),
+                        mCamerasAreMuted, /* aStartAudioMuted */ false);
     mActiveListeners.AppendElement(std::move(aListener));
   }
 
@@ -747,6 +749,12 @@ class GetUserMediaWindowListener {
 
   nsTArray<RefPtr<SourceListener>> mInactiveListeners;
   nsTArray<RefPtr<SourceListener>> mActiveListeners;
+
+  // Whether camera access in this window is currently User Agent (UA) muted.
+  // When true, new camera tracks must start out muted, to avoid JS
+  // circumventing UA mute by calling getUserMedia again.
+  // Per-camera UA muting is not supported.
+  bool mCamerasAreMuted = false;
 };
 
 class LocalTrackSource : public MediaStreamTrackSource {
@@ -4112,7 +4120,8 @@ void SourceListener::Register(GetUserMediaWindowListener* aListener) {
 void SourceListener::Activate(RefPtr<MediaDevice> aAudioDevice,
                               RefPtr<LocalTrackSource> aAudioTrackSource,
                               RefPtr<MediaDevice> aVideoDevice,
-                              RefPtr<LocalTrackSource> aVideoTrackSource) {
+                              RefPtr<LocalTrackSource> aVideoTrackSource,
+                              bool aStartVideoMuted, bool aStartAudioMuted) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   LOG("SourceListener %p activating audio=%p video=%p", this,
@@ -4130,6 +4139,10 @@ void SourceListener::Activate(RefPtr<MediaDevice> aAudioDevice,
     mAudioDeviceState =
         MakeUnique<DeviceState>(std::move(aAudioDevice),
                                 std::move(aAudioTrackSource), offWhileDisabled);
+    mAudioDeviceState->mDeviceMuted = aStartAudioMuted;
+    if (aStartAudioMuted) {
+      mAudioDeviceState->mTrackSource->Mute();
+    }
   }
 
   if (aVideoDevice) {
@@ -4140,6 +4153,10 @@ void SourceListener::Activate(RefPtr<MediaDevice> aAudioDevice,
     mVideoDeviceState =
         MakeUnique<DeviceState>(std::move(aVideoDevice),
                                 std::move(aVideoTrackSource), offWhileDisabled);
+    mVideoDeviceState->mDeviceMuted = aStartVideoMuted;
+    if (aStartVideoMuted) {
+      mVideoDeviceState->mTrackSource->Mute();
+    }
   }
 }
 
@@ -4156,11 +4173,15 @@ SourceListener::InitializeAsync() {
               audioStream = mAudioDeviceState
                                 ? mAudioDeviceState->mTrackSource->mTrack
                                 : nullptr,
+              audioDeviceMuted =
+                  mAudioDeviceState ? mAudioDeviceState->mDeviceMuted : false,
               videoDevice =
                   mVideoDeviceState ? mVideoDeviceState->mDevice : nullptr,
               videoStream = mVideoDeviceState
                                 ? mVideoDeviceState->mTrackSource->mTrack
-                                : nullptr](
+                                : nullptr,
+              videoDeviceMuted =
+                  mVideoDeviceState ? mVideoDeviceState->mDeviceMuted : false](
                  MozPromiseHolder<SourceListenerPromise>& aHolder) {
                if (audioDevice) {
                  audioDevice->SetTrack(audioStream->AsSourceTrack(), principal);
@@ -4171,7 +4192,7 @@ SourceListener::InitializeAsync() {
                }
 
                if (audioDevice) {
-                 nsresult rv = audioDevice->Start();
+                 nsresult rv = audioDeviceMuted ? NS_OK : audioDevice->Start();
                  if (rv == NS_ERROR_NOT_AVAILABLE) {
                    PR_Sleep(200);
                    rv = audioDevice->Start();
@@ -4195,7 +4216,7 @@ SourceListener::InitializeAsync() {
                }
 
                if (videoDevice) {
-                 nsresult rv = videoDevice->Start();
+                 nsresult rv = videoDeviceMuted ? NS_OK : videoDevice->Start();
                  if (NS_FAILED(rv)) {
                    if (audioDevice) {
                      if (NS_WARN_IF(NS_FAILED(audioDevice->Stop()))) {
@@ -4786,6 +4807,11 @@ void GetUserMediaWindowListener::StopRawID(const nsString& removedDeviceID) {
 
 void GetUserMediaWindowListener::MuteOrUnmuteCameras(bool aMute) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
+
+  if (mCamerasAreMuted == aMute) {
+    return;
+  }
+  mCamerasAreMuted = aMute;
 
   for (auto& source : mActiveListeners) {
     if (source->GetVideoDevice()) {
