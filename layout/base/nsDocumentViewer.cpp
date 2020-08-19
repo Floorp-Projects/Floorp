@@ -47,6 +47,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_javascript.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 
@@ -399,6 +400,8 @@ class nsDocumentViewer final : public nsIContentViewer,
   // are sharing/recycling a single base widget and not creating multiple
   // child widgets.
   bool ShouldAttachToTopLevel();
+
+  nsresult PrintPreviewScrollToPageForOldUI(int16_t aType, int32_t aPageNum);
 
  protected:
   // Returns the current viewmanager.  Might be null.
@@ -3228,11 +3231,99 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
 #  endif  // NS_PRINT_PREVIEW
 }
 
+nsresult nsDocumentViewer::PrintPreviewScrollToPageForOldUI(int16_t aType,
+                                                            int32_t aPageNum) {
+  MOZ_ASSERT(GetIsPrintPreview() && !mPrintJob->GetIsCreatingPrintPreview());
+
+  nsIScrollableFrame* sf =
+      mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
+  if (!sf) {
+    return NS_OK;
+  }
+
+  // Check to see if we can short circut scrolling to the top
+  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_HOME ||
+      (aType == nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM &&
+       aPageNum == 1)) {
+    sf->ScrollTo(nsPoint(0, 0), ScrollMode::Instant);
+    return NS_OK;
+  }
+
+  // in PP mPrtPreview->mPrintObject->mSeqFrame is null
+  auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
+  if (!seqFrame) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Figure where we are currently scrolled to
+  nsPoint currentScrollPosition = sf->GetScrollPosition();
+
+  int32_t pageNum = 1;
+  nsIFrame* fndPageFrame = nullptr;
+  nsIFrame* currentPage = nullptr;
+
+  // If it is "End" then just do a "goto" to the last page
+  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_END) {
+    aType = nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM;
+    aPageNum = pageCount;
+  }
+
+  // Now, locate the current page we are on and
+  // and the page of the page number
+  for (nsIFrame* sheetFrame : seqFrame->PrincipalChildList()) {
+    nsRect sheetRect = sheetFrame->GetRect();
+    if (sheetRect.Contains(sheetRect.x, currentScrollPosition.y)) {
+      currentPage = sheetFrame;
+    }
+    if (pageNum == aPageNum) {
+      fndPageFrame = sheetFrame;
+      break;
+    }
+    pageNum++;
+  }
+
+  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_PREV_PAGE) {
+    if (currentPage) {
+      fndPageFrame = currentPage->GetPrevInFlow();
+      if (!fndPageFrame) {
+        return NS_OK;
+      }
+    } else {
+      return NS_OK;
+    }
+  } else if (aType == nsIWebBrowserPrint::PRINTPREVIEW_NEXT_PAGE) {
+    if (currentPage) {
+      fndPageFrame = currentPage->GetNextInFlow();
+      if (!fndPageFrame) {
+        return NS_OK;
+      }
+    } else {
+      return NS_OK;
+    }
+  } else {  // If we get here we are doing "GoTo"
+    if (aPageNum < 0 || aPageNum > pageCount) {
+      return NS_OK;
+    }
+  }
+
+  if (fndPageFrame) {
+    nscoord newYPosn = nscoord(seqFrame->GetPrintPreviewScale() *
+                               fndPageFrame->GetPosition().y);
+    sf->ScrollTo(nsPoint(currentScrollPosition.x, newYPosn),
+                 ScrollMode::Instant);
+  }
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 NS_IMETHODIMP
 nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
+
+  if (!StaticPrefs::print_tab_modal_enabled()) {
+    return PrintPreviewScrollToPageForOldUI(aType, aPageNum);
+  }
 
   nsIScrollableFrame* sf =
       mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
