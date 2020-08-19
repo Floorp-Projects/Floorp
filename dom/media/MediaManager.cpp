@@ -807,9 +807,15 @@ class LocalTrackSource : public MediaStreamTrackSource {
     }
   }
 
-  void Mute() { MutedChanged(true); }
+  void Mute() {
+    MutedChanged(true);
+    mTrack->SetDisabledTrackMode(DisabledTrackMode::SILENCE_BLACK);
+  }
 
-  void Unmute() { MutedChanged(false); }
+  void Unmute() {
+    MutedChanged(false);
+    mTrack->SetDisabledTrackMode(DisabledTrackMode::ENABLED);
+  }
 
   const MediaSourceEnum mSource;
   const RefPtr<MediaTrack> mTrack;
