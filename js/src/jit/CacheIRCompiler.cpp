@@ -1976,28 +1976,6 @@ bool CacheIRCompiler::emitGuardIsExtensible(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardSpecificNativeFunction(ObjOperandId objId,
-                                                      JSNative native) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister scratch(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Ensure obj is a function.
-  const JSClass* clasp = &JSFunction::class_;
-  masm.branchTestObjClass(Assembler::NotEqual, obj, clasp, scratch, obj,
-                          failure->label());
-
-  // Ensure function native matches.
-  masm.branchPtr(Assembler::NotEqual,
-                 Address(obj, JSFunction::offsetOfNativeOrEnv()),
-                 ImmPtr(native), failure->label());
-  return true;
-}
 
 bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
     ObjOperandId objId, ObjOperandId expectedId, uint32_t slotOffset) {
