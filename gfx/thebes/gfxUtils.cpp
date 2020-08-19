@@ -1026,11 +1026,6 @@ nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
     return NS_OK;
   }
 
-  // base 64, result will be null-terminated
-  nsCString encodedImg;
-  rv = Base64Encode(Substring(imgData.begin(), imgSize), encodedImg);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCString stringBuf;
   nsACString& dataURI = aStrOut ? *aStrOut : stringBuf;
   dataURI.AppendLiteral("data:");
@@ -1056,7 +1051,8 @@ nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
   }
 
   dataURI.AppendLiteral(";base64,");
-  dataURI.Append(encodedImg);
+  rv = Base64EncodeAppend(imgData.begin(), imgSize, dataURI);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aFile) {
 #ifdef ANDROID
@@ -1275,20 +1271,17 @@ nsCString gfxUtils::GetAsLZ4Base64Str(DataSourceSurface* aSourceSurface) {
     int nDataSize =
         LZ4::compress((char*)map.GetData(), dataSize, compressedData.get());
     if (nDataSize > 0) {
-      nsCString encodedImg;
-      nsresult rv =
-          Base64Encode(Substring(compressedData.get(), nDataSize), encodedImg);
+      nsCString string;
+      string.AppendPrintf("data:image/lz4bgra;base64,%i,%i,%i,",
+                          aSourceSurface->GetSize().width, map.GetStride(),
+                          aSourceSurface->GetSize().height);
+      nsresult rv = Base64EncodeAppend(compressedData.get(), nDataSize, string);
       if (rv == NS_OK) {
-        nsCString string("");
-        string.AppendPrintf("data:image/lz4bgra;base64,%i,%i,%i,",
-                            aSourceSurface->GetSize().width, map.GetStride(),
-                            aSourceSurface->GetSize().height);
-        string.Append(encodedImg);
         return string;
       }
     }
   }
-  return nsCString("");
+  return EmptyCString();
 }
 
 /* static */

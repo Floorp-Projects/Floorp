@@ -18,7 +18,7 @@
 namespace {
 
 // BEGIN base64 encode code copied and modified from NSPR
-const unsigned char* base =
+const unsigned char* const base =
   (unsigned char*)"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                   "abcdefghijklmnopqrstuvwxyz"
                   "0123456789+/";
@@ -408,7 +408,36 @@ nsresult Base64EncodeAppend(const char* aBinary, uint32_t aBinaryLen,
   return Base64EncodeHelper<true>(aBinary, aBinaryLen, aBase64);
 }
 
+nsresult Base64EncodeAppend(const char* aBinary, uint32_t aBinaryLen,
+                            nsACString& aBase64) {
+  return Base64EncodeHelper<true>(aBinary, aBinaryLen, aBase64);
+}
+
+nsresult Base64EncodeAppend(const nsACString& aBinary, nsACString& aBase64) {
+  return Base64EncodeHelper<true>(aBinary.BeginReading(), aBinary.Length(),
+                                  aBase64);
+}
+
+nsresult Base64EncodeAppend(const nsACString& aBinary, nsAString& aBase64) {
+  return Base64EncodeHelper<true>(aBinary.BeginReading(), aBinary.Length(),
+                                  aBase64);
+}
+
+nsresult Base64Encode(const char* aBinary, uint32_t aBinaryLen,
+                      nsACString& aBase64) {
+  return Base64EncodeHelper(aBinary, aBinaryLen, aBase64);
+}
+
+nsresult Base64Encode(const char* aBinary, uint32_t aBinaryLen,
+                      nsAString& aBase64) {
+  return Base64EncodeHelper(aBinary, aBinaryLen, aBase64);
+}
+
 nsresult Base64Encode(const nsACString& aBinary, nsACString& aBase64) {
+  return Base64EncodeHelper(aBinary.BeginReading(), aBinary.Length(), aBase64);
+}
+
+nsresult Base64Encode(const nsACString& aBinary, nsAString& aBase64) {
   return Base64EncodeHelper(aBinary.BeginReading(), aBinary.Length(), aBase64);
 }
 

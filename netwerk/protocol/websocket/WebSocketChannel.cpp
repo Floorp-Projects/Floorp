@@ -2697,7 +2697,7 @@ nsresult WebSocketChannel::SetupRequest() {
 
   rv = mRandomGenerator->GenerateRandomBytes(16, &secKey);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = Base64Encode(nsDependentCSubstring((char*)secKey, 16), secKeyString);
+  rv = Base64Encode(reinterpret_cast<const char*>(secKey), 16, secKeyString);
   free(secKey);
   if (NS_FAILED(rv)) {
     return rv;

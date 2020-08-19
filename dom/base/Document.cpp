@@ -1770,18 +1770,14 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
       return;
     }
 
-    certArray.AppendElement(
-        0);  // Append null terminator, required by nsC*String.
-    nsDependentCString derString(reinterpret_cast<char*>(certArray.Elements()),
-                                 certArray.Length() - 1);
-    nsAutoCString der64;
-    rv = Base64Encode(derString, der64);
+    nsAutoString der64;
+    rv = Base64Encode(reinterpret_cast<const char*>(certArray.Elements()),
+                      certArray.Length(), der64);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return;
     }
-    if (!certChainStrings.AppendElement(NS_ConvertUTF8toUTF16(der64),
-                                        fallible)) {
+    if (!certChainStrings.AppendElement(der64, fallible)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }

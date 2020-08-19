@@ -16,7 +16,7 @@ static void ToBase64EncodedStringArray(nsCString (&aInput)[N],
     nsCString encoded;
     nsresult rv = mozilla::Base64Encode(aInput[i], encoded);
     NS_ENSURE_SUCCESS_VOID(rv);
-    aEncodedArray.AppendElement(encoded);
+    aEncodedArray.AppendElement(std::move(encoded));
   }
 }
 
