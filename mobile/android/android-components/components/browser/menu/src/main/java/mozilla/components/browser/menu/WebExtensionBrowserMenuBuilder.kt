@@ -52,7 +52,7 @@ class WebExtensionBrowserMenuBuilder(
 
             val addonsManagerMenuItem = BrowserMenuImageText(
                 label = context.getString(R.string.mozac_browser_menu_addons_manager),
-                imageResource = R.drawable.mozac_ic_addons_extensions,
+                imageResource = R.drawable.mozac_ic_extensions,
                 iconTintColorResource = webExtIconTintColorResource
             ) {
                 onAddonsManagerTapped.invoke()
@@ -73,7 +73,7 @@ class WebExtensionBrowserMenuBuilder(
 
             ParentBrowserMenuItem(
                 label = context.getString(R.string.mozac_browser_menu_addons),
-                imageResource = R.drawable.mozac_ic_addons_extensions,
+                imageResource = R.drawable.mozac_ic_extensions,
                 iconTintColorResource = webExtIconTintColorResource,
                 subMenu = webExtMenu,
                 endOfMenuAlwaysVisible = endOfMenuAlwaysVisible
@@ -81,7 +81,7 @@ class WebExtensionBrowserMenuBuilder(
         } else {
             BrowserMenuImageText(
                 label = context.getString(R.string.mozac_browser_menu_addons),
-                imageResource = R.drawable.mozac_ic_addons_extensions,
+                imageResource = R.drawable.mozac_ic_extensions,
                 iconTintColorResource = webExtIconTintColorResource
             ) {
                 onAddonsManagerTapped.invoke()
