@@ -16,6 +16,7 @@ job-defaults:
                     .*-ux/.*: 2400
                     default: 1800
     suite: raptor
+    workdir: /home/cltbld
     run-on-projects:
         by-app:
             firefox:
