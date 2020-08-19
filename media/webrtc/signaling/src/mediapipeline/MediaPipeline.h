@@ -310,6 +310,7 @@ class MediaPipelineTransmit : public MediaPipeline {
 
   // Separate classes to allow ref counting
   class PipelineListener;
+  class PipelineListenerTrackConsumer;
   class VideoFrameFeeder;
 
  protected:
@@ -322,6 +323,9 @@ class MediaPipelineTransmit : public MediaPipeline {
 
   const bool mIsVideo;
   const RefPtr<PipelineListener> mListener;
+  // Listens for changes in enabled state on the attached MediaStreamTrack, and
+  // notifies mListener.
+  const nsMainThreadPtrHandle<PipelineListenerTrackConsumer> mTrackConsumer;
   const RefPtr<VideoFrameFeeder> mFeeder;
   RefPtr<AudioProxyThread> mAudioProcessing;
   RefPtr<VideoFrameConverter> mConverter;

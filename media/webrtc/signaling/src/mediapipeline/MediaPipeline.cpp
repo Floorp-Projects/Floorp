@@ -724,11 +724,11 @@ class MediaPipelineTransmit::PipelineListener
         ->SendVideoFrame(aVideoFrame);
   }
 
+  void SetTrackEnabled(MediaStreamTrack* aTrack, bool aEnabled);
+
   // Implement MediaTrackListener
   void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aOffset,
                            const MediaSegment& aQueuedMedia) override;
-  void NotifyEnabledStateChanged(MediaTrackGraph* aGraph,
-                                 bool aEnabled) override;
 
   // Implement DirectMediaTrackListener
   void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aOffset,
@@ -751,6 +751,29 @@ class MediaPipelineTransmit::PipelineListener
 
   // Written and read on the MediaTrackGraph thread
   bool mDirectConnect;
+};
+
+// MediaStreamTrackConsumer inherits from SupportsWeakPtr, which is
+// main-thread-only.
+class MediaPipelineTransmit::PipelineListenerTrackConsumer
+    : public MediaStreamTrackConsumer {
+  virtual ~PipelineListenerTrackConsumer() { MOZ_ASSERT(NS_IsMainThread()); }
+
+  const RefPtr<PipelineListener> mListener;
+
+ public:
+  NS_INLINE_DECL_REFCOUNTING(PipelineListenerTrackConsumer)
+
+  explicit PipelineListenerTrackConsumer(RefPtr<PipelineListener> aListener)
+      : mListener(std::move(aListener)) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  // Implement MediaStreamTrackConsumer
+  void NotifyEnabledChanged(MediaStreamTrack* aTrack, bool aEnabled) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    mListener->SetTrackEnabled(aTrack, aEnabled);
+  }
 };
 
 // Implements VideoConverterListener for MediaPipeline.
@@ -799,6 +822,10 @@ MediaPipelineTransmit::MediaPipelineTransmit(
                     std::move(aConduit)),
       mIsVideo(aIsVideo),
       mListener(new PipelineListener(mConduit)),
+      mTrackConsumer(
+          MakeAndAddRef<nsMainThreadPtrHolder<PipelineListenerTrackConsumer>>(
+              "MediaPipelineTransmit::mTrackConsumer",
+              MakeAndAddRef<PipelineListenerTrackConsumer>(mListener))),
       mFeeder(aIsVideo ? MakeAndAddRef<VideoFrameFeeder>(mListener)
                        : nullptr),  // For video we send frames to an
                                     // async VideoFrameConverter that
@@ -908,10 +935,10 @@ void MediaPipelineTransmit::Start() {
 
   mSendTrack->Resume();
 
-  mSendTrack->AddListener(mListener);
   if (mSendTrack->mType == MediaSegment::VIDEO) {
     mSendTrack->AddDirectListener(mListener);
   }
+  mSendTrack->AddListener(mListener);
 }
 
 bool MediaPipelineTransmit::IsVideo() const { return mIsVideo; }
@@ -951,7 +978,10 @@ void MediaPipelineTransmit::UpdateSinkIdentity_m(
 void MediaPipelineTransmit::DetachMedia() {
   ASSERT_ON_THREAD(mMainThread);
   MOZ_ASSERT(!mTransmitting);
-  mDomTrack = nullptr;
+  if (mDomTrack) {
+    mDomTrack->RemoveConsumer(mTrackConsumer);
+    mDomTrack = nullptr;
+  }
   if (mSendPort) {
     mSendPort->Destroy();
     mSendPort = nullptr;
@@ -1006,6 +1036,9 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
          (mConduit->type() == MediaSessionConduit::AUDIO ? "audio" : "video")));
   }
 
+  if (mDomTrack) {
+    mDomTrack->RemoveConsumer(mTrackConsumer);
+  }
   if (mSendPort) {
     mSendPort->Destroy();
     mSendPort = nullptr;
@@ -1042,6 +1075,10 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
             mDomTrack->GetTrack()->mType));
       }
       mSendPort = mSendTrack->AllocateInputPort(mDomTrack->GetTrack());
+    }
+    mDomTrack->AddConsumer(mTrackConsumer);
+    if (mConverter) {
+      mConverter->SetTrackEnabled(mDomTrack->Enabled());
     }
   }
 
@@ -1173,11 +1210,13 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
   NewData(aQueuedMedia, rate);
 }
 
-void MediaPipelineTransmit::PipelineListener::NotifyEnabledStateChanged(
-    MediaTrackGraph* aGraph, bool aEnabled) {
+void MediaPipelineTransmit::PipelineListener::SetTrackEnabled(
+    MediaStreamTrack* aTrack, bool aEnabled) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mConduit->type() != MediaSessionConduit::VIDEO) {
     return;
   }
+
   MOZ_ASSERT(mConverter);
   mConverter->SetTrackEnabled(aEnabled);
 }

@@ -547,7 +547,7 @@ AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
 
   DisabledTrackMode disabledMode =
       suspended ? DisabledTrackMode::SILENCE_BLACK : DisabledTrackMode::ENABLED;
-  mTrack->SetDisabledTrackMode(disabledMode);
+  mTrack->SetEnabled(disabledMode);
 
   AudioChannelService::AudibleState audible =
       aSuspend == nsISuspendedTypes::NONE_SUSPENDED
