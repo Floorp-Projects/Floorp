@@ -1448,16 +1448,14 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       ConsoleAPIStorage.clearEvents(id);
     });
 
-    // If were dealing with the root actor (e.g. the browser console), we want to remove
-    // every cached messages. Calling this.consoleServiceListener.clearCachedMessages
-    // wouldn't work as even the browser console has a window, and that would only clear
-    // cached messages for that window (and not the content messages for example).
-    if (this.parentActor.isRootActor) {
+    if (this.parentActor.isRootActor || !this.global) {
+      // If were dealing with the root actor (e.g. the browser console), we want
+      // to remove all cached messages, not only the ones specific to a window.
       Services.console.reset();
-    } else if (this.consoleServiceListener) {
-      // If error and css messages are handled by the ResourceWatcher, the
-      // consoleServiceListener is never instantiated.
-      this.consoleServiceListener.clearCachedMessages();
+    } else {
+      WebConsoleUtils.getInnerWindowIDsForFrames(this.global).forEach(id =>
+        Services.console.resetWindow(id)
+      );
     }
   },
 
