@@ -379,21 +379,17 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   class Mark {
     friend class ParserBase;
     LifoAlloc::Mark mark;
-    FunctionBox* traceListHead;
-    size_t funcDataLength;
+    CompilationInfo::RewindToken token;
   };
   Mark mark() const {
     Mark m;
     m.mark = alloc_.mark();
-    m.traceListHead = compilationInfo_.traceListHead;
-    m.funcDataLength = compilationInfo_.funcData.length();
-    MOZ_ASSERT(compilationInfo_.functions.empty());
+    m.token = compilationInfo_.getRewindToken();
     return m;
   }
   void release(Mark m) {
     alloc_.release(m.mark);
-    compilationInfo_.traceListHead = m.traceListHead;
-    compilationInfo_.funcData.get().shrinkTo(m.funcDataLength);
+    compilationInfo_.rewind(m.token);
   }
 
  public:
