@@ -2684,7 +2684,6 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
       return EditActionHandled();
     }
     EditActionResult result = HandleDeleteCollapsedSelectionAtAtomicContent(
-        aDirectionAndAmount, aStripWrappers,
         MOZ_KnownLive(*aScanFromCaretPointResult.GetContent()),
         aWSRunScannerAtCaret.ScanStartRef(), aWSRunScannerAtCaret);
     NS_WARNING_ASSERTION(
@@ -2699,7 +2698,7 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
       return EditActionHandled();
     }
     EditActionResult result = HandleDeleteCollapsedSelectionAtHRElement(
-        aDirectionAndAmount, aStripWrappers,
+        aDirectionAndAmount,
         MOZ_KnownLive(*aScanFromCaretPointResult.ElementPtr()),
         aWSRunScannerAtCaret.ScanStartRef(), aWSRunScannerAtCaret);
     NS_WARNING_ASSERTION(
@@ -2993,8 +2992,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
 }
 
 EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
-    nsIEditor::EDirection aDirectionAndAmount,
-    nsIEditor::EStripWrappers aStripWrappers, Element& aHRElement,
+    nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
     const EditorDOMPoint& aCaretPoint,
     const WSRunScanner& aWSRunScannerAtCaret) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -3003,8 +3001,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
 
   if (aDirectionAndAmount != nsIEditor::ePrevious) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtAtomicContent(
-        aDirectionAndAmount, aStripWrappers, aHRElement, aCaretPoint,
-        aWSRunScannerAtCaret);
+        aHRElement, aCaretPoint, aWSRunScannerAtCaret);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent() failed");
@@ -3040,8 +3037,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
   if (aCaretPoint.GetContainer() == atHRElement.GetContainer() &&
       aCaretPoint.Offset() - 1 == atHRElement.Offset() && !interLineIsRight) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtAtomicContent(
-        aDirectionAndAmount, aStripWrappers, aHRElement, aCaretPoint,
-        aWSRunScannerAtCaret);
+        aHRElement, aCaretPoint, aWSRunScannerAtCaret);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent() failed");
@@ -3094,9 +3090,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
 }
 
 EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
-    nsIEditor::EDirection aDirectionAndAmount,
-    nsIEditor::EStripWrappers aStripWrappers, nsIContent& aAtomicContent,
-    const EditorDOMPoint& aCaretPoint,
+    nsIContent& aAtomicContent, const EditorDOMPoint& aCaretPoint,
     const WSRunScanner& aWSRunScannerAtCaret) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT_IF(aAtomicContent.IsHTMLElement(nsGkAtoms::br),
