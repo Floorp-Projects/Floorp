@@ -203,26 +203,43 @@ class ResourceWatcher {
    *        composed of a BrowsingContextTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
+    const resources = [];
     if (isTargetSwitching) {
       this._onWillNavigate(targetFront);
+      // WatcherActor currently only watches additional frame targets and
+      // explicitely ignores top level one that may be created when navigating
+      // to a new process.
+      // In order to keep working resources that are being watched via the
+      // Watcher actor, we have to unregister and re-register the resource
+      // types. This will force calling `watchTargetResources` on the new top
+      // level target.
+      for (const resourceType of this._listenerCount.keys()) {
+        await this._stopListening(resourceType, { bypassListenerCount: true });
+        resources.push(resourceType);
+      }
     }
 
     targetFront.on("will-navigate", () => this._onWillNavigate(targetFront));
 
-    // For each resource type...
-    for (const resourceType of Object.values(ResourceWatcher.TYPES)) {
-      // ...which has at least one listener...
-      if (!this._listenerCount.get(resourceType)) {
-        continue;
+    // If we are target switching, we already stop & start listening to all the
+    // currently monitored resources.
+    if (!isTargetSwitching) {
+      // For each resource type...
+      for (const resourceType of Object.values(ResourceWatcher.TYPES)) {
+        // ...which has at least one listener...
+        if (!this._listenerCount.get(resourceType)) {
+          continue;
+        }
+        // ...request existing resource and new one to come from this one target
+        // *but* only do that for backward compat, where we don't have the watcher API
+        // (See bug 1626647)
+        if (this._hasWatcherSupport(resourceType)) {
+          continue;
+        }
+        await this._watchResourcesForTarget(targetFront, resourceType);
       }
-      // ...request existing resource and new one to come from this one target
-      // *but* only do that for backward compat, where we don't have the watcher API
-      // (See bug 1626647)
-      if (this._hasWatcherSupport(resourceType)) {
-        continue;
-      }
-      await this._watchResourcesForTarget(targetFront, resourceType);
     }
+
     // Compared to the TargetList and Watcher.watchTargets,
     // We do call Watcher.watchResources, but the events are fired on the target.
     // That's because the Watcher runs in the parent process/main thread, while resources
@@ -239,6 +256,12 @@ class ResourceWatcher {
       "resource-destroyed-form",
       this._onResourceDestroyed.bind(this, { targetFront })
     );
+
+    if (isTargetSwitching) {
+      for (const resourceType of resources) {
+        await this._startListening(resourceType, { bypassListenerCount: true });
+      }
+    }
   }
 
   /**
@@ -423,14 +446,21 @@ class ResourceWatcher {
    * @param {String} resourceType
    *        One string of ResourceWatcher.TYPES, which designates the types of resources
    *        to be listened.
+   * @param {Object}
+   *        - {Boolean} bypassListenerCount
+   *          Pass true to avoid checking/updating the listenersCount map.
+   *          Exclusively used when target switching, to stop & start listening
+   *          to all resources.
    */
-  async _startListening(resourceType) {
-    let listeners = this._listenerCount.get(resourceType) || 0;
-    listeners++;
-    this._listenerCount.set(resourceType, listeners);
+  async _startListening(resourceType, { bypassListenerCount = false } = {}) {
+    if (!bypassListenerCount) {
+      let listeners = this._listenerCount.get(resourceType) || 0;
+      listeners++;
+      this._listenerCount.set(resourceType, listeners);
 
-    if (listeners > 1) {
-      return;
+      if (listeners > 1) {
+        return;
+      }
     }
 
     // If the server supports the Watcher API and the Watcher supports
@@ -485,18 +515,22 @@ class ResourceWatcher {
   /**
    * Reverse of _startListening. Stop listening for a given type of resource.
    * For backward compatibility, we unregister from each individual target.
+   *
+   * See _startListening for parameters description.
    */
-  _stopListening(resourceType) {
-    let listeners = this._listenerCount.get(resourceType);
-    if (!listeners || listeners <= 0) {
-      throw new Error(
-        `Stopped listening for resource '${resourceType}' that isn't being listened to`
-      );
-    }
-    listeners--;
-    this._listenerCount.set(resourceType, listeners);
-    if (listeners > 0) {
-      return;
+  _stopListening(resourceType, { bypassListenerCount = false } = {}) {
+    if (!bypassListenerCount) {
+      let listeners = this._listenerCount.get(resourceType);
+      if (!listeners || listeners <= 0) {
+        throw new Error(
+          `Stopped listening for resource '${resourceType}' that isn't being listened to`
+        );
+      }
+      listeners--;
+      this._listenerCount.set(resourceType, listeners);
+      if (listeners > 0) {
+        return;
+      }
     }
 
     // Clear the cached resources of the type.
