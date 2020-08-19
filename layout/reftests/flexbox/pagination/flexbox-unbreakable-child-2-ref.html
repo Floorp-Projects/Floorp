@@ -8,7 +8,7 @@
   <head>
     <style>
     .multicol {
-      height: 40px;
+      height: 38px;
       width: 100px;
       column-width: 60px;
       column-fill: auto;
@@ -17,7 +17,6 @@
     }
     .flexContainer {
       background: yellow;
-      border: 1px dashed black;
     }
     .item {
       width: 40px;
@@ -32,25 +31,25 @@
   <body>
     <!-- auto-height container: -->
     <div class="multicol">
-      <div class="flexContainer" style="height: 38px">
-        <div class="item">1</div>
-        <div class="item">3</div>
-        <div class="item">2</div>
+      <div class="flexContainer" style="height: calc(19px*3)">
+        <div style="width: 50px">
+          <div class="item">1</div>
+          <div class="item">2</div>
+          <div class="item">3</div>
+        </div>
       </div>
     </div>
 
     <!-- auto-height container, with enough children that our last flex line
          overflows (in the cross axis) -->
-    <!-- XXXdholbert Ultimately (in bug 939897 probably) we should push the
-         overflowing flex line to a continuation of the flex container -->
     <div class="multicol">
-      <div class="flexContainer" style="height: 38px">
-        <div style="width: 132px">
+      <div class="flexContainer" style="height: calc(19px*5)">
+        <div style="width: 50px">
           <div class="item">1</div>
-          <div class="item">3</div>
-          <div class="item">5</div>
           <div class="item">2</div>
+          <div class="item">3</div>
           <div class="item">4</div>
+          <div class="item">5</div>
         </div>
       </div>
     </div>
@@ -58,24 +57,24 @@
     <!-- fixed-height container-->
     <div class="multicol">
       <div class="flexContainer" style="height: 70px">
-        <div class="item">1</div>
-        <div class="item">3</div>
-        <div class="item">2</div>
+        <div style="width: 50px">
+          <div class="item">1</div>
+          <div class="item">2</div>
+          <div class="item">3</div>
+        </div>
       </div>
     </div>
 
     <!-- fixed-height container, with enough children that our last flex line
          overflows (in the cross axis) -->
-    <!-- XXXdholbert Ultimately (in bug 939897 probably) we should push the
-         overflowing flex line to a continuation of the flex container -->
     <div class="multicol">
       <div class="flexContainer" style="height: 70px">
-        <div style="width: 132px">
+        <div style="width: 100px">
           <div class="item">1</div>
-          <div class="item">3</div>
-          <div class="item">5</div>
-          <div class="item">2</div>
           <div class="item">4</div>
+          <div class="item">2</div>
+          <div class="item">5</div>
+          <div class="item">3</div>
         </div>
       </div>
     </div>
