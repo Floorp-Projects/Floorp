@@ -32,6 +32,22 @@ function setTrackEnabled(audio, video) {
   );
 }
 
+async function getVideoTrackMuted() {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.wrappedJSObject.gStreams[0].getVideoTracks()[0].muted
+  );
+}
+
+async function getVideoTrackEvents() {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => content.wrappedJSObject.gVideoEvents
+  );
+}
+
 function cloneTracks(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -370,6 +386,12 @@ var gTests = [
         video: STATE_CAPTURE_ENABLED,
         audio: STATE_CAPTURE_ENABLED,
       });
+      is(await getVideoTrackMuted(), false, "video track starts unmuted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        [],
+        "no video track events fired yet"
+      );
 
       // Mute camera.
       observerPromise = expectObserverCalled("recording-device-events");
@@ -390,6 +412,8 @@ var gTests = [
         video: STATE_CAPTURE_DISABLED,
         audio: STATE_CAPTURE_ENABLED,
       });
+      is(await getVideoTrackMuted(), true, "video track is muted");
+      Assert.deepEqual(await getVideoTrackEvents(), ["mute"], "mute fired");
 
       // Unmute video again.
       observerPromise = expectObserverCalled("recording-device-events");
@@ -409,6 +433,12 @@ var gTests = [
         video: STATE_CAPTURE_ENABLED,
         audio: STATE_CAPTURE_ENABLED,
       });
+      is(await getVideoTrackMuted(), false, "video track is unmuted");
+      Assert.deepEqual(
+        await getVideoTrackEvents(),
+        ["mute", "unmute"],
+        "unmute fired"
+      );
       await closeStream();
     },
   },
