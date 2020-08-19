@@ -295,8 +295,8 @@ void MediaStreamTrack::SetEnabled(bool aEnabled) {
     return;
   }
 
-  mTrack->SetEnabled(mEnabled ? DisabledTrackMode::ENABLED
-                              : DisabledTrackMode::SILENCE_BLACK);
+  mTrack->SetDisabledTrackMode(mEnabled ? DisabledTrackMode::ENABLED
+                                        : DisabledTrackMode::SILENCE_BLACK);
   NotifyEnabledChanged();
 }
 
