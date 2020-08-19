@@ -3329,17 +3329,21 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
       mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
   if (!sf) return NS_OK;
 
+  // Figure where we are currently scrolled to
+  nsPoint currentScrollPosition = sf->GetScrollPosition();
+
   // Check to see if we can short circut scrolling to the top
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_HOME ||
       (aType == nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM &&
        aPageNum == 1)) {
-    sf->ScrollTo(nsPoint(0, 0), ScrollMode::Instant);
+    sf->ScrollTo(nsPoint(currentScrollPosition.x, 0), ScrollMode::Instant);
     return NS_OK;
   }
 
   // If it is "End" then just scroll to the `scrollTopMax` position.
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_END) {
-    sf->ScrollTo(nsPoint(0, sf->GetScrollRange().YMost()), ScrollMode::Instant);
+    sf->ScrollTo(nsPoint(currentScrollPosition.x, sf->GetScrollRange().YMost()),
+                 ScrollMode::Instant);
     return NS_OK;
   }
 
@@ -3348,9 +3352,6 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (!seqFrame) {
     return NS_ERROR_FAILURE;
   }
-
-  // Figure where we are currently scrolled to
-  nsPoint currentScrollPosition = sf->GetScrollPosition();
 
   int32_t pageNum = 1;
   nsIFrame* fndPageFrame = nullptr;
