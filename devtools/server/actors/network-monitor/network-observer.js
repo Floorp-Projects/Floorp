@@ -368,18 +368,25 @@ NetworkObserver.prototype = {
 
     const httpActivity = this.createOrGetActivityObject(channel);
     const serverTimings = this._extractServerTimings(channel);
-    if (httpActivity.owner) {
-      // Try extracting server timings. Note that they will be sent to the client
-      // in the `_onTransactionClose` method together with network event timings.
-      httpActivity.owner.addSeverTimings(serverTimings);
-    } else {
+    if (!httpActivity.owner) {
       // If the owner isn't set we need to create the network event and send
       // it to the client. This happens in case where the request has been
       // blocked (e.g. CORS) and "http-on-stop-request" is the first notification.
-      this._createNetworkEvent(subject, {
-        blockedReason: reason,
-        blockingExtension: id,
-      });
+
+      // Also we need make sure there is a valid reason to block. These reason
+      // - Either the id is set to a valid string in case of extension blocking
+      // - Or the reason is set to anything other than 0 (BLOCKING_REASON_NONE) which is default for
+      //   any request (blocked or unblocked). See https://searchfox.org/mozilla-central/rev/23dd7c485a6525bb3a974abeaafaf34bfb43d76b/netwerk/base/nsILoadInfo.idl#1256-1310 for details.
+      if (reason || id) {
+        this._createNetworkEvent(subject, {
+          blockedReason: reason,
+          blockingExtension: id,
+        });
+      }
+    } else {
+      // Try extracting server timings. Note that they will be sent to the client
+      // in the `_onTransactionClose` method together with network event timings.
+      httpActivity.owner.addSeverTimings(serverTimings);
     }
   },
 
