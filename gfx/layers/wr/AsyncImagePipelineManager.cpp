@@ -539,9 +539,6 @@ void AsyncImagePipelineManager::NotifyPipelinesUpdated(
   MOZ_ASSERT(mLastCompletedFrameId <= aLastCompletedFrameId.mId);
   MOZ_ASSERT(aLatestFrameId.IsValid());
 
-  // This is called on the render thread, so we just stash the data into
-  // mPendingUpdates and process it later on the compositor thread.
-  mPendingUpdates.push_back(std::move(aInfo));
   mLastCompletedFrameId = aLastCompletedFrameId.mId;
 
   {
@@ -549,10 +546,8 @@ void AsyncImagePipelineManager::NotifyPipelinesUpdated(
     // on the compositor thread.
     MutexAutoLock lock(mRenderSubmittedUpdatesLock);
 
-    // Move the pending updates into the submitted ones. Note that this clears
-    // mPendingUpdates.
-    mRenderSubmittedUpdates.emplace_back(aLatestFrameId,
-                                         std::move(mPendingUpdates));
+    // Move the pending updates into the submitted ones.
+    mRenderSubmittedUpdates.emplace_back(aLatestFrameId, std::move(aInfo));
   }
 
   // Queue a runnable on the compositor thread to process the updates.
@@ -569,7 +564,8 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
     return;
   }
 
-  std::vector<std::pair<wr::RenderedFrameId, PipelineInfoVector>>
+  std::vector<
+      std::pair<wr::RenderedFrameId, RefPtr<const wr::WebRenderPipelineInfo>>>
       submittedUpdates;
   {
     // We need to lock for mRenderSubmittedUpdates because it can be accessed on
@@ -581,15 +577,13 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
   // submittedUpdates is a vector of RenderedFrameIds paired with vectors of
   // WebRenderPipelineInfo.
   for (auto update : submittedUpdates) {
-    for (auto pipelineInfo : update.second) {
-      auto& info = pipelineInfo->Raw();
+    auto& info = update.second->Raw();
 
-      for (auto& epoch : info.epochs) {
-        ProcessPipelineRendered(epoch.pipeline_id, epoch.epoch, update.first);
-      }
-      for (auto& removedPipeline : info.removed_pipelines) {
-        ProcessPipelineRemoved(removedPipeline, update.first);
-      }
+    for (auto& epoch : info.epochs) {
+      ProcessPipelineRendered(epoch.pipeline_id, epoch.epoch, update.first);
+    }
+    for (auto& removedPipeline : info.removed_pipelines) {
+      ProcessPipelineRemoved(removedPipeline, update.first);
     }
   }
   CheckForTextureHostsNotUsedByGPU();

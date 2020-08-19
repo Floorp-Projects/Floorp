@@ -245,15 +245,10 @@ class AsyncImagePipelineManager final {
 
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
-  typedef std::vector<RefPtr<const wr::WebRenderPipelineInfo>>
-      PipelineInfoVector;
-
-  // PipelineInfo updates to be processed once a render has been submitted.
-  // This is only accessed on the render thread, so does not need a lock.
-  PipelineInfoVector mPendingUpdates;
   // PipelineInfo updates that have been submitted for rendering. This is
   // accessed on render and compositor threads, so requires a Lock.
-  std::vector<std::pair<wr::RenderedFrameId, PipelineInfoVector>>
+  std::vector<
+      std::pair<wr::RenderedFrameId, RefPtr<const wr::WebRenderPipelineInfo>>>
       mRenderSubmittedUpdates;
   Mutex mRenderSubmittedUpdatesLock;
 
