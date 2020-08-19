@@ -466,7 +466,38 @@ function getStubFile(fileName) {
   return require(CHROME_PREFIX + STUBS_FOLDER + fileName);
 }
 
-function getSerializedPacket(packet) {
+function sortObjectKeys(obj) {
+  const isArray = Array.isArray(obj);
+  const isObject = Object.prototype.toString.call(obj) === "[object Object]";
+  const isFront = obj?._grip;
+
+  if (isObject && !isFront) {
+    // Reorder keys for objects, but skip fronts to avoid infinite recursion.
+    const sortedKeys = Object.keys(obj).sort((k1, k2) => k1.localeCompare(k2));
+    const withSortedKeys = {};
+    sortedKeys.forEach(k => {
+      withSortedKeys[k] = k !== "stacktrace" ? sortObjectKeys(obj[k]) : obj[k];
+    });
+    return withSortedKeys;
+  } else if (isArray) {
+    return obj.map(item => sortObjectKeys(item));
+  }
+  return obj;
+}
+
+/**
+ * @param {Object} packet
+ *        The packet to serialize.
+ * @param {Object}
+ *        - {Boolean} sortKeys: pass true to sort all keys alphabetically in the
+ *          packet before serialization. For instance stub comparison should not
+ *          fail if the order of properties changed.
+ */
+function getSerializedPacket(packet, { sortKeys = false } = {}) {
+  if (sortKeys) {
+    packet = sortObjectKeys(packet);
+  }
+
   return JSON.stringify(
     packet,
     function(_, value) {
