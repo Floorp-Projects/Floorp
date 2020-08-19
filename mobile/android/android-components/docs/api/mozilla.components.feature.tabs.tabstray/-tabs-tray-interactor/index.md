@@ -22,6 +22,12 @@ the session manager.
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [onTabsUpdated](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/on-tabs-updated.md) | `open fun onTabsUpdated(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>One or many tabs have been added or removed. |
+
 ### Extension Functions
 
 | Name | Summary |
