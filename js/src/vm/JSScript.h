@@ -1960,6 +1960,9 @@ XDRResult XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
                         HandleScriptSourceObject sourceObject,
                         HandleFunction fun, MutableHandle<BaseScript*> lazy);
 
+template <XDRMode mode>
+XDRResult XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent);
+
 /*
  * Code any constant value.
  */
