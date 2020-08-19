@@ -164,10 +164,6 @@ bool IsCloseToHorizontal(float aAngle, float aThreshold);
 // As above, but for the vertical axis.
 bool IsCloseToVertical(float aAngle, float aThreshold);
 
-// Determine the amount of overlap between the 1D vector |aTranslation|
-// and the interval [aMin, aMax].
-gfxFloat IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax);
-
 // Returns true if a sticky layer with async translation |aTranslation| is
 // stuck with a bottom margin. The inner/outer ranges are produced by the main
 // thread at the last paint, and so |aTranslation| only needs to be the
