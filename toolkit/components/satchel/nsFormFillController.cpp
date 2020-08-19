@@ -669,7 +669,8 @@ NS_IMETHODIMP
 nsFormFillController::StartSearch(const nsAString& aSearchString,
                                   const nsAString& aSearchParam,
                                   nsIAutoCompleteResult* aPreviousResult,
-                                  nsIAutoCompleteObserver* aListener) {
+                                  nsIAutoCompleteObserver* aListener,
+                                  nsIPropertyBag2* aOptions) {
   MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch for %p", mFocusedInput));
 
   nsresult rv;
@@ -716,7 +717,7 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
 
     formAutoComplete->AutoCompleteSearchAsync(aSearchParam, aSearchString,
                                               mFocusedInput, aPreviousResult,
-                                              datalistResult, this);
+                                              datalistResult, this, aOptions);
     mLastFormAutoComplete = formAutoComplete;
   }
 

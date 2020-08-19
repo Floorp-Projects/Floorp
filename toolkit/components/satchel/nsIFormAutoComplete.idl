@@ -7,6 +7,7 @@
 
 interface nsIAutoCompleteResult;
 interface nsIFormAutoCompleteObserver;
+interface nsIPropertyBag2;
 
 webidl HTMLInputElement;
 
@@ -20,7 +21,8 @@ interface nsIFormAutoComplete: nsISupports {
                                  in HTMLInputElement aField,
                                  in nsIAutoCompleteResult aPreviousResult,
                                  in nsIAutoCompleteResult aDatalistResult,
-                                 in nsIFormAutoCompleteObserver aListener);
+                                 in nsIFormAutoCompleteObserver aListener,
+                                 [optional] in nsIPropertyBag2 options);
 
     /**
      * If a search is in progress, stop it. Otherwise, do nothing. This is used

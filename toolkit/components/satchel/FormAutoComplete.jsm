@@ -293,44 +293,48 @@ FormAutoComplete.prototype = {
   /*
    * autoCompleteSearchAsync
    *
-   * aSearchParam    -- The searchParam, each entry is separated by the "\x1F"
-   *                    char. The first entry is the `name` attribute from the
-   *                    form input being autocompleted, while the next entries
-   *                    are in `key=value` form.
+   * aInputName -- |name| or |id| attribute value from the form input being
+   *               autocompleted
    * aUntrimmedSearchString -- current value of the input
    * aField -- HTMLInputElement being autocompleted (may be null if from chrome)
    * aPreviousResult -- previous search result, if any.
    * aDatalistResult -- results from list=datalist for aField.
    * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult
    *              that may be returned asynchronously.
+   *  options -- an optional nsIPropertyBag2 containing additional search
+   *             parameters.
    */
   autoCompleteSearchAsync(
-    aSearchParam,
+    aInputName,
     aUntrimmedSearchString,
     aField,
     aPreviousResult,
     aDatalistResult,
-    aListener
+    aListener,
+    aOptions
   ) {
     // Guard against void DOM strings filtering into this code.
-    if (typeof aSearchParam === "object") {
-      aSearchParam = "";
+    if (typeof aInputName === "object") {
+      aInputName = "";
     }
     if (typeof aUntrimmedSearchString === "object") {
       aUntrimmedSearchString = "";
     }
-
-    let searchParams = aSearchParam.split("\x1F");
-    let inputName = searchParams.shift();
     let params = {};
-    for (let p of searchParams) {
-      let [key, val] = p.split("=");
-      params[key] = val;
+    if (aOptions) {
+      try {
+        aOptions.QueryInterface(Ci.nsIPropertyBag2);
+        for (let { name, value } of aOptions.enumerator) {
+          params[name] = value;
+        }
+      } catch (ex) {
+        Cu.reportError("Invalid options object: " + ex);
+      }
     }
 
     let client = new FormHistoryClient({
       formField: aField,
-      inputName,
+      inputName: aInputName,
     });
 
     function maybeNotifyListener(result) {
@@ -342,7 +346,12 @@ FormAutoComplete.prototype = {
     // If we have datalist results, they become our "empty" result.
     let emptyResult =
       aDatalistResult ||
-      new FormAutoCompleteResult(client, [], inputName, aUntrimmedSearchString);
+      new FormAutoCompleteResult(
+        client,
+        [],
+        aInputName,
+        aUntrimmedSearchString
+      );
     if (!this._enabled) {
       maybeNotifyListener(emptyResult);
       return;
@@ -350,9 +359,9 @@ FormAutoComplete.prototype = {
 
     // Don't allow form inputs (aField != null) to get results from
     // search bar history.
-    if (inputName == "searchbar-history" && aField) {
+    if (aInputName == "searchbar-history" && aField) {
       this.log(
-        'autoCompleteSearch for input name "' + inputName + '" is denied'
+        'autoCompleteSearch for input name "' + aInputName + '" is denied'
       );
       maybeNotifyListener(emptyResult);
       return;
@@ -471,7 +480,7 @@ FormAutoComplete.prototype = {
         ? new FormAutoCompleteResult(
             client,
             [],
-            inputName,
+            aInputName,
             aUntrimmedSearchString
           )
         : emptyResult;
@@ -494,7 +503,7 @@ FormAutoComplete.prototype = {
 
       this.getAutoCompleteValues(
         client,
-        inputName,
+        aInputName,
         searchString,
         params,
         processEntry
