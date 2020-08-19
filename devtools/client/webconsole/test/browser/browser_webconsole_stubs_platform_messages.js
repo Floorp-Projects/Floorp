@@ -40,9 +40,10 @@ add_task(async function() {
 
   let failed = false;
   for (const [key, packet] of generatedStubs) {
-    const packetStr = getSerializedPacket(packet);
+    const packetStr = getSerializedPacket(packet, { sortKeys: true });
     const existingPacketStr = getSerializedPacket(
-      existingStubs.rawPackets.get(key)
+      existingStubs.rawPackets.get(key),
+      { sortKeys: true }
     );
     is(packetStr, existingPacketStr, `"${key}" packet has expected value`);
     failed = failed || packetStr !== existingPacketStr;
