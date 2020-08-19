@@ -23,6 +23,28 @@
 #error "Only little endian compatibility was tested"
 #endif
 
+// The AAPCS doesn't require argument widening, but Apple's calling convention
+// does. If we are really fortunate, the compiler will clean up all the
+// copying for us.
+template<typename T>
+inline uint64_t normalize_arg(T value) {
+    return (uint64_t)value;
+}
+
+template<>
+inline uint64_t normalize_arg(float value) {
+    uint64_t result = 0;
+    memcpy(&result, &value, sizeof(value));
+    return result;
+}
+
+template<>
+inline uint64_t normalize_arg(double value) {
+    uint64_t result = 0;
+    memcpy(&result, &value, sizeof(value));
+    return result;
+}
+
 /*
  * Allocation of function arguments to their appropriate place in registers
  * if possible and then to the stack.  Handling of 'that' argument which
@@ -42,16 +64,28 @@
 template<typename T>
 static inline void alloc_arg(uint64_t* &reg_args,
                              uint64_t* reg_args_end,
-                             uint64_t* &stack_args,
+                             void* &stack_args,
                              T*     data)
 {
     if (reg_args < reg_args_end) {
-        memcpy(reg_args, data, sizeof(T));
+        *reg_args = normalize_arg(*data);
         reg_args++;
     } else {
-        memcpy(stack_args, data, sizeof(T));
-        // Allocate a word-sized stack slot no matter what.
-        stack_args++;
+        // According to the ABI, types that are smaller than 8 bytes are
+        // passed in registers or 8-byte stack slots.  This rule is only
+        // partially true on Apple platforms, where types smaller than 8
+        // bytes occupy only the space they require on the stack and
+        // their stack slot must be properly aligned.
+#ifdef __APPLE__
+        const size_t aligned_size = sizeof(T);
+#else
+        const size_t aligned_size = 8;
+#endif
+        // Ensure the pointer is aligned for the type
+        uintptr_t addr = (reinterpret_cast<uintptr_t>(stack_args) + aligned_size - 1) & ~(aligned_size - 1);
+        memcpy(reinterpret_cast<void*>(addr), data, sizeof(T));
+        // Point the stack to the next slot.
+        stack_args = reinterpret_cast<void*>(addr + aligned_size);
     }
 }
 
@@ -59,51 +93,67 @@ extern "C" void
 invoke_copy_to_stack(uint64_t* stk, uint64_t *end,
                      uint32_t paramCount, nsXPTCVariant* s)
 {
-    uint64_t *ireg_args = stk;
-    uint64_t *ireg_end  = ireg_args + 8;
+    uint64_t* ireg_args = stk;
+    uint64_t* ireg_end  = ireg_args + 8;
     // Pun on integer and floating-point registers being the same size.
-    uint64_t *freg_args = ireg_end;
-    uint64_t *freg_end  = freg_args + 8;
-    uint64_t *stack_args = freg_end;
+    uint64_t* freg_args = ireg_end;
+    uint64_t* freg_end  = freg_args + 8;
+    void* stack_args = freg_end;
 
     // leave room for 'that' argument in x0
     ++ireg_args;
 
     for (uint32_t i = 0; i < paramCount; i++, s++) {
-        uint64_t word;
-
         if (s->IsIndirect()) {
-            word = (uint64_t)&s->val;
+            void* ptr = &s->val;
+            alloc_arg(ireg_args, ireg_end, stack_args, &ptr);
         } else {
-            // According to the ABI, integral types that are smaller than 8
-            // bytes are to be passed in 8-byte registers or 8-byte stack
-            // slots.
             switch (s->type) {
                 case nsXPTType::T_FLOAT:
                     alloc_arg(freg_args, freg_end, stack_args, &s->val.f);
-                    continue;
+                    break;
                 case nsXPTType::T_DOUBLE:
                     alloc_arg(freg_args, freg_end, stack_args, &s->val.d);
-                    continue;
-                case nsXPTType::T_I8:    word = s->val.i8;  break;
-                case nsXPTType::T_I16:   word = s->val.i16; break;
-                case nsXPTType::T_I32:   word = s->val.i32; break;
-                case nsXPTType::T_I64:   word = s->val.i64; break;
-                case nsXPTType::T_U8:    word = s->val.u8;  break;
-                case nsXPTType::T_U16:   word = s->val.u16; break;
-                case nsXPTType::T_U32:   word = s->val.u32; break;
-                case nsXPTType::T_U64:   word = s->val.u64; break;
-                case nsXPTType::T_BOOL:  word = s->val.b;   break;
-                case nsXPTType::T_CHAR:  word = s->val.c;   break;
-                case nsXPTType::T_WCHAR: word = s->val.wc;  break;
+                    break;
+                case nsXPTType::T_I8:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.i8);
+                    break;
+                case nsXPTType::T_I16:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.i16);
+                    break;
+                case nsXPTType::T_I32:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.i32);
+                    break;
+                case nsXPTType::T_I64:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.i64);
+                    break;
+                case nsXPTType::T_U8:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.u8);
+                    break;
+                case nsXPTType::T_U16:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.u16);
+                    break;
+                case nsXPTType::T_U32:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.u32);
+                    break;
+                case nsXPTType::T_U64:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.u64);
+                    break;
+                case nsXPTType::T_BOOL:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.b);
+                    break;
+                case nsXPTType::T_CHAR:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.c);
+                    break;
+                case nsXPTType::T_WCHAR:
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.wc);
+                    break;
                 default:
                     // all the others are plain pointer types
-                    word = reinterpret_cast<uint64_t>(s->val.p);
+                    alloc_arg(ireg_args, ireg_end, stack_args, &s->val.p);
                     break;
             }
         }
-
-        alloc_arg(ireg_args, ireg_end, stack_args, &word);
     }
 }
 
