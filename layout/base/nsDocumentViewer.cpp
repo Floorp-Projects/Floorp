@@ -3318,6 +3318,39 @@ nsresult nsDocumentViewer::PrintPreviewScrollToPageForOldUI(int16_t aType,
   return NS_OK;
 }
 
+static const nsIFrame* GetTargetPageFrame(int32_t aTargetPageNum,
+                                          nsPageSequenceFrame* aSequenceFrame) {
+  MOZ_ASSERT(aTargetPageNum > 0 &&
+             aTargetPageNum < aSequenceFrame->PrincipalChildList().GetLength());
+
+  int32_t pageNum = 1;
+  for (const nsIFrame* sheetFrame : aSequenceFrame->PrincipalChildList()) {
+    if (pageNum == aTargetPageNum) {
+      return sheetFrame;
+    }
+    pageNum++;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Should have found the target frame");
+
+  return nullptr;
+}
+
+// Calculate the scroll position where the center of |aFrame| is positioned at
+// the center of |aScrollable|'s scroll port for the print preview.
+// So what we do for that is;
+// 1) Calculate the position of the center of |aFrame| in the print preview
+//    coordinates.
+// 2) Reduce the half height of the scroll port from the result of 1.
+static nscoord ScrollPositionForFrame(
+    const nsIFrame* aFrame, nsIScrollableFrame* aScrollable,
+    float aPreviewScale) {
+  // Note that even if the computed scroll position is out of the range of
+  // the scroll port, it gets clamped in nsIScrollableFrame::ScrollTo.
+  return nscoord(aPreviewScale * aFrame->GetRect().Center().y -
+                 float(aScrollable->GetScrollPortRect().height) / 2.0f);
+}
+
 //----------------------------------------------------------------------
 NS_IMETHODIMP
 nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
@@ -3332,78 +3365,63 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
       mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
   if (!sf) return NS_OK;
 
-  // Figure where we are currently scrolled to
-  nsPoint currentScrollPosition = sf->GetScrollPosition();
-
-  // Check to see if we can short circut scrolling to the top
-  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_HOME ||
-      (aType == nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM &&
-       aPageNum == 1)) {
-    sf->ScrollTo(nsPoint(currentScrollPosition.x, 0), ScrollMode::Instant);
-    return NS_OK;
-  }
-
-  // If it is "End" then just scroll to the `scrollTopMax` position.
-  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_END) {
-    sf->ScrollTo(nsPoint(currentScrollPosition.x, sf->GetScrollRange().YMost()),
-                 ScrollMode::Instant);
-    return NS_OK;
-  }
-
-  // in PP mPrtPreview->mPrintObject->mSeqFrame is null
   auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
+  Unused << pageCount;
   if (!seqFrame) {
     return NS_ERROR_FAILURE;
   }
 
-  int32_t pageNum = 1;
-  nsIFrame* fndPageFrame = nullptr;
-  nsIFrame* currentPage = nullptr;
+  float previewScale = seqFrame->GetPrintPreviewScale();
 
-  // Now, locate the current page we are on and
-  // and the page of the page number
-  for (nsIFrame* sheetFrame : seqFrame->PrincipalChildList()) {
-    nsRect sheetRect = sheetFrame->GetRect();
-    if (sheetRect.Contains(sheetRect.x, currentScrollPosition.y)) {
-      currentPage = sheetFrame;
-    }
-    if (pageNum == aPageNum) {
-      fndPageFrame = sheetFrame;
+  nsPoint dest = sf->GetScrollPosition();
+
+  switch (aType) {
+    case nsIWebBrowserPrint::PRINTPREVIEW_HOME:
+      dest.y = 0;
+      break;
+    case nsIWebBrowserPrint::PRINTPREVIEW_END:
+      dest.y = sf->GetScrollRange().YMost();
+      break;
+    case nsIWebBrowserPrint::PRINTPREVIEW_PREV_PAGE:
+    case nsIWebBrowserPrint::PRINTPREVIEW_NEXT_PAGE: {
+      auto [currentFrame, currentPageNumber] =
+          GetCurrentSheetFrameAndPageNumber();
+      Unused << currentPageNumber;
+      if (!currentFrame) {
+        return NS_OK;
+      }
+
+      const nsIFrame* targetFrame = nullptr;
+      if (aType == nsIWebBrowserPrint::PRINTPREVIEW_PREV_PAGE) {
+        targetFrame = currentFrame->GetPrevInFlow();
+      } else {
+        targetFrame = currentFrame->GetNextInFlow();
+      }
+      if (!targetFrame) {
+        return NS_OK;
+      }
+
+      dest.y = ScrollPositionForFrame(targetFrame, sf, previewScale);
       break;
     }
-    pageNum++;
+    case nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM: {
+      if (aPageNum < 0 || aPageNum > pageCount) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      const nsIFrame* targetFrame = GetTargetPageFrame(aPageNum, seqFrame);
+      MOZ_ASSERT(targetFrame);
+
+      dest.y = ScrollPositionForFrame(targetFrame, sf, previewScale);
+      break;
+    }
+    default:
+      return NS_ERROR_INVALID_ARG;
+      break;
   }
 
-  if (aType == nsIWebBrowserPrint::PRINTPREVIEW_PREV_PAGE) {
-    if (currentPage) {
-      fndPageFrame = currentPage->GetPrevInFlow();
-      if (!fndPageFrame) {
-        return NS_OK;
-      }
-    } else {
-      return NS_OK;
-    }
-  } else if (aType == nsIWebBrowserPrint::PRINTPREVIEW_NEXT_PAGE) {
-    if (currentPage) {
-      fndPageFrame = currentPage->GetNextInFlow();
-      if (!fndPageFrame) {
-        return NS_OK;
-      }
-    } else {
-      return NS_OK;
-    }
-  } else {  // If we get here we are doing "GoTo"
-    if (aPageNum < 0 || aPageNum > pageCount) {
-      return NS_OK;
-    }
-  }
+  sf->ScrollTo(dest, ScrollMode::Instant);
 
-  if (fndPageFrame) {
-    nscoord newYPosn = nscoord(seqFrame->GetPrintPreviewScale() *
-                               fndPageFrame->GetPosition().y);
-    sf->ScrollTo(nsPoint(currentScrollPosition.x, newYPosn),
-                 ScrollMode::Instant);
-  }
   return NS_OK;
 }
 
