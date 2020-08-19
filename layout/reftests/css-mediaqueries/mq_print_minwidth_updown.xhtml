@@ -8,14 +8,16 @@
     @media print { .a { color: aqua; } }
     @media screen { .b { color: aqua; } }
 
-    /* we set the width to 5 inches/360pt/127mm in the reftest-paged class*/
+    /* we set the width to 5 inches/360pt/127mm in the reftest-paged class, -0.5 inches
+       for each margin, that makes 4 inches / 288pt / 101.6mm */
+
     /* test values less than set */
     @media (min-width: 3.14in) { .c { color: aqua; } }    /* y */
-    @media (min-width: 314pt) { .d { color: aqua; } }  /* y */ 
+    @media (min-width: 284pt) { .d { color: aqua; } }  /* y */ 
     @media (min-width: 31.4mm) { .e { color: aqua; } }  /* y */
 
     @media print and (min-width: 3.14in) { .f {color: aqua; } }  /* y */ 
-    @media print and (min-width: 314pt) { .g {color: aqua; } }/* y */
+    @media print and (min-width: 284pt) { .g {color: aqua; } }/* y */
     @media print and (min-width: 31.4mm) { .h {color: aqua; } }/* y */
 
     @media all and (min-width: 3.14in) { .i { color: aqua; } } /* y */

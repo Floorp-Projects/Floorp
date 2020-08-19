@@ -8,14 +8,16 @@
     @media print { .a { color: aqua; } }
     @media screen { .b { color: aqua; } }
 
-    /* we set the height to 3 inches/216pt/76.2mm in the reftest-paged class*/
+    /* we set the height to 3 inches/216pt/76mm in the reftest-paged class. -0.5 inches
+       for each margin, that makes 2 inches/144pt/50.8mm*/
+
     /* test less than set value */
     @media (min-height: 1.57in) { .c { color: aqua; } }    /* y */
-    @media (min-height: 157pt) { .d { color: aqua; } }  /* y */ 
+    @media (min-height: 140pt) { .d { color: aqua; } }  /* y */ 
     @media (min-height: 31.4mm) { .e { color: aqua; } }  /* y */
 
     @media print and (min-height: 1.57in) { .f {color: aqua; } }  /* y */ 
-    @media print and (min-height: 157pt) { .g {color: aqua; } }/* y */
+    @media print and (min-height: 140pt) { .g {color: aqua; } }/* y */
     @media print and (min-height: 31.4mm) { .h {color: aqua; } }/* y */
 
     @media all and (min-height: 1.57in) { .i { color: aqua; } } /* y */
