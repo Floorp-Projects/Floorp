@@ -1589,8 +1589,7 @@ class HTMLInputElement final : public TextControlElement,
   }
 
   /**
-   * Checks if aDateTimeInputType should be supported based on
-   * "dom.forms.datetime", and "dom.experimental_forms".
+   * Checks if aDateTimeInputType should be supported.
    */
   static bool IsDateTimeTypeSupported(uint8_t aDateTimeInputType);
 

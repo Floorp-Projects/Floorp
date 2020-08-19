@@ -94,7 +94,7 @@ interface HTMLInputElement : HTMLElement {
            attribute DOMString defaultValue;
   [CEReactions, Pure, SetterThrows, NeedsCallerType]
            attribute [TreatNullAs=EmptyString] DOMString value;
-  [Throws, Func="HTMLInputElement::ValueAsDateEnabled"]
+  [Throws]
            attribute object? valueAsDate;
   [Pure, SetterThrows]
            attribute unrestricted double valueAsNumber;
@@ -248,40 +248,36 @@ dictionary DateTimeValue {
 };
 
 partial interface HTMLInputElement {
-  [Pref="dom.forms.datetime", ChromeOnly]
+  [ChromeOnly]
   DateTimeValue getDateTimeInputBoxValue();
 
-  [Pref="dom.forms.datetime", ChromeOnly]
+  [ChromeOnly]
   readonly attribute Element? dateTimeBoxElement;
 
-  [Pref="dom.forms.datetime", ChromeOnly,
-   BinaryName="getMinimumAsDouble"]
+  [ChromeOnly, BinaryName="getMinimumAsDouble"]
   double getMinimum();
 
-  [Pref="dom.forms.datetime", ChromeOnly,
-   BinaryName="getMaximumAsDouble"]
+  [ChromeOnly, BinaryName="getMaximumAsDouble"]
   double getMaximum();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
+  [Func="IsChromeOrUAWidget"]
   void openDateTimePicker(optional DateTimeValue initialValue = {});
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
+  [Func="IsChromeOrUAWidget"]
   void updateDateTimePicker(optional DateTimeValue value = {});
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
+  [Func="IsChromeOrUAWidget"]
   void closeDateTimePicker();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
+  [Func="IsChromeOrUAWidget"]
   void setFocusState(boolean aIsFocused);
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
+  [Func="IsChromeOrUAWidget"]
   void updateValidityState();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget",
-   BinaryName="getStepAsDouble"]
+  [Func="IsChromeOrUAWidget", BinaryName="getStepAsDouble"]
   double getStep();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget",
-   BinaryName="getStepBaseAsDouble"]
+  [Func="IsChromeOrUAWidget", BinaryName="getStepBaseAsDouble"]
   double getStepBase();
 };
