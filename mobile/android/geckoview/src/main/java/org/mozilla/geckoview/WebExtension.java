@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Represents a WebExtension that may be used by GeckoView.
@@ -55,8 +54,7 @@ public class WebExtension {
     public final @WebExtensionFlags long flags;
 
     /** Provides information about this {@link WebExtension}. */
-    // TODO: move to @NonNull when we remove registerWebExtension
-    public final @Nullable MetaData metaData;
+    public final @NonNull MetaData metaData;
 
     /**
      * Whether this extension is built-in. Built-in extension can be installed
@@ -121,70 +119,6 @@ public class WebExtension {
         } else {
             metaData = null;
         }
-    }
-
-    /**
-     * Builds a WebExtension instance that can be loaded in GeckoView using
-     * {@link GeckoRuntime#registerWebExtension}
-     *
-     * @param location The WebExtension install location. It must be either a
-     *                 <code>resource:</code> URI to a folder inside the APK or
-     *                 a <code>file:</code> URL to a <code>.xpi</code> file.
-     * @param id Unique identifier for this WebExtension. This identifier must
-     *           either be a GUID or a string formatted like an email address.
-     *           E.g. <pre><code>
-     *              "extensionname@example.org"
-     *              "{daf44bf7-a45e-4450-979c-91cf07434c3d}"
-     *           </code></pre>
-     *
-     *           See also: <ul>
-     *           <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings">
-     *                  WebExtensions/manifest.json/browser_specific_settings
-     *               </a>
-     *           <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID#When_do_you_need_an_add-on_ID">
-     *                  WebExtensions/WebExtensions_and_the_Add-on_ID
-     *               </a>
-     *           </ul>
-     * @param flags {@link Flags} for this WebExtension.
-     * @param controller the current {@link WebExtensionController} instance
-     *
-     * @deprecated Use the return value of {@link WebExtensionController#installBuiltIn} instead.
-     *             This method will be removed in GeckoView 81.
-     */
-    @Deprecated
-    public WebExtension(final @NonNull String location, final @NonNull String id,
-                        final @WebExtensionFlags long flags,
-                        final @NonNull WebExtensionController controller) {
-        setDelegateController(controller.delegateFor(this));
-        this.location = location;
-        this.id = id;
-        this.flags = flags;
-
-        // TODO:
-        this.isBuiltIn = false;
-        this.metaData = null;
-    }
-
-    /**
-     * Builds a WebExtension instance that can be loaded in GeckoView using
-     * {@link GeckoRuntime#registerWebExtension}
-     * The <code>id</code> for this web extension will be automatically
-     * generated.
-     *
-     * All messaging from the web extension will be ignored.
-     *
-     * @param location The WebExtension install location. It must be either a
-     *                 <code>resource:</code> URI to a folder inside the APK or
-     *                 a <code>file:</code> URL to a <code>.xpi</code> file.
-     * @param controller the current {@link WebExtensionController} instance
-     *
-     * @deprecated Use the return value of {@link WebExtensionController#installBuiltIn} instead.
-     *             This method will be removed in GeckoView 81.
-     */
-    @Deprecated
-    public WebExtension(final @NonNull String location,
-                        final @NonNull WebExtensionController controller) {
-        this(location, "{" + UUID.randomUUID().toString() + "}", Flags.NONE, controller);
     }
 
     /**
@@ -471,8 +405,7 @@ public class WebExtension {
          * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/remove">
          *     WebExtensions/API/tabs/remove</a>
          *
-         * @param source An instance of {@link WebExtension} or null if extension was not registered
-         *               with GeckoRuntime.registerWebextension
+         * @param source An instance of {@link WebExtension}
          * @param session An instance of {@link GeckoSession} to be closed.
          * @return GeckoResult.ALLOW if the tab will be closed, GeckoResult.DENY otherwise
          */

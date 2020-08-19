@@ -164,18 +164,7 @@ class GeckoViewConnection {
   constructor(sender, nativeApp, allowContentMessaging) {
     this.sender = sender;
     this.nativeApp = nativeApp;
-    if (allowContentMessaging) {
-      this.allowContentMessaging = allowContentMessaging;
-    } else {
-      const scope = GeckoViewWebExtension.extensionScopes.get(
-        sender.extensionId
-      );
-      if (scope) {
-        this.allowContentMessaging = scope.allowContentMessaging;
-      } else {
-        this.allowContentMessaging = false;
-      }
-    }
+    this.allowContentMessaging = allowContentMessaging;
 
     if (!this.allowContentMessaging && !sender.verified) {
       throw new Error(`Unexpected messaging sender: ${JSON.stringify(sender)}`);
@@ -595,56 +584,13 @@ var GeckoViewWebExtension = {
     }
   },
 
-  async registerWebExtension(aId, aUri, allowContentMessaging, aCallback) {
-    const params = {
-      id: aId,
-      resourceURI: aUri,
-      temporarilyInstalled: true,
-      builtIn: true,
-    };
-
-    let file;
-    if (aUri instanceof Ci.nsIFileURL) {
-      file = aUri.file;
-    }
-
-    const scope = Extension.getBootstrapScope(aId, file);
-    scope.allowContentMessaging = allowContentMessaging;
-    // Always allow built-in extensions to run in private browsing
-    ExtensionPermissions.add(aId, PRIVATE_BROWSING_PERMISSION);
-    this.extensionScopes.set(aId, scope);
-
-    await scope.startup(params, undefined);
-
-    scope.extension.callOnClose({
-      close: () => this.extensionScopes.delete(aId),
-    });
-  },
-
-  async unregisterWebExtension(aId, aCallback) {
-    try {
-      const scope = this.extensionScopes.get(aId);
-      await scope.shutdown();
-      this.extensionScopes.delete(aId);
-      aCallback.onSuccess();
-    } catch (ex) {
-      aCallback.onError(`Error unregistering WebExtension ${aId}. ${ex}`);
-    }
-  },
-
   async extensionById(aId) {
-    const scope = this.extensionScopes.get(aId);
-    if (!scope) {
-      // Check if this is an installed extension
-      const addon = await AddonManager.getAddonByID(aId);
-      if (!addon) {
-        debug`Could not find extension with id=${aId}`;
-        return null;
-      }
-      return addon;
+    const addon = await AddonManager.getAddonByID(aId);
+    if (!addon) {
+      debug`Could not find extension with id=${aId}`;
+      return null;
     }
-
-    return scope.extension;
+    return addon;
   },
 
   async ensureBuiltIn(aUri, aId) {
@@ -882,66 +828,8 @@ var GeckoViewWebExtension = {
         break;
       }
 
-      // TODO: Remove deprecated Bug 1634504
-      case "GeckoView:RegisterWebExtension": {
-        let uri;
-        try {
-          uri = Services.io.newURI(aData.locationUri);
-        } catch (ex) {
-          aCallback.onError(`Could not parse URI: ${aData.locationUri}`);
-          return;
-        }
-        if (
-          !uri ||
-          (!(uri instanceof Ci.nsIFileURL) && !(uri instanceof Ci.nsIJARURI))
-        ) {
-          aCallback.onError(
-            `Extension does not point to a resource URI or a file URL. extension=${aData.locationUri}`
-          );
-          return;
-        }
-
-        if (uri.fileName != "" && uri.fileExtension != "xpi") {
-          aCallback.onError(
-            `Extension does not point to a folder or an .xpi file. Hint: the path needs to end with a "/" to be considered a folder. extension=${aData.locationUri}`
-          );
-          return;
-        }
-
-        if (this.extensionScopes.has(aData.id)) {
-          aCallback.onError(
-            `An extension with id='${aData.id}' has already been registered.`
-          );
-          return;
-        }
-
-        this.registerWebExtension(
-          aData.id,
-          uri,
-          aData.allowContentMessaging
-        ).then(aCallback.onSuccess, error =>
-          aCallback.onError(
-            `An error occurred while registering the WebExtension ${aData.locationUri}: ${error}.`
-          )
-        );
-        break;
-      }
-
       case "GeckoView:ActionDelegate:Attached": {
         this.actionDelegateAttached(aData.extensionId);
-        break;
-      }
-
-      // TODO: Remove deprecated Bug 1634504
-      case "GeckoView:UnregisterWebExtension": {
-        if (!this.extensionScopes.has(aData.id)) {
-          aCallback.onError(
-            `Could not find an extension with id='${aData.id}'.`
-          );
-          return;
-        }
-
-        this.unregisterWebExtension(aData.id, aCallback);
         break;
       }
 
@@ -1131,8 +1019,6 @@ var GeckoViewWebExtension = {
   },
 };
 
-// TODO: Remove deprecated Bug 1634504
-GeckoViewWebExtension.extensionScopes = new Map();
 // WeakMap[Extension -> BrowserAction]
 GeckoViewWebExtension.browserActions = new WeakMap();
 // WeakMap[Extension -> PageAction]
