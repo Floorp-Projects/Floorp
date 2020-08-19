@@ -9,7 +9,6 @@ job-defaults:
             .*-ref-hw-2017/.*: 3600
             default: 1800
     suite: raptor
-    workdir: /home/cltbld
     run-on-projects:
         by-test-platform:
             linux.*shippable[^-qr].*: ['mozilla-central']
