@@ -4,7 +4,6 @@
 
 # Pretty-printers for JSID values.
 
-import gdb
 import mozilla.prettyprinters
 import mozilla.Root
 
@@ -14,8 +13,8 @@ from mozilla.prettyprinters import pretty_printer
 mozilla.prettyprinters.clear_module_printers(__name__)
 
 
-@pretty_printer('jsid')
-class jsid(object):
+@pretty_printer('JS::PropertyKey')
+class PropertyKey(object):
     # Since people don't always build with macro debugging info, I can't
     # think of any way to avoid copying these values here, short of using
     # inferior calls for every operation (which, I hear, is broken from
@@ -32,31 +31,19 @@ class jsid(object):
         self.cache = cache
         self.concrete_type = self.value.type.strip_typedefs()
 
-    # SpiderMonkey has two alternative definitions of jsid: a typedef for
-    # ptrdiff_t, and a struct with == and != operators defined on it.
-    # Extract the bits from either one.
-    def as_bits(self):
-        if self.concrete_type.code == gdb.TYPE_CODE_STRUCT:
-            return self.value['asBits']
-        elif self.concrete_type.code == gdb.TYPE_CODE_INT:
-            return self.value
-        else:
-            raise RuntimeError("definition of SpiderMonkey 'jsid' type"
-                               "neither struct nor integral type")
-
     def to_string(self):
-        bits = self.as_bits()
-        tag = bits & jsid.TYPE_MASK
-        if tag == jsid.TYPE_STRING:
+        bits = self.value['asBits']
+        tag = bits & PropertyKey.TYPE_MASK
+        if tag == PropertyKey.TYPE_STRING:
             body = bits.cast(self.cache.JSString_ptr_t)
-        elif tag & jsid.TYPE_INT:
+        elif tag & PropertyKey.TYPE_INT:
             body = bits >> 1
-        elif tag == jsid.TYPE_VOID:
+        elif tag == PropertyKey.TYPE_VOID:
             return "JSID_VOID"
-        elif tag == jsid.TYPE_SYMBOL:
-            body = ((bits & ~jsid.TYPE_MASK)
+        elif tag == PropertyKey.TYPE_SYMBOL:
+            body = ((bits & ~PropertyKey.TYPE_MASK)
                     .cast(self.cache.JSSymbol_ptr_t))
-        elif tag == jsid.TYPE_EMPTY:
+        elif tag == PropertyKey.TYPE_EMPTY:
             return "JSID_EMPTY"
         else:
             body = "<unrecognized>"
@@ -64,22 +51,17 @@ class jsid(object):
 
 
 @pretty_printer('JS::Rooted<long>')
-def RootedJSID(value, cache):
-    # Hard-code the referent type pretty-printer for jsid roots and handles.
-    # See the comment for mozilla.Root.Common.__init__.
-    return mozilla.Root.Rooted(value, cache, jsid)
+def RootedPropertyKey(value, cache):
+    # Hard-code the referent type pretty-printer for PropertyKey roots and
+    # handles. See the comment for mozilla.Root.Common.__init__.
+    return mozilla.Root.Rooted(value, cache, PropertyKey)
 
 
 @pretty_printer('JS::Handle<long>')
-def HandleJSID(value, cache):
-    return mozilla.Root.Handle(value, cache, jsid)
+def HandlePropertyKey(value, cache):
+    return mozilla.Root.Handle(value, cache, PropertyKey)
 
 
 @pretty_printer('JS::MutableHandle<long>')
-def MutableHandleJSID(value, cache):
-    return mozilla.Root.MutableHandle(value, cache, jsid)
-
-
-@pretty_printer('JS::PropertyKey')
-def PropertyKey(value, cache):
-    return mozilla.jsid.jsid(value, cache)
+def MutableHandlePropertyKey(value, cache):
+    return mozilla.Root.MutableHandle(value, cache, PropertyKey)
