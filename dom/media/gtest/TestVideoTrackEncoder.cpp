@@ -1279,6 +1279,46 @@ TEST(VP8VideoTrackEncoder, DisableBetweenFrames)
   EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[2]->mDuration);
 }
 
+// Test that an encoding which is disabled before the first frame becomes black
+// immediately.
+TEST(VP8VideoTrackEncoder, DisableBeforeFirstFrame)
+{
+  TestVP8TrackEncoder encoder;
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  nsTArray<RefPtr<EncodedFrame>> frames;
+  TimeStamp now = TimeStamp::Now();
+
+  // Disable the track at t=0.
+  // Pass a frame in at t=50ms.
+  // Enable the track at t=100ms.
+  // Stop encoding at t=200ms.
+  // Should yield 2 frames, 1 black [0, 100); 1 real [100, 200).
+
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE, false,
+                      now + TimeDuration::FromMilliseconds(50));
+
+  encoder.SetStartOffset(now);
+  encoder.Disable(now);
+  encoder.AppendVideoSegment(std::move(segment));
+
+  encoder.Enable(now + TimeDuration::FromMilliseconds(100));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(200));
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  ASSERT_EQ(2UL, frames.Length());
+
+  // [0, 100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[0]->mDuration);
+
+  // [100ms, 200ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[1]->mDuration);
+}
+
 // Test that an encoding which is enabled on a frame timestamp encodes
 // frames as expected.
 TEST(VP8VideoTrackEncoder, EnableOnFrameTime)
