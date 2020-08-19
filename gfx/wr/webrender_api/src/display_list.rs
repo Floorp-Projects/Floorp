@@ -1228,9 +1228,11 @@ impl DisplayListBuilder {
     pub fn push_hit_test(
         &mut self,
         common: &di::CommonItemProperties,
+        tag: di::ItemTag,
     ) {
         let item = di::DisplayItem::HitTest(di::HitTestDisplayItem {
             common: *common,
+            tag,
         });
         self.push_item(&item);
     }
