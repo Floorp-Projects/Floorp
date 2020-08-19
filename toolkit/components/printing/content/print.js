@@ -760,7 +760,9 @@ async function pickFileName(sourceBrowser, pageSettings) {
   );
   picker.appendFilter("PDF", "*.pdf");
   picker.defaultExtension = "pdf";
-  picker.defaultString = filename;
+  // macOS and linux don't set the extension based on the default. Windows will
+  // only include the filename once, so we can add it there too.
+  picker.defaultString = filename + ".pdf";
 
   let retval = await new Promise(resolve => picker.open(resolve));
 
