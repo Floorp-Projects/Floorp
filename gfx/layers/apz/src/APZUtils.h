@@ -159,6 +159,14 @@ bool IsStuckAtBottom(gfxFloat aTranslation,
 bool IsStuckAtTop(gfxFloat aTranslation, const LayerRectAbsolute& aInnerRange,
                   const LayerRectAbsolute& aOuterRange);
 
+/**
+ * Compute the translation that should be applied to a layer that's fixed
+ * at |eFixedSides|, to respect the fixed layer margins |aFixedMargins|.
+ */
+ScreenPoint ComputeFixedMarginsOffset(
+    const ScreenMargin& aCompositorFixedLayerMargins, SideBits aFixedSides,
+    const ScreenMargin& aGeckoFixedLayerMargins);
+
 }  // namespace apz
 
 }  // namespace layers

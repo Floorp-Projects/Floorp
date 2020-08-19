@@ -472,7 +472,7 @@ void AsyncCompositionManager::AdjustFixedOrStickyLayer(
 
   // Offset the layer's anchor point to make sure fixed position content
   // respects content document fixed position margins.
-  ScreenPoint offset = ComputeFixedMarginsOffset(
+  ScreenPoint offset = apz::ComputeFixedMarginsOffset(
       aFixedLayerMargins, sideBits,
       // For sticky layers, we don't need to factor aGeckoFixedLayerMargins
       // because Gecko doesn't shift the position of sticky elements for dynamic
@@ -1310,34 +1310,6 @@ ScreenMargin AsyncCompositionManager::GetFixedLayerMargins() const {
     result.bottom = StaticPrefs::apz_fixed_margin_override_bottom();
   }
   return result;
-}
-
-/*static*/
-ScreenPoint AsyncCompositionManager::ComputeFixedMarginsOffset(
-    const ScreenMargin& aCompositorFixedLayerMargins, SideBits aFixedSides,
-    const ScreenMargin& aGeckoFixedLayerMargins) {
-  // Work out the necessary translation, in screen space.
-  ScreenPoint translation;
-
-  ScreenMargin effectiveMargin =
-      aCompositorFixedLayerMargins - aGeckoFixedLayerMargins;
-  if ((aFixedSides & SideBits::eLeftRight) == SideBits::eLeftRight) {
-    translation.x += (effectiveMargin.left - effectiveMargin.right) / 2;
-  } else if (aFixedSides & SideBits::eRight) {
-    translation.x -= effectiveMargin.right;
-  } else if (aFixedSides & SideBits::eLeft) {
-    translation.x += effectiveMargin.left;
-  }
-
-  if ((aFixedSides & SideBits::eTopBottom) == SideBits::eTopBottom) {
-    translation.y += (effectiveMargin.top - effectiveMargin.bottom) / 2;
-  } else if (aFixedSides & SideBits::eBottom) {
-    translation.y -= effectiveMargin.bottom;
-  } else if (aFixedSides & SideBits::eTop) {
-    translation.y += effectiveMargin.top;
-  }
-
-  return translation;
 }
 
 }  // namespace layers

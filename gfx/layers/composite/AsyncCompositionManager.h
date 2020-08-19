@@ -107,14 +107,6 @@ class AsyncCompositionManager final {
 
   typedef std::map<Layer*, ClipParts> ClipPartsCache;
 
-  /**
-   * Compute the translation that should be applied to a layer that's fixed
-   * at |eFixedSides|, to respect the fixed layer margins |aFixedMargins|.
-   */
-  static ScreenPoint ComputeFixedMarginsOffset(
-      const ScreenMargin& aFixedMargins, SideBits eFixedSides,
-      const ScreenMargin& aGeckoFixedLayerMargins);
-
  private:
   // Return true if an AsyncPanZoomController content transform was
   // applied for |aLayer|. |*aOutFoundRoot| is set to true on Android only, if
