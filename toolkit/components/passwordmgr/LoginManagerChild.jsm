@@ -2046,7 +2046,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       form.ownerDocument.documentURI
     );
     let formActionOrigin = LoginHelper.getFormActionOrigin(form);
-
     logins = logins.filter(l => {
       let formActionMatches = LoginHelper.isOriginMatching(
         l.formActionOrigin,
@@ -2054,7 +2053,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         {
           schemeUpgrades: LoginHelper.schemeUpgrades,
           acceptWildcardMatch: true,
-          acceptDifferentSubdomains: false,
+          acceptDifferentSubdomains: true,
         }
       );
       let formOriginMatches = LoginHelper.isOriginMatching(
