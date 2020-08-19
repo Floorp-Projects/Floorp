@@ -22,12 +22,13 @@
         <option value="all" selected data-l10n-id="printui-page-range-all"></option>
         <option value="custom" data-l10n-id="printui-page-range-custom"></option>
       </select>
-      <div class="range-group" hidden="true">
+      <div class="range-group" hidden>
         <label data-l10n-id="printui-range-start" class="range-group-separator" for="custom-range-start"></label>
         <input id="custom-range-start" type="number" min="1" step="1" class="range-group-input" disabled>
         <label data-l10n-id="printui-range-end" class="range-group-separator" for="custom-range-end"></label>
         <input id="custom-range-end" type="number" min="1" step="1" class="range-group-input" disabled>
       </div>
+      <p id="error-invalid-range" hidden data-l10n-id="printui-error-invalid-range" class="error-message" data-l10n-args='{ "numPages": 1 }'></p>
     </template>
 
     <template id="orientation-template">
@@ -59,7 +60,7 @@
               autocomplete="off" disabled required>
           </span>
         </div>
-        <p id="error-invalid-scale" hidden="true" data-l10n-id="printui-error-invalid-scale" class="error-message"></p>
+        <p id="error-invalid-scale" hidden data-l10n-id="printui-error-invalid-scale" class="error-message"></p>
       </div>
     </template>
 
