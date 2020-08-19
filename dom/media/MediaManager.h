@@ -342,6 +342,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
+  bool mCamerasMuted = false;
 
   // Always exists
   const RefPtr<TaskQueue> mMediaThread;
