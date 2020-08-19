@@ -2603,8 +2603,9 @@ class HTMLEditor final : public TextEditor,
    * HandleDeleteCollapsedSelectionAtAtomicContent() handles deletion of
    * atomic elements like `<br>`, `<hr>`, `<img>`, `<input>`, etc and
    * data nodes except text node (e.g., comment node).
-   * If aAtomicContent is a invisible `<br>` element, this will call
-   * `HandleDeleteSelectionInternal()` recursively after deleting it.
+   * Note that don't call this directly with `<hr>` element.  Instead, call
+   * `HandleDeleteCollapsedSelectionAtHRElement()`.
+   * Note that don't call this for invisible `<br>` element.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
@@ -2618,6 +2619,31 @@ class HTMLEditor final : public TextEditor,
   HandleDeleteCollapsedSelectionAtAtomicContent(
       nsIEditor::EDirection aDirectionAndAmount,
       nsIEditor::EStripWrappers aStripWrappers, nsIContent& aAtomicContent,
+      const EditorDOMPoint& aCaretPoint,
+      const WSRunScanner& aWSRunScannerAtCaret);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtHRElement() handles deletion around
+   * `<hr>` element.  If aDirectionAndAmount is nsIEditor::ePrevious,
+   * aHTElement is removed only when caret is at next sibling of the `<hr>`
+   * element and inter line position is "left".  Otherwise, caret is moved
+   * and does not remove the `<hr>` elemnent.
+   * XXX Perhaps, we can get rid of this special handling because the other
+   *     browsers don't do this, and our `<hr>` element handling is really
+   *     odd.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aHRElement          The `<hr>` element to be removed.
+   * @param aCaretPoint         The caret point (i.e., selection start or
+   *                            end).
+   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
+   *                             with the caret point.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteCollapsedSelectionAtHRElement(
+      nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers, Element& aHRElement,
       const EditorDOMPoint& aCaretPoint,
       const WSRunScanner& aWSRunScannerAtCaret);
 
