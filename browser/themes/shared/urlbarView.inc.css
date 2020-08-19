@@ -512,45 +512,39 @@
   flex-grow: 1;
 }
 
-#urlbar-engine-one-off-item-bookmarks > .button-box > .button-icon {
+#urlbar-engine-one-off-item-bookmarks {
   list-style-image: url("chrome://browser/skin/bookmark.svg");
   fill: #0060df; /* Blue-60 */
   fill-opacity: 1;
   -moz-context-properties: fill, fill-opacity;
 }
 
-#urlbar-engine-one-off-item-tabs > .button-box > .button-icon {
+#urlbar-engine-one-off-item-tabs {
   list-style-image: url("chrome://browser/skin/tab.svg");
   fill: #008eaf; /* Teal-70 */
   fill-opacity: 1;
   -moz-context-properties: fill, fill-opacity;
 }
 
-#urlbar-engine-one-off-item-history > .button-box > .button-icon {
+#urlbar-engine-one-off-item-history {
   list-style-image: url("chrome://browser/skin/history.svg");
-  fill: #0c0c0d; /* Grey-90 */
-  fill-opacity: 1;
+  fill: currentColor;
+  fill-opacity: .9;
   -moz-context-properties: fill, fill-opacity;
 }
 
-:root[lwt-toolbar-field-brighttext] #urlbar-engine-one-off-item-bookmarks > .button-box > .button-icon {
+:root[lwt-toolbar-field-brighttext] #urlbar-engine-one-off-item-bookmarks:not([selected]) {
   fill: #0a84ff; /* Blue-50 */
 }
 
-:root[lwt-toolbar-field-brighttext] #urlbar-engine-one-off-item-tabs > .button-box > .button-icon {
+:root[lwt-toolbar-field-brighttext] #urlbar-engine-one-off-item-tabs:not([selected]) {
   fill: #00c8d7; /* Teal-60 */
 }
 
-:root[lwt-toolbar-field-brighttext] #urlbar-engine-one-off-item-history > .button-box > .button-icon {
+#urlbar-engine-one-off-item-bookmarks[selected],
+#urlbar-engine-one-off-item-tabs[selected] {
   fill: currentColor;
-  fill-opacity: .6;
-}
-
-:root #urlbar-engine-one-off-item-bookmarks[selected] > .button-box > .button-icon,
-:root #urlbar-engine-one-off-item-tabs[selected] > .button-box > .button-icon,
-:root #urlbar-engine-one-off-item-history[selected] > .button-box > .button-icon {
-  fill: currentColor;
-  fill-opacity: .6;
+  fill-opacity: .9;
 }
 
 /* search bar popup */
