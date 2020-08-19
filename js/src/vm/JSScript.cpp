@@ -948,6 +948,18 @@ template
     RuntimeScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
 
 template <XDRMode mode>
+XDRResult js::XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent) {
+  MOZ_TRY(xdr->codeUint32(&extent->sourceStart));
+  MOZ_TRY(xdr->codeUint32(&extent->sourceEnd));
+  MOZ_TRY(xdr->codeUint32(&extent->toStringStart));
+  MOZ_TRY(xdr->codeUint32(&extent->toStringEnd));
+  MOZ_TRY(xdr->codeUint32(&extent->lineno));
+  MOZ_TRY(xdr->codeUint32(&extent->column));
+
+  return Ok();
+}
+
+template <XDRMode mode>
 XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                         HandleScriptSourceObject sourceObjectArg,
                         HandleObject funOrMod, MutableHandleScript scriptp) {
@@ -962,12 +974,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   uint8_t xdrFlags = 0;
 
-  uint32_t sourceStart = 0;
-  uint32_t sourceEnd = 0;
-  uint32_t toStringStart = 0;
-  uint32_t toStringEnd = 0;
-  uint32_t lineno = 0;
-  uint32_t column = 0;
+  SourceExtent extent;
   uint32_t immutableFlags = 0;
 
   // NOTE: |mutableFlags| are not preserved by XDR.
@@ -1016,22 +1023,12 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   MOZ_TRY(xdr->codeUint8(&xdrFlags));
 
   if (mode == XDR_ENCODE) {
-    sourceStart = script->sourceStart();
-    sourceEnd = script->sourceEnd();
-    toStringStart = script->toStringStart();
-    toStringEnd = script->toStringEnd();
+    extent = script->extent();
     immutableFlags = script->immutableFlags();
-    lineno = script->lineno();
-    column = script->column();
   }
 
-  MOZ_TRY(xdr->codeUint32(&sourceStart));
-  MOZ_TRY(xdr->codeUint32(&sourceEnd));
-  MOZ_TRY(xdr->codeUint32(&toStringStart));
-  MOZ_TRY(xdr->codeUint32(&toStringEnd));
+  MOZ_TRY(XDRSourceExtent(xdr, &extent));
   MOZ_TRY(xdr->codeUint32(&immutableFlags));
-  MOZ_TRY(xdr->codeUint32(&lineno));
-  MOZ_TRY(xdr->codeUint32(&column));
 
   RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
   Maybe<CompileOptions> options;
@@ -1096,9 +1093,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     RootedObject functionOrGlobal(
         cx, isFunctionScript ? static_cast<JSObject*>(funOrMod)
                              : static_cast<JSObject*>(cx->global()));
-
-    SourceExtent extent{sourceStart, sourceEnd, toStringStart,
-                        toStringEnd, lineno,    column};
 
     script = JSScript::Create(cx, functionOrGlobal, sourceObject, extent,
                               ImmutableScriptFlags(immutableFlags));
@@ -1191,13 +1185,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       ngcthings = lazy->gcthings().size();
     }
 
-    MOZ_TRY(xdr->codeUint32(&extent.sourceStart));
-    MOZ_TRY(xdr->codeUint32(&extent.sourceEnd));
-    MOZ_TRY(xdr->codeUint32(&extent.toStringStart));
-    MOZ_TRY(xdr->codeUint32(&extent.toStringEnd));
-    MOZ_TRY(xdr->codeUint32(&extent.lineno));
-    MOZ_TRY(xdr->codeUint32(&extent.column));
-
+    MOZ_TRY(XDRSourceExtent(xdr, &extent));
     MOZ_TRY(xdr->codeUint32(&immutableFlags));
     MOZ_TRY(xdr->codeUint32(&ngcthings));
 
