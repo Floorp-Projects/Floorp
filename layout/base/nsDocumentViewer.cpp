@@ -403,6 +403,8 @@ class nsDocumentViewer final : public nsIContentViewer,
 
   nsresult PrintPreviewScrollToPageForOldUI(int16_t aType, int32_t aPageNum);
 
+  int32_t GetCurrentPageNumberInPrintPreview() const;
+
  protected:
   // Returns the current viewmanager.  Might be null.
   nsViewManager* GetViewManager();
@@ -3404,38 +3406,32 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
-  NS_ENSURE_ARG_POINTER(aNumber);
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-  if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview()) {
-    return NS_ERROR_FAILURE;
+int32_t nsDocumentViewer::GetCurrentPageNumberInPrintPreview() const {
+  MOZ_ASSERT(mPrintJob);
+  MOZ_ASSERT(GetIsPrintPreview() && !mPrintJob->GetIsCreatingPrintPreview());
+
+  // in PP mPrtPreview->mPrintObject->mSeqFrame is null
+  auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
+  if (!seqFrame) {
+    return 0;
   }
 
   nsIScrollableFrame* sf =
       mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
   if (!sf) {
     // No scrollable contents, returns 1 even if there are multiple pages.
-    *aNumber = 1;
-    return NS_OK;
-  }
-
-  // in PP mPrtPreview->mPrintObject->mSeqFrame is null
-  auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
-  Unused << pageCount;
-  if (!seqFrame) {
-    return NS_ERROR_FAILURE;
+    return 1;
   }
 
   nsPoint currentScrollPosition = sf->GetScrollPosition();
   float halfwayPoint =
       currentScrollPosition.y + float(sf->GetScrollPortRect().height) / 2.0f;
   float lastDistanceFromHalfwayPoint = std::numeric_limits<float>::max();
-  *aNumber = 0;
+  int32_t pageNumber = 0;
   float previewScale = seqFrame->GetPrintPreviewScale();
   for (const nsIFrame* sheetFrame : seqFrame->PrincipalChildList()) {
     nsRect sheetRect = sheetFrame->GetRect();
-    (*aNumber)++;
+    pageNumber++;
 
     float bottomOfSheet = sheetRect.YMost() * previewScale;
     if (bottomOfSheet < halfwayPoint) {
@@ -3458,13 +3454,31 @@ nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
     if ((topOfSheet - halfwayPoint) >= lastDistanceFromHalfwayPoint) {
       // If the previous page distance is less than or equal to the current page
       // distance, choose the previous one as the current.
-      (*aNumber)--;
-      MOZ_ASSERT(*aNumber > 0);
+      pageNumber--;
+      MOZ_ASSERT(pageNumber > 0);
     }
     break;
   }
 
-  MOZ_ASSERT(*aNumber <= pageCount);
+  MOZ_ASSERT(pageNumber <= pageCount);
+  return pageNumber;
+}
+
+NS_IMETHODIMP
+nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
+  NS_ENSURE_ARG_POINTER(aNumber);
+  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
+  if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t currentPageNumber = GetCurrentPageNumberInPrintPreview();
+  if (!currentPageNumber) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aNumber = currentPageNumber;
+
   return NS_OK;
 }
 
