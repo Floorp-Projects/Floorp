@@ -56,8 +56,7 @@ class DownloadView(
 
     fun update(state: DownloadFragmentState) {
 
-        view.swipe_refresh.isEnabled =
-            state.mode === DownloadFragmentState.Mode.Normal
+        view.swipe_refresh.isEnabled = false
         mode = state.mode
 
         updateEmptyState(state.items.isNotEmpty())
