@@ -1,4 +1,4 @@
-4.27
+4.28
 
 # The first line of this file must contain the human readable NSPR
 # version number, which is the minimum required version of NSPR
