@@ -350,14 +350,19 @@ SearchSuggestionController.prototype = {
         "@mozilla.org/autocomplete/search;1?name=form-history"
       ].createInstance(Ci.nsIAutoCompleteSearch);
       let params = this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM;
+      let options = null;
       if (source) {
-        params += "\x1Fsource=" + source;
+        options = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+          Ci.nsIWritablePropertyBag2
+        );
+        options.setPropertyAsAUTF8String("source", source);
       }
       formHistory.startSearch(
         searchTerm,
         params,
         this._formHistoryResult,
-        acSearchObserver
+        acSearchObserver,
+        options
       );
     });
   },
