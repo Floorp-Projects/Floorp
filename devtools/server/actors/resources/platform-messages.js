@@ -22,9 +22,10 @@ class PlatformMessageWatcher extends nsIConsoleListenerWatcher {
    * Returns true if the message is considered a platform message, and as a result, should
    * be sent to the client.
    *
+   * @param {TargetActor} targetActor
    * @param {nsIConsoleMessage} message
    */
-  shouldHandleMessage(message) {
+  shouldHandleMessage(targetActor, message) {
     // The listener we use can be called either with a nsIConsoleMessage or as nsIScriptError.
     // In this file, we want to ignore nsIScriptError, which are handled by the
     // error-messages resource handler (See Bug 1644186).
