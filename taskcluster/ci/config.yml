@@ -641,19 +641,3 @@ mac-notarization:
                     production: security/mac/hardenedruntime/production.entitlements.xml
                     default: security/mac/hardenedruntime/developer.entitlements.xml
             default: ''
-
-expiration-policies:
-    by-project:
-        try:
-            default: 1 month
-            medium: 1 month
-            long: 1 month
-        autoland:
-            default: 1 month
-            medium: 1 year
-            # To avoid keeping shippable builds for over a year
-            long: 1 year
-        default:
-            default: 3 months
-            medium: 1 year
-            long: 3 years

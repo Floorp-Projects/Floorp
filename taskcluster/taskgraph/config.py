@@ -121,7 +121,6 @@ graph_config_schema = Schema({
         ): text_type,
         Optional('decision-parameters'): text_type,
     },
-    Required("expiration-policies"): optionally_keyed_by("project", {text_type: text_type}),
 })
 
 

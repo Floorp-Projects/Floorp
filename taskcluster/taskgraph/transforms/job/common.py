@@ -10,7 +10,6 @@ consistency.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.util.taskcluster import get_artifact_prefix
-from taskgraph.util.keyed_by import evaluate_keyed_by
 
 SECRET_SCOPE = 'secrets:get:project/releng/{trust_domain}/{kind}/level-{level}/{secret}'
 
@@ -51,12 +50,11 @@ def add_cache(job, taskdesc, name, mount_point, skip_untrusted=False):
 
 
 def add_artifacts(config, job, taskdesc, path):
-    a = {
+    taskdesc['worker'].setdefault('artifacts', []).append({
         'name': get_artifact_prefix(taskdesc),
         'path': path,
         'type': 'directory',
-    }
-    taskdesc['worker'].setdefault('artifacts', []).append(a)
+    })
 
 
 def docker_worker_add_artifacts(config, job, taskdesc):
@@ -224,11 +222,3 @@ def add_tooltool(config, job, taskdesc, internal=False):
         taskdesc['scopes'].extend([
             'project:releng:services/tooltool/api/download/internal',
         ])
-
-
-def get_expiration(config, policy='default'):
-    expires = evaluate_keyed_by(
-        config.graph_config["expiration-policies"], 'artifact expiration',
-        {'project': config.params['project']}
-    )[policy]
-    return expires
