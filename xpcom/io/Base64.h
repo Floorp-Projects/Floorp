@@ -27,10 +27,24 @@ namespace mozilla {
 [[nodiscard]] nsresult Base64EncodeAppend(const char* aBinary,
                                           uint32_t aBinaryLen,
                                           nsAString& aBase64);
+[[nodiscard]] nsresult Base64EncodeAppend(const char* aBinary,
+                                          uint32_t aBinaryLen,
+                                          nsACString& aBase64);
+[[nodiscard]] nsresult Base64EncodeAppend(const nsACString& aBinary,
+                                          nsACString& aBase64);
+[[nodiscard]] nsresult Base64EncodeAppend(const nsACString& aBinary,
+                                          nsAString& aBase64);
+
 [[nodiscard]] nsresult Base64Encode(const char* aBinary, uint32_t aBinaryLen,
                                     char** aBase64);
+[[nodiscard]] nsresult Base64Encode(const char* aBinary, uint32_t aBinaryLen,
+                                    nsACString& aBase64);
+[[nodiscard]] nsresult Base64Encode(const char* aBinary, uint32_t aBinaryLen,
+                                    nsAString& aBase64);
 [[nodiscard]] nsresult Base64Encode(const nsACString& aBinary,
                                     nsACString& aBase64);
+[[nodiscard]] nsresult Base64Encode(const nsACString& aBinary,
+                                    nsAString& aBase64);
 
 // The high bits of any characters in aBinary are dropped.
 [[nodiscard]] nsresult Base64Encode(const nsAString& aBinary,

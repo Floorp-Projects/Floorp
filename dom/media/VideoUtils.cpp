@@ -468,7 +468,7 @@ nsresult GenerateRandomName(nsCString& aOutSalt, uint32_t aLength) {
   rv = rg->GenerateRandomBytes(requiredBytesLength, &buffer);
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoCString temp;
+  nsCString temp;
   nsDependentCSubstring randomData(reinterpret_cast<const char*>(buffer),
                                    requiredBytesLength);
   rv = Base64Encode(randomData, temp);
@@ -476,7 +476,7 @@ nsresult GenerateRandomName(nsCString& aOutSalt, uint32_t aLength) {
   buffer = nullptr;
   if (NS_FAILED(rv)) return rv;
 
-  aOutSalt = temp;
+  aOutSalt = std::move(temp);
   return NS_OK;
 }
 

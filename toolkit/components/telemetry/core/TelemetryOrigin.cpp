@@ -522,8 +522,8 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
         return rv;
       }
 
-      prioData.AppendElement(
-          std::make_pair(encodingName, std::make_pair(aBase64, bBase64)));
+      prioData.EmplaceBack(std::move(encodingName),
+                           std::pair(std::move(aBase64), std::move(bBase64)));
     }
   }
 

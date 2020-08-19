@@ -127,9 +127,10 @@ TEST(PrincipalSerialization, ExpandedPrincipal)
   nsAutoCString JSON;
   rv = BasePrincipal::Cast(result)->ToJSON(JSON);
   ASSERT_EQ(rv, NS_OK);
-  ASSERT_TRUE(JSON.EqualsLiteral(
+  ASSERT_STREQ(
+      JSON.get(),
       "{\"2\":{\"0\":\"eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEuY29tLyJ9fQ==,"
-      "eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEub3JnLyJ9fQ==\"}}"));
+      "eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEub3JnLyJ9fQ==\"}}");
 
   nsCOMPtr<nsIPrincipal> returnedPrincipal = BasePrincipal::FromJSON(JSON);
   auto outPrincipal = BasePrincipal::Cast(returnedPrincipal);
@@ -189,10 +190,11 @@ TEST(PrincipalSerialization, ExpandedPrincipalOA)
   nsAutoCString JSON;
   rv = BasePrincipal::Cast(result)->ToJSON(JSON);
   ASSERT_EQ(rv, NS_OK);
-  ASSERT_TRUE(JSON.EqualsLiteral(
+  ASSERT_STREQ(
+      JSON.get(),
       "{\"2\":{\"0\":\"eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEuY29tLyJ9fQ==,"
       "eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEub3JnLyJ9fQ==\",\"1\":\"^"
-      "userContextId=1\"}}"));
+      "userContextId=1\"}}");
 
   nsCOMPtr<nsIPrincipal> returnedPrincipal = BasePrincipal::FromJSON(JSON);
   auto outPrincipal = BasePrincipal::Cast(returnedPrincipal);

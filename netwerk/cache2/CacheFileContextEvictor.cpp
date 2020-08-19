@@ -439,9 +439,6 @@ nsresult CacheFileContextEvictor::GetContextFile(
     const nsAString& aOrigin, nsIFile** _retval) {
   nsresult rv;
 
-  nsAutoCString leafName;
-  leafName.AssignLiteral(CONTEXT_EVICTION_PREFIX);
-
   nsAutoCString keyPrefix;
   if (aPinned) {
     // Mark pinned context files with a tab char at the start.
@@ -458,16 +455,16 @@ nsresult CacheFileContextEvictor::GetContextFile(
     keyPrefix.Append(NS_ConvertUTF16toUTF8(aOrigin));
   }
 
-  nsAutoCString data64;
-  rv = Base64Encode(keyPrefix, data64);
+  nsAutoCString leafName;
+  leafName.AssignLiteral(CONTEXT_EVICTION_PREFIX);
+
+  rv = Base64EncodeAppend(keyPrefix, leafName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Replace '/' with '-' since '/' cannot be part of the filename.
-  data64.ReplaceChar('/', '-');
-
-  leafName.Append(data64);
+  leafName.ReplaceChar('/', '-');
 
   nsCOMPtr<nsIFile> file;
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
