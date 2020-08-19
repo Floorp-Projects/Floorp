@@ -222,7 +222,7 @@ private fun assertLibrariesUsed() {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
 
-    onView(withId(R.id.action_bar)).check(matches(hasDescendant(withText(containsString("Firefox Preview | OSS Libraries")))))
+    onView(withId(R.id.toolbar)).check(matches(hasDescendant(withText(containsString("Firefox Preview | OSS Libraries")))))
     Espresso.pressBack()
 }
 
