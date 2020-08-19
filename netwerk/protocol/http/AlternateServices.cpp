@@ -831,11 +831,11 @@ TransactionObserver::OnDataAvailable(nsIRequest* aRequest,
   uint32_t oldLen = mWKResponse.Length();
   uint64_t newLen = aCount + oldLen;
   if (newLen < MAX_WK) {
-    auto handleOrErr = mWKResponse.BulkWrite(newLen, oldLen, false);
-    if (handleOrErr.isErr()) {
-      return handleOrErr.unwrapErr();
+    nsresult rv;
+    auto handle = mWKResponse.BulkWrite(newLen, oldLen, false, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-    auto handle = handleOrErr.unwrap();
     uint32_t amtRead;
     if (NS_SUCCEEDED(
             aStream->Read(handle.Elements() + oldLen, aCount, &amtRead))) {

@@ -9,7 +9,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Printf.h"
-#include "mozilla/ResultExtensions.h"
 
 #include "nsASCIIMask.h"
 
@@ -64,13 +63,15 @@ inline const nsTAutoString<T>* AsAutoString(const nsTSubstring<T>* aStr) {
 }
 
 template <typename T>
-mozilla::Result<mozilla::BulkWriteHandle<T>, nsresult>
-nsTSubstring<T>::BulkWrite(size_type aCapacity, size_type aPrefixToPreserve,
-                           bool aAllowShrinking) {
+mozilla::BulkWriteHandle<T> nsTSubstring<T>::BulkWrite(
+    size_type aCapacity, size_type aPrefixToPreserve, bool aAllowShrinking,
+    nsresult& aRv) {
   auto r = StartBulkWriteImpl(aCapacity, aPrefixToPreserve, aAllowShrinking);
   if (MOZ_UNLIKELY(r.isErr())) {
-    return r.propagateErr();
+    aRv = r.unwrapErr();
+    return mozilla::BulkWriteHandle<T>(nullptr, 0);
   }
+  aRv = NS_OK;
   return mozilla::BulkWriteHandle<T>(this, r.unwrap());
 }
 

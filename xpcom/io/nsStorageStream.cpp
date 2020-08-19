@@ -589,10 +589,8 @@ void nsStorageInputStream::SerializeInternal(InputStreamParams& aParams,
   rv = Tell(&offset);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  auto handleOrErr = combined.BulkWrite(remaining, 0, false);
-  MOZ_ASSERT(!handleOrErr.isErr());
-
-  auto handle = handleOrErr.unwrap();
+  auto handle = combined.BulkWrite(remaining, 0, false, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   uint32_t numRead = 0;
 
