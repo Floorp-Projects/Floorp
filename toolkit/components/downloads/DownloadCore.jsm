@@ -2231,6 +2231,9 @@ DownloadCopySaver.prototype = {
             uri: download.source.url,
             contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
             loadingPrincipal: download.source.loadingPrincipal,
+            // triggeringPrincipal must be the system principal to prevent the
+            // request from being mistaken as a third-party request.
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
             securityFlags:
               Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
           });
@@ -2257,6 +2260,9 @@ DownloadCopySaver.prototype = {
         // and also prevents its caching.
         if (channel instanceof Ci.nsIHttpChannelInternal) {
           channel.channelIsForDownload = true;
+
+          // Include cookies even if cookieBehavior is BEHAVIOR_REJECT_FOREIGN.
+          channel.forceAllowThirdPartyCookie = true;
         }
 
         if (

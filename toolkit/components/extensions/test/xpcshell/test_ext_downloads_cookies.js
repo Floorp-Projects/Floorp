@@ -163,15 +163,13 @@ add_task(async function download_cookies_without_host_permissions() {
 
   equal(
     await downloadAndGetCookies(extension, "http://example.net/download"),
-    // TODO bug 1655190: should be "c_none=1; c_lax=1; c_strict=1"
-    "c_none=1; c_lax=1",
+    "c_none=1; c_lax=1; c_strict=1",
     "Cookies for downloads.download without host permissions"
   );
 
   equal(
     await downloadAndGetCookies(extension, "http://itisatracker.org/download"),
-    // TODO bug 1655190: should be "c_none=1; c_lax=1; c_strict=1"
-    "",
+    "c_none=1; c_lax=1; c_strict=1",
     "Cookies for downloads.download of itisatracker.org"
   );
 
@@ -180,8 +178,7 @@ add_task(async function download_cookies_without_host_permissions() {
     async () => {
       equal(
         await downloadAndGetCookies(extension, "http://example.net/download"),
-        // TODO bug 1655190: should be "c_none=1; c_lax=1; c_strict=1"
-        "",
+        "c_none=1; c_lax=1; c_strict=1",
         "Cookies for downloads.download with all third-party cookies disabled"
       );
     }
