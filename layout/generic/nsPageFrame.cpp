@@ -57,18 +57,21 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   }
 
   nsIFrame* frame = mFrames.FirstChild();
-  nsSize maxSize = aPresContext->GetPageSize();
-  float scale = aPresContext->GetPageScale();
   // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
   // a single page to print selection. So this means we want to use
-  // NS_UNCONSTRAINEDSIZE without altering it.
-  //
-  // FIXME(emilio): Is this still true?
+  // NS_UNCONSTRAINEDSIZE without altering it
+  nscoord avHeight;
+  if (mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE) {
+    avHeight = NS_UNCONSTRAINEDSIZE;
+  } else {
+    avHeight = mPD->mReflowSize.height;
+  }
+  nsSize maxSize(mPD->mReflowSize.width, avHeight);
+  float scale = aPresContext->GetPageScale();
   maxSize.width = NSToCoordCeil(maxSize.width / scale);
   if (maxSize.height != NS_UNCONSTRAINEDSIZE) {
     maxSize.height = NSToCoordCeil(maxSize.height / scale);
   }
-
   // Get the number of Twips per pixel from the PresContext
   const nscoord onePixel = AppUnitsPerCSSPixel();
 
@@ -91,8 +94,7 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   const auto& marginStyle = kidReflowInput.mStyleMargin->mMargin;
   for (const auto side : mozilla::AllPhysicalSides()) {
     if (marginStyle.Get(side).IsAuto()) {
-      mPageContentMargin.Side(side) =
-          aPresContext->GetDefaultPageMargin().Side(side);
+      mPageContentMargin.Side(side) = mPD->mReflowMargin.Side(side);
     } else {
       mPageContentMargin.Side(side) =
           kidReflowInput.ComputedPhysicalMargin().Side(side);
@@ -110,7 +112,9 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   // Check the width and height, if they're too small we reset the margins
   // back to the default.
   if (maxWidth < onePixel || maxHeight < onePixel) {
-    mPageContentMargin = aPresContext->GetDefaultPageMargin();
+    for (const auto side : mozilla::AllPhysicalSides()) {
+      mPageContentMargin.Side(side) = mPD->mReflowMargin.Side(side);
+    }
     maxWidth = maxSize.width - mPageContentMargin.LeftRight() / scale;
     if (maxHeight != NS_UNCONSTRAINEDSIZE) {
       maxHeight = maxSize.height - mPageContentMargin.TopBottom() / scale;
@@ -489,9 +493,9 @@ static void PaintMarginGuides(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                        /* dash offset */ 0.0f);
   DrawOptions options;
 
-  // FIXME(emilio, bug 1659834): Shouldn't this use the page-specific margins,
-  // which account for @page?
-  const nsMargin& margin = aFrame->PresContext()->GetDefaultPageMargin();
+  auto* pageData = static_cast<nsPageFrame*>(aFrame)->GetSharedPageData();
+  MOZ_ASSERT(pageData, "Should have page data by the time we're painting");
+  const nsMargin& margin = pageData->mReflowMargin;
   int32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
 
   // Get the frame's rect and inset by the margins to get the edges of the
@@ -537,11 +541,8 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // y-value matches the top edge of the current page.  So, to clip to the
     // current page's content (in coordinates *relative* to the page content
     // frame), we just negate its y-position and add the top margin.
-    //
-    // FIXME(emilio): Rather than the default margin, this should probably use
-    // mPageContentMargin?
-    clipRect.y = NSToCoordCeil(
-        (-child->GetRect().y + pc->GetDefaultPageMargin().top) / scale);
+    clipRect.y =
+        NSToCoordCeil((-child->GetRect().y + mPD->mReflowMargin.top) / scale);
     clipRect.height = expectedPageContentHeight;
     NS_ASSERTION(clipRect.y < child->GetSize().height,
                  "Should be clipping to region inside the page content bounds");

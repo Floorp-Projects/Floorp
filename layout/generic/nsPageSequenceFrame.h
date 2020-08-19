@@ -39,6 +39,8 @@ class nsSharedPageData {
   nsString mDocURL;
   nsFont mHeadFootFont;
 
+  nsSize mReflowSize;
+  nsMargin mReflowMargin;
   // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX
   // and 0 elsewhere; I think it has to do with some inconsistency in page size
   // computations
@@ -130,6 +132,8 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   void DetermineWhetherToPrintPage();
   nsIFrame* GetCurrentPageFrame();
 
+  nsMargin mMargin;
+
   nsSize mSize;
 
   // These next two LogicalSize members are used when we're in print-preview to
@@ -152,6 +156,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   // Async Printing
   int32_t mPageNum;
   int32_t mTotalPages;
+  int32_t mPrintRangeType;
   int32_t mFromPageNum;
   int32_t mToPageNum;
 
