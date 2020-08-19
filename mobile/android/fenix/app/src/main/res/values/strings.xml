@@ -300,6 +300,8 @@
     <string name="preferences_external_download_manager">External download manager</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Notifications</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

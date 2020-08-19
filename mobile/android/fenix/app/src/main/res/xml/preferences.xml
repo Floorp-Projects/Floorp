@@ -110,6 +110,11 @@
             android:title="@string/preferences_delete_browsing_data_on_quit" />
 
         <androidx.preference.Preference
+            android:icon="@drawable/ic_notifications"
+            android:key="@string/pref_key_notifications"
+            android:title="@string/preferences_notifications" />
+
+        <androidx.preference.Preference
             android:icon="@drawable/ic_data_collection"
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_collection" />

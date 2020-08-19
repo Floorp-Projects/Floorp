@@ -270,6 +270,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_delete_browsing_data_on_quit_preference) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
             }
+            resources.getString(R.string.pref_key_notifications) -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    startActivity(intent)
+                }
+                null
+            }
             resources.getString(R.string.pref_key_customize) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToCustomizationFragment()
             }
@@ -352,6 +359,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>(
             getPreferenceKey(R.string.pref_key_debug_settings)
         )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
+
+        findPreference<Preference>(
+            getPreferenceKey(R.string.pref_key_notifications)
+        )?.isVisible = requireContext().settings().showNotificationsSetting
     }
 
     private fun getClickListenerForMakeDefaultBrowser(): Preference.OnPreferenceClickListener {

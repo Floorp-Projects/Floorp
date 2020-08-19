@@ -279,6 +279,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                         !trackingProtectionOnboardingShownThisSession)
 
     var showSecretDebugMenuThisSession = false
+    var showNotificationsSetting = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
     val shouldShowSecurityPinWarningSync: Boolean
         get() = loginsSecureWarningSyncCount < showLoginsSecureWarningSyncMaxCount
