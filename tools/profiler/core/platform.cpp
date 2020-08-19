@@ -3848,6 +3848,12 @@ static ProfilingStack* locked_register_thread(PSLockRef aLock,
     }
   }
 
+  MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(aLock),
+                     "TLS should be set when registering thread");
+  MOZ_RELEASE_ASSERT(
+      registeredThread == TLSRegisteredThread::RegisteredThread(aLock),
+      "TLS should be set as expected when registering thread");
+
   ProfilingStack* profilingStack =
       &registeredThread->RacyRegisteredThread().ProfilingStack();
 
@@ -5081,6 +5087,12 @@ ProfilingStack* profiler_register_thread(const char* aName,
         "profiler_register_thread again",
         TextMarkerPayload(text, TimeStamp::NowUnfuzzed()), &lock);
 
+    MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock),
+                       "TLS should be set when re-registering thread");
+    MOZ_RELEASE_ASSERT(
+        thread == TLSRegisteredThread::RegisteredThread(lock),
+        "TLS should be set as expected when re-registering thread");
+
     return &thread->RacyRegisteredThread().ProfilingStack();
   }
 
@@ -5103,11 +5115,14 @@ void profiler_unregister_thread() {
   // We don't call RegisteredThread::StopJSSampling() here; there's no point
   // doing that for a JS thread that is in the process of disappearing.
 
-  RegisteredThread* registeredThread = FindCurrentThreadRegisteredThread(lock);
-  if (registeredThread) {
-    MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock));
-    MOZ_RELEASE_ASSERT(registeredThread ==
-                       TLSRegisteredThread::RegisteredThread(lock));
+  if (RegisteredThread* registeredThread =
+          FindCurrentThreadRegisteredThread(lock);
+      registeredThread) {
+    MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock),
+                       "TLS should be set when un-registering thread");
+    MOZ_RELEASE_ASSERT(
+        registeredThread == TLSRegisteredThread::RegisteredThread(lock),
+        "TLS should be set as expected when un-registering thread");
     RefPtr<ThreadInfo> info = registeredThread->Info();
 
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
@@ -5121,12 +5136,14 @@ void profiler_unregister_thread() {
     // thread is unregistering itself and won't need the ProfilingStack anymore.
     TLSRegisteredThread::ResetRegisteredThread(lock);
     TLSRegisteredThread::ResetAutoProfilerLabelProfilingStack(lock);
-    MOZ_RELEASE_ASSERT(!TLSRegisteredThread::RegisteredThread(lock));
 
     // Remove the thread from the list of registered threads. This deletes the
     // registeredThread object.
     CorePS::RemoveRegisteredThread(lock, registeredThread);
     MOZ_RELEASE_ASSERT(!FindCurrentThreadRegisteredThread(lock));
+    MOZ_RELEASE_ASSERT(
+        !TLSRegisteredThread::RegisteredThread(lock),
+        "TLS should have been reset after un-registering thread");
   } else {
     LOG("profiler_unregister_thread() - thread %d already unregistered",
         profiler_current_thread_id());
@@ -5150,7 +5167,9 @@ void profiler_unregister_thread() {
     //   (Whether or not it should, this does happen in practice.)
     //
     // Either way, TLSRegisteredThread should be empty.
-    MOZ_RELEASE_ASSERT(!TLSRegisteredThread::RegisteredThread(lock));
+    MOZ_RELEASE_ASSERT(
+        !TLSRegisteredThread::RegisteredThread(lock),
+        "TLS should have been reset when thread was previously un-registered");
   }
 }
 
