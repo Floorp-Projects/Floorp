@@ -537,7 +537,10 @@ var tests = [
     Cr.NS_ERROR_INVALID_ARG,
   ],
 
-  ["attachment; filename=foo extension=bla", "attachment", "foo"],
+  // Bug 1440677 - spaces inside filenames ought to be quoted, but too many
+  // servers do the wrong thing and most browsers accept this, so we were
+  // forced to do the same for compat.
+  ["attachment; filename=foo extension=bla", "attachment", "foo extension=bla"],
 
   ["attachment filename=foo", "attachment", Cr.NS_ERROR_INVALID_ARG],
 
@@ -555,6 +558,27 @@ var tests = [
 
   // Bug 1412213 - do continue to parse, behind a parameter w/o =
   ["attachment; badparameter; filename=foo", "attachment", "foo"],
+
+  // Bug 1440677 - spaces inside filenames ought to be quoted, but too many
+  // servers do the wrong thing and most browsers accept this, so we were
+  // forced to do the same for compat.
+  ["attachment; filename=foo bar.html", "attachment", "foo bar.html"],
+  // Note: we keep the tab character, but later validation will replace with a space,
+  // as file systems do not like tab characters.
+  ["attachment; filename=foo\tbar.html", "attachment", "foo\tbar.html"],
+  // Newlines get stripped completely (in practice, http header parsing may
+  // munge these into spaces before they get to us, but we should check we deal
+  // with them either way):
+  ["attachment; filename=foo\nbar.html", "attachment", "foobar.html"],
+  ["attachment; filename=foo\r\nbar.html", "attachment", "foobar.html"],
+  ["attachment; filename=foo\rbar.html", "attachment", "foobar.html"],
+
+  // Trailing rubbish shouldn't matter:
+  ["attachment; filename=foo bar; garbage", "attachment", "foo bar"],
+  ["attachment; filename=foo bar; extension=blah", "attachment", "foo bar"],
+
+  // Check that whitespace processing can't crash.
+  ["attachment; filename =      ", "attachment", ""],
 ];
 
 var rfc5987paramtests = [
