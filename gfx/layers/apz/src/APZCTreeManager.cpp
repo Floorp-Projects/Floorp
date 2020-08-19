@@ -28,7 +28,8 @@
 #include "mozilla/layers/APZSampler.h"      // for APZSampler
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
 #include "mozilla/layers/APZUpdater.h"      // for APZUpdater
-#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
+#include "mozilla/layers/APZUtils.h"        // for AsyncTransform
+#include "mozilla/layers/AsyncCompositionManager.h"  // for AsyncCompositionManager
 #include "mozilla/layers/AsyncDragMetrics.h"         // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent, etc
 #include "mozilla/layers/LayerMetricsWrapper.h"

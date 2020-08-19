@@ -66,10 +66,10 @@
 #include "mozilla/gfx/Rect.h"               // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"        // for ScaleFactor
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
-#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
-#include "mozilla/layers/AxisPhysicsModel.h"         // for AxisPhysicsModel
-#include "mozilla/layers/AxisPhysicsMSDModel.h"      // for AxisPhysicsMSDModel
-#include "mozilla/layers/CompositorController.h"     // for CompositorController
+#include "mozilla/layers/APZUtils.h"        // for AsyncTransform
+#include "mozilla/layers/AxisPhysicsModel.h"      // for AxisPhysicsModel
+#include "mozilla/layers/AxisPhysicsMSDModel.h"   // for AxisPhysicsMSDModel
+#include "mozilla/layers/CompositorController.h"  // for CompositorController
 #include "mozilla/layers/DirectionUtils.h"  // for GetAxis{Start,End,Length,Scale}
 #include "mozilla/layers/LayerTransactionParent.h"  // for LayerTransactionParent
 #include "mozilla/layers/MetricsSharingController.h"  // for MetricsSharingController

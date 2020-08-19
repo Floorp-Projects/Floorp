@@ -15,17 +15,17 @@
 #include "TiledLayerBuffer.h"  // for TiledLayerBuffer
 #include "Units.h"             // for CSSPoint
 #include "gfxTypes.h"
-#include "mozilla/Attributes.h"                      // for override
-#include "mozilla/gfx/2D.h"                          // for gfx::Tile
-#include "mozilla/RefPtr.h"                          // for RefPtr
-#include "mozilla/ipc/Shmem.h"                       // for Shmem
-#include "mozilla/ipc/SharedMemory.h"                // for SharedMemory
-#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
-#include "mozilla/layers/CompositableClient.h"       // for CompositableClient
-#include "mozilla/layers/CompositorTypes.h"          // for TextureInfo, etc
-#include "mozilla/layers/LayersMessages.h"           // for TileDescriptor
-#include "mozilla/layers/LayersTypes.h"              // for TextureDumpMode
-#include "mozilla/layers/PaintThread.h"  // for CapturedTiledPaintState
+#include "mozilla/Attributes.h"                 // for override
+#include "mozilla/gfx/2D.h"                     // for gfx::Tile
+#include "mozilla/RefPtr.h"                     // for RefPtr
+#include "mozilla/ipc/Shmem.h"                  // for Shmem
+#include "mozilla/ipc/SharedMemory.h"           // for SharedMemory
+#include "mozilla/layers/APZUtils.h"            // for AsyncTransform
+#include "mozilla/layers/CompositableClient.h"  // for CompositableClient
+#include "mozilla/layers/CompositorTypes.h"     // for TextureInfo, etc
+#include "mozilla/layers/LayersMessages.h"      // for TileDescriptor
+#include "mozilla/layers/LayersTypes.h"         // for TextureDumpMode
+#include "mozilla/layers/PaintThread.h"         // for CapturedTiledPaintState
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureClientPool.h"
 #include "ClientLayerManager.h"

@@ -24,8 +24,8 @@
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticFlags::CONTAINER
 #include "mozilla/layers/Effects.h"          // for Effect, EffectChain, etc
 #include "mozilla/layers/TextureHost.h"      // for CompositingRenderTarget
-#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
-#include "mozilla/layers/LayerMetricsWrapper.h"      // for LayerMetricsWrapper
+#include "mozilla/layers/APZUtils.h"         // for AsyncTransform
+#include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
 #include "mozilla/layers/LayersHelpers.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc
 #include "mozilla/RefPtr.h"    // for nsRefPtr

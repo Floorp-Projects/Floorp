@@ -8,8 +8,7 @@
 #include "LayersLogging.h"           // for Stringify
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/Point.h"        // for Point4D
-#include "mozilla/layers/APZUtils.h"  // for CompleteAsyncTransform
-#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform::operator Matrix4x4()
+#include "mozilla/layers/APZUtils.h"  // for AsyncTransform, CompleteAsyncTransform
 #include "mozilla/layers/AsyncDragMetrics.h"  // for AsyncDragMetrics
 #include "nsPrintfCString.h"                  // for nsPrintfCString
 #include "UnitTransforms.h"                   // for ViewAs
