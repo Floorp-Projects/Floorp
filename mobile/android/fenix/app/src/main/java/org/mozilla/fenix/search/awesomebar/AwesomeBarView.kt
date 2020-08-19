@@ -19,6 +19,7 @@ import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.syncedtabs.DeviceIndicators
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.feature.tabs.TabsUseCases
@@ -130,7 +131,12 @@ class AwesomeBarView(
             SyncedTabsStorageSuggestionProvider(
                 components.backgroundServices.syncedTabsStorage,
                 components.useCases.tabsUseCases.addTab,
-                components.core.icons
+                components.core.icons,
+                DeviceIndicators(
+                    getDrawable(activity, R.drawable.ic_search_results_device_desktop),
+                    getDrawable(activity, R.drawable.ic_search_results_device_mobile),
+                    getDrawable(activity, R.drawable.ic_search_results_device_tablet)
+                )
             )
 
         val searchBitmap = getDrawable(activity, R.drawable.ic_search)!!.apply {
