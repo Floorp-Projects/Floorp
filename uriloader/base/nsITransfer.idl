@@ -15,10 +15,6 @@ webidl BrowsingContext;
 [scriptable, uuid(37ec75d3-97ad-4da8-afaa-eabe5b4afd73)]
 interface nsITransfer : nsIWebProgressListener2 {
 
-    const unsigned long DOWNLOAD_ACCEPTABLE = 0;
-    const unsigned long DOWNLOAD_FORBIDDEN = 1;
-    const unsigned long DOWNLOAD_POTENTIALLY_UNSAFE = 2;
-
     /**
      * Initializes the transfer with certain properties.  This function must
      * be called prior to accessing any properties on this interface.
@@ -55,8 +51,6 @@ interface nsITransfer : nsIWebProgressListener2 {
      *                   If true, indicates that the transfer was initiated from
      *                   a source that desires privacy.
      *
-     * @param aDownloadClassification Indicates wheter the dowload is unwanted,
-     *                                should be considered dangerous or insecure. 
      */
     void init(in nsIURI aSource,
               in nsIURI aTarget,
@@ -65,8 +59,7 @@ interface nsITransfer : nsIWebProgressListener2 {
               in PRTime startTime,
               in nsIFile aTempFile,
               in nsICancelable aCancelable,
-              in boolean aIsPrivate,
-              in long aDownloadClassification);
+              in boolean aIsPrivate);
 
     /**
      * Same as init, but allows for passing the browsingContext
@@ -86,7 +79,6 @@ interface nsITransfer : nsIWebProgressListener2 {
                                  in nsIFile aTempFile,
                                  in nsICancelable aCancelable,
                                  in boolean aIsPrivate,
-                                 in long aDownloadClassification,
                                  in BrowsingContext aBrowsingContext,
                                  in boolean aHandleInternally);
 
