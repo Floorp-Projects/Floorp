@@ -83,9 +83,25 @@ function showTooltip(toolbox) {
   });
 }
 exports.showTooltip = showTooltip;
-
 function updateTooltipContent(toolbox) {
   const container = toolbox.doc.createElement("div");
+
+  /*
+   *  This is the grid we want to have:
+   *  +--------------------------------------------+---------------+
+   *  | Header text                                | Reset button  |
+   *  +------+-----------------------------+-------+---------------+
+   *  | Icon | Preference name             | Value | Toggle button |
+   *  +------+-----------------------------+-------+---------------+
+   *  | Icon | Preference name             | Value | Toggle button |
+   *  +------+-----------------------------+-------+---------------+
+   */
+  container.style.display = "grid";
+  container.style.gridTemplateColumns =
+    "max-content minmax(300px, auto) max-content max-content";
+  container.style.gridColumnGap = "8px";
+  container.style.gridTemplateRows = `repeat(${PREFERENCES.length + 1}, auto)`;
+  container.style.gridRowGap = "8px";
   container.style.padding = "12px";
   container.style.fontSize = "11px";
   container.classList.add("theme-body");
@@ -99,9 +115,11 @@ function updateTooltipContent(toolbox) {
    *  +-------------------------+--------------+
    */
   headerContainer.style.display = "grid";
-  headerContainer.style.gridTemplateColumns = "auto max-content";
+  headerContainer.style.gridTemplateColumns = "subgrid";
+  headerContainer.style.gridColumn = "1 / -1";
 
   const header = toolbox.doc.createElement("h1");
+  header.style.gridColumn = "1 / -2";
   header.style.fontSize = "11px";
   header.style.margin = "0";
   header.style.padding = "0";
@@ -119,6 +137,14 @@ function updateTooltipContent(toolbox) {
   headerContainer.append(header, resetButton);
 
   const prefList = toolbox.doc.createElement("ul");
+  prefList.style.display = "grid";
+  prefList.style.gridTemplateColumns = "subgrid";
+  prefList.style.gridTemplateRows = "subgrid";
+
+  // Subgrid should span all grid columns
+  prefList.style.gridColumn = "1 / -1";
+
+  prefList.style.gridRow = "2 / -1";
   prefList.style.listStyle = "none";
   prefList.style.margin = "0";
   prefList.style.padding = "0";
@@ -142,7 +168,7 @@ function createPreferenceListItem(toolbox, name, desc) {
 
   const prefEl = toolbox.doc.createElement("li");
   prefEl.classList.toggle("theme-comment", !isPrefEnabled);
-  prefEl.style.margin = "8px 0 0";
+  prefEl.style.margin = "0";
   prefEl.style.lineHeight = "12px";
 
   /**
@@ -154,24 +180,27 @@ function createPreferenceListItem(toolbox, name, desc) {
    */
   prefEl.style.display = "grid";
   prefEl.style.alignItems = "center";
-  prefEl.style.gridTemplateColumns =
-    "max-content minmax(300px, auto) max-content max-content";
-  prefEl.style.gridColumnGap = "8px";
+  prefEl.style.gridTemplateColumns = "subgrid";
+  prefEl.style.gridColumn = "1 / -1";
 
+  // Icon
   const prefInfo = toolbox.doc.createElement("div");
   prefInfo.title = desc;
   prefInfo.style.width = "12px";
   prefInfo.style.height = "12px";
   prefInfo.classList.add("fission-pref-icon");
 
+  // Preference name
   const prefTitle = toolbox.doc.createElement("span");
   prefTitle.textContent = name;
   prefTitle.style.userSelect = "text";
   prefTitle.style.fontWeight = isPrefEnabled ? "bold" : "normal";
 
+  // Value
   const prefValue = toolbox.doc.createElement("span");
   prefValue.textContent = isPrefEnabled;
 
+  // Toggle Button
   const toggleButton = toolbox.doc.createElement("button");
   toggleButton.addEventListener("click", () => {
     Services.prefs.setBoolPref(name, !isPrefEnabled);
