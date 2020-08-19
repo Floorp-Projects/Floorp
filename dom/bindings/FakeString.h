@@ -89,13 +89,15 @@ struct FakeString {
     return mozilla::Span{BeginWriting(), Length()};
   }
 
-  mozilla::Result<mozilla::BulkWriteHandle<CharT>, nsresult> BulkWrite(
-      size_type aCapacity, size_type aPrefixToPreserve, bool aAllowShrinking) {
+  mozilla::BulkWriteHandle<CharT> BulkWrite(size_type aCapacity,
+                                            size_type aPrefixToPreserve,
+                                            bool aAllowShrinking,
+                                            nsresult& aRv) {
     MOZ_ASSERT(!mDataInitialized);
     InitData(mStorage, 0);
     mDataFlags |= DataFlags::INLINE;
     return ToAStringPtr()->BulkWrite(aCapacity, aPrefixToPreserve,
-                                     aAllowShrinking);
+                                     aAllowShrinking, aRv);
   }
 
   // Reserve space to write aLength chars, not including null-terminator.

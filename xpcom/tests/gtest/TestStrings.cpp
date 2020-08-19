@@ -1388,14 +1388,12 @@ TEST_F(Strings, legacy_set_length_semantics) {
 #endif
 
 TEST_F(Strings, bulk_write) {
+  nsresult rv;
   nsCString s;
   const char* ptrTwoThousand;
   {
-    auto handleOrErr = s.BulkWrite(500, 0, true);
-    EXPECT_TRUE(handleOrErr.isOk());
-
-    auto handle = handleOrErr.unwrap();
-
+    auto handle = s.BulkWrite(500, 0, true, rv);
+    EXPECT_EQ(rv, NS_OK);
     auto span = handle.AsSpan();
     for (auto&& c : span) {
       c = 'a';
@@ -1420,10 +1418,11 @@ TEST_F(Strings, bulk_write) {
 }
 
 TEST_F(Strings, bulk_write_fail) {
+  nsresult rv;
   nsCString s;
   {
-    auto handleOrErr = s.BulkWrite(500, 0, true);
-    EXPECT_TRUE(handleOrErr.isOk());
+    auto handle = s.BulkWrite(500, 0, true, rv);
+    EXPECT_EQ(rv, NS_OK);
   }
   EXPECT_EQ(s.Length(), 3U);
   EXPECT_TRUE(s.Equals(u8"\uFFFD"));

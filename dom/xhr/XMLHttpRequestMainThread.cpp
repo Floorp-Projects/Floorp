@@ -518,12 +518,12 @@ nsresult XMLHttpRequestMainThread::AppendToResponseText(
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    auto handleOrErr = helper.BulkWrite(destBufferLen.value());
-    if (handleOrErr.isErr()) {
-      return handleOrErr.unwrapErr();
+    nsresult rv;
+    BulkWriteHandle<char16_t> handle =
+        helper.BulkWrite(destBufferLen.value(), rv);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-
-    auto handle = handleOrErr.unwrap();
 
     uint32_t result;
     size_t read;
