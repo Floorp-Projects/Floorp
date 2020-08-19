@@ -7,8 +7,10 @@ package org.mozilla.fenix.library.downloads
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
+import kotlinx.android.synthetic.main.component_downloads.*
 import kotlinx.android.synthetic.main.component_downloads.view.*
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
@@ -58,12 +60,22 @@ class DownloadView(
             state.mode === DownloadFragmentState.Mode.Normal
         mode = state.mode
 
+        updateEmptyState(state.items.isNotEmpty())
+
         downloadAdapter.updateMode(state.mode)
         downloadAdapter.updateDownloads(state.items)
 
         setUiForNormalMode(
             context.getString(R.string.library_downloads)
         )
+    }
+
+    fun updateEmptyState(userHasDownloads: Boolean) {
+        download_list.isVisible = userHasDownloads
+        download_empty_view.isVisible = !userHasDownloads
+        if (!userHasDownloads) {
+            download_empty_view.announceForAccessibility(context.getString(R.string.download_empty_message))
+        }
     }
 
     override fun onBackPressed(): Boolean {
