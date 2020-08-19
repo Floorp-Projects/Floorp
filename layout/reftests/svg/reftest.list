@@ -550,6 +550,7 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == use-children.svg pass.svg
 
 == use-element-shadow-tree-rule-matching.html pass.svg
+== use-image-01.svg pass.svg
 
 # test case for Fragment URLs
 # https://drafts.csswg.org/css-values/#local-urls
