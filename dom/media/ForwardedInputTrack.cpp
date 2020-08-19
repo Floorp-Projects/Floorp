@@ -66,6 +66,11 @@ void ForwardedInputTrack::RemoveInput(MediaInputPort* aPort) {
                this, listener.get(), aPort->GetSource()));
     source->RemoveDirectListenerImpl(listener);
   }
+
+  DisabledTrackMode oldMode = CombinedDisabledMode();
+  mInputDisabledMode = DisabledTrackMode::ENABLED;
+  NotifyIfDisabledModeChangedFrom(oldMode);
+
   mInputPort = nullptr;
   ProcessedMediaTrack::RemoveInput(aPort);
 }
@@ -75,6 +80,8 @@ void ForwardedInputTrack::SetInput(MediaInputPort* aPort) {
   MOZ_ASSERT(aPort->GetSource());
   MOZ_ASSERT(aPort->GetSource()->GetData());
   MOZ_ASSERT(!mInputPort);
+  MOZ_ASSERT(mInputDisabledMode == DisabledTrackMode::ENABLED);
+
   mInputPort = aPort;
 
   for (const auto& listener : mOwnedDirectListeners) {
@@ -84,6 +91,10 @@ void ForwardedInputTrack::SetInput(MediaInputPort* aPort) {
                                 this, listener.get(), aPort->GetSource()));
     source->AddDirectListenerImpl(do_AddRef(listener));
   }
+
+  DisabledTrackMode oldMode = CombinedDisabledMode();
+  mInputDisabledMode = mInputPort->GetSource()->CombinedDisabledMode();
+  NotifyIfDisabledModeChangedFrom(oldMode);
 }
 
 void ForwardedInputTrack::ProcessInputImpl(MediaTrack* aSource,
@@ -170,6 +181,18 @@ void ForwardedInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 }
 
+DisabledTrackMode ForwardedInputTrack::CombinedDisabledMode() const {
+  if (mDisabledMode == DisabledTrackMode::SILENCE_BLACK ||
+      mInputDisabledMode == DisabledTrackMode::SILENCE_BLACK) {
+    return DisabledTrackMode::SILENCE_BLACK;
+  }
+  if (mDisabledMode == DisabledTrackMode::SILENCE_FREEZE ||
+      mInputDisabledMode == DisabledTrackMode::SILENCE_FREEZE) {
+    return DisabledTrackMode::SILENCE_FREEZE;
+  }
+  return DisabledTrackMode::ENABLED;
+}
+
 void ForwardedInputTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
   bool enabled = aMode == DisabledTrackMode::ENABLED;
   TRACK_LOG(LogLevel::Info, ("ForwardedInputTrack %p was explicitly %s", this,
@@ -190,6 +213,21 @@ void ForwardedInputTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
     }
   }
   MediaTrack::SetDisabledTrackModeImpl(aMode);
+}
+
+void ForwardedInputTrack::OnInputDisabledModeChanged(
+    DisabledTrackMode aInputMode) {
+  MOZ_ASSERT(mInputs.Length() == 1);
+  MOZ_ASSERT(mInputs[0]->GetSource());
+  DisabledTrackMode oldMode = CombinedDisabledMode();
+  if (mInputDisabledMode == DisabledTrackMode::SILENCE_BLACK &&
+      aInputMode == DisabledTrackMode::SILENCE_FREEZE) {
+    // Don't allow demoting from SILENCE_BLACK to SILENCE_FREEZE. Frames will
+    // remain black so we shouldn't notify that the track got enabled.
+    aInputMode = DisabledTrackMode::SILENCE_BLACK;
+  }
+  mInputDisabledMode = aInputMode;
+  NotifyIfDisabledModeChangedFrom(oldMode);
 }
 
 void ForwardedInputTrack::AddDirectListenerImpl(
