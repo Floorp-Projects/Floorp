@@ -10,7 +10,7 @@ import re
 
 import six
 from six import text_type
-from voluptuous import Required
+from voluptuous import Required, Optional
 
 from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.transforms.job import (
@@ -50,7 +50,7 @@ mozharness_test_run_schema = Schema({
     Required('using'): 'mozharness-test',
     Required('test'): test_description_schema,
     # Base work directory used to set up the task.
-    Required('workdir'): text_type,
+    Optional('workdir'): text_type,
 })
 
 
@@ -215,7 +215,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
 @run_job_using('generic-worker', 'mozharness-test', schema=mozharness_test_run_schema)
 def mozharness_test_on_generic_worker(config, job, taskdesc):
-    run = job['run']
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
     worker = taskdesc['worker'] = job['worker']
@@ -406,7 +405,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         }]
 
     job['run'] = {
-        'workdir': run['workdir'],
         'tooltool-downloads': mozharness['tooltool-downloads'],
         'checkout': test['checkout'],
         'command': mh_command,
