@@ -38,6 +38,7 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.top.sites.TopSitesUseCases
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -59,7 +60,6 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -93,7 +93,7 @@ class DefaultBrowserToolbarControllerTest {
     @RelaxedMockK private lateinit var browserAnimator: BrowserAnimator
     @RelaxedMockK private lateinit var snackbar: FenixSnackbar
     @RelaxedMockK private lateinit var tabCollectionStorage: TabCollectionStorage
-    @RelaxedMockK private lateinit var topSiteStorage: TopSiteStorage
+    @RelaxedMockK private lateinit var topSitesUseCase: TopSitesUseCases
     @RelaxedMockK private lateinit var readerModeController: ReaderModeController
     @RelaxedMockK private lateinit var sessionFeatureWrapper: ViewBoundFeatureWrapper<SessionFeature>
     @RelaxedMockK private lateinit var sessionFeature: SessionFeature
@@ -120,6 +120,7 @@ class DefaultBrowserToolbarControllerTest {
         every { analytics.metrics } returns metrics
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
         every { activity.components.useCases.searchUseCases } returns searchUseCases
+        every { activity.components.useCases.topSitesUseCase } returns topSitesUseCase
         every { activity.components.core.sessionManager } returns sessionManager
         every { activity.components.core.store } returns store
         every { sessionManager.selectedSession } returns currentSession
@@ -397,6 +398,9 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarAddToTopSitesPressed() = runBlockingTest {
         val item = ToolbarMenu.Item.AddToTopSites
+        val addPinnedSiteUseCase: TopSitesUseCases.AddPinnedSiteUseCase = mockk(relaxed = true)
+
+        every { topSitesUseCase.addPinnedSites } returns addPinnedSiteUseCase
         every {
             swipeRefreshLayout.context.getString(R.string.snackbar_added_to_top_sites)
         } returns "Added to top sites!"
@@ -404,7 +408,7 @@ class DefaultBrowserToolbarControllerTest {
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
 
-        verify { topSiteStorage.addTopSite(currentSession.title, currentSession.url) }
+        verify { addPinnedSiteUseCase.invoke(currentSession.title, currentSession.url) }
         verify { snackbar.setText("Added to top sites!") }
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.ADD_TO_TOP_SITES)) }
     }
@@ -636,7 +640,6 @@ class DefaultBrowserToolbarControllerTest {
         scope = scope,
         swipeRefresh = swipeRefreshLayout,
         tabCollectionStorage = tabCollectionStorage,
-        topSiteStorage = topSiteStorage,
         bookmarkTapped = bookmarkTapped,
         readerModeController = readerModeController,
         sessionManager = sessionManager,

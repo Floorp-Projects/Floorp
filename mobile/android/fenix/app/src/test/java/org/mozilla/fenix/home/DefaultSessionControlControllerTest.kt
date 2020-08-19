@@ -27,7 +27,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
@@ -52,7 +51,6 @@ class DefaultSessionControlControllerTest {
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
-    private val topSiteStorage: TopSiteStorage = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
     private val hideOnboarding: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
@@ -101,7 +99,6 @@ class DefaultSessionControlControllerTest {
             metrics = metrics,
             sessionManager = sessionManager,
             tabCollectionStorage = tabCollectionStorage,
-            topSiteStorage = topSiteStorage,
             addTabUseCase = tabsUseCases.addTab,
             fragmentStore = fragmentStore,
             navController = navController,
