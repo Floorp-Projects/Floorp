@@ -2766,6 +2766,10 @@ void SourceMediaTrack::AddDirectListenerImpl(
   listener->NotifyDirectListenerInstalled(
       DirectMediaTrackListener::InstallationResult::SUCCESS);
 
+  if (mDisabledMode != DisabledTrackMode::ENABLED) {
+    listener->IncreaseDisabled(mDisabledMode);
+  }
+
   if (mEnded) {
     return;
   }
@@ -2812,6 +2816,9 @@ void SourceMediaTrack::RemoveDirectListenerImpl(
   for (int32_t i = mDirectTrackListeners.Length() - 1; i >= 0; --i) {
     const RefPtr<DirectMediaTrackListener>& l = mDirectTrackListeners[i];
     if (l == aListener) {
+      if (mDisabledMode != DisabledTrackMode::ENABLED) {
+        aListener->DecreaseDisabled(mDisabledMode);
+      }
       aListener->NotifyDirectListenerUninstalled();
       mDirectTrackListeners.RemoveElementAt(i);
     }
