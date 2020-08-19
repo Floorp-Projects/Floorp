@@ -26,7 +26,9 @@ class ForwardedInputTrack : public ProcessedMediaTrack {
   void RemoveInput(MediaInputPort* aPort) override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
+  DisabledTrackMode CombinedDisabledMode() const override;
   void SetDisabledTrackModeImpl(DisabledTrackMode aMode) override;
+  void OnInputDisabledModeChanged(DisabledTrackMode aInputMode) override;
 
   friend class MediaTrackGraphImpl;
 
@@ -52,6 +54,11 @@ class ForwardedInputTrack : public ProcessedMediaTrack {
   // Set if an input has been added, nullptr otherwise. Adding more than one
   // input is an error.
   MediaInputPort* mInputPort = nullptr;
+
+  // This track's input's associated disabled mode. ENABLED if there is no
+  // input. This is used with MediaTrackListener::NotifyEnabledStateChanged(),
+  // which affects only video tracks. This is set only on ForwardedInputTracks.
+  DisabledTrackMode mInputDisabledMode = DisabledTrackMode::ENABLED;
 };
 
 }  // namespace mozilla
