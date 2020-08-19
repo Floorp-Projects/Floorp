@@ -1713,7 +1713,7 @@
 - name: LoadStringCharResult
   shared: false
   transpile: true
-  cost_estimate: 2
+  cost_estimate: 5
   args:
     str: StringId
     index: Int32Id

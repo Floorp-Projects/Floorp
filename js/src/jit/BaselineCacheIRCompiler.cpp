@@ -1619,12 +1619,35 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
                             scratch1, failure->label());
   masm.loadStringChar(str, index, scratch1, scratch2, failure->label());
 
-  // Load StaticString for this char.
+  allocator.discardStack(masm);
+
+  // Load StaticString for this char. For larger code units perform a VM call.
+  Label vmCall;
   masm.boundsCheck32PowerOfTwo(scratch1, StaticStrings::UNIT_STATIC_LIMIT,
-                               failure->label());
+                               &vmCall);
   masm.movePtr(ImmPtr(&cx_->staticStrings().unitStaticTable), scratch2);
   masm.loadPtr(BaseIndex(scratch2, scratch1, ScalePointer), scratch2);
 
+  Label done;
+  masm.jump(&done);
+
+  {
+    masm.bind(&vmCall);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch2);
+
+    masm.Push(scratch1);
+
+    using Fn = JSLinearString* (*)(JSContext*, int32_t);
+    callVM<Fn, jit::StringFromCharCode>(masm);
+
+    stubFrame.leave(masm);
+
+    masm.storeCallPointerResult(scratch2);
+  }
+
+  masm.bind(&done);
   masm.tagValue(JSVAL_TYPE_STRING, scratch2, output.valueReg());
   return true;
 }
