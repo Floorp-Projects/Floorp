@@ -6,23 +6,10 @@
 
 #include "mozilla/layers/APZUtils.h"
 
-#include "AsyncPanZoomController.h"
-
 namespace mozilla {
 namespace layers {
 
 namespace apz {
-
-/*static*/ void InitializeGlobalState() {
-  MOZ_ASSERT(NS_IsMainThread());
-  AsyncPanZoomController::InitializeGlobalState();
-}
-
-/*static*/ const ScreenMargin CalculatePendingDisplayPort(
-    const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity) {
-  return AsyncPanZoomController::CalculatePendingDisplayPort(aFrameMetrics,
-                                                             aVelocity);
-}
 
 /*static*/ bool IsCloseToHorizontal(float aAngle, float aThreshold) {
   return (aAngle < aThreshold || aAngle > (M_PI - aThreshold));
