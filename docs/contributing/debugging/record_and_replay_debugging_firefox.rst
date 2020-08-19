@@ -1,6 +1,10 @@
 Record and Replay Debugging Firefox
 ===================================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 This guide details how to setup `VMWare Workstation
 7 <http://www.vmware.com/products/workstation/>`__ to use Record and
 Replay Debugging on Firefox on Windows. It's possible to replay debug
@@ -36,7 +40,7 @@ Hardware Requirements
 
 You need a modern multi-core CPU with VT-x support to get adequate
 performance when replay debugging. We recommend a quad core i7 or Xeon
-chip. We also recommend at least 8 GB RAM and an SSD with at least 256
+chip. We also recommend at least 8 GB RAM and an SSD with at least 256
 GB space.
 
 Setting up the Host computer
@@ -150,7 +154,7 @@ specifying an object dir, and the following options:
   Firefox builds. Visual Studio has a limited number of breakpoints, and
   must reserve some of them for itself. The more DLLs the debug-target
   has, the more breakpoints MSVC seems to reserve, and so the fewer
-  breakpoints you'll have for your own use. (We have seen MSVC reserve
+  breakpoints you'll have for your own use. (We have seen MSVC reserve
   all the breakpoints so we couldn't set any of our own.)
 
 | Build your mozilla tree on the Host, and package it up along with

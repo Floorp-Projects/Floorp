@@ -1,6 +1,10 @@
 Debugging A Minidump
 ====================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 The
 `minidump <http://msdn.microsoft.com/en-us/library/windows/desktop/ms680369%28v=vs.85%29.aspx>`__
 file format contains data about a crash on Windows. It is used by
@@ -55,50 +59,51 @@ on "Run Native", and Visual Studio will ask for the corresponding symbol
 files. For each .dll you wish to have symbols for, you must go to a
 console and go to the corresponding directory. E.g. (xul.dll should go
 to xul.pdf in the crashreporter symbols directory). Each directory will
-have a .pd\_ file. In a command shell run: "expand /r foo.pd_". Then
+have a .pd\_ file. In a command shell run: "expand /r foo.pd\_". Then
 point Visual Studio to this directory.
 
 Then you'll be able to examine:
 
-the stack trace
-   The debugger shows the stack trace.  You can right-click on any frame
-   in the stack, and then choose "go to disassembly" or "go to source". 
-   (Choosing "go to disassembly" from the source view might not get you
-   to the right place due to optimizations.)  When looking at the
-   source, beware that the debugging information will associate all
-   inlined functions as part of the line into which they were inlined,
-   and compiler (with PGO) inlines *very* aggressively (including
-   inlining virtual functions).  You can often figure out where you
-   *really* are by reading the disassembly.
-registers
-   In the Registers tab (Debug -> Windows -> Registers if you don't have
-   it open), you can look at the registers associated with each stack
-   frame, but only at the current state (i.e., the time of the crash). 
-   Registers that Visual Studio can't figure out will be grayed-out and
-   have the value 00000000.
-stack memory
-   You open a window (Memory 1, etc.) that shows contiguous segments of
-   memory using the Debug -> Windows -> Memory menu item.  You can then
-   enter the address of the stack pointer (ESP register) in this window
-   and look at the memory on the stack.  (The minidump doesn't have the
-   memory on the heap.)  It's a good idea to change the "width" dropdown
-   in the top right corner of the window from its default "Auto" to
-   either "8" or "16" so that the memory display is word-aligned.  If
-   you're interested in pointers, which is usually the case, you can
-   right click in this window and change the display to show 4-byte
-   words (so that you don't have to reverse the order due to
-   little-endianness).  This view, combined with the disassembly, can
-   often be used to reconstruct information beyond what in shown the
-   function parameters.
-local variables
-   In the Watch 1 (etc.) window (which, if you don't have open, you can
-   get from Debug -> Windows -> Watch), you can type an expression
-   (e.g., the name of a local variable) and the debugger will show you
-   its value (although it sometimes gets confused).  If you're looking
-   at a pointer to a variable that happens to be on the stack, you can
-   even examine member variables by just typing expressions.  If Visual
-   Studio can't figure something out from the minidump, it might show
-   you 00000000 (is this true?).
++------------------+-------------------------------------------------------------------------+
+| stack trace      |    The debugger shows the stack trace. You can right-click on any frame |
+|                  |    in the stack, and then choose "go to disassembly" or "go to source". |
+|                  |    (Choosing "go to disassembly" from the source view might not get you |
+|                  |    to the right place due to optimizations.) When looking at the        |
+|                  |    source, beware that the debugging information will associate all     |
+|                  |    inlined functions as part of the line into which they were inlined,  |
+|                  |    and compiler (with PGO) inlines *very* aggressively (including       |
+|                  |    inlining virtual functions). You can often figure out where you      |
+|                  |    *really* are by reading the disassembly.                             |
++------------------+-------------------------------------------------------------------------+
+| registers        |    In the Registers tab (Debug->Windows->Registers if you don't have    |
+|                  |    it open), you can look at the registers associated with each stack   |
+|                  |    frame, but only at the current state (i.e., the time of the crash).  |
+|                  |    Registers that Visual Studio can't figure out will be grayed-out and |
+|                  |    have the value 00000000.                                             |
++------------------+-------------------------------------------------------------------------+
+| stack memory     |    You open a window (Memory 1, etc.) that shows contiguous segments of |
+|                  |    memory using the Debug->Windows->Memory menu item. You can then      |
+|                  |    enter the address of the stack pointer (ESP register) in this window |
+|                  |    and look at the memory on the stack. (The minidump doesn't have the  |
+|                  |    memory on the heap.) It's a good idea to change the "width" dropdown |
+|                  |    in the top right corner of the window from its default "Auto" to     |
+|                  |    either "8" or "16" so that the memory display is word-aligned. If    |
+|                  |    you're interested in pointers, which is usually the case, you can    |
+|                  |    right click in this window and change the display to show 4-byte     |
+|                  |    words (so that you don't have to reverse the order due to            |
+|                  |    little-endianness). This view, combined with the disassembly, can    |
+|                  |    often be used to reconstruct information beyond what in shown the    |
+|                  |    function parameters.                                                 |
++------------------+-------------------------------------------------------------------------+
+| local variables  |    In the Watch 1 (etc.) window (which, if you don't have open, you can |
+|                  |    iget from Debug->Windows->Watch), you can type an expression         |
+|                  |    (e.g., the name of a local variable) and the debugger will show you  |
+|                  |    its value (although it sometimes gets confused). If you're looking   |
+|                  |    at a pointer to a variable that happens to be on the stack, you can  |
+|                  |    even examine member variables by just typing expressions. If Visual  |
+|                  |    Studio can't figure something out from the minidump, it might show   |
+|                  |    you 00000000 (is this true?).                                        |
++------------------+-------------------------------------------------------------------------+
 
 Using minidump-2-core on Linux
 ------------------------------
