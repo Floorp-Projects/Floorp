@@ -100,7 +100,7 @@ ol {
 }
 
 .create-login-button-container {
-  box-shadow: 0 -1px var(--in-content-box-border-color);
+  border-top: 1px solid var(--in-content-box-border-color);
   display: flex;
   flex-direction: column;
 }
@@ -111,8 +111,11 @@ ol {
   padding-block: 10px;
   padding-inline: 12px 18px;
   border-inline-start: 4px solid transparent;
-  border-bottom: 1px solid var(--in-content-border-color);
   user-select: none;
+}
+
+.login-list-item + .login-list-item {
+  border-top: 1px solid var(--in-content-border-color);
 }
 
 .login-list-item:hover {
