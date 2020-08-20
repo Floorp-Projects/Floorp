@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-prompts**
+  * Added optional `LoginPickerView` and `onManageLogins` params to `PromptFeature` for a new [LoginPicker] to display a view for selecting one of multiple matching saved logins to fill into a site.
+
 * **concept-tabstray**
   * Added `onTabsUpdated` to `TabsTray.Observer` for notifying observers when one or more tabs have been added/removed.
 

@@ -8,17 +8,18 @@ import android.content.Context
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
-import mozilla.components.concept.storage.Login
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.storage.Login
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.getFileName
 import mozilla.components.support.ktx.kotlin.toDate
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
@@ -29,7 +30,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.MON
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.WEEK
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
-import org.mozilla.geckoview.Autocomplete
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -106,19 +106,25 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         prompt: PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption>
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
-        val onConfirmSave: (Login) -> Unit = { login ->
+        val onConfirmSelect: (Login) -> Unit = { login ->
             geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
         }
         val onDismiss: () -> Unit = {
             geckoResult.complete(prompt.dismiss())
         }
 
-        // Currently no-op will be addressed in https://github.com/mozilla-mobile/android-components/issues/7134
+        // Exactly one of `httpRealm` and `formSubmitURL` must be present to be a valid login entry.
+        val loginList = prompt.options.filter { option ->
+            option.value.formActionOrigin != null || option.value.httpRealm != null
+        }.map { option ->
+            option.value.toLogin()
+        }
+
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.SelectLoginPrompt(
-                    logins = listOf(),
-                    onConfirm = onConfirmSave,
+                    logins = loginList,
+                    onConfirm = onConfirmSelect,
                     onDismiss = onDismiss
                 )
             )

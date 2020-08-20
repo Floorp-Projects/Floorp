@@ -50,14 +50,17 @@ import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.dialog.ColorPickerDialogFragment
 import mozilla.components.feature.prompts.dialog.ConfirmDialogFragment
-import mozilla.components.feature.prompts.dialog.LoginDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
 import mozilla.components.feature.prompts.dialog.PromptAbuserDetector
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.Prompter
+import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.feature.prompts.login.LoginExceptions
+import mozilla.components.feature.prompts.login.LoginPicker
+import mozilla.components.feature.prompts.login.LoginPickerView
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.lib.state.ext.flowScoped
@@ -105,6 +108,9 @@ private const val PROGRESS_ALMOST_COMPLETE = 90
  * 'save login'prompts will not be shown.
  * @property loginExceptionStorage An implementation of [LoginExceptions] that saves and checks origins
  * the user does not want to see a save login dialog for.
+ * @property loginPickerView The [LoginPickerView] used for [LoginPicker] to display select login options.
+ * @property onManageLogins A callback invoked when a user selects "manage logins" from the
+ * select login prompt.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -119,11 +125,14 @@ class PromptFeature private constructor(
     override val loginValidationDelegate: LoginValidationDelegate? = null,
     private val isSaveLoginEnabled: () -> Boolean = { false },
     override val loginExceptionStorage: LoginExceptions? = null,
+    private val loginPickerView: LoginPickerView? = null,
+    private val onManageLogins: () -> Unit = {},
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter {
-    // These two scopes have identical lifetimes. We do not yet have a way of combining scopes
+    // These three scopes have identical lifetimes. We do not yet have a way of combining scopes
     private var handlePromptScope: CoroutineScope? = null
     private var dismissPromptScope: CoroutineScope? = null
+    private var sessionPromptScope: CoroutineScope? = null
     private var activePromptRequest: PromptRequest? = null
 
     internal val promptAbuserDetector = PromptAbuserDetector()
@@ -141,6 +150,8 @@ class PromptFeature private constructor(
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
+        loginPickerView: LoginPickerView? = null,
+        onManageLogins: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -151,7 +162,9 @@ class PromptFeature private constructor(
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
         loginExceptionStorage = loginExceptionStorage,
-        onNeedToRequestPermissions = onNeedToRequestPermissions
+        onNeedToRequestPermissions = onNeedToRequestPermissions,
+        loginPickerView = loginPickerView,
+        onManageLogins = onManageLogins
     )
 
     constructor(
@@ -163,6 +176,8 @@ class PromptFeature private constructor(
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
+        loginPickerView: LoginPickerView? = null,
+        onManageLogins: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -173,7 +188,9 @@ class PromptFeature private constructor(
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
         loginExceptionStorage = loginExceptionStorage,
-        onNeedToRequestPermissions = onNeedToRequestPermissions
+        onNeedToRequestPermissions = onNeedToRequestPermissions,
+        loginPickerView = loginPickerView,
+        onManageLogins = onManageLogins
     )
 
     @Deprecated("Pass only activity or fragment instead")
@@ -183,6 +200,8 @@ class PromptFeature private constructor(
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
+        loginPickerView: LoginPickerView? = null,
+        onManageLogins: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = activity?.let { PromptContainer.Activity(it) }
@@ -196,10 +215,15 @@ class PromptFeature private constructor(
         fragmentManager = fragmentManager,
         shareDelegate = DefaultShareDelegate(),
         loginValidationDelegate = null,
-        onNeedToRequestPermissions = onNeedToRequestPermissions
+        onNeedToRequestPermissions = onNeedToRequestPermissions,
+        loginPickerView = loginPickerView,
+        onManageLogins = onManageLogins
     )
 
     private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
+
+    private val loginPicker =
+        loginPickerView?.let { LoginPicker(store, it, onManageLogins, customTabId) }
 
     override val onNeedToRequestPermissions
         get() = filePicker.onNeedToRequestPermissions
@@ -240,6 +264,20 @@ class PromptFeature private constructor(
                         prompt.dismiss()
                     }
                     activePrompt?.clear()
+                    loginPicker?.dismissCurrentLoginSelect()
+                }
+        }
+
+        // Dismiss prompts when a new tab is selected.
+        sessionPromptScope = store.flowScoped { flow ->
+            flow.ifChanged { browserState -> browserState.selectedTabId }
+                .collect {
+                    val prompt = activePrompt?.get()
+                    if (prompt?.shouldDismissOnLoad() == true) {
+                        prompt.dismiss()
+                    }
+                    activePrompt?.clear()
+                    loginPicker?.dismissCurrentLoginSelect()
                 }
         }
 
@@ -257,6 +295,7 @@ class PromptFeature private constructor(
     override fun stop() {
         handlePromptScope?.cancel()
         dismissPromptScope?.cancel()
+        sessionPromptScope?.cancel()
     }
 
     /**
@@ -294,6 +333,13 @@ class PromptFeature private constructor(
             when (promptRequest) {
                 is File -> filePicker.handleFileRequest(promptRequest)
                 is Share -> handleShareRequest(promptRequest, session)
+                is SelectLoginPrompt -> {
+                    if (promptRequest.logins.isNotEmpty()) {
+                        loginPicker?.handleSelectLoginRequest(
+                            promptRequest
+                        )
+                    }
+                }
                 else -> handleDialogsRequest(promptRequest, session)
             }
         }
@@ -439,19 +485,13 @@ class PromptFeature private constructor(
                     return
                 }
 
-                LoginDialogFragment.newInstance(
+                SaveLoginDialogFragment.newInstance(
                     sessionId = session.id,
                     hint = promptRequest.hint,
                     // For v1, we only handle a single login and drop all others on the floor
                     login = promptRequest.logins[0]
                 )
             }
-
-            /**
-             * This feature isn't implemented yet
-             * see https://github.com/mozilla-mobile/android-components/issues/7134
-             */
-            is SelectLoginPrompt -> return
 
             is SingleChoice -> ChoiceDialogFragment.newInstance(
                 promptRequest.choices,
