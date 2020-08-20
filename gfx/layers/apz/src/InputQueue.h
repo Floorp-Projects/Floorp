@@ -16,8 +16,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
-#include <unordered_map>
-
 namespace mozilla {
 
 class InputData;
@@ -146,11 +144,6 @@ class InputQueue {
 
   InputBlockState* GetBlockForId(uint64_t aInputBlockId);
 
-  using InputBlockCallback =
-      std::function<void(uint64_t aInputBlockId, bool aHandledByRootApzc)>;
-  void AddInputBlockCallback(uint64_t aInputBlockId,
-                             InputBlockCallback&& aCallback);
-
  private:
   ~InputQueue();
 
@@ -255,12 +248,6 @@ class InputQueue {
   // Temporarily stores a timeout task that needs to be run as soon as
   // as the event that triggered it has been queued.
   RefPtr<Runnable> mImmediateTimeout;
-
-  // Maps input block ids to callbacks that will be invoked when the input block
-  // is ready for handling.
-  using InputBlockCallbackMap =
-      std::unordered_map<uint64_t, InputBlockCallback>;
-  InputBlockCallbackMap mInputBlockCallbacks;
 };
 
 }  // namespace layers

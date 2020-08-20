@@ -105,12 +105,6 @@ APZInputBridge* APZCTreeManagerChild::InputBridge() {
   return mInputBridge.get();
 }
 
-void APZCTreeManagerChild::AddInputBlockCallback(
-    uint64_t aInputBlockId, InputBlockCallback&& aCallback) {
-  MOZ_RELEASE_ASSERT(false,
-                     "Remoting of input block callbacks is not implemented");
-}
-
 void APZCTreeManagerChild::AddIPDLReference() {
   MOZ_ASSERT(mIPCOpen == false);
   mIPCOpen = true;

@@ -176,6 +176,52 @@ public class WebExtensionController {
         }
     }
 
+    // TODO: remove once we remove GeckoRuntime#registerWebExtension
+    /* package */ DelegateController delegateFor(final WebExtension extension) {
+        return new DelegateController(extension);
+    }
+
+    /**
+     * @deprecated Use {@link WebExtension.TabDelegate} and {@link WebExtension.SessionTabDelegate}.
+     */
+    @Deprecated
+    public interface TabDelegate {
+        /**
+         * Called when tabs.create is invoked, this method returns a *newly-created* session
+         * that GeckoView will use to load the requested page on. If the returned value
+         * is null the page will not be opened.
+         *
+         * @param source An instance of {@link WebExtension} or null if extension was not registered
+         *               with GeckoRuntime.registerWebextension
+         * @param uri The URI to be loaded. This is provided for informational purposes only,
+         *            do not call {@link GeckoSession#loadUri} on it.
+         * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
+         *        which case the request for a new tab by the extension will fail.
+         *        The implementation of onNewTab is responsible for maintaining a reference
+         *        to the returned object, to prevent it from being garbage collected.
+         */
+        @UiThread
+        @Nullable
+        default GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension source, @Nullable String uri) {
+            return null;
+        }
+        /**
+         * Called when tabs.remove is invoked, this method decides if WebExtension can close the
+         * tab. In case WebExtension can close the tab, it should close passed GeckoSession and
+         * return GeckoResult.ALLOW or GeckoResult.DENY in case tab cannot be closed.
+         *
+         * @param source An instance of {@link WebExtension} or null if extension was not registered
+         *               with GeckoRuntime.registerWebextension
+         * @param session An instance of {@link GeckoSession} to be closed.
+         * @return GeckoResult.ALLOW if the tab will be closed, GeckoResult.DENY otherwise
+         */
+        @UiThread
+        @NonNull
+        default GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension source, @NonNull GeckoSession session)  {
+            return GeckoResult.DENY;
+        }
+    }
+
     /**
      * This delegate will be called whenever an extension is about to be installed or it needs
      * new permissions, e.g during an update or because it called <code>permissions.request</code>
