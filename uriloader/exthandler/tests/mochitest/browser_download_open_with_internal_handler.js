@@ -112,29 +112,11 @@ add_task(async function test_check_open_with_internal_handler() {
 
     let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
     let dialog = doc.querySelector("#unknownContentType");
-    let checkbox = doc.querySelector("#rememberChoice");
-    checkbox.checked = true;
-    checkbox.doCommand();
     let button = dialog.getButton("accept");
     button.disabled = false;
     dialog.acceptDialog();
     info("waiting for new tab to open");
     let newTab = await newTabPromise;
-
-    if (file.includes("binary")) {
-      const handlerSvc = Cc[
-        "@mozilla.org/uriloader/handler-service;1"
-      ].getService(Ci.nsIHandlerService);
-      const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-      const mimeInfo = mimeSvc.getFromTypeAndExtension(
-        "binary/octet-stream",
-        "pdf"
-      );
-      ok(
-        !handlerSvc.exists(mimeInfo),
-        "Shouldn't store information for octet-stream types."
-      );
-    }
 
     is(
       newTab._tPos - 1,
