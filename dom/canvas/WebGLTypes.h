@@ -731,10 +731,13 @@ class RawBuffer final {
         mLen(data.length()),
         mOwned(std::move(owned)) {}
 
+  explicit RawBuffer(const size_t len) : mLen(len) {}
+
   ~RawBuffer() = default;
 
   Range<const T> Data() const { return {mBegin, mLen}; }
-  const auto& begin() const { return mBegin; };
+  const auto& begin() const { return mBegin; }
+  const auto& size() const { return mLen; }
 
   RawBuffer() = default;
 

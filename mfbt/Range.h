@@ -30,7 +30,14 @@ class Range {
   Range() : mStart(nullptr, 0), mEnd(nullptr, 0) {}
   Range(T* aPtr, size_t aLength)
       : mStart(aPtr, aPtr, aPtr + aLength),
-        mEnd(aPtr + aLength, aPtr, aPtr + aLength) {}
+        mEnd(aPtr + aLength, aPtr, aPtr + aLength) {
+    if (!aPtr) {
+      MOZ_ASSERT(!aLength,
+                 "Range does not support nullptr with non-zero length.");
+      // ...because merely having a pointer to `nullptr + 1` is undefined
+      // behavior. UBSAN catches this as of clang-10.
+    }
+  }
   Range(const RangedPtr<T>& aStart, const RangedPtr<T>& aEnd)
       : mStart(aStart.get(), aStart.get(), aEnd.get()),
         mEnd(aEnd.get(), aStart.get(), aEnd.get()) {
