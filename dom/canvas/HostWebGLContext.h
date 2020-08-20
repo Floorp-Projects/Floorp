@@ -482,8 +482,8 @@ class HostWebGLContext final : public SupportsWeakPtr {
   }
 
   void BufferData(GLenum target, const RawBuffer<>& data, GLenum usage) const {
-    const auto& range = data.Data();
-    mContext->BufferData(target, range.length(), range.begin().get(), usage);
+    const auto& beginOrNull = data.begin();
+    mContext->BufferData(target, data.size(), beginOrNull, usage);
   }
 
   void BufferSubData(GLenum target, uint64_t dstByteOffset,

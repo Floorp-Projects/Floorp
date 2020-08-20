@@ -74,19 +74,18 @@ struct QueueParamTraits<RawBuffer<T>> {
 
   template <typename U>
   static QueueStatus Write(ProducerView<U>& view, const ParamType& in) {
-    const auto range = in.Data();
-
-    const auto elemCount = range.length();
+    const auto& elemCount = in.size();
     auto status = view.WriteParam(elemCount);
     if (!status) return status;
     if (!elemCount) return status;
 
-    const bool hasData = bool(range.begin().get());
+    const auto& begin = in.begin();
+    const bool hasData = static_cast<bool>(begin);
     status = view.WriteParam(hasData);
     if (!status) return status;
     if (!hasData) return status;
 
-    status = view.Write(range.begin().get(), range.end().get());
+    status = view.Write(begin, begin + elemCount);
     return status;
   }
 
@@ -100,11 +99,11 @@ struct QueueParamTraits<RawBuffer<T>> {
       return QueueStatus::kSuccess;
     }
 
-    bool hasData = false;
+    uint8_t hasData = 0;
     status = view.ReadParam(&hasData);
     if (!status) return status;
     if (!hasData) {
-      auto temp = RawBuffer<T>{Range<T>{nullptr, elemCount}};
+      auto temp = RawBuffer<T>{elemCount};
       *out = std::move(temp);
       return QueueStatus::kSuccess;
     }
