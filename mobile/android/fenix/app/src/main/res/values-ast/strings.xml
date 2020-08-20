@@ -27,6 +27,8 @@
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d esbillaes</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Amiestu d\'una coleción nueva</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Nome</string>
 
@@ -247,6 +249,8 @@
     <string name="preferences_sign_in_description">Sincroniza los marcadores, l\'historial y muncho más cola to cuenta de Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Cuenta de Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Reconéutate pa siguir cola sincronización</string>
     <!-- Preference for language -->
     <string name="preferences_language">Llingua</string>
     <!-- Preference for data collection -->
@@ -364,6 +368,11 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activación de Sync</string>
 
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Aniciar sesión pa reconeutar</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Desaniciar la cuenta</string>
+
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Escania\'l códigu QR que s\'amuesa en <b>firefox.com/pair</b>]]></string>
@@ -472,6 +481,9 @@
 
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (en privao)</string>
+
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Guardar</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -659,6 +671,8 @@
     <string name="create_collection_save_to_collection_tab_selected">Esbillóse %d llingüeta</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">¡Guardáronse les llingüetes!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">¡Guardóse la coleición!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">¡Guardóse la llingüeta!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -690,6 +704,8 @@
 
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Unviar a tolos preseos</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Reconexón con Sync</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Coneutar otru preséu</string>
     <!-- The dialog text shown when additional devices are not available -->

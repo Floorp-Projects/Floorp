@@ -27,6 +27,16 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s ruwi\' ejaqon. Tachapa\' richin nak\'ëx ruwi\'.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d xcha\'</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Titz\'aqatisäx k\'ak\'a\' mol</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">B\'i\'aj</string>
+
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Ticha\' mol</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s b\'anon ruma Mozilla.</string>
 
@@ -151,14 +161,10 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Tiwachib\'ëx</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Choj okem</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Runuk\'ulem kanob\'äl</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Tikanöx pa</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Wakami tikanöx rik\'in:</string>
+    <string name="search_engines_search_with">Wakami tikanöx rik\'in:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Titz\'ajb\'äl ri ximonel pa ri molwuj</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -270,8 +276,6 @@
     <string name="developer_tools_category">Taq rusamajib\'al nuk\'unel</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Näj chojmirisanem pa USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Kek\'ut retal pitz\'b\'äl richin nikanöx</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Kek\'ut pe ri taq chilab\'enïk richin yakanon</string>
 
@@ -524,6 +528,9 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Ichinan Rub\'anikil)</string>
 
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Tiyak</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Tiyuj natab\'äl</string>
@@ -649,7 +656,7 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Xyuj %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Taq yaketal xeyuj</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">TITZOLÏX</string>
@@ -1458,9 +1465,7 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <string name="saved_login_duplicate">K\'o chik jun tikirib\'äl molojri\'ïl rik\'in re b\'i\'aj re\'</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Tok rik\'in jun Rub\'i\' Rutaqoya\'l Firefox</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Tokisäx jun chik okisab\'äl</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Tajuxub\'ej chik awi\'.</string>
