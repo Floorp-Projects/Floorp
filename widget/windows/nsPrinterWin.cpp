@@ -7,15 +7,19 @@
 
 #include <algorithm>
 #include <windows.h>
+#include <winspool.h>
 
 #include "mozilla/Array.h"
 #include "nsPaper.h"
+#include "nsPrintSettingsImpl.h"
+#include "nsWindowsHelpers.h"
+#include "WinUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::widget;
 
-static const float kTenthMMToPoint =
-    (POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT) / 10;
+static const double kTenthMMToPoint = 72.0 / 254.0;
 
 nsPrinterWin::nsPrinterWin(const nsAString& aName) : mName(aName) {}
 
@@ -24,12 +28,57 @@ already_AddRefed<nsPrinterWin> nsPrinterWin::Create(const nsAString& aName) {
   return do_AddRef(new nsPrinterWin(aName));
 }
 
-// TODO(nordzilla, 165829) This needs to be implemented for windows.
-// It should basically collect the same information as
-// nsPrinterListWin::InitPrintSettingsFromPrinter.
 PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
-  PrintSettingsInitializer settings;
-  return settings;
+  nsAutoPrinter autoPrinter(nsHPRINTER(nullptr));
+  BOOL status = ::OpenPrinterW(mName.get(), &autoPrinter.get(), nullptr);
+  if (NS_WARN_IF(!status)) {
+    return PrintSettingsInitializer();
+  }
+
+  // Allocate devmode storage of the correct size.
+  LONG bytesNeeded = ::DocumentPropertiesW(nullptr, autoPrinter.get(),
+                                           mName.get(), nullptr, nullptr, 0);
+  if (NS_WARN_IF(bytesNeeded < 0)) {
+    return PrintSettingsInitializer();
+  }
+
+  nsTArray<uint8_t> devmodeWStorage(bytesNeeded);
+  devmodeWStorage.SetLength(bytesNeeded);
+  DEVMODEW* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
+  LONG ret = ::DocumentPropertiesW(nullptr, autoPrinter.get(), mName.get(),
+                                   devmode, nullptr, DM_OUT_BUFFER);
+  if (NS_WARN_IF(ret != IDOK)) {
+    return PrintSettingsInitializer();
+  }
+
+  nsAutoHDC printerDc(::CreateICW(nullptr, mName.get(), nullptr, devmode));
+  if (NS_WARN_IF(!printerDc)) {
+    return PrintSettingsInitializer();
+  }
+
+  nsString paperName;
+  SizeDouble paperSize;
+  for (auto paperInfo : PaperList()) {
+    if (paperInfo.mPaperId == devmode->dmPaperSize) {
+      paperName.Assign(paperInfo.mName);
+      paperSize = paperInfo.mSize;
+      break;
+    }
+  }
+
+  auto margin = WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
+  margin.top *= POINTS_PER_INCH_FLOAT;
+  margin.right *= POINTS_PER_INCH_FLOAT;
+  margin.bottom *= POINTS_PER_INCH_FLOAT;
+  margin.left *= POINTS_PER_INCH_FLOAT;
+
+  // Using Y to match existing code for print scaling calculations.
+  int resolution = GetDeviceCaps(printerDc, LOGPIXELSY);
+
+  return PrintSettingsInitializer{mName,
+                                  PaperInfo(paperName, paperSize, Some(margin)),
+                                  devmode->dmColor == DMCOLOR_COLOR, resolution,
+                                  std::move(devmodeWStorage)};
 }
 
 template <class T>

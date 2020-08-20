@@ -66,6 +66,7 @@ void nsPrintSettings::InitWithInitializer(
 
   SetPrinterName(aSettings.mPrinter);
   SetPrintInColor(aSettings.mPrintInColor);
+  SetResolution(aSettings.mResolution);
   SetPaperName(aSettings.mPaperInfo.mName);
   SetPaperWidth(aSettings.mPaperInfo.mSize.Width() * kInchesPerPoint);
   SetPaperHeight(aSettings.mPaperInfo.mSize.Height() * kInchesPerPoint);
