@@ -4346,7 +4346,7 @@ const BrowserSearch = {
       csp,
     });
 
-    return engine;
+    return { engine, url: submission.uri };
   },
 
   /**
@@ -4356,7 +4356,7 @@ const BrowserSearch = {
    * BrowserSearch.loadSearch for the preferred API.
    */
   async loadSearchFromContext(terms, usePrivate, triggeringPrincipal, csp) {
-    let engine = await BrowserSearch._loadSearch(
+    let { engine, url } = await BrowserSearch._loadSearch(
       terms,
       usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window)
         ? "window"
@@ -4369,7 +4369,7 @@ const BrowserSearch = {
       csp
     );
     if (engine) {
-      BrowserSearch.recordSearchInTelemetry(engine, "contextmenu");
+      BrowserSearch.recordSearchInTelemetry(engine, "contextmenu", { url });
     }
   },
 
@@ -4377,7 +4377,7 @@ const BrowserSearch = {
    * Perform a search initiated from the command line.
    */
   async loadSearchFromCommandLine(terms, usePrivate, triggeringPrincipal, csp) {
-    let engine = await BrowserSearch._loadSearch(
+    let { engine, url } = await BrowserSearch._loadSearch(
       terms,
       "current",
       usePrivate,
@@ -4386,7 +4386,7 @@ const BrowserSearch = {
       csp
     );
     if (engine) {
-      BrowserSearch.recordSearchInTelemetry(engine, "system");
+      BrowserSearch.recordSearchInTelemetry(engine, "system", { url });
     }
   },
 
