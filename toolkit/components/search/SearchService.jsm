@@ -42,6 +42,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "gExperiment",
+  SearchUtils.BROWSER_SEARCH_PREF + "experiment",
+  false,
+  () => {
+    Services.search.wrappedJSObject._maybeReloadEngines();
+  }
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "gModernConfig",
   SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
   false,
@@ -1849,10 +1859,6 @@ SearchService.prototype = {
     let channel = AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
       ? "esr"
       : AppConstants.MOZ_UPDATE_CHANNEL;
-    let experiment = Services.prefs.getCharPref(
-      "browser.search.experiment",
-      null
-    );
 
     let {
       engines,
@@ -1861,7 +1867,7 @@ SearchService.prototype = {
       locale,
       region,
       channel,
-      experiment,
+      experiment: gExperiment,
       distroID: SearchUtils.distroID,
     });
 
