@@ -8,6 +8,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
+#include "nsMemoryReporterManager.h"
 #include "nsNetCID.h"
 
 #include <cstdio>
@@ -66,7 +67,6 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.cpuUser = pti.pti_total_user;
           info.cpuKernel = pti.pti_total_system;
 
-          // Now getting threads info
           mach_port_t selectedTask;
           // If we did not get a task from a child process, we use mach_task_self()
           if (request.childTask == MACH_PORT_NULL) {
@@ -74,6 +74,14 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           } else {
             selectedTask = request.childTask;
           }
+          // Computing the resident unique size is somewhat tricky,
+          // so we use about:memory's implementation. This implementation
+          // uses the `task` so, in theory, should be no additional
+          // race condition. However, in case of error, the result is `0`.
+          info.residentUniqueSize = nsMemoryReporterManager::ResidentUnique(selectedTask);
+
+          // Now getting threads info
+
           // task_threads() gives us a snapshot of the process threads
           // but those threads can go away. All the code below makes
           // the assumption that thread_info() calls may fail, and

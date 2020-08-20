@@ -530,32 +530,100 @@ dictionary ThreadInfoDictionary {
   unsigned long long cpuKernel = 0;
 };
 
+/**
+ * Information on a child process.
+ *
+ * # Limitation
+ *
+ * If we lose a race with a process or thread attempting to close the
+ * target process, not all information is available.
+ *
+ * Missing information will generally have its default value.
+ */
 dictionary ChildProcInfoDictionary {
-  // System info
+  // --- System info
+
+  // The cross-process descriptor for this process.
   long long pid = 0;
+
+  // Process filename (without the path name).
   DOMString filename = "";
+
+  // VMS, in bytes.
   unsigned long long virtualMemorySize = 0;
+
+  // RSS, in bytes, i.e. the total amount of memory allocated
+  // by this process.
   long long residentSetSize = 0;
+
+  // Resident unique size, i.e. the total amount of memory
+  // allocated by this process *and not shared with other processes*.
+  // Given that we share lots of memory between processes,
+  // this is probably the best end-user measure for "memory used".
+  long long residentUniqueSize = 0;
+
+  // Time spent by the process in user mode, in ns.
   unsigned long long cpuUser = 0;
+
+  // Time spent by the process in kernel mode, in ns.
   unsigned long long cpuKernel = 0;
+
+  // Thread information for this process.
   sequence<ThreadInfoDictionary> threads = [];
-  // Firefox info
+
+  // --- Firefox info
+
+  // Internal-to-Firefox process identifier.
   unsigned long long childID = 0;
+
+  // The origin of the process, e.g. the subset of domain names
+  // that this subset serves.
   UTF8String origin = "";
+
+  // Type of this child process.
   WebIDLProcType type = "web";
 };
 
+/**
+ * Information on the parent process.
+ */
 dictionary ParentProcInfoDictionary {
-  // System info
+  // --- System info
+
+  // The cross-process descriptor for this process.
   long long pid = 0;
+
+  // Process filename (without the path name).
   DOMString filename = "";
+
+  // VMS, in bytes.
   unsigned long long virtualMemorySize = 0;
+
+  // RSS, in bytes, i.e. the total amount of memory allocated
+  // by this process.
   long long residentSetSize = 0;
+
+  // Resident unique size, i.e. the total amount of memory
+  // allocated by this process *and not shared with other processes*.
+  // Given that we share lots of memory between processes,
+  // this is probably the best end-user measure for "memory used".
+  long long residentUniqueSize = 0;
+
+  // Time spent by the process in user mode, in ns.
   unsigned long long cpuUser = 0;
+
+  // Time spent by the process in kernel mode, in ns.
   unsigned long long cpuKernel = 0;
+
+  // Thread information for this process.
   sequence<ThreadInfoDictionary> threads = [];
+
+  // Information on children processes.
   sequence<ChildProcInfoDictionary> children = [];
-  // Firefox info
+
+  // --- Firefox info
+  // Type of this parent process.
+  // As of this writing, this is always `browser`.
   WebIDLProcType type = "browser";
 };
 
