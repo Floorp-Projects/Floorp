@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.de"
+  },
+  "extensionDescription": {
+    "message": "Amazon.de Suche"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.de/s"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.de/"
+  },
+  "searchUrlGetParams": {
+    "message": "tag=admpdesktopde-21&ref=pd_sl_aDAC36B6C384A213{moz:date}&k={searchTerms}"
+  }
+}
