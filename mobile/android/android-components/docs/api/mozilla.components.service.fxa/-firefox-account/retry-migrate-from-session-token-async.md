@@ -2,7 +2,7 @@
 
 # retryMigrateFromSessionTokenAsync
 
-`fun retryMigrateFromSessionTokenAsync(): Deferred<<ERROR CLASS>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L173)
+`fun retryMigrateFromSessionTokenAsync(): Deferred<<ERROR CLASS>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L178)
 
 Overrides [OAuthAccount.retryMigrateFromSessionTokenAsync](../../mozilla.components.concept.sync/-o-auth-account/retry-migrate-from-session-token-async.md)
 

@@ -2,21 +2,23 @@
 
 # &lt;init&gt;
 
-`FirefoxAccount(config: `[`ServerConfig`](../-server-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null)`
+`FirefoxAccount(config: `[`ServerConfig`](../-server-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null, crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null)`
 
 Construct a FirefoxAccount from a [Config](#), a clientId, and a redirectUri.
 
 ### Parameters
 
-`persistCallback` -
-
-This callback will be called every time the [FirefoxAccount](index.md)
+`persistCallback` - This callback will be called every time the [FirefoxAccount](index.md)
 internal state has mutated.
 The FirefoxAccount instance can be later restored using the
 [FirefoxAccount.fromJSONString](from-j-s-o-n-string.md)` class method.
 It is the responsibility of the consumer to ensure the persisted data
 is saved in a secure location, as it can contain Sync Keys and
 OAuth tokens.
+
+`crashReporter` -
+
+A crash reporter instance.
 
 
 

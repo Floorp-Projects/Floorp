@@ -2,7 +2,7 @@
 
 # getSessionToken
 
-`fun getSessionToken(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L147)
+`fun getSessionToken(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L152)
 
 Overrides [OAuthAccount.getSessionToken](../../mozilla.components.concept.sync/-o-auth-account/get-session-token.md)
 

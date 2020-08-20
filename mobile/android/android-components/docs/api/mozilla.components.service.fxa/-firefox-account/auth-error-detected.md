@@ -2,7 +2,7 @@
 
 # authErrorDetected
 
-`fun authErrorDetected(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L206)
+`fun authErrorDetected(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L211)
 
 Overrides [OAuthAccount.authErrorDetected](../../mozilla.components.concept.sync/-o-auth-account/auth-error-detected.md)
 

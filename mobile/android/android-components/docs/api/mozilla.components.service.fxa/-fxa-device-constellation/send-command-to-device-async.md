@@ -2,7 +2,7 @@
 
 # sendCommandToDeviceAsync
 
-`fun sendCommandToDeviceAsync(targetDeviceId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, outgoingCommand: `[`DeviceCommandOutgoing`](../../mozilla.components.concept.sync/-device-command-outgoing/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L105)
+`fun sendCommandToDeviceAsync(targetDeviceId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, outgoingCommand: `[`DeviceCommandOutgoing`](../../mozilla.components.concept.sync/-device-command-outgoing/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L108)
 
 Overrides [DeviceConstellation.sendCommandToDeviceAsync](../../mozilla.components.concept.sync/-device-constellation/send-command-to-device-async.md)
 

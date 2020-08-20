@@ -2,7 +2,7 @@
 
 # FirefoxAccount
 
-`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L29)
+`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L30)
 
 FirefoxAccount represents the authentication state of a client.
 
@@ -10,7 +10,7 @@ FirefoxAccount represents the authentication state of a client.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FirefoxAccount(config: `[`ServerConfig`](../-server-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null)`<br>Construct a FirefoxAccount from a [Config](#), a clientId, and a redirectUri. |
+| [&lt;init&gt;](-init-.md) | `FirefoxAccount(config: `[`ServerConfig`](../-server-config.md)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null, crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null)`<br>Construct a FirefoxAccount from a [Config](#), a clientId, and a redirectUri. |
 
 ### Functions
 
