@@ -313,8 +313,8 @@ add_task(async function testAboutProcesses() {
   info("Sanity checks: memory resident");
   testMemory(
     memoryResidentContent,
-    row.process.totalResidentSize,
-    row.process.deltaResidentSize,
+    row.process.totalResidentUniqueSize,
+    row.process.deltaResidentUniqueSize,
     HARDCODED_ASSUMPTIONS_PROCESS
   );
 

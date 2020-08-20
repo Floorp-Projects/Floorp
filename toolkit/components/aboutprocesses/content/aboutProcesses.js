@@ -156,10 +156,8 @@ var State = {
       pid: cur.pid,
       childID: cur.childID,
       filename: cur.filename,
-      totalVirtualMemorySize: cur.virtualMemorySize,
-      deltaVirtualMemorySize: null,
-      totalResidentSize: cur.residentSetSize,
-      deltaResidentSize: null,
+      totalResidentUniqueSize: cur.residentUniqueSize,
+      deltaResidentUniqueSize: null,
       totalCpuUser: cur.cpuUser,
       slopeCpuUser: null,
       totalCpuKernel: cur.cpuKernel,
@@ -192,9 +190,8 @@ var State = {
       }
       return this._getThreadDelta(curThread, prevThread, deltaT);
     });
-    result.deltaVirtualMemorySize =
-      cur.virtualMemorySize - prev.virtualMemorySize;
-    result.deltaResidentSize = cur.residentSetSize - prev.residentSetSize;
+    result.deltaResidentUniqueSize =
+      cur.residentUniqueSize - prev.residentUniqueSize;
     result.slopeCpuUser = (cur.cpuUser - prev.cpuUser) / deltaT;
     result.slopeCpuKernel = (cur.cpuKernel - prev.cpuKernel) / deltaT;
     result.slopeCpu = result.slopeCpuUser + result.slopeCpuKernel;
@@ -290,15 +287,15 @@ var View = {
     // Column: Resident size
     {
       let { formatedDelta, formatedValue } = this._formatMemoryAndDelta(
-        data.totalResidentSize,
-        data.deltaResidentSize
+        data.totalResidentUniqueSize,
+        data.deltaResidentUniqueSize
       );
       let content = formatedDelta
         ? `${formatedValue}${formatedDelta}`
         : formatedValue;
       this._addCell(row, {
         content,
-        classes: ["totalResidentSize"],
+        classes: ["totalMemorySize"],
       });
     }
 
@@ -766,7 +763,7 @@ var Control = {
           order = b.threads.length - a.threads.length;
           break;
         case "column-memory-resident":
-          order = b.totalResidentSize - a.totalResidentSize;
+          order = b.totalResidentUniqueSize - a.totalResidentUniqueSize;
           break;
         case null:
           // Default order: classify processes by group.
