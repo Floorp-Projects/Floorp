@@ -9119,6 +9119,13 @@ class MGuardProto : public MBinaryInstruction, public SingleObjectPolicy::Data {
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
   }
+  AliasType mightAlias(const MDefinition* def) const override {
+    // These instructions never modify the [[Prototype]].
+    if (def->isAddAndStoreSlot() || def->isAllocateAndStoreSlot()) {
+      return AliasType::NoAlias;
+    }
+    return AliasType::MayAlias;
+  }
 };
 
 // Guard the object has no proto.
@@ -9142,6 +9149,13 @@ class MGuardNullProto : public MUnaryInstruction,
   }
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
+  }
+  AliasType mightAlias(const MDefinition* def) const override {
+    // These instructions never modify the [[Prototype]].
+    if (def->isAddAndStoreSlot() || def->isAllocateAndStoreSlot()) {
+      return AliasType::NoAlias;
+    }
+    return AliasType::MayAlias;
   }
 };
 
@@ -9651,6 +9665,13 @@ class MGuardObjectGroup : public MUnaryInstruction,
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
   }
+  AliasType mightAlias(const MDefinition* def) const override {
+    // These instructions don't modify the group only the shape.
+    if (def->isAddAndStoreSlot() || def->isAllocateAndStoreSlot()) {
+      return AliasType::NoAlias;
+    }
+    return AliasType::MayAlias;
+  };
   bool appendRoots(MRootList& roots) const override {
     return roots.append(group_);
   }
@@ -12010,8 +12031,19 @@ class MObjectStaticProto : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
+  }
+  AliasType mightAlias(const MDefinition* def) const override {
+    // These instructions never modify the [[Prototype]].
+    if (def->isAddAndStoreSlot() || def->isAllocateAndStoreSlot()) {
+      return AliasType::NoAlias;
+    }
+    return AliasType::MayAlias;
   }
 };
 
