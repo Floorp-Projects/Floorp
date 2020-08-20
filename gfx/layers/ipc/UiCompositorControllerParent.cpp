@@ -212,12 +212,12 @@ void UiCompositorControllerParent::NotifyFirstPaint() {
 }
 
 void UiCompositorControllerParent::NotifyUpdateScreenMetrics(
-    const FrameMetrics& aMetrics) {
+    const GeckoViewMetrics& aMetrics) {
 #if defined(MOZ_WIDGET_ANDROID)
   CSSToScreenScale scale = ViewTargetAs<ScreenPixel>(
-      aMetrics.GetZoom().ToScaleFactor(),
+      aMetrics.mZoom.ToScaleFactor(),
       PixelCastJustification::ScreenIsParentLayerForRoot);
-  ScreenPoint scrollOffset = aMetrics.GetVisualScrollOffset() * scale;
+  ScreenPoint scrollOffset = aMetrics.mVisualScrollOffset * scale;
   CompositorThread()->Dispatch(NewRunnableMethod<ScreenPoint, CSSToScreenScale>(
       "UiCompositorControllerParent::SendRootFrameMetrics", this,
       &UiCompositorControllerParent::SendRootFrameMetrics, scrollOffset,

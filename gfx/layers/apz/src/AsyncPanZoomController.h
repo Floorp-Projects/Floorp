@@ -530,9 +530,14 @@ class AsyncPanZoomController {
   const FrameMetrics& Metrics() const;
   FrameMetrics& Metrics();
 
+  /**
+   * Get the GeckoViewMetrics to be sent to Gecko for the current composite.
+   */
+  GeckoViewMetrics GetGeckoViewMetrics() const;
+
   // Helper function to compare root frame metrics and update them
   // Returns true when the metrics have changed and were updated.
-  bool UpdateRootFrameMetricsIfChanged(FrameMetrics& aMetrics);
+  bool UpdateRootFrameMetricsIfChanged(GeckoViewMetrics& aMetrics);
 
  private:
   // Get whether the horizontal content of the honoured target of auto-dir

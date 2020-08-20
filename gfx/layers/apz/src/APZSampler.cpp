@@ -253,6 +253,15 @@ ScrollableLayerGuid APZSampler::GetGuid(const LayerMetricsWrapper& aLayer) {
   return aLayer.GetApzc()->GetGuid();
 }
 
+GeckoViewMetrics APZSampler::GetGeckoViewMetrics(
+    const LayerMetricsWrapper& aLayer) const {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetGeckoViewMetrics();
+}
+
 ScreenMargin APZSampler::GetGeckoFixedLayerMargins() const {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();

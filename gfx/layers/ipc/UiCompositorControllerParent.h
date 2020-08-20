@@ -7,6 +7,7 @@
 #define include_gfx_ipc_UiCompositorControllerParent_h
 
 #include "mozilla/layers/PUiCompositorControllerParent.h"
+#include "mozilla/layers/APZUtils.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/RefPtr.h"
 
@@ -55,7 +56,7 @@ class UiCompositorControllerParent final
   // necessary.
   void NotifyLayersUpdated();
   void NotifyFirstPaint();
-  void NotifyUpdateScreenMetrics(const FrameMetrics& aMetrics);
+  void NotifyUpdateScreenMetrics(const GeckoViewMetrics& aMetrics);
 
  private:
   explicit UiCompositorControllerParent(const LayersId& aRootLayerTreeId);

@@ -865,17 +865,15 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                 if (CompositorBridgeParent* bridge =
                         compositor->GetCompositorBridgeParent()) {
                   LayersId rootLayerTreeId = bridge->RootLayerTreeId();
-                  // XXX: This should be using the APZ metrics, not the
-                  // layer tree metrics. (And possibly, both this code and
-                  // the WR equivalent should be using the "effective"
-                  // metrics matching the values being composited.)
-                  if (mIsFirstPaint || FrameMetricsHaveUpdated(metrics)) {
+                  GeckoViewMetrics gvMetrics =
+                      sampler->GetGeckoViewMetrics(wrapper);
+                  if (mIsFirstPaint || GeckoViewMetricsHaveUpdated(gvMetrics)) {
                     if (RefPtr<UiCompositorControllerParent> uiController =
                             UiCompositorControllerParent::
                                 GetFromRootLayerTreeId(rootLayerTreeId)) {
-                      uiController->NotifyUpdateScreenMetrics(metrics);
+                      uiController->NotifyUpdateScreenMetrics(gvMetrics);
                     }
-                    mLastMetrics = metrics;
+                    mLastMetrics = gvMetrics;
                   }
                   if (mIsFirstPaint) {
                     if (RefPtr<UiCompositorControllerParent> uiController =
@@ -1125,11 +1123,11 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-bool AsyncCompositionManager::FrameMetricsHaveUpdated(
-    const FrameMetrics& aMetrics) {
-  return RoundedToInt(mLastMetrics.GetVisualScrollOffset()) !=
-             RoundedToInt(aMetrics.GetVisualScrollOffset()) ||
-         mLastMetrics.GetZoom() != aMetrics.GetZoom();
+bool AsyncCompositionManager::GeckoViewMetricsHaveUpdated(
+    const GeckoViewMetrics& aMetrics) {
+  return RoundedToInt(mLastMetrics.mVisualScrollOffset) !=
+             RoundedToInt(aMetrics.mVisualScrollOffset) ||
+         mLastMetrics.mZoom != aMetrics.mZoom;
 }
 #endif
 
