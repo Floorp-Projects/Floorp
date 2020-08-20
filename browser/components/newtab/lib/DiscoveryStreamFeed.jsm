@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const SEARCH_REGION_PREF = "browser.search.region";
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -29,11 +28,10 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
-XPCOMUtils.defineLazyPreferenceGetter(
+ChromeUtils.defineModuleGetter(
   this,
-  "browserSearchRegion",
-  SEARCH_REGION_PREF,
-  ""
+  "Region",
+  "resource://gre/modules/Region.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -180,7 +178,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   get region() {
-    return browserSearchRegion;
+    return Region.home;
   }
 
   get showSpocs() {
