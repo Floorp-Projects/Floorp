@@ -22,16 +22,13 @@ class HTMLCanvasElement;
 }  // namespace dom
 }  // namespace mozilla
 
-//-----------------------------------------------
-// This class maintains all the data that
-// is used by all the page frame
-// It lives while the nsPageSequenceFrame lives
+/**
+ * This class maintains various shared data that is used by printing-related
+ * frames. The nsPageSequenceFrame strongly owns an instance of this class,
+ * which lives for as long as the nsPageSequenceFrame does.
+ */
 class nsSharedPageData {
  public:
-  // This object a shared by all the nsPageFrames
-  // parented to a nsPageSequenceFrame
-  nsSharedPageData() : mShrinkToFitRatio(1.0f) {}
-
   nsString mDateTimeStr;
   nsString mPageNumFormat;
   nsString mPageNumAndTotalsFormat;
@@ -53,7 +50,7 @@ class nsSharedPageData {
   // The scaling ratio we need to apply to make all pages fit horizontally. It's
   // the minimum "ComputedWidth / OverflowWidth" ratio of all page content
   // frames that overflowed.  It's 1.0 if none overflowed horizontally.
-  float mShrinkToFitRatio;
+  float mShrinkToFitRatio = 1.0f;
 };
 
 // Page sequence frame class. Manages a series of pages, in paginated mode.
