@@ -1520,7 +1520,13 @@ class CreateMachEnvironment(MachCommandBase):
         manager.install_pip_package('zstandard>=0.9.0,<=0.13.0')
 
         if PY3:
-            manager.install_pip_package('glean_sdk~=31.5.0')
+            # This can fail on some platforms. See
+            # https://bugzilla.mozilla.org/show_bug.cgi?id=1660120
+            try:
+                manager.install_pip_package('glean_sdk~=31.5.0')
+            except subprocess.CalledProcessError:
+                print('Could not install glean_sdk, so telemetry will not be '
+                      'collected. Continuing.')
             print('Python 3 mach environment created.')
             python2, _ = find_python2_executable()
             if not python2:
