@@ -223,7 +223,7 @@ class ADT1Remapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {3, BUTTON_INDEX_TERTIARY},
         {4, BUTTON_INDEX_QUATERNARY},
         {6, BUTTON_INDEX_LEFT_SHOULDER},
@@ -297,7 +297,7 @@ class TwoAxesEightKeysRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {0, BUTTON_INDEX_QUATERNARY},
         {2, BUTTON_INDEX_PRIMARY},
         {3, BUTTON_INDEX_TERTIARY}};
@@ -730,7 +730,7 @@ class LogitechDInputRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {0, BUTTON_INDEX_TERTIARY},
         {1, BUTTON_INDEX_PRIMARY},
         {2, BUTTON_INDEX_SECONDARY}};
@@ -897,7 +897,7 @@ class NvShieldRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {2, BUTTON_INDEX_META},
         {3, BUTTON_INDEX_TERTIARY},
         {4, BUTTON_INDEX_QUATERNARY},
@@ -995,7 +995,7 @@ class NvShield2017Remapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {2, BUTTON_INDEX_META},
         {3, BUTTON_INDEX_TERTIARY},
         {4, BUTTON_INDEX_QUATERNARY},
@@ -1078,7 +1078,7 @@ class IBuffaloRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {0, BUTTON_INDEX_SECONDARY},     {1, BUTTON_INDEX_PRIMARY},
         {2, BUTTON_INDEX_QUATERNARY},    {3, BUTTON_INDEX_TERTIARY},
         {5, BUTTON_INDEX_RIGHT_TRIGGER}, {6, BUTTON_INDEX_BACK_SELECT},
@@ -1159,7 +1159,7 @@ class XSkillsRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {0, BUTTON_INDEX_PRIMARY},     // A
         {1, BUTTON_INDEX_TERTIARY},    // B
         {2, BUTTON_INDEX_SECONDARY},   // X
@@ -1335,7 +1335,7 @@ class StadiaControllerOldFirmwareRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {3, BUTTON_INDEX_TERTIARY},
         {4, BUTTON_INDEX_QUATERNARY},
         {6, BUTTON_INDEX_LEFT_SHOULDER},
@@ -1435,7 +1435,7 @@ class RazerServalRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {3, BUTTON_INDEX_TERTIARY},         {4, BUTTON_INDEX_QUATERNARY},
         {6, BUTTON_INDEX_LEFT_SHOULDER},    {7, BUTTON_INDEX_RIGHT_SHOULDER},
         {10, BUTTON_INDEX_BACK_SELECT},     {11, BUTTON_INDEX_START},
@@ -1520,7 +1520,7 @@ class MogaProRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {3, BUTTON_INDEX_TERTIARY},         {4, BUTTON_INDEX_QUATERNARY},
         {6, BUTTON_INDEX_LEFT_SHOULDER},    {7, BUTTON_INDEX_RIGHT_SHOULDER},
         {11, BUTTON_INDEX_START},           {13, BUTTON_INDEX_LEFT_THUMBSTICK},
@@ -1606,7 +1606,7 @@ class OnLiveWirelessRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {3, BUTTON_INDEX_TERTIARY},
         {4, BUTTON_INDEX_QUATERNARY},
         {6, BUTTON_INDEX_LEFT_SHOULDER},
@@ -1690,7 +1690,7 @@ class OUYARemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::map<uint32_t, uint32_t> buttonMapping = {
+    const std::unordered_map<uint32_t, uint32_t> buttonMapping = {
         {1, BUTTON_INDEX_TERTIARY},         {2, BUTTON_INDEX_QUATERNARY},
         {3, BUTTON_INDEX_SECONDARY},        {6, BUTTON_INDEX_LEFT_THUMBSTICK},
         {7, BUTTON_INDEX_RIGHT_THUMBSTICK}, {8, BUTTON_INDEX_DPAD_UP},
