@@ -599,7 +599,7 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
-        t-win10-64(-hw|-ref-hw):
+        t-win10-64(-hw|-ref-hw|-1803-hw):
             provisioner: releng-hardware
             implementation: generic-worker
             os: windows

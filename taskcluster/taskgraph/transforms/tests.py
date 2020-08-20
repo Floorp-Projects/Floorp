@@ -68,27 +68,27 @@ WINDOWS_WORKER_TYPES = {
     'windows7-32': {
       'virtual': 't-win7-32',
       'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows7-32-shippable': {
       'virtual': 't-win7-32',
       'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows7-32-devedition': {
       'virtual': 't-win7-32',
       'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows7-32-mingwclang': {
       'virtual': 't-win7-32',
       'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-aarch64': {
       'virtual': 't-win64-aarch64-laptop',
@@ -98,37 +98,37 @@ WINDOWS_WORKER_TYPES = {
     'windows10-64-ccov': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64-devedition': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64-shippable': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64-asan': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64-qr': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64-shippable-qr': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64-mingwclang': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu-s',
-      'hardware': 't-win10-64-hw',
+      'hardware': 't-win10-64-1803-hw',
     },
     'windows10-64-ref-hw-2017': {
       'virtual': 't-win10-64',
