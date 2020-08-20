@@ -1192,7 +1192,7 @@ var PlacesUIUtils = {
       if (
         aForceVisible ||
         toolbarIsCustomized ||
-        PlacesUtils.getToolbarFolderCount(PlacesUtils.bookmarks.toolbarGuid) >
+        PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.toolbarGuid) >
           this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
       ) {
         Services.obs.notifyObservers(
