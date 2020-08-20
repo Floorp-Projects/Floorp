@@ -9,9 +9,6 @@
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { Troubleshoot } = ChromeUtils.import(
-  "resource://gre/modules/Troubleshoot.jsm"
-);
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function isTelemetryEnabled() {
@@ -55,36 +52,6 @@ this.browserInfo = class extends ExtensionAPI {
           // If content-track-digest256 is in the tracking table,
           // the user has enabled the strict list.
           return trackingTable.includes("content") ? "strict" : "basic";
-        },
-        async getGPUInfo() {
-          if (!isTelemetryEnabled() || !isWebRenderEnabled()) {
-            return undefined;
-          }
-          let gpus = [];
-          await new Promise(resolve => {
-            Troubleshoot.snapshot(async function(snapshot) {
-              const { graphics } = snapshot;
-              const activeGPU = graphics.isGPU2Active ? 2 : 1;
-              gpus.push({
-                active: activeGPU == 1,
-                description: graphics.adapterDescription,
-                deviceID: graphics.adapterDeviceID,
-                vendorID: graphics.adapterVendorID,
-                driverVersion: graphics.driverVersion,
-              });
-              if ("adapterDescription2" in graphics) {
-                gpus.push({
-                  active: activeGPU == 2,
-                  description: graphics.adapterDescription2,
-                  deviceID: graphics.adapterDeviceID2,
-                  vendorID: graphics.adapterVendorID2,
-                  driverVersion: graphics.driverVersion2,
-                });
-              }
-              resolve();
-            });
-          });
-          return gpus;
         },
         async getBuildID() {
           return Services.appinfo.appBuildID;
