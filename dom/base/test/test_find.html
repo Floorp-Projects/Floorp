@@ -122,6 +122,14 @@ let runTests = t.step_func_done(function() {
     document.documentElement.appendChild(div);
   }, "Mixed shadow and non-shadow text");
 
+  testFindable(true, "Shadow", function(document) {
+    document.documentElement.innerHTML = `
+      Sources<span id="host"></span>
+      <div>whatever</div>
+    `;
+    document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "Shadow text";
+  }, "Test inside a shadow-root mid-match");
+
   // NOTE(emilio): It is probably doable / worth changing this to return true,
   // maybe, by relaxing the security checks in the ranges nsFind returns or
   // such.
