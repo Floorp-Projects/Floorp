@@ -100,7 +100,6 @@ function getWebCompatInfoForTab(tab) {
   return Promise.all([
     browser.browserInfo.getBlockList(),
     browser.browserInfo.getBuildID(),
-    browser.browserInfo.getGPUInfo(),
     browser.browserInfo.getGraphicsPrefs(),
     browser.browserInfo.getUpdateChannel(),
     browser.browserInfo.hasTouchScreen(),
@@ -114,7 +113,6 @@ function getWebCompatInfoForTab(tab) {
     ([
       blockList,
       buildID,
-      GPUs,
       graphicsPrefs,
       channel,
       hasTouchScreen,
@@ -137,7 +135,6 @@ function getWebCompatInfoForTab(tab) {
           channel,
           consoleLog,
           frameworks,
-          GPUs,
           hasTouchScreen,
           "mixed active content blocked":
             frameInfo.hasMixedActiveContentBlocked,
