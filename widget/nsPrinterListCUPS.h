@@ -12,10 +12,11 @@
 class nsPrinterListCUPS final : public nsPrinterListBase {
   NS_IMETHOD InitPrintSettingsFromPrinter(const nsAString&,
                                           nsIPrintSettings*) final;
-  NS_IMETHOD GetSystemDefaultPrinterName(nsAString&) final;
 
   nsTArray<PrinterInfo> Printers() const final;
   RefPtr<nsIPrinter> CreatePrinter(PrinterInfo) const final;
+  Maybe<PrinterInfo> NamedPrinter(nsString aPrinterName) const final;
+  nsresult SystemDefaultPrinterName(nsAString&) const final;
 
  private:
   ~nsPrinterListCUPS() override = default;
