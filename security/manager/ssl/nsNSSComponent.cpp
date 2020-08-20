@@ -2049,8 +2049,8 @@ nsresult nsNSSComponent::InitializeNSS() {
                            mTestBuiltInRootHash);
 #endif
     mContentSigningRootHash.Truncate();
-    Preferences::GetString("security.content.signature.root_hash",
-                           mContentSigningRootHash);
+    Preferences::GetCString("security.content.signature.root_hash",
+                            mContentSigningRootHash);
 
     mMitmCanaryIssuer.Truncate();
     Preferences::GetString("security.pki.mitm_canary_issuer",
@@ -2442,8 +2442,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
     } else if (prefName.EqualsLiteral("security.content.signature.root_hash")) {
       MutexAutoLock lock(mMutex);
       mContentSigningRootHash.Truncate();
-      Preferences::GetString("security.content.signature.root_hash",
-                             mContentSigningRootHash);
+      Preferences::GetCString("security.content.signature.root_hash",
+                              mContentSigningRootHash);
     } else if (prefName.Equals(kEnterpriseRootModePref) ||
                prefName.Equals(kFamilySafetyModePref)) {
       UnloadEnterpriseRoots();
@@ -2566,30 +2566,28 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool* result) {
 }
 
 NS_IMETHODIMP
-nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool* result) {
+nsNSSComponent::IsCertContentSigningRoot(const nsTArray<uint8_t>& cert,
+                                         bool* result) {
   NS_ENSURE_ARG_POINTER(result);
   *result = false;
 
-  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
-  if (!nsc) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("creating nsNSSCertificate failed"));
-    return NS_ERROR_FAILURE;
+  if (cert.Length() > std::numeric_limits<uint32_t>::max()) {
+    return NS_ERROR_INVALID_ARG;
   }
-  nsAutoString certHash;
-  nsresult rv = nsc->GetSha256Fingerprint(certHash);
+  Digest digest;
+  nsresult rv =
+      digest.DigestBuf(SEC_OID_SHA256, cert.Elements(), cert.Length());
   if (NS_FAILED(rv)) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("getting cert fingerprint failed"));
     return rv;
+  }
+  UniquePORTString fingerprintCString(CERT_Hexify(
+      const_cast<SECItem*>(&digest.get()), true /* use colon delimiters */));
+  if (!fingerprintCString) {
+    return NS_ERROR_FAILURE;
   }
 
   MutexAutoLock lock(mMutex);
-
-  if (mContentSigningRootHash.IsEmpty()) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("mContentSigningRootHash is empty"));
-    return NS_ERROR_FAILURE;
-  }
-
-  *result = mContentSigningRootHash.Equals(certHash);
+  *result = mContentSigningRootHash.Equals(fingerprintCString.get());
   return NS_OK;
 }
 
