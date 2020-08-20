@@ -1213,6 +1213,11 @@ class GeckoEngineTest {
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
+        val metaDataBundle = GeckoBundle()
+        metaDataBundle.putStringArray("disabledFlags", emptyArray())
+        metaDataBundle.putBoolean("privateBrowsingAllowed", false)
+        bundle.putBundle("metaData", metaDataBundle)
+
         val installedExtension = MockWebExtension(bundle)
 
         val installedExtensions = listOf<GeckoWebExtension>(installedExtension)
