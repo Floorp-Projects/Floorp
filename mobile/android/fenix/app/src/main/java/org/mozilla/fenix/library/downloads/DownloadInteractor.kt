@@ -15,13 +15,9 @@ class DownloadInteractor(
         downloadController.handleOpen(item)
     }
 
-    override fun select(item: DownloadItem) {
-        TODO("Not yet implemented")
-    }
+    override fun select(item: DownloadItem) { /* noop */ }
 
-    override fun deselect(item: DownloadItem) {
-        TODO("Not yet implemented")
-    }
+    override fun deselect(item: DownloadItem) { /* noop */ }
 
     override fun onBackPressed(): Boolean {
         return downloadController.handleBackPressed()
