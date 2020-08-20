@@ -19,6 +19,7 @@
 #include "js/Exception.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/HeapAPI.h"
+#include "js/shadow/Function.h"     // JS::shadow::Function
 #include "js/shadow/Object.h"       // JS::shadow::Object
 #include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
 #include "js/shadow/String.h"  // JS::shadow::String
@@ -363,26 +364,6 @@ extern JS_FRIEND_API bool CompartmentHasLiveGlobal(JS::Compartment* comp);
 // Returns true if this compartment can be shared across multiple Realms.  Used
 // when we're looking for an existing compartment to place a new Realm in.
 extern JS_FRIEND_API bool IsSharableCompartment(JS::Compartment* comp);
-
-/*
- * Shadow declarations of JS internal structures, for access by inline access
- * functions below. Do not use these structures in any other way. When adding
- * new fields for access by inline methods, make sure to add static asserts to
- * the original header file to ensure that offsets are consistent.
- */
-namespace shadow {
-
-struct Function {
-  JS::shadow::Object base;
-  uint16_t nargs;
-  uint16_t flags;
-  /* Used only for natives */
-  JSNative native;
-  const JSJitInfo* jitinfo;
-  void* _1;
-};
-
-} /* namespace shadow */
 
 // This is equal to |&JSObject::class_|.  Use it in places where you don't want
 // to #include vm/JSObject.h.
@@ -1261,10 +1242,10 @@ struct JSTypedMethodJitInfo {
 
 namespace js {
 
-static MOZ_ALWAYS_INLINE shadow::Function* FunctionObjectToShadowFunction(
+static MOZ_ALWAYS_INLINE JS::shadow::Function* FunctionObjectToShadowFunction(
     JSObject* fun) {
   MOZ_ASSERT(GetObjectClass(fun) == FunctionClassPtr);
-  return reinterpret_cast<shadow::Function*>(fun);
+  return reinterpret_cast<JS::shadow::Function*>(fun);
 }
 
 /* Statically asserted in FunctionFlags.cpp. */
@@ -1291,7 +1272,7 @@ static MOZ_ALWAYS_INLINE const JSJitInfo* FUNCTION_VALUE_TO_JITINFO(
 
 static MOZ_ALWAYS_INLINE void SET_JITINFO(JSFunction* func,
                                           const JSJitInfo* info) {
-  js::shadow::Function* fun = reinterpret_cast<js::shadow::Function*>(func);
+  auto* fun = reinterpret_cast<JS::shadow::Function*>(func);
   MOZ_ASSERT(!(fun->flags & js::JS_FUNCTION_INTERPRETED_BITS));
   fun->jitinfo = info;
 }
