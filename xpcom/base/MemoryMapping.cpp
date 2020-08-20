@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include <string>
+#include <sstream>
 
 namespace mozilla {
 
@@ -103,8 +104,15 @@ const T* FindEntry(const char* aName, const T (&aEntries)[n]) {
 using Perm = MemoryMapping::Perm;
 using PermSet = MemoryMapping::PermSet;
 
-nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings) {
-  std::ifstream stream("/proc/self/smaps");
+nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings, pid_t aPid) {
+  std::ifstream stream;
+  if (aPid == 0) {
+    stream.open("/proc/self/smaps");
+  } else {
+    std::ostringstream path;
+    path << "/proc/" << aPid << "/smaps" << std::ends;
+    stream.open(path.str());
+  }
   if (stream.fail()) {
     return NS_ERROR_FAILURE;
   }

@@ -81,6 +81,7 @@ EXPORTS += [
     'nsIWeakReferenceUtils.h',
     'nsMaybeWeakPtr.h',
     'nsMemory.h',
+    'nsMemoryReporterManager.h',
     'nsObjCExceptions.h',
     'nsQueryObject.h',
     'nsSystemInfo.h',
