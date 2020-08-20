@@ -5427,8 +5427,8 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
       MOZ_ASSERT(loadingEntry);
       nsID changeID = {};
       if (XRE_IsParentProcess()) {
-        mBrowsingContext->Canonical()->SessionHistoryCommit(mActiveEntry->Id(),
-                                                            changeID);
+        mBrowsingContext->Canonical()->SessionHistoryCommit(
+            loadingEntry->mLoadId, changeID);
       } else {
         RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
         if (rootSH) {
@@ -5443,8 +5443,8 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
           }
         }
         ContentChild* cc = ContentChild::GetSingleton();
-        mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
-                                                 mActiveEntry->Id(), changeID);
+        mozilla::Unused << cc->SendHistoryCommit(
+            mBrowsingContext, loadingEntry->mLoadId, changeID);
       }
     }
   }

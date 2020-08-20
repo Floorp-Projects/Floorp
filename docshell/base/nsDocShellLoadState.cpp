@@ -510,7 +510,7 @@ void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
   mSHEntry = aSHEntry;
   nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aSHEntry);
   if (she) {
-    SetLoadingSessionHistoryInfo(LoadingSessionHistoryInfo(she->Info()));
+    mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(she);
   } else {
     mLoadingSessionHistoryInfo = nullptr;
   }
