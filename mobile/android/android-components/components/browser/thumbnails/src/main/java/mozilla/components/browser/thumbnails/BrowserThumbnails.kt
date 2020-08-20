@@ -52,8 +52,11 @@ class BrowserThumbnails(
         }
     }
 
-    @VisibleForTesting
-    internal fun requestScreenshot() {
+    /**
+     * Requests a screenshot to be taken that can be observed from [BrowserStore] if successful. The request can fail
+     * if the device is low on memory or if there is no tab attached to the [EngineView].
+     */
+    fun requestScreenshot() {
         if (!isLowOnMemory()) {
             engineView.captureThumbnail {
                 val bitmap = it ?: return@captureThumbnail
