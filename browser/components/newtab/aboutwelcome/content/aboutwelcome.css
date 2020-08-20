@@ -335,7 +335,7 @@ body {
   .multistageContainer .tiles-theme-section {
     display: grid;
     grid-gap: 21px;
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat(4, auto);
     /* --newtab-background-color-1 will be invisible, but it's necessary to
      * keep the content from jumping around when it gets focus-within and
      * does sprout a dotted border.  This way it keeps a 1 pixel wide border
@@ -371,6 +371,8 @@ body {
           background-image: url("chrome://mozapps/content/extensions/firefox-compact-dark.svg"); }
         .multistageContainer .tiles-theme-section .theme .icon.automatic {
           background-image: url("chrome://mozapps/content/extensions/default-theme.svg"); }
+        .multistageContainer .tiles-theme-section .theme .icon.alpenglow {
+          background-image: url("chrome://mozapps/content/extensions/firefox-alpenglow.svg"); }
       .multistageContainer .tiles-theme-section .theme .text {
         display: flex;
         font-size: 14px;
