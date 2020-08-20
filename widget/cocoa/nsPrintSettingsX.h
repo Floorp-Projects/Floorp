@@ -22,6 +22,7 @@ class nsPrintSettingsX : public nsPrintSettings {
   NS_DECL_ISUPPORTS_INHERITED
 
   nsPrintSettingsX();
+  explicit nsPrintSettingsX(const PrintSettingsInitializer& aSettings);
   nsresult Init();
   NSPrintInfo* GetCocoaPrintInfo() { return mPrintInfo; }
   void SetCocoaPrintInfo(NSPrintInfo* aPrintInfo);

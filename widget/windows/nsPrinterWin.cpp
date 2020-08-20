@@ -24,6 +24,14 @@ already_AddRefed<nsPrinterWin> nsPrinterWin::Create(const nsAString& aName) {
   return do_AddRef(new nsPrinterWin(aName));
 }
 
+// TODO(nordzilla, 165829) This needs to be implemented for windows.
+// It should basically collect the same information as
+// nsPrinterListWin::InitPrintSettingsFromPrinter.
+PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
+  PrintSettingsInitializer settings;
+  return settings;
+}
+
 template <class T>
 static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
                                             WORD aCapabilityID) {
@@ -119,12 +127,8 @@ nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
     // We don't resolve the margins eagerly because they're really expensive (on
     // the order of seconds for some drivers).
     nsDependentSubstring name(paperNames[i].cbegin(), nameLength);
-    paperList.AppendElement(mozilla::PaperInfo{
-        nsString(name),
-        {width, height},
-        Nothing(),
-        paperIds[i],
-    });
+    paperList.AppendElement(mozilla::PaperInfo(nsString(name), {width, height},
+                                               Nothing(), paperIds[i]));
   }
 
   return paperList;
