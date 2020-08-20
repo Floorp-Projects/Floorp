@@ -19,6 +19,7 @@
 #include "js/Exception.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/HeapAPI.h"
+#include "js/shadow/String.h"  // JS::shadow::String
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
