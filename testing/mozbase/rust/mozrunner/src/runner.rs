@@ -154,9 +154,19 @@ impl RunnerProcess for FirefoxProcess {
     }
 
     fn kill(&mut self) -> io::Result<process::ExitStatus> {
-        debug!("Killing process {}", self.process.id());
-        self.process.kill()?;
-        self.process.wait()
+        match self.try_wait() {
+            // child has already exited, reap its exit code
+            Ok(Some(status)) => return Ok(status),
+
+            // child still running, kill it
+            Ok(None) => {
+                debug!("Killing process {}", self.process.id());
+                self.process.kill()?;
+                return self.process.wait();
+            }
+
+            Err(e) => return Err(e),
+        }
     }
 }
 
