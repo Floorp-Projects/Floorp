@@ -20,6 +20,7 @@
 #include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
 #include "gc/ZoneAllocator.h"
+#include "js/shadow/Object.h"  // JS::shadow::Object
 #include "js/Value.h"
 #include "vm/JSObject.h"
 #include "vm/Shape.h"
@@ -512,18 +513,18 @@ class NativeObject : public JSObject {
   static void staticAsserts() {
     static_assert(sizeof(NativeObject) == sizeof(JSObject_Slots0),
                   "native object size must match GC thing size");
-    static_assert(sizeof(NativeObject) == sizeof(shadow::Object),
+    static_assert(sizeof(NativeObject) == sizeof(JS::shadow::Object),
                   "shadow interface must match actual implementation");
     static_assert(sizeof(NativeObject) % sizeof(Value) == 0,
                   "fixed slots after an object must be aligned");
 
-    static_assert(offsetOfGroup() == offsetof(shadow::Object, group),
+    static_assert(offsetOfGroup() == offsetof(JS::shadow::Object, group),
                   "shadow type must match actual type");
     static_assert(
-        offsetof(NativeObject, slots_) == offsetof(shadow::Object, slots),
+        offsetof(NativeObject, slots_) == offsetof(JS::shadow::Object, slots),
         "shadow slots must match actual slots");
     static_assert(
-        offsetof(NativeObject, elements_) == offsetof(shadow::Object, _1),
+        offsetof(NativeObject, elements_) == offsetof(JS::shadow::Object, _1),
         "shadow placeholder must match actual elements");
 
     static_assert(MAX_FIXED_SLOTS <= Shape::FIXED_SLOTS_MAX,
@@ -756,7 +757,7 @@ class NativeObject : public JSObject {
   }
 
   uint32_t numFixedSlots() const {
-    return reinterpret_cast<const shadow::Object*>(this)->numFixedSlots();
+    return reinterpret_cast<const JS::shadow::Object*>(this)->numFixedSlots();
   }
 
   // Get the number of fixed slots when the shape pointer may have been
@@ -1066,7 +1067,8 @@ class NativeObject : public JSObject {
 
   // MAX_FIXED_SLOTS is the biggest number of fixed slots our GC
   // size classes will give an object.
-  static constexpr uint32_t MAX_FIXED_SLOTS = shadow::Object::MAX_FIXED_SLOTS;
+  static constexpr uint32_t MAX_FIXED_SLOTS =
+      JS::shadow::Object::MAX_FIXED_SLOTS;
 
  protected:
   MOZ_ALWAYS_INLINE bool updateSlotsForSpan(JSContext* cx, size_t oldSpan,
