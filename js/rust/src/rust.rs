@@ -1100,7 +1100,7 @@ pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
 };
 
 #[inline]
-unsafe fn get_object_group(obj: *mut JSObject) -> *mut js::shadow::ObjectGroup {
+unsafe fn get_object_group(obj: *mut JSObject) -> *mut JS::shadow::ObjectGroup {
     assert!(!obj.is_null());
     let obj = obj as *mut js::shadow::Object;
     (*obj).group
