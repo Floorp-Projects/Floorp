@@ -123,7 +123,7 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 #ifdef DEBUG
   nsString mTestBuiltInRootHash;
 #endif
-  nsString mContentSigningRootHash;
+  nsCString mContentSigningRootHash;
   RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
   nsString mMitmCanaryIssuer;
   bool mMitmDetecionEnabled;

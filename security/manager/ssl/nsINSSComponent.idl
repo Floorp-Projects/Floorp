@@ -38,10 +38,10 @@ interface nsINSSComponent : nsISupports {
   [noscript] bool isCertTestBuiltInRoot(in CERTCertificatePtr cert);
 
   /**
-   * Used to determine if the given CERTCertificate is the content signing root
-   * certificate.
+   * Used to determine if the given certificate (represented as an array of
+   * bytes) is the content signing root certificate.
    */
-  [noscript] bool isCertContentSigningRoot(in CERTCertificatePtr cert);
+  [noscript] bool isCertContentSigningRoot(in Array<octet> cert);
 
   /**
    * If enabled by the preference "security.enterprise_roots.enabled", returns
