@@ -4888,18 +4888,20 @@ const FrameMetrics& AsyncPanZoomController::Metrics() const {
 }
 
 bool AsyncPanZoomController::UpdateRootFrameMetricsIfChanged(
-    FrameMetrics& metrics) {
+    FrameMetrics& aMetrics) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
-  const FrameMetrics& aMetrics = Metrics();
-  if (!aMetrics.IsRootContent()) return false;
+  const FrameMetrics& metrics = Metrics();
+  if (!metrics.IsRootContent()) {
+    return false;
+  }
 
-  bool hasChanged = RoundedToInt(metrics.GetVisualScrollOffset()) !=
-                        RoundedToInt(aMetrics.GetVisualScrollOffset()) ||
-                    metrics.GetZoom() != aMetrics.GetZoom();
+  bool hasChanged = RoundedToInt(aMetrics.GetVisualScrollOffset()) !=
+                        RoundedToInt(metrics.GetVisualScrollOffset()) ||
+                    aMetrics.GetZoom() != metrics.GetZoom();
 
   if (hasChanged) {
-    metrics = aMetrics;
+    aMetrics = metrics;
   }
 
   return hasChanged;
