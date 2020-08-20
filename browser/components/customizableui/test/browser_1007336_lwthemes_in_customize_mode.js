@@ -75,9 +75,9 @@ add_task(async function() {
 
   is(
     header.nextElementSibling.nextElementSibling.nextElementSibling
-      .nextElementSibling,
+      .nextElementSibling.nextElementSibling,
     footer,
-    "There should only be three themes (default, light, dark) in the 'My Themes' section by default"
+    "There should only be four themes (default, light, dark, alpenglow) in the 'My Themes' section by default"
   );
   is(
     header.nextElementSibling.theme.id,
