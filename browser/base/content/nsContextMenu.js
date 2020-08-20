@@ -1883,7 +1883,7 @@ class nsContextMenu {
   }
 
   printFrame() {
-    PrintUtils.printWindow(this.actor.browsingContext);
+    PrintUtils.startPrintWindow(this.actor.browsingContext);
   }
 
   switchPageDirection() {
