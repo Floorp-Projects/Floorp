@@ -29,7 +29,9 @@ function startTest()
     }
 
     w.close();
-    SimpleTest.finish();
+    SpecialPowers.popPermissions(() => {
+      SimpleTest.finish();
+    });
   }
 }
 
