@@ -421,6 +421,7 @@
         isOneOff: aOneOff,
         isSuggestion: !aOneOff && telemetrySearchDetails,
         selection: telemetrySearchDetails,
+        url: submission.uri,
       };
       BrowserSearch.recordSearchInTelemetry(engine, "searchbar", details);
       // null parameter below specifies HTML response for search
