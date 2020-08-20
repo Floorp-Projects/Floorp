@@ -49,7 +49,7 @@ internal object DownloadNotification {
         context: Context,
         notifications: List<DownloadJobState>
     ): Notification {
-        val allDownloadsHaveFinished = notifications.all { it.state.status != DOWNLOADING }
+        val allDownloadsHaveFinished = notifications.all { it.status != DOWNLOADING }
         val icon = if (allDownloadsHaveFinished) {
             R.drawable.mozac_feature_download_ic_download_complete
         } else {
@@ -79,7 +79,7 @@ internal object DownloadNotification {
         downloadJobState: DownloadJobState
     ): Notification {
         val downloadState = downloadJobState.state
-        val bytesCopied = downloadJobState.state.currentBytesCopied
+        val bytesCopied = downloadJobState.currentBytesCopied
         val channelId = ensureChannelExists(context)
         val isIndeterminate = downloadState.contentLength == null
 
@@ -280,7 +280,7 @@ internal fun NotificationCompat.Builder.setCompatGroup(groupKey: String): Notifi
 
 @VisibleForTesting
 internal fun DownloadJobState.getProgress(): String {
-    val bytesCopied = state.currentBytesCopied
+    val bytesCopied = currentBytesCopied
     val isIndeterminate = state.contentLength == null || bytesCopied == 0L
     return if (isIndeterminate) {
         ""
@@ -291,7 +291,7 @@ internal fun DownloadJobState.getProgress(): String {
 
 @VisibleForTesting
 internal fun DownloadJobState.getStatusDescription(context: Context): String {
-    return when (this.state.status) {
+    return when (this.status) {
         DOWNLOADING -> {
             getProgress()
         }

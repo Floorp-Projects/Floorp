@@ -27,7 +27,9 @@ class DownloadNotificationTest {
                         currentBytesCopied = 10,
                         status = DownloadState.Status.DOWNLOADING),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.DOWNLOADING
         )
 
         assertEquals("10%", downloadJobState.getProgress())
@@ -65,7 +67,9 @@ class DownloadNotificationTest {
                         currentBytesCopied = 10,
                         status = DownloadState.Status.DOWNLOADING),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                status = DownloadState.Status.DOWNLOADING,
+                currentBytesCopied = 10
         )
 
         assertEquals(downloadJobState.getProgress(), downloadJobState.getStatusDescription(testContext))
@@ -76,7 +80,8 @@ class DownloadNotificationTest {
                         currentBytesCopied = 10,
                         status = DownloadState.Status.PAUSED),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                status = DownloadState.Status.PAUSED
         )
 
         assertEquals(pausedText, downloadJobState.getStatusDescription(testContext))
@@ -87,7 +92,8 @@ class DownloadNotificationTest {
                         currentBytesCopied = 10,
                         status = DownloadState.Status.COMPLETED),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                status = DownloadState.Status.COMPLETED
         )
 
         assertEquals(completedText, downloadJobState.getStatusDescription(testContext))
@@ -98,7 +104,8 @@ class DownloadNotificationTest {
                         currentBytesCopied = 10,
                         status = DownloadState.Status.FAILED),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                status = DownloadState.Status.FAILED
         )
 
         assertEquals(failedText, downloadJobState.getStatusDescription(testContext))
@@ -109,7 +116,8 @@ class DownloadNotificationTest {
                         currentBytesCopied = 10,
                         status = DownloadState.Status.CANCELLED),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                status = DownloadState.Status.CANCELLED
         )
 
         assertEquals("", downloadJobState.getStatusDescription(testContext))
@@ -123,7 +131,9 @@ class DownloadNotificationTest {
                         currentBytesCopied = 10,
                         status = DownloadState.Status.DOWNLOADING),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.DOWNLOADING
         )
         val download2 = DownloadJobState(
                 job = null,
@@ -131,7 +141,9 @@ class DownloadNotificationTest {
                         currentBytesCopied = 20,
                         status = DownloadState.Status.DOWNLOADING),
                 foregroundServiceId = 1,
-                downloadDeleted = false
+                downloadDeleted = false,
+                currentBytesCopied = 20,
+                status = DownloadState.Status.DOWNLOADING
         )
 
         val summary = DownloadNotification.getSummaryList(testContext, listOf(download1, download2))

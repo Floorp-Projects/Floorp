@@ -27,6 +27,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import android.widget.Toast
+import androidx.annotation.GuardedBy
 import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
@@ -106,6 +107,8 @@ abstract class AbstractFetchDownloadService : Service() {
     internal data class DownloadJobState(
         var job: Job? = null,
         @Volatile var state: DownloadState,
+        var currentBytesCopied: Long = 0,
+        @GuardedBy("context") var status: Status,
         var foregroundServiceId: Int = 0,
         var downloadDeleted: Boolean = false,
         var notifiedStopped: Boolean = false,
@@ -137,14 +140,14 @@ abstract class AbstractFetchDownloadService : Service() {
             if (status == DOWNLOADING) {
                 downloadJobState.notifiedStopped = false
             }
-
+            downloadJobState.status = status
             updateDownloadState(downloadJobState.state.copy(status = status))
         }
     }
 
     internal fun getDownloadJobStatus(downloadJobState: DownloadJobState): Status {
         synchronized(context) {
-            return downloadJobState.state.status
+            return downloadJobState.status
         }
     }
 
@@ -253,7 +256,8 @@ abstract class AbstractFetchDownloadService : Service() {
         // Create a new job and add it, with its downloadState to the map
         val downloadJobState = DownloadJobState(
             state = download.copy(status = DOWNLOADING),
-            foregroundServiceId = foregroundServiceId
+            foregroundServiceId = foregroundServiceId,
+            status = DOWNLOADING
         )
 
         store.dispatch(DownloadAction.UpdateDownloadAction(downloadJobState.state))
@@ -513,7 +517,7 @@ abstract class AbstractFetchDownloadService : Service() {
          * it always deletes the previous notification :(
          */
         previousDownload?.let {
-            updateDownloadNotification(previousDownload.state.status, it)
+            updateDownloadNotification(previousDownload.status, it)
         }
     }
 
@@ -530,7 +534,7 @@ abstract class AbstractFetchDownloadService : Service() {
              * the foreground notification id, when the previous one gets a state that
              * is likely to be dismissed.
              */
-            val status = download.state.status
+            val status = download.status
             val foregroundId = download.foregroundServiceId
             val isSelectedForegroundId = compatForegroundNotificationId == foregroundId
             val needNewForegroundNotification = when (status) {
@@ -544,7 +548,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 stopForeground(false)
 
                 // Now we need to find a new foreground notification, if needed.
-                val newSelectedForegroundDownload = downloadJobs.values.firstOrNull { it.state.status == DOWNLOADING }
+                val newSelectedForegroundDownload = downloadJobs.values.firstOrNull { it.status == DOWNLOADING }
                 newSelectedForegroundDownload?.let {
                     setForegroundNotification(it)
                 }
@@ -558,11 +562,11 @@ abstract class AbstractFetchDownloadService : Service() {
     @Suppress("ComplexCondition")
     internal fun performDownload(currentDownloadJobState: DownloadJobState) {
         val download = currentDownloadJobState.state
-        val isResumingDownload = currentDownloadJobState.state.currentBytesCopied > 0L
+        val isResumingDownload = currentDownloadJobState.currentBytesCopied > 0L
         val headers = MutableHeaders()
 
         if (isResumingDownload) {
-            headers.append(RANGE, "bytes=${currentDownloadJobState.state.currentBytesCopied}-")
+            headers.append(RANGE, "bytes=${currentDownloadJobState.currentBytesCopied}-")
         }
 
         val request = Request(download.url.sanitizeURL(), headers = headers)
@@ -574,6 +578,7 @@ abstract class AbstractFetchDownloadService : Service() {
         if (response.status != PARTIAL_CONTENT_STATUS && response.status != OK_STATUS ||
             (isResumingDownload && !response.headers.contains(CONTENT_RANGE))) {
             // We experienced a problem trying to fetch the file, send a failure notification
+            currentDownloadJobState.currentBytesCopied = 0
             currentDownloadJobState.state = currentDownloadJobState.state.copy(currentBytesCopied = 0)
             setDownloadJobStatus(currentDownloadJobState, FAILED)
             logger.debug("Unable to fetching Download for ${currentDownloadJobState.state.url} status FAILED")
@@ -597,7 +602,7 @@ abstract class AbstractFetchDownloadService : Service() {
      */
     internal fun verifyDownload(download: DownloadJobState) {
         if (getDownloadJobStatus(download) == DOWNLOADING &&
-            download.state.currentBytesCopied < download.state.contentLength ?: 0
+            download.currentBytesCopied < download.state.contentLength ?: 0
         ) {
             setDownloadJobStatus(download, FAILED)
             logger.error("verifyDownload for ${download.state.url} FAILED")
@@ -609,17 +614,17 @@ abstract class AbstractFetchDownloadService : Service() {
              */
             val fileSizeNotFound = download.state.contentLength == null || download.state.contentLength == 0L
             if (fileSizeNotFound) {
-                val newState = download.state.copy(contentLength = download.state.currentBytesCopied)
+                val newState = download.state.copy(contentLength = download.currentBytesCopied)
                 updateDownloadState(newState)
             }
-            logger.debug("verifyDownload for ${download.state.url} ${download.state.status}")
+            logger.debug("verifyDownload for ${download.state.url} ${download.status}")
         }
     }
 
     private fun copyInChunks(downloadJobState: DownloadJobState, inStream: InputStream, outStream: OutputStream) {
         val data = ByteArray(CHUNK_SIZE)
         logger.debug("starting copyInChunks ${downloadJobState.state.url}" +
-                " currentBytesCopied ${downloadJobState.state.currentBytesCopied}")
+                " currentBytesCopied ${downloadJobState.currentBytesCopied}")
 
         // To ensure that we copy all files (even ones that don't have fileSize, we must NOT check < fileSize
         while (getDownloadJobStatus(downloadJobState) == DOWNLOADING) {
@@ -629,8 +634,7 @@ abstract class AbstractFetchDownloadService : Service() {
             if (bytesRead == -1) { break }
 
             val newState = downloadJobState.state.copy(
-                currentBytesCopied =
-                downloadJobState.state.currentBytesCopied + bytesRead
+                currentBytesCopied = downloadJobState.currentBytesCopied + bytesRead
             )
             updateDownloadState(newState)
 
@@ -638,7 +642,7 @@ abstract class AbstractFetchDownloadService : Service() {
         }
         logger.debug(
             "Finishing copyInChunks ${downloadJobState.state.url} " +
-                "currentBytesCopied ${downloadJobState.state.currentBytesCopied}"
+                "currentBytesCopied ${downloadJobState.currentBytesCopied}"
         )
     }
 
