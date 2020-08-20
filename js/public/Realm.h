@@ -7,6 +7,8 @@
 #ifndef js_Realm_h
 #define js_Realm_h
 
+#include "js/shadow/Realm.h"  // JS::shadow::Realm
+
 #include "jspubtd.h"
 #include "js/GCAPI.h"
 #include "js/GCPolicyAPI.h"
@@ -38,23 +40,6 @@ struct GCPolicy<Realm*> : public NonGCPointerPolicy<Realm*> {
 // Get the current realm, if any. The ECMAScript spec calls this "the current
 // Realm Record".
 extern JS_PUBLIC_API Realm* GetCurrentRealmOrNull(JSContext* cx);
-
-namespace shadow {
-
-class Realm {
- protected:
-  JS::Compartment* compartment_;
-
-  explicit Realm(JS::Compartment* comp) : compartment_(comp) {}
-
- public:
-  JS::Compartment* compartment() { return compartment_; }
-  static shadow::Realm* get(JS::Realm* realm) {
-    return reinterpret_cast<shadow::Realm*>(realm);
-  }
-};
-
-};  // namespace shadow
 
 // Return the compartment that contains a given realm.
 inline JS::Compartment* GetCompartmentForRealm(Realm* realm) {
