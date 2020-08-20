@@ -609,8 +609,10 @@ class WebSocketServer(object):
         cmd += ['-H', '127.0.0.1', '-p', str(self.port), '-w', self._scriptdir,
                 '-l', os.path.join(self._scriptdir, "websock.log"),
                 '--log-level=debug', '--allow-handlers-outside-root-dir']
+        env = dict(os.environ)
+        env['PYTHONPATH'] = os.pathsep.join(sys.path)
         # start the process
-        self._process = mozprocess.ProcessHandler(cmd, cwd=SCRIPT_DIR)
+        self._process = mozprocess.ProcessHandler(cmd, cwd=SCRIPT_DIR, env=env)
         self._process.run()
         pid = self._process.pid
         self._log.info("runtests.py | Websocket server pid: %d" % pid)
