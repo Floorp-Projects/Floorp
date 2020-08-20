@@ -1001,6 +1001,12 @@ async function pickFileName(contentTitle, currentURI) {
       filename = url.hostname;
     }
   }
+  if (!filename.endsWith(".pdf")) {
+    // macOS and linux don't set the extension based on the default extension.
+    // Windows won't add the extension a second time, fortunately.
+    // If it already ends with .pdf though, adding it again isn't needed.
+    filename += ".pdf";
+  }
   filename = DownloadPaths.sanitize(filename);
 
   picker.init(
@@ -1010,9 +1016,7 @@ async function pickFileName(contentTitle, currentURI) {
   );
   picker.appendFilter("PDF", "*.pdf");
   picker.defaultExtension = "pdf";
-  // macOS and linux don't set the extension based on the default. Windows will
-  // only include the filename once, so we can add it there too.
-  picker.defaultString = filename + ".pdf";
+  picker.defaultString = filename;
 
   let retval = await new Promise(resolve => picker.open(resolve));
 
