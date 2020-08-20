@@ -196,14 +196,14 @@ add_task(async function escape() {
   let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
     window
   ).getSelectableButtons(true);
-  UrlbarTestUtils.assertSearchMode(window, {
+  await UrlbarTestUtils.assertSearchMode(window, {
     engineName: oneOffs[0].engine.name,
   });
 
   EventUtils.synthesizeKey("KEY_Escape");
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
   Assert.ok(!gURLBar.value, "Urlbar value is empty.");
-  UrlbarTestUtils.assertSearchMode(window, null);
+  await UrlbarTestUtils.assertSearchMode(window, null);
 });
 
 // Tests that the indicator is removed when its close button is clicked.
@@ -265,9 +265,9 @@ add_task(async function click_close() {
 
 // Tests that Accel+K enters search mode with the default engine.
 add_task(async function keyboard_shortcut() {
-  UrlbarTestUtils.assertSearchMode(window, null);
+  await UrlbarTestUtils.assertSearchMode(window, null);
   EventUtils.synthesizeKey("k", { accelKey: true });
-  UrlbarTestUtils.assertSearchMode(window, {
+  await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: defaultEngine.name,
   });
@@ -280,10 +280,10 @@ add_task(async function keyboard_shortcut() {
 // Tests that the Tools:Search menu item enters search mode with the default
 // engine.
 add_task(async function menubar_item() {
-  UrlbarTestUtils.assertSearchMode(window, null);
+  await UrlbarTestUtils.assertSearchMode(window, null);
   let command = window.document.getElementById("Tools:Search");
   command.doCommand();
-  UrlbarTestUtils.assertSearchMode(window, {
+  await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: defaultEngine.name,
   });
@@ -329,6 +329,6 @@ add_task(async function pref_flip_while_enabled() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.update2", false]],
   });
-  UrlbarTestUtils.assertSearchMode(window, null);
+  await UrlbarTestUtils.assertSearchMode(window, null);
   await SpecialPowers.popPrefEnv();
 });

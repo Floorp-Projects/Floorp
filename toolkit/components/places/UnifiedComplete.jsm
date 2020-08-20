@@ -492,7 +492,7 @@ function Search(
     this._maxResults = queryContext.maxResults;
     this._userContextId = queryContext.userContextId;
     this._currentPage = queryContext.currentPage;
-    this._engineName = queryContext.searchMode?.engineName;
+    this._searchModeEngine = queryContext.searchMode?.engineName;
   } else {
     let params = new Set(searchParam.split(" "));
     this._enableActions = params.has("enable-actions");
@@ -787,10 +787,10 @@ Search.prototype = {
       return;
     }
 
-    // this._engineName is set if the user is in search mode. We fetch only
+    // this._searchModeEngine is set if the user is in search mode. We fetch only
     // local results with the same host as the search mode engine.
-    if (this._engineName && !this._keywordSubstitute) {
-      let engine = Services.search.getEngineByName(this._engineName);
+    if (this._searchModeEngine && !this._keywordSubstitute) {
+      let engine = Services.search.getEngineByName(this._searchModeEngine);
       this._keywordSubstitute = {
         host: engine.getResultDomain(),
         keyword: null,
@@ -1587,6 +1587,10 @@ Search.prototype = {
   // results, caching the others. If at the end we don't find other results, we
   // can add these.
   _addAdaptiveQueryMatch(row) {
+    // We should only show filtered results in search mode.
+    if (this._searchModeEngine) {
+      return;
+    }
     // Allow one quarter of the results to be adaptive results.
     // Note: ideally adaptive results should have their own provider and the
     // results muxer should decide what to show.  But that's too complex to

@@ -378,7 +378,7 @@ var UrlbarTestUtils = {
    *   The expected search mode object.
    * @note Can only be used if UrlbarTestUtils has been initialized with init().
    */
-  assertSearchMode(window, expectedSearchMode) {
+  async assertSearchMode(window, expectedSearchMode) {
     this.Assert.equal(
       !!window.gURLBar.searchMode,
       window.gURLBar.hasAttribute("searchmode"),
@@ -464,6 +464,33 @@ var UrlbarTestUtils = {
       expectedPlaceholderL10n,
       "Expected placeholder l10n when search mode is active"
     );
+
+    // If this is an engine search mode, check that all results are either
+    // search results with the same engine or have the same host as the engine.
+    if (expectedSearchMode.engineName && this.isPopupOpen(window)) {
+      let resultCount = this.getResultCount(window);
+      for (let i = 0; i < resultCount; i++) {
+        let result = await this.getDetailsOfResultAt(window, i);
+        if (result.source == UrlbarUtils.RESULT_SOURCE.SEARCH) {
+          this.Assert.equal(
+            expectedSearchMode.engineName,
+            result.searchParams.engine,
+            "Search mode result matches engine name."
+          );
+        } else {
+          let engine = Services.search.getEngineByName(
+            expectedSearchMode.engineName
+          );
+          let engineHost = engine.getResultDomain();
+          let resultUrl = new URL(result.url);
+          // Use `includes` to allow results from engine subdomains.
+          this.Assert.ok(
+            resultUrl.host.includes(engineHost),
+            "Search mode result matches engine host."
+          );
+        }
+      }
+    }
   },
 
   /**
@@ -508,7 +535,7 @@ var UrlbarTestUtils = {
     this.EventUtils.synthesizeMouseAtCenter(oneOff, {}, window);
     await this.promiseSearchComplete(window);
     this.Assert.ok(this.isPopupOpen(window), "Urlbar view is still open.");
-    this.assertSearchMode(window, searchMode);
+    await this.assertSearchMode(window, searchMode);
   },
 
   /**
@@ -580,7 +607,7 @@ var UrlbarTestUtils = {
       } else {
         this.EventUtils.synthesizeMouseAtCenter(closeButton, {}, window);
       }
-      this.assertSearchMode(window, null);
+      await this.assertSearchMode(window, null);
     }
   },
 

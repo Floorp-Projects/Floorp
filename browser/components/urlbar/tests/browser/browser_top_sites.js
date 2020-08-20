@@ -212,11 +212,13 @@ add_task(async function selectSearchTopSite() {
     "First result should have the Amazon keyword."
   );
 
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
   EventUtils.synthesizeMouseAtCenter(amazonSearch, {});
-  UrlbarTestUtils.assertSearchMode(window, {
+  await searchPromise;
+  await UrlbarTestUtils.assertSearchMode(window, {
     engineName: amazonSearch.result.payload.engine,
   });
-  gURLBar.setSearchMode({});
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
 
   await UrlbarTestUtils.promisePopupClose(window, () => {
     gURLBar.blur();
