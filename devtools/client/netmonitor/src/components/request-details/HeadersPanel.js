@@ -192,7 +192,7 @@ class HeadersPanel extends Component {
             urlDetails.url.split(
               requestHeaders.headers.find(ele => ele.name === "Host").value
             )[1]
-          } ${httpVersion || ""}`;
+          } ${httpVersion}`;
           result = `${title} (${getFormattedSize(
             writeHeaderText(requestHeaders.headers, preHeaderText).length,
             3
@@ -357,7 +357,7 @@ class HeadersPanel extends Component {
             urlDetails.url.split(
               requestHeaders.headers.find(ele => ele.name === "Host").value
             )[1]
-          } ${httpVersion || ""}`;
+          } ${httpVersion}`;
           value = writeHeaderText(requestHeaders.headers, preHeaderText).trim();
           break;
         case "RESPONSE":
