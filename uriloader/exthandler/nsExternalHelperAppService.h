@@ -144,14 +144,6 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
                                               nsIMIMEInfo* aMIMEInfo);
 
   /**
-   * Replace the primary extension of the mimeinfo object if it's in our
-   * list of forbidden extensions. This fixes up broken information
-   * provided to us by the OS.
-   */
-  bool MaybeReplacePrimaryExtension(const nsACString& aPrimaryExtension,
-                                    nsIMIMEInfo* aMIMEInfo);
-
-  /**
    * Searches the "extra" array for a MIME type, and gets its extension.
    * @param aExtension The extension to search for
    * @param aMIMEType [out] The found MIME type.
