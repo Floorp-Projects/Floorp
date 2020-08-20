@@ -1329,8 +1329,8 @@ class ContentParent final
       NotifyOnHistoryReloadResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvHistoryCommit(
-      const MaybeDiscarded<BrowsingContext>& aContext, const uint64_t& aLoadID,
-      const nsID& aChangeID);
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const uint64_t& aSessionHistoryEntryID, const nsID& aChangeID);
 
   mozilla::ipc::IPCResult RecvHistoryGo(
       const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
