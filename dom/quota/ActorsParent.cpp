@@ -2416,6 +2416,10 @@ bool FileAlreadyExists(nsresult aValue) {
   return aValue == NS_ERROR_FILE_ALREADY_EXISTS;
 }
 
+bool FileCorrupted(nsresult aValue) {
+  return aValue == NS_ERROR_FILE_CORRUPTED;
+}
+
 nsresult EnsureDirectory(nsIFile* aDirectory, bool* aCreated) {
   AssertIsOnIOThread();
 
@@ -6364,40 +6368,23 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       Initialization::Storage,
       [&self = *this] { return static_cast<bool>(self.mStorageConnection); });
 
-  auto storageFileOrErr = QM_NewLocalFile(mBasePath);
-  if (NS_WARN_IF(storageFileOrErr.isErr())) {
-    return storageFileOrErr.unwrapErr();
-  }
+  QM_TRY_VAR(auto storageFile, QM_NewLocalFile(mBasePath));
 
-  nsCOMPtr<nsIFile> storageFile = storageFileOrErr.unwrap();
+  QM_TRY(storageFile->Append(mStorageName + kSQLiteSuffix));
 
-  nsresult rv = storageFile->Append(mStorageName + kSQLiteSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const auto storageFileExists,
+             ToResultInvoke(storageFile, &nsIFile::Exists));
 
-  bool exists;
-  rv = storageFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  if (!storageFileExists) {
+    QM_TRY_VAR(auto indexedDBDir, QM_NewLocalFile(mIndexedDBPath));
 
-  if (!exists) {
-    auto indexedDBDirOrErr = QM_NewLocalFile(mIndexedDBPath);
-    if (NS_WARN_IF(indexedDBDirOrErr.isErr())) {
-      return indexedDBDirOrErr.unwrapErr();
-    }
-
-    nsCOMPtr<nsIFile> indexedDBDir = indexedDBDirOrErr.unwrap();
-
-    bool indexedDBDirExists;
-    rv = indexedDBDir->Exists(&indexedDBDirExists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY_VAR(const auto indexedDBDirExists,
+               ToResultInvoke(indexedDBDir, &nsIFile::Exists));
 
     if (indexedDBDirExists) {
-      rv = UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
+      // TODO: Convert to QM_TRY once upgrade functions record first
+      //       initialization attempts directly.
+      nsresult rv = UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
           indexedDBDir);
       mInitializationInfo.RecordFirstInitializationAttempt(
           Initialization::UpgradeFromIndexedDBDirectory, rv);
@@ -6406,28 +6393,20 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       }
     }
 
-    auto persistentStorageDirOrErr = QM_NewLocalFile(mStoragePath);
-    if (NS_WARN_IF(persistentStorageDirOrErr.isErr())) {
-      return persistentStorageDirOrErr.unwrapErr();
-    }
+    QM_TRY_VAR(auto persistentStorageDir, QM_NewLocalFile(mStoragePath));
 
-    nsCOMPtr<nsIFile> persistentStorageDir = persistentStorageDirOrErr.unwrap();
+    QM_TRY(persistentStorageDir->Append(
+        nsLiteralString(PERSISTENT_DIRECTORY_NAME)));
 
-    rv = persistentStorageDir->Append(
-        nsLiteralString(PERSISTENT_DIRECTORY_NAME));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool persistentStorageDirExists;
-    rv = persistentStorageDir->Exists(&persistentStorageDirExists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY_VAR(const auto persistentStorageDirExists,
+               ToResultInvoke(persistentStorageDir, &nsIFile::Exists));
 
     if (persistentStorageDirExists) {
-      rv = UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
-          persistentStorageDir);
+      // TODO: Convert to QM_TRY once upgrade functions record first
+      //       initialization attempts directly.
+      nsresult rv =
+          UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
+              persistentStorageDir);
       mInitializationInfo.RecordFirstInitializationAttempt(
           Initialization::UpgradeFromPersistentStorageDirectory, rv);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6436,46 +6415,52 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     }
   }
 
-  nsCOMPtr<mozIStorageService> ss =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<mozIStorageConnection> connection;
-  rv = ss->OpenUnsharedDatabase(storageFile, getter_AddRefs(connection));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // Nuke the database file.
-    rv = storageFile->Remove(false);
+  // TODO: Convert to QM_TRY_VAR once we have an adapter for it.
+  nsCOMPtr<mozIStorageService> ss;
+  {
+    nsresult rv;
+    ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    rv = ss->OpenUnsharedDatabase(storageFile, getter_AddRefs(connection));
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsCOMPtr<mozIStorageConnection> connection;
+
+  // TODO: Result<V, E> could have own mapping function for filtering out
+  //       NS_ERROR_FILE_CORRUPTED.
+  // TODO: We can then use ToResultInvoke here (like below).
+  QM_TRY_VAR(const auto corrupted,
+             ToResult(ss->OpenUnsharedDatabase(storageFile,
+                                               getter_AddRefs(connection)),
+                      FileCorrupted));
+
+  if (corrupted) {
+    // Nuke the database file.
+    QM_TRY(storageFile->Remove(false));
+
+    // TODO: Can we simplify this syntax ?
+    QM_TRY_VAR(connection,
+               ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
+                   std::mem_fn(&mozIStorageService::OpenUnsharedDatabase), ss,
+                   storageFile));
   }
 
   // We want extra durability for this important file.
-  rv = connection->ExecuteSimpleSQL("PRAGMA synchronous = EXTRA;"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(connection->ExecuteSimpleSQL("PRAGMA synchronous = EXTRA;"_ns));
 
   // Check to make sure that the storage version is correct.
-  int32_t storageVersion;
-  rv = connection->GetSchemaVersion(&storageVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(
+      auto storageVersion,
+      ToResultInvoke(connection, &mozIStorageConnection::GetSchemaVersion));
 
   // Hacky downgrade logic!
   // If we see major.minor of 3.0, downgrade it to be 2.1.
   if (storageVersion == kHackyPreDowngradeStorageVersion) {
     storageVersion = kHackyPostDowngradeStorageVersion;
-    rv = connection->SetSchemaVersion(storageVersion);
+    // TODO: Convert to QM_TRY once we have support for additional cleanup
+    //       function.
+    nsresult rv = connection->SetSchemaVersion(storageVersion);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_ASSERT(false, "Downgrade didn't take.");
       return rv;
@@ -6483,6 +6468,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   }
 
   if (GetMajorStorageVersion(storageVersion) > kMajorStorageVersion) {
+    // TODO: This should use QM_TRY too.
     NS_WARNING("Unable to initialize storage, version is too high!");
     return NS_ERROR_FAILURE;
   }
@@ -6490,28 +6476,18 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   if (storageVersion < kStorageVersion) {
     const bool newDatabase = !storageVersion;
 
-    auto storageDirOrErr = QM_NewLocalFile(mStoragePath);
-    if (NS_WARN_IF(storageDirOrErr.isErr())) {
-      return storageDirOrErr.unwrapErr();
-    }
+    QM_TRY_VAR(auto storageDir, QM_NewLocalFile(mStoragePath));
 
-    nsCOMPtr<nsIFile> storageDir = storageDirOrErr.unwrap();
+    QM_TRY_VAR(const auto storageDirExists,
+               ToResultInvoke(storageDir, &nsIFile::Exists));
 
-    rv = storageDir->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    const bool newDirectory = !exists;
+    const bool newDirectory = !storageDirExists;
 
     if (newDatabase) {
       // Set the page size first.
       if (kSQLitePageSizeOverride) {
-        rv = connection->ExecuteSimpleSQL(nsPrintfCString(
-            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY(connection->ExecuteSimpleSQL(nsPrintfCString(
+            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
       }
     }
 
@@ -6522,26 +6498,23 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     // The upgrade loop below can only be avoided when there's no database and
     // no storage yet (e.g. new profile).
     if (newDatabase && newDirectory) {
-      rv = CreateTables(connection);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      QM_TRY(CreateTables(connection));
 
       MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&storageVersion)));
       MOZ_ASSERT(storageVersion == kStorageVersion);
 
-      rv = connection->ExecuteSimpleSQL(
+      QM_TRY(connection->ExecuteSimpleSQL(
           nsLiteralCString("INSERT INTO database (cache_version) "
-                           "VALUES (0)"));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+                           "VALUES (0)")));
     } else {
       // This logic needs to change next time we change the storage!
       static_assert(kStorageVersion == int32_t((2 << 16) + 3),
                     "Upgrade function needed due to storage version increase.");
 
       while (storageVersion != kStorageVersion) {
+        // TODO: Convert to QM_TRY once upgrade functions record first
+        //       initialization attempts directly.
+        nsresult rv;
         if (storageVersion == 0) {
           rv = UpgradeStorageFrom0_0To1_0(connection);
           mInitializationInfo.RecordFirstInitializationAttempt(
@@ -6563,6 +6536,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           mInitializationInfo.RecordFirstInitializationAttempt(
               Initialization::UpgradeStorageFrom2_2To2_3, rv);
         } else {
+          // TODO: This should use QM_TRY too.
           NS_WARNING(
               "Unable to initialize storage, no upgrade path is "
               "available!");
@@ -6573,68 +6547,50 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           return rv;
         }
 
-        rv = connection->GetSchemaVersion(&storageVersion);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY_VAR(storageVersion,
+                   ToResultInvoke(connection,
+                                  &mozIStorageConnection::GetSchemaVersion));
       }
 
       MOZ_ASSERT(storageVersion == kStorageVersion);
     }
 
-    rv = transaction.Commit();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(transaction.Commit());
   }
 
   if (CachedNextGenLocalStorageEnabled()) {
+    // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
     nsCOMPtr<mozIStorageConnection> connection;
     bool newlyCreated;
-    rv = CreateLocalStorageArchiveConnection(getter_AddRefs(connection),
-                                             newlyCreated);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(CreateLocalStorageArchiveConnection(getter_AddRefs(connection),
+                                               newlyCreated));
 
     uint32_t version = 0;
 
     if (!newlyCreated) {
+      // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
       bool initialized;
-      rv = IsLocalStorageArchiveInitialized(connection, initialized);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      QM_TRY(IsLocalStorageArchiveInitialized(connection, initialized));
 
       if (initialized) {
-        rv = LoadLocalStorageArchiveVersion(connection, version);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
+        QM_TRY(LoadLocalStorageArchiveVersion(connection, version));
       }
     }
 
     if (version > kLocalStorageArchiveVersion) {
-      rv = DowngradeLocalStorageArchive(connection);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      QM_TRY(DowngradeLocalStorageArchive(connection));
 
-      rv = LoadLocalStorageArchiveVersion(connection, version);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
+      QM_TRY(LoadLocalStorageArchiveVersion(connection, version));
 
       MOZ_ASSERT(version == kLocalStorageArchiveVersion);
     } else if (version != kLocalStorageArchiveVersion) {
       if (newlyCreated) {
         MOZ_ASSERT(version == 0);
 
-        rv = InitializeLocalStorageArchive(connection,
-                                           kLocalStorageArchiveVersion);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY(InitializeLocalStorageArchive(connection,
+                                             kLocalStorageArchiveVersion));
       } else {
         static_assert(kLocalStorageArchiveVersion == 4,
                       "Upgrade function needed due to LocalStorage archive "
@@ -6642,44 +6598,34 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
         while (version != kLocalStorageArchiveVersion) {
           if (version < 4) {
-            rv = UpgradeLocalStorageArchiveFromLessThan4To4(connection);
+            QM_TRY(UpgradeLocalStorageArchiveFromLessThan4To4(connection));
           } /* else if (version == 4) {
-            rv = UpgradeLocalStorageArchiveFrom4To5(connection);
+            QM_TRY(UpgradeLocalStorageArchiveFrom4To5(connection));
           } */
           else {
+            // TODO: This should use QM_TRY too.
             QM_WARNING(
                 "Unable to initialize LocalStorage archive, no upgrade path is "
                 "available!");
             return NS_ERROR_FAILURE;
           }
 
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-
-          rv = LoadLocalStorageArchiveVersion(connection, version);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+          // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
+          QM_TRY(LoadLocalStorageArchiveVersion(connection, version));
         }
 
         MOZ_ASSERT(version == kLocalStorageArchiveVersion);
       }
     }
   } else {
-    rv = MaybeRemoveLocalStorageData();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(MaybeRemoveLocalStorageData());
   }
 
   bool cacheUsable = true;
 
+  // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
   int32_t cacheVersion;
-  rv = LoadCacheVersion(connection, cacheVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(LoadCacheVersion(connection, cacheVersion));
 
   if (cacheVersion > kCacheVersion) {
     cacheUsable = false;
@@ -6690,20 +6636,14 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
         connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     if (newCache) {
-      rv = CreateCacheTables(connection);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      QM_TRY(CreateCacheTables(connection));
 
       MOZ_ASSERT(NS_SUCCEEDED(LoadCacheVersion(connection, cacheVersion)));
       MOZ_ASSERT(cacheVersion == kCacheVersion);
 
-      rv = connection->ExecuteSimpleSQL(
+      QM_TRY(connection->ExecuteSimpleSQL(
           nsLiteralCString("INSERT INTO cache (valid, build_id) "
-                           "VALUES (0, '')"));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+                           "VALUES (0, '')")));
 
       nsCOMPtr<mozIStorageStatement> insertStmt;
 
@@ -6711,30 +6651,21 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
         if (insertStmt) {
           MOZ_ALWAYS_SUCCEEDS(insertStmt->Reset());
         } else {
-          rv = connection->CreateStatement(
-              nsLiteralCString("INSERT INTO repository (id, name) "
-                               "VALUES (:id, :name)"),
-              getter_AddRefs(insertStmt));
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+          // TODO: Can we simplify this syntax ?
+          QM_TRY_VAR(insertStmt,
+                     ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+                         std::mem_fn(&mozIStorageConnection::CreateStatement),
+                         connection,
+                         nsLiteralCString("INSERT INTO repository (id, name) "
+                                          "VALUES (:id, :name)")));
         }
 
-        rv = insertStmt->BindInt32ByName("id"_ns, persistenceType);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY(insertStmt->BindInt32ByName("id"_ns, persistenceType));
 
-        rv = insertStmt->BindUTF8StringByName(
-            "name"_ns, PersistenceTypeToString(persistenceType));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY(insertStmt->BindUTF8StringByName(
+            "name"_ns, PersistenceTypeToString(persistenceType)));
 
-        rv = insertStmt->Execute();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY(insertStmt->Execute());
       }
     } else {
       // This logic needs to change next time we change the cache!
@@ -6743,38 +6674,27 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
       while (cacheVersion != kCacheVersion) {
         /* if (cacheVersion == 1) {
-          rv = UpgradeCacheFrom1To2(connection);
+          QM_TRY(UpgradeCacheFrom1To2(connection));
         } else */
         {
+          // TODO: This should use QM_TRY too.
           QM_WARNING(
               "Unable to initialize cache, no upgrade path is available!");
           return NS_ERROR_FAILURE;
         }
 
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        rv = LoadCacheVersion(connection, cacheVersion);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
+        QM_TRY(LoadCacheVersion(connection, cacheVersion));
       }
 
       MOZ_ASSERT(cacheVersion == kCacheVersion);
     }
 
-    rv = transaction.Commit();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(transaction.Commit());
   }
 
   if (cacheUsable && gInvalidateQuotaCache) {
-    rv = InvalidateCache(connection);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(InvalidateCache(connection));
 
     gInvalidateQuotaCache = false;
   }
