@@ -26,6 +26,7 @@
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
+#include "js/shadow/String.h"  // JS::shadow::String
 #include "js/UniquePtr.h"
 #include "util/Text.h"
 #include "vm/Printer.h"

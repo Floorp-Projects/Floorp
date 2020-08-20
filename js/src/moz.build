@@ -239,6 +239,24 @@ EXPORTS.js.friend += [
     '../public/friend/WindowProxy.h',
 ]
 
+# "Shadow" API defines the internal layout of public JSAPI types like |JSObject|
+# and |JSString|, so that other *inline* public functions can efficiently access
+# their internal fields.
+#
+# Embedders must never include these headers themselves or use their contents.
+# These internal layout details are publicly exposed for access *only* so that
+# other public API definitions may use them.
+#
+# When adding new shadow structure definitions (or new fields/static constants
+# to existing structures) for access by inline methods, make sure to add static
+# asserts to the original header file to ensure that offsets and duplicated
+# constants are consistent.  (Long term, it might be worth figuring out some way
+# to back actual implementations *with* these shadow definitions to eliminate
+# this requirement.)
+EXPORTS.js.shadow += [
+    '../public/shadow/String.h',
+]
+
 UNIFIED_SOURCES += [
     'builtin/Array.cpp',
     'builtin/AtomicsObject.cpp',
