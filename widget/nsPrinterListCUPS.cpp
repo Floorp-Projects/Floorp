@@ -21,6 +21,7 @@ static void GetDisplayNameForPrinter(const cups_dest_t& aDest,
                                      nsAString& aName) {
 // macOS clients expect prettified printer names
 // while GTK clients expect non-prettified names.
+// If you change this, please change NamedPrinter accordingly.
 #ifdef XP_MACOSX
   const char* displayName =
       sCupsShim.cupsGetOption("printer-info", aDest.num_options, aDest.options);
@@ -70,8 +71,58 @@ RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
       static_cast<cups_dinfo_t*>(aInfo.mCupsHandles[1]));
 }
 
-NS_IMETHODIMP
-nsPrinterListCUPS::GetSystemDefaultPrinterName(nsAString& aName) {
+Maybe<PrinterInfo> nsPrinterListCUPS::NamedPrinter(
+    nsString aPrinterName) const {
+  Maybe<PrinterInfo> rv;
+  if (!sCupsShim.EnsureInitialized()) {
+    return rv;
+  }
+
+  // Will contain the printer, if found. This must be fully owned, and not a
+  // member of another array of printers.
+  cups_dest_t* printer = nullptr;
+
+#ifdef XP_MACOSX
+  // On OS X the printer name given to this function is the readable/display
+  // name and not the CUPS name, so we iterate over all the printers for now.
+  // See bug 1659807 for one approach to improve perf here.
+  {
+    nsAutoCString printerName;
+    CopyUTF16toUTF8(aPrinterName, printerName);
+    cups_dest_t* printers = nullptr;
+    const auto numPrinters = sCupsShim.cupsGetDests(&printers);
+    for (auto i : mozilla::IntegerRange(0, numPrinters)) {
+      const char* const displayName = sCupsShim.cupsGetOption(
+          "printer-info", printers[i].num_options, printers[i].options);
+      if (printerName == displayName) {
+        sCupsShim.cupsCopyDest(printers, i, &printer);
+        break;
+      }
+    }
+    sCupsShim.cupsFreeDests(numPrinters, printers);
+  }
+#else
+  // On GTK, we only ever show the CUPS name of printers, so we can use
+  // cupsGetNamedDest directly.
+  {
+    const auto printerName = NS_ConvertUTF16toUTF8(aPrinterName);
+    printer = sCupsShim.cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName.get(),
+                                         nullptr);
+  }
+#endif
+
+  if (printer) {
+    cups_dinfo_t* const info =
+        sCupsShim.cupsCopyDestInfo(CUPS_HTTP_DEFAULT, printer);
+    MOZ_ASSERT(info);
+    // Since the printer name had to be passed by-value, we can move the
+    // name from that.
+    rv.emplace(PrinterInfo{std::move(aPrinterName), {printer, info}});
+  }
+  return rv;
+}
+
+nsresult nsPrinterListCUPS::SystemDefaultPrinterName(nsAString& aName) const {
   aName.Truncate();
 
   if (!sCupsShim.EnsureInitialized()) {

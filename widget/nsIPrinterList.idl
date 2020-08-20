@@ -30,6 +30,19 @@ interface nsIPrinterList : nsISupports
   readonly attribute AString systemDefaultPrinterName;
 
   /**
+   * Returns a promise that resolves to the printer of a given name, or is
+   * rejected if there is no such printer.
+   */
+  [implicit_jscontext] Promise getNamedPrinter(in AString aPrinterName);
+
+  /**
+   * Returns a promise that resolves to the printer of the given name, or
+   * the default system printer, or is rejected if there are no printers
+   * available.
+   */
+  [implicit_jscontext] Promise getNamedOrDefaultPrinter(in AString aPrinterName);
+
+  /**
    * Returns a promise that resolves to an array of printers.
    */
   [implicit_jscontext] readonly attribute Promise printers;

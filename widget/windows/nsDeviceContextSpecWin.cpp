@@ -81,9 +81,7 @@ nsDeviceContextSpecWin::~nsDeviceContextSpecWin() {
   }
 }
 
-static void GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
-  aDefaultPrinterName.Truncate();
-
+static bool GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
   DWORD length = 0;
   GetDefaultPrinterW(nullptr, &length);
 
@@ -94,13 +92,15 @@ static void GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
       // `length` includes the terminating null, so we subtract that from our
       // string length.
       aDefaultPrinterName.SetLength(length - 1);
-    } else {
-      aDefaultPrinterName.Truncate();
+      PR_PL(("DEFAULT PRINTER [%s]\n",
+             NS_ConvertUTF16toUTF8(aDefaultPrinterName).get()));
+      return true;
     }
   }
 
-  PR_PL(("DEFAULT PRINTER [%s]\n",
-         NS_ConvertUTF16toUTF8(aDefaultPrinterName).get()));
+  aDefaultPrinterName.Truncate();
+  PR_PL(("NO DEFAULT PRINTER\n"));
+  return false;
 }
 
 //----------------------------------------------------------------------------------
@@ -528,10 +528,11 @@ RefPtr<nsIPrinter> nsPrinterListWin::CreatePrinter(PrinterInfo aInfo) const {
   return nsPrinterWin::Create(std::move(aInfo.mName));
 }
 
-NS_IMETHODIMP
-nsPrinterListWin::GetSystemDefaultPrinterName(nsAString& aName) {
-  GetDefaultPrinterName(aName);
-  return NS_OK;
+nsresult nsPrinterListWin::SystemDefaultPrinterName(nsAString& aName) const {
+  if (GetDefaultPrinterName(aName)) {
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
