@@ -310,7 +310,6 @@ class FullParseHandler {
       return false;
     }
     addList(/* list = */ literal, /* kid = */ elision);
-    literal->setHasArrayHoleOrSpread();
     literal->setHasNonConstInitializer();
     return true;
   }
@@ -324,7 +323,6 @@ class FullParseHandler {
       return false;
     }
     addList(/* list = */ literal, /* kid = */ spread);
-    literal->setHasArrayHoleOrSpread();
     literal->setHasNonConstInitializer();
     return true;
   }
