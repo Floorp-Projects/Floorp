@@ -8,7 +8,9 @@
 #define mozilla_Mutex_h
 
 #include "mozilla/BlockingResourceBase.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
+#include "mozilla/Unused.h"
 
 //
 // Provides:
@@ -158,6 +160,25 @@ class MOZ_RAII BaseAutoLock {
 
   ~BaseAutoLock(void) { mLock.Unlock(); }
 
+  /**
+   * TryMake
+   * Tries to lock the mutex with TryLock, and returns true with aOutAutoLock
+   * containing the BaseAutoLock if TryLock was successful. Otherwise returns
+   * false.
+   *
+   * @param aLock A valid mozilla::Mutex* returned by
+   *              mozilla::Mutex::NewMutex.
+   * @param aOutAutoLock A Maybe<BaseAutoLock<T>> to fill if TryLock succeeds.
+   **/
+  static MOZ_MUST_USE bool TryMake(T aLock,
+                                   Maybe<BaseAutoLock<T>>& aOutAutoLock) {
+    if (aLock.TryLock()) {
+      aOutAutoLock.emplace(aLock, /* aPlaceholder: */ true);
+      return true;
+    }
+    return false;
+  }
+
   // Assert that aLock is the mutex passed to the constructor and that the
   // current thread owns the mutex.  In coding patterns such as:
   //
@@ -194,7 +215,17 @@ class MOZ_RAII BaseAutoLock {
   BaseAutoLock& operator=(BaseAutoLock&);
   static void* operator new(size_t) noexcept(true);
 
+  // This is the internal cconstructor used by TryMake. We need it to be a
+  // constructor to distinguish it from the public constructor, so we add a
+  // dummy variable to track that.
+  BaseAutoLock(T aLock, bool aPlaceholder) : mLock(aLock) {
+    Unused << aPlaceholder;
+  }
+
   friend class BaseAutoUnlock<T>;
+
+  // So that Maybe can access our private constructor
+  friend class Maybe<BaseAutoLock<T>>;
 
   T mLock;
 };
