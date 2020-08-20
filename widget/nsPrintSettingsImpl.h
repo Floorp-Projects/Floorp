@@ -29,6 +29,10 @@ struct PrintSettingsInitializer {
   nsString mPrinter;
   PaperInfo mPaperInfo;
   bool mPrintInColor = false;
+  int mResolution = 0;
+#ifdef XP_WIN
+  nsTArray<uint8_t> mDevmodeWStorage;
+#endif
 };
 
 }  // namespace mozilla
@@ -47,7 +51,7 @@ class nsPrintSettings : public nsIPrintSettings {
    * This is specifically not a constructor so that we can ensure that the
    * relevant setters are dynamically dispatched to derived classes.
    */
-  void InitWithInitializer(const PrintSettingsInitializer& aSettings);
+  virtual void InitWithInitializer(const PrintSettingsInitializer& aSettings);
 
   nsPrintSettings& operator=(const nsPrintSettings& rhs);
 
