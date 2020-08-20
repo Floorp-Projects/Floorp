@@ -4,20 +4,32 @@
 
 package mozilla.components.support.sync.telemetry
 
+import org.json.JSONException
+import org.json.JSONObject
 import mozilla.appservices.sync15.EngineInfo
 import mozilla.appservices.sync15.FailureName
 import mozilla.appservices.sync15.FailureReason
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.service.glean.private.LabeledMetricType
 import mozilla.components.service.glean.private.StringMetricType
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
+import mozilla.components.support.sync.telemetry.GleanMetrics.FxaTab
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
 
 const val MAX_FAILURE_REASON_LENGTH = 100
+
+// The exceptions we report to the crash reporter, but otherwise don't escape this module.
+internal sealed class InvalidTelemetryException(cause: Exception) : Exception(cause) {
+    // The top-level data passed in is invalid.
+    class InvalidData(cause: JSONException) : InvalidTelemetryException(cause)
+    // The sent or received tabs data is invalid.
+    class InvalidEvents(cause: JSONException) : InvalidTelemetryException(cause)
+}
 
 /**
  * Contains functionality necessary to process instances of [SyncTelemetryPing].
@@ -283,5 +295,46 @@ object SyncTelemetry {
         }
         val message = reason.message ?: "Unexpected error: ${reason.code}"
         metric.set(message.take(MAX_FAILURE_REASON_LENGTH))
+    }
+
+    fun processFxaTelemetry(jsonStr: String, crashReporter: CrashReporting? = null) {
+        val json = try {
+            JSONObject(jsonStr)
+        } catch (e: JSONException) {
+            crashReporter?.submitCaughtException(InvalidTelemetryException.InvalidData(e))
+            logger.error("Invalid JSON in FxA telemetry", e)
+            return
+        }
+        try {
+            val sent = json.getJSONArray("commands_sent")
+            for (i in 0..sent.length() - 1) {
+                val one = sent.getJSONObject(i)
+                val extras = mapOf(
+                    FxaTab.sentKeys.flowId to one.getString("flow_id"),
+                    FxaTab.sentKeys.streamId to one.getString("stream_id")
+                )
+                FxaTab.sent.record(extras)
+            }
+            logger.info("Reported telemetry for ${sent.length()} sent commands")
+        } catch (e: JSONException) {
+            crashReporter?.submitCaughtException(InvalidTelemetryException.InvalidEvents(e))
+            logger.error("Failed to report sent commands", e)
+        }
+        try {
+            val recd = json.getJSONArray("commands_received")
+            for (i in 0..recd.length() - 1) {
+                val one = recd.getJSONObject(i)
+                val extras = mapOf(
+                    FxaTab.receivedKeys.flowId to one.getString("flow_id"),
+                    FxaTab.receivedKeys.streamId to one.getString("stream_id"),
+                    FxaTab.receivedKeys.reason to one.getString("reason")
+                )
+                FxaTab.received.record(extras)
+            }
+            logger.info("Reported telemetry for ${recd.length()} received commands")
+        } catch (e: JSONException) {
+            crashReporter?.submitCaughtException(InvalidTelemetryException.InvalidEvents(e))
+            logger.error("Failed to report received commands", e)
+        }
     }
 }

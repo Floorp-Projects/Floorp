@@ -167,6 +167,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     fun `send command to device`() = runBlocking(coroutinesTestRule.testDispatcher) {
+        `when`(account.gatherTelemetry()).thenReturn("{}")
         assertTrue(constellation.sendCommandToDeviceAsync(
             "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
         ).await())
@@ -236,6 +237,7 @@ class FxaDeviceConstellationTest {
     @ExperimentalCoroutinesApi
     fun `polling for commands triggers observers`() = runBlocking(coroutinesTestRule.testDispatcher) {
         // No commands, no observers.
+        `when`(account.gatherTelemetry()).thenReturn("{}")
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
         assertTrue(constellation.pollForCommandsAsync().await())
 

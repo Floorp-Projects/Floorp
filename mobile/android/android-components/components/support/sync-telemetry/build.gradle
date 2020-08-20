@@ -44,6 +44,7 @@ dependencies {
 
     implementation project(':service-glean')
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
     implementation Dependencies.mozilla_sync15
 
     testImplementation Dependencies.testing_robolectric
