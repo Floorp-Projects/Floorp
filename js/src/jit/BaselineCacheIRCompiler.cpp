@@ -2567,10 +2567,6 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult(
 // blowing the stack limit.
 bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
                                          Register scratch) {
-  static_assert(CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH <= ARGS_LENGTH_MAX,
-                "maximum arguments length for optimized stub should be <= "
-                "ARGS_LENGTH_MAX");
-
   CallFlags::ArgFormat format = flags.getArgFormat();
   switch (format) {
     case CallFlags::Standard:
@@ -2620,8 +2616,7 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
   }
 
   // Ensure that callee argc does not exceed the limit.
-  masm.branch32(Assembler::Above, scratch,
-                Imm32(CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH),
+  masm.branch32(Assembler::Above, scratch, Imm32(JIT_ARGS_LENGTH_MAX),
                 failure->label());
 
   // We're past the final guard. Update argc with the new value.
@@ -2664,8 +2659,7 @@ bool BaselineCacheIRCompiler::emitGuardFunApplyArray() {
   // we do this earlier for FunApplyArray than for FunApplyArgs,
   // because we don't want to loop over every element of the array
   // looking for holes if we already know it is too long.
-  masm.branch32(Assembler::Above, calleeArgcReg,
-                Imm32(CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH),
+  masm.branch32(Assembler::Above, calleeArgcReg, Imm32(JIT_ARGS_LENGTH_MAX),
                 failure->label());
 
   // Ensure that length == initializedLength

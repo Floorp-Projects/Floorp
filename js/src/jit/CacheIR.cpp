@@ -8370,7 +8370,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     format = CallFlags::FunApplyArgs;
   } else if (args_[1].isObject() && args_[1].toObject().is<ArrayObject>() &&
              args_[1].toObject().as<ArrayObject>().length() <=
-                 CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH) {
+                 JIT_ARGS_LENGTH_MAX) {
     format = CallFlags::FunApplyArray;
   } else {
     return AttachDecision::NoAction;
@@ -8916,6 +8916,11 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     return AttachDecision::TemporarilyUnoptimizable;
   }
 
+  // Verify that spread calls have a reasonable number of arguments.
+  if (isSpread && args_.length() > JIT_ARGS_LENGTH_MAX) {
+    return AttachDecision::NoAction;
+  }
+
   // Keep track of the function's |prototype| property in type
   // information, for use during Ion compilation.
   if (IsIonEnabled(cx_)) {
@@ -9092,6 +9097,11 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
     return AttachDecision::NoAction;
   }
 
+  // Verify that spread calls have a reasonable number of arguments.
+  if (isSpread && args_.length() > JIT_ARGS_LENGTH_MAX) {
+    return AttachDecision::NoAction;
+  }
+
   // Check for specific native-function optimizations.
   if (isSpecialized) {
     TRY_ATTACH(tryAttachInlinableNative(calleeFunc));
@@ -9165,6 +9175,11 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   JSNative hook =
       isConstructing ? calleeObj->constructHook() : calleeObj->callHook();
   if (!hook) {
+    return AttachDecision::NoAction;
+  }
+
+  // Verify that spread calls have a reasonable number of arguments.
+  if (isSpread && args_.length() > JIT_ARGS_LENGTH_MAX) {
     return AttachDecision::NoAction;
   }
 
