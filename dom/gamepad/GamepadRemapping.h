@@ -110,4 +110,4 @@ already_AddRefed<GamepadRemapper> GetGamepadRemapper(const uint16_t aVendorId,
 }  // namespace dom
 }  // namespace mozilla
 
-#endif
+#endif  // mozilla_dom_GamepadRemapping_h_
