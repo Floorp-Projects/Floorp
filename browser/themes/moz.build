@@ -17,7 +17,6 @@ else:
     DIRS += ['windows']
 
 DIRS += [
-    'addons/alpenglow',
     'addons/dark',
     'addons/light',
 ]

@@ -345,7 +345,7 @@ body {
   .tiles-theme-section {
     display: grid;
     grid-gap: 21px;
-    grid-template-columns: repeat(4, auto);
+    grid-template-columns: repeat(3, auto);
 
     /* --newtab-background-color-1 will be invisible, but it's necessary to
      * keep the content from jumping around when it gets focus-within and
@@ -396,10 +396,6 @@ body {
 
         &.automatic {
           background-image: url('chrome://mozapps/content/extensions/default-theme.svg');
-        }
-
-        &.alpenglow {
-          background-image: url('chrome://mozapps/content/extensions/firefox-alpenglow.svg');
         }
       }
 
