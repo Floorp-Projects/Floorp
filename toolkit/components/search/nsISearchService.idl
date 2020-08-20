@@ -131,6 +131,12 @@ interface nsISearchEngine : nsISupports
   readonly attribute AString searchForm;
 
   /**
+   * A boolean to indicate if we should send an attribution request to Mozilla's
+   * server.
+   */
+  readonly attribute boolean sendAttributionRequest;
+
+  /**
    * The identifier to use for this engine when submitting to telemetry.
    */
   readonly attribute AString telemetryId;
