@@ -18,6 +18,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.filterNotExistsOnDisk
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.LibraryPageFragment
@@ -43,7 +44,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                 it.value.contentLength.toString(),
                 it.value.contentType
             )
-        }
+        }.filterNotExistsOnDisk()
 
         downloadStore = StoreProvider.get(this) {
             DownloadFragmentStore(
