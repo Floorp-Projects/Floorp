@@ -114,6 +114,7 @@ elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
         'x86-shared/AssemblerBuffer-x86-shared.cpp',
         'x86-shared/CodeGenerator-x86-shared.cpp',
         'x86-shared/Lowering-x86-shared.cpp',
+        'x86-shared/MacroAssembler-x86-shared-SIMD-unused.cpp',
         'x86-shared/MacroAssembler-x86-shared-SIMD.cpp',
         'x86-shared/MacroAssembler-x86-shared.cpp',
         'x86-shared/MoveEmitter-x86-shared.cpp',
