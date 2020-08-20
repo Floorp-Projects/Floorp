@@ -1243,8 +1243,7 @@ package org.mozilla.geckoview {
     method public boolean getAutofillEnabled();
     method @NonNull public PanZoomController getPanZoomController();
     method @AnyThread @Nullable public GeckoSession getSession();
-    method public int onGenericMotionEventForResult(@NonNull MotionEvent);
-    method public int onTouchEventForResult(@NonNull MotionEvent);
+    method @NonNull public GeckoResult<Integer> onTouchEventForResult(@NonNull MotionEvent);
     method @UiThread @Nullable public GeckoSession releaseSession();
     method public void setAutofillEnabled(boolean);
     method public void setDynamicToolbarMaxHeight(int);
@@ -1418,9 +1417,10 @@ package org.mozilla.geckoview {
   @UiThread public class PanZoomController {
     ctor protected PanZoomController(GeckoSession);
     method public float getScrollFactor();
-    method public int onMotionEvent(@NonNull MotionEvent);
-    method public int onMouseEvent(@NonNull MotionEvent);
-    method public int onTouchEvent(@NonNull MotionEvent);
+    method public void onMotionEvent(@NonNull MotionEvent);
+    method public void onMouseEvent(@NonNull MotionEvent);
+    method public void onTouchEvent(@NonNull MotionEvent);
+    method @NonNull public GeckoResult<Integer> onTouchEventForResult(@NonNull MotionEvent);
     method @UiThread public void scrollBy(@NonNull ScreenLength, @NonNull ScreenLength);
     method @UiThread public void scrollBy(@NonNull ScreenLength, @NonNull ScreenLength, int);
     method @UiThread public void scrollTo(@NonNull ScreenLength, @NonNull ScreenLength);
