@@ -37,10 +37,55 @@ void ResolveOrReject(dom::Promise& aPromise, nsPrinterListBase& aList,
   aPromise.MaybeResolve(printers);
 }
 
+template <>
+void ResolveOrReject(dom::Promise& aPromise, nsPrinterListBase& aList,
+                     const Maybe<PrinterInfo>& aInfo) {
+  if (aInfo) {
+    aPromise.MaybeResolve(aList.CreatePrinter(aInfo.value()));
+  } else {
+    aPromise.MaybeRejectWithNotFoundError("Printer not found");
+  }
+}
+
 }  // namespace mozilla
 
 NS_IMETHODIMP nsPrinterListBase::GetPrinters(JSContext* aCx,
                                              Promise** aResult) {
   return mozilla::AsyncPromiseAttributeGetter(
       *this, mPrintersPromise, aCx, aResult, &nsPrinterListBase::Printers);
+}
+
+NS_IMETHODIMP nsPrinterListBase::GetNamedPrinter(const nsAString& aPrinterName,
+                                                 JSContext* aCx,
+                                                 Promise** aResult) {
+  return PrintBackgroundTaskPromise(*this, aCx, aResult,
+                                    &nsPrinterListBase::NamedPrinter,
+                                    nsString{aPrinterName});
+}
+
+NS_IMETHODIMP nsPrinterListBase::GetNamedOrDefaultPrinter(
+    const nsAString& aPrinterName, JSContext* aCx, Promise** aResult) {
+  return PrintBackgroundTaskPromise(*this, aCx, aResult,
+                                    &nsPrinterListBase::NamedOrDefaultPrinter,
+                                    nsString{aPrinterName});
+}
+
+Maybe<PrinterInfo> nsPrinterListBase::NamedPrinter(nsString aName) const {
+  // TODO: This should be removed once the Win32 backend lands.
+  return Nothing();
+}
+
+Maybe<PrinterInfo> nsPrinterListBase::NamedOrDefaultPrinter(
+    nsString aName) const {
+  if (Maybe<PrinterInfo> value = NamedPrinter(std::move(aName))) {
+    return value;
+  }
+
+  // Since the name had to be passed by-value, we can re-use it to fetch the
+  // default printer name, potentially avoiding an extra string allocation.
+  if (NS_SUCCEEDED(SystemDefaultPrinterName(aName))) {
+    return NamedPrinter(std::move(aName));
+  }
+
+  return Nothing();
 }

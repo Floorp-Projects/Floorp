@@ -18,7 +18,14 @@ class nsPrinterListBase : public nsIPrinterList {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsPrinterListBase)
+  NS_IMETHOD GetSystemDefaultPrinterName(nsAString& aName) final {
+    return SystemDefaultPrinterName(aName);
+  }
   NS_IMETHOD GetPrinters(JSContext*, Promise**) final;
+  NS_IMETHOD GetNamedPrinter(const nsAString& aPrinterName, JSContext* aCx,
+                             Promise** aResult) final;
+  NS_IMETHOD GetNamedOrDefaultPrinter(const nsAString& aPrinterName,
+                                      JSContext* aCx, Promise** aResult) final;
 
   struct PrinterInfo {
     // Both windows and CUPS: The name of the printer.
@@ -35,6 +42,8 @@ class nsPrinterListBase : public nsIPrinterList {
   // background thread.
   virtual RefPtr<nsIPrinter> CreatePrinter(PrinterInfo) const = 0;
 
+  Maybe<PrinterInfo> NamedOrDefaultPrinter(nsString aName) const;
+
   // No copy or move, we're an identity.
   nsPrinterListBase(const nsPrinterListBase&) = delete;
   nsPrinterListBase(nsPrinterListBase&&) = delete;
@@ -42,6 +51,14 @@ class nsPrinterListBase : public nsIPrinterList {
  protected:
   nsPrinterListBase();
   virtual ~nsPrinterListBase();
+
+  // Implemented in terms of Printers() and then searching the returned printer
+  // info for a printer of the given name. Backends might have more efficient
+  // methods of implementing this.
+  virtual Maybe<PrinterInfo> NamedPrinter(nsString aName) const;
+  // This is implemented separately from the IDL interface version so that it
+  // can be made const, which allows it to be used while resolving promises.
+  virtual nsresult SystemDefaultPrinterName(nsAString&) const = 0;
 
   RefPtr<Promise> mPrintersPromise;
 };
