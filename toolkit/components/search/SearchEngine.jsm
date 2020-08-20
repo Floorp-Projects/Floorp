@@ -595,8 +595,6 @@ class SearchEngine {
   _queryCharset = null;
   // The engine's raw SearchForm value (URL string pointing to a search form).
   __searchForm = null;
-  // Whether or not to send an attribution request to the server.
-  _sendAttributionRequest = false;
   // The number of days between update checks for new versions
   _updateInterval = null;
   // The url to check at for a new update
@@ -622,9 +620,6 @@ class SearchEngine {
   _definedAliases = [];
   // The urls associated with this engine.
   _urls = [];
-  // The query parameter name of the search url, cached in memory to avoid
-  // repeated look-ups.
-  _searchUrlQueryParamName = null;
 
   /**
    * Constructor.
@@ -978,8 +973,6 @@ class SearchEngine {
     this._telemetryId = configuration.telemetryId;
     this._name = searchProvider.name.trim();
     this._regionParams = configuration.regionParams;
-    this._sendAttributionRequest =
-      configuration.sendAttributionRequest ?? false;
 
     if (shortName) {
       this._shortName = shortName;
@@ -1402,10 +1395,6 @@ class SearchEngine {
     return this._getSearchFormWithPurpose();
   }
 
-  get sendAttributionRequest() {
-    return this._sendAttributionRequest;
-  }
-
   _getSearchFormWithPurpose(purpose) {
     // First look for a <Url rel="searchform">
     var searchFormURL = this._getURLOfType(
@@ -1507,32 +1496,6 @@ class SearchEngine {
       );
     }
     return url.getSubmission(submissionData, this, purpose);
-  }
-
-  get searchUrlQueryParamName() {
-    if (this._searchUrlQueryParamName != null) {
-      return this._searchUrlQueryParamName;
-    }
-
-    let submission = this.getSubmission(
-      "{searchTerms}",
-      SearchUtils.URL_TYPE.SEARCH
-    );
-
-    if (submission.postData) {
-      Cu.reportError("searchUrlQueryParamName can't handle POST urls.");
-      return (this._searchUrlQueryParamName = "");
-    }
-
-    let queryParams = new URLSearchParams(submission.uri.query);
-    let searchUrlQueryParamName = "";
-    for (let [key, value] of queryParams) {
-      if (value == "{searchTerms}") {
-        searchUrlQueryParamName = key;
-      }
-    }
-
-    return (this._searchUrlQueryParamName = searchUrlQueryParamName);
   }
 
   // from nsISearchEngine

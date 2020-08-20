@@ -474,7 +474,7 @@ class UrlbarInput {
         selectedOneOff.engine,
         searchString
       );
-      this._recordSearch(selectedOneOff.engine, event, url);
+      this._recordSearch(selectedOneOff.engine, event);
 
       UrlbarUtils.addToFormHistory(
         this,
@@ -776,7 +776,6 @@ class UrlbarInput {
           isSuggestion: !!result.payload.suggestion,
           isFormHistory: result.source == UrlbarUtils.RESULT_SOURCE.HISTORY,
           alias: result.payload.keyword,
-          url,
         };
         const engine = Services.search.getEngineByName(result.payload.engine);
         this._recordSearch(engine, event, actionDetails);
@@ -1826,8 +1825,6 @@ class UrlbarInput {
    *   True if this query was initiated via a search alias.
    * @param {boolean} searchActionDetails.isFormHistory
    *   True if this query was initiated from a form history result.
-   * @param {string} searchActionDetails.url
-   *   The url this query was triggered with.
    */
   _recordSearch(engine, event, searchActionDetails = {}) {
     const isOneOff = this.view.oneOffSearchButtons.maybeRecordTelemetry(event);
