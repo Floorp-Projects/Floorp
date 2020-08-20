@@ -44,7 +44,7 @@ printui-less-settings = Fewer settings
 
 # Section title (noun) for the print scaling options
 printui-scale = Scale
-printui-scale-fit-to-page = Fit to page
+printui-scale-fit-to-page-width = Fit to page width
 # Label for input control where user can set the scale percentage
 printui-scale-pcent = Scale
 
