@@ -379,4 +379,7 @@
 // AXAttributedStringForTextMarkerRange
 - (NSAttributedString* _Nullable)moxAttributedStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
 
+// AXBoundsForTextMarkerRange
+- (NSValue* _Nullable)moxBoundsForTextMarkerRange:(id _Nonnull)textMarkerRange;
+
 @end

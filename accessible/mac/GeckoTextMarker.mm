@@ -266,5 +266,27 @@ NSString* GeckoTextMarkerRange::Text() const {
   }
   return nsCocoaUtils::ToNSString(text);
 }
+
+NSValue* GeckoTextMarkerRange::Bounds() const {
+  nsIntRect rect;
+  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendBoundsForRange(
+        mStart.mContainer.AsProxy()->ID(), mStart.mOffset, mEnd.mContainer.AsProxy()->ID(),
+        mEnd.mOffset, &rect);
+  } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
+    rect = htWrap->BoundsForRange(mStart.mOffset, mEnd.ContainerAsHyperTextWrap(), mEnd.mOffset);
+  }
+
+  NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
+  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
+  NSRect r = NSMakeRect(
+      static_cast<CGFloat>(rect.x) / scaleFactor,
+      [mainView frame].size.height - static_cast<CGFloat>(rect.y + rect.height) / scaleFactor,
+      static_cast<CGFloat>(rect.width) / scaleFactor,
+      static_cast<CGFloat>(rect.height) / scaleFactor);
+
+  return [NSValue valueWithRect:r];
+}
 }
 }

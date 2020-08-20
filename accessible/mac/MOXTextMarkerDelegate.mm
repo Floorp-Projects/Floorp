@@ -194,4 +194,13 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
       initWithString:[self moxStringForTextMarkerRange:textMarkerRange]] autorelease];
 }
 
+- (NSValue*)moxBoundsForTextMarkerRange:(id)textMarkerRange {
+  mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible, textMarkerRange);
+  if (!range.IsValid()) {
+    return nil;
+  }
+
+  return range.Bounds();
+}
+
 @end
