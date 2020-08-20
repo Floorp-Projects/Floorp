@@ -23,6 +23,7 @@
 
 #include "js/HeapAPI.h"     // JS::shadow::String
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/shadow/String.h"  // JS::shadow::String
 #include "js/TypeDecls.h"   // JSContext, JS::Latin1Char, JSString
 #include "js/Vector.h"      // js::Vector
 

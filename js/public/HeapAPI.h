@@ -13,6 +13,7 @@
 #include "jspubtd.h"
 
 #include "js/GCAnnotations.h"
+#include "js/shadow/String.h"  // JS::shadow::String
 #include "js/TraceKind.h"
 #include "js/Utility.h"
 
@@ -241,43 +242,6 @@ struct Zone {
 
   static MOZ_ALWAYS_INLINE JS::shadow::Zone* from(JS::Zone* zone) {
     return reinterpret_cast<JS::shadow::Zone*>(zone);
-  }
-};
-
-struct String {
-  static const uint32_t ATOM_BIT = js::Bit(3);
-  static const uint32_t LINEAR_BIT = js::Bit(4);
-  static const uint32_t INLINE_CHARS_BIT = js::Bit(6);
-  static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
-  static const uint32_t EXTERNAL_FLAGS = LINEAR_BIT | js::Bit(8);
-  static const uint32_t TYPE_FLAGS_MASK = js::BitMask(9) - js::BitMask(3);
-  static const uint32_t PERMANENT_ATOM_MASK = ATOM_BIT | js::Bit(8);
-
-  uintptr_t flags_;
-#if JS_BITS_PER_WORD == 32
-  uint32_t length_;
-#endif
-
-  union {
-    const JS::Latin1Char* nonInlineCharsLatin1;
-    const char16_t* nonInlineCharsTwoByte;
-    JS::Latin1Char inlineStorageLatin1[1];
-    char16_t inlineStorageTwoByte[1];
-  };
-  const JSExternalStringCallbacks* externalCallbacks;
-
-  inline uint32_t flags() const { return uint32_t(flags_); }
-  inline uint32_t length() const {
-#if JS_BITS_PER_WORD == 32
-    return length_;
-#else
-    return uint32_t(flags_ >> 32);
-#endif
-  }
-
-  static bool isPermanentAtom(const js::gc::Cell* cell) {
-    uint32_t flags = reinterpret_cast<const String*>(cell)->flags();
-    return (flags & PERMANENT_ATOM_MASK) == PERMANENT_ATOM_MASK;
   }
 };
 
