@@ -3069,23 +3069,51 @@ bool WarpCacheIRTranspiler::emitFunApplyArgs(MDefinition* callee,
   MDefinition* argFunc = callInfo_->thisArg();
   MDefinition* argThis = callInfo_->getArg(0);
 
-  MArgumentsLength* numArgs = MArgumentsLength::New(alloc());
-  current->add(numArgs);
+  MInstruction* result = nullptr;
 
-  MApplyArgs* apply =
-      MApplyArgs::New(alloc(), wrappedTarget, argFunc, numArgs, argThis);
+  // If we are building an inlined function, we know the arguments
+  // being used.
+  if (const CallInfo* outerCallInfo = builder_->inlineCallInfo()) {
+    CallInfo newCallInfo(alloc(), loc_.toRawBytecode(), /*constructing=*/false,
+                         loc_.resultIsPopped());
 
-  if (flags.isSameRealm()) {
-    apply->setNotCrossRealm();
+    if (!newCallInfo.setArgs(outerCallInfo->argv())) {
+      return false;
+    }
+
+    newCallInfo.setCallee(argFunc);
+    newCallInfo.setThis(argThis);
+
+    bool needsThisCheck = false;
+    MCall* call = makeCall(newCallInfo, needsThisCheck, wrappedTarget);
+    if (!call) {
+      return false;
+    }
+
+    if (flags.isSameRealm()) {
+      call->setNotCrossRealm();
+    }
+    result = call;
+  } else {
+    MArgumentsLength* numArgs = MArgumentsLength::New(alloc());
+    current->add(numArgs);
+
+    MApplyArgs* apply =
+        MApplyArgs::New(alloc(), wrappedTarget, argFunc, numArgs, argThis);
+
+    if (flags.isSameRealm()) {
+      apply->setNotCrossRealm();
+    }
+    if (callInfo_->ignoresReturnValue()) {
+      apply->setIgnoresReturnValue();
+    }
+    result = apply;
   }
-  if (callInfo_->ignoresReturnValue()) {
-    apply->setIgnoresReturnValue();
-  }
 
-  addEffectful(apply);
-  pushResult(apply);
+  addEffectful(result);
+  pushResult(result);
 
-  return resumeAfter(apply);
+  return resumeAfter(result);
 }
 
 #ifndef JS_SIMULATOR
