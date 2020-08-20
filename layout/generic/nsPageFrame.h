@@ -41,8 +41,10 @@ class nsPageFrame final : public nsContainerFrame {
   // For Printing
   //////////////////
 
-  // Tell the page which page number it is out of how many
-  void SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages);
+  // Determine this page's page-number, based on its previous continuation
+  // (whose page number is presumed to already be known).
+  void DeterminePageNum();
+  int32_t GetPageNum() { return mPageNum; }
 
   void SetSharedPageData(nsSharedPageData* aPD);
   nsSharedPageData* GetSharedPageData() const { return mPD; }
@@ -88,9 +90,7 @@ class nsPageFrame final : public nsContainerFrame {
   void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);
 
   static constexpr int32_t kPageNumUnset = -1;
-
   int32_t mPageNum = kPageNumUnset;
-  int32_t mTotNumPages = kPageNumUnset;
 
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
