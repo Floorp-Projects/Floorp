@@ -7,6 +7,8 @@
 #ifndef vm_ObjectGroup_h
 #define vm_ObjectGroup_h
 
+#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
+
 #include "jsfriendapi.h"
 
 #include "ds/IdValuePair.h"
@@ -438,7 +440,7 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   static void staticAsserts() {
     static_assert(offsetof(ObjectGroup, proto_) ==
-                  offsetof(js::shadow::ObjectGroup, proto));
+                  offsetof(JS::shadow::ObjectGroup, proto));
   }
 
  public:

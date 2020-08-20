@@ -28,6 +28,7 @@ typedef uint32_t HashNumber;
 #include "js/Initialization.h"
 #include "js/MemoryMetrics.h"
 #include "js/PropertySpec.h"
+#include "js/shadow/ObjectGroup.h"
 #include "js/SourceText.h"
 #include "js/StructuredClone.h"
 #include "js/ValueArray.h"

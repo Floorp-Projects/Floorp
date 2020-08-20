@@ -254,6 +254,7 @@ EXPORTS.js.friend += [
 # to back actual implementations *with* these shadow definitions to eliminate
 # this requirement.)
 EXPORTS.js.shadow += [
+    '../public/shadow/ObjectGroup.h',
     '../public/shadow/String.h',
 ]
 

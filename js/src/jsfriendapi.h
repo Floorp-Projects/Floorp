@@ -19,6 +19,7 @@
 #include "js/Exception.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/HeapAPI.h"
+#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
 #include "js/shadow/String.h"  // JS::shadow::String
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -370,12 +371,6 @@ extern JS_FRIEND_API bool IsSharableCompartment(JS::Compartment* comp);
  */
 namespace shadow {
 
-struct ObjectGroup {
-  const JSClass* clasp;
-  JSObject* proto;
-  JS::Realm* realm;
-};
-
 struct BaseShape {
   const JSClass* clasp_;
   JSObject* parent;
@@ -397,7 +392,7 @@ class Shape {
  * depending on the object's specific layout.
  */
 struct Object {
-  shadow::ObjectGroup* group;
+  JS::shadow::ObjectGroup* group;
   shadow::Shape* shape;
   JS::Value* slots;
   void* _1;
