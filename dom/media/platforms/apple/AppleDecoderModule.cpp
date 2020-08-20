@@ -134,6 +134,7 @@ bool AppleDecoderModule::CanCreateVP9Decoder() {
     }
 
     VideoInfo info(1920, 1080);
+    info.mMimeType = "video/vp9";
     VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
 
     RefPtr<AppleVTDecoder> decoder =
