@@ -1302,9 +1302,26 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
       }
       continue;
     }
-    // If the available vertical height has changed, we need to reflow
-    // even if the frame isn't dirty.
-    if (shouldReflowAllKids || frame->IsSubtreeDirty()) {
+
+    auto ScrollableOverflowExceedsAvailableBSize =
+        [this, &aReflowInput](nsIFrame* aFrame) {
+          if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
+            return false;
+          }
+          const auto parentWM = GetWritingMode();
+          const nscoord scrollableOverflowRectBEnd =
+              LogicalRect(parentWM,
+                          aFrame->ScrollableOverflowRectRelativeToParent(),
+                          GetSize())
+                  .BEnd(parentWM);
+          return scrollableOverflowRectBEnd > aReflowInput.AvailableBSize();
+        };
+
+    // If the available block-size has changed, or the existing scrollable
+    // overflow's block-end exceeds it, we need to reflow even if the frame
+    // isn't dirty.
+    if (shouldReflowAllKids || frame->IsSubtreeDirty() ||
+        ScrollableOverflowExceedsAvailableBSize(frame)) {
       // Get prev-in-flow
       nsIFrame* prevInFlow = frame->GetPrevInFlow();
       NS_ASSERTION(prevInFlow,
