@@ -101,7 +101,7 @@ this.LoginHelper = {
       "signon.showAutoCompleteImport",
       ""
     );
-    if (["control", "import"].includes(this.showAutoCompleteImport)) {
+    if (["control"].includes(this.showAutoCompleteImport)) {
       Services.telemetry.setEventRecordingEnabled("exp_import", true);
     } else {
       Services.telemetry.setEventRecordingEnabled("exp_import", false);
