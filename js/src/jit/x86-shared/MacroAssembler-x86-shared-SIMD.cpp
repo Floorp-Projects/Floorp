@@ -2016,12 +2016,10 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4(
   vpxor(Operand(scratch), scratch, scratch);
   vmaxps(Operand(scratch), dest, dest);
 
-  // Compute the float value of 0x7FFFFFFF (the largest positive signed integer
-  // value) in all lanes in scratch.  We use it to bias the conversion to handle
-  // edge cases.
-  vpcmpeqd(Operand(scratch), scratch, scratch);
-  vpsrld(Imm32(1), scratch, scratch);
-  vcvtdq2ps(scratch, scratch);
+  // Place the largest positive signed integer in all lanes in scratch.
+  // We use it to bias the conversion to handle edge cases.
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX4(2147483647.f),
+                                    scratch);
 
   // temp = dest - 7FFFFFFFh (as floating), this brings integers in the unsigned
   // range but above the signed range into the signed range; 0 => -7FFFFFFFh.
