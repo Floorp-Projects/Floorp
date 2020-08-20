@@ -43,8 +43,8 @@ class CacheIRHealth {
                                         ICEntry* entry);
   // Show JSOps present in the script, formatted for CacheIR
   // health report.
-  uint32_t spewJSOpForCacheIRHealth(AutoStructuredSpewer& spew,
-                                    unsigned pcOffset, jsbytecode next);
+  void spewJSOpAndCacheIRHealth(AutoStructuredSpewer& spew, HandleScript script,
+                                jit::ICEntry* entry, jsbytecode* pc, JSOp op);
   // If a JitScript exists, shows health of all ICEntries that exist
   // for the specified script.
   bool rateMyCacheIR(JSContext* cx, HandleScript script);
