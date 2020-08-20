@@ -923,14 +923,6 @@ const DEFAULT_WELCOME_CONTENT = {
           tooltip: {
             string_id: "onboarding-multistage-theme-tooltip-dark"
           }
-        }, {
-          theme: "alpenglow",
-          label: {
-            string_id: "onboarding-multistage-theme-label-alpenglow"
-          },
-          tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-alpenglow"
-          }
         }]
       },
       primary_button: {

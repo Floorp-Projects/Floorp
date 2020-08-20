@@ -43,15 +43,5 @@ var LightweightThemes = {
         await addon.enable();
       },
     },
-
-    alpenGlow: {
-      selectors: [],
-      async applyConfig() {
-        let addon = await AddonManager.getAddonByID(
-          "firefox-alpenglow@mozilla.org"
-        );
-        await addon.enable();
-      },
-    },
   },
 };
