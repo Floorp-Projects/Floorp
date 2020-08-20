@@ -16,6 +16,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsDataHashtable.h"
 
+#ifdef XP_WIN
+#  include <windows.h>
+#endif  // XP_WIN
+
 namespace mozilla {
 class MemoryReportingProcess;
 namespace dom {
@@ -170,7 +174,19 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
 
   // Convenience function to get USS easily from other code.  This is useful
   // when debugging unshared memory pages for forked processes.
+  //
+  // Returns 0 if, for some reason, the resident unique memory cannot be
+  // determined - typically if there is a race between us and someone else
+  // closing the process and we lost that race.
+#ifdef XP_WIN
+  static int64_t ResidentUnique(HANDLE aProcess = nullptr);
+#elif XP_MACOSX
+  static int64_t ResidentUnique(mach_port_t aPort = 0);
+#elif XP_LINUX
+  static int64_t ResidentUnique(pid_t aPid = 0);
+#else
   static int64_t ResidentUnique();
+#endif  // XP_{WIN, MACOSX, LINUX, *}
 
   // Functions that measure per-tab memory consumption.
   struct SizeOfTabFns {
