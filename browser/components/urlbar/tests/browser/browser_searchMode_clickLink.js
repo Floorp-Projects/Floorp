@@ -78,7 +78,7 @@ async function doClickLinkTest(searchString, href) {
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     });
     await UrlbarTestUtils.promisePopupClose(window);
-    UrlbarTestUtils.assertSearchMode(window, {
+    await UrlbarTestUtils.assertSearchMode(window, {
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     });
 
@@ -98,6 +98,6 @@ async function doClickLinkTest(searchString, href) {
       "Should have loaded the href URL"
     );
 
-    UrlbarTestUtils.assertSearchMode(window, null);
+    await UrlbarTestUtils.assertSearchMode(window, null);
   });
 }

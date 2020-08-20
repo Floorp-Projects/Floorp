@@ -91,6 +91,6 @@ async function doPickResultTest(initialURL, searchString) {
       "Should have loaded the bookmarked URL"
     );
 
-    UrlbarTestUtils.assertSearchMode(window, null);
+    await UrlbarTestUtils.assertSearchMode(window, null);
   });
 }

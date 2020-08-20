@@ -113,7 +113,7 @@ async function doSetURITest(initialURL, searchString, url, expectSearchMode) {
     let uri = url ? Services.io.newURI(url) : null;
     gURLBar.setURI(uri);
 
-    UrlbarTestUtils.assertSearchMode(
+    await UrlbarTestUtils.assertSearchMode(
       window,
       !expectSearchMode
         ? null
@@ -123,6 +123,6 @@ async function doSetURITest(initialURL, searchString, url, expectSearchMode) {
     );
 
     gURLBar.handleRevert();
-    UrlbarTestUtils.assertSearchMode(window, null);
+    await UrlbarTestUtils.assertSearchMode(window, null);
   });
 }

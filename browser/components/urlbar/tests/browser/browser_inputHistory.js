@@ -329,3 +329,41 @@ add_task(async function test_adaptive_mouse() {
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
   Assert.equal(result.url, url1, "Check second result");
 });
+
+add_task(async function test_adaptive_searchmode() {
+  info("Check adaptive history is not shown in search mode.");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+
+  let suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
+  );
+
+  let url1 = "http://site.tld/1";
+  let url2 = "http://site.tld/2";
+
+  info("Sanity check: adaptive history is shown for a normal search.");
+  await PlacesUtils.history.clear();
+  await bumpScore(url1, "site", { visits: 3, picks: 3 }, true);
+  await bumpScore(url2, "site", { visits: 3, picks: 1 }, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "si",
+  });
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.url, url1, "Check first result");
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
+  Assert.equal(result.url, url2, "Check second result");
+
+  info("Entering search mode.");
+  // enterSearchMode checks internally that our site.tld URLs are not shown.
+  await UrlbarTestUtils.enterSearchMode(window, {
+    engineName: suggestionsEngine.name,
+  });
+
+  await SpecialPowers.popPrefEnv();
+});

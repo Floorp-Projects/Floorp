@@ -46,7 +46,7 @@ add_task(async function replaced_on_space() {
   EventUtils.synthesizeKey("VK_SPACE");
   await searchPromise;
 
-  UrlbarTestUtils.assertSearchMode(window, null);
+  await UrlbarTestUtils.assertSearchMode(window, null);
   Assert.equal(
     gURLBar.value,
     ALIAS.slice(0, -1),
@@ -81,7 +81,7 @@ add_task(async function replaced_on_space() {
   UrlbarTestUtils.fireInputEvent(window);
   await searchPromise;
 
-  UrlbarTestUtils.assertSearchMode(window, {
+  await UrlbarTestUtils.assertSearchMode(window, {
     engineName: aliasEngine.name,
   });
   Assert.ok(!gURLBar.value, "The Urlbar value should be cleared.");
@@ -130,5 +130,5 @@ add_task(async function not_replaced_for_alt_tab() {
   UrlbarTestUtils.fireInputEvent(window);
   await searchPromise;
 
-  UrlbarTestUtils.assertSearchMode(window, null);
+  await UrlbarTestUtils.assertSearchMode(window, null);
 });
