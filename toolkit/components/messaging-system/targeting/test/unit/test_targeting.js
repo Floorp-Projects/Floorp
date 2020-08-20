@@ -217,3 +217,29 @@ add_task(async function test_live_telemetry() {
   // This shouldn't throw.
   await targeting.eval("env.liveTelemetry.main", ctx);
 });
+
+add_task(async function test_default_targeting() {
+  const targeting = new TargetingContext();
+  const expected_attributes = [
+    "locale",
+    "localeLanguageCode",
+    // "region", // Not available in test, requires network access to determine
+    "userId",
+    "version",
+    "channel",
+    "platform",
+  ];
+
+  for (let attribute of expected_attributes) {
+    let res = await targeting.eval(`ctx.${attribute}`);
+    Assert.ok(res, `[eval] result for ${attribute} should not be null`);
+  }
+
+  for (let attribute of expected_attributes) {
+    let res = await targeting.evalWithDefault(attribute);
+    Assert.ok(
+      res,
+      `[evalWithDefault] result for ${attribute} should not be null`
+    );
+  }
+});

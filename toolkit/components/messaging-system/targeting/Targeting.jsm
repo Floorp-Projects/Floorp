@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TargetingContext"];
@@ -42,6 +43,18 @@ const TargetingEnvironment = {
 
   get userId() {
     return ClientEnvironment.userId;
+  },
+
+  get version() {
+    return AppConstants.MOZ_APP_VERSION_DISPLAY;
+  },
+
+  get channel() {
+    return AppConstants.MOZ_UPDATE_CHANNEL;
+  },
+
+  get platform() {
+    return AppConstants.platform;
   },
 };
 
