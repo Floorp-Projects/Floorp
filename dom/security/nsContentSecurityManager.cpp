@@ -641,7 +641,7 @@ static void LogPrincipal(nsIPrincipal* aPrincipal,
     nsAutoCString principalSpec;
     aPrincipal->GetAsciiSpec(principalSpec);
     MOZ_LOG(sCSMLog, LogLevel::Debug,
-            ("%s%s %s\n", aIndentationString.get(),
+            ("%s%s: %s\n", aIndentationString.get(),
              NS_ConvertUTF16toUTF8(aPrincipalName).get(), principalSpec.get()));
     return;
   }
