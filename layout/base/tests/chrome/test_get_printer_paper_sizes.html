@@ -20,8 +20,9 @@ async function run() {
 
     for (let printer of printers) {
       printer.QueryInterface(Ci.nsIPrinter);
-      isnot(printer.name, null, "Printer name should never be null.");
+      is(typeof(printer.name), 'string', "Printer name should be a string.");
       isnot(printer.name, "", "Printer name should never be empty.");
+
       info(printer.name);
 
       let paperList = await printer.paperList;
@@ -30,29 +31,29 @@ async function run() {
 
         info(`${paper.name}: ${paper.width}x${paper.height}`);
 
-        isnot(paper.name, null, "Paper name should never be null.");
+        is(typeof(paper.name), 'string', "Paper name should be a string.");
         isnot(paper.name, "", "Paper name should never be empty.");
 
-        isnot(paper.width, null, "Paper width should never be null.");
+        is(typeof(paper.width), 'number', "Paper width should be a number.");
         ok(paper.width > 0.0, "Paper width should be greater than zero.");
 
-        isnot(paper.height, null, "Paper height should never be null.");
+        is(typeof(paper.height), 'number', "Paper height should be a number.");
         ok(paper.height > 0.0, "Paper height should be greater than zero.");
-
 
         let margin = await paper.unwriteableMargin;
         margin.QueryInterface(Ci.nsIPaperMargin);
 
         info(`with margin: ${margin.top} ${margin.right} ${margin.bottom} ${margin.left}`);
-        is(typeof(margin.top), 'number', "Paper unwriteable margin top should be a number.");
-        is(typeof(margin.right), 'number', "Paper unwriteable margin right should be a number.");
-        is(typeof(margin.bottom), 'number', "Paper unwriteable margin bottom should be a number.");
-        is(typeof(margin.left), 'number', "Paper unwriteable margin left should be a number.");
 
-        ok(margin.top >= 0.0, "Paper unwriteable margin top should be greater than or equal to zero.");
-        ok(margin.right >= 0.0, "Paper unwriteable margin right should be greater than or equal to zero.");
+        is(typeof(margin.top),    'number', "Paper unwriteable margin top should be a number.");
+        is(typeof(margin.right),  'number', "Paper unwriteable margin right should be a number.");
+        is(typeof(margin.bottom), 'number', "Paper unwriteable margin bottom should be a number.");
+        is(typeof(margin.left),   'number', "Paper unwriteable margin left should be a number.");
+
+        ok(margin.top    >= 0.0, "Paper unwriteable margin top should be greater than or equal to zero.");
+        ok(margin.right  >= 0.0, "Paper unwriteable margin right should be greater than or equal to zero.");
         ok(margin.bottom >= 0.0, "Paper unwriteable bottom right should be greater than or equal to zero.");
-        ok(margin.left >= 0.0, "Paper unwriteable margin left should be greater than or equal to zero.");
+        ok(margin.left   >= 0.0, "Paper unwriteable margin left should be greater than or equal to zero.");
       }
     }
   } catch (e) {
