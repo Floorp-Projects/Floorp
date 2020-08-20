@@ -123,8 +123,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->ionEnabled = ion;
   target->craneliftEnabled = cranelift;
   target->debugEnabled = debug;
-  target->sharedMemoryEnabled =
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+  target->sharedMemoryEnabled = wasm::ThreadsAvailable(cx);
   target->forceTiering = forceTiering;
   target->reftypesEnabled = wasm::ReftypesAvailable(cx);
   target->gcEnabled = wasm::GcTypesAvailable(cx);
