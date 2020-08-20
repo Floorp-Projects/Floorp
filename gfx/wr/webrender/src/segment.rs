@@ -52,7 +52,7 @@
 use api::{BorderRadius, ClipMode, EdgeAaSegmentMask};
 use api::units::*;
 use std::{cmp, usize};
-use crate::util::{extract_inner_rect_safe, RectHelpers};
+use crate::util::{extract_inner_rect_safe};
 use smallvec::SmallVec;
 
 bitflags! {
@@ -280,7 +280,7 @@ impl SegmentBuilder {
     ) {
         self.has_interesting_clips = true;
 
-        if !inner_rect.is_well_formed_and_nonempty() {
+        if inner_rect.is_empty() {
             self.items.push(Item::new(
                 outer_rect,
                 None,
