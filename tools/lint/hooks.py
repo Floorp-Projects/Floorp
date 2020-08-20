@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 
 import os
 import signal
+import six
 import subprocess
 import sys
 from distutils.spawn import find_executable
@@ -26,6 +27,8 @@ def run_process(cmd):
 
 
 def run_mozlint(hooktype, args):
+    if isinstance(hooktype, six.binary_type):
+        hooktype = hooktype.decode('UTF-8', 'replace')
     # --quiet prevents warnings on eslint, it will be ignored by other linters
     python = find_executable("python3")
     if not python:
