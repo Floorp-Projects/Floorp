@@ -26,7 +26,7 @@ function test1() {
       ok(false, "Setting localStorageItem should throw a security exception");
     }
     catch(ex) {
-      is(ex.name, "SecurityError");
+      is(ex.name, "SecurityError", "Got security exception");
     }
 
     w.close();
@@ -55,10 +55,20 @@ function test2() {
     var myframe = w.document.createElement("iframe");
     w.document.body.appendChild(myframe);
     myframe.src = fileTest;
-    myframe.onload = _ => {
-      w.close();
-      SimpleTest.finish();
-    }
+
+    w.onmessage = function(e) {
+      switch (e.data.type || "") {
+        case "ok":
+          ok(e.data.what, e.data.msg);
+          break;
+        case "finish":
+          w.close();
+          SimpleTest.finish();
+          break;
+        default:
+          ok(false, "Invalid type.");
+      }
+    };
   }
 }
 
