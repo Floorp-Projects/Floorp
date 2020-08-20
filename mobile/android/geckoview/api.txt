@@ -531,13 +531,11 @@ package org.mozilla.geckoview {
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
-    method @Deprecated @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
     method @UiThread public void setLoginStorageDelegate(@Nullable Autocomplete.LoginStorageDelegate);
     method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
-    method @Deprecated @UiThread @NonNull public GeckoResult<Void> unregisterWebExtension(@NonNull WebExtension);
     field public static final String ACTION_CRASHED = "org.mozilla.gecko.ACTION_CRASHED";
     field public static final Parcelable.Creator<GeckoRuntime> CREATOR;
     field public static final String EXTRA_CRASH_FATAL = "fatal";
@@ -1557,8 +1555,6 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtension {
-    ctor @Deprecated public WebExtension(@NonNull String, @NonNull String, long, @NonNull WebExtensionController);
-    ctor @Deprecated public WebExtension(@NonNull String, @NonNull WebExtensionController);
     method @UiThread @Nullable public WebExtension.TabDelegate getTabDelegate();
     method @AnyThread public void setActionDelegate(@Nullable WebExtension.ActionDelegate);
     method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
@@ -1567,7 +1563,7 @@ package org.mozilla.geckoview {
     field @NonNull public final String id;
     field public final boolean isBuiltIn;
     field @NonNull public final String location;
-    field @Nullable public final WebExtension.MetaData metaData;
+    field @NonNull public final WebExtension.MetaData metaData;
   }
 
   @AnyThread public static class WebExtension.Action {
@@ -1766,11 +1762,6 @@ package org.mozilla.geckoview {
   @UiThread public static interface WebExtensionController.PromptDelegate {
     method @Nullable default public GeckoResult<AllowOrDeny> onInstallPrompt(@NonNull WebExtension);
     method @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull WebExtension, @NonNull String[], @NonNull String[]);
-  }
-
-  @Deprecated public static interface WebExtensionController.TabDelegate {
-    method @UiThread @NonNull default public GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension, @NonNull GeckoSession);
-    method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension, @Nullable String);
   }
 
   @AnyThread public abstract class WebMessage {
