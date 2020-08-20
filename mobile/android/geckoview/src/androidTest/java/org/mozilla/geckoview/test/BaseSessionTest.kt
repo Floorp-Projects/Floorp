@@ -74,6 +74,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val IFRAME_UNKNOWN_PROTOCOL = "/assets/www/iframe_unknown_protocol.html"
         const val MEDIA_SESSION_DOM1_PATH = "/assets/www/media_session_dom1.html"
         const val MEDIA_SESSION_DEFAULT1_PATH = "/assets/www/media_session_default1.html"
+        const val TOUCH_HTML_PATH = "/assets/www/touch.html"
+
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
     }
 
