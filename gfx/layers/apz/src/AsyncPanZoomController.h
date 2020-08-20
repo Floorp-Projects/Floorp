@@ -532,7 +532,7 @@ class AsyncPanZoomController {
 
   // Helper function to compare root frame metrics and update them
   // Returns true when the metrics have changed and were updated.
-  bool UpdateRootFrameMetricsIfChanged(FrameMetrics& metrics);
+  bool UpdateRootFrameMetricsIfChanged(FrameMetrics& aMetrics);
 
  private:
   // Get whether the horizontal content of the honoured target of auto-dir
