@@ -14,25 +14,13 @@
     android:paddingStart="16dp"
     android:paddingEnd="0dp">
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/icon_container"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/add_on_icon"
+        style="@style/Mozac.Widgets.Favicon"
         android:layout_alignParentStart="true"
         android:layout_marginTop="16dp"
-        app:cardElevation="0dp"
-        app:cardCornerRadius="20dp">
-
-        <ImageView
-            android:id="@+id/add_on_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:importantForAccessibility="no"
-            android:scaleType="fitCenter"
-            app:srcCompat="@android:color/transparent" />
-
-    </androidx.cardview.widget.CardView>
+        android:importantForAccessibility="no"
+        app:srcCompat="@android:color/transparent" />
 
     <LinearLayout
         android:id="@+id/details_container"
@@ -42,7 +30,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:layout_toStartOf="@+id/add_button"
-        android:layout_toEndOf="@+id/icon_container"
+        android:layout_toEndOf="@+id/add_on_icon"
         android:orientation="vertical"
         android:paddingStart="8dp"
         android:paddingTop="8dp"

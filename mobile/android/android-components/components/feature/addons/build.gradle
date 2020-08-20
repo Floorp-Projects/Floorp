@@ -59,6 +59,7 @@ dependencies {
 
     implementation project(':ui-colors')
     implementation project(':ui-icons')
+    implementation project(':ui-widgets')
     implementation project(':browser-state')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')

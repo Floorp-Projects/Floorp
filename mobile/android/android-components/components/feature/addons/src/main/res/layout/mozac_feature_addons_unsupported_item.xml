@@ -14,10 +14,8 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/add_on_icon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        style="@style/Mozac.Widgets.Favicon"
         android:importantForAccessibility="no"
-        android:scaleType="fitCenter"
         app:srcCompat="@drawable/mozac_ic_extensions"
         app:tint="?android:attr/textColorPrimary" />
 

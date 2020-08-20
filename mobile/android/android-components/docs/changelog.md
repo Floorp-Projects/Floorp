@@ -74,6 +74,9 @@ permalink: /changelog/
 * **browser-engine-nightly**
   * Added `cookiePurging` to `TrackingProtectionPolicy.toContentBlockingSetting`.
 
+* **feature-addons**
+  * ⚠️ **This is a breaking change**: Unified addons icons design with the one of favicons used all throughout the app. Specifying a different background is not possible anymore.
+
 # 53.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v52.0.0...v53.0.0)
