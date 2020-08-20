@@ -72,7 +72,7 @@ HandlerService.prototype = {
       this.__store.ensureDataReady();
 
       this._injectDefaultProtocolHandlersIfNeeded();
-      this._migrateHandlersIfNeeded();
+      this._migrateProtocolHandlersIfNeeded();
 
       Services.obs.notifyObservers(null, "handlersvc-store-initialized");
     }
@@ -228,7 +228,7 @@ HandlerService.prototype = {
    * This avoids both re-running older migrations and keeping an additional
    * pref around permanently.
    */
-  _migrateHandlersIfNeeded() {
+  _migrateProtocolHandlersIfNeeded() {
     const kMigrations = {
       "30boxes": () => {
         const k30BoxesRegex = /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
@@ -266,16 +266,6 @@ HandlerService.prototype = {
             this.store(webcalHandler);
           }
         }
-      },
-      "octet-stream": () => {
-        let { mimeTypes } = this._store.data;
-        for (let octetType of [
-          "application/octet-stream",
-          "binary/octet-stream",
-        ]) {
-          delete mimeTypes[octetType];
-        }
-        this._store.saveSoon();
       },
     };
     let migrationsToRun = Services.prefs.getCharPref(
@@ -383,16 +373,6 @@ HandlerService.prototype = {
   // nsIHandlerService
   store(handlerInfo) {
     let handlerList = this._getHandlerListByHandlerInfoType(handlerInfo);
-
-    // Do not store "octet-stream" information.
-    if (
-      this._isMIMEInfo(handlerInfo) &&
-      ["application/octet-stream", "binary/octet-stream"].includes(
-        handlerInfo.type
-      )
-    ) {
-      return;
-    }
 
     // Retrieve an existing entry if present, instead of creating a new one, so
     // that we preserve unknown properties for forward compatibility.
