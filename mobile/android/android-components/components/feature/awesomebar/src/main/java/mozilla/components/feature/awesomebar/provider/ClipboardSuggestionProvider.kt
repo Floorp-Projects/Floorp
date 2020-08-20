@@ -60,6 +60,7 @@ class ClipboardSuggestionProvider(
             provider = this,
             id = url,
             description = url,
+            editSuggestion = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
             icon = icon ?: context.getDrawable(R.drawable.mozac_ic_search)?.toBitmap(),
             title = title,

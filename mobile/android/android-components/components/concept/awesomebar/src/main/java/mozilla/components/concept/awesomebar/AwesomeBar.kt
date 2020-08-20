@@ -81,6 +81,7 @@ interface AwesomeBar {
      * animates showing the new suggestion.
      * @property title A user-readable title for the [Suggestion].
      * @property description A user-readable description for the [Suggestion].
+     * @property editSuggestion The string that will be set to the url bar when using the edit suggestion arrow.
      * @property icon A lambda that can be invoked by the [AwesomeBar] implementation to receive an icon [Bitmap] for
      * this [Suggestion]. The [AwesomeBar] will pass in its desired width and height for the Bitmap.
      * @property indicatorIcon A drawable for indicating different types of [Suggestion].
@@ -96,6 +97,7 @@ interface AwesomeBar {
         val id: String = UUID.randomUUID().toString(),
         val title: String? = null,
         val description: String? = null,
+        val editSuggestion: String? = null,
         val icon: Bitmap? = null,
         val indicatorIcon: Drawable? = null,
         val chips: List<Chip> = emptyList(),

@@ -156,6 +156,7 @@ class SearchSuggestionProvider private constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun createMultipleSuggestions(text: String, result: List<String>?): List<AwesomeBar.Suggestion> {
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
 
@@ -181,6 +182,8 @@ class SearchSuggestionProvider private constructor(
                 id = if (item == text) ID_OF_ENTERED_TEXT else item,
                 title = item,
                 description = description,
+                // Don't show an autocomplete arrow for the entered text
+                editSuggestion = if (item == text) null else item,
                 icon = icon ?: client.searchEngine?.icon,
                 score = Int.MAX_VALUE - (index + 1),
                 onSuggestionClicked = {
