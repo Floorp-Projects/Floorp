@@ -37,6 +37,10 @@ var ChromeMigrationUtils = {
   // }
   _extensionLocaleStrings: {},
 
+  get supportsLoginsForPlatform() {
+    return ["macosx", "win"].includes(AppConstants.platform);
+  },
+
   /**
    * Get all extensions installed in a specific profile.
    * @param {String} profileId - A Chrome user profile ID. For example, "Profile 1".
@@ -369,6 +373,11 @@ var ChromeMigrationUtils = {
    */
   _importableLoginsCache: null,
   async getImportableLogins(formOrigin) {
+    // Only provide importable if we actually support importing.
+    if (!this.supportsLoginsForPlatform) {
+      return undefined;
+    }
+
     // Lazily fill the cache with all importable login browsers.
     if (!this._importableLoginsCache) {
       this._importableLoginsCache = new Map();

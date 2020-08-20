@@ -120,7 +120,7 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
         GetHistoryResource(profileFolder),
         GetCookiesResource(profileFolder),
       ];
-      if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
+      if (ChromeMigrationUtils.supportsLoginsForPlatform) {
         possibleResourcePromises.push(
           this._GetPasswordsResource(profileFolder)
         );
