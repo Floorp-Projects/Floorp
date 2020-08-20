@@ -253,7 +253,6 @@ let ContentSearch = {
     }
     win.BrowserSearch.recordSearchInTelemetry(engine, data.healthReportKey, {
       selection: data.selection,
-      url: submission.uri,
     });
   },
 

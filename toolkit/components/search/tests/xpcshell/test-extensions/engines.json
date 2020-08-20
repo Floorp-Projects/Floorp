@@ -5,7 +5,6 @@
         "id": "plainengine@search.mozilla.org"
       },
       "orderHint": 10000,
-      "sendAttributionRequest": true,
       "appliesTo": [{
         "included": { "everywhere": true },
         "default": "yes-if-no-other"
@@ -17,11 +16,10 @@
       },
       "orderHint": 7000,
       "appliesTo": [{
-        "included": { "regions": ["tr"] },
-        "default": "yes"
-      }, {
-        "included": { "everywhere": true },
-        "sendAttributionRequest": true
+          "included": { "regions": ["tr"] },
+          "default": "yes"
+        }, {
+        "included": { "everywhere": true }
       }]
     },
     {

@@ -117,8 +117,7 @@ this.search = class extends ExtensionAPI {
           BrowserUsageTelemetry.recordSearch(
             tabbrowser,
             engine,
-            "webextension",
-            { url: submission.uri }
+            "webextension"
           );
         },
       },

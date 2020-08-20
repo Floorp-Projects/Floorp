@@ -108,22 +108,6 @@ var SearchTestUtils = Object.freeze({
     }
   },
 
-  async useMochitestEngines(testDir) {
-    // Replace the path we load search engines from with
-    // the path to our test data.
-    let resProt = Services.io
-      .getProtocolHandler("resource")
-      .QueryInterface(Ci.nsIResProtocolHandler);
-    let originalSubstitution = resProt.getSubstitution("search-extensions");
-    resProt.setSubstitution(
-      "search-extensions",
-      Services.io.newURI("file://" + testDir.path)
-    );
-    gTestGlobals.registerCleanupFunction(() => {
-      resProt.setSubstitution("search-extensions", originalSubstitution);
-    });
-  },
-
   /**
    * Convert a list of engine configurations into engine objects.
    *
@@ -300,14 +284,10 @@ var SearchTestUtils = Object.freeze({
   /**
    * Simulates an update to the RemoteSettings configuration.
    *
-   * @param {object} [config]
+   * @param {object} config
    *  The new configuration.
    */
   async updateRemoteSettingsConfig(config) {
-    if (!config) {
-      let settings = RemoteSettings(SearchUtils.SETTINGS_KEY);
-      config = await settings.get();
-    }
     const reloadObserved = SearchTestUtils.promiseSearchNotification(
       "engines-reloaded"
     );
