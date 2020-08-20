@@ -5587,6 +5587,7 @@ if test -n "$CROSS_COMPILE"; then
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT CPU_ARCH=x86 ;;
+        cygwin*)      OS_ARCH=WINNT ;;
         darwin*)      OS_ARCH=Darwin ;;
         riscos*)      OS_ARCH=RISCOS ;;
     esac
