@@ -23,8 +23,10 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -73,13 +75,13 @@ class AppLinksFeatureTest {
         `when`(mockGetRedirect.invoke(intentUrl)).thenReturn(appRedirect)
         `when`(mockGetRedirect.invoke(webUrlWithAppLink)).thenReturn(appRedirectFromWebUrl)
 
-        feature = AppLinksFeature(
+        feature = spy(AppLinksFeature(
             context = mockContext,
             sessionManager = mockSessionManager,
             fragmentManager = mockFragmentManager,
             useCases = mockUseCases,
             dialog = mockDialog
-        )
+        ))
     }
 
     private fun createSession(isPrivate: Boolean, url: String = "https://mozilla.com"): Session {
@@ -152,7 +154,7 @@ class AppLinksFeatureTest {
         feature.start()
         userTapsOnSession(intentUrl, true)
 
-        verify(mockDialog).show(eq(mockFragmentManager), anyString())
+        verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
         verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any())
     }
 
@@ -163,5 +165,18 @@ class AppLinksFeatureTest {
 
         val dialog = feature.getOrCreateDialog()
         assertEquals(dialog, feature.getOrCreateDialog())
+    }
+
+    @Test
+    fun `redirect dialog is only added once`() {
+        feature.start()
+        userTapsOnSession(intentUrl, true)
+
+        verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
+
+        doReturn(mockDialog).`when`(feature).getOrCreateDialog()
+        doReturn(mockDialog).`when`(mockFragmentManager).findFragmentByTag(RedirectDialogFragment.FRAGMENT_TAG)
+        userTapsOnSession(intentUrl, true)
+        verify(mockDialog, times(1)).showNow(mockFragmentManager, RedirectDialogFragment.FRAGMENT_TAG)
     }
 }

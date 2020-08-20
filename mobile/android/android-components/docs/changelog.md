@@ -18,6 +18,9 @@ permalink: /changelog/
 * **browser-tabstray**
   * Added the convenience function `TabsAdapter.doOnTabsUpdated` for performing actions only once when the tabs are updated.
 
+* **feature-app-links**
+  * Fixed [issue #8169](https://github.com/mozilla-mobile/android-components/issues/8169) App links dialog will now call `showNow` to immediately show the dialog.
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
