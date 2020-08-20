@@ -37,39 +37,50 @@ window.addEventListener(
 );
 
 var PrintEventHandler = {
-  async init() {
-    this.sourceBrowser = this.getSourceBrowser();
-    this.previewBrowser = this._createPreviewBrowser();
-    this.settings = null;
-    this.defaultSettings = null;
-    this._printerSettingsChangedFlags = 0;
-    this._nonFlaggedChangedSettings = {};
+  hasPreviewed: false,
+  settings: null,
+  defaultSettings: null,
+  _printerSettingsChangedFlags: 0,
+  _nonFlaggedChangedSettings: {},
+  settingFlags: {
+    margins: Ci.nsIPrintSettings.kInitSaveMargins,
+    orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
+    printInColor: Ci.nsIPrintSettings.kInitSaveInColor,
+    printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
+    scaling: Ci.nsIPrintSettings.kInitSaveScaling,
+    shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
+    printFootersHeaders:
+      Ci.nsIPrintSettings.kInitSaveHeaderLeft |
+      Ci.nsIPrintSettings.kInitSaveHeaderCenter |
+      Ci.nsIPrintSettings.kInitSaveHeaderRight |
+      Ci.nsIPrintSettings.kInitSaveFooterLeft |
+      Ci.nsIPrintSettings.kInitSaveFooterCenter |
+      Ci.nsIPrintSettings.kInitSaveFooterRight,
+    printBackgrounds:
+      Ci.nsIPrintSettings.kInitSaveBGColors |
+      Ci.nsIPrintSettings.kInitSaveBGImages,
+  },
+  originalSourceContentTitle: null,
+  originalSourceCurrentURI: null,
+  previewBrowser: null,
 
-    this.settingFlags = {
-      margins: Ci.nsIPrintSettings.kInitSaveMargins,
-      orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
-      printInColor: Ci.nsIPrintSettings.kInitSaveInColor,
-      printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
-      scaling: Ci.nsIPrintSettings.kInitSaveScaling,
-      shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
-      printFootersHeaders:
-        Ci.nsIPrintSettings.kInitSaveHeaderLeft |
-        Ci.nsIPrintSettings.kInitSaveHeaderCenter |
-        Ci.nsIPrintSettings.kInitSaveHeaderRight |
-        Ci.nsIPrintSettings.kInitSaveFooterLeft |
-        Ci.nsIPrintSettings.kInitSaveFooterCenter |
-        Ci.nsIPrintSettings.kInitSaveFooterRight,
-      printBackgrounds:
-        Ci.nsIPrintSettings.kInitSaveBGColors |
-        Ci.nsIPrintSettings.kInitSaveBGImages,
-    };
-    // These settings do not have an associated pref value or flag, but
-    // changing them requires us to update the print preview.
-    this._nonFlaggedUpdatePreviewSettings = [
-      "printAllOrCustomRange",
-      "startPageRange",
-      "endPageRange",
-    ];
+  // These settings do not have an associated pref value or flag, but
+  // changing them requires us to update the print preview.
+  _nonFlaggedUpdatePreviewSettings: [
+    "printAllOrCustomRange",
+    "startPageRange",
+    "endPageRange",
+  ],
+
+  async init() {
+    // Do not keep a reference to source browser, it may mutate after printing
+    // is initiated and the print preview clone must be a snapshot from the
+    // time that the print was started.
+    let sourceBrowser = this.getSourceBrowser();
+    // This isn't correct for prints initiated from a subdocument (bug 1660064).
+    this.originalSourceContentTitle = sourceBrowser.contentTitle;
+    this.originalSourceCurrentURI = sourceBrowser.currentURI.spec;
+    this.previewBrowser = this._createPreviewBrowser(sourceBrowser);
 
     // First check the available destinations to ensure we get settings for an
     // accessible printer.
@@ -108,12 +119,11 @@ var PrintEventHandler = {
     );
   },
 
-  _createPreviewBrowser() {
+  _createPreviewBrowser(sourceBrowser) {
     // Create a preview browser.
     let printPreviewBrowser = gBrowser.createBrowser({
-      remoteType: this.sourceBrowser.remoteType,
-      initialBrowsingContextGroupId: this.sourceBrowser.browsingContext.group
-        .id,
+      remoteType: sourceBrowser.remoteType,
+      initialBrowsingContextGroupId: sourceBrowser.browsingContext.group.id,
       skipLoad: false,
     });
     printPreviewBrowser.classList.add("printPreviewBrowser");
@@ -156,7 +166,10 @@ var PrintEventHandler = {
 
     if (settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
       try {
-        settings.toFileName = await pickFileName(this.sourceBrowser, settings);
+        settings.toFileName = await pickFileName(
+          this.originalSourceContentTitle,
+          this.originalSourceCurrentURI
+        );
       } catch (e) {
         // Don't care why just yet.
         return;
@@ -248,8 +261,12 @@ var PrintEventHandler = {
   },
 
   async _updatePrintPreview() {
+    let browsingContext = this.hasPreviewed
+      ? this.previewBrowser.browsingContext
+      : this.getSourceBrowsingContext();
+    this.hasPreviewed = true;
     let totalPages = await PrintUtils.updatePrintPreview(
-      this.getSourceBrowsingContext(),
+      browsingContext,
       this.previewBrowser,
       this.settings
     );
@@ -290,11 +307,6 @@ var PrintEventHandler = {
       return null;
     }
     return browsingContext.top.embedderElement;
-  },
-
-  getPreviewBrowser() {
-    let container = gBrowser.getBrowserContainer(this.sourceBrowser);
-    return container.querySelector(".printPreviewBrowser");
   },
 
   async getPrintDestinations() {
@@ -974,7 +986,7 @@ class PrintButton extends PrintUIControlMixin(HTMLButtonElement) {
 }
 customElements.define("print-button", PrintButton, { extends: "button" });
 
-async function pickFileName(sourceBrowser, pageSettings) {
+async function pickFileName(contentTitle, currentURI) {
   let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   let [title] = await document.l10n.formatMessages([
     { id: "printui-save-to-pdf-title" },
@@ -982,10 +994,10 @@ async function pickFileName(sourceBrowser, pageSettings) {
   title = title.value;
 
   let filename;
-  if (sourceBrowser.contentTitle != "") {
-    filename = sourceBrowser.contentTitle;
+  if (contentTitle != "") {
+    filename = contentTitle;
   } else {
-    let url = new URL(sourceBrowser.currentURI.spec);
+    let url = new URL(currentURI);
     let path = decodeURIComponent(url.pathname);
     path = path.replace(/\/$/, "");
     filename = path.split("/").pop();
