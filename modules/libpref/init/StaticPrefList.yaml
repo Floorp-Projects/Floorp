@@ -3510,7 +3510,7 @@
 # between process swaps.
 - name: fission.preserve_browsing_contexts
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Store the session history in the parent process, and access it over IPC
