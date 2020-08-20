@@ -22,11 +22,9 @@ let property= [
   ["closed"      , w => w.closed             ] ,
   ["focus"       , w => w.focus()            ] ,
   ["frames"      , w => w.frames             ] ,
-  ["indexed"     , w => w[0]                 ] ,
   ["length"      , w => w.length             ] ,
   ["location"    , w => w.location           ] ,
   ["location"    , w => w.location = "#"     ] ,
-  ["named"       , w => w["test"]            ] ,
   ["opener"      , w => w.opener             ] ,
   ["opener"      , w => w.opener = ""        ] ,
   ["postMessage" , w => w.postMessage("")    ] ,
@@ -44,8 +42,8 @@ origin.forEach(([origin_name, origin]) => {
       const opener_token = token(); // The current test window.
 
       const reportTo = reportToHeaders(report_token);
-      const openee_url = origin+ executor_path +
-        reportTo.header + reportTo.coopReportOnlySameOriginHeader + coep_header +
+      const openee_url = origin + executor_path + reportTo.header +
+        reportTo.coopReportOnlySameOriginHeader + coep_header +
         `&uuid=${openee_token}`;
       const openee = window.open(openee_url);
       t.add_cleanup(() => send(openee_token, "window.close()"))
