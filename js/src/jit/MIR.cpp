@@ -5939,6 +5939,14 @@ static MDefinition* SkipObjectGuards(MDefinition* ins) {
       ins = ins->toGuardObjectGroup()->object();
       continue;
     }
+    if (ins->isGuardNullProto()) {
+      ins = ins->toGuardNullProto()->object();
+      continue;
+    }
+    if (ins->isGuardProto()) {
+      ins = ins->toGuardProto()->object();
+      continue;
+    }
 
     break;
   }
