@@ -115,6 +115,13 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvTextForRange(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvBoundsForRange(
+    const uint64_t& aID, const int32_t& aStartOffset,
+    const uint64_t& aEndContainer, const int32_t& aEndOffset,
+    nsIntRect* aBounds) {
+  return IPC_OK();
+}
+
 HyperTextAccessibleWrap*
 DocAccessiblePlatformExtChild::IdToHyperTextAccessibleWrap(
     const uint64_t& aID) const {

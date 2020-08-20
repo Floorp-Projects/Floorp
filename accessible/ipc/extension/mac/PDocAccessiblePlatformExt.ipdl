@@ -6,6 +6,8 @@
 
 include protocol PDocAccessible;
 
+using nsIntRect from "nsRect.h";
+
 namespace mozilla {
 namespace a11y {
 
@@ -31,6 +33,9 @@ child:
 
   nested(inside_sync) sync TextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
       returns(nsString aText);
+
+  nested(inside_sync) sync BoundsForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(nsIntRect aRetVal);
 };
 
 }  // namespace a11y
