@@ -1664,7 +1664,8 @@ parent:
                      bool? reloadActiveEntry);
 
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
-                        uint64_t aLoadID, nsID aChangeID);
+                        uint64_t aSessionHistoryEntryID,
+                        nsID aChangeID);
 
     async HistoryGo(MaybeDiscardedBrowsingContext aContext,
                     int32_t aOffset) returns(int32_t requestedIndex);
