@@ -5,6 +5,7 @@
 package org.mozilla.fenix.shortcut
 
 import android.os.Bundle
+import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,7 +42,7 @@ class CreateShortcutFragment : DialogFragment() {
 
             cancel_button.setOnClickListener { dismiss() }
             add_button.setOnClickListener {
-                val text = shortcut_text.text.toString()
+                val text = shortcut_text.text.toString().trim()
                 requireActivity().lifecycleScope.launch {
                     requireComponents.useCases.webAppUseCases.addToHomescreen(text)
                 }
@@ -57,9 +58,12 @@ class CreateShortcutFragment : DialogFragment() {
     }
 
     private fun updateAddButtonEnabledState() {
-        add_button.isEnabled = shortcut_text.text.isNotEmpty()
-        add_button.alpha = if (shortcut_text.text.isNotEmpty()) ENABLED_ALPHA else DISABLED_ALPHA
+        val text = shortcut_text.text
+        add_button.isEnabled = isTextValid(text)
+        add_button.alpha = if (isTextValid(text)) ENABLED_ALPHA else DISABLED_ALPHA
     }
+
+    private fun isTextValid(text: Editable) = text.isNotEmpty() && !text.isBlank()
 
     companion object {
         private const val ENABLED_ALPHA = 1.0f
