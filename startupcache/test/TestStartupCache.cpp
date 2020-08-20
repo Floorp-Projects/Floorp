@@ -93,6 +93,14 @@ TEST_F(TestStartupCache, StartupWriteRead) {
   rv = sc->GetBuffer(id, &outbuf, &len);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   EXPECT_STREQ(buf, outbuf);
+
+  rv = sc->ResetStartupWriteTimer();
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  WaitForStartupTimer();
+
+  rv = sc->GetBuffer(id, &outbuf, &len);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_STREQ(buf, outbuf);
 }
 
 TEST_F(TestStartupCache, WriteInvalidateRead) {
@@ -178,26 +186,4 @@ TEST_F(TestStartupCache, WriteObject) {
   rv = uri->GetSpec(outSpec);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(outSpec.Equals(spec));
-}
-
-TEST_F(TestStartupCache, GetDisabledAfterDiskWrite) {
-  nsresult rv;
-  StartupCache* sc = StartupCache::GetSingleton();
-
-  const char* buf = "Market opportunities for BeardBook";
-  const char* id = "id";
-  const char* outbuf;
-  uint32_t len;
-
-  rv = sc->PutBuffer(id, UniquePtr<char[]>(strdup(buf)), strlen(buf) + 1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
-  rv = sc->GetBuffer(id, &outbuf, &len);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-  EXPECT_STREQ(buf, outbuf);
-
-  WaitForStartupTimer();
-
-  rv = sc->GetBuffer(id, &outbuf, &len);
-  EXPECT_TRUE(NS_FAILED(rv));
 }

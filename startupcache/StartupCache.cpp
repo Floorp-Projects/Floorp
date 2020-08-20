@@ -206,7 +206,6 @@ StartupCache::StartupCache()
     : mLock("StartupCache::mLock"),
       mDirty(false),
       mWrittenOnce(false),
-      mStartupFinished(false),
       mCurTableReferenced(false),
       mLoaded(false),
       mFullyInitialized(false),
@@ -821,16 +820,21 @@ Result<Ok, nsresult> StartupCache::DecompressEntry(StartupCacheEntry& aEntry) {
 bool StartupCache::HasEntry(const char* id) {
   AUTO_PROFILER_LABEL("StartupCache::HasEntry", OTHER);
 
-  if (mStartupFinished) {
-    return false;
-  }
-
-  MutexAutoLock lock(mLock);
-
   MOZ_ASSERT(
       strnlen(id, kStartupCacheKeyLengthCap) + 1 < kStartupCacheKeyLengthCap,
       "StartupCache key too large or not terminated.");
-  return mTable.has(id);
+
+  // The lock could be held here by the write thread, which could take a while.
+  // scache reads/writes are never critical enough to block waiting for the
+  // entire cache to be written to disk, so if we can't acquire the lock, we
+  // just exit.
+  Maybe<MutexAutoLock> tryLock;
+  if (!MutexAutoLock::TryMake(mLock, tryLock)) {
+    return false;
+  }
+
+  bool result = mTable.has(id);
+  return result;
 }
 
 nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
@@ -840,13 +844,15 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
   auto telemetry =
       MakeScopeExit([&label] { Telemetry::AccumulateCategorical(label); });
 
-  // Exit here, ensuring we collect a cache miss for telemetry, but before we
-  // lock. No need to potentially hang waiting on the write thread.
-  if (mStartupFinished) {
+  // The lock could be held here by the write thread, which could take a while.
+  // scache reads/writes are never critical enough to block waiting for the
+  // entire cache to be written to disk, so if we can't acquire the lock, we
+  // just exit.
+  Maybe<MutexAutoLock> tryLock;
+  if (!MutexAutoLock::TryMake(mLock, tryLock)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  MutexAutoLock lock(mLock);
   if (!mLoaded) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -914,10 +920,6 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
 // Client gives ownership of inbuf.
 nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
                                  uint32_t len, bool isFromChildProcess) {
-  if (mStartupFinished) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // We use this to update the RequestedByChild flag.
   MOZ_RELEASE_ASSERT(
       inbuf || isFromChildProcess,
@@ -927,7 +929,21 @@ nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  MutexAutoLock lock(mLock);
+  // If we've already written to disk, just go ahead and exit. There's no point
+  // in putting something in the cache since we're not going to write again.
+  if (mWrittenOnce) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // The lock could be held here by the write thread, which could take a while.
+  // scache reads/writes are never critical enough to block waiting for the
+  // entire cache to be written to disk, so if we can't acquire the lock, we
+  // just exit.
+  Maybe<MutexAutoLock> tryLock;
+  if (!MutexAutoLock::TryMake(mLock, tryLock)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (!mLoaded) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1354,11 +1370,6 @@ void StartupCache::MaybeWriteOffMainThread() {
   if (!XRE_IsParentProcess()) {
     return;
   }
-
-  // If we're scheduling the cache to be written, then whether it's because
-  // we're shutting down, or because our write timer has finished, it's safe
-  // to say that we shouldn't think of ourselves as "starting up" anymore.
-  mStartupFinished = true;
 
   if (mWrittenOnce) {
     return;
