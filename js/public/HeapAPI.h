@@ -14,6 +14,7 @@
 
 #include "js/GCAnnotations.h"
 #include "js/shadow/String.h"  // JS::shadow::String
+#include "js/shadow/Symbol.h"  // JS::shadow::Symbol
 #include "js/TraceKind.h"
 #include "js/Utility.h"
 
@@ -242,16 +243,6 @@ struct Zone {
 
   static MOZ_ALWAYS_INLINE JS::shadow::Zone* from(JS::Zone* zone) {
     return reinterpret_cast<JS::shadow::Zone*>(zone);
-  }
-};
-
-struct Symbol {
-  void* _1;
-  uint32_t code_;
-  static const uint32_t WellKnownAPILimit = 0x80000000;
-
-  static bool isWellKnownSymbol(const js::gc::Cell* cell) {
-    return reinterpret_cast<const Symbol*>(cell)->code_ < WellKnownAPILimit;
   }
 };
 
