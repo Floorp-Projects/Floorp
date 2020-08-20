@@ -633,8 +633,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
   State state(mFindBackward, *root, *aStartPoint);
   Text* current = nullptr;
 
-  auto EndPartialMatch = [&]() -> bool {
-    bool hadAnchorNode = !!matchAnchorNode;
+  auto EndPartialMatch = [&] {
     // If we didn't match, go back to the beginning of patStr, and set findex
     // back to the next char after we started the current match.
     if (matchAnchorNode) {  // we're ending a partial match
@@ -658,7 +657,6 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     pindex = mFindBackward ? patLen : 0;
     DEBUG_FIND_PRINTF("Setting findex back to %d, pindex to %d\n", findex,
                       pindex);
-    return hadAnchorNode;
   };
 
   while (true) {
@@ -669,7 +667,8 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       current = state.GetNextNode(!!matchAnchorNode);
       if (!current) {
         DEBUG_FIND_PRINTF("Reached the end, matching: %d\n", !!matchAnchorNode);
-        if (EndPartialMatch()) {
+        if (matchAnchorNode) {
+          EndPartialMatch();
           continue;
         }
         return NS_OK;
@@ -679,9 +678,14 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       // <br>, different blocks or what not.
       if (state.ForcedBreak()) {
         DEBUG_FIND_PRINTF("Forced break!\n");
-        if (EndPartialMatch()) {
-          continue;
-        }
+        // End any pending match:
+        matchAnchorNode = nullptr;
+        matchAnchorOffset = 0;
+        c = 0;
+        prevChar = 0;
+        prevCharInMatch = 0;
+        pindex = (mFindBackward ? patLen : 0);
+        inWhitespace = false;
       }
 
       frag = &current->TextFragment();
