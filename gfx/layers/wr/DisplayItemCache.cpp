@@ -130,7 +130,6 @@ void DisplayItemCache::FreeUnusedSlots() {
 void DisplayItemCache::SetCapacity(const size_t aInitialSize,
                                    const size_t aMaximumSize) {
   mMaximumSize = aMaximumSize;
-  mSlots.SetCapacity(aMaximumSize);
   mSlots.SetLength(aInitialSize);
   mFreeSlots.SetCapacity(aMaximumSize);
   Clear();
