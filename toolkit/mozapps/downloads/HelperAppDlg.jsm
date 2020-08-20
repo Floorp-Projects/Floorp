@@ -1075,12 +1075,14 @@ nsUnknownContentTypeDialog.prototype = {
 
       // Update user pref for this mime type (if necessary). We do not
       // store anything in the mime type preferences for the ambiguous
-      // type application/octet-stream. We do NOT do this for
-      // application/x-msdownload since we want users to be able to
-      // autodownload these to disk.
+      // type application/octet-stream and binary/octet-stream. We do
+      // NOT do this for application/x-msdownload since we want users
+      // to be able to autodownload these to disk.
       if (
         needUpdate &&
-        this.mLauncher.MIMEInfo.MIMEType != "application/octet-stream"
+        !["application/octet-stream", "binary/octet-stream"].includes(
+          this.mLauncher.MIMEInfo.MIMEType
+        )
       ) {
         this.updateHelperAppPref();
       }
