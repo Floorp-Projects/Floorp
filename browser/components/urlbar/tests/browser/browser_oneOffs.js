@@ -478,15 +478,17 @@ add_task(async function oneOffClick() {
     let oneOffs = oneOffSearchButtons.getSelectableButtons(true);
 
     if (refresh) {
+      let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
       EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
+      await searchPromise;
       Assert.ok(
         UrlbarTestUtils.isPopupOpen(window),
         "Urlbar view is still open."
       );
-      UrlbarTestUtils.assertSearchMode(window, {
+      await UrlbarTestUtils.assertSearchMode(window, {
         engineName: oneOffs[0].engine.name,
       });
-      window.gURLBar.setSearchMode({});
+      await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
     } else {
       let resultsPromise = BrowserTestUtils.browserLoaded(
         gBrowser.selectedBrowser,
@@ -528,15 +530,17 @@ add_task(async function oneOffReturn() {
     assertState(0, 0, typedValue);
 
     if (refresh) {
+      let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
       EventUtils.synthesizeKey("KEY_Enter");
+      await searchPromise;
       Assert.ok(
         UrlbarTestUtils.isPopupOpen(window),
         "Urlbar view is still open."
       );
-      UrlbarTestUtils.assertSearchMode(window, {
+      await UrlbarTestUtils.assertSearchMode(window, {
         engineName: oneOffs[0].engine.name,
       });
-      window.gURLBar.setSearchMode({});
+      await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
     } else {
       let resultsPromise = BrowserTestUtils.browserLoaded(
         gBrowser.selectedBrowser,
@@ -695,18 +699,19 @@ add_task(async function localOneOffClick() {
 
   for (let button of buttons) {
     Assert.ok(button.source, "Sanity check: Button has a source");
+    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeMouseAtCenter(button, {});
+    await searchPromise;
     Assert.ok(
       UrlbarTestUtils.isPopupOpen(window),
       "Urlbar view is still open."
     );
-    UrlbarTestUtils.assertSearchMode(window, {
+    await UrlbarTestUtils.assertSearchMode(window, {
       source: button.source,
     });
   }
 
-  window.gURLBar.setSearchMode({});
-
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   await hidePopup();
   await SpecialPowers.popPrefEnv();
 });
@@ -760,18 +765,19 @@ add_task(async function localOneOffReturn() {
     assertState(0, index, typedValue);
 
     Assert.ok(button.source, "Sanity check: Button has a source");
+    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeKey("KEY_Enter");
+    await searchPromise;
     Assert.ok(
       UrlbarTestUtils.isPopupOpen(window),
       "Urlbar view is still open."
     );
-    UrlbarTestUtils.assertSearchMode(window, {
+    await UrlbarTestUtils.assertSearchMode(window, {
       source: button.source,
     });
   }
 
-  window.gURLBar.setSearchMode({});
-
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   await hidePopup();
   await SpecialPowers.popPrefEnv();
 });
@@ -823,7 +829,7 @@ add_task(async function localOneOffEmptySearchString() {
       true,
       "One-offs are visible"
     );
-    UrlbarTestUtils.assertSearchMode(window, {
+    await UrlbarTestUtils.assertSearchMode(window, {
       source: button.source,
     });
 

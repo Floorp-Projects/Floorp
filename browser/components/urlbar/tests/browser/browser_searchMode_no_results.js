@@ -132,7 +132,7 @@ add_task(async function autoOpen() {
 
     // Blur the urlbar.
     win.gURLBar.blur();
-    UrlbarTestUtils.assertSearchMode(win, {
+    await UrlbarTestUtils.assertSearchMode(win, {
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     });
 
@@ -210,7 +210,7 @@ add_task(async function backspaceRemainOpen() {
     EventUtils.synthesizeKey("KEY_Backspace", {}, win);
     await searchPromise;
     Assert.ok(UrlbarTestUtils.isPopupOpen(win), "View remains open");
-    UrlbarTestUtils.assertSearchMode(win, {
+    await UrlbarTestUtils.assertSearchMode(win, {
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     });
     Assert.equal(
@@ -264,7 +264,7 @@ add_task(async function spaceToEnterSearchMode() {
       "true",
       "Panel has no results, therefore should have noresults attribute"
     );
-    UrlbarTestUtils.assertSearchMode(win, {
+    await UrlbarTestUtils.assertSearchMode(win, {
       engineName: engine.name,
     });
     this.Assert.equal(
