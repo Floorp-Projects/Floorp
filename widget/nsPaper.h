@@ -25,12 +25,21 @@ struct PaperInfo {
   using MarginDouble = mozilla::gfx::MarginDouble;
   using SizeDouble = mozilla::gfx::SizeDouble;
 
+  PaperInfo() = default;
+  PaperInfo(const nsAString& aName, const SizeDouble& aSize,
+            const Maybe<MarginDouble>& aUnwriteableMargin,
+            uint64_t aPaperId = 0)
+      : mName(aName),
+        mSize(aSize),
+        mUnwriteableMargin(aUnwriteableMargin),
+        mPaperId(aPaperId) {}
+
   const nsString mName;
 
   SizeDouble mSize;
 
   // The margins may not be known by some back-ends.
-  const Maybe<MarginDouble> mUnwriteableMargin;
+  const Maybe<MarginDouble> mUnwriteableMargin{Nothing()};
 
   // The paper id from the device, this is only useful on Windows, right now.
   uint64_t mPaperId{0};

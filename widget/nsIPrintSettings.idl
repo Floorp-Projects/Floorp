@@ -273,3 +273,11 @@ interface nsIPrintSettings : nsISupports
    */
   [noscript] void GetPageRanges(in IntegerArray aPages);
 };
+
+%{ C++
+namespace mozilla {
+struct PrintSettingsInitializer;
+}
+
+already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(const mozilla::PrintSettingsInitializer&);
+%}

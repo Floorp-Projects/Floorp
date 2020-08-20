@@ -50,6 +50,14 @@ nsPrintSettingsGTK::nsPrintSettingsGTK()
   SetOutputFormat(nsIPrintSettings::kOutputFormatNative);
 }
 
+already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
+    const PrintSettingsInitializer& aSettings) {
+  RefPtr<nsPrintSettings> settings = new nsPrintSettingsGTK();
+  settings->InitWithInitializer(aSettings);
+  settings->SetDefaultFileName();
+  return settings.forget();
+}
+
 /** ---------------------------------------------------
  */
 nsPrintSettingsGTK::~nsPrintSettingsGTK() {

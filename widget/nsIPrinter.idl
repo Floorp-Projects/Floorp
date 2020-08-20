@@ -15,6 +15,14 @@ interface nsIPrinter : nsISupports
   readonly attribute AString name;
 
   /**
+   * Creates a Promise that will resolve to an nsIPrintSettings object containing
+   * the default settings for this printer. For convenience, a new, mutable
+   * nsIPrintSettings object is created for each call.
+   */
+  [implicit_jscontext]
+  Promise createDefaultSettings();
+
+  /**
    * Returns a Promise that resolves to an array of
    * nsIPaper instances with the list of available paper
    * sizes.

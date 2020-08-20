@@ -17,6 +17,7 @@
 namespace mozilla {
 
 struct PaperInfo;
+struct PrintSettingsInitializer;
 
 namespace dom {
 class Promise;
@@ -28,7 +29,9 @@ class nsPrinterBase : public nsIPrinter {
  public:
   using Promise = mozilla::dom::Promise;
   using MarginDouble = mozilla::gfx::MarginDouble;
+  using PrintSettingsInitializer = mozilla::PrintSettingsInitializer;
 
+  NS_IMETHOD CreateDefaultSettings(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsDuplex(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsColor(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsCollation(JSContext*, Promise**) final;
@@ -68,6 +71,7 @@ class nsPrinterBase : public nsIPrinter {
 
   // Implementation-specific methods. These must not make assumptions about
   // which thread they run on.
+  virtual PrintSettingsInitializer DefaultSettings() const = 0;
   virtual bool SupportsDuplex() const = 0;
   virtual bool SupportsColor() const = 0;
   virtual bool SupportsCollation() const = 0;
