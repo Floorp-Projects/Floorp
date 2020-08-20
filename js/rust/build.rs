@@ -232,7 +232,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::RootKind",
     "js::Scalar::Type",
     "JS::ServoSizes",
-    "js::shadow::Object",
+    "JS::shadow::Object",
     "JS::shadow::ObjectGroup",
     "JS::SourceText",
     "js::StackFormat",

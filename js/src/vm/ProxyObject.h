@@ -8,6 +8,7 @@
 #define vm_ProxyObject_h
 
 #include "js/Proxy.h"
+#include "js/shadow/Object.h"  // JS::shadow::Object
 #include "vm/JSObject.h"
 
 namespace js {
@@ -33,7 +34,7 @@ class ProxyObject : public JSObject {
     static_assert(offsetof(ProxyObject, data) == detail::ProxyDataOffset,
                   "proxy object layout must match shadow interface");
     static_assert(offsetof(ProxyObject, data.reservedSlots) ==
-                      offsetof(shadow::Object, slots),
+                      offsetof(JS::shadow::Object, slots),
                   "Proxy reservedSlots must overlay native object slots field");
   }
 

@@ -4265,7 +4265,7 @@ class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
                 body += fill(
                     """
 
-                    static_assert(${slot} < js::shadow::Object::MAX_FIXED_SLOTS,
+                    static_assert(${slot} < JS::shadow::Object::MAX_FIXED_SLOTS,
                                   "Not enough fixed slots to fit '${interface}.${member}.  Ion's visitGetDOMMemberV/visitGetDOMMemberT assume StoreInSlot things are all in fixed slots.");
                     if (!get_${member}(aCx, aWrapper, aObject, args)) {
                       return false;
@@ -15490,6 +15490,8 @@ class CGBindingRoot(CGThing):
             return any(hasIteratorAlias(m) for m in desc.interface.members)
 
         bindingHeaders["js/Symbol.h"] = any(descriptorHasIteratorAlias(d) for d in descriptors)
+
+        bindingHeaders["js/shadow/Object.h"] = any(d.interface.hasMembersInSlots() for d in descriptors)
 
         def descriptorDeprecated(desc):
             iface = desc.interface

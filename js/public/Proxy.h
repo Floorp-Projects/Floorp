@@ -14,6 +14,7 @@
 #include "js/Array.h"  // JS::IsArrayAnswer
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/shadow/Object.h"  // JS::shadow::Object
 
 namespace js {
 
@@ -718,7 +719,7 @@ constexpr unsigned CheckProxyFlags() {
       (offsetof(js::detail::ProxyValueArray, reservedSlots) / sizeof(Value)) +
               ((Flags >> JSCLASS_RESERVED_SLOTS_SHIFT) &
                JSCLASS_RESERVED_SLOTS_MASK) <=
-          shadow::Object::MAX_FIXED_SLOTS,
+          JS::shadow::Object::MAX_FIXED_SLOTS,
       "ProxyValueArray size must not exceed max JSObject size");
 
   // Proxies must not have the JSCLASS_SKIP_NURSERY_FINALIZE flag set: they

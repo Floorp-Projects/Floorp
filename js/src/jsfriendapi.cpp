@@ -25,6 +25,7 @@
 #include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
 #include "js/Printf.h"
 #include "js/Proxy.h"
+#include "js/shadow/Object.h"  // JS::shadow::Object
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Poison.h"
@@ -483,7 +484,8 @@ JS_FRIEND_API bool js::GetObjectProto(JSContext* cx, JS::Handle<JSObject*> obj,
     return JS_GetPrototype(cx, obj, proto);
   }
 
-  proto.set(reinterpret_cast<const shadow::Object*>(obj.get())->group->proto);
+  proto.set(
+      reinterpret_cast<const JS::shadow::Object*>(obj.get())->group->proto);
   return true;
 }
 
