@@ -39,6 +39,9 @@ class nsSharedPageData {
   nsString mDocURL;
   nsFont mHeadFootFont;
 
+  // Total number of pages:
+  int32_t mTotNumPages = 0;
+
   // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX
   // and 0 elsewhere; I think it has to do with some inconsistency in page size
   // computations
