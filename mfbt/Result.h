@@ -422,8 +422,8 @@ class MOZ_MUST_USE_TYPE Result final {
   }
 
   /**
-   * Map a function V -> W over this result's success variant. If this result is
-   * an error, do not invoke the function and propagate the error.
+   * Map a function V -> V2 over this result's success variant. If this result
+   * is an error, do not invoke the function and propagate the error.
    *
    * Mapping over success values invokes the function to produce a new success
    * value:
@@ -431,11 +431,13 @@ class MOZ_MUST_USE_TYPE Result final {
    *     // Map Result<int, E> to another Result<int, E>
    *     Result<int, E> res(5);
    *     Result<int, E> res2 = res.map([](int x) { return x * x; });
+   *     MOZ_ASSERT(res.isOk());
    *     MOZ_ASSERT(res2.unwrap() == 25);
    *
    *     // Map Result<const char*, E> to Result<size_t, E>
    *     Result<const char*, E> res("hello, map!");
    *     Result<size_t, E> res2 = res.map(strlen);
+   *     MOZ_ASSERT(res.isOk());
    *     MOZ_ASSERT(res2.unwrap() == 11);
    *
    * Mapping over an error does not invoke the function and propagates the
@@ -443,7 +445,7 @@ class MOZ_MUST_USE_TYPE Result final {
    *
    *     Result<V, int> res(5);
    *     MOZ_ASSERT(res.isErr());
-   *     Result<W, int> res2 = res.map([](V v) { ... });
+   *     Result<V2, int> res2 = res.map([](V v) { ... });
    *     MOZ_ASSERT(res2.isErr());
    *     MOZ_ASSERT(res2.unwrapErr() == 5);
    */
@@ -454,7 +456,7 @@ class MOZ_MUST_USE_TYPE Result final {
   }
 
   /**
-   * Map a function V -> W over this result's error variant. If this result is
+   * Map a function E -> E2 over this result's error variant. If this result is
    * a success, do not invoke the function and move the success over.
    *
    * Mapping over error values invokes the function to produce a new error
@@ -463,30 +465,34 @@ class MOZ_MUST_USE_TYPE Result final {
    *     // Map Result<V, int> to another Result<V, int>
    *     Result<V, int> res(5);
    *     Result<V, int> res2 = res.mapErr([](int x) { return x * x; });
+   *     MOZ_ASSERT(res2.isErr());
    *     MOZ_ASSERT(res2.unwrapErr() == 25);
    *
    *     // Map Result<V, const char*> to Result<V, size_t>
-   *     Result<V, const char*> res("hello, map!");
-   *     Result<size_t, E> res2 = res.mapErr(strlen);
-   *     MOZ_ASSERT(res2.unwrapErr() == 11);
+   *     Result<V, const char*> res("hello, mapErr!");
+   *     Result<V, size_t> res2 = res.mapErr(strlen);
+   *     MOZ_ASSERT(res2.isErr());
+   *     MOZ_ASSERT(res2.unwrapErr() == 14);
    *
-   * Mapping over a success does not invoke the function and copies the error:
+   * Mapping over a success does not invoke the function and moves the success:
    *
-   *     Result<int, V> res(5);
+   *     Result<int, E> res(5);
    *     MOZ_ASSERT(res.isOk());
-   *     Result<int, W> res2 = res.mapErr([](V v) { ... });
+   *     Result<int, E2> res2 = res.mapErr([](E e) { ... });
    *     MOZ_ASSERT(res2.isOk());
    *     MOZ_ASSERT(res2.unwrap() == 5);
    */
   template <typename F>
   auto mapErr(F f) -> Result<V, std::result_of_t<F(E)>> {
     using RetResult = Result<V, std::result_of_t<F(E)>>;
-    return isOk() ? RetResult(unwrap()) : RetResult(f(unwrapErr()));
+    return MOZ_UNLIKELY(isErr()) ? RetResult(f(unwrapErr()))
+                                 : RetResult(unwrap());
   }
 
   /**
-   * Given a function V -> Result<W, E>, apply it to this result's success value
-   * and return its result. If this result is an error value, it is propagated.
+   * Given a function V -> Result<V2, E>, apply it to this result's success
+   * value and return its result. If this result is an error value, it is
+   * propagated.
    *
    * This is sometimes called "flatMap" or ">>=" in other contexts.
    *
