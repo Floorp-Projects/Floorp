@@ -595,6 +595,8 @@ class SearchEngine {
   _queryCharset = null;
   // The engine's raw SearchForm value (URL string pointing to a search form).
   __searchForm = null;
+  // Whether or not to send an attribution request to the server.
+  _sendAttributionRequest = false;
   // The number of days between update checks for new versions
   _updateInterval = null;
   // The url to check at for a new update
@@ -973,6 +975,8 @@ class SearchEngine {
     this._telemetryId = configuration.telemetryId;
     this._name = searchProvider.name.trim();
     this._regionParams = configuration.regionParams;
+    this._sendAttributionRequest =
+      configuration.sendAttributionRequest ?? false;
 
     if (shortName) {
       this._shortName = shortName;
@@ -1393,6 +1397,10 @@ class SearchEngine {
 
   get searchForm() {
     return this._getSearchFormWithPurpose();
+  }
+
+  get sendAttributionRequest() {
+    return this._sendAttributionRequest;
   }
 
   _getSearchFormWithPurpose(purpose) {
