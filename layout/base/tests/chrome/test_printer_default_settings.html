@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="run()">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+async function run() {
+  try {
+    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
+      Ci.nsIPrinterList
+    );
+    let printers = await printerList.printers;
+    if (printers.length == 0) {
+      ok(true, "There were no printers to iterate through.");
+    }
+
+    for (let printer of printers) {
+      printer.QueryInterface(Ci.nsIPrinter);
+      info(printer.name);
+
+      const settings = await printer.createDefaultSettings();
+      settings.QueryInterface(Ci.nsIPrintSettings);
+
+      is(typeof settings.printerName, "string", "Printer name should be a string.");
+
+      let todo_if_win = navigator.platform.startsWith("Win") ? todo_is : is;
+
+      todo_if_win(settings.printerName, printer.name, "Print settings' printer should match the printer that created them.");
+
+      console.log(typeof settings.paperWidth);
+      is(typeof settings.paperName, "string", "Paper name should never be null.");
+      is(typeof settings.paperWidth, "number", "Paper width hould never be null.");
+      is(typeof settings.paperHeight, "number", "Paper height hould never be null.");
+
+      if (settings.paperName != "") {
+        info(`Paper: ${settings.paperName}`);
+        info(`Size:  (${settings.paperWidth} x ${settings.paperHeight})`);
+        ok(settings.paperWidth  > 0.0, "Paper width should be greater than zero.");
+        ok(settings.paperHeight > 0.0, "Paper height should be greater than zero.");
+      }
+
+      ok(settings.marginTop    >= 0.0, "Paper margins should be greater than or equal to zero.");
+      ok(settings.marginRight  >= 0.0, "Paper margins should be greater than or equal to zero.");
+      ok(settings.marginBottom >= 0.0, "Paper margins should be greater than or equal to zero.");
+      ok(settings.marginLeft   >= 0.0, "Paper margins should be greater than or equal to zero.");
+
+
+      todo_if_win(settings.printInColor, await printer.supportsColor, "Print settings' color mode should match the printer's color support.");
+
+      ok(settings.isInitializedFromPrinter, "Print settings were initialized from printer");
+      ok(!settings.isInitializedFromPrefs);
+    }
+  } catch (e) {
+    ok(false, `Shouldn't throw: ${e}`);
+    Cu.reportError(e);
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

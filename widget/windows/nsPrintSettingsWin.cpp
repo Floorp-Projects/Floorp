@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "nsCRT.h"
+#include "nsDeviceContextSpecWin.h"
 #include "WinUtils.h"
 
 // Using paper sizes from wingdi.h and the units given there, plus a little
@@ -157,6 +158,40 @@ nsPrintSettingsWin::nsPrintSettingsWin()
 nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin& aPS)
     : mDevMode(nullptr) {
   *this = aPS;
+}
+
+already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
+    const PrintSettingsInitializer& aSettings) {
+  auto settings = MakeRefPtr<nsPrintSettingsWin>();
+  settings->InitWithInitializer(aSettings);
+
+  // When printing to PDF on Windows there is no associated printer driver.
+  int16_t outputFormat;
+  settings->GetOutputFormat(&outputFormat);
+  if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
+    return settings.forget();
+  }
+
+  RefPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
+
+  nsString name;
+  settings->GetPrinterName(name);
+  devSpecWin->GetDataFromPrinter(name);
+
+  LPDEVMODEW devmode;
+  devSpecWin->GetDevMode(devmode);
+  if (NS_WARN_IF(!devmode)) {
+    return settings.forget();
+  }
+
+  // TODO(nordzilla, 1658299)
+  // We need to get information from the device as well.
+  // See InitPrintSettingsFromPrinter call to CreateICW and the code
+  // below it. The issue is that we can't do it here. It needs to
+  // happen async, off the main thread, similar to the code that
+  // populates the PrintSettingsInitializer argument.
+
+  return settings.forget();
 }
 
 /** ---------------------------------------------------
