@@ -7,20 +7,21 @@
 #ifndef GFX_ASYNCCOMPOSITIONMANAGER_H
 #define GFX_ASYNCCOMPOSITIONMANAGER_H
 
-#include "Units.h"                                 // for ScreenPoint, etc
-#include "FrameMetrics.h"                          // for FrameMetrics
-#include "mozilla/layers/LayerManagerComposite.h"  // for LayerManagerComposite
-#include "mozilla/Attributes.h"                    // for final, etc
-#include "mozilla/RefPtr.h"                        // for RefCounted
-#include "mozilla/TimeStamp.h"                     // for TimeStamp
-#include "mozilla/gfx/BasePoint.h"                 // for BasePoint
-#include "mozilla/gfx/Matrix.h"                    // for Matrix4x4
-#include "mozilla/HalScreenConfiguration.h"        // For ScreenOrientation
-#include "mozilla/layers/FrameUniformityData.h"    // For FrameUniformityData
-#include "mozilla/layers/LayersMessages.h"         // for TargetConfig
-#include "mozilla/RefPtr.h"                        // for nsRefPtr
-#include "nsISupportsImpl.h"         // for LayerManager::AddRef, etc
-#include "CompositorBridgeParent.h"  // for TransformsToSkip
+#include "Units.h"                                  // for ScreenPoint, etc
+#include "FrameMetrics.h"                           // for FrameMetrics
+#include "mozilla/layers/APZUtils.h"                // for GeckoViewMetrics
+#include "mozilla/layers/CompositorBridgeParent.h"  // for TransformsToSkip
+#include "mozilla/layers/LayerManagerComposite.h"   // for LayerManagerComposite
+#include "mozilla/Attributes.h"                     // for final, etc
+#include "mozilla/RefPtr.h"                         // for RefCounted
+#include "mozilla/TimeStamp.h"                      // for TimeStamp
+#include "mozilla/gfx/BasePoint.h"                  // for BasePoint
+#include "mozilla/gfx/Matrix.h"                     // for Matrix4x4
+#include "mozilla/HalScreenConfiguration.h"         // For ScreenOrientation
+#include "mozilla/layers/FrameUniformityData.h"     // For FrameUniformityData
+#include "mozilla/layers/LayersMessages.h"          // for TargetConfig
+#include "mozilla/RefPtr.h"                         // for nsRefPtr
+#include "nsISupportsImpl.h"  // for LayerManager::AddRef, etc
 
 namespace mozilla {
 namespace layers {
