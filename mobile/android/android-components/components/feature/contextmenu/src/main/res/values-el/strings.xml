@@ -30,6 +30,14 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Εναλλαγή</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Άνοιγμα συνδέσμου σε εξωτερική εφαρμογή</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">Κοινή χρήση διεύθυνσης email</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">Αντιγραφή διεύθυνσης email</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Η διεύθυνση email αντιγράφηκε στο πρόχειρο</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">Προσθήκη σε επαφή</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">Αναζήτηση</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->

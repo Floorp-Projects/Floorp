@@ -51,11 +51,34 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Λειτουργία εκτός σύνδεσης</string>
 
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Περιορισμός θύρας για λόγους ασφαλείας</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Η ζητούμενη διεύθυνση καθόρισε θύρα (π.χ., <q>mozilla.org:80</q> για τη θύρα 80 στο mozilla.org) που <em>δεν</em> χρησιμοποιείται συνήθως για περιήγηση στο διαδίκτυο. Το πρόγραμμα περιήγησης ακύρωσε το αίτημα για να σας προστατεύσει.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Έγινε επαναφορά της σύνδεσης</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Ο σύνδεσμος δικτύου διακόπηκε κατά τη διαδικασία σύνδεσης. Παρακαλούμε δοκιμάστε ξανά.</p>
+      <ul>
+        <li>Η ιστοσελίδα ίσως είναι προσωρινά μη διαθέσιμη ή πολύ απασχολημένη. Δοκιμάστε ξανά σε λίγο.</li>
+        <li>Αν δεν μπορείτε να φορτώσετε καμία σελίδα, ελέγξτε τη σύνδεση δεδομένων ή Wi-Fi της συσκευής σας.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Μη ασφαλής τύπος αρχείου</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Παρακαλούμε επικοινωνήστε με τους ιδιοκτήτες της ιστοσελίδες για να τους ενημερώσετε σχετικά με αυτό το πρόβλημα.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Σφάλμα κατεστραμμένου περιεχομένου</string>
