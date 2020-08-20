@@ -642,6 +642,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       traits: {
         // FF81+ addStyleSheet supports file name parameter.
         isFileNameSupported: true,
+        // FF81+ resource requesting supports.
+        supportResourceRequests: true,
       },
     };
   },
@@ -897,6 +899,13 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 
     const actor = this.parentActor.createStyleSheetActor(style.sheet);
     return actor;
+  },
+
+  toggleDisabled(resourceId) {
+    const actor = this.parentActor._targetScopedActorPool.getActorByID(
+      resourceId
+    );
+    return actor.toggleDisabled();
   },
 });
 

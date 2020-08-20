@@ -411,6 +411,7 @@ StyleEditorUI.prototype = {
     const editor = new StyleSheetEditor(
       resource,
       this._window,
+      this._toolbox.targetList,
       this._walker,
       this._highlighter,
       this._getNextFriendlyIndex(resource)
