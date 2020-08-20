@@ -119,6 +119,15 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvBoundsForRange(
     const uint64_t& aID, const int32_t& aStartOffset,
     const uint64_t& aEndContainer, const int32_t& aEndOffset,
     nsIntRect* aBounds) {
+  HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
+  HyperTextAccessibleWrap* endContainer =
+      IdToHyperTextAccessibleWrap(aEndContainer);
+  if (!acc || !endContainer) {
+    return IPC_OK();
+  }
+
+  *aBounds = acc->BoundsForRange(aStartOffset, endContainer, aEndOffset);
+
   return IPC_OK();
 }
 
