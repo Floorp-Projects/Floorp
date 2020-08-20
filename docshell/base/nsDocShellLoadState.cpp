@@ -78,7 +78,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mChannelInitialized = aLoadState.ChannelInitialized();
   if (aLoadState.loadingSessionHistoryInfo().isSome()) {
     mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
-        aLoadState.loadingSessionHistoryInfo().value());
+        aLoadState.loadingSessionHistoryInfo().ref());
   }
 }
 
