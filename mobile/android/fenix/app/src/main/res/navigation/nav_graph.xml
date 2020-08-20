@@ -587,7 +587,16 @@
 
     <fragment
         android:id="@+id/aboutFragment"
-        android:name="org.mozilla.fenix.settings.about.AboutFragment" />
+        android:name="org.mozilla.fenix.settings.about.AboutFragment"
+        tools:layout="@layout/fragment_about">
+        <action
+            android:id="@+id/action_aboutFragment_to_aboutLibrariesFragment"
+            app:destination="@id/aboutLibrariesFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
     <fragment
         android:id="@+id/secretSettingsPreference"
         android:name="org.mozilla.fenix.settings.SecretSettingsFragment"
@@ -599,6 +608,10 @@
             android:name="crashIntent"
             app:argType="android.content.Intent" />
     </fragment>
+    <fragment
+        android:id="@+id/aboutLibrariesFragment"
+        android:name="org.mozilla.fenix.settings.about.AboutLibrariesFragment"
+        tools:layout="@layout/fragment_about_libraries" />
     <fragment
         android:id="@+id/customizationFragment"
         android:name="org.mozilla.fenix.settings.CustomizationFragment"

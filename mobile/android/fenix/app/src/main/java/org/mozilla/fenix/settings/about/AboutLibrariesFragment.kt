@@ -7,12 +7,15 @@ package org.mozilla.fenix.settings.about
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.util.Linkify
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import kotlinx.android.synthetic.main.fragment_about_libraries.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.showToolbar
 import java.nio.charset.Charset
 import java.util.Locale
 
@@ -27,33 +30,24 @@ import java.util.Locale
  * such as AboutLibraries (https://github.com/mikepenz/AboutLibraries)
  * but we considered the risk of introducing such third-party dependency
  * to Fenix too high. Therefore, we use Google's gradle plugin to
- * extract the dependencies and their licenses, and this activity
+ * extract the dependencies and their licenses, and this fragment
  * to show the extracted licenses to the end-user.
  */
-class AboutLibrariesActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+class AboutLibrariesFragment : Fragment(R.layout.fragment_about_libraries) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val appName = getString(R.string.app_name)
-        title = getString(R.string.open_source_licenses_title, appName)
-        setContentView(R.layout.about_libraries_activity)
+        showToolbar(getString(R.string.open_source_licenses_title, appName))
 
-        setSupportActionBar(findViewById(R.id.toolbar))
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        setupLibrariesListView()
+        setupLibrariesListView(view.about_libraries_listview)
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
-    }
-
-    private fun setupLibrariesListView() {
+    private fun setupLibrariesListView(listView: ListView) {
         val libraries = parseLibraries()
-        val listView = findViewById<ListView>(R.id.about_libraries_listview)
-        listView.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, libraries)
+        listView.adapter = ArrayAdapter(
+            listView.context,
+            android.R.layout.simple_list_item_1,
+            libraries
+        )
         listView.setOnItemClickListener { _, _, position, _ ->
             showLicenseDialog(libraries[position])
         }
@@ -95,7 +89,7 @@ class AboutLibrariesActivity : AppCompatActivity() {
     }
 
     private fun showLicenseDialog(libraryItem: LibraryItem) {
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(libraryItem.name)
             .setMessage(libraryItem.license)
             .create()
