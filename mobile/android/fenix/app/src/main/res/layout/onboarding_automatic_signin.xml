@@ -22,7 +22,7 @@
         tools:text="@string/onboarding_firefox_account_auto_signin_header_2" />
 
     <Button
-        android:id="@+id/turn_on_sync_button"
+        android:id="@+id/fxa_sign_in_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"

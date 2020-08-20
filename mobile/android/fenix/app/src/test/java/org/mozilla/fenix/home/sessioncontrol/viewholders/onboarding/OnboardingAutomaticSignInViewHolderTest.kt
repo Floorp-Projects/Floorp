@@ -65,7 +65,7 @@ class OnboardingAutomaticSignInViewHolderTest {
             "You are signed in as email@example.com on another Firefox browser on this phone. Would you like to sign in with this account?",
             view.header_text.text
         )
-        assertTrue(view.turn_on_sync_button.isEnabled)
+        assertTrue(view.fxa_sign_in_button.isEnabled)
     }
 
     @Test
@@ -79,10 +79,10 @@ class OnboardingAutomaticSignInViewHolderTest {
 
         val holder = OnboardingAutomaticSignInViewHolder(view, scope = this)
         holder.bind(account)
-        holder.onClick(view.turn_on_sync_button)
+        holder.onClick(view.fxa_sign_in_button)
 
-        assertEquals("Signing in…", view.turn_on_sync_button.text)
-        assertFalse(view.turn_on_sync_button.isEnabled)
+        assertEquals("Signing in…", view.fxa_sign_in_button.text)
+        assertFalse(view.fxa_sign_in_button.isEnabled)
     }
 
     @Test
@@ -96,10 +96,10 @@ class OnboardingAutomaticSignInViewHolderTest {
 
         val holder = OnboardingAutomaticSignInViewHolder(view, scope = this)
         holder.bind(account)
-        holder.onClick(view.turn_on_sync_button)
+        holder.onClick(view.fxa_sign_in_button)
 
-        assertEquals("Yes, sign me in", view.turn_on_sync_button.text)
-        assertTrue(view.turn_on_sync_button.isEnabled)
+        assertEquals("Yes, sign me in", view.fxa_sign_in_button.text)
+        assertTrue(view.fxa_sign_in_button.isEnabled)
         verify { snackbar.setText("Failed to sign-in") }
     }
 }

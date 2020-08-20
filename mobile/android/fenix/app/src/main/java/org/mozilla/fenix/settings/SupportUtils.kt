@@ -74,6 +74,10 @@ object SupportUtils {
         return "https://support.mozilla.org/$langTag/kb/$escapedTopic"
     }
 
+    fun getFirefoxAccountSumoUrl(): String {
+        return "https://support.mozilla.org/kb/access-mozilla-services-firefox-account"
+    }
+
     fun getMozillaPageUrl(page: MozillaPage, locale: Locale = Locale.getDefault()): String {
         val path = page.path
         val langTag = getLanguageTag(locale)

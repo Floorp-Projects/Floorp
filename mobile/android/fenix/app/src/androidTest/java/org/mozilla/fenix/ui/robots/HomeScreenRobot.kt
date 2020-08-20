@@ -553,11 +553,11 @@ private fun assertWelcomeHeader() =
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertGetTheMostHeader() =
-    onView(allOf(withText("Get the most out of Firefox Preview.")))
+    onView(allOf(withText("Start syncing bookmarks, passwords, and more with your Firefox account.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertAccountsSignInButton() =
-    onView(ViewMatchers.withResourceName("turn_on_sync_button"))
+    onView(ViewMatchers.withResourceName("fxa_sign_in_button"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertGetToKnowHeader() =

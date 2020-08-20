@@ -31,9 +31,9 @@ class OnboardingAutomaticSignInViewHolder(
     private val headerText = view.header_text
 
     init {
-        view.turn_on_sync_button.setOnClickListener {
+        view.fxa_sign_in_button.setOnClickListener {
             scope.launch {
-                onClick(it.turn_on_sync_button)
+                onClick(it.fxa_sign_in_button)
             }
         }
     }
