@@ -19,8 +19,8 @@
 #include "js/Exception.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/HeapAPI.h"
+#include "js/shadow/Object.h"       // JS::shadow::Object
 #include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
-#include "js/shadow/Shape.h"        // JS::shadow::Shape
 #include "js/shadow/String.h"  // JS::shadow::String
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -372,39 +372,8 @@ extern JS_FRIEND_API bool IsSharableCompartment(JS::Compartment* comp);
  */
 namespace shadow {
 
-/**
- * This layout is shared by all native objects. For non-native objects, the
- * group may always be accessed safely, and other members may be as well,
- * depending on the object's specific layout.
- */
-struct Object {
-  JS::shadow::ObjectGroup* group;
-  JS::shadow::Shape* shape;
-  JS::Value* slots;
-  void* _1;
-
-  static constexpr size_t MAX_FIXED_SLOTS = 16;
-
-  size_t numFixedSlots() const {
-    return (shape->immutableFlags & JS::shadow::Shape::FIXED_SLOTS_MASK) >>
-           JS::shadow::Shape::FIXED_SLOTS_SHIFT;
-  }
-
-  JS::Value* fixedSlots() const {
-    return (JS::Value*)(uintptr_t(this) + sizeof(shadow::Object));
-  }
-
-  JS::Value& slotRef(size_t slot) const {
-    size_t nfixed = numFixedSlots();
-    if (slot < nfixed) {
-      return fixedSlots()[slot];
-    }
-    return slots[slot - nfixed];
-  }
-};
-
 struct Function {
-  Object base;
+  JS::shadow::Object base;
   uint16_t nargs;
   uint16_t flags;
   /* Used only for natives */
@@ -420,7 +389,7 @@ struct Function {
 extern JS_FRIEND_DATA const JSClass* const ObjectClassPtr;
 
 inline const JSClass* GetObjectClass(const JSObject* obj) {
-  return reinterpret_cast<const shadow::Object*>(obj)->group->clasp;
+  return reinterpret_cast<const JS::shadow::Object*>(obj)->group->clasp;
 }
 
 JS_FRIEND_API const JSClass* ProtoKeyToClass(JSProtoKey key);
@@ -455,7 +424,7 @@ JS_FRIEND_API bool IsFunctionObject(JSObject* obj);
 JS_FRIEND_API bool UninlinedIsCrossCompartmentWrapper(const JSObject* obj);
 
 static MOZ_ALWAYS_INLINE JS::Compartment* GetObjectCompartment(JSObject* obj) {
-  JS::Realm* realm = reinterpret_cast<shadow::Object*>(obj)->group->realm;
+  JS::Realm* realm = reinterpret_cast<JS::shadow::Object*>(obj)->group->realm;
   return JS::GetCompartmentForRealm(realm);
 }
 
@@ -463,7 +432,7 @@ static MOZ_ALWAYS_INLINE JS::Compartment* GetObjectCompartment(JSObject* obj) {
 // getting a wrapper's realm usually doesn't make sense.
 static MOZ_ALWAYS_INLINE JS::Realm* GetNonCCWObjectRealm(JSObject* obj) {
   MOZ_ASSERT(!js::UninlinedIsCrossCompartmentWrapper(obj));
-  return reinterpret_cast<shadow::Object*>(obj)->group->realm;
+  return reinterpret_cast<JS::shadow::Object*>(obj)->group->realm;
 }
 
 JS_FRIEND_API JSObject* GetPrototypeNoProxy(JSObject* obj);
@@ -512,7 +481,7 @@ JS_FRIEND_API bool GetRealmOriginalEval(JSContext* cx,
 
 inline void* GetObjectPrivate(JSObject* obj) {
   MOZ_ASSERT(GetObjectClass(obj)->flags & JSCLASS_HAS_PRIVATE);
-  const shadow::Object* nobj = reinterpret_cast<const shadow::Object*>(obj);
+  const auto* nobj = reinterpret_cast<const JS::shadow::Object*>(obj);
   void** addr =
       reinterpret_cast<void**>(&nobj->fixedSlots()[nobj->numFixedSlots()]);
   return *addr;
@@ -525,7 +494,7 @@ inline void* GetObjectPrivate(JSObject* obj) {
  */
 inline const JS::Value& GetReservedSlot(JSObject* obj, size_t slot) {
   MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-  return reinterpret_cast<const shadow::Object*>(obj)->slotRef(slot);
+  return reinterpret_cast<const JS::shadow::Object*>(obj)->slotRef(slot);
 }
 
 JS_FRIEND_API void SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
@@ -539,7 +508,7 @@ JS_FRIEND_API void SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
 inline void SetReservedSlot(JSObject* obj, size_t slot,
                             const JS::Value& value) {
   MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-  shadow::Object* sobj = reinterpret_cast<shadow::Object*>(obj);
+  auto* sobj = reinterpret_cast<JS::shadow::Object*>(obj);
   if (sobj->slotRef(slot).isGCThing() || value.isGCThing()) {
     SetReservedSlotWithBarrier(obj, slot, value);
   } else {
@@ -551,7 +520,7 @@ JS_FRIEND_API uint32_t GetObjectSlotSpan(JSObject* obj);
 
 inline const JS::Value& GetObjectSlot(JSObject* obj, size_t slot) {
   MOZ_ASSERT(slot < GetObjectSlotSpan(obj));
-  return reinterpret_cast<const shadow::Object*>(obj)->slotRef(slot);
+  return reinterpret_cast<const JS::shadow::Object*>(obj)->slotRef(slot);
 }
 
 MOZ_ALWAYS_INLINE size_t GetAtomLength(JSAtom* atom) {
