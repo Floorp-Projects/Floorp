@@ -1,1 +1,1 @@
-{"data": [{"urls": [{"search_url": "https://duckduckgo.com/?q={searchTerms}&t=newext"}], "schema": 1590435694495, "overridesId": "ddg@search.mozilla.org", "thirdPartyId": "jid1-ZAdIEUB7XOzOJw@jetpack", "id": "c5de2b3f-da15-4bc5-b36f-9555043b5ef3", "last_modified": 1595254618540}]}
+{"data":[{"urls":[{"search_url":"https://duckduckgo.com/?q={searchTerms}&t=newext"}],"schema":1590435694495,"overridesId":"ddg@search.mozilla.org","thirdPartyId":"jid1-ZAdIEUB7XOzOJw@jetpack","id":"c5de2b3f-da15-4bc5-b36f-9555043b5ef3","last_modified":1595254618540}]}
