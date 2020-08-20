@@ -2025,17 +2025,17 @@ getHardcodedLayout = isBasicLayout => ({
                 url: "https://getpocket.com/explore/must-reads?src=fx_new_tab",
               },
               {
-                name: "Productivity",
+                name: "Self Improvement",
                 url:
-                  "https://getpocket.com/explore/productivity?src=fx_new_tab",
+                  "https://getpocket.com/explore/self-improvement?src=fx_new_tab",
               },
               {
                 name: "Health",
                 url: "https://getpocket.com/explore/health?src=fx_new_tab",
               },
               {
-                name: "Finance",
-                url: "https://getpocket.com/explore/finance?src=fx_new_tab",
+                name: "Business",
+                url: "https://getpocket.com/explore/business?src=fx_new_tab",
               },
               {
                 name: "Technology",
