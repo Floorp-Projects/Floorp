@@ -91,7 +91,12 @@ def _get_optimizations(target_task_graph, strategies):
     return optimizations
 
 
-def _log_optimization(verb, opt_counts):
+def _log_optimization(verb, opt_counts, opt_reasons=None):
+    if opt_reasons:
+        message = "optimize: {label} {action} because of {reason}"
+        for label, (action, reason) in opt_reasons.items():
+            logger.debug(message.format(label=label, action=action, reason=reason))
+
     if opt_counts:
         logger.info(
             '{} '.format(verb.title()) +
@@ -108,44 +113,37 @@ def remove_tasks(target_task_graph, requested_tasks, params, optimizations, do_n
     Implement the "Removing Tasks" phase, returning a set of task labels of all removed tasks.
     """
     opt_counts = defaultdict(int)
+    opt_reasons = {}
     removed = set()
     reverse_links_dict = target_task_graph.graph.reverse_links_dict()
 
-    message = "optimize: {label} {verb} because of {reason}"
     for label in target_task_graph.graph.visit_preorder():
-        verb = "kept"
-
         # if we're not allowed to optimize, that's easy..
         if label in do_not_optimize:
-            logger.debug(message.format(label=label, verb=verb, reason="do not optimize"))
+            opt_reasons[label] = ("kept", "do not optimize")
             continue
 
         # if there are remaining tasks depending on this one, do not remove..
         if any(l not in removed for l in reverse_links_dict[label]):
-            logger.debug(message.format(label=label, verb=verb, reason="dependent tasks"))
+            opt_reasons[label] = ("kept", "dependent tasks")
             continue
 
         # Some tasks in the task graph only exist because they were required
         # by a task that has just been optimized away. They can now be removed.
         if label not in requested_tasks:
-            reason = "downstreams-optimized"
-            verb = "removed"
+            opt_counts['dependents-optimized'] += 1
+            opt_reasons[label] = ("removed", "dependents optimized")
             removed.add(label)
-            opt_counts['downstreams-optimized'] += 1
-            logger.debug(message.format(label=label, verb=verb, reason=reason))
 
         # call the optimization strategy
         task = target_task_graph.tasks[label]
         opt_by, opt, arg = optimizations(label)
         if opt.should_remove_task(task, params, arg):
-            verb = "removed"
-            removed.add(label)
             opt_counts[opt_by] += 1
+            opt_reasons[label] = ("removed", "'{}' strategy".format(opt_by))
+            removed.add(label)
 
-        reason = "'{}' strategy".format(opt_by)
-        logger.debug(message.format(label=label, verb=verb, reason=reason))
-
-    _log_optimization('removed', opt_counts)
+    _log_optimization('removed', opt_counts, opt_reasons)
     return removed
 
 
