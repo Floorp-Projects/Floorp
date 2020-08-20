@@ -5,8 +5,8 @@
 
 include "GMPMessageUtils.h";
 
+using cdm::EncryptionScheme from "gmp-sanitized-cdm-exports.h";
 using GMPBufferType from "gmp-video-codec.h";
-using GMPEncryptionScheme from "gmp-video-codec.h";
 
 namespace mozilla {
 namespace gmp {
@@ -58,7 +58,7 @@ struct CDMInputBuffer {
   uint32_t[] mCipherBytes;
   uint8_t mCryptByteBlock;
   uint8_t mSkipByteBlock;
-  GMPEncryptionScheme mEncryptionScheme;
+  EncryptionScheme mEncryptionScheme;
 };
 
 struct CDMVideoDecoderConfig {
@@ -68,7 +68,7 @@ struct CDMVideoDecoderConfig {
   int32_t mImageWidth;
   int32_t mImageHeight;
   uint8_t[] mExtraData;
-  GMPEncryptionScheme mEncryptionScheme;
+  EncryptionScheme mEncryptionScheme;
 };
 
 struct CDMKeyInformation {
