@@ -17,9 +17,6 @@ namespace dom {
 
 static uint64_t gNextHistoryEntryId = 0;
 
-SessionHistoryInfo::SessionHistoryInfo(uint64_t aExistingId)
-    : mId(aExistingId) {}
-
 SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
                                        nsIChannel* aChannel)
     : mURI(aLoadState->URI()),
@@ -32,7 +29,6 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
       mScrollPositionY(0),
       mSrcdocData(aLoadState->SrcdocData()),
       mBaseURI(aLoadState->BaseURI()),
-      mId(++gNextHistoryEntryId),
       mLoadReplace(aLoadState->LoadReplace()),
       mURIWasModified(false),
       /* FIXME Should this be aLoadState->IsSrcdocLoad()? */
@@ -56,33 +52,45 @@ void SessionHistoryInfo::MaybeUpdateTitleFromURI() {
   }
 }
 
+static uint64_t gLoadingSessionHistoryInfoLoadId = 0;
+
+nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>*
+    SessionHistoryEntry::sLoadIdToEntry = nullptr;
+
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
-    const SessionHistoryInfo& aInfo)
-    : mInfo(aInfo) {}
+    SessionHistoryEntry* aEntry)
+    : mInfo(aEntry->Info()), mLoadId(++gLoadingSessionHistoryInfoLoadId) {
+  if (!SessionHistoryEntry::sLoadIdToEntry) {
+    SessionHistoryEntry::sLoadIdToEntry =
+        new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
+  }
+  SessionHistoryEntry::sLoadIdToEntry->Put(mLoadId, aEntry);
+}
 
 static uint32_t gEntryID;
-nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>*
-    SessionHistoryEntry::sInfoIdToEntry = nullptr;
 
-SessionHistoryEntry* SessionHistoryEntry::GetByInfoId(uint64_t aId) {
+SessionHistoryEntry* SessionHistoryEntry::GetByLoadId(uint64_t aLoadId) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (!sInfoIdToEntry) {
+  if (!sLoadIdToEntry) {
     return nullptr;
   }
 
-  return sInfoIdToEntry->Get(aId);
+  return sLoadIdToEntry->Get(aLoadId);
+}
+
+void SessionHistoryEntry::RemoveLoadId(uint64_t aLoadId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!sLoadIdToEntry) {
+    return;
+  }
+
+  sLoadIdToEntry->Remove(aLoadId);
 }
 
 SessionHistoryEntry::SessionHistoryEntry()
-    : mInfo(new SessionHistoryInfo(++gNextHistoryEntryId)),
+    : mInfo(new SessionHistoryInfo()),
       mSharedInfo(new SHEntrySharedParentState()),
-      mID(++gEntryID) {
-  if (!sInfoIdToEntry) {
-    sInfoIdToEntry =
-        new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
-  }
-  sInfoIdToEntry->Put(Info().Id(), this);
-}
+      mID(++gEntryID) {}
 
 SessionHistoryEntry::SessionHistoryEntry(nsDocShellLoadState* aLoadState,
                                          nsIChannel* aChannel)
@@ -95,19 +103,16 @@ SessionHistoryEntry::SessionHistoryEntry(nsDocShellLoadState* aLoadState,
       aLoadState->PartitionedPrincipalToInherit();
   mSharedInfo->mCsp = aLoadState->Csp();
   // FIXME Set remaining shared fields!
-
-  if (!sInfoIdToEntry) {
-    sInfoIdToEntry =
-        new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
-  }
-  sInfoIdToEntry->Put(Info().Id(), this);
 }
 
 SessionHistoryEntry::~SessionHistoryEntry() {
-  sInfoIdToEntry->Remove(Info().Id());
-  if (sInfoIdToEntry->IsEmpty()) {
-    delete sInfoIdToEntry;
-    sInfoIdToEntry = nullptr;
+  if (sLoadIdToEntry) {
+    sLoadIdToEntry->RemoveIf(
+        [this](auto& aIter) { return aIter.Data() == this; });
+    if (sLoadIdToEntry->IsEmpty()) {
+      delete sLoadIdToEntry;
+      sLoadIdToEntry = nullptr;
+    }
   }
 }
 
@@ -1001,12 +1006,12 @@ void IPDLParamTraits<dom::LoadingSessionHistoryInfo>::Write(
   WriteIPDLParam(aMsg, aActor, info.mSrcdocData);
   WriteIPDLParam(aMsg, aActor, info.mBaseURI);
   WriteIPDLParam(aMsg, aActor, info.mLayoutHistoryState);
-  WriteIPDLParam(aMsg, aActor, info.mId);
   WriteIPDLParam(aMsg, aActor, info.mLoadReplace);
   WriteIPDLParam(aMsg, aActor, info.mURIWasModified);
   WriteIPDLParam(aMsg, aActor, info.mIsSrcdocEntry);
   WriteIPDLParam(aMsg, aActor, info.mScrollRestorationIsManual);
   WriteIPDLParam(aMsg, aActor, info.mPersist);
+  WriteIPDLParam(aMsg, aActor, aParam.mLoadId);
   WriteIPDLParam(aMsg, aActor, aParam.mIsLoadFromSessionHistory);
   WriteIPDLParam(aMsg, aActor, aParam.mRequestedIndex);
   WriteIPDLParam(aMsg, aActor, aParam.mSessionHistoryLength);
@@ -1031,12 +1036,12 @@ bool IPDLParamTraits<dom::LoadingSessionHistoryInfo>::Read(
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mSrcdocData) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mBaseURI) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mLayoutHistoryState) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info.mId) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mLoadReplace) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mURIWasModified) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mIsSrcdocEntry) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mScrollRestorationIsManual) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mPersist) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLoadId) ||
       !ReadIPDLParam(aMsg, aIter, aActor,
                      &aResult->mIsLoadFromSessionHistory) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRequestedIndex) ||
