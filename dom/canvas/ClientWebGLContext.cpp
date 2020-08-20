@@ -3084,8 +3084,8 @@ void ClientWebGLContext::BufferData(GLenum target, WebGLsizeiptr rawSize,
     return;
   }
 
-  const auto range = Range<const uint8_t>{nullptr, *size};
-  Run<RPROC(BufferData)>(target, RawBuffer<>(range), usage);
+  const auto data = RawBuffer<>{*size};
+  Run<RPROC(BufferData)>(target, data, usage);
 }
 
 void ClientWebGLContext::BufferData(
