@@ -77,6 +77,11 @@ class GeckoTextMarkerRange final {
    */
   NSString* Text() const;
 
+  /**
+   * Return screen bounds of range.
+   */
+  NSValue* Bounds() const;
+
   GeckoTextMarker mStart;
   GeckoTextMarker mEnd;
 };
