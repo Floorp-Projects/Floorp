@@ -282,6 +282,15 @@ class RegionDetector {
     }
   }
 
+  // Wrap a string as a nsISupports.
+  _createSupportsString(data) {
+    let string = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString
+    );
+    string.data = data;
+    return string;
+  }
+
   /**
    * Save the updated home region and notify observers.
    *
@@ -300,10 +309,9 @@ class RegionDetector {
     Services.prefs.setCharPref("browser.search.region", region);
     if (notify) {
       Services.obs.notifyObservers(
-        null,
+        this._createSupportsString(region),
         this.REGION_TOPIC,
-        this.REGION_UPDATED,
-        region
+        this.REGION_UPDATED
       );
     }
   }
