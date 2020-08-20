@@ -535,10 +535,8 @@ class QuotaManager final : public BackgroundThreadObject {
   nsresult CreateLocalStorageArchiveConnectionFromWebAppsStore(
       mozIStorageConnection** aConnection);
 
-  // The second object in the pair is used to signal if the localStorage
-  // archive database was newly created or recreated.
-  Result<std::pair<nsCOMPtr<mozIStorageConnection>, bool>, nsresult>
-  CreateLocalStorageArchiveConnection();
+  nsresult CreateLocalStorageArchiveConnection(
+      mozIStorageConnection** aConnection, bool& aNewlyCreated);
 
   nsresult RecreateLocalStorageArchive(
       nsCOMPtr<mozIStorageConnection>& aConnection);
