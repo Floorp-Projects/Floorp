@@ -2478,101 +2478,70 @@ class AssemblerX86Shared : public AssemblerShared {
     }
   }
 
-  void vcmpps(uint8_t order, Operand src1, FloatRegister src0,
-              FloatRegister dest) {
+  void vcmpps(uint8_t order, Operand rhs, FloatRegister srcDest) {
     MOZ_ASSERT(HasSSE2());
-    // :TODO: (Bug 1132894) See LIRGeneratorX86Shared::lowerForFPU
-    // FIXME: This logic belongs in the MacroAssembler.
-    //
-    // Also FIXME: Want to use ScratchSimd128Scope here, not the register
-    // directly.
-    if (!HasAVX() && !src0.aliases(dest)) {
-      if (src1.kind() == Operand::FPREG &&
-          dest.aliases(FloatRegister::FromCode(src1.fpu()))) {
-        vmovdqa(src1, ScratchSimd128Reg);
-        src1 = Operand(ScratchSimd128Reg);
-      }
-      vmovdqa(src0, dest);
-      src0 = dest;
-    }
-    switch (src1.kind()) {
+    switch (rhs.kind()) {
       case Operand::FPREG:
-        masm.vcmpps_rr(order, src1.fpu(), src0.encoding(), dest.encoding());
+        masm.vcmpps_rr(order, rhs.fpu(), srcDest.encoding(),
+                       srcDest.encoding());
         break;
       case Operand::MEM_REG_DISP:
-        masm.vcmpps_mr(order, src1.disp(), src1.base(), src0.encoding(),
-                       dest.encoding());
+        masm.vcmpps_mr(order, rhs.disp(), rhs.base(), srcDest.encoding(),
+                       srcDest.encoding());
         break;
       case Operand::MEM_ADDRESS32:
-        masm.vcmpps_mr(order, src1.address(), src0.encoding(), dest.encoding());
+        masm.vcmpps_mr(order, rhs.address(), srcDest.encoding(),
+                       srcDest.encoding());
         break;
       default:
         MOZ_CRASH("unexpected operand kind");
     }
   }
-  void vcmpeqps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmpps(X86Encoding::ConditionCmp_EQ, src1, src0, dest);
+  void vcmpeqps(const Operand& rhs, FloatRegister srcDest) {
+    vcmpps(X86Encoding::ConditionCmp_EQ, rhs, srcDest);
   }
-  void vcmpltps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmpps(X86Encoding::ConditionCmp_LT, src1, src0, dest);
+  void vcmpltps(const Operand& rhs, FloatRegister srcDest) {
+    vcmpps(X86Encoding::ConditionCmp_LT, rhs, srcDest);
   }
-  void vcmpleps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmpps(X86Encoding::ConditionCmp_LE, src1, src0, dest);
+  void vcmpleps(const Operand& rhs, FloatRegister srcDest) {
+    vcmpps(X86Encoding::ConditionCmp_LE, rhs, srcDest);
   }
-  void vcmpunordps(const Operand& src1, FloatRegister src0,
-                   FloatRegister dest) {
-    vcmpps(X86Encoding::ConditionCmp_UNORD, src1, src0, dest);
+  void vcmpunordps(const Operand& rhs, FloatRegister srcDest) {
+    vcmpps(X86Encoding::ConditionCmp_UNORD, rhs, srcDest);
   }
-  void vcmpneqps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmpps(X86Encoding::ConditionCmp_NEQ, src1, src0, dest);
+  void vcmpneqps(const Operand& rhs, FloatRegister srcDest) {
+    vcmpps(X86Encoding::ConditionCmp_NEQ, rhs, srcDest);
   }
-  void vcmpordps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmpps(X86Encoding::ConditionCmp_ORD, src1, src0, dest);
+  void vcmpordps(const Operand& rhs, FloatRegister srcDest) {
+    vcmpps(X86Encoding::ConditionCmp_ORD, rhs, srcDest);
   }
-  void vcmppd(uint8_t order, Operand src1, FloatRegister src0,
-              FloatRegister dest) {
-    // Pre-AVX we require src0 == dest but logic in the macroassembler
-    // invalidates this and should be changed.
-    //
-    // FIXME: See further comments at vcmpps.
-    //
-    // Also FIXME: Want to use ScratchSimd128Scope here, not the register
-    // directly.
-    if (!HasAVX() && !src0.aliases(dest)) {
-      if (src1.kind() == Operand::FPREG &&
-          dest.aliases(FloatRegister::FromCode(src1.fpu()))) {
-        vmovdqa(src1, ScratchSimd128Reg);
-        src1 = Operand(ScratchSimd128Reg);
-      }
-      vmovdqa(src0, dest);
-      src0 = dest;
-    }
-    switch (src1.kind()) {
+  void vcmppd(uint8_t order, Operand rhs, FloatRegister srcDest) {
+    switch (rhs.kind()) {
       case Operand::FPREG:
-        masm.vcmppd_rr(order, src1.fpu(), src0.encoding(), dest.encoding());
+        masm.vcmppd_rr(order, rhs.fpu(), srcDest.encoding(),
+                       srcDest.encoding());
         break;
       default:
         MOZ_CRASH("NYI");
     }
   }
-  void vcmpeqpd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmppd(X86Encoding::ConditionCmp_EQ, src1, src0, dest);
+  void vcmpeqpd(const Operand& rhs, FloatRegister srcDest) {
+    vcmppd(X86Encoding::ConditionCmp_EQ, rhs, srcDest);
   }
-  void vcmpltpd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmppd(X86Encoding::ConditionCmp_LT, src1, src0, dest);
+  void vcmpltpd(const Operand& rhs, FloatRegister srcDest) {
+    vcmppd(X86Encoding::ConditionCmp_LT, rhs, srcDest);
   }
-  void vcmplepd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmppd(X86Encoding::ConditionCmp_LE, src1, src0, dest);
+  void vcmplepd(const Operand& rhs, FloatRegister srcDest) {
+    vcmppd(X86Encoding::ConditionCmp_LE, rhs, srcDest);
   }
-  void vcmpneqpd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmppd(X86Encoding::ConditionCmp_NEQ, src1, src0, dest);
+  void vcmpneqpd(const Operand& rhs, FloatRegister srcDest) {
+    vcmppd(X86Encoding::ConditionCmp_NEQ, rhs, srcDest);
   }
-  void vcmpordpd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
-    vcmppd(X86Encoding::ConditionCmp_ORD, src1, src0, dest);
+  void vcmpordpd(const Operand& rhs, FloatRegister srcDest) {
+    vcmppd(X86Encoding::ConditionCmp_ORD, rhs, srcDest);
   }
-  void vcmpunordpd(const Operand& src1, FloatRegister src0,
-                   FloatRegister dest) {
-    vcmppd(X86Encoding::ConditionCmp_UNORD, src1, src0, dest);
+  void vcmpunordpd(const Operand& rhs, FloatRegister srcDest) {
+    vcmppd(X86Encoding::ConditionCmp_UNORD, rhs, srcDest);
   }
   void vrcpps(const Operand& src, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());

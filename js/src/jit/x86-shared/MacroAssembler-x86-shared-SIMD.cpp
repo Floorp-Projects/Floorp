@@ -44,13 +44,13 @@ void MacroAssemblerX86Shared::oolConvertFloat32x4ToInt32x4(
 
   ScratchSimd128Scope scratch(asMasm());
   asMasm().loadConstantSimd128Float(Int32MinX4, scratch);
-  vcmpleps(Operand(src), scratch, scratch);
+  vcmpleps(Operand(src), scratch);
   vmovmskps(scratch, temp);
   cmp32(temp, Imm32(15));
   j(Assembler::NotEqual, onConversionError);
 
   asMasm().loadConstantSimd128Float(Int32MaxX4, scratch);
-  vcmpleps(Operand(src), scratch, scratch);
+  vcmpleps(Operand(src), scratch);
   vmovmskps(scratch, temp);
   cmp32(temp, Imm32(0));
   j(Assembler::NotEqual, onConversionError);
@@ -154,16 +154,18 @@ void MacroAssemblerX86Shared::createFloat32x4(
 }
 
 void MacroAssemblerX86Shared::splatX16(Register input, FloatRegister output) {
+  ScratchSimd128Scope scratch(asMasm());
+
   vmovd(input, output);
   if (AssemblerX86Shared::HasSSSE3()) {
-    zeroSimd128Int(ScratchSimd128Reg);
-    vpshufb(ScratchSimd128Reg, output, output);
+    zeroSimd128Int(scratch);
+    vpshufb(scratch, output, output);
   } else {
     // Use two shifts to duplicate the low 8 bits into the low 16 bits.
     vpsllw(Imm32(8), output, output);
-    vmovdqa(output, ScratchSimd128Reg);
-    vpsrlw(Imm32(8), ScratchSimd128Reg, ScratchSimd128Reg);
-    vpor(ScratchSimd128Reg, output, output);
+    vmovdqa(output, scratch);
+    vpsrlw(Imm32(8), scratch, scratch);
+    vpor(scratch, output, output);
     // Then do an X8 splat.
     vpshuflw(0, output, output);
     vpshufd(0, output, output);
@@ -216,8 +218,9 @@ void MacroAssemblerX86Shared::extractLaneInt32x4(FloatRegister input,
     vpextrd(lane, input, output);
   } else {
     uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
-    shuffleInt32(mask, input, ScratchSimd128Reg);
-    moveLowInt32(ScratchSimd128Reg, output);
+    ScratchSimd128Scope scratch(asMasm());
+    shuffleInt32(mask, input, scratch);
+    moveLowInt32(scratch, output);
   }
 }
 
@@ -944,7 +947,6 @@ void MacroAssemblerX86Shared::unsignedCompareInt8x16(
                 ToSimdFloatRegister(rhs) != lhs &&
                     ToSimdFloatRegister(rhs) != tmp1 &&
                     ToSimdFloatRegister(rhs) != tmp2);
-  MOZ_ASSERT(tmp1 != ScratchSimd128Reg && tmp2 != ScratchSimd128Reg);
 
   bool complement = false;
   switch (cond) {
@@ -1252,18 +1254,36 @@ void MacroAssemblerX86Shared::unsignedCompareInt32x4(
 void MacroAssemblerX86Shared::compareFloat32x4(FloatRegister lhs, Operand rhs,
                                                Assembler::Condition cond,
                                                FloatRegister output) {
+  if (HasAVX()) {
+    MOZ_CRASH("Can do better here with three-address compares");
+  }
+
+  // Move lhs to output if lhs!=output; move rhs out of the way if rhs==output.
+  //
+  // TODO: The front end really needs to set things up so that this hack is not
+  // necessary.
+  ScratchSimd128Scope scratch(asMasm());
+  if (!lhs.aliases(output)) {
+    if (rhs.kind() == Operand::FPREG &&
+        output.aliases(FloatRegister::FromCode(rhs.fpu()))) {
+      vmovdqa(rhs, scratch);
+      rhs = Operand(scratch);
+    }
+    vmovdqa(lhs, output);
+  }
+
   switch (cond) {
     case Assembler::Condition::Equal:
-      vcmpeqps(rhs, lhs, output);
+      vcmpeqps(rhs, output);
       break;
     case Assembler::Condition::LessThan:
-      vcmpltps(rhs, lhs, output);
+      vcmpltps(rhs, output);
       break;
     case Assembler::Condition::LessThanOrEqual:
-      vcmpleps(rhs, lhs, output);
+      vcmpleps(rhs, output);
       break;
     case Assembler::Condition::NotEqual:
-      vcmpneqps(rhs, lhs, output);
+      vcmpneqps(rhs, output);
       break;
     case Assembler::Condition::GreaterThanOrEqual:
     case Assembler::Condition::GreaterThan:
@@ -1278,18 +1298,36 @@ void MacroAssemblerX86Shared::compareFloat32x4(FloatRegister lhs, Operand rhs,
 void MacroAssemblerX86Shared::compareFloat64x2(FloatRegister lhs, Operand rhs,
                                                Assembler::Condition cond,
                                                FloatRegister output) {
+  if (HasAVX()) {
+    MOZ_CRASH("Can do better here with three-address compares");
+  }
+
+  // Move lhs to output if lhs!=output; move rhs out of the way if rhs==output.
+  //
+  // TODO: The front end really needs to set things up so that this hack is not
+  // necessary.
+  ScratchSimd128Scope scratch(asMasm());
+  if (!lhs.aliases(output)) {
+    if (rhs.kind() == Operand::FPREG &&
+        output.aliases(FloatRegister::FromCode(rhs.fpu()))) {
+      vmovdqa(rhs, scratch);
+      rhs = Operand(scratch);
+    }
+    vmovdqa(lhs, output);
+  }
+
   switch (cond) {
     case Assembler::Condition::Equal:
-      vcmpeqpd(rhs, lhs, output);
+      vcmpeqpd(rhs, output);
       break;
     case Assembler::Condition::LessThan:
-      vcmpltpd(rhs, lhs, output);
+      vcmpltpd(rhs, output);
       break;
     case Assembler::Condition::LessThanOrEqual:
-      vcmplepd(rhs, lhs, output);
+      vcmplepd(rhs, output);
       break;
     case Assembler::Condition::NotEqual:
-      vcmpneqpd(rhs, lhs, output);
+      vcmpneqpd(rhs, output);
       break;
     case Assembler::Condition::GreaterThanOrEqual:
     case Assembler::Condition::GreaterThan:
@@ -1386,7 +1424,7 @@ void MacroAssemblerX86Shared::minMaxFloat32x4(bool isMin, FloatRegister lhs_,
     vandps(temp1, output, output);           // fix max(-0, 0) with AND
   }
   vmovaps(lhs, temp1);                       // compute
-  vcmpunordps(rhs, temp1, temp1);            //   lhs UNORD rhs
+  vcmpunordps(rhs, temp1);                   //   lhs UNORD rhs
   vptest(temp1, temp1);                      // check if any unordered
   j(Assembler::Equal, &l);                   //   and exit if not
 
@@ -1401,12 +1439,12 @@ void MacroAssemblerX86Shared::minMaxFloat32x4(bool isMin, FloatRegister lhs_,
   vandps(output, temp1, temp1);              // setup QNaN bits in NaN lanes
   vorps(temp1, temp2, temp2);                //   and OR into result
   vmovaps(lhs, temp1);                       // find NaN lanes
-  vcmpunordps(Operand(temp1), temp1, temp1); //   in lhs
+  vcmpunordps(Operand(temp1), temp1);        //   in lhs
   vmovaps(temp1, output);                    //     (and save them for later)
   vandps(lhs, temp1, temp1);                 //       and extract the NaNs
   vorps(temp1, temp2, temp2);                //         and add to the result
   vmovaps(rhs, temp1);                       // find NaN lanes
-  vcmpunordps(Operand(temp1), temp1, temp1); //   in rhs
+  vcmpunordps(Operand(temp1), temp1);        //   in rhs
   vpandn(temp1, output, output);             //     except if they were in lhs
   vandps(rhs, output, output);               //       and extract the NaNs
   vorps(temp2, output, output);              //         and add to the result
@@ -1440,7 +1478,7 @@ void MacroAssemblerX86Shared::minMaxFloat64x2(bool isMin, FloatRegister lhs_,
     vandpd(temp1, output, output);           // fix max(-0, 0) with AND
   }
   vmovapd(lhs, temp1);                       // compute
-  vcmpunordpd(rhs, temp1, temp1);            //   lhs UNORD rhs
+  vcmpunordpd(rhs, temp1);                   //   lhs UNORD rhs
   vptest(temp1, temp1);                      // check if any unordered
   j(Assembler::Equal, &l);                   //   and exit if not
 
@@ -1455,12 +1493,12 @@ void MacroAssemblerX86Shared::minMaxFloat64x2(bool isMin, FloatRegister lhs_,
   vandpd(output, temp1, temp1);              // setup QNaN bits in NaN lanes
   vorpd(temp1, temp2, temp2);                //   and OR into result
   vmovapd(lhs, temp1);                       // find NaN lanes
-  vcmpunordpd(Operand(temp1), temp1, temp1); //   in lhs
+  vcmpunordpd(Operand(temp1), temp1);        //   in lhs
   vmovapd(temp1, output);                    //     (and save them for later)
   vandpd(lhs, temp1, temp1);                 //       and extract the NaNs
   vorpd(temp1, temp2, temp2);                //         and add to the result
   vmovapd(rhs, temp1);                       // find NaN lanes
-  vcmpunordpd(Operand(temp1), temp1, temp1); //   in rhs
+  vcmpunordpd(Operand(temp1), temp1);        //   in rhs
   vpandn(temp1, output, output);             //     except if they were in lhs
   vandpd(rhs, output, output);               //       and extract the NaNs
   vorpd(temp2, output, output);              //         and add to the result
@@ -1513,8 +1551,12 @@ void MacroAssemblerX86Shared::minNumFloat32x4(FloatRegister lhs, Operand rhs,
   vminps(rhs, lhsCopy, temp);
   vorps(mask, temp, temp);
 
-  FloatRegister rhsCopy = reusedInputAlignedSimd128Float(rhs, mask);
-  vcmpneqps(rhs, rhsCopy, mask);
+  if (AssemblerX86Shared::HasAVX()) {
+    MOZ_CRASH("Can do better by avoiding the movaps");
+  } else {
+    vmovaps(rhs, mask);
+    vcmpneqps(rhs, mask);
+  }
 
   if (AssemblerX86Shared::HasAVX()) {
     vblendvps(mask, lhs, temp, output);
@@ -1552,8 +1594,12 @@ void MacroAssemblerX86Shared::maxNumFloat32x4(FloatRegister lhs, Operand rhs,
   mask = temp;
   temp = scratch;
 
-  FloatRegister rhsCopy = reusedInputAlignedSimd128Float(rhs, mask);
-  vcmpneqps(rhs, rhsCopy, mask);
+  if (AssemblerX86Shared::HasAVX()) {
+    MOZ_CRASH("Can do better by avoiding the movaps");
+  } else {
+    vmovaps(rhs, mask);
+    vcmpneqps(rhs, mask);
+  }
 
   if (AssemblerX86Shared::HasAVX()) {
     vblendvps(mask, lhs, temp, output);
@@ -1933,7 +1979,7 @@ void MacroAssemblerX86Shared::truncSatFloat32x4ToInt32x4(FloatRegister src,
 
   // Convert NaN to 0 by masking away values that compare unordered to itself.
   vmovaps(dest, scratch);
-  vcmpeqps(Operand(scratch), scratch, scratch);
+  vcmpeqps(Operand(scratch), scratch);
   vpand(Operand(scratch), dest, dest);
 
   // Compute the complement of each non-NaN lane's sign bit, we'll need this to
@@ -1983,7 +2029,7 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4(
   vsubps(Operand(scratch), temp, temp);
 
   // scratch = mask of biased values that are greater than 7FFFFFFFh.
-  vcmpleps(Operand(temp), scratch, scratch);
+  vcmpleps(Operand(temp), scratch);
 
   // Convert the biased values to integer.  Positive values above 7FFFFFFFh will
   // have been converted to 80000000h, all others become the expected integer.
