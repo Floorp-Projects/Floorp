@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/Zone-inl.h"
+#include "js/shadow/Zone.h"  // JS::shadow::Zone
 
 #include <type_traits>
 

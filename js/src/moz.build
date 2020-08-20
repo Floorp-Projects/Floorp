@@ -260,6 +260,7 @@ EXPORTS.js.shadow += [
     '../public/shadow/Shape.h',
     '../public/shadow/String.h',
     '../public/shadow/Symbol.h',
+    '../public/shadow/Zone.h',
 ]
 
 UNIFIED_SOURCES += [

@@ -15,6 +15,7 @@
 #include "js/GCAnnotations.h"
 #include "js/shadow/String.h"  // JS::shadow::String
 #include "js/shadow/Symbol.h"  // JS::shadow::Symbol
+#include "js/shadow/Zone.h"    // JS::shadow::Zone
 #include "js/TraceKind.h"
 #include "js/Utility.h"
 
@@ -184,69 +185,6 @@ const uint32_t DefaultNurseryMaxBytes = 16 * js::gc::ChunkSize;
 
 /* Default maximum heap size in bytes to pass to JS_NewContext(). */
 const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
-
-namespace shadow {
-
-struct Zone {
-  enum GCState : uint8_t {
-    NoGC,
-    MarkBlackOnly,
-    MarkBlackAndGray,
-    Sweep,
-    Finished,
-    Compact
-  };
-
- protected:
-  JSRuntime* const runtime_;
-  JSTracer* const barrierTracer_;  // A pointer to the JSRuntime's |gcMarker|.
-  uint32_t needsIncrementalBarrier_;
-  GCState gcState_;
-
-  Zone(JSRuntime* runtime, JSTracer* barrierTracerArg)
-      : runtime_(runtime),
-        barrierTracer_(barrierTracerArg),
-        needsIncrementalBarrier_(0),
-        gcState_(NoGC) {}
-
- public:
-  bool needsIncrementalBarrier() const { return needsIncrementalBarrier_; }
-
-  JSTracer* barrierTracer() {
-    MOZ_ASSERT(needsIncrementalBarrier_);
-    MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
-    return barrierTracer_;
-  }
-
-  JSRuntime* runtimeFromMainThread() const {
-    MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
-    return runtime_;
-  }
-
-  // Note: Unrestricted access to the zone's runtime from an arbitrary
-  // thread can easily lead to races. Use this method very carefully.
-  JSRuntime* runtimeFromAnyThread() const { return runtime_; }
-
-  GCState gcState() const { return gcState_; }
-  bool wasGCStarted() const { return gcState_ != NoGC; }
-  bool isGCMarkingBlackOnly() const { return gcState_ == MarkBlackOnly; }
-  bool isGCMarkingBlackAndGray() const { return gcState_ == MarkBlackAndGray; }
-  bool isGCSweeping() const { return gcState_ == Sweep; }
-  bool isGCFinished() const { return gcState_ == Finished; }
-  bool isGCCompacting() const { return gcState_ == Compact; }
-  bool isGCMarking() const {
-    return isGCMarkingBlackOnly() || isGCMarkingBlackAndGray();
-  }
-  bool isGCSweepingOrCompacting() const {
-    return gcState_ == Sweep || gcState_ == Compact;
-  }
-
-  static MOZ_ALWAYS_INLINE JS::shadow::Zone* from(JS::Zone* zone) {
-    return reinterpret_cast<JS::shadow::Zone*>(zone);
-  }
-};
-
-} /* namespace shadow */
 
 /**
  * A GC pointer, tagged with the trace kind.

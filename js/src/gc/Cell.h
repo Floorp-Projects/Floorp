@@ -12,15 +12,11 @@
 #include "gc/GCEnum.h"
 #include "gc/Heap.h"
 #include "js/GCAnnotations.h"
+#include "js/shadow/Zone.h"  // JS::shadow::Zone
 #include "js/TraceKind.h"
 #include "js/TypeDecls.h"
 
 namespace JS {
-
-namespace shadow {
-struct Zone;
-} /* namespace shadow */
-
 enum class TraceKind;
 } /* namespace JS */
 

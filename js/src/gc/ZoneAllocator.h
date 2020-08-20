@@ -16,6 +16,7 @@
 #include "gc/Scheduling.h"
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
+#include "js/shadow/Zone.h"  // JS::shadow::Zone
 #include "vm/MallocProvider.h"
 
 namespace JS {

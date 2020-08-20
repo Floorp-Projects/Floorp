@@ -24,6 +24,7 @@
 #include "ds/Fifo.h"
 #include "jit/JitContext.h"
 #include "js/CompileOptions.h"
+#include "js/shadow/Zone.h"  // JS::shadow::Zone::GCState
 #include "js/SourceText.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
