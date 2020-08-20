@@ -6130,29 +6130,28 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
   return NS_OK;
 }
 
-nsresult QuotaManager::CreateLocalStorageArchiveConnection(
-    mozIStorageConnection** aConnection, bool& aNewlyCreated) {
+Result<std::pair<nsCOMPtr<mozIStorageConnection>, bool>, nsresult>
+QuotaManager::CreateLocalStorageArchiveConnection() {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
-  MOZ_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> lsArchiveTmpFile;
   nsresult rv = GetLocalStorageArchiveTmpFile(mStoragePath,
                                               getter_AddRefs(lsArchiveTmpFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   bool exists;
   rv = lsArchiveTmpFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   if (exists) {
     rv = lsArchiveTmpFile->Remove(false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
   }
 
@@ -6160,12 +6159,12 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnection(
   nsCOMPtr<nsIFile> lsArchiveFile;
   rv = GetLocalStorageArchiveFile(mStoragePath, getter_AddRefs(lsArchiveFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   rv = lsArchiveFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   if (exists) {
@@ -6174,13 +6173,13 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnection(
     bool isDirectory;
     rv = lsArchiveFile->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
     if (isDirectory) {
       rv = lsArchiveFile->Remove(true);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       removed = true;
@@ -6189,7 +6188,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnection(
     nsCOMPtr<mozIStorageService> ss =
         do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
     nsCOMPtr<mozIStorageConnection> connection;
@@ -6197,7 +6196,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnection(
     if (!removed && rv == NS_ERROR_FILE_CORRUPTED) {
       rv = lsArchiveFile->Remove(false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       removed = true;
@@ -6205,49 +6204,45 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnection(
       rv = ss->OpenUnsharedDatabase(lsArchiveFile, getter_AddRefs(connection));
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
     rv = StorageDBUpdater::Update(connection);
     if (!removed && NS_FAILED(rv)) {
       rv = connection->Close();
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = lsArchiveFile->Remove(false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       removed = true;
 
       rv = ss->OpenUnsharedDatabase(lsArchiveFile, getter_AddRefs(connection));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       rv = StorageDBUpdater::Update(connection);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
-    connection.forget(aConnection);
-    aNewlyCreated = removed;
-    return NS_OK;
+    return std::pair{std::move(connection), removed};
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
   rv = CreateLocalStorageArchiveConnectionFromWebAppsStore(
       getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  connection.forget(aConnection);
-  aNewlyCreated = true;
-  return NS_OK;
+  return std::pair{std::move(connection), true};
 }
 
 nsresult QuotaManager::RecreateLocalStorageArchive(
@@ -6557,15 +6552,12 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   }
 
   if (CachedNextGenLocalStorageEnabled()) {
-    // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
-    nsCOMPtr<mozIStorageConnection> connection;
-    bool newlyCreated;
-    QM_TRY(CreateLocalStorageArchiveConnection(getter_AddRefs(connection),
-                                               newlyCreated));
+    QM_TRY_VAR((auto [connection, newlyCreatedOrRecreated]),
+               CreateLocalStorageArchiveConnection());
 
     uint32_t version = 0;
 
-    if (!newlyCreated) {
+    if (!newlyCreatedOrRecreated) {
       // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
       bool initialized;
       QM_TRY(IsLocalStorageArchiveInitialized(connection, initialized));
@@ -6584,7 +6576,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
       MOZ_ASSERT(version == kLocalStorageArchiveVersion);
     } else if (version != kLocalStorageArchiveVersion) {
-      if (newlyCreated) {
+      if (newlyCreatedOrRecreated) {
         MOZ_ASSERT(version == 0);
 
         QM_TRY(InitializeLocalStorageArchive(connection,
