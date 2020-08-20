@@ -64,11 +64,13 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   // is trivial & will will run exactly once, for now.
   MOZ_ASSERT(mFrames.GetLength() == 1,
              "how did we get more than one page per sheet");
-  for (auto* pageFrame : mFrames) {
-    MOZ_ASSERT(pageFrame->IsPageFrame(),
+  for (auto* childFrame : mFrames) {
+    MOZ_ASSERT(childFrame->IsPageFrame(),
                "we're only expecting page frames as children");
+    auto* pageFrame = static_cast<nsPageFrame*>(childFrame);
+
     // Be sure our child has a pointer to the nsSharedPageData:
-    static_cast<nsPageFrame*>(pageFrame)->SetSharedPageData(mPD);
+    pageFrame->SetSharedPageData(mPD);
 
     ReflowInput pageReflowInput(aPresContext, aReflowInput, pageFrame,
                                 pageSize);
