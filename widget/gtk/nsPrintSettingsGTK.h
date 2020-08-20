@@ -31,7 +31,6 @@ class nsPrintSettingsGTK : public nsPrintSettings {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PRINTSETTINGSGTK_IID)
 
   nsPrintSettingsGTK();
-  explicit nsPrintSettingsGTK(const PrintSettingsInitializer& aSettings);
 
   // We're overriding these methods because we want to read/write with GTK
   // objects, not local variables. This allows a simpler settings implementation

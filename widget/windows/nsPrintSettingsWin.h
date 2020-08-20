@@ -23,7 +23,6 @@ class nsPrintSettingsWin : public nsPrintSettings, public nsIPrintSettingsWin {
 
   nsPrintSettingsWin();
   nsPrintSettingsWin(const nsPrintSettingsWin& aPS);
-  explicit nsPrintSettingsWin(const PrintSettingsInitializer&);
 
   /**
    * Makes a new copy

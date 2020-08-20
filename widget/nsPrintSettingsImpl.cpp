@@ -4,9 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPrintSettingsImpl.h"
-
-#include "nsCoord.h"
-#include "nsPaper.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintSession.h"
 #include "mozilla/RefPtr.h"
@@ -58,29 +55,6 @@ nsPrintSettings::nsPrintSettings()
   mFooterStrs[0].AssignLiteral(
       "&PT");  // Use &P (Page Num Only) or &PT (Page Num of Page Total)
   mFooterStrs[2].AssignLiteral("&D");
-}
-
-void nsPrintSettings::InitWithInitializer(
-    const PrintSettingsInitializer& aSettings) {
-  const double kInchesPerPoint = 1.0 / 72.0;
-
-  SetPrinterName(aSettings.mPrinter);
-  SetPrintInColor(aSettings.mPrintInColor);
-  SetPaperName(aSettings.mPaperInfo.mName);
-  SetPaperWidth(aSettings.mPaperInfo.mSize.Width() * kInchesPerPoint);
-  SetPaperHeight(aSettings.mPaperInfo.mSize.Height() * kInchesPerPoint);
-  SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
-
-  if (aSettings.mPaperInfo.mUnwriteableMargin) {
-    const auto& margin = aSettings.mPaperInfo.mUnwriteableMargin.value();
-    SetUnwriteableMarginTop(NS_POINTS_TO_TWIPS(margin.top));
-    SetUnwriteableMarginRight(NS_POINTS_TO_TWIPS(margin.right));
-    SetUnwriteableMarginBottom(NS_POINTS_TO_TWIPS(margin.bottom));
-    SetUnwriteableMarginLeft(NS_POINTS_TO_TWIPS(margin.left));
-  }
-
-  // Set this last because other setters may overwrite its value.
-  SetIsInitializedFromPrinter(true);
 }
 
 nsPrintSettings::nsPrintSettings(const nsPrintSettings& aPS) { *this = aPS; }
@@ -822,24 +796,4 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   }
 
   return *this;
-}
-
-void nsPrintSettings::SetDefaultFileName() {
-  nsAutoString filename;
-  nsresult rv = GetToFileName(filename);
-  if (NS_FAILED(rv) || filename.IsEmpty()) {
-    const char* path = PR_GetEnv("PWD");
-    if (!path) {
-      path = PR_GetEnv("HOME");
-    }
-
-    if (path) {
-      CopyUTF8toUTF16(mozilla::MakeStringSpan(path), filename);
-      filename.AppendLiteral("/mozilla.pdf");
-    } else {
-      filename.AssignLiteral("mozilla.pdf");
-    }
-
-    SetToFileName(filename);
-  }
 }

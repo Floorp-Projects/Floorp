@@ -24,10 +24,3 @@ nsresult nsPrintSettingsServiceAndroid::_CreatePrintSettings(
                                    nsIPrintSettings::kInitSaveAll);
   return NS_OK;
 }
-
-already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
-    const mozilla::PrintSettingsInitializer& aSettings) {
-  RefPtr<nsPrintSettings> settings = new nsPrintSettingsAndroid();
-  settings->InitWithInitializer(aSettings);
-  return settings.forget();
-}
