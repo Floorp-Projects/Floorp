@@ -1,4 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="72" height="128" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient x1="50%" y1="0%" x2="50%" y2="50%" id="a"><stop stop-color="#20123A" offset="0%"/><stop stop-color="#291D4F" offset="100%"/></linearGradient></defs><path fill="url(#a)" d="M0 0h72v128H0z" fill-rule="evenodd"/></svg>
