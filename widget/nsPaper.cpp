@@ -10,7 +10,6 @@
 #include "mozilla/dom/Promise.h"
 
 using mozilla::ErrorResult;
-using mozilla::PaperInfo;
 
 NS_IMPL_CYCLE_COLLECTION(nsPaper, mMarginPromise, mPrinter)
 
