@@ -207,7 +207,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     PopulateReflowOutput(aReflowOutput, aReflowInput);
     FinishAndStoreOverflow(&aReflowOutput);
 
-    if (GetSize().Width() != aReflowOutput.Width()) {
+    if (GetSize() != aReflowOutput.PhysicalSize()) {
       CenterPages();
     }
     return;
