@@ -23,7 +23,7 @@ namespace jit {
 class BaselineCacheIRCompiler;
 class IonCacheIRCompiler;
 
-// [SMDDOC] CacheIR Value Representation and Tracking
+// [SMDOC] CacheIR Value Representation and Tracking
 //
 // While compiling an IC stub the CacheIR compiler needs to keep track of the
 // physical location for each logical piece of data we care about, as well as
@@ -901,11 +901,6 @@ class MOZ_RAII CacheIRCompiler {
 #endif
 
  public:
-  // The maximum number of arguments passed to a spread call or
-  // fun_apply IC.  Keep this small to avoid controllable stack
-  // overflows by attackers passing large arrays.
-  static const uint32_t MAX_ARGS_ARRAY_LENGTH = 16;
-
   void callVMInternal(MacroAssembler& masm, VMFunctionId id);
   template <typename Fn, Fn fn>
   void callVM(MacroAssembler& masm);
