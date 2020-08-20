@@ -89,7 +89,10 @@ describe("Event - mouse event", () => {
   const renderRep = props => shallow(Event.rep({ object, ...props }));
 
   const grips = getSelectableInInspectorGrips(object);
-  expect(grips).toHaveLength(1, "the stub has one node grip");
+
+  it("has stub with one node grip", () => {
+    expect(grips).toHaveLength(1);
+  });
 
   it("correctly selects Event Rep", () => {
     expect(getRep(object)).toBe(Event.rep);

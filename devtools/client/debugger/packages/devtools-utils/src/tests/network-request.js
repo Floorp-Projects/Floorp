@@ -37,11 +37,9 @@ describe("network request", () => {
       text: async () => "Sad",
     }));
 
-    try {
-      await networkRequest("foo");
-    } catch (e) {
-      expect(e.message).toEqual("failed to request foo");
-    }
+    await expect(networkRequest("foo")).rejects.toThrow(
+      expect.objectContaining({ message: "failed to request foo" })
+    );
   });
 
   it("timed out fetch", async () => {
