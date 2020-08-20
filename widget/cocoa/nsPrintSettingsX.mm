@@ -47,6 +47,14 @@ nsPrintSettingsX::nsPrintSettingsX() : mAdjustedPaperWidth{0.0}, mAdjustedPaperH
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
+    const PrintSettingsInitializer& aSettings) {
+  RefPtr<nsPrintSettings> settings = new nsPrintSettingsX();
+  settings->InitWithInitializer(aSettings);
+  settings->SetDefaultFileName();
+  return settings.forget();
+}
+
 nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) { *this = src; }
 
 nsPrintSettingsX::~nsPrintSettingsX() {
