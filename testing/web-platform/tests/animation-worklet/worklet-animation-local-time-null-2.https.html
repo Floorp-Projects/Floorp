@@ -3,6 +3,7 @@
 <title>Setting localTime to null means effect does not apply (reftest)</title>
 <link rel="help" href="https://drafts.css-houdini.org/css-animationworklet/">
 <link rel="match" href="worklet-animation-local-time-null-2-ref.html">
+<meta name="timeout" content="long">
 
 <script src="/common/reftest-wait.js"></script>
 <script src="/web-animations/testcommon.js"></script>
@@ -100,7 +101,8 @@ runInAnimationWorklet(`
   ]);
 
   waitForAnimationFrameWithCondition(() => control_anim.currentTime > 1000)
-    .then(() => waitForAsyncAnimationFrames(1))
+    // long timeout due to laggy compositor thread on debug build.
+    .then(() => waitForAsyncAnimationFrames(120))
     .then(takeScreenshot);
 });
 
