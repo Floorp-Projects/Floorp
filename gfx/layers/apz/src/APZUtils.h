@@ -134,6 +134,16 @@ using AsyncTransformComponents = EnumSet<AsyncTransformComponent>;
 constexpr AsyncTransformComponents LayoutAndVisual(
     AsyncTransformComponent::eLayout, AsyncTransformComponent::eVisual);
 
+/**
+ * Metrics that GeckoView wants to know at every composite.
+ * These are the effective visual scroll offset and zoom level of
+ * the root content APZC at composition time.
+ */
+struct GeckoViewMetrics {
+  CSSPoint mVisualScrollOffset;
+  CSSToParentLayerScale2D mZoom;
+};
+
 namespace apz {
 
 /**

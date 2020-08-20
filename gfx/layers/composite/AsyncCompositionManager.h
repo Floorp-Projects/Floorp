@@ -229,11 +229,11 @@ class AsyncCompositionManager final {
 
 #ifdef MOZ_WIDGET_ANDROID
  private:
-  // This calculates whether frame metrics should be sent to Java.
-  bool FrameMetricsHaveUpdated(const FrameMetrics& aMetrics);
-  // This holds the most recent scroll/zoom metrics sent to Java, and is used
+  // This calculates whether GeckoView metrics should be sent to Java.
+  bool GeckoViewMetricsHaveUpdated(const GeckoViewMetrics& aMetrics);
+  // This holds the most recent GeckoView metrics sent to Java, and is used
   // to send new updates when it changes.
-  FrameMetrics mLastMetrics;
+  GeckoViewMetrics mLastMetrics;
   // The following two fields are only needed on Fennec with C++ APZ, because
   // then we need to reposition the gecko scrollbar to deal with the
   // dynamic toolbar shifting content around.

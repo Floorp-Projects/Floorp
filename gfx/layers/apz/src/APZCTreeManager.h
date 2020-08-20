@@ -18,6 +18,7 @@
 #include "mozilla/gfx/Matrix.h"               // for Matrix4x4
 #include "mozilla/layers/APZInputBridge.h"    // for APZInputBridge
 #include "mozilla/layers/APZTestData.h"       // for APZTestData
+#include "mozilla/layers/APZUtils.h"          // for GeckoViewMetrics
 #include "mozilla/layers/IAPZCTreeManager.h"  // for IAPZCTreeManager
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -1018,7 +1019,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 #if defined(MOZ_WIDGET_ANDROID)
  private:
   // Last Frame metrics sent to java through UIController.
-  FrameMetrics mLastRootMetrics;
+  GeckoViewMetrics mLastRootMetrics;
 #endif  // defined(MOZ_WIDGET_ANDROID)
 };
 
