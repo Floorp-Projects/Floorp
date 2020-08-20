@@ -4490,12 +4490,10 @@
 
 - name: gfx.webrender.enable-low-priority-pool
   type: RelaxedAtomicBool
-#if defined(XP_WIN)
-  value: true
-#elif defined(XP_LINUX) && !defined(ANDROID)
-  value: true
-#else
+#if defined(ANDROID)
   value: false
+#else
+  value: true
 #endif
   mirror: always
 
