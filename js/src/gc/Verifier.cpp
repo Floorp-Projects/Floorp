@@ -1061,6 +1061,17 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
     fprintf(stderr, "(map %p is %s, key %p is %s, value %p is %s)\n", map,
             map->mapColor.name(), key, keyColor.name(), value,
             valueColor.name());
+#ifdef DEBUG
+    fprintf(stderr, "Key:\n");
+    key->dump();
+    if (auto delegate = MaybeGetDelegate(key); delegate) {
+      fprintf(stderr, "Delegate:\n");
+      delegate->dump();
+    }
+    fprintf(stderr, "Value:\n");
+    value->dump();
+#endif
+
     ok = false;
   }
 
