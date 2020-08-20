@@ -76,6 +76,8 @@ struct ProcInfo {
   uint64_t virtualMemorySize = 0;
   // RSS in bytes.
   int64_t residentSetSize = 0;
+  // Unshared resident size in bytes.
+  int64_t residentUniqueSize = 0;
   // User time in ns.
   uint64_t cpuUser = 0;
   // System time in ns.
@@ -176,6 +178,7 @@ nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
   dest->mFilename.Assign(source.filename);
   dest->mVirtualMemorySize = source.virtualMemorySize;
   dest->mResidentSetSize = source.residentSetSize;
+  dest->mResidentUniqueSize = source.residentUniqueSize;
   dest->mCpuUser = source.cpuUser;
   dest->mCpuKernel = source.cpuKernel;
 

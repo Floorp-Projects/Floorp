@@ -6,6 +6,7 @@
 
 #include "mozilla/ProcInfo.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "nsMemoryReporterManager.h"
 #include <windows.h>
 #include <psapi.h>
 #include <tlhelp32.h>
@@ -89,6 +90,14 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.cpuUser = ToNanoSeconds(userTime);
           info.residentSetSize = memoryCounters.WorkingSetSize;
           info.virtualMemorySize = memoryCounters.PagefileUsage;
+
+          // Computing the resident unique size is somewhat tricky,
+          // so we use about:memory's implementation. This implementation
+          // uses the `HANDLE` so, in theory, should be no additional
+          // race condition. However, in case of error, the result is `0`.
+          info.residentUniqueSize =
+              nsMemoryReporterManager::ResidentUnique(handle.get());
+
           if (!gathered.put(request.pid, std::move(info))) {
             holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
             return;
