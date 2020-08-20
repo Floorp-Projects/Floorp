@@ -107,6 +107,12 @@ bool CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
           spew->property("main", true);
         }
 
+        // TODO: If a perf issue arises, look into improving the SrcNotes
+        // API call below.
+        unsigned column;
+        spew->property("lineno", PCToLineNumber(script, next, &column));
+        spew->property("column", column);
+
         uint32_t pcOffset = script->pcToOffset(next);
         jit::ICEntry* entry = jitScript->maybeICEntryFromPCOffset(pcOffset);
 
