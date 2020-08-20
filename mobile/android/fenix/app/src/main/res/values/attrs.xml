@@ -93,4 +93,5 @@
         <attr name="onboardingKeyDescription" format="reference" />
     </declare-styleable>
 
+    <attr name="selectLoginHeaderTextColor" format="reference"/>
 </resources>

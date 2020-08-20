@@ -27,6 +27,7 @@
             tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
         <item name="mozacInputLayoutErrorIconColor"
             tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
+        <item name="mozacLoginSelectHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectLoginHeaderTextStyle</item>
 
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="colorControlActivated">@color/accent_high_contrast_normal_theme</item>
@@ -79,7 +80,7 @@
         <item name="syncedTabsSeparator">@color/synced_tabs_separator</item>
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_normal_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
-
+        <item name="selectLoginHeaderTextColor">@color/select_login_header_normal_theme</item>
         <!-- Shared widget colors -->
         <item name="mozac_primary_text_color">@color/primary_text_normal_theme</item>
         <item name="mozac_caption_text_color">@color/caption_text_normal_theme</item>
@@ -124,6 +125,11 @@
     <style name="DialogStyleLight" parent="BaseDialogStyle">
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyleLight</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleLight</item>
+    </style>
+
+    <style name="SelectLoginHeaderTextStyle" parent="Header16TextStyle">
+        <item name="android:textColor">?selectLoginHeaderTextColor</item>
+        <item name="drawableTint">?accentHighContrast</item>
     </style>
 
     <style name="Checkable.Colored" parent="Theme.AppCompat">
@@ -174,6 +180,7 @@
             tools:ignore="UnusedResources">@color/destructive_private_theme</item>
         <item name="mozacInputLayoutErrorIconColor"
             tools:ignore="UnusedResources">@color/destructive_private_theme</item>
+        <item name="mozacLoginSelectHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectLoginHeaderTextStyle</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
@@ -221,6 +228,7 @@
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_private_theme</item>
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_dark_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_dark_theme</item>
+        <item name="selectLoginHeaderTextColor">@color/accent_high_contrast_private_theme</item>
 
         <!-- Shared widget colors -->
         <item name="mozac_primary_text_color">@color/primary_text_private_theme</item>

@@ -50,6 +50,7 @@
     <color name="readermode_end_gradient_normal_theme">#00B3F4</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/search_suggestion_indicator_icon_color_dark_theme</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/search_suggestion_indicator_icon_bookmark_color_dark_theme</color>
+    <color name="select_login_header_normal_theme">@color/accent_high_contrast_dark_theme</color>
 
     <color name="mozac_widget_favicon_background_normal_theme">@color/mozac_widget_favicon_background_dark_theme</color>
     <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_dark_theme</color>
