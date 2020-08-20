@@ -61,7 +61,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ToggleButton
-            android:id="@+id/search_scan_button"
+            android:id="@+id/qr_scan_button"
             style="@style/search_pill"
             android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
             android:textOff="@string/search_scan_button"

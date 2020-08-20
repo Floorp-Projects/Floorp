@@ -20,14 +20,13 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
-import kotlinx.android.synthetic.main.fragment_search_dialog.search_scan_button
+import kotlinx.android.synthetic.main.fragment_search_dialog.qr_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.toolbar
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_engines_shortcut_button
-import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_scan_button
+import kotlinx.android.synthetic.main.fragment_search_dialog.view.qr_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.toolbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.feature.qr.QrFeature
@@ -142,9 +141,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             interactor.onSearchShortcutsButtonClicked()
         }
 
-        search_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
+        qr_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
 
-        search_scan_button.setOnClickListener {
+        qr_scan_button.setOnClickListener {
             if (!requireContext().hasCamera()) { return@setOnClickListener }
 
             toolbarView.view.clearFocus()
@@ -153,41 +152,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
 
         qrFeature.set(
-            QrFeature(
-                requireContext(),
-                fragmentManager = childFragmentManager,
-                onNeedToRequestPermissions = { permissions ->
-                    requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
-                },
-                onScanResult = { result ->
-                    search_scan_button.isChecked = false
-                    activity?.let {
-                        AlertDialog.Builder(it).apply {
-                            val spannable = resources.getSpanned(
-                                R.string.qr_scanner_confirmation_dialog_message,
-                                getString(R.string.app_name) to StyleSpan(Typeface.BOLD),
-                                result to StyleSpan(Typeface.ITALIC)
-                            )
-                            setMessage(spannable)
-                            setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
-                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
-                                dialog.cancel()
-                            }
-                            setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
-                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
-                                (activity as HomeActivity)
-                                    .openToBrowserAndLoad(
-                                        searchTermOrURL = result,
-                                        newTab = store.state.tabId == null,
-                                        from = BrowserDirection.FromSearch
-                                    )
-                                dialog.dismiss()
-                            }
-                            create()
-                        }.show()
-                        requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
-                    }
-                }),
+            createQrFeature(),
             owner = this,
             view = view
         )
@@ -209,7 +174,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         return when {
             qrFeature.onBackPressed() -> {
                 toolbarView.view.edit.focus()
-                view?.search_scan_button?.isChecked = false
+                view?.qr_scan_button?.isChecked = false
                 toolbarView.view.requestFocus()
                 true
             }
@@ -219,6 +184,44 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 true
             }
         }
+    }
+
+    private fun createQrFeature(): QrFeature {
+        return QrFeature(
+            requireContext(),
+            fragmentManager = childFragmentManager,
+            onNeedToRequestPermissions = { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
+            },
+            onScanResult = { result ->
+                qr_scan_button.isChecked = false
+                activity?.let {
+                    AlertDialog.Builder(it).apply {
+                        val spannable = resources.getSpanned(
+                            R.string.qr_scanner_confirmation_dialog_message,
+                            getString(R.string.app_name) to StyleSpan(Typeface.BOLD),
+                            result to StyleSpan(Typeface.ITALIC)
+                        )
+                        setMessage(spannable)
+                        setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
+                            requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
+                            dialog.cancel()
+                        }
+                        setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
+                            requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
+                            (activity as HomeActivity)
+                                .openToBrowserAndLoad(
+                                    searchTermOrURL = result,
+                                    newTab = store.state.tabId == null,
+                                    from = BrowserDirection.FromSearch
+                                )
+                            dialog.dismiss()
+                        }
+                        create()
+                    }.show()
+                    requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
+                }
+            })
     }
 
     private fun setupConstraints(view: View) {
