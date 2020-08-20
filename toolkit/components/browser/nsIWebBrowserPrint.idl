@@ -19,6 +19,10 @@ interface nsIWebBrowserPrint : nsISupports
 {
   /**
    * PrintPreview Navigation Constants
+   *
+   * XXXdholbert Consider renaming these? Strictly speaking, these deal with
+   * *sheets* (which are roughly the same as pages in the default configuration
+   * of one page per sheet).
    */
   const short PRINTPREVIEW_GOTO_PAGENUM = 0;
   const short PRINTPREVIEW_PREV_PAGE    = 1;
@@ -47,11 +51,19 @@ interface nsIWebBrowserPrint : nsISupports
 
   /**
    * This returns the total number of pages for the Print Preview
+   *
+   * XXXdholbert Consider renaming this? Strictly speaking, this is the number
+   * of *sheets* (which is the same as the number of pages in the default
+   * configuration of one page per sheet).
    */
   readonly attribute long printPreviewNumPages;
 
   /**
    * This returns the number of the page which is currently in the Print Preview viewport
+   *
+   * XXXdholbert Consider renaming this? (similar to printPreviewNumPages above)
+   * Strictly speaking, this is the number of the *sheet* which is currently in
+   * the print preview viewport.
    */
   readonly attribute long printPreviewCurrentPageNumber;
 
