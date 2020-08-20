@@ -68,10 +68,21 @@
 }
 
 .controlsContainer [hidden],
-.controlBar[hidden],
+.controlBar[hidden] .progressBar,
+.controlBar[hidden] .bufferBar,
 .pictureInPictureToggleButton[hidden],
 .videocontrols[inDOMFullscreen] > .controlsContainer > .controlsOverlay > .pictureInPictureToggleButton {
   display: none;
+}
+
+/* We hide the controlBar visually so it doesn't obscure the video. However,
+ * we still want to expose it to a11y so users who don't use a mouse can access
+ * it.
+ */
+.controlBar[hidden] {
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .controlBar[size="hidden"] {
