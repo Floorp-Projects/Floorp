@@ -67,6 +67,29 @@ void FrameListener::OnVideoFrameConverted(
   mTest->OnVideoFrameConverted(aVideoFrame);
 }
 
+static bool IsPlane(const uint8_t* aData, int aWidth, int aHeight, int aStride,
+                    uint8_t aValue) {
+  for (int i = 0; i < aHeight; ++i) {
+    for (int j = 0; j < aWidth; ++j) {
+      if (aData[i * aStride + j] != aValue) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+static bool IsFrameBlack(const webrtc::VideoFrame& aFrame) {
+  RefPtr<webrtc::I420BufferInterface> buffer =
+      aFrame.video_frame_buffer()->ToI420().get();
+  return IsPlane(buffer->DataY(), buffer->width(), buffer->height(),
+                 buffer->StrideY(), 0x00) &&
+         IsPlane(buffer->DataU(), buffer->ChromaWidth(), buffer->ChromaHeight(),
+                 buffer->StrideU(), 0x80) &&
+         IsPlane(buffer->DataV(), buffer->ChromaWidth(), buffer->ChromaHeight(),
+                 buffer->StrideV(), 0x80);
+}
+
 VideoChunk GenerateChunk(int32_t aWidth, int32_t aHeight, TimeStamp aTime) {
   YUVBufferGenerator generator;
   generator.Init(gfx::IntSize(aWidth, aHeight));
@@ -87,6 +110,7 @@ TEST_F(VideoFrameConverterTest, BasicConversion) {
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[0].first));
   EXPECT_GT(frames[0].second - now, TimeDuration::FromMilliseconds(0));
 }
 
@@ -101,6 +125,7 @@ TEST_F(VideoFrameConverterTest, BasicPacing) {
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[0].first));
   EXPECT_GT(frames[0].second - now, future - now);
 }
 
@@ -118,9 +143,11 @@ TEST_F(VideoFrameConverterTest, MultiPacing) {
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[0].first));
   EXPECT_GT(frames[0].second - now, future1 - now);
   EXPECT_EQ(frames[1].first.width(), 640);
   EXPECT_EQ(frames[1].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[1].first));
   EXPECT_GT(frames[1].second, future2);
   EXPECT_GT(frames[1].second - now, frames[0].second - now);
 }
@@ -136,9 +163,11 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[0].first));
   EXPECT_GT(frames[0].second, future1);
   EXPECT_EQ(frames[1].first.width(), 640);
   EXPECT_EQ(frames[1].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[1].first));
   EXPECT_GT(frames[1].second - now, TimeDuration::FromMilliseconds(1100));
   // Check that the second frame comes between 1s and 2s after the first.
   EXPECT_NEAR(frames[1].first.timestamp_us(),
@@ -158,6 +187,7 @@ TEST_F(VideoFrameConverterTest, DropsOld) {
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[0].first));
   EXPECT_GT(frames[0].second - now, future2 - now);
 }
 
@@ -180,10 +210,12 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   // The first frame was created instantly by SetTrackEnabled().
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
+  EXPECT_TRUE(IsFrameBlack(frames[0].first));
   EXPECT_GT(frames[0].second - now, TimeDuration::FromSeconds(0));
   // The second frame was created by the same-frame timer (after 1s).
   EXPECT_EQ(frames[1].first.width(), 640);
   EXPECT_EQ(frames[1].first.height(), 480);
+  EXPECT_TRUE(IsFrameBlack(frames[1].first));
   EXPECT_GT(frames[1].second - now, TimeDuration::FromSeconds(1));
   // Check that the second frame comes between 1s and 2s after the first.
   EXPECT_NEAR(frames[1].first.timestamp_us(),
@@ -224,9 +256,11 @@ TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frames[0].first));
   EXPECT_GT(frames[0].second - start, future1 - start);
   EXPECT_EQ(frames[1].first.width(), 320);
   EXPECT_EQ(frames[1].first.height(), 240);
+  EXPECT_FALSE(IsFrameBlack(frames[1].first));
   EXPECT_GT(frames[1].second - start, future3 - start);
 }
 
@@ -252,4 +286,5 @@ TEST_F(VideoFrameConverterTest, NoConversionsWhileInactive) {
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first.width(), 800);
   EXPECT_EQ(frames[0].first.height(), 600);
+  EXPECT_FALSE(IsFrameBlack(frames[0].first));
 }
