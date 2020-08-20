@@ -44,7 +44,7 @@ class nsPageFrame final : public nsContainerFrame {
   // Determine this page's page-number, based on its previous continuation
   // (whose page number is presumed to already be known).
   void DeterminePageNum();
-  int32_t GetPageNum() { return mPageNum; }
+  int32_t GetPageNum() const { return mPageNum; }
 
   void SetSharedPageData(nsSharedPageData* aPD);
   nsSharedPageData* GetSharedPageData() const { return mPD; }
