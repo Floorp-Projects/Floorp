@@ -15,6 +15,9 @@ from mozunit import main
 from taskgraph.util import chunking
 
 
+pytestmark = pytest.mark.slow
+
+
 @pytest.fixture(scope='module')
 def mock_manifest_runtimes():
     """Deterministically produce a list of simulated manifest runtimes.
