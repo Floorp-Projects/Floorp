@@ -18,6 +18,7 @@ exclude: true
   to [`ContentBlocking.Settings`][81.2].
 - Added [`GeckoSession.ContentDelegate.onPaintStatusReset()`][81.3] callback which notifies when valid content is no longer being rendered.
 - Made [`GeckoSession.ContentDelegate.onFirstContentfulPaint()`][81.4] additionally be called for the first contentful paint following a `onPaintStatusReset()` event, rather than just the first contentful paint of the session.
+- Removed deprecated `GeckoRuntime.registerWebExtension`. Use [`WebExtensionController.install`][73.1] instead.
 
 [81.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
 [81.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
@@ -765,4 +766,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 9f4bf24e0795c8da7caf58487e659918ea1a56cc
+[api-version]: d698a9e1bfdf7614a478c8fdc772967e945ced24
