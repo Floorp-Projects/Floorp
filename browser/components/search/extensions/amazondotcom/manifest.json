@@ -2,7 +2,7 @@
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "manifest_version": 2,
-  "version": "1.2",
+  "version": "1.3",
   "applications": {
     "gecko": {
       "id": "amazondotcom@search.mozilla.org"
