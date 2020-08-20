@@ -2,7 +2,7 @@
 
 # isInMigrationState
 
-`fun isInMigrationState(): `[`InFlightMigrationState`](../../mozilla.components.concept.sync/-in-flight-migration-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L171)
+`fun isInMigrationState(): `[`InFlightMigrationState`](../../mozilla.components.concept.sync/-in-flight-migration-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L176)
 
 Overrides [OAuthAccount.isInMigrationState](../../mozilla.components.concept.sync/-o-auth-account/is-in-migration-state.md)
 

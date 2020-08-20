@@ -2,7 +2,7 @@
 
 # FxaDeviceConstellation
 
-`class FxaDeviceConstellation : `[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountEventsObserver`](../../mozilla.components.concept.sync/-account-events-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L33)
+`class FxaDeviceConstellation : `[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountEventsObserver`](../../mozilla.components.concept.sync/-account-events-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L35)
 
 Provides an implementation of [DeviceConstellation](../../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#).
 
@@ -10,7 +10,7 @@ Provides an implementation of [DeviceConstellation](../../mozilla.components.con
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FxaDeviceConstellation(account: FirefoxAccount, scope: CoroutineScope)`<br>Provides an implementation of [DeviceConstellation](../../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#). |
+| [&lt;init&gt;](-init-.md) | `FxaDeviceConstellation(account: FirefoxAccount, scope: CoroutineScope, crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null)`<br>Provides an implementation of [DeviceConstellation](../../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#). |
 
 ### Functions
 
