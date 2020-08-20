@@ -217,6 +217,10 @@ this.TopSitesFeed = class TopSitesFeed {
       {
         url: "https://firefox.com",
       },
+      {
+        url: "https://foobar.com",
+        keyword: "@foobar",
+      },
     ];
 
     // Clear out the array of any previous defaults.
@@ -231,6 +235,10 @@ this.TopSitesFeed = class TopSitesFeed {
       };
       if (siteData.title) {
         link.label = siteData.title;
+      }
+      if (siteData.keyword) {
+        link.searchTopSite = true;
+        link.label = siteData.keyword;
       }
       DEFAULT_TOP_SITES.push(link);
     }
@@ -433,12 +441,18 @@ this.TopSitesFeed = class TopSitesFeed {
     }
 
     // Get pinned links augmented with desired properties
+    if (this._useRemoteSetting) {
+      this.disableSearchImprovements();
+    }
     let plainPinned = await this.pinnedCache.request();
 
     // Insert search shortcuts if we need to.
     // _maybeInsertSearchShortcuts returns true if any search shortcuts are
     // inserted, meaning we need to expire and refresh the pinnedCache
-    if (await this._maybeInsertSearchShortcuts(plainPinned)) {
+    if (
+      !this._useRemoteSetting &&
+      (await this._maybeInsertSearchShortcuts(plainPinned))
+    ) {
       this.pinnedCache.expire();
       plainPinned = await this.pinnedCache.request();
     }
