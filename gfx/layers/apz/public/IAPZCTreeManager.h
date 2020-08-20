@@ -131,6 +131,27 @@ class IAPZCTreeManager {
    */
   virtual APZInputBridge* InputBridge() = 0;
 
+  /**
+   * Add a callback to be invoked when |aInputBlockId| is ready for handling,
+   * with a boolean indicating whether the APZC handling the input block is
+   * the root content APZC.
+   *
+   * Should only be used for input blocks that are not yet ready for handling
+   * at the time this is called. If the input block was already handled,
+   * the callback will never be called.
+   *
+   * Only one callback can be registered for an input block at a time.
+   * Subsequent attempts to register a callback for an input block will be
+   * ignored until the existing callback is triggered.
+   *
+   * This is only implemented when the caller is in the same process as
+   * the APZCTreeManager.
+   */
+  using InputBlockCallback =
+      std::function<void(uint64_t aInputBlockId, bool aHandledByRootApzc)>;
+  virtual void AddInputBlockCallback(uint64_t aInputBlockId,
+                                     InputBlockCallback&& aCallback) = 0;
+
  protected:
   // Discourage destruction outside of decref
 
