@@ -292,32 +292,40 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   const LoadingSessionHistoryInfo* existingLoadingInfo =
       aLoadState->GetLoadingSessionHistoryInfo();
   if (existingLoadingInfo) {
-    entry = SessionHistoryEntry::GetByInfoId(existingLoadingInfo->mInfo.Id());
+    entry = SessionHistoryEntry::GetByLoadId(existingLoadingInfo->mLoadId);
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
   }
   MOZ_DIAGNOSTIC_ASSERT(entry);
 
-  mLoadingEntries.AppendElement(entry);
-  MOZ_ASSERT(SessionHistoryEntry::GetByInfoId(entry->Info().Id()) == entry);
+  UniquePtr<LoadingSessionHistoryInfo> loadingInfo;
   if (existingLoadingInfo) {
-    return MakeUnique<LoadingSessionHistoryInfo>(*existingLoadingInfo);
+    loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(*existingLoadingInfo);
+  } else {
+    loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(entry);
   }
-  return MakeUnique<LoadingSessionHistoryInfo>(entry->Info());
+
+  MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId) == entry);
+  mLoadingEntries.AppendElement(
+      LoadingSessionHistoryEntry{loadingInfo->mLoadId, entry});
+  return loadingInfo;
 }
 
-void CanonicalBrowsingContext::SessionHistoryCommit(
-    uint64_t aSessionHistoryEntryId, const nsID& aChangeID) {
+void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
+                                                    const nsID& aChangeID) {
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
-    if (mLoadingEntries[i]->Info().Id() == aSessionHistoryEntryId) {
+    if (mLoadingEntries[i].mLoadId == aLoadId) {
       nsISHistory* shistory = GetSessionHistory();
       if (!shistory) {
+        SessionHistoryEntry::RemoveLoadId(aLoadId);
         mLoadingEntries.RemoveElementAt(i);
         return;
       }
 
       RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry.forget();
-      mActiveEntry = mLoadingEntries[i];
+      mActiveEntry = mLoadingEntries[i].mEntry;
+
+      SessionHistoryEntry::RemoveLoadId(aLoadId);
       mLoadingEntries.RemoveElementAt(i);
       if (IsTop()) {
         nsCOMPtr<nsISHistory> existingSHistory = mActiveEntry->GetShistory();
@@ -382,7 +390,7 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
     aReloadActiveEntry.emplace(true);
   } else if (!mLoadingEntries.IsEmpty()) {
     aLoadState.emplace();
-    mLoadingEntries.LastElement()->CreateLoadInfo(
+    mLoadingEntries.LastElement().mEntry->CreateLoadInfo(
         getter_AddRefs(aLoadState.ref()));
     aReloadActiveEntry.emplace(false);
   }
