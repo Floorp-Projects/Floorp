@@ -5,12 +5,22 @@
 </head>
 <body>
 <script type="text/javascript">
+  function ok(what, msg) {
+    parent.postMessage({ type: "ok", what: !!what, msg }, "*");
+  }
+
+  function is(a, b, msg) {
+    ok(a === b, msg);
+  }
+
   try {
     localStorage.setItem("contentkey", "test-value");
     ok(false, "Setting localStorageItem should throw a security exception");
   } catch(ex) {
-    is(ex.name, "SecurityError");
+    is(ex.name, "SecurityError", "Got security exception");
   }
+
+  parent.postMessage({ type: "finish" }, "*");
 </script>
 </body>
 </html>
