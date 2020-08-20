@@ -196,44 +196,14 @@ this.TopSitesFeed = class TopSitesFeed {
       return;
     }
 
-    // Read override pref if present.
     let sites;
     try {
       sites = Services.prefs.getStringPref(REMOTE_SETTING_OVERRIDE_PREF);
-    } catch (e) {}
-    if (sites) {
-      this.refreshDefaults(sites);
-      return;
+    } catch (e) {
+      // Placeholder for the actual remote setting (bug 1653937).
+      sites = "https://mozilla.org/#%YYYYMMDDHH%,https://firefox.com";
     }
-
-    // Read defaults from remote settings.
-    // Placeholder for the actual remote setting (bug 1653937).
-    let remoteSettingData = [
-      {
-        title: "Mozilla!",
-        url: "https://mozilla.org/#%YYYYMMDDHH%",
-        send_attribution_request: true,
-      },
-      {
-        url: "https://firefox.com",
-      },
-    ];
-
-    // Clear out the array of any previous defaults
-    DEFAULT_TOP_SITES.length = 0;
-
-    for (let siteData of remoteSettingData) {
-      let link = {
-        isDefault: true,
-        url: siteData.url,
-        hostname: shortURL(siteData),
-        sendTopSiteAttributionRequest: !!siteData.send_attribution_request,
-      };
-      if (siteData.title) {
-        link.label = siteData.title;
-      }
-      DEFAULT_TOP_SITES.push(link);
-    }
+    this.refreshDefaults(sites);
   }
 
   refreshDefaults(sites) {
@@ -406,6 +376,8 @@ this.TopSitesFeed = class TopSitesFeed {
       if (this._useRemoteSetting) {
         link = {
           ...link,
+          // This should be optional (bug 1657083):
+          sendTopSiteAttributionRequest: link.isDefault,
           url: link.url.replace("%YYYYMMDDHH%", yyyymmddhh),
         };
       }
