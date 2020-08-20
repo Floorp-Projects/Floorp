@@ -366,5 +366,31 @@ testConversion('f32', 'demote', 'f64', 40.1, 40.099998474121094);
 testConversion('f64', 'promote', 'f32', 40.1, 40.099998474121094);
 
 // Non-canonical NaNs.
-wasmFullPass('(module (func (result i32) (i32.reinterpret/f32 (f32.demote/f64 (f64.const -nan:0x4444444444444)))) (export "run" (func 0)))', -0x1dddde);
-wasmFullPass('(module (func (result i32) (local i64) (local.set 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (local.get 0)) (i32.wrap/i64 (i64.shr_u (local.get 0) (i64.const 32))))) (export "run" (func 0)))', -0x4003bbbc);
+
+// Wasm v1.1 spec 4.3.4 "Conversions", subsection demote(z): if z is a NaN but
+// not canonical, return any NaN.  That is, the sign is arbitrary and the
+// payload is arbitrary, except that the most significant bit of the payload
+// must be set.  We check simply that a quiet NaN is returned and ignore the
+// sign and payload.
+
+wasmFullPass(`
+(module
+ (func (result i32)
+  (i32.and
+    (i32.const 0x7FC00000)
+    (i32.reinterpret/f32
+      (f32.demote/f64 (f64.const -nan:0x4444444444444)))))
+ (export "run" (func 0)))`,
+             0x7FC00000);
+
+// Wasm v1.1 spec 4.3.4 "Conversions", subsection promote(z): if z is a NaN but
+// not canonical, return any NaN.  See above.
+
+wasmFullPass(`
+(module
+ (func (result i64)
+   (i64.and
+     (i64.const 0x7FF8000000000000)
+     (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))))
+ (export "run" (func 0)))`,
+             0x7FF8_0000_0000_0000n);

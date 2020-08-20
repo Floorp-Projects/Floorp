@@ -93,12 +93,26 @@ function _augmentSrc(src, assertions) {
                 case 'f32':
                     newSrc += `
          i32.reinterpret/f32
+         ${(function () {
+             if (expected == 'nan:arithmetic') {
+               expected = '0x7FC00000';
+               return '(i32.const 0x7FC00000) i32.and';
+             }
+             return '';
+         })()}
          i32.const ${expected}
          i32.eq`;
                     break;
                 case 'f64':
                     newSrc += `
          i64.reinterpret/f64
+         ${(function () {
+             if (expected == 'nan:arithmetic') {
+               expected = '0x7FF8000000000000';
+               return '(i64.const 0x7FF8000000000000) i64.and';
+             }
+             return '';
+         })()}
          i64.const ${expected}
          i64.eq`;
                     break;
