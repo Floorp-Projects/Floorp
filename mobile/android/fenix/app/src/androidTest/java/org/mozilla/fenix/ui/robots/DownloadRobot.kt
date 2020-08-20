@@ -37,8 +37,6 @@ class DownloadRobot {
 
     fun verifyDownloadNotificationPopup() = assertDownloadNotificationPopup()
 
-    fun verifyDownloadNotificationShade() = assertDownloadNotificationShade()
-
     fun verifyPhotosAppOpens() = assertPhotosOpens()
 
     class Transition {
@@ -96,17 +94,6 @@ fun downloadRobot(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition 
 
 private fun assertDownloadPrompt() {
     mDevice.waitNotNull(Until.findObjects(By.res("org.mozilla.fenix.debug:id/download_button")))
-}
-
-private fun assertDownloadNotificationShade() {
-    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    mDevice.openNotification()
-    mDevice.waitNotNull(
-        Until.findObjects(By.text("Download completed")), TestAssetHelper.waitingTime
-    )
-
-    // Go home (no UIDevice closeNotification) to close notification shade
-    mDevice.pressHome()
 }
 
 private fun assertDownloadNotificationPopup() {
