@@ -636,6 +636,11 @@ async function runTest22() {
     exitprintpreview();
   }
 
+  requestAnimationFrame(() => setTimeout(runTest23));
+}
+
+async function runTest23() {
+  await compareFiles("printpreview_prettyprint.xml", "printpreview_prettyprint_ref.xhtml");
   finish();
 }
 
