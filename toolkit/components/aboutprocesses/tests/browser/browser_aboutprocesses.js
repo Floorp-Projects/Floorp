@@ -302,9 +302,8 @@ add_task(async function testAboutProcesses() {
   let children = row.children;
   let pidContent = children[0].textContent;
   let memoryResidentContent = children[2].textContent;
-  let cpuUserContent = children[3].textContent;
-  let cpuKernelContent = children[4].textContent;
-  let numberOfThreadsContent = children[5].textContent;
+  let cpuContent = children[3].textContent;
+  let numberOfThreadsContent = children[4].textContent;
 
   info("Sanity checks: pid");
   let pid = Number.parseInt(pidContent);
@@ -319,19 +318,11 @@ add_task(async function testAboutProcesses() {
     HARDCODED_ASSUMPTIONS_PROCESS
   );
 
-  info("Sanity checks: CPU (user)");
+  info("Sanity checks: CPU (Total)");
   testCpu(
-    cpuUserContent,
-    row.process.totalCpuUser,
-    row.process.slopeCpuUser,
-    HARDCODED_ASSUMPTIONS_PROCESS
-  );
-
-  info("Sanity checks: CPU (kernel)");
-  testCpu(
-    cpuKernelContent,
-    row.process.totalCpuKernel,
-    row.process.slopeCpuKernel,
+    cpuContent,
+    row.process.totalCpu,
+    row.process.slopeCpu,
     HARDCODED_ASSUMPTIONS_PROCESS
   );
 
@@ -360,8 +351,7 @@ add_task(async function testAboutProcesses() {
   ) {
     let children = threadRow.children;
     let tidContent = children[0].textContent;
-    let cpuUserContent = children[3].textContent;
-    let cpuKernelContent = children[4].textContent;
+    let cpuContent = children[3].textContent;
     ++numberOfThreadsFound;
 
     info("Sanity checks: tid");
@@ -369,19 +359,11 @@ add_task(async function testAboutProcesses() {
     Assert.notEqual(tid, 0, "The tid should be set");
     Assert.equal(tid, threadRow.thread.tid);
 
-    info("Sanity checks: CPU (user)");
+    info("Sanity checks: CPU (User and Kernel)");
     testCpu(
-      cpuUserContent,
-      threadRow.thread.totalCpuUser,
-      threadRow.thread.slopeCpuUser,
-      HARDCODED_ASSUMPTIONS_THREAD
-    );
-
-    info("Sanity checks: CPU (kernel)");
-    testCpu(
-      cpuKernelContent,
-      threadRow.thread.totalCpuKernel,
-      threadRow.thread.slopeCpuKernel,
+      cpuContent,
+      threadRow.thread.totalCpu,
+      threadRow.thread.slopeCpu,
       HARDCODED_ASSUMPTIONS_THREAD
     );
   }

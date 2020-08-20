@@ -129,6 +129,9 @@ var State = {
       // Total amount of CPU used, in ns (kernel).
       totalCpuKernel: cur.cpuKernel,
       slopeCpuKernel: null,
+      // Total amount of CPU used, in ns (user + kernel).
+      totalCpu: cur.cpuUser + cur.cpuKernel,
+      slopeCpu: null,
     };
     if (!prev) {
       return result;
@@ -138,6 +141,7 @@ var State = {
     }
     result.slopeCpuUser = (cur.cpuUser - prev.cpuUser) / deltaT;
     result.slopeCpuKernel = (cur.cpuKernel - prev.cpuKernel) / deltaT;
+    result.slopeCpu = result.slopeCpuKernel + result.slopeCpuUser;
     return result;
   },
 
@@ -160,6 +164,8 @@ var State = {
       slopeCpuUser: null,
       totalCpuKernel: cur.cpuKernel,
       slopeCpuKernel: null,
+      totalCpu: cur.cpuUser + cur.cpuKernel,
+      slopeCpu: null,
       type: cur.type,
       origin: cur.origin || "",
       threads: null,
@@ -191,6 +197,7 @@ var State = {
     result.deltaResidentSize = cur.residentSetSize - prev.residentSetSize;
     result.slopeCpuUser = (cur.cpuUser - prev.cpuUser) / deltaT;
     result.slopeCpuKernel = (cur.cpuKernel - prev.cpuKernel) / deltaT;
+    result.slopeCpu = result.slopeCpuUser + result.slopeCpuKernel;
     result.threads = threads;
     return result;
   },
@@ -262,11 +269,12 @@ var View = {
       row.classList.add("hung");
     }
 
-    // Column: pid / twisty image
+    // Column: type / twisty image
     {
+      let content = data.origin ? `${data.origin} (${data.type})` : data.type;
       let elt = this._addCell(row, {
-        content: data.pid,
-        classes: ["pid", "root"],
+        content,
+        classes: ["type"],
       });
 
       if (data.threads.length) {
@@ -277,15 +285,6 @@ var View = {
         }
         elt.insertBefore(img, elt.firstChild);
       }
-    }
-
-    // Column: name/type
-    {
-      let content = data.origin ? `${data.origin} (${data.type})` : data.type;
-      this._addCell(row, {
-        content,
-        classes: ["type"],
-      });
     }
 
     // Column: Resident size
@@ -303,29 +302,23 @@ var View = {
       });
     }
 
-    // Column: CPU: User
+    // Column: CPU: User and Kernel
     {
-      let slope = this._formatPercentage(data.slopeCpuUser);
+      let slope = this._formatPercentage(data.slopeCpu);
       let content = `${slope} (${(
-        data.totalCpuUser / MS_PER_NS
+        data.totalCpu / MS_PER_NS
       ).toLocaleString(undefined, { maximumFractionDigits: 0 })}ms)`;
       this._addCell(row, {
         content,
-        classes: ["cpuUser"],
+        classes: ["cpu"],
       });
     }
 
-    // Column: CPU: Kernel
-    {
-      let slope = this._formatPercentage(data.slopeCpuKernel);
-      let content = `${slope} (${(
-        data.totalCpuKernel / MS_PER_NS
-      ).toLocaleString(undefined, { maximumFractionDigits: 0 })}ms)`;
-      this._addCell(row, {
-        content,
-        classes: ["cpuKernel"],
-      });
-    }
+    // Column: pid
+    this._addCell(row, {
+      content: data.pid,
+      classes: ["pid", "root"],
+    });
 
     // Column: Number of threads
     this._addCell(row, {
@@ -347,16 +340,10 @@ var View = {
     let row = document.createElement("tr");
     row.classList.add("thread");
 
-    // Column: id
-    this._addCell(row, {
-      content: data.tid,
-      classes: ["tid", "indent"],
-    });
-
     // Column: filename
     this._addCell(row, {
       content: data.name,
-      classes: ["name"],
+      classes: ["name", "indent"],
     });
 
     // Column: Resident size (empty)
@@ -365,29 +352,23 @@ var View = {
       classes: ["totalResidentSize"],
     });
 
-    // Column: CPU: User
+    // Column: CPU: User and Kernel
     {
-      let slope = this._formatPercentage(data.slopeCpuUser);
+      let slope = this._formatPercentage(data.slopeCpu);
       let text = `${slope} (${(
-        data.totalCpuUser / MS_PER_NS
+        data.totalCpu / MS_PER_NS
       ).toLocaleString(undefined, { maximumFractionDigits: 0 })} ms)`;
       this._addCell(row, {
         content: text,
-        classes: ["cpuUser"],
+        classes: ["cpu"],
       });
     }
 
-    // Column: CPU: Kernel
-    {
-      let slope = this._formatPercentage(data.slopeCpuKernel);
-      let text = `${slope} (${(
-        data.totalCpuKernel / MS_PER_NS
-      ).toLocaleString(undefined, { maximumFractionDigits: 0 })} ms)`;
-      this._addCell(row, {
-        content: text,
-        classes: ["cpuKernel"],
-      });
-    }
+    // Column: id
+    this._addCell(row, {
+      content: data.tid,
+      classes: ["tid"],
+    });
 
     // Column: Number of threads (empty)
     this._addCell(row, {
@@ -736,18 +717,13 @@ var Control = {
         case "column-name":
           order = a.name.localeCompare(b.name);
           break;
-        case "column-cpu-user":
-          order = b.slopeCpuUser - a.slopeCpuUser;
+        case "column-cpu-total":
+          order = b.totalCpu - a.totalCpu;
           if (order == 0) {
-            order = b.totalCpuUser - a.totalCpuUser;
+            order = b.totalCpu - a.totalCpu;
           }
           break;
-        case "column-cpu-kernel":
-          order = b.slopeCpuKernel - a.slopeCpuKernel;
-          if (order == 0) {
-            order = b.totalCpuKernel - a.totalCpuKernel;
-          }
-          break;
+
         case "column-cpu-threads":
         case "column-memory-resident":
         case "column-type":
@@ -780,16 +756,10 @@ var Control = {
         case "column-name":
           order = String(a.name).localeCompare(b.name);
           break;
-        case "column-cpu-user":
-          order = b.slopeCpuUser - a.slopeCpuUser;
+        case "column-cpu-total":
+          order = b.totalCpu - a.totalCpu;
           if (order == 0) {
-            order = b.totalCpuUser - a.totalCpuUser;
-          }
-          break;
-        case "column-cpu-kernel":
-          order = b.slopeCpuKernel - a.slopeCpuKernel;
-          if (order == 0) {
-            order = b.totalCpuKernel - a.totalCpuKernel;
+            order = b.totalCpu - a.totalCpu;
           }
           break;
         case "column-cpu-threads":
