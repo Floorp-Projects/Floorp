@@ -7,6 +7,7 @@
 #define nsPrinterCUPS_h___
 
 #include "nsPrinterBase.h"
+#include "nsPrintSettingsImpl.h"
 #include "nsCUPSShim.h"
 #include "nsString.h"
 
@@ -16,6 +17,7 @@
 class nsPrinterCUPS final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
+  PrintSettingsInitializer DefaultSettings() const final;
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
   bool SupportsCollation() const final;
@@ -38,6 +40,13 @@ class nsPrinterCUPS final : public nsPrinterBase {
 
  private:
   ~nsPrinterCUPS();
+
+  /**
+   * Retrieves the localized name for a given media (paper).
+   */
+  const char* LocalizeMediaName(http_t& aConnection, cups_size_t& aMedia) const;
+
+  void GetPrinterName(nsAString& aName) const;
 
   // Little util for getting support flags using the direct CUPS names.
   bool Supports(const char* option, const char* value) const;
