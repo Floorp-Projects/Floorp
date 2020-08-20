@@ -208,9 +208,15 @@ class SearchEngineSelector {
     for (let config of this._configuration) {
       const appliesTo = config.appliesTo || [];
       const applies = appliesTo.filter(section => {
-        if ("experiment" in section && experiment != section.experiment) {
-          return false;
+        if ("experiment" in section) {
+          if (experiment != section.experiment) {
+            return false;
+          }
+          if (section.override) {
+            return true;
+          }
         }
+
         const distroExcluded =
           (distroID &&
             sectionIncludes(section, "excludedDistributions", distroID)) ||
