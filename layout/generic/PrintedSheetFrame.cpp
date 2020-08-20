@@ -10,6 +10,7 @@
 
 #include "nsCSSFrameConstructor.h"
 #include "nsPageFrame.h"
+#include "nsPageSequenceFrame.h"
 
 using namespace mozilla;
 
@@ -69,8 +70,10 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
                "we're only expecting page frames as children");
     auto* pageFrame = static_cast<nsPageFrame*>(childFrame);
 
-    // Be sure our child has a pointer to the nsSharedPageData:
+    // Be sure our child has a pointer to the nsSharedPageData and knows its
+    // page number:
     pageFrame->SetSharedPageData(mPD);
+    pageFrame->DeterminePageNum();
 
     ReflowInput pageReflowInput(aPresContext, aReflowInput, pageFrame,
                                 pageSize);
@@ -93,6 +96,10 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
     // another page frame?
     nsIFrame* pageNextInFlow = pageFrame->GetNextInFlow();
     if (status.IsFullyComplete()) {
+      // The page we just reflowed is the final page! Record its page number
+      // as the number of pages:
+      mPD->mTotNumPages = pageFrame->GetPageNum();
+
       // Normally, we (the parent frame) would be responsible for deleting the
       // next-in-flow of our fully-complete children. But since we don't
       // support dynamic changes / incremental reflow for printing (and since

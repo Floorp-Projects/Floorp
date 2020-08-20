@@ -208,7 +208,7 @@ void nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr) {
   if (aStr.Find(kPageAndTotal) != kNotFound) {
     nsAutoString uStr;
     nsTextFormatter::ssprintf(uStr, mPD->mPageNumAndTotalsFormat.get(),
-                              mPageNum, mTotNumPages);
+                              mPageNum, mPD->mTotNumPages);
     aNewStr.ReplaceSubstring(kPageAndTotal, uStr);
   }
 
@@ -234,7 +234,8 @@ void nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr) {
   constexpr auto kPageTotal = u"&L"_ns;
   if (aStr.Find(kPageTotal) != kNotFound) {
     nsAutoString uStr;
-    nsTextFormatter::ssprintf(uStr, mPD->mPageNumFormat.get(), mTotNumPages);
+    nsTextFormatter::ssprintf(uStr, mPD->mPageNumFormat.get(),
+                              mPD->mTotNumPages);
     aNewStr.ReplaceSubstring(kPageTotal, uStr);
   }
 }
@@ -642,9 +643,11 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 //------------------------------------------------------------------------------
-void nsPageFrame::SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages) {
-  mPageNum = aPageNumber;
-  mTotNumPages = aTotalPages;
+void nsPageFrame::DeterminePageNum() {
+  // If we have no previous continuation, we're page 1. Otherwise, we're
+  // just one more than our previous continuation's page number.
+  auto* prevContinuation = static_cast<nsPageFrame*>(GetPrevContinuation());
+  mPageNum = prevContinuation ? prevContinuation->GetPageNum() + 1 : 1;
 }
 
 void nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext, nsPoint aPt,
