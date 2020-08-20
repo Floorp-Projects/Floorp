@@ -37,7 +37,6 @@ window.addEventListener(
 );
 
 var PrintEventHandler = {
-  hasPreviewed: false,
   settings: null,
   defaultSettings: null,
   _printerSettingsChangedFlags: 0,
@@ -76,11 +75,12 @@ var PrintEventHandler = {
     // Do not keep a reference to source browser, it may mutate after printing
     // is initiated and the print preview clone must be a snapshot from the
     // time that the print was started.
-    let sourceBrowser = this.getSourceBrowser();
-    // This isn't correct for prints initiated from a subdocument (bug 1660064).
-    this.originalSourceContentTitle = sourceBrowser.contentTitle;
-    this.originalSourceCurrentURI = sourceBrowser.currentURI.spec;
-    this.previewBrowser = this._createPreviewBrowser(sourceBrowser);
+    let sourceBrowsingContext = this.getSourceBrowsingContext();
+    this.originalSourceContentTitle =
+      sourceBrowsingContext.currentWindowContext.documentTitle;
+    this.originalSourceCurrentURI =
+      sourceBrowsingContext.currentWindowContext.documentURI.spec;
+    this.previewBrowser = this._createPreviewBrowser(sourceBrowsingContext);
 
     // First check the available destinations to ensure we get settings for an
     // accessible printer.
@@ -96,7 +96,7 @@ var PrintEventHandler = {
     );
 
     this.refreshSettings(selectedPrinter.value);
-    this.updatePrintPreview();
+    this.updatePrintPreview(sourceBrowsingContext);
 
     document.dispatchEvent(
       new CustomEvent("available-destinations", {
@@ -119,11 +119,11 @@ var PrintEventHandler = {
     );
   },
 
-  _createPreviewBrowser(sourceBrowser) {
+  _createPreviewBrowser(sourceBrowsingContext) {
     // Create a preview browser.
     let printPreviewBrowser = gBrowser.createBrowser({
-      remoteType: sourceBrowser.remoteType,
-      initialBrowsingContextGroupId: sourceBrowser.browsingContext.group.id,
+      remoteType: sourceBrowsingContext.currentRemoteType,
+      initialBrowsingContextGroupId: sourceBrowsingContext.group.id,
       skipLoad: false,
     });
     printPreviewBrowser.classList.add("printPreviewBrowser");
@@ -247,26 +247,30 @@ var PrintEventHandler = {
     }
   },
 
-  async updatePrintPreview() {
+  /**
+   * Prepare the print preview. A browsingContext must be provided on the
+   * first call to initialize the preview, if no browsingContext is provided
+   * then this.previewBrowser.browsingContext will be used.
+   *
+   * @param browsingContext {BrowsingContext} (optional)
+   *        The BrowsingContext to initialize the preview from.
+   */
+  async updatePrintPreview(browsingContext) {
     if (this._previewUpdatingPromise) {
       if (!this._queuedPreviewUpdatePromise) {
         this._queuedPreviewUpdatePromise = this._previewUpdatingPromise.then(
-          () => this._updatePrintPreview()
+          () => this._updatePrintPreview(browsingContext)
         );
       }
       // else there's already an update queued.
     } else {
-      this._previewUpdatingPromise = this._updatePrintPreview();
+      this._previewUpdatingPromise = this._updatePrintPreview(browsingContext);
     }
   },
 
-  async _updatePrintPreview() {
-    let browsingContext = this.hasPreviewed
-      ? this.previewBrowser.browsingContext
-      : this.getSourceBrowsingContext();
-    this.hasPreviewed = true;
+  async _updatePrintPreview(browsingContext) {
     let totalPages = await PrintUtils.updatePrintPreview(
-      browsingContext,
+      browsingContext || this.previewBrowser.browsingContext,
       this.previewBrowser,
       this.settings
     );
@@ -299,14 +303,6 @@ var PrintEventHandler = {
       return null;
     }
     return BrowsingContext.get(browsingContextId);
-  },
-
-  getSourceBrowser() {
-    let browsingContext = this.getSourceBrowsingContext();
-    if (!browsingContext) {
-      return null;
-    }
-    return browsingContext.top.embedderElement;
   },
 
   async getPrintDestinations() {
