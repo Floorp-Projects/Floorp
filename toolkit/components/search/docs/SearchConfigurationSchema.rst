@@ -123,8 +123,12 @@ the engine is to be included when we do not know the user's region.
 "override"
 ----------
 
-The `"override"` field can be set to true if you want a section to
-only override otherwise included engines. For example:
+The ``"override"`` field can be set to true if you want a section to
+only override otherwise included engines. ``"override"`` will only work for
+sections which apply to distributions or experiments. The experiment case was
+added in Firefox 81.
+
+Example:
 
 .. code-block:: js
 
