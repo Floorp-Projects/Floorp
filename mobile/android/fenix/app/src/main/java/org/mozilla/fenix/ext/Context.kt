@@ -6,6 +6,9 @@ package org.mozilla.fenix.ext
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
@@ -89,3 +92,21 @@ fun Context.getStringWithArgSafe(@StringRes resId: Int, formatArg: String): Stri
  */
 val Context.accessibilityManager: AccessibilityManager get() =
     getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+
+/**
+ * Used to navigate to system notifications settings for app
+ */
+fun Context.navigateToNotificationsSettings() {
+    val intent = Intent()
+    intent.let {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            it.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+            it.putExtra(Settings.EXTRA_APP_PACKAGE, this.packageName)
+        } else {
+            it.action = "android.settings.APP_NOTIFICATION_SETTINGS"
+            it.putExtra("app_package", this.packageName)
+            it.putExtra("app_uid", this.applicationInfo.uid)
+        }
+    }
+    startActivity(intent)
+}

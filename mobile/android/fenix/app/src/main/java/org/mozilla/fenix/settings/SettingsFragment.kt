@@ -36,6 +36,7 @@ import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.navigateToNotificationsSettings
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -271,10 +272,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
             }
             resources.getString(R.string.pref_key_notifications) -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                    startActivity(intent)
-                }
+                context?.navigateToNotificationsSettings()
                 null
             }
             resources.getString(R.string.pref_key_customize) -> {
@@ -359,10 +357,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>(
             getPreferenceKey(R.string.pref_key_debug_settings)
         )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
-
-        findPreference<Preference>(
-            getPreferenceKey(R.string.pref_key_notifications)
-        )?.isVisible = requireContext().settings().showNotificationsSetting
     }
 
     private fun getClickListenerForMakeDefaultBrowser(): Preference.OnPreferenceClickListener {
