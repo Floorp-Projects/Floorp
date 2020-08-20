@@ -377,7 +377,6 @@ add_task(async function run_test() {
   let badSections = [
     // data that looks like PEM but isn't
     "-----BEGIN CERTIFICATE-----\nBSsPRlYp5+gaFMRIczwUzaioRfteCjr94xyz0g==\n",
-    "-----BEGIN CERTIFICATE-----\nBSsPRlYp5+gaFMRIczwUzaioRfteCjr94xyz0g==\n-----END CERTIFICATE-----",
     // data that will start to parse but won't base64decode
     "-----BEGIN CERTIFICATE-----\nnon-base64-stuff\n-----END CERTIFICATE-----",
     // data with garbage outside of PEM sections

@@ -568,7 +568,8 @@ nsNSSCertificate::GetIssuerName(nsAString& _issuerName) {
 NS_IMETHODIMP
 nsNSSCertificate::GetSerialNumber(nsAString& _serialNumber) {
   _serialNumber.Truncate();
-  UniquePORTString tmpstr(CERT_Hexify(&mCert->serialNumber, 1));
+  UniquePORTString tmpstr(
+      CERT_Hexify(&mCert->serialNumber, true /* use colon delimiters */));
   if (tmpstr) {
     _serialNumber = NS_ConvertASCIItoUTF16(tmpstr.get());
     return NS_OK;
@@ -586,8 +587,8 @@ nsresult nsNSSCertificate::GetCertificateHash(nsAString& aFingerprint,
     return rv;
   }
 
-  // CERT_Hexify's second argument is an int that is interpreted as a boolean
-  UniquePORTString fpStr(CERT_Hexify(const_cast<SECItem*>(&digest.get()), 1));
+  UniquePORTString fpStr(CERT_Hexify(const_cast<SECItem*>(&digest.get()),
+                                     true /* use colon delimiters */));
   if (!fpStr) {
     return NS_ERROR_FAILURE;
   }
