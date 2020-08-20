@@ -86,7 +86,7 @@ using namespace dom;
   return NS_ERROR_FAILURE;
 }
 
-[[nodiscard]] static nsresult GetProcSelfSmapsPrivate(int64_t* aN) {
+[[nodiscard]] static nsresult GetProcSelfSmapsPrivate(int64_t* aN, pid_t aPid) {
   // You might be tempted to calculate USS by subtracting the "shared" value
   // from the "resident" value in /proc/<pid>/statm. But at least on Linux,
   // statm's "shared" value actually counts pages backed by files, which has
@@ -94,7 +94,7 @@ using namespace dom;
   // on the other hand appears to give us the correct information.
 
   nsTArray<MemoryMapping> mappings(1024);
-  MOZ_TRY(GetMemoryMappings(mappings));
+  MOZ_TRY(GetMemoryMappings(mappings, aPid));
 
   int64_t amount = 0;
   for (auto& mapping : mappings) {
@@ -119,8 +119,9 @@ using namespace dom;
 }
 
 #  define HAVE_RESIDENT_UNIQUE_REPORTER 1
-[[nodiscard]] static nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
-  return GetProcSelfSmapsPrivate(aN);
+[[nodiscard]] static nsresult ResidentUniqueDistinguishedAmount(
+    int64_t* aN, pid_t aPid = 0) {
+  return GetProcSelfSmapsPrivate(aN, aPid);
 }
 
 #  ifdef HAVE_MALLINFO
@@ -454,7 +455,8 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
   return base <= aAddr && aAddr < (base + size);
 }
 
-[[nodiscard]] static nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
+[[nodiscard]] static nsresult ResidentUniqueDistinguishedAmount(
+    int64_t* aN, mach_port_t aPort = 0) {
   if (!aN) {
     return NS_ERROR_FAILURE;
   }
@@ -475,7 +477,7 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
     mach_port_t objectName;
 
     kern_return_t kr = mach_vm_region(
-        mach_task_self(), &addr, &size, VM_REGION_TOP_INFO,
+        aPort ? aPort : mach_task_self(), &addr, &size, VM_REGION_TOP_INFO,
         reinterpret_cast<vm_region_info_t>(&info), &infoCount, &objectName);
     if (kr == KERN_INVALID_ADDRESS) {
       // Done iterating VM regions.
@@ -510,7 +512,8 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
   }
 
   vm_size_t pageSize;
-  if (host_page_size(mach_host_self(), &pageSize) != KERN_SUCCESS) {
+  if (host_page_size(aPort ? aPort : mach_task_self(), &pageSize) !=
+      KERN_SUCCESS) {
     pageSize = PAGE_SIZE;
   }
 
@@ -555,13 +558,14 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
 
 #  define HAVE_RESIDENT_UNIQUE_REPORTER 1
 
-[[nodiscard]] static nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
+[[nodiscard]] static nsresult ResidentUniqueDistinguishedAmount(
+    int64_t* aN, HANDLE aProcess = nullptr) {
   // Determine how many entries we need.
   PSAPI_WORKING_SET_INFORMATION tmp;
   DWORD tmpSize = sizeof(tmp);
   memset(&tmp, 0, tmpSize);
 
-  HANDLE proc = GetCurrentProcess();
+  HANDLE proc = aProcess ? aProcess : GetCurrentProcess();
   QueryWorkingSet(proc, &tmp, tmpSize);
 
   // Fudge the size in case new entries are added between calls.
@@ -2371,17 +2375,43 @@ nsMemoryReporterManager::GetResidentUnique(int64_t* aAmount) {
 #endif
 }
 
+typedef
+#ifdef XP_WIN
+    HANDLE
+#elif XP_MACOSX
+    mach_port_t
+#elif XP_LINUX
+    pid_t
+#else
+    int /*dummy type */
+#endif
+        ResidentUniqueArg;
+
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+
 /*static*/
-int64_t nsMemoryReporterManager::ResidentUnique() {
-#ifdef HAVE_RESIDENT_UNIQUE_REPORTER
+int64_t nsMemoryReporterManager::ResidentUnique(ResidentUniqueArg aProcess) {
+  int64_t amount = 0;
+  nsresult rv = ResidentUniqueDistinguishedAmount(&amount, aProcess);
+  NS_ENSURE_SUCCESS(rv, 0);
+  return amount;
+}
+
+#else
+
+/*static*/
+int64_t nsMemoryReporterManager::ResidentUnique(ResidentUniqueArg) {
+#  ifdef HAVE_RESIDENT_UNIQUE_REPORTER
   int64_t amount = 0;
   nsresult rv = ResidentUniqueDistinguishedAmount(&amount);
   NS_ENSURE_SUCCESS(rv, 0);
   return amount;
-#else
+#  else
   return 0;
-#endif
+#  endif
 }
+
+#endif  // XP_{WIN, MACOSX, LINUX, *}
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount) {
