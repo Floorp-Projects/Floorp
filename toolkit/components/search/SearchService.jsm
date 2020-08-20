@@ -1373,28 +1373,65 @@ SearchService.prototype = {
           e.webExtension.id == engine._extensionID &&
           e.webExtension.locale == engine._locale
       );
-      if (index == -1) {
-        enginesToRemove.push(engine);
-      } else {
-        // This is an existing engine that we should update (we don't know if
-        // the configuration for this engine has changed or not).
-        let policy = await this._getExtensionPolicy(engine._extensionID);
 
-        let manifest = policy.extension.manifest;
-        let locale = engine._locale || SearchUtils.DEFAULT_TAG;
+      let policy, manifest, locale;
+      if (index == -1) {
+        // No engines directly match on id and locale, however, check to see
+        // if we have a new entry that matches on id and name - we might just
+        // be swapping the in-use locale.
+        let replacementEngines = configEngines.filter(
+          e => e.webExtension.id == engine._extensionID
+        );
+        // If there's no possible, or more than one, we treat these as distinct
+        // engines so we'll remove the existing engine and add new later if
+        // necessary.
+        if (replacementEngines.length != 1) {
+          enginesToRemove.push(engine);
+          continue;
+        }
+
+        policy = await this._getExtensionPolicy(engine._extensionID);
+        manifest = policy.extension.manifest;
+        locale =
+          replacementEngines[0].webExtension.locale || SearchUtils.DEFAULT_TAG;
         if (locale != SearchUtils.DEFAULT_TAG) {
           manifest = await policy.extension.getLocalizedManifest(locale);
         }
-        engine._updateFromManifest(
-          policy.extension.id,
-          policy.extension.baseURI,
-          manifest,
-          locale,
-          configEngines[index]
-        );
+        if (
+          manifest.name !=
+          manifest.chrome_settings_overrides.search_provider.name.trim()
+        ) {
+          // No matching name, so just remove it.
+          enginesToRemove.push(engine);
+          continue;
+        }
 
-        configEngines.splice(index, 1);
+        // Update the index so we can handle the updating below.
+        index = configEngines.findIndex(
+          e =>
+            e.webExtension.id == replacementEngines[0].webExtension.id &&
+            e.webExtension.locale == replacementEngines[0].webExtension.locale
+        );
+      } else {
+        // This is an existing engine that we should update (we don't know if
+        // the configuration for this engine has changed or not).
+        policy = await this._getExtensionPolicy(engine._extensionID);
+
+        manifest = policy.extension.manifest;
+        locale = engine._locale || SearchUtils.DEFAULT_TAG;
+        if (locale != SearchUtils.DEFAULT_TAG) {
+          manifest = await policy.extension.getLocalizedManifest(locale);
+        }
       }
+      engine._updateFromManifest(
+        policy.extension.id,
+        policy.extension.baseURI,
+        manifest,
+        locale,
+        configEngines[index]
+      );
+
+      configEngines.splice(index, 1);
     }
 
     // Any remaining configuration engines are ones that we need to add.

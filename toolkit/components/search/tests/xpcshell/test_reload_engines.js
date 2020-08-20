@@ -229,23 +229,19 @@ add_task(async function test_config_updated_engine_changes() {
 
   Assert.deepEqual(
     enginesAdded,
-    ["engine-resourceicon-gd", "engine-reordered", "engine-same-name-gd"],
+    ["engine-resourceicon-gd", "engine-reordered"],
     "Should have added the correct engines"
   );
 
   Assert.deepEqual(
     enginesModified.sort(),
-    ["engine", "engine-chromeicon", "engine-pref"],
+    ["engine", "engine-chromeicon", "engine-pref", "engine-same-name-gd"],
     "Should have modified the expected engines"
   );
 
   Assert.deepEqual(
     enginesRemoved,
-    [
-      "engine-rel-searchform-purpose",
-      "engine-resourceicon",
-      "engine-same-name",
-    ],
+    ["engine-rel-searchform-purpose", "engine-resourceicon"],
     "Should have removed the expected engine"
   );
 
