@@ -169,11 +169,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (FeatureFlags.loginsEdit) {
-            inflater.inflate(R.menu.login_options_menu, menu)
-        } else {
-            inflater.inflate(R.menu.login_delete, menu)
-        }
+        inflater.inflate(R.menu.login_options_menu, menu)
         this.menu = menu
     }
 

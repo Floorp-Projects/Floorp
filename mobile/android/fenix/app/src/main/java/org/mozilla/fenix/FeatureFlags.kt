@@ -15,11 +15,6 @@ object FeatureFlags {
     const val pullToRefreshEnabled = false
 
     /**
-     * Allows edit of saved logins.
-     */
-    const val loginsEdit = true
-
-    /**
      * Shows Synced Tabs in the tabs tray.
      *
      * Tracking issue: https://github.com/mozilla-mobile/fenix/issues/13892
