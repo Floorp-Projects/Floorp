@@ -20,16 +20,38 @@ const histogram = Services.telemetry.getHistogramById(
   "SEARCH_SERVICE_COUNTRY_FETCH_RESULT"
 );
 
+// Add notification observer, it will return a promise that will resolve once a notification is fired.
+function waitForNotificationSubject(topic) {
+  return new Promise((resolve, reject) => {
+    Services.obs.addObserver(function observe(aSubject, aTopic, aData) {
+      // wrap the subject as a nsISupports
+      let subject = aSubject.QueryInterface(Ci.nsISupportsString);
+      Services.obs.removeObserver(observe, topic);
+      resolve(subject);
+    }, topic);
+  });
+}
+
 add_task(async function test_basic() {
   let srv = useHttpServer(REGION_PREF);
   srv.registerPathHandler("/", (req, res) => {
     res.setStatusLine("1.1", 200, "OK");
     send(res, { country_code: "UK" });
   });
-
+  // start to listen the notification
+  let notificationSubjectPromise = await waitForNotificationSubject(
+    "browser-region"
+  );
   await Region._fetchRegion();
+  let notificationSub = await notificationSubjectPromise;
+
   Assert.ok(true, "Region fetch should succeed");
   Assert.equal(Region.home, "UK", "Region fetch should return correct result");
+  Assert.equal(
+    notificationSub,
+    Region.home,
+    "Notification should be sent with the correct region"
+  );
 
   await new Promise(r => srv.stop(r));
 });
