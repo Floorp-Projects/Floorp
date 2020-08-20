@@ -8,17 +8,14 @@ Cu.importGlobalProperties(["fetch"]);
 
 var EXPORTED_SYMBOLS = ["PartnerLinkAttribution"];
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Region",
-  "resource://gre/modules/Region.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+  Region: "resource://gre/modules/Region.jsm",
+});
 
 var PartnerLinkAttribution = {
   async makeRequest({ targetURL, source }) {
@@ -34,7 +31,7 @@ var PartnerLinkAttribution = {
 
     const attributionUrl = Services.prefs.getStringPref(
       Services.prefs.getBoolPref("browser.topsites.useRemoteSetting")
-        ? "browser.topsites.attributionURL"
+        ? "browser.partnerlink.attributionURL"
         : `browser.newtabpage.searchTileOverride.${partner}.attributionURL`,
       ""
     );
@@ -42,14 +39,66 @@ var PartnerLinkAttribution = {
       record("attribution", "abort");
       return;
     }
-    const request = new Request(attributionUrl);
-    request.headers.set("X-Region", Region.home);
-    request.headers.set("X-Source", source);
-    request.headers.set("X-Target-URL", targetURL);
-    const response = await fetch(request);
-    record("attribution", response.ok ? "success" : "failure");
+    let result = await sendRequest(attributionUrl, source, targetURL);
+    record("attribution", result ? "success" : "failure");
+  },
+
+  /**
+   * Makes a request to the attribution URL for a search engine search.
+   *
+   * @param {nsISearchEngine} engine
+   *   The search engine to save the attribution for.
+   * @param {nsIURI} targetUrl
+   *   The target URL to filter and include in the attribution.
+   */
+  async makeSearchEngineRequest(engine, targetUrl) {
+    if (!engine.sendAttributionRequest) {
+      return;
+    }
+
+    let searchUrlQueryParamName = engine.searchUrlQueryParamName;
+    if (!searchUrlQueryParamName) {
+      Cu.reportError("makeSearchEngineRequest can't find search terms key");
+      return;
+    }
+
+    let url = targetUrl;
+    if (typeof url == "string") {
+      url = Services.io.newURI(url);
+    }
+
+    let targetParams = new URLSearchParams(url.query);
+    if (!targetParams.has(searchUrlQueryParamName)) {
+      Cu.reportError(
+        "makeSearchEngineRequest can't remove target search terms"
+      );
+      return;
+    }
+
+    const attributionUrl = Services.prefs.getStringPref(
+      "browser.partnerlink.attributionURL",
+      ""
+    );
+
+    targetParams.delete(searchUrlQueryParamName);
+    let strippedTargetUrl = `${url.prePath}${url.filePath}`;
+    let newParams = targetParams.toString();
+    if (newParams) {
+      strippedTargetUrl += "?" + newParams;
+    }
+
+    await sendRequest(attributionUrl, "searchurl", strippedTargetUrl);
   },
 };
+
+async function sendRequest(attributionUrl, source, targetURL) {
+  const request = new Request(attributionUrl);
+  request.headers.set("X-Region", Region.home);
+  request.headers.set("X-Source", source);
+  request.headers.set("X-Target-URL", targetURL);
+  const response = await fetch(request);
+  return response.ok;
+}
 
 function recordTelemetryEvent(method, objectString, value, extra) {
   Services.telemetry.setEventRecordingEnabled("partner_link", true);
