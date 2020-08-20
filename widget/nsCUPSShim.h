@@ -35,7 +35,6 @@ class nsCUPSShim {
   X(cupsCopyDestInfo)          \
   X(cupsFreeDestInfo)          \
   X(cupsFreeDests)             \
-  X(cupsGetDestMediaDefault)   \
   X(cupsGetDestMediaCount)     \
   X(cupsGetDestMediaByIndex)   \
   X(cupsGetDest)               \

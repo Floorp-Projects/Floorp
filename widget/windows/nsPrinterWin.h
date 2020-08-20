@@ -11,7 +11,7 @@
 class nsPrinterWin final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
-  PrintSettingsInitializer DefaultSettings() const final;
+
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
   bool SupportsCollation() const final;
