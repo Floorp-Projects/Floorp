@@ -109,16 +109,18 @@ void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey,
 
   mKey = aKey;
   mIsUsed = !aIsPreload;
+
+  if (!mIsUsed && !mUsageTimer) {
+    auto callback = MakeRefPtr<UsageTimer>(this, aDocument);
+    NS_NewTimerWithCallback(getter_AddRefs(mUsageTimer), callback, 10000,
+                            nsITimer::TYPE_ONE_SHOT);
+  }
 }
 
 void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey, nsIChannel* aChannel,
                                dom::Document* aDocument, bool aIsPreload) {
   NotifyOpen(aKey, aDocument, aIsPreload);
   mChannel = aChannel;
-
-  auto callback = MakeRefPtr<UsageTimer>(this, aDocument);
-  NS_NewTimerWithCallback(getter_AddRefs(mUsageTimer), callback, 10000,
-                          nsITimer::TYPE_ONE_SHOT);
 
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
