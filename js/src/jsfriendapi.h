@@ -20,6 +20,7 @@
 #include "js/friend/ErrorMessages.h"
 #include "js/HeapAPI.h"
 #include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
+#include "js/shadow/Shape.h"        // JS::shadow::Shape
 #include "js/shadow/String.h"  // JS::shadow::String
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -371,21 +372,6 @@ extern JS_FRIEND_API bool IsSharableCompartment(JS::Compartment* comp);
  */
 namespace shadow {
 
-struct BaseShape {
-  const JSClass* clasp_;
-  JSObject* parent;
-};
-
-class Shape {
- public:
-  shadow::BaseShape* base;
-  jsid _1;
-  uint32_t immutableFlags;
-
-  static const uint32_t FIXED_SLOTS_SHIFT = 24;
-  static const uint32_t FIXED_SLOTS_MASK = 0x1f << FIXED_SLOTS_SHIFT;
-};
-
 /**
  * This layout is shared by all native objects. For non-native objects, the
  * group may always be accessed safely, and other members may be as well,
@@ -393,15 +379,15 @@ class Shape {
  */
 struct Object {
   JS::shadow::ObjectGroup* group;
-  shadow::Shape* shape;
+  JS::shadow::Shape* shape;
   JS::Value* slots;
   void* _1;
 
   static constexpr size_t MAX_FIXED_SLOTS = 16;
 
   size_t numFixedSlots() const {
-    return (shape->immutableFlags & Shape::FIXED_SLOTS_MASK) >>
-           Shape::FIXED_SLOTS_SHIFT;
+    return (shape->immutableFlags & JS::shadow::Shape::FIXED_SLOTS_MASK) >>
+           JS::shadow::Shape::FIXED_SLOTS_SHIFT;
   }
 
   JS::Value* fixedSlots() const {
