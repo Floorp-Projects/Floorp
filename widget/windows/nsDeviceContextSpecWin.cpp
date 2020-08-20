@@ -484,12 +484,10 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
 
 nsPrinterListWin::~nsPrinterListWin() = default;
 
-nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
-  PR_PL(("EnumerateNativePrinters\n"));
-
+// Helper to get the array of PRINTER_INFO_4 records from the OS into a
+// caller-supplied byte array; returns the number of records present.
+static unsigned GetPrinterInfo4(nsTArray<BYTE>& aBuffer) {
   const DWORD kLevel = 4;
-  using RecType = PRINTER_INFO_4;
-
   DWORD needed = 0;
   DWORD count = 0;
   const DWORD kFlags = PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS;
@@ -500,20 +498,30 @@ nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
                          0,        // cbBuf (buffer size)
                          &needed,  // Bytes needed in buffer
                          &count);
+  if (needed > 0) {
+    aBuffer.SetLength(needed);
+    ok = EnumPrinters(kFlags, nullptr, kLevel, aBuffer.Elements(),
+                      aBuffer.Length(), &needed, &count);
+  }
+  if (!ok || !count) {
+    return 0;
+  }
+  return count;
+}
+
+nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
+  PR_PL(("nsPrinterListWin::Printers\n"));
 
   AutoTArray<BYTE, 1024> buffer;
-  if (needed > 0) {
-    buffer.SetLength(needed);
-    ok = EnumPrinters(kFlags, nullptr, kLevel, buffer.Elements(),
-                      buffer.Length(), &needed, &count);
-  }
+  unsigned count = GetPrinterInfo4(buffer);
 
-  if (!ok || !count) {
+  if (!count) {
     PR_PL(("[No printers found]\n"));
     return {};
   }
 
-  auto* printers = reinterpret_cast<const RecType*>(buffer.Elements());
+  const auto* printers =
+      reinterpret_cast<const PRINTER_INFO_4*>(buffer.Elements());
   nsTArray<PrinterInfo> list;
   for (unsigned i = 0; i < count; i++) {
     list.AppendElement(PrinterInfo{nsString(printers[i].pPrinterName)});
@@ -522,6 +530,25 @@ nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
   }
 
   return list;
+}
+
+Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::NamedPrinter(
+    nsString aName) const {
+  Maybe<PrinterInfo> rv;
+
+  AutoTArray<BYTE, 1024> buffer;
+  unsigned count = GetPrinterInfo4(buffer);
+
+  const auto* printers =
+      reinterpret_cast<const PRINTER_INFO_4*>(buffer.Elements());
+  for (unsigned i = 0; i < count; ++i) {
+    if (aName.Equals(nsString(printers[i].pPrinterName))) {
+      rv.emplace(PrinterInfo{aName});
+      break;
+    }
+  }
+
+  return rv;
 }
 
 RefPtr<nsIPrinter> nsPrinterListWin::CreatePrinter(PrinterInfo aInfo) const {

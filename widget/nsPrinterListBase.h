@@ -52,10 +52,11 @@ class nsPrinterListBase : public nsIPrinterList {
   nsPrinterListBase();
   virtual ~nsPrinterListBase();
 
-  // Implemented in terms of Printers() and then searching the returned printer
-  // info for a printer of the given name. Backends might have more efficient
-  // methods of implementing this.
-  virtual Maybe<PrinterInfo> NamedPrinter(nsString aName) const;
+  // This could be implemented in terms of Printers() and then searching the
+  // returned printer info for a printer of the given name, but we expect
+  // backends to have more efficient methods of implementing this.
+  virtual Maybe<PrinterInfo> NamedPrinter(nsString aName) const = 0;
+
   // This is implemented separately from the IDL interface version so that it
   // can be made const, which allows it to be used while resolving promises.
   virtual nsresult SystemDefaultPrinterName(nsAString&) const = 0;
