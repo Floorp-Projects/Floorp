@@ -112,6 +112,23 @@ const presets = {
     threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
     duration: 0,
   },
+  graphics: {
+    label: "Firefox Graphics",
+    description:
+      "Recommended preset for Firefox graphics performance investigation.",
+    entries: 128 * 1024 * 1024,
+    interval: 1,
+    features: ["leaf", "stackwalk", "js", "java"],
+    threads: [
+      "GeckoMain",
+      "Compositor",
+      "Renderer",
+      "RenderBackend",
+      "SceneBuilder",
+      "WrWorker",
+    ],
+    duration: 0,
+  },
   media: {
     label: "Media",
     description: "Recommended preset for diagnosing audio and video problems.",
