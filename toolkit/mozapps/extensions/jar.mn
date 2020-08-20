@@ -24,7 +24,6 @@ toolkit.jar:
   content/mozapps/extensions/drag-drop-addon-installer.js       (content/drag-drop-addon-installer.js)
   content/mozapps/extensions/firefox-compact-dark.svg           (content/firefox-compact-dark.svg)
   content/mozapps/extensions/firefox-compact-light.svg          (content/firefox-compact-light.svg)
-  content/mozapps/extensions/firefox-alpenglow.svg              (content/firefox-alpenglow.svg)
   content/mozapps/extensions/message-bar.css                    (content/message-bar.css)
   content/mozapps/extensions/message-bar.js                     (content/message-bar.js)
   content/mozapps/extensions/named-deck.js                      (content/named-deck.js)
