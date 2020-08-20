@@ -252,3 +252,8 @@ p {
   fill-opacity: 0;
   width: 28px;
 }
+
+#private-browsing-vpn {
+  color: inherit;
+  text-decoration: underline;
+}
