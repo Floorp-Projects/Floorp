@@ -503,7 +503,6 @@ where
     Self: Sized,
 {
     fn from_floats(x0: f32, y0: f32, x1: f32, y1: f32) -> Self;
-    fn is_well_formed_and_nonempty(&self) -> bool;
     fn snap(&self) -> Self;
 }
 
@@ -513,10 +512,6 @@ impl<U> RectHelpers<U> for Rect<f32, U> {
             Point2D::new(x0, y0),
             Size2D::new(x1 - x0, y1 - y0),
         )
-    }
-
-    fn is_well_formed_and_nonempty(&self) -> bool {
-        self.size.width > 0.0 && self.size.height > 0.0
     }
 
     fn snap(&self) -> Self {
