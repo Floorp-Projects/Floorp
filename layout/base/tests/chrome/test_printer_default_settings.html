@@ -26,6 +26,7 @@ async function run() {
       settings.QueryInterface(Ci.nsIPrintSettings);
 
       is(typeof settings.printerName, "string", "Printer name should be a string.");
+      is(settings.printerName, printer.name, "Print settings' printer should match the printer that created them.");
 
       console.log(typeof settings.paperWidth);
       is(typeof settings.paperName, "string", "Paper name should never be null.");
@@ -43,6 +44,8 @@ async function run() {
       ok(settings.marginRight  >= 0.0, "Paper margins should be greater than or equal to zero.");
       ok(settings.marginBottom >= 0.0, "Paper margins should be greater than or equal to zero.");
       ok(settings.marginLeft   >= 0.0, "Paper margins should be greater than or equal to zero.");
+
+      is(settings.printInColor, await printer.supportsColor, "Print settings' color mode should match the printer's color support.");
 
       ok(settings.isInitializedFromPrinter, "Print settings were initialized from printer");
       ok(!settings.isInitializedFromPrefs);

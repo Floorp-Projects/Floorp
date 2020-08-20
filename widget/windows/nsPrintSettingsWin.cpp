@@ -7,7 +7,10 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsCRT.h"
 #include "nsDeviceContextSpecWin.h"
+#include "nsPrintSettingsImpl.h"
 #include "WinUtils.h"
+
+using namespace mozilla;
 
 // Using paper sizes from wingdi.h and the units given there, plus a little
 // extra research for the ones it doesn't give. Looks like the list hasn't
@@ -160,37 +163,76 @@ nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin& aPS)
   *this = aPS;
 }
 
+void nsPrintSettingsWin::InitWithInitializer(
+    const PrintSettingsInitializer& aSettings) {
+  nsPrintSettings::InitWithInitializer(aSettings);
+
+  if (aSettings.mDevmodeWStorage.Length() < sizeof(DEVMODEW)) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Why did nsPrinterWin::DefaultSettings fail?");
+    return;
+  }
+
+  const DEVMODEW* devmode =
+      reinterpret_cast<const DEVMODEW*>(aSettings.mDevmodeWStorage.Elements());
+
+  if (devmode->dmFields & DM_ORIENTATION) {
+    SetOrientation(devmode->dmOrientation == DMORIENT_PORTRAIT
+                       ? kPortraitOrientation
+                       : kLandscapeOrientation);
+  }
+
+  if (devmode->dmFields & DM_COPIES) {
+    SetNumCopies(devmode->dmCopies);
+  }
+
+  if (devmode->dmFields & DM_SCALE) {
+    double scale = double(devmode->dmScale) / 100.0f;
+    if (mScaling == 1.0 || scale != 1.0) {
+      SetScaling(scale);
+    }
+  }
+
+  if (devmode->dmFields & DM_PAPERSIZE) {
+    SetPaperData(devmode->dmPaperSize);
+    if (devmode->dmPaperSize > 0 &&
+        devmode->dmPaperSize < int32_t(mozilla::ArrayLength(kPaperSizeUnits))) {
+      SetPaperSizeUnit(kPaperSizeUnits[mPaperData]);
+    }
+  } else {
+    SetPaperData(-1);
+  }
+
+  // Set the paper sizes to match the unit.
+  double pointsToSizeUnit =
+      mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0;
+  SetPaperWidth(aSettings.mPaperInfo.mSize.width * pointsToSizeUnit);
+  SetPaperHeight(aSettings.mPaperInfo.mSize.height * pointsToSizeUnit);
+
+  double printableWidthInPoints = aSettings.mPaperInfo.mSize.width;
+  double printableHeightInPoints = aSettings.mPaperInfo.mSize.height;
+  if (aSettings.mPaperInfo.mUnwriteableMargin.isSome()) {
+    const auto& margin = aSettings.mPaperInfo.mUnwriteableMargin.value();
+    printableWidthInPoints -= (margin.top + margin.bottom);
+    printableHeightInPoints -= (margin.left + margin.right);
+  }
+
+  // Keep these values in portrait format, so we can reflect our own changes
+  // to mOrientation.
+  if (mOrientation == kPortraitOrientation) {
+    mPrintableWidthInInches = printableWidthInPoints / POINTS_PER_INCH_FLOAT;
+    mPrintableHeightInInches = printableHeightInPoints / POINTS_PER_INCH_FLOAT;
+  } else {
+    mPrintableHeightInInches = printableWidthInPoints / POINTS_PER_INCH_FLOAT;
+    mPrintableWidthInInches = printableHeightInPoints / POINTS_PER_INCH_FLOAT;
+  }
+
+  SetDevMode(const_cast<DEVMODEW*>(devmode));  // copies devmode
+}
+
 already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
     const PrintSettingsInitializer& aSettings) {
   auto settings = MakeRefPtr<nsPrintSettingsWin>();
   settings->InitWithInitializer(aSettings);
-
-  // When printing to PDF on Windows there is no associated printer driver.
-  int16_t outputFormat;
-  settings->GetOutputFormat(&outputFormat);
-  if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
-    return settings.forget();
-  }
-
-  RefPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
-
-  nsString name;
-  settings->GetPrinterName(name);
-  devSpecWin->GetDataFromPrinter(name);
-
-  LPDEVMODEW devmode;
-  devSpecWin->GetDevMode(devmode);
-  if (NS_WARN_IF(!devmode)) {
-    return settings.forget();
-  }
-
-  // TODO(nordzilla, 1658299)
-  // We need to get information from the device as well.
-  // See InitPrintSettingsFromPrinter call to CreateICW and the code
-  // below it. The issue is that we can't do it here. It needs to
-  // happen async, off the main thread, similar to the code that
-  // populates the PrintSettingsInitializer argument.
-
   return settings.forget();
 }
 
