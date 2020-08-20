@@ -11,6 +11,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -52,6 +53,7 @@ class SearchEngineStorageTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/android-components/issues/8124")
     fun `loadSearchEngineList successfully loads after saving`() = runBlockingTest {
         val searchEngine = SearchEngine(
             id = "id1",
