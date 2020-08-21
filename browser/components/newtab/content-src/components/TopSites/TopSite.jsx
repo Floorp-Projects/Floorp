@@ -370,10 +370,10 @@ export class TopSite extends React.PureComponent {
           })
         );
       }
-      if (this.props.link.sendTopSiteAttributionRequest) {
+      if (this.props.link.sendAttributionRequest) {
         this.props.dispatch(
           ac.OnlyToMain({
-            type: at.TOP_SITES_ATTRIBUTION,
+            type: at.PARTNER_LINK_ATTRIBUTION,
             data: {
               targetURL: this.props.link.url,
               source: "newtab",

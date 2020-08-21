@@ -942,7 +942,7 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       isPinned: {
         type: "boolean",
       },
-      sendTopSiteAttributionRequest: {
+      sendAttributionRequest: {
         type: "boolean",
       },
       tags: {

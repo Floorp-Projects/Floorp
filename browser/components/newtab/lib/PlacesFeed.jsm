@@ -504,7 +504,7 @@ class PlacesFeed {
         this.openLink(action);
         break;
       }
-      case at.TOP_SITES_ATTRIBUTION:
+      case at.PARTNER_LINK_ATTRIBUTION:
         PartnerLinkAttribution.makeRequest(action.data);
         break;
     }
