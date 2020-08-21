@@ -33,6 +33,8 @@ const LINUX = AppConstants.platform == "linux";
 const WIN = AppConstants.platform == "win";
 const MAC = AppConstants.platform == "macosx";
 
+const kSharedFontList = SpecialPowers.getBoolPref("gfx.e10s.font-list.shared");
+
 /* This is an object mapping string phases of startup to lists of known cases
  * of IO happening on the main thread. Ideally, IO should not be on the main
  * thread, and should happen as late as possible (see above).
@@ -261,7 +263,7 @@ const startupPhases = {
       // Side-effect of bug 1412090, via sandboxing (but the real
       // problem there is main-thread CPU use; see bug 1439412)
       path: "*ld.so.conf*",
-      condition: LINUX && !AppConstants.MOZ_CODE_COVERAGE,
+      condition: LINUX && !AppConstants.MOZ_CODE_COVERAGE && !kSharedFontList,
       read: 22,
       close: 11,
     },
