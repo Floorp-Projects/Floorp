@@ -628,7 +628,7 @@ class UrlbarInput {
     }
 
     this.controller.recordSelectedResult(event, result);
-    if (result.payload.sendTopSiteAttributionRequest) {
+    if (result.payload.sendAttributionRequest) {
       PartnerLinkAttribution.makeRequest({
         targetURL: result.payload.url,
         source: "urlbar",

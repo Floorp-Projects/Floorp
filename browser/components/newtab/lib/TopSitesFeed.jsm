@@ -232,7 +232,7 @@ this.TopSitesFeed = class TopSitesFeed {
         isDefault: true,
         url: siteData.url,
         hostname: shortURL(siteData),
-        sendTopSiteAttributionRequest: !!siteData.send_attribution_request,
+        sendAttributionRequest: !!siteData.send_attribution_request,
       };
       if (siteData.url_urlbar_override) {
         link.url_urlbar = siteData.url_urlbar_override;
@@ -562,7 +562,7 @@ this.TopSitesFeed = class TopSitesFeed {
             delete link.searchTopSite;
             delete link.label;
             link.url = url;
-            link.sendTopSiteAttributionRequest = true;
+            link.sendAttributionRequest = true;
           }
         }
       }
