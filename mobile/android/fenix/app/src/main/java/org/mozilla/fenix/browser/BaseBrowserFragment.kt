@@ -42,6 +42,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.accounts.FxaCapability
 import mozilla.components.feature.accounts.FxaWebChannelFeature
@@ -132,6 +133,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         get() = _browserToolbarView!!
 
     protected val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
+    protected val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
@@ -231,6 +233,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
                 topSiteStorage = requireComponents.core.topSiteStorage,
                 onTabCounterClicked = {
+                    thumbnailsFeature.get()?.requestScreenshot()
                     findNavController().nav(
                         R.id.browserFragment,
                         BrowserFragmentDirections.actionGlobalTabTrayDialogFragment()

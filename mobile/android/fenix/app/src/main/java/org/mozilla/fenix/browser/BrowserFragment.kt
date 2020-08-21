@@ -54,7 +54,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
-    private val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
 
     private var readerModeAvailable = false
 
