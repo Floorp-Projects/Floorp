@@ -2,7 +2,7 @@
 
 # AbstractFetchDownloadService
 
-`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L85)
+`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L86)
 
 Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native
 Android download manager.

@@ -2,4 +2,4 @@
 
 # store
 
-`protected abstract val store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L86)
+`protected abstract val store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L87)

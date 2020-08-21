@@ -2,7 +2,7 @@
 
 # CustomViewHolder
 
-`sealed class CustomViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/CustomViewHolder.kt#L17)
+`sealed class CustomViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/CustomViewHolder.kt#L16)
 
 A base view holder.
 

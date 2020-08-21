@@ -2,7 +2,7 @@
 
 # UnsupportedSectionViewHolder
 
-`class UnsupportedSectionViewHolder : `[`CustomViewHolder`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/CustomViewHolder.kt#L29)
+`class UnsupportedSectionViewHolder : `[`CustomViewHolder`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/CustomViewHolder.kt#L28)
 
 A view holder for displaying Not yet supported section items.
 
