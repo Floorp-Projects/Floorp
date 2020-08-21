@@ -41,6 +41,7 @@ loader.lazyRequireGetter(
   [
     "allAnonymousContentTreeWalkerFilter",
     "findGridParentContainerForNode",
+    "isDocumentReady",
     "isNodeDead",
     "noAnonymousContentTreeWalkerFilter",
     "nodeDocument",
@@ -295,7 +296,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     this._isWatchingRootNode = true;
-    if (this.rootNode && this._isRootDocumentReady()) {
+    if (this.rootNode && isDocumentReady(this.rootDoc)) {
       this._emitNewRoot(this.rootNode, { isTopLevelDocument: true });
     }
   },
@@ -316,23 +317,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     this.emit("root-available", rootNode);
-  },
-
-  _isRootDocumentReady() {
-    if (this.rootDoc) {
-      const { readyState } = this.rootDoc;
-      if (readyState == "interactive" || readyState == "complete") {
-        return true;
-      }
-    }
-
-    // A document might stay forever in unitialized state.
-    // If the target actor is not currently loading a document,
-    // assume the document is ready.
-    const webProgress = this.rootDoc.defaultView.docShell.QueryInterface(
-      Ci.nsIWebProgress
-    );
-    return !webProgress.isLoadingDocument;
   },
 
   /**
