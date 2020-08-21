@@ -32,17 +32,21 @@ class PrintHelper {
 
   async startPrint() {
     document.getElementById("cmd_print").doCommand();
-    let dialog = await TestUtils.waitForCondition(() => this._dialogs[0]);
-    await dialog._dialog._dialogReady;
+    let dialog = await TestUtils.waitForCondition(
+      () => this.dialog,
+      "Wait for dialog"
+    );
+    await dialog._dialogReady;
   }
 
   async withClosingFn(closeFn) {
+    let { dialog } = this;
     await closeFn();
-    await this._dialogs[0]._dialog._closingPromise;
+    await dialog._closingPromise;
   }
 
   async closeDialog() {
-    await this.withClosingFn(() => this._dialogs[0]._dialog.close());
+    await this.withClosingFn(() => this.dialog.close());
   }
 
   assertDialogHidden() {
@@ -51,25 +55,29 @@ class PrintHelper {
 
   assertDialogVisible() {
     is(this._dialogs.length, 1, "There is one print dialog");
-    BrowserTestUtils.is_visible(this._dialogs[0], "The dialog is visible");
+    BrowserTestUtils.is_visible(this.dialog._box, "The dialog is visible");
   }
 
-  get _container() {
-    return this.sourceBrowser.ownerGlobal.gBrowser.getBrowserContainer(
+  get _tabDialogBox() {
+    return this.sourceBrowser.ownerGlobal.gBrowser.getTabDialogBox(
       this.sourceBrowser
     );
   }
 
   get _dialogs() {
-    return this._container.querySelectorAll(".printDialogContainer");
+    return this._tabDialogBox._dialogManager._dialogs;
+  }
+
+  get dialog() {
+    return this._dialogs.find(dlg =>
+      dlg._box.querySelector(".printSettingsBrowser")
+    );
   }
 
   get _printBrowser() {
-    let dialogs = this._dialogs;
-    is(dialogs.length, 1, "There's one dialog");
-    let frame = dialogs[0].querySelector(".dialogFrame");
-    ok(frame, "Found the print dialog frame");
-    return frame;
+    let dialog = this.dialog;
+    ok(dialog, "The dialog exists");
+    return dialog._frame;
   }
 
   get doc() {
