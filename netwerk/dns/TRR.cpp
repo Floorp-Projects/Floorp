@@ -1197,6 +1197,16 @@ nsresult TRR::DohDecode(nsCString& aHost) {
     LOG(("TRR: No entries were stored!\n"));
     return NS_ERROR_FAILURE;
   }
+
+  // https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-03#page-14
+  // If one or more SVCB records of ServiceForm SvcRecordType are returned for
+  // HOST, clients should select the highest-priority option with acceptable
+  // parameters.
+  if (mResult.is<TypeRecordHTTPSSVC>()) {
+    auto& results = mResult.as<TypeRecordHTTPSSVC>();
+    results.Sort();
+  }
+
   return NS_OK;
 }
 
