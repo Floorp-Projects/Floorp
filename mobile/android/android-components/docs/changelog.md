@@ -39,6 +39,9 @@ permalink: /changelog/
 * **browser-menu2**
   * Added `style` parameter to `BrowserMenuController`.
 
+* **ui-widgets**
+  * Added widget for showing a website in a list, such as in bookmarks or history. The `mozac_primary_text_color` and `mozac_caption_text_color` attributes should be set.
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
@@ -143,6 +146,9 @@ permalink: /changelog/
 * **feature-contextmenu**
   * Do not show the "Download link" option for html URLs.
   * Uses a speculative check, may not work in all cases.
+
+* **ui-widgets**
+  * Added shared ImageView style for favicons. The `mozac_widget_favicon_background_color` and `mozac_widget_favicon_border_color` attributes should be set, then `style="@style/Mozac.Widgets.Favicon"` can be added to an ImageView.
 
 # 52.0.0
 

@@ -4,6 +4,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="Mozac.Widgets.TestTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="mozac_widget_favicon_background_color">@color/photonWhite</item>
+        <item name="mozac_widget_favicon_border_color">@color/photonLightGrey30</item>
+        <item name="mozac_primary_text_color">@color/photonInk90</item>
+        <item name="mozac_caption_text_color">@color/photonInk50</item>
+    </style>
 
     <!-- Button styling -->
     <style name="Mozac.Widgets.NeutralButton" parent="Widget.MaterialComponents.Button.TextButton">
@@ -40,5 +46,18 @@
         <item name="android:scaleType">fitCenter</item>
         <item name="android:padding">@dimen/mozac_widget_favicon_padding</item>
         <item name="android:background">@drawable/mozac_widget_favicon_background</item>
+    </style>
+
+    <style name="Mozac.Widgets.SiteItem.Label" parent="">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:textSize">@dimen/mozac_widget_site_item_label_text_size</item>
+        <item name="android:textColor">?attr/mozac_primary_text_color</item>
+    </style>
+    <style name="Mozac.Widgets.SiteItem.Caption" parent="Mozac.Widgets.SiteItem.Label">
+        <item name="android:textSize">@dimen/mozac_widget_site_item_caption_text_size</item>
+        <item name="android:textColor">?attr/mozac_caption_text_color</item>
     </style>
 </resources>
