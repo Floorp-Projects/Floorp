@@ -1256,7 +1256,7 @@ this.tabs = class extends ExtensionAPI {
         print() {
           let activeTab = getTabOrActive(null);
           let { PrintUtils } = activeTab.ownerGlobal;
-          PrintUtils.printWindow(activeTab.linkedBrowser.browsingContext);
+          PrintUtils.startPrintWindow(activeTab.linkedBrowser.browsingContext);
         },
 
         printPreview() {
