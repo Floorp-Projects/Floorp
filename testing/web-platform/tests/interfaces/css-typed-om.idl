@@ -23,10 +23,10 @@ interface StylePropertyMapReadOnly {
 
 [Exposed=Window]
 interface StylePropertyMap : StylePropertyMapReadOnly {
-    void set(USVString property, (CSSStyleValue or USVString)... values);
-    void append(USVString property, (CSSStyleValue or USVString)... values);
-    void delete(USVString property);
-    void clear();
+    undefined set(USVString property, (CSSStyleValue or USVString)... values);
+    undefined append(USVString property, (CSSStyleValue or USVString)... values);
+    undefined delete(USVString property);
+    undefined clear();
 };
 
 partial interface Element {
