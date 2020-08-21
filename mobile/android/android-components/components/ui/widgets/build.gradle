@@ -33,6 +33,7 @@ dependencies {
     implementation Dependencies.androidx_constraintlayout
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.google_material
+    implementation Dependencies.androidx_swiperefreshlayout
 
     testImplementation project(":support-test")
 
