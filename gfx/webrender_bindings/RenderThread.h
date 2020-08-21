@@ -207,8 +207,10 @@ class RenderThread final {
   /// Can be called from any thread.
   void NotifyNotUsed(uint64_t aExternalImageId);
 
-  /// Can only be called from the render thread.
-  void NofityForUse(uint64_t aExternalImageId);
+  /// Can be called from any thread.
+  void NotifyForUse(uint64_t aExternalImageId);
+
+  void HandleRenderTextureOps();
 
   /// Can only be called from the render thread.
   void UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId);
@@ -268,9 +270,6 @@ class RenderThread final {
   bool IsHandlingWebRenderError();
 
   /// Can only be called from the render thread.
-  void HandlePrepareForUse();
-
-  /// Can only be called from the render thread.
   bool SyncObjectNeeded();
 
   size_t RendererCount();
@@ -287,6 +286,12 @@ class RenderThread final {
   static void MaybeEnableGLDebugMessage(gl::GLContext* aGLContext);
 
  private:
+  enum class RenderTextureOp {
+    PrepareForUse,
+    NotifyForUse,
+    NotifyNotUsed,
+  };
+
   explicit RenderThread(base::Thread* aThread);
 
   void DeferredRenderTextureHostDestroy();
@@ -295,6 +300,8 @@ class RenderThread final {
 
   void DoAccumulateMemoryReport(MemoryReport,
                                 const RefPtr<MemoryReportPromise::Private>&);
+
+  void AddRenderTextureOp(RenderTextureOp aOp, uint64_t aExternalImageId);
 
   ~RenderThread();
 
@@ -337,10 +344,9 @@ class RenderThread final {
   std::unordered_map<uint64_t, RefPtr<RenderTextureHost>> mRenderTextures;
   std::unordered_map<uint64_t, RefPtr<RenderTextureHost>>
       mSyncObjectNeededRenderTextures;
-  // Hold RenderTextureHosts that are waiting for handling PrepareForUse().
-  // It is for ensuring that PrepareForUse() is called before
-  // RenderTextureHost::Lock().
-  std::list<RefPtr<RenderTextureHost>> mRenderTexturesPrepareForUse;
+  std::list<std::pair<RenderTextureOp, RefPtr<RenderTextureHost>>>
+      mRenderTextureOps;
+
   // Used to remove all RenderTextureHost that are going to be removed by
   // a deferred callback and remove them right away without waiting for the
   // callback. On device reset we have to remove all GL related resources right

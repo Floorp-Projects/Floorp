@@ -29,7 +29,7 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
   void PrepareForUse() override;
-  void NofityForUse() override;
+  void NotifyForUse() override;
   void NotifyNotUsed() override;
 
  private:

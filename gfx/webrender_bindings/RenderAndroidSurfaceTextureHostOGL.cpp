@@ -161,7 +161,7 @@ void RenderAndroidSurfaceTextureHostOGL::PrepareForUse() {
   }
 }
 
-void RenderAndroidSurfaceTextureHostOGL::NofityForUse() {
+void RenderAndroidSurfaceTextureHostOGL::NotifyForUse() {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
 
   if (mPrepareStatus == STATUS_MIGHT_BE_USED_BY_WR) {
