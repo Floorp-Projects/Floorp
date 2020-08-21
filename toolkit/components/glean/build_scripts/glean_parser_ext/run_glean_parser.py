@@ -11,11 +11,23 @@ from glean_parser import lint, parser, util
 from pathlib import Path
 
 
-def main(output_fd, *metrics_yamls):
+def main(output_fd, metrics_index_path, which_array):
+
+    # Source the list of input files from `metrics_index.py`
+    sys.path.append(str(Path(metrics_index_path).parent))
+    from metrics_index import METRICS, PINGS
+    if which_array == 'METRICS':
+        input_files = METRICS
+    elif which_array == 'PINGS':
+        input_files = PINGS
+    else:
+        print("Build system's asking for unknown array {}".format(which_array))
+        sys.exit(1)
+
     # Derived heavily from glean_parser.translate.translate.
     # Adapted to how mozbuild sends us a fd.
     options = {"allow_reserved": False}
-    input_files = [Path(x) for x in metrics_yamls]
+    input_files = [Path(x) for x in input_files]
 
     all_objs = parser.parse_objects(input_files, options)
     if util.report_validation_errors(all_objs):
