@@ -1,10 +1,10 @@
-fuzzy-if(gtkWidget||webrender,0-1,0-34) fails-if(Android&&nativeThemePref) == simple.html chrome://reftest/content/forms/input/file/simple-ref.xhtml
-fuzzy-if(gtkWidget||webrender,0-1,0-17) fails-if(Android&&nativeThemePref) == rtl.html chrome://reftest/content/forms/input/file/rtl-ref.xhtml
-fuzzy-if(gtkWidget||webrender,0-1,0-34) fails-if(Android&&nativeThemePref) == size.html chrome://reftest/content/forms/input/file/simple-ref.xhtml
-fuzzy-if(gtkWidget||webrender,0-1,0-10) fails-if(Android&&nativeThemePref) == background.html chrome://reftest/content/forms/input/file/background-ref.xhtml
-fuzzy-if(gtkWidget,0-1,0-10) fails-if(Android&&nativeThemePref) == style.html chrome://reftest/content/forms/input/file/style-ref.xhtml
+fuzzy-if(gtkWidget||webrender,0-1,0-34) == simple.html chrome://reftest/content/forms/input/file/simple-ref.xhtml
+fuzzy-if(gtkWidget||webrender,0-1,0-17) == rtl.html chrome://reftest/content/forms/input/file/rtl-ref.xhtml
+fuzzy-if(gtkWidget||webrender,0-1,0-34) == size.html chrome://reftest/content/forms/input/file/simple-ref.xhtml
+fuzzy-if(gtkWidget||webrender,0-1,0-10) == background.html chrome://reftest/content/forms/input/file/background-ref.xhtml
+fuzzy-if(gtkWidget,0-1,0-10) == style.html chrome://reftest/content/forms/input/file/style-ref.xhtml
 != width-clip.html width-clip-ref.html
-fails-if(Android&&nativeThemePref) == color-inherit.html color-inherit-ref.html
+== color-inherit.html color-inherit-ref.html
 fuzzy-if(Android,0-2,0-2) fuzzy-if(OSX,0-34,0-134) fails-if(webrender&&!(cocoaWidget||geckoview)) == dynamic-max-width.html dynamic-max-width-ref.html # bug 1496542 for webrender.
 == label-min-inline-size.html label-min-inline-size-ref.html
 == css-overflow.html css-overflow-ref.html
