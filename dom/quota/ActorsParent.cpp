@@ -585,36 +585,34 @@ Result<bool, nsresult> IsLocalStorageArchiveInitialized(
   return exists;
 }
 
-nsresult LoadLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
-                                        uint32_t& aVersion) {
+Result<int32_t, nsresult> LoadLocalStorageArchiveVersion(
+    mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement("SELECT version FROM database"_ns,
-                                             getter_AddRefs(stmt));
+  nsresult rv = aConnection.CreateStatement("SELECT version FROM database"_ns,
+                                            getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   if (NS_WARN_IF(!hasResult)) {
-    return NS_ERROR_FILE_CORRUPTED;
+    return Err(NS_ERROR_FILE_CORRUPTED);
   }
 
   int32_t version;
   rv = stmt->GetInt32(0, &version);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  aVersion = version;
-  return NS_OK;
+  return version;
 }
 
 /*
@@ -6579,16 +6577,14 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
                  IsLocalStorageArchiveInitialized(*connection));
 
       if (initialized) {
-        // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
-        QM_TRY(LoadLocalStorageArchiveVersion(connection, version));
+        QM_TRY_VAR(version, LoadLocalStorageArchiveVersion(*connection));
       }
     }
 
     if (version > kLocalStorageArchiveVersion) {
       QM_TRY(DowngradeLocalStorageArchive(connection));
 
-      // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
-      QM_TRY(LoadLocalStorageArchiveVersion(connection, version));
+      QM_TRY_VAR(version, LoadLocalStorageArchiveVersion(*connection));
 
       MOZ_ASSERT(version == kLocalStorageArchiveVersion);
     } else if (version != kLocalStorageArchiveVersion) {
@@ -6616,8 +6612,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
             return NS_ERROR_FAILURE;
           }
 
-          // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
-          QM_TRY(LoadLocalStorageArchiveVersion(connection, version));
+          QM_TRY_VAR(version, LoadLocalStorageArchiveVersion(*connection));
         }
 
         MOZ_ASSERT(version == kLocalStorageArchiveVersion);
