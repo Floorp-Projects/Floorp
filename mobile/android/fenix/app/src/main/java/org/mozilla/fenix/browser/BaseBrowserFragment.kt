@@ -591,7 +591,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
                             if (showEngineView) {
                                 engineView?.asView()?.isVisible = true
-                                swipeRefresh.alpha = 1f
+                                swipeRefresh?.alpha = 1f
                             } else {
                                 engineView?.asView()?.isVisible = false
                             }
