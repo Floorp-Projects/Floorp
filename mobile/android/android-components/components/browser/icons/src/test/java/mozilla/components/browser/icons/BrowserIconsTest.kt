@@ -29,11 +29,13 @@ import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import java.io.OutputStream
 
 @RunWith(AndroidJUnit4::class)
 class BrowserIconsTest {
@@ -263,5 +265,40 @@ class BrowserIconsTest {
         verify(previousJob).cancel()
 
         result.cancel()
+    }
+
+    @Test
+    fun `clear should delete all disk and memory data`() {
+        // Test the effect of clear by first adding some icons data
+        val icons = BrowserIcons(testContext, httpClient = HttpURLConnectionClient())
+        val resource = IconRequest.Resource(
+            url = "https://www.mozilla.org/icon64.png",
+            sizes = listOf(Size(64, 64)),
+            mimeType = "image/png",
+            type = IconRequest.Resource.Type.FAVICON
+        )
+        val request = IconRequest(url = "https://www.mozilla.org", resources = listOf(resource))
+        sharedDiskCache.putResources(testContext, request)
+        val bitmap: Bitmap = mock()
+        `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
+            assertEquals(Bitmap.CompressFormat.WEBP, it.arguments[0] as Bitmap.CompressFormat)
+            assertEquals(90, it.arguments[1] as Int) // Quality
+
+            val stream = it.arguments[2] as OutputStream
+            stream.write("Hello World".toByteArray())
+            true
+        }
+        val icon = Icon(bitmap, source = Icon.Source.DOWNLOAD)
+        sharedMemoryCache.put(request, resource, icon)
+
+        // Verifying it's all there
+        assertEquals(listOf(resource), sharedDiskCache.getResources(testContext, request))
+        assertEquals(listOf(resource), sharedMemoryCache.getResources(request))
+
+        icons.clear()
+
+        // Verifying it's not anymore
+        assertEquals(0, sharedDiskCache.getResources(testContext, request).size)
+        assertEquals(0, sharedMemoryCache.getResources(request).size)
     }
 }

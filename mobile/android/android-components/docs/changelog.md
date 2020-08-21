@@ -42,6 +42,9 @@ permalink: /changelog/
 * **ui-widgets**
   * Added widget for showing a website in a list, such as in bookmarks or history. The `mozac_primary_text_color` and `mozac_caption_text_color` attributes should be set.
 
+* **browser-icons**
+  * Expose `BrowserIcons.clear()` as a public API to remove all saved data from disk and memory caches.
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
