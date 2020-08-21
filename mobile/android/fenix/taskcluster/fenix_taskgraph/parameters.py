@@ -13,7 +13,7 @@ from voluptuous import All, Any, Optional, Range, Required
 
 
 BETA_SEMVER = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
-PRODUCTION_SEMVER = re.compile(r'^v\d+\.\d+\.\d+(-rc\.\d+)?$')
+RELEASE_SEMVER = re.compile(r'^v\d+\.\d+\.\d+(-rc\.\d+)?$')
 
 
 extend_parameters_schema({
@@ -48,8 +48,8 @@ def resolve_release_type(head_tag):
         return ""
     elif BETA_SEMVER.match(head_tag):
         return "beta"
-    elif PRODUCTION_SEMVER.match(head_tag):
-        return "production"
+    elif RELEASE_SEMVER.match(head_tag):
+        return "release"
     else:
         raise ValueError('Github tag must be in semver format and prefixed with a "v", '
-                         'e.g.: "v1.0.0-beta.0" (beta), "v1.0.0-rc.0" (production) or "v1.0.0" (production)')
+                         'e.g.: "v1.0.0-beta.0" (beta), "v1.0.0-rc.0" (release) or "v1.0.0" (release)')
