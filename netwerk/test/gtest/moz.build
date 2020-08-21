@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     'TestServerTimingHeader.cpp',
     'TestSocketTransportService.cpp',
     'TestStandardURL.cpp',
+    'TestSupportAlpn.cpp',
     'TestUDPSocket.cpp',
 ]
 

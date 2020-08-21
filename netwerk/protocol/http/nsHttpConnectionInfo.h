@@ -29,6 +29,8 @@
 // origin and multiplex non tunneled transactions at the same time, so they have
 // a special wildcard CI that accepts all origins through that proxy.
 
+class nsISVCBRecord;
+
 namespace mozilla {
 namespace net {
 
@@ -83,6 +85,12 @@ class nsHttpConnectionInfo final : public ARefBase {
 
   // OK to treat these as an infalible allocation
   already_AddRefed<nsHttpConnectionInfo> Clone() const;
+  // This main prupose of this function is to clone this connection info, but
+  // replace mRoutedHost with SvcDomainName in the given SVCB record. Note that
+  // if SvcParamKeyPort and SvcParamKeyAlpn are presented in the SVCB record,
+  // mRoutedPort and mNPNToken will be replaced as well.
+  already_AddRefed<nsHttpConnectionInfo> CloneAndAdoptHTTPSSVCRecord(
+      nsISVCBRecord* aRecord) const;
   void CloneAsDirectRoute(nsHttpConnectionInfo** outParam);
   [[nodiscard]] nsresult CreateWildCard(nsHttpConnectionInfo** outParam);
 

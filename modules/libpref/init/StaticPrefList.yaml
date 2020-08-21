@@ -8309,6 +8309,13 @@
   value: 1048576
   mirror: always
 
+# When true, a http request will be upgraded to https when HTTPS RR is
+# available.
+- name: network.dns.upgrade_with_https_rr
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------

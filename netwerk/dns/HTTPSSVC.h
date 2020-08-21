@@ -85,6 +85,9 @@ struct SVCB {
   bool operator<(const SVCB& aOther) const {
     return mSvcFieldPriority < aOther.mSvcFieldPriority;
   }
+  Maybe<uint16_t> GetPort() const;
+  bool NoDefaultAlpn() const;
+  Maybe<nsCString> GetAlpn(bool aNoHttp2, bool aNoHttp3) const;
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
@@ -94,11 +97,28 @@ class SVCBRecord : public nsISVCBRecord {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISVCBRECORD
  public:
-  explicit SVCBRecord(const SVCB& data) : mData(data) {}
+  explicit SVCBRecord(const SVCB& data)
+      : mData(data), mPort(Nothing()), mAlpn(Nothing()) {}
+  explicit SVCBRecord(const SVCB& data, Maybe<uint16_t>&& aPort,
+                      Maybe<nsCString>&& aAlpn)
+      : mData(data), mPort(std::move(aPort)), mAlpn(std::move(aAlpn)) {}
 
  private:
   virtual ~SVCBRecord() = default;
   SVCB mData;
+  Maybe<uint16_t> mPort;
+  Maybe<nsCString> mAlpn;
+};
+
+class DNSHTTPSSVCRecordBase {
+ public:
+  DNSHTTPSSVCRecordBase() = default;
+
+ protected:
+  virtual ~DNSHTTPSSVCRecordBase() = default;
+
+  already_AddRefed<nsISVCBRecord> GetServiceModeRecordInternal(
+      bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords);
 };
 
 }  // namespace net

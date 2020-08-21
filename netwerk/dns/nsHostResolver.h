@@ -330,7 +330,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(AddrHostRecord, ADDRHOSTRECORD_IID)
 
 class TypeHostRecord final : public nsHostRecord,
                              public nsIDNSTXTRecord,
-                             public nsIDNSHTTPSSVCRecord {
+                             public nsIDNSHTTPSSVCRecord,
+                             public mozilla::net::DNSHTTPSSVCRecordBase {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(TYPEHOSTRECORD_IID)
   NS_DECL_ISUPPORTS_INHERITED

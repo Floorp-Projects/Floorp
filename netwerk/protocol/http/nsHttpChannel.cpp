@@ -387,6 +387,8 @@ nsHttpChannel::nsHttpChannel()
       mIsIsolated(0),
       mTopWindowOriginComputed(0),
       mDataSentToChildProcess(0),
+      mUseHTTPSSVC(0),
+      mWaitHTTPSSVCRecord(0),
       mPushedStreamId(0),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
@@ -604,6 +606,15 @@ nsresult nsHttpChannel::OnBeforeConnect() {
       auto resultCallback = [self(self)](bool aResult, nsresult aStatus) {
         MOZ_ASSERT(NS_IsMainThread());
 
+        // We need to wait for HTTPSSVC record if there is no AltSvc or HSTS
+        // upgrade for this request.
+        if (!aResult && NS_SUCCEEDED(aStatus) && self->mUseHTTPSSVC) {
+          LOG(("nsHttpChannel Wait for HTTPSSVC record [this=%p]\n",
+               self.get()));
+          self->mWaitHTTPSSVCRecord = true;
+          return;
+        }
+
         nsresult rv = self->ContinueOnBeforeConnect(aResult, aStatus);
         if (NS_FAILED(rv)) {
           self->CloseCacheEntry(false);
@@ -697,6 +708,28 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   mConnectionInfo->SetTRRMode(nsIRequest::GetTRRMode());
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
+
+  if (mHTTPSSVCRecord) {
+    MOZ_ASSERT(mURI->SchemeIs("https"));
+
+    LOG((" Using connection info with HTTPSSVC record"));
+    nsCOMPtr<nsIDNSHTTPSSVCRecord> rec;
+    mHTTPSSVCRecord.swap(rec);
+
+    bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
+                        !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !mBeConservative;
+
+    nsCOMPtr<nsISVCBRecord> record;
+    if (NS_SUCCEEDED(rec->GetServiceModeRecord(mCaps & NS_HTTP_DISALLOW_SPDY,
+                                               !http3Allowed,
+                                               getter_AddRefs(record)))) {
+      MOZ_ASSERT(record);
+
+      RefPtr<nsHttpConnectionInfo> newConnInfo =
+          mConnectionInfo->CloneAndAdoptHTTPSSVCRecord(record);
+      mConnectionInfo = std::move(newConnInfo);
+    }
+  }
 
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
@@ -3181,6 +3214,11 @@ nsresult nsHttpChannel::ProxyFailover() {
   return AsyncDoReplaceWithProxy(pi);
 }
 
+void nsHttpChannel::SetHTTPSSVCRecord(nsIDNSHTTPSSVCRecord* aRecord) {
+  LOG(("nsHttpChannel::SetHTTPSSVCRecord [this=%p]\n", this));
+  mHTTPSSVCRecord = aRecord;
+}
+
 void nsHttpChannel::HandleAsyncRedirectChannelToHttps() {
   MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
@@ -3263,6 +3301,15 @@ nsresult nsHttpChannel::StartRedirectChannelToURI(nsIURI* upgradedURI,
 
   rv = SetupReplacementChannel(upgradedURI, newChannel, true, flags);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mHTTPSSVCRecord) {
+    RefPtr<nsHttpChannel> httpChan = do_QueryObject(newChannel);
+    if (httpChan) {
+      nsCOMPtr<nsIDNSHTTPSSVCRecord> rec;
+      mHTTPSSVCRecord.swap(rec);
+      httpChan->SetHTTPSSVCRecord(rec);
+    }
+  }
 
   // Inform consumers about this fake redirect
   mRedirectChannel = newChannel;
@@ -6817,6 +6864,10 @@ nsresult nsHttpChannel::BeginConnect() {
   bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
                       !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !mBeConservative;
 
+  // No need to lookup HTTPSSVC record if we already have one.
+  mUseHTTPSSVC =
+      StaticPrefs::network_dns_upgrade_with_https_rr() && !mHTTPSSVCRecord;
+
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && mAllowAltSvc &&  // per channel
       !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
@@ -6865,6 +6916,9 @@ nsresult nsHttpChannel::BeginConnect() {
                                originAttributes);
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, true);
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC_OE, !isHttps);
+
+    // Don't use HTTPSSVC record if we found altsvc mapping.
+    mUseHTTPSSVC = false;
   } else if (mConnectionInfo) {
     LOG(("nsHttpChannel %p Using channel supplied connection info", this));
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
@@ -7040,6 +7094,14 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
 
       // Resolved in OnLookupComplete.
       mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
+    }
+
+    if (mUseHTTPSSVC) {
+      rv = mDNSPrefetch->FetchHTTPSSVC(mCaps & NS_HTTP_REFRESH_DNS);
+      if (NS_FAILED(rv)) {
+        LOG(("  FetchHTTPSSVC failed with 0x%08" PRIx32,
+             static_cast<uint32_t>(rv)));
+      }
     }
   }
 
@@ -9106,42 +9168,59 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
   MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
 
+  nsCOMPtr<nsIDNSHTTPSSVCRecord> httpSSVCRecord = do_QueryInterface(rec);
   LOG(
       ("nsHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
-       "%s status[0x%" PRIx32 "]\n",
+       "%s status[0x%" PRIx32 "], isHTTPSSVC=%d\n",
        this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : "",
        NS_SUCCEEDED(status) ? "success" : "failure",
-       static_cast<uint32_t>(status)));
+       static_cast<uint32_t>(status), !!httpSSVCRecord));
 
-  // We no longer need the dns prefetch object. Note: mDNSPrefetch could be
-  // validly null if OnStopRequest has already been called.
-  // We only need the domainLookup timestamps when not loading from cache
-  if (mDNSPrefetch && mDNSPrefetch->TimingsValid() && mTransaction) {
-    TimeStamp connectStart = mTransaction->GetConnectStart();
-    TimeStamp requestStart = mTransaction->GetRequestStart();
-    // We only set the domainLookup timestamps if we're not using a
-    // persistent connection.
-    if (requestStart.IsNull() && connectStart.IsNull()) {
-      mTransaction->SetDomainLookupStart(mDNSPrefetch->StartTimestamp());
-      mTransaction->SetDomainLookupEnd(mDNSPrefetch->EndTimestamp());
+  if (!httpSSVCRecord) {
+    // We no longer need the dns prefetch object. Note: mDNSPrefetch could be
+    // validly null if OnStopRequest has already been called.
+    // We only need the domainLookup timestamps when not loading from cache
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid() && mTransaction) {
+      TimeStamp connectStart = mTransaction->GetConnectStart();
+      TimeStamp requestStart = mTransaction->GetRequestStart();
+      // We only set the domainLookup timestamps if we're not using a
+      // persistent connection.
+      if (requestStart.IsNull() && connectStart.IsNull()) {
+        mTransaction->SetDomainLookupStart(mDNSPrefetch->StartTimestamp());
+        mTransaction->SetDomainLookupEnd(mDNSPrefetch->EndTimestamp());
+      }
     }
-  }
-  mDNSPrefetch = nullptr;
 
-  // Unset DNS cache refresh if it was requested,
-  if (mCaps & NS_HTTP_REFRESH_DNS) {
-    mCaps &= ~NS_HTTP_REFRESH_DNS;
-    if (mTransaction) {
-      mTransaction->SetDNSWasRefreshed();
+    // Unset DNS cache refresh if it was requested,
+    if (mCaps & NS_HTTP_REFRESH_DNS) {
+      mCaps &= ~NS_HTTP_REFRESH_DNS;
+      if (mTransaction) {
+        mTransaction->SetDNSWasRefreshed();
+      }
     }
+
+    if (!mDNSBlockingPromise.IsEmpty()) {
+      if (NS_SUCCEEDED(status)) {
+        nsCOMPtr<nsIDNSRecord> record(rec);
+        mDNSBlockingPromise.Resolve(record, __func__);
+      } else {
+        mDNSBlockingPromise.Reject(status, __func__);
+      }
+    }
+
+    return NS_OK;
   }
 
-  if (!mDNSBlockingPromise.IsEmpty()) {
-    if (NS_SUCCEEDED(status)) {
-      nsCOMPtr<nsIDNSRecord> record(rec);
-      mDNSBlockingPromise.Resolve(record, __func__);
-    } else {
-      mDNSBlockingPromise.Reject(status, __func__);
+  if (mWaitHTTPSSVCRecord) {
+    MOZ_ASSERT(mURI->SchemeIs("http"));
+    MOZ_ASSERT(!mHTTPSSVCRecord);
+
+    // This record will be used in the new redirect channel.
+    mHTTPSSVCRecord = httpSSVCRecord;
+    nsresult rv = ContinueOnBeforeConnect(true, status);
+    if (NS_FAILED(rv)) {
+      CloseCacheEntry(false);
+      Unused << AsyncAbort(rv);
     }
   }
 
