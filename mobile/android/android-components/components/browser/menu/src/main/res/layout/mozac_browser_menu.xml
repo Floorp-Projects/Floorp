@@ -6,6 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/Mozac.Browser.Menu"
+    android:id="@+id/mozac_browser_menu_menuView"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:cardCornerRadius="@dimen/mozac_browser_menu_corner_radius"
@@ -19,8 +20,6 @@
         android:overScrollMode="never"
         android:layout_width="@dimen/mozac_browser_menu_width"
         android:layout_height="wrap_content"
-        app:maxWidth="@dimen/mozac_browser_menu_width_max"
-        app:minWidth="@dimen/mozac_browser_menu_width_min"
         tools:listitem="@layout/mozac_browser_menu_item_simple" />
 
 </androidx.cardview.widget.CardView>

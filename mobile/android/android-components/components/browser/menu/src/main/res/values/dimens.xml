@@ -17,6 +17,11 @@
     <dimen name="mozac_browser_menu_item_container_padding_end">16dp</dimen>
     <!--Menu Item -->
 
+    <!--DynamicWidthRecyclerView -->
+    <dimen name="mozac_browser_menu_material_min_tap_area">48dp</dimen>
+    <dimen name="mozac_browser_menu_material_min_item_width">112dp</dimen>
+    <!--DynamicWidthRecyclerView -->
+
     <!--BrowserMenuDivider -->
     <dimen name="mozac_browser_menu_item_divider_height">1dp</dimen>
     <!--BrowserMenuDivider -->

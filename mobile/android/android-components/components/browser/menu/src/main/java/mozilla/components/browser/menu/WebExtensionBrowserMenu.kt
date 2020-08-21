@@ -17,6 +17,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
@@ -33,6 +34,7 @@ class WebExtensionBrowserMenu internal constructor(
     override fun show(
         anchor: View,
         orientation: Orientation,
+        style: MenuStyle?,
         endOfMenuAlwaysVisible: Boolean,
         onDismiss: () -> Unit
     ): PopupWindow {
@@ -47,6 +49,7 @@ class WebExtensionBrowserMenu internal constructor(
         return super.show(
             anchor,
             orientation,
+            style,
             endOfMenuAlwaysVisible,
             onDismiss
         ).apply {

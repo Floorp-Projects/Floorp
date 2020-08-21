@@ -30,6 +30,15 @@ permalink: /changelog/
 * **browser-engine-gecko-nightly**
   * Added `onPaintStatusReset` when a session's paint has been reset.
 
+* **concept-menu**
+  * Added `MenuStyle` class to set menu background and width.
+
+* **browser-menu**
+  * Added `style` parameter to `BrowserMenu.show`.
+
+* **browser-menu2**
+  * Added `style` parameter to `BrowserMenuController`.
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
@@ -40,7 +49,7 @@ permalink: /changelog/
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Fixed issue [#7983](https://github.com/mozilla-mobile/android-components/issues/7983), crash when a file name wasn't provided when uploading a file.
-  
+
 * **service-glean**
   * Glean was updated to v32.1.0
     * The rate limiter now allows 15, rather than 10, pings per minute.
@@ -67,19 +76,19 @@ permalink: /changelog/
 
 * **feature-app-links**
   * Added `loadUrlUseCase` as a parameter for `AppLinksFeature`.  This is used to load the URL if the user decides to not launch the link in the external app.
-  
+
 * **concept-awesomebar**
   * Added `AwesomeBar.setOnEditSuggestionListener()` to register a callback when a search term is selected to be edited further.
 
 * **browser-toolbar**
   * `BrowserToolbar.setSearchTerms()` can now be called during `State.EDIT`
-  
+
 * **browser-awesomebar**
   * The view of `DefaultSuggestionViewHolder` now contains a button to select a search term for further editing. Clicking it will invoke the callback registered in `BrowserAwesomeBar.setOnEditSuggestionListener()`
 
 * **browser-menu**
   * ⚠️ **This is a breaking change**: Removed `SimpleBrowserMenuHighlightableItem.itemType`. Use a WeakMap instead if you need to attach private data.
-  
+
 * **browser-menu**
   * For a11y, `BrowserMenuImageSwitch` now highlights the entire row, not just the switch
 
@@ -129,7 +138,7 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `DownloadsFeature` is no longer accepting a custom download dialog but supporting customizations via the `promptStyling` parameter. The `dialog` parameter was unused so far. If it's required in the future it will need to be replaced with a lambda or factory so that the feature can create instances of the dialog itself, as needed.
 
 * **feature-webcompat-reporter**
-  * Added a second parameter to the `install` method: `productName` allows to provide a unique product name per usage for automatic product-labelling on webcompat.com 
+  * Added a second parameter to the `install` method: `productName` allows to provide a unique product name per usage for automatic product-labelling on webcompat.com
 
 * **feature-contextmenu**
   * Do not show the "Download link" option for html URLs.

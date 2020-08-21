@@ -12,10 +12,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu2.R
 import mozilla.components.browser.menu2.adapter.MenuCandidateListAdapter
+import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.MenuCandidate
 import mozilla.components.concept.menu.candidate.NestedMenuCandidate
@@ -36,6 +38,7 @@ class MenuView @JvmOverloads constructor(
         dismiss = { onDismiss() },
         reopenMenu = { onReopenMenu(it) }
     )
+    private val cardView: CardView
     private val recyclerView: RecyclerView
 
     /**
@@ -51,6 +54,7 @@ class MenuView @JvmOverloads constructor(
     init {
         View.inflate(context, R.layout.mozac_browser_menu2_view, this)
 
+        cardView = findViewById(R.id.mozac_browser_menu_cardView)
         recyclerView = findViewById(R.id.mozac_browser_menu_recyclerView)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = menuAdapter
@@ -73,6 +77,13 @@ class MenuView @JvmOverloads constructor(
             // See: https://github.com/mozilla-mobile/android-components/issues/3211
             if (side == Side.END) scrollOnceToTheBottom(recyclerView)
         }
+    }
+
+    /**
+     * Sets the background color for the menu view.
+     */
+    fun setStyle(style: MenuStyle) {
+        style.backgroundColor?.let { cardView.setCardBackgroundColor(it) }
     }
 
     @VisibleForTesting
