@@ -59,6 +59,10 @@ interface nsIMemoryInfoDumper : nsISupports
    *
    * @param aAnonymize Should the reports be anonymized?
    *
+   * @param aMinimizeMemoryUsage indicates whether we should run a series of
+   *   GC/CC's in an attempt to reduce our memory usage before collecting our
+   *   memory report.
+   *
    * Sample output, annotated with comments for explanatory purposes.
    *
    * {
@@ -86,7 +90,8 @@ interface nsIMemoryInfoDumper : nsISupports
   void dumpMemoryReportsToNamedFile(in AString aFilename,
                                     in nsIFinishDumpingCallback aFinishDumping,
                                     in nsISupports aFinishDumpingData,
-                                    in boolean aAnonymize);
+                                    in boolean aAnonymize,
+                                    in boolean aMinimizeMemoryUsage);
 
   /**
    * Similar to dumpMemoryReportsToNamedFile, this method dumps gzipped memory
@@ -111,7 +116,7 @@ interface nsIMemoryInfoDumper : nsISupports
    * @param aAnonymize Should the reports be anonymized?
    *
    * @param aMinimizeMemoryUsage indicates whether we should run a series of
-   *   gc/cc's in an attempt to reduce our memory usage before collecting our
+   *   GC/CC's in an attempt to reduce our memory usage before collecting our
    *   memory report.
    */
   void dumpMemoryInfoToTempDir(

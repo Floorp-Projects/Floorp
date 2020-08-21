@@ -615,7 +615,8 @@ static nsresult DumpMemoryInfoToFile(nsIFile* aReportsFile,
 NS_IMETHODIMP
 nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
     const nsAString& aFilename, nsIFinishDumpingCallback* aFinishDumping,
-    nsISupports* aFinishDumpingData, bool aAnonymize) {
+    nsISupports* aFinishDumpingData, bool aAnonymize,
+    bool aMinimizeMemoryUsage) {
   MOZ_ASSERT(!aFilename.IsEmpty());
 
   // Create the file.
@@ -646,8 +647,7 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
 
   nsString dmdIdent = EmptyString();
   return DumpMemoryInfoToFile(reportsFile, aFinishDumping, aFinishDumpingData,
-                              aAnonymize, /* minimizeMemoryUsage = */ false,
-                              dmdIdent);
+                              aAnonymize, aMinimizeMemoryUsage, dmdIdent);
 }
 
 NS_IMETHODIMP

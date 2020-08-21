@@ -2400,7 +2400,8 @@ function saveReportsToFile() {
       aFile.path,
       finishDumping,
       null,
-      gAnonymize.checked
+      gAnonymize.checked,
+      /* minimize memory usage = */ false
     );
   };
 

@@ -1205,8 +1205,8 @@ nsXULAppInfo::SaveMemoryReport() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  rv = dumper->DumpMemoryReportsToNamedFile(path, this, file,
-                                            true /* anonymize */);
+  rv = dumper->DumpMemoryReportsToNamedFile(
+      path, this, file, true /* anonymize */, false /* minimizeMemoryUsage */);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
