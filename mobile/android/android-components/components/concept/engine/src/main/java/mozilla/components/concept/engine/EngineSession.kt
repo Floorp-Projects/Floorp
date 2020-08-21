@@ -54,6 +54,10 @@ abstract class EngineSession(
          * Event to indicate that this session has had it's first engine contentful paint of page content.
          */
         fun onFirstContentfulPaint() = Unit
+        /**
+         * Event to indicate that this session has had it's paint status reset.
+         */
+        fun onPaintStatusReset() = Unit
         fun onLongPress(hitResult: HitResult) = Unit
         fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit
