@@ -80,6 +80,14 @@ strong {
   direction: ltr;
 }
 
+/* Tooltip: JS Evaluation Context */
+
+#webconsole-input-evaluationsButton > .tooltip-panel {
+  /* helps the JS Context selector to have scrollbars when content exceed the vertical size of the popup */
+  overflow-y: auto;
+}
+
+
 /* Tooltip: Inactive CSS tooltip */
 
 .devtools-tooltip-inactive-css,
