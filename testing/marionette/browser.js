@@ -254,26 +254,6 @@ browser.Context = class {
   }
 
   /**
-   * Returns the current URI of the content browser.
-   *
-   * @return {nsIURI}
-   *     Read-only property containing the currently loaded URL.
-   *
-   * @throws {NoSuchWindowError}
-   *     If the current ChromeWindow does not have a content browser.
-   */
-  get currentURI() {
-    // Bug 1363368 - contentBrowser could be null until we wait for its
-    // initialization been finished
-    if (this.contentBrowser) {
-      return this.contentBrowser.currentURI;
-    }
-    throw new NoSuchWindowError(
-      "Current window does not have a content browser"
-    );
-  }
-
-  /**
    * Gets the position and dimensions of the top-level browsing context.
    *
    * @return {Map.<string, number>}

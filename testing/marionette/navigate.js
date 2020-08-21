@@ -17,9 +17,9 @@ this.navigate = {};
  * Determines if we expect to get a DOM load event (DOMContentLoaded)
  * on navigating to the <code>future</code> URL.
  *
- * @param {nsIURI} current
+ * @param {URL} current
  *     URL the browser is currently visiting.
- * @param {nsIURI=} future
+ * @param {URL=} future
  *     Destination URL, if known.
  *
  * @return {boolean}

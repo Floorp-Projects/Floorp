@@ -334,7 +334,12 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
                 else:
                     self.assertEqual(Alert(self.marionette).text, page["alert_text"])
 
-            self.assertEqual(page["url"], self.marionette.get_url())
+            if "error" in page and page["error"] != errors.TimeoutException:
+                url = self.marionette.get_url()
+                self.assertNotEqual(url, page["url"])
+                self.assertIn("error", url)
+            else:
+                self.assertEqual(self.marionette.get_url(), page["url"])
             self.assertEqual(self.history_length, expected_history_length)
 
             if "is_remote" in page:
@@ -362,7 +367,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
                     self.marionette.go_back()
             else:
                 self.marionette.go_back()
-            self.assertEqual(page["url"], self.marionette.get_url())
 
             check_page_status(page, len(test_pages))
 
@@ -373,7 +377,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
                     self.marionette.go_forward()
             else:
                 self.marionette.go_forward()
-            self.assertEqual(page["url"], self.marionette.get_url())
 
             check_page_status(page, len(test_pages))
 
@@ -671,7 +674,7 @@ class TestRefresh(BaseNavigationTestCase):
     def test_insecure_error(self):
         with self.assertRaises(errors.InsecureCertificateException):
             self.marionette.navigate(self.test_page_insecure)
-        self.assertEqual(self.test_page_insecure, self.marionette.get_url())
+        self.assertNotEqual(self.marionette.get_url(), self.test_page_insecure)
 
         with self.assertRaises(errors.InsecureCertificateException):
             self.marionette.refresh()
