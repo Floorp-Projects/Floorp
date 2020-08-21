@@ -4028,6 +4028,19 @@ class LInArray : public LInstructionHelper<1, 4, 0> {
   const LAllocation* object() { return getOperand(3); }
 };
 
+class LGuardElementNotHole : public LInstructionHelper<0, 2, 0> {
+ public:
+  LIR_HEADER(GuardElementNotHole)
+
+  LGuardElementNotHole(const LAllocation& elements, const LAllocation& index)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+  }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+};
+
 // Load a value from an array's elements vector, loading |undefined| if we hit a
 // hole. Bail out if we get a negative index.
 class LLoadElementHole : public LInstructionHelper<BOX_PIECES, 3, 0> {
