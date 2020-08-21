@@ -3953,6 +3953,7 @@ function run_variadic_tests(library) {
     ctypes.int32_t.ptr,
     ctypes.uint8_t,
     ctypes.uint8_t,
+    ctypes.int32_t.ptr,
     "..."
   );
   // Note that vector_add_va zeroes out result first.
