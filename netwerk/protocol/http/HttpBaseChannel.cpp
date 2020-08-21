@@ -4840,5 +4840,10 @@ void HttpBaseChannel::MaybeFlushConsoleReports() {
 
 void HttpBaseChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {}
 
+NS_IMETHODIMP HttpBaseChannel::SetWaitForHTTPSSVCRecord() {
+  mCaps |= NS_HTTP_WAIT_HTTPSSVC_RESULT;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

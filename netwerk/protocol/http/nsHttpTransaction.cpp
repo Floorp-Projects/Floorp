@@ -28,6 +28,9 @@
 #include "nsHttpResponseHead.h"
 #include "nsICancelable.h"
 #include "nsIClassOfService.h"
+#include "nsIDNSByTypeRecord.h"
+#include "nsIDNSRecord.h"
+#include "nsIDNSService.h"
 #include "nsIEventTarget.h"
 #include "nsIHttpActivityObserver.h"
 #include "nsIHttpAuthenticator.h"
@@ -424,6 +427,27 @@ nsresult nsHttpTransaction::Init(
     MOZ_ASSERT(trans);
     mPushedStream = trans->TakePushedStreamById(aPushedStreamId);
   }
+
+  if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled()) {
+    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+    nsCOMPtr<nsIEventTarget> target;
+    Unused << gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
+    if (dns && target) {
+      uint32_t flags =
+          nsIDNSService::GetFlagsFromTRRMode(mConnInfo->GetTRRMode());
+      if (mCaps & NS_HTTP_REFRESH_DNS) {
+        flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
+      }
+
+      rv = dns->AsyncResolveNative(
+          mConnInfo->GetOrigin(), nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags,
+          nullptr, this, target, mConnInfo->GetOriginAttributes(),
+          getter_AddRefs(mDNSRequest));
+      if (NS_FAILED(rv) && (mCaps & NS_HTTP_WAIT_HTTPSSVC_RESULT)) {
+        return rv;
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -520,6 +544,11 @@ void nsHttpTransaction::OnActivated() {
 
   if (mActivated) {
     return;
+  }
+
+  if (mDNSRequest) {
+    mDNSRequest->Cancel(NS_ERROR_ABORT);
+    mDNSRequest = nullptr;
   }
 
   if (mTrafficCategory != HttpTrafficCategory::eInvalid) {
@@ -2364,7 +2393,7 @@ nsHttpTransaction::Release() {
 }
 
 NS_IMPL_QUERY_INTERFACE(nsHttpTransaction, nsIInputStreamCallback,
-                        nsIOutputStreamCallback)
+                        nsIOutputStreamCallback, nsIDNSListener)
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsIInputStreamCallback
@@ -2625,6 +2654,59 @@ void nsHttpTransaction::NotifyTransactionObserver(nsresult reason) {
   TransactionObserverFunc obs = nullptr;
   std::swap(obs, mTransactionObserver);
   obs(std::move(result));
+}
+
+void nsHttpTransaction::UpdateConnectionInfo(nsHttpConnectionInfo* aConnInfo) {
+  MOZ_ASSERT(aConnInfo);
+
+  if (mActivated) {
+    MOZ_ASSERT(false, "Should not update conn info after activated");
+    return;
+  }
+
+  // TODO: maybe backup the old connection info.
+  mConnInfo = aConnInfo;
+}
+
+NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
+                                                  nsIDNSRecord* aRecord,
+                                                  nsresult aStatus) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  LOG(("nsHttpTransaction::OnLookupComplete [this=%p] mActivated=%d", this,
+       mActivated));
+
+  mDNSRequest = nullptr;
+
+  MakeDontWaitHTTPSSVC();
+
+  if (mActivated) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDNSHTTPSSVCRecord> record = do_QueryInterface(aRecord);
+  if (!record || NS_FAILED(aStatus)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsISVCBRecord> svcbRecord;
+  if (NS_FAILED(record->GetServiceModeRecord(mCaps & NS_HTTP_DISALLOW_SPDY,
+                                             mCaps & NS_HTTP_DISALLOW_HTTP3,
+                                             getter_AddRefs(svcbRecord)))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<nsHttpConnectionInfo> newInfo =
+      mConnInfo->CloneAndAdoptHTTPSSVCRecord(svcbRecord);
+  if (!gHttpHandler->ConnMgr()->MoveTransToHTTPSSVCConnEntry(this, newInfo)) {
+    // MoveTransToHTTPSSVCConnEntry() returning fail means this transaction is
+    // not in the connection entry's pending queue. This could happen if
+    // OnLookupComplete() is called before this transaction is added in the
+    // queue. We still need to update the connection info, so this transaction
+    // can be added to the right connection entry.
+    UpdateConnectionInfo(newInfo);
+  }
+  return NS_OK;
 }
 
 }  // namespace net

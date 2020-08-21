@@ -94,6 +94,12 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                nsHttpConnectionInfo* wildcardCI,
                                HttpConnectionBase* conn);
 
+  // Move a transaction from the pendingQ of it's connection entry to another
+  // one. Returns true if the transaction is moved successfully, otherwise
+  // returns false.
+  bool MoveTransToHTTPSSVCConnEntry(nsHttpTransaction* aTrans,
+                                    nsHttpConnectionInfo* aNewCI);
+
   [[nodiscard]] bool ProcessPendingQForEntry(nsHttpConnectionInfo*);
 
   // This is used to force an idle connection to be closed and removed from
