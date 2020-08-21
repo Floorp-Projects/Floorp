@@ -57,8 +57,8 @@ add_task(async function test_management_themes() {
     async function getAddon(type) {
       let addons = await browser.management.getAll();
       let themes = addons.filter(addon => addon.type === "theme");
-      // We get the 4 built-in themes plus the lwt and our addon.
-      browser.test.assertEq(5, themes.length, "got expected addons");
+      // We get the 3 built-in themes plus the lwt and our addon.
+      browser.test.assertEq(4, themes.length, "got expected addons");
       // We should also get our test extension.
       let testExtension = addons.find(addon => {
         return addon.id === TEST_ID;
