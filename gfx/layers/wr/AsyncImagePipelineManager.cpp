@@ -264,7 +264,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     return UpdateWithoutExternalImage(texture, aKeys[0], op, aMaybeFastTxn);
   }
 
-  wrTexture->MaybeNofityForUse(aMaybeFastTxn);
+  wrTexture->MaybeNotifyForUse(aMaybeFastTxn);
 
   Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
   auto externalImageKey = wrTexture->GetExternalImageKey();
