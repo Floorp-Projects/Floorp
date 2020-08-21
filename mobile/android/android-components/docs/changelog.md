@@ -24,6 +24,12 @@ permalink: /changelog/
 * **feature-app-links**
   * Fixed [issue #8169](https://github.com/mozilla-mobile/android-components/issues/8169) App links dialog will now call `showNow` to immediately show the dialog.
 
+* **browser-thumbnails**
+  * Exposed `BrowserThumbnail.requestThumbnail` API for consumers.
+
+* **browser-engine-gecko-nightly**
+  * Added `onPaintStatusReset` when a session's paint has been reset.
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
