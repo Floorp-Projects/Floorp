@@ -31,7 +31,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
        */
       const bufferA11yShown = waitForEvent(
         EVENT_SHOW,
-        evt => evt.accessible.parent.role == ROLE_STATUSBAR
+        evt => evt.accessible.role == ROLE_TEXT_LEAF &&
+          evt.accessible.indexInParent == 2 &&
+          evt.accessible.parent.role == ROLE_STATUSBAR
       );
       await new Promise(resolve => {
         let el = document.getElementById("audio");
