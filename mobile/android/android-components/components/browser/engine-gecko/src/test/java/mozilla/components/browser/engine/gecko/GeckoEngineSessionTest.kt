@@ -940,7 +940,7 @@ class GeckoEngineSessionTest {
             override fun getCurrentIndex() = currentIndex
         }
 
-        fun mockHistoryItem(title: String, uri: String): GeckoSession.HistoryDelegate.HistoryItem {
+        fun mockHistoryItem(title: String?, uri: String): GeckoSession.HistoryDelegate.HistoryItem {
             val item = mock<GeckoSession.HistoryDelegate.HistoryItem>()
             whenever(item.title).thenReturn(title)
             whenever(item.uri).thenReturn(uri)
@@ -952,11 +952,13 @@ class GeckoEngineSessionTest {
 
         historyDelegate.value.onHistoryStateChange(mock(), MockHistoryList(listOf(
             mockHistoryItem("Firefox", "https://firefox.com"),
-            mockHistoryItem("Mozilla", "http://mozilla.org")
+            mockHistoryItem("Mozilla", "http://mozilla.org"),
+            mockHistoryItem(null, "https://example.com")
         ), 1))
         verify(observer).onHistoryStateChanged(listOf(
             HistoryItem("Firefox", "https://firefox.com"),
-            HistoryItem("Mozilla", "http://mozilla.org")
+            HistoryItem("Mozilla", "http://mozilla.org"),
+            HistoryItem("https://example.com", "https://example.com")
         ), 1)
     }
 
