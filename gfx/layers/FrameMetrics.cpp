@@ -93,6 +93,21 @@ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
   aLayoutViewport = aLayoutViewport.MoveInsideAndClamp(aScrollableRect);
 }
 
+void FrameMetrics::ApplyScrollUpdateFrom(const FrameMetrics& aContentMetrics) {
+  // In applying a main-thread scroll update, try to preserve the relative
+  // offset between the visual and layout viewports.
+  CSSPoint relativeOffset = GetVisualScrollOffset() - GetLayoutScrollOffset();
+  MOZ_ASSERT(IsRootContent() || relativeOffset == CSSPoint());
+  // We need to set the two offsets together, otherwise a subsequent
+  // RecalculateLayoutViewportOffset() could see divergent layout and
+  // visual offsets.
+  SetLayoutScrollOffset(aContentMetrics.GetLayoutScrollOffset());
+  ClampAndSetVisualScrollOffset(aContentMetrics.GetLayoutScrollOffset() +
+                                relativeOffset);
+
+  mScrollGeneration = aContentMetrics.mScrollGeneration;
+}
+
 ScrollSnapInfo::ScrollSnapInfo()
     : mScrollSnapStrictnessX(StyleScrollSnapStrictness::None),
       mScrollSnapStrictnessY(StyleScrollSnapStrictness::None) {}

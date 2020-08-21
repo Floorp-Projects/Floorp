@@ -270,13 +270,7 @@ struct FrameMetrics {
            aContentFrameMetrics.GetVisualScrollOffset();
   }
 
-  void ApplyScrollUpdateFrom(const FrameMetrics& aOther) {
-    // Note that we set this (APZ) metrics' visual scroll offset to
-    // the incoming (Gecko) metrics' layout scroll offset.
-    // This will change in bug 1543485.
-    SetVisualScrollOffset(aOther.GetLayoutScrollOffset());
-    mScrollGeneration = aOther.mScrollGeneration;
-  }
+  void ApplyScrollUpdateFrom(const FrameMetrics& aContentMetrics);
 
   void ApplySmoothScrollUpdateFrom(const FrameMetrics& aOther) {
     mSmoothScrollOffset = aOther.mSmoothScrollOffset;
