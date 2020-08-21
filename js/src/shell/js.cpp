@@ -5402,6 +5402,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
         } else {
           JS_ReportErrorASCII(cx,
                               "SmooshMonkey does not support module stencil");
+          return false;
         }
         args.rval().setUndefined();
         return true;
