@@ -555,12 +555,18 @@ class ChromeActions {
     if (isValidMatchesCount(data.matchesCount)) {
       matchesCount = data.matchesCount;
     }
+    // Same for the `rawQuery` property.
+    let rawQuery = null;
+    if (typeof data.rawQuery === "string") {
+      rawQuery = data.rawQuery;
+    }
 
     let actor = getActor(this.domWindow);
     actor?.sendAsyncMessage("PDFJS:Parent:updateControlState", {
       result,
       findPrevious,
       matchesCount,
+      rawQuery,
     });
   }
 
