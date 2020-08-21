@@ -14,6 +14,7 @@ import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.downloads.DownloadInteractor
 import org.mozilla.fenix.library.downloads.DownloadItem
 import mozilla.components.feature.downloads.toMegabyteString
+import org.mozilla.fenix.ext.getIcon
 
 class DownloadsListItemViewHolder(
     view: View,
@@ -34,7 +35,7 @@ class DownloadsListItemViewHolder(
         itemView.download_layout.changeSelected(item in selectionHolder.selectedItems)
 
         itemView.overflow_menu.hideAndDisable()
-        itemView.favicon.setImageResource(R.drawable.ic_download_default)
+        itemView.favicon.setImageResource(item.getIcon())
         itemView.favicon.isClickable = false
 
         this.item = item
