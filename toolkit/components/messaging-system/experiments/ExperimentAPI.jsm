@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
-const COLLECTION_ID = "messaging-experiments";
+const COLLECTION_ID = "nimbus-experiments-desktop";
 
 const ExperimentAPI = {
   /**
