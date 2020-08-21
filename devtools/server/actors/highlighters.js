@@ -22,6 +22,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "isDocumentReady",
+  "devtools/server/actors/inspector/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "BoxModelHighlighter",
   "devtools/server/actors/highlighters/box-model",
   true
@@ -124,10 +130,10 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     const onInitialized = new Promise(resolve => {
       this._initialized = resolve;
     });
-    // Only try to create the highlighter isntance when the document is loaded,
+    // Only try to create the highlighter instance when the document is loaded,
     // otherwise, wait for the navigate event to fire.
     const doc = this._targetActor.window.document;
-    if (doc.documentElement && doc.readyState != "uninitialized") {
+    if (doc.documentElement && isDocumentReady(doc)) {
       this._createHighlighter();
     }
 
