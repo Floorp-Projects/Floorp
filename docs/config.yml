@@ -48,6 +48,8 @@ categories:
         - python
     fennec_doc:
         - mobile/android
+    metrics_doc:
+        - metrics
 
 redirects:
     browser/browser: browser
