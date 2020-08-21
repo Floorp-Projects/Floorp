@@ -389,7 +389,8 @@ class StartupCache : public nsIMemoryReporter {
   // Writes the cache to disk
   Result<Ok, nsresult> WriteToDisk();
 
-  Result<Ok, nsresult> DecompressEntry(StartupCacheEntry& aEntry);
+  Result<Ok, nsresult> DecompressEntry(StartupCacheEntry& aEntry,
+                                       MaybeOwnedCharPtr& aBuffer);
 
   Result<Ok, nsresult> LoadEntriesOffDisk();
 
