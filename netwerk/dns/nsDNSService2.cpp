@@ -369,6 +369,12 @@ nsDNSByTypeRecord::GetRecords(nsTArray<RefPtr<nsISVCBRecord>>& aRecords) {
 }
 
 NS_IMETHODIMP
+nsDNSByTypeRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
+                                        nsISVCBRecord** aRecord) {
+  return mHostRecord->GetServiceModeRecord(aNoHttp2, aNoHttp3, aRecord);
+}
+
+NS_IMETHODIMP
 nsDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
   *aResults = mHostRecord->GetResults();
   return NS_OK;

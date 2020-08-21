@@ -4,6 +4,7 @@
 
 #include "HTTPSSVC.h"
 #include "mozilla/net/DNS.h"
+#include "nsHttp.h"
 #include "nsNetAddr.h"
 
 namespace mozilla {
@@ -129,6 +130,48 @@ SvcParam::GetIpv6Hint(nsTArray<RefPtr<nsINetAddr>>& aIpv6Hint) {
   return NS_OK;
 }
 
+Maybe<uint16_t> SVCB::GetPort() const {
+  Maybe<uint16_t> port;
+  for (const auto& value : mSvcFieldValue) {
+    if (value.mValue.is<SvcParamPort>()) {
+      port.emplace(value.mValue.as<SvcParamPort>().mValue);
+      if (NS_FAILED(NS_CheckPortSafety(*port, "https"))) {
+        *port = 0;
+      }
+      return port;
+    }
+  }
+
+  return Nothing();
+}
+
+bool SVCB::NoDefaultAlpn() const {
+  for (const auto& value : mSvcFieldValue) {
+    if (value.mValue.is<SvcParamKeyNoDefaultAlpn>()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+Maybe<nsCString> SVCB::GetAlpn(bool aNoHttp2, bool aNoHttp3) const {
+  Maybe<nsCString> alpn;
+  nsAutoCString alpnValue;
+  for (const auto& value : mSvcFieldValue) {
+    if (value.mValue.is<SvcParamAlpn>()) {
+      alpn.emplace();
+      alpnValue = value.mValue.as<SvcParamAlpn>().mValue;
+      if (!alpnValue.IsEmpty()) {
+        alpn->Assign(SelectAlpnFromAlpnList(alpnValue, aNoHttp2, aNoHttp3));
+      }
+      return alpn;
+    }
+  }
+
+  return Nothing();
+}
+
 NS_IMETHODIMP SVCBRecord::GetPriority(uint16_t* aPriority) {
   *aPriority = mData.mSvcFieldPriority;
   return NS_OK;
@@ -139,12 +182,56 @@ NS_IMETHODIMP SVCBRecord::GetName(nsACString& aName) {
   return NS_OK;
 }
 
+Maybe<uint16_t> SVCBRecord::GetPort() { return mPort; }
+
+Maybe<nsCString> SVCBRecord::GetAlpn() { return mAlpn; }
+
 NS_IMETHODIMP SVCBRecord::GetValues(nsTArray<RefPtr<nsISVCParam>>& aValues) {
   for (const auto& v : mData.mSvcFieldValue) {
     RefPtr<nsISVCParam> param = new SvcParam(v.mValue);
     aValues.AppendElement(param);
   }
   return NS_OK;
+}
+
+already_AddRefed<nsISVCBRecord>
+DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
+    bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords) {
+  nsCOMPtr<nsISVCBRecord> selectedRecord;
+  uint32_t recordHasNoDefaultAlpnCount = 0;
+  for (const SVCB& record : aRecords) {
+    if (record.mSvcFieldPriority == 0) {
+      // In ServiceMode, the SvcPriority should never be 0.
+      return nullptr;
+    }
+
+    if (record.NoDefaultAlpn()) {
+      ++recordHasNoDefaultAlpnCount;
+    }
+
+    Maybe<uint16_t> port = record.GetPort();
+    if (port && *port == 0) {
+      // Found an unsafe port, skip this record.
+      continue;
+    }
+
+    Maybe<nsCString> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
+    if (alpn && alpn->IsEmpty()) {
+      // Can't find any supported protocols, skip.
+      continue;
+    }
+
+    if (!selectedRecord) {
+      selectedRecord = new SVCBRecord(record, std::move(port), std::move(alpn));
+    }
+  }
+
+  // If all records indicate "no-default-alpn", we should not use this RRSet.
+  if (recordHasNoDefaultAlpnCount == aRecords.Length()) {
+    return nullptr;
+  }
+
+  return selectedRecord.forget();
 }
 
 }  // namespace net

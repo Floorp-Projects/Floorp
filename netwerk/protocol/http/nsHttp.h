@@ -347,6 +347,12 @@ void LogHeaders(const char* lineStart);
 // CONNECT method.
 nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode);
 
+// Given a list of alpn-id, this function returns a supported alpn-id. If both
+// h3 and h2 are enabled, h3 alpn is preferred. This function returns an empty
+// string if no supported alpn-id is found.
+nsCString SelectAlpnFromAlpnList(const nsACString& aAlpnList, bool aNoHttp2,
+                                 bool aNoHttp3);
+
 }  // namespace net
 }  // namespace mozilla
 

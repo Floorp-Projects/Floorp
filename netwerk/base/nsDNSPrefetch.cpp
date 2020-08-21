@@ -10,6 +10,7 @@
 
 #include "nsIDNSListener.h"
 #include "nsIDNSService.h"
+#include "nsIDNSByTypeRecord.h"
 #include "nsICancelable.h"
 #include "nsIURI.h"
 #include "mozilla/Atomics.h"
@@ -110,21 +111,38 @@ nsresult nsDNSPrefetch::PrefetchHigh(bool refreshDNS) {
   return Prefetch(refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0);
 }
 
+nsresult nsDNSPrefetch::FetchHTTPSSVC(bool aRefreshDNS) {
+  if (!sDNSService) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
+  uint32_t flags = nsIDNSService::GetFlagsFromTRRMode(mTRRMode) |
+                   nsIDNSService::RESOLVE_SPECULATE;
+  if (aRefreshDNS) {
+    flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
+  }
+
+  nsCOMPtr<nsICancelable> tmpOutstanding;
+  return sDNSService->AsyncResolveNative(
+      mHostname, nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags, nullptr, this,
+      target, mOriginAttributes, getter_AddRefs(tmpOutstanding));
+}
+
 NS_IMPL_ISUPPORTS(nsDNSPrefetch, nsIDNSListener)
 
 NS_IMETHODIMP
 nsDNSPrefetch::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
-  if (mStoreTiming) {
+  nsCOMPtr<nsIDNSHTTPSSVCRecord> httpsRecord = do_QueryInterface(rec);
+
+  if (mStoreTiming && !httpsRecord) {
     mEndTimestamp = mozilla::TimeStamp::Now();
   }
   nsCOMPtr<nsIDNSListener> listener = do_QueryReferent(mListener);
   if (listener) {
     listener->OnLookupComplete(request, rec, status);
   }
-  // OnLookupComplete should be called on the target thread, so we release
-  // mListener here to make sure mListener is also released on the target
-  // thread.
-  mListener = nullptr;
+
   return NS_OK;
 }
