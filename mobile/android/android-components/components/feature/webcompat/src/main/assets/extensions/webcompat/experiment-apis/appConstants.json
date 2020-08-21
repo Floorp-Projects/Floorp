@@ -1,0 +1,15 @@
+[
+  {
+    "namespace": "appConstants",
+    "description": "experimental API to expose some app constants",
+    "functions": [
+      {
+        "name": "getReleaseBranch",
+        "type": "function",
+        "description": "",
+        "async": true,
+        "parameters": []
+      }
+    ]
+  }
+]

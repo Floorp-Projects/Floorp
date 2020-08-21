@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "13.0.1",
+  "version": "14.0.0",
 
   "applications": {
     "gecko": {
@@ -20,6 +20,14 @@
         "paths": [["aboutConfigPrefs"]]
       }
     },
+    "appConstants": {
+      "schema": "experiment-apis/appConstants.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/appConstants.js",
+        "paths": [["appConstants"]]
+      }
+    },
     "aboutPage": {
       "schema": "about-compat/aboutPage.json",
       "parent": {
@@ -34,6 +42,14 @@
         "scopes": ["addon_parent"],
         "script": "experiment-apis/experiments.js",
         "paths": [["experiments"]]
+      }
+    },
+    "matchPatterns": {
+      "schema": "experiment-apis/matchPatterns.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/matchPatterns.js",
+        "paths": [["matchPatterns"]]
       }
     },
     "pictureInPictureChild": {
@@ -67,26 +83,62 @@
         "script": "experiment-apis/systemManufacturer.js",
         "paths": [["systemManufacturer"]]
       }
+    },
+    "trackingProtection": {
+      "schema": "experiment-apis/trackingProtection.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/trackingProtection.js",
+        "paths": [["trackingProtection"]]
+      }
     }
   },
 
   "content_security_policy": "script-src 'self' 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo='; default-src 'self'; base-uri moz-extension://*; object-src 'none'",
 
-  "permissions": ["webRequest", "webRequestBlocking", "<all_urls>"],
+  "permissions": [
+    "tabs",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ],
 
   "background": {
     "scripts": [
       "lib/module_shim.js",
+      "lib/messaging_helper.js",
       "lib/intervention_helpers.js",
       "data/injections.js",
       "data/picture_in_picture_overrides.js",
+      "data/shims.js",
       "data/ua_overrides.js",
       "lib/about_compat_broker.js",
       "lib/custom_functions.js",
       "lib/injections.js",
       "lib/picture_in_picture_overrides.js",
+      "lib/shims.js",
       "lib/ua_overrides.js",
       "run.js"
     ]
-  }
+  },
+
+  "web_accessible_resources": [
+    "shims/adsafeprotected-ima.js",
+    "shims/bmauth.js",
+    "shims/eluminate.js",
+    "shims/empty-script.js",
+    "shims/facebook-sdk.js",
+    "shims/google-analytics-ecommerce-plugin.js",
+    "shims/google-analytics-legacy.js",
+    "shims/google-analytics-tag-manager.js",
+    "shims/google-analytics.js",
+    "shims/google-publisher-tags.js",
+    "shims/live-test-shim.js",
+    "shims/mochitest-shim-1.js",
+    "shims/mochitest-shim-2.js",
+    "shims/mochitest-shim-3.js",
+    "shims/rambler-authenticator.js",
+    "shims/rich-relevance.js"
+  ]
 }
