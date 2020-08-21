@@ -70,6 +70,9 @@ permalink: /changelog/
 
 * **browser-menu**
   * ⚠️ **This is a breaking change**: Removed `SimpleBrowserMenuHighlightableItem.itemType`. Use a WeakMap instead if you need to attach private data.
+  
+* **browser-menu**
+  * For a11y, `BrowserMenuImageSwitch` now highlights the entire row, not just the switch
 
 * **concept-engine**
   * Added the `cookiePurging` property to `TrackingProtectionPolicy` and `TrackingProtectionPolicyForSessionTypes` constructors to enable/disable cookie purging feature read more about it [here](https://blog.mozilla.org/blog/2020/08/04/latest-firefox-rolls-out-enhanced-tracking-protection-2-0-blocking-redirect-trackers-by-default/).

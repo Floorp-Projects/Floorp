@@ -48,6 +48,7 @@
     <!--Icon-->
     <dimen name="mozac_browser_menu_item_image_text_icon_width">24dp</dimen>
     <dimen name="mozac_browser_menu_item_image_text_icon_height">24dp</dimen>
+    <dimen name="mozac_browser_menu_item_image_text_icon_padding">20dp</dimen>
     <!--Icon-->
 
     <!--Label-->
