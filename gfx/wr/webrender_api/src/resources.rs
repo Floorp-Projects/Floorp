@@ -106,6 +106,9 @@ impl ApiResources {
                 }
                 ResourceUpdate::DeleteBlobImage(key) => {
                     self.blob_image_templates.remove(&key);
+                    if let Some(ref mut handler) = self.blob_image_handler {
+                        handler.delete(key);
+                    }
                 }
                 ResourceUpdate::SetBlobImageVisibleArea(ref key, ref area) => {
                     self.update_blob_image(*key, None, None, None, area);
