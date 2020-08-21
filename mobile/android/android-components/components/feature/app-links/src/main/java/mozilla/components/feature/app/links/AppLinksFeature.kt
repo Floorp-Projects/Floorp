@@ -78,7 +78,7 @@ class AppLinksFeature(
             dialog.onCancelRedirect = doNotOpenApp
 
             if (!isAlreadyADialogCreated()) {
-                dialog.show(fragmentManager, FRAGMENT_TAG)
+                dialog.showNow(fragmentManager, FRAGMENT_TAG)
             }
 
             return
