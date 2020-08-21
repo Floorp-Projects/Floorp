@@ -502,8 +502,8 @@ void Family::SetupFamilyCharMap(FontList* aList) {
     }
     auto faceMap = static_cast<SharedBitSet*>(f->mCharacterMap.ToPtr(aList));
     if (!faceMap) {
-      return;  // If there's a face where setting up the cmap failed or is not
-               // yet complete, just bail out of creating the family charmap.
+      continue;  // If there's a face where setting up the cmap failed, we skip
+                 // it as unusable.
     }
     if (!firstMap) {
       firstMap = faceMap;
@@ -516,10 +516,14 @@ void Family::SetupFamilyCharMap(FontList* aList) {
       familyMap.Union(*faceMap);
     }
   }
-  if (merged) {
+  // If we created a merged cmap, we need to save that on the family; or if we
+  // found no usable cmaps at all, we need to store the empty familyMap so that
+  // we won't repeatedly attempt this for an unusable family.
+  if (merged || firstMapShmPointer.IsNull()) {
     mCharacterMap =
         gfxPlatformFontList::PlatformFontList()->GetShmemCharMap(&familyMap);
   } else {
+    // If all [usable] faces had the same cmap, we can just share it.
     mCharacterMap = firstMapShmPointer;
   }
 }
