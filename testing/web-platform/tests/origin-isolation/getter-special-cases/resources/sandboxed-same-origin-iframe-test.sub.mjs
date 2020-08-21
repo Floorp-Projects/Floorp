@@ -1,6 +1,6 @@
 import {
   navigateIframe,
-  testOriginIsolationRestricted
+  testGetter
 } from "../../resources/helpers.mjs";
 
 export default ({ expected }) => {
@@ -16,5 +16,5 @@ export default ({ expected }) => {
 
   // Since the allow-same-origin token is set, this should behave like a normal
   // iframe, and follow the embedder.
-  testOriginIsolationRestricted(0, expected);
+  testGetter(0, expected);
 };

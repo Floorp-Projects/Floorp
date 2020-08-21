@@ -1,5 +1,5 @@
 import { insertCustomIframe, testSupportScript } from "./helpers.mjs";
-import { testOriginIsolationRestricted } from "../../resources/helpers.mjs";
+import { testGetter } from "../../resources/helpers.mjs";
 
 export default ({ expected }) => {
   promise_setup(() => {
@@ -10,5 +10,5 @@ export default ({ expected }) => {
   // of the iframe, which is about:blank, which in turn inherits from the
   // parent. So, the caller needs to tell us what to expect.
 
-  testOriginIsolationRestricted(0, expected);
+  testGetter(0, expected);
 };

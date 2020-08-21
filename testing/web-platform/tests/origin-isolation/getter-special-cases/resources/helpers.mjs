@@ -18,12 +18,12 @@ export async function insertCustomIframe(src) {
 
 /**
  * This is the part of send-origin-isolation-header.py that allows
- * us to reuse testOriginIsolationRestricted.
+ * us to reuse testGetter.
  */
 export const testSupportScript = `
   <script>
   window.onmessage = () => {
-    parent.postMessage(self.originIsolationRestricted, "*");
+    parent.postMessage(self.originIsolated, "*");
   };
   </script>
 `;
