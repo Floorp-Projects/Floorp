@@ -13239,7 +13239,7 @@ void CodeGenerator::visitInArray(LInArray* lir) {
 
     MOZ_ASSERT_IF(index < 0, mir->needsNegativeIntCheck());
     if (mir->needsNegativeIntCheck()) {
-      using Fn = bool (*)(JSContext*, uint32_t, HandleObject, bool*);
+      using Fn = bool (*)(JSContext*, int32_t, HandleObject, bool*);
       ool = oolCallVM<Fn, OperatorInI>(
           lir, ArgList(Imm32(index), ToRegister(lir->object())),
           StoreRegisterTo(output));
@@ -13270,7 +13270,7 @@ void CodeGenerator::visitInArray(LInArray* lir) {
 
     if (mir->needsNegativeIntCheck()) {
       masm.bind(&negativeIntCheck);
-      using Fn = bool (*)(JSContext*, uint32_t, HandleObject, bool*);
+      using Fn = bool (*)(JSContext*, int32_t, HandleObject, bool*);
       ool = oolCallVM<Fn, OperatorInI>(
           lir, ArgList(index, ToRegister(lir->object())),
           StoreRegisterTo(output));
