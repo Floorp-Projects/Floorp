@@ -41,7 +41,8 @@ class PdfjsChild extends JSWindowActorChild {
 
       case "PDFJS:ZoomIn":
       case "PDFJS:ZoomOut":
-      case "PDFJS:ZoomReset": {
+      case "PDFJS:ZoomReset":
+      case "PDFJS:Save": {
         const type = msg.name.split("PDFJS:")[1].toLowerCase();
         this.dispatchEvent(type, null);
         break;

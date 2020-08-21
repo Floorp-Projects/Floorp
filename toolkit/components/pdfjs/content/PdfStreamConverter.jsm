@@ -306,6 +306,21 @@ class ChromeActions {
       filename = "document.pdf";
     }
     var blobUri = NetUtil.newURI(blobUrl);
+
+    // If the download was triggered from the ctrl/cmd+s or "Save Page As"
+    // launch the "Save As" dialog.
+    if (data.sourceEventType == "save") {
+      let actor = getActor(this.domWindow);
+      actor.sendAsyncMessage("PDFJS:Parent:saveURL", {
+        blobUrl,
+        filename,
+      });
+      return;
+    }
+
+    // The download is from the fallback bar or the download button, so trigger
+    // the open dialog to make it easier for users to save in the downloads
+    // folder or launch a different PDF viewer.
     var extHelperAppSvc = Cc[
       "@mozilla.org/uriloader/external-helper-app-service;1"
     ].getService(Ci.nsIExternalHelperAppService);
