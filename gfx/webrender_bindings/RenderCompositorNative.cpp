@@ -35,7 +35,6 @@ RenderCompositorNative::RenderCompositorNative(
 }
 
 RenderCompositorNative::~RenderCompositorNative() {
-  mProfilerScreenshotGrabber.Destroy();
   mNativeLayerRoot->SetLayers({});
   mNativeLayerForEntireWindow = nullptr;
   mNativeLayerRootSnapshotter = nullptr;
@@ -122,39 +121,6 @@ bool RenderCompositorNative::MaybeReadback(
   return success;
 }
 
-bool RenderCompositorNative::MaybeGrabScreenshot(
-    const gfx::IntSize& aWindowSize) {
-  if (!ShouldUseNativeCompositor()) {
-    return false;
-  }
-
-  if (!mNativeLayerRootSnapshotter) {
-    mNativeLayerRootSnapshotter = mNativeLayerRoot->CreateSnapshotter();
-  }
-  mNativeLayerRootSnapshotter->MaybeGrabProfilerScreenshot(
-      &mProfilerScreenshotGrabber, aWindowSize);
-
-  // MaybeGrabScreenshot might have changed the current context. Make sure our
-  // context is current again.
-  MakeCurrent();
-
-  return true;
-}
-
-bool RenderCompositorNative::MaybeProcessScreenshotQueue() {
-  if (!ShouldUseNativeCompositor()) {
-    return false;
-  }
-
-  mProfilerScreenshotGrabber.MaybeProcessQueue();
-
-  // MaybeProcessQueue might have changed the current context. Make sure our
-  // context is current again.
-  MakeCurrent();
-
-  return true;
-}
-
 uint32_t RenderCompositorNative::GetMaxUpdateRects() {
   if (ShouldUseNativeCompositor() &&
       StaticPrefs::gfx_webrender_compositor_max_update_rects_AtStartup() > 0) {
@@ -165,7 +131,7 @@ uint32_t RenderCompositorNative::GetMaxUpdateRects() {
 
 void RenderCompositorNative::CompositorBeginFrame() {
   mAddedLayers.Clear();
-  mAddedTilePixelCount = 0;
+  mAddedPixelCount = 0;
   mAddedClippedPixelCount = 0;
   mBeginFrameTimeStamp = TimeStamp::NowUnfuzzed();
   mSurfacePoolHandle->OnBeginFrame();
@@ -187,10 +153,10 @@ void RenderCompositorNative::CompositorEndFrame() {
                         int(mDrawnPixelCount * 100 / windowPixelCount),
                         int(mAddedClippedPixelCount * 100 / windowPixelCount),
                         int(mAddedLayers.Length()),
-                        int(mAddedTilePixelCount * 100 / windowPixelCount),
+                        int(mAddedPixelCount * 100 / windowPixelCount),
                         int(nativeLayerCount - mAddedLayers.Length()),
-                        int((mTotalTilePixelCount - mAddedTilePixelCount) *
-                            100 / windowPixelCount)),
+                        int((mTotalPixelCount - mAddedPixelCount) * 100 /
+                            windowPixelCount)),
         JS::ProfilingCategoryPair::GRAPHICS, mBeginFrameTimeStamp,
         TimeStamp::NowUnfuzzed());
   }
@@ -270,10 +236,8 @@ void RenderCompositorNative::DestroySurface(NativeSurfaceId aId) {
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
 
   Surface& surface = surfaceCursor->second;
-  if (!surface.mIsExternal) {
-    for (const auto& iter : surface.mNativeLayers) {
-      mTotalTilePixelCount -= gfx::IntRect({}, iter.second->GetSize()).Area();
-    }
+  for (const auto& iter : surface.mNativeLayers) {
+    mTotalPixelCount -= gfx::IntRect({}, iter.second->GetSize()).Area();
   }
 
   mSurfaces.erase(surfaceCursor);
@@ -289,7 +253,7 @@ void RenderCompositorNative::CreateTile(wr::NativeSurfaceId aId, int aX,
   RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer(
       surface.TileSize(), surface.mIsOpaque, mSurfacePoolHandle);
   surface.mNativeLayers.insert({TileKey(aX, aY), layer});
-  mTotalTilePixelCount += gfx::IntRect({}, layer->GetSize()).Area();
+  mTotalPixelCount += gfx::IntRect({}, layer->GetSize()).Area();
 }
 
 void RenderCompositorNative::DestroyTile(wr::NativeSurfaceId aId, int aX,
@@ -303,7 +267,7 @@ void RenderCompositorNative::DestroyTile(wr::NativeSurfaceId aId, int aX,
   MOZ_RELEASE_ASSERT(layerCursor != surface.mNativeLayers.end());
   RefPtr<layers::NativeLayer> layer = std::move(layerCursor->second);
   surface.mNativeLayers.erase(layerCursor);
-  mTotalTilePixelCount -= gfx::IntRect({}, layer->GetSize()).Area();
+  mTotalPixelCount -= gfx::IntRect({}, layer->GetSize()).Area();
 
   // If the layer is currently present in mNativeLayerRoot, it will be destroyed
   // once CompositorEndFrame() replaces mNativeLayerRoot's layers and drops that
@@ -352,13 +316,9 @@ void RenderCompositorNative::AddSurface(
     layer->SetSamplingFilter(ToSamplingFilter(aImageRendering));
     mAddedLayers.AppendElement(layer);
 
-    if (!surface.mIsExternal) {
-      mAddedTilePixelCount += layerSize.width * layerSize.height;
-    }
-    gfx::Rect r = transform.TransformBounds(
-        gfx::Rect(layer->CurrentSurfaceDisplayRect()));
+    mAddedPixelCount += layerSize.width * layerSize.height;
     gfx::IntRect visibleRect =
-        clipRect.Intersect(RoundedToInt(r) + layerPosition);
+        clipRect.Intersect(layer->CurrentSurfaceDisplayRect() + layerPosition);
     mAddedClippedPixelCount += visibleRect.Area();
   }
 }

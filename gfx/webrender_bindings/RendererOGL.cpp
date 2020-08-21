@@ -180,9 +180,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
     }
   }
 
-  if (!mCompositor->MaybeGrabScreenshot(size.ToUnknownSize())) {
-    mScreenshotGrabber.MaybeGrabScreenshot(this, size.ToUnknownSize());
-  }
+  mScreenshotGrabber.MaybeGrabScreenshot(this, size.ToUnknownSize());
 
   RenderedFrameId frameId = mCompositor->EndFrame(dirtyRects);
 
@@ -198,9 +196,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   mFrameStartTime = TimeStamp();
 #endif
 
-  if (!mCompositor->MaybeProcessScreenshotQueue()) {
-    mScreenshotGrabber.MaybeProcessQueue(this);
-  }
+  mScreenshotGrabber.MaybeProcessQueue(this);
 
   // TODO: Flush pending actions such as texture deletions/unlocks and
   //       textureHosts recycling.
