@@ -11,7 +11,8 @@ use std::default::Default;
 use std::error;
 use std::fmt::{self, Display, Formatter};
 use std::path::Path;
-use std::str::FromStr;
+use std::process::{Command, Stdio};
+use std::str::{self, FromStr};
 
 /// Details about the version of a Firefox build.
 #[derive(Clone, Default)]
@@ -88,6 +89,8 @@ pub struct Version {
     pub patch: u64,
     /// Prerelase information (e.g. Some(("a", 1)) in 55.0a1)
     pub pre: Option<(String, u64)>,
+    /// Is build an ESR build
+    pub esr: bool,
 }
 
 impl Version {
@@ -105,7 +108,7 @@ impl Version {
         }
     }
 
-    pub fn matches(&self, version_req: &str) -> Result<bool, Error> {
+    pub fn matches(&self, version_req: &str) -> VersionResult<bool> {
         let req = semver::VersionReq::parse(version_req)?;
         Ok(req.matches(&self.to_semver()))
     }
@@ -114,9 +117,9 @@ impl Version {
 impl FromStr for Version {
     type Err = Error;
 
-    fn from_str(version_string: &str) -> Result<Version, Error> {
+    fn from_str(version_string: &str) -> VersionResult<Version> {
         let mut version: Version = Default::default();
-        let version_re = Regex::new(r"^(?P<major>[[:digit:]]+)\.(?P<minor>[[:digit:]]+)(?:\.(?P<patch>[[:digit:]]+))?(?:(?P<pre0>[a-z]+)(?P<pre1>[[:digit:]]*))?$").unwrap();
+        let version_re = Regex::new(r"^(?P<major>[[:digit:]]+)\.(?P<minor>[[:digit:]]+)(?:\.(?P<patch>[[:digit:]]+))?(?:(?P<esr>esr)|(?P<pre0>[a-z]+)(?P<pre1>[[:digit:]]*))?$").unwrap();
         if let Some(captures) = version_re.captures(version_string) {
             match captures
                 .name("major")
@@ -138,6 +141,9 @@ impl FromStr for Version {
             {
                 version.patch = x
             }
+            if let Some(_) = captures.name("esr") {
+                version.esr = true;
+            }
             if let Some(pre_0) = captures.name("pre0").map(|x| x.as_str().to_string()) {
                 if captures.name("pre1").is_some() {
                     if let Some(pre_1) = captures
@@ -158,7 +164,7 @@ impl FromStr for Version {
             }
         } else {
             return Err(Error::VersionError(
-                "Failed to parse input as version string".into(),
+                format!("Failed to parse {} as version string", version_string).into(),
             ));
         }
         Ok(version)
@@ -171,6 +177,9 @@ impl Display for Version {
             0 => write!(f, "{}.{}", self.major, self.minor)?,
             _ => write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?,
         }
+        if self.esr {
+            write!(f, "esr")?;
+        }
         if let Some(ref pre) = self.pre {
             write!(f, "{}{}", pre.0, pre.1)?;
         };
@@ -178,12 +187,12 @@ impl Display for Version {
     }
 }
 
-/// Determine the version of Firefox given the path to a binary.
+/// Determine the version of Firefox using associated metadata files.
 ///
 /// Given the path to a Firefox binary, read the associated application.ini
 /// and platform.ini files to extract information about the version of Firefox
 /// at that path.
-pub fn firefox_version(binary: &Path) -> Result<AppVersion, Error> {
+pub fn firefox_version(binary: &Path) -> VersionResult<AppVersion> {
     let mut version = AppVersion::new();
     let mut updated = false;
 
@@ -221,7 +230,40 @@ pub fn firefox_version(binary: &Path) -> Result<AppVersion, Error> {
     Ok(version)
 }
 
-#[derive(Debug)]
+/// Determine the version of Firefox by executing the binary.
+///
+/// Given the path to a Firefox binary, run firefox --version and extract the
+/// version string from the output
+pub fn firefox_binary_version(binary: &Path) -> VersionResult<Version> {
+    let output = Command::new(binary)
+        .args(&["--version"])
+        .stdout(Stdio::piped())
+        .spawn()
+        .and_then(|child| child.wait_with_output())
+        .ok();
+
+    if let Some(x) = output {
+        let output_str = str::from_utf8(&*x.stdout)
+            .map_err(|_| Error::VersionError("Couldn't parse version output as UTF8".into()))?;
+        parse_binary_version(&output_str)
+    } else {
+        Err(Error::VersionError("Running binary failed".into()))
+    }
+}
+
+fn parse_binary_version(version_str: &str) -> VersionResult<Version> {
+    let version_regexp = Regex::new(r#"Mozilla Firefox[[:space:]]+(?P<version>.+)"#)
+        .expect("Error parsing version regexp");
+
+    let version_match = version_regexp
+        .captures(version_str)
+        .and_then(|captures| captures.name("version"))
+        .ok_or_else(|| Error::VersionError("--version output didn't match expectations".into()))?;
+
+    Ok(Version::from_str(version_match.as_str())?)
+}
+
+#[derive(Clone, Debug)]
 pub enum Error {
     /// Error parsing a version string
     VersionError(String),
@@ -265,6 +307,8 @@ impl error::Error for Error {
     }
 }
 
+pub type VersionResult<T> = Result<T, Error>;
+
 #[cfg(target_os = "macos")]
 mod platform {
     use std::path::{Path, PathBuf};
@@ -296,7 +340,7 @@ mod platform {
 
 #[cfg(test)]
 mod test {
-    use super::Version;
+    use super::{parse_binary_version, Version};
     use std::str::FromStr;
 
     fn parse_version(input: &str) -> String {
@@ -313,6 +357,7 @@ mod test {
         assert!(parse_version("50.0a1") == "50.0a1");
         assert!(parse_version("50.0.1a1") == "50.0.1a1");
         assert!(parse_version("50.0.0") == "50.0");
+        assert!(parse_version("78.0.11esr") == "78.0.11esr");
     }
 
     #[test]
@@ -331,7 +376,50 @@ mod test {
         assert!(compare("50.1.0", ">=50,<51"));
         assert!(compare("50.0a1", ">49.0"));
         assert!(compare("50.0a2", "=50"));
+        assert!(compare("78.1.0esr", ">=78"));
+        assert!(compare("78.1.0esr", "<79"));
+        assert!(compare("78.1.11esr", "<79"));
         // This is the weird one
         assert!(!compare("50.0a2", ">50.0"));
+    }
+
+    #[test]
+    fn test_binary_parser() {
+        assert!(
+            parse_binary_version("Mozilla Firefox 50.0a1")
+                .unwrap()
+                .to_string()
+                == "50.0a1"
+        );
+        assert!(
+            parse_binary_version("Mozilla Firefox 50.0.1a1")
+                .unwrap()
+                .to_string()
+                == "50.0.1a1"
+        );
+        assert!(
+            parse_binary_version("Mozilla Firefox 50.0.0")
+                .unwrap()
+                .to_string()
+                == "50.0"
+        );
+        assert!(
+            parse_binary_version("Mozilla Firefox 78.0.11esr")
+                .unwrap()
+                .to_string()
+                == "78.0.11esr"
+        );
+        assert!(
+            parse_binary_version("Mozilla Firefox 78.0esr")
+                .unwrap()
+                .to_string()
+                == "78.0esr"
+        );
+        assert!(
+            parse_binary_version("Mozilla Firefox 78.0")
+                .unwrap()
+                .to_string()
+                == "78.0"
+        );
     }
 }
