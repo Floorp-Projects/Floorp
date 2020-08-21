@@ -1188,7 +1188,8 @@ void nsHttpTransaction::Close(nsresult reason) {
   // the password mistakenly again from the user.
   if ((reason == NS_ERROR_NET_RESET || reason == NS_OK ||
        reason ==
-           psm::GetXPCOMFromNSSError(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA)) &&
+           psm::GetXPCOMFromNSSError(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA) ||
+       mFallbackConnInfo) &&
       (!(mCaps & NS_HTTP_STICKY_CONNECTION) ||
        (mCaps & NS_HTTP_CONNECTION_RESTARTABLE) ||
        (mEarlyDataDisposition == EARLY_425))) {
@@ -1218,10 +1219,25 @@ void nsHttpTransaction::Close(nsresult reason) {
     bool reallySentData =
         mSentData && (!mConnection || mConnection->BytesWritten());
 
+    // If this is true, it means we failed to use the HTTPSSVC connection info
+    // to connect to the server. We need to retry with the original connection
+    // info.
+    bool restartToFallbackConnInfo = !reallySentData && mFallbackConnInfo;
+
     if (reason ==
             psm::GetXPCOMFromNSSError(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA) ||
         (!mReceivedData && ((mRequestHead && mRequestHead->IsSafeMethod()) ||
-                            !reallySentData || connReused))) {
+                            !reallySentData || connReused)) ||
+        restartToFallbackConnInfo) {
+      if (restartToFallbackConnInfo) {
+        mConnInfo = nullptr;
+        mFallbackConnInfo.swap(mConnInfo);
+        LOG(
+            ("transaction will be restarted with the fallback connection info "
+             "key=%s",
+             mConnInfo->HashKey().get()));
+      }
+
       // if restarting fails, then we must proceed to close the pipe,
       // which will notify the channel that the transaction failed.
 
@@ -2664,7 +2680,7 @@ void nsHttpTransaction::UpdateConnectionInfo(nsHttpConnectionInfo* aConnInfo) {
     return;
   }
 
-  // TODO: maybe backup the old connection info.
+  mFallbackConnInfo = mConnInfo->Clone();
   mConnInfo = aConnInfo;
 }
 
@@ -2693,6 +2709,7 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
   if (NS_FAILED(record->GetServiceModeRecord(mCaps & NS_HTTP_DISALLOW_SPDY,
                                              mCaps & NS_HTTP_DISALLOW_HTTP3,
                                              getter_AddRefs(svcbRecord)))) {
+    LOG(("  no usable record!"));
     return NS_ERROR_FAILURE;
   }
 

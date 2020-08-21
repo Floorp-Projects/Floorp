@@ -240,6 +240,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   RefPtr<nsAHttpConnection> mConnection;
   RefPtr<nsHttpConnectionInfo> mConnInfo;
+  // This is only set in UpdateConnectionInfo() when we have received a SVCB RR.
+  // When the SVCB connection is failed, this transaction will be restarted with
+  // this fallback connection info.
+  RefPtr<nsHttpConnectionInfo> mFallbackConnInfo;
   nsHttpRequestHead* mRequestHead;    // weak ref
   nsHttpResponseHead* mResponseHead;  // owning pointer
 
