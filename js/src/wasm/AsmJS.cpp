@@ -6731,9 +6731,9 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {
     UniqueChars msg(JS_smprintf(
-        "ArrayBuffer byteLength 0x%" PRIu64
+        "ArrayBuffer byteLength 0x%" PRIx64
         " is not a valid heap length. The next "
-        "valid length is 0x%" PRIu64,
+        "valid length is 0x%" PRIx64,
         memoryLength, RoundUpToNextValidAsmJSHeapLength(memoryLength)));
     if (!msg) {
       return false;
@@ -6746,8 +6746,8 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   // byteLength has larger alignment.
   MOZ_ASSERT((metadata.minMemoryLength - 1) <= INT32_MAX);
   if (memoryLength < metadata.minMemoryLength) {
-    UniqueChars msg(JS_smprintf("ArrayBuffer byteLength of 0x%" PRIu64
-                                " is less than 0x%" PRIu64 " (the "
+    UniqueChars msg(JS_smprintf("ArrayBuffer byteLength of 0x%" PRIx64
+                                " is less than 0x%" PRIx64 " (the "
                                 "size implied "
                                 "by const heap accesses).",
                                 memoryLength, metadata.minMemoryLength));

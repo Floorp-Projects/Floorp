@@ -2376,7 +2376,7 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
       return -1;
     }
   } else {
-    if (Maybe<uint32_t> maxSize = oldBuf->wasmMaxSize()) {
+    if (Maybe<uint64_t> maxSize = oldBuf->wasmMaxSize()) {
       if (newSize.value() > maxSize.value()) {
         return -1;
       }
