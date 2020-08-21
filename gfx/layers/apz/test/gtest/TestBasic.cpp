@@ -492,3 +492,32 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   TouchUp(apzc, touchPos, mcc->Time());
 }
 #endif
+
+TEST_F(APZCBasicTester, RelativeScrollOffset) {
+  // Set up initial conditions: zoomed in, layout offset at (100, 100),
+  // visual offset at (120, 120); the relative offset is such (20, 20).
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetScrollableRect(CSSRect(0, 0, 1000, 1000));
+  metrics.SetLayoutViewport(CSSRect(100, 100, 100, 100));
+  metrics.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetVisualScrollOffset(CSSPoint(120, 120));
+  metrics.SetIsRootContent(true);
+  apzc->SetFrameMetrics(metrics);
+
+  // Scroll the layout viewport to (200, 200).
+  ScrollMetadata mainThreadMetadata = metadata;
+  FrameMetrics& mainThreadMetrics = mainThreadMetadata.GetMetrics();
+  mainThreadMetrics.SetLayoutScrollOffset(CSSPoint(200, 200));
+  mainThreadMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
+  mainThreadMetrics.SetScrollGeneration(
+      mainThreadMetrics.GetScrollGeneration() + 1);
+  apzc->NotifyLayersUpdated(mainThreadMetadata, /*isFirstPaint=*/false,
+                            /*thisLayerTreeUpdated=*/true);
+
+  // Check that the relative offset has been preserved.
+  metrics = apzc->GetFrameMetrics();
+  EXPECT_EQ(metrics.GetLayoutScrollOffset(), CSSPoint(200, 200));
+  EXPECT_EQ(metrics.GetVisualScrollOffset(), CSSPoint(220, 220));
+}
