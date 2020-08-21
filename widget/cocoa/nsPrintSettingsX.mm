@@ -496,6 +496,41 @@ nsPrintSettingsX::SetOrientation(int32_t aOrientation) {
 }
 
 NS_IMETHODIMP
+nsPrintSettingsX::GetNumCopies(int32_t* aCopies) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Only use NSPrintInfo data in the parent process. The
+  // child process' instance is not needed or used.
+  if (XRE_IsParentProcess()) {
+    NSDictionary* dict = [mPrintInfo dictionary];
+    *aCopies = [[dict objectForKey:NSPrintCopies] intValue];
+  } else {
+    nsPrintSettings::GetNumCopies(aCopies);
+  }
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsX::SetNumCopies(int32_t aCopies) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Only use NSPrintInfo data in the parent process. The
+  // child process' instance is not needed or used.
+  if (XRE_IsParentProcess()) {
+    NSMutableDictionary* dict = [mPrintInfo dictionary];
+    [dict setObject:[NSNumber numberWithInt:aCopies] forKey:NSPrintCopies];
+  } else {
+    nsPrintSettings::SetNumCopies(aCopies);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
 nsPrintSettingsX::SetUnwriteableMarginTop(double aUnwriteableMarginTop) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
