@@ -46,6 +46,9 @@ class TargetList extends EventEmitter {
    *    all the targets are going to be declared as destroyed and the new ones
    *    will be notified to the user of this API.
    *
+   * @fires target-tread-wrong-order-on-resume : An event that is emitted when resuming
+   *        the thread throws with the "wrongOrder" error.
+   *
    * @param {RootFront} rootFront
    *        The root front.
    * @param {TargetFront} targetFront
@@ -83,6 +86,12 @@ class TargetList extends EventEmitter {
 
     // List of all the target fronts
     this._targets = new Set();
+    // {Map<Function, Set<targetFront>>} A Map keyed by `onAvailable` function passed to
+    // `watchTargets`, whose initial value is a Set of the existing target fronts at the
+    // time watchTargets is called.
+    this._pendingWatchTargetInitialization = new Map();
+
+    // Add the top-level target to debug to the list of targets.
     this._targets.add(targetFront);
 
     // Listeners for target creation and destruction
@@ -140,6 +149,10 @@ class TargetList extends EventEmitter {
       return;
     }
 
+    if (targetFront.isDestroyedOrBeingDestroyed()) {
+      return;
+    }
+
     // Handle top level target switching
     // Note that, for now, `_onTargetAvailable` isn't called for the *initial* top level target.
     // i.e. the one that is passed to TargetList constructor.
@@ -166,8 +179,12 @@ class TargetList extends EventEmitter {
     targetFront.setTargetType(targetType);
 
     this._targets.add(targetFront);
+    await targetFront.attachAndInitThread(this);
+    for (const targetFrontsSet of this._pendingWatchTargetInitialization.values()) {
+      targetFrontsSet.delete(targetFront);
+    }
 
-    // Notify the target front creation listeners
+    // Then, once the target is attached, notify the target front creation listeners
     await this._createListeners.emitAsync(targetType, {
       targetFront,
       isTargetSwitching,
@@ -378,27 +395,49 @@ class TargetList extends EventEmitter {
     }
 
     // Notify about already existing target of these types
-    const promises = [...this._targets]
-      .filter(targetFront => types.includes(targetFront.targetType))
-      .map(async targetFront => {
-        try {
-          // Ensure waiting for eventual async create listeners
-          // which may setup things regarding the existing targets
-          // and listen callsite may care about the full initialization
-          await onAvailable({
-            targetFront,
-            isTargetSwitching: false,
-          });
-        } catch (e) {
-          // Prevent throwing when onAvailable handler throws on one target
-          // so that it can try to register the other targets
-          console.error(
-            "Exception when calling onAvailable handler",
-            e.message,
-            e
-          );
-        }
-      });
+    const targetFronts = [...this._targets].filter(targetFront =>
+      types.includes(targetFront.targetType)
+    );
+    this._pendingWatchTargetInitialization.set(
+      onAvailable,
+      new Set(targetFronts)
+    );
+    const promises = targetFronts.map(async targetFront => {
+      // Attach the targets that aren't attached yet (e.g. the initial top-level target),
+      // and wait for the other ones to be fully attached.
+      await targetFront.attachAndInitThread(this);
+
+      // It can happen that onAvailable was already called with this targetFront at
+      // this time (via _onTargetAvailable). If that's the case, we don't want to call
+      // onAvailable a second time.
+      if (
+        this._pendingWatchTargetInitialization &&
+        this._pendingWatchTargetInitialization.has(onAvailable) &&
+        !this._pendingWatchTargetInitialization
+          .get(onAvailable)
+          .has(targetFront)
+      ) {
+        return;
+      }
+
+      try {
+        // Ensure waiting for eventual async create listeners
+        // which may setup things regarding the existing targets
+        // and listen callsite may care about the full initialization
+        await onAvailable({
+          targetFront,
+          isTargetSwitching: false,
+        });
+      } catch (e) {
+        // Prevent throwing when onAvailable handler throws on one target
+        // so that it can try to register the other targets
+        console.error(
+          "Exception when calling onAvailable handler",
+          e.message,
+          e
+        );
+      }
+    });
 
     for (const type of types) {
       this._createListeners.on(type, onAvailable);
@@ -408,6 +447,7 @@ class TargetList extends EventEmitter {
     }
 
     await Promise.all(promises);
+    this._pendingWatchTargetInitialization.delete(onAvailable);
   }
 
   /**
@@ -427,6 +467,7 @@ class TargetList extends EventEmitter {
         this._destroyListeners.off(type, onDestroy);
       }
     }
+    this._pendingWatchTargetInitialization.delete(onAvailable);
   }
 
   /**

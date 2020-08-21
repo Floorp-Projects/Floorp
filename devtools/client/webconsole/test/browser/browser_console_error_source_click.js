@@ -29,27 +29,28 @@ add_task(async function() {
     button.click();
   });
 
-  await waitForMessageAndViewSource(
-    hud,
-    "ReferenceError: foobar is not defined"
-  );
-});
+  const messageText = "ReferenceError: foobar is not defined";
 
-async function waitForMessageAndViewSource(hud, message) {
   const msg = await waitFor(
-    () => findMessage(hud, message),
-    `Message "${message}" wasn't found`
+    () => findMessage(hud, messageText),
+    `Message "${messageText}" wasn't found`
   );
-  ok(msg, `Message found: "${message}"`);
+  ok(msg, `Message found: "${messageText}"`);
 
   const locationNode = msg.querySelector(
     ".message-location .frame-link-source"
   );
   ok(locationNode, "Message location link element found");
 
-  const onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  const onTabOpen = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    url => url.startsWith("view-source:"),
+    true
+  );
   locationNode.click();
-  const newTab = await onTabOpen;
+  await onTabOpen;
   ok(true, "The view source tab was opened in response to clicking the link");
-  BrowserTestUtils.removeTab(newTab);
-}
+
+  await waitForAllTargetsToBeAttached(hud);
+  await BrowserConsoleManager.closeBrowserConsole();
+});

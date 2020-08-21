@@ -10,7 +10,7 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 const EXAMPLE_DOMAIN = "https://example.com/";
-const TEST_URI = `${URL_ROOT_SSL}/network_document.html`;
+const TEST_URI = `${URL_ROOT_SSL}network_document.html`;
 
 add_task(async function() {
   info("Test network events legacy listener");
@@ -163,12 +163,18 @@ async function testNetworkEventResources(options) {
       }
     };
 
-    resourceWatcher.watchResources([ResourceWatcher.TYPES.NETWORK_EVENT], {
-      onAvailable: onResourceAvailable,
-      onUpdated: onResourceUpdated,
-    });
+    resourceWatcher
+      .watchResources([ResourceWatcher.TYPES.NETWORK_EVENT], {
+        onAvailable: onResourceAvailable,
+        onUpdated: onResourceUpdated,
+      })
+      .then(() => {
+        // We can only trigger the requests once `watchResources` settles, otherwise the
+        // thread might be paused.
+        triggerNetworkRequests(tab.linkedBrowser, EXISTING_REQUESTS_COMMANDS);
+      });
   });
-  await triggerNetworkRequests(tab.linkedBrowser, EXISTING_REQUESTS_COMMANDS);
+
   await waitOnAllExpectedUpdatesForExistingRequests;
 
   let {

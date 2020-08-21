@@ -212,7 +212,7 @@ export type Target = {
 
   // Property installed by the debugger itself.
   debuggerServiceWorkerStatus: string,
-  onThreadAttached: Promise<*>,
+  attachAndInitThread: TargetList => Promise<*>,
 };
 
 /**

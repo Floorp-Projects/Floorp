@@ -68,11 +68,10 @@ async function onTargetAvailable({
     actions.willNavigate({ url: targetFront.url });
   }
 
-  // Make sure targetFront.threadFront is availabled and attached.
-  await targetFront.onThreadAttached;
-
+  // At this point, we expect the target and its thread to be attached.
   const { threadFront } = targetFront;
   if (!threadFront) {
+    console.error("The thread for", targetFront, "isn't attached.");
     return;
   }
 

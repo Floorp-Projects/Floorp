@@ -45,7 +45,8 @@ add_task(async function() {
   );
 
   info("Close the Browser Console");
-  await BrowserConsoleManager.toggleBrowserConsole();
+  await waitForAllTargetsToBeAttached(hud);
+  await BrowserConsoleManager.closeBrowserConsole();
   hud = BrowserConsoleManager.getBrowserConsole();
   ok(!hud, "Browser Console has been closed");
 });

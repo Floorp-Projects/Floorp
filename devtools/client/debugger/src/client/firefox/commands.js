@@ -453,9 +453,6 @@ function getSourceForActor(actor: ActorId) {
 }
 
 async function addThread(targetFront: Target) {
-  // Wait for the thread actor to be attached
-  await targetFront.onThreadAttached;
-
   const threadActorID = targetFront.targetForm.threadActor;
   if (!targets[threadActorID]) {
     targets[threadActorID] = targetFront;

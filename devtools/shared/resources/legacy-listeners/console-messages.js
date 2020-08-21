@@ -31,6 +31,9 @@ module.exports = async function({
   }
 
   const webConsoleFront = await targetFront.getFront("console");
+  if (webConsoleFront.isDestroyed()) {
+    return;
+  }
 
   // Request notifying about new messages
   await webConsoleFront.startListeners(["ConsoleAPI"]);

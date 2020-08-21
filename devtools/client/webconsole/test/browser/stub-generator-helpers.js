@@ -29,14 +29,6 @@ async function createResourceWatcherForTarget(target) {
   const { TargetList } = require("devtools/shared/resources/target-list");
 
   const targetList = new TargetList(target.client.mainRoot, target);
-
-  await target.attach();
-  // Attach the thread actor in order to ensure having sources
-  // and have the `sourceId` attribute correctly set.
-  const threadFront = await target.attachThread({});
-  // Resume the thread, otherwise it stays pause and we prevent JS from running
-  await threadFront.resume();
-
   await targetList.startListening();
   return new ResourceWatcher(targetList);
 }

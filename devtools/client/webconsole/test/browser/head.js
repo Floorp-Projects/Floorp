@@ -57,8 +57,10 @@ registerCleanupFunction(async function() {
   });
   const browserConsole = BrowserConsoleManager.getBrowserConsole();
   if (browserConsole) {
+    browserConsole.targetList.stopListening();
     await clearOutput(browserConsole);
-    await BrowserConsoleManager.toggleBrowserConsole();
+    await waitForAllTargetsToBeAttached(browserConsole);
+    await BrowserConsoleManager.closeBrowserConsole();
   }
 });
 
@@ -138,6 +140,19 @@ async function openNewWindowAndConsole(url) {
   win.gBrowser.selectedTab = tab;
   const hud = await openConsole(tab);
   return { win, hud, tab };
+}
+
+/**
+ * Returns a Promise that resolves when all the targets are fully attached.
+ *
+ * @param {WebConsole} hud
+ */
+function waitForAllTargetsToBeAttached(hud) {
+  return Promise.all(
+    hud.targetList
+      .getAllTargets(hud.targetList.ALL_TYPES)
+      .map(target => target.attachAndInitThread())
+  );
 }
 
 /**

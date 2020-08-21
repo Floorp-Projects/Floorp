@@ -128,11 +128,6 @@ function waitForWorkerListChanged(targetFront) {
   return targetFront.once("workerListChanged");
 }
 
-function attachThread(workerTargetFront, options) {
-  info("Attaching to thread.");
-  return workerTargetFront.attachThread(options);
-}
-
 async function waitForWorkerClose(workerTargetFront) {
   info("Waiting for worker to close.");
   await workerTargetFront.once("close");
