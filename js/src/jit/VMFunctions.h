@@ -917,7 +917,7 @@ JSObject* NewCallObject(JSContext* cx, HandleShape shape,
 JSObject* NewStringObject(JSContext* cx, HandleString str);
 
 bool OperatorIn(JSContext* cx, HandleValue key, HandleObject obj, bool* out);
-bool OperatorInI(JSContext* cx, uint32_t index, HandleObject obj, bool* out);
+bool OperatorInI(JSContext* cx, int32_t index, HandleObject obj, bool* out);
 
 MOZ_MUST_USE bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name,
                                     MutableHandleValue rval);
