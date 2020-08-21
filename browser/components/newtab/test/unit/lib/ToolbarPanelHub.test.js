@@ -295,6 +295,17 @@ describe("ToolbarPanelHub", () => {
       instance._hideAppmenuButton(fakeWindow);
       assert.calledWith(fakeElementById.setAttribute, "hidden", true);
     });
+    it("should not do anything if the window is closed", () => {
+      instance._hideAppmenuButton(fakeWindow, true);
+      assert.notCalled(PanelMultiView.getViewNode);
+    });
+    it("should not throw if the element does not exist", () => {
+      let fn = instance._hideAppmenuButton.bind(null, {
+        browser: { ownerDocument: {} },
+      });
+      getViewNodeStub.returns(undefined);
+      assert.doesNotThrow(fn);
+    });
     it("should unhide toolbar button on _showToolbarButton()", async () => {
       await instance._showToolbarButton(fakeWindow);
 
