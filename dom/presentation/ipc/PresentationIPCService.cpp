@@ -20,7 +20,6 @@
 
 namespace mozilla {
 namespace dom {
-using namespace mozilla::ipc;
 
 namespace {
 
