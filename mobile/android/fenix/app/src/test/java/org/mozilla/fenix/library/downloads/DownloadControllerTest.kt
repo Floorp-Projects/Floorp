@@ -10,6 +10,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.browser.state.state.content.DownloadState
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
@@ -20,7 +21,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class DownloadControllerTest {
-    private val downloadItem = DownloadItem(0, "title", "url", "77", "jpg")
+    private val downloadItem = DownloadItem("0", "title", "url", "77", "jpg", DownloadState.Status.COMPLETED)
     private val scope: CoroutineScope = TestCoroutineScope()
     private val store: DownloadFragmentStore = mockk(relaxed = true)
     private val state: DownloadFragmentState = mockk(relaxed = true)

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.downloads
 
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -17,11 +18,12 @@ import mozilla.components.lib.state.Store
  * @property contentType The type of file the download is
  */
 data class DownloadItem(
-    val id: Long,
+    val id: String,
     val fileName: String?,
     val filePath: String,
     val size: String,
-    val contentType: String?
+    val contentType: String?,
+    val status: DownloadState.Status
 )
 
 /**

@@ -7,11 +7,12 @@ package org.mozilla.fenix.library.downloads
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyAll
+import mozilla.components.browser.state.state.content.DownloadState
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DownloadInteractorTest {
-    private val downloadItem = DownloadItem(0, "title", "url", "5.6 mb", "png")
+    private val downloadItem = DownloadItem("0", "title", "url", "5.6 mb", "png", DownloadState.Status.COMPLETED)
     val controller: DownloadController = mockk(relaxed = true)
     val interactor = DownloadInteractor(controller)
 

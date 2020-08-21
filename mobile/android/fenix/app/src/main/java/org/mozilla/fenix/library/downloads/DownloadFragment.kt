@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_downloads.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -38,12 +39,15 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
 
         val items = requireComponents.core.store.state.downloads.map {
             DownloadItem(
-                it.value.id,
+                it.value.id.toString(),
                 it.value.fileName,
                 it.value.filePath,
                 it.value.contentLength.toString(),
-                it.value.contentType
+                it.value.contentType,
+                it.value.status
             )
+        }.filter {
+            it.status == DownloadState.Status.COMPLETED
         }.filterNotExistsOnDisk()
 
         downloadStore = StoreProvider.get(this) {
