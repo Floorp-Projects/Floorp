@@ -400,7 +400,7 @@
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Autentificare</string>
     <!-- Preference for reconnecting to FxA sync -->
-    <string name="preferences_sync_sign_in_to_reconnect">Autentifică-te pentru reconectare</string>
+    <string name="preferences_sync_sign_in_to_reconnect">Intră în cont pentru reconectare</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Șterge contul</string>
 
@@ -632,7 +632,7 @@
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Editează dosarul</string>
     <!-- Bookmark sign in button message -->
-    <string name="bookmark_sign_in_button">Autentifică-te pentru a vedea marcajele sincronizate</string>
+    <string name="bookmark_sign_in_button">Intră în cont pentru a vedea marcajele sincronizate</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -782,7 +782,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Folosite recent</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Autentifică-te în Sync</string>
+    <string name="sync_sign_in">Intră în contul Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Trimite pe toate dispozitivele</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -792,7 +792,7 @@
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Conectează alt dispozitiv</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Pentru a trimite o filă, autentifică-te în Firefox pe cel puțin un alt dispozitiv.</string>
+    <string name="sync_connect_device_dialog">Pentru a trimite o filă, intră în contul Firefox de pe cel puțin un alt dispozitiv.</string>
 
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Am înțeles</string>
@@ -986,7 +986,7 @@
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Autentificare…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Autentifică-te în Firefox</string>
+    <string name="onboarding_firefox_account_sign_in">Intră în contul Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Rămâi deconectat</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1068,7 +1068,7 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Gata de scanare</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">Autentifică-te cu camera</string>
+    <string name="sign_in_with_camera">Autentificare cu camera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Folosește e-mailul în schimb</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
@@ -1246,7 +1246,7 @@
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconectare</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Autentifică-te în Sync</string>
+    <string name="preferences_passwords_sync_logins_sign_in">Intră în contul Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Date de autentificare salvate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1464,7 +1464,7 @@
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Afișează o listă de file de pe celelalte dispozitive.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
-    <string name="synced_tabs_sign_in_button">Autentifică-te în Sync</string>
+    <string name="synced_tabs_sign_in_button">Intră în contul Sync</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

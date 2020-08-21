@@ -1032,11 +1032,6 @@
     <string name="onboarding_private_browsing_button">Abrir configurações</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Sua privacidade</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Projetamos o %s para lhe dar o controle sobre o que você compartilha
-        online e o que compartilha conosco.
-    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leia nosso aviso de privacidade</string>
 

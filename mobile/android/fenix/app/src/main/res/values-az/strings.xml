@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Məxfi Firefox Preview</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (Məxfi)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Digər seçimlər</string>
@@ -13,23 +9,17 @@
     <string name="content_description_disable_private_browsing_button">Məxfi səyahəti söndür</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Ünvanı daxil et və ya axtar</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Açıq vərəq yoxdur</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Açıq vərəqləriniz burada göstəriləcək.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Məxfi sessiyadasınız</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s tətbiqdən çıxdığınızda və ya bütün məxfi səyahət vərəq və pəncərələrini qapatdığınızda axtarış və səyahət tarixçənizi təmizləyir. Bu sizi saytlar və internet provayderiniz üçün anonim etməsə də,
-        onlayn məlumatlarınızı bu cihazı işlədən digər şəxslərdən saxlamağınızı asanlaşdırır.</string>
     <string name="private_browsing_common_myths">Məxfi səyahət haqqında olan əfsanələr</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Sessiyanı sil</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Ana ekranınızdan məxfi vərəqləri açmaq üçün qısayol əlavə edin.</string>
     <!-- Text for the positive button -->
@@ -84,8 +74,6 @@
     <string name="browser_menu_new_tab">Yeni vərəq</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Kolleksiyaya saxla</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Saytla bağlı problem xəbər et</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Paylaş</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -99,7 +87,7 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">%1$s Tərəfindən</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Oxuyucu vörünüşü</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Tətbiqdə aç</string>
@@ -119,14 +107,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skanla</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Qısayollar</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Axtarış mühərriyi tənzimləmələri</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Bununla axtar:</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Bu dəfə bununla axtarın:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Buferdəki keçidi doldur</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -223,8 +205,6 @@
     <string name="developer_tools_category">Tərtibatçı alətləri</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB ilə məsafəli sazlama</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Axtarış qısayollarını göstər</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Axtarış təkliflərini göstər</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
@@ -273,10 +253,6 @@
     <string name="sync_last_synced_summary">Son uğurlu olan: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Son uğurlu olan: heç vaxt</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s - %s %s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -373,8 +349,6 @@
     <string name="library_reading_list">Oxuma siyahısı</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Axtar</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Kitabxana</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Tənzimləmələr</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -401,8 +375,6 @@
     <string name="tabs_menu_close_all_tabs">Bütün vərəqləri qapat</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Vərəqləri paylaş</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Kolleksiyaya saxla</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Vərəq menyusu</string>
     <!-- Tab menu item to share the tab -->
@@ -523,8 +495,6 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s silindi</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Seçilən əlfəcinlər silinir</string>
 
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">GERİ AL</string>
@@ -576,14 +546,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Sönülü</string>
 
+    <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kolleksiyalar</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Kolleksiya menyusu</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Kolleksiya yoxdur</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Kolleksiyalarınız burada göstəriləcəklər.</string>
 
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Vərəqləri seç</string>
@@ -702,8 +669,6 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Şrift ölçüsü</string>
 
-    <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Açıq Vərəqlər</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d vərəq</string>
 
@@ -721,8 +686,6 @@
     <string name="preferences_delete_browsing_data_cookies">Çərəzlər</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Sayt icazələri</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Səyahət tarixçəsi</string>
 
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Çıx</string>
@@ -747,13 +710,14 @@
     <string name="onboarding_firefox_account_sign_in">Firefox-a daxil ol</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync aktivdir</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Standart</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Tənzimləmələri aç</string>
 
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Məxfiliyiniz</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Qapat</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Səyahətə başlayın</string>
@@ -762,6 +726,21 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Mövzunuzu seçin</string>
 
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Avtomatik</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Tünd mövzu</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Açıq mövzu</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Vərəqlər göndərildi!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Vərəq göndərildi!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Göndərilə bilmədi</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Kodu skanla</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">E-poçt ilə daxil ol</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -778,28 +757,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">İzlənmədən səyahət edin</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ətraflı öyrən</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Standart</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Standart (məsləhətlidir)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Tarazlaşdırılmış qoruma və verimlilik.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Səhifələr normal yüklənəcəklər, amma daha az izləyici əngəllənəcək.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Standart izlənmə qorumasında nələr əngəllənir</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Sərt</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Sərt (Ön seçilən)</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Sərt (məsləhətlidir)</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Sərt izlənmə qorumasında nələr əngəllənir</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Fərdi</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Hansı izləyici və skriptlərin əngəllənəcəyini seçin</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Fərdi izlənmə qorumasında nələr əngəllənir</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1015,4 +980,5 @@
     <string name="login_deletion_confirmation">Bu hesabı silmək istədiyinizə əminsiniz?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Sil</string>
-</resources>
+
+    </resources>
