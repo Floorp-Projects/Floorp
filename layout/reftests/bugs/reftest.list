@@ -1005,7 +1005,7 @@ fails-if(Android) fuzzy-if(webrender,63-64,1024-1024) fails-if(usesRepeatResampl
 == 422678-1.html 422678-1-ref.html
 == 423130-1.html 423130-1-ref.html
 == 423385-1.html 423385-1-ref.html
-random-if(gtkWidget||!nativeThemePref) == 423599-1.html 423599-1-ref.html # bug 1309095
+random-if(gtkWidget||Android) == 423599-1.html 423599-1-ref.html # bug 1309095
 == 423676-1.html 423676-1-ref.html
 fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups were removed in bug 28800
 == chrome://reftest/content/bugs/424074-1.xhtml chrome://reftest/content/bugs/424074-1-ref.xhtml
@@ -1132,7 +1132,7 @@ fuzzy-if(skiaContent,0-1,0-3280) == 438987-2c.html 438987-2-ref.html
 == 439004-1.html 439004-1-ref.html
 == 439639-1.html 439639-1-ref.html
 fuzzy-if(gtkWidget,0-255,0-6) == 439910.html 439910-ref.html
-fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(!nativeThemePref&&skiaContent,0-1,0-3) == 440112.html 440112-ref.html
+fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(Android,0-1,0-3) == 440112.html 440112-ref.html
 == 440149-1.html 440149-1-ref.html
 == 441259-1.html 441259-1-ref.html
 == 441259-2.html 441259-2-ref.html
@@ -1287,9 +1287,9 @@ pref(layout.css.xul-display-values.content.enabled,true) == 480017-1.html 480017
 == 480880-2a.html about:blank
 == 480880-2b.html about:blank
 == 480880-2c.html about:blank
-fails-if(Android&&nativeThemePref) == 481024-1a.html 481024-1-ref.html
-fails-if(Android&&nativeThemePref) == 481024-1b.html 481024-1-ref.html
-fails-if(Android&&nativeThemePref) == 481024-1c.html 481024-1-ref.html
+== 481024-1a.html 481024-1-ref.html
+== 481024-1b.html 481024-1-ref.html
+== 481024-1c.html 481024-1-ref.html
 == 481024-1d.html 481024-1-ref.html
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
@@ -1385,8 +1385,8 @@ skip-if(isDebugBuild) == chrome://reftest/content/bugs/508908-1.xhtml chrome://r
 == 509155-1.xhtml 509155-1-ref.xhtml
 fuzzy-if(Android,0-5,0-1656) fuzzy-if(skiaContent,0-1,0-1200) == 512410.html 512410-ref.html
 == 512631-1.html 512631-1-ref.html
-fuzzy-if(!nativeThemePref&&skiaContent,0-1,0-2) == 513153-1a.html 513153-1-ref.html
-fuzzy-if(!nativeThemePref&&skiaContent,0-1,0-2) == 513153-1b.html 513153-1-ref.html
+fuzzy-if(Android,0-1,0-2) == 513153-1a.html 513153-1-ref.html
+fuzzy-if(Android,0-1,0-2) == 513153-1b.html 513153-1-ref.html
 fuzzy-if(webrender&&winWidget,82-82,76-76) == 513153-2a.html 513153-2-ref.html
 fuzzy-if(webrender&&OSX,34-34,138-138) == 513153-2b.html 513153-2-ref.html
 == chrome://reftest/content/bugs/513318-1.xhtml chrome://reftest/content/bugs/513318-1-ref.xhtml

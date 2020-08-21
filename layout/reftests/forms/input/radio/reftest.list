@@ -5,6 +5,6 @@
 != checked-native.html about:blank
 != checked-native-notref.html about:blank
 skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height-ref.html
-skip-if(gtkWidget) fails-if(geckoview&&webrender) fails-if(!nativeThemePref) == radio-clamp-01.html radio-clamp-01-ref.html
-skip-if(OSX||winWidget||!nativeThemePref) fuzzy-if(gtkWidget,24-24,16-16) == radio-clamp-02.html radio-clamp-02-ref.html # gtkWidget, Bug 1599622
+skip-if(gtkWidget) fails-if(geckoview&&webrender) fails-if(Android) == radio-clamp-01.html radio-clamp-01-ref.html
+skip-if(OSX||winWidget||Android) fuzzy-if(gtkWidget,24-24,16-16) == radio-clamp-02.html radio-clamp-02-ref.html # gtkWidget, Bug 1599622
 fails-if(OSX) == radio-minimum-size.html radio-minimum-size-ref.html
