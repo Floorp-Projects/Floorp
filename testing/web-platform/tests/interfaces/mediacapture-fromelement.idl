@@ -13,5 +13,5 @@ partial interface HTMLCanvasElement {
 
 [Exposed=Window] interface CanvasCaptureMediaStreamTrack : MediaStreamTrack {
     readonly        attribute HTMLCanvasElement canvas;
-    void requestFrame ();
+    undefined requestFrame ();
 };
