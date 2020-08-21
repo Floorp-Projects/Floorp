@@ -20,10 +20,6 @@ document.addEventListener(
   "DOMContentLoaded",
   e => {
     document.mozSubdialogReady = PrintEventHandler.init();
-    let ourBrowser = window.docShell.chromeEventHandler;
-    ourBrowser.setAttribute("flex", "0");
-    ourBrowser.classList.add("printSettingsBrowser");
-    ourBrowser.closest(".dialogBox").classList.add("printDialogBox");
   },
   { once: true }
 );
@@ -131,7 +127,6 @@ var PrintEventHandler = {
       skipLoad: false,
     });
     printPreviewBrowser.classList.add("printPreviewBrowser");
-    printPreviewBrowser.setAttribute("flex", "1");
 
     // Create the stack for the loading indicator.
     let ourBrowser = window.docShell.chromeEventHandler;
@@ -314,16 +309,10 @@ var PrintEventHandler = {
     const printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
       Ci.nsIPrinterList
     );
-    let printers;
-
-    if (Cu.isInAutomation) {
-      printers = [];
-    } else {
-      printers = await printerList.printers;
-    }
 
     const lastUsedPrinterName = PrintUtils._getLastUsedPrinterName();
     const defaultPrinterName = printerList.systemDefaultPrinterName;
+    const printers = await printerList.printers;
 
     let lastUsedPrinter;
     let defaultPrinter;

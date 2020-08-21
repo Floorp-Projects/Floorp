@@ -91,3 +91,8 @@ tabmodalprompt label[value=""] {
   height: 100%;
   width: 100%;
 }
+
+.printPreviewBrowser {
+  width: 500px;
+  height: 600px;
+}
