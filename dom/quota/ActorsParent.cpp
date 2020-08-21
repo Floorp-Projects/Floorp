@@ -265,36 +265,33 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-nsresult LoadCacheVersion(mozIStorageConnection* aConnection,
-                          int32_t& aVersion) {
+Result<int32_t, nsresult> LoadCacheVersion(mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(
+  nsresult rv = aConnection.CreateStatement(
       "SELECT cache_version FROM database"_ns, getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   if (NS_WARN_IF(!hasResult)) {
-    return NS_ERROR_FILE_CORRUPTED;
+    return Err(NS_ERROR_FILE_CORRUPTED);
   }
 
   int32_t version;
   rv = stmt->GetInt32(0, &version);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  aVersion = version;
-  return NS_OK;
+  return version;
 }
 
 nsresult SaveCacheVersion(mozIStorageConnection* aConnection,
@@ -367,12 +364,7 @@ nsresult CreateCacheTables(mozIStorageConnection* aConnection) {
 
 #ifdef DEBUG
   {
-    int32_t cacheVersion;
-    rv = LoadCacheVersion(aConnection, cacheVersion);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
+    QM_TRY_VAR(const int32_t cacheVersion, LoadCacheVersion(*aConnection));
     MOZ_ASSERT(cacheVersion == 0);
   }
 #endif
@@ -6624,9 +6616,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
   bool cacheUsable = true;
 
-  // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
-  int32_t cacheVersion;
-  QM_TRY(LoadCacheVersion(connection, cacheVersion));
+  QM_TRY_VAR(int32_t cacheVersion, LoadCacheVersion(*connection));
 
   if (cacheVersion > kCacheVersion) {
     cacheUsable = false;
@@ -6639,8 +6629,12 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     if (newCache) {
       QM_TRY(CreateCacheTables(connection));
 
-      MOZ_ASSERT(NS_SUCCEEDED(LoadCacheVersion(connection, cacheVersion)));
-      MOZ_ASSERT(cacheVersion == kCacheVersion);
+#ifdef DEBUG
+      {
+        QM_TRY_VAR(const int32_t cacheVersion, LoadCacheVersion(*connection));
+        MOZ_ASSERT(cacheVersion == kCacheVersion);
+      }
+#endif
 
       QM_TRY(connection->ExecuteSimpleSQL(
           nsLiteralCString("INSERT INTO cache (valid, build_id) "
@@ -6684,8 +6678,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           return NS_ERROR_FAILURE;
         }
 
-        // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
-        QM_TRY(LoadCacheVersion(connection, cacheVersion));
+        QM_TRY_VAR(cacheVersion, LoadCacheVersion(*connection));
       }
 
       MOZ_ASSERT(cacheVersion == kCacheVersion);
