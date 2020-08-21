@@ -1,0 +1,27 @@
+https://github.com/libffi/libffi/pull/579
+
+diff --git a/js/src/ctypes/libffi/src/x86/sysv.S b/js/src/ctypes/libffi/src/x86/sysv.S
+index 7c9598c93c984..b73492795d6d0 100644
+--- a/js/src/ctypes/libffi/src/x86/sysv.S
++++ b/js/src/ctypes/libffi/src/x86/sysv.S
+@@ -51,18 +51,18 @@
+ #ifdef __ELF__
+ # define ENDF(X)  .type	X,@function; .size X, . - X
+ #else
+ # define ENDF(X)
+ #endif
+ 
+ /* Handle win32 fastcall name mangling.  */
+ #ifdef X86_WIN32
+-# define ffi_call_i386		@ffi_call_i386@8
+-# define ffi_closure_inner	@ffi_closure_inner@8
++# define ffi_call_i386		"@ffi_call_i386@8"
++# define ffi_closure_inner	"@ffi_closure_inner@8"
+ #else
+ # define ffi_call_i386		C(ffi_call_i386)
+ # define ffi_closure_inner	C(ffi_closure_inner)
+ #endif
+ 
+ /* This macro allows the safe creation of jump tables without an
+    actual table.  The entry points into the table are all 8 bytes.
+    The use of ORG asserts that we're at the correct location.  */

@@ -6,22 +6,20 @@ import collections
 import glob
 import argparse
 
-
 class Platform(object):
     pass
-
 
 class simulator_platform(Platform):
     directory = 'darwin_ios'
     sdk = 'iphonesimulator'
     arch = 'i386'
     triple = 'i386-apple-darwin11'
-    version_min = '-miphoneos-version-min=5.1.1'
+    version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __i386__\n\n"
     suffix = "\n\n#endif"
     src_dir = 'x86'
-    src_files = ['darwin.S', 'win32.S', 'ffi.c']
+    src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
 
 class simulator64_platform(Platform):
@@ -34,7 +32,7 @@ class simulator64_platform(Platform):
     prefix = "#ifdef __x86_64__\n\n"
     suffix = "\n\n#endif"
     src_dir = 'x86'
-    src_files = ['darwin64.S', 'ffi64.c']
+    src_files = ['unix64.S', 'ffi64.c', 'ffiw64.c', 'win64.S', 'internal64.h', 'asmnames.h']
 
 
 class device_platform(Platform):
@@ -42,12 +40,12 @@ class device_platform(Platform):
     sdk = 'iphoneos'
     arch = 'armv7'
     triple = 'arm-apple-darwin11'
-    version_min = '-miphoneos-version-min=5.1.1'
+    version_min = '-miphoneos-version-min=7.0'
 
     prefix = "#ifdef __arm__\n\n"
     suffix = "\n\n#endif"
     src_dir = 'arm'
-    src_files = ['sysv.S', 'trampoline.S', 'ffi.c']
+    src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
 
 class device64_platform(Platform):
@@ -60,7 +58,7 @@ class device64_platform(Platform):
     prefix = "#ifdef __arm64__\n\n"
     suffix = "\n\n#endif"
     src_dir = 'aarch64'
-    src_files = ['sysv.S', 'ffi.c']
+    src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
 
 class desktop32_platform(Platform):
@@ -70,7 +68,7 @@ class desktop32_platform(Platform):
     triple = 'i386-apple-darwin10'
     version_min = '-mmacosx-version-min=10.6'
     src_dir = 'x86'
-    src_files = ['darwin.S', 'win32.S', 'ffi.c']
+    src_files = ['sysv.S', 'ffi.c', 'internal.h']
 
     prefix = "#ifdef __i386__\n\n"
     suffix = "\n\n#endif"
@@ -86,16 +84,14 @@ class desktop64_platform(Platform):
     prefix = "#ifdef __x86_64__\n\n"
     suffix = "\n\n#endif"
     src_dir = 'x86'
-    src_files = ['darwin64.S', 'ffi64.c']
+    src_files = ['unix64.S', 'ffi64.c', 'ffiw64.c', 'win64.S', 'internal64.h', 'asmnames.h']
 
 
 def mkdir_p(path):
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST:
-            pass
-        else:
+        if exc.errno != errno.EEXIST:
             raise
 
 
@@ -104,8 +100,11 @@ def move_file(src_dir, dst_dir, filename, file_suffix=None, prefix='', suffix=''
     out_filename = filename
 
     if file_suffix:
-        split_name = os.path.splitext(filename)
-        out_filename = "%s_%s%s" % (split_name[0], file_suffix, split_name[1])
+        if filename in ['internal64.h', 'asmnames.h', 'internal.h']:
+            out_filename = filename
+        else:
+            split_name = os.path.splitext(filename)
+            out_filename = "%s_%s%s" % (split_name[0], file_suffix, split_name[1])
 
     with open(os.path.join(src_dir, filename)) as in_file:
         with open(os.path.join(dst_dir, out_filename), 'w') as out_file:
@@ -119,31 +118,27 @@ def move_file(src_dir, dst_dir, filename, file_suffix=None, prefix='', suffix=''
 
 
 def list_files(src_dir, pattern=None, filelist=None):
-    if pattern:
-        filelist = glob.iglob(os.path.join(src_dir, pattern))
+    if pattern: filelist = glob.iglob(os.path.join(src_dir, pattern))
     for file in filelist:
         yield os.path.basename(file)
 
 
-def copy_files(src_dir, dst_dir, pattern=None, filelist=None, file_suffix=None, prefix=None,
-               suffix=None):
+def copy_files(src_dir, dst_dir, pattern=None, filelist=None, file_suffix=None, prefix=None, suffix=None):
     for filename in list_files(src_dir, pattern=pattern, filelist=filelist):
-        move_file(src_dir, dst_dir, filename, file_suffix=file_suffix,
-                  prefix=prefix, suffix=suffix)
+        move_file(src_dir, dst_dir, filename, file_suffix=file_suffix, prefix=prefix, suffix=suffix)
 
 
 def copy_src_platform_files(platform):
     src_dir = os.path.join('src', platform.src_dir)
     dst_dir = os.path.join(platform.directory, 'src', platform.src_dir)
-    copy_files(src_dir, dst_dir, filelist=platform.src_files, file_suffix=platform.arch,
-               prefix=platform.prefix, suffix=platform.suffix)
+    copy_files(src_dir, dst_dir, filelist=platform.src_files, file_suffix=platform.arch, prefix=platform.prefix, suffix=platform.suffix)
 
 
 def build_target(platform, platform_headers):
     def xcrun_cmd(cmd):
         return 'xcrun -sdk %s %s -arch %s' % (platform.sdk, cmd, platform.arch)
 
-    tag = '%s-%s' % (platform.sdk, platform.arch)
+    tag='%s-%s' % (platform.sdk, platform.arch)
     build_dir = 'build_%s' % tag
     mkdir_p(build_dir)
     env = dict(CC=xcrun_cmd('clang'),
@@ -168,18 +163,11 @@ def build_target(platform, platform_headers):
             platform_headers[filename].add((platform.prefix, platform.arch, platform.suffix))
 
 
-def make_tramp():
-    with open('src/arm/trampoline.S', 'w') as tramp_out:
-        p = subprocess.Popen(['bash', 'src/arm/gentramp.sh'], stdout=tramp_out)
-        p.wait()
-
-
 def generate_source_and_headers(generate_osx=True, generate_ios=True):
     copy_files('src', 'darwin_common/src', pattern='*.c')
     copy_files('include', 'darwin_common/include', pattern='*.h')
 
     if generate_ios:
-        make_tramp()
         copy_src_platform_files(simulator_platform)
         copy_src_platform_files(simulator64_platform)
         copy_src_platform_files(device_platform)
@@ -204,9 +192,7 @@ def generate_source_and_headers(generate_osx=True, generate_ios=True):
         basename, suffix = os.path.splitext(header_name)
         with open(os.path.join('darwin_common/include', header_name), 'w') as header:
             for tag_tuple in tag_tuples:
-                header.write('%s#include <%s_%s%s>\n%s\n' %
-                             (tag_tuple[0], basename, tag_tuple[1], suffix, tag_tuple[2]))
-
+                header.write('%s#include <%s_%s%s>\n%s\n' % (tag_tuple[0], basename, tag_tuple[1], suffix, tag_tuple[2]))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
