@@ -14,7 +14,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/DownloadPaths.jsm"
 );
 
-const INVALID_INPUT_DELAY_MS = 500;
+const INPUT_DELAY_MS = 500;
 
 document.addEventListener(
   "DOMContentLoaded",
@@ -750,6 +750,9 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 
   handleEvent(e) {
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
+      if (!this._percentScale.checkValidity()) {
+        this._percentScale.value = 100;
+      }
       let scale =
         e.target == this._shrinkToFitChoice
           ? 1
@@ -759,21 +762,26 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
         scaling: scale,
       });
       this._scaleError.hidden = true;
-      return;
-    }
-
-    if (e.type == "input") {
-      window.clearTimeout(this.invalidTimeoutId);
+    } else if (e.type == "input") {
+      window.clearTimeout(this.updateSettingsTimeoutId);
 
       if (this._percentScale.checkValidity()) {
-        this.invalidTimeoutId = window.setTimeout(() => {
+        this.updateSettingsTimeoutId = window.setTimeout(() => {
           this.dispatchSettingsChange({
             scaling: Number(this._percentScale.value / 100),
           });
-        }, INVALID_INPUT_DELAY_MS);
+        }, INPUT_DELAY_MS);
       }
     }
-    this._scaleError.hidden = this._percentScale.validity.valid;
+
+    window.clearTimeout(this.showErrorTimeoutId);
+    if (this._percentScale.validity.valid) {
+      this._scaleError.hidden = true;
+    } else {
+      this.showErrorTimeoutId = window.setTimeout(() => {
+        this._scaleError.hidden = false;
+      }, INPUT_DELAY_MS);
+    }
   }
 }
 customElements.define("scale-input", ScaleInput);
@@ -812,7 +820,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
         this.dispatchSettingsChange({
           endPageRange: this._endRange.value,
         });
-        this.endRange.dispatchEvent(new Event("change", { bubbles: true }));
+        this._endRange.dispatchEvent(new Event("change", { bubbles: true }));
       }
       return;
     }
@@ -864,15 +872,38 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       }
     );
 
+    window.clearTimeout(this.showErrorTimeoutId);
+    let hasShownOverflowError = false;
     let startValidity = this._startRange.validity;
     let endValidity = this._endRange.validity;
-    this._startRangeOverflowError.hidden = !(
-      (startValidity.rangeOverflow && endValidity.valid) ||
-      (endValidity.rangeUnderflow && startValidity.valid)
-    );
-    this._rangeError.hidden =
-      !this._startRangeOverflowError.hidden ||
-      (startValidity.valid && endValidity.valid);
+
+    // Display the startRangeOverflowError if the start range exceeds
+    // the end range. This means either the start range is greater than its
+    // max constraint, whiich is determined by the end range, or the end range
+    // is less than its minimum constraint, determined by the start range.
+    if (
+      !(
+        (startValidity.rangeOverflow && endValidity.valid) ||
+        (endValidity.rangeUnderflow && startValidity.valid)
+      )
+    ) {
+      this._startRangeOverflowError.hidden = true;
+    } else {
+      hasShownOverflowError = true;
+      this.showErrorTimeoutId = window.setTimeout(() => {
+        this._startRangeOverflowError.hidden = false;
+      }, INPUT_DELAY_MS);
+    }
+
+    // Display the generic error if the startRangeOverflowError is not already
+    // showing and a range input is invalid.
+    if (hasShownOverflowError || (startValidity.valid && endValidity.valid)) {
+      this._rangeError.hidden = true;
+    } else {
+      this.showErrorTimeoutId = window.setTimeout(() => {
+        this._rangeError.hidden = false;
+      }, INPUT_DELAY_MS);
+    }
   }
 }
 customElements.define("page-range-input", PageRangeInput);
