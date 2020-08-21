@@ -217,9 +217,9 @@ async function showAvailableStudies(cachedAddons) {
       for (const line of cachedAddon[`${joinOrLeave}StudyConsent`].split(
         "\n"
       )) {
-        const p = document.createElement("p");
-        p.textContent = line;
-        consentText.appendChild(p);
+        const li = document.createElement("li");
+        li.textContent = line;
+        consentText.appendChild(li);
       }
 
       dialog.showModal();
@@ -318,7 +318,7 @@ async function updateStudy(studyAddonId) {
       document.l10n.setAttributes(joinBtn, "pioneer-join-study");
     }
   } else {
-    document.l10n.setAttributes(joinBtn, "pioneer-join-study");
+    document.l10n.setAttributes(joinBtn, "pioneer-study-prompt");
     study.style.opacity = 0.5;
     joinBtn.disabled = true;
   }
@@ -488,24 +488,27 @@ function removeBadge() {
 function updateContents(contents) {
   for (const section of [
     "title",
-    "summary",
-    "details",
     "joinPioneerConsent",
     "leavePioneerConsent",
   ]) {
     if (contents && section in contents) {
       // Generate a corresponding dom-id style ID for a camel-case domId style JS attribute.
+      // Dynamically set the tag type based on which section is getting updated.
+      let tagType = "li";
+      if (section === "title") {
+        tagType = "p";
+      }
+
       const domId = section
         .split(/(?=[A-Z])/)
         .join("-")
         .toLowerCase();
       // Clears out any existing children with a single #text node.
       document.getElementById(domId).textContent = "";
-      contents[section].textContent = "";
       for (const line of contents[section].split("\n")) {
-        const p = document.createElement("p");
-        p.textContent = line;
-        document.getElementById(domId).appendChild(p);
+        const entry = document.createElement(tagType);
+        entry.textContent = line;
+        document.getElementById(domId).appendChild(entry);
       }
     }
   }
@@ -519,6 +522,12 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
 
   document.addEventListener("focus", removeBadge);
   removeBadge();
+
+  const privacyPolicyLink = document.getElementById("privacy-policy");
+  const privacyPolicyFormattedLink = Services.urlFormatter.formatURL(
+    privacyPolicyLink.href
+  );
+  privacyPolicyLink.href = privacyPolicyFormattedLink;
 
   let cachedContent;
   let cachedAddons;
@@ -568,111 +577,3 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
   await setup(cachedAddons);
   await showAvailableStudies(cachedAddons);
 });
-
-/**
- * Prevent tab/shift-tab from leaving the modal dialog.
- * FIXME - this should be removed once bug 1322939 is fixed.
- */
-class TrappedDialog extends HTMLDialogElement {
-  static get observedAttributes() {
-    return ["open"];
-  }
-
-  attributeChangedCallback(name, oldVal, newVal) {
-    if (name == "open") {
-      if (newVal != null) {
-        this.trapFocus();
-      } else {
-        this.untrapFocus();
-      }
-    }
-  }
-
-  trapFocus() {
-    if (!this.trapped) {
-      this.trapped = true;
-      document.addEventListener("focusin", this);
-      document.addEventListener("keydown", this);
-    }
-  }
-
-  untrapFocus() {
-    document.removeEventListener("focusin", this);
-    document.removeEventListener("keydown", this);
-    this.trapped = false;
-  }
-
-  handleEvent(e) {
-    if (
-      e.type == "focusin" &&
-      // FIXME this should focus on the document when reverse-cycling/shift-tabbing,
-      // but for now let's defer until bug 1322939 is fixed in Firefox 81. This will cause the Accept button to be selected when reversing.
-      // e.relatedTarget == null &&
-      !this.contains(e.target)
-    ) {
-      // Focus entered the document.
-      e.preventDefault();
-      this.focusWalker.currentNode = this;
-
-      // Focus the first focusable child.
-      this.focusWalker.nextNode();
-    } else if (
-      e.type == "keydown" &&
-      e.keyCode == e.DOM_VK_TAB &&
-      !e.ctrlKey &&
-      !e.altKey &&
-      !e.metaKey &&
-      (!this.contains(e.target) || e.target == this)
-    ) {
-      // Focus moved out of the dialog.
-      e.preventDefault();
-      let parentWin = window.docShell.chromeEventHandler.ownerGlobal;
-      let fm = Services.focus;
-
-      if (e.shiftKey) {
-        // Moving backwards out of the document.
-
-        // Focus the first element on the page.
-        this.focusWalker.currentNode = document;
-        //this.focusWalker.nextNode();
-
-        // Move backwards from there.
-        fm.moveFocus(parentWin, null, fm.MOVEFOCUS_BACKWARD, fm.FLAG_BYKEY);
-      } else if (e.target == document.documentElement) {
-        // Focus the first focusable child.
-        this.focusWalker.currentNode = this;
-        this.focusWalker.nextNode();
-      } else {
-        fm.moveFocus(parentWin, null, fm.MOVEFOCUS_ROOT, fm.FLAG_BYKEY);
-      }
-    }
-  }
-
-  get focusWalker() {
-    if (!this._focusWalker) {
-      this._focusWalker = document.createTreeWalker(
-        this,
-        NodeFilter.SHOW_ELEMENT,
-        {
-          acceptNode: node => {
-            // No need to look at hidden nodes.
-            if (node.hidden) {
-              return NodeFilter.FILTER_REJECT;
-            }
-
-            // Focus the node, if it worked then this is the node we want.
-            node.focus();
-            if (node === document.activeElement) {
-              return NodeFilter.FILTER_ACCEPT;
-            }
-
-            // Continue into child nodes if the parent couldn't be focused.
-            return NodeFilter.FILTER_SKIP;
-          },
-        }
-      );
-    }
-    return this._focusWalker;
-  }
-}
-customElements.define("trapped-dialog", TrappedDialog, { extends: "dialog" });

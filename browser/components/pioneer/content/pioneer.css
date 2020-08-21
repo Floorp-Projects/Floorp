@@ -3,14 +3,55 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
-  margin: 70px auto;
+  margin: 40px auto;
   max-width: 664px;
+  font-family: 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
 }
 
 @media (max-width: 830px) {
   body {
     margin-inline-start: 16px;
+    margin-inline-end: 16px;
   }
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-block-end: 24px;
+}
+
+@media (max-width: 600px) {
+  header {
+    display: block;
+  }
+}
+
+#summary, #details, #data {
+  margin-block-end: 24px;
+}
+
+#summary, #summary, #details p, #data p {
+  font-size: 15px;
+  line-height: 22px;
+}
+
+#data ul {
+  padding-inline-start: 15px;
+}
+
+#data ul li {
+  margin-block-end: 8px;
+}
+
+#data a, #data strong {
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 17px;
+  font-weight: 600;
 }
 
 details > summary {
@@ -21,18 +62,24 @@ details > summary {
   outline: none;
 }
 
-#report-title {
+#report-title, #title {
   font-size: 1.46em;
   font-weight: 300;
   line-height: 1.3em;
+  margin-block-end: 0;
+}
+
+@media (max-width: 600px) {
+  #title {
+    margin-block-end: 8px;
+  }
+  #enrollment-button {
+    margin-inline-start: 0;
+  }
 }
 
 #available-studies {
   font-weight: 600;
-}
-
-#enrollment-button {
-  float: right;
 }
 
 .card {
@@ -119,3 +166,11 @@ details > summary {
 }
 
 h1 > p { margin-bottom: 0}
+
+.consent-list {
+  padding: 16px;
+  padding-inline-start: 32px;
+  margin-block-end: 16px;
+  border: 1px solid var(--in-content-box-border-color);
+  background: var(--in-content-box-background);
+}
