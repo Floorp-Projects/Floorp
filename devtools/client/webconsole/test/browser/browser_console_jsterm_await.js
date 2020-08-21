@@ -40,7 +40,4 @@ add_task(async function() {
       messagesText.includes(`Array [ "await1" ]`),
     "The output contains the the expected messages"
   );
-
-  info("Close the Browser console");
-  await BrowserConsoleManager.toggleBrowserConsole();
 });

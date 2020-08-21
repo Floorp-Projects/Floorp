@@ -147,11 +147,11 @@ async function testTabFrames(mainRoot) {
     frames.length,
     "retrieved the same number of frames via watchTargets"
   );
-  for (let i = 0; i < frames.length; i++) {
-    is(
-      frames[i],
-      targets[i],
-      `frame ${i} targets are the same via watchTargets`
+
+  for (const frame of frames) {
+    ok(
+      targets.find(t => t === frame),
+      "frame " + frame.actorID + " target is the same via watchTargets"
     );
   }
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onAvailable);

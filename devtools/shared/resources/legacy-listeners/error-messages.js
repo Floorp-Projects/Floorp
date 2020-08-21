@@ -32,6 +32,9 @@ module.exports = async function({
   }
 
   const webConsoleFront = await targetFront.getFront("console");
+  if (webConsoleFront.isDestroyed()) {
+    return;
+  }
 
   // Request notifying about new messages. Here the "PageError" type start listening for
   // both actual PageErrors (emitted as "pageError" events) as well as LogMessages (
