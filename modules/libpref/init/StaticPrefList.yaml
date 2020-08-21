@@ -9755,7 +9755,7 @@
 # Global user preference for disabling native theme in content processes.
 - name: widget.disable-native-theme-for-content
   type: RelaxedAtomicBool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 # Preference to disable dark scrollbar implementation.
