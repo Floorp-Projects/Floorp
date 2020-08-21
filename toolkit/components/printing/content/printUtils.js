@@ -152,7 +152,9 @@ var PrintUtils = {
     let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
     dialogBox.open(
       `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`,
-      "resizable=no"
+      "resizable=no",
+      null,
+      { sizeTo: "available" }
     );
   },
 
