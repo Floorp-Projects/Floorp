@@ -21,6 +21,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "SetClipboardSearchString",
+  "resource://gre/modules/Finder.jsm"
+);
+
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(
   Svc,
@@ -47,6 +53,7 @@ class PdfjsParent extends JSWindowActorParent {
   constructor() {
     super();
     this._boundToFindbar = null;
+    this._findFailedString = null;
   }
 
   didDestroy() {
@@ -90,6 +97,19 @@ class PdfjsParent extends JSWindowActorParent {
         return;
       }
       fb.updateControlState(data.result, data.findPrevious);
+
+      if (
+        data.result === Ci.nsITypeAheadFind.FIND_FOUND ||
+        data.result === Ci.nsITypeAheadFind.FIND_WRAPPED ||
+        (data.result === Ci.nsITypeAheadFind.FIND_PENDING &&
+          !this._findFailedString)
+      ) {
+        this._findFailedString = null;
+        SetClipboardSearchString(data.rawQuery);
+      } else if (!this._findFailedString) {
+        this._findFailedString = data.rawQuery;
+        SetClipboardSearchString(data.rawQuery);
+      }
 
       const matchesCount = this._requestMatchesCount(data.matchesCount);
       fb.onMatchesCountResult(matchesCount);

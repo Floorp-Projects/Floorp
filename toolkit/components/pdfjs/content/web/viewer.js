@@ -2229,13 +2229,15 @@ function webViewerUpdateFindMatchesCount({
 function webViewerUpdateFindControlState({
   state,
   previous,
-  matchesCount
+  matchesCount,
+  rawQuery
 }) {
   if (PDFViewerApplication.supportsIntegratedFind) {
     PDFViewerApplication.externalServices.updateFindControlState({
       result: state,
       findPrevious: previous,
-      matchesCount
+      matchesCount,
+      rawQuery
     });
   } else {
     PDFViewerApplication.findBar.updateUIState(state, previous, matchesCount);
@@ -6196,7 +6198,8 @@ class PDFFindController {
       source: this,
       state,
       previous,
-      matchesCount: this._requestMatchesCount()
+      matchesCount: this._requestMatchesCount(),
+      rawQuery: this._state ? this._state.query : null,
     });
   }
 

@@ -67,7 +67,7 @@
   "file_stringencoding.jsm": ["checkFromJSM"],
   "file_url.jsm": ["checkFromJSM"],
   "file_worker_url.jsm": ["checkFromJSM"],
-  "Finder.jsm": ["Finder", "GetClipboardSearchString"],
+  "Finder.jsm": ["Finder", "GetClipboardSearchString", "SetClipboardSearchString"],
   "format.js": ["pprint", "truncate"],
   "formautofill.jsm": ["Address", "CreditCard", "DumpAddresses", "DumpCreditCards"],
   "FormAutofillHeuristics.jsm": ["FormAutofillHeuristics", "LabelUtils"],
