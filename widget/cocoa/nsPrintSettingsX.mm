@@ -123,6 +123,17 @@ NS_IMETHODIMP nsPrintSettingsX::InitAdjustedPaperSize() {
   mAdjustedPaperWidth = paperRect.right - paperRect.left;
   mAdjustedPaperHeight = paperRect.bottom - paperRect.top;
 
+  int32_t orientation;
+  GetOrientation(&orientation);
+  if (kLandscapeOrientation == orientation) {
+    // Depending whether we're coming from the old system UI or the tab-modal
+    // preview UI, the orientation may not actually have been set yet. So for
+    // consistency, we always store physical (portrait-mode) width and height
+    // here. They will be swapped if needed in GetEffectivePageSize (in line
+    // with other implementations).
+    std::swap(mAdjustedPaperWidth, mAdjustedPaperHeight);
+  }
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -250,7 +261,9 @@ nsPrintSettingsX::GetEffectivePageSize(double* aWidth, double* aHeight) {
     *aWidth = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
     *aHeight = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
   }
-  if (kLandscapeOrientation == mOrientation) {
+  int32_t orientation;
+  GetOrientation(&orientation);
+  if (kLandscapeOrientation == orientation) {
     std::swap(*aWidth, *aHeight);
   }
   return NS_OK;
