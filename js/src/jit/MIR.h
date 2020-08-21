@@ -10934,6 +10934,30 @@ class MInArray : public MQuaternaryInstruction, public ObjectPolicy<3>::Data {
   }
 };
 
+// Bail when the element is a hole.
+class MGuardElementNotHole : public MBinaryInstruction,
+                             public NoTypePolicy::Data {
+  MGuardElementNotHole(MDefinition* elements, MDefinition* index)
+      : MBinaryInstruction(classOpcode, elements, index) {
+    setMovable();
+    setGuard();
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardElementNotHole)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, elements), (1, index))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Element);
+  }
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+};
+
 class MCheckPrivateFieldCache
     : public MBinaryInstruction,
       public MixPolicy<BoxExceptPolicy<0, MIRType::Object>,

@@ -13293,6 +13293,21 @@ void CodeGenerator::visitInArray(LInArray* lir) {
   }
 }
 
+void CodeGenerator::visitGuardElementNotHole(LGuardElementNotHole* lir) {
+  Register elements = ToRegister(lir->elements());
+  const LAllocation* index = lir->index();
+
+  Label testMagic;
+  if (index->isConstant()) {
+    Address address(elements, ToInt32(index) * sizeof(js::Value));
+    masm.branchTestMagic(Assembler::Equal, address, &testMagic);
+  } else {
+    BaseObjectElementIndex address(elements, ToRegister(index));
+    masm.branchTestMagic(Assembler::Equal, address, &testMagic);
+  }
+  bailoutFrom(&testMagic, lir->snapshot());
+}
+
 void CodeGenerator::visitInstanceOfO(LInstanceOfO* ins) {
   emitInstanceOf(ins, ins->mir()->prototypeObject());
 }
