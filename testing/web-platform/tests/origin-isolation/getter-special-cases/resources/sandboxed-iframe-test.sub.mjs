@@ -1,6 +1,6 @@
 import {
   navigateIframe,
-  testOriginIsolationRestricted
+  testGetter
 } from "../../resources/helpers.mjs";
 
 export default () => {
@@ -16,5 +16,5 @@ export default () => {
 
   // Sandboxed iframes have an opaque origin, so it should return true, since
   // for them site === origin so they are always "origin-isolated".
-  testOriginIsolationRestricted(0, true);
+  testGetter(0, true);
 };
