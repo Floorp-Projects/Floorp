@@ -81,7 +81,12 @@ class SearchUtils {
     await this.init();
     let tokenAliasEngines = [];
     for (let engine of await Services.search.getVisibleEngines()) {
-      let tokenAliases = engine.aliases.filter(a => a.startsWith("@"));
+      let tokenAliases = engine.aliases.map(alias => {
+        if (!alias.startsWith("@")) {
+          alias = "@" + alias;
+        }
+        return alias;
+      });
       if (tokenAliases.length) {
         tokenAliasEngines.push({ engine, tokenAliases });
       }
