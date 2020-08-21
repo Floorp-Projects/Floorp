@@ -138,7 +138,7 @@ class ProviderTopSites extends UrlbarProvider {
 
     sites = sites.map(link => ({
       type: link.searchTopSite ? "search" : "url",
-      url: link.url,
+      url: link.url_urlbar || link.url,
       isPinned: link.isPinned,
       // The newtab page allows the user to set custom site titles, which
       // are stored in `label`, so prefer it.  Search top sites currently

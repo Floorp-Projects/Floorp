@@ -216,6 +216,7 @@ this.TopSitesFeed = class TopSitesFeed {
       },
       {
         url: "https://firefox.com",
+        url_urlbar_override: "https://firefox.com/#urlbar",
       },
       {
         url: "https://foobar.com",
@@ -233,6 +234,9 @@ this.TopSitesFeed = class TopSitesFeed {
         hostname: shortURL(siteData),
         sendTopSiteAttributionRequest: !!siteData.send_attribution_request,
       };
+      if (siteData.url_urlbar_override) {
+        link.url_urlbar = siteData.url_urlbar_override;
+      }
       if (siteData.title) {
         link.label = siteData.title;
       }
@@ -416,6 +420,9 @@ this.TopSitesFeed = class TopSitesFeed {
           ...link,
           url: link.url.replace("%YYYYMMDDHH%", yyyymmddhh),
         };
+        if (link.url_urlbar) {
+          link.url_urlbar = link.url_urlbar.replace("%YYYYMMDDHH%", yyyymmddhh);
+        }
       }
       // Remove any defaults that have been blocked.
       if (NewTabUtils.blockedLinks.isBlocked({ url: link.url })) {
