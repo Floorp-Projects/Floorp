@@ -1,5 +1,5 @@
 import { insertCustomIframe, testSupportScript } from "./helpers.mjs";
-import { waitForIframe, testOriginIsolationRestricted } from "../../resources/helpers.mjs";
+import { waitForIframe, testGetter } from "../../resources/helpers.mjs";
 
 const testSupportScriptSuitableForNesting =
   testSupportScript.replace('</script>', '</scri` + `pt>');
@@ -29,5 +29,5 @@ export default () => {
   // The javascript: URL iframe inherits its origin from the previous occupant
   // of the iframe, which is a data: URL, so it should always be true.
 
-  testOriginIsolationRestricted(0, true);
+  testGetter(0, true);
 };
