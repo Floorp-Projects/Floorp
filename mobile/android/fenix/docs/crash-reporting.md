@@ -1,6 +1,6 @@
 # Crash Reporting
 
-Firefox Preview uses a few libraries for crash and exception reporting. This kind of reporting gives Mozilla invaluable insight as to why Firefox Preview crashes or incorrectly behaves. It is one of the key methods we use to improve the product in terms of stability.
+Firefox for Android uses a few libraries for crash and exception reporting. This kind of reporting gives Mozilla invaluable insight as to why Firefox for Android crashes or incorrectly behaves. It is one of the key methods we use to improve the product in terms of stability.
 
 This page documents the types of crash reporting, how the various parts interact, and what kind of data is sent back to Mozilla.
 
@@ -8,7 +8,7 @@ Documentation for the specific libraries is included in the [Android Components 
 
 ## Glean crash ping
 
-[Glean SDK](https://mozilla.github.io/glean/book/index.html) is a Mozilla open source telemetry library, which Firefox Preview uses to collect app telemetry. It can also collect crash counts as a labeled counter with each label corresponding to a specific type of crash (such as `native_code_crash`, `unhandled_exception`).
+[Glean SDK](https://mozilla.github.io/glean/book/index.html) is a Mozilla open source telemetry library, which Firefox for Android uses to collect app telemetry. It can also collect crash counts as a labeled counter with each label corresponding to a specific type of crash (such as `native_code_crash`, `unhandled_exception`).
 
 The Glean crash ping format is documented [here](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/docs/metrics.md).
 
@@ -24,11 +24,11 @@ In [HomeActivity](https://github.com/mozilla-mobile/fenix/blob/master/app/src/ma
 
 ## Socorro
 
-[Socorro](https://wiki.mozilla.org/Socorro) is a Mozilla open source project for [crash statistics](https://crash-stats.mozilla.org/). Firefox Preview uses Socorro to track native GeckoView crashes. Crash reports contain a signature, classifications, and a number of improved fields (e.g. OS, product, version) - you can read more about what is sent in these fields in the [Socorro report documentation](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Crash_reporting/Understanding_crash_reports).
+[Socorro](https://wiki.mozilla.org/Socorro) is a Mozilla open source project for [crash statistics](https://crash-stats.mozilla.org/). Firefox for Android uses Socorro to track native GeckoView crashes. Crash reports contain a signature, classifications, and a number of improved fields (e.g. OS, product, version) - you can read more about what is sent in these fields in the [Socorro report documentation](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Crash_reporting/Understanding_crash_reports).
 
 These crashes contain hardware information and some app metadata, but no personally identifiable information is visible in the report. A few privacy-sensitive parts are only available to users who have "minidump access", which is a relatively small number of users with specific rules they must follow.
 
-A sample Firefox Preview crash report can be found [here](https://crash-stats.mozilla.org/report/index/bbbcc019-f30c-4fbb-8cbd-543940190923).
+A sample Firefox for Android crash report can be found [here](https://crash-stats.mozilla.org/report/index/bbbcc019-f30c-4fbb-8cbd-543940190923).
 
 A crash report is only sent when the user confirms and submits it through the crash reporter notification or dialog. Crash reports are never automatically sent.
 
@@ -40,11 +40,11 @@ A crash report is only sent when the user confirms and submits it through the cr
 
 ### High-Level Summary
 
-The server is hosted and maintained by Mozilla. There are no third-parties involved, all crash reports are sent directly from Firefox Preview to the Sentry server hosted by Mozilla.
+The server is hosted and maintained by Mozilla. There are no third-parties involved, all crash reports are sent directly from Firefox for Android to the Sentry server hosted by Mozilla.
 
 On the client side Sentry is invisible. There are no parts to interact with. It reports crashes and fatal errors back to Mozilla in the background.
 
-On the server side there is a dashboard that the Firefox Preview team uses to look at incoming crash reports. The dashboard lets us inspect the crash report in detail and for example see where in the application the crash happened, what version of the application was used and what version of Android OS was active. Below is an overview of all the attributes that are part of a crash report.
+On the server side there is a dashboard that the Firefox for Android team uses to look at incoming crash reports. The dashboard lets us inspect the crash report in detail and for example see where in the application the crash happened, what version of the application was used and what version of Android OS was active. Below is an overview of all the attributes that are part of a crash report.
 
 ### Sentry Reports
 
@@ -101,7 +101,7 @@ Sentry collects basic information about the device the application is running on
 
 ### Application Information
 
-Sentry collects basic information about the Firefox Preview app.
+Sentry collects basic information about the Firefox for Android app.
 
 ```
     "app":{
@@ -122,7 +122,7 @@ Sentry collects basic information about the Firefox Preview app.
 
 #### Stack trace
 
-Every crash report contains a *stack trace*, which shows what functions in the Firefox Preview code led to this crash. It includes names of Android framework functions and Firefox Preview functions. Here's an excerpt of three lines from the stack trace:
+Every crash report contains a *stack trace*, which shows what functions in the Firefox for Android code led to this crash. It includes names of Android framework functions and Firefox for Android functions. Here's an excerpt of three lines from the stack trace:
 
 ```
   "sentry.interfaces.Exception": {
@@ -158,7 +158,7 @@ Every crash report contains a *stack trace*, which shows what functions in the F
 
 ##### Exception message
 
-The first line of every stack trace in every crash report contains a *reason* - why did this crash happen. This reason is provided by the developers who wrote the code that decide the app is in an error state. These developers include the Firefox Preview team at Mozilla, the Android framework, the Java programming language, and any libraries Mozilla bundles to develop Firefox Preview.
+The first line of every stack trace in every crash report contains a *reason* - why did this crash happen. This reason is provided by the developers who wrote the code that decide the app is in an error state. These developers include the Firefox for Android team at Mozilla, the Android framework, the Java programming language, and any libraries Mozilla bundles to develop Firefox for Android.
 
 Java, the Android framework, and Mozilla are diligent about making sure that no personally identifiable information is put in any of these messages. We keep them technical and to the point. We at Mozilla stay on top of our dependencies to ensure they're not including personally identifiable information as well.
 
@@ -167,7 +167,7 @@ Here's an example message generated by Java:
 java.lang.StringIndexOutOfBoundsException: length=0; regionStart=20; regionLength=20
 ```
 
-Example of a Firefox Preview generated message:
+Example of a Firefox for Android generated message:
 ```
 java.lang.StringIndexOutOfBoundsException: Cannot create negative-length String
 ```
