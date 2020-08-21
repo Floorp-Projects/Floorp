@@ -731,7 +731,8 @@ static bool CreateSpecificWasmBuffer(
     // If we fail, and have a clampedMaxSize, try to reserve the biggest chunk
     // in the range [initialSize, clampedMaxSize) using log backoff.
     if (!clampedMaxSize) {
-      wasm::Log(cx, "new Memory({initial=%u bytes}) failed", initialSize);
+      wasm::Log(cx, "new Memory({initial=%" PRIu32 " bytes}) failed",
+                initialSize);
       ReportOutOfMemory(cx);
       return false;
     }
@@ -747,7 +748,8 @@ static bool CreateSpecificWasmBuffer(
     }
 
     if (!buffer) {
-      wasm::Log(cx, "new Memory({initial=%u bytes}) failed", initialSize);
+      wasm::Log(cx, "new Memory({initial=%" PRIu32 " bytes}) failed",
+                initialSize);
       ReportOutOfMemory(cx);
       return false;
     }
@@ -786,18 +788,19 @@ static bool CreateSpecificWasmBuffer(
   if (clampedMaxSize) {
     if (useHugeMemory) {
       wasm::Log(cx,
-                "new Memory({initial:%u bytes, maximum:%u bytes}) succeeded",
-                unsigned(initialSize), unsigned(*clampedMaxSize));
+                "new Memory({initial:%" PRIu32 " bytes, maximum:%" PRIu64
+                " bytes}) succeeded",
+                initialSize, *clampedMaxSize);
     } else {
       wasm::Log(cx,
-                "new Memory({initial:%u bytes, maximum:%u bytes}) succeeded "
-                "with internal maximum of %u",
-                unsigned(initialSize), unsigned(*clampedMaxSize),
-                unsigned(object->wasmMaxSize().value()));
+                "new Memory({initial:%" PRIu32 " bytes, maximum:%" PRIu64
+                " bytes}) succeeded "
+                "with internal maximum of %" PRIu64,
+                initialSize, *clampedMaxSize, object->wasmMaxSize().value());
     }
   } else {
-    wasm::Log(cx, "new Memory({initial:%u bytes}) succeeded",
-              unsigned(initialSize));
+    wasm::Log(cx, "new Memory({initial:%" PRIu32 " bytes}) succeeded",
+              initialSize);
   }
 
   return true;
@@ -989,7 +992,7 @@ Maybe<uint64_t> ArrayBufferObject::wasmMaxSize() const {
   }
 }
 
-Maybe<uint32_t> js::WasmArrayBufferMaxSize(
+Maybe<uint64_t> js::WasmArrayBufferMaxSize(
     const ArrayBufferObjectMaybeShared* buf) {
   if (buf->is<ArrayBufferObject>()) {
     return buf->as<ArrayBufferObject>().wasmMaxSize();

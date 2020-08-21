@@ -105,7 +105,7 @@ int32_t LiveMappedBufferCount();
 
 class ArrayBufferObjectMaybeShared;
 
-mozilla::Maybe<uint32_t> WasmArrayBufferMaxSize(
+mozilla::Maybe<uint64_t> WasmArrayBufferMaxSize(
     const ArrayBufferObjectMaybeShared* buf);
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 

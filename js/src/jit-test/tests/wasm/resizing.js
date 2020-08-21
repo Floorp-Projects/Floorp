@@ -125,6 +125,10 @@ assertEq(mem.buffer.byteLength, 2 * 64*1024);
 assertErrorMessage(() => mem.grow(1), RangeError, /failed to grow memory/);
 assertEq(mem.buffer.byteLength, 2 * 64*1024);
 
+// Do not misinterpret the maximum @ max for the current size.
+
+(new WebAssembly.Memory({initial: 1, maximum: 65536})).grow(1)
+
 // ======
 // TABLE
 // ======
