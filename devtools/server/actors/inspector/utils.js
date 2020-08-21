@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
+const { Cu, Ci } = require("chrome");
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
@@ -543,8 +543,34 @@ async function getBackgroundColor({ rawNode: node, walker }) {
   );
 }
 
+/**
+ * Indicates if a document is ready (i.e. if it's not loading anymore)
+ *
+ * @param {HTMLDocument} document: The document we want to check
+ * @returns {Boolean}
+ */
+function isDocumentReady(document) {
+  if (!document) {
+    return false;
+  }
+
+  const { readyState } = document;
+  if (readyState == "interactive" || readyState == "complete") {
+    return true;
+  }
+
+  // A document might stay forever in unitialized state.
+  // If the target actor is not currently loading a document,
+  // assume the document is ready.
+  const webProgress = document.defaultView.docShell.QueryInterface(
+    Ci.nsIWebProgress
+  );
+  return !webProgress.isLoadingDocument;
+}
+
 module.exports = {
   allAnonymousContentTreeWalkerFilter,
+  isDocumentReady,
   isWhitespaceTextNode,
   findGridParentContainerForNode,
   getBackgroundColor,
