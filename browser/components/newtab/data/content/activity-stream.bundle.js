@@ -1738,9 +1738,9 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
         label = react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "remote settings (", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
           className: "providerUrl",
           target: "_blank",
-          href: "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/messaging-experiments/records",
+          href: "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/nimbus-experiments-desktop/records",
           rel: "noopener noreferrer"
-        }, "messaging-experiments"), ")");
+        }, "nimbus-experiments-desktop"), ")");
       }
 
       let reasonsDisabled = [];

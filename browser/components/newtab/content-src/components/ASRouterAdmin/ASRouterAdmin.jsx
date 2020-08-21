@@ -1148,10 +1148,10 @@ export class ASRouterAdminInner extends React.PureComponent {
                   <a
                     className="providerUrl"
                     target="_blank"
-                    href="https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/messaging-experiments/records"
+                    href="https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/nimbus-experiments-desktop/records"
                     rel="noopener noreferrer"
                   >
-                    messaging-experiments
+                    nimbus-experiments-desktop
                   </a>
                   )
                 </span>

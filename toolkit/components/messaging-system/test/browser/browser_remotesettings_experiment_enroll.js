@@ -64,7 +64,7 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["messaging-system.log", "all"]],
   });
-  rsClient = RemoteSettings("messaging-experiments");
+  rsClient = RemoteSettings("nimbus-experiments-desktop");
 
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
