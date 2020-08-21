@@ -114,7 +114,7 @@ impl WebDriverExtensionRoute for GeckoExtensionRoute {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum GeckoExtensionCommand {
     GetContext,
     SetContext(GeckoContextParameters),
