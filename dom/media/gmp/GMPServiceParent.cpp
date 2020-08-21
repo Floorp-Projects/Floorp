@@ -78,7 +78,7 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
       mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor"),
       mInitPromise(&mInitPromiseMonitor),
       mLoadPluginsFromDiskComplete(false),
-      mWorkerThread(GetCurrentSerialEventTarget()) {
+      mMainThread(GetCurrentSerialEventTarget()) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -448,7 +448,7 @@ void GeckoMediaPluginServiceParent::UnloadPlugins() {
   nsCOMPtr<nsIRunnable> task = NewRunnableMethod(
       "GeckoMediaPluginServiceParent::NotifySyncShutdownComplete", this,
       &GeckoMediaPluginServiceParent::NotifySyncShutdownComplete);
-  mWorkerThread->Dispatch(task.forget());
+  mMainThread->Dispatch(task.forget());
 }
 
 void GeckoMediaPluginServiceParent::CrashPlugins() {
@@ -538,12 +538,12 @@ GeckoMediaPluginServiceParent::PathRunnable::Run() {
 }
 
 void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities() {
-  if (!mWorkerThread->IsOnCurrentThread()) {
+  if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> task = NewRunnableMethod(
         "GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities",
         this,
         &GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities);
-    mWorkerThread->Dispatch(task.forget());
+    mMainThread->Dispatch(task.forget());
     return;
   }
 
@@ -604,7 +604,7 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(
   return InvokeAsync(thread, this, __func__,
                      &GeckoMediaPluginServiceParent::AddOnGMPThread, dir)
       ->Then(
-          mWorkerThread, __func__,
+          mMainThread, __func__,
           [dir, self](bool aVal) {
             GMP_LOG_DEBUG(
                 "GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s "
@@ -760,7 +760,8 @@ already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::SelectPluginForAPI(
   return nullptr;
 }
 
-RefPtr<GMPParent> CreateGMPParent(nsISerialEventTarget* aThread) {
+static already_AddRefed<GMPParent> CreateGMPParent() {
+  // Should run on the GMP thread.
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!SandboxInfo::Get().CanSandboxMedia()) {
     if (!StaticPrefs::media_gmp_insecure_allow()) {
@@ -770,14 +771,16 @@ RefPtr<GMPParent> CreateGMPParent(nsISerialEventTarget* aThread) {
     NS_WARNING("Loading media plugin despite lack of sandboxing.");
   }
 #endif
-  return new GMPParent(aThread);
+  RefPtr<GMPParent> gmpParent = new GMPParent();
+  return gmpParent.forget();
 }
 
 already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::ClonePlugin(
     const GMPParent* aOriginal) {
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   MOZ_ASSERT(aOriginal);
 
-  RefPtr<GMPParent> gmp = CreateGMPParent(mWorkerThread);
+  RefPtr<GMPParent> gmp = CreateGMPParent();
   if (!gmp) {
     NS_WARNING("Can't Create GMPParent");
     return nullptr;
@@ -816,7 +819,7 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::AddOnGMPThread(
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  RefPtr<GMPParent> gmp = CreateGMPParent(mWorkerThread);
+  RefPtr<GMPParent> gmp = CreateGMPParent();
   if (!gmp) {
     NS_WARNING("Can't Create GMPParent");
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -906,7 +909,7 @@ void GeckoMediaPluginServiceParent::RemoveOnGMPThread(
       mPluginsWaitingForDeletion.RemoveElement(aDirectory);
       nsCOMPtr<nsIRunnable> task = new NotifyObserversTask(
           "gmp-directory-deleted", nsString(aDirectory));
-      mWorkerThread->Dispatch(task.forget());
+      mMainThread->Dispatch(task.forget());
     }
   }
 }
@@ -1459,7 +1462,7 @@ void GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread(
 
   nsCOMPtr<nsIRunnable> task =
       new NotifyObserversTask("gmp-clear-storage-complete");
-  mWorkerThread->Dispatch(task.forget());
+  mMainThread->Dispatch(task.forget());
 }
 
 NS_IMETHODIMP
@@ -1566,7 +1569,7 @@ void GeckoMediaPluginServiceParent::ClearStorage() {
 
   nsCOMPtr<nsIRunnable> task =
       new NotifyObserversTask("gmp-clear-storage-complete");
-  mWorkerThread->Dispatch(task.forget());
+  mMainThread->Dispatch(task.forget());
 }
 
 already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::GetById(
@@ -1682,7 +1685,7 @@ mozilla::ipc::IPCResult GMPServiceParent::RecvGetGMPNodeId(
 
 void GMPServiceParent::ActorDealloc() {
   // The GMPServiceParent must be destroyed on the main thread.
-  mService->mWorkerThread->Dispatch(
+  mService->mMainThread->Dispatch(
       NS_NewRunnableFunction("gmp::GMPServiceParent::ActorDealloc",
                              [this]() { delete this; }),
       NS_DISPATCH_NORMAL);

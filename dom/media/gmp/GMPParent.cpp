@@ -54,8 +54,9 @@ namespace mozilla {
 
 namespace gmp {
 
-GMPParent::GMPParent(nsISerialEventTarget* aThread)
+GMPParent::GMPParent()
     : mState(GMPStateNotLoaded),
+      mPluginId(GeckoChildProcessHost::GetUniqueID()),
       mProcess(nullptr),
       mDeleteProcessOnlyOnUnload(false),
       mAbnormalShutdownInProgress(false),
@@ -64,12 +65,13 @@ GMPParent::GMPParent(nsISerialEventTarget* aThread)
       mGMPContentChildCount(0),
       mChildPid(0),
       mHoldingSelfRef(false),
-      mWorkerThread(aThread) {
-  mPluginId = GeckoChildProcessHost::GetUniqueID();
+      mMainThread(GetMainThreadSerialEventTarget()) {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_PARENT_LOG_DEBUG("GMPParent ctor id=%u", mPluginId);
 }
 
 GMPParent::~GMPParent() {
+  // This method is not restricted to a specific thread.
   GMP_PARENT_LOG_DEBUG("GMPParent dtor id=%u", mPluginId);
   MOZ_ASSERT(!mProcess);
 }
@@ -245,8 +247,8 @@ void GMPParent::CloseIfUnused() {
 }
 
 void GMPParent::CloseActive(bool aDieWhenUnloaded) {
-  GMP_PARENT_LOG_DEBUG("%s: state %d", __FUNCTION__, mState);
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
+  GMP_PARENT_LOG_DEBUG("%s: state %d", __FUNCTION__, mState);
 
   if (aDieWhenUnloaded) {
     mDeleteProcessOnlyOnUnload = true;  // don't allow this to go back...
@@ -268,8 +270,8 @@ void GMPParent::MarkForDeletion() {
 bool GMPParent::IsMarkedForDeletion() { return mIsBlockingDeletion; }
 
 void GMPParent::Shutdown() {
-  GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
+  GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
 
   if (mAbnormalShutdownInProgress) {
     return;
@@ -330,6 +332,7 @@ void GMPParent::ChildTerminated() {
 }
 
 void GMPParent::DeleteProcess() {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
 
   if (mState != GMPStateClosing) {
@@ -365,7 +368,7 @@ void GMPParent::DeleteProcess() {
 
   nsCOMPtr<nsIRunnable> r =
       new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId));
-  mWorkerThread->Dispatch(r.forget());
+  mMainThread->Dispatch(r.forget());
 
   if (mHoldingSelfRef) {
     Release();
@@ -481,6 +484,7 @@ static void GMPNotifyObservers(const uint32_t aPluginID,
 }
 
 void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_PARENT_LOG_DEBUG("%s: (%d)", __FUNCTION__, (int)aWhy);
 
   if (AbnormalShutdown == aWhy) {
@@ -498,7 +502,7 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
     // NotifyObservers is mainthread-only
     nsCOMPtr<nsIRunnable> r =
         WrapRunnableNM(&GMPNotifyObservers, mPluginId, mDisplayName, dumpID);
-    mWorkerThread->Dispatch(r.forget());
+    mMainThread->Dispatch(r.forget());
   }
 
   // warn us off trying to close again
@@ -570,6 +574,7 @@ bool ReadInfoField(GMPInfoFileParser& aParser, const nsCString& aKey,
 }
 
 RefPtr<GenericPromise> GMPParent::ReadGMPMetaData() {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
   MOZ_ASSERT(!mName.IsEmpty(), "Plugin mName cannot be empty!");
 
@@ -595,6 +600,7 @@ RefPtr<GenericPromise> GMPParent::ReadGMPMetaData() {
 }
 
 RefPtr<GenericPromise> GMPParent::ReadGMPInfoFile(nsIFile* aFile) {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMPInfoFileParser parser;
   if (!parser.Init(aFile)) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -658,13 +664,14 @@ RefPtr<GenericPromise> GMPParent::ReadGMPInfoFile(nsIFile* aFile) {
 }
 
 RefPtr<GenericPromise> GMPParent::ReadChromiumManifestFile(nsIFile* aFile) {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   nsAutoCString json;
   if (!ReadIntoString(aFile, json, 5 * 1024)) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   // DOM JSON parsing needs to run on the main thread.
-  return InvokeAsync(mWorkerThread, this, __func__,
+  return InvokeAsync(mMainThread, this, __func__,
                      &GMPParent::ParseChromiumManifest,
                      NS_ConvertUTF8toUTF16(json));
 }
@@ -685,7 +692,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   GMP_PARENT_LOG_DEBUG("%s: for '%s'", __FUNCTION__,
                        NS_LossyConvertUTF16toASCII(aJSON).get());
 
-  MOZ_ASSERT(mWorkerThread->IsOnCurrentThread());
+  MOZ_ASSERT(NS_IsMainThread());
   mozilla::dom::WidevineCDMManifest m;
   if (!m.Init(aJSON)) {
     GMP_PARENT_LOG_DEBUG("%s: Failed to initialize json parser, failing.",
@@ -862,8 +869,8 @@ void GMPParent::RejectGetContentParentPromises() {
 
 void GMPParent::GetGMPContentParent(
     UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>&& aPromiseHolder) {
-  GMP_PARENT_LOG_DEBUG("%s %p", __FUNCTION__, this);
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
+  GMP_PARENT_LOG_DEBUG("%s %p", __FUNCTION__, this);
 
   if (mGMPContentParent) {
     RefPtr<GMPContentParent::CloseBlocker> blocker(
