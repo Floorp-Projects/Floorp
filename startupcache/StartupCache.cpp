@@ -658,8 +658,9 @@ Result<Ok, nsresult> StartupCache::LoadEntriesOffDisk() {
           MOZ_ASSERT(false);
           return Err(NS_ERROR_UNEXPECTED);
         }
-        value.mSharedDataOffset = sharedBuf.cursor();
-        value.mData = MaybeOwnedCharPtr(
+
+        auto sharedDataOffset = sharedBuf.cursor();
+        auto decompressionBuffer = MaybeOwnedCharPtr(
             (char*)(sharedBuf.write(value.mUncompressedSize)));
 
         if (sharedBuf.error()) {
@@ -667,8 +668,14 @@ Result<Ok, nsresult> StartupCache::LoadEntriesOffDisk() {
           return Err(NS_ERROR_UNEXPECTED);
         }
 
-        MOZ_TRY(DecompressEntry(value));
-        value.mData = nullptr;
+        // NOTE: we decompress the entry here, but we don't want to assign mData
+        // for the table entry, because all we have is a pointer into the
+        // ipc::MemMapSnapshot's buffer - once we've finalized the snapshot with
+        // mem.Finalize below, we can cut pointers into mSharedData's buffer.
+        // This happens inside GetBuffer, using value.mSharedDataOffset which we
+        // set here.
+        MOZ_TRY(DecompressEntry(value, decompressionBuffer));
+        value.mSharedDataOffset = sharedDataOffset;
       }
 
       if (mem.Finalize(mSharedData).isErr()) {
@@ -789,7 +796,8 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
   return Ok();
 }
 
-Result<Ok, nsresult> StartupCache::DecompressEntry(StartupCacheEntry& aEntry) {
+Result<Ok, nsresult> StartupCache::DecompressEntry(StartupCacheEntry& aEntry,
+                                                   MaybeOwnedCharPtr& aBuffer) {
   MOZ_ASSERT(XRE_IsParentProcess());
   mLock.AssertCurrentThreadOwns();
 
@@ -798,13 +806,12 @@ Result<Ok, nsresult> StartupCache::DecompressEntry(StartupCacheEntry& aEntry) {
   Span<const char> compressed = Span(
       mCacheData.get<char>().get() + mCacheEntriesBaseOffset + aEntry.mOffset,
       aEntry.mCompressedSize);
-  Span<char> uncompressed = Span(aEntry.mData.get(), aEntry.mUncompressedSize);
+  Span<char> uncompressed = Span(aBuffer.get(), aEntry.mUncompressedSize);
   bool finished = false;
   while (!finished) {
     auto result = mDecompressionContext->Decompress(
         uncompressed.From(totalWritten), compressed.From(totalRead));
     if (NS_WARN_IF(result.isErr())) {
-      aEntry.mData = nullptr;
       InvalidateCacheImpl();
       return Err(NS_ERROR_UNEXPECTED);
     }
@@ -885,14 +892,15 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    value.mData = MaybeOwnedCharPtr(value.mUncompressedSize);
     MMAP_FAULT_HANDLER_BEGIN_BUFFER(value.mData.get(), value.mUncompressedSize)
 
-    auto decompressionResult = DecompressEntry(value);
+    auto decompressionBuffer = MaybeOwnedCharPtr(value.mUncompressedSize);
+    auto decompressionResult = DecompressEntry(value, decompressionBuffer);
     if (decompressionResult.isErr()) {
       return decompressionResult.unwrapErr();
     }
 
+    value.mData = std::move(decompressionBuffer);
     MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
 
     label = Telemetry::LABELS_STARTUP_CACHE_REQUESTS::HitDisk;
