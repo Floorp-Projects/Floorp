@@ -572,19 +572,17 @@ nsresult InitializeLocalStorageArchive(mozIStorageConnection* aConnection,
   return NS_OK;
 }
 
-nsresult IsLocalStorageArchiveInitialized(mozIStorageConnection* aConnection,
-                                          bool& aInitialized) {
+Result<bool, nsresult> IsLocalStorageArchiveInitialized(
+    mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
 
   bool exists;
-  nsresult rv = aConnection->TableExists("database"_ns, &exists);
+  nsresult rv = aConnection.TableExists("database"_ns, &exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  aInitialized = exists;
-  return NS_OK;
+  return exists;
 }
 
 nsresult LoadLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
@@ -6577,9 +6575,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     uint32_t version = 0;
 
     if (!newlyCreatedOrRecreated) {
-      // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
-      bool initialized;
-      QM_TRY(IsLocalStorageArchiveInitialized(connection, initialized));
+      QM_TRY_VAR(const auto initialized,
+                 IsLocalStorageArchiveInitialized(*connection));
 
       if (initialized) {
         // TODO: Use QM_TRY_VAR once the return type is Result<V, E>.
