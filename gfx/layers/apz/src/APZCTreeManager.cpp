@@ -899,14 +899,13 @@ bool APZCTreeManager::AdvanceAnimations(const SampleTime& aSampleTime) {
 ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
     const MutexAutoLock& aProofOfMapLock, ClippedCompositionBoundsMap& aDestMap,
     ScrollableLayerGuid aGuid) {
-  auto insertResult = aDestMap.insert(std::make_pair(aGuid, ParentLayerRect()));
-  if (!insertResult.second) {
+  if (auto iter = aDestMap.find(aGuid); iter != aDestMap.end()) {
     // We already computed it for this one, early-exit. This might happen
     // because on a later iteration of mApzcMap we might encounter an ancestor
     // of an APZC that we processed on an earlier iteration. In this case we
     // would have computed the ancestor's clipped composition bounds when
     // recursing up on the earlier iteration.
-    return insertResult.first->second;
+    return iter->second;
   }
 
   ParentLayerRect bounds = mApzcMap[aGuid].apzc->GetCompositionBounds();
@@ -916,7 +915,7 @@ ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
     // Recursion base case, where the APZC with guid `aGuid` has no parent.
     // In this case, we don't need to clip `bounds` any further and can just
     // early exit.
-    insertResult.first->second = bounds;
+    aDestMap.emplace(aGuid, bounds);
     return bounds;
   }
 
@@ -950,7 +949,7 @@ ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
                                PixelCastJustification::MovingDownToChildren));
 
   // Done!
-  insertResult.first->second = bounds;
+  aDestMap.emplace(aGuid, bounds);
   return bounds;
 }
 
