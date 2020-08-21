@@ -786,6 +786,9 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
     this._endRange = this.querySelector("#custom-range-end");
     this._rangePicker = this.querySelector("#range-picker");
     this._rangeError = this.querySelector("#error-invalid-range");
+    this._startRangeOverflowError = this.querySelector(
+      "#error-invalid-start-range-overflow"
+    );
 
     this.addEventListener("input", this);
     document.addEventListener("page-count", this);
@@ -833,6 +836,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
         });
       }
       this._rangeError.hidden = true;
+      this._startRangeOverflowError.hidden = true;
       return;
     }
 
@@ -859,8 +863,16 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
         numPages: this._numPages,
       }
     );
+
+    let startValidity = this._startRange.validity;
+    let endValidity = this._endRange.validity;
+    this._startRangeOverflowError.hidden = !(
+      (startValidity.rangeOverflow && endValidity.valid) ||
+      (endValidity.rangeUnderflow && startValidity.valid)
+    );
     this._rangeError.hidden =
-      this._endRange.validity.valid && this._startRange.validity.valid;
+      !this._startRangeOverflowError.hidden ||
+      (startValidity.valid && endValidity.valid);
   }
 }
 customElements.define("page-range-input", PageRangeInput);
