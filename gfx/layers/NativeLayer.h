@@ -30,7 +30,6 @@ namespace layers {
 class NativeLayer;
 class NativeLayerCA;
 class NativeLayerRootSnapshotter;
-class ScreenshotGrabber;
 class SurfacePoolHandle;
 
 // NativeLayerRoot and NativeLayer allow building up a flat layer "tree" of
@@ -92,12 +91,6 @@ class NativeLayerRootSnapshotter {
   virtual bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
                               gfx::SurfaceFormat aReadbackFormat,
                               const Range<uint8_t>& aReadbackBuffer) = 0;
-
-  // Calls aScreenshotGrabber->MaybeGrabScreenshot(), to allow capturing the
-  // composited result as profiler screenshots.
-  virtual void MaybeGrabProfilerScreenshot(
-      ScreenshotGrabber* aScreenshotGrabber,
-      const gfx::IntSize& aWindowSize) = 0;
 };
 
 // Represents a native layer. Native layers, such as CoreAnimation layers on

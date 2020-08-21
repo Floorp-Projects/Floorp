@@ -18,8 +18,6 @@
 #include "GLContextCGL.h"
 #include "GLContextProvider.h"
 #include "MozFramebuffer.h"
-#include "mozilla/gfx/Swizzle.h"
-#include "mozilla/layers/ScreenshotGrabber.h"
 #include "mozilla/layers/SurfacePoolCA.h"
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHostOGL.h"
 #include "ScopedGLHelpers.h"
@@ -35,67 +33,10 @@ using gfx::IntPoint;
 using gfx::IntSize;
 using gfx::IntRect;
 using gfx::IntRegion;
-using gfx::DataSourceSurface;
 using gfx::Matrix4x4;
 using gfx::SurfaceFormat;
 using gl::GLContext;
 using gl::GLContextCGL;
-
-// Utility classes for NativeLayerRootSnapshotter (NLRS) profiler screenshots.
-
-class WindowNLRS : public profiler_screenshots::Window {
- public:
-  WindowNLRS(gl::GLContext* aGL, RenderSourceNLRS* aSnapshot) : mGL(aGL), mSnapshot(aSnapshot) {}
-  already_AddRefed<profiler_screenshots::RenderSource> GetWindowContents() override;
-  already_AddRefed<profiler_screenshots::DownscaleTarget> CreateDownscaleTarget(
-      const IntSize& aSize) override;
-  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
-      const IntSize& aSize) override;
-
- protected:
-  RefPtr<gl::GLContext> mGL;
-  RefPtr<RenderSourceNLRS> mSnapshot;
-};
-
-class RenderSourceNLRS : public profiler_screenshots::RenderSource {
- public:
-  explicit RenderSourceNLRS(UniquePtr<gl::MozFramebuffer>&& aFramebuffer)
-      : RenderSource(aFramebuffer->mSize), mFramebuffer(std::move(aFramebuffer)) {}
-  auto& FB() { return *mFramebuffer; }
-
- protected:
-  UniquePtr<gl::MozFramebuffer> mFramebuffer;
-};
-
-class DownscaleTargetNLRS : public profiler_screenshots::DownscaleTarget {
- public:
-  DownscaleTargetNLRS(gl::GLContext* aGL, UniquePtr<gl::MozFramebuffer>&& aFramebuffer)
-      : profiler_screenshots::DownscaleTarget(aFramebuffer->mSize),
-        mGL(aGL),
-        mRenderSource(new RenderSourceNLRS(std::move(aFramebuffer))) {}
-  already_AddRefed<profiler_screenshots::RenderSource> AsRenderSource() override {
-    return do_AddRef(mRenderSource);
-  };
-  bool DownscaleFrom(profiler_screenshots::RenderSource* aSource, const IntRect& aSourceRect,
-                     const IntRect& aDestRect) override;
-
- protected:
-  RefPtr<gl::GLContext> mGL;
-  RefPtr<RenderSourceNLRS> mRenderSource;
-};
-
-class AsyncReadbackBufferNLRS : public profiler_screenshots::AsyncReadbackBuffer {
- public:
-  AsyncReadbackBufferNLRS(gl::GLContext* aGL, const IntSize& aSize, GLuint aBufferHandle)
-      : profiler_screenshots::AsyncReadbackBuffer(aSize), mGL(aGL), mBufferHandle(aBufferHandle) {}
-  void CopyFrom(profiler_screenshots::RenderSource* aSource) override;
-  bool MapAndCopyInto(DataSourceSurface* aSurface, const IntSize& aReadSize) override;
-
- protected:
-  virtual ~AsyncReadbackBufferNLRS();
-  RefPtr<gl::GLContext> mGL;
-  GLuint mBufferHandle = 0;
-};
 
 // Needs to be on the stack whenever CALayer mutations are performed.
 // (Mutating CALayers outside of a transaction can result in permanently stuck rendering, because
@@ -355,8 +296,14 @@ NativeLayerRootSnapshotterCA::~NativeLayerRootSnapshotterCA() {
   [mRenderer release];
 }
 
-void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
-  CGRect bounds = CGRectMake(0, 0, aSize.width, aSize.height);
+bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
+                                                  SurfaceFormat aReadbackFormat,
+                                                  const Range<uint8_t>& aReadbackBuffer) {
+  if (aReadbackFormat != SurfaceFormat::B8G8R8A8) {
+    return false;
+  }
+
+  CGRect bounds = CGRectMake(0, 0, aReadbackSize.width, aReadbackSize.height);
 
   {
     // Set the correct bounds and scale on the renderer and its root layer. CARenderer always
@@ -376,25 +323,23 @@ void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
   mGL->MakeCurrent();
 
   bool needToRedrawEverything = false;
-  if (!mSnapshot || mSnapshot->Size() != aSize) {
-    mSnapshot = nullptr;
-    auto fb = gl::MozFramebuffer::Create(mGL, aSize, 0, false);
-    if (!fb) {
-      return;
+  if (!mFB || mFB->mSize != aReadbackSize) {
+    mFB = gl::MozFramebuffer::Create(mGL, aReadbackSize, 0, false);
+    if (!mFB) {
+      return false;
     }
-    mSnapshot = new RenderSourceNLRS(std::move(fb));
     needToRedrawEverything = true;
   }
 
-  const gl::ScopedBindFramebuffer bindFB(mGL, mSnapshot->FB().mFB);
-  mGL->fViewport(0.0, 0.0, aSize.width, aSize.height);
+  const gl::ScopedBindFramebuffer bindFB(mGL, mFB->mFB);
+  mGL->fViewport(0.0, 0.0, aReadbackSize.width, aReadbackSize.height);
 
   // These legacy OpenGL function calls are part of CARenderer's API contract, see CARenderer.h.
   // The size passed to glOrtho must be the device pixel size of the render target, otherwise
   // CARenderer will produce incorrect results.
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(0.0, aSize.width, 0.0, aSize.height, -1, 1);
+  glOrtho(0.0, aReadbackSize.width, 0.0, aReadbackSize.height, -1, 1);
 
   float mediaTime = CACurrentMediaTime();
   [mRenderer beginFrameAtTime:mediaTime timeStamp:nullptr];
@@ -421,34 +366,12 @@ void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
   }
   [mRenderer render];
   [mRenderer endFrame];
-}
 
-bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
-                                                  SurfaceFormat aReadbackFormat,
-                                                  const Range<uint8_t>& aReadbackBuffer) {
-  if (aReadbackFormat != SurfaceFormat::B8G8R8A8) {
-    return false;
-  }
-
-  UpdateSnapshot(aReadbackSize);
-  if (!mSnapshot) {
-    return false;
-  }
-
-  const gl::ScopedBindFramebuffer bindFB(mGL, mSnapshot->FB().mFB);
   gl::ScopedPackState safePackState(mGL);
   mGL->fReadPixels(0.0f, 0.0f, aReadbackSize.width, aReadbackSize.height, LOCAL_GL_BGRA,
                    LOCAL_GL_UNSIGNED_BYTE, &aReadbackBuffer[0]);
 
   return true;
-}
-
-void NativeLayerRootSnapshotterCA::MaybeGrabProfilerScreenshot(
-    ScreenshotGrabber* aScreenshotGrabber, const gfx::IntSize& aWindowSize) {
-  UpdateSnapshot(aWindowSize);
-
-  WindowNLRS window(mGL, mSnapshot);
-  aScreenshotGrabber->MaybeGrabScreenshot(window);
 }
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
@@ -994,104 +917,6 @@ Maybe<NativeLayerCA::SurfaceWithInvalidRegion> NativeLayerCA::GetUnusedSurfaceAn
   mSurfaces = std::move(usedSurfaces);
 
   return unusedSurface;
-}
-
-already_AddRefed<profiler_screenshots::RenderSource> WindowNLRS::GetWindowContents() {
-  return do_AddRef(mSnapshot);
-}
-
-already_AddRefed<profiler_screenshots::DownscaleTarget> WindowNLRS::CreateDownscaleTarget(
-    const IntSize& aSize) {
-  auto fb = gl::MozFramebuffer::Create(mGL, aSize, 0, false);
-  if (!fb) {
-    return nullptr;
-  }
-  RefPtr<profiler_screenshots::DownscaleTarget> dt = new DownscaleTargetNLRS(mGL, std::move(fb));
-  return dt.forget();
-}
-
-already_AddRefed<profiler_screenshots::AsyncReadbackBuffer> WindowNLRS::CreateAsyncReadbackBuffer(
-    const IntSize& aSize) {
-  size_t bufferByteCount = aSize.width * aSize.height * 4;
-  GLuint bufferHandle = 0;
-  mGL->fGenBuffers(1, &bufferHandle);
-
-  gl::ScopedPackState scopedPackState(mGL);
-  mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, bufferHandle);
-  mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
-  mGL->fBufferData(LOCAL_GL_PIXEL_PACK_BUFFER, bufferByteCount, nullptr, LOCAL_GL_STREAM_READ);
-  return MakeAndAddRef<AsyncReadbackBufferNLRS>(mGL, aSize, bufferHandle);
-}
-
-bool DownscaleTargetNLRS::DownscaleFrom(profiler_screenshots::RenderSource* aSource,
-                                        const IntRect& aSourceRect, const IntRect& aDestRect) {
-  mGL->BlitHelper()->BlitFramebufferToFramebuffer(static_cast<RenderSourceNLRS*>(aSource)->FB().mFB,
-                                                  mRenderSource->FB().mFB, aSourceRect, aDestRect,
-                                                  LOCAL_GL_LINEAR);
-
-  return true;
-}
-
-void AsyncReadbackBufferNLRS::CopyFrom(profiler_screenshots::RenderSource* aSource) {
-  IntSize size = aSource->Size();
-  MOZ_RELEASE_ASSERT(Size() == size);
-
-  gl::ScopedPackState scopedPackState(mGL);
-  mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, mBufferHandle);
-  mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
-  const gl::ScopedBindFramebuffer bindFB(mGL, static_cast<RenderSourceNLRS*>(aSource)->FB().mFB);
-  mGL->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, 0);
-}
-
-bool AsyncReadbackBufferNLRS::MapAndCopyInto(DataSourceSurface* aSurface,
-                                             const IntSize& aReadSize) {
-  MOZ_RELEASE_ASSERT(aReadSize <= aSurface->GetSize());
-
-  if (!mGL || !mGL->MakeCurrent()) {
-    return false;
-  }
-
-  gl::ScopedPackState scopedPackState(mGL);
-  mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, mBufferHandle);
-  mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
-
-  const uint8_t* srcData = nullptr;
-  if (mGL->IsSupported(gl::GLFeature::map_buffer_range)) {
-    srcData = static_cast<uint8_t*>(mGL->fMapBufferRange(LOCAL_GL_PIXEL_PACK_BUFFER, 0,
-                                                         aReadSize.height * aReadSize.width * 4,
-                                                         LOCAL_GL_MAP_READ_BIT));
-  } else {
-    srcData =
-        static_cast<uint8_t*>(mGL->fMapBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, LOCAL_GL_READ_ONLY));
-  }
-
-  if (!srcData) {
-    return false;
-  }
-
-  int32_t srcStride = mSize.width * 4;  // Bind() sets an alignment of 1
-  DataSourceSurface::ScopedMap map(aSurface, DataSourceSurface::WRITE);
-  uint8_t* destData = map.GetData();
-  int32_t destStride = map.GetStride();
-  SurfaceFormat destFormat = aSurface->GetFormat();
-  for (int32_t destRow = 0; destRow < aReadSize.height; destRow++) {
-    // Turn srcData upside down during the copy.
-    int32_t srcRow = aReadSize.height - 1 - destRow;
-    const uint8_t* src = &srcData[srcRow * srcStride];
-    uint8_t* dest = &destData[destRow * destStride];
-    SwizzleData(src, srcStride, SurfaceFormat::R8G8B8A8, dest, destStride, destFormat,
-                IntSize(aReadSize.width, 1));
-  }
-
-  mGL->fUnmapBuffer(LOCAL_GL_PIXEL_PACK_BUFFER);
-
-  return true;
-}
-
-AsyncReadbackBufferNLRS::~AsyncReadbackBufferNLRS() {
-  if (mGL && mGL->MakeCurrent()) {
-    mGL->fDeleteBuffers(1, &mBufferHandle);
-  }
 }
 
 }  // namespace layers
