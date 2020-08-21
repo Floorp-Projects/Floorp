@@ -32,8 +32,8 @@ interface CSSKeyframesRule : CSSRule {
            attribute CSSOMString name;
   readonly attribute CSSRuleList cssRules;
 
-  void             appendRule(CSSOMString rule);
-  void             deleteRule(CSSOMString select);
+  undefined        appendRule(CSSOMString rule);
+  undefined        deleteRule(CSSOMString select);
   CSSKeyframeRule? findRule(CSSOMString select);
 };
 
