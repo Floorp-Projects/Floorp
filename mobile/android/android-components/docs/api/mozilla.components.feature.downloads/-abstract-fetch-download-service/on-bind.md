@@ -2,4 +2,4 @@
 
 # onBind
 
-`open fun onBind(intent: <ERROR CLASS>?): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L238)
+`open fun onBind(intent: <ERROR CLASS>?): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L241)

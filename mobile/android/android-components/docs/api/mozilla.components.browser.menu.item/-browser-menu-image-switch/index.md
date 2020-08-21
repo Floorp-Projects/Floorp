@@ -2,7 +2,7 @@
 
 # BrowserMenuImageSwitch
 
-`class BrowserMenuImageSwitch : `[`BrowserMenuCompoundButton`](../-browser-menu-compound-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuImageSwitch.kt#L27)
+`class BrowserMenuImageSwitch : `[`BrowserMenuCompoundButton`](../-browser-menu-compound-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuImageSwitch.kt#L26)
 
 A simple browser menu switch.
 

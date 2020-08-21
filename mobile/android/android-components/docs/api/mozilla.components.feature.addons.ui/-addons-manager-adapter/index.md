@@ -2,7 +2,7 @@
 
 # AddonsManagerAdapter
 
-`class AddonsManagerAdapter : ListAdapter<`[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, `[`CustomViewHolder`](../-custom-view-holder/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonsManagerAdapter.kt#L57)
+`class AddonsManagerAdapter : ListAdapter<`[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, `[`CustomViewHolder`](../-custom-view-holder/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonsManagerAdapter.kt#L56)
 
 An adapter for displaying add-on items. This will display information related to the state of
 an add-on such as recommended, unsupported or installed. In addition, it will perform actions
