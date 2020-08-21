@@ -62,6 +62,7 @@ add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
     };
 
     info(`enter fullscreen several times and controller should keep inactive`);
+    await ensureTabIsAlreadyFocused(tab);
     for (let idx = 0; idx < 3; idx++) {
       await enterAndLeaveFullScreen(tab, testVideoId);
     }
@@ -75,6 +76,24 @@ add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
 /**
  * The following is helper function.
  */
+function ensureTabIsAlreadyFocused(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    // fullscreen can only be request from a visible tab, sometime we excecute
+    // this method too early where the tab hasn't become a focus tab.
+    if (content.document.visibilityState != "visible") {
+      info(`wait until tab becomes a focus tab`);
+      return new Promise(r => {
+        content.document.onvisibilitychange = () => {
+          if (content.document.visibilityState == "visible") {
+            r();
+          }
+        };
+      });
+    }
+    return Promise.resolve();
+  });
+}
+
 function enterAndLeaveFullScreen(tab, elementId) {
   return SpecialPowers.spawn(tab.linkedBrowser, [elementId], elementId => {
     return new Promise(r => {
