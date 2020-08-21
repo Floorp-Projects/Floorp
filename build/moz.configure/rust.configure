@@ -153,12 +153,19 @@ def rust_compiler(rustc_info, cargo_info, build_project):
     cargo_min_version = rustc_min_version
 
     version = rustc_info.version
-    if version < rustc_min_version:
+    is_nightly = 'nightly' in version.version
+    is_version_number_match = (
+            version.major == rustc_min_version.major and
+            version.minor == rustc_min_version.minor and
+            version.patch == rustc_min_version.patch)
+
+    if version < rustc_min_version or (is_version_number_match and is_nightly):
         die(dedent('''\
         Rust compiler {} is too old.
 
         To compile Rust language sources please install at least
-        version {} of the 'rustc' toolchain and make sure it is
+        version {} of the 'rustc' toolchain (or, if using nightly,
+        at least one version newer than {}) and make sure it is
         first in your path.
 
         You can verify this by typing 'rustc --version'.
@@ -166,7 +173,7 @@ def rust_compiler(rustc_info, cargo_info, build_project):
         If you have the 'rustup' tool installed you can upgrade
         to the latest release by typing 'rustup update'. The
         installer is available from https://rustup.rs/
-        '''.format(version, rustc_min_version)))
+        '''.format(version, rustc_min_version, rustc_min_version)))
 
     if not cargo_info:
         die(dedent('''\
