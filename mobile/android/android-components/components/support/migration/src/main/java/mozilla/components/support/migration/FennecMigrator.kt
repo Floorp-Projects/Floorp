@@ -14,6 +14,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.search.SearchEngineManager
@@ -1305,7 +1306,9 @@ class FennecMigrator private constructor(
             // Reversed, so that first pinned site in Fennec ends up as the first one in Fenix, as well.
             pinnedSitesWithUrl.reversed().forEach { pinnedSite ->
                 try {
-                    pinnedSitesStorage.addPinnedSite(pinnedSite.title ?: "", pinnedSite.url!!)
+                    CoroutineScope(coroutineContext).launch {
+                        pinnedSitesStorage.addPinnedSite(pinnedSite.title ?: "", pinnedSite.url!!)
+                    }
                 } catch (e: Exception) {
                     failedToImport++
                     // Let's not spam Sentry and submit the same exception multiple times

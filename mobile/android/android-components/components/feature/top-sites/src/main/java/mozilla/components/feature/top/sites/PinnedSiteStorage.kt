@@ -5,62 +5,51 @@
 package mozilla.components.feature.top.sites
 
 import android.content.Context
-import androidx.paging.DataSource
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import mozilla.components.feature.top.sites.adapter.PinnedSiteAdapter
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.withContext
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
 import mozilla.components.feature.top.sites.db.PinnedSiteEntity
+import mozilla.components.feature.top.sites.db.toPinnedSite
 
 /**
  * A storage implementation for organizing pinned sites.
  */
-class PinnedSiteStorage(
-    context: Context
-) {
+class PinnedSiteStorage(context: Context) {
+
     internal var database: Lazy<TopSiteDatabase> = lazy { TopSiteDatabase.get(context) }
+    private val pinnedSiteDao by lazy { database.value.pinnedSiteDao() }
 
     /**
-     * Adds a new [PinnedSite].
+     * Adds a new pinned site.
      *
      * @param title The title string.
      * @param url The URL string.
      * @param isDefault Whether or not the pinned site added should be a default pinned site. This
      * is used to identify pinned sites that are added by the application.
      */
-    fun addPinnedSite(title: String, url: String, isDefault: Boolean = false) {
-        PinnedSiteEntity(
+    suspend fun addPinnedSite(title: String, url: String, isDefault: Boolean = false) = withContext(IO) {
+        val entity = PinnedSiteEntity(
             title = title,
             url = url,
             isDefault = isDefault,
             createdAt = System.currentTimeMillis()
-        ).also { entity ->
-            entity.id = database.value.pinnedSiteDao().insertPinnedSite(entity)
-        }
+        )
+        entity.id = pinnedSiteDao.insertPinnedSite(entity)
     }
 
     /**
-     * Returns a [Flow] list of all the [PinnedSite] instances.
+     * Returns a list of all the pinned sites.
      */
-    fun getPinnedSites(): Flow<List<PinnedSite>> {
-        return database.value.pinnedSiteDao().getPinnedSites().map { list ->
-            list.map { entity -> PinnedSiteAdapter(entity) }
-        }
+    suspend fun getPinnedSites(): List<TopSite> = withContext(IO) {
+        pinnedSiteDao.getPinnedSites().map { entity -> entity.toTopSite() }
     }
 
     /**
-     * Returns all [PinnedSite]s as a [DataSource.Factory].
+     * Removes the given pinned site.
+     *
+     * @param site The pinned site.
      */
-    fun getPinnedSitesPaged(): DataSource.Factory<Int, PinnedSite> = database.value
-        .pinnedSiteDao()
-        .getPinnedSitesPaged()
-        .map { entity -> PinnedSiteAdapter(entity) }
-
-    /**
-     * Removes the given [PinnedSite].
-     */
-    fun removePinnedSite(site: PinnedSite) {
-        val pinnedSiteEntity = (site as PinnedSiteAdapter).entity
-        database.value.pinnedSiteDao().deletePinnedSite(pinnedSiteEntity)
+    suspend fun removePinnedSite(site: TopSite) = withContext(IO) {
+        pinnedSiteDao.deletePinnedSite(site.toPinnedSite())
     }
 }

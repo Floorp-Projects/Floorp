@@ -4,30 +4,26 @@
 
 package mozilla.components.feature.top.sites.db
 
-import androidx.paging.DataSource
+import androidx.annotation.WorkerThread
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Transaction
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Internal DAO for accessing [PinnedSiteEntity] instances.
  */
 @Dao
 internal interface PinnedSiteDao {
+    @WorkerThread
     @Insert
     fun insertPinnedSite(site: PinnedSiteEntity): Long
 
+    @WorkerThread
     @Delete
     fun deletePinnedSite(site: PinnedSiteEntity)
 
-    @Transaction
+    @WorkerThread
     @Query("SELECT * FROM top_sites")
-    fun getPinnedSites(): Flow<List<PinnedSiteEntity>>
-
-    @Transaction
-    @Query("SELECT * FROM top_sites")
-    fun getPinnedSitesPaged(): DataSource.Factory<Int, PinnedSiteEntity>
+    fun getPinnedSites(): List<PinnedSiteEntity>
 }

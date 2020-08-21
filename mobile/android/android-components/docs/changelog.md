@@ -76,6 +76,13 @@ permalink: /changelog/
 * **feature-addons**
   * 🌟 Feature [issue #8200](https://github.com/mozilla-mobile/android-components/issues/8200): "users" in add-ons manager should be renamed to "reviews".
 
+* **feature-top-sites**:
+  * ⚠️ **This is a breaking change**: Renames `TopSiteStorage` to `PinnedSitesStorage`.
+  * ⚠️ **This is a breaking change**: Renames `TopSiteDao` to `PinnedSiteDao`.
+  * ⚠️ **This is a breaking change**: Renames `TopSiteEntity` to `PinnedSiteEntity`.
+  * ⚠️ **This is a breaking change**: Replaces `TopSite` interface with a new generic `TopSite` data class.
+  * Implements TopSitesFeature based on the RFC [0006-top-sites-feature.md](https://github.com/mozilla-mobile/android-components/blob/master/docs/rfcs/0006-top-sites-feature.md).
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
