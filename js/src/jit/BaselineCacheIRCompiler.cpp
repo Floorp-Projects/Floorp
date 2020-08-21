@@ -1197,6 +1197,23 @@ bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   return true;
 }
 
+static void EmitAssertExtensibleAndWritableArrayLength(MacroAssembler& masm,
+                                                       Register elementsReg) {
+#ifdef DEBUG
+  // Preceding shape guards ensure the object is extensible and the array length
+  // is writable.
+  Address elementsFlags(elementsReg, ObjectElements::offsetOfFlags());
+  Label ok;
+  masm.branchTest32(Assembler::Zero, elementsFlags,
+                    Imm32(ObjectElements::Flags::NOT_EXTENSIBLE |
+                          ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH),
+                    &ok);
+  masm.assumeUnreachable(
+      "Unexpected non-extensible object or non-writable array length");
+  masm.bind(&ok);
+#endif
+}
+
 bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
                                                         Int32OperandId indexId,
                                                         ValOperandId rhsId,
@@ -1218,6 +1235,8 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
 
   // Load obj->elements in scratch.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+  EmitAssertExtensibleAndWritableArrayLength(masm, scratch);
 
   BaseObjectElementIndex element(scratch, index);
   Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
@@ -1252,12 +1271,7 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
     masm.spectreBoundsCheck32(index, capacity, spectreTemp, &allocElement);
     masm.jump(&capacityOk);
 
-    // Check for non-writable array length. We only have to do this if
-    // index >= capacity.
     masm.bind(&allocElement);
-    masm.branchTest32(Assembler::NonZero, elementsFlags,
-                      Imm32(ObjectElements::NONWRITABLE_ARRAY_LENGTH),
-                      failure->label());
 
     LiveRegisterSet save(GeneralRegisterSet::Volatile(),
                          liveVolatileFloatRegs());
@@ -1367,6 +1381,8 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   // Load obj->elements in scratch.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
+  EmitAssertExtensibleAndWritableArrayLength(masm, scratch);
+
   Address elementsInitLength(scratch,
                              ObjectElements::offsetOfInitializedLength());
   Address elementsLength(scratch, ObjectElements::offsetOfLength());
@@ -1392,12 +1408,7 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   masm.spectreBoundsCheck32(scratchLength, capacity, InvalidReg, &allocElement);
   masm.jump(&capacityOk);
 
-  // Check for non-writable array length. We only have to do this if
-  // index >= capacity.
   masm.bind(&allocElement);
-  masm.branchTest32(Assembler::NonZero, elementsFlags,
-                    Imm32(ObjectElements::NONWRITABLE_ARRAY_LENGTH),
-                    failure->label());
 
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   save.takeUnchecked(scratch);

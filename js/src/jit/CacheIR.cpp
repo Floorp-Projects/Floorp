@@ -5055,7 +5055,6 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
 
   MOZ_ASSERT(!thisarray->denseElementsAreFrozen(),
              "Extensible arrays should not have frozen elements");
-  MOZ_ASSERT(thisarray->lengthIsWritable());
 
   // After this point, we can generate code fine.
 
