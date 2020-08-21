@@ -4817,15 +4817,15 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   mozilla::LogModule::Init(gArgc, gArgv);
 
-#ifdef MOZ_CODE_COVERAGE
-  CodeCoverageHandler::Init();
-#endif
-
   NS_SetCurrentThreadName("MainThread");
 
   AUTO_BASE_PROFILER_LABEL("XREMain::XRE_main (around Gecko Profiler)", OTHER);
   AUTO_PROFILER_INIT;
   AUTO_PROFILER_LABEL("XREMain::XRE_main", OTHER);
+
+#ifdef MOZ_CODE_COVERAGE
+  CodeCoverageHandler::Init();
+#endif
 
   nsresult rv = NS_OK;
 
