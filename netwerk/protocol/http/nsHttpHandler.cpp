@@ -2964,4 +2964,8 @@ void nsHttpHandler::MaybeAddAltSvcForTesting(
   }
 }
 
+bool nsHttpHandler::UseHTTPSRRAsAltSvcEnabled() const {
+  return StaticPrefs::network_dns_use_https_rr_as_altsvc();
+}
+
 }  // namespace mozilla::net

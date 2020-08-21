@@ -8316,6 +8316,12 @@
   value: false
   mirror: always
 
+  # Whether to use HTTPS RR as AltSvc
+- name: network.dns.use_https_rr_as_altsvc
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------

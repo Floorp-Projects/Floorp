@@ -13,6 +13,7 @@
 #include "EventTokenBucket.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
+#include "nsIDNSListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
@@ -48,13 +49,15 @@ class nsHttpTransaction final : public nsAHttpTransaction,
                                 public ATokenBucketEvent,
                                 public nsIInputStreamCallback,
                                 public nsIOutputStreamCallback,
-                                public ARefBase {
+                                public ARefBase,
+                                public nsIDNSListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
   NS_DECL_HTTPTRANSACTIONSHELL
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
+  NS_DECL_NSIDNSLISTENER
 
   nsHttpTransaction();
 
@@ -73,6 +76,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void EnableKeepAlive() { mCaps |= NS_HTTP_ALLOW_KEEPALIVE; }
   void MakeSticky() { mCaps |= NS_HTTP_STICKY_CONNECTION; }
   void MakeNonSticky() override { mCaps &= ~NS_HTTP_STICKY_CONNECTION; }
+
+  void MakeDontWaitHTTPSSVC() { mCaps &= ~NS_HTTP_WAIT_HTTPSSVC_RESULT; }
 
   // SetPriority() may only be used by the connection manager.
   void SetPriority(int32_t priority) { mPriority = priority; }
@@ -143,6 +148,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // stream is available. The newly added stream will be taken by another
   // transaction.
   void OnPush(Http2PushedStreamWrapper* aStream);
+
+  void UpdateConnectionInfo(nsHttpConnectionInfo* aConnInfo);
 
  private:
   friend class DeleteHttpTransaction;
@@ -431,6 +438,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   OnPushCallback mOnPushCallback;
   nsDataHashtable<nsUint32HashKey, RefPtr<Http2PushedStreamWrapper>>
       mIDToStreamMap;
+
+  nsCOMPtr<nsICancelable> mDNSRequest;
 };
 
 }  // namespace net
