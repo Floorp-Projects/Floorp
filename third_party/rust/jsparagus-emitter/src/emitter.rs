@@ -567,6 +567,10 @@ impl InstructionWriter {
         self.emit_op(Opcode::InitHiddenElem);
     }
 
+    pub fn init_locked_elem(&mut self) {
+        self.emit_op(Opcode::InitLockedElem);
+    }
+
     pub fn init_prop_getter(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitPropGetter);
         self.write_g_c_thing_index(name_index);

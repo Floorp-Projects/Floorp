@@ -12,12 +12,12 @@ log = "0.4"
 # Disable regex feature for code size.
 env_logger = {version = "0.6", default-features = false}
 # For non-jsparagus developers.
-jsparagus = { git = "https://github.com/mozilla-spidermonkey/jsparagus", rev = "239df3502e7e09a706b8d6fbe4c0db139d653e25" }
+jsparagus = { git = "https://github.com/mozilla-spidermonkey/jsparagus", rev = "0b933acac9dc56067e66f26d16ee00194a91e13b" }
 # For local development, replace above with
 # jsparagus = { path = "{path to jsparagus}" }
 
 [build-dependencies]
 # For non-jsparagus developers.
-jsparagus = { git = "https://github.com/mozilla-spidermonkey/jsparagus", rev = "239df3502e7e09a706b8d6fbe4c0db139d653e25" }
+jsparagus = { git = "https://github.com/mozilla-spidermonkey/jsparagus", rev = "0b933acac9dc56067e66f26d16ee00194a91e13b" }
 # For local development, replace above with
 # jsparagus = { path = "{path to jsparagus}" }

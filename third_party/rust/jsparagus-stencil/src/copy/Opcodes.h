@@ -925,6 +925,8 @@
      *
      * `JSOp::InitHiddenElem` is the same but defines a non-enumerable property,
      * for class methods.
+     * `JSOp::InitLockedElem` is the same but defines a non-enumerable, non-writable, non-configurable property,
+     * for private class methods.
      *
      *    [1]: https://tc39.es/ecma262/#sec-createdatapropertyorthrow
      *
@@ -935,6 +937,7 @@
      */ \
     MACRO(InitElem, init_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
     MACRO(InitHiddenElem, init_hidden_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
+    MACRO(InitLockedElem, init_locked_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
     /*
      * Define an accessor property on `obj` with the given `getter`.
      * `nameIndex` gives the property name.
@@ -3675,7 +3678,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \
   MACRO(241)                                   \
