@@ -72,11 +72,11 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     Extension(T),
 }
 
-pub trait WebDriverExtensionCommand: Clone + Send + PartialEq {
+pub trait WebDriverExtensionCommand: Clone + Send {
     fn parameters_json(&self) -> Option<Value>;
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct VoidWebDriverExtensionCommand;
 
 impl WebDriverExtensionCommand for VoidWebDriverExtensionCommand {
