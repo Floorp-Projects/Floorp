@@ -47,7 +47,6 @@ const LIGHT_WEIGHT_THEMES = {
   DARK: "firefox-compact-dark@mozilla.org",
   LIGHT: "firefox-compact-light@mozilla.org",
   AUTOMATIC: "default-theme@mozilla.org",
-  ALPENGLOW: "firefox-alpenglow@mozilla.org",
 };
 
 async function getImportableSites() {
