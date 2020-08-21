@@ -9,7 +9,7 @@ partial namespace CSS {
 
 [Global=(Worklet,PaintWorklet),Exposed=PaintWorklet]
 interface PaintWorkletGlobalScope : WorkletGlobalScope {
-    void registerPaint(DOMString name, VoidFunction paintCtor);
+    undefined registerPaint(DOMString name, VoidFunction paintCtor);
     readonly attribute unrestricted double devicePixelRatio;
 };
 
