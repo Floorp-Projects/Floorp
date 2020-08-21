@@ -41,21 +41,23 @@ assertEq(new Date("0/10/0").getTime(), new Date(NaN).getTime());
 // Written months.
 for (let year of Array(1000).keys()) {
     let fullDate = new Date(`5/1/${year}`);
-    let d1 = new Date(`may ${year} 1`);
-    let d2 = new Date(`may 1 ${year}`);
-
-    let d3 = new Date(`1 may ${year}`);
-    let d4 = new Date(`${year} may 1`);
-
-    let d5 = new Date(`1 ${year} may`);
-    let d6 = new Date(`${year} 1 may`);
+    let d1 = new Date(`may 1 ${year}`);
+    let d2 = new Date(`1 may ${year}`);
+    let d3 = new Date(`1 ${year} may`);
 
     assertEq(d1.getTime(), fullDate.getTime())
     assertEq(d2.getTime(), fullDate.getTime())
     assertEq(d3.getTime(), fullDate.getTime())
-    assertEq(d4.getTime(), fullDate.getTime())
-    assertEq(d5.getTime(), fullDate.getTime())
-    assertEq(d6.getTime(), fullDate.getTime())
+
+    if (year > 31) {
+      let d4 = new Date(`may ${year} 1`);
+      let d5 = new Date(`${year} may 1`);
+      let d6 = new Date(`${year} 1 may`);
+
+      assertEq(d4.getTime(), fullDate.getTime())
+      assertEq(d5.getTime(), fullDate.getTime())
+      assertEq(d6.getTime(), fullDate.getTime())
+    }
 }
 
 assertEq(new Date("may 1999 1999").getTime(), new Date(NaN).getTime());
