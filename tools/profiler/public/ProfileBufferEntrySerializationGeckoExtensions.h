@@ -49,10 +49,12 @@ struct ProfileBufferEntryReader::Deserializer<nsTString<CHAR>> {
   static nsTString<CHAR> Read(ProfileBufferEntryReader& aER) {
     const Length length = aER.ReadULEB128<Length>();
     nsTString<CHAR> s;
-    nsresult rv;
     // BulkWrite is the most efficient way to copy bytes into the target string.
-    auto writer = s.BulkWrite(length, 0, true, rv);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    auto writerOrErr = s.BulkWrite(length, 0, true);
+    MOZ_RELEASE_ASSERT(!writerOrErr.isErr());
+
+    auto writer = writerOrErr.unwrap();
+
     aER.ReadBytes(writer.Elements(), length * sizeof(CHAR));
     writer.Finish(length, true);
     return s;
@@ -94,10 +96,11 @@ struct ProfileBufferEntryReader::Deserializer<nsTAutoStringN<CHAR, N>> {
   static nsTAutoStringN<CHAR, N> Read(ProfileBufferEntryReader& aER) {
     const auto length = aER.ReadULEB128<Length>();
     nsTAutoStringN<CHAR, N> s;
-    nsresult rv;
     // BulkWrite is the most efficient way to copy bytes into the target string.
-    auto writer = s.BulkWrite(length, 0, true, rv);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    auto writerOrErr = s.BulkWrite(length, 0, true);
+    MOZ_RELEASE_ASSERT(!writerOrErr.isErr());
+
+    auto writer = writerOrErr.unwrap();
     aER.ReadBytes(writer.Elements(), length * sizeof(CHAR));
     writer.Finish(length, true);
     return s;
