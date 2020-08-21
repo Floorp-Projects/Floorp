@@ -5604,13 +5604,20 @@ nsresult QuotaManager::UpgradeStorageFrom0_0To1_0(
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv = UpgradeStorage<UpgradeStorageFrom0_0To1_0Helper>(
-      0, MakeStorageVersion(1, 0), aConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto rv = [this, &aConnection]() -> nsresult {
+    nsresult rv = UpgradeStorage<UpgradeStorageFrom0_0To1_0Helper>(
+        0, MakeStorageVersion(1, 0), aConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  return NS_OK;
+    return NS_OK;
+  }();
+
+  mInitializationInfo.RecordFirstInitializationAttempt(
+      Initialization::UpgradeStorageFrom0_0To1_0, rv);
+
+  return rv;
 }
 
 nsresult QuotaManager::UpgradeStorageFrom1_0To2_0(
@@ -5685,13 +5692,20 @@ nsresult QuotaManager::UpgradeStorageFrom1_0To2_0(
   // manager directories without the ".files" suffix then prevent current
   // Firefox from initializing and using the storage.
 
-  nsresult rv = UpgradeStorage<UpgradeStorageFrom1_0To2_0Helper>(
-      MakeStorageVersion(1, 0), MakeStorageVersion(2, 0), aConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto rv = [this, &aConnection]() -> nsresult {
+    nsresult rv = UpgradeStorage<UpgradeStorageFrom1_0To2_0Helper>(
+        MakeStorageVersion(1, 0), MakeStorageVersion(2, 0), aConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  return NS_OK;
+    return NS_OK;
+  }();
+
+  mInitializationInfo.RecordFirstInitializationAttempt(
+      Initialization::UpgradeStorageFrom1_0To2_0, rv);
+
+  return rv;
 }
 
 nsresult QuotaManager::UpgradeStorageFrom2_0To2_1(
@@ -5702,13 +5716,20 @@ nsresult QuotaManager::UpgradeStorageFrom2_0To2_1(
   // The upgrade is mainly to create a directory padding file in DOM Cache
   // directory to record the overall padding size of an origin.
 
-  nsresult rv = UpgradeStorage<UpgradeStorageFrom2_0To2_1Helper>(
-      MakeStorageVersion(2, 0), MakeStorageVersion(2, 1), aConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto rv = [this, &aConnection]() -> nsresult {
+    nsresult rv = UpgradeStorage<UpgradeStorageFrom2_0To2_1Helper>(
+        MakeStorageVersion(2, 0), MakeStorageVersion(2, 1), aConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  return NS_OK;
+    return NS_OK;
+  }();
+
+  mInitializationInfo.RecordFirstInitializationAttempt(
+      Initialization::UpgradeStorageFrom2_0To2_1, rv);
+
+  return rv;
 }
 
 nsresult QuotaManager::UpgradeStorageFrom2_1To2_2(
@@ -5719,13 +5740,20 @@ nsresult QuotaManager::UpgradeStorageFrom2_1To2_2(
   // The upgrade is mainly to clean obsolete origins in the repositoies, remove
   // asmjs client, and ".tmp" file in the idb folers.
 
-  nsresult rv = UpgradeStorage<UpgradeStorageFrom2_1To2_2Helper>(
-      MakeStorageVersion(2, 1), MakeStorageVersion(2, 2), aConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto rv = [this, &aConnection]() -> nsresult {
+    nsresult rv = UpgradeStorage<UpgradeStorageFrom2_1To2_2Helper>(
+        MakeStorageVersion(2, 1), MakeStorageVersion(2, 2), aConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  return NS_OK;
+    return NS_OK;
+  }();
+
+  mInitializationInfo.RecordFirstInitializationAttempt(
+      Initialization::UpgradeStorageFrom2_1To2_2, rv);
+
+  return rv;
 }
 
 nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
@@ -5733,40 +5761,47 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  // Table `database`
-  nsresult rv = aConnection->ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE database"
-                       "( cache_version INTEGER NOT NULL DEFAULT 0"
-                       ");"));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aConnection->ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO database (cache_version) "
-                       "VALUES (0)"));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-#ifdef DEBUG
-  {
-    int32_t storageVersion;
-    rv = aConnection->GetSchemaVersion(&storageVersion);
+  auto rv = [&aConnection]() -> nsresult {
+    // Table `database`
+    nsresult rv = aConnection->ExecuteSimpleSQL(
+        nsLiteralCString("CREATE TABLE database"
+                         "( cache_version INTEGER NOT NULL DEFAULT 0"
+                         ");"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    MOZ_ASSERT(storageVersion == MakeStorageVersion(2, 2));
-  }
+    rv = aConnection->ExecuteSimpleSQL(
+        nsLiteralCString("INSERT INTO database (cache_version) "
+                         "VALUES (0)"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+#ifdef DEBUG
+    {
+      int32_t storageVersion;
+      rv = aConnection->GetSchemaVersion(&storageVersion);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(storageVersion == MakeStorageVersion(2, 2));
+    }
 #endif
 
-  rv = aConnection->SetSchemaVersion(MakeStorageVersion(2, 3));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    rv = aConnection->SetSchemaVersion(MakeStorageVersion(2, 3));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  return NS_OK;
+    return NS_OK;
+  }();
+
+  mInitializationInfo.RecordFirstInitializationAttempt(
+      Initialization::UpgradeStorageFrom2_2To2_3, rv);
+
+  return rv;
 }
 
 nsresult QuotaManager::MaybeRemoveLocalStorageData() {
@@ -6506,39 +6541,22 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
                     "Upgrade function needed due to storage version increase.");
 
       while (storageVersion != kStorageVersion) {
-        // TODO: Convert to QM_TRY once upgrade functions record first
-        //       initialization attempts directly.
-        nsresult rv;
         if (storageVersion == 0) {
-          rv = UpgradeStorageFrom0_0To1_0(connection);
-          mInitializationInfo.RecordFirstInitializationAttempt(
-              Initialization::UpgradeStorageFrom0_0To1_0, rv);
+          QM_TRY(UpgradeStorageFrom0_0To1_0(connection));
         } else if (storageVersion == MakeStorageVersion(1, 0)) {
-          rv = UpgradeStorageFrom1_0To2_0(connection);
-          mInitializationInfo.RecordFirstInitializationAttempt(
-              Initialization::UpgradeStorageFrom1_0To2_0, rv);
+          QM_TRY(UpgradeStorageFrom1_0To2_0(connection));
         } else if (storageVersion == MakeStorageVersion(2, 0)) {
-          rv = UpgradeStorageFrom2_0To2_1(connection);
-          mInitializationInfo.RecordFirstInitializationAttempt(
-              Initialization::UpgradeStorageFrom2_0To2_1, rv);
+          QM_TRY(UpgradeStorageFrom2_0To2_1(connection));
         } else if (storageVersion == MakeStorageVersion(2, 1)) {
-          rv = UpgradeStorageFrom2_1To2_2(connection);
-          mInitializationInfo.RecordFirstInitializationAttempt(
-              Initialization::UpgradeStorageFrom2_1To2_2, rv);
+          QM_TRY(UpgradeStorageFrom2_1To2_2(connection));
         } else if (storageVersion == MakeStorageVersion(2, 2)) {
-          rv = UpgradeStorageFrom2_2To2_3(connection);
-          mInitializationInfo.RecordFirstInitializationAttempt(
-              Initialization::UpgradeStorageFrom2_2To2_3, rv);
+          QM_TRY(UpgradeStorageFrom2_2To2_3(connection));
         } else {
           // TODO: This should use QM_TRY too.
           NS_WARNING(
               "Unable to initialize storage, no upgrade path is "
               "available!");
           return NS_ERROR_FAILURE;
-        }
-
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
         }
 
         QM_TRY_VAR(storageVersion,
