@@ -501,12 +501,12 @@ android-hw-p2-8-0-arm7-api-16/debug:
         - android-hw-arm7-debug-unittests
 
 android-hw-p2-8-0-android-aarch64-qr/opt:
-    build-platform: android-api-16/opt
+    build-platform: android-aarch64/opt
     test-sets:
         - android-hw-aarch64-qr
 
 android-hw-p2-8-0-android-aarch64-shippable-qr/opt:
-    build-platform: android-api-16-shippable/opt
+    build-platform: android-aarch64-shippable/opt
     test-sets:
         - android-hw-aarch64-qr
 
