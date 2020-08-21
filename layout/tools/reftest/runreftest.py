@@ -393,6 +393,10 @@ class RefTest(object):
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.suite'] = options.suite
         prefs['gfx.font_rendering.ahem_antialias_none'] = True
+        # Run the "deferred" font-loader immediately, because if it finishes
+        # mid-test, the extra reflow that is triggered can disrupt the test.
+        prefs['gfx.font_loader.delay'] = 0
+        prefs['gfx.font_loader.interval'] = 0
         # Disable dark scrollbars because it's semi-transparent.
         prefs['widget.disable-dark-scrollbar'] = True
         prefs['reftest.isCoverageBuild'] = mozinfo.info.get('ccov', False)

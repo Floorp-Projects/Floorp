@@ -1,9 +1,3 @@
-# Run the font loader eagerly: this also ensures we will eagerly load localized
-# family names when looking up a requested font-family. Otherwise, tests here
-# may fail if they're running too soon after browser startup, and localized
-# names have not yet been read. (See bug 1439937.)
-defaults pref(gfx.font_loader.delay,0)
-
 == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
 
 # tests for bug 1394311 (case-insensitive lang tag processing)
