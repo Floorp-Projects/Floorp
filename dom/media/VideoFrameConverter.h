@@ -145,9 +145,8 @@ class VideoFrameConverter {
             if (mLastFrameQueuedForProcessing.Serial() != -2) {
               // This track has already seen a frame so we re-send the last one
               // queued as black.
-              FrameToProcess f = mLastFrameQueuedForProcessing;
-              f.mTime = TimeStamp::Now();
-              ProcessVideoFrame(f);
+              QueueForProcessing(nullptr, TimeStamp::Now(),
+                                 mLastFrameQueuedForProcessing.mSize, true);
             } else {
               // This track has not yet seen any frame. We make one up.
               QueueForProcessing(nullptr, TimeStamp::Now(),
