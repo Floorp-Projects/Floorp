@@ -57,13 +57,9 @@ class CreateShortcutFragment : DialogFragment() {
     }
 
     private fun updateAddButtonEnabledState() {
-        add_button.isEnabled = isTextValid()
-        add_button.alpha = if (isTextValid()) ENABLED_ALPHA else DISABLED_ALPHA
-    }
-
-    private fun isTextValid(): Boolean {
         val text = shortcut_text.text
-        return text.isNotEmpty() && !text.isBlank()
+        add_button.isEnabled = text.isNotBlank()
+        add_button.alpha = if (text.isNotBlank()) ENABLED_ALPHA else DISABLED_ALPHA
     }
 
     companion object {
