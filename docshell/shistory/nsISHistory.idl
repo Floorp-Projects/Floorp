@@ -271,14 +271,14 @@ interface nsISHistory: nsISupports
   nsISHEntry createEntry();
 
   [noscript] void AddToRootSessionHistory(in bool aCloneChildren, in nsISHEntry aOSHE,
-                                          in BrowsingContext aBC, in nsISHEntry aEntry,
+                                          in BrowsingContext aRootBC, in nsISHEntry aEntry,
                                           in unsigned long aLoadType,
                                           in bool aShouldPersist,
                                           out MaybeInt32 aPreviousEntryIndex,
                                           out MaybeInt32 aLoadedEntryIndex);
 
   [noscript] void AddChildSHEntryHelper(in nsISHEntry aCloneRef, in nsISHEntry aNewEntry,
-                                        in BrowsingContext aBC, in bool aCloneChildren);
+                                        in BrowsingContext aRootBC, in bool aCloneChildren);
 
   [noscript, notxpcom] boolean isEmptyOrHasEntriesForSingleTopLevelPage();
 };
