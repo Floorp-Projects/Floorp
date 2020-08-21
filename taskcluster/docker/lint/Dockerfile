@@ -28,16 +28,10 @@ ADD system-setup.sh /tmp/system-setup.sh
 ADD topsrcdir/tools/lint/eslint/manifest.tt /tmp/eslint.tt
 # %include tools/lint/eslint/eslint-plugin-mozilla/manifest.tt
 ADD topsrcdir/tools/lint/eslint/eslint-plugin-mozilla/manifest.tt /tmp/eslint-plugin-mozilla.tt
-# %include tools/lint/python/flake8_requirements.txt
-ADD topsrcdir/tools/lint/python/flake8_requirements.txt /tmp/flake8_requirements.txt
-# %include tools/lint/python/pylint_requirements.txt
-ADD topsrcdir/tools/lint/python/pylint_requirements.txt /tmp/pylint_requirements.txt
 # %include tools/lint/spell/codespell_requirements.txt
 ADD topsrcdir/tools/lint/spell/codespell_requirements.txt /tmp/codespell_requirements.txt
 # %include tools/lint/tox/tox_requirements.txt
 ADD topsrcdir/tools/lint/tox/tox_requirements.txt /tmp/tox_requirements.txt
-# %include tools/lint/python/black_requirements.txt
-ADD topsrcdir/tools/lint/python/black_requirements.txt /tmp/black_requirements.txt
 RUN bash /tmp/system-setup.sh
 
 # %include taskcluster/scripts/run-task
