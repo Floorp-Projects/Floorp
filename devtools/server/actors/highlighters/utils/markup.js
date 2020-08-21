@@ -23,13 +23,6 @@ loader.lazyRequireGetter(
   "devtools/server/actors/inspector/css-logic",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "isDocumentReady",
-  "devtools/server/actors/inspector/utils",
-  true
-);
-
 exports.getComputedStyle = node =>
   lazyContainer.CssLogic.getComputedStyle(node);
 
@@ -217,7 +210,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // Only try to create the highlighter when the document is loaded,
     // otherwise, wait for the window-ready event to fire.
     const doc = this.highlighterEnv.document;
-    if (doc.documentElement && isDocumentReady(doc)) {
+    if (doc.documentElement && doc.readyState != "uninitialized") {
       this._insert();
     }
 
@@ -715,7 +708,7 @@ function waitForContentLoaded(iframeOrWindow) {
   }
 
   const doc = iframeOrWindow.contentDocument || iframeOrWindow.document;
-  if (isDocumentReady(doc)) {
+  if (doc.readyState == "interactive" || doc.readyState == "complete") {
     return Promise.resolve();
   }
 
