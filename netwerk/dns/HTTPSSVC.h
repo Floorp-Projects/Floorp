@@ -82,6 +82,9 @@ struct SVCB {
            mSvcDomainName == aOther.mSvcDomainName &&
            mSvcFieldValue == aOther.mSvcFieldValue;
   }
+  bool operator<(const SVCB& aOther) const {
+    return mSvcFieldPriority < aOther.mSvcFieldPriority;
+  }
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
