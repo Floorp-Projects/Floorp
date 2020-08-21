@@ -135,6 +135,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
             initializeWebExtensionSupport()
 
+            restoreDownloads()
+
             // Just to make sure it is impossible for any application-services pieces
             // to invoke parts of itself that require complete megazord initialization
             // before that process completes, we wait here, if necessary.
@@ -159,6 +161,12 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         initVisualCompletenessQueueAndQueueTasks()
 
         components.appStartupTelemetry.onFenixApplicationOnCreate()
+    }
+
+    private fun restoreDownloads() {
+        if (FeatureFlags.viewDownloads) {
+            components.useCases.downloadUseCases.restoreDownloads()
+        }
     }
 
     private fun initVisualCompletenessQueueAndQueueTasks() {

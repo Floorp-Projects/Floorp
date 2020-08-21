@@ -734,7 +734,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             return
         }
 
-        val onTryAgain: (Long) -> Unit = {
+        val onTryAgain: (String) -> Unit = {
             savedDownloadState.first?.let { dlState ->
                 store.dispatch(
                     ContentAction.UpdateDownloadAction(

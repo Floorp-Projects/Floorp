@@ -27,7 +27,7 @@ class DynamicDownloadDialog(
     private val container: ViewGroup,
     private val downloadState: DownloadState?,
     private val didFail: Boolean,
-    private val tryAgain: (Long) -> Unit,
+    private val tryAgain: (String) -> Unit,
     private val onCannotOpenFile: () -> Unit,
     private val view: View,
     private val toolbarHeight: Int,
