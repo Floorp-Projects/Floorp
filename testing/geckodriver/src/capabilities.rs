@@ -4,23 +4,50 @@ use base64;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;
-use mozversion::{self, firefox_version, Version};
+use mozversion::{self, firefox_binary_version, firefox_version, Version};
 use regex::bytes::Regex;
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::default::Default;
+use std::fmt::{self, Display};
 use std::fs;
 use std::io;
 use std::io::BufWriter;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::str::{self, FromStr};
 use webdriver::capabilities::{BrowserCapabilities, Capabilities};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use zip;
 
-/// Provides matching of `moz:firefoxOptions` and resolution of which Firefox
+#[derive(Clone, Debug)]
+enum VersionError {
+    VersionError(mozversion::Error),
+    MissingBinary,
+}
+
+impl From<mozversion::Error> for VersionError {
+    fn from(err: mozversion::Error) -> VersionError {
+        VersionError::VersionError(err)
+    }
+}
+
+impl Display for VersionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            VersionError::VersionError(ref x) => x.fmt(f),
+            VersionError::MissingBinary => "No binary provided".fmt(f),
+        }
+    }
+}
+
+impl From<VersionError> for WebDriverError {
+    fn from(err: VersionError) -> WebDriverError {
+        WebDriverError::new(ErrorStatus::SessionNotCreated, err.to_string())
+    }
+}
+
+/// Provides matching of `moz:firefoxOptions` and resolutionnized  of which Firefox
 /// binary to use.
 ///
 /// `FirefoxCapabilities` is constructed with the fallback binary, should
@@ -30,7 +57,7 @@ use zip;
 pub struct FirefoxCapabilities<'a> {
     pub chosen_binary: Option<PathBuf>,
     fallback_binary: Option<&'a PathBuf>,
-    version_cache: BTreeMap<PathBuf, String>,
+    version_cache: BTreeMap<PathBuf, Result<Version, VersionError>>,
 }
 
 impl<'a> FirefoxCapabilities<'a> {
@@ -52,57 +79,42 @@ impl<'a> FirefoxCapabilities<'a> {
             .or_else(firefox_default_path);
     }
 
-    fn version(&mut self, binary: Option<&Path>) -> Option<String> {
+    fn version(&mut self, binary: Option<&Path>) -> Result<Version, VersionError> {
         if let Some(binary) = binary {
-            if let Some(value) = self.version_cache.get(binary) {
-                return Some((*value).clone());
+            if let Some(cache_value) = self.version_cache.get(binary) {
+                return cache_value.clone();
             }
-            debug!("Trying to read firefox version from ini files");
-            let rv = firefox_version(&*binary)
-                .ok()
-                .and_then(|x| x.version_string)
-                .or_else(|| {
-                    debug!("Trying to read firefox version from binary");
-                    self.version_from_binary(binary)
-                });
-            if let Some(ref version) = rv {
+            let rv = self
+                .version_from_ini(binary)
+                .or_else(|_| self.version_from_binary(binary));
+            if let Ok(ref version) = rv {
                 debug!("Found version {}", version);
-                self.version_cache
-                    .insert(binary.to_path_buf(), version.clone());
             } else {
                 debug!("Failed to get binary version");
             }
+            self.version_cache.insert(binary.to_path_buf(), rv.clone());
             rv
         } else {
-            None
+            Err(VersionError::MissingBinary)
         }
     }
 
-    fn version_from_binary(&self, binary: &Path) -> Option<String> {
-        let version_regexp = Regex::new(r#"Mozilla Firefox [0-9]+\.[0-9]+(?:[a-z][0-9]+)?"#)
-            .expect("Error parsing version regexp");
-        let output = Command::new(binary)
-            .args(&["--version"])
-            .stdout(Stdio::piped())
-            .spawn()
-            .and_then(|child| child.wait_with_output())
-            .ok();
-
-        if let Some(x) = output {
-            version_regexp
-                .captures(&*x.stdout)
-                .and_then(|captures| captures.get(0))
-                .and_then(|m| str::from_utf8(m.as_bytes()).ok())
-                .map(|x| x.into())
+    fn version_from_ini(&self, binary: &Path) -> Result<Version, VersionError> {
+        debug!("Trying to read firefox version from ini files");
+        let version = firefox_version(binary)?;
+        if let Some(version_string) = version.version_string {
+            Version::from_str(&version_string).map_err(|err| err.into())
         } else {
-            None
+            Err(VersionError::VersionError(
+                mozversion::Error::MetadataError("Missing version string".into()),
+            ))
         }
     }
-}
 
-// TODO: put this in webdriver-rust
-fn convert_version_error(err: mozversion::Error) -> WebDriverError {
-    WebDriverError::new(ErrorStatus::SessionNotCreated, err.to_string())
+    fn version_from_binary(&self, binary: &Path) -> Result<Version, VersionError> {
+        debug!("Trying to read firefox version from binary");
+        Ok(firefox_binary_version(binary)?)
+    }
 }
 
 impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
@@ -116,7 +128,9 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
 
     fn browser_version(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
         let binary = self.chosen_binary.clone();
-        Ok(self.version(binary.as_ref().map(|x| x.as_ref())))
+        self.version(binary.as_ref().map(|x| x.as_ref()))
+            .map_err(|err| err.into())
+            .map(|x| Some(x.to_string()))
     }
 
     fn platform_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
@@ -145,9 +159,9 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         comparison: &str,
     ) -> WebDriverResult<bool> {
         Version::from_str(version)
-            .or_else(|x| Err(convert_version_error(x)))?
+            .map_err(|err| VersionError::from(err))?
             .matches(comparison)
-            .or_else(|x| Err(convert_version_error(x)))
+            .map_err(|err| VersionError::from(err).into())
     }
 
     fn strict_file_interactability(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
@@ -200,7 +214,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                         "binary" => {
                             if let Some(binary) = value.as_str() {
                                 if !data.contains_key("androidPackage")
-                                    && self.version(Some(Path::new(binary))).is_none()
+                                    && self.version(Some(Path::new(binary))).is_err()
                                 {
                                     return Err(WebDriverError::new(
                                         ErrorStatus::InvalidArgument,
