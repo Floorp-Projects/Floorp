@@ -21,7 +21,7 @@ fuzzy-if(skiaContent,0-1,0-40) == stepDown-unthemed.html 75pct-unthemed-common-r
 == stepDown.html 75pct-common-ref.html
 fuzzy-if(skiaContent,0-1,0-40) == stepUp-unthemed.html 75pct-unthemed-common-ref.html
 == stepUp.html 75pct-common-ref.html
-random-if(!nativeThemePref) == max-prop.html 100pct-common-ref.html # Snapping in different ways in debug and opt builds, bug 1621141
+random-if(Android) == max-prop.html 100pct-common-ref.html # Snapping in different ways in debug and opt builds, bug 1621141
 == reset-value.html reset-value-ref.html
 
 # 'direction' property:
@@ -56,6 +56,6 @@ skip-if(Android) == range-border-background.html range-border-background-ref.htm
 # is an internal reftest for now.
 == range-percent-intrinsic-size-2b.html range-percent-intrinsic-size-2b-ref.html
 
-fails-if(!nativeThemePref) == auto-size.html auto-size-ref.html # Snapping, bug 1621141
+fails-if(Android) == auto-size.html auto-size-ref.html # Snapping, bug 1621141
 == range-track-bg.html range-track-bg-ref.html
 != track-default-rendering.html track-default-rendering-ref.html

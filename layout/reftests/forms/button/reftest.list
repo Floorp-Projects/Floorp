@@ -27,7 +27,7 @@ fuzzy-if(Android,0-125,0-20) == percent-width-child.html  percent-width-child-re
 
 # Looks like Android changes the text color, but to something slightly
 # different from ColorGray
-fails-if(Android&&nativeThemePref) == disabled-1.html disabled-1-ref.html
+== disabled-1.html disabled-1-ref.html
 == disabled-2.html disabled-2-ref.html
 
 != disabled-3.html disabled-3-notref.html

@@ -18,7 +18,7 @@
 == placeholder-5.html placeholder-visible-ref.html
 
 # This tests assumes that the overflowing placeholder won't eat the padding, which is just not true in some platforms...
-fuzzy-if(winWidget,0-160,0-10) fuzzy-if(!nativeThemePref,0-160,0-41) fuzzy-if(Android&&nativeThemePref,0-1,0-1) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-146,0-317) fuzzy-if(OSX==1010&&browserIsRemote,0-1,0-8) == placeholder-6.html placeholder-overflow-ref.html
+fuzzy-if(winWidget,0-160,0-10) fuzzy-if(Android,0-160,0-41) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-146,0-317) fuzzy-if(OSX==1010&&browserIsRemote,0-1,0-8) == placeholder-6.html placeholder-overflow-ref.html
 
 skip-if(Android&&asyncPan) == placeholder-6-textarea.html placeholder-overflow-textarea-ref.html
 # needs-focus == placeholder-7.html placeholder-focus-ref.html

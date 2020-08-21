@@ -1,9 +1,6 @@
 # sanity checks:
-# not valid on Android where type=number looks like type=text
-skip-if(Android&&nativeThemePref) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
-skip-if(Android&&nativeThemePref) != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
-# only valid on Android where type=number looks the same as type=text
-skip-if(!(Android&&nativeThemePref)) == number-same-as-text-unthemed.html number-same-as-text-unthemed-ref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+!= not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
 
 # should look the same as type=text, except for the spin box
 == number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
