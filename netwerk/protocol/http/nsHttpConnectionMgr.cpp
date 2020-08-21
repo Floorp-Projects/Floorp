@@ -26,7 +26,10 @@
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpHandler.h"
 #include "nsIClassOfService.h"
+#include "nsIDNSByTypeRecord.h"
 #include "nsIDNSRecord.h"
+#include "nsIDNSListener.h"
+#include "nsIDNSService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIRequestContext.h"
 #include "nsISocketTransport.h"
@@ -1715,6 +1718,12 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
   // step 3
   // consider pipelining scripts and revalidations
   // h1 pipelining has been removed
+
+  // Don't dispatch if this transaction is waiting for HTTPS RR.
+  // Note that this is only used in test currently.
+  if (caps & NS_HTTP_WAIT_HTTPSSVC_RESULT) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // step 4
   if (!onlyReusedConnection) {
@@ -5760,6 +5769,62 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
       }
     }
   }
+}
+
+bool nsHttpConnectionMgr::MoveTransToHTTPSSVCConnEntry(
+    nsHttpTransaction* aTrans, nsHttpConnectionInfo* aNewCI) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  LOG(("nsHttpConnectionMgr::MoveTransToHTTPSSVCConnEntry: trans=%p aNewCI=%s",
+       aTrans, aNewCI->HashKey().get()));
+
+  bool prohibitWildCard = !!aTrans->TunnelProvider();
+  bool noHttp3 = aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3;
+  // Step 1: Check if the new entry is the same as the old one.
+  nsConnectionEntry* oldEntry = GetOrCreateConnectionEntry(
+      aTrans->ConnectionInfo(), prohibitWildCard, noHttp3);
+
+  nsConnectionEntry* newEntry =
+      GetOrCreateConnectionEntry(aNewCI, prohibitWildCard, noHttp3);
+
+  if (oldEntry == newEntry) {
+    return true;
+  }
+
+  // Step 2: Try to find the undispatched transaction.
+  int32_t transIndex;
+  // We will abandon all half-open sockets belonging to the given
+  // transaction.
+  nsTArray<RefPtr<PendingTransactionInfo>>* infoArray =
+      GetTransactionPendingQHelper(oldEntry, aTrans);
+
+  RefPtr<PendingTransactionInfo> pendingTransInfo;
+  transIndex =
+      infoArray ? infoArray->IndexOf(aTrans, 0, PendingComparator()) : -1;
+  if (transIndex >= 0) {
+    pendingTransInfo = (*infoArray)[transIndex];
+    infoArray->RemoveElementAt(transIndex);
+  }
+
+  // It's fine we can't find the transaction. The transaction may not be added.
+  if (!pendingTransInfo) {
+    return false;
+  }
+
+  MOZ_ASSERT(pendingTransInfo->mTransaction == aTrans);
+
+  // Abandon all half-open sockets belonging to the given transaction.
+  RefPtr<nsHalfOpenSocket> half = do_QueryReferent(pendingTransInfo->mHalfOpen);
+  if (half) {
+    half->Abandon();
+  }
+  pendingTransInfo->mHalfOpen = nullptr;
+  pendingTransInfo->mActiveConn = nullptr;
+
+  // Step 3: Add the transaction to the new entry.
+  aTrans->UpdateConnectionInfo(aNewCI);
+  Unused << ProcessNewTransaction(aTrans);
+  return true;
 }
 
 nsHttpConnectionMgr* nsHttpConnectionMgr::AsHttpConnectionMgr() { return this; }

@@ -340,6 +340,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
                          nsIHttpUpgradeListener* aListener) override;
   void DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() override;
 
+  NS_IMETHOD SetWaitForHTTPSSVCRecord() override;
+
   // nsISupportsPriority
   NS_IMETHOD GetPriority(int32_t* value) override;
   NS_IMETHOD AdjustPriority(int32_t delta) override;

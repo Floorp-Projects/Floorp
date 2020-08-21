@@ -746,5 +746,9 @@ NS_IMETHODIMP ClassifierDummyChannel::GetResponseEmbedderPolicy(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP ClassifierDummyChannel::SetWaitForHTTPSSVCRecord() {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla
