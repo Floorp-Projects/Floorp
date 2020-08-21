@@ -19,29 +19,19 @@ job-defaults:
         ignore-closed-tree: false
         push:
             by-project:
-                mozilla-(central|beta|esr.*): true
+                mozilla-(central|beta): true
                 default: false
         source-repo:
             by-release-type:
-                esr68: https://hg.mozilla.org/releases/mozilla-esr68
                 beta: https://hg.mozilla.org/releases/mozilla-beta
                 default: https://hg.mozilla.org/mozilla-central
         l10n-bump-info:
             by-release-type:
-                esr68:
-                    name: Fennec l10n changesets
-                    path: mobile/locales/l10n-changesets.json
-                    version-path: mobile/android/config/version-files/release/version.txt
-                    revision-url: "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(COMBINED_MAJOR_VERSION)s"
-                    platform-configs: [{
-                        "platforms": ["android-multilocale"],
-                        "path": "mobile/android/locales/maemo-locales",
-                    }]
                 beta:
                     name: Firefox l10n changesets
                     path: browser/locales/l10n-changesets.json
                     version-path: browser/config/version.txt
-                    revision-url: "https://l10n.mozilla.org/shipping/l10n-changesets?av=fx%(MAJOR_VERSION)s"
+                    l10n-repo-url: "https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1"
                     ignore-config:
                         ja:
                             - macosx64
