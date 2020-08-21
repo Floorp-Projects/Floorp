@@ -5446,93 +5446,100 @@ QuotaManager::UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistentStorageDir);
 
-  bool isDirectory;
-  nsresult rv = aPersistentStorageDir->IsDirectory(&isDirectory);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!isDirectory) {
-    NS_WARNING("persistent entry is not a directory!");
-    return NS_OK;
-  }
-
-  auto defaultStorageDirOrErr = QM_NewLocalFile(mDefaultStoragePath);
-  if (NS_WARN_IF(defaultStorageDirOrErr.isErr())) {
-    return defaultStorageDirOrErr.unwrapErr();
-  }
-
-  nsCOMPtr<nsIFile> defaultStorageDir = defaultStorageDirOrErr.unwrap();
-
-  bool exists;
-  rv = defaultStorageDir->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (exists) {
-    QM_WARNING("Deleting old <profile>/storage/persistent directory!");
-
-    rv = aPersistentStorageDir->Remove(/* aRecursive */ true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    return NS_OK;
-  }
-
-  // Create real metadata files for origin directories in persistent storage.
-  RefPtr<CreateOrUpgradeDirectoryMetadataHelper> helper =
-      new CreateOrUpgradeDirectoryMetadataHelper(aPersistentStorageDir,
-                                                 /* aPersistent */ true);
-
-  rv = helper->ProcessRepository();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Upgrade metadata files for origin directories in temporary storage.
-  auto temporaryStorageDirOrErr = QM_NewLocalFile(mTemporaryStoragePath);
-  if (NS_WARN_IF(temporaryStorageDirOrErr.isErr())) {
-    return temporaryStorageDirOrErr.unwrapErr();
-  }
-
-  nsCOMPtr<nsIFile> temporaryStorageDir = temporaryStorageDirOrErr.unwrap();
-
-  rv = temporaryStorageDir->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (exists) {
-    rv = temporaryStorageDir->IsDirectory(&isDirectory);
+  auto rv = [this, &aPersistentStorageDir]() -> nsresult {
+    bool isDirectory;
+    nsresult rv = aPersistentStorageDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     if (!isDirectory) {
-      NS_WARNING("temporary entry is not a directory!");
+      NS_WARNING("persistent entry is not a directory!");
       return NS_OK;
     }
 
-    helper =
-        new CreateOrUpgradeDirectoryMetadataHelper(temporaryStorageDir,
-                                                   /* aPersistent */ false);
+    auto defaultStorageDirOrErr = QM_NewLocalFile(mDefaultStoragePath);
+    if (NS_WARN_IF(defaultStorageDirOrErr.isErr())) {
+      return defaultStorageDirOrErr.unwrapErr();
+    }
+
+    nsCOMPtr<nsIFile> defaultStorageDir = defaultStorageDirOrErr.unwrap();
+
+    bool exists;
+    rv = defaultStorageDir->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (exists) {
+      QM_WARNING("Deleting old <profile>/storage/persistent directory!");
+
+      rv = aPersistentStorageDir->Remove(/* aRecursive */ true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      return NS_OK;
+    }
+
+    // Create real metadata files for origin directories in persistent storage.
+    RefPtr<CreateOrUpgradeDirectoryMetadataHelper> helper =
+        new CreateOrUpgradeDirectoryMetadataHelper(aPersistentStorageDir,
+                                                   /* aPersistent */ true);
 
     rv = helper->ProcessRepository();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
 
-  // And finally rename persistent to default.
-  rv = aPersistentStorageDir->RenameTo(nullptr,
-                                       nsLiteralString(DEFAULT_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    // Upgrade metadata files for origin directories in temporary storage.
+    auto temporaryStorageDirOrErr = QM_NewLocalFile(mTemporaryStoragePath);
+    if (NS_WARN_IF(temporaryStorageDirOrErr.isErr())) {
+      return temporaryStorageDirOrErr.unwrapErr();
+    }
 
-  return NS_OK;
+    nsCOMPtr<nsIFile> temporaryStorageDir = temporaryStorageDirOrErr.unwrap();
+
+    rv = temporaryStorageDir->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (exists) {
+      rv = temporaryStorageDir->IsDirectory(&isDirectory);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (!isDirectory) {
+        NS_WARNING("temporary entry is not a directory!");
+        return NS_OK;
+      }
+
+      helper =
+          new CreateOrUpgradeDirectoryMetadataHelper(temporaryStorageDir,
+                                                     /* aPersistent */ false);
+
+      rv = helper->ProcessRepository();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    // And finally rename persistent to default.
+    rv = aPersistentStorageDir->RenameTo(
+        nullptr, nsLiteralString(DEFAULT_DIRECTORY_NAME));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }();
+
+  mInitializationInfo.RecordFirstInitializationAttempt(
+      Initialization::UpgradeFromPersistentStorageDirectory, rv);
+
+  return rv;
 }
 
 template <typename Helper>
@@ -6397,16 +6404,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
                ToResultInvoke(persistentStorageDir, &nsIFile::Exists));
 
     if (persistentStorageDirExists) {
-      // TODO: Convert to QM_TRY once upgrade functions record first
-      //       initialization attempts directly.
-      nsresult rv =
-          UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
-              persistentStorageDir);
-      mInitializationInfo.RecordFirstInitializationAttempt(
-          Initialization::UpgradeFromPersistentStorageDirectory, rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      QM_TRY(UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
+          persistentStorageDir));
     }
   }
 
