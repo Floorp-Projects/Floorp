@@ -6,7 +6,6 @@ package mozilla.components.feature.top.sites.db
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import org.junit.After
@@ -52,15 +51,10 @@ class PinnedSiteDaoTest {
             it.id = pinnedSiteDao.insertPinnedSite(it)
         }
 
-        val dataSource = pinnedSiteDao.getPinnedSitesPaged().create()
+        val pinnedSites = pinnedSiteDao.getPinnedSites()
 
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        assertEquals(1, pagedList.size)
-        assertEquals(topSite, pagedList[0]!!)
+        assertEquals(1, pinnedSites.size)
+        assertEquals(topSite, pinnedSites[0])
     }
 
     @Test
@@ -85,14 +79,9 @@ class PinnedSiteDaoTest {
 
         pinnedSiteDao.deletePinnedSite(topSite1)
 
-        val dataSource = pinnedSiteDao.getPinnedSitesPaged().create()
+        val pinnedSites = pinnedSiteDao.getPinnedSites()
 
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        assertEquals(1, pagedList.size)
-        assertEquals(topSite2, pagedList[0])
+        assertEquals(1, pinnedSites.size)
+        assertEquals(topSite2, pinnedSites[0])
     }
 }

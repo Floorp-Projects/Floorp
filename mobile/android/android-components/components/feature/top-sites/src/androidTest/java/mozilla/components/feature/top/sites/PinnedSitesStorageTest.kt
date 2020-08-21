@@ -6,21 +6,19 @@ package mozilla.components.feature.top.sites
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
+import mozilla.components.feature.top.sites.TopSite.Type.PINNED
 import mozilla.components.feature.top.sites.db.Migrations
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -62,34 +60,34 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    fun testAddingTopSite() {
+    fun testAddingPinnedSite() = runBlocking {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         storage.addPinnedSite("Firefox", "https://www.firefox.com", isDefault = true)
 
-        val topSites = getAllTopSites()
+        val topSites = storage.getPinnedSites()
 
         assertEquals(2, topSites.size)
 
         assertEquals("Mozilla", topSites[0].title)
         assertEquals("https://www.mozilla.org", topSites[0].url)
-        assertFalse(topSites[0].isDefault)
+        assertEquals(PINNED, topSites[0].type)
         assertEquals("Firefox", topSites[1].title)
         assertEquals("https://www.firefox.com", topSites[1].url)
-        assertTrue(topSites[1].isDefault)
+        assertEquals(DEFAULT, topSites[1].type)
     }
 
     @Test
-    fun testRemovingTopSites() {
+    fun testRemovingPinnedSites() = runBlocking {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         storage.addPinnedSite("Firefox", "https://www.firefox.com")
 
-        getAllTopSites().let { topSites ->
+        storage.getPinnedSites().let { topSites ->
             assertEquals(2, topSites.size)
 
             storage.removePinnedSite(topSites[0])
         }
 
-        getAllTopSites().let { topSites ->
+        storage.getPinnedSites().let { topSites ->
             assertEquals(1, topSites.size)
 
             assertEquals("Firefox", topSites[0].title)
@@ -98,11 +96,11 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    fun testGettingTopSites() = runBlocking {
+    fun testGettingPinnedSites() = runBlocking {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         storage.addPinnedSite("Firefox", "https://www.firefox.com", isDefault = true)
 
-        val topSites = storage.getPinnedSites().first()
+        val topSites = storage.getPinnedSites()
 
         assertNotNull(topSites)
         assertEquals(2, topSites.size)
@@ -110,13 +108,13 @@ class PinnedSitesStorageTest {
         with(topSites[0]) {
             assertEquals("Mozilla", title)
             assertEquals("https://www.mozilla.org", url)
-            assertFalse(isDefault)
+            assertEquals(DEFAULT, type)
         }
 
         with(topSites[1]) {
             assertEquals("Firefox", title)
             assertEquals("https://www.firefox.com", url)
-            assertTrue(isDefault)
+            assertEquals(DEFAULT, type)
         }
     }
 
@@ -245,16 +243,5 @@ class PinnedSitesStorageTest {
             assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
             assertEquals(4, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))
         }
-    }
-
-    private fun getAllTopSites(): List<PinnedSite> {
-        val dataSource = storage.getPinnedSitesPaged().create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        return pagedList.toList()
     }
 }
