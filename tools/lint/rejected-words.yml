@@ -254,6 +254,7 @@ avoid-blacklist-and-whitelist:
         - netwerk/test/unit/test_idn_urls.js
         - netwerk/test/unit/test_trr_httpssvc.js
         - netwerk/test/unit/test_trr.js
+        - netwerk/test/unit/test_use_httpssvc.js
         - netwerk/url-classifier/AsyncUrlChannelClassifier.cpp
         - netwerk/url-classifier/nsChannelClassifier.cpp
         - netwerk/url-classifier/nsChannelClassifier.h
