@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.6.263';
-const pdfjsBuild = '37e9c97ce';
+const pdfjsVersion = '2.6.276';
+const pdfjsBuild = '0d5ef5dd';
 ;
 
 /***/ }),
@@ -1912,7 +1912,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.263',
+    apiVersion: '2.6.276',
     source: {
       data: source.data,
       url: source.url,
@@ -3489,7 +3489,9 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("SaveDocument", {
       numPages: this._numPages,
       annotationStorage: annotationStorage && annotationStorage.getAll() || null,
-      filename: this._fullReader.filename
+      filename: this._fullReader ? this._fullReader.filename : null
+    }).finally(() => {
+      annotationStorage.resetModified();
     });
   }
 
@@ -3833,9 +3835,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.263';
+const version = '2.6.276';
 exports.version = version;
-const build = '37e9c97ce';
+const build = '0d5ef5dd';
 exports.build = build;
 
 /***/ }),
@@ -4141,6 +4143,9 @@ exports.AnnotationStorage = void 0;
 class AnnotationStorage {
   constructor() {
     this._storage = new Map();
+    this._modified = false;
+    this.onSetModified = null;
+    this.onResetModified = null;
   }
 
   getOrCreateValue(key, defaultValue) {
@@ -4154,6 +4159,10 @@ class AnnotationStorage {
   }
 
   setValue(key, value) {
+    if (this._storage.get(key) !== value) {
+      this.setModified();
+    }
+
     this._storage.set(key, value);
   }
 
@@ -4167,6 +4176,26 @@ class AnnotationStorage {
 
   get size() {
     return this._storage.size;
+  }
+
+  setModified() {
+    if (!this._modified) {
+      this._modified = true;
+
+      if (typeof this.onSetModified === "function") {
+        this.onSetModified();
+      }
+    }
+  }
+
+  resetModified() {
+    if (this._modified) {
+      this._modified = false;
+
+      if (typeof this.onResetModified === "function") {
+        this.onResetModified();
+      }
+    }
   }
 
 }

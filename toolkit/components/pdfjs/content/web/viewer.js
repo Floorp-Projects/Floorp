@@ -953,7 +953,9 @@ const PDFViewerApplication = {
     });
   },
 
-  download() {
+  download({
+    sourceEventType = "download"
+  }) {
     function downloadByUrl() {
       downloadManager.downloadUrl(url, filename);
     }
@@ -975,11 +977,13 @@ const PDFViewerApplication = {
       const blob = new Blob([data], {
         type: "application/pdf"
       });
-      downloadManager.download(blob, url, filename);
+      downloadManager.download(blob, url, filename, sourceEventType);
     }).catch(downloadByUrl);
   },
 
-  save() {
+  save({
+    sourceEventType = "download"
+  }) {
     if (this._saveInProgress) {
       return;
     }
@@ -993,7 +997,9 @@ const PDFViewerApplication = {
     };
 
     if (!this.pdfDocument || !this.downloadComplete) {
-      this.download();
+      this.download({
+        sourceEventType
+      });
       return;
     }
 
@@ -1002,9 +1008,11 @@ const PDFViewerApplication = {
       const blob = new Blob([data], {
         type: "application/pdf"
       });
-      downloadManager.download(blob, url, filename);
+      downloadManager.download(blob, url, filename, sourceEventType);
     }).catch(() => {
-      this.download();
+      this.download({
+        sourceEventType
+      });
     }).finally(() => {
       this._saveInProgress = false;
     });
@@ -1630,6 +1638,8 @@ const PDFViewerApplication = {
 
     eventBus._on("download", webViewerDownload);
 
+    eventBus._on("save", webViewerSave);
+
     eventBus._on("firstpage", webViewerFirstPage);
 
     eventBus._on("lastpage", webViewerLastPage);
@@ -1755,6 +1765,8 @@ const PDFViewerApplication = {
     eventBus._off("print", webViewerPrint);
 
     eventBus._off("download", webViewerDownload);
+
+    eventBus._off("save", webViewerSave);
 
     eventBus._off("firstpage", webViewerFirstPage);
 
@@ -2118,12 +2130,24 @@ function webViewerPrint() {
   window.print();
 }
 
-function webViewerDownload() {
+function webViewerDownloadOrSave(sourceEventType) {
   if (PDFViewerApplication.pdfDocument && PDFViewerApplication.pdfDocument.annotationStorage.size > 0) {
-    PDFViewerApplication.save();
+    PDFViewerApplication.save({
+      sourceEventType
+    });
   } else {
-    PDFViewerApplication.download();
+    PDFViewerApplication.download({
+      sourceEventType
+    });
   }
+}
+
+function webViewerDownload() {
+  webViewerDownloadOrSave("download");
+}
+
+function webViewerSave() {
+  webViewerDownloadOrSave("save");
 }
 
 function webViewerFirstPage() {
@@ -6199,7 +6223,7 @@ class PDFFindController {
       state,
       previous,
       matchesCount: this._requestMatchesCount(),
-      rawQuery: this._state ? this._state.query : null,
+      rawQuery: this._state ? this._state.query : null
     });
   }
 
@@ -8881,6 +8905,12 @@ function isSameScale(oldScale, newScale) {
   return false;
 }
 
+function beforeUnload(evt) {
+  evt.preventDefault();
+  evt.returnValue = "";
+  return false;
+}
+
 class BaseViewer {
   constructor(options) {
     if (this.constructor === BaseViewer) {
@@ -9129,6 +9159,14 @@ class BaseViewer {
     const pagesCount = pdfDocument.numPages;
     const firstPagePromise = pdfDocument.getPage(1);
     const annotationStorage = pdfDocument.annotationStorage;
+
+    annotationStorage.onSetModified = function () {
+      window.addEventListener("beforeunload", beforeUnload);
+    };
+
+    annotationStorage.onResetModified = function () {
+      window.removeEventListener("beforeunload", beforeUnload);
+    };
 
     this._pagesCapability.promise.then(() => {
       this.eventBus.dispatch("pagesloaded", {
@@ -11682,7 +11720,7 @@ class Toolbar {
     }
 
     const overflow = SCALE_SELECT_WIDTH - SCALE_SELECT_CONTAINER_WIDTH;
-    maxWidth += 1.5 * overflow;
+    maxWidth += 2 * overflow;
 
     if (maxWidth > SCALE_SELECT_CONTAINER_WIDTH) {
       items.scaleSelect.style.width = `${maxWidth + overflow}px`;
@@ -11889,7 +11927,7 @@ class DownloadManager {
     }, onResponse);
   }
 
-  download(blob, url, filename) {
+  download(blob, url, filename, sourceEventType = "download") {
     const blobUrl = URL.createObjectURL(blob);
 
     const onResponse = err => {
@@ -11903,7 +11941,8 @@ class DownloadManager {
     FirefoxCom.request("download", {
       blobUrl,
       originalUrl: url,
-      filename
+      filename,
+      sourceEventType
     }, onResponse);
   }
 
@@ -12011,6 +12050,23 @@ class MozL10n {
   for (const event of events) {
     window.addEventListener(event, handleEvent);
   }
+})();
+
+(function listenSaveEvent() {
+  const handleEvent = function ({
+    type,
+    detail
+  }) {
+    if (!_app.PDFViewerApplication.initialized) {
+      return;
+    }
+
+    _app.PDFViewerApplication.eventBus.dispatch(type, {
+      source: window
+    });
+  };
+
+  window.addEventListener("save", handleEvent);
 })();
 
 class FirefoxComDataRangeTransport extends _pdfjsLib.PDFDataRangeTransport {
