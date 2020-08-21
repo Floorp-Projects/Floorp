@@ -73,6 +73,9 @@ class nsPrintSettingsX : public nsPrintSettings {
   NS_IMETHOD GetOrientation(int32_t* aOrientation) override;
   NS_IMETHOD SetOrientation(int32_t aOrientation) override;
 
+  NS_IMETHOD GetNumCopies(int32_t* aCopies) override;
+  NS_IMETHOD SetNumCopies(int32_t aCopies) override;
+
   NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop) override;
   NS_IMETHOD SetUnwriteableMarginLeft(double aUnwriteableMarginLeft) override;
   NS_IMETHOD SetUnwriteableMarginBottom(
