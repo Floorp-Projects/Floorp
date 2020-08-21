@@ -17,22 +17,20 @@
 
 namespace mozilla::layers {
 
-class ScheduleNofityForUse : public wr::NotificationHandler {
+class ScheduleHandleRenderTextureOps : public wr::NotificationHandler {
  public:
-  explicit ScheduleNofityForUse(uint64_t aExternalImageId)
-      : mExternalImageId(aExternalImageId) {}
+  explicit ScheduleHandleRenderTextureOps() {}
 
   virtual void Notify(wr::Checkpoint aCheckpoint) override {
     if (aCheckpoint == wr::Checkpoint::FrameTexturesUpdated) {
       MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
-      wr::RenderThread::Get()->NofityForUse(mExternalImageId);
+      wr::RenderThread::Get()->HandleRenderTextureOps();
     } else {
       MOZ_ASSERT(aCheckpoint == wr::Checkpoint::TransactionDropped);
     }
   }
 
  protected:
-  uint64_t mExternalImageId;
 };
 
 WebRenderTextureHost::WebRenderTextureHost(
@@ -147,16 +145,13 @@ void WebRenderTextureHost::NotifyNotUsed() {
   TextureHost::NotifyNotUsed();
 }
 
-void WebRenderTextureHost::MaybeNofityForUse(wr::TransactionBuilder& aTxn) {
+void WebRenderTextureHost::MaybeNotifyForUse(wr::TransactionBuilder& aTxn) {
 #if defined(MOZ_WIDGET_ANDROID)
-  if (!mWrappedTextureHost->AsSurfaceTextureHost()) {
-    return;
+  if (mWrappedTextureHost->AsSurfaceTextureHost()) {
+    wr::RenderThread::Get()->NotifyForUse(wr::AsUint64(GetExternalImageKey()));
+    aTxn.Notify(wr::Checkpoint::FrameTexturesUpdated,
+                MakeUnique<ScheduleHandleRenderTextureOps>());
   }
-  // SurfaceTexture of video needs NofityForUse() to detect if it is rendered
-  // on WebRender.
-  aTxn.Notify(
-      wr::Checkpoint::FrameTexturesUpdated,
-      MakeUnique<ScheduleNofityForUse>(wr::AsUint64(GetExternalImageKey())));
 #endif
 }
 

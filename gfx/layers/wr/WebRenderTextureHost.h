@@ -87,7 +87,7 @@ class WebRenderTextureHost : public TextureHost {
 
   bool NeedsYFlip() const override;
 
-  void MaybeNofityForUse(wr::TransactionBuilder& aTxn);
+  void MaybeNotifyForUse(wr::TransactionBuilder& aTxn);
 
  protected:
   RefPtr<TextureHost> mWrappedTextureHost;

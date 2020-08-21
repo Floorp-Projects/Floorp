@@ -355,7 +355,7 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
 
   // It is for ensuring that PrepareForUse() is called before
   // RenderTextureHost::Lock().
-  HandlePrepareForUse();
+  HandleRenderTextureOps();
 
   UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, render,
                   /* aReadbackSize */ Nothing(),
@@ -675,63 +675,58 @@ void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
 }
 
 void RenderThread::PrepareForUse(uint64_t aExternalImageId) {
-  MOZ_ASSERT(!IsInRenderThread());
-
-  MutexAutoLock lock(mRenderTextureMapLock);
-  if (mHasShutdown) {
-    return;
-  }
-
-  auto it = mRenderTextures.find(aExternalImageId);
-  MOZ_ASSERT(it != mRenderTextures.end());
-  if (it == mRenderTextures.end()) {
-    return;
-  }
-
-  RefPtr<RenderTextureHost> texture = it->second;
-  mRenderTexturesPrepareForUse.emplace_back(std::move(texture));
-  Loop()->PostTask(NewRunnableMethod("RenderThread::HandlePrepareForUse", this,
-                                     &RenderThread::HandlePrepareForUse));
+  AddRenderTextureOp(RenderTextureOp::PrepareForUse, aExternalImageId);
 }
 
 void RenderThread::NotifyNotUsed(uint64_t aExternalImageId) {
+  AddRenderTextureOp(RenderTextureOp::NotifyNotUsed, aExternalImageId);
+}
+
+void RenderThread::NotifyForUse(uint64_t aExternalImageId) {
+  AddRenderTextureOp(RenderTextureOp::NotifyForUse, aExternalImageId);
+}
+
+void RenderThread::AddRenderTextureOp(RenderTextureOp aOp,
+                                      uint64_t aExternalImageId) {
   MOZ_ASSERT(!IsInRenderThread());
 
   MutexAutoLock lock(mRenderTextureMapLock);
-  if (mHasShutdown) {
-    return;
-  }
 
   auto it = mRenderTextures.find(aExternalImageId);
   MOZ_ASSERT(it != mRenderTextures.end());
   if (it == mRenderTextures.end()) {
     return;
   }
+
   RefPtr<RenderTextureHost> texture = it->second;
-  RefPtr<Runnable> task =
-      NS_NewRunnableFunction("RenderThread::DoNotifyNotUsed",
-                             [renderTexture = std::move(texture)]() -> void {
-                               renderTexture->NotifyNotUsed();
-                             });
-  Loop()->PostTask(task.forget());
+  mRenderTextureOps.emplace_back(aOp, std::move(texture));
+  Loop()->PostTask(NewRunnableMethod("RenderThread::HandleRenderTextureOps",
+                                     this,
+                                     &RenderThread::HandleRenderTextureOps));
 }
 
-void RenderThread::NofityForUse(uint64_t aExternalImageId) {
-  MOZ_ASSERT(RenderThread::IsInRenderThread());
+void RenderThread::HandleRenderTextureOps() {
+  MOZ_ASSERT(IsInRenderThread());
 
-  HandlePrepareForUse();
-
+  std::list<std::pair<RenderTextureOp, RefPtr<RenderTextureHost>>>
+      renderTextureOps;
   {
     MutexAutoLock lock(mRenderTextureMapLock);
-    if (mHasShutdown) {
-      return;
+    mRenderTextureOps.swap(renderTextureOps);
+  }
+
+  for (auto& it : renderTextureOps) {
+    switch (it.first) {
+      case RenderTextureOp::PrepareForUse:
+        it.second->PrepareForUse();
+        break;
+      case RenderTextureOp::NotifyForUse:
+        it.second->NotifyForUse();
+        break;
+      case RenderTextureOp::NotifyNotUsed:
+        it.second->NotifyNotUsed();
+        break;
     }
-    auto it = mRenderTextures.find(aExternalImageId);
-    MOZ_ASSERT(it != mRenderTextures.end());
-    if (it == mRenderTextures.end()) {
-      return;
-    }
-    it->second->NofityForUse();
   }
 }
 
@@ -742,15 +737,6 @@ void RenderThread::UnregisterExternalImageDuringShutdown(
   MOZ_ASSERT(mHasShutdown);
   MOZ_ASSERT(mRenderTextures.find(aExternalImageId) != mRenderTextures.end());
   mRenderTextures.erase(aExternalImageId);
-}
-
-void RenderThread::HandlePrepareForUse() {
-  MOZ_ASSERT(IsInRenderThread());
-  MutexAutoLock lock(mRenderTextureMapLock);
-  for (auto& texture : mRenderTexturesPrepareForUse) {
-    texture->PrepareForUse();
-  }
-  mRenderTexturesPrepareForUse.clear();
 }
 
 bool RenderThread::SyncObjectNeeded() {

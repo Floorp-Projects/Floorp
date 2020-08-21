@@ -57,7 +57,7 @@ class RenderTextureHost {
   // Called asynchronouly when corresponding TextureHost's is actually going to
   // be used by WebRender. For now, it is used only for
   // SurfaceTextureHost/RenderAndroidSurfaceTextureHostOGL.
-  virtual void NofityForUse() {}
+  virtual void NotifyForUse() {}
   // Called asynchronouly when corresponding TextureHost's mCompositableCount
   // becomes 0. For now, it is used only for
   // SurfaceTextureHost/RenderAndroidSurfaceTextureHostOGL.
