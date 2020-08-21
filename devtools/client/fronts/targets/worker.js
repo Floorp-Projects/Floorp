@@ -63,7 +63,12 @@ class WorkerTargetFront extends TargetMixin(
     if (this._attach) {
       return this._attach;
     }
+
     this._attach = (async () => {
+      if (this.isDestroyedOrBeingDestroyed()) {
+        return;
+      }
+
       const response = await super.attach();
 
       if (this.isServiceWorker) {
@@ -75,6 +80,10 @@ class WorkerTargetFront extends TargetMixin(
 
       this._url = response.url;
 
+      if (this.isDestroyedOrBeingDestroyed()) {
+        return;
+      }
+
       // Immediately call `connect` in other to fetch console and thread actors
       // that will be later used by Target.
       const connectResponse = await this.connect({});
@@ -83,7 +92,11 @@ class WorkerTargetFront extends TargetMixin(
       this.targetForm.consoleActor = connectResponse.consoleActor;
       this.targetForm.threadActor = connectResponse.threadActor;
 
-      return this.attachConsole();
+      if (this.isDestroyedOrBeingDestroyed()) {
+        return;
+      }
+
+      await this.attachConsole();
     })();
     return this._attach;
   }

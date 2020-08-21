@@ -354,6 +354,10 @@ class WebConsoleUI {
   }
 
   _onResourceAvailable({ resourceType, targetFront, resource }) {
+    if (!this.hud) {
+      return;
+    }
+
     const { TYPES } = this.hud.resourceWatcher;
     // Ignore messages forwarded from content processes if we're in fission browser toolbox.
     if (

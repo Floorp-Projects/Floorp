@@ -46,4 +46,22 @@ add_task(async function() {
       `"${expectedMessage}" should be still visible`
     );
   }
+
+  // Wait until the sourcemap worker is fully initialized
+  await waitForSourceMapWorker(hud);
 });
+
+function waitForSourceMapWorker(hud) {
+  const { targetList } = hud;
+  return new Promise(resolve => {
+    const onAvailable = ({ targetFront }) => {
+      if (
+        targetFront.url.endsWith("devtools/client/shared/source-map/worker.js")
+      ) {
+        targetList.unwatchTargets([targetList.TYPES.WORKER], onAvailable);
+        resolve();
+      }
+    };
+    targetList.watchTargets([targetList.TYPES.WORKER], onAvailable);
+  });
+}

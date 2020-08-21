@@ -30,6 +30,9 @@ module.exports = async function({
   }
 
   const webConsoleFront = await targetFront.getFront("console");
+  if (webConsoleFront.isDestroyed()) {
+    return;
+  }
 
   // Request notifying about new CSS messages (they're emitted from the "PageError listener").
   await webConsoleFront.startListeners(["PageError"]);

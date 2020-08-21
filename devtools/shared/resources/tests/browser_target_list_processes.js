@@ -30,6 +30,13 @@ add_task(async function() {
   await testProcesses(targetList, mainProcess);
 
   await targetList.stopListening();
+  // Wait for all the targets to be fully attached so we don't have pending requests.
+  await Promise.all(
+    targetList
+      .getAllTargets(targetList.ALL_TYPES)
+      .map(t => t.attachAndInitThread(targetList))
+  );
+
   await client.close();
 });
 

@@ -19,7 +19,7 @@ add_task(async function() {
     "Session state still not true even after setting (since Browser Console is closed)"
   );
 
-  await BrowserConsoleManager.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
   BrowserConsoleManager.storeBrowserConsoleSessionState();
   is(
     BrowserConsoleManager.getBrowserConsoleSessionState(),
@@ -30,9 +30,10 @@ add_task(async function() {
   info(
     "Closing the browser console and waiting for the session restore to reopen it"
   );
-  await BrowserConsoleManager.toggleBrowserConsole();
+  await waitForAllTargetsToBeAttached(hud);
+  await BrowserConsoleManager.closeBrowserConsole();
 
-  const opened = waitForBrowserConsole();
+  const opened = waitForBrowserConsole(hud);
   await gDevTools.restoreDevToolsSession({
     browserConsole: true,
   });

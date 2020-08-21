@@ -262,7 +262,8 @@ class ResponsiveUI {
     // If our tab is about to be closed, there's not enough time to exit
     // gracefully, but that shouldn't be a problem since the tab will go away.
     // So, skip any waiting when we're about to close the tab.
-    const isTabDestroyed = !this.tab.linkedBrowser;
+    const isTabDestroyed =
+      !this.tab.linkedBrowser || this.responsiveFront.isDestroyed();
     const isWindowClosing =
       (options && options.reason === "unload") || isTabDestroyed;
     const isTabContentDestroying =
@@ -1036,6 +1037,10 @@ class ResponsiveUI {
   }
 
   async onTargetAvailable({ targetFront }) {
+    if (this.destroying) {
+      return;
+    }
+
     if (targetFront.isTopLevel) {
       this.responsiveFront = await targetFront.getFront("responsive");
       await this.restoreActorState();

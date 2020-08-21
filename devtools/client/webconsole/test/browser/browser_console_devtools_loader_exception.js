@@ -57,13 +57,27 @@ add_task(async function() {
   ok(url.includes("toolbox.js"), "we have the expected view source URL");
   ok(!url.includes("->"), "no -> in the URL given to view-source");
 
-  const onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  const { targetList } = bcHud;
+  const onViewSourceTargetAvailable = new Promise(resolve => {
+    const onAvailable = ({ targetFront }) => {
+      if (targetFront.url.includes("view-source:")) {
+        targetList.unwatchTargets([targetList.TYPES.FRAME], onAvailable);
+        resolve();
+      }
+    };
+    targetList.watchTargets([targetList.TYPES.FRAME], onAvailable);
+  });
+
+  const onTabOpen = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    tabUrl => tabUrl.startsWith("view-source:"),
+    true
+  );
   locationNode.click();
 
-  const newTab = await onTabOpen;
+  await onTabOpen;
   ok(true, "The view source tab was opened in response to clicking the link");
 
-  await BrowserTestUtils.removeTab(newTab);
-  info("Close browser console");
-  await BrowserConsoleManager.closeBrowserConsole();
+  info("Wait for the frame target to be available");
+  await onViewSourceTargetAvailable;
 });

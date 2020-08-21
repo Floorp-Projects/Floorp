@@ -101,9 +101,6 @@ add_task(async function() {
   await testProxyGetter(oi);
   await testThrowingGetter(oi);
   await testLongStringGetter(oi, LONGSTRING);
-
-  info("Close the Browser Console");
-  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 async function testStringGetter(oi) {
