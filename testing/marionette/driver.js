@@ -203,17 +203,8 @@ Object.defineProperty(GeckoDriver.prototype, "context", {
  */
 Object.defineProperty(GeckoDriver.prototype, "currentURL", {
   get() {
-    switch (this.context) {
-      case Context.Chrome:
-        let chromeWin = this.getCurrentWindow();
-        return new URL(chromeWin.location.href);
-
-      case Context.Content:
-        return new URL(this.curBrowser.currentURI.spec);
-
-      default:
-        throw new TypeError(`Unknown context: ${this.context}`);
-    }
+    const browsingContext = this.getBrowsingContext({ top: true });
+    return new URL(browsingContext.currentWindowGlobal.documentURI.spec);
   },
 });
 
@@ -1192,7 +1183,7 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
   );
 
   const navigated = this.listener.navigateTo({
-    url: validURL,
+    url: validURL.href,
     loadEventExpected,
     pageTimeout: this.timeouts.pageLoad,
   });
@@ -1237,7 +1228,7 @@ GeckoDriver.prototype.getCurrentUrl = async function() {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  return this.currentURL.toString();
+  return this.currentURL.href;
 };
 
 /**
@@ -1325,7 +1316,7 @@ GeckoDriver.prototype.goBack = async function() {
     let parameters = {
       // TODO(ato): Bug 1242595
       commandID: this.listener.activeMessageId,
-      lastSeenURL: lastURL.toString(),
+      lastSeenURL: lastURL.href,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1371,7 +1362,7 @@ GeckoDriver.prototype.goForward = async function() {
     let parameters = {
       // TODO(ato): Bug 1242595
       commandID: this.listener.activeMessageId,
-      lastSeenURL: lastURL.toString(),
+      lastSeenURL: lastURL.href,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
