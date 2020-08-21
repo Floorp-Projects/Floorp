@@ -55,13 +55,13 @@ private const val KEY_LOGIN_HTTP_REALM = "KEY_LOGIN_HTTP_REALM"
  * dialog that allows users to save/update usernames and passwords for a given domain.
  */
 @Suppress("TooManyFunctions", "LargeClass")
-internal class LoginDialogFragment : PromptDialogFragment() {
+internal class SaveLoginDialogFragment : PromptDialogFragment() {
 
     private inner class SafeArgString(private val key: String) {
-        operator fun getValue(frag: LoginDialogFragment, prop: KProperty<*>): String =
+        operator fun getValue(frag: SaveLoginDialogFragment, prop: KProperty<*>): String =
             safeArguments.getString(key)!!
 
-        operator fun setValue(frag: LoginDialogFragment, prop: KProperty<*>, value: String) {
+        operator fun setValue(frag: SaveLoginDialogFragment, prop: KProperty<*>, value: String) {
             safeArguments.putString(key, value)
         }
     }
@@ -176,7 +176,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
 
     private fun inflateRootView(container: ViewGroup? = null): View {
         val rootView = LayoutInflater.from(requireContext()).inflate(
-            R.layout.mozac_feature_prompt_login_prompt,
+            R.layout.mozac_feature_prompt_save_login_prompt,
             container,
             false
         )
@@ -274,7 +274,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
             // We only want to fetch this list once. Since we are ignoring username the results will
             // not change when user changes username or password fields
             if (potentialDupesList == null) {
-                this@LoginDialogFragment.potentialDupesList = CopyOnWriteArrayList(
+                this@SaveLoginDialogFragment.potentialDupesList = CopyOnWriteArrayList(
                     validationDelegate.getPotentialDupesIgnoringUsernameAsync(
                         login
                     ).await()
@@ -349,7 +349,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         private const val KEYBOARD_HIDING_DELAY = 100L
 
         /**
-         * A builder method for creating a [LoginDialogFragment]
+         * A builder method for creating a [SaveLoginDialogFragment]
          * @param sessionId the id of the session for which this dialog will be created.
          * @param hint a value that helps to determine the appropriate prompting behavior.
          * @param login represents login information on a given domain.
@@ -358,9 +358,9 @@ internal class LoginDialogFragment : PromptDialogFragment() {
             sessionId: String,
             hint: Int,
             login: Login
-        ): LoginDialogFragment {
+        ): SaveLoginDialogFragment {
 
-            val fragment = LoginDialogFragment()
+            val fragment = SaveLoginDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 
             with(arguments) {

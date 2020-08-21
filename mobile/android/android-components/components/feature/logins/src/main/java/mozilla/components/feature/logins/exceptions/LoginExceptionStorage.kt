@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 import mozilla.components.feature.logins.exceptions.adapter.LoginExceptionAdapter
 import mozilla.components.feature.logins.exceptions.db.LoginExceptionDatabase
 import mozilla.components.feature.logins.exceptions.db.LoginExceptionEntity
-import mozilla.components.feature.prompts.LoginExceptions
+import mozilla.components.feature.prompts.login.LoginExceptions
 
 /**
  * A storage implementation for organizing login exceptions.

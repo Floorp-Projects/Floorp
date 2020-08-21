@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import mozilla.components.concept.storage.Login
 import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -25,9 +26,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mozilla.gecko.util.GeckoBundle
+import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATE
@@ -43,6 +45,7 @@ import java.security.InvalidParameterException
 import java.util.Calendar
 import java.util.Calendar.YEAR
 import java.util.Date
+
 typealias GeckoChoice = GeckoSession.PromptDelegate.ChoicePrompt.Choice
 typealias GECKO_AUTH_LEVEL = GeckoSession.PromptDelegate.AuthPrompt.AuthOptions.Level
 typealias GECKO_PROMPT_CHOICE_TYPE = GeckoSession.PromptDelegate.ChoicePrompt.Type
@@ -142,11 +145,11 @@ class GeckoPromptDelegateTest {
         )
 
         mockSession.register(
-                object : EngineSession.Observer {
-                    override fun onPromptRequest(promptRequest: PromptRequest) {
-                        promptRequestSingleChoice = promptRequest
-                    }
-                })
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    promptRequestSingleChoice = promptRequest
+                }
+            })
 
         val geckoResult = gecko.onChoicePrompt(mock(), geckoPrompt)
         geckoResult!!.accept {
@@ -475,7 +478,8 @@ class GeckoPromptDelegateTest {
                 dateRequest = promptRequest
             }
         })
-        val geckoResult = promptDelegate.onDateTimePrompt(mock(), GeckoDateTimePrompt(type = DATETIME_LOCAL))
+        val geckoResult =
+            promptDelegate.onDateTimePrompt(mock(), GeckoDateTimePrompt(type = DATETIME_LOCAL))
         geckoResult!!.accept {
             confirmCalled = true
         }
@@ -617,6 +621,125 @@ class GeckoPromptDelegateTest {
             filePickerRequest.captureMode
         )
     }
+
+    @Test
+    fun `Calling onLoginSave must provide an SaveLoginPrompt PromptRequest`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var onLoginSaved = false
+        var onDismissWasCalled = false
+
+        var loginSaveRequest: PromptRequest.SaveLoginPrompt = mock()
+
+        val promptDelegate = spy(GeckoPromptDelegate(mockSession))
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                loginSaveRequest = promptRequest as PromptRequest.SaveLoginPrompt
+            }
+        })
+
+        val login = createLogin()
+        val saveOption = Autocomplete.LoginSaveOption(login.toLoginEntry())
+
+        var geckoResult =
+            promptDelegate.onLoginSave(mock(), GeckoLoginSavePrompt(arrayOf(saveOption)))
+
+        geckoResult!!.accept {
+            onDismissWasCalled = true
+        }
+
+        loginSaveRequest.onDismiss()
+        assertTrue(onDismissWasCalled)
+
+        geckoResult = promptDelegate.onLoginSave(mock(), GeckoLoginSavePrompt(arrayOf(saveOption)))
+
+        geckoResult!!.accept {
+            onLoginSaved = true
+        }
+
+        loginSaveRequest.onConfirm(login)
+        assertTrue(onLoginSaved)
+    }
+
+    @Test
+    fun `Calling onLoginSelect must provide an SelectLoginPrompt PromptRequest`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var onLoginSelected = false
+        var onDismissWasCalled = false
+
+        var loginSelectRequest: PromptRequest.SelectLoginPrompt = mock()
+
+        val promptDelegate = spy(GeckoPromptDelegate(mockSession))
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                loginSelectRequest = promptRequest as PromptRequest.SelectLoginPrompt
+            }
+        })
+
+        val login = createLogin()
+        val loginSelectOption = Autocomplete.LoginSelectOption(login.toLoginEntry())
+
+        val secondLogin = createLogin(username = "username2")
+        val secondLoginSelectOption = Autocomplete.LoginSelectOption(secondLogin.toLoginEntry())
+
+        var geckoResult =
+            promptDelegate.onLoginSelect(
+                mock(),
+                GeckoLoginSelectPrompt(arrayOf(loginSelectOption, secondLoginSelectOption))
+            )
+
+        geckoResult!!.accept {
+            onDismissWasCalled = true
+        }
+
+        loginSelectRequest.onDismiss()
+        assertTrue(onDismissWasCalled)
+
+        geckoResult = promptDelegate.onLoginSelect(
+            mock(),
+            GeckoLoginSelectPrompt(arrayOf(loginSelectOption, secondLoginSelectOption))
+        )
+
+        geckoResult!!.accept {
+            onLoginSelected = true
+        }
+
+        loginSelectRequest.onConfirm(login)
+        assertTrue(onLoginSelected)
+    }
+
+    fun createLogin(
+        guid: String = "id",
+        password: String = "password",
+        username: String = "username",
+        origin: String = "https://www.origin.com",
+        httpRealm: String = "httpRealm",
+        formActionOrigin: String = "https://www.origin.com",
+        usernameField: String = "usernameField",
+        passwordField: String = "passwordField"
+    ) = Login(
+        guid = guid,
+        origin = origin,
+        password = password,
+        username = username,
+        httpRealm = httpRealm,
+        formActionOrigin = formActionOrigin,
+        usernameField = usernameField,
+        passwordField = passwordField
+    )
+
+    /**
+     * Converts an Android Components [Login] to a GeckoView [LoginStorage.LoginEntry]
+     */
+    private fun Login.toLoginEntry() = Autocomplete.LoginEntry.Builder()
+        .guid(guid)
+        .origin(origin)
+        .formActionOrigin(formActionOrigin)
+        .httpRealm(httpRealm)
+        .username(username)
+        .password(password)
+        .build()
 
     @Test
     fun `Calling onAuthPrompt must provide an Authentication PromptRequest`() {
@@ -979,7 +1102,7 @@ class GeckoPromptDelegateTest {
         title: String = "title",
         type: Int,
         capture: Int = 0,
-        mimeTypes: Array<out String > = emptyArray()
+        mimeTypes: Array<out String> = emptyArray()
     ) : GeckoSession.PromptDelegate.FilePrompt(title, type, capture, mimeTypes)
 
     class GeckoAuthPrompt(
@@ -1015,6 +1138,14 @@ class GeckoPromptDelegateTest {
         title: String = "title",
         message: String = "message"
     ) : GeckoSession.PromptDelegate.ButtonPrompt(title, message)
+
+    class GeckoLoginSelectPrompt(
+        loginArray: Array<Autocomplete.LoginSelectOption>
+    ) : GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption>(loginArray)
+
+    class GeckoLoginSavePrompt(
+        login: Array<Autocomplete.LoginSaveOption>
+    ) : GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>(login)
 
     class GeckoAuthOptions : GeckoSession.PromptDelegate.AuthPrompt.AuthOptions()
 

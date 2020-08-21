@@ -8,4 +8,8 @@
         <attr name="mozacInputLayoutErrorIconColor" format="reference"/>
         <attr name="mozacPromptLoginEditTextCursorColor" format="reference"/>
     </declare-styleable>
+
+    <declare-styleable name="LoginSelectBar">
+        <attr name="mozacLoginSelectHeaderTextStyle" format="reference"/>
+    </declare-styleable>
 </resources>
