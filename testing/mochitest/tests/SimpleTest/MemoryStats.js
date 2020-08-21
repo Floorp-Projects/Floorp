@@ -112,7 +112,8 @@ MemoryStats.dump = function(
         info("TEST-INFO | " + testURL + " | MEMDUMP-END");
       },
       null,
-      /* anonymize = */ false
+      /* anonymize = */ false,
+      /* minimize memory usage = */ false
     );
   }
 
