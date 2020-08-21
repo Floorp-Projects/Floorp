@@ -1571,7 +1571,7 @@
       //            to the JS global of the current browser, which would rather
       //            easily create leaks while swapping.
       // IMPORTANT2: When the current browser element is removed from DOM,
-      //             which is quite common after a swpDocShells call, its
+      //             which is quite common after a swapDocShells call, its
       //             frame loader is destroyed, and that destroys the relevant
       //             message manager, which will remove the listeners.
       let event = new CustomEvent("SwapDocShells", { detail: aOtherBrowser });
