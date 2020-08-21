@@ -1234,7 +1234,7 @@ def build_push_addons_payload(config, task, task_def):
         Required('name'): text_type,
         Required('path'): text_type,
         Required('version-path'): text_type,
-        Optional('revision-url'): text_type,
+        Optional('l10n-repo-url'): text_type,
         Optional('ignore-config'): object,
         Required('platform-configs'): [{
             Required('platforms'): [text_type],
