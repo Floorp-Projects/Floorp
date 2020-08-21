@@ -222,7 +222,8 @@ class AwsyTestCase(MarionetteTestCase):
                 "%s",
                 () => resolve("memory report done!"),
                 null,
-                /* anonymize */ false);
+                /* anonymize */ false,
+                /* minimize memory usage */ false);
             """ % checkpoint_path
 
         checkpoint = None
