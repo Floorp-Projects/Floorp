@@ -60,7 +60,7 @@ class GMPParent final
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent)
 
-  explicit GMPParent(nsISerialEventTarget* aThread);
+  GMPParent();
 
   RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService,
                               nsIFile* aPluginDir);
@@ -185,7 +185,7 @@ class GMPParent final
   nsCString mLibs;
 #endif
   nsString mAdapter;
-  uint32_t mPluginId;
+  const uint32_t mPluginId;
   nsTArray<GMPCapability> mCapabilities;
   GMPProcessParent* mProcess;
   bool mDeleteProcessOnlyOnUnload;
@@ -214,7 +214,7 @@ class GMPParent final
   // to terminate gracefully.
   bool mHoldingSelfRef;
 
-  const nsCOMPtr<nsISerialEventTarget> mWorkerThread;
+  const nsCOMPtr<nsISerialEventTarget> mMainThread;
 };
 
 }  // namespace gmp

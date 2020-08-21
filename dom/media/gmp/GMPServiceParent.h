@@ -66,8 +66,6 @@ class GeckoMediaPluginServiceParent final
 
   void UpdateContentProcessGMPCapabilities();
 
-  nsISerialEventTarget* Thread() const { return mWorkerThread; }
-
  private:
   friend class GMPServiceParent;
 
@@ -204,7 +202,7 @@ class GeckoMediaPluginServiceParent final
   // Synchronized across thread via mMutex in base class.
   nsTArray<GMPServiceParent*> mServiceParents;
 
-  const nsCOMPtr<nsISerialEventTarget> mWorkerThread;
+  const nsCOMPtr<nsISerialEventTarget> mMainThread;
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
