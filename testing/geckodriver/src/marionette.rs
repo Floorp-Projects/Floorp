@@ -330,7 +330,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             let mut capabilities_options = None;
             // First handle the status message which doesn't actually require a marionette
             // connection or message
-            if msg.command == Status {
+            if let Status = msg.command {
                 let (ready, message) = self
                     .connection
                     .lock()
