@@ -2795,6 +2795,15 @@ function BrowserStop() {
 
 function BrowserReloadOrDuplicate(aEvent) {
   aEvent = getRootEvent(aEvent);
+  let accelKeyPressed =
+    AppConstants.platform == "macosx" ? aEvent.metaKey : aEvent.ctrlKey;
+  var backgroundTabModifier = aEvent.button == 1 || accelKeyPressed;
+
+  if (aEvent.shiftKey && !backgroundTabModifier) {
+    BrowserReloadSkipCache();
+    return;
+  }
+
   let where = whereToOpenLink(aEvent, false, true);
   if (where == "current") {
     BrowserReload();
