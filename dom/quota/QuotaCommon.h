@@ -264,8 +264,8 @@
     static_assert(false, "Did you forget arguments?"); \
   } while (0)
 
-// QM_TRY_PROPAGATE_ERR, QM_TRY_CUSTOM_RET_VAR and
-// QM_TRY_CUSTOM_RET_VAR_WITH_CLEANUP macros are implementation details of
+// QM_TRY_PROPAGATE_ERR, QM_TRY_CUSTOM_RET_VAL and
+// QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP macros are implementation details of
 // QM_TRY and shouldn't be used directly.
 
 // Handles the two arguments case when the eror is propagated.
@@ -279,7 +279,7 @@
 
 // Handles the three arguments case when a custom return value needs to be
 // returned
-#define QM_TRY_CUSTOM_RET_VAR(ns, expr, customRetVal)                    \
+#define QM_TRY_CUSTOM_RET_VAL(ns, expr, customRetVal)                    \
   auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr);            \
   if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                 \
     ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
@@ -289,7 +289,7 @@
 
 // Handles the four arguments case when a cleanup function needs to be called
 // before a custom return value is returned
-#define QM_TRY_CUSTOM_RET_VAR_WITH_CLEANUP(ns, expr, customRetVal, cleanup) \
+#define QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(ns, expr, customRetVal, cleanup) \
   auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr);               \
   if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                    \
     ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__),    \
@@ -301,8 +301,8 @@
 // Chooses the final implementation macro for given argument count.
 // It can be used by other modules to define module specific error handling.
 #define QM_TRY_META(...)                                                      \
-  MOZ_ARG_6(, ##__VA_ARGS__, QM_TRY_CUSTOM_RET_VAR_WITH_CLEANUP(__VA_ARGS__), \
-            QM_TRY_CUSTOM_RET_VAR(__VA_ARGS__),                               \
+  MOZ_ARG_6(, ##__VA_ARGS__, QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
+            QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__),                               \
             QM_TRY_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),  \
             QM_MISSING_ARGS(__VA_ARGS__))
 
@@ -316,8 +316,8 @@
  */
 #define QM_TRY(...) QM_TRY_META(mozilla::dom::quota, ##__VA_ARGS__)
 
-// QM_TRY_VAR_PROPAGATE_ERR, QM_TRY_VAR_CUSTOM_RET_VAR and
-// QM_TRY_VAR_CUSTOM_RET_VAR_WITH_CLEANUP macros are implementation details of
+// QM_TRY_VAR_PROPAGATE_ERR, QM_TRY_VAR_CUSTOM_RET_VAL and
+// QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP macros are implementation details of
 // QM_TRY_VAR and shouldn't be used directly.
 
 // Handles the three arguments case when the eror is propagated.
@@ -332,7 +332,7 @@
 
 // Handles the four arguments case when a custom return value needs to be
 // returned
-#define QM_TRY_VAR_CUSTOM_RET_VAR(ns, target, expr, customRetVal)        \
+#define QM_TRY_VAR_CUSTOM_RET_VAL(ns, target, expr, customRetVal)        \
   auto MOZ_UNIQUE_VAR(tryResult) = (expr);                               \
   if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                 \
     ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
@@ -343,7 +343,7 @@
 
 // Handles the five arguments case when a cleanup function needs to be called
 // before a custom return value is returned
-#define QM_TRY_VAR_CUSTOM_RET_VAR_WITH_CLEANUP(ns, target, expr, customRetVal, \
+#define QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(ns, target, expr, customRetVal, \
                                                cleanup)                        \
   auto MOZ_UNIQUE_VAR(tryResult) = (expr);                                     \
   if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                       \
@@ -358,8 +358,8 @@
 // It can be used by other modules to define module specific error handling.
 #define QM_TRY_VAR_META(...)                                                \
   MOZ_ARG_7(                                                                \
-      , ##__VA_ARGS__, QM_TRY_VAR_CUSTOM_RET_VAR_WITH_CLEANUP(__VA_ARGS__), \
-      QM_TRY_VAR_CUSTOM_RET_VAR(__VA_ARGS__),                               \
+      , ##__VA_ARGS__, QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
+      QM_TRY_VAR_CUSTOM_RET_VAL(__VA_ARGS__),                               \
       QM_TRY_VAR_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),  \
       QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
 
