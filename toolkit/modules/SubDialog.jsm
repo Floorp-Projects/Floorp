@@ -108,13 +108,8 @@ SubDialog.prototype = {
     aFeatures = null,
     aParams = null,
     aClosingCallback = null,
-    aClosedCallback = null,
-    aOptions = {}
+    aClosedCallback = null
   ) {
-    if (aOptions.sizeTo == "available") {
-      this._box.setAttribute("sizeto", "available");
-    }
-
     // Create a promise so consumers can tell when we're done setting up.
     this._dialogReady = new Promise(resolve => {
       this._resolveDialogReady = resolve;
@@ -423,10 +418,7 @@ SubDialog.prototype = {
     let frameWidth = docEl.getAttribute("width")
       ? docEl.getAttribute("width") + "px"
       : frameMinWidth;
-
-    if (this._box.getAttribute("sizeto") != "available") {
-      this._frame.style.width = frameWidth;
-    }
+    this._frame.style.width = frameWidth;
 
     let boxMinWidth = `calc(${boxHorizontalBorder +
       frameHorizontalMargin}px + ${frameMinWidth})`;
@@ -487,13 +479,6 @@ SubDialog.prototype = {
     let frameRect = this._frame.getBoundingClientRect();
     let frameSizeDifference =
       frameRect.top - boxRect.top + (boxRect.bottom - frameRect.bottom);
-
-    if (this._box.getAttribute("sizeto") == "available") {
-      // Inform the CSS of the toolbar height so the bottom padding can be
-      // correctly calculated.
-      this._box.style.setProperty("--box-top-px", `${boxRect.top}px`);
-      return;
-    }
 
     // Now do the same but for the height. We need to do this afterwards because otherwise
     // XUL assumes we'll optimize for height and gives us "wrong" values which then are no
@@ -833,8 +818,7 @@ class SubDialogManager {
     aFeatures = null,
     aParams = null,
     aClosingCallback = null,
-    aClosedCallback = null,
-    aOpenOptions
+    aClosedCallback = null
   ) {
     // If we're already open/opening on this URL, do nothing.
     if (!this._allowDuplicateDialogs && this._topDialog?._openedURL == aURL) {
@@ -871,8 +855,7 @@ class SubDialogManager {
       aFeatures,
       aParams,
       aClosingCallback,
-      aClosedCallback,
-      aOpenOptions
+      aClosedCallback
     );
     this._dialogs.push(this._preloadDialog);
 
