@@ -12,11 +12,11 @@ interface CookieStore : EventTarget {
   Promise<CookieList> getAll(USVString name);
   Promise<CookieList> getAll(optional CookieStoreGetOptions options = {});
 
-  Promise<void> set(USVString name, USVString value);
-  Promise<void> set(CookieInit options);
+  Promise<undefined> set(USVString name, USVString value);
+  Promise<undefined> set(CookieInit options);
 
-  Promise<void> delete(USVString name);
-  Promise<void> delete(CookieStoreDeleteOptions options);
+  Promise<undefined> delete(USVString name);
+  Promise<undefined> delete(CookieStoreDeleteOptions options);
 
   [Exposed=Window]
   attribute EventHandler onchange;
@@ -69,9 +69,9 @@ typedef sequence<CookieListItem> CookieList;
 [Exposed=(ServiceWorker,Window),
  SecureContext]
 interface CookieStoreManager {
-  Promise<void> subscribe(sequence<CookieStoreGetOptions> subscriptions);
+  Promise<undefined> subscribe(sequence<CookieStoreGetOptions> subscriptions);
   Promise<sequence<CookieStoreGetOptions>> getSubscriptions();
-  Promise<void> unsubscribe(sequence<CookieStoreGetOptions> subscriptions);
+  Promise<undefined> unsubscribe(sequence<CookieStoreGetOptions> subscriptions);
 };
 
 [Exposed=(ServiceWorker,Window)]
