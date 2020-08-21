@@ -297,12 +297,13 @@ inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   // Shouldn't really matter, but worth being safe.
   const bool kAllowShrinking = true;
 
-  nsresult rv;
-  auto handle = dest.BulkWrite(bufLen.value(), 0, kAllowShrinking, rv);
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+  auto handleOrErr = dest.BulkWrite(bufLen.value(), 0, kAllowShrinking);
+  if (MOZ_UNLIKELY(handleOrErr.isErr())) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
+
+  auto handle = handleOrErr.unwrap();
 
   auto maybe = JS_EncodeStringToUTF8BufferPartial(cx, s, handle.AsSpan());
   if (MOZ_UNLIKELY(!maybe)) {
