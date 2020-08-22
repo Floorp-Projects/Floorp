@@ -108,12 +108,11 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     this.wasDisplayed = this.isDisplayed;
     this.wasScrollable = this.isScrollable;
 
-    if (this.isScrollable) {
-      this.walker.updateOverflowCausingElements(
-        this,
-        this.walker.overflowCausingElementsMap
-      );
-    }
+    this.walker.updateOverflowCausingElements(
+      this.rawNode,
+      this,
+      this.walker.overflowCausingElementsSet
+    );
   },
 
   toString: function() {
@@ -184,7 +183,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       displayType: this.displayType,
       isScrollable: this.isScrollable,
       isTopLevelDocument: this.isTopLevelDocument,
-      causesOverflow: this.walker.overflowCausingElementsMap.has(this.rawNode),
+      causesOverflow: this.walker.overflowCausingElementsSet.has(this.rawNode),
 
       // doctype attributes
       name: this.rawNode.name,

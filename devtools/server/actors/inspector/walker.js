@@ -206,10 +206,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.customElementWatcher = new CustomElementWatcher(
       targetActor.chromeEventHandler
     );
-
-    // In this map, the key-value pairs are the overflow causing elements and their
-    // respective ancestor scrollable node actor.
-    this.overflowCausingElementsMap = new Map();
+    this.overflowCausingElementsSet = new Set();
 
     this.showAllAnonymousContent = options.showAllAnonymousContent;
 
@@ -367,8 +364,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       traits: {
         // Walker implements node picker starting with Firefox 80
         supportsNodePicker: true,
-        // Walker implements overflow debugging support starting with Firefox 81
-        supportsOverflowDebugging: true,
       },
     };
   },
@@ -424,8 +419,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.clearPseudoClassLocks();
       this._activePseudoClassLocks = null;
 
-      this.overflowCausingElementsMap.clear();
-      this.overflowCausingElementsMap = null;
+      this.overflowCausingElementsSet.clear();
+      this.overflowCausingElementsSet = null;
 
       this._hoveredNode = null;
       this.rootWin = null;
@@ -579,7 +574,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const displayTypeChanges = [];
     const scrollableStateChanges = [];
 
-    const currentOverflowCausingElementsMap = new Map();
+    const currentOverflowCausingElementsSet = new Set();
 
     for (const [node, actor] of this._nodeActorsMap) {
       if (Cu.isDeadWrapper(node)) {
@@ -606,27 +601,26 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         actor.wasScrollable = isScrollable;
       }
 
-      if (isScrollable) {
-        this.updateOverflowCausingElements(
-          actor,
-          currentOverflowCausingElementsMap
-        );
-      }
+      this.updateOverflowCausingElements(
+        node,
+        actor,
+        currentOverflowCausingElementsSet
+      );
     }
 
     // Get the NodeActor for each node in the symmetric difference of
-    // currentOverflowCausingElementsMap and this.overflowCausingElementsMap
-    const overflowStateChanges = [...currentOverflowCausingElementsMap.keys()]
-      .filter(node => !this.overflowCausingElementsMap.has(node))
+    // currentOverflowCausingElementsSet and this.overflowCausingElementsSet
+    const overflowStateChanges = [...currentOverflowCausingElementsSet]
+      .filter(node => !this.overflowCausingElementsSet.has(node))
       .concat(
-        [...this.overflowCausingElementsMap.keys()].filter(
-          node => !currentOverflowCausingElementsMap.has(node)
+        [...this.overflowCausingElementsSet].filter(
+          node => !currentOverflowCausingElementsSet.has(node)
         )
       )
       .filter(node => this.hasNode(node))
       .map(node => this.getNode(node));
 
-    this.overflowCausingElementsMap = currentOverflowCausingElementsMap;
+    this.overflowCausingElementsSet = currentOverflowCausingElementsSet;
 
     if (displayTypeChanges.length) {
       this.emit("display-change", displayTypeChanges);
@@ -2869,67 +2863,29 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * Given a scrollable node, find its descendants which are causing overflow in it and
-   * add their raw nodes to the map as keys with the scrollable element as the values.
-   *
-   * @param {NodeActor} scrollableNode A scrollable node.
-   * @param {Map} map The map to which the overflow causing elements are added.
+   * If element has a scrollbar, find the children causing the overflow and
+   * add them to the set.
+   * @param {DOMNode} node The node whose overflow causing elements are returned.
+   * @param {NodeActor} actor The actor of the node.
+   * @param {Set} set The set to which the overflow causing elements are added.
    */
-  updateOverflowCausingElements: function(scrollableNode, map) {
-    if (scrollableNode.rawNode.nodeType !== Node.ELEMENT_NODE) {
+  updateOverflowCausingElements: function(node, actor, set) {
+    if (node.nodeType !== Node.ELEMENT_NODE || !actor.isScrollable) {
       return;
     }
 
     const overflowCausingChildren = [
-      ...InspectorUtils.getOverflowingChildrenOfElement(scrollableNode.rawNode),
+      ...InspectorUtils.getOverflowingChildrenOfElement(node),
     ];
 
-    for (let overflowCausingChild of overflowCausingChildren) {
-      // overflowCausingChild is a Node, but not necessarily an Element.
+    for (let child of overflowCausingChildren) {
+      // child is a Node, but not necessarily an Element.
       // So, get the containing Element
-      if (overflowCausingChild.nodeType !== Node.ELEMENT_NODE) {
-        overflowCausingChild = overflowCausingChild.parentElement;
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        child = child.parentElement;
       }
-      map.set(overflowCausingChild, scrollableNode);
+      set.add(child);
     }
-  },
-
-  /**
-   * Return the overflow causing elements for the given node.
-   *
-   * @param {NodeActor} node The scrollable node.
-   */
-  getOverflowCausingElements: function(node) {
-    if (node.rawNode.nodeType !== Node.ELEMENT_NODE || !node.isScrollable) {
-      return [];
-    }
-
-    const overflowCausingElements = [
-      ...InspectorUtils.getOverflowingChildrenOfElement(node.rawNode),
-    ].map(overflowCausingChild => {
-      if (overflowCausingChild.nodeType !== Node.ELEMENT_NODE) {
-        overflowCausingChild = overflowCausingChild.parentElement;
-      }
-
-      this.attachElement(overflowCausingChild);
-
-      return overflowCausingChild;
-    });
-
-    return new NodeListActor(this, overflowCausingElements);
-  },
-
-  /**
-   * Return the scrollable ancestor node which has overflow because of the given node.
-   *
-   * @param {NodeActor} overflowCausingNode
-   */
-  getScrollableAncestorNode: function(overflowCausingNode) {
-    if (!this.overflowCausingElementsMap.has(overflowCausingNode.rawNode)) {
-      return null;
-    }
-
-    return this.overflowCausingElementsMap.get(overflowCausingNode.rawNode);
   },
 });
 
