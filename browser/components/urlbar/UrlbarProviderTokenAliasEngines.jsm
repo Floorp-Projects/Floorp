@@ -89,8 +89,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
       return true;
     }
 
-    // If there's no engine associated with the searchString, then we don't want
-    // to block other kinds of results.
+    // If the user is typing a potential engine name, autofill it.
     if (UrlbarPrefs.get("autoFill") && queryContext.allowAutofill) {
       let result = this._getAutofillResult(queryContext);
       if (result) {
@@ -157,14 +156,14 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
   }
 
   _getAutofillResult(queryContext) {
-    let token = queryContext.tokens[0];
     // The user is typing a specific engine. We should show a heuristic result.
     for (let { engine, tokenAliases } of this._engines) {
       for (let alias of tokenAliases) {
-        if (alias.startsWith(token.lowerCaseValue)) {
+        if (alias.startsWith(queryContext.searchString.toLowerCase())) {
           // We found a specific engine. We will add an autofill result.
           let aliasPreservingUserCase =
-            token.value + alias.substr(token.value.length);
+            queryContext.searchString +
+            alias.substr(queryContext.searchString.length);
           // Don't append a space if update2 is on since selecting this result
           // will just enter search mode.
           let value =
