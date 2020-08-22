@@ -1206,6 +1206,7 @@ class JsepSessionTest : public JsepSessionTestBase,
       ASSERT_TRUE(transceiver->HasBundleLevel())
       << context;
       ASSERT_EQ(0U, transceiver->BundleLevel()) << context;
+      ASSERT_NE("", transceiver->mTransport.mTransportId);
     }
   }
 
@@ -5023,10 +5024,9 @@ TEST_P(JsepSessionTest, TestMaxBundle) {
   AddTracks(*mSessionAns);
 
   mSessionOff->SetBundlePolicy(kBundleMaxBundle);
-  OfferAnswer();
-
-  std::string offer = mSessionOff->GetLocalDescription(kJsepDescriptionCurrent);
+  std::string offer = CreateOffer();
   UniquePtr<Sdp> parsedOffer = std::move(SipccSdpParser().Parse(offer)->Sdp());
+
   ASSERT_TRUE(parsedOffer.get());
 
   ASSERT_FALSE(parsedOffer->GetMediaSection(0).GetAttributeList().HasAttribute(
@@ -5037,6 +5037,15 @@ TEST_P(JsepSessionTest, TestMaxBundle) {
         SdpAttribute::kBundleOnlyAttribute));
     ASSERT_EQ(0U, parsedOffer->GetMediaSection(i).GetPort());
   }
+
+  SetLocalOffer(offer);
+  CheckTransceiversAreBundled(*mSessionOff,
+                              "Offerer transceivers (in have-local-offer)");
+
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
 
   CheckTransceiversAreBundled(*mSessionOff, "Offerer transceivers");
   CheckTransceiversAreBundled(*mSessionAns, "Answerer transceivers");
