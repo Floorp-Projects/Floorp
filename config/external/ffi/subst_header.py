@@ -10,7 +10,7 @@ import buildconfig
 from mozbuild.preprocessor import Preprocessor
 
 
-def main(output, input_file):
+def main(output, input_file, *defines):
     pp = Preprocessor()
     pp.context.update({
         'FFI_EXEC_TRAMPOLINE_TABLE': '0',
@@ -18,6 +18,8 @@ def main(output, input_file):
         'TARGET': buildconfig.substs['FFI_TARGET'],
         'VERSION': '',
     })
+    for d in defines:
+        pp.context.update({d: '1'})
     pp.do_filter('substitution')
     pp.setMarker(None)
     pp.out = output

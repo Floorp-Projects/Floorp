@@ -31,24 +31,30 @@ def ffi_target(target):
         die('Building libffi from the tree is not supported on this platform. '
             'Use --with-system-ffi instead.')
 
-    if target.os == 'WINNT':
-        target_dir, target_name = {
-            'x86_64': ('x86', 'X86_WIN64'),
-            'x86': ('x86', 'X86_WIN32'),
-            'aarch64': ('aarch64', 'ARM64_WIN64'),
-        }[target.cpu]
-    elif target.os == 'OSX' and target.cpu in ('x86', 'x86_64'):
+    if target.cpu == 'x86_64':
         target_dir = 'x86'
-        target_name = 'X86_DARWIN'
+        target_name = {
+            'WINNT': 'X86_WIN64',
+        }.get(target.kernel, 'X86_64')
+
+    elif target.cpu == 'x86':
+        target_dir = 'x86'
+        target_name = {
+            'WINNT': 'X86_WIN32',
+            'Darwin': 'X86_DARWIN',
+            'FreeBSD': 'X86_FREEBSD',
+            'OpenBSD': 'X86_FREEBSD',
+        }.get(target.kernel, 'X86')
+
+    elif target.cpu == 'aarch64':
+        target_dir = 'aarch64'
+        target_name = {
+            'WINNT': 'ARM_WIN64',
+        }.get(target.kernel, 'AARCH64')
+
     elif target.cpu == 'arm':
         target_dir = 'arm'
         target_name = 'ARM'
-    elif target.cpu == 'aarch64':
-        target_dir = 'aarch64'
-        target_name = 'AARCH64'
-    else:
-        target_dir = 'x86'
-        target_name = target.cpu.upper()
 
     return namespace(
         name=target_name,
