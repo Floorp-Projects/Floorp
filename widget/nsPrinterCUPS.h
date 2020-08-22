@@ -43,6 +43,7 @@ class nsPrinterCUPS final : public nsPrinterBase {
 
   /**
    * Retrieves the localized name for a given media (paper).
+   * Returns nullptr if the name cannot be localized.
    */
   const char* LocalizeMediaName(http_t& aConnection, cups_size_t& aMedia) const;
 
