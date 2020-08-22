@@ -8,10 +8,7 @@ about-processes-title = Process Manager
 ## Column headers
 
 about-processes-column-id = Id
-about-processes-column-type = Type
 about-processes-column-name = Name
-about-processes-column-memory-resident = Memory (Resident)
-about-processes-column-cpu-user = CPU (User)
-about-processes-column-cpu-kernel = CPU (Kernel)
-about-processes-column-cpu-threads = CPU (Threads)
+about-processes-column-memory-resident = Memory
+about-processes-column-cpu-total = CPU
 about-processes-column-threads = Threads
