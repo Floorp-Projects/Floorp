@@ -904,16 +904,15 @@ void DataChannelConnection::ProcessQueuedOpens() {
 
   // Can't copy nsDeque's.  Move into temp array since any that fail will
   // go back to mPending
-  nsDeque<DataChannel> temp;
-  DataChannel* temp_channel;  // really already_AddRefed<>
+  nsRefPtrDeque<DataChannel> temp;
+  RefPtr<DataChannel> temp_channel;
   while (nullptr != (temp_channel = mPending.PopFront())) {
-    temp.Push(temp_channel);
+    temp.Push(temp_channel.forget());
   }
 
   RefPtr<DataChannel> channel;
-  // All these entries have an AddRef(); make that explicit now via the
-  // dont_AddRef()
-  while (nullptr != (channel = dont_AddRef(temp.PopFront()))) {
+
+  while (nullptr != (channel = temp.PopFront())) {
     if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
       DC_DEBUG(("Processing queued open for %p (%u)", channel.get(),
                 channel->mStream));
@@ -2506,10 +2505,7 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
     DC_DEBUG(("Queuing channel %p (%u) to finish open", channel.get(), stream));
     // Also serves to mark we told the app
     channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_OPEN;
-    // we need a ref for the nsDeQue and one to return
-    DataChannel* rawChannel = channel;
-    rawChannel->AddRef();
-    mPending.Push(rawChannel);
+    mPending.Push(channel);
     return channel.forget();
   }
 
@@ -3055,7 +3051,7 @@ void DataChannelConnection::CloseAll() {
 
   // Clean up any pending opens for channels
   RefPtr<DataChannel> channel;
-  while (nullptr != (channel = dont_AddRef(mPending.PopFront()))) {
+  while (nullptr != (channel = mPending.PopFront())) {
     DC_DEBUG(("closing pending channel %p, stream %u", channel.get(),
               channel->mStream));
     channel->Close();  // also releases the ref on each iteration

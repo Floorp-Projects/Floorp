@@ -104,7 +104,7 @@ EventTokenBucket::~EventTokenBucket() {
 
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
-    RefPtr<TokenBucketCancelable> cancelable = dont_AddRef(mEvents.PopFront());
+    RefPtr<TokenBucketCancelable> cancelable = mEvents.PopFront();
     cancelable->Fire();
   }
 }
@@ -196,7 +196,7 @@ void EventTokenBucket::Stop() {
 
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
-    RefPtr<TokenBucketCancelable> cancelable = dont_AddRef(mEvents.PopFront());
+    RefPtr<TokenBucketCancelable> cancelable = mEvents.PopFront();
     cancelable->Fire();
   }
 }
@@ -219,7 +219,7 @@ nsresult EventTokenBucket::SubmitEvent(ATokenBucketEvent* event,
   if (mPaused || !TryImmediateDispatch(cancelEvent.get())) {
     // queue it
     SOCKET_LOG(("   queued\n"));
-    mEvents.Push(cancelEvent.forget().take());
+    mEvents.Push(cancelEvent.forget());
     UpdateTimer();
   } else {
     SOCKET_LOG(("   dispatched synchronously\n"));
@@ -242,7 +242,7 @@ void EventTokenBucket::DispatchEvents() {
   if (mPaused || mStopped) return;
 
   while (mEvents.GetSize() && mUnitCost <= mCredit) {
-    RefPtr<TokenBucketCancelable> cancelable = dont_AddRef(mEvents.PopFront());
+    RefPtr<TokenBucketCancelable> cancelable = mEvents.PopFront();
     if (cancelable->mEvent) {
       SOCKET_LOG(
           ("EventTokenBucket::DispachEvents [%p] "
