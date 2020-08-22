@@ -523,10 +523,21 @@ nsresult nsSHistory::CloneAndReplace(
 
 NS_IMETHODIMP
 nsSHistory::AddChildSHEntryHelper(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
-                                  BrowsingContext* aRootBC,
-                                  bool aCloneChildren) {
-  MOZ_ASSERT(aRootBC->IsTop());
+                                  BrowsingContext* aBC, bool aCloneChildren) {
+  nsCOMPtr<nsISHEntry> child;
+  nsresult rv = AddChildSHEntryHelper(aCloneRef, aNewEntry, aBC, aCloneChildren,
+                                      getter_AddRefs(child));
+  if (NS_SUCCEEDED(rv)) {
+    child->SetDocshellID(aBC->GetHistoryID());
+  }
+  return rv;
+}
 
+nsresult nsSHistory::AddChildSHEntryHelper(nsISHEntry* aCloneRef,
+                                           nsISHEntry* aNewEntry,
+                                           BrowsingContext* aBC,
+                                           bool aCloneChildren,
+                                           nsISHEntry** aNextEntry) {
   /* You are currently in the rootDocShell.
    * You will get here when a subframe has a new url
    * to load and you have walked up the tree all the
@@ -534,7 +545,6 @@ nsSHistory::AddChildSHEntryHelper(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
    * and replace the subframe where a new url was loaded with
    * a new entry.
    */
-  nsCOMPtr<nsISHEntry> child;
   nsCOMPtr<nsISHEntry> currentHE;
   int32_t index = mIndex;
   if (index < 0) {
@@ -546,16 +556,12 @@ nsSHistory::AddChildSHEntryHelper(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
 
   nsresult rv = NS_OK;
   uint32_t cloneID = aCloneRef->GetID();
-  rv = nsSHistory::CloneAndReplace(currentHE, aRootBC, cloneID, aNewEntry,
-                                   aCloneChildren, getter_AddRefs(child));
+  rv = nsSHistory::CloneAndReplace(currentHE, aBC, cloneID, aNewEntry,
+                                   aCloneChildren, aNextEntry);
 
   if (NS_SUCCEEDED(rv)) {
-    rv = AddEntry(child, true);
-    if (NS_SUCCEEDED(rv)) {
-      child->SetDocshellID(aRootBC->GetHistoryID());
-    }
+    rv = AddEntry(*aNextEntry, true);
   }
-
   return rv;
 }
 
@@ -627,13 +633,10 @@ void nsSHistory::HandleEntriesToSwapInDocShell(
 
 NS_IMETHODIMP
 nsSHistory::AddToRootSessionHistory(bool aCloneChildren, nsISHEntry* aOSHE,
-                                    BrowsingContext* aRootBC,
-                                    nsISHEntry* aEntry, uint32_t aLoadType,
-                                    bool aShouldPersist,
+                                    BrowsingContext* aBC, nsISHEntry* aEntry,
+                                    uint32_t aLoadType, bool aShouldPersist,
                                     Maybe<int32_t>* aPreviousEntryIndex,
                                     Maybe<int32_t>* aLoadedEntryIndex) {
-  MOZ_ASSERT(aRootBC->IsTop());
-
   nsresult rv = NS_OK;
 
   // If we need to clone our children onto the new session
@@ -641,7 +644,7 @@ nsSHistory::AddToRootSessionHistory(bool aCloneChildren, nsISHEntry* aOSHE,
   if (aCloneChildren && aOSHE) {
     uint32_t cloneID = aOSHE->GetID();
     nsCOMPtr<nsISHEntry> newEntry;
-    nsSHistory::CloneAndReplace(aOSHE, aRootBC, cloneID, aEntry, true,
+    nsSHistory::CloneAndReplace(aOSHE, aBC, cloneID, aEntry, true,
                                 getter_AddRefs(newEntry));
     NS_ASSERTION(aEntry == newEntry,
                  "The new session history should be in the new entry");
@@ -676,7 +679,7 @@ nsSHistory::AddToRootSessionHistory(bool aCloneChildren, nsISHEntry* aOSHE,
              aPreviousEntryIndex->value(), aLoadedEntryIndex->value()));
   }
   if (NS_SUCCEEDED(rv)) {
-    aEntry->SetDocshellID(aRootBC->GetHistoryID());
+    aEntry->SetDocshellID(aBC->GetHistoryID());
   }
   return rv;
 }
