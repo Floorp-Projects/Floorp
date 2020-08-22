@@ -9,7 +9,7 @@
 const video = document.getElementById("video");
 const w = window.opener || window.parent;
 
-window.onmessage = event => {
+window.onmessage = async event => {
   if (event.data == "fullscreen") {
     video.requestFullscreen();
     video.onfullscreenchange = () => {
@@ -30,6 +30,25 @@ window.onmessage = event => {
         w.postMessage("checked-playing", "*");
       }
     }
+  } else if (event.data == "play") {
+    await video.play();
+    w.postMessage("played", "*");
+  } else if (event.data == "pause") {
+    video.pause();
+    w.postMessage("paused", "*");
+  } else if (event.data == "setMetadata") {
+    const metadata = {
+      title: document.title,
+      artist: document.title,
+      album: document.title,
+      artwork: [{ src: document.title, sizes: "128x128", type: "image/jpeg" }],
+    };
+    navigator.mediaSession.metadata = new window.MediaMetadata(metadata);
+    w.postMessage(metadata, "*");
+  } else if (event.data == "setPositionState") {
+    navigator.mediaSession.setPositionState({
+      duration: 60, // The value doesn't matter
+    });
   }
 }
 
