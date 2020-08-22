@@ -3,12 +3,12 @@
    Limitations:	none.
    PR:		none.
    Originator:	From the original ffitest.c  */
-/* { dg-do run } */
+
+/* { dg-excess-errors "fails" { target x86_64-*-mingw* x86_64-*-cygwin* } } */
+/* { dg-do run { xfail x86_64-*-mingw* x86_64-*-cygwin* } } */
 
 #include "ffitest.h"
 #include "float.h"
-
-#include <math.h>
 
 static long double ldblit(float f)
 {
@@ -22,7 +22,6 @@ int main (void)
   void *values[MAX_ARGS];
   float f;
   long double ld;
-  long double original;
 
   args[0] = &ffi_type_float;
   values[0] = &f;
@@ -33,26 +32,24 @@ int main (void)
 
   f = 3.14159;
 
-#if defined(__sun) && defined(__GNUC__)
-  /* long double support under SunOS/gcc is pretty much non-existent.
-     You'll get the odd bus error in library routines like printf() */
-#else
+#if 1
+  /* This is ifdef'd out for now. long double support under SunOS/gcc
+     is pretty much non-existent.  You'll get the odd bus error in library
+     routines like printf().  */
   printf ("%Lf\n", ldblit(f));
 #endif
-
   ld = 666;
   ffi_call(&cif, FFI_FN(ldblit), &ld, values);
 
-#if defined(__sun) && defined(__GNUC__)
-  /* long double support under SunOS/gcc is pretty much non-existent.
-     You'll get the odd bus error in library routines like printf() */
-#else
+#if 1
+  /* This is ifdef'd out for now. long double support under SunOS/gcc
+     is pretty much non-existent.  You'll get the odd bus error in library
+     routines like printf().  */
   printf ("%Lf, %Lf, %Lf, %Lf\n", ld, ldblit(f), ld - ldblit(f), LDBL_EPSILON);
 #endif
 
   /* These are not always the same!! Check for a reasonable delta */
-  original = ldblit(f);
-  if (((ld > original) ? (ld - original) : (original - ld)) < LDBL_EPSILON)
+  if (ld - ldblit(f) < LDBL_EPSILON)
     puts("long double return value tests ok!");
   else
     CHECK(0);
