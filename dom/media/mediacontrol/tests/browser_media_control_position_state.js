@@ -2,7 +2,7 @@
 const PAGE_URL =
   "https://example.com/browser/dom/media/mediacontrol/tests/file_non_autoplay.html";
 const IFRAME_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/file_media_session_page.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_iframe_media.html";
 
 const testVideoId = "video";
 
