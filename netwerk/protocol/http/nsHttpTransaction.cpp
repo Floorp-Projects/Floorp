@@ -1230,6 +1230,13 @@ void nsHttpTransaction::Close(nsresult reason) {
                             !reallySentData || connReused)) ||
         restartToFallbackConnInfo) {
       if (restartToFallbackConnInfo) {
+        nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+        if (dns) {
+          LOG(("add failed domain name [%s] -> [%s] to exclusion list",
+               mConnInfo->GetOrigin().get(), mConnInfo->GetRoutedHost().get()));
+          Unused << dns->ReportFailedSVCDomainName(mConnInfo->GetOrigin(),
+                                                   mConnInfo->GetRoutedHost());
+        }
         mConnInfo = nullptr;
         mFallbackConnInfo.swap(mConnInfo);
         LOG(

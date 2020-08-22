@@ -422,6 +422,19 @@ ChildDNSService::SetPrefetchEnabled(bool inVal) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ChildDNSService::ReportFailedSVCDomainName(const nsACString& aOwnerName,
+                                           const nsACString& aSVCDomainName) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ChildDNSService::IsSVCDomainNameFailed(const nsACString& aOwnerName,
+                                       const nsACString& aSVCDomainName,
+                                       bool* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //-----------------------------------------------------------------------------
 // ChildDNSService::nsIObserver
 //-----------------------------------------------------------------------------

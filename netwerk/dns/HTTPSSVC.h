@@ -112,13 +112,16 @@ class SVCBRecord : public nsISVCBRecord {
 
 class DNSHTTPSSVCRecordBase {
  public:
-  DNSHTTPSSVCRecordBase() = default;
+  explicit DNSHTTPSSVCRecordBase(const nsACString& aHost) : mHost(aHost) {}
 
  protected:
   virtual ~DNSHTTPSSVCRecordBase() = default;
 
   already_AddRefed<nsISVCBRecord> GetServiceModeRecordInternal(
       bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords);
+
+  // The owner name of this HTTPS RR.
+  nsCString mHost;
 };
 
 }  // namespace net
