@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ext
 
+import mozilla.components.browser.state.state.content.DownloadState
 import org.junit.Test
 
 import org.junit.Assert.assertEquals
@@ -13,7 +14,7 @@ import org.mozilla.fenix.library.downloads.DownloadItem
 class DownloadItemKtTest {
     @Test
     fun getIcon() {
-        val downloadItem = DownloadItem(0, "MyAwesomeFile", "", "", "image/png")
+        val downloadItem = DownloadItem("0", "MyAwesomeFile", "", "", "image/png", DownloadState.Status.COMPLETED)
 
         assertEquals(R.drawable.ic_file_type_image, downloadItem.getIcon())
         assertEquals(R.drawable.ic_file_type_audio_note, downloadItem.copy(contentType = "audio/mp3").getIcon())
