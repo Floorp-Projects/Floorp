@@ -110,6 +110,7 @@ struct FrameMetrics {
         mExtraResolution(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
+        mVisualDestination(0, 0),
         mVisualScrollUpdateType(eNone),
         mIsRootContent(false),
         mIsRelative(false),
@@ -140,6 +141,7 @@ struct FrameMetrics {
            mExtraResolution == aOther.mExtraResolution &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
+           mVisualDestination == aOther.mVisualDestination &&
            mVisualScrollUpdateType == aOther.mVisualScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
            mIsRelative == aOther.mIsRelative &&
@@ -517,6 +519,11 @@ struct FrameMetrics {
   }
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
+  void SetVisualDestination(const CSSPoint& aVisualDestination) {
+    mVisualDestination = aVisualDestination;
+  }
+  const CSSPoint& GetVisualDestination() const { return mVisualDestination; }
+
   void SetVisualScrollUpdateType(ScrollOffsetUpdateType aUpdateType) {
     mVisualScrollUpdateType = aUpdateType;
   }
@@ -701,9 +708,12 @@ struct FrameMetrics {
   // if the APZC receiving this metrics should update its local copy.
   ScrollOffsetUpdateType mScrollUpdateType;
 
-  // Theis field is set to eMainThread when the main thread wants APZ to
-  // scroll to a visual viewport offset that's distinct from the layout
-  // viewport offset.
+  // These fields are used when the main thread wants to set a visual viewport
+  // offset that's distinct from the layout viewport offset.
+  // In this case, mVisualScrollUpdateType is set to eMainThread, and
+  // mVisualDestination is set to desired visual destination (relative
+  // to the document, like mScrollOffset).
+  CSSPoint mVisualDestination;
   ScrollOffsetUpdateType mVisualScrollUpdateType;
 
   // 'fixed layer margins' on the main-thread. This is only used for the

@@ -475,7 +475,7 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   mainThreadOffset = scrollOffsetBeforeInterruption;
   mainThreadOffset.y -= 5;
   metadata = apzc->GetScrollMetadata();
-  metadata.GetMetrics().SetVisualScrollOffset(mainThreadOffset);
+  metadata.GetMetrics().SetVisualDestination(mainThreadOffset);
   metadata.GetMetrics().SetScrollGeneration(2);
   metadata.GetMetrics().SetVisualScrollUpdateType(FrameMetrics::eMainThread);
   apzc->NotifyLayersUpdated(metadata, false, true);

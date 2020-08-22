@@ -4831,9 +4831,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   if (visualScrollOffsetUpdated) {
     APZC_LOG("%p updating visual scroll offset from %s to %s\n", this,
              ToString(Metrics().GetVisualScrollOffset()).c_str(),
-             ToString(aLayerMetrics.GetVisualScrollOffset()).c_str());
+             ToString(aLayerMetrics.GetVisualDestination()).c_str());
     Metrics().ClampAndSetVisualScrollOffset(
-        aLayerMetrics.GetVisualScrollOffset());
+        aLayerMetrics.GetVisualDestination());
 
     // The rest of this branch largely follows the code in the
     // |if (scrollOffsetUpdated)| branch above.
