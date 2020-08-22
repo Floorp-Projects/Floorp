@@ -44,6 +44,9 @@ var PrintEventHandler = {
   settingFlags: {
     margins: Ci.nsIPrintSettings.kInitSaveMargins,
     orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
+    paperName:
+      Ci.nsIPrintSettings.kInitSavePaperSize |
+      Ci.nsIPrintSettings.kInitSaveUnwriteableMargins,
     printInColor: Ci.nsIPrintSettings.kInitSaveInColor,
     printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
     scaling: Ci.nsIPrintSettings.kInitSaveScaling,
@@ -84,7 +87,12 @@ var PrintEventHandler = {
 
     // First check the available destinations to ensure we get settings for an
     // accessible printer.
-    let { destinations, selectedPrinter } = await this.getPrintDestinations();
+    let {
+      destinations,
+      selectedPrinter,
+      printersByName,
+    } = await this.getPrintDestinations();
+    PrintSettingsViewProxy.availablePrinters = printersByName;
 
     document.addEventListener("print", e => this.print({ silent: true }));
     document.addEventListener("update-print-settings", e =>
@@ -95,7 +103,7 @@ var PrintEventHandler = {
       this.print({ silent: false })
     );
 
-    this.refreshSettings(selectedPrinter.value);
+    await this.refreshSettings(selectedPrinter.value);
     this.updatePrintPreview(sourceBrowsingContext);
 
     document.dispatchEvent(
@@ -146,18 +154,23 @@ var PrintEventHandler = {
     return printPreviewBrowser;
   },
 
-  refreshSettings(printerName) {
+  async refreshSettings(printerName) {
     this.settings = PrintUtils.getPrintSettings(printerName);
     this.defaultSettings = PrintUtils.getPrintSettings(printerName, true);
     // restore settings which do not have a corresponding flag
-    Object.assign(this.settings, this._nonFlaggedChangedSettings);
+    for (let key of Object.keys(this._nonFlaggedChangedSettings)) {
+      if (key in this.settings) {
+        this.settings[key] = this._nonFlaggedChangedSettings[key];
+      }
+    }
+    await PrintSettingsViewProxy.resolvePropertiesForPrinter(printerName);
 
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
     this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
 
     // Ensure the output format is set properly
-    this.viewSettings.printerName = this.settings.printerName;
+    this.viewSettings.printerName = printerName;
   },
 
   async print({ silent } = {}) {
@@ -188,7 +201,7 @@ var PrintEventHandler = {
     window.close();
   },
 
-  updateSettings(changedSettings = {}) {
+  async updateSettings(changedSettings = {}) {
     let didSettingsChange = false;
     let updatePreviewWithoutFlag = false;
     let flags = 0;
@@ -233,7 +246,7 @@ var PrintEventHandler = {
         PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
       }
       if (printerChanged) {
-        this.refreshSettings(this.settings.printerName);
+        await this.refreshSettings(this.settings.printerName);
       }
       if (flags || printerChanged || updatePreviewWithoutFlag) {
         this.updatePrintPreview();
@@ -313,6 +326,7 @@ var PrintEventHandler = {
     const lastUsedPrinterName = PrintUtils._getLastUsedPrinterName();
     const defaultPrinterName = printerList.systemDefaultPrinterName;
     const printers = await printerList.printers;
+    const printersByName = {};
 
     let lastUsedPrinter;
     let defaultPrinter;
@@ -331,6 +345,7 @@ var PrintEventHandler = {
       ...printers.map(printer => {
         printer.QueryInterface(Ci.nsIPrinter);
         const { name } = printer;
+        printersByName[printer.name] = { printer };
         const destination = { name, value: name };
 
         if (name == lastUsedPrinterName) {
@@ -346,7 +361,7 @@ var PrintEventHandler = {
 
     let selectedPrinter = lastUsedPrinter || defaultPrinter || saveToPdfPrinter;
 
-    return { destinations, selectedPrinter };
+    return { destinations, selectedPrinter, printersByName };
   },
 
   getMarginPresets(marginSize) {
@@ -400,6 +415,18 @@ const PrintSettingsViewProxy = {
     headerStrRight: "print.print_headerright",
   },
 
+  async resolvePropertiesForPrinter(printerName) {
+    // resolve any async properties we need on the printer
+    let printer = this.availablePrinters[printerName];
+    // Await the async printer data.
+    if (printer.printer) {
+      [printer.supportsColor, printer.paperList] = await Promise.all([
+        printer.printer.supportsColor,
+        printer.printer.paperList,
+      ]);
+    }
+  },
+
   get(target, name) {
     switch (name) {
       case "margins":
@@ -437,6 +464,9 @@ const PrintSettingsViewProxy = {
         return target.printRange == Ci.nsIPrintSettings.kRangeAllPages
           ? "all"
           : "custom";
+
+      case "supportsColor":
+        return this.availablePrinters[target.printerName].supportsColor;
     }
     return target[name];
   },
