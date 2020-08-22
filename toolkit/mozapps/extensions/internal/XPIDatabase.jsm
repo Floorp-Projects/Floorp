@@ -25,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
@@ -795,7 +794,7 @@ AddonWrapper = class {
   }
 
   get __AddonInternal__() {
-    return AppConstants.DEBUG ? addonFor(this) : undefined;
+    return addonFor(this);
   }
 
   get seen() {
@@ -3013,6 +3012,16 @@ this.XPIDatabaseReconcile = {
       aOldAddon.signedDate === undefined &&
       (aOldAddon.signedState || checkSigning);
 
+    // If maxVersion was inadvertently updated for a locale, force a reload
+    // from the manifest.  See Bug 1646016 for details.
+    if (
+      !aReloadMetadata &&
+      aOldAddon.type === "locale" &&
+      aOldAddon.matchingTargetApplication
+    ) {
+      aReloadMetadata = aOldAddon.matchingTargetApplication.maxVersion === "*";
+    }
+
     let manifest = null;
     if (checkSigning || aReloadMetadata || signedDateMissing) {
       try {
@@ -3040,7 +3049,6 @@ this.XPIDatabaseReconcile = {
     if (aReloadMetadata) {
       // Avoid re-reading these properties from manifest,
       // use existing addon instead.
-      // TODO - consider re-scanning for targetApplications.
       let remove = [
         "syncGUID",
         "foreignInstall",
@@ -3051,9 +3059,13 @@ this.XPIDatabaseReconcile = {
         "applyBackgroundUpdates",
         "sourceURI",
         "releaseNotesURI",
-        "targetApplications",
         "installTelemetryInfo",
       ];
+
+      // TODO - consider re-scanning for targetApplications for other addon types.
+      if (aOldAddon.type !== "locale") {
+        remove.push("targetApplications");
+      }
 
       let props = PROP_JSON_FIELDS.filter(a => !remove.includes(a));
       copyProperties(manifest, props, aOldAddon);
