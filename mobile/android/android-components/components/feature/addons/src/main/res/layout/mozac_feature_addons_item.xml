@@ -102,7 +102,7 @@
                 android:layout_marginStart="6dp"
                 android:textSize="12sp"
                 android:layout_gravity="center_vertical"
-                tools:text="Users: 591,642" />
+                tools:text="Reviews: 591,642" />
 
         </LinearLayout>
 
