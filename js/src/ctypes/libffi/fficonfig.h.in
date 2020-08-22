@@ -39,18 +39,21 @@
    */
 #undef HAVE_ALLOCA_H
 
+/* Define if your assembler supports .ascii. */
+#undef HAVE_AS_ASCII_PSEUDO_OP
+
 /* Define if your assembler supports .cfi_* directives. */
 #undef HAVE_AS_CFI_PSEUDO_OP
 
 /* Define if your assembler supports .register. */
 #undef HAVE_AS_REGISTER_PSEUDO_OP
 
-/* Define if the compiler uses zarch features. */
-#undef HAVE_AS_S390_ZARCH
-
 /* Define if your assembler and linker support unaligned PC relative relocs.
    */
 #undef HAVE_AS_SPARC_UA_PCREL
+
+/* Define if your assembler supports .string. */
+#undef HAVE_AS_STRING_PSEUDO_OP
 
 /* Define if your assembler supports unwind section type. */
 #undef HAVE_AS_X86_64_UNWIND_SECTION_TYPE
@@ -78,9 +81,6 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
-
-/* Define to 1 if you have the `mkostemp' function. */
-#undef HAVE_MKOSTEMP
 
 /* Define to 1 if you have the `mmap' function. */
 #undef HAVE_MMAP
@@ -121,10 +121,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if GNU symbol versioning is used for libatomic. */
-#undef LIBFFI_GNU_SYMBOL_VERSIONING
-
-/* Define to the sub-directory where libtool stores uninstalled libraries. */
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
 #undef LT_OBJDIR
 
 /* Name of package */
@@ -196,11 +194,7 @@
 
 #ifdef HAVE_HIDDEN_VISIBILITY_ATTRIBUTE
 #ifdef LIBFFI_ASM
-#ifdef __APPLE__
-#define FFI_HIDDEN(name) .private_extern name
-#else
 #define FFI_HIDDEN(name) .hidden name
-#endif
 #else
 #define FFI_HIDDEN __attribute__ ((visibility ("hidden")))
 #endif

@@ -13,8 +13,12 @@ else:
     NoVisibilityFlags()
 
     CONFIGURE_DEFINE_FILES += [
-        '/js/src/ctypes/libffi/fficonfig.h',
+        '../../../js/src/ctypes/libffi/fficonfig.h',
     ]
+    GeneratedFile('../../../js/src/ctypes/libffi/include/ffi.h',
+                  script='subst_header.py',
+                  inputs=['../../../js/src/ctypes/libffi/include/ffi.h.in'])
+
     LOCAL_INCLUDES += [
         '!/js/src/ctypes/libffi',
         '!/js/src/ctypes/libffi/include',
@@ -25,7 +29,6 @@ else:
     DEFINES['TARGET'] = CONFIG['FFI_TARGET']
     DEFINES[CONFIG['FFI_TARGET']] = True
     DEFINES['FFI_NO_RAW_API'] = True
-    DEFINES['FFI_BUILDING'] = True
     DEFINES['HAVE_AS_ASCII_PSEUDO_OP'] = True
     DEFINES['HAVE_AS_STRING_PSEUDO_OP'] = True
     DEFINES['HAVE_AS_X86_64_UNWIND_SECTION_TYPE'] = True
@@ -38,7 +41,7 @@ else:
             '/js/src/ctypes/libffi/src/debug.c',
         ]
 
-    if CONFIG['OS_TARGET'] != 'WINNT':
+    if CONFIG['OS_TARGET'] not in ('WINNT', 'Darwin'):
         DEFINES['HAVE_HIDDEN_VISIBILITY_ATTRIBUTE'] = True
 
     if CONFIG['INTEL_ARCHITECTURE']:
@@ -63,74 +66,70 @@ else:
 
     # Per-platform sources and flags.
     ffi_srcs = ()
-    ffi_h_defines = []
-    if CONFIG['FFI_TARGET'] == 'X86_WIN64':
-        if CONFIG['CC_TYPE'] == 'clang-cl':
-            ffi_srcs = ('ffiw64.c',)
-            # libffi asm needs to be preprocessed for MSVC's assembler
-            GeneratedFile('win64_intel.asm', inputs=[
-                '/js/src/ctypes/libffi/src/x86/win64_intel.S',
-                '!/js/src/ctypes/libffi/fficonfig.h',
-                '!/js/src/ctypes/libffi/include/ffi.h',
-            ], script='preprocess_libffi_asm.py',
-            flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
-            SOURCES += ['!win64_intel.asm']
-        else:
-            ffi_srcs = ('ffiw64.c', 'win64.S')
+    if CONFIG['FFI_TARGET'] == 'ARM':
+        ffi_srcs = ('sysv.S', 'ffi.c')
+        if CONFIG['CC_TYPE'] == 'clang':
+            ASFLAGS += ['-no-integrated-as']
+    elif CONFIG['FFI_TARGET'] == 'AARCH64':
+        ffi_srcs = ('sysv.S', 'ffi.c')
+    elif CONFIG['FFI_TARGET'] == 'ARM64_WIN64':
+        ffi_srcs = ['ffi.c']
 
-    elif CONFIG['FFI_TARGET'] == 'X86_64':
-        ffi_srcs = ('ffi64.c', 'unix64.S', 'ffiw64.c', 'win64.S')
-
-    elif CONFIG['FFI_TARGET'] == 'X86_WIN32' and CONFIG['CC_TYPE'] == 'clang-cl':
-        ffi_srcs = ('ffi.c',)
-        # libffi asm needs to be preprocessed for MSVC's assembler
-        GeneratedFile('sysv_intel.asm', inputs=[
-            '/js/src/ctypes/libffi/src/x86/sysv_intel.S',
-            '!/js/src/ctypes/libffi/fficonfig.h',
-            '!/js/src/ctypes/libffi/include/ffi.h',
-        ], script='preprocess_libffi_asm.py',
-        flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
-        SOURCES += ['!sysv_intel.asm']
-        ASFLAGS += ['-safeseh']
-
-    elif CONFIG['FFI_TARGET'] == 'ARM_WIN64':
-        ffi_srcs = ('ffi.c',)
-
-        # libffi asm needs to be preprocessed for MSVC's assembler
         GeneratedFile(
-            'win64_armasm.asm',
+            'win64_aarch.asm',
             inputs=[
-                '/js/src/ctypes/libffi/src/aarch64/win64_armasm.S',
-                '!/js/src/ctypes/libffi/fficonfig.h',
-                '!/js/src/ctypes/libffi/include/ffi.h',
+                '/js/src/ctypes/libffi/src/aarch64/win64.asm',
+                '!../../../js/src/ctypes/libffi/fficonfig.h',
+                '!../../../js/src/ctypes/libffi/include/ffi.h',
             ],
             script='preprocess_libffi_asm.py',
             flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
-        SOURCES += ['!win64_armasm.asm']
-
-    else:
-        ffi_srcs = ('ffi.c', 'sysv.S')
-        if CONFIG['FFI_TARGET'] == 'ARM' and CONFIG['CC_TYPE'] == 'clang':
-            ASFLAGS += ['-no-integrated-as']
-
-    if CONFIG['FFI_TARGET'] in ('X86_WIN32', 'X86_DARWIN') and \
-            CONFIG['CC_TYPE'] in ('gcc', 'clang'):
-        DEFINES['SYMBOL_UNDERSCORE'] = True
-
-    if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['CPU_ARCH'] in ('arm', 'aarch64'):
-        DEFINES['FFI_EXEC_TRAMPOLINE_TABLE'] = True
-        ffi_h_defines.append('FFI_EXEC_TRAMPOLINE_TABLE')
-
-    elif CONFIG['OS_ARCH'] in ('Darwin', 'FreeBSD', 'GNU_kFreeBSD', 'OpenBSD', 'SunOS') or \
-            CONFIG['OS_TARGET'] == 'Android':
+        SOURCES += ['!win64_aarch.asm']
+    elif CONFIG['FFI_TARGET'] == 'X86':
+        ffi_srcs = ('ffi.c', 'sysv.S', 'win32.S')
+    elif CONFIG['FFI_TARGET'] == 'X86_64':
+        ffi_srcs = ('ffi64.c', 'unix64.S', 'ffi.c', 'sysv.S')
+    elif CONFIG['FFI_TARGET'] == 'X86_WIN32':
+        ffi_srcs = ['ffi.c']
+        # MinGW Build for 32 bit
+        if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
+            DEFINES['SYMBOL_UNDERSCORE'] = True
+            ffi_srcs += ['win32.S']
+        else:
+            # libffi asm needs to be preprocessed for MSVC
+            GeneratedFile('win32.asm', inputs=[
+                '/js/src/ctypes/libffi/src/x86/win32.S',
+                '!../../../js/src/ctypes/libffi/fficonfig.h',
+                '!../../../js/src/ctypes/libffi/include/ffi.h',
+            ], script='preprocess_libffi_asm.py',
+            flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
+            SOURCES += ['!win32.asm']
+            ASFLAGS += ['-safeseh']
+    elif CONFIG['FFI_TARGET'] == 'X86_WIN64':
+        ffi_srcs = ['ffi.c']
+        if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
+            ffi_srcs += ['win64.S']
+        else:
+            # libffi asm needs to be preprocessed for MSVC
+            GeneratedFile(
+                'win64.asm',
+                inputs=[
+                    '/js/src/ctypes/libffi/src/x86/win64.S',
+                    '!../../../js/src/ctypes/libffi/fficonfig.h',
+                    '!../../../js/src/ctypes/libffi/include/ffi.h',
+                ], script='preprocess_libffi_asm.py',
+                flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
+            SOURCES += ['!win64.asm']
+    elif CONFIG['FFI_TARGET'] == 'X86_DARWIN':
         DEFINES['FFI_MMAP_EXEC_WRIT'] = True
+        if CONFIG['CPU_ARCH'] == 'x86':
+            ffi_srcs = ('ffi.c', 'darwin.S', 'ffi64.c', 'darwin64.S',
+                        'win32.S')
+            DEFINES['SYMBOL_UNDERSCORE'] = True
+        else:
+            ffi_srcs = ('ffi.c', 'darwin.S', 'ffi64.c', 'darwin64.S')
 
     SOURCES += [
         '/js/src/ctypes/libffi/src/%s/%s' % (CONFIG['FFI_TARGET_DIR'], s)
         for s in sorted(ffi_srcs)
     ]
-
-    GeneratedFile('/js/src/ctypes/libffi/include/ffi.h',
-                  script='subst_header.py',
-                  inputs=['/js/src/ctypes/libffi/include/ffi.h.in'],
-                  flags=ffi_h_defines)

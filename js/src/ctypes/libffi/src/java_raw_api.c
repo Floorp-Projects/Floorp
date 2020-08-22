@@ -39,7 +39,7 @@
 #include <ffi_common.h>
 #include <stdlib.h>
 
-#if !defined(NO_JAVA_RAW_API)
+#if !defined(NO_JAVA_RAW_API) && !defined(FFI_NO_RAW_API)
 
 size_t
 ffi_java_raw_size (ffi_cif *cif)
@@ -59,9 +59,6 @@ ffi_java_raw_size (ffi_cif *cif)
 	  break;
 	case FFI_TYPE_STRUCT:
 	  /* No structure parameters in Java.	*/
-	  abort();
-	case FFI_TYPE_COMPLEX:
-	  /* Not supported yet.  */
 	  abort();
 	default:
 	  result += FFI_SIZEOF_JAVA_RAW;
@@ -107,14 +104,10 @@ ffi_java_raw_to_ptrarray (ffi_cif *cif, ffi_java_raw *raw, void **args)
 	  *args = (void*) &(raw++)->ptr;
 	  break;
 
-	case FFI_TYPE_COMPLEX:
-	  /* Not supported yet.  */
-	  abort();
-
 	default:
 	  *args = raw;
 	  raw +=
-	    FFI_ALIGN ((*tp)->size, sizeof(ffi_java_raw)) / sizeof(ffi_java_raw);
+	    ALIGN ((*tp)->size, sizeof(ffi_java_raw)) / sizeof(ffi_java_raw);
 	}
     }
 
@@ -133,16 +126,13 @@ ffi_java_raw_to_ptrarray (ffi_cif *cif, ffi_java_raw *raw, void **args)
 	  *args = (void*) raw;
 	  raw += 2;
 	  break;
-	case FFI_TYPE_COMPLEX:
-	  /* Not supported yet.  */
-	  abort();
 	default:
 	  *args = (void*) raw++;
       }
 #else /* FFI_SIZEOF_JAVA_RAW != 8 */
 	*args = (void*) raw;
 	raw +=
-	  FFI_ALIGN ((*tp)->size, sizeof(ffi_java_raw)) / sizeof(ffi_java_raw);
+	  ALIGN ((*tp)->size, sizeof(ffi_java_raw)) / sizeof(ffi_java_raw);
 #endif /* FFI_SIZEOF_JAVA_RAW == 8 */
     }
 
@@ -234,7 +224,7 @@ ffi_java_ptrarray_to_raw (ffi_cif *cif, void **args, ffi_java_raw *raw)
 #else
 	  memcpy ((void*) raw->data, (void*)*args, (*tp)->size);
 	  raw +=
-	    FFI_ALIGN ((*tp)->size, sizeof(ffi_java_raw)) / sizeof(ffi_java_raw);
+	    ALIGN ((*tp)->size, sizeof(ffi_java_raw)) / sizeof(ffi_java_raw);
 #endif
 	}
     }
@@ -264,10 +254,6 @@ ffi_java_rvalue_to_raw (ffi_cif *cif, void *rvalue)
       *(SINT64 *)rvalue <<= 32;
       break;
 
-    case FFI_TYPE_COMPLEX:
-      /* Not supported yet.  */
-      abort();
-
     default:
       break;
     }
@@ -292,10 +278,6 @@ ffi_java_raw_to_rvalue (ffi_cif *cif, void *rvalue)
     case FFI_TYPE_INT:
       *(SINT64 *)rvalue >>= 32;
       break;
-
-    case FFI_TYPE_COMPLEX:
-      /* Not supported yet.  */
-      abort();
 
     default:
       break;
@@ -371,4 +353,4 @@ ffi_prep_java_raw_closure (ffi_java_raw_closure* cl,
 
 #endif /* FFI_CLOSURES */
 #endif /* !FFI_NATIVE_RAW_API */
-#endif /* !NO_JAVA_RAW_API */
+#endif /* !FFI_NO_RAW_API */

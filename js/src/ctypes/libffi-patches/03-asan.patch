@@ -1,12 +1,12 @@
 diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
-index dec331c958c21..b7c7d5218eb14 100644
+index 5a5e043..0594119 100644
 --- a/js/src/ctypes/libffi/src/x86/ffi64.c
 +++ b/js/src/ctypes/libffi/src/x86/ffi64.c
-@@ -549,16 +549,26 @@ ffi_prep_cif_machdep (ffi_cif *cif)
-     flags |= UNIX64_FLAG_XMM_ARGS;
- 
+@@ -414,16 +414,26 @@ ffi_prep_cif_machdep (ffi_cif *cif)
+   if (ssecount)
+     flags |= 1 << 11;
    cif->flags = flags;
-   cif->bytes = (unsigned) FFI_ALIGN (bytes, 8);
+   cif->bytes = (unsigned)ALIGN (bytes, 8);
  
    return FFI_OK;
  }
@@ -21,11 +21,11 @@ index dec331c958c21..b7c7d5218eb14 100644
 +#ifdef __SANITIZE_ADDRESS__
 +__attribute__((noinline,no_sanitize_address))
 +#endif
- static void
- ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
- 	      void **avalue, void *closure)
+ void
+ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
  {
    enum x86_64_reg_class classes[MAX_CLASSES];
    char *stack, *argp;
    ffi_type **arg_types;
-   int gprcount, ssecount, ngpr, nsse, i, avn, flags;
+   int gprcount, ssecount, ngpr, nsse, i, avn;
+   _Bool ret_in_memory;

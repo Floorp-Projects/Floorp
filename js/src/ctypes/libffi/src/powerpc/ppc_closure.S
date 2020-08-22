@@ -33,14 +33,13 @@
 
 #ifndef POWERPC64
 
-FFI_HIDDEN(ffi_closure_SYSV)
 ENTRY(ffi_closure_SYSV)
-	.cfi_startproc
+.LFB1:
 	stwu %r1,-144(%r1)
-	.cfi_def_cfa_offset 144
+.LCFI0:
 	mflr %r0
+.LCFI1:
 	stw %r0,148(%r1)
-	.cfi_offset 65, 4
 
 # we want to build up an areas for the parameters passed
 # in registers (both floating point and integer)
@@ -49,17 +48,6 @@ ENTRY(ffi_closure_SYSV)
 	stw   %r3, 16(%r1)
 	stw   %r4, 20(%r1)
 	stw   %r5, 24(%r1)
-
-	# set up registers for the routine that does the work
-
-	# closure->cif
-	lwz %r3,FFI_TRAMPOLINE_SIZE(%r11)
-	# closure->fun
-	lwz %r4,FFI_TRAMPOLINE_SIZE+4(%r11)
-	# closure->user_data
-	lwz %r5,FFI_TRAMPOLINE_SIZE+8(%r11)
-
-.Ldoclosure:
 	stw   %r6, 28(%r1)
 	stw   %r7, 32(%r1)
 	stw   %r8, 36(%r1)
@@ -78,18 +66,23 @@ ENTRY(ffi_closure_SYSV)
 	stfd  %f8, 104(%r1)
 #endif
 
-	# pointer to the result storage
-	addi %r6,%r1,112
+	# set up registers for the routine that actually does the work
+	# get the context pointer from the trampoline
+	mr %r3,%r11
 
-	# pointer to the saved gpr registers
-	addi %r7,%r1,16
+	# now load up the pointer to the result storage
+	addi %r4,%r1,112
 
-	# pointer to the saved fpr registers
-	addi %r8,%r1,48
+	# now load up the pointer to the saved gpr registers
+	addi %r5,%r1,16
 
-	# pointer to the outgoing parameter save area in the previous frame
+	# now load up the pointer to the saved fpr registers */
+	addi %r6,%r1,48
+
+	# now load up the pointer to the outgoing parameter
+	# stack in the previous frame
 	# i.e. the previous frame pointer + 8
-	addi %r9,%r1,152
+	addi %r7,%r1,152
 
 	# make the call
 	bl ffi_closure_helper_SYSV@local
@@ -108,6 +101,7 @@ ENTRY(ffi_closure_SYSV)
 	add %r3,%r3,%r4		# add contents of table to table address
 	mtctr %r3
 	bctr			# jump to it
+.LFE1:
 
 # Each of the ret_typeX code fragments has to be exactly 16 bytes long
 # (4 instructions). For cache effectiveness we align to a 16 byte boundary
@@ -117,9 +111,7 @@ ENTRY(ffi_closure_SYSV)
 .Lret_type0:
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 	nop
 
 # case FFI_TYPE_INT
@@ -127,33 +119,31 @@ ENTRY(ffi_closure_SYSV)
 	mtlr %r0
 .Lfinish:
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_FLOAT
 #ifndef __NO_FPRS__
 	lfs %f1,112+0(%r1)
-#else
-	nop
-#endif
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
+#else
+	nop
+	nop
+	nop
+#endif
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_DOUBLE
 #ifndef __NO_FPRS__
 	lfd %f1,112+0(%r1)
-#else
-	nop
-#endif
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
+#else
+	nop
+	nop
+	nop
+#endif
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_LONGDOUBLE
 #ifndef __NO_FPRS__
@@ -162,12 +152,10 @@ ENTRY(ffi_closure_SYSV)
 	mtlr %r0
 	b .Lfinish
 #else
-	mtlr %r0
-	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
-	blr
-	.cfi_def_cfa_offset 144
 	nop
+	nop
+	nop
+	blr
 #endif
 
 # case FFI_TYPE_UINT8
@@ -178,9 +166,7 @@ ENTRY(ffi_closure_SYSV)
 #endif
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_SINT8
 #ifdef __LITTLE_ENDIAN__
@@ -200,9 +186,7 @@ ENTRY(ffi_closure_SYSV)
 #endif
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_SINT16
 #ifdef __LITTLE_ENDIAN__
@@ -212,25 +196,19 @@ ENTRY(ffi_closure_SYSV)
 #endif
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_UINT32
 	lwz %r3,112+0(%r1)
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_SINT32
 	lwz %r3,112+0(%r1)
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_UINT64
 	lwz %r3,112+0(%r1)
@@ -247,18 +225,14 @@ ENTRY(ffi_closure_SYSV)
 # case FFI_TYPE_STRUCT
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 	nop
 
 # case FFI_TYPE_POINTER
 	lwz %r3,112+0(%r1)
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_TYPE_UINT128
 	lwz %r3,112+0(%r1)
@@ -271,26 +245,20 @@ ENTRY(ffi_closure_SYSV)
 	lbz %r3,112+0(%r1)
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_SYSV_TYPE_SMALL_STRUCT + 2. Two byte struct.
 	lhz %r3,112+0(%r1)
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_SYSV_TYPE_SMALL_STRUCT + 3. Three byte struct.
 	lwz %r3,112+0(%r1)
 #ifdef __LITTLE_ENDIAN__
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 #else
 	srwi %r3,%r3,8
 	mtlr %r0
@@ -301,9 +269,7 @@ ENTRY(ffi_closure_SYSV)
 	lwz %r3,112+0(%r1)
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 
 # case FFI_SYSV_TYPE_SMALL_STRUCT + 5. Five byte struct.
 	lwz %r3,112+0(%r1)
@@ -353,43 +319,64 @@ ENTRY(ffi_closure_SYSV)
 	or %r4,%r6,%r4
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_def_cfa_offset 144
 #endif
 
 .Luint128:
 	lwz %r6,112+12(%r1)
 	mtlr %r0
 	addi %r1,%r1,144
-	.cfi_def_cfa_offset 0
 	blr
-	.cfi_endproc
+	
 END(ffi_closure_SYSV)
 
-
-FFI_HIDDEN(ffi_go_closure_sysv)
-ENTRY(ffi_go_closure_sysv)
-	.cfi_startproc
-	stwu %r1,-144(%r1)
-	.cfi_def_cfa_offset 144
-	mflr %r0
-	stw %r0,148(%r1)
-	.cfi_offset 65, 4
-
-	stw   %r3, 16(%r1)
-	stw   %r4, 20(%r1)
-	stw   %r5, 24(%r1)
-
-	# closure->cif
-	lwz %r3,4(%r11)
-	# closure->fun
-	lwz %r4,8(%r11)
-	# user_data
-	mr %r5,%r11
-	b .Ldoclosure
-	.cfi_endproc
-END(ffi_go_closure_sysv)
+	.section	".eh_frame",EH_FRAME_FLAGS,@progbits
+.Lframe1:
+	.4byte	.LECIE1-.LSCIE1	 # Length of Common Information Entry
+.LSCIE1:
+	.4byte	0x0	 # CIE Identifier Tag
+	.byte	0x1	 # CIE Version
+#if defined _RELOCATABLE || defined __PIC__
+	.ascii "zR\0"	 # CIE Augmentation
+#else
+	.ascii "\0"	 # CIE Augmentation
+#endif
+	.uleb128 0x1	 # CIE Code Alignment Factor
+	.sleb128 -4	 # CIE Data Alignment Factor
+	.byte	0x41	 # CIE RA Column
+#if defined _RELOCATABLE || defined __PIC__
+	.uleb128 0x1	 # Augmentation size
+	.byte	0x1b	 # FDE Encoding (pcrel sdata4)
+#endif
+	.byte	0xc	 # DW_CFA_def_cfa
+	.uleb128 0x1
+	.uleb128 0x0
+	.align 2
+.LECIE1:
+.LSFDE1:
+	.4byte	.LEFDE1-.LASFDE1	 # FDE Length
+.LASFDE1:
+	.4byte	.LASFDE1-.Lframe1	 # FDE CIE offset
+#if defined _RELOCATABLE || defined __PIC__
+	.4byte	.LFB1-.	 # FDE initial location
+#else
+	.4byte	.LFB1	 # FDE initial location
+#endif
+	.4byte	.LFE1-.LFB1	 # FDE address range
+#if defined _RELOCATABLE || defined __PIC__
+	.uleb128 0x0	 # Augmentation size
+#endif
+	.byte	0x4	 # DW_CFA_advance_loc4
+	.4byte	.LCFI0-.LFB1
+	.byte	0xe	 # DW_CFA_def_cfa_offset
+	.uleb128 144
+	.byte	0x4	 # DW_CFA_advance_loc4
+	.4byte	.LCFI1-.LCFI0
+	.byte	0x11	 # DW_CFA_offset_extended_sf
+	.uleb128 0x41
+	.sleb128 -1
+	.align 2
+.LEFDE1:
 
 #if defined __ELF__ && defined __linux__
 	.section	.note.GNU-stack,"",@progbits

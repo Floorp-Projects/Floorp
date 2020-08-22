@@ -1,0 +1,134 @@
+Modifications to upstream libffi needed for the Mozilla build:
+* Clear INFO_DEPS so that builds don't fail when makeinfo isn't present.
+  - This can be removed if https://github.com/atgreen/libffi/issues/111 is fixed.
+* Various workarounds for pymake bugs.
+  - Once pymake support is fully deprecated, hunks 2-4 be safely removed.
+
+diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
+--- a/js/src/ctypes/libffi/Makefile.in
++++ b/js/src/ctypes/libffi/Makefile.in
+@@ -358,17 +358,17 @@ am__v_TEXI2PDF_1 =
+ AM_V_texinfo = $(am__v_texinfo_@AM_V@)
+ am__v_texinfo_ = $(am__v_texinfo_@AM_DEFAULT_V@)
+ am__v_texinfo_0 = -q
+ am__v_texinfo_1 = 
+ AM_V_texidevnull = $(am__v_texidevnull_@AM_V@)
+ am__v_texidevnull_ = $(am__v_texidevnull_@AM_DEFAULT_V@)
+ am__v_texidevnull_0 = > /dev/null
+ am__v_texidevnull_1 = 
+-INFO_DEPS = $(srcdir)/doc/libffi.info
++INFO_DEPS =
+ am__TEXINFO_TEX_DIR = $(srcdir)
+ DVIS = doc/libffi.dvi
+ PDFS = doc/libffi.pdf
+ PSS = doc/libffi.ps
+ HTMLS = doc/libffi.html
+ TEXINFOS = doc/libffi.texi
+ TEXI2DVI = texi2dvi
+ TEXI2PDF = $(TEXI2DVI) --pdf --batch
+@@ -758,18 +758,20 @@ Makefile: $(srcdir)/Makefile.in $(top_bu
+ 
+ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
+ 	$(am__cd) $(srcdir) && $(AUTOCONF)
+ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
+ 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+ $(am__aclocal_m4_deps):
+ 
+ fficonfig.h: stamp-h1
+-	@test -f $@ || rm -f stamp-h1
+-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) stamp-h1
++	@if test ! -f $@; then \
++	  rm -f stamp-h1; \
++	  $(MAKE) $(AM_MAKEFLAGS) stamp-h1; \
++	else :; fi
+ 
+ stamp-h1: $(srcdir)/fficonfig.h.in $(top_builddir)/config.status
+ 	@rm -f stamp-h1
+ 	cd $(top_builddir) && $(SHELL) ./config.status fficonfig.h
+ $(srcdir)/fficonfig.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
+ 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
+ 	rm -f stamp-h1
+ 	touch $@
+@@ -1292,57 +1294,57 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/freebsd.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/sysv.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/unix64.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/win32.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/win64.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/xtensa/$(DEPDIR)/ffi.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/xtensa/$(DEPDIR)/sysv.Plo@am__quote@
+ 
+-.S.o:
++%.o: %.S
+ @am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+ @am__fastdepCCAS_TRUE@	$(CPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CPPASCOMPILE) -c -o $@ $<
+ 
+-.S.obj:
++%.obj: %.S
+ @am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+ @am__fastdepCCAS_TRUE@	$(CPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+ @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CPPASCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+ 
+-.S.lo:
++%.lo: %.S
+ @am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+ @am__fastdepCCAS_TRUE@	$(LTCPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(LTCPPASCOMPILE) -c -o $@ $<
+ 
+-.c.o:
++%.o: %.c
+ @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+ @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
+ 
+-.c.obj:
++%.obj: %.c
+ @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+ @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+ @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+ 
+-.c.lo:
++%.lo: %.c
+ @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+ @am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+ @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+ 
+ mostlyclean-libtool:
+@@ -1443,17 +1445,17 @@ doc/libffi.html: doc/libffi.texi $(srcdi
+ 	-@rm -f vti.tmp
+ 	@cp $(srcdir)/doc/version.texi $@
+ 
+ mostlyclean-vti:
+ 	-rm -f vti.tmp
+ 
+ maintainer-clean-vti:
+ @MAINTAINER_MODE_TRUE@	-rm -f $(srcdir)/doc/stamp-vti $(srcdir)/doc/version.texi
+-.dvi.ps:
++%.ps: %.dvi
+ 	$(AM_V_DVIPS)TEXINPUTS="$(am__TEXINFO_TEX_DIR)$(PATH_SEPARATOR)$$TEXINPUTS" \
+ 	$(DVIPS) $(AM_V_texinfo) -o $@ $<
+ 
+ uninstall-dvi-am:
+ 	@$(NORMAL_UNINSTALL)
+ 	@list='$(DVIS)'; test -n "$(dvidir)" || list=; \
+ 	for p in $$list; do \
+ 	  $(am__strip_dir) \

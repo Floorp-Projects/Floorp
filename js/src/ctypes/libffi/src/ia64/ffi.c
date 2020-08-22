@@ -220,8 +220,8 @@ hfa_element_type (ffi_type *type, int nested)
 
 /* Perform machine dependent cif processing. */
 
-static ffi_status
-ffi_prep_cif_machdep_core(ffi_cif *cif)
+ffi_status
+ffi_prep_cif_machdep(ffi_cif *cif)
 {
   int flags;
 
@@ -269,22 +269,6 @@ ffi_prep_cif_machdep_core(ffi_cif *cif)
   cif->flags = flags;
 
   return FFI_OK;
-}
-
-ffi_status
-ffi_prep_cif_machdep(ffi_cif *cif)
-{
-  cif->nfixedargs = cif->nargs;
-  return ffi_prep_cif_machdep_core(cif);
-}
-
-ffi_status
-ffi_prep_cif_machdep_var(ffi_cif *cif,
-			 unsigned int nfixedargs,
-			 unsigned int ntotalargs MAYBE_UNUSED)
-{
-  cif->nfixedargs = nfixedargs;
-  return ffi_prep_cif_machdep_core(cif);
 }
 
 extern int ffi_call_unix (struct ia64_args *, PTR64, void (*)(void), UINT64);
@@ -470,11 +454,10 @@ ffi_closure_unix_inner (ffi_closure *closure, struct ia64_args *stack,
   ffi_cif *cif;
   void **avalue;
   ffi_type **p_arg;
-  long i, avn, gpcount, fpcount, nfixedargs;
+  long i, avn, gpcount, fpcount;
 
   cif = closure->cif;
   avn = cif->nargs;
-  nfixedargs = cif->nfixedargs;
   avalue = alloca (avn * sizeof (void *));
 
   /* If the structure return value is passed in memory get that location
@@ -485,7 +468,6 @@ ffi_closure_unix_inner (ffi_closure *closure, struct ia64_args *stack,
   gpcount = fpcount = 0;
   for (i = 0, p_arg = cif->arg_types; i < avn; i++, p_arg++)
     {
-      int named = i < nfixedargs;
       switch ((*p_arg)->type)
 	{
 	case FFI_TYPE_SINT8:
@@ -509,7 +491,7 @@ ffi_closure_unix_inner (ffi_closure *closure, struct ia64_args *stack,
 	  break;
 
 	case FFI_TYPE_FLOAT:
-	  if (named && gpcount < 8 && fpcount < 8)
+	  if (gpcount < 8 && fpcount < 8)
 	    {
 	      fpreg *addr = &stack->fp_regs[fpcount++];
 	      float result;
@@ -523,7 +505,7 @@ ffi_closure_unix_inner (ffi_closure *closure, struct ia64_args *stack,
 	  break;
 
 	case FFI_TYPE_DOUBLE:
-	  if (named && gpcount < 8 && fpcount < 8)
+	  if (gpcount < 8 && fpcount < 8)
 	    {
 	      fpreg *addr = &stack->fp_regs[fpcount++];
 	      double result;
@@ -539,7 +521,7 @@ ffi_closure_unix_inner (ffi_closure *closure, struct ia64_args *stack,
 	case FFI_TYPE_LONGDOUBLE:
 	  if (gpcount & 1)
 	    gpcount++;
-	  if (LDBL_MANT_DIG == 64 && named && gpcount < 8 && fpcount < 8)
+	  if (LDBL_MANT_DIG == 64 && gpcount < 8 && fpcount < 8)
 	    {
 	      fpreg *addr = &stack->fp_regs[fpcount++];
 	      __float80 result;
