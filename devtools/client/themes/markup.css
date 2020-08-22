@@ -11,7 +11,6 @@
   --markup-outline: var(--theme-splitter-color);
   --markup-drag-line: var(--grey-40);
   --markup-drop-line: var(--blue-55);
-  --markup-overflow-causing-background-color: rgba(128, 0, 215, 0.15);
 }
 
 .theme-dark:root {
@@ -22,7 +21,6 @@
   --markup-outline: var(--theme-selection-background);
   --markup-drag-line: var(--grey-55);
   --markup-drop-line: var(--blue-50);
-  --markup-overflow-causing-background-color: rgba(148, 0, 255, 0.38);
 }
 
 * {
@@ -309,10 +307,6 @@ ul.children + .tag-line::before {
  * expanded (it can be if it has pseudo-elements attached) */
 .child.collapsed > .tag-line .void-element .close {
   display: none;
-}
-
-.tag-line .tag-state.overflow-causing-highlighted:not(.theme-selected) {
-  background-color: var(--markup-overflow-causing-background-color);
 }
 
 .closing-bracket {
