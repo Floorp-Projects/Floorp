@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 #include "nsDeque.h"
 #include "nsCRT.h"
+#include "mozilla/RefPtr.h"
 #include <stdio.h>
 #include <functional>
 #include <type_traits>
@@ -54,6 +55,53 @@ class ForEachAdder : public nsDequeFunctor<int> {
  public:
   int GetSum() { return sum; }
 };
+
+static uint32_t sFreeCount = 0;
+
+class RefCountedClass {
+ public:
+  RefCountedClass() : mRefCnt(0), mVal(0) {}
+
+  ~RefCountedClass() { ++sFreeCount; }
+
+  NS_METHOD_(MozExternalRefCountType) AddRef() {
+    mRefCnt++;
+    return mRefCnt;
+  }
+  NS_METHOD_(MozExternalRefCountType) Release() {
+    NS_ASSERTION(mRefCnt > 0, "");
+    mRefCnt--;
+    if (mRefCnt == 0) {
+      delete this;
+    }
+    return 0;
+  }
+
+  inline uint32_t GetRefCount() const { return mRefCnt; }
+
+  inline void SetVal(int aVal) { mVal = aVal; }
+
+  inline int GetVal() const { return mVal; }
+
+ private:
+  uint32_t mRefCnt;
+  int mVal;
+};
+
+class ForEachRefPtr : public nsDequeFunctor<RefCountedClass> {
+  virtual void operator()(RefCountedClass* aObject) {
+    if (aObject) {
+      aObject->SetVal(mVal);
+    }
+  }
+
+ private:
+  int mVal = 0;
+
+ public:
+  explicit ForEachRefPtr(int aVal) : mVal(aVal) {}
+};
+
 }  // namespace TestNsDeque
 
 using namespace TestNsDeque;
@@ -469,4 +517,78 @@ TEST(NsDeque, TestRangeFor)
         << "Range-for should iterate over values in test '" << test.description
         << "'";
   }
+}
+
+TEST(NsDeque, RefPtrDeque)
+{
+  sFreeCount = 0;
+  nsRefPtrDeque<RefCountedClass> deque;
+  RefPtr<RefCountedClass> ptr1 = new RefCountedClass();
+  EXPECT_EQ(1u, ptr1->GetRefCount());
+
+  deque.Push(ptr1);
+  EXPECT_EQ(2u, ptr1->GetRefCount());
+
+  {
+    auto* peekPtr1 = deque.Peek();
+    EXPECT_TRUE(peekPtr1);
+    EXPECT_EQ(2u, ptr1->GetRefCount());
+    EXPECT_EQ(1u, deque.GetSize());
+  }
+
+  {
+    RefPtr<RefCountedClass> ptr2 = new RefCountedClass();
+    deque.PushFront(ptr2.forget());
+    EXPECT_TRUE(deque.PeekFront());
+    ptr2 = deque.PopFront();
+    EXPECT_EQ(ptr1, deque.PeekFront());
+  }
+  EXPECT_EQ(1u, sFreeCount);
+
+  {
+    RefPtr<RefCountedClass> popPtr1 = deque.Pop();
+    EXPECT_TRUE(popPtr1);
+    EXPECT_EQ(2u, ptr1->GetRefCount());
+    EXPECT_EQ(0u, deque.GetSize());
+  }
+
+  EXPECT_EQ(1u, ptr1->GetRefCount());
+  deque.Erase();
+  EXPECT_EQ(0u, deque.GetSize());
+  ptr1 = nullptr;
+  EXPECT_EQ(2u, sFreeCount);
+}
+
+TEST(NsDeque, RefPtrDequeTestIterator)
+{
+  sFreeCount = 0;
+  nsRefPtrDeque<RefCountedClass> deque;
+  const uint32_t cnt = 10;
+  for (uint32_t i = 0; i < cnt; ++i) {
+    RefPtr<RefCountedClass> ptr = new RefCountedClass();
+    deque.Push(ptr.forget());
+    EXPECT_TRUE(deque.Peek());
+  }
+  EXPECT_EQ(cnt, deque.GetSize());
+
+  int val = 100;
+  ForEachRefPtr functor(val);
+  deque.ForEach(functor);
+
+  uint32_t pos = 0;
+  for (nsRefPtrDeque<RefCountedClass>::ConstIterator it = deque.begin();
+       it != deque.end(); ++it) {
+    RefPtr<RefCountedClass> cur = *it;
+    EXPECT_TRUE(cur);
+    EXPECT_EQ(cur, deque.ObjectAt(pos++));
+    EXPECT_EQ(val, cur->GetVal());
+  }
+
+  EXPECT_EQ(deque.ObjectAt(0), deque.PeekFront());
+  EXPECT_EQ(deque.ObjectAt(cnt - 1), deque.Peek());
+
+  deque.Erase();
+
+  EXPECT_EQ(0u, deque.GetSize());
+  EXPECT_EQ(cnt, sFreeCount);
 }

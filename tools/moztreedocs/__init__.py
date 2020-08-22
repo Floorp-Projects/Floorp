@@ -14,6 +14,7 @@ from mozbuild.util import memoize
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
 from mozpack.manifests import InstallManifest
+from pathlib import PurePath
 
 import frontmatter
 import sphinx
@@ -109,7 +110,8 @@ class _SphinxManager(object):
             finder = FileFinder(full)
             dirs = {os.path.dirname(f[0]) for f in finder.find('**')}
 
-            excludes = {d for d in dirs if d.endswith('test')}
+            test_dirs = {"test", "tests"}
+            excludes = {d for d in dirs if set(PurePath(d).parts) & test_dirs}
 
             args = list(base_args)
             args.append(full)
