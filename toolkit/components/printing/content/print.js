@@ -335,6 +335,10 @@ var PrintEventHandler = {
       nameId: "printui-destination-pdf-label",
       value: PrintUtils.SAVE_TO_PDF_PRINTER,
     };
+    printersByName[PrintUtils.SAVE_TO_PDF_PRINTER] = {
+      supportsColor: true,
+      name: PrintUtils.SAVE_TO_PDF_PRINTER,
+    };
 
     if (lastUsedPrinterName == PrintUtils.SAVE_TO_PDF_PRINTER) {
       lastUsedPrinter = saveToPdfPrinter;
@@ -634,7 +638,17 @@ customElements.define("destination-picker", DestinationPicker, {
 class ColorModePicker extends PrintSettingSelect {
   update(settings) {
     let value = settings[this.settingName];
+    let supportsColor = settings.supportsColor;
+    let forceChange;
+    if (value && !supportsColor) {
+      forceChange = true;
+      value = false;
+    }
     this.value = value ? "color" : "bw";
+    this.options.namedItem("color-option").hidden = !supportsColor;
+    if (forceChange) {
+      this.dispatchEvent(new Event("change", { bubbles: true }));
+    }
   }
 
   handleEvent(e) {
@@ -643,9 +657,6 @@ class ColorModePicker extends PrintSettingSelect {
       this.dispatchSettingsChange({
         [this.settingName]: this.value == "color",
       });
-    } else if (e.type == "available-destinations") {
-      this.setOptions(e.detail);
-      this.required = true;
     }
   }
 }
