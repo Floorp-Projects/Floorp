@@ -11,6 +11,9 @@
   --badge-hover-background-color: #DFDFE8;
   --badge-interactive-background-color: var(--grey-20);
   --badge-interactive-color: var(--grey-90);
+  --badge-scrollable-color: #8000D7;
+  --badge-scrollable-background-color: #FFFFFF;
+  --badge-scrollable-active-background-color: #8000D7;
 }
 
 .theme-dark:root {
@@ -22,6 +25,8 @@
   --badge-hover-background-color: var(--grey-80);
   --badge-interactive-background-color: var(--grey-70);
   --badge-interactive-color: var(--grey-30);
+  --badge-scrollable-color: #B98EFF;
+  --badge-scrollable-background-color: transparent;
 }
 
 /* Inspector badge */
@@ -73,5 +78,16 @@
 .inspector-badge.interactive.active {
   background-color: var(--badge-active-background-color);
   border-color: var(--badge-active-border-color);
+  color: var(--theme-selection-color);
+}
+
+.inspector-badge.interactive.scrollable-badge {
+  background-color: var(--badge-scrollable-background-color);
+  border-color: var(--badge-scrollable-color);
+  color: var(--badge-scrollable-color);
+}
+
+.inspector-badge.interactive.scrollable-badge.active {
+  background-color: var(--badge-scrollable-active-background-color);
   color: var(--theme-selection-color);
 }
