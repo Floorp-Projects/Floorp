@@ -64,7 +64,8 @@ def check_for_crashes(dump_directory,
 
     `stackwalk_binary` should be a path to the minidump_stackwalk binary.
     If `stackwalk_binary` is not set, the MINIDUMP_STACKWALK environment variable
-    will be checked and its value used if it is not empty.
+    will be checked and its value used if it is not empty. If neither is set, then
+    ~/.mozbuild/minidump_stackwalk/minidump_stackwalk will be used.
 
     `symbols_path` should be a path to a directory containing symbols to use for
     dump processing. This can either be a path to a directory containing Breakpad-format
@@ -192,7 +193,9 @@ class CrashInfo(object):
                            the MINIDUMP_SAVE_PATH environment variable will be used.
     :param stackwalk_binary: Path to the minidump_stackwalk binary. If this is None,
                              the MINIDUMP_STACKWALK environment variable will be used
-                             as the path to the minidump binary."""
+                             as the path to the minidump binary. If neither is set,
+                             then ~/.mozbuild/minidump_stackwalk/minidump_stackwalk
+                             will be used."""
 
     def __init__(self, dump_directory, symbols_path, dump_save_path=None,
                  stackwalk_binary=None):
@@ -206,6 +209,12 @@ class CrashInfo(object):
 
         if stackwalk_binary is None:
             stackwalk_binary = os.environ.get('MINIDUMP_STACKWALK', None)
+        if stackwalk_binary is None:
+            # Location of minidump_stackwalk installed by "mach bootstrap".
+            stackwalk_binary = os.path.expanduser(
+                "~/.mozbuild/minidump_stackwalk/minidump_stackwalk")
+            if mozinfo.isWin and not stackwalk_binary.endswith('.exe'):
+                stackwalk_binary += '.exe'
         self.stackwalk_binary = stackwalk_binary
 
         self.logger = get_logger()
@@ -346,9 +355,12 @@ class CrashInfo(object):
             if not self.symbols_path:
                 errors.append("No symbols path given, can't process dump.")
             if not self.stackwalk_binary:
-                errors.append("MINIDUMP_STACKWALK not set, can't process dump.")
+                errors.append("MINIDUMP_STACKWALK not set, can't process dump. Either set "
+                              "MINIDUMP_STACKWALK or use mach bootstrap --no-system "
+                              "to install minidump_stackwalk.")
             elif self.stackwalk_binary and not os.path.exists(self.stackwalk_binary):
-                errors.append("MINIDUMP_STACKWALK binary not found: %s" % self.stackwalk_binary)
+                errors.append("MINIDUMP_STACKWALK binary not found: %s. Use mach bootstrap "
+                              "--no-system to install minidump_stackwalk." % self.stackwalk_binary)
             elif not os.access(self.stackwalk_binary, os.X_OK):
                 errors.append('This user cannot execute the MINIDUMP_STACKWALK binary.')
 
