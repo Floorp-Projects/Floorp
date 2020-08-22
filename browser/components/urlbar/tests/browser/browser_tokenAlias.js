@@ -83,6 +83,26 @@ add_task(async function restrictionCharBeforeAlias() {
   );
 });
 
+// Types a space while typing an alias to ensure we stop autofilling.
+add_task(async function spaceWhileTypingAlias() {
+  let value = ALIAS.substring(0, ALIAS.length - 1);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value,
+    selectionStart: value.length,
+    selectionEnd: value.length,
+  });
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
+
+  gURLBar.value = value + " ";
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  UrlbarTestUtils.fireInputEvent(window);
+  await searchPromise;
+
+  await assertAlias(false);
+});
+
 // Aliases are case insensitive, and the alias in the result uses the case that
 // the user typed in the input.  Make sure that searching with an alias using a
 // weird case still causes the alias to be highlighted.
