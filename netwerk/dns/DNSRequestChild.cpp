@@ -183,7 +183,8 @@ class ChildDNSByTypeRecord : public nsIDNSByTypeRecord,
   NS_DECL_NSIDNSTXTRECORD
   NS_DECL_NSIDNSHTTPSSVCRECORD
 
-  explicit ChildDNSByTypeRecord(const TypeRecordResultType& reply);
+  explicit ChildDNSByTypeRecord(const TypeRecordResultType& reply,
+                                const nsACString& aHost);
 
  private:
   virtual ~ChildDNSByTypeRecord() = default;
@@ -194,7 +195,9 @@ class ChildDNSByTypeRecord : public nsIDNSByTypeRecord,
 NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord,
                   nsIDNSTXTRecord, nsIDNSHTTPSSVCRecord)
 
-ChildDNSByTypeRecord::ChildDNSByTypeRecord(const TypeRecordResultType& reply) {
+ChildDNSByTypeRecord::ChildDNSByTypeRecord(const TypeRecordResultType& reply,
+                                           const nsACString& aHost)
+    : DNSHTTPSSVCRecordBase(aHost) {
   mResults = reply;
 }
 
@@ -402,7 +405,8 @@ bool DNSRequestSender::OnRecvLookupCompleted(const DNSRequestResponse& reply) {
     }
     case DNSRequestResponse::TIPCTypeRecord: {
       MOZ_ASSERT(mType != nsIDNSService::RESOLVE_TYPE_DEFAULT);
-      mResultRecord = new ChildDNSByTypeRecord(reply.get_IPCTypeRecord().mData);
+      mResultRecord =
+          new ChildDNSByTypeRecord(reply.get_IPCTypeRecord().mData, mHost);
       break;
     }
     default:

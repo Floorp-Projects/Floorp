@@ -199,6 +199,7 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
     bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords) {
   nsCOMPtr<nsISVCBRecord> selectedRecord;
   uint32_t recordHasNoDefaultAlpnCount = 0;
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
   for (const SVCB& record : aRecords) {
     if (record.mSvcFieldPriority == 0) {
       // In ServiceMode, the SvcPriority should never be 0.
@@ -207,6 +208,14 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
 
     if (record.NoDefaultAlpn()) {
       ++recordHasNoDefaultAlpnCount;
+    }
+
+    bool excluded = false;
+    if (NS_SUCCEEDED(dns->IsSVCDomainNameFailed(mHost, record.mSvcDomainName,
+                                                &excluded)) &&
+        excluded) {
+      // Skip if the domain name of this record was failed to connect before.
+      continue;
     }
 
     Maybe<uint16_t> port = record.GetPort();
