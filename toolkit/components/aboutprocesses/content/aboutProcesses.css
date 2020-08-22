@@ -43,31 +43,27 @@ tr {
   width: 100%;
 }
 
-/* column-pid */
-td:nth-child(1) {
-  width:  16%;
-}
 /* At least one column needs to have a flexible width,
-   so no width specified for td:nth-child(2) aka column-name*/
-
+   so no width specified for td:nth-child(1) aka column-name*/
 
 /* column-memory-resident */
-td:nth-child(3) {
-    width: 10%;
+td:nth-child(2) {
+  width:  15%;
 }
 
-/* column-cpu-user */
+/* column-cpu-total */
+td:nth-child(3) {
+    width: 15%;
+}
+
+/* column-pid */
 td:nth-child(4) {
   width: 10%;
 }
 
-/* column-cpu-kernel */
+/* column-cpu-threads */
 td:nth-child(5) {
-  width: 10%;
-}
-/* column-threads */
-td:nth-child(6) {
-  width: 2%;
+  width: 5%;
 }
 
 #process-thead > tr {

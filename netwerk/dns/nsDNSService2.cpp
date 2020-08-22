@@ -1337,6 +1337,14 @@ size_t nsDNSService::SizeOfIncludingThis(
   n += mResolver ? mResolver->SizeOfIncludingThis(mallocSizeOf) : 0;
   n += mIPv4OnlyDomains.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mLocalDomains.SizeOfExcludingThis(mallocSizeOf);
+  n += mFailedSVCDomainNames.ShallowSizeOfExcludingThis(mallocSizeOf);
+  for (auto iter = mFailedSVCDomainNames.ConstIter(); !iter.Done();
+       iter.Next()) {
+    n += iter.UserData()->ShallowSizeOfExcludingThis(mallocSizeOf);
+    for (const auto& name : *iter.UserData()) {
+      n += name.SizeOfExcludingThisIfUnshared(mallocSizeOf);
+    }
+  }
   return n;
 }
 
@@ -1349,5 +1357,37 @@ nsDNSService::CollectReports(nsIHandleReportCallback* aHandleReport,
                      SizeOfIncludingThis(DNSServiceMallocSizeOf),
                      "Memory used for the DNS service.");
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSService::ReportFailedSVCDomainName(const nsACString& aOwnerName,
+                                        const nsACString& aSVCDomainName) {
+  MutexAutoLock lock(mLock);
+
+  nsTArray<nsCString>* failedList = mFailedSVCDomainNames.Get(aOwnerName);
+  if (!failedList) {
+    failedList = new nsTArray<nsCString>(1);
+    mFailedSVCDomainNames.Put(aOwnerName, failedList);
+  }
+
+  failedList->AppendElement(aSVCDomainName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSService::IsSVCDomainNameFailed(const nsACString& aOwnerName,
+                                    const nsACString& aSVCDomainName,
+                                    bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  MutexAutoLock lock(mLock);
+  *aResult = false;
+  nsTArray<nsCString>* failedList = mFailedSVCDomainNames.Get(aOwnerName);
+  if (!failedList) {
+    return NS_OK;
+  }
+
+  *aResult = failedList->Contains(aSVCDomainName);
   return NS_OK;
 }

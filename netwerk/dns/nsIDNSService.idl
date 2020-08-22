@@ -192,6 +192,27 @@ interface nsIDNSService : nsISupports
     void setDetectedTrrURI(in AUTF8String aURI);
 
     /**
+     * Notifies the DNS service that we failed to connect to this alternative
+     * endpoint.
+     * @param aOwnerName
+     *        The owner name of this HTTPS RRs.
+     * @param aSVCDomainName
+     *        The domain name of this alternative endpoint.
+     */
+    [noscript] void ReportFailedSVCDomainName(in ACString aOwnerName,
+                                              in ACString aSVCDomainName);
+
+    /**
+     * Check if the given domain name was failed to connect to before.
+     * @param aOwnerName
+     *        The owner name of this HTTPS RRs.
+     * @param aSVCDomainName
+     *        The domain name of this alternative endpoint.
+     */
+    [noscript] boolean IsSVCDomainNameFailed(in ACString aOwnerName,
+                                             in ACString aSVCDomainName);
+
+    /**
      * Returns a string containing the URI currently used by the TRR service.
      */
     readonly attribute AUTF8String currentTrrURI;
