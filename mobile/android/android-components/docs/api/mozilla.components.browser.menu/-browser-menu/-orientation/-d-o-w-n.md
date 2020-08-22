@@ -2,7 +2,7 @@
 
 # DOWN
 
-`DOWN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L151)
+`DOWN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L161)
 
 ### Inherited Properties
 

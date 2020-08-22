@@ -2,7 +2,7 @@
 
 # LoginExceptionStorage
 
-`class LoginExceptionStorage : `[`LoginExceptions`](../../mozilla.components.feature.prompts/-login-exceptions/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/logins/src/main/java/mozilla/components/feature/logins/exceptions/LoginExceptionStorage.kt#L19)
+`class LoginExceptionStorage : `[`LoginExceptions`](../../mozilla.components.feature.prompts.login/-login-exceptions/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/logins/src/main/java/mozilla/components/feature/logins/exceptions/LoginExceptionStorage.kt#L19)
 
 A storage implementation for organizing login exceptions.
 

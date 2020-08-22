@@ -1,8 +1,8 @@
-[android-components](../../index.md) / [mozilla.components.feature.prompts](../index.md) / [LoginExceptions](./index.md)
+[android-components](../../index.md) / [mozilla.components.feature.prompts.login](../index.md) / [LoginExceptions](./index.md)
 
 # LoginExceptions
 
-`interface LoginExceptions` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/LoginExceptions.kt#L10)
+`interface LoginExceptions` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/login/LoginExceptions.kt#L10)
 
 Interface to be implemented by a storage layer to exclude the save logins prompt from showing.
 

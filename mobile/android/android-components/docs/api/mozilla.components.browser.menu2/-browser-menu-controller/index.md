@@ -2,7 +2,7 @@
 
 # BrowserMenuController
 
-`class BrowserMenuController : `[`MenuController`](../../mozilla.components.concept.menu/-menu-controller/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.menu/-menu-controller/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/BrowserMenuController.kt#L26)
+`class BrowserMenuController : `[`MenuController`](../../mozilla.components.concept.menu/-menu-controller/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.menu/-menu-controller/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/BrowserMenuController.kt#L28)
 
 Controls a popup menu composed of MenuCandidate objects.
 
@@ -10,11 +10,13 @@ Controls a popup menu composed of MenuCandidate objects.
 
 `visibleSide` - Sets the menu to open with either the start or end visible.
 
+`style` - Custom styling for this menu controller.
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserMenuController(visibleSide: `[`Side`](../../mozilla.components.concept.menu/-side/index.md)` = Side.START)`<br>Controls a popup menu composed of MenuCandidate objects. |
+| [&lt;init&gt;](-init-.md) | `BrowserMenuController(visibleSide: `[`Side`](../../mozilla.components.concept.menu/-side/index.md)` = Side.START, style: `[`MenuStyle`](../../mozilla.components.concept.menu/-menu-style/index.md)`? = null)`<br>Controls a popup menu composed of MenuCandidate objects. |
 
 ### Functions
 

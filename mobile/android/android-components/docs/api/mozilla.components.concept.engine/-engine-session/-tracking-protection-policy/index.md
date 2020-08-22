@@ -2,7 +2,7 @@
 
 # TrackingProtectionPolicy
 
-`open class TrackingProtectionPolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L182)
+`open class TrackingProtectionPolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L186)
 
 Represents a tracking protection policy, which is a combination of
 tracker categories that should be blocked. Unless otherwise specified,

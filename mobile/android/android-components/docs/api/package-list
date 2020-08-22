@@ -228,6 +228,7 @@ mozilla.components.feature.privatemode.feature
 mozilla.components.feature.privatemode.notification
 mozilla.components.feature.prompts
 mozilla.components.feature.prompts.dialog
+mozilla.components.feature.prompts.login
 mozilla.components.feature.prompts.share
 mozilla.components.feature.push
 mozilla.components.feature.pwa
@@ -368,6 +369,7 @@ mozilla.components.tooling.fetch.tests
 mozilla.components.tooling.lint
 mozilla.components.ui.autocomplete
 mozilla.components.ui.tabcounter
+mozilla.components.ui.widgets
 org.mozilla.telemetry
 org.mozilla.telemetry.config
 org.mozilla.telemetry.event

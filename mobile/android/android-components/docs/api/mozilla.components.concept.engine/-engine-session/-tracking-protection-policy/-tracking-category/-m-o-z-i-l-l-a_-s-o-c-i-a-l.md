@@ -2,7 +2,7 @@
 
 # MOZILLA_SOCIAL
 
-`MOZILLA_SOCIAL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L269)
+`MOZILLA_SOCIAL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L273)
 
 Blocks social trackers from the social-tracking-protection-digest256 list.
 
