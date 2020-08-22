@@ -140,8 +140,8 @@ browsertime:
         toolchain:
             - linux64-node
 
-wasi-sysroot:
-    description: "wasi sysroot build process"
+wasi-sysroot-9:
+    description: "wasi sysroot build using clang-9"
     attributes:
         local-toolchain: true
     treeherder:
@@ -151,6 +151,7 @@ wasi-sysroot:
         script: build-wasi-sysroot.sh
         sparse-profile: null
         toolchain-artifact: public/build/wasi-sysroot.tar.xz
+        toolchain-alias: wasi-sysroot
     fetches:
         fetch:
             - clang-9

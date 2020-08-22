@@ -70,7 +70,7 @@ linux64-clang-9:
         toolchain:
             - linux64-binutils
             - linux64-gcc-7
-            - wasi-sysroot
+            - wasi-sysroot-9
 
 linux64-clang-9-mingw-x86:
     description: "MinGW-Clang 9 x86 toolchain build"
