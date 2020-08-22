@@ -163,10 +163,6 @@ const HELPER_SHEET =
   }
 `);
 
-const OVERFLOW_DEBUGGING_ENABLED = Services.prefs.getBoolPref(
-  "devtools.overflow.debugging.enabled"
-);
-
 /**
  * We only send nodeValue up to a certain size by default.  This stuff
  * controls that size.
@@ -610,7 +606,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         actor.wasScrollable = isScrollable;
       }
 
-      if (OVERFLOW_DEBUGGING_ENABLED && isScrollable) {
+      if (isScrollable) {
         this.updateOverflowCausingElements(
           actor,
           currentOverflowCausingElementsMap
@@ -618,25 +614,19 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       }
     }
 
-    if (OVERFLOW_DEBUGGING_ENABLED) {
-      // Get the NodeActor for each node in the symmetric difference of
-      // currentOverflowCausingElementsMap and this.overflowCausingElementsMap
-      const overflowStateChanges = [...currentOverflowCausingElementsMap.keys()]
-        .filter(node => !this.overflowCausingElementsMap.has(node))
-        .concat(
-          [...this.overflowCausingElementsMap.keys()].filter(
-            node => !currentOverflowCausingElementsMap.has(node)
-          )
+    // Get the NodeActor for each node in the symmetric difference of
+    // currentOverflowCausingElementsMap and this.overflowCausingElementsMap
+    const overflowStateChanges = [...currentOverflowCausingElementsMap.keys()]
+      .filter(node => !this.overflowCausingElementsMap.has(node))
+      .concat(
+        [...this.overflowCausingElementsMap.keys()].filter(
+          node => !currentOverflowCausingElementsMap.has(node)
         )
-        .filter(node => this.hasNode(node))
-        .map(node => this.getNode(node));
+      )
+      .filter(node => this.hasNode(node))
+      .map(node => this.getNode(node));
 
-      this.overflowCausingElementsMap = currentOverflowCausingElementsMap;
-
-      if (overflowStateChanges.length) {
-        this.emit("overflow-change", overflowStateChanges);
-      }
-    }
+    this.overflowCausingElementsMap = currentOverflowCausingElementsMap;
 
     if (displayTypeChanges.length) {
       this.emit("display-change", displayTypeChanges);
@@ -644,6 +634,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     if (scrollableStateChanges.length) {
       this.emit("scrollable-change", scrollableStateChanges);
+    }
+
+    if (overflowStateChanges.length) {
+      this.emit("overflow-change", overflowStateChanges);
     }
   },
 
