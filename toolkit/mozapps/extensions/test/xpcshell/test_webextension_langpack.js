@@ -479,3 +479,47 @@ add_task(async function test_staged_langpack_for_app_update_not_found() {
   await promiseShutdownManager();
   Services.locale.requestedLocales = originalLocales;
 });
+
+/**
+ * This test verifies that a compat update with an invalid max_version
+ * will be disabled, at least allowing Firefox to startup without failures.
+ */
+add_task(async function test_staged_langpack_compat_startup() {
+  let originalLocales = Services.locale.requestedLocales;
+
+  await promiseStartupManager("58");
+  let [, { addon }] = await Promise.all([
+    promiseLangpackStartup(),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
+  ]);
+  Assert.ok(addon.isActive);
+  await promiseLocaleChanged(["und"]);
+
+  // Mimick a compatibility update
+  let compatUpdate = {
+    targetApplications: [
+      {
+        id: "toolkit@mozilla.org",
+        minVersion: "58",
+        maxVersion: "*",
+      },
+    ],
+  };
+  addon.__AddonInternal__.applyCompatibilityUpdate(compatUpdate);
+
+  await promiseRestartManager("59");
+
+  addon = await promiseAddonByID(ID);
+  Assert.ok(!addon.isActive, "addon is not active after upgrade");
+  ok(!addon.isCompatible, "compatibility update fixed");
+
+  await promiseRestartManager("58");
+
+  addon = await promiseAddonByID(ID);
+  Assert.ok(addon.isActive, "addon is active after downgrade");
+  ok(addon.isCompatible, "compatibility update fixed");
+
+  await addon.uninstall();
+  await promiseShutdownManager();
+  Services.locale.requestedLocales = originalLocales;
+});
