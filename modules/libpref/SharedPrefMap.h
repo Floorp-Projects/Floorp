@@ -246,7 +246,7 @@ class SharedPrefMap {
     // The StringTableEntry arrays of user and default string preference values.
     //
     // Strings are stored as StringTableEntry structs with character offsets
-    // into the mValueStrings string table and their corresponding lenghts.
+    // into the mValueStrings string table and their corresponding lengths.
     //
     // Entries in the map, likewise, store their string values as indices into
     // these arrays.
