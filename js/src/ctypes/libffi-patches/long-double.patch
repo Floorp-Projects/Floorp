@@ -1,0 +1,88 @@
+https://github.com/libffi/libffi/pull/580
+
+diff --git a/js/src/ctypes/libffi/src/x86/win64.S b/js/src/ctypes/libffi/src/x86/win64.S
+index 2c334c82f9b2d..a54459f077c91 100644
+--- a/js/src/ctypes/libffi/src/x86/win64.S
++++ b/js/src/ctypes/libffi/src/x86/win64.S
+@@ -25,17 +25,17 @@
+ 
+ /* This macro allows the safe creation of jump tables without an
+    actual table.  The entry points into the table are all 8 bytes.
+    The use of ORG asserts that we're at the correct location.  */
+ /* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
+ #if defined(__clang__) || defined(__APPLE__) || (defined (__sun__) && defined(__svr4__))
+ # define E(BASE, X)	.balign 8
+ #else
+-# define E(BASE, X)	.balign 8; .org BASE + X * 8
++# define E(BASE, X)	.balign 8; .org BASE + (X) * 8
+ #endif
+ 
+ 	.text
+ 
+ /* ffi_call_win64 (void *stack, struct win64_call_frame *frame, void *r10)
+ 
+    Bit o trickiness here -- FRAME is the base of the stack frame
+    for this function.  This has been allocated by ffi_call.  We also
+@@ -102,17 +102,18 @@ E(0b, FFI_TYPE_INT)
+ 	movq	%rax, (%r8)
+ 	epilogue
+ E(0b, FFI_TYPE_FLOAT)
+ 	movss	%xmm0, (%r8)
+ 	epilogue
+ E(0b, FFI_TYPE_DOUBLE)
+ 	movsd	%xmm0, (%r8)
+ 	epilogue
+-E(0b, FFI_TYPE_LONGDOUBLE)
++// FFI_TYPE_LONGDOUBLE may be FFI_TYPE_DOUBLE but we need a different value here.
++E(0b, FFI_TYPE_DOUBLE + 1)
+ 	call	PLT(C(abort))
+ E(0b, FFI_TYPE_UINT8)
+ 	movzbl	%al, %eax
+ 	movq	%rax, (%r8)
+ 	epilogue
+ E(0b, FFI_TYPE_SINT8)
+ 	movsbq	%al, %rax
+ 	jmp	98f
+diff --git a/js/src/ctypes/libffi/src/x86/win64_intel.S b/js/src/ctypes/libffi/src/x86/win64_intel.S
+index 7df78b30e42c6..970a4f997a981 100644
+--- a/js/src/ctypes/libffi/src/x86/win64_intel.S
++++ b/js/src/ctypes/libffi/src/x86/win64_intel.S
+@@ -24,17 +24,17 @@
+ 
+ /* This macro allows the safe creation of jump tables without an
+    actual table.  The entry points into the table are all 8 bytes.
+    The use of ORG asserts that we're at the correct location.  */
+ /* ??? The clang assembler doesn't handle .org with symbolic expressions.  */
+ #if defined(__clang__) || defined(__APPLE__) || (defined (__sun__) && defined(__svr4__))
+ # define E(BASE, X)	ALIGN 8
+ #else
+-# define E(BASE, X)	ALIGN 8; ORG BASE + X * 8
++# define E(BASE, X)	ALIGN 8; ORG BASE + (X) * 8
+ #endif
+ 
+ 	.CODE
+ 	extern PLT(C(abort)):near
+ 	extern C(ffi_closure_win64_inner):near
+ 
+ /* ffi_call_win64 (void *stack, struct win64_call_frame *frame, void *r10)
+ 
+@@ -102,17 +102,18 @@ E(0b, FFI_TYPE_INT)
+ 	mov qword ptr [r8], rax; movq	%rax, (%r8)
+ 	epilogue
+ E(0b, FFI_TYPE_FLOAT)
+ 	movss dword ptr [r8], xmm0 ; movss	%xmm0, (%r8)
+ 	epilogue
+ E(0b, FFI_TYPE_DOUBLE)
+ 	movsd qword ptr[r8], xmm0; movsd	%xmm0, (%r8)
+ 	epilogue
+-E(0b, FFI_TYPE_LONGDOUBLE)
++// FFI_TYPE_LONGDOUBLE may be FFI_TYPE_DOUBLE but we need a different value here.
++E(0b, FFI_TYPE_DOUBLE + 1)
+ 	call	PLT(C(abort))
+ E(0b, FFI_TYPE_UINT8)
+ 	movzx eax, al ;movzbl	%al, %eax
+ 	mov qword ptr[r8], rax; movq	%rax, (%r8)
+ 	epilogue
+ E(0b, FFI_TYPE_SINT8)
+ 	movsx rax, al ; movsbq	%al, %rax
+ 	jmp	L98
