@@ -384,6 +384,22 @@ const walkerSpec = generateActorSpec({
       request: {},
       oneway: true,
     },
+    getOverflowCausingElements: {
+      request: {
+        node: Arg(0, "domnode"),
+      },
+      response: {
+        list: RetVal("domnodelist"),
+      },
+    },
+    getScrollableAncestorNode: {
+      request: {
+        node: Arg(0, "domnode"),
+      },
+      response: {
+        node: RetVal("nullable:domnode"),
+      },
+    },
   },
 });
 

@@ -520,6 +520,7 @@ NS_IMPL_ISUPPORTS_INHERITED(TypeHostRecord, nsHostRecord, TypeHostRecord,
 
 TypeHostRecord::TypeHostRecord(const nsHostKey& key)
     : nsHostRecord(key),
+      DNSHTTPSSVCRecordBase(key.host),
       mTrrLock("TypeHostRecord.mTrrLock"),
       mResultsLock("TypeHostRecord.mResultsLock") {}
 

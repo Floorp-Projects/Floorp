@@ -15,7 +15,7 @@ namespace mozilla {
 
 class TransactionItem;
 
-class TransactionStack : private nsDeque<TransactionItem> {
+class TransactionStack : private nsRefPtrDeque<TransactionItem> {
  public:
   enum Type { FOR_UNDO, FOR_REDO };
 
@@ -26,10 +26,10 @@ class TransactionStack : private nsDeque<TransactionItem> {
   void Push(already_AddRefed<TransactionItem> aTransactionItem);
   already_AddRefed<TransactionItem> Pop();
   already_AddRefed<TransactionItem> PopBottom();
-  already_AddRefed<TransactionItem> Peek();
+  already_AddRefed<TransactionItem> Peek() const;
   already_AddRefed<TransactionItem> GetItemAt(size_t aIndex) const;
   void Clear();
-  size_t GetSize() const { return nsDeque::GetSize(); }
+  size_t GetSize() const { return nsRefPtrDeque<TransactionItem>::GetSize(); }
   bool IsEmpty() const { return GetSize() == 0; }
 
   void DoUnlink() { Clear(); }

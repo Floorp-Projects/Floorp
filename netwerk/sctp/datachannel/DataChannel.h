@@ -357,7 +357,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   Channels mChannels;
   // STS only
   uint32_t mCurrentStream = 0;
-  nsDeque<DataChannel> mPending;  // Holds addref'ed DataChannel's -- careful!
+  nsRefPtrDeque<DataChannel> mPending;
   // STS and main
   size_t mNegotiatedIdLimit = 0;  // GUARDED_BY(mConnection->mLock)
   uint8_t mPendingType = PENDING_NONE;
