@@ -15,6 +15,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
+import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
@@ -27,23 +28,23 @@ class TopSiteItemViewHolder(
     private val interactor: TopSiteInteractor
 ) : ViewHolder(view) {
     private lateinit var topSite: TopSite
-    private var topSiteMenu: TopSiteItemMenu
 
     init {
-        topSiteMenu = TopSiteItemMenu(view.context) {
-            when (it) {
-                is TopSiteItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTabClicked(
-                    topSite
-                )
-                is TopSiteItemMenu.Item.RemoveTopSite -> interactor.onRemoveTopSiteClicked(topSite)
-            }
-        }
-
         top_site_item.setOnClickListener {
             interactor.onSelectTopSite(topSite.url, topSite.type === DEFAULT)
         }
 
         top_site_item.setOnLongClickListener {
+            val topSiteMenu = TopSiteItemMenu(view.context, topSite.type != FRECENT) { item ->
+                when (item) {
+                    is TopSiteItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTabClicked(
+                        topSite
+                    )
+                    is TopSiteItemMenu.Item.RemoveTopSite -> interactor.onRemoveTopSiteClicked(
+                        topSite
+                    )
+                }
+            }
             val menu = topSiteMenu.menuBuilder.build(view.context).show(anchor = it)
             it.setOnTouchListener @SuppressLint("ClickableViewAccessibility") { v, event ->
                 onTouchEvent(v, event, menu)
@@ -83,6 +84,7 @@ class TopSiteItemViewHolder(
 
 class TopSiteItemMenu(
     private val context: Context,
+    private val isPinnedSite: Boolean,
     private val onItemTapped: (Item) -> Unit = {}
 ) {
     sealed class Item {
@@ -99,9 +101,12 @@ class TopSiteItemMenu(
             ) {
                 onItemTapped.invoke(Item.OpenInPrivateTab)
             },
-
             SimpleBrowserMenuItem(
-                context.getString(R.string.remove_top_site)
+                if (isPinnedSite) {
+                    context.getString(R.string.remove_top_site)
+                } else {
+                    context.getString(R.string.delete_from_history)
+                }
             ) {
                 onItemTapped.invoke(Item.RemoveTopSite)
             }
