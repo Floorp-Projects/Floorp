@@ -52,11 +52,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
             '-Wno-inconsistent-dllimport',
             '-Wno-macro-redefined', # 'WIN32_LEAN_AND_MEAN' macro redefined
         ]
-    if CONFIG['CC_TYPE'] == 'clang':
-        CFLAGS += [
-            # Workaround for https://bugs.llvm.org/show_bug.cgi?id=26828#c4 :
-            '-ffreestanding',
-        ]
 else:
     CFLAGS += [
         '-Wno-discarded-qualifiers',
