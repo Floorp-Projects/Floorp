@@ -110,4 +110,10 @@ class SessionControlInteractorTest {
         interactor.onPasteAndGo("text")
         verify { controller.handlePasteAndGo("text") }
     }
+
+    @Test
+    fun onRemoveCollectionsPlaceholder() {
+        interactor.onRemoveCollectionsPlaceholder()
+        verify { controller.handleRemoveCollectionsPlaceholder() }
+    }
 }

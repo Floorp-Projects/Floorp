@@ -146,8 +146,11 @@ class HomeFragment : Fragment() {
     private val store: BrowserStore
         get() = requireComponents.core.store
 
-    private val onboarding by lazy { StrictMode.allowThreadDiskReads().resetPoliciesAfter {
-        FenixOnboarding(requireContext()) } }
+    private val onboarding by lazy {
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            FenixOnboarding(requireContext())
+        }
+    }
 
     private lateinit var homeFragmentStore: HomeFragmentStore
     private var _sessionControlInteractor: SessionControlInteractor? = null
@@ -193,7 +196,8 @@ class HomeFragment : Fragment() {
                     topSites = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
                         components.core.topSiteStorage.cachedTopSites
                     },
-                    tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
+                    tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip(),
+                    showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome
                 )
             )
         }
@@ -201,6 +205,7 @@ class HomeFragment : Fragment() {
         _sessionControlInteractor = SessionControlInteractor(
             DefaultSessionControlController(
                 activity = activity,
+                settings = components.settings,
                 engine = components.core.engine,
                 metrics = components.analytics.metrics,
                 sessionManager = sessionManager,
@@ -220,9 +225,9 @@ class HomeFragment : Fragment() {
         updateLayout(view)
         sessionControlView = SessionControlView(
             view.sessionControlRecyclerView,
+            viewLifecycleOwner,
             sessionControlInteractor,
-            homeViewModel,
-            requireComponents.core.store.state.normalTabs.isNotEmpty()
+            homeViewModel
         )
 
         updateSessionControlView(view)
@@ -516,7 +521,8 @@ class HomeFragment : Fragment() {
                 collections = components.core.tabCollectionStorage.cachedTabCollections,
                 mode = currentMode.getCurrentMode(),
                 topSites = components.core.topSiteStorage.cachedTopSites,
-                tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
+                tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip(),
+                showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome
             )
         )
 

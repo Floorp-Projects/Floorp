@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol
 
 import android.view.View
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +14,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
@@ -25,7 +27,8 @@ private fun normalModeAdapterItems(
     topSites: List<TopSite>,
     collections: List<TabCollection>,
     expandedCollections: Set<Long>,
-    tip: Tip?
+    tip: Tip?,
+    showCollectionsPlaceholder: Boolean
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
 
@@ -36,8 +39,9 @@ private fun normalModeAdapterItems(
     }
 
     if (collections.isEmpty()) {
-        items.add(AdapterItem.CollectionHeader)
-        items.add(AdapterItem.NoCollectionsMessage)
+        if (showCollectionsPlaceholder) {
+            items.add(AdapterItem.NoCollectionsMessage)
+        }
     } else {
         showCollections(collections, expandedCollections, items)
     }
@@ -68,62 +72,77 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     val items: MutableList<AdapterItem> = mutableListOf(AdapterItem.OnboardingHeader)
 
     // Customize FxA items based on where we are with the account state:
-    items.addAll(when (onboardingState) {
-        OnboardingState.SignedOutNoAutoSignIn -> {
-            listOf(
-                AdapterItem.OnboardingManualSignIn
-            )
+    items.addAll(
+        when (onboardingState) {
+            OnboardingState.SignedOutNoAutoSignIn -> {
+                listOf(
+                    AdapterItem.OnboardingManualSignIn
+                )
+            }
+            is OnboardingState.SignedOutCanAutoSignIn -> {
+                listOf(
+                    AdapterItem.OnboardingAutomaticSignIn(onboardingState)
+                )
+            }
+            OnboardingState.SignedIn -> listOf()
         }
-        is OnboardingState.SignedOutCanAutoSignIn -> {
-            listOf(
-                AdapterItem.OnboardingAutomaticSignIn(onboardingState)
-            )
-        }
-        OnboardingState.SignedIn -> listOf()
-    })
+    )
 
-    items.addAll(listOf(
-        AdapterItem.OnboardingSectionHeader {
-            val appName = it.getString(R.string.app_name)
-            it.getString(R.string.onboarding_feature_section_header, appName)
-        },
-        AdapterItem.OnboardingWhatsNew,
-        AdapterItem.OnboardingTrackingProtection,
-        AdapterItem.OnboardingThemePicker,
-        AdapterItem.OnboardingPrivateBrowsing,
-        AdapterItem.OnboardingToolbarPositionPicker,
-        AdapterItem.OnboardingPrivacyNotice,
-        AdapterItem.OnboardingFinish
-    ))
+    items.addAll(
+        listOf(
+            AdapterItem.OnboardingSectionHeader {
+                val appName = it.getString(R.string.app_name)
+                it.getString(R.string.onboarding_feature_section_header, appName)
+            },
+            AdapterItem.OnboardingWhatsNew,
+            AdapterItem.OnboardingTrackingProtection,
+            AdapterItem.OnboardingThemePicker,
+            AdapterItem.OnboardingPrivateBrowsing,
+            AdapterItem.OnboardingToolbarPositionPicker,
+            AdapterItem.OnboardingPrivacyNotice,
+            AdapterItem.OnboardingFinish
+        )
+    )
 
     return items
 }
 
 private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
-    is Mode.Normal -> normalModeAdapterItems(topSites, collections, expandedCollections, tip)
+    is Mode.Normal -> normalModeAdapterItems(
+        topSites,
+        collections,
+        expandedCollections,
+        tip,
+        showCollectionPlaceholder
+    )
     is Mode.Private -> privateModeAdapterItems()
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
 }
 
-private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapIndexed { index, tab ->
+private fun collectionTabItems(collection: TabCollection) =
+    collection.tabs.mapIndexed { index, tab ->
         AdapterItem.TabInCollectionItem(collection, tab, index == collection.tabs.lastIndex)
-}
+    }
 
 class SessionControlView(
-    override val containerView: View?,
+    override val containerView: View,
+    viewLifecycleOwner: LifecycleOwner,
     interactor: SessionControlInteractor,
-    private var homeScreenViewModel: HomeScreenViewModel,
-    private val hasNormalTabsOpened: Boolean
+    private var homeScreenViewModel: HomeScreenViewModel
 ) : LayoutContainer {
 
     val view: RecyclerView = containerView as RecyclerView
 
-    private val sessionControlAdapter = SessionControlAdapter(interactor, hasNormalTabsOpened)
+    private val sessionControlAdapter = SessionControlAdapter(
+        interactor,
+        viewLifecycleOwner,
+        containerView.context.components
+    )
 
     init {
         view.apply {
             adapter = sessionControlAdapter
-            layoutManager = LinearLayoutManager(containerView!!.context)
+            layoutManager = LinearLayoutManager(containerView.context)
             val itemTouchHelper =
                 ItemTouchHelper(
                     SwipeToDeleteCallback(

@@ -172,4 +172,5 @@
     <!-- a11y -->
     <dimen name="accessibility_min_height">48dp</dimen>
 
+    <dimen name="tap_increase_16">16dp</dimen>
 </resources>

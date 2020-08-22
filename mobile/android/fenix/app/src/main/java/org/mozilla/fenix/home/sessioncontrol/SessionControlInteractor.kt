@@ -93,6 +93,11 @@ interface CollectionInteractor {
      * Opens the collection creator
      */
     fun onAddTabsToCollectionTapped()
+
+    /**
+     * User has removed the collections placeholder from home.
+     */
+    fun onRemoveCollectionsPlaceholder()
 }
 
 interface ToolbarInteractor {
@@ -255,5 +260,9 @@ class SessionControlInteractor(
 
     override fun onPaste(clipboardText: String) {
         controller.handlePaste(clipboardText)
+    }
+
+    override fun onRemoveCollectionsPlaceholder() {
+        controller.handleRemoveCollectionsPlaceholder()
     }
 }

@@ -2,42 +2,63 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/no_collections_wrapper"
-    android:background="@drawable/empty_session_control_background"
-    android:layout_marginBottom="12dp"
-    android:padding="16dp"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/empty_session_control_background"
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/no_collections_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/no_collections_header1"
-        tools:drawableEnd="@drawable/ic_tab_collection"
+        android:text="@string/collections_header"
         android:textAppearance="@style/HeaderTextStyle"
         android:textSize="16sp"
-        app:fontFamily="@font/metropolis_semibold" />
+        app:fontFamily="@font/metropolis_semibold"
+        app:layout_constraintEnd_toStartOf="@id/remove_collection_placeholder"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/remove_collection_placeholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/remove_home_collection_placeholder_content_description"
+        app:layout_constraintBottom_toBottomOf="@id/no_collections_header"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/no_collections_header"
+        app:srcCompat="@drawable/ic_close" />
 
     <TextView
         android:id="@+id/no_collections_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="@string/no_collections_description1"
+        android:text="@string/no_collections_description2"
+        android:textAlignment="viewStart"
         android:textSize="14sp"
-        android:textAlignment="viewStart" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/no_collections_header" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/add_tabs_to_collections_button"
         style="@style/PositiveButton"
-        app:icon="@drawable/ic_tab_collection"
-        android:visibility="gone"
+        android:layout_marginTop="8dp"
         android:text="@string/tabs_menu_save_to_collection1"
-        android:layout_marginTop="8dp"/>
-</LinearLayout>
+        android:visibility="gone"
+        app:icon="@drawable/ic_tab_collection"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/no_collections_description" />
+</androidx.constraintlayout.widget.ConstraintLayout>

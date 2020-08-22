@@ -725,10 +725,8 @@
     <string name="collections_header">Collections</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Collection menu</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Collect the things that matter to you</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Group together similar searches, sites, and tabs for quick access later.</string>
+    <string name="no_collections_description2">Collect the things that matter to you.\nGroup together similar searches, sites, and tabs for quick access later.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Select Tabs</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1467,4 +1465,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, Got It</string>
 
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Remove</string>
 </resources>

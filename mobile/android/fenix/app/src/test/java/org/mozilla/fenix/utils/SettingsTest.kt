@@ -290,6 +290,19 @@ class SettingsTest {
     }
 
     @Test
+    fun shouldShowCollectionsPlaceholderOnHome() {
+        // When
+        // Then
+        assertTrue(settings.showCollectionsPlaceholderOnHome)
+
+        // When
+        settings.showCollectionsPlaceholderOnHome = false
+
+        // Then
+        assertFalse(settings.showCollectionsPlaceholderOnHome)
+    }
+
+    @Test
     fun shouldSetOpenInAppOpened() {
         // When
         // Then

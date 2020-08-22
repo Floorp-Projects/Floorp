@@ -6,22 +6,50 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleOwner
 import kotlinx.android.synthetic.main.no_collections_message.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.view.ViewHolder
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
+import org.mozilla.fenix.utils.view.ViewHolder
 
+@OptIn(ExperimentalCoroutinesApi::class)
 open class NoCollectionsMessageViewHolder(
     view: View,
-    interactor: CollectionInteractor,
-    hasNormalTabsOpened: Boolean
+    viewLifecycleOwner: LifecycleOwner,
+    store: BrowserStore,
+    interactor: CollectionInteractor
 ) : ViewHolder(view) {
 
     init {
         add_tabs_to_collections_button.setOnClickListener {
             interactor.onAddTabsToCollectionTapped()
         }
-        add_tabs_to_collections_button.isVisible = hasNormalTabsOpened
+
+        remove_collection_placeholder.increaseTapArea(
+            view.resources.getDimensionPixelSize(R.dimen.tap_increase_16)
+        )
+
+        remove_collection_placeholder.setOnClickListener {
+            interactor.onRemoveCollectionsPlaceholder()
+        }
+
+        add_tabs_to_collections_button.isVisible = store.state.normalTabs.isNotEmpty()
+
+        store.flowScoped(viewLifecycleOwner) { flow ->
+            flow.map { state -> state.normalTabs.size }
+                .ifChanged()
+                .collect { tabs ->
+                    add_tabs_to_collections_button.isVisible = tabs > 0
+                }
+        }
     }
 
     companion object {

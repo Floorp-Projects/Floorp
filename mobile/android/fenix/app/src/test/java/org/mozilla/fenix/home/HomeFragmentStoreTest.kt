@@ -12,6 +12,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -53,7 +54,8 @@ class HomeFragmentStoreTest {
             collections = emptyList(),
             expandedCollections = emptySet(),
             mode = currentMode.getCurrentMode(),
-            topSites = emptyList()
+            topSites = emptyList(),
+            showCollectionPlaceholder = true
         )
 
         homeFragmentStore = HomeFragmentStore(homeFragmentState)
@@ -96,6 +98,15 @@ class HomeFragmentStoreTest {
     }
 
     @Test
+    fun `Test changing hiding collections placeholder`() = runBlocking {
+        assertTrue(homeFragmentStore.state.showCollectionPlaceholder)
+
+        homeFragmentStore.dispatch(HomeFragmentAction.RemoveCollectionsPlaceholder).join()
+
+        assertFalse(homeFragmentStore.state.showCollectionPlaceholder)
+    }
+
+    @Test
     fun `Test changing the expanded collections in HomeFragmentStore`() = runBlocking {
         val collection: TabCollection = mockk<TabCollection>().apply {
             every { id } returns 0
@@ -110,25 +121,27 @@ class HomeFragmentStoreTest {
     }
 
     @Test
-    fun `Test changing the collections, mode and top sites in the HomeFragmentStore`() = runBlocking {
-        // Verify that the default state of the HomeFragment is correct.
-        assertEquals(0, homeFragmentStore.state.collections.size)
-        assertEquals(0, homeFragmentStore.state.topSites.size)
-        assertEquals(Mode.Normal, homeFragmentStore.state.mode)
+    fun `Test changing the collections, mode and top sites in the HomeFragmentStore`() =
+        runBlocking {
+            // Verify that the default state of the HomeFragment is correct.
+            assertEquals(0, homeFragmentStore.state.collections.size)
+            assertEquals(0, homeFragmentStore.state.topSites.size)
+            assertEquals(Mode.Normal, homeFragmentStore.state.mode)
 
-        val collections: List<TabCollection> = listOf(mockk())
-        val topSites: List<TopSite> = listOf(mockk(), mockk())
+            val collections: List<TabCollection> = listOf(mockk())
+            val topSites: List<TopSite> = listOf(mockk(), mockk())
 
-        homeFragmentStore.dispatch(
-            HomeFragmentAction.Change(
-                collections = collections,
-                mode = Mode.Private,
-                topSites = topSites
-            )
-        ).join()
+            homeFragmentStore.dispatch(
+                HomeFragmentAction.Change(
+                    collections = collections,
+                    mode = Mode.Private,
+                    topSites = topSites,
+                    showCollectionPlaceholder = true
+                )
+            ).join()
 
-        assertEquals(1, homeFragmentStore.state.collections.size)
-        assertEquals(Mode.Private, homeFragmentStore.state.mode)
-        assertEquals(2, homeFragmentStore.state.topSites.size)
-    }
+            assertEquals(1, homeFragmentStore.state.collections.size)
+            assertEquals(Mode.Private, homeFragmentStore.state.mode)
+            assertEquals(2, homeFragmentStore.state.topSites.size)
+        }
 }

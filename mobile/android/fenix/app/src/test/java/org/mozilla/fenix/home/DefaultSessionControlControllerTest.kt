@@ -78,8 +78,10 @@ class DefaultSessionControlControllerTest {
             collections = emptyList(),
             expandedCollections = emptySet(),
             mode = Mode.Normal,
-            topSites = emptyList()
+            topSites = emptyList(),
+            showCollectionPlaceholder = true
         )
+
         every { sessionManager.sessions } returns emptyList()
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
@@ -94,6 +96,7 @@ class DefaultSessionControlControllerTest {
 
         controller = DefaultSessionControlController(
             activity = activity,
+            settings = settings,
             engine = engine,
             metrics = metrics,
             sessionManager = sessionManager,
@@ -412,6 +415,16 @@ class DefaultSessionControlControllerTest {
                 match<NavDirections> { it.actionId == R.id.action_global_search },
                 null
             )
+        }
+    }
+
+    @Test
+    fun handleRemoveCollectionsPlaceholder() {
+        controller.handleRemoveCollectionsPlaceholder()
+
+        verify {
+            settings.showCollectionsPlaceholderOnHome = false
+            fragmentStore.dispatch(HomeFragmentAction.RemoveCollectionsPlaceholder)
         }
     }
 }

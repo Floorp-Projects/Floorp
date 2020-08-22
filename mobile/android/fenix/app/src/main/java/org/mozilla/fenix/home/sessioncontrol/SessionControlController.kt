@@ -37,6 +37,7 @@ import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.utils.Settings
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 /**
@@ -144,11 +145,17 @@ interface SessionControlController {
      * @see [CollectionInteractor.onAddTabsToCollectionTapped]
      */
     fun handleCreateCollection()
+
+    /**
+     * @see [CollectionInteractor.onRemoveCollectionsPlaceholder]
+     */
+    fun handleRemoveCollectionsPlaceholder()
 }
 
 @Suppress("TooManyFunctions", "LargeClass")
 class DefaultSessionControlController(
     private val activity: HomeActivity,
+    private val settings: Settings,
     private val engine: Engine,
     private val metrics: MetricController,
     private val sessionManager: SessionManager,
@@ -213,7 +220,11 @@ class DefaultSessionControlController(
         metrics.track(Event.CollectionAllTabsRestored)
     }
 
-    override fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab, wasSwiped: Boolean) {
+    override fun handleCollectionRemoveTab(
+        collection: TabCollection,
+        tab: ComponentTab,
+        wasSwiped: Boolean
+    ) {
         metrics.track(Event.CollectionTabRemoved)
 
         if (collection.tabs.size == 1) {
@@ -223,7 +234,13 @@ class DefaultSessionControlController(
             )
             val message =
                 activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
-            showDeleteCollectionPrompt(collection, title, message, wasSwiped, handleSwipedItemDeletionCancel)
+            showDeleteCollectionPrompt(
+                collection,
+                title,
+                message,
+                wasSwiped,
+                handleSwipedItemDeletionCancel
+            )
         } else {
             viewLifecycleScope.launch(Dispatchers.IO) {
                 tabCollectionStorage.removeTabFromCollection(collection, tab)
@@ -367,6 +384,11 @@ class DefaultSessionControlController(
 
     override fun handleCreateCollection() {
         showTabTrayCollectionCreation()
+    }
+
+    override fun handleRemoveCollectionsPlaceholder() {
+        settings.showCollectionsPlaceholderOnHome = false
+        fragmentStore.dispatch(HomeFragmentAction.RemoveCollectionsPlaceholder)
     }
 
     private fun showShareFragment(shareSubject: String, data: List<ShareData>) {
