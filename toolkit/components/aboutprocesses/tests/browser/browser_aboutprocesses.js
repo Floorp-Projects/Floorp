@@ -294,16 +294,17 @@ add_task(async function testAboutProcesses() {
   info("Looking at the contents of about:processes");
   // Find the row for the browser process.
   let row = tbody.firstChild;
-  while (row && row.children[0].textContent != "browser") {
+  while (row && row.children[1].textContent != "browser") {
     row = row.nextSibling;
   }
 
   Assert.ok(row, "found a table row for the browser");
   let children = row.children;
-  let memoryResidentContent = children[1].textContent;
-  let cpuContent = children[2].textContent;
-  let pidContent = children[3].textContent;
-  let numberOfThreadsContent = children[4].textContent;
+  let pidContent = children[0].textContent;
+  let memoryResidentContent = children[2].textContent;
+  let cpuUserContent = children[3].textContent;
+  let cpuKernelContent = children[4].textContent;
+  let numberOfThreadsContent = children[5].textContent;
 
   info("Sanity checks: pid");
   let pid = Number.parseInt(pidContent);
@@ -318,11 +319,19 @@ add_task(async function testAboutProcesses() {
     HARDCODED_ASSUMPTIONS_PROCESS
   );
 
-  info("Sanity checks: CPU (Total)");
+  info("Sanity checks: CPU (user)");
   testCpu(
-    cpuContent,
-    row.process.totalCpu,
-    row.process.slopeCpu,
+    cpuUserContent,
+    row.process.totalCpuUser,
+    row.process.slopeCpuUser,
+    HARDCODED_ASSUMPTIONS_PROCESS
+  );
+
+  info("Sanity checks: CPU (kernel)");
+  testCpu(
+    cpuKernelContent,
+    row.process.totalCpuKernel,
+    row.process.slopeCpuKernel,
     HARDCODED_ASSUMPTIONS_PROCESS
   );
 
@@ -350,8 +359,9 @@ add_task(async function testAboutProcesses() {
     threadRow = threadRow.nextSibling
   ) {
     let children = threadRow.children;
-    let cpuContent = children[2].textContent;
-    let tidContent = children[3].textContent;
+    let tidContent = children[0].textContent;
+    let cpuUserContent = children[3].textContent;
+    let cpuKernelContent = children[4].textContent;
     ++numberOfThreadsFound;
 
     info("Sanity checks: tid");
@@ -359,11 +369,19 @@ add_task(async function testAboutProcesses() {
     Assert.notEqual(tid, 0, "The tid should be set");
     Assert.equal(tid, threadRow.thread.tid);
 
-    info("Sanity checks: CPU (User and Kernel)");
+    info("Sanity checks: CPU (user)");
     testCpu(
-      cpuContent,
-      threadRow.thread.totalCpu,
-      threadRow.thread.slopeCpu,
+      cpuUserContent,
+      threadRow.thread.totalCpuUser,
+      threadRow.thread.slopeCpuUser,
+      HARDCODED_ASSUMPTIONS_THREAD
+    );
+
+    info("Sanity checks: CPU (kernel)");
+    testCpu(
+      cpuKernelContent,
+      threadRow.thread.totalCpuKernel,
+      threadRow.thread.slopeCpuKernel,
       HARDCODED_ASSUMPTIONS_THREAD
     );
   }
