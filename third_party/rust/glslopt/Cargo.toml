@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glslopt"
-version = "0.1.6"
+version = "0.1.5"
 authors = ["Jamie Nicol <jnicol@mozilla.com>"]
 description = "Optimizes GLSL shader code"
 keywords = ["opengl", "gl", "gles", "glsl", "shader"]
