@@ -125,28 +125,23 @@ endif
 # https://github.com/alexcrichton/cc-rs/blob/baa71c0e298d9ad7ac30f0ad78f20b4b3b3a8fb2/src/lib.rs#L1715
 rust_host_cc_env_name := $(subst -,_,$(RUST_HOST_TARGET))
 
-# HOST_CC/HOST_CXX/CC/CXX usually contain base flags for e.g. the build target.
-# We want to pass those through CFLAGS_*/CXXFLAGS_* instead, so that they end up
-# after whatever cc-rs adds to the compiler command line, so that they win.
-# Ideally, we'd use CRATE_CC_NO_DEFAULTS=1, but that causes other problems at the
-# moment.
-export CC_$(rust_host_cc_env_name)=$(filter-out $(HOST_CC_BASE_FLAGS),$(HOST_CC))
-export CXX_$(rust_host_cc_env_name)=$(filter-out $(HOST_CXX_BASE_FLAGS),$(HOST_CXX))
+export CC_$(rust_host_cc_env_name)=$(HOST_CC)
+export CXX_$(rust_host_cc_env_name)=$(HOST_CXX)
 # We don't have a HOST_AR. If rust needs one, assume it's going to pick an appropriate one.
 
 rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 
-export CC_$(rust_cc_env_name)=$(filter-out $(CC_BASE_FLAGS),$(CC))
-export CXX_$(rust_cc_env_name)=$(filter-out $(CXX_BASE_FLAGS),$(CXX))
+export CC_$(rust_cc_env_name)=$(CC)
+export CXX_$(rust_cc_env_name)=$(CXX)
 export AR_$(rust_cc_env_name)=$(AR)
 ifeq (,$(NATIVE_SANITIZERS)$(MOZ_CODE_COVERAGE))
 # -DMOZILLA_CONFIG_H is added to prevent mozilla-config.h from injecting anything
 # in C/C++ compiles from rust. That's not needed in the other branch because the
 # base flags don't force-include mozilla-config.h.
-export CFLAGS_$(rust_host_cc_env_name)=$(HOST_CC_BASE_FLAGS) $(COMPUTED_HOST_CFLAGS) -DMOZILLA_CONFIG_H
-export CXXFLAGS_$(rust_host_cc_env_name)=$(HOST_CXX_BASE_FLAGS) $(COMPUTED_HOST_CXXFLAGS) -DMOZILLA_CONFIG_H
-export CFLAGS_$(rust_cc_env_name)=$(CC_BASE_FLAGS) $(COMPUTED_CFLAGS) -DMOZILLA_CONFIG_H
-export CXXFLAGS_$(rust_cc_env_name)=$(CXX_BASE_FLAGS) $(COMPUTED_CXXFLAGS) -DMOZILLA_CONFIG_H
+export CFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CFLAGS) -DMOZILLA_CONFIG_H
+export CXXFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CXXFLAGS) -DMOZILLA_CONFIG_H
+export CFLAGS_$(rust_cc_env_name)=$(COMPUTED_CFLAGS) -DMOZILLA_CONFIG_H
+export CXXFLAGS_$(rust_cc_env_name)=$(COMPUTED_CXXFLAGS) -DMOZILLA_CONFIG_H
 else
 # Because cargo doesn't allow to distinguish builds happening for build
 # scripts/procedural macros vs. those happening for the rust target,
