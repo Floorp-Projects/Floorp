@@ -127,6 +127,10 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                                      WalkHistoryEntriesFunc aCallback,
                                      void* aData);
 
+  nsresult AddChildSHEntryHelper(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
+                                 mozilla::dom::BrowsingContext* aBC,
+                                 bool aCloneChildren, nsISHEntry** aNextEntry);
+
   nsTArray<nsCOMPtr<nsISHEntry>>& Entries() { return mEntries; }
 
   void RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex,
