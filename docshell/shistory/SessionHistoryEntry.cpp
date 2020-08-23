@@ -1010,7 +1010,7 @@ void IPDLParamTraits<dom::LoadingSessionHistoryInfo>::Write(
   WriteIPDLParam(aMsg, aActor, info.mScrollRestorationIsManual);
   WriteIPDLParam(aMsg, aActor, info.mPersist);
   WriteIPDLParam(aMsg, aActor, aParam.mLoadId);
-  WriteIPDLParam(aMsg, aActor, aParam.mIsLoadFromSessionHistory);
+  WriteIPDLParam(aMsg, aActor, aParam.mLoadIsFromSessionHistory);
   WriteIPDLParam(aMsg, aActor, aParam.mRequestedIndex);
   WriteIPDLParam(aMsg, aActor, aParam.mSessionHistoryLength);
 }
@@ -1041,7 +1041,7 @@ bool IPDLParamTraits<dom::LoadingSessionHistoryInfo>::Read(
       !ReadIPDLParam(aMsg, aIter, aActor, &info.mPersist) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLoadId) ||
       !ReadIPDLParam(aMsg, aIter, aActor,
-                     &aResult->mIsLoadFromSessionHistory) ||
+                     &aResult->mLoadIsFromSessionHistory) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRequestedIndex) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSessionHistoryLength)) {
     aActor->FatalError("Error reading fields for SessionHistoryInfo");

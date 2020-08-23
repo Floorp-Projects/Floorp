@@ -530,10 +530,23 @@ nsDocShellLoadState::GetLoadingSessionHistoryInfo() const {
 void nsDocShellLoadState::SetLoadIsFromSessionHistory(
     int32_t aRequestedIndex, int32_t aSessionHistoryLength) {
   if (mLoadingSessionHistoryInfo) {
-    mLoadingSessionHistoryInfo->mIsLoadFromSessionHistory = true;
+    mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory = true;
     mLoadingSessionHistoryInfo->mRequestedIndex = aRequestedIndex;
     mLoadingSessionHistoryInfo->mSessionHistoryLength = aSessionHistoryLength;
   }
+}
+
+void nsDocShellLoadState::ClearLoadIsFromSessionHistory() {
+  if (mLoadingSessionHistoryInfo) {
+    mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory = false;
+  }
+  mSHEntry = nullptr;
+}
+
+bool nsDocShellLoadState::LoadIsFromSessionHistory() const {
+  return mLoadingSessionHistoryInfo
+             ? mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory
+             : !!mSHEntry;
 }
 
 const nsString& nsDocShellLoadState::Target() const { return mTarget; }
