@@ -90,16 +90,21 @@ class SHEntrySharedParentState : public SHEntrySharedState {
  public:
   friend class SessionHistoryInfo;
 
-  uint64_t GetID() const { return mId; }
+  uint64_t GetId() const { return mId; }
+  void ChangeId(uint64_t aId);
 
   void NotifyListenersContentViewerEvicted();
 
-  SHEntrySharedParentState() = default;
+  SHEntrySharedParentState();
   SHEntrySharedParentState(nsIPrincipal* aTriggeringPrincipal,
                            nsIPrincipal* aPrincipalToInherit,
                            nsIPrincipal* aPartitionedPrincipalToInherit,
                            nsIContentSecurityPolicy* aCsp,
                            const nsACString& aContentType);
+
+  // This returns the existing SHEntrySharedParentState that was registered for
+  // aId, if one exists.
+  static SHEntrySharedParentState* Lookup(uint64_t aId);
 
  protected:
   virtual ~SHEntrySharedParentState();
