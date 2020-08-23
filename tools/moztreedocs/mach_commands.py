@@ -344,6 +344,13 @@ class Documentation(MachCommandBase):
         from moztreedocs.package import distribution_files
         from moztreedocs.upload import s3_upload, s3_set_redirects
 
+        # Workaround the issue
+        # BlockingIOError: [Errno 11] write could not complete without blocking
+        # https://github.com/travis-ci/travis-ci/issues/8920
+        import fcntl
+
+        fcntl.fcntl(1, fcntl.F_SETFL, 0)
+
         # Files are uploaded to multiple locations:
         #
         # <project>/latest
