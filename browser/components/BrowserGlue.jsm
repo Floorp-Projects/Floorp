@@ -1617,7 +1617,7 @@ BrowserGlue.prototype = {
     win.gNotificationBox.appendNotification(
       message,
       "reset-profile-notification",
-      "chrome://global/skin/icons/question-16.png",
+      "chrome://global/skin/icons/question-64.png",
       win.gNotificationBox.PRIORITY_INFO_LOW,
       buttons
     );
