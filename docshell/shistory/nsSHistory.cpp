@@ -1730,7 +1730,21 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   loadState->SetLoadType(aLoadType);
 
   loadState->SetSHEntry(aFrameEntry);
-  loadState->SetLoadIsFromSessionHistory(mRequestedIndex, Length());
+
+  // If we're loading from the current active entry we want to treat it as not
+  // a same-document navigation (see nsDocShell::IsSameDocumentNavigation), so
+  // record that here in the LoadingSessionHistoryEntry.
+  bool loadingFromActiveEntry;
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    loadingFromActiveEntry =
+        aFrameBC->Canonical()->GetActiveSessionHistoryEntry() == aFrameEntry;
+  } else {
+    loadingFromActiveEntry =
+        aFrameBC->GetDocShell() &&
+        nsDocShell::Cast(aFrameBC->GetDocShell())->IsOSHE(aFrameEntry);
+  }
+  loadState->SetLoadIsFromSessionHistory(mRequestedIndex, Length(),
+                                         loadingFromActiveEntry);
 
   nsCOMPtr<nsIURI> originalURI = aFrameEntry->GetOriginalURI();
   loadState->SetOriginalURI(originalURI);
