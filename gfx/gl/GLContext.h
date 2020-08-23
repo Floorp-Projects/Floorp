@@ -1191,8 +1191,14 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
  public:
   void fGetIntegerv(GLenum pname, GLint* params) const;
 
-  void GetUIntegerv(GLenum pname, GLuint* params) const {
+  template <typename T>
+  void GetInt(const GLenum pname, T* const params) const {
+    static_assert(sizeof(T) == sizeof(GLint), "Invalid T.");
     fGetIntegerv(pname, reinterpret_cast<GLint*>(params));
+  }
+
+  void GetUIntegerv(GLenum pname, GLuint* params) const {
+    GetInt(pname, params);
   }
 
   template <typename T>
