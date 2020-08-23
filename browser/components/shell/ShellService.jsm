@@ -47,6 +47,26 @@ let ShellServiceInternal = {
     return false;
   },
 
+  isDefaultBrowserOptOut() {
+    if (AppConstants.platform == "win") {
+      let optOutValue = WindowsRegistry.readRegKey(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        "Software\\Mozilla\\Firefox",
+        "DefaultBrowserOptOut"
+      );
+      WindowsRegistry.removeRegKey(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        "Software\\Mozilla\\Firefox",
+        "DefaultBrowserOptOut"
+      );
+      if (optOutValue == "True") {
+        Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", false);
+        return true;
+      }
+    }
+    return false;
+  },
+
   /**
    * Used to determine whether or not to show a "Set Default Browser"
    * query dialog. This attribute is true if the application is starting
@@ -65,21 +85,8 @@ let ShellServiceInternal = {
       return false;
     }
 
-    if (AppConstants.platform == "win") {
-      let optOutValue = WindowsRegistry.readRegKey(
-        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-        "Software\\Mozilla\\Firefox",
-        "DefaultBrowserOptOut"
-      );
-      WindowsRegistry.removeRegKey(
-        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-        "Software\\Mozilla\\Firefox",
-        "DefaultBrowserOptOut"
-      );
-      if (optOutValue == "True") {
-        Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", false);
-        return false;
-      }
+    if (this.isDefaultBrowserOptOut()) {
+      return false;
     }
 
     return true;
@@ -103,6 +110,37 @@ let ShellServiceInternal = {
       return this.shellService.isDefaultBrowser(forAllTypes);
     }
     return false;
+  },
+
+  setAsDefault() {
+    let claimAllTypes = true;
+    let setAsDefaultError = false;
+    if (AppConstants.platform == "win") {
+      try {
+        // In Windows 8+, the UI for selecting default protocol is much
+        // nicer than the UI for setting file type associations. So we
+        // only show the protocol association screen on Windows 8+.
+        // Windows 8 is version 6.2.
+        let version = Services.sysinfo.getProperty("version");
+        claimAllTypes = parseFloat(version) < 6.2;
+      } catch (ex) {}
+    }
+    try {
+      ShellService.setDefaultBrowser(claimAllTypes, false);
+    } catch (ex) {
+      setAsDefaultError = true;
+      Cu.reportError(ex);
+    }
+    // Here BROWSER_IS_USER_DEFAULT and BROWSER_SET_USER_DEFAULT_ERROR appear
+    // to be inverse of each other, but that is only because this function is
+    // called when the browser is set as the default. During startup we record
+    // the BROWSER_IS_USER_DEFAULT value without recording BROWSER_SET_USER_DEFAULT_ERROR.
+    Services.telemetry
+      .getHistogramById("BROWSER_IS_USER_DEFAULT")
+      .add(!setAsDefaultError);
+    Services.telemetry
+      .getHistogramById("BROWSER_SET_DEFAULT_ERROR")
+      .add(setAsDefaultError);
   },
 };
 
