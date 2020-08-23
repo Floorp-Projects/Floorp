@@ -1617,7 +1617,7 @@ BrowserGlue.prototype = {
     win.gNotificationBox.appendNotification(
       message,
       "reset-profile-notification",
-      "chrome://global/skin/icons/question-64.png",
+      "chrome://global/skin/icons/question-16.png",
       win.gNotificationBox.PRIORITY_INFO_LOW,
       buttons
     );
@@ -3756,15 +3756,11 @@ BrowserGlue.prototype = {
 
   _maybeShowDefaultBrowserPrompt() {
     DefaultBrowserCheck.willCheckDefaultBrowser(/* isStartupCheck */ true).then(
-      async willPrompt => {
-        let win = BrowserWindowTracker.getTopWindow();
+      willPrompt => {
         if (!willPrompt) {
-          // If we're not showing the modal prompt, maybe we
-          // still want to show the passive notification bar.
-          await win.DefaultBrowserNotificationOnNewTabPage.init();
           return;
         }
-        DefaultBrowserCheck.prompt(win);
+        DefaultBrowserCheck.prompt(BrowserWindowTracker.getTopWindow());
       }
     );
   },
@@ -4547,57 +4543,211 @@ ContentPermissionPrompt.prototype = {
 };
 
 var DefaultBrowserCheck = {
+  get OPTIONPOPUP() {
+    return "defaultBrowserNotificationPopup";
+  },
+
+  closePrompt(aNode) {
+    if (this._notification) {
+      this._notification.close();
+    }
+  },
+
+  setAsDefault() {
+    let claimAllTypes = true;
+    let setAsDefaultError = false;
+    if (AppConstants.platform == "win") {
+      try {
+        // In Windows 8+, the UI for selecting default protocol is much
+        // nicer than the UI for setting file type associations. So we
+        // only show the protocol association screen on Windows 8+.
+        // Windows 8 is version 6.2.
+        let version = Services.sysinfo.getProperty("version");
+        claimAllTypes = parseFloat(version) < 6.2;
+      } catch (ex) {}
+    }
+    try {
+      ShellService.setDefaultBrowser(claimAllTypes, false);
+    } catch (ex) {
+      setAsDefaultError = true;
+      Cu.reportError(ex);
+    }
+    // Here BROWSER_IS_USER_DEFAULT and BROWSER_SET_USER_DEFAULT_ERROR appear
+    // to be inverse of each other, but that is only because this function is
+    // called when the browser is set as the default. During startup we record
+    // the BROWSER_IS_USER_DEFAULT value without recording BROWSER_SET_USER_DEFAULT_ERROR.
+    Services.telemetry
+      .getHistogramById("BROWSER_IS_USER_DEFAULT")
+      .add(!setAsDefaultError);
+    Services.telemetry
+      .getHistogramById("BROWSER_SET_DEFAULT_ERROR")
+      .add(setAsDefaultError);
+  },
+
+  _createPopup(win, notNowStrings, neverStrings) {
+    let doc = win.document;
+    let popup = doc.createXULElement("menupopup");
+    popup.id = this.OPTIONPOPUP;
+
+    let notNowItem = doc.createXULElement("menuitem");
+    notNowItem.id = "defaultBrowserNotNow";
+    notNowItem.setAttribute("label", notNowStrings.label);
+    notNowItem.setAttribute("accesskey", notNowStrings.accesskey);
+    popup.appendChild(notNowItem);
+
+    let neverItem = doc.createXULElement("menuitem");
+    neverItem.id = "defaultBrowserNever";
+    neverItem.setAttribute("label", neverStrings.label);
+    neverItem.setAttribute("accesskey", neverStrings.accesskey);
+    popup.appendChild(neverItem);
+
+    popup.addEventListener("command", this);
+
+    let popupset = doc.getElementById("mainPopupSet");
+    popupset.appendChild(popup);
+  },
+
+  handleEvent(event) {
+    if (event.type == "command") {
+      if (event.target.id == "defaultBrowserNever") {
+        ShellService.shouldCheckDefaultBrowser = false;
+      }
+      this.closePrompt();
+    }
+  },
+
   prompt(win) {
+    let useNotificationBar = Services.prefs.getBoolPref(
+      "browser.defaultbrowser.notificationbar"
+    );
+
     let brandBundle = win.document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
 
     let shellBundle = win.document.getElementById("bundle_shell");
-    let buttonPrefix = "setDefaultBrowserAlert";
+    let buttonPrefix =
+      "setDefaultBrowser" + (useNotificationBar ? "" : "Alert");
     let yesButton = shellBundle.getFormattedString(
       buttonPrefix + "Confirm.label",
       [brandShortName]
     );
     let notNowButton = shellBundle.getString(buttonPrefix + "NotNow.label");
 
-    let promptTitle = shellBundle.getString("setDefaultBrowserTitle");
-    let promptMessage = shellBundle.getFormattedString(
-      "setDefaultBrowserMessage",
-      [brandShortName]
-    );
-    let askLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk", [
-      brandShortName,
-    ]);
+    if (useNotificationBar) {
+      let promptMessage = shellBundle.getFormattedString(
+        "setDefaultBrowserMessage2",
+        [brandShortName]
+      );
+      let optionsMessage = shellBundle.getString(
+        "setDefaultBrowserOptions.label"
+      );
+      let optionsKey = shellBundle.getString(
+        "setDefaultBrowserOptions.accesskey"
+      );
 
-    let ps = Services.prompt;
-    let shouldAsk = { value: true };
-    let buttonFlags =
-      ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
-      ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1 +
-      ps.BUTTON_POS_0_DEFAULT;
-    let rv = ps.confirmEx(
-      win,
-      promptTitle,
-      promptMessage,
-      buttonFlags,
-      yesButton,
-      notNowButton,
-      null,
-      askLabel,
-      shouldAsk
-    );
-    if (rv == 0) {
-      ShellService.setAsDefault();
-    } else if (!shouldAsk.value) {
-      ShellService.shouldCheckDefaultBrowser = false;
+      let neverLabel = shellBundle.getString("setDefaultBrowserNever.label");
+      let neverKey = shellBundle.getString("setDefaultBrowserNever.accesskey");
+
+      let yesButtonKey = shellBundle.getString(
+        "setDefaultBrowserConfirm.accesskey"
+      );
+      let notNowButtonKey = shellBundle.getString(
+        "setDefaultBrowserNotNow.accesskey"
+      );
+
+      this._createPopup(
+        win,
+        {
+          label: notNowButton,
+          accesskey: notNowButtonKey,
+        },
+        {
+          label: neverLabel,
+          accesskey: neverKey,
+        }
+      );
+
+      let buttons = [
+        {
+          label: yesButton,
+          accessKey: yesButtonKey,
+          callback: () => {
+            this.setAsDefault();
+            this.closePrompt();
+          },
+        },
+        {
+          label: optionsMessage,
+          accessKey: optionsKey,
+          popup: this.OPTIONPOPUP,
+        },
+      ];
+
+      let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
+      let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
+      const priority = win.gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH;
+      let callback = this._onNotificationEvent.bind(this);
+      this._notification = win.gHighPriorityNotificationBox.appendNotification(
+        promptMessage,
+        "default-browser",
+        iconURL,
+        priority,
+        buttons,
+        callback
+      );
+    } else {
+      // Modal prompt
+      let promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+      let promptMessage = shellBundle.getFormattedString(
+        "setDefaultBrowserMessage",
+        [brandShortName]
+      );
+      let askLabel = shellBundle.getFormattedString(
+        "setDefaultBrowserDontAsk",
+        [brandShortName]
+      );
+
+      let ps = Services.prompt;
+      let shouldAsk = { value: true };
+      let buttonFlags =
+        ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
+        ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1 +
+        ps.BUTTON_POS_0_DEFAULT;
+      let rv = ps.confirmEx(
+        win,
+        promptTitle,
+        promptMessage,
+        buttonFlags,
+        yesButton,
+        notNowButton,
+        null,
+        askLabel,
+        shouldAsk
+      );
+      if (rv == 0) {
+        this.setAsDefault();
+      } else if (!shouldAsk.value) {
+        ShellService.shouldCheckDefaultBrowser = false;
+      }
+
+      try {
+        let resultEnum = rv * 2 + shouldAsk.value;
+        Services.telemetry
+          .getHistogramById("BROWSER_SET_DEFAULT_RESULT")
+          .add(resultEnum);
+      } catch (ex) {
+        /* Don't break if Telemetry is acting up. */
+      }
     }
+  },
 
-    try {
-      let resultEnum = rv * 2 + shouldAsk.value;
-      Services.telemetry
-        .getHistogramById("BROWSER_SET_DEFAULT_RESULT")
-        .add(resultEnum);
-    } catch (ex) {
-      /* Don't break if Telemetry is acting up. */
+  _onNotificationEvent(eventType) {
+    if (eventType == "removed") {
+      let doc = this._notification.ownerDocument;
+      let popup = doc.getElementById(this.OPTIONPOPUP);
+      popup.removeEventListener("command", this);
+      popup.remove();
+      delete this._notification;
     }
   },
 
@@ -4614,12 +4764,7 @@ var DefaultBrowserCheck = {
     }
 
     let shouldCheck =
-      !AppConstants.DEBUG &&
-      ShellService.shouldCheckDefaultBrowser &&
-      !Services.prefs.getBoolPref(
-        "browser.defaultbrowser.notificationbar",
-        false
-      );
+      !AppConstants.DEBUG && ShellService.shouldCheckDefaultBrowser;
 
     // Even if we shouldn't check the default browser, we still continue when
     // isStartupCheck = true to set prefs and telemetry.
