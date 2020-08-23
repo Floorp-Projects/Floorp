@@ -283,7 +283,7 @@
         if (notification.persistence) {
           notification.persistence--;
         } else if (Date.now() > notification.timeout) {
-          this.removeNotification(notification);
+          this.removeNotification(notification, true);
         }
       }
     }
