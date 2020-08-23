@@ -35,12 +35,35 @@ class SessionHistoryInfo {
   SessionHistoryInfo() = default;
   SessionHistoryInfo(const SessionHistoryInfo& aInfo) = default;
   SessionHistoryInfo(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
+  SessionHistoryInfo(const SessionHistoryInfo& aSharedStateFrom, nsIURI* aURI,
+                     const nsID& aDocShellID);
+  SessionHistoryInfo(nsIURI* aURI, const nsID& aDocShellID,
+                     nsIPrincipal* aTriggeringPrincipal,
+                     nsIContentSecurityPolicy* aCsp,
+                     const nsACString& aContentType);
+
+  void Reset(nsIURI* aURI, const nsID& aDocShellID, bool aDynamicCreation,
+             nsIPrincipal* aTriggeringPrincipal,
+             nsIPrincipal* aPrincipalToInherit,
+             nsIPrincipal* aPartitionedPrincipalToInherit,
+             nsIContentSecurityPolicy* aCsp, const nsACString& aContentType);
 
   bool operator==(const SessionHistoryInfo& aInfo) const {
     return false;  // FIXME
   }
 
+  nsIURI* GetURI() const { return mURI; }
+  void SetURI(nsIURI* aURI) { mURI = aURI; }
+
+  void SetOriginalURI(nsIURI* aOriginalURI) { mOriginalURI = aOriginalURI; }
+
+  void SetResultPrincipalURI(nsIURI* aResultPrincipalURI) {
+    mResultPrincipalURI = aResultPrincipalURI;
+  }
+
   nsIInputStream* GetPostData() const { return mPostData; }
+  void SetPostData(nsIInputStream* aPostData) { mPostData = aPostData; }
+
   void GetScrollPosition(int32_t* aScrollPositionX, int32_t* aScrollPositionY) {
     *aScrollPositionX = mScrollPositionX;
     *aScrollPositionY = mScrollPositionY;
@@ -55,16 +78,29 @@ class SessionHistoryInfo {
     mScrollRestorationIsManual = aIsManual;
   }
 
-  nsIURI* GetURI() const { return mURI; }
+  void SetStateData(nsStructuredCloneContainer* aStateData) {
+    mStateData = aStateData;
+  }
 
+  void SetLoadReplace(bool aLoadReplace) { mLoadReplace = aLoadReplace; }
+
+  void SetURIWasModified(bool aURIWasModified) {
+    mURIWasModified = aURIWasModified;
+  }
   bool GetURIWasModified() const { return mURIWasModified; }
+
+  uint64_t SharedId() const;
 
   nsILayoutHistoryState* GetLayoutHistoryState();
   void SetLayoutHistoryState(nsILayoutHistoryState* aState);
 
+  bool SharesDocumentWith(const SessionHistoryInfo& aOther) const {
+    return SharedId() == aOther.SharedId();
+  }
+
  private:
   friend class SessionHistoryEntry;
-  friend struct mozilla::ipc::IPDLParamTraits<LoadingSessionHistoryInfo>;
+  friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
 
   void MaybeUpdateTitleFromURI();
 
@@ -132,10 +168,13 @@ struct LoadingSessionHistoryInfo {
   // but session-history-in-parent needs to pass needed information explicitly
   // to the relevant child process.
   bool mLoadIsFromSessionHistory = false;
-  // mRequestedIndex and mSessionHistoryLength are relevant
-  // only if mLoadIsFromSessionHistory is true.
+  // mRequestedIndex, mSessionHistoryLength and mLoadingCurrentActiveEntry are
+  // relevant only if mLoadIsFromSessionHistory is true.
   int32_t mRequestedIndex = -1;
   int32_t mSessionHistoryLength = 0;
+  // If we're loading from the current active entry we want to treat it as not
+  // a same-document navigation (see nsDocShell::IsSameDocumentNavigation).
+  bool mLoadingCurrentActiveEntry = false;
 };
 
 // SessionHistoryEntry is used to store session history data in the parent
@@ -152,6 +191,7 @@ class SessionHistoryEntry : public nsISHEntry {
  public:
   SessionHistoryEntry(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   SessionHistoryEntry();
+  explicit SessionHistoryEntry(SessionHistoryInfo* aInfo);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
@@ -168,6 +208,8 @@ class SessionHistoryEntry : public nsISHEntry {
   // aNewChild and returns true. If there is no child with the same docshell ID
   // then it returns false.
   bool ReplaceChild(SessionHistoryEntry* aNewChild);
+
+  void SetInfo(SessionHistoryInfo* aInfo);
 
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
@@ -193,6 +235,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(SessionHistoryEntry, NS_SESSIONHISTORYENTRY_IID)
 }  // namespace dom
 
 namespace ipc {
+
+// Allow sending SessionHistoryInfo objects over IPC.
+template <>
+struct IPDLParamTraits<dom::SessionHistoryInfo> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const dom::SessionHistoryInfo& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, dom::SessionHistoryInfo* aResult);
+};
 
 // Allow sending LoadingSessionHistoryInfo objects over IPC.
 template <>

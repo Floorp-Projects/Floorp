@@ -51,6 +51,7 @@
 #include "nsFocusManager.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIObserverService.h"
+#include "nsISHistory.h"
 #include "nsContentUtils.h"
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
@@ -2593,6 +2594,50 @@ bool BrowsingContext::IsPopupAllowed() {
   }
 
   return false;
+}
+
+void BrowsingContext::SetActiveSessionHistoryEntryForTop(
+    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
+    uint32_t aLoadType) {
+  if (XRE_IsContentProcess()) {
+    nsID changeID = {};
+    RefPtr<ChildSHistory> shistory = GetChildSessionHistory();
+    if (shistory) {
+      changeID = shistory->AddPendingHistoryChange(1, 1);
+    }
+    ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntryForTop(
+        this, aPreviousScrollPos, *aInfo, aLoadType, changeID);
+  } else {
+    Canonical()->SetActiveSessionHistoryEntryForTop(aPreviousScrollPos, aInfo,
+                                                    aLoadType, nsID());
+  }
+}
+
+void BrowsingContext::SetActiveSessionHistoryEntryForFrame(
+    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
+    int32_t aChildOffset) {
+  if (XRE_IsContentProcess()) {
+    nsID changeID = {};
+    RefPtr<ChildSHistory> shistory = GetChildSessionHistory();
+    if (shistory) {
+      changeID = shistory->AddPendingHistoryChange(1, 1);
+    }
+    ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntryForFrame(
+        this, aPreviousScrollPos, *aInfo, aChildOffset, changeID);
+  } else {
+    Canonical()->SetActiveSessionHistoryEntryForFrame(aPreviousScrollPos, aInfo,
+                                                      aChildOffset, nsID());
+  }
+}
+
+void BrowsingContext::ReplaceActiveSessionHistoryEntry(
+    SessionHistoryInfo* aInfo) {
+  if (XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()->SendReplaceActiveSessionHistoryEntry(this,
+                                                                       *aInfo);
+  } else {
+    Canonical()->ReplaceActiveSessionHistoryEntry(aInfo);
+  }
 }
 
 }  // namespace dom

@@ -403,10 +403,72 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
     shistory->GetRequestedIndex(&requestedIndex);
     shistory->GetCount(&length);
     aLoadState.ref()->SetLoadIsFromSessionHistory(
-        requestedIndex >= 0 ? requestedIndex : index, length);
+        requestedIndex >= 0 ? requestedIndex : index, length,
+        aReloadActiveEntry.value());
   }
   // If we don't have an active entry and we don't have a loading entry then
   // the nsDocShell will create a load state based on its document.
+}
+
+void CanonicalBrowsingContext::SetActiveSessionHistoryEntryForTop(
+    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
+    uint32_t aLoadType, const nsID& aChangeID) {
+  RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry;
+  if (aPreviousScrollPos.isSome() && oldActiveEntry) {
+    oldActiveEntry->SetScrollPosition(aPreviousScrollPos.ref().x,
+                                      aPreviousScrollPos.ref().y);
+  }
+  RefPtr<SessionHistoryEntry> newEntry = new SessionHistoryEntry(aInfo);
+  mActiveEntry = newEntry;
+  Maybe<int32_t> previousEntryIndex, loadedEntryIndex;
+  nsISHistory* shistory = GetSessionHistory();
+  if (shistory) {
+    shistory->AddToRootSessionHistory(
+        true, oldActiveEntry, this, newEntry, aLoadType,
+        nsDocShell::ShouldAddToSessionHistory(aInfo->GetURI(), nullptr),
+        &previousEntryIndex, &loadedEntryIndex);
+    // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
+    Group()->EachParent([&](ContentParent* aParent) {
+      int32_t index = 0;
+      shistory->GetIndex(&index);
+      Unused << aParent->SendHistoryCommitIndexAndLength(
+          Top(), index, shistory->GetCount(), aChangeID);
+    });
+  }
+}
+
+void CanonicalBrowsingContext::SetActiveSessionHistoryEntryForFrame(
+    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
+    int32_t aChildOffset, const nsID& aChangeID) {
+  RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry;
+  if (aPreviousScrollPos.isSome() && oldActiveEntry) {
+    oldActiveEntry->SetScrollPosition(aPreviousScrollPos.ref().x,
+                                      aPreviousScrollPos.ref().y);
+  }
+  RefPtr<SessionHistoryEntry> newEntry = new SessionHistoryEntry(aInfo);
+  mActiveEntry = newEntry;
+  nsISHistory* shistory = GetSessionHistory();
+  if (oldActiveEntry) {
+    if (shistory) {
+      shistory->AddChildSHEntryHelper(oldActiveEntry, newEntry, Top(), true);
+    }
+  } else if (GetParent() && GetParent()->mActiveEntry) {
+    GetParent()->mActiveEntry->AddChild(newEntry, aChildOffset,
+                                        UseRemoteSubframes());
+  }
+  // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
+  Group()->EachParent([&](ContentParent* aParent) {
+    int32_t index = 0;
+    shistory->GetIndex(&index);
+    Unused << aParent->SendHistoryCommitIndexAndLength(
+        Top(), index, shistory->GetCount(), aChangeID);
+  });
+}
+
+void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
+    SessionHistoryInfo* aInfo) {
+  mActiveEntry->SetInfo(aInfo);
+  // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
 }
 
 JSObject* CanonicalBrowsingContext::WrapObject(

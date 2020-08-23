@@ -6902,13 +6902,13 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
-    const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
+    const MaybeDiscarded<BrowsingContext>& aContext, int32_t aIndex,
     HistoryGoResolver&& aResolveRequestedIndex) {
   if (!aContext.IsDiscarded()) {
     nsSHistory* shistory =
         static_cast<nsSHistory*>(aContext.get_canonical()->GetSessionHistory());
     nsTArray<nsSHistory::LoadEntryResult> loadResults;
-    nsresult rv = shistory->GotoIndex(aOffset, loadResults);
+    nsresult rv = shistory->GotoIndex(aIndex, loadResults);
     if (NS_FAILED(rv)) {
       return IPC_FAIL(this, "GotoIndex failed");
     }
@@ -6991,6 +6991,37 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
       aContext.get_canonical()->GetActiveSessionHistoryEntry();
   if (entry) {
     entry->SetCacheKey(aCacheKey);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntryForTop(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
+    uint32_t aLoadType, const nsID& aChangeID) {
+  if (!aContext.IsDiscarded()) {
+    aContext.get_canonical()->SetActiveSessionHistoryEntryForTop(
+        aPreviousScrollPos, &aInfo, aLoadType, aChangeID);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntryForFrame(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
+    int32_t aChildOffset, const nsID& aChangeID) {
+  if (!aContext.IsDiscarded()) {
+    aContext.get_canonical()->SetActiveSessionHistoryEntryForFrame(
+        aPreviousScrollPos, &aInfo, aChildOffset, aChangeID);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvReplaceActiveSessionHistoryEntry(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    SessionHistoryInfo&& aInfo) {
+  if (!aContext.IsDiscarded()) {
+    aContext.get_canonical()->ReplaceActiveSessionHistoryEntry(&aInfo);
   }
   return IPC_OK();
 }
