@@ -11,12 +11,12 @@
 #include <unordered_map>
 #include <vector>
 
-// Most WebIDL typedefs are identical to their OpenGL counterparts.
 #include "GLDefs.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
+#include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/ipc/Shmem.h"
 #include "gfxTypes.h"
@@ -903,7 +903,14 @@ struct WebGLPixelStore final {
   bool mPremultiplyAlpha = false;
   bool mRequireFastPath = false;
 
+  static void AssertDefault(gl::GLContext& gl, const bool isWebgl2) {
+    WebGLPixelStore expected;
+    MOZ_ASSERT(expected.AssertCurrent(gl, isWebgl2));
+    Unused << expected;
+  }
+
   void Apply(gl::GLContext&, bool isWebgl2, const uvec3& uploadSize) const;
+  bool AssertCurrent(gl::GLContext&, bool isWebgl2) const;
 
   WebGLPixelStore ForUseWith(
       const GLenum target, const uvec3& uploadSize,
