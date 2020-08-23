@@ -48,14 +48,14 @@ class Document;
  * parent process.
  */
 struct SHEntrySharedState {
-  SHEntrySharedState() = default;
+  SHEntrySharedState() : mId(GenerateId()) {}
   SHEntrySharedState(const SHEntrySharedState& aState) = default;
-  SHEntrySharedState(uint64_t aId, nsIPrincipal* aTriggeringPrincipal,
+  SHEntrySharedState(nsIPrincipal* aTriggeringPrincipal,
                      nsIPrincipal* aPrincipalToInherit,
                      nsIPrincipal* aPartitionedPrincipalToInherit,
                      nsIContentSecurityPolicy* aCsp,
                      const nsACString& aContentType)
-      : mId(aId),
+      : mId(GenerateId()),
         mTriggeringPrincipal(aTriggeringPrincipal),
         mPrincipalToInherit(aPrincipalToInherit),
         mPartitionedPrincipalToInherit(aPartitionedPrincipalToInherit),
@@ -77,6 +77,9 @@ struct SHEntrySharedState {
   // moved to bfcache.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
   uint32_t mCacheKey = 0;
+
+ protected:
+  static uint64_t GenerateId();
 };
 
 /**
