@@ -44,16 +44,59 @@ namespace dom {
 class Document;
 
 /**
+ * SHEntrySharedState holds shared state both in the child process and in the
+ * parent process.
+ */
+struct SHEntrySharedState {
+  SHEntrySharedState() = default;
+  SHEntrySharedState(const SHEntrySharedState& aState) = default;
+  SHEntrySharedState(uint64_t aId, nsIPrincipal* aTriggeringPrincipal,
+                     nsIPrincipal* aPrincipalToInherit,
+                     nsIPrincipal* aPartitionedPrincipalToInherit,
+                     nsIContentSecurityPolicy* aCsp,
+                     const nsACString& aContentType)
+      : mId(aId),
+        mTriggeringPrincipal(aTriggeringPrincipal),
+        mPrincipalToInherit(aPrincipalToInherit),
+        mPartitionedPrincipalToInherit(aPartitionedPrincipalToInherit),
+        mCsp(aCsp),
+        mContentType(aContentType) {}
+
+  // These members aren't copied by SHEntrySharedParentState::CopyFrom() because
+  // they're specific to a particular content viewer.
+  uint64_t mId = 0;
+
+  // These members are copied by SHEntrySharedParentState::CopyFrom(). If you
+  // add a member here, be sure to update the CopyFrom() implementation.
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
+  nsCOMPtr<nsIPrincipal> mPartitionedPrincipalToInherit;
+  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
+  nsCString mContentType;
+  // Child side updates layout history state when page is being unloaded or
+  // moved to bfcache.
+  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
+  uint32_t mCacheKey = 0;
+};
+
+/**
  * SHEntrySharedParentState holds the shared state that can live in the parent
  * process.
  */
-class SHEntrySharedParentState {
+class SHEntrySharedParentState : public SHEntrySharedState {
  public:
-  uint64_t GetID() const { return mID; }
+  friend class SessionHistoryInfo;
+
+  uint64_t GetID() const { return mId; }
 
   void NotifyListenersContentViewerEvicted();
 
-  SHEntrySharedParentState();
+  SHEntrySharedParentState() = default;
+  SHEntrySharedParentState(nsIPrincipal* aTriggeringPrincipal,
+                           nsIPrincipal* aPrincipalToInherit,
+                           nsIPrincipal* aPartitionedPrincipalToInherit,
+                           nsIContentSecurityPolicy* aCsp,
+                           const nsACString& aContentType);
 
  protected:
   virtual ~SHEntrySharedParentState();
@@ -66,34 +109,24 @@ class SHEntrySharedParentState {
 
   // These members are copied by SHEntrySharedParentState::CopyFrom(). If you
   // add a member here, be sure to update the CopyFrom() implementation.
-  nsID mDocShellID;
-  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
-  nsCOMPtr<nsIPrincipal> mPartitionedPrincipalToInherit;
-  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
-  // Child side updates layout history state when page is being unloaded or
-  // moved to bfcache.
-  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-  nsCString mContentType;
+  nsID mDocShellID{};
 
-  nsIntRect mViewerBounds;
+  nsIntRect mViewerBounds{0, 0, 0, 0};
 
-  uint32_t mCacheKey;
-  uint32_t mLastTouched;
+  uint32_t mLastTouched = 0;
 
   // These members aren't copied by SHEntrySharedParentState::CopyFrom() because
   // they're specific to a particular content viewer.
-  uint64_t mID;
   nsWeakPtr mSHistory;
 
-  bool mIsFrameNavigation;
-  bool mSticky;
-  bool mDynamicallyCreated;
+  bool mIsFrameNavigation = false;
+  bool mSticky = true;
+  bool mDynamicallyCreated = false;
 
   // This flag is about necko cache, not bfcache.
-  bool mExpired;
+  bool mExpired = false;
 
-  bool mSaveLayoutState;
+  bool mSaveLayoutState = true;
 };
 
 /**
