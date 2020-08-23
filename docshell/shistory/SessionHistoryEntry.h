@@ -98,6 +98,8 @@ class SessionHistoryInfo {
     return SharedId() == aOther.SharedId();
   }
 
+  void FillLoadInfo(nsDocShellLoadState& aLoadState) const;
+
  private:
   friend class SessionHistoryEntry;
   friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
@@ -161,6 +163,8 @@ class SessionHistoryInfo {
 struct LoadingSessionHistoryInfo {
   LoadingSessionHistoryInfo() = default;
   explicit LoadingSessionHistoryInfo(SessionHistoryEntry* aEntry);
+
+  already_AddRefed<nsDocShellLoadState> CreateLoadInfo() const;
 
   SessionHistoryInfo mInfo;
 

@@ -119,6 +119,42 @@ void SessionHistoryInfo::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
   mSharedState.Get()->mLayoutHistoryState = aState;
 }
 
+void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
+  aLoadState.SetOriginalURI(mOriginalURI);
+  aLoadState.SetMaybeResultPrincipalURI(Some(mResultPrincipalURI));
+  aLoadState.SetLoadReplace(mLoadReplace);
+  aLoadState.SetPostDataStream(mPostData);
+  aLoadState.SetReferrerInfo(mReferrerInfo);
+
+  aLoadState.SetTypeHint(mSharedState.Get()->mContentType);
+  aLoadState.SetTriggeringPrincipal(mSharedState.Get()->mTriggeringPrincipal);
+  aLoadState.SetPrincipalToInherit(mSharedState.Get()->mPrincipalToInherit);
+  aLoadState.SetPartitionedPrincipalToInherit(
+      mSharedState.Get()->mPartitionedPrincipalToInherit);
+  aLoadState.SetCsp(mSharedState.Get()->mCsp);
+
+  // Do not inherit principal from document (security-critical!);
+  uint32_t flags = nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_NONE;
+
+  // Passing nullptr as aSourceDocShell gives the same behaviour as before
+  // aSourceDocShell was introduced. According to spec we should be passing
+  // the source browsing context that was used when the history entry was
+  // first created. bug 947716 has been created to address this issue.
+  nsAutoString srcdoc;
+  nsCOMPtr<nsIURI> baseURI;
+  if (mIsSrcdocEntry) {
+    srcdoc = mSrcdocData;
+    baseURI = mBaseURI;
+    flags |= nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+  } else {
+    srcdoc = VoidString();
+  }
+  aLoadState.SetSrcdocData(srcdoc);
+  aLoadState.SetBaseURI(baseURI);
+  aLoadState.SetLoadFlags(flags);
+
+  aLoadState.SetFirstParty(true);
+}
 /* static */
 SessionHistoryInfo::SharedState SessionHistoryInfo::SharedState::Create(
     nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
@@ -205,6 +241,18 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
         new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
   }
   SessionHistoryEntry::sLoadIdToEntry->Put(mLoadId, aEntry);
+}
+
+already_AddRefed<nsDocShellLoadState>
+LoadingSessionHistoryInfo::CreateLoadInfo() const {
+  RefPtr<nsDocShellLoadState> loadState(
+      new nsDocShellLoadState(mInfo.GetURI()));
+
+  mInfo.FillLoadInfo(*loadState);
+
+  loadState->SetLoadingSessionHistoryInfo(*this);
+
+  return loadState.forget();
 }
 
 static uint32_t gEntryID;
@@ -1040,46 +1088,7 @@ SessionHistoryEntry::ClearEntry() {
 
 NS_IMETHODIMP
 SessionHistoryEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
-  nsCOMPtr<nsIURI> uri = GetURI();
-  RefPtr<nsDocShellLoadState> loadState(new nsDocShellLoadState(mInfo->mURI));
-
-  loadState->SetOriginalURI(mInfo->mOriginalURI);
-  loadState->SetMaybeResultPrincipalURI(Some(mInfo->mResultPrincipalURI));
-  loadState->SetLoadReplace(mInfo->mLoadReplace);
-  loadState->SetPostDataStream(mInfo->mPostData);
-  loadState->SetReferrerInfo(mInfo->mReferrerInfo);
-
-  loadState->SetTypeHint(SharedInfo()->mContentType);
-  loadState->SetTriggeringPrincipal(SharedInfo()->mTriggeringPrincipal);
-  loadState->SetPrincipalToInherit(SharedInfo()->mPrincipalToInherit);
-  loadState->SetPartitionedPrincipalToInherit(
-      SharedInfo()->mPartitionedPrincipalToInherit);
-  loadState->SetCsp(SharedInfo()->mCsp);
-
-  // Do not inherit principal from document (security-critical!);
-  uint32_t flags = nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_NONE;
-
-  // Passing nullptr as aSourceDocShell gives the same behaviour as before
-  // aSourceDocShell was introduced. According to spec we should be passing
-  // the source browsing context that was used when the history entry was
-  // first created. bug 947716 has been created to address this issue.
-  nsAutoString srcdoc;
-  nsCOMPtr<nsIURI> baseURI;
-  if (mInfo->mIsSrcdocEntry) {
-    srcdoc = mInfo->mSrcdocData;
-    baseURI = mInfo->mBaseURI;
-    flags |= nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC;
-  } else {
-    srcdoc = VoidString();
-  }
-  loadState->SetSrcdocData(srcdoc);
-  loadState->SetBaseURI(baseURI);
-  loadState->SetLoadFlags(flags);
-
-  loadState->SetFirstParty(true);
-  loadState->SetSHEntry(this);
-
-  loadState.forget(aLoadState);
+  NS_WARNING("We shouldn't be calling this!");
   return NS_OK;
 }
 
