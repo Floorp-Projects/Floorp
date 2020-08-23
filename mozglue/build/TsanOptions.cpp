@@ -150,6 +150,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:SkARGB32_Opaque_Blitter\n"
          "race:SkRasterPipelineBlitter\n"
          "race:Clamp_S32_D32_nofilter_trans_shaderproc\n"
+         "race:SkSpriteBlitter_Memcpy\n"
 
          // Bug 1601632
          "race:ScriptPreloader::MaybeFinishOffThreadDecode\n"
