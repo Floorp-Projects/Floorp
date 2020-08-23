@@ -108,6 +108,9 @@ class Documentation(MachCommandBase):
     @CommandArgument(
         "--write-url", default=None, help="Write S3 Upload URL to text file"
     )
+    @CommandArgument(
+        "--verbose", action="store_true", help="Run Sphinx in verbose mode"
+    )
     def build_docs(
         self,
         path=None,
@@ -120,6 +123,7 @@ class Documentation(MachCommandBase):
         upload=False,
         jobs=None,
         write_url=None,
+        verbose=None,
     ):
         if self.check_jsdoc():
             return die(JSDOC_NOT_FOUND)
@@ -149,7 +153,7 @@ class Documentation(MachCommandBase):
                 "%s: could not find docs at this location" % path
             )
 
-        result = self._run_sphinx(docdir, savedir, fmt=fmt, jobs=jobs)
+        result = self._run_sphinx(docdir, savedir, fmt=fmt, jobs=jobs, verbose=verbose)
         if result != 0:
             print(self._dump_sphinx_backtrace())
             return die(
@@ -199,7 +203,9 @@ class Documentation(MachCommandBase):
 
         sphinx_trees = self.manager.trees or {savedir: docdir}
         for _, src in sphinx_trees.items():
-            run_sphinx = partial(self._run_sphinx, src, savedir, fmt=fmt, jobs=jobs)
+            run_sphinx = partial(
+                self._run_sphinx, src, savedir, fmt=fmt, jobs=jobs, verbose=verbose
+            )
             server.watch(src, run_sphinx)
         server.serve(
             host=host,
@@ -233,7 +239,9 @@ class Documentation(MachCommandBase):
                     output += f.read()
         return output
 
-    def _run_sphinx(self, docdir, savedir, config=None, fmt="html", jobs=None):
+    def _run_sphinx(
+        self, docdir, savedir, config=None, fmt="html", jobs=None, verbose=None
+    ):
         import sphinx.cmd.build
 
         config = config or self.manager.conf_py_path
@@ -247,6 +255,10 @@ class Documentation(MachCommandBase):
         ]
         if jobs:
             args.extend(["-j", jobs])
+        if verbose:
+            args.extend(["-v", "-v", "-T"])
+        print("Run sphinx with:")
+        print(args)
         return sphinx.cmd.build.build_main(args)
 
     def _post_process_html(self, savedir):
