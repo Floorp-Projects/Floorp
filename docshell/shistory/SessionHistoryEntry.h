@@ -111,9 +111,9 @@ struct LoadingSessionHistoryInfo {
   // an nsISHEntry in the nsDocShellLoadState and access to the nsISHistory,
   // but session-history-in-parent needs to pass needed information explicitly
   // to the relevant child process.
-  bool mIsLoadFromSessionHistory = false;
+  bool mLoadIsFromSessionHistory = false;
   // mRequestedIndex and mSessionHistoryLength are relevant
-  // only if mIsLoadFromSessionHistory is true.
+  // only if mLoadIsFromSessionHistory is true.
   int32_t mRequestedIndex = -1;
   int32_t mSessionHistoryLength = 0;
 };
