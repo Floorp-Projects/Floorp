@@ -10,14 +10,6 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/ajv-4.1.1.js"
 );
 
-const { TelemetryArchive } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryArchive.jsm"
-);
-
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
-);
-
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
 const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
@@ -446,29 +438,12 @@ add_task(async function testAboutPage() {
       const acceptUnenrollmentDialogButton = content.document.getElementById(
         "leave-pioneer-accept-dialog-button"
       );
-
       acceptUnenrollmentDialogButton.click();
 
-      // Wait for deletion ping, uninstalls, and UI updates...
-      const pioneerUnenrolled = await new Promise((resolve, reject) => {
-        Services.prefs.addObserver(PREF_PIONEER_ID, function observer(
-          subject,
-          topic,
-          data
-        ) {
-          try {
-            const prefValue = Services.prefs.getStringPref(
-              PREF_PIONEER_ID,
-              null
-            );
-            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
-            resolve(prefValue);
-          } catch (ex) {
-            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
-            reject(ex);
-          }
-        });
-      });
+      const pioneerUnenrolled = Services.prefs.getStringPref(
+        PREF_PIONEER_ID,
+        null
+      );
 
       ok(
         !pioneerUnenrolled,
@@ -502,23 +477,6 @@ add_task(async function testAboutPage() {
       }
     }
   );
-
-  // Wait for any pending pings to settle.
-  await TelemetryStorage.testClearPendingPings();
-
-  let pings = await TelemetryArchive.promiseArchivedPingList();
-  ok(
-    // We expect two extra ping from the test studies being removed explicitly vs. leaving Pioneer and all studies being removed implicitly.
-    pings.length === CACHED_ADDONS.length + 1,
-    "The expected number of archived telemetry pings are present."
-  );
-
-  for (const ping of pings) {
-    ok(
-      ping.type === "pioneer-study",
-      "Deletion request telemetry ping was sent."
-    );
-  }
 });
 
 add_task(async function testPioneerBadge() {
