@@ -246,6 +246,7 @@ class Documentation(MachCommandBase):
 
         config = config or self.manager.conf_py_path
         args = [
+            "-T",
             "-b",
             fmt,
             "-c",
@@ -256,7 +257,7 @@ class Documentation(MachCommandBase):
         if jobs:
             args.extend(["-j", jobs])
         if verbose:
-            args.extend(["-v", "-v", "-T"])
+            args.extend(["-v", "-v"])
         print("Run sphinx with:")
         print(args)
         return sphinx.cmd.build.build_main(args)
