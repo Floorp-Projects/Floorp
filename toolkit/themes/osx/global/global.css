@@ -160,6 +160,37 @@ html|input {
   margin: 4px;
 }
 
+xul|notification > xul|hbox > xul|button {
+  margin: 0 3px;
+  padding: 1px 10px;
+  min-width: 60px;
+  min-height: 16px;
+  appearance: none;
+  border-radius: 10000px;
+  border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ @roundButtonBorderColor@;
+  color: @roundButtonColor@;
+  background: @roundButtonBackgroundImage@;
+  box-shadow: @roundButtonShadow@;
+}
+
+xul|notification > xul|hbox > xul|button:active:hover {
+  color: @roundButtonColor@;
+  background: @roundButtonPressedBackgroundImage@;
+  box-shadow: @roundButtonPressedShadow@;
+}
+
+xul|notification > xul|hbox > xul|button:-moz-focusring {
+  box-shadow: var(--focus-ring-box-shadow), @roundButtonShadow@;
+}
+
+xul|notification > xul|hbox > xul|button:active:hover:-moz-focusring {
+  box-shadow: var(--focus-ring-box-shadow), @roundButtonPressedShadow@;
+}
+
+xul|notification > xul|hbox > xul|button > .button-box > .button-text {
+  margin: 0 !important;
+}
+
 xul|popupnotificationcontent {
   margin-top: .5em;
 }
