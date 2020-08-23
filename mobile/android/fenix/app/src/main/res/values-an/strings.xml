@@ -296,8 +296,13 @@
     <string name="preferences_account_settings">Achustes d’a cuenta</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Ubrir vinclos en aplicacions</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Chestor de descargas externo</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Complementos</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Notificacions</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -561,6 +566,13 @@
     <string name="history_older">Mas antigo</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">No i hai garra historial</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">No bi ha descargas aquí</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d seleccionaus</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -962,9 +974,10 @@
     <string name="onboarding_whats_new_description">Tiens preguntas sobre lo redisenyo de %s? Quiers saber qué ha cambiau?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obtiene respuestas aquí</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Quita-le lo millor provecho a %s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Saber-ne mas</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1442,6 +1455,9 @@
     <string name="synced_tabs_sign_in_message">Veyer una lista de pestanyas d’as tuyas atros dispositivos.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Inicia sesión pa sincronizar</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">No i hai garra pestanya ubierta</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

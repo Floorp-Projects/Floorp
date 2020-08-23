@@ -299,6 +299,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Dodatki</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Obvestila</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sinhroniziraj zdaj</string>
@@ -981,9 +984,10 @@
     <string name="onboarding_whats_new_description">Imate vprašanja o preoblikovanem %su? Želite izvedeti, kaj se je spremenilo?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Tukaj poiščite odgovore</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Kar najbolje izkoristite %s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Več o tem</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1479,6 +1483,9 @@
 
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Prijava v Sync</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Ni odprtih zavihkov</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

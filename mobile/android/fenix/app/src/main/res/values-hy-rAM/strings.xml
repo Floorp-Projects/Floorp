@@ -980,8 +980,7 @@
 
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Ստացեք պատասխանները այստեղ</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Օգտագործեք առավելագույնը %s-ից:</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
@@ -1231,7 +1230,7 @@
     <string name="add_to_homescreen_text_placeholder">Դյուրանցման անունը</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Հեշտությամբ կարող եք ավելացնել այս կայքը ձեր հեռախոսի Տնային էկրանին՝ ակնթարթային մատչելու և արագ դիտարկելու համար:</string>
+    <string name="add_to_homescreen_description">Հեշտությամբ կարող եք ավելացնել այս կայքը ձեր հեռախոսի Տնային էկրանին՝ ակնթարթորեն մատչելու և արագ դիտարկելու համար:</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Մուտքանուններ և գաղտնաբառեր</string>

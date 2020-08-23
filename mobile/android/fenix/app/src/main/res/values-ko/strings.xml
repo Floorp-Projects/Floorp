@@ -319,6 +319,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">부가 기능</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">알림</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">지금 동기화</string>
@@ -414,7 +417,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Sync 켜기</string>
+    <string name="preferences_sync">동기화 시작하기</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">데스크톱 Firefox에서 페어링 코드를 스캔하세요</string>
     <!-- Preference for account login -->
@@ -592,6 +595,13 @@
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">기록 없음</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">다운로드 없음</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d개 선택됨</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -950,7 +960,7 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">쿠키</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">대부분의 사이트에서 로그아웃됩니다</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">대부분 웹 사이트 자동 로그아웃</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">캐시된 이미지와 파일</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -1026,9 +1036,10 @@
     <string name="onboarding_whats_new_description">새롭게 디자인된 %s에 대해 궁금한 점이 있습니까? 변경된 사항을 알고 싶으십니까?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">여기서 답을 얻으세요</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s를 최대한 활용하세요.</string>
+    <!-- text for the firefox account onboarding card header -->
+    <string name="onboarding_firefox_account_header">Firefox 계정으로 북마크, 비밀번호 등을 동기화하세요.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">더 알아보기</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1143,7 +1154,7 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">향상된 추적 방지 기능</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">추적되지 않는 탐색</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">브라우저 추적 차단하기</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">자신의 데이터를 보호하세요. %s는 온라인에서 하는 일을 추적하는 가장 일반적인 많은 추적기로부터 사용자를 보호합니다.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1522,6 +1533,9 @@
     <string name="synced_tabs_sign_in_message">다른 기기의 탭 목록을 봅니다.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Sync에 로그인</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">열린 탭이 없음</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

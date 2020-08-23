@@ -22,6 +22,29 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s ivinell digor. Stokit evit mont dʼun ivinell all.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d diuzet</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Ouzhpennañ un dastumad nevez</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Anv</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Diuzañ an dastumad</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Kuitaat ar mod lies-diuzañ</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Enrollañ an ivinelloù diuzet en dastumad</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s diuzet</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s diziuzet</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Kuitaet ar mod lies-diuzañ</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Aet er mod lies-diuzañ, diuzit ivinelloù evit o enrollañ en un dastumad</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Diuzet</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Gant Mozilla eo produet %1$s.</string>
 
@@ -141,8 +164,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Cʼhwilerviñ</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Lusker klask</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Lusker enklask</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Arventennoù al lusker klask</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -271,8 +294,13 @@
     <string name="preferences_account_settings">Arventennoù ar gont</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Digeriñ ereoù en arloadoù</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Ardoer pellgargañ diavaez</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Askouezhioù</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Rebuzadurioù</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -499,6 +527,9 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Mod prevez)</string>
 
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Enrollañ</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Dilemel ar roll istor</string>
@@ -536,6 +567,13 @@
     <string name="history_older">Koshocʼh</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Roll istor ebet amañ</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Pellgargadur ebet amañ</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d diuzet</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -941,9 +979,10 @@
     <string name="onboarding_whats_new_description">Goulennoù hoc’h eus a-zivout ar %s nevez? Fellout a ra deoc’h gouzout pezh a zo bet cheñchet?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Amañ emañ ar respontoù</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Tennit gounid eus %s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Gouzout hiroc’h</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1413,9 +1452,7 @@
     <string name="saved_login_duplicate">Un titour kennaskañ gant an anv arveriad-mañ a zo dioutañ endeo.</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Kennaskañ gant ur gont Firefox</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Kennaskañ un trevnad all.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Adkennaskit mar plij ganeoc’h.</string>
@@ -1429,6 +1466,9 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Kennaskañ evit goubredañ</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Ivinell digor ebet</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Tizhet eo bet ar vevenn lec’hiennoù</string>
@@ -1437,13 +1477,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Mat, komprenet am eus</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Berradennoù</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Klask gant</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Evit ar wech-mañ, klask gant:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Berradennoù klask</string>
     </resources>

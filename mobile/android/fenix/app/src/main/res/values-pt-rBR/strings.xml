@@ -307,6 +307,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Extensões</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Notificações</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar agora</string>
@@ -574,6 +577,13 @@
     <string name="history_older">Mais antigos</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nenhum histórico aqui</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Nenhum download aqui</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d selecionados</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -981,9 +991,10 @@
     <string name="onboarding_whats_new_description">Tem dúvidas sobre o %s reprojetado? Quer saber o que mudou?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obtenha respostas aqui</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Aproveite ao máximo o %s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Saiba mais</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1032,6 +1043,9 @@
     <string name="onboarding_private_browsing_button">Abrir configurações</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Sua privacidade</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Projetamos o %s para lhe dar o controle sobre o que você compartilha online e o que compartilha conosco.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leia nosso aviso de privacidade</string>
 
@@ -1471,6 +1485,9 @@
     <string name="synced_tabs_sign_in_message">Veja uma lista de abas de seus outros dispositivos.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Entrar para sincronizar</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Nenhuma aba aberta</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

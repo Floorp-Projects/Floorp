@@ -280,7 +280,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">ניפוי שגיאות מרחוק דרך USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">הצגת מנועי חפוש</string>
+    <string name="preferences_show_search_engines">הצגת מנועי חיפוש</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">הצגת הצעות חיפוש</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -303,6 +303,9 @@
     <string name="preferences_external_download_manager">מנהל הורדות חיצוני</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">תוספות</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">התרעות</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -566,6 +569,13 @@
     <string name="history_older">ישן יותר</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">אין היסטוריה כאן</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">אין כאן הורדות</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d נבחרו</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -975,9 +985,10 @@
     <string name="onboarding_whats_new_description">יש לך שאלות על העיצוב החדש של %s? רוצה לדעת מה השתנה?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">התשובות כאן</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">להוציא את המיטב מ־%s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">מידע נוסף</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1449,6 +1460,9 @@
 
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">יש להתחבר כדי לסנכרן</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">אין לשוניות פתוחות</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

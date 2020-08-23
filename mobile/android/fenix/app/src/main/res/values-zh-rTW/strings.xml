@@ -314,6 +314,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">附加元件</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">通知</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">立即同步</string>
@@ -585,6 +588,13 @@
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">沒有紀錄</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">沒有下載的檔案</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">已選擇 %1$d 個下載的檔案</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1011,9 +1021,10 @@
     <string name="onboarding_whats_new_description">對重新設計的 %s 有好奇的地方嗎？想知道哪裡變得不一樣了？</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">在此尋找答案</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">發揮 %s 的最大威力。</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">了解更多</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1498,6 +1509,9 @@
     <string name="synced_tabs_sign_in_message">檢視您其他裝置中的分頁清單。</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">登入至 Sync</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">無已開啟的分頁</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

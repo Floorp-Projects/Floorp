@@ -305,6 +305,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Moduls complementaris</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Notificacions</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar ara</string>
@@ -571,6 +574,13 @@
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Cap d’istoric</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Pas cap de telecargament</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d seleccionats</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -962,9 +972,10 @@
     <string name="onboarding_whats_new_header1">Descobrissètz las novetats</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Trobatz de responsas aquí</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Ne fasètz mai amb %s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Ne saber mai</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Òc, connectatz-me</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1399,6 +1410,9 @@
     <string name="synced_tabs_sign_in_message">Vejatz la lista dels onglets dels autres periferics.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Se connectar a Sync</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Cap d’onglet pas dobèrt</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
