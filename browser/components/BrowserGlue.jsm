@@ -4614,7 +4614,12 @@ var DefaultBrowserCheck = {
     }
 
     let shouldCheck =
-      !AppConstants.DEBUG && ShellService.shouldCheckDefaultBrowser;
+      !AppConstants.DEBUG &&
+      ShellService.shouldCheckDefaultBrowser &&
+      !Services.prefs.getBoolPref(
+        "browser.defaultbrowser.notificationbar",
+        false
+      );
 
     // Even if we shouldn't check the default browser, we still continue when
     // isStartupCheck = true to set prefs and telemetry.
