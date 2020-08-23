@@ -28,17 +28,13 @@ uint64_t gSHEntrySharedID = 0;
 namespace mozilla {
 namespace dom {
 
-SHEntrySharedParentState::SHEntrySharedParentState()
-    : mDocShellID({0}),
-      mViewerBounds(0, 0, 0, 0),
-      mCacheKey(0),
-      mLastTouched(0),
-      mID(++gSHEntrySharedID),
-      mIsFrameNavigation(false),
-      mSticky(true),
-      mDynamicallyCreated(false),
-      mExpired(false),
-      mSaveLayoutState(true) {}
+SHEntrySharedParentState::SHEntrySharedParentState(
+    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
+    nsIPrincipal* aPartitionedPrincipalToInherit,
+    nsIContentSecurityPolicy* aCsp, const nsACString& aContentType)
+    : SHEntrySharedState(++gSHEntrySharedID, aTriggeringPrincipal,
+                         aPrincipalToInherit, aPartitionedPrincipalToInherit,
+                         aCsp, aContentType) {}
 
 SHEntrySharedParentState::~SHEntrySharedParentState() {}
 
