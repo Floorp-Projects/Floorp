@@ -12,6 +12,7 @@ black:
         - taskcluster/test
         - testing/condprofile/condprof
         - tools/crashreporter/system-symbols
+        - tools/moztreedocs/
         - tools/lint/
         - tools/tryselect/selectors/scriptworker.py
     exclude:
