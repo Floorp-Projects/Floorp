@@ -5,18 +5,47 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .notificationbox-stack {
+  /* Prevent the animation from overlapping the navigation toolbar */
   overflow: clip;
 }
 
+.notificationbox-stack[notificationside="top"] {
+  /* Create a stacking context for the box-shadow */
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 3px 10px -7px #000;
+}
+
 notification {
-  padding: 2px 0 3px;
-  padding-inline-start: 12px;
-  background: -moz-dialog;
-  color: -moz-dialogText;
-  border-color: ThreeDLightShadow;
+  height: 56px;
+  padding-inline-start: 16px;
+  background: var(--notification-background);
+  color: var(--notification-text);
+  border-color: var(--notification-border);
   border-style: solid;
   border-width: 1px 0;
   text-shadow: none;
+  font-size: 1.15em;
+
+  --notification-background: Window;
+  --notification-text: WindowText;
+  --notification-border: rgba(12, 12, 13, 0.2);
+  --notification-button-background: rgba(12,12,13,.1);
+  --notification-button-background-hover: rgba(12,12,13,0.2);
+  --notification-button-background-active: rgba(12,12,13,0.3);
+  --notification-button-text: inherit;
+  --notification-primary-button-background: #0060df;
+  --notification-primary-button-background-hover: #003eaa;
+  --notification-primary-button-background-active: #002275;
+  --notification-primary-button-text: rgb(249, 249, 250);
+}
+
+notification[type="info"]:-moz-lwtheme-brighttext {
+  --notification-background: #38383d;
+  --notification-text: rgb(249, 249, 250);
+  --notification-button-background: rgba(249,249,250,.1);
+  --notification-button-background-hover: rgba(249,249,250,.2);
+  --notification-button-background-active: rgba(249,249,250,.3);
 }
 
 notification.animated {
@@ -31,24 +60,27 @@ notification.animated {
   border-bottom-style: none;
 }
 
-notification[type="warning"],
-notification[type="critical"] {
-  border-color: rgba(12, 12, 13, 0.2);
-}
-
 notification[type="warning"] {
-  background: #ffe900;
-  color: #0c0c0d;
+  --notification-background: #ffe900;
+  --notification-text: #0c0c0d;
 }
 
 notification[type="critical"] {
-  background: #d70022;
-  color: #fff;
+  --notification-background: #d70022;
+  --notification-text: #fff;
+}
+
+notification[type="critical"] > .close-icon:hover {
+  fill-opacity: .2;
+}
+
+notification[type="critical"] > .close-icon:hover:active {
+  fill-opacity: .3;
 }
 
 .messageText {
   margin-inline-start: 12px !important;
-  margin-bottom: 1px !important;
+  margin-block: 12px;
 }
 
 .messageText > .text-link {
@@ -61,8 +93,8 @@ notification[type="critical"] {
 }
 
 .messageImage {
-  width: 16px;
-  height: 16px;
+  width: 32px;
+  height: 32px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -84,8 +116,47 @@ notification[type="critical"] > hbox > .messageImage {
   padding: 0;
 }
 
-/* Close button needs to be clickable from the edge of the window */
 .messageCloseButton > .toolbarbutton-icon {
-  margin-inline-end: 12px;
+  padding: 6px;
+  /* Override width and height from close-icon.css */
+  width: 32px !important;
+  height: 32px !important;
+  /* Close button needs to be clickable from the edge of the window */
+  margin-inline-end: 16px;
 }
 
+.notification-button {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background-color: var(--notification-button-background);
+  color: var(--notification-button-text);
+  padding: 0 8px;
+  margin: 4px 8px;
+  height: 32px;
+}
+
+.notification-button[disabled] {
+  opacity: 0.5;
+}
+
+.notification-button:not([disabled]):hover {
+  background-color: var(--notification-button-background-hover);
+}
+
+.notification-button:not([disabled]):hover:active {
+  background-color: var(--notification-button-background-active);
+}
+
+.notification-button.primary {
+  background-color: var(--notification-primary-button-background);
+  color: var(--notification-primary-button-text);
+}
+
+.notification-button.primary:not([disabled]):hover {
+  background-color: var(--notification-primary-button-background-hover);
+}
+
+.notification-button.primary:not([disabled]):hover:active {
+  background-color: var(--notification-primary-button-background-active);
+}
