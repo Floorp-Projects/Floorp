@@ -1729,7 +1729,6 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
 
   loadState->SetLoadType(aLoadType);
 
-  SessionHistoryEntry::MaybeSynchronizeSharedStateToInfo(aFrameEntry);
   loadState->SetSHEntry(aFrameEntry);
   loadState->SetLoadIsFromSessionHistory(mRequestedIndex, Length());
 

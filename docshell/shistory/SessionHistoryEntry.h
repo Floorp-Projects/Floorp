@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsILayoutHistoryState.h"
 #include "nsISHEntry.h"
+#include "nsSHEntryShared.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsDataHashtable.h"
 
@@ -32,6 +33,7 @@ class SHEntrySharedParentState;
 class SessionHistoryInfo {
  public:
   SessionHistoryInfo() = default;
+  SessionHistoryInfo(const SessionHistoryInfo& aInfo) = default;
   SessionHistoryInfo(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
 
   bool operator==(const SessionHistoryInfo& aInfo) const {
@@ -53,17 +55,12 @@ class SessionHistoryInfo {
     mScrollRestorationIsManual = aIsManual;
   }
 
-  void SetCacheKey(uint32_t aCacheKey) { mCacheKey = aCacheKey; }
-
   nsIURI* GetURI() const { return mURI; }
 
   bool GetURIWasModified() const { return mURIWasModified; }
 
-  nsILayoutHistoryState* GetLayoutHistoryState() { return mLayoutHistoryState; }
-
-  void SetLayoutHistoryState(nsILayoutHistoryState* aState) {
-    mLayoutHistoryState = aState;
-  }
+  nsILayoutHistoryState* GetLayoutHistoryState();
+  void SetLayoutHistoryState(nsILayoutHistoryState* aState);
 
  private:
   friend class SessionHistoryEntry;
@@ -83,19 +80,42 @@ class SessionHistoryInfo {
   RefPtr<nsStructuredCloneContainer> mStateData;
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
-  // mLayoutHistoryState is used to serialize layout history state across
-  // IPC. In the parent process this is then synchronized to
-  // SHEntrySharedParentState::mLayoutHistoryState
-  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-
-  // mCacheKey is handled similar way to mLayoutHistoryState.
-  uint32_t mCacheKey = 0;
 
   bool mLoadReplace = false;
   bool mURIWasModified = false;
   bool mIsSrcdocEntry = false;
   bool mScrollRestorationIsManual = false;
   bool mPersist = false;
+
+  union SharedState {
+    SharedState();
+    explicit SharedState(const SharedState& aOther);
+    ~SharedState();
+
+    SharedState& operator=(const SharedState& aOther);
+
+    SHEntrySharedState* Get() const;
+
+    static SharedState Create(nsIPrincipal* aTriggeringPrincipal,
+                              nsIPrincipal* aPrincipalToInherit,
+                              nsIPrincipal* aPartitionedPrincipalToInherit,
+                              nsIContentSecurityPolicy* aCsp,
+                              const nsACString& aContentType);
+
+   private:
+    explicit SharedState(SHEntrySharedParentState* aParent)
+        : mParent(aParent) {}
+    explicit SharedState(UniquePtr<SHEntrySharedState>&& aChild)
+        : mChild(std::move(aChild)) {}
+
+    // In the parent process this holds a strong reference to the refcounted
+    // SHEntrySharedParentState. In the child processes this holds an owning
+    // pointer to a SHEntrySharedState.
+    RefPtr<SHEntrySharedParentState> mParent;
+    UniquePtr<SHEntrySharedState> mChild;
+  };
+
+  SharedState mSharedState;
 };
 
 struct LoadingSessionHistoryInfo {
@@ -139,6 +159,8 @@ class SessionHistoryEntry : public nsISHEntry {
 
   const SessionHistoryInfo& Info() const { return *mInfo; }
 
+  SHEntrySharedParentState* SharedInfo() const;
+
   void AddChild(SessionHistoryEntry* aChild, int32_t aOffset,
                 bool aUseRemoteSubframes);
   void RemoveChild(SessionHistoryEntry* aChild);
@@ -152,8 +174,6 @@ class SessionHistoryEntry : public nsISHEntry {
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
   static void RemoveLoadId(uint64_t aLoadId);
 
-  static void MaybeSynchronizeSharedStateToInfo(nsISHEntry* aEntry);
-
  private:
   friend struct LoadingSessionHistoryInfo;
   virtual ~SessionHistoryEntry();
@@ -161,7 +181,6 @@ class SessionHistoryEntry : public nsISHEntry {
   const nsID& DocshellID() const;
 
   UniquePtr<SessionHistoryInfo> mInfo;
-  RefPtr<SHEntrySharedParentState> mSharedInfo;
   nsISHEntry* mParent = nullptr;
   uint32_t mID;
   nsTArray<RefPtr<SessionHistoryEntry>> mChildren;
