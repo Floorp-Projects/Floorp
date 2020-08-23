@@ -3756,12 +3756,12 @@ BrowserGlue.prototype = {
 
   _maybeShowDefaultBrowserPrompt() {
     DefaultBrowserCheck.willCheckDefaultBrowser(/* isStartupCheck */ true).then(
-      willPrompt => {
+      async willPrompt => {
         let win = BrowserWindowTracker.getTopWindow();
         if (!willPrompt) {
           // If we're not showing the modal prompt, maybe we
           // still want to show the passive notification bar.
-          win.DefaultBrowserNotificationOnNewTabPage.init();
+          await win.DefaultBrowserNotificationOnNewTabPage.init();
           return;
         }
         DefaultBrowserCheck.prompt(win);
