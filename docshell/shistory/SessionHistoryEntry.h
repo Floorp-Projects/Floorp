@@ -132,6 +132,10 @@ class SessionHistoryInfo {
 
     SHEntrySharedState* Get() const;
 
+    void Set(SHEntrySharedParentState* aState) { mParent = aState; }
+
+    void ChangeId(uint64_t aId);
+
     static SharedState Create(nsIPrincipal* aTriggeringPrincipal,
                               nsIPrincipal* aPrincipalToInherit,
                               nsIPrincipal* aPartitionedPrincipalToInherit,

@@ -10,6 +10,7 @@
 #include "nsStructuredCloneContainer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 
 namespace mozilla {
@@ -182,6 +183,15 @@ SHEntrySharedState* SessionHistoryInfo::SharedState::Get() const {
 
   return mChild.get();
 }
+
+void SessionHistoryInfo::SharedState::ChangeId(uint64_t aId) {
+  if (XRE_IsParentProcess()) {
+    mParent->ChangeId(aId);
+  } else {
+    mChild->mId = aId;
+  }
+}
+
 static uint64_t gLoadingSessionHistoryInfoLoadId = 0;
 
 nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>*
@@ -825,7 +835,7 @@ SessionHistoryEntry::SharesDocumentWith(nsISHEntry* aEntry,
   SessionHistoryEntry* entry = static_cast<SessionHistoryEntry*>(aEntry);
 
   MOZ_ASSERT_IF(entry->SharedInfo() != SharedInfo(),
-                entry->SharedInfo()->GetID() != SharedInfo()->GetID());
+                entry->SharedInfo()->GetId() != SharedInfo()->GetId());
 
   *aSharesDocumentWith = entry->SharedInfo() == SharedInfo();
   return NS_OK;
@@ -1173,21 +1183,63 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
     return false;
   }
 
-  // FIXME If we're in the parent we need to look up the sharedstate
-  //       by id and reuse it, and only create a new one when there is no
-  //       existing sharedstate.
-  aResult->mSharedState.Get()->mId = sharedId;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> principalToInherit;
+  nsCOMPtr<nsIPrincipal> partitionedPrincipalToInherit;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsCString contentType;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &triggeringPrincipal) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &principalToInherit) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &partitionedPrincipalToInherit) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &csp) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &contentType)) {
+    aActor->FatalError("Error reading fields for SessionHistoryInfo");
+    return false;
+  }
+
+  dom::SHEntrySharedParentState* sharedState = nullptr;
+  if (XRE_IsParentProcess()) {
+    sharedState = dom::SHEntrySharedParentState::Lookup(sharedId);
+  }
+
+  if (sharedState) {
+    aResult->mSharedState.Set(sharedState);
+
+    MOZ_ASSERT(triggeringPrincipal
+                   ? triggeringPrincipal->Equals(
+                         aResult->mSharedState.Get()->mTriggeringPrincipal)
+                   : !aResult->mSharedState.Get()->mTriggeringPrincipal,
+               "We don't expect this to change!");
+    MOZ_ASSERT(principalToInherit
+                   ? principalToInherit->Equals(
+                         aResult->mSharedState.Get()->mPrincipalToInherit)
+                   : !aResult->mSharedState.Get()->mPrincipalToInherit,
+               "We don't expect this to change!");
+    MOZ_ASSERT(
+        partitionedPrincipalToInherit
+            ? partitionedPrincipalToInherit->Equals(
+                  aResult->mSharedState.Get()->mPartitionedPrincipalToInherit)
+            : !aResult->mSharedState.Get()->mPartitionedPrincipalToInherit,
+        "We don't expect this to change!");
+    MOZ_ASSERT(
+        csp ? nsCSPContext::Equals(csp, aResult->mSharedState.Get()->mCsp)
+            : !aResult->mSharedState.Get()->mCsp,
+        "We don't expect this to change!");
+    MOZ_ASSERT(contentType.Equals(aResult->mSharedState.Get()->mContentType),
+               "We don't expect this to change!");
+  } else {
+    aResult->mSharedState.ChangeId(sharedId);
+    aResult->mSharedState.Get()->mTriggeringPrincipal =
+        triggeringPrincipal.forget();
+    aResult->mSharedState.Get()->mPrincipalToInherit =
+        principalToInherit.forget();
+    aResult->mSharedState.Get()->mPartitionedPrincipalToInherit =
+        partitionedPrincipalToInherit.forget();
+    aResult->mSharedState.Get()->mCsp = csp.forget();
+    aResult->mSharedState.Get()->mContentType = contentType;
+  }
+
   if (!ReadIPDLParam(aMsg, aIter, aActor,
-                     &aResult->mSharedState.Get()->mTriggeringPrincipal) ||
-      !ReadIPDLParam(aMsg, aIter, aActor,
-                     &aResult->mSharedState.Get()->mPrincipalToInherit) ||
-      !ReadIPDLParam(
-          aMsg, aIter, aActor,
-          &aResult->mSharedState.Get()->mPartitionedPrincipalToInherit) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSharedState.Get()->mCsp) ||
-      !ReadIPDLParam(aMsg, aIter, aActor,
-                     &aResult->mSharedState.Get()->mContentType) ||
-      !ReadIPDLParam(aMsg, aIter, aActor,
                      &aResult->mSharedState.Get()->mLayoutHistoryState) ||
       !ReadIPDLParam(aMsg, aIter, aActor,
                      &aResult->mSharedState.Get()->mCacheKey)) {
