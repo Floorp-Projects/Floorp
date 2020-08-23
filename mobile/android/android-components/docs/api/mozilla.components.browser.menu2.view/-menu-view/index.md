@@ -2,7 +2,7 @@
 
 # MenuView
 
-`class MenuView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/view/MenuView.kt#L27)
+`class MenuView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/view/MenuView.kt#L29)
 
 A popup menu composed of [MenuCandidate](../../mozilla.components.concept.menu.candidate/-menu-candidate/index.md) objects.
 
@@ -23,6 +23,7 @@ A popup menu composed of [MenuCandidate](../../mozilla.components.concept.menu.c
 
 | Name | Summary |
 |---|---|
+| [setStyle](set-style.md) | `fun setStyle(style: `[`MenuStyle`](../../mozilla.components.concept.menu/-menu-style/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the background color for the menu view. |
 | [setVisibleSide](set-visible-side.md) | `fun setVisibleSide(side: `[`Side`](../../mozilla.components.concept.menu/-side/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Displays either the start or the end of the list. |
 | [submitList](submit-list.md) | `fun submitList(list: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`MenuCandidate`](../../mozilla.components.concept.menu.candidate/-menu-candidate/index.md)`>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Changes the contents of the menu. |
 

@@ -22,6 +22,7 @@ free up some [ContentState.thumbnail](../../mozilla.components.browser.state.sta
 
 | Name | Summary |
 |---|---|
+| [requestScreenshot](request-screenshot.md) | `fun requestScreenshot(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Requests a screenshot to be taken that can be observed from [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md) if successful. The request can fail if the device is low on memory or if there is no tab attached to the [EngineView](../../mozilla.components.concept.engine/-engine-view/index.md). |
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts observing the selected session to listen for when a session finishes loading. |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stops observing the selected session. |
 

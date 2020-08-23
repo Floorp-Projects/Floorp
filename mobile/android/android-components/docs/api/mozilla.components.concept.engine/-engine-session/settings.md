@@ -2,7 +2,7 @@
 
 # settings
 
-`abstract val settings: `[`Settings`](../-settings/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L139)
+`abstract val settings: `[`Settings`](../-settings/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L143)
 
 Provides access to the settings of this engine session.
 

@@ -2,7 +2,7 @@
 
 # TrackingProtectionPolicyForSessionTypes
 
-`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L370)
+`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L374)
 
 Subtype of [TrackingProtectionPolicy](../-tracking-protection-policy/index.md) to control the type of session this policy
 should be applied to. By default, a policy will be applied to all sessions.

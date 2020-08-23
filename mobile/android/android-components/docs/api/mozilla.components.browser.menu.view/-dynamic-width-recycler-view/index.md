@@ -4,13 +4,20 @@
 
 `class DynamicWidthRecyclerView : RecyclerView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/view/DynamicWidthRecyclerView.kt#L18)
 
-[RecylerView](#) with automatically set width between widthMin / widthMax xml attributes.
+[RecyclerView](#) with automatically set width between widthMin / widthMax xml attributes.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `DynamicWidthRecyclerView(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null)`<br>[RecylerView](#) with automatically set width between widthMin / widthMax xml attributes. |
+| [&lt;init&gt;](-init-.md) | `DynamicWidthRecyclerView(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null)`<br>[RecyclerView](#) with automatically set width between widthMin / widthMax xml attributes. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [maxWidth](max-width.md) | `var maxWidth: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [minWidth](min-width.md) | `var minWidth: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 
 ### Functions
 

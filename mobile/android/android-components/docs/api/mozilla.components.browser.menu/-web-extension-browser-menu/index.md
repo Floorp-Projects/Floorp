@@ -2,7 +2,7 @@
 
 # WebExtensionBrowserMenu
 
-`class WebExtensionBrowserMenu : `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L26)
+`class WebExtensionBrowserMenu : `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L27)
 
 A [BrowserMenu](../-browser-menu/index.md) capable of displaying browser and page actions from web extensions.
 
@@ -16,7 +16,7 @@ A [BrowserMenu](../-browser-menu/index.md) capable of displaying browser and pag
 
 | Name | Summary |
 |---|---|
-| [show](show.md) | `fun show(anchor: <ERROR CLASS>, orientation: `[`Orientation`](../-browser-menu/-orientation/index.md)`, endOfMenuAlwaysVisible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, onDismiss: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): <ERROR CLASS>` |
+| [show](show.md) | `fun show(anchor: <ERROR CLASS>, orientation: `[`Orientation`](../-browser-menu/-orientation/index.md)`, style: `[`MenuStyle`](../../mozilla.components.concept.menu/-menu-style/index.md)`?, endOfMenuAlwaysVisible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, onDismiss: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): <ERROR CLASS>` |
 
 ### Inherited Functions
 

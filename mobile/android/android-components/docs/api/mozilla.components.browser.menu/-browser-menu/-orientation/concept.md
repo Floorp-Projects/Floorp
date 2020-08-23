@@ -2,4 +2,4 @@
 
 # concept
 
-`val concept: `[`Orientation`](../../../mozilla.components.concept.menu/-orientation/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L149)
+`val concept: `[`Orientation`](../../../mozilla.components.concept.menu/-orientation/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L159)

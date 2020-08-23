@@ -4,5 +4,5 @@
 
 `DynamicWidthRecyclerView(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null)`
 
-[RecylerView](#) with automatically set width between widthMin / widthMax xml attributes.
+[RecyclerView](#) with automatically set width between widthMin / widthMax xml attributes.
 

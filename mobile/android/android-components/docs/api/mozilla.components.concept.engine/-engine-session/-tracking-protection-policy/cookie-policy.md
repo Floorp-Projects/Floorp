@@ -2,4 +2,4 @@
 
 # cookiePolicy
 
-`val cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L186)
+`val cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L190)
