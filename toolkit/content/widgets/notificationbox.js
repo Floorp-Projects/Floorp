@@ -191,6 +191,10 @@
           }
 
           buttonElem.classList.add("notification-button");
+          if (button.primary) {
+            buttonElem.classList.add("primary");
+          }
+
           newitem.messageDetails.appendChild(buttonElem);
           buttonElem.buttonInfo = button;
         }
