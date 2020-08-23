@@ -51,6 +51,7 @@ var DefaultBrowserNotificationOnNewTabPage = {
     let buttons = [
       {
         "l10n-id": "default-browser-notification-button",
+        primary: true,
         callback: () => {
           ShellService.setAsDefault();
           this.closePrompt();
