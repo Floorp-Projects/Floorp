@@ -17,6 +17,13 @@
 
 namespace mozilla {
 
+constexpr bool kIsDebug =
+#ifdef DEBUG
+    true;
+#else
+    false;
+#endif
+
 constexpr bool kIsWindows =
 #ifdef XP_WIN
     true;
