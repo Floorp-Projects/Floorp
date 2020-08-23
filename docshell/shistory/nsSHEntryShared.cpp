@@ -7,6 +7,7 @@
 #include "nsSHEntryShared.h"
 
 #include "nsArray.h"
+#include "nsContentUtils.h"
 #include "nsDocShellEditorData.h"
 #include "nsIContentViewer.h"
 #include "nsISHistory.h"
@@ -28,13 +29,17 @@ uint64_t gSHEntrySharedID = 0;
 namespace mozilla {
 namespace dom {
 
+/* static */
+uint64_t SHEntrySharedState::GenerateId() {
+  return nsContentUtils::GenerateProcessSpecificId(++gSHEntrySharedID);
+}
+
 SHEntrySharedParentState::SHEntrySharedParentState(
     nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
     nsIPrincipal* aPartitionedPrincipalToInherit,
     nsIContentSecurityPolicy* aCsp, const nsACString& aContentType)
-    : SHEntrySharedState(++gSHEntrySharedID, aTriggeringPrincipal,
-                         aPrincipalToInherit, aPartitionedPrincipalToInherit,
-                         aCsp, aContentType) {}
+    : SHEntrySharedState(aTriggeringPrincipal, aPrincipalToInherit,
+                         aPartitionedPrincipalToInherit, aCsp, aContentType) {}
 
 SHEntrySharedParentState::~SHEntrySharedParentState() {}
 

@@ -129,10 +129,9 @@ SessionHistoryInfo::SharedState SessionHistoryInfo::SharedState::Create(
         aPartitionedPrincipalToInherit, aCsp, aContentType));
   }
 
-  // FIXME Pass the correct ID!!!
   return SharedState(MakeUnique<SHEntrySharedState>(
-      0, aTriggeringPrincipal, aPrincipalToInherit,
-      aPartitionedPrincipalToInherit, aCsp, aContentType));
+      aTriggeringPrincipal, aPrincipalToInherit, aPartitionedPrincipalToInherit,
+      aCsp, aContentType));
 }
 
 SessionHistoryInfo::SharedState::SharedState() {
