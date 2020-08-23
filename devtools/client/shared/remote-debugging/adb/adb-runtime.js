@@ -15,6 +15,8 @@ class AdbRuntime {
   constructor(adbDevice, socketPath) {
     this._adbDevice = adbDevice;
     this._socketPath = socketPath;
+    // Set a default version name in case versionName cannot be parsed.
+    this._versionName = "";
   }
 
   async init() {
