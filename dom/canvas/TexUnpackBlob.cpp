@@ -19,6 +19,43 @@
 
 namespace mozilla {
 
+bool WebGLPixelStore::AssertCurrent(gl::GLContext& gl,
+                                    const bool isWebgl2) const {
+  WebGLPixelStore actual;
+  gl.GetInt(LOCAL_GL_UNPACK_ALIGNMENT, &actual.mUnpackAlignment);
+  if (isWebgl2) {
+    gl.GetInt(LOCAL_GL_UNPACK_ROW_LENGTH, &actual.mUnpackRowLength);
+    gl.GetInt(LOCAL_GL_UNPACK_IMAGE_HEIGHT, &actual.mUnpackImageHeight);
+
+    gl.GetInt(LOCAL_GL_UNPACK_SKIP_PIXELS, &actual.mUnpackSkipPixels);
+    gl.GetInt(LOCAL_GL_UNPACK_SKIP_ROWS, &actual.mUnpackSkipRows);
+    gl.GetInt(LOCAL_GL_UNPACK_SKIP_IMAGES, &actual.mUnpackSkipImages);
+  }
+
+  bool ok = true;
+  ok &= (mUnpackAlignment == actual.mUnpackAlignment);
+  ok &= (mUnpackRowLength == actual.mUnpackRowLength);
+  ok &= (mUnpackImageHeight == actual.mUnpackImageHeight);
+  ok &= (mUnpackSkipPixels == actual.mUnpackSkipPixels);
+  ok &= (mUnpackSkipRows == actual.mUnpackSkipRows);
+  ok &= (mUnpackSkipImages == actual.mUnpackSkipImages);
+  if (ok) return ok;
+
+  const auto fnToStr = [](const WebGLPixelStore& x) {
+    const auto text = nsPrintfCString("%u,%u,%u;%u,%u,%u", x.mUnpackAlignment,
+                                      x.mUnpackRowLength, x.mUnpackImageHeight,
+                                      x.mUnpackSkipPixels, x.mUnpackSkipRows,
+                                      x.mUnpackSkipImages);
+    return ToString(text);
+  };
+
+  const auto was = fnToStr(actual);
+  const auto expected = fnToStr(*this);
+  gfxCriticalError() << "WebGLPixelStore not current. Was " << was
+                     << ". Expected << " << expected << ".";
+  return ok;
+}
+
 void WebGLPixelStore::Apply(gl::GLContext& gl, const bool isWebgl2,
                             const uvec3& uploadSize) const {
   gl.fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mUnpackAlignment);

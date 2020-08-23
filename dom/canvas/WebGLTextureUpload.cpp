@@ -982,12 +982,6 @@ void WebGLTexture::TexImage(uint32_t level, GLenum respecFormat,
   ////////////////////////////////////
   // Do the thing!
 
-  blob->mDesc.unpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
-  const auto revertUnpacking = MakeScopeExit([&]() {
-    const WebGLPixelStore defaultUnpacking;
-    defaultUnpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
-  });
-
   Maybe<webgl::ImageInfo> newImageInfo;
   bool isRespec = false;
   if (respecFormat) {
@@ -1013,6 +1007,14 @@ void WebGLTexture::TexImage(uint32_t level, GLenum respecFormat,
       return;
     }
   }
+
+  WebGLPixelStore::AssertDefault(*mContext->gl, mContext->IsWebGL2());
+
+  blob->mDesc.unpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
+  const auto revertUnpacking = MakeScopeExit([&]() {
+    const WebGLPixelStore defaultUnpacking;
+    defaultUnpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
+  });
 
   const bool isSubImage = !respecFormat;
   GLenum glError;
@@ -1634,6 +1636,8 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
     }
 
     if (!isSubImage || zeros) {
+      WebGLPixelStore::AssertDefault(*gl, webgl->IsWebGL2());
+
       gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
       const auto revert = MakeScopeExit(
           [&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });

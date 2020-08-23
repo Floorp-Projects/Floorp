@@ -588,6 +588,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
 
     // Don't bother with striding it well.
     // TODO: We shouldn't need to do this for CompressedTexSubImage.
+    WebGLPixelStore::AssertDefault(*gl, webgl->IsWebGL2());
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
     const auto revert = MakeScopeExit(
         [&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });
@@ -631,6 +632,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
   if (!zeros) return false;
 
   // Don't bother with striding it well.
+  WebGLPixelStore::AssertDefault(*gl, webgl->IsWebGL2());
   gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
   const auto revert =
       MakeScopeExit([&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });

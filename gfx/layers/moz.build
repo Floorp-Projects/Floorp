@@ -90,6 +90,10 @@ EXPORTS.mozilla.dom += [
     'apz/util/CheckerboardReportService.h',
 ]
 
+EXPORTS.mozilla.gfx += [
+    'BuildConstants.h',
+]
+
 EXPORTS.mozilla.layers += [
     'AnimationHelper.h',
     'AnimationInfo.h',
