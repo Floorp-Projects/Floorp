@@ -2,6 +2,11 @@
 
 ChromeUtils.defineModuleGetter(
   this,
+  "ObjectUtils",
+  "resource://gre/modules/ObjectUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm"
 );
