@@ -267,6 +267,7 @@ bool ValueSetter(JSContext* cx, const JS::CallArgs& args);
 static bool Address(JSContext* cx, unsigned argc, Value* vp);
 static bool ReadString(JSContext* cx, unsigned argc, Value* vp);
 static bool ReadStringReplaceMalformed(JSContext* cx, unsigned argc, Value* vp);
+static bool ReadTypedArray(JSContext* cx, unsigned argc, Value* vp);
 static bool ToSource(JSContext* cx, unsigned argc, Value* vp);
 static JSString* GetSourceString(JSContext* cx, HandleObject typeObj,
                                  void* data);
@@ -340,6 +341,7 @@ namespace Methods {
 static bool Dispose(JSContext* cx, unsigned argc, Value* vp);
 static bool Forget(JSContext* cx, unsigned argc, Value* vp);
 static bool ReadString(JSContext* cx, unsigned argc, Value* vp);
+static bool ReadTypedArray(JSContext* cx, unsigned argc, Value* vp);
 static bool ToSource(JSContext* cx, unsigned argc, Value* vp);
 static bool ToString(JSContext* cx, unsigned argc, Value* vp);
 }  // namespace Methods
@@ -594,6 +596,7 @@ static const JSFunctionSpec sCDataFunctions[] = {
     JS_FN("readString", CData::ReadString, 0, CDATAFN_FLAGS),
     JS_FN("readStringReplaceMalformed", CData::ReadStringReplaceMalformed, 0,
           CDATAFN_FLAGS),
+    JS_FN("readTypedArray", CData::ReadTypedArray, 0, CDATAFN_FLAGS),
     JS_FN("toSource", CData::ToSource, 0, CDATAFN_FLAGS),
     JS_FN("toString", CData::ToSource, 0, CDATAFN_FLAGS),
     JS_FS_END};
@@ -603,6 +606,8 @@ static const JSFunctionSpec sCDataFinalizerFunctions[] = {
           CDATAFINALIZERFN_FLAGS),
     JS_FN("forget", CDataFinalizer::Methods::Forget, 0, CDATAFINALIZERFN_FLAGS),
     JS_FN("readString", CDataFinalizer::Methods::ReadString, 0,
+          CDATAFINALIZERFN_FLAGS),
+    JS_FN("readTypedArray", CDataFinalizer::Methods::ReadTypedArray, 0,
           CDATAFINALIZERFN_FLAGS),
     JS_FN("toString", CDataFinalizer::Methods::ToString, 0,
           CDATAFINALIZERFN_FLAGS),
@@ -1677,6 +1682,18 @@ static bool NonStringBaseError(JSContext* cx, HandleValue thisVal) {
 
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            CTYPESMSG_NON_STRING_BASE, valStr);
+  return false;
+}
+
+static bool NonTypedArrayBaseError(JSContext* cx, HandleValue thisVal) {
+  JS::UniqueChars valBytes;
+  const char* valStr = CTypesToSourceForError(cx, thisVal, valBytes);
+  if (!valStr) {
+    return false;
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_NON_TYPEDARRAY_BASE, valStr);
   return false;
 }
 
@@ -7764,22 +7781,15 @@ bool CData::GetRuntime(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-using InflateUTF8Method = JS::TwoByteCharsZ (*)(JSContext*, const JS::UTF8Chars,
-                                                size_t*, arena_id_t);
-
-static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
-                             unsigned argc, Value* vp, const char* funName,
-                             arena_id_t destArenaId) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 0) {
-    return ArgumentLengthError(cx, funName, "no", "s");
-  }
-
-  RootedObject obj(cx, GetThisObject(cx, args, funName));
+// Unwrap the `this` object to a CData object, or extract a CData object from a
+// CDataFinalizer.
+static bool GetThisDataObject(JSContext* cx, const CallArgs& args,
+                              const char* funName, MutableHandleObject obj) {
+  obj.set(GetThisObject(cx, args, funName));
   if (!obj) {
     return IncompatibleThisProto(cx, funName, args.thisv());
   }
-  if (!CData::IsCDataMaybeUnwrap(&obj)) {
+  if (!CData::IsCDataMaybeUnwrap(obj)) {
     if (!CDataFinalizer::IsCDataFinalizer(obj)) {
       return IncompatibleThisProto(cx, funName, args.thisv());
     }
@@ -7798,10 +7808,29 @@ static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
       return IncompatibleThisProto(cx, funName, args.thisv());
     }
 
-    obj = dataVal.toObjectOrNull();
-    if (!obj || !CData::IsCDataMaybeUnwrap(&obj)) {
+    obj.set(dataVal.toObjectOrNull());
+    if (!obj || !CData::IsCDataMaybeUnwrap(obj)) {
       return IncompatibleThisProto(cx, funName, args.thisv());
     }
+  }
+
+  return true;
+}
+
+typedef JS::TwoByteCharsZ (*InflateUTF8Method)(JSContext*, const JS::UTF8Chars,
+                                               size_t*, arena_id_t);
+
+static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
+                             unsigned argc, Value* vp, const char* funName,
+                             arena_id_t destArenaId) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 0) {
+    return ArgumentLengthError(cx, funName, "no", "s");
+  }
+
+  RootedObject obj(cx);
+  if (!GetThisDataObject(cx, args, funName, &obj)) {
+    return false;
   }
 
   // Make sure we are a pointer to, or an array of, an 8-bit or 16-bit
@@ -7894,6 +7923,146 @@ bool CData::ReadStringReplaceMalformed(JSContext* cx, unsigned argc,
   return ReadStringCommon(cx, JS::LossyUTF8CharsToNewTwoByteCharsZ, argc, vp,
                           "CData.prototype.readStringReplaceMalformed",
                           js::StringBufferArena);
+}
+
+using TypedArrayConstructor = JSObject* (*)(JSContext*, uint32_t);
+
+template <typename Type>
+TypedArrayConstructor GetTypedArrayConstructorImpl() {
+  if (std::is_floating_point_v<Type>) {
+    switch (sizeof(Type)) {
+      case 4:
+        return JS_NewFloat32Array;
+      case 8:
+        return JS_NewFloat64Array;
+      default:
+        return nullptr;
+    }
+  }
+
+  constexpr bool isSigned = std::is_signed_v<Type>;
+  switch (sizeof(Type)) {
+    case 1:
+      return isSigned ? JS_NewInt8Array : JS_NewUint8Array;
+    case 2:
+      return isSigned ? JS_NewInt16Array : JS_NewUint16Array;
+    case 4:
+      return isSigned ? JS_NewInt32Array : JS_NewUint32Array;
+    default:
+      return nullptr;
+  }
+}
+
+static TypedArrayConstructor GetTypedArrayConstructor(TypeCode baseType) {
+  switch (baseType) {
+#define MACRO(name, ctype, _) \
+  case TYPE_##name:           \
+    return GetTypedArrayConstructorImpl<ctype>();
+    CTYPES_FOR_EACH_TYPE(MACRO)
+#undef MACRO
+    default:
+      return nullptr;
+  }
+}
+
+static bool ReadTypedArrayCommon(JSContext* cx, unsigned argc, Value* vp,
+                                 const char* funName) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 0) {
+    return ArgumentLengthError(cx, funName, "no", "s");
+  }
+
+  RootedObject obj(cx);
+  if (!GetThisDataObject(cx, args, funName, &obj)) {
+    return false;
+  }
+
+  // Make sure we are a pointer to, or an array of, a type that is compatible
+  // with a typed array base type.
+  JSObject* baseType;
+  JSObject* typeObj = CData::GetCType(obj);
+  TypeCode typeCode = CType::GetTypeCode(typeObj);
+  void* data;
+  mozilla::Maybe<size_t> length;
+  switch (typeCode) {
+    case TYPE_pointer:
+      baseType = PointerType::GetBaseType(typeObj);
+      data = *static_cast<void**>(CData::GetData(obj));
+      if (data == nullptr) {
+        return NullPointerError(cx, "read contents of", obj);
+      }
+      break;
+    case TYPE_array:
+      baseType = ArrayType::GetBaseType(typeObj);
+      data = CData::GetData(obj);
+      length.emplace(ArrayType::GetLength(typeObj));
+      break;
+    default:
+      return TypeError(cx, "PointerType or ArrayType", args.thisv());
+  }
+
+  TypeCode baseTypeCode = CType::GetTypeCode(baseType);
+
+  // For string inputs only, use strlen to determine the length.
+  switch (baseTypeCode) {
+    case TYPE_char:
+    case TYPE_signed_char:
+    case TYPE_unsigned_char:
+      if (!length) {
+        length.emplace(js_strnlen(static_cast<char*>(data), INT32_MAX));
+      }
+      break;
+
+    case TYPE_char16_t:
+      if (!length) {
+        length.emplace(js_strlen(static_cast<char16_t*>(data)));
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  if (!length) {
+    return NonStringBaseError(cx, args.thisv());
+  }
+
+  auto makeTypedArray = GetTypedArrayConstructor(baseTypeCode);
+  if (!makeTypedArray) {
+    return NonTypedArrayBaseError(cx, args.thisv());
+  }
+
+  CheckedInt<size_t> size = *length;
+  size *= CType::GetSize(baseType);
+  if (!size.isValid() ||
+      size.value() > ArrayBufferObject::MaxBufferByteLength) {
+    return SizeOverflow(cx, "data", "typed array");
+  }
+
+  JSObject* result = makeTypedArray(cx, *length);
+  if (!result) {
+    return false;
+  }
+
+  AutoCheckCannotGC nogc(cx);
+  bool isShared;
+  void* buffer = JS_GetArrayBufferViewData(&result->as<ArrayBufferViewObject>(),
+                                           &isShared, nogc);
+  MOZ_ASSERT(!isShared);
+  memcpy(buffer, data, size.value());
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+bool CData::ReadTypedArray(JSContext* cx, unsigned argc, Value* vp) {
+  return ReadTypedArrayCommon(cx, argc, vp, "CData.prototype.readTypedArray");
+}
+
+bool CDataFinalizer::Methods::ReadTypedArray(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  return ReadTypedArrayCommon(cx, argc, vp,
+                              "CDataFinalizer.prototype.readTypedArray");
 }
 
 JSString* CData::GetSourceString(JSContext* cx, HandleObject typeObj,
