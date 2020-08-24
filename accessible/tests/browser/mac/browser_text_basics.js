@@ -43,11 +43,6 @@ function testWordAtMarker(
     expectedRight,
     "Right word matches"
   );
-
-  return macDoc.getParameterizedAttributeValue(
-    "AXNextTextMarkerForTextMarker",
-    marker
-  );
 }
 
 // Read-only tests
@@ -80,7 +75,7 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
   is(stringForRange(macDoc, range), "ello Wo");
 });
 
-addAccessibleTask(`<p>hello world goodbye</p>`, async (browser, accDoc) => {
+addAccessibleTask(`<p>hello world goodbye</p>`, (browser, accDoc) => {
   let macDoc = accDoc.nativeInterface.QueryInterface(
     Ci.nsIAccessibleMacInterface
   );
@@ -117,11 +112,12 @@ addAccessibleTask(`<p>hello world goodbye</p>`, async (browser, accDoc) => {
   testWordAndAdvance("goodbye", "");
 
   ok(!marker, "Iterated through all markers");
+  testMarkerIntegrity(accDoc);
 });
 
 addAccessibleTask(
   `<p>hello world <a href="#">i love you</a> goodbye</p>`,
-  async (browser, accDoc) => {
+  (browser, accDoc) => {
     let macDoc = accDoc.nativeInterface.QueryInterface(
       Ci.nsIAccessibleMacInterface
     );
@@ -167,12 +163,15 @@ addAccessibleTask(
     testWordAndAdvance("goodbye", "goodbye");
     testWordAndAdvance("goodbye", "goodbye");
     testWordAndAdvance("goodbye", "");
+
+    ok(!marker, "Iterated through all markers");
+    testMarkerIntegrity(accDoc);
   }
 );
 
 addAccessibleTask(
   `<p>hello <a href=#">wor</a>ld goodbye</p>`,
-  async (browser, accDoc) => {
+  (browser, accDoc) => {
     let macDoc = accDoc.nativeInterface.QueryInterface(
       Ci.nsIAccessibleMacInterface
     );
@@ -212,5 +211,53 @@ addAccessibleTask(
     );
     is(stringForRange(macDoc, left), "world", "Left word matches");
     is(stringForRange(macDoc, right), "world", "Right word matches");
+
+    testMarkerIntegrity(accDoc);
   }
 );
+
+addAccessibleTask(
+  `<div id="a">hello</div><div id="b">world</div>`,
+  (browser, accDoc) => {
+    testMarkerIntegrity(accDoc);
+  }
+);
+
+addAccessibleTask(`<p>hello <input> world</p>`, (browser, accDoc) => {
+  testMarkerIntegrity(accDoc);
+});
+
+// Tests consistency in text markers between:
+// 1. "Linked list" forward navagation
+// 2. "Linked list" reverse navagation
+function testMarkerIntegrity(accDoc) {
+  let macDoc = accDoc.nativeInterface.QueryInterface(
+    Ci.nsIAccessibleMacInterface
+  );
+
+  let count = 0;
+
+  // Iterate forward with "AXNextTextMarkerForTextMarker"
+  let marker = macDoc.getAttributeValue("AXStartTextMarker");
+  while (marker) {
+    marker = macDoc.getParameterizedAttributeValue(
+      "AXNextTextMarkerForTextMarker",
+      marker
+    );
+    count++;
+  }
+
+  ok(count != 0, "Iterated forward through text markers");
+
+  // Iterate backward with "AXPreviousTextMarkerForTextMarker"
+  marker = macDoc.getAttributeValue("AXEndTextMarker");
+  while (marker) {
+    count--;
+    marker = macDoc.getParameterizedAttributeValue(
+      "AXPreviousTextMarkerForTextMarker",
+      marker
+    );
+  }
+
+  is(count, 0, "Iterated backward through all text markers");
+}
