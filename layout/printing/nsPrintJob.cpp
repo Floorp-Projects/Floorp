@@ -966,9 +966,20 @@ nsresult nsPrintJob::PrintPreview(
 }
 
 //----------------------------------------------------------------------------------
+int32_t nsPrintJob::GetRawNumPages() const {
+  RefPtr<nsPrintData> printData = mPrtPreview ? mPrtPreview : mPrt;
+  if (NS_WARN_IF(!printData)) {
+    return 0;
+  }
+  auto [seqFrame, numPages] =
+      GetSeqFrameAndCountPagesInternal(printData->mPrintObject);
+
+  Unused << numPages;
+  return seqFrame ? seqFrame->GetRawNumPages() : 0;
+}
+
+//----------------------------------------------------------------------------------
 int32_t nsPrintJob::GetPrintPreviewNumPages() {
-  // When calling this function, the FinishPrintPreview() function might not
-  // been called as there are still some
   RefPtr<nsPrintData> printData = mPrtPreview ? mPrtPreview : mPrt;
   if (NS_WARN_IF(!printData)) {
     return 0;
@@ -2308,7 +2319,7 @@ bool nsPrintJob::PrintPage(nsPrintObject* aPO, bool& aInRange) {
   int32_t pageNum, numPages, endPage;
   nsPageSequenceFrame* pageSeqFrame = do_QueryFrame(mPageSeqFrame.GetFrame());
   pageNum = pageSeqFrame->GetCurrentPageNum();
-  numPages = pageSeqFrame->GetNumPages();
+  numPages = pageSeqFrame->GetRawNumPages();
 
   bool donePrinting;
   bool isDoingPrintRange = pageSeqFrame->IsDoingPrintRange();
