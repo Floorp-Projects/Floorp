@@ -59,6 +59,8 @@ from taskgraph.util.taskcluster import (
     list_artifacts,
 )
 
+from mach.util import UserError
+
 from mozbuild.artifact_cache import ArtifactCache
 from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.util import (
@@ -991,6 +993,13 @@ class Artifacts(object):
             if not hg_hash or hg_hash == zeroes:
                 continue
             hashes.append(hg_hash)
+        if not hashes:
+            raise UserError(
+                'Could not list any recent revisions in your clone. Does your '
+                'clone have git-cinnabar metadata? If not, consider re-cloning '
+                'using the directions at '
+                'https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-'
+                'workflow-for-Gecko-development')
         return hashes
 
     def _get_recent_public_revisions(self):
@@ -1010,7 +1019,7 @@ class Artifacts(object):
                                 cwd=self._topsrcdir).splitlines()
 
         if len(last_revs) == 0:
-            raise Exception("""\
+            raise UserError("""\
 There are no public revisions.
 This can happen if the repository is created from bundle file and never pulled
 from remote.  Please run `hg pull` and build again.
