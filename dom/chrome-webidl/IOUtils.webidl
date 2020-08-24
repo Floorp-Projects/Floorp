@@ -70,6 +70,16 @@ namespace IOUtils {
    * @param destPath   An absolute file path identifying the location for the
    */
   Promise<void> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
+  /**
+   * Updates the |modification| time for the file at |path|.
+   *
+   * @param path         An absolute file path identifying the file to touch.
+   * @param modification An optional modification time for the file expressed in
+   *                     milliseconds since the Unix epoch
+   *                     (1970-01-01T00:00:00Z). The current system time is used
+   *                     if this parameter is not provided.
+   */
+  Promise<long long> touch(DOMString path, optional long long modification);
 };
 
 /**
