@@ -136,6 +136,11 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             view.awesome_bar
         )
 
+        view.awesome_bar.setOnTouchListener { _, _ ->
+            view.hideKeyboard()
+            false
+        }
+
         return view
     }
 

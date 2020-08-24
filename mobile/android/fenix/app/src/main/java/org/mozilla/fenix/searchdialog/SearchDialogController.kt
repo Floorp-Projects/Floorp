@@ -159,6 +159,7 @@ class SearchDialogController(
     }
 
     override fun handleClickSearchEngineSettings() {
+        clearToolbarFocus()
         val directions = SearchDialogFragmentDirections.actionGlobalSearchEngineFragment()
         navController.navigateSafe(R.id.searchDialogFragment, directions)
     }
