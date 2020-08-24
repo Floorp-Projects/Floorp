@@ -703,23 +703,6 @@ class HTMLEditor final : public TextEditor,
       const nsAString& aStringToInsert);
 
   /**
-   * DeleteParentBlocksIfEmpty() removes parent block elements if they
-   * don't have visible contents.  Note that due performance issue of
-   * WhiteSpaceVisibilityKeeper, this call may be expensive.  And also note that
-   * this removes a empty block with a transaction.  So, please make sure that
-   * you've already created `AutoPlaceholderBatch`.
-   *
-   * @param aPoint      The point whether this method climbing up the DOM
-   *                    tree to remove empty parent blocks.
-   * @return            NS_OK if one or more empty block parents are deleted.
-   *                    NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND if the point is
-   *                    not in empty block.
-   *                    Or NS_ERROR_* if something unexpected occurs.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteParentBlocksWithTransactionIfEmpty(const EditorDOMPoint& aPoint);
-
-  /**
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
    */
   MOZ_CAN_RUN_SCRIPT virtual nsresult InsertTextWithTransaction(
@@ -2015,13 +1998,6 @@ class HTMLEditor final : public TextEditor,
       SelectAllOfCurrentList aSelectAllOfCurrentList);
 
   /**
-   * If aContent is a text node that contains only collapsed white-space or
-   * empty and editable.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteNodeIfInvisibleAndEditableTextNode(nsIContent& aContent);
-
-  /**
    * DeleteTextAndTextNodesWithTransaction() removes text or text nodes in
    * the given range.
    */
@@ -2617,28 +2593,6 @@ class HTMLEditor final : public TextEditor,
 
     RefPtr<Element> mEmptyInclusiveAncestorBlockElement;
   };
-
-  /**
-   * DeleteUnnecessaryNodesAndCollapseSelection() removes unnecessary nodes
-   * around aSelectionStartPoint and aSelectionEndPoint.  Then, collapse
-   * selection at aSelectionStartPoint or aSelectionEndPoint (depending on
-   * aDirectionAndAmount).
-   *
-   * @param aDirectionAndAmount         Direction of the deletion.
-   *                                    If nsIEditor::ePrevious, selection will
-   *                                    be collapsed to aSelectionEndPoint.
-   *                                    Otherwise, selection will be collapsed
-   *                                    to aSelectionStartPoint.
-   * @param aSelectionStartPoint        First selection range start after
-   *                                    computing the deleting range.
-   * @param aSelectionEndPoint          First selection range end after
-   *                                    computing the deleting range.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteUnnecessaryNodesAndCollapseSelection(
-      nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aSelectionStartPoint,
-      const EditorDOMPoint& aSelectionEndPoint);
 
   /**
    * HandleDeleteSelectionInternal() is a helper method of
