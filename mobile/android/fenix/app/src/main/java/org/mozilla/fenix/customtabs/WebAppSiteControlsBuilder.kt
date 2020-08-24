@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.customtabs
 
+import android.app.Notification
 import android.content.Context
 import android.content.Intent
-import androidx.core.app.NotificationCompat
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -23,12 +23,8 @@ class WebAppSiteControlsBuilder(
 
     private val inner = SiteControlsBuilder.CopyAndRefresh(reloadUrlUseCase)
 
-    override fun buildNotification(
-        context: Context,
-        builder: NotificationCompat.Builder,
-        channelId: String
-    ) {
-        inner.buildNotification(context, builder, channelId)
+    override fun buildNotification(context: Context, builder: Notification.Builder) {
+        inner.buildNotification(context, builder)
 
         val isPrivateSession = sessionManager.findSessionById(sessionId)?.private ?: false
 
