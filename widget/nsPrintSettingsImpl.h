@@ -95,7 +95,6 @@ class nsPrintSettings : public nsIPrintSettings {
 
   nsString mTitle;
   nsString mURL;
-  nsString mPageNumberFormat;
   nsString mHeaderStrs[NUM_HEAD_FOOT];
   nsString mFooterStrs[NUM_HEAD_FOOT];
 
