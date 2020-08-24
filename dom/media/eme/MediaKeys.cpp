@@ -369,8 +369,7 @@ class MediaKeysGMPCrashHelper : public GMPCrashHelper {
   WeakPtr<MediaKeys> mMediaKeys;
 };
 
-already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy(
-    nsISerialEventTarget* aMainThread) {
+already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
   EME_LOG("MediaKeys[%p]::CreateCDMProxy()", this);
   RefPtr<CDMProxy> proxy;
 #ifdef MOZ_WIDGET_ANDROID
@@ -378,16 +377,14 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy(
     proxy = new MediaDrmCDMProxy(
         this, mKeySystem,
         mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required,
-        aMainThread);
+        mConfig.mPersistentState == MediaKeysRequirement::Required);
   } else
 #endif
   {
     proxy = new ChromiumCDMProxy(
         this, mKeySystem, new MediaKeysGMPCrashHelper(this),
         mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required,
-        aMainThread);
+        mConfig.mPersistentState == MediaKeysRequirement::Required);
   }
   return proxy.forget();
 }
@@ -467,7 +464,7 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   EME_LOG("MediaKeys[%p]::Create() (%s, %s)", this, origin.get(),
           topLevelOrigin.get());
 
-  mProxy = CreateCDMProxy(mDocument->EventTargetFor(TaskCategory::Other));
+  mProxy = CreateCDMProxy();
 
   // The CDMProxy's initialization is asynchronous. The MediaKeys is
   // refcounted, and its instance is returned to JS by promise once
