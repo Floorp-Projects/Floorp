@@ -13,6 +13,13 @@
  * During this shutdown phase, no additional I/O tasks will be accepted --
  * method calls to this interface will reject once shutdown has entered this
  * phase.
+ *
+ * IOUtils methods may reject for any number of reasons. Reasonable attempts
+ * have been made to map each common operating system error to a |DOMException|.
+ * Most often, a caller only needs to check if a given file wasn't found by
+ * catching the rejected error and checking if |ex.name === 'NotFoundError'|.
+ * In other cases, it is likely sufficient to allow the error to be caught and
+ * reported elsewhere.
  */
 [ChromeOnly, Exposed=(Window, Worker)]
 namespace IOUtils {
@@ -22,6 +29,9 @@ namespace IOUtils {
    *
    * @param path      An absolute file path.
    * @param maxBytes  The max bytes to read from the file at path.
+   *
+   * @return Resolves with an array of unsigned byte values read from disk,
+   *         otherwise rejects with a DOMException.
    */
   Promise<Uint8Array> read(DOMString path, optional unsigned long maxBytes);
   /**
@@ -29,6 +39,9 @@ namespace IOUtils {
    * contents as a |DOMString|.
    *
    * @param path An absolute file path.
+   *
+   * @return Resolves with the file contents encoded as a string, otherwise
+   *         rejects with a DOMException.
    */
   Promise<DOMString> readUTF8(DOMString path);
   /**
@@ -44,6 +57,9 @@ namespace IOUtils {
    *
    * @param path    An absolute file path.
    * @param data    Data to write to the file at path.
+   *
+   * @return Resolves with the number of bytes successfully written to the file,
+   *         otherwise rejects with a DOMException.
    */
   Promise<unsigned long long> writeAtomic(DOMString path, Uint8Array data, optional WriteAtomicOptions options = {});
   /**
@@ -52,6 +68,9 @@ namespace IOUtils {
    *
    * @param path      An absolute file path.
    * @param string    A string to encode to UTF-8 and write to the file at path.
+   *
+   * @return Resolves with the number of bytes successfully written to the file,
+   *         otherwise rejects with a DOMException.
    */
   Promise<unsigned long long> writeAtomicUTF8(DOMString path, DOMString string, optional WriteAtomicOptions options = {});
   /**
@@ -63,6 +82,9 @@ namespace IOUtils {
    *                   to move.
    * @param destPath   An absolute file path identifying the destination
    *                   directory and/or file name.
+   *
+   * @return Resolves if the file is moved successfully, otherwise rejects with
+   *         a DOMException.
    */
   Promise<void> move(DOMString sourcePath, DOMString destPath, optional MoveOptions options = {});
   /**
@@ -70,12 +92,18 @@ namespace IOUtils {
    *
    * @param path An absolute file path identifying the file or directory to
    *             remove.
+   *
+   * @return Resolves if the file is removed successfully, otherwise rejects
+   *         with a DOMException.
    */
   Promise<void> remove(DOMString path, optional RemoveOptions options = {});
   /**
    * Creates a new directory at |path| according to |options|.
    *
    * @param path An absolute file path identifying the directory to create.
+   *
+   * @return Resolves if the directory is created successfully, otherwise
+   *         rejects with a DOMException.
    */
   Promise<void> makeDirectory(DOMString path, optional MakeDirectoryOptions options = {});
   /**
@@ -83,6 +111,9 @@ namespace IOUtils {
    *
    * @param path An absolute file path identifying the file or directory to
    *             inspect.
+   *
+   * @return Resolves with a |FileInfo| object for the file at path, otherwise
+   *         rejects with a DOMException.
    *
    * @see FileInfo
    */
@@ -94,6 +125,10 @@ namespace IOUtils {
    * @param sourcePath An absolute file path identifying the source file to be
    *                   copied.
    * @param destPath   An absolute file path identifying the location for the
+   *                   copy.
+   *
+   * @return Resolves if the file was copied successfully, otherwise rejects
+   *         with a DOMException.
    */
   Promise<void> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
   /**
@@ -104,6 +139,10 @@ namespace IOUtils {
    *                     milliseconds since the Unix epoch
    *                     (1970-01-01T00:00:00Z). The current system time is used
    *                     if this parameter is not provided.
+   *
+   * @return Resolves with the updated modification time expressed in
+   *         milliseconds since the Unix epoch, otherwise rejects with a
+   *         DOMException.
    */
   Promise<long long> touch(DOMString path, optional long long modification);
 };
