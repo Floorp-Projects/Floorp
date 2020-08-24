@@ -15,6 +15,13 @@ using namespace mozilla;
 using mozilla::dom::Promise;
 using mozilla::gfx::MarginDouble;
 
+void nsPrinterBase::CachePrintSettingsInitializer(
+    const PrintSettingsInitializer& aInitializer) {
+  if (mPrintSettingsInitializer.isNothing()) {
+    mPrintSettingsInitializer.emplace(aInitializer);
+  }
+}
+
 template <typename Index, Index Size, typename Value>
 inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback,
@@ -57,6 +64,7 @@ void ResolveOrReject(Promise& aPromise, nsPrinterBase& aPrinter,
 template <>
 void ResolveOrReject(Promise& aPromise, nsPrinterBase& aPrinter,
                      const PrintSettingsInitializer& aResult) {
+  aPrinter.CachePrintSettingsInitializer(aResult);
   aPromise.MaybeResolve(
       RefPtr<nsIPrintSettings>(CreatePlatformPrintSettings(aResult)));
 }
@@ -75,8 +83,27 @@ nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
 
 NS_IMETHODIMP nsPrinterBase::CreateDefaultSettings(JSContext* aCx,
                                                    Promise** aResultPromise) {
-  // This doesn't yet implement caching. See bug 1659551.
   MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG_POINTER(aResultPromise);
+
+  if (mPrintSettingsInitializer.isSome()) {
+    ErrorResult rv;
+    RefPtr<dom::Promise> promise =
+        dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+
+    if (MOZ_UNLIKELY(rv.Failed())) {
+      *aResultPromise = nullptr;
+      return rv.StealNSResult();
+    }
+
+    RefPtr<nsIPrintSettings> settings(
+        CreatePlatformPrintSettings(mPrintSettingsInitializer.ref()));
+    promise->MaybeResolve(settings);
+
+    promise.forget(aResultPromise);
+    return NS_OK;
+  }
+
   return PrintBackgroundTaskPromise(*this, aCx, aResultPromise,
                                     &nsPrinterBase::DefaultSettings);
 }
