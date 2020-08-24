@@ -1309,7 +1309,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
 
-  if (JitOptions.warpBuilder && JitOptions.warpTrialInlining) {
+  if (JitOptions.warpBuilder && !JitOptions.disableInlining) {
     // Consider trial inlining.
     // Note: unlike other warmup thresholds, where we try to enter a
     // higher tier whenever we are higher than a given warmup count,
