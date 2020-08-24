@@ -6426,15 +6426,9 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     }
   }
 
-  // TODO: Convert to QM_TRY_VAR once we have an adapter for it.
-  nsCOMPtr<mozIStorageService> ss;
-  {
-    nsresult rv;
-    ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+  QM_TRY_VAR(auto ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
+                          MOZ_SELECT_OVERLOAD(do_GetService),
+                          MOZ_STORAGE_SERVICE_CONTRACTID));
 
   QM_TRY_VAR(auto connection,
              ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(

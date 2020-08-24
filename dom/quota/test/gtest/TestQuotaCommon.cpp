@@ -379,3 +379,63 @@ TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr_Err)
   EXPECT_TRUE(res.isErr());
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
+
+TEST(QuotaCommon_ToResultGet, Lambda_NoInput)
+{
+  auto task = [](nsresult* aRv) -> int32_t {
+    *aRv = NS_OK;
+    return 42;
+  };
+
+  auto res = ToResultGet<int32_t>(task);
+
+  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
+
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_ToResultGet, Lambda_NoInput_Err)
+{
+  auto task = [](nsresult* aRv) -> int32_t {
+    *aRv = NS_ERROR_FAILURE;
+    return -1;
+  };
+
+  auto res = ToResultGet<int32_t>(task);
+
+  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
+
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_ToResultGet, Lambda_WithInput)
+{
+  auto task = [](int32_t aValue, nsresult* aRv) -> int32_t {
+    *aRv = NS_OK;
+    return aValue * 2;
+  };
+
+  auto res = ToResultGet<int32_t>(task, 42);
+
+  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
+
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 84);
+}
+
+TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Err)
+{
+  auto task = [](int32_t aValue, nsresult* aRv) -> int32_t {
+    *aRv = NS_ERROR_FAILURE;
+    return -1;
+  };
+
+  auto res = ToResultGet<int32_t>(task, 42);
+
+  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
+
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+}
