@@ -206,10 +206,10 @@ static const char kFontWenQuanYiMicroHei[] = "WenQuanYi Micro Hei";
 static const char kFontNanumGothic[] = "NanumGothic";
 static const char kFontSymbola[] = "Symbola";
 
-void gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
-                                            eFontPresentation aPresentation,
+void gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
+                                            Script aRunScript,
                                             nsTArray<const char*>& aFontList) {
-  if (aPresentation == eFontPresentation::Emoji) {
+  if (ShouldPreferEmojiFont(aCh, aNextCh)) {
     aFontList.AppendElement(kFontTwemojiMozilla);
   }
 

@@ -12,7 +12,6 @@
 #include "gfxFontFeatures.h"
 #include "gfxFontUtils.h"
 #include "gfxFontVariations.h"
-#include "gfxPlatform.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "mozilla/HashFunctions.h"
@@ -255,15 +254,6 @@ class gfxFontEntry {
                           const mozilla::gfx::DeviceColor& aDefaultColor,
                           nsTArray<uint16_t>& layerGlyphs,
                           nsTArray<mozilla::gfx::DeviceColor>& layerColors);
-  bool HasColorLayersForGlyph(uint32_t aGlyphId) {
-    MOZ_ASSERT(mCOLR);
-    return gfxFontUtils::HasColorLayersForGlyph(mCOLR, aGlyphId);
-  }
-
-  bool HasColorBitmapTable() {
-    return HasFontTable(TRUETYPE_TAG('C', 'B', 'D', 'T')) ||
-           HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
-  }
 
   // Access to raw font table data (needed for Harfbuzz):
   // returns a pointer to data owned by the fontEntry or the OS,
@@ -762,23 +752,17 @@ inline bool gfxFontEntry::SupportsBold() {
 
 // used when iterating over all fonts looking for a match for a given character
 struct GlobalFontMatch {
-  GlobalFontMatch(uint32_t aCharacter, uint32_t aNextCh,
-                  const gfxFontStyle& aStyle, eFontPresentation aPresentation)
-      : mStyle(aStyle),
-        mCh(aCharacter),
-        mNextCh(aNextCh),
-        mPresentation(aPresentation) {}
+  GlobalFontMatch(const uint32_t aCharacter, const gfxFontStyle& aStyle)
+      : mStyle(aStyle), mCh(aCharacter) {}
 
   RefPtr<gfxFontEntry> mBestMatch;       // current best match
   RefPtr<gfxFontFamily> mMatchedFamily;  // the family it belongs to
   mozilla::fontlist::Family* mMatchedSharedFamily = nullptr;
-  const gfxFontStyle& mStyle;  // style to match
-  const uint32_t mCh;          // codepoint to be matched
-  const uint32_t mNextCh;      // following codepoint (or zero)
-  eFontPresentation mPresentation;
-  uint32_t mCount = 0;               // number of fonts matched
-  uint32_t mCmapsTested = 0;         // number of cmaps tested
-  double mMatchDistance = INFINITY;  // metric indicating closest match
+  const gfxFontStyle& mStyle;       // style to match
+  const uint32_t mCh;               // codepoint to be matched
+  uint32_t mCount = 0;              // number of fonts matched
+  uint32_t mCmapsTested = 0;        // number of cmaps tested
+  float mMatchDistance = INFINITY;  // metric indicating closest match
 };
 
 // Installation status (base system / langpack / user-installed) may determine

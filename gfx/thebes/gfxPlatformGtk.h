@@ -42,8 +42,7 @@ class gfxPlatformGtk final : public gfxPlatform {
 
   nsresult UpdateFontList() override;
 
-  void GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
-                              eFontPresentation aPresentation,
+  void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh, Script aRunScript,
                               nsTArray<const char*>& aFontList) override;
 
   gfxPlatformFontList* CreatePlatformFontList() override;

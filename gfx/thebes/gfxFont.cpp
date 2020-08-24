@@ -2409,40 +2409,6 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
   return true;
 }
 
-bool gfxFont::HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh) {
-  // Bitmap fonts are assumed to provide "color" glyphs for all supported chars.
-  gfxFontEntry* fe = GetFontEntry();
-  if (fe->HasColorBitmapTable()) {
-    return true;
-  }
-  // Use harfbuzz shaper to look up the default glyph ID for the character.
-  if (!mHarfBuzzShaper) {
-    mHarfBuzzShaper = MakeUnique<gfxHarfBuzzShaper>(this);
-  }
-  auto* shaper = static_cast<gfxHarfBuzzShaper*>(mHarfBuzzShaper.get());
-  if (!shaper->Initialize()) {
-    return false;
-  }
-  uint32_t gid = 0;
-  if (gfxFontUtils::IsVarSelector(aNextCh)) {
-    gid = shaper->GetVariationGlyph(aCh, aNextCh);
-  }
-  if (!gid) {
-    gid = shaper->GetNominalGlyph(aCh);
-  }
-  if (!gid) {
-    return false;
-  }
-  // Check if there is a COLR/CPAL or SVG glyph for this ID.
-  if (fe->TryGetColorGlyphs() && fe->HasColorLayersForGlyph(gid)) {
-    return true;
-  }
-  if (fe->TryGetSVGData(this) && fe->HasSVGGlyph(gid)) {
-    return true;
-  }
-  return false;
-}
-
 static void UnionRange(gfxFloat aX, gfxFloat* aDestMin, gfxFloat* aDestMax) {
   *aDestMin = std::min(*aDestMin, aX);
   *aDestMax = std::max(*aDestMax, aX);
