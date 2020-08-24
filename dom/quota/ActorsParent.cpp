@@ -6460,20 +6460,14 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   // If we see major.minor of 3.0, downgrade it to be 2.1.
   if (storageVersion == kHackyPreDowngradeStorageVersion) {
     storageVersion = kHackyPostDowngradeStorageVersion;
-    // TODO: Convert to QM_TRY once we have support for additional cleanup
-    //       function.
-    nsresult rv = connection->SetSchemaVersion(storageVersion);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_ASSERT(false, "Downgrade didn't take.");
-      return rv;
-    }
+    QM_TRY(connection->SetSchemaVersion(storageVersion), QM_PROPAGATE,
+           []() { MOZ_ASSERT(false, "Downgrade didn't take."); });
   }
 
-  if (GetMajorStorageVersion(storageVersion) > kMajorStorageVersion) {
-    // TODO: This should use QM_TRY too.
-    NS_WARNING("Unable to initialize storage, version is too high!");
-    return NS_ERROR_FAILURE;
-  }
+  QM_TRY(OkIf(GetMajorStorageVersion(storageVersion) <= kMajorStorageVersion),
+         NS_ERROR_FAILURE, []() {
+           NS_WARNING("Unable to initialize storage, version is too high!");
+         });
 
   if (storageVersion < kStorageVersion) {
     const bool newDatabase = !storageVersion;
