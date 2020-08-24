@@ -47,8 +47,8 @@ class TDZCheckCache : public Nestable<TDZCheckCache> {
   explicit TDZCheckCache(BytecodeEmitter* bce);
 
   mozilla::Maybe<MaybeCheckTDZ> needsTDZCheck(BytecodeEmitter* bce,
-                                              const ParserAtom* name);
-  MOZ_MUST_USE bool noteTDZCheck(BytecodeEmitter* bce, const ParserAtom* name,
+                                              JSAtom* name);
+  MOZ_MUST_USE bool noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
                                  MaybeCheckTDZ check);
 };
 

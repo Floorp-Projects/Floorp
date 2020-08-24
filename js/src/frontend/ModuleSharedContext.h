@@ -23,7 +23,7 @@ namespace frontend {
 
 class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
  public:
-  ParserModuleScopeData* bindings;
+  JS::Rooted<ModuleScope::Data*> bindings;
   ModuleBuilder& builder;
 
   ModuleSharedContext(JSContext* cx, CompilationInfo& compilationInfo,

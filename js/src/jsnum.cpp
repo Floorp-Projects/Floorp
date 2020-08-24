@@ -26,8 +26,6 @@
 #include "jstypes.h"
 
 #include "double-conversion/double-conversion.h"
-#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo
-#include "frontend/ParserAtom.h"       // frontend::ParserAtom
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #if !JS_HAS_INTL_API
@@ -847,23 +845,6 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
   return atom;
 }
 
-const frontend::ParserAtom* js::Int32ToParserAtom(
-    frontend::CompilationInfo& compilationInfo, int32_t si) {
-  char buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
-  size_t length;
-  char* start = BackfillInt32InBuffer(
-      si, buffer, JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1, &length);
-
-  Maybe<uint32_t> indexValue;
-  if (si >= 0) {
-    indexValue.emplace(si);
-  }
-
-  return compilationInfo.parserAtoms
-      .internAscii(compilationInfo.cx, start, length)
-      .unwrapOr(nullptr);
-}
-
 /* Returns a non-nullptr pointer to inside cbuf.  */
 static char* Int32ToCString(ToCStringBuf* cbuf, int32_t i, size_t* len,
                             int base = 10) {
@@ -1648,28 +1629,6 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   CacheNumber(cx, d, atom);
 
   return atom;
-}
-
-const frontend::ParserAtom* js::NumberToParserAtom(
-    frontend::CompilationInfo& compilationInfo, double d) {
-  int32_t si;
-  if (NumberEqualsInt32(d, &si)) {
-    return Int32ToParserAtom(compilationInfo, si);
-  }
-
-  ToCStringBuf cbuf;
-  char* numStr = FracNumberToCString(compilationInfo.cx, &cbuf, d);
-  if (!numStr) {
-    ReportOutOfMemory(compilationInfo.cx);
-    return nullptr;
-  }
-  MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
-             numStr < cbuf.sbuf + cbuf.sbufSize);
-
-  size_t length = strlen(numStr);
-  return compilationInfo.parserAtoms
-      .internAscii(compilationInfo.cx, numStr, length)
-      .unwrapOr(nullptr);
 }
 
 JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {

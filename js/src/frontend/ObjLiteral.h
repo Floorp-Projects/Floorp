@@ -12,7 +12,6 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/Span.h"
 
-#include "frontend/ParserAtom.h"
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/Value.h"
@@ -141,10 +140,6 @@
 namespace js {
 
 class JSONPrinter;
-
-namespace frontend {
-struct CompilationInfo;
-}
 
 // Object-literal instruction opcodes. An object literal is constructed by a
 // straight-line sequence of these ops, each adding one property to the
@@ -549,20 +544,16 @@ struct ObjLiteralReader : private ObjLiteralReaderBase {
   }
 };
 
-typedef Vector<const frontend::ParserAtom*, 4> ObjLiteralAtomVector;
+typedef Vector<JSAtom*, 4> ObjLiteralAtomVector;
 
-JSObject* InterpretObjLiteral(JSContext* cx,
-                              frontend::CompilationInfo& compilationInfo,
-                              const ObjLiteralAtomVector& atoms,
+JSObject* InterpretObjLiteral(JSContext* cx, const ObjLiteralAtomVector& atoms,
                               const mozilla::Span<const uint8_t> insns,
                               ObjLiteralFlags flags);
 
 inline JSObject* InterpretObjLiteral(JSContext* cx,
-                                     frontend::CompilationInfo& compilationInfo,
                                      const ObjLiteralAtomVector& atoms,
                                      const ObjLiteralWriter& writer) {
-  return InterpretObjLiteral(cx, compilationInfo, atoms, writer.getCode(),
-                             writer.getFlags());
+  return InterpretObjLiteral(cx, atoms, writer.getCode(), writer.getFlags());
 }
 
 class ObjLiteralStencil {
@@ -575,12 +566,12 @@ class ObjLiteralStencil {
 
   ObjLiteralWriter& writer() { return writer_; }
 
-  bool addAtom(const frontend::ParserAtom* atom, uint32_t* index) {
+  bool addAtom(JSAtom* atom, uint32_t* index) {
     *index = atoms_.length();
     return atoms_.append(atom);
   }
 
-  JSObject* create(JSContext* cx, frontend::CompilationInfo& info) const;
+  JSObject* create(JSContext* cx) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();

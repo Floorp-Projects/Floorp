@@ -1234,7 +1234,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
           return false;
         }
       } else {
-        if (importEntry->importName == cx_->parserNames().star) {
+        if (importEntry->importName == cx_->names().star) {
           if (!metadata.localExportEntries.append(exp)) {
             return false;
           }
@@ -1247,7 +1247,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
           }
         }
       }
-    } else if (exp.importName == cx_->parserNames().star && !exp.exportName) {
+    } else if (exp.importName == cx_->names().star && !exp.exportName) {
       if (!metadata.starExportEntries.append(exp)) {
         return false;
       }
@@ -1273,8 +1273,7 @@ enum class ModuleArrayType {
 };
 
 static ArrayObject* ModuleBuilderInitArray(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    ModuleArrayType arrayType,
+    JSContext* cx, ModuleArrayType arrayType,
     const frontend::StencilModuleMetadata::EntryVector& vector) {
   RootedArrayObject resultArray(
       cx, NewDenseFullyAllocatedArray(cx, vector.length()));
@@ -1292,34 +1291,10 @@ static ArrayObject* ModuleBuilderInitArray(
 
   for (uint32_t i = 0; i < vector.length(); ++i) {
     const frontend::StencilModuleEntry& entry = vector[i];
-
-    if (entry.specifier) {
-      specifier = compilationInfo.liftParserAtomToJSAtom(entry.specifier);
-      if (!specifier) {
-        return nullptr;
-      }
-    }
-
-    if (entry.localName) {
-      localName = compilationInfo.liftParserAtomToJSAtom(entry.localName);
-      if (!localName) {
-        return nullptr;
-      }
-    }
-
-    if (entry.importName) {
-      importName = compilationInfo.liftParserAtomToJSAtom(entry.importName);
-      if (!importName) {
-        return nullptr;
-      }
-    }
-
-    if (entry.exportName) {
-      exportName = compilationInfo.liftParserAtomToJSAtom(entry.exportName);
-      if (!exportName) {
-        return nullptr;
-      }
-    }
+    specifier = entry.specifier;
+    localName = entry.localName;
+    importName = entry.importName;
+    exportName = entry.exportName;
 
     switch (arrayType) {
       case ModuleArrayType::ImportEntryObject:
@@ -1352,43 +1327,37 @@ static ArrayObject* ModuleBuilderInitArray(
 
 // Use StencilModuleMetadata data to fill in ModuleObject
 bool frontend::StencilModuleMetadata::initModule(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    JS::Handle<ModuleObject*> module) {
+    JSContext* cx, JS::Handle<ModuleObject*> module) {
   RootedArrayObject requestedModulesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::RequestedModuleObject,
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::RequestedModuleObject,
                                  requestedModules));
   if (!requestedModulesObject) {
     return false;
   }
 
   RootedArrayObject importEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ImportEntryObject,
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ImportEntryObject,
                                  importEntries));
   if (!importEntriesObject) {
     return false;
   }
 
   RootedArrayObject localExportEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ExportEntryObject,
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ExportEntryObject,
                                  localExportEntries));
   if (!localExportEntriesObject) {
     return false;
   }
 
   RootedArrayObject indirectExportEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ExportEntryObject,
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ExportEntryObject,
                                  indirectExportEntries));
   if (!indirectExportEntriesObject) {
     return false;
   }
 
   RootedArrayObject starExportEntriesObject(
-      cx, ModuleBuilderInitArray(cx, compilationInfo,
-                                 ModuleArrayType::ExportEntryObject,
+      cx, ModuleBuilderInitArray(cx, ModuleArrayType::ExportEntryObject,
                                  starExportEntries));
   if (!starExportEntriesObject) {
     return false;
@@ -1415,20 +1384,23 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   NameNode* moduleSpec = &importNode->right()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  const ParserAtom* module = moduleSpec->atom();
+  RootedAtom module(cx_, moduleSpec->atom());
   if (!maybeAppendRequestedModule(module, moduleSpec)) {
     return false;
   }
 
+  RootedAtom importName(cx_);
+  RootedAtom localName(cx_);
   for (ParseNode* item : specList->contents()) {
     BinaryNode* spec = &item->as<BinaryNode>();
     MOZ_ASSERT(spec->isKind(ParseNodeKind::ImportSpec));
 
     NameNode* importNameNode = &spec->left()->as<NameNode>();
+
     NameNode* localNameNode = &spec->right()->as<NameNode>();
 
-    const ParserAtom* importName = importNameNode->atom();
-    const ParserAtom* localName = localNameNode->atom();
+    importName = importNameNode->atom();
+    localName = localNameNode->atom();
 
     uint32_t line;
     uint32_t column;
@@ -1457,24 +1429,24 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
 
   if (isDefault && exportNode->as<BinaryNode>().right()) {
     // This is an export default containing an expression.
-    const ParserAtom* localName = cx_->parserNames().default_;
-    const ParserAtom* exportName = cx_->parserNames().default_;
+    HandlePropertyName localName = cx_->names().default_;
+    HandlePropertyName exportName = cx_->names().default_;
     return appendExportEntry(exportName, localName);
   }
 
   switch (kid->getKind()) {
     case ParseNodeKind::ExportSpecList: {
       MOZ_ASSERT(!isDefault);
+      RootedAtom localName(cx_);
+      RootedAtom exportName(cx_);
       for (ParseNode* item : kid->as<ListNode>().contents()) {
         BinaryNode* spec = &item->as<BinaryNode>();
         MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportSpec));
 
         NameNode* localNameNode = &spec->left()->as<NameNode>();
         NameNode* exportNameNode = &spec->right()->as<NameNode>();
-
-        const ParserAtom* localName = localNameNode->atom();
-        const ParserAtom* exportName = exportNameNode->atom();
-
+        localName = localNameNode->atom();
+        exportName = exportNameNode->atom();
         if (!appendExportEntry(exportName, localName, spec)) {
           return false;
         }
@@ -1485,10 +1457,9 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     case ParseNodeKind::ClassDecl: {
       const ClassNode& cls = kid->as<ClassNode>();
       MOZ_ASSERT(cls.names());
-      const frontend::ParserAtom* localName =
-          cls.names()->innerBinding()->atom();
-      const frontend::ParserAtom* exportName =
-          isDefault ? cx_->parserNames().default_ : localName;
+      RootedAtom localName(cx_, cls.names()->innerBinding()->atom());
+      RootedAtom exportName(
+          cx_, isDefault ? cx_->names().default_ : localName.get());
       if (!appendExportEntry(exportName, localName)) {
         return false;
       }
@@ -1498,6 +1469,8 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     case ParseNodeKind::VarStmt:
     case ParseNodeKind::ConstDecl:
     case ParseNodeKind::LetDecl: {
+      RootedAtom localName(cx_);
+      RootedAtom exportName(cx_);
       for (ParseNode* binding : kid->as<ListNode>().contents()) {
         if (binding->isKind(ParseNodeKind::AssignExpr)) {
           binding = binding->as<AssignmentNode>().left();
@@ -1506,10 +1479,8 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
         }
 
         if (binding->isKind(ParseNodeKind::Name)) {
-          const frontend::ParserAtom* localName =
-              binding->as<NameNode>().atom();
-          const frontend::ParserAtom* exportName =
-              isDefault ? cx_->parserNames().default_ : localName;
+          localName = binding->as<NameNode>().atom();
+          exportName = isDefault ? cx_->names().default_ : localName.get();
           if (!appendExportEntry(exportName, localName)) {
             return false;
           }
@@ -1530,9 +1501,10 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     case ParseNodeKind::Function: {
       FunctionBox* box = kid->as<FunctionNode>().funbox();
       MOZ_ASSERT(!box->isArrow());
-      const frontend::ParserAtom* localName = box->explicitName();
-      const frontend::ParserAtom* exportName =
-          isDefault ? cx_->parserNames().default_ : localName;
+      RootedAtom localName(cx_, box->explicitName());
+      RootedAtom exportName(
+          cx_, isDefault ? cx_->names().default_ : localName.get());
+      MOZ_ASSERT_IF(isDefault, localName);
       if (!appendExportEntry(exportName, localName)) {
         return false;
       }
@@ -1550,7 +1522,7 @@ bool ModuleBuilder::processExportBinding(frontend::ParseNode* binding) {
   using namespace js::frontend;
 
   if (binding->isKind(ParseNodeKind::Name)) {
-    const frontend::ParserAtom* name = binding->as<NameNode>().atom();
+    RootedAtom name(cx_, binding->as<NameNode>().atom());
     return appendExportEntry(name, name);
   }
 
@@ -1631,28 +1603,27 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
   NameNode* moduleSpec = &exportNode->right()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  const frontend::ParserAtom* module = moduleSpec->atom();
-
+  RootedAtom module(cx_, moduleSpec->atom());
   if (!maybeAppendRequestedModule(module, moduleSpec)) {
     return false;
   }
 
+  RootedAtom bindingName(cx_);
+  RootedAtom exportName(cx_);
   for (ParseNode* spec : specList->contents()) {
     if (spec->isKind(ParseNodeKind::ExportSpec)) {
       NameNode* localNameNode = &spec->as<BinaryNode>().left()->as<NameNode>();
       NameNode* exportNameNode =
           &spec->as<BinaryNode>().right()->as<NameNode>();
-
-      const frontend::ParserAtom* bindingName = localNameNode->atom();
-      const frontend::ParserAtom* exportName = exportNameNode->atom();
-
+      bindingName = localNameNode->atom();
+      exportName = exportNameNode->atom();
       if (!appendExportFromEntry(exportName, module, bindingName,
                                  localNameNode)) {
         return false;
       }
     } else {
       MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportBatchSpecStmt));
-      const frontend::ParserAtom* exportName = cx_->parserNames().star;
+      exportName = cx_->names().star;
       if (!appendExportFromEntry(nullptr, module, exportName, spec)) {
         return false;
       }
@@ -1663,7 +1634,7 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
 }
 
 frontend::StencilModuleEntry* ModuleBuilder::importEntryFor(
-    const frontend::ParserAtom* localName) const {
+    JSAtom* localName) const {
   MOZ_ASSERT(localName);
   auto ptr = importEntries_.lookup(localName);
   if (!ptr) {
@@ -1673,13 +1644,13 @@ frontend::StencilModuleEntry* ModuleBuilder::importEntryFor(
   return &ptr->value();
 }
 
-bool ModuleBuilder::hasExportedName(const frontend::ParserAtom* name) const {
+bool ModuleBuilder::hasExportedName(JSAtom* name) const {
   MOZ_ASSERT(name);
   return exportNames_.has(name);
 }
 
-bool ModuleBuilder::appendExportEntry(const frontend::ParserAtom* exportName,
-                                      const frontend::ParserAtom* localName,
+bool ModuleBuilder::appendExportEntry(HandleAtom exportName,
+                                      HandleAtom localName,
                                       frontend::ParseNode* node) {
   uint32_t line = 0;
   uint32_t column = 0;
@@ -1702,10 +1673,10 @@ bool ModuleBuilder::appendExportEntry(const frontend::ParserAtom* exportName,
   return true;
 }
 
-bool ModuleBuilder::appendExportFromEntry(
-    const frontend::ParserAtom* exportName,
-    const frontend::ParserAtom* moduleRequest,
-    const frontend::ParserAtom* importName, frontend::ParseNode* node) {
+bool ModuleBuilder::appendExportFromEntry(HandleAtom exportName,
+                                          HandleAtom moduleRequest,
+                                          HandleAtom importName,
+                                          frontend::ParseNode* node) {
   uint32_t line;
   uint32_t column;
   eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
@@ -1719,8 +1690,8 @@ bool ModuleBuilder::appendExportFromEntry(
   return !exportName || exportNames_.put(exportName);
 }
 
-bool ModuleBuilder::maybeAppendRequestedModule(
-    const frontend::ParserAtom* specifier, frontend::ParseNode* node) {
+bool ModuleBuilder::maybeAppendRequestedModule(HandleAtom specifier,
+                                               frontend::ParseNode* node) {
   if (requestedModuleSpecifiers_.has(specifier)) {
     return true;
   }

@@ -55,7 +55,7 @@ struct MOZ_STACK_CLASS GCThingList {
   explicit GCThingList(JSContext* cx, CompilationInfo& compilationInfo)
       : compilationInfo(compilationInfo), vector(cx) {}
 
-  MOZ_MUST_USE bool append(const ParserAtom* atom, GCThingIndex* index) {
+  MOZ_MUST_USE bool append(JSAtom* atom, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     return vector.append(mozilla::AsVariant(std::move(atom)));
   }

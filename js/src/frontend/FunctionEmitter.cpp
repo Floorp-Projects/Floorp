@@ -35,7 +35,7 @@ FunctionEmitter::FunctionEmitter(BytecodeEmitter* bce, FunctionBox* funbox,
                                  IsHoisted isHoisted)
     : bce_(bce),
       funbox_(funbox),
-      name_(funbox_->explicitName()),
+      name_(bce_->cx, funbox_->explicitName()),
       syntaxKind_(syntaxKind),
       isHoisted_(isHoisted) {}
 
@@ -515,9 +515,8 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
   //
   //   function f(x, y = 42) { var y; }
   //
-  const ParserAtom* name = nullptr;
-  for (ParserBindingIter bi(*funbox_->functionScopeBindings(), true); bi;
-       bi++) {
+  JS::Rooted<JSAtom*> name(bce_->cx);
+  for (BindingIter bi(*funbox_->functionScopeBindings(), true); bi; bi++) {
     name = bi.name();
 
     // There may not be a var binding of the same name.
@@ -699,7 +698,7 @@ bool FunctionScriptEmitter::emitEndBody() {
 bool FunctionScriptEmitter::intoStencil() {
   MOZ_ASSERT(state_ == State::EndBody);
 
-  if (!bce_->intoScriptStencil(&funbox_->functionStencil().get())) {
+  if (!bce_->intoScriptStencil(funbox_->functionStencil().address())) {
     return false;
   }
 
@@ -716,7 +715,7 @@ FunctionParamsEmitter::FunctionParamsEmitter(BytecodeEmitter* bce,
       funbox_(funbox),
       functionEmitterScope_(bce_->innermostEmitterScope()) {}
 
-bool FunctionParamsEmitter::emitSimple(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitSimple(JS::Handle<JSAtom*> paramName) {
   MOZ_ASSERT(state_ == State::Start);
 
   //                [stack]
@@ -753,7 +752,7 @@ bool FunctionParamsEmitter::prepareForDefault() {
   return true;
 }
 
-bool FunctionParamsEmitter::emitDefaultEnd(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitDefaultEnd(JS::Handle<JSAtom*> paramName) {
   MOZ_ASSERT(state_ == State::Default);
 
   //                [stack] DEFAULT
@@ -859,7 +858,7 @@ bool FunctionParamsEmitter::emitDestructuringDefaultEnd() {
   return true;
 }
 
-bool FunctionParamsEmitter::emitRest(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitRest(JS::Handle<JSAtom*> paramName) {
   MOZ_ASSERT(state_ == State::Start);
 
   //                [stack]
@@ -950,7 +949,7 @@ bool FunctionParamsEmitter::emitRestArray() {
   return true;
 }
 
-bool FunctionParamsEmitter::emitAssignment(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitAssignment(JS::Handle<JSAtom*> paramName) {
   //                [stack] ARG
 
   NameLocation paramLoc =

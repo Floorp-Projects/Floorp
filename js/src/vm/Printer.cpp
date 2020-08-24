@@ -14,7 +14,6 @@
 #include <stdio.h>
 
 #include "ds/LifoAlloc.h"
-#include "frontend/ParserAtom.h"
 #include "js/CharacterEncoding.h"
 #include "util/Memory.h"
 #include "util/Text.h"
@@ -379,32 +378,12 @@ bool QuoteString(Sprinter* sp, JSString* str, char quote /*= '\0' */) {
                                         sp, linear->twoByteRange(nogc), quote);
 }
 
-bool QuoteString(Sprinter* sp, const frontend::ParserAtom* atom,
-                 char quote /*= '\0' */) {
-  return atom->hasLatin1Chars()
-             ? QuoteString<QuoteTarget::String>(sp, atom->latin1Range(), quote)
-             : QuoteString<QuoteTarget::String>(sp, atom->twoByteRange(),
-                                                quote);
-}
-
 UniqueChars QuoteString(JSContext* cx, JSString* str, char quote /* = '\0' */) {
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return nullptr;
   }
   if (!QuoteString(&sprinter, str, quote)) {
-    return nullptr;
-  }
-  return sprinter.release();
-}
-
-UniqueChars QuoteString(JSContext* cx, const frontend::ParserAtom* atom,
-                        char quote /* = '\0' */) {
-  Sprinter sprinter(cx);
-  if (!sprinter.init()) {
-    return nullptr;
-  }
-  if (!QuoteString(&sprinter, atom, quote)) {
     return nullptr;
   }
   return sprinter.release();

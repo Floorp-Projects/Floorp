@@ -51,9 +51,6 @@ class FullParseHandler {
    * - lazyOuterFunction_ holds the lazyScript for this current parse
    * - lazyInnerFunctionIndex is used as we skip over inner functions
    *   (see skipLazyInnerFunction),
-   *
-   *  TODO-Stencil: We probably need to snapshot the atoms from the
-   *                lazyOuterFunction here.
    */
   const Rooted<BaseScript*> lazyOuterFunction_;
   size_t lazyInnerFunctionIndex;
@@ -143,8 +140,7 @@ class FullParseHandler {
   // these assumptions.
   SourceKind sourceKind() const { return sourceKind_; }
 
-  NameNodeType newName(const ParserName* name, const TokenPos& pos,
-                       JSContext* cx) {
+  NameNodeType newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
     return new_<NameNode>(ParseNodeKind::Name, name, pos);
   }
 
@@ -153,12 +149,11 @@ class FullParseHandler {
     return new_<UnaryNode>(ParseNodeKind::ComputedName, pos, expr);
   }
 
-  NameNodeType newObjectLiteralPropertyName(const ParserAtom* atom,
-                                            const TokenPos& pos) {
+  NameNodeType newObjectLiteralPropertyName(JSAtom* atom, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::ObjectPropertyName, atom, pos);
   }
 
-  NameNodeType newPrivateName(const ParserAtom* atom, const TokenPos& pos) {
+  NameNodeType newPrivateName(JSAtom* atom, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::PrivateName, atom, pos);
   }
 
@@ -177,12 +172,11 @@ class FullParseHandler {
     return new_<BooleanLiteral>(cond, pos);
   }
 
-  NameNodeType newStringLiteral(const ParserAtom* atom, const TokenPos& pos) {
+  NameNodeType newStringLiteral(JSAtom* atom, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::StringExpr, atom, pos);
   }
 
-  NameNodeType newTemplateStringLiteral(const ParserAtom* atom,
-                                        const TokenPos& pos) {
+  NameNodeType newTemplateStringLiteral(JSAtom* atom, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::TemplateStringExpr, atom, pos);
   }
 
@@ -732,12 +726,12 @@ class FullParseHandler {
     return new_<CaseClause>(expr, body, begin);
   }
 
-  ContinueStatementType newContinueStatement(const ParserName* label,
+  ContinueStatementType newContinueStatement(PropertyName* label,
                                              const TokenPos& pos) {
     return new_<ContinueStatement>(label, pos);
   }
 
-  BreakStatementType newBreakStatement(const ParserName* label,
+  BreakStatementType newBreakStatement(PropertyName* label,
                                        const TokenPos& pos) {
     return new_<BreakStatement>(label, pos);
   }
@@ -757,7 +751,7 @@ class FullParseHandler {
                             TokenPos(begin, body->pn_pos.end), expr, body);
   }
 
-  LabeledStatementType newLabeledStatement(const ParserName* label, Node stmt,
+  LabeledStatementType newLabeledStatement(PropertyName* label, Node stmt,
                                            uint32_t begin) {
     return new_<LabeledStatement>(label, stmt, begin);
   }
@@ -777,7 +771,7 @@ class FullParseHandler {
     return new_<DebuggerStatement>(pos);
   }
 
-  NameNodeType newPropertyName(const ParserName* name, const TokenPos& pos) {
+  NameNodeType newPropertyName(PropertyName* name, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::PropertyNameExpr, name, pos);
   }
 
@@ -869,8 +863,7 @@ class FullParseHandler {
     return new_<ModuleNode>(pos);
   }
 
-  LexicalScopeNodeType newLexicalScope(ParserLexicalScopeData* bindings,
-                                       Node body,
+  LexicalScopeNodeType newLexicalScope(LexicalScope::Data* bindings, Node body,
                                        ScopeKind kind = ScopeKind::Lexical) {
     return new_<LexicalScopeNode>(bindings, body, kind);
   }
@@ -1061,14 +1054,14 @@ class FullParseHandler {
     return false;
   }
 
-  const ParserName* maybeDottedProperty(Node pn) {
-    return pn->is<PropertyAccessBase>() ? pn->as<PropertyAccessBase>().name()
+  PropertyName* maybeDottedProperty(Node pn) {
+    return pn->is<PropertyAccessBase>() ? &pn->as<PropertyAccessBase>().name()
                                         : nullptr;
   }
-  const ParserAtom* isStringExprStatement(Node pn, TokenPos* pos) {
+  JSAtom* isStringExprStatement(Node pn, TokenPos* pos) {
     if (pn->is<UnaryNode>()) {
       UnaryNode* unary = &pn->as<UnaryNode>();
-      if (const ParserAtom* atom = unary->isStringExprStatement()) {
+      if (JSAtom* atom = unary->isStringExprStatement()) {
         *pos = unary->kid()->pn_pos;
         return atom;
       }

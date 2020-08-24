@@ -199,23 +199,12 @@ void RegExpLiteral::dumpImpl(GenericPrinter& out, int indent) {
   out.printf("(%s)", parseNodeNames[getKindAsIndex()]);
 }
 
-static void DumpCharsNoNewline(const ParserAtom* atom,
-                               js::GenericPrinter& out) {
-  if (atom->hasLatin1Chars()) {
-    out.put("[Latin 1]");
-    JSString::dumpChars(atom->latin1Chars(), atom->length(), out);
-  } else {
-    out.put("[2 byte]");
-    JSString::dumpChars(atom->twoByteChars(), atom->length(), out);
-  }
-}
-
 void LoopControlStatement::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s", name);
   if (label()) {
     out.printf(" ");
-    DumpCharsNoNewline(label(), out);
+    label()->dumpCharsNoNewline(out);
   }
   out.printf(")");
 }
@@ -319,7 +308,7 @@ void NameNode::dumpImpl(GenericPrinter& out, int indent) {
     case ParseNodeKind::StringExpr:
     case ParseNodeKind::TemplateStringExpr:
     case ParseNodeKind::ObjectPropertyName:
-      DumpCharsNoNewline(atom(), out);
+      atom()->dumpCharsNoNewline(out);
       return;
 
     case ParseNodeKind::Name:
@@ -329,10 +318,11 @@ void NameNode::dumpImpl(GenericPrinter& out, int indent) {
       if (!atom()) {
         out.put("#<null name>");
       } else {
+        JS::AutoCheckCannotGC nogc;
         if (atom()->hasLatin1Chars()) {
-          DumpName(out, atom()->latin1Chars(), atom()->length());
+          DumpName(out, atom()->latin1Chars(nogc), atom()->length());
         } else {
-          DumpName(out, atom()->twoByteChars(), atom()->length());
+          DumpName(out, atom()->twoByteChars(nogc), atom()->length());
         }
       }
       return;
@@ -353,7 +343,7 @@ void NameNode::dumpImpl(GenericPrinter& out, int indent) {
 void LabeledStatement::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
-  DumpCharsNoNewline(atom(), out);
+  atom()->dumpCharsNoNewline(out);
   out.printf(" ");
   indent += strlen(name) + atom()->length() + 3;
   DumpParseTree(statement(), out, indent);
@@ -365,13 +355,14 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
   out.printf("(%s [", name);
   int nameIndent = indent + strlen(name) + 3;
   if (!isEmptyScope()) {
-    ParserScopeData<LexicalScope>* bindings = scopeBindings();
+    LexicalScope::Data* bindings = scopeBindings();
     for (uint32_t i = 0; i < bindings->length; i++) {
-      const ParserAtom* name = bindings->trailingNames[i].name();
+      JSAtom* name = bindings->trailingNames[i].name();
+      JS::AutoCheckCannotGC nogc;
       if (name->hasLatin1Chars()) {
-        DumpName(out, name->latin1Chars(), name->length());
+        DumpName(out, name->latin1Chars(nogc), name->length());
       } else {
-        DumpName(out, name->twoByteChars(), name->length());
+        DumpName(out, name->twoByteChars(nogc), name->length());
       }
       if (i < bindings->length - 1) {
         IndentNewLine(out, nameIndent);
@@ -394,9 +385,8 @@ bool BigIntLiteral::isZero() {
   return compilationInfo_.bigIntData[index_].isZero();
 }
 
-const ParserAtom* NumericLiteral::toAtom(
-    CompilationInfo& compilationInfo) const {
-  return NumberToParserAtom(compilationInfo, value());
+JSAtom* NumericLiteral::toAtom(JSContext* cx) const {
+  return NumberToAtom(cx, value());
 }
 
 RegExpObject* RegExpStencil::createRegExp(JSContext* cx) const {

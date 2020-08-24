@@ -17,10 +17,6 @@ class JS_PUBLIC_API JSObject;
 
 namespace js {
 
-namespace frontend {
-class ParserAtom;
-}  // namespace frontend
-
 class GlobalObject;
 
 /**
@@ -54,15 +50,13 @@ enum class BuiltinObjectKind : uint8_t {
  * Return the BuiltinObjectKind for the given constructor name. Return
  * BuiltinObjectKind::None if no matching constructor was found.
  */
-BuiltinObjectKind BuiltinConstructorForName(JSContext* cx,
-                                            const frontend::ParserAtom* name);
+BuiltinObjectKind BuiltinConstructorForName(JSContext* cx, JSAtom* name);
 
 /**
  * Return the BuiltinObjectKind for the given prototype name. Return
  * BuiltinObjectKind::None if no matching prototype was found.
  */
-BuiltinObjectKind BuiltinPrototypeForName(JSContext* cx,
-                                          const frontend::ParserAtom* name);
+BuiltinObjectKind BuiltinPrototypeForName(JSContext* cx, JSAtom* name);
 
 /**
  * Return the built-in object if already created for the given global. Otherwise

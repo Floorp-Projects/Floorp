@@ -205,7 +205,7 @@ EvalSharedContext::EvalSharedContext(JSContext* cx,
                                      CompilationInfo& compilationInfo,
                                      Directives directives, SourceExtent extent)
     : SharedContext(cx, Kind::Eval, compilationInfo, directives, extent),
-      bindings(nullptr) {
+      bindings(cx) {
   // Eval inherits syntax and binding rules from enclosing environment.
   allowNewTarget_ = compilationInfo.scopeContext.allowNewTarget;
   allowSuperProperty_ = compilationInfo.scopeContext.allowSuperProperty;
@@ -222,7 +222,7 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
                          SourceExtent extent, CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind, const ParserAtom* atom,
+                         FunctionAsyncKind asyncKind, JSAtom* atom,
                          FunctionFlags flags, FunctionIndex index,
                          TopLevelFunction isTopLevel)
     : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives, extent),
@@ -381,7 +381,11 @@ void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
   }
 }
 
-void FunctionBox::trace(JSTracer* trc) {}
+void FunctionBox::trace(JSTracer* trc) {
+  if (atom_) {
+    TraceRoot(trc, &atom_, "funbox-atom");
+  }
+}
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx,
                                          CompilationInfo& compilationInfo,
@@ -389,7 +393,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx,
                                          SourceExtent extent)
     : SharedContext(cx, Kind::Module, compilationInfo, Directives(true),
                     extent),
-      bindings(nullptr),
+      bindings(cx),
       builder(builder) {
   thisBinding_ = ThisBinding::Module;
   setFlag(ImmutableFlags::HasModuleGoal);
