@@ -63,7 +63,7 @@ inline ParseContext::VarScope::VarScope(JSContext* cx, ParseContext* pc,
 }
 
 inline JS::Result<Ok, ParseContext::BreakStatementError>
-ParseContext::checkBreakStatement(PropertyName* label) {
+ParseContext::checkBreakStatement(const ParserName* label) {
   // Labeled 'break' statements target the nearest labeled statements (could
   // be any kind) with the same label. Unlabeled 'break' statements target
   // the innermost loop or switch statement.
@@ -91,7 +91,7 @@ ParseContext::checkBreakStatement(PropertyName* label) {
 }
 
 inline JS::Result<Ok, ParseContext::ContinueStatementError>
-ParseContext::checkContinueStatement(PropertyName* label) {
+ParseContext::checkContinueStatement(const ParserName* label) {
   // Labeled 'continue' statements target the nearest labeled loop
   // statements with the same label. Unlabeled 'continue' statements target
   // the innermost loop statement.

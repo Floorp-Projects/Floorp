@@ -18,6 +18,7 @@
 
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
+#include "frontend/ParserAtom.h"
 #include "frontend/Stencil.h"
 #include "frontend/Token.h"
 #include "js/RootingAPI.h"
@@ -38,16 +39,9 @@
 //
 // - This bulk-deallocation DOES NOT run destructors.
 //
-// - Instances of `LexicalScope::Data` MUST BE allocated as instances of
-//   `ParseNode`, in the same `LifoAlloc`. They are bulk-deallocated alongside
-//   the rest of the tree.
-//
-// - Instances of `JSAtom` used throughout the tree (including instances of
-//   `PropertyName`) MUST be kept alive by the parser. This is done through an
-//   instance of `AutoKeepAtoms` held by the parser.
-//
-// - Once the parser is deallocated, the `JSAtom` instances MAY be
-//   garbage-collected.
+// - Instances of `ParserScopeData<LexicalScope>` MUST BE allocated as
+//   instances of `ParseNode`, in the same `LifoAlloc`. They are bulk-
+//   deallocated alongside the rest of the tree.
 
 struct JSContext;
 
@@ -67,7 +61,14 @@ class ParseContext;
 struct CompilationInfo;
 class ParserSharedBase;
 class FullParseHandler;
+
 class FunctionBox;
+
+// This typedef unfortunately needs to be replicated here.
+using ParserBindingName = AbstractBindingName<const ParserAtom>;
+
+template <typename Scope>
+using ParserScopeData = typename Scope::template AbstractData<const ParserAtom>;
 
 #define FOR_EACH_PARSE_NODE_KIND(F)                              \
   F(EmptyStmt, NullaryNode)                                      \
@@ -747,7 +748,7 @@ class ParseNode {
     return ParseNodeKind::BinOpFirst <= kind &&
            kind <= ParseNodeKind::BinOpLast;
   }
-  inline bool isName(PropertyName* name) const;
+  inline bool isName(const ParserName* name) const;
 
   /* Boolean attributes. */
   bool isInParens() const { return pn_parens; }
@@ -850,11 +851,11 @@ class NullaryNode : public ParseNode {
 };
 
 class NameNode : public ParseNode {
-  JSAtom* atom_; /* lexical name or label atom */
+  const ParserAtom* atom_; /* lexical name or label atom */
   PrivateNameKind privateNameKind_ = PrivateNameKind::None;
 
  public:
-  NameNode(ParseNodeKind kind, JSAtom* atom, const TokenPos& pos)
+  NameNode(ParseNodeKind kind, const ParserAtom* atom, const TokenPos& pos)
       : ParseNode(kind, pos), atom_(atom) {
     MOZ_ASSERT(is<NameNode>());
   }
@@ -874,15 +875,15 @@ class NameNode : public ParseNode {
   void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
-  JSAtom* atom() const { return atom_; }
+  const ParserAtom* atom() const { return atom_; }
 
-  PropertyName* name() const {
+  const ParserName* name() const {
     MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
                isKind(ParseNodeKind::PrivateName));
-    return atom()->asPropertyName();
+    return atom()->asName();
   }
 
-  void setAtom(JSAtom* atom) { atom_ = atom; }
+  void setAtom(const ParserAtom* atom) { atom_ = atom; }
 
   void setPrivateNameKind(PrivateNameKind privateNameKind) {
     privateNameKind_ = privateNameKind;
@@ -891,7 +892,7 @@ class NameNode : public ParseNode {
   PrivateNameKind privateNameKind() { return privateNameKind_; }
 };
 
-inline bool ParseNode::isName(PropertyName* name) const {
+inline bool ParseNode::isName(const ParserName* name) const {
   return getKind() == ParseNodeKind::Name && as<NameNode>().name() == name;
 }
 
@@ -940,7 +941,7 @@ class UnaryNode : public ParseNode {
    * or escaped newlines, say). This member function returns true for such
    * nodes; we use it to determine the extent of the prologue.
    */
-  JSAtom* isStringExprStatement() const {
+  const ParserAtom* isStringExprStatement() const {
     if (isKind(ParseNodeKind::ExpressionStmt)) {
       if (kid()->isKind(ParseNodeKind::StringExpr) && !kid()->isInParens()) {
         return kid()->as<NameNode>().atom();
@@ -1552,7 +1553,7 @@ class NumericLiteral : public ParseNode {
   void setDecimalPoint(DecimalPoint d) { decimalPoint_ = d; }
 
   // Return the decimal string representation of this numeric literal.
-  JSAtom* toAtom(JSContext* cx) const;
+  const ParserAtom* toAtom(CompilationInfo& compilationInfo) const;
 };
 
 class BigIntLiteral : public ParseNode {
@@ -1590,12 +1591,12 @@ class BigIntLiteral : public ParseNode {
 };
 
 class LexicalScopeNode : public ParseNode {
-  LexicalScope::Data* bindings;
+  ParserScopeData<LexicalScope>* bindings;
   ParseNode* body;
   ScopeKind kind_;
 
  public:
-  LexicalScopeNode(LexicalScope::Data* bindings, ParseNode* body,
+  LexicalScopeNode(ParserScopeData<LexicalScope>* bindings, ParseNode* body,
                    ScopeKind kind = ScopeKind::Lexical)
       : ParseNode(ParseNodeKind::LexicalScope, body->pn_pos),
         bindings(bindings),
@@ -1617,11 +1618,11 @@ class LexicalScopeNode : public ParseNode {
   void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
-  Handle<LexicalScope::Data*> scopeBindings() const {
+  ParserScopeData<LexicalScope>* scopeBindings() const {
     MOZ_ASSERT(!isEmptyScope());
     // Bindings' GC safety depend on the presence of an AutoKeepAtoms that
     // the rest of the frontend also depends on.
-    return Handle<LexicalScope::Data*>::fromMarkedLocation(&bindings);
+    return bindings;
   }
 
   ParseNode* scopeBody() const { return body; }
@@ -1637,12 +1638,12 @@ class LabeledStatement : public NameNode {
   ParseNode* statement_;
 
  public:
-  LabeledStatement(PropertyName* label, ParseNode* stmt, uint32_t begin)
+  LabeledStatement(const ParserName* label, ParseNode* stmt, uint32_t begin)
       : NameNode(ParseNodeKind::LabelStmt, label,
                  TokenPos(begin, stmt->pn_pos.end)),
         statement_(stmt) {}
 
-  PropertyName* label() const { return atom()->asPropertyName(); }
+  const ParserName* label() const { return atom()->asName(); }
 
   ParseNode* statement() const { return statement_; }
 
@@ -1688,10 +1689,10 @@ class CaseClause : public BinaryNode {
 };
 
 class LoopControlStatement : public ParseNode {
-  PropertyName* label_; /* target of break/continue statement */
+  const ParserName* label_; /* target of break/continue statement */
 
  protected:
-  LoopControlStatement(ParseNodeKind kind, PropertyName* label,
+  LoopControlStatement(ParseNodeKind kind, const ParserName* label,
                        const TokenPos& pos)
       : ParseNode(kind, pos), label_(label) {
     MOZ_ASSERT(kind == ParseNodeKind::BreakStmt ||
@@ -1701,7 +1702,7 @@ class LoopControlStatement : public ParseNode {
 
  public:
   /* Label associated with this break/continue statement, if any. */
-  PropertyName* label() const { return label_; }
+  const ParserName* label() const { return label_; }
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);
@@ -1722,7 +1723,7 @@ class LoopControlStatement : public ParseNode {
 
 class BreakStatement : public LoopControlStatement {
  public:
-  BreakStatement(PropertyName* label, const TokenPos& pos)
+  BreakStatement(const ParserName* label, const TokenPos& pos)
       : LoopControlStatement(ParseNodeKind::BreakStmt, label, pos) {}
 
   static bool test(const ParseNode& node) {
@@ -1734,7 +1735,7 @@ class BreakStatement : public LoopControlStatement {
 
 class ContinueStatement : public LoopControlStatement {
  public:
-  ContinueStatement(PropertyName* label, const TokenPos& pos)
+  ContinueStatement(const ParserName* label, const TokenPos& pos)
       : LoopControlStatement(ParseNodeKind::ContinueStmt, label, pos) {}
 
   static bool test(const ParseNode& node) {
@@ -1922,8 +1923,8 @@ class PropertyAccessBase : public BinaryNode {
 
   void setExpression(ParseNode* pn) { *unsafeLeftReference() = pn; }
 
-  PropertyName& name() const {
-    return *right()->as<NameNode>().atom()->asPropertyName();
+  const ParserName* name() const {
+    return right()->as<NameNode>().atom()->asName();
   }
 };
 

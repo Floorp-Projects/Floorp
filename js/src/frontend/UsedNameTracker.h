@@ -96,10 +96,10 @@ namespace frontend {
 // clang-format on
 
 struct UnboundPrivateName {
-  JSAtom* atom;
+  const ParserAtom* atom;
   TokenPos position;
 
-  UnboundPrivateName(JSAtom* atom, TokenPos position)
+  UnboundPrivateName(const ParserAtom* atom, TokenPos position)
       : atom(atom), position(position) {}
 };
 
@@ -165,7 +165,8 @@ class UsedNameTracker {
     mozilla::Maybe<TokenPos> pos() { return firstUsePos_; }
   };
 
-  using UsedNameMap = HashMap<JSAtom*, UsedNameInfo, DefaultHasher<JSAtom*>>;
+  using UsedNameMap = HashMap<const ParserAtom*, UsedNameInfo,
+                              DefaultHasher<const ParserAtom*>>;
 
  private:
   // The map of names to chains of uses.
@@ -192,11 +193,13 @@ class UsedNameTracker {
     return scopeCounter_++;
   }
 
-  UsedNameMap::Ptr lookup(JSAtom* name) const { return map_.lookup(name); }
+  UsedNameMap::Ptr lookup(const ParserAtom* name) const {
+    return map_.lookup(name);
+  }
 
   MOZ_MUST_USE bool noteUse(
-      JSContext* cx, JSAtom* name, NameVisibility visbility, uint32_t scriptId,
-      uint32_t scopeId,
+      JSContext* cx, const ParserAtom* name, NameVisibility visibility,
+      uint32_t scriptId, uint32_t scopeId,
       mozilla::Maybe<TokenPos> tokenPosition = mozilla::Nothing());
 
   // Fill maybeUnboundName with the first (source order) unbound name, or
