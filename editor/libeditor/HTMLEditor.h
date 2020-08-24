@@ -2595,19 +2595,6 @@ class HTMLEditor final : public TextEditor,
   };
 
   /**
-   * HandleDeleteSelectionInternal() is a helper method of
-   * HandleDeleteSelection().  This can be called recursively by the helper
-   * methods.
-   * NOTE: This method creates SelectionBatcher.  Therefore, each caller
-   *       needs to check if the editor is still available even if this returns
-   *       NS_OK.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteSelectionInternal(nsIEditor::EDirection aDirectionAndAmount,
-                                nsIEditor::EStripWrappers aStripWrappers,
-                                AutoRangeArray& aRangesToDelete);
-
-  /**
    * This method handles "delete selection" commands.
    * NOTE: Don't call this method recursively from the helper methods since
    *       when nobody handled it without canceling and returing an error,
