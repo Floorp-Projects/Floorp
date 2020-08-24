@@ -4,10 +4,13 @@
 
 package org.mozilla.fenix.searchdialog
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
@@ -15,11 +18,11 @@ import android.view.ViewGroup
 import android.view.ViewStub
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
 import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -33,6 +36,7 @@ import kotlinx.android.synthetic.main.fragment_search_dialog.view.qr_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.toolbar
 import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -55,12 +59,13 @@ import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.widget.VoiceSearchActivity
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
 typealias SearchDialogInteractor = SearchInteractor
 
+@SuppressWarnings("LargeClass", "TooManyFunctions")
 class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
-
     private lateinit var interactor: SearchDialogInteractor
     private lateinit var store: SearchDialogFragmentStore
     private lateinit var toolbarView: ToolbarView
@@ -68,6 +73,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private var firstUpdate = true
 
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
+    private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,7 +128,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             false,
             view.toolbar,
             requireComponents.core.engine
-        )
+        ).also(::addSearchButton)
 
         awesomeBarView = AwesomeBarView(
             requireContext(),
@@ -214,6 +220,16 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
+        if (requestCode == VoiceSearchActivity.SPEECH_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            intent?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.first()?.also {
+                toolbarView.view.edit.updateUrl(url = it, shouldHighlight = true)
+                interactor.onTextChanged(it)
+                toolbarView.view.edit.focus()
+            }
+        }
+    }
+
     override fun onBackPressed(): Boolean {
         return when {
             qrFeature.onBackPressed() -> {
@@ -292,6 +308,38 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             search_suggestions_onboarding_divider?.isVisible = state.showSearchSuggestionsHint
         }
     }
+
+    private fun addSearchButton(toolbarView: ToolbarView) {
+        toolbarView.view.addEditAction(
+            BrowserToolbar.Button(
+                ContextCompat.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
+                requireContext().getString(R.string.voice_search_content_description),
+                visible = {
+                    store.state.searchEngineSource.searchEngine.identifier.contains("google") &&
+                            isSpeechAvailable() &&
+                            requireContext().settings().shouldShowVoiceSearch
+                },
+                listener = ::launchVoiceSearch
+            )
+        )
+    }
+
+    private fun launchVoiceSearch() {
+        // Note if a user disables speech while the app is on the search fragment
+        // the voice button will still be available and *will* cause a crash if tapped,
+        // since the `visible` call is only checked on create. In order to avoid extra complexity
+        // around such a small edge case, we make the button have no functionality in this case.
+        if (!isSpeechAvailable()) { return }
+
+        requireComponents.analytics.metrics.track(Event.VoiceSearchTapped)
+        speechIntent.apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, requireContext().getString(R.string.voice_search_explainer))
+        }
+        startActivityForResult(speechIntent, VoiceSearchActivity.SPEECH_REQUEST_CODE)
+    }
+
+    private fun isSpeechAvailable(): Boolean = speechIntent.resolveActivity(requireContext().packageManager) != null
 
     companion object {
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
