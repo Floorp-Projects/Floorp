@@ -15,10 +15,10 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Gueta o introduz una direición</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">Equi van amosase les llingüetes abiertes.</string>
+    <string name="no_open_tabs_description">Equí van amosase les llingüetes abiertes.</string>
 
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">Equi van amosase les llingüetes abiertes.</string>
+    <string name="no_private_tabs_description">Equí van amosase les llingüetes abiertes.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 llingüeta abierta. Toca pa cambiar a otra.</string>
@@ -128,6 +128,8 @@
     <string name="browser_menu_powered_by2">Cola potencia de %1$s</string>
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Mou de llector</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Zarrar la vista de llector</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Abrir nuna aplicación</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -895,8 +897,7 @@
     <string name="onboarding_whats_new_description">¿Tienes entrugues tocante al rediseñu de %s?¿Quies saber qué camudó?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Consigui rempuestes equí</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Aprovecha %s al máximu.</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Aniciando sesión…</string>

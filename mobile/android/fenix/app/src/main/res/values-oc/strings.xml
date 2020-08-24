@@ -43,6 +43,8 @@
     <string name="tab_tray_item_unselected_multiselect_content_description">%1$s deseleccionat</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Sortida del mòde seleccion multipla</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Mòde de seleccion multipla activat, seleccionatz los onglets d’enregistrar dins una colleccion</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Seleccionat</string>
 
@@ -382,8 +384,12 @@
     <string name="preferences_telemetry">Telemetria</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Donadas tecnicas e d’utilizacion</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Parteja d’informacions sus las performàncias, lo material, l’utilizacion e las personalizacions a Mozilla per nos ajudar a melhorar %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Donadas marketing</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Parteja de donadas sus las foncionalitats qu’utilizatz amb Leanplum, nòstre provesidor de marketing mobil.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experimentacions</string>
 
@@ -744,6 +750,8 @@
     <string name="collection_menu_button_content_description">Menú de colleccion</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header1">Amassatz çò que compta per vos</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agropatz de recèrcas, de sites e d’onglets similaris per i accedir rapidament mai tard.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Seleccionar d’onglets</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -807,6 +815,8 @@
     <string name="sync_offline">Fòra linha</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Connectar un periferic mai</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Per enviar un onglet, connectatz-vos a vòstre compte Firefox sus almens un autre periferic.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Comprés !</string>
     <!-- Share error message -->
@@ -988,6 +998,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sincro. activada</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Fracàs de connexion</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Confidencialitat automatica</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_tracking_protection_description_2">Los paramètres de confidencialitat e de seguretat blocan los traçadors, los logicials malvolents e las entrepresas que vos pistan.</string>
@@ -1023,6 +1035,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Causissètz vòstre tèma</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Estalviatz la batariá e vòstra vista en activant lo mòde fosc.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1156,6 +1170,8 @@
 
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">Plantatges</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Vòstres dreches</string>
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Entresenhas sus la licéncia</string>
 

@@ -49,7 +49,7 @@
     <string name="tab_tray_multiselect_selected_content_description">Ընտրված</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
-    <string name="about_content">%1$s-ն արտադրվում է Mozilla-ի կողմից:</string>
+    <string name="about_content">%1$s-ը մշակված է Mozilla-ի կողմից:</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
@@ -184,9 +184,9 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Չթույլատրել</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">Թույլատրեք որոնման առաջարկներ մասնավոր աշխատաշրջաններում:</string>
+    <string name="search_suggestions_onboarding_title">Թույլատրել որոնման առաջարկներ մասնավոր աշխատաշրջաններում:</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s-ը համօգտագործելու է այն ամենը, ինչ մուտքագրում եք հասցեի տողում՝ ձեր սկզբնական որոնիչի հետ:</string>
+    <string name="search_suggestions_onboarding_text">%s-ը համօգտագործելու է այն ամենը, ինչ մուտքագրում եք հասցեի տողում ձեր սկզբնական որոնիչի հետ:</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Իմանալ ավելին</string>
 
@@ -266,13 +266,13 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Հարմարեցնել</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Համաժամեցեք էջանիշները, պատմությունը և ավելին ձեր Firefox հաշվի հետ</string>
+    <string name="preferences_sign_in_description">Համաժամեցրեք էջանիշները, պատմությունը և ավելին ձեր Firefox հաշվի հետ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-ի հաշիվ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Կրկին կապակցվեք՝ համաժամեցումը վերսկսելու համար</string>
     <!-- Preference for language -->
-    <string name="preferences_language">Լեզու</string>
+    <string name="preferences_language">Լեզուն</string>
 
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Տվյալների ընտրություն</string>
@@ -303,8 +303,13 @@
     <string name="preferences_account_settings">Հաշվի կարգավորումներ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Բացել հղումները հավելվածներում</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Ներբեռնումների արտաքին հավելված</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Հավելումներ</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Ծանուցումներ</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -377,7 +382,7 @@
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
-    <string name="preference_usage_data">Օգտագործում և տեխնիկական տվյալներ</string>
+    <string name="preference_usage_data">Օգտագործման և տեխնիկական տվյալներ</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Կիսվում է արագագործության, օգտագործման, սարքակազմի և ձեր դիտարկիչի կարգավորումներով Mozilla-ի հետ՝ %1$s-ը էլ ավելի լավը դարձնելու համար</string>
     <!-- Preference switch for marketing data collection -->
@@ -572,6 +577,13 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Այստեղ պատմություն չկա</string>
 
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Չկան նեևբեռնումներ</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">Ընտրված է %1$d-ը</string>
+
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Ներողություն. %1$s-ը չի կարող բեռնել այդ էջը:</string>
@@ -622,7 +634,7 @@
     <!-- Bookmark overflow menu open in new tab button -->
     <string name="bookmark_menu_open_in_new_tab_button">Բացել նոր ներդիր</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">Բացել Գաղտնի ներդիրով</string>
+    <string name="bookmark_menu_open_in_private_tab_button">Բացել Գաղտնի ներդիրում</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Ջնջել</string>
     <!--Bookmark overflow menu save button -->
@@ -894,7 +906,7 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ներդիրներ</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Պատմության և կայքի տվյալների դիտարկում</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">Դիտարկման պատմություն և կայքերի տվյալներ</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d հասցեներ</string>
@@ -906,13 +918,13 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie-ներ</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">Դուք դուրս կգրվեք կայքերի մեծ մասից</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Դուրս կգրվեք կայքերի մեծ մասից</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files">Պահված պատկերներն ու ֆայլերը</string>
+    <string name="preferences_delete_browsing_data_cached_files">Շտեմված պատկերներ ու ֆայլեր</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Ազատում է պահեստային տարածք</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">Կայքի թույլտվություններ</string>
+    <string name="preferences_delete_browsing_data_site_permissions">Կայքերի թույլտվություններ</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Ջնջել դիտարկման տվյալները</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -982,6 +994,8 @@
     <string name="onboarding_whats_new_description_linktext">Ստացեք պատասխանները այստեղ</string>
     <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Օգտագործեք առավելագույնը %s-ից:</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Իմանալ ավելին</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1016,16 +1030,16 @@
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Դիրքորոշեք</string>
+    <string name="onboarding_toolbar_position_header">Դիրքորոշել</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Փորձեք մի ձեռքով դիտարկումը գործիքագոտու ներքևում կամ այն տեղափոխել վերև:</string>
+    <string name="onboarding_toolbar_position_description">Փորձեք մի ձեռքով դիտարկումը գործիքագոտու ներքևում կամ այն տեղափոխեք վերև:</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Դիտարկեք գաղտնի</string>
+    <string name="onboarding_private_browsing_header">Դիտարկել գաղտնի</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Մեկ անգամ բացել գաղտնի ներդիր. Հպեք %s պատկերակին:</string>
+    <string name="onboarding_private_browsing_description1">Ցանկանում եք բացել գաղտնի ներդիր, հպեք %s պատկերակին:</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Ամեն անգամ բացել գաղտնի ներդիրները. Թարմացրեք ձեր գաղտնի դիտարկման կարգավորումները:</string>
+    <string name="onboarding_private_browsing_always_description">Ցանկանում եք ամեն անգամ բացել գաղտնի ներդիրները. Թարմացրեք գաղտնի դիտարկման կարգավորումները:</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Բացել կարգավորումները</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -1033,8 +1047,8 @@
 
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Մենք պատրաստել ենք %s-ը, որպեսզի տանք Ձեզ հսկողություն սահմանելու այն ամենի նկատմամբ, ինչ որ համօգտագործում եք
-        առցանց և այն, ինչ դուք համօգտագործում եք մեզ հետ:</string>
+    <string name="onboarding_privacy_notice_description">Մենք պատրաստել ենք %s-ը, որպեսզի Ձեզ տանք հսկողություն սահմանելը այն ամենի նկատմամբ, ինչ որ համօգտագործում եք
+        առցանց և մեզ հետ:</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Կարդացեք մեր գաղտնիության ծանուցումը</string>
 
@@ -1075,7 +1089,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Մուտք գործեք ձեր տեսախցիկի հետ</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Փոխարենը օգտագործեք էլ. փոստ</string>
+    <string name="sign_in_with_email">Փոխարենը օգտ. էլ. փոստ</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox-ը կկանգնեցնի համաժամացումը ձեր հաշվի հետ, բայց չի ջնջվի այս սարքում ձեր դիտարկման որևէ տվյալ։</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1095,7 +1109,7 @@
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Դիտարկեք առանց Ձեզ հետևելու</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Ձեր տվյալները պահեք ձեզ մոտ: %s-ը ձեզ պաշտպանում է ամենատարածված հետագծիչներից, որոնք հետևում են այն ամենին, ինչ որ անում եք առցանց:</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Ձեր տվյալները պահեք ձեզ մոտ: %s-ը պաշտպանում է ամենատարածված հետագծիչներից, որոնք հետևում են այն ամենին, ինչ որ անում եք առցանց:</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Իմանալ ավելին</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1253,7 +1267,7 @@
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Մուտք գործեք՝ համաժամեցնելու համար</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Պահպանված մուտքաանուններ</string>
+    <string name="preferences_passwords_saved_logins">Պահպանված մուտքանուններ</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Ձեր պահպանած կամ համաժամեցրած մուտքանունները կցուցադրվեն այստեղ:</string>
     <!-- Preference to access list of saved logins -->
@@ -1288,7 +1302,7 @@
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Իմանալ ավելին</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Ցանկանո՞ւմ եք, որ %s-ը պահպանի այս մուտքաանունը:</string>
+    <string name="logins_doorhanger_save">Ցանկանո՞ւմ եք, որ %s-ը պահպանի այս մուտքանունը:</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Պահպանել</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1354,7 +1368,7 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Անուն</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Որոնել տողը՝ օգտագործելու համար</string>
+    <string name="search_add_custom_engine_search_string_hint">Օգտագործվող որոնման տողը </string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example">Հարցումը փոխարինել “%s”-ով: Օրինակ՝ \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
@@ -1369,7 +1383,7 @@
     <!-- Text shown when a user tries to add a search engine that already exists -->
     <string name="search_add_custom_engine_error_existing_name">«%s» անունով որոնիչ արդեն գոյություն ունի:</string>
     <!-- Text shown when a user leaves the search string field empty -->
-    <string name="search_add_custom_engine_error_empty_search_string">Մուտքագրել որոնման տող</string>
+    <string name="search_add_custom_engine_error_empty_search_string">Մուտքագրեք որոնման տող</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Ստուգեք, որ որոնման տողը համապատասխանում է օրինակի ձևաչափին</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
@@ -1382,10 +1396,10 @@
     <string name="search_delete_search_engine_success_message">%s-ը ջնջվել է</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Բարի գալուստ բոլորովին նոր %s</string>
+    <string name="migration_title">Բարի գալուստ նոր %s</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Ամբողջովին վերափոխված դիտարկիչը Ձեզ է սպասում՝ բարելավված արտադրողականությամբ և յուրահատկություններով, որոնք կօգնեն ավելին անել առցանց:\n\nԽնդրում ենք սպասել, մինչ մենք կթարմացնենք %s-ը ձեր</string>
+    <string name="migration_description">Ամբողջովին վերափոխված դիտարկիչը Ձեզ է սպասում՝ բարելավված արտադրողականությամբ և յուրահատկություններով, որոնք կօգնեն անել ավելին առցանց:\n\nԽնդրում ենք սպասել, մինչ մենք կթարմացնենք %s-ի հետևյալ բաղադրիչները՝</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s-ը արդիացվում է…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1415,7 +1429,7 @@
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Համոզվա՞ծ եք, որ ցանկանում եք մաքրել այս թույլտվությունը այս կայքում:</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
-    <string name="no_site_exceptions">Կայքի բացառություններ չեն</string>
+    <string name="no_site_exceptions">Բացառություններ չկան</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Լավագույն հոդվածներ</string>
     <!-- Bookmark deletion confirmation -->
@@ -1430,7 +1444,7 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Խմբագրել</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս մուտքագրումը:</string>
+    <string name="login_deletion_confirmation">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս մուտքանունը:</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Ջնջել</string>
     <!--  The saved login options menu description. -->
@@ -1455,7 +1469,7 @@
     <string name="voice_search_explainer">Խոսել</string>
 
     <!--  The error message in edit login view when a duplicate username exists. -->
-    <string name="saved_login_duplicate">Այդ անունով մուտքագրում արդեն գոյություն ունի</string>
+    <string name="saved_login_duplicate">Այդ անունով մուտքանուն արդեն գոյություն ունի</string>
 
     <!-- Synced Tabs -->
    <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1471,6 +1485,9 @@
     <string name="synced_tabs_sign_in_message">Դիտեք այլ սարքերում ձեր ներդիրների ցանկը:</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Մուտք գործեք՝ համաժամեցնելու համար</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Չկան բացված ներդիրներ</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

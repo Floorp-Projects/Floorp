@@ -1061,7 +1061,7 @@
     <string name="onboarding_tracking_protection_header_2">자동 개인정보 보호</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">개인 정보 및 보안 설정은 추적기, 멀웨어 및 사용자를 따라다니는 회사를 차단합니다.</string>
+    <string name="onboarding_tracking_protection_description_2">개인 정보 및 보안 설정은 추적기, 악성 코드 및 사용자를 따라다니는 회사를 차단합니다.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">표준 (기본값)</string>
     <!-- text for standard blocking option button description -->
