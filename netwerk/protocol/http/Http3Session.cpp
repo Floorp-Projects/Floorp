@@ -580,6 +580,11 @@ nsresult Http3Session::ProcessOutputAndEvents() {
 
 void Http3Session::SetupTimer(uint64_t aTimeout) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  // UINT64_MAX indicated a no-op from neqo, which only happens when a
+  // connection is in or going to be Closed state.
+  if (aTimeout == UINT64_MAX) {
+    return;
+  }
 
   LOG(("Http3Session::SetupTimer to %" PRIu64 "ms [this=%p].", aTimeout, this));
 
