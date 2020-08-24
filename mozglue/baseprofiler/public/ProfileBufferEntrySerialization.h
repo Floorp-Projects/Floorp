@@ -767,39 +767,52 @@ struct ProfileBufferEntryReader::Deserializer<ProfileBufferRawPointer<T>> {
 // ULEB128) and all the characters in the string. The terminal '\0' is omitted.
 //
 // Usage: `std::string s = ...; aEW.WriteObject(s);`
-template <>
-struct ProfileBufferEntryWriter::Serializer<std::string> {
-  static Length Bytes(const std::string& aS) {
+template <typename CHAR>
+struct ProfileBufferEntryWriter::Serializer<std::basic_string<CHAR>> {
+  static Length Bytes(const std::basic_string<CHAR>& aS) {
     const Length len = static_cast<Length>(aS.length());
     return ULEB128Size(len) + len;
   }
 
-  static void Write(ProfileBufferEntryWriter& aEW, const std::string& aS) {
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const std::basic_string<CHAR>& aS) {
     const Length len = static_cast<Length>(aS.length());
     aEW.WriteULEB128(len);
-    aEW.WriteBytes(aS.c_str(), len);
+    aEW.WriteBytes(aS.c_str(), len * sizeof(CHAR));
   }
 };
 
 // Usage: `std::string s = aEW.ReadObject<std::string>(s);` or
 // `std::string s; aER.ReadIntoObject(s);`
-template <>
-struct ProfileBufferEntryReader::Deserializer<std::string> {
-  static void ReadInto(ProfileBufferEntryReader& aER, std::string& aS) {
-    const auto len = aER.ReadULEB128<std::string::size_type>();
+template <typename CHAR>
+struct ProfileBufferEntryReader::Deserializer<std::basic_string<CHAR>> {
+  static void ReadCharsInto(ProfileBufferEntryReader& aER,
+                            std::basic_string<CHAR>& aS, size_t aLength) {
     // Assign to `aS` by using iterators.
     // (`aER+0` so we get the same iterator type as `aER+len`.)
-    aS.assign(aER, aER.EmptyIteratorAtOffset(len));
-    aER += len;
+    aS.assign(aER, aER.EmptyIteratorAtOffset(aLength));
+    aER += aLength;
   }
 
-  static std::string Read(ProfileBufferEntryReader& aER) {
-    const auto len = aER.ReadULEB128<std::string::size_type>();
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       std::basic_string<CHAR>& aS) {
+    ReadCharsInto(
+        aER, aS,
+        aER.ReadULEB128<typename std::basic_string<CHAR>::size_type>());
+  }
+
+  static std::basic_string<CHAR> ReadChars(ProfileBufferEntryReader& aER,
+                                           size_t aLength) {
     // Construct a string by using iterators.
     // (`aER+0` so we get the same iterator type as `aER+len`.)
-    std::string s(aER, aER.EmptyIteratorAtOffset(len));
-    aER += len;
+    std::basic_string<CHAR> s(aER, aER.EmptyIteratorAtOffset(aLength));
+    aER += aLength;
     return s;
+  }
+
+  static std::basic_string<CHAR> Read(ProfileBufferEntryReader& aER) {
+    return ReadChars(
+        aER, aER.ReadULEB128<typename std::basic_string<CHAR>::size_type>());
   }
 };
 
