@@ -1,27 +1,25 @@
 //! Randomization of big integers
 
-use rand::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
+use rand::distributions::uniform::{SampleUniform, UniformSampler};
 use rand::prelude::*;
+use rand::AsByteSliceMut;
 
-use crate::BigInt;
-use crate::BigUint;
-use crate::Sign::*;
+use BigInt;
+use BigUint;
+use Sign::*;
 
-use crate::bigint::{into_magnitude, magnitude};
-use crate::biguint::biguint_from_vec;
+use big_digit::BigDigit;
+use bigint::{into_magnitude, magnitude};
 
-use num_integer::Integer;
-use num_traits::{ToPrimitive, Zero};
+use integer::Integer;
+use traits::Zero;
 
-/// A trait for sampling random big integers.
-///
-/// The `rand` feature must be enabled to use this. See crate-level documentation for details.
 pub trait RandBigInt {
     /// Generate a random `BigUint` of the given bit size.
-    fn gen_biguint(&mut self, bit_size: u64) -> BigUint;
+    fn gen_biguint(&mut self, bit_size: usize) -> BigUint;
 
     /// Generate a random BigInt of the given bit size.
-    fn gen_bigint(&mut self, bit_size: u64) -> BigInt;
+    fn gen_bigint(&mut self, bit_size: usize) -> BigInt;
 
     /// Generate a random `BigUint` less than the given bound. Fails
     /// when the bound is zero.
@@ -38,54 +36,24 @@ pub trait RandBigInt {
     fn gen_bigint_range(&mut self, lbound: &BigInt, ubound: &BigInt) -> BigInt;
 }
 
-fn gen_bits<R: Rng + ?Sized>(rng: &mut R, data: &mut [u32], rem: u64) {
-    // `fill` is faster than many `gen::<u32>` calls
-    rng.fill(data);
-    if rem > 0 {
-        let last = data.len() - 1;
-        data[last] >>= 32 - rem;
-    }
-}
-
 impl<R: Rng + ?Sized> RandBigInt for R {
-    #[cfg(not(u64_digit))]
-    fn gen_biguint(&mut self, bit_size: u64) -> BigUint {
-        let (digits, rem) = bit_size.div_rem(&32);
-        let len = (digits + (rem > 0) as u64)
-            .to_usize()
-            .expect("capacity overflow");
-        let mut data = vec![0u32; len];
-        gen_bits(self, &mut data, rem);
-        biguint_from_vec(data)
+    fn gen_biguint(&mut self, bit_size: usize) -> BigUint {
+        use super::big_digit::BITS;
+        let (digits, rem) = bit_size.div_rem(&BITS);
+        let mut data = vec![BigDigit::default(); digits + (rem > 0) as usize];
+        // `fill_bytes` is faster than many `gen::<u32>` calls
+        self.fill_bytes(data[..].as_byte_slice_mut());
+        // Swap bytes per the `Rng::fill` source. This might be
+        // unnecessary if reproducibility across architectures is not
+        // desired.
+        data.to_le();
+        if rem > 0 {
+            data[digits] >>= BITS - rem;
+        }
+        BigUint::new(data)
     }
 
-    #[cfg(u64_digit)]
-    fn gen_biguint(&mut self, bit_size: u64) -> BigUint {
-        use core::slice;
-
-        let (digits, rem) = bit_size.div_rem(&32);
-        let len = (digits + (rem > 0) as u64)
-            .to_usize()
-            .expect("capacity overflow");
-        let native_digits = bit_size.div_ceil(&64);
-        let native_len = native_digits.to_usize().expect("capacity overflow");
-        let mut data = vec![0u64; native_len];
-        unsafe {
-            // Generate bits in a `&mut [u32]` slice for value stability
-            let ptr = data.as_mut_ptr() as *mut u32;
-            debug_assert!(native_len * 2 >= len);
-            let data = slice::from_raw_parts_mut(ptr, len);
-            gen_bits(self, data, rem);
-        }
-        #[cfg(target_endian = "big")]
-        for digit in &mut data {
-            // swap u32 digits into u64 endianness
-            *digit = (*digit << 32) | (*digit >> 32);
-        }
-        biguint_from_vec(data)
-    }
-
-    fn gen_bigint(&mut self, bit_size: u64) -> BigInt {
+    fn gen_bigint(&mut self, bit_size: usize) -> BigInt {
         loop {
             // Generate a random BigUint...
             let biguint = self.gen_biguint(bit_size);
@@ -153,28 +121,16 @@ impl UniformSampler for UniformBigUint {
     type X = BigUint;
 
     #[inline]
-    fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        let low = low_b.borrow();
-        let high = high_b.borrow();
+    fn new(low: Self::X, high: Self::X) -> Self {
         assert!(low < high);
         UniformBigUint {
-            len: high - low,
-            base: low.clone(),
+            len: high - &low,
+            base: low,
         }
     }
 
     #[inline]
-    fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        let low = low_b.borrow();
-        let high = high_b.borrow();
+    fn new_inclusive(low: Self::X, high: Self::X) -> Self {
         assert!(low <= high);
         Self::new(low, high + 1u32)
     }
@@ -185,12 +141,8 @@ impl UniformSampler for UniformBigUint {
     }
 
     #[inline]
-    fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R) -> Self::X
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        rng.gen_biguint_range(low.borrow(), high.borrow())
+    fn sample_single<R: Rng + ?Sized>(low: Self::X, high: Self::X, rng: &mut R) -> Self::X {
+        rng.gen_biguint_range(&low, &high)
     }
 }
 
@@ -209,28 +161,16 @@ impl UniformSampler for UniformBigInt {
     type X = BigInt;
 
     #[inline]
-    fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        let low = low_b.borrow();
-        let high = high_b.borrow();
+    fn new(low: Self::X, high: Self::X) -> Self {
         assert!(low < high);
         UniformBigInt {
-            len: into_magnitude(high - low),
-            base: low.clone(),
+            len: into_magnitude(high - &low),
+            base: low,
         }
     }
 
     #[inline]
-    fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        let low = low_b.borrow();
-        let high = high_b.borrow();
+    fn new_inclusive(low: Self::X, high: Self::X) -> Self {
         assert!(low <= high);
         Self::new(low, high + 1u32)
     }
@@ -241,12 +181,8 @@ impl UniformSampler for UniformBigInt {
     }
 
     #[inline]
-    fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R) -> Self::X
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        rng.gen_bigint_range(low.borrow(), high.borrow())
+    fn sample_single<R: Rng + ?Sized>(low: Self::X, high: Self::X, rng: &mut R) -> Self::X {
+        rng.gen_bigint_range(&low, &high)
     }
 }
 
@@ -255,16 +191,14 @@ impl SampleUniform for BigInt {
 }
 
 /// A random distribution for `BigUint` and `BigInt` values of a particular bit size.
-///
-/// The `rand` feature must be enabled to use this. See crate-level documentation for details.
 #[derive(Clone, Copy, Debug)]
 pub struct RandomBits {
-    bits: u64,
+    bits: usize,
 }
 
 impl RandomBits {
     #[inline]
-    pub fn new(bits: u64) -> RandomBits {
+    pub fn new(bits: usize) -> RandomBits {
         RandomBits { bits }
     }
 }

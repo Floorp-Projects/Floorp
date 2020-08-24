@@ -2,8 +2,8 @@
 
 [![crate](https://img.shields.io/crates/v/num-traits.svg)](https://crates.io/crates/num-traits)
 [![documentation](https://docs.rs/num-traits/badge.svg)](https://docs.rs/num-traits)
-[![minimum rustc 1.8](https://img.shields.io/badge/rustc-1.8+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
-[![build status](https://github.com/rust-num/num-traits/workflows/master/badge.svg)](https://github.com/rust-num/num-traits/actions)
+![minimum rustc 1.8](https://img.shields.io/badge/rustc-1.8+-red.svg)
+[![Travis status](https://travis-ci.org/rust-num/num-traits.svg?branch=master)](https://travis-ci.org/rust-num/num-traits)
 
 Numeric traits for generic mathematics in Rust.
 

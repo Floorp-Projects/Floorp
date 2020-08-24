@@ -1,3 +1,6 @@
+extern crate num_bigint;
+extern crate num_traits;
+
 use num_bigint::{BigInt, Sign, ToBigInt};
 use num_traits::ToPrimitive;
 use std::{i32, i64, u32};
@@ -8,7 +11,7 @@ enum ValueVec {
     M(&'static [u32]),
 }
 
-use crate::ValueVec::*;
+use ValueVec::*;
 
 impl ToBigInt for ValueVec {
     fn to_bigint(&self) -> Option<BigInt> {
@@ -21,7 +24,7 @@ impl ToBigInt for ValueVec {
 }
 
 // a, !a
-const NOT_VALUES: &[(ValueVec, ValueVec)] = &[
+const NOT_VALUES: &'static [(ValueVec, ValueVec)] = &[
     (N, M(&[1])),
     (P(&[1]), M(&[2])),
     (P(&[2]), M(&[3])),
@@ -33,7 +36,7 @@ const NOT_VALUES: &[(ValueVec, ValueVec)] = &[
 ];
 
 // a, b, a & b, a | b, a ^ b
-const BITWISE_VALUES: &[(ValueVec, ValueVec, ValueVec, ValueVec, ValueVec)] = &[
+const BITWISE_VALUES: &'static [(ValueVec, ValueVec, ValueVec, ValueVec, ValueVec)] = &[
     (N, N, N, N, N),
     (N, P(&[1]), N, P(&[1]), P(&[1])),
     (N, P(&[!0]), N, P(&[!0]), P(&[!0])),
@@ -59,7 +62,7 @@ const I32_MAX: i64 = i32::MAX as i64;
 const U32_MAX: i64 = u32::MAX as i64;
 
 // some corner cases
-const I64_VALUES: &[i64] = &[
+const I64_VALUES: &'static [i64] = &[
     i64::MIN,
     i64::MIN + 1,
     i64::MIN + 2,

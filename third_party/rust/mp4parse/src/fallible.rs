@@ -256,7 +256,7 @@ impl<T> TryVec<T> {
         Ok(())
     }
 
-    pub fn reserve(&mut self, additional: usize) -> Result<()> {
+    fn reserve(&mut self, additional: usize) -> Result<()> {
         #[cfg(feature = "mp4parse_fallible")]
         {
             let available = self
