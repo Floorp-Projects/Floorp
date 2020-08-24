@@ -481,6 +481,29 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {"application/vnd.android.package-archive", "apk", "Android Package"},
 #endif
 
+    // OpenDocument formats
+    {"application/vnd.oasis.opendocument.text", "odt", "OpenDocument Text"},
+    {"application/vnd.oasis.opendocument.presentation", "odp",
+     "OpenDocument Presentation"},
+    {"application/vnd.oasis.opendocument.spreadsheet", "ods",
+     "OpenDocument Spreadsheet"},
+    {"application/vnd.oasis.opendocument.graphics", "odg",
+     "OpenDocument Graphics"},
+
+    // Legacy Microsoft Office
+    {"application/msword", "doc", "Microsoft Word"},
+    {"application/vnd.ms-powerpoint", "ppt", "Microsoft PowerPoint"},
+    {"application/vnd.ms-excel", "xls", "Microsoft Excel"},
+
+    // Office Open XML
+    {"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     "docx", "Microsoft Word (Open XML)"},
+    {"application/"
+     "vnd.openxmlformats-officedocument.presentationml.presentation",
+     "pptx", "Microsoft PowerPoint (Open XML)"},
+    {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+     "xlsx", "Microsoft Excel (Open XML)"},
+
     // Note: if you add new image types, please also update the list in
     // contentAreaUtils.js to match.
     {IMAGE_ART, "art", "ART Image"},
@@ -509,6 +532,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language"},
     {TEXT_CSS, "css", "Style Sheet"},
     {TEXT_VCARD, "vcf,vcard", "Contact Information"},
+    {TEXT_CALENDAR, "ics", "iCalendar"},
     {VIDEO_OGG, "ogv", "Ogg Video"},
     {VIDEO_OGG, "ogg", "Ogg Video"},
     {APPLICATION_OGG, "ogg", "Ogg Video"},
