@@ -588,12 +588,6 @@ pref("browser.bookmarks.openInTabClosesMenu", true);
 pref("dom.disable_open_during_load",              true);
 pref("javascript.options.showInConsole",          true);
 
-// This is the pref to control the location bar, change this to true to
-// force this - this makes the origin of popup windows more obvious to avoid
-// spoofing. We would rather not do it by default because it affects UE for web
-// applications, but without it there isn't a really good way to prevent chrome
-// spoofing, see bug 337344
-pref("dom.disable_window_open_feature.location",  true);
 // allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize",            false);
 // prevent JS from monkeying with window focus, etc

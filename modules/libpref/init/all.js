@@ -991,16 +991,6 @@ pref("dom.beforeunload_timeout_ms",         1000);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
 
-pref("dom.disable_window_open_feature.titlebar",    false);
-pref("dom.disable_window_open_feature.close",       false);
-pref("dom.disable_window_open_feature.toolbar",     false);
-pref("dom.disable_window_open_feature.location",    false);
-pref("dom.disable_window_open_feature.personalbar", false);
-pref("dom.disable_window_open_feature.menubar",     false);
-pref("dom.disable_window_open_feature.resizable",   true);
-pref("dom.disable_window_open_feature.minimizable", false);
-pref("dom.disable_window_open_feature.status",      true);
-
 pref("dom.allow_scripts_to_close_windows",          false);
 
 pref("dom.popup_allowed_events", "change click dblclick auxclick mouseup pointerup notificationclick reset submit touchend contextmenu");
