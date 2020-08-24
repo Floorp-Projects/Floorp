@@ -73,6 +73,8 @@ class BytecodeAnalysis {
   }
 
   bool hasTryFinally() const { return hasTryFinally_; }
+
+  void checkWarpSupport(JSOp op);
 };
 
 // Bytecode analysis pass necessary for IonBuilder. The result is cached in

@@ -7,6 +7,7 @@
 #include "jit/BytecodeAnalysis.h"
 
 #include "jit/JitSpewer.h"
+#include "jit/WarpBuilder.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
@@ -72,6 +73,10 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 
     JitSpew(JitSpew_BaselineOp, "Analyzing op @ %u (end=%u): %s",
             unsigned(offset), unsigned(script_->length()), CodeName(op));
+
+    if (JitOptions.warpBuilder) {
+      checkWarpSupport(op);
+    }
 
     // If this bytecode info has not yet been initialized, it's not reachable.
     if (!infos_[offset].initialized) {
@@ -219,6 +224,18 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
   }
 
   return true;
+}
+
+void BytecodeAnalysis::checkWarpSupport(JSOp op) {
+  switch (op) {
+#define DEF_CASE(OP) case JSOp::OP:
+    WARP_UNSUPPORTED_OPCODE_LIST(DEF_CASE)
+#undef DEF_CASE
+    script_->disableIon();
+    break;
+    default:
+      break;
+  }
 }
 
 IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,

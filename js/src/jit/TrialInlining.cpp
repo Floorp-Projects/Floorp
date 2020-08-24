@@ -26,6 +26,10 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
   ICScript* icScript = frame->icScript();
   bool isRecursive = !!icScript->inliningRoot();
 
+  if (!script->canIonCompile()) {
+    return true;
+  }
+
   const uint32_t MAX_INLINING_DEPTH = 5;
   if (icScript->depth() > MAX_INLINING_DEPTH) {
     return true;
@@ -166,7 +170,8 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
   }
   JSScript* script = target->nonLazyScript();
   if (!script->jitScript()->hasBaselineScript() || script->uninlineable() ||
-      script->needsArgsObj() || script->isDebuggee()) {
+      !script->canIonCompile() || script->needsArgsObj() ||
+      script->isDebuggee()) {
     return false;
   }
   // Don't inline cross-realm calls.
