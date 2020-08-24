@@ -22,6 +22,7 @@ namespace dom {
 
 class PerformanceEntry;
 class PerformanceNavigation;
+class PerformancePaintTiming;
 class PerformanceObserver;
 class PerformanceService;
 class PerformanceStorage;
@@ -84,6 +85,8 @@ class Performance : public DOMEventTargetHelper {
   virtual PerformanceTiming* Timing() = 0;
 
   virtual PerformanceNavigation* Navigation() = 0;
+
+  virtual void SetFCPTimingEntry(PerformancePaintTiming* aEntry) = 0;
 
   IMPL_EVENT_HANDLER(resourcetimingbufferfull)
 
