@@ -72,7 +72,7 @@ class MOZ_STACK_CLASS FunctionEmitter {
   FunctionBox* funbox_;
 
   // Function's explicit name.
-  JS::Rooted<JSAtom*> name_;
+  const ParserAtom* name_;
 
   FunctionSyntaxKind syntaxKind_;
   IsHoisted isHoisted_;
@@ -410,10 +410,10 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
 
   // paramName is used only when there's at least one expression in the
   // paramerters (funbox_->hasParameterExprs == true).
-  MOZ_MUST_USE bool emitSimple(JS::Handle<JSAtom*> paramName);
+  MOZ_MUST_USE bool emitSimple(const ParserAtom* paramName);
 
   MOZ_MUST_USE bool prepareForDefault();
-  MOZ_MUST_USE bool emitDefaultEnd(JS::Handle<JSAtom*> paramName);
+  MOZ_MUST_USE bool emitDefaultEnd(const ParserAtom* paramName);
 
   MOZ_MUST_USE bool prepareForDestructuring();
   MOZ_MUST_USE bool emitDestructuringEnd();
@@ -422,7 +422,7 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
   MOZ_MUST_USE bool prepareForDestructuringDefault();
   MOZ_MUST_USE bool emitDestructuringDefaultEnd();
 
-  MOZ_MUST_USE bool emitRest(JS::Handle<JSAtom*> paramName);
+  MOZ_MUST_USE bool emitRest(const ParserAtom* paramName);
 
   MOZ_MUST_USE bool prepareForDestructuringRest();
   MOZ_MUST_USE bool emitDestructuringRestEnd();
@@ -433,7 +433,7 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
 
   MOZ_MUST_USE bool emitRestArray();
 
-  MOZ_MUST_USE bool emitAssignment(JS::Handle<JSAtom*> paramName);
+  MOZ_MUST_USE bool emitAssignment(const ParserAtom* paramName);
 };
 
 } /* namespace frontend */

@@ -16,11 +16,10 @@
 #include "ds/Nestable.h"               // Nestable
 #include "frontend/BytecodeSection.h"  // BytecodeOffset
 #include "frontend/JumpList.h"         // JumpList, JumpTarget
+#include "frontend/ParserAtom.h"       // ParserAtom
 #include "frontend/SharedContext.h"  // StatementKind, StatementKindIsLoop, StatementKindIsUnlabeledBreakTarget
 #include "frontend/TDZCheckCache.h"  // TDZCheckCache
-#include "gc/Rooting.h"              // RootedAtom, HandleAtom
 #include "vm/StencilEnums.h"         // TryNoteKind
-#include "vm/StringType.h"           // JSAtom
 
 namespace js {
 namespace frontend {
@@ -71,15 +70,16 @@ inline bool NestableControl::is<BreakableControl>() const {
 }
 
 class LabelControl : public BreakableControl {
-  RootedAtom label_;
+  const ParserAtom* label_;
 
   // The code offset when this was pushed. Used for effectfulness checking.
   BytecodeOffset startOffset_;
 
  public:
-  LabelControl(BytecodeEmitter* bce, JSAtom* label, BytecodeOffset startOffset);
+  LabelControl(BytecodeEmitter* bce, const ParserAtom* label,
+               BytecodeOffset startOffset);
 
-  HandleAtom label() const { return label_; }
+  const ParserAtom* label() const { return label_; }
 
   BytecodeOffset startOffset() const { return startOffset_; }
 };
