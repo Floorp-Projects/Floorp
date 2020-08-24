@@ -79,6 +79,10 @@ class IOUtils final {
                                         const nsAString& aDestPath,
                                         const CopyOptions& aOptions);
 
+  static already_AddRefed<Promise> Touch(
+      GlobalObject& aGlobal, const nsAString& aPath,
+      const Optional<int64_t>& aModification);
+
   static bool IsAbsolutePath(const nsAString& aPath);
 
  private:
@@ -285,6 +289,18 @@ class IOUtils final {
    */
   static Result<IOUtils::InternalFileInfo, IOError> StatSync(
       const nsAString& aPath);
+
+  /**
+   * Attempts to update the last modification time of the file at |aPath|.
+   *
+   * @param aPath       The location of the file as an absolute path string.
+   * @param aNewModTime Some value in milliseconds since Epoch. For the current
+   *                    system time, use |Nothing|.
+   *
+   * @return Timestamp of the file if the operation was successful, or an error.
+   */
+  static Result<int64_t, IOError> TouchSync(const nsAString& aPath,
+                                            const Maybe<int64_t>& aNewModTime);
 };
 
 /**
