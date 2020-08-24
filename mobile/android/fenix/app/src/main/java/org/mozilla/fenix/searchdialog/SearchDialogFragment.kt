@@ -12,12 +12,15 @@ import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewStub
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
 import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
@@ -28,6 +31,7 @@ import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_engines_shortcut_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.qr_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.toolbar
+import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom
@@ -43,11 +47,14 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.search.SearchFragmentAction
+import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.SearchInteractor
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.search.toolbar.ToolbarView
+import org.mozilla.fenix.settings.SupportUtils
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
 typealias SearchDialogInteractor = SearchInteractor
@@ -157,6 +164,42 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             view = view
         )
 
+        val stubListener = ViewStub.OnInflateListener { _, inflated ->
+            inflated.learn_more.setOnClickListener {
+                (activity as HomeActivity)
+                    .openToBrowserAndLoad(
+                        searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+                            SupportUtils.SumoTopic.SEARCH_SUGGESTION
+                        ),
+                        newTab = store.state.tabId == null,
+                        from = BrowserDirection.FromSearch
+                    )
+            }
+
+            inflated.allow.setOnClickListener {
+                inflated.visibility = View.GONE
+                context?.settings()?.shouldShowSearchSuggestionsInPrivate = true
+                context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+                store.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true))
+                store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
+                requireComponents.analytics.metrics.track(Event.PrivateBrowsingShowSearchSuggestions)
+            }
+
+            inflated.dismiss.setOnClickListener {
+                inflated.visibility = View.GONE
+                context?.settings()?.shouldShowSearchSuggestionsInPrivate = false
+                context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+            }
+
+            inflated.text.text =
+                getString(R.string.search_suggestions_onboarding_text, getString(R.string.app_name))
+
+            inflated.title.text =
+                getString(R.string.search_suggestions_onboarding_title)
+        }
+
+        view.search_suggestions_onboarding.setOnInflateListener((stubListener))
+
         consumeFrom(store) {
             val shouldShowAwesomebar =
                 !firstUpdate &&
@@ -164,6 +207,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 it.showSearchShortcuts
 
             awesome_bar?.visibility = if (shouldShowAwesomebar) View.VISIBLE else View.INVISIBLE
+            updateSearchSuggestionsHintVisibility(it)
             toolbarView.update(it)
             awesomeBarView.update(it)
             firstUpdate = false
@@ -239,6 +283,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
                 applyTo(search_wrapper)
             }
+        }
+    }
+
+    private fun updateSearchSuggestionsHintVisibility(state: SearchFragmentState) {
+        view?.apply {
+            findViewById<View>(R.id.search_suggestions_onboarding)?.isVisible = state.showSearchSuggestionsHint
+            search_suggestions_onboarding_divider?.isVisible = state.showSearchSuggestionsHint
         }
     }
 
