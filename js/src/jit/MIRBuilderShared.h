@@ -231,6 +231,10 @@ class MOZ_STACK_CLASS CallInfo {
     MOZ_ASSERT(args_.empty());
     return args_.appendAll(args);
   }
+  MOZ_MUST_USE bool replaceArgs(const MDefinitionVector& args) {
+    args_.clear();
+    return setArgs(args);
+  }
 
   MDefinitionVector& argv() { return args_; }
 
