@@ -94,7 +94,6 @@ class nsPrintSettingsX : public nsPrintSettings {
  protected:
   virtual ~nsPrintSettingsX();
 
-  nsPrintSettingsX(const nsPrintSettingsX& src);
   nsPrintSettingsX& operator=(const nsPrintSettingsX& rhs);
 
   nsresult _Clone(nsIPrintSettings** _retval) override;
