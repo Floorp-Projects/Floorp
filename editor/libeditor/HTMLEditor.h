@@ -2536,9 +2536,6 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * This method handles "delete selection" commands.
-   * NOTE: Don't call this method recursively from the helper methods since
-   *       when nobody handled it without canceling and returing an error,
-   *       this falls it back to `DeleteSelectionWithTransaction()`.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
