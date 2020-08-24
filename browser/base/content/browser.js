@@ -8911,9 +8911,10 @@ class TabDialogBox {
    * @param {String} aURL - URL of the dialog to load in the tab box.
    * @param {String} [aFeatures] - Comma separated list of window features.
    * @param {*} [aParams] - Parameters to pass to dialog window.
+   * @param {Object} [aOpenOptions] - Parameters to pass to dialog open method.
    * @returns {Promise} - Resolves once the dialog has been closed.
    */
-  open(aURL, aFeatures = null, aParams = null) {
+  open(aURL, aFeatures = null, aParams = null, aOpenOptions = {}) {
     return new Promise(resolve => {
       if (!this._dialogManager.hasDialogs) {
         this._onFirstDialogOpen();
@@ -8931,7 +8932,8 @@ class TabDialogBox {
           }
         },
         // Resolve on closed callback
-        resolve
+        resolve,
+        aOpenOptions
       );
     });
   }
