@@ -5248,7 +5248,7 @@ static void SweepAllWeakCachesOnMainThread(JSRuntime* rt) {
     if (cache->needsIncrementalBarrier()) {
       cache->setNeedsIncrementalBarrier(false);
     }
-    cache->sweep(nullptr);
+    cache->sweep(&rt->gc.storeBuffer());
     return true;
   });
 }
@@ -5345,19 +5345,23 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
                                       PhaseKind::SWEEP_WEAKREFS, lock);
 
     WeakCacheTaskVector sweepCacheTasks;
-    if (PrepareWeakCacheTasks(rt, &sweepCacheTasks)) {
+    bool canSweepWeakCachesOffThread =
+        PrepareWeakCacheTasks(rt, &sweepCacheTasks);
+    if (canSweepWeakCachesOffThread) {
       weakCachesToSweep.ref().emplace(currentSweepGroup);
-    } else {
-      SweepAllWeakCachesOnMainThread(rt);
-    }
-
-    for (auto& task : sweepCacheTasks) {
-      startTask(task, PhaseKind::SWEEP_WEAK_CACHES, lock);
+      for (auto& task : sweepCacheTasks) {
+        startTask(task, PhaseKind::SWEEP_WEAK_CACHES, lock);
+      }
     }
 
     {
       AutoUnlockHelperThreadState unlock(lock);
       sweepJitDataOnMainThread(fop);
+
+      if (!canSweepWeakCachesOffThread) {
+        MOZ_ASSERT(sweepCacheTasks.empty());
+        SweepAllWeakCachesOnMainThread(rt);
+      }
     }
 
     for (auto& task : sweepCacheTasks) {
