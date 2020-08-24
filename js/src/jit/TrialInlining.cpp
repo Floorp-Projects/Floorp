@@ -296,8 +296,14 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
     return true;
   }
 
+  // We only inline FunCall if we are calling the js::fun_call builtin.
+  MOZ_ASSERT_IF(loc.getOp() == JSOp::FunCall,
+                data->callFlags.getArgFormat() == CallFlags::FunCall);
+
   // TODO: The arguments rectifier is not yet supported.
-  if (loc.getCallArgc() < data->target->nargs()) {
+  uint32_t argc =
+      loc.getOp() == JSOp::FunCall ? loc.getCallArgc() - 1 : loc.getCallArgc();
+  if (argc < data->target->nargs()) {
     return true;
   }
 
@@ -326,6 +332,7 @@ bool TrialInliner::tryInlining() {
       case JSOp::Call:
       case JSOp::CallIgnoresRv:
       case JSOp::CallIter:
+      case JSOp::FunCall:
         if (!maybeInlineCall(icScript_->icEntry(icIndex), loc)) {
           return false;
         }
