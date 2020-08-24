@@ -25,10 +25,9 @@ MediaDrmSessionType ToMediaDrmSessionType(
 MediaDrmCDMProxy::MediaDrmCDMProxy(dom::MediaKeys* aKeys,
                                    const nsAString& aKeySystem,
                                    bool aDistinctiveIdentifierRequired,
-                                   bool aPersistentStateRequired,
-                                   nsISerialEventTarget* aMainThread)
+                                   bool aPersistentStateRequired)
     : CDMProxy(aKeys, aKeySystem, aDistinctiveIdentifierRequired,
-               aPersistentStateRequired, aMainThread),
+               aPersistentStateRequired),
       mCDM(nullptr),
       mShutdownCalled(false) {
   MOZ_ASSERT(NS_IsMainThread());

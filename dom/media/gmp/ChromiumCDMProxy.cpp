@@ -21,10 +21,9 @@ ChromiumCDMProxy::ChromiumCDMProxy(dom::MediaKeys* aKeys,
                                    const nsAString& aKeySystem,
                                    GMPCrashHelper* aCrashHelper,
                                    bool aDistinctiveIdentifierRequired,
-                                   bool aPersistentStateRequired,
-                                   nsISerialEventTarget* aMainThread)
+                                   bool aPersistentStateRequired)
     : CDMProxy(aKeys, aKeySystem, aDistinctiveIdentifierRequired,
-               aPersistentStateRequired, aMainThread),
+               aPersistentStateRequired),
       mCrashHelper(aCrashHelper),
       mCDMMutex("ChromiumCDMProxy"),
       mGMPThread(GetGMPThread()) {
