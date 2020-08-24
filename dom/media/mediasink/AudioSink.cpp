@@ -17,7 +17,7 @@
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerMarkerPayload.h"
-#  define PROFILER_MARKER(tag, sample)                                    \
+#  define PROFILER_AUDIO_MARKER(tag, sample)                              \
     do {                                                                  \
       uint64_t startTime = (sample)->mTime.ToMicroseconds();              \
       uint64_t endTime = (sample)->GetEndTime().ToMicroseconds();         \
@@ -30,7 +30,7 @@
           }));                                                            \
     } while (0)
 #else
-#  define PROFILER_MARKER(tag, sample)
+#  define PROFILER_AUDIO_MARKER(tag, sample)
 #endif
 
 namespace mozilla {
@@ -285,7 +285,7 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
   SINK_LOG_V("playing audio at time=%" PRId64 " offset=%u length=%u",
              mCurrentData->mTime.ToMicroseconds(),
              mCurrentData->Frames() - mCursor->Available(), framesToPop);
-  PROFILER_MARKER("PlayAudio", mCurrentData);
+  PROFILER_AUDIO_MARKER("PlayAudio", mCurrentData);
 
   UniquePtr<AudioStream::Chunk> chunk =
       MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
