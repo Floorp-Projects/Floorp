@@ -615,8 +615,21 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
-    <style name="SearchDialogStyle" parent="DialogStyleBase">
-        <item name="android:windowIsFloating">false</item>
+    <style name="SearchDialogStyle">
         <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
+        <item name="android:colorControlNormal">?accentHighContrast</item>
+        <item name="android:colorControlActivated">?accentHighContrast</item>
+        <item name="android:colorControlHighlight">?accentBright</item>
+
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
 </resources>
