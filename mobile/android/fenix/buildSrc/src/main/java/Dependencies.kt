@@ -28,7 +28,6 @@ object Versions {
     const val androidx_transition = "1.3.0"
     const val androidx_work = "2.2.0"
     const val google_material = "1.1.0"
-    const val google_flexbox = "2.0.1"
 
     const val mozilla_android_components = AndroidComponents.VERSION
 
@@ -175,7 +174,6 @@ object Deps {
     const val androidx_work_ktx = "androidx.work:work-runtime-ktx:${Versions.androidx_work}"
     const val androidx_work_testing = "androidx.work:work-testing:${Versions.androidx_work}"
     const val google_material = "com.google.android.material:material:${Versions.google_material}"
-    const val google_flexbox = "com.google.android:flexbox:${Versions.google_flexbox}"
 
     const val adjust = "com.adjust.sdk:adjust-android:${Versions.adjust}"
     const val installreferrer = "com.android.installreferrer:installreferrer:${Versions.installreferrer}"

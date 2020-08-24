@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.flexbox.FlexboxLayoutManager
 import kotlinx.android.synthetic.main.component_top_sites.view.*
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
@@ -23,8 +22,6 @@ class TopSiteViewHolder(
     init {
         view.top_sites_list.apply {
             adapter = topSitesAdapter
-            layoutManager = FlexboxLayoutManager(view.context)
-            isNestedScrollingEnabled = false
         }
     }
 

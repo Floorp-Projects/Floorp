@@ -432,8 +432,6 @@ dependencies {
     implementation Deps.androidx_work_ktx
     implementation Deps.google_material
 
-    implementation Deps.google_flexbox
-
     implementation Deps.lottie
 
     implementation Deps.adjust

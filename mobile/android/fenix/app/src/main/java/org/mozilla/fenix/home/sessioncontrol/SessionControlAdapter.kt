@@ -22,7 +22,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSitePagerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingAutomaticSignInViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFinishViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
@@ -42,14 +42,14 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         ButtonTipViewHolder.LAYOUT_ID
     )
 
-    data class TopSiteList(val topSites: List<TopSite>) : AdapterItem(TopSiteViewHolder.LAYOUT_ID) {
+    data class TopSitePager(val topSites: List<TopSite>) : AdapterItem(TopSitePagerViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem): Boolean {
-            val newTopSites = (other as? TopSiteList) ?: return false
+            val newTopSites = (other as? TopSitePager) ?: return false
             return newTopSites.topSites == this.topSites
         }
 
         override fun contentsSameAs(other: AdapterItem): Boolean {
-            val newTopSites = (other as? TopSiteList) ?: return false
+            val newTopSites = (other as? TopSitePager) ?: return false
             if (newTopSites.topSites.size != this.topSites.size) return false
             val newSitesSequence = newTopSites.topSites.asSequence()
             val oldTopSites = this.topSites.asSequence()
@@ -147,7 +147,7 @@ class SessionControlAdapter(
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
             ButtonTipViewHolder.LAYOUT_ID -> ButtonTipViewHolder(view, interactor)
-            TopSiteViewHolder.LAYOUT_ID -> TopSiteViewHolder(view, interactor)
+            TopSitePagerViewHolder.LAYOUT_ID -> TopSitePagerViewHolder(view, interactor)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(
                 view,
                 interactor
@@ -203,8 +203,8 @@ class SessionControlAdapter(
                 val tipItem = item as AdapterItem.TipItem
                 holder.bind(tipItem.tip)
             }
-            is TopSiteViewHolder -> {
-                holder.bind((item as AdapterItem.TopSiteList).topSites)
+            is TopSitePagerViewHolder -> {
+                holder.bind((item as AdapterItem.TopSitePager).topSites)
             }
             is CollectionViewHolder -> {
                 val (collection, expanded) = item as AdapterItem.CollectionItem
