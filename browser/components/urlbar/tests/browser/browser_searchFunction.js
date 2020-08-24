@@ -5,11 +5,20 @@
 
 "use strict";
 
+const ALIAS = "@enginealias";
+let aliasEngine;
+
 add_task(async function init() {
   // Run this in a new tab, to ensure all the locationchange notifications have
   // fired.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  aliasEngine = await Services.search.addEngineWithDetails("Test", {
+    alias: ALIAS,
+    template: "http://example.com/?search={searchTerms}",
+  });
   registerCleanupFunction(async function() {
+    await Services.search.removeEngine(aliasEngine);
     BrowserTestUtils.removeTab(tab);
     gURLBar.handleRevert();
   });
@@ -115,6 +124,75 @@ add_task(async function searchIME() {
   assertOneOffButtonsVisible(true);
 
   await UrlbarTestUtils.promisePopupClose(window);
+});
+
+// Calls searchWithAlias(), a companion function to search().
+add_task(async function searchWithAlias() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+
+  await UrlbarTestUtils.promisePopupOpen(window, () =>
+    gURLBar.searchWithAlias(ALIAS, "test")
+  );
+  Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
+  UrlbarTestUtils.assertSearchMode(window, {
+    engineName: aliasEngine.name,
+  });
+  await assertUrlbarValue("test");
+  assertOneOffButtonsVisible(true);
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  await SpecialPowers.popPrefEnv();
+});
+
+// Calls searchWithAlias() with update2 disabled.
+add_task(async function searchWithAlias_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
+
+  await UrlbarTestUtils.promisePopupOpen(window, () =>
+    gURLBar.searchWithAlias(ALIAS, "test")
+  );
+  Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
+  Assert.equal(gURLBar.value, `${ALIAS} test`);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(
+    result.type,
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    "Should have type search for the first result"
+  );
+  Assert.equal(
+    result.searchParams.query,
+    "test",
+    "Should have the correct query for the first result"
+  );
+
+  assertOneOffButtonsVisible(false);
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  await SpecialPowers.popPrefEnv();
+});
+
+// Calls searchWithAlias() with an invalid alias.
+add_task(async function searchWithAliasInvalidAlias() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+
+  await UrlbarTestUtils.promisePopupOpen(window, () =>
+    gURLBar.searchWithAlias("@invalidalias", "test")
+  );
+  Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
+  UrlbarTestUtils.assertSearchMode(window, null);
+  await assertUrlbarValue("@invalidalias test");
+  assertOneOffButtonsVisible(false);
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  await SpecialPowers.popPrefEnv();
 });
 
 /**

@@ -367,7 +367,7 @@ class PlacesFeed {
   }
 
   fillSearchTopSiteTerm({ _target, data }) {
-    _target.browser.ownerGlobal.gURLBar.search(`${data.label} `);
+    _target.browser.ownerGlobal.gURLBar.searchWithAlias(data.label);
   }
 
   _getSearchPrefix(isPrivateWindow) {
@@ -391,8 +391,7 @@ class PlacesFeed {
     if (!data || !data.text) {
       urlBar.setHiddenFocus();
     } else {
-      // Pass the provided text to the awesomebar. Prepend the @engine shortcut.
-      urlBar.search(`${searchAlias}${data.text}`);
+      urlBar.searchWithAlias(searchAlias, data.text);
       isFirstChange = false;
     }
 
@@ -403,7 +402,7 @@ class PlacesFeed {
       if (isFirstChange) {
         isFirstChange = false;
         urlBar.removeHiddenFocus();
-        urlBar.search(searchAlias);
+        urlBar.searchWithAlias(searchAlias);
         this.store.dispatch(
           ac.OnlyToOneContent({ type: at.HIDE_SEARCH }, meta.fromTarget)
         );

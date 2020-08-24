@@ -1163,6 +1163,32 @@ class UrlbarInput {
   }
 
   /**
+   * Starts a search with a given alias. If update2 is enabled, search mode is
+   * entered. Otherwise, this just calls search().
+   * @param {string} alias
+   *   A search engine alias.
+   * @param {string} [value]
+   *   The input's value will be set to this value, and the search will
+   *   use it as its query.
+   */
+  searchWithAlias(alias, value = "") {
+    alias = alias.trim();
+    if (UrlbarPrefs.get("update2")) {
+      // Enter search mode.
+      let engine = Services.search.getEngineByAlias(alias);
+      if (engine) {
+        this.setSearchMode({ engineName: engine.name });
+        this.search(value);
+      } else {
+        this.search(`${alias} ${value}`);
+      }
+    } else {
+      // Pass the provided text to the Urlbar. Prepend the @engine shortcut.
+      this.search(`${alias} ${value}`);
+    }
+  }
+
+  /**
    * Focus without the focus styles.
    * This is used by Activity Stream and about:privatebrowsing for search hand-off.
    */
