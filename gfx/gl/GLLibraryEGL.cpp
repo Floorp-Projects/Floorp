@@ -61,6 +61,7 @@ static const char* sEGLExtensionNames[] = {
     "EGL_EXT_create_context_robustness",
     "EGL_KHR_image",
     "EGL_KHR_fence_sync",
+    "EGL_KHR_wait_sync",
     "EGL_ANDROID_native_fence_sync",
     "EGL_ANDROID_image_crop",
     "EGL_ANGLE_d3d_share_handle_client_buffer",
@@ -543,6 +544,10 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
   {
     const SymLoadStruct symbols[] = {SYMBOL(CreateImageKHR),
                                      SYMBOL(DestroyImageKHR), END_OF_SYMBOLS};
+    (void)fnLoadSymbols(symbols);
+  }
+  {
+    const SymLoadStruct symbols[] = {SYMBOL(WaitSyncKHR), END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
   {
