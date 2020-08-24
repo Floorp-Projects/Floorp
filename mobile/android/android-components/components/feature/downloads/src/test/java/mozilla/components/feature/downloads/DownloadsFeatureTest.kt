@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -728,6 +729,76 @@ class DownloadsFeatureTest {
 
         val app = resolveInfo.toDownloaderApp(spyContext, download)
         assertEquals(expectedApp, app)
+    }
+
+    @Test
+    fun `previous dialogs MUST be dismissed when navigating to another website`() {
+        val downloadsUseCases = spy(DownloadsUseCases(store))
+        val consumeDownloadUseCase = mock<ConsumeDownloadUseCase>()
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = download))
+                .joinBlocking()
+
+        doReturn(consumeDownloadUseCase).`when`(downloadsUseCases).consumeDownload
+
+        val feature = spy(DownloadsFeature(
+            testContext,
+            store,
+            useCases = downloadsUseCases,
+            downloadManager = mock()
+        ))
+
+        doNothing().`when`(feature).dismissAllDownloadDialogs()
+        doReturn(true).`when`(feature).processDownload(any(), any())
+
+        feature.start()
+
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = download))
+                .joinBlocking()
+
+        grantPermissions()
+
+        val tab = createTab("https://www.firefox.com")
+        store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
+
+        verify(feature).dismissAllDownloadDialogs()
+        verify(downloadsUseCases).consumeDownload
+        assertNull(feature.previousTab)
+    }
+
+    @Test
+    fun `previous dialogs must NOT be dismissed when navigating on the same website`() {
+        val downloadsUseCases = spy(DownloadsUseCases(store))
+        val consumeDownloadUseCase = mock<ConsumeDownloadUseCase>()
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = download))
+                .joinBlocking()
+
+        doReturn(consumeDownloadUseCase).`when`(downloadsUseCases).consumeDownload
+
+        val feature = spy(DownloadsFeature(
+            testContext,
+            store,
+            useCases = downloadsUseCases,
+            downloadManager = mock()
+        ))
+
+        doNothing().`when`(feature).dismissAllDownloadDialogs()
+        doReturn(true).`when`(feature).processDownload(any(), any())
+
+        feature.start()
+
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = download))
+                .joinBlocking()
+
+        grantPermissions()
+
+        val tab = createTab("https://www.mozilla.org/example")
+        store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
+
+        verify(feature, never()).dismissAllDownloadDialogs()
+        verify(downloadsUseCases, never()).consumeDownload
+        assertNotNull(feature.previousTab)
     }
 }
 
