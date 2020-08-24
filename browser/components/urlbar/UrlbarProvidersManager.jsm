@@ -511,9 +511,6 @@ class Query {
     result.providerName = provider.name;
     result.providerType = provider.type;
     this.context.results.push(result);
-    if (result.heuristic) {
-      this.context.allHeuristicResults.push(result);
-    }
 
     this._notifyResultsFromProvider(provider);
   }
