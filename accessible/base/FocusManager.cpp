@@ -236,19 +236,6 @@ void FocusManager::ProcessDOMFocus(nsINode* aTarget) {
   Accessible* target =
       document->GetAccessibleEvenIfNotInMapOrContainer(aTarget);
   if (target) {
-    if (target->IsOuterDoc()) {
-      // An OuterDoc shouldn't get accessibility focus itself. Focus should
-      // always go to something inside it. However, OOP iframes will get DOM
-      // focus because their content isn't in this process. We suppress the
-      // focus in this case. The OOP browser will fire focus for the correct
-      // Accessible inside the embedded document. If we don't suppress the
-      // OuterDoc focus, the two focus events will race and the OuterDoc focus
-      // may override the correct embedded focus for accessibility clients. Even
-      // if they fired in the correct order, clients may report extraneous focus
-      // information to the user before reporting the correct focus.
-      return;
-    }
-
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
     nsINode* focusedNode = FocusedDOMNode();
@@ -382,12 +369,12 @@ nsINode* FocusManager::FocusedDOMNode() const {
   nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
   nsIContent* focusedElm = DOMFocusManager->GetFocusedElement();
 
-  // No focus on remote target elements like xul:browser having DOM focus and
-  // residing in chrome process because it means an element in content process
-  // keeps the focus.
   if (focusedElm) {
-    // XXXedgar, do we need to return null if focus is in fission OOP iframe?
-    if (EventStateManager::IsTopLevelRemoteTarget(focusedElm)) {
+    // No focus on remote target elements like xul:browser having DOM focus and
+    // residing in chrome process because it means an element in content process
+    // keeps the focus. Similarly, suppress focus on OOP iframes because an
+    // element in another content process should now have the focus.
+    if (EventStateManager::IsRemoteTarget(focusedElm)) {
       return nullptr;
     }
     return focusedElm;
