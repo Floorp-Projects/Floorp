@@ -45,6 +45,9 @@ permalink: /changelog/
 * **browser-icons**
   * Expose `BrowserIcons.clear()` as a public API to remove all saved data from disk and memory caches.
 
+* **feature-downloads**
+  * 🚒 Fix [issue #8202](https://github.com/mozilla-mobile/android-components/issues/8202) Download's ui were always showing failed status.
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)

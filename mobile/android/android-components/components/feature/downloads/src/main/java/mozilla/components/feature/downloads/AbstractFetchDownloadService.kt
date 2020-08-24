@@ -621,7 +621,8 @@ abstract class AbstractFetchDownloadService : Service() {
         }
     }
 
-    private fun copyInChunks(downloadJobState: DownloadJobState, inStream: InputStream, outStream: OutputStream) {
+    @VisibleForTesting
+    internal fun copyInChunks(downloadJobState: DownloadJobState, inStream: InputStream, outStream: OutputStream) {
         val data = ByteArray(CHUNK_SIZE)
         logger.debug("starting copyInChunks ${downloadJobState.state.url}" +
                 " currentBytesCopied ${downloadJobState.currentBytesCopied}")
@@ -632,9 +633,10 @@ abstract class AbstractFetchDownloadService : Service() {
 
             // If bytesRead is -1, there's no data left to read from the stream
             if (bytesRead == -1) { break }
+            downloadJobState.currentBytesCopied += bytesRead
 
             val newState = downloadJobState.state.copy(
-                currentBytesCopied = downloadJobState.currentBytesCopied + bytesRead
+                currentBytesCopied = downloadJobState.currentBytesCopied
             )
             updateDownloadState(newState)
 

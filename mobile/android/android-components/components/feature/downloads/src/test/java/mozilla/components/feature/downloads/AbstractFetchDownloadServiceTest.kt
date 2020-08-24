@@ -1375,4 +1375,19 @@ class AbstractFetchDownloadServiceTest {
 
         assertTrue(downloadJobState.canUpdateNotification())
     }
+
+    @Test
+    fun `copyInChunks must alter download currentBytesCopied`() = runBlocking {
+        val downloadJobState = DownloadJobState(state = mock(), status = DOWNLOADING)
+        val inputStream = mock<InputStream>()
+
+        assertEquals(0, downloadJobState.currentBytesCopied)
+
+        doReturn(15, -1).`when`(inputStream).read(any())
+        doNothing().`when`(service).updateDownloadState(any())
+
+        service.copyInChunks(downloadJobState, inputStream, mock())
+
+        assertEquals(15, downloadJobState.currentBytesCopied)
+    }
 }
