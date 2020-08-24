@@ -55,8 +55,6 @@ class nsHistory final : public nsISupports, public nsWrapperCache {
  protected:
   virtual ~nsHistory();
 
-  nsIDocShell* GetDocShell() const;
-
   void PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
                           const nsAString& aTitle, const nsAString& aUrl,
                           mozilla::ErrorResult& aRv, bool aReplace);

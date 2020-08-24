@@ -28,6 +28,15 @@ add_task(async () => {
         });
 
         let iframeBc = browser.browsingContext.children[0];
+
+        if (gFissionBrowser) {
+          Assert.notEqual(
+            browser.browsingContext.currentWindowGlobal.osPid,
+            iframeBc.currentWindowGlobal.osPid,
+            "The iframe should be running in a different process."
+          );
+        }
+
         let pipWin = await triggerPictureInPicture(iframeBc, videoID);
         ok(pipWin, "Got Picture-in-Picture window.");
 

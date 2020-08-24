@@ -24,13 +24,7 @@
 @BINPATH@/hyphenation/*
 @BINPATH@/localization/*
 
-; We want fennec/lib for both Fennec and GeckoView, so we turn
-; geckoview/lib into fennec/lib.
-#ifndef MOZ_GECKOVIEW_JAR
 [lib destdir="lib/@ANDROID_CPU_ARCH@"]
-#else
-[lib destdir="../fennec/lib/@ANDROID_CPU_ARCH@"]
-#endif
 
 #ifdef MOZ_CLANG_RT_ASAN_LIB
 @BINPATH@/@MOZ_CLANG_RT_ASAN_LIB@
@@ -139,7 +133,6 @@
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
-#ifdef MOZ_GECKOVIEW_JAR
 #ifndef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
 @BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
 @BINPATH@/@PREF_DIR@/@ANDROID_CPU_ARCH@/geckoview-prefs.js
@@ -147,10 +140,6 @@
 @BINPATH@/*/greprefs.js
 @BINPATH@/@PREF_DIR@/*/geckoview-prefs.js
 #endif # !MOZ_ANDROID_FAT_AAR_ARCHITECTURES
-#else
-@BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
-@BINPATH@/@PREF_DIR@/mobile.js
-#endif # MOZ_GECKOVIEW_JAR
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 
@@ -214,12 +203,7 @@
 @BINPATH@/chrome/geckoview@JAREXT@
 @BINPATH@/chrome/geckoview.manifest
 
-#ifdef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/GeckoView.manifest
-#else
-@BINPATH@/chrome/chrome@JAREXT@
-@BINPATH@/chrome/chrome.manifest
-#endif
 
 ; Remote control protocol
 #ifdef ENABLE_MARIONETTE

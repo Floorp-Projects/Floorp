@@ -481,6 +481,29 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {"application/vnd.android.package-archive", "apk", "Android Package"},
 #endif
 
+    // OpenDocument formats
+    {"application/vnd.oasis.opendocument.text", "odt", "OpenDocument Text"},
+    {"application/vnd.oasis.opendocument.presentation", "odp",
+     "OpenDocument Presentation"},
+    {"application/vnd.oasis.opendocument.spreadsheet", "ods",
+     "OpenDocument Spreadsheet"},
+    {"application/vnd.oasis.opendocument.graphics", "odg",
+     "OpenDocument Graphics"},
+
+    // Legacy Microsoft Office
+    {"application/msword", "doc", "Microsoft Word"},
+    {"application/vnd.ms-powerpoint", "ppt", "Microsoft PowerPoint"},
+    {"application/vnd.ms-excel", "xls", "Microsoft Excel"},
+
+    // Office Open XML
+    {"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     "docx", "Microsoft Word (Open XML)"},
+    {"application/"
+     "vnd.openxmlformats-officedocument.presentationml.presentation",
+     "pptx", "Microsoft PowerPoint (Open XML)"},
+    {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+     "xlsx", "Microsoft Excel (Open XML)"},
+
     // Note: if you add new image types, please also update the list in
     // contentAreaUtils.js to match.
     {IMAGE_ART, "art", "ART Image"},
@@ -509,6 +532,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language"},
     {TEXT_CSS, "css", "Style Sheet"},
     {TEXT_VCARD, "vcf,vcard", "Contact Information"},
+    {TEXT_CALENDAR, "ics", "iCalendar"},
     {VIDEO_OGG, "ogv", "Ogg Video"},
     {VIDEO_OGG, "ogg", "Ogg Video"},
     {APPLICATION_OGG, "ogg", "Ogg Video"},
@@ -1581,10 +1605,22 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   if (mMimeInfo) {
     mMimeInfo->GetMIMEType(MIMEType);
   }
+  // Now get the URI
+  if (aChannel) {
+    aChannel->GetURI(getter_AddRefs(mSourceUrl));
+  }
 
-  if (!nsContentSecurityUtils::IsDownloadAllowed(aChannel, MIMEType)) {
+  mDownloadClassification =
+      nsContentSecurityUtils::ClassifyDownload(aChannel, MIMEType);
+  if (mDownloadClassification != nsITransfer::DOWNLOAD_ACCEPTABLE) {
+    // If the download is rated as forbidden,
+    // we need to silently cancel the request to make sure
+    // it wont show up in the download ui.
     mCanceled = true;
     request->Cancel(NS_ERROR_ABORT);
+    if (mDownloadClassification != nsITransfer::DOWNLOAD_FORBIDDEN) {
+      CreateFailedTransfer();
+    }
     return NS_OK;
   }
 
@@ -1616,11 +1652,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
         mMaybeCloseWindowHelper->SetShouldCloseWindow(tmp);
       }
     }
-  }
-
-  // Now get the URI
-  if (aChannel) {
-    aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
   // retarget all load notifications to our docloader instead of the original
@@ -2183,11 +2214,12 @@ nsresult nsExternalAppHandler::CreateTransfer() {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, target, EmptyString(), mMimeInfo, mTimeDownloadStarted,
         mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
-        mBrowsingContext, mHandleInternally);
+        mDownloadClassification, mBrowsingContext, mHandleInternally);
   } else {
     rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
-                        channel && NS_UsePrivateBrowsing(channel));
+                        channel && NS_UsePrivateBrowsing(channel),
+                        mDownloadClassification);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2251,12 +2283,13 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
         mTimeDownloadStarted, nullptr, this,
-        channel && NS_UsePrivateBrowsing(channel), mBrowsingContext,
-        mHandleInternally);
+        channel && NS_UsePrivateBrowsing(channel), mDownloadClassification,
+        mBrowsingContext, mHandleInternally);
   } else {
     rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
                         mTimeDownloadStarted, nullptr, this,
-                        channel && NS_UsePrivateBrowsing(channel));
+                        channel && NS_UsePrivateBrowsing(channel),
+                        mDownloadClassification);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

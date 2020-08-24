@@ -251,24 +251,13 @@ void nsHistory::PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
   aRv = docShell->AddState(aData, aTitle, aUrl, aReplace, aCx);
 }
 
-nsIDocShell* nsHistory::GetDocShell() const {
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryReferent(mInnerWindow);
-  if (!win) {
-    return nullptr;
-  }
-  return win->GetDocShell();
-}
-
 already_AddRefed<ChildSHistory> nsHistory::GetSessionHistory() const {
-  nsIDocShell* docShell = GetDocShell();
-  NS_ENSURE_TRUE(docShell, nullptr);
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryReferent(mInnerWindow);
+  NS_ENSURE_TRUE(win, nullptr);
 
-  // Get the root DocShell from it
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(root));
-  NS_ENSURE_TRUE(webNav, nullptr);
+  BrowsingContext* bc = win->GetBrowsingContext();
+  NS_ENSURE_TRUE(bc, nullptr);
 
-  // Get SH from nsIWebNavigation
-  return webNav->GetSessionHistory();
+  RefPtr<ChildSHistory> childSHistory = bc->Top()->GetChildSessionHistory();
+  return childSHistory.forget();
 }

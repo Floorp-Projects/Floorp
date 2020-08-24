@@ -364,11 +364,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 # buildid hard coded in it. Then we make that source file depend on all the
 # objects files that constitute libxul, so that if any of the files linked into
 # libxul is rebuilt, we refresh the buildid and link it into libxul.
-SOURCES += ['!buildid.cpp']
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
-    libxul_list = 'XUL'
-else:
-    libxul_list = '%sxul_%s' % (
-        CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.').replace('.','_'))
-GeneratedFile('buildid.cpp', script = 'gen_buildid.py',
-              inputs=['!build/%s.list' % libxul_list])
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    SOURCES += ['!buildid.cpp']
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
+        libxul_list = 'XUL'
+    else:
+        libxul_list = '%sxul_%s' % (
+            CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.').replace('.','_'))
+    GeneratedFile('buildid.cpp', script = 'gen_buildid.py',
+                  inputs=['!build/%s.list' % libxul_list])

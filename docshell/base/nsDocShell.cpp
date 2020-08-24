@@ -44,6 +44,7 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WidgetUtils.h"
 
@@ -801,7 +802,7 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
       ("nsDocShell[%p]: loading %s with flags 0x%08x", this,
        aLoadState->URI()->GetSpecOrDefault().get(), aLoadState->LoadFlags()));
 
-  if (!aLoadState->SHEntry() &&
+  if (!aLoadState->LoadIsFromSessionHistory() &&
       !LOAD_TYPE_HAS_FLAGS(aLoadState->LoadType(),
                            LOAD_FLAGS_REPLACE_HISTORY)) {
     // This is possibly a subframe, so handle it accordingly.
@@ -811,13 +812,19 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
     MaybeHandleSubframeHistory(aLoadState);
   }
 
-  if (aLoadState->SHEntry()) {
+  if (aLoadState->LoadIsFromSessionHistory()) {
 #ifdef DEBUG
     MOZ_LOG(gDocShellLog, LogLevel::Debug,
             ("nsDocShell[%p]: loading from session history", this));
 #endif
 
-    return LoadHistoryEntry(aLoadState->SHEntry(), aLoadState->LoadType());
+    if (!StaticPrefs::fission_sessionHistoryInParent()) {
+      return LoadHistoryEntry(aLoadState->SHEntry(), aLoadState->LoadType());
+    }
+
+    // FIXME Null check aLoadState->GetLoadingSessionHistoryInfo()?
+    return LoadHistoryEntry(*aLoadState->GetLoadingSessionHistoryInfo(),
+                            aLoadState->LoadType());
   }
 
   // On history navigation via Back/Forward buttons, don't execute
@@ -849,8 +856,9 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
              "Typehint should be null when calling InternalLoad from LoadURI");
   MOZ_ASSERT(aLoadState->FileName().IsVoid(),
              "FileName should be null when calling InternalLoad from LoadURI");
-  MOZ_ASSERT(aLoadState->SHEntry() == nullptr,
-             "SHEntry should be null when calling InternalLoad from LoadURI");
+  MOZ_ASSERT(!aLoadState->LoadIsFromSessionHistory(),
+             "Shouldn't be loading from an entry when calling InternalLoad "
+             "from LoadURI");
 
   rv = InternalLoad(aLoadState);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -938,14 +946,14 @@ void nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState) {
 
     if (parentBusy & BUSY_FLAGS_BUSY || selfBusy & BUSY_FLAGS_BUSY) {
       aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
-      aLoadState->SetSHEntry(nullptr);
+      aLoadState->ClearLoadIsFromSessionHistory();
     }
     return;
   }
 
   // This is a newly created frame. Check for exception cases first.
   // By default the subframe will inherit the parent's loadType.
-  if (aLoadState->SHEntry() &&
+  if (aLoadState->LoadIsFromSessionHistory() &&
       (parentLoadType == LOAD_NORMAL || parentLoadType == LOAD_LINK ||
        parentLoadType == LOAD_NORMAL_EXTERNAL)) {
     // The parent was loaded normally. In this case, this *brand new*
@@ -958,14 +966,14 @@ void nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState) {
     parentDS->GetIsExecutingOnLoadHandler(&inOnLoadHandler);
     if (inOnLoadHandler) {
       aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
-      aLoadState->SetSHEntry(nullptr);
+      aLoadState->ClearLoadIsFromSessionHistory();
     }
   } else if (parentLoadType == LOAD_REFRESH) {
     // Clear shEntry. For refresh loads, we have to load
     // what comes through the pipe, not what's in history.
-    aLoadState->SetSHEntry(nullptr);
+    aLoadState->ClearLoadIsFromSessionHistory();
   } else if ((parentLoadType == LOAD_BYPASS_HISTORY) ||
-             (aLoadState->SHEntry() &&
+             (aLoadState->LoadIsFromSessionHistory() &&
               ((parentLoadType & LOAD_CMD_HISTORY) ||
                (parentLoadType == LOAD_RELOAD_NORMAL) ||
                (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE) ||
@@ -5432,7 +5440,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
       } else {
         RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
         if (rootSH) {
-          if (!loadingEntry->mIsLoadFromSessionHistory) {
+          if (!loadingEntry->mLoadIsFromSessionHistory) {
             changeID = rootSH->AddPendingHistoryChange();
           } else {
             // This is a load from session history, so we can update
@@ -8229,7 +8237,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
       // LOAD_LINK.
       MOZ_ASSERT(aLoadState->LoadType() == LOAD_LINK ||
                  aLoadState->LoadType() == LOAD_NORMAL_REPLACE);
-      MOZ_ASSERT(!aLoadState->SHEntry());
+      MOZ_ASSERT(!aLoadState->LoadIsFromSessionHistory());
       MOZ_ASSERT(aLoadState->FirstParty());  // Windowwatcher will assume this.
 
       RefPtr<nsDocShellLoadState> loadState =
@@ -8359,25 +8367,32 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
     }
   }
 
-  if (mOSHE && aLoadState->SHEntry()) {
-    // We're doing a history load.
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (mActiveEntry && aLoadState->LoadIsFromSessionHistory()) {
+      aState.mHistoryNavBetweenSameDoc = mActiveEntry->SharesDocumentWith(
+          aLoadState->GetLoadingSessionHistoryInfo()->mInfo);
+    }
+  } else {
+    if (mOSHE && aLoadState->LoadIsFromSessionHistory()) {
+      // We're doing a history load.
 
-    mOSHE->SharesDocumentWith(aLoadState->SHEntry(),
-                              &aState.mHistoryNavBetweenSameDoc);
+      mOSHE->SharesDocumentWith(aLoadState->SHEntry(),
+                                &aState.mHistoryNavBetweenSameDoc);
+    }
+  }
 
 #ifdef DEBUG
-    if (aState.mHistoryNavBetweenSameDoc) {
-      nsCOMPtr<nsIInputStream> currentPostData;
-      if (StaticPrefs::fission_sessionHistoryInParent()) {
-        currentPostData = mActiveEntry->GetPostData();
-      } else {
-        currentPostData = mOSHE->GetPostData();
-      }
-      NS_ASSERTION(currentPostData == aLoadState->PostDataStream(),
-                   "Different POST data for entries for the same page?");
+  if (aState.mHistoryNavBetweenSameDoc) {
+    nsCOMPtr<nsIInputStream> currentPostData;
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      currentPostData = mActiveEntry->GetPostData();
+    } else {
+      currentPostData = mOSHE->GetPostData();
     }
-#endif
+    NS_ASSERTION(currentPostData == aLoadState->PostDataStream(),
+                 "Different POST data for entries for the same page?");
   }
+#endif
 
   // A same document navigation happens when we navigate between two SHEntries
   // for the same document. We do a same document navigation under two
@@ -8393,12 +8408,23 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
   // The restriction that the SHEntries in (a) must be different ensures
   // that history.go(0) and the like trigger full refreshes, rather than
   // same document navigations.
-  bool doSameDocumentNavigation =
-      (aState.mHistoryNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
-      (!aLoadState->SHEntry() && !aLoadState->PostDataStream() &&
-       aState.mSameExceptHashes && aState.mNewURIHasRef);
+  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    bool doSameDocumentNavigation =
+        (aState.mHistoryNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
+        (!aLoadState->SHEntry() && !aLoadState->PostDataStream() &&
+         aState.mSameExceptHashes && aState.mNewURIHasRef);
 
-  return doSameDocumentNavigation;
+    return doSameDocumentNavigation;
+  }
+
+  if (aState.mHistoryNavBetweenSameDoc &&
+      !aLoadState->GetLoadingSessionHistoryInfo()->mLoadingCurrentActiveEntry) {
+    return true;
+  }
+
+  return !aLoadState->LoadIsFromSessionHistory() &&
+         !aLoadState->PostDataStream() && aState.mSameExceptHashes &&
+         aState.mNewURIHasRef;
 }
 
 nsresult nsDocShell::HandleSameDocumentNavigation(
@@ -8499,7 +8525,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       // Link our new SHEntry to the old SHEntry's back/forward
       // cache data, since the two SHEntries correspond to the
       // same document.
-      if (mLoadingEntry && !mLoadingEntry->mIsLoadFromSessionHistory) {
+      if (mLoadingEntry && !mLoadingEntry->mLoadIsFromSessionHistory) {
         // If we're not doing a history load, scroll restoration
         // should be inherited from the previous session history entry.
         // XXX This needs most probably tweaks once fragment navigation is fixed
@@ -8508,7 +8534,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
                                                    scrollRestorationIsManual);
       }
       if (mLSHE) {
-        if (!aLoadState->SHEntry()) {
+        if (!aLoadState->LoadIsFromSessionHistory()) {
           // If we're not doing a history load, scroll restoration
           // should be inherited from the previous session history entry.
           SetScrollRestorationIsManualOnHistoryEntry(mLSHE,
@@ -8520,11 +8546,13 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   }
 
   // If we're doing a history load, use its scroll restoration state.
-  if (aLoadState->SHEntry()) {
-    DebugOnly<nsresult> rv =
-        aLoadState->SHEntry()->GetScrollRestorationIsManual(
-            &scrollRestorationIsManual);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
+  if (aLoadState->LoadIsFromSessionHistory()) {
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
+    } else {
+      scrollRestorationIsManual =
+          aLoadState->SHEntry()->GetScrollRestorationIsManual();
+    }
   }
 
   /* Assign mLSHE to mOSHE. This will either be a new entry created
@@ -8910,7 +8938,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   if (mLoadType != LOAD_ERROR_PAGE) {
     SetHistoryEntryAndUpdateBC(Some<nsISHEntry*>(aLoadState->SHEntry()),
                                Nothing());
-    if (aLoadState->SHEntry()) {
+    if (aLoadState->LoadIsFromSessionHistory() &&
+        !StaticPrefs::fission_sessionHistoryInParent()) {
       // We're making history navigation or a reload. Make sure our history ID
       // points to the same ID as SHEntry's docshell ID.
       aLoadState->SHEntry()->GetDocshellID(mHistoryID);
@@ -8922,7 +8951,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   mSavingOldViewer = savePresentation;
 
   // If we have a saved content viewer in history, restore and show it now.
-  if (aLoadState->SHEntry() && (mLoadType & LOAD_CMD_HISTORY)) {
+  if (aLoadState->LoadIsFromSessionHistory() &&
+      (mLoadType & LOAD_CMD_HISTORY)) {
     // https://html.spec.whatwg.org/#history-traversal:
     // To traverse the history
     // "If entry has a different Document object than the current entry, then
@@ -8934,47 +8964,48 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
     if (shistory) {
       shistory->RemovePendingHistoryNavigations();
     }
-
-    // It's possible that the previous viewer of mContentViewer is the
-    // viewer that will end up in aLoadState->SHEntry() when it gets closed.  If
-    // that's the case, we need to go ahead and force it into its shentry so we
-    // can restore it.
-    if (mContentViewer) {
-      nsCOMPtr<nsIContentViewer> prevViewer =
-          mContentViewer->GetPreviousViewer();
-      if (prevViewer) {
+    if (!StaticPrefs::fission_sessionHistoryInParent()) {
+      // It's possible that the previous viewer of mContentViewer is the
+      // viewer that will end up in aLoadState->SHEntry() when it gets closed.
+      // If that's the case, we need to go ahead and force it into its shentry
+      // so we can restore it.
+      if (mContentViewer) {
+        nsCOMPtr<nsIContentViewer> prevViewer =
+            mContentViewer->GetPreviousViewer();
+        if (prevViewer) {
 #ifdef DEBUG
-        nsCOMPtr<nsIContentViewer> prevPrevViewer =
-            prevViewer->GetPreviousViewer();
-        NS_ASSERTION(!prevPrevViewer, "Should never have viewer chain here");
+          nsCOMPtr<nsIContentViewer> prevPrevViewer =
+              prevViewer->GetPreviousViewer();
+          NS_ASSERTION(!prevPrevViewer, "Should never have viewer chain here");
 #endif
-        nsCOMPtr<nsISHEntry> viewerEntry;
-        prevViewer->GetHistoryEntry(getter_AddRefs(viewerEntry));
-        if (viewerEntry == aLoadState->SHEntry()) {
-          // Make sure this viewer ends up in the right place
-          mContentViewer->SetPreviousViewer(nullptr);
-          prevViewer->Destroy();
+          nsCOMPtr<nsISHEntry> viewerEntry;
+          prevViewer->GetHistoryEntry(getter_AddRefs(viewerEntry));
+          if (viewerEntry == aLoadState->SHEntry()) {
+            // Make sure this viewer ends up in the right place
+            mContentViewer->SetPreviousViewer(nullptr);
+            prevViewer->Destroy();
+          }
         }
       }
-    }
-    nsCOMPtr<nsISHEntry> oldEntry = mOSHE;
-    bool restoring;
-    rv = RestorePresentation(aLoadState->SHEntry(), &restoring);
-    if (restoring) {
-      Telemetry::Accumulate(Telemetry::BFCACHE_PAGE_RESTORED, true);
-      return rv;
-    }
-    Telemetry::Accumulate(Telemetry::BFCACHE_PAGE_RESTORED, false);
-
-    // We failed to restore the presentation, so clean up.
-    // Both the old and new history entries could potentially be in
-    // an inconsistent state.
-    if (NS_FAILED(rv)) {
-      if (oldEntry) {
-        oldEntry->SyncPresentationState();
+      nsCOMPtr<nsISHEntry> oldEntry = mOSHE;
+      bool restoring;
+      rv = RestorePresentation(aLoadState->SHEntry(), &restoring);
+      if (restoring) {
+        Telemetry::Accumulate(Telemetry::BFCACHE_PAGE_RESTORED, true);
+        return rv;
       }
+      Telemetry::Accumulate(Telemetry::BFCACHE_PAGE_RESTORED, false);
 
-      aLoadState->SHEntry()->SyncPresentationState();
+      // We failed to restore the presentation, so clean up.
+      // Both the old and new history entries could potentially be in
+      // an inconsistent state.
+      if (NS_FAILED(rv)) {
+        if (oldEntry) {
+          oldEntry->SyncPresentationState();
+        }
+
+        aLoadState->SHEntry()->SyncPresentationState();
+      }
     }
   }
 
@@ -10245,7 +10276,11 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                          (IsForceReloadType(aLoadType) && IsFrame()));
 
   // Create SH Entry (mLSHE) only if there is a SessionHistory object in the
-  // in the root browsing context.
+  // root browsing context.
+  // FIXME If session history in the parent is enabled then we only do this if
+  //       the session history object is in process, otherwise we can't really
+  //       use the mLSHE anyway. Once session history is only stored in the
+  //       parent then this code will probably be removed anyway.
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (!rootSH) {
     updateSHistory = false;
@@ -10613,6 +10648,23 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
   NS_ENSURE_TRUE(mOSHE || aReplace, NS_ERROR_FAILURE);
   nsCOMPtr<nsISHEntry> oldOSHE = mOSHE;
 
+  // If this push/replaceState changed the document's current URI and the new
+  // URI differs from the old URI in more than the hash, or if the old
+  // SHEntry's URI was modified in this way by a push/replaceState call
+  // set URIWasModified to true for the current SHEntry (bug 669671).
+  bool sameExceptHashes = true;
+  aNewURI->EqualsExceptRef(aCurrentURI, &sameExceptHashes);
+  bool uriWasModified;
+  if (sameExceptHashes) {
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      uriWasModified = mActiveEntry && mActiveEntry->GetURIWasModified();
+    } else {
+      uriWasModified = oldOSHE && oldOSHE->GetURIWasModified();
+    }
+  } else {
+    uriWasModified = true;
+  }
+
   mLoadType = LOAD_PUSHSTATE;
 
   nsCOMPtr<nsISHEntry> newSHEntry;
@@ -10626,49 +10678,63 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
       shistory->RemovePendingHistoryNavigations();
     }
 
-    // Save the current scroll position (bug 590573).  Step 2.3.
     nsPoint scrollPos = GetCurScrollPos();
-    mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
 
     bool scrollRestorationIsManual;
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
     } else {
+      // Save the current scroll position (bug 590573).  Step 2.3.
+      mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
+
       scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
     }
 
     nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
 
-    // Since we're not changing which page we have loaded, pass
-    // true for aCloneChildren.
-    nsresult rv = AddToSessionHistory(
-        aNewURI, nullptr,
-        aDocument->NodePrincipal(),  // triggeringPrincipal
-        nullptr, nullptr, csp, true, getter_AddRefs(newSHEntry));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ENSURE_TRUE(newSHEntry, NS_ERROR_FAILURE);
-
-    // Session history entries created by pushState inherit scroll restoration
-    // mode from the current entry.
-    newSHEntry->SetScrollRestorationIsManual(scrollRestorationIsManual);
-
-    // Link the new SHEntry to the old SHEntry's BFCache entry, since the
-    // two entries correspond to the same document.
-    NS_ENSURE_SUCCESS(newSHEntry->AdoptBFCacheEntry(oldOSHE), NS_ERROR_FAILURE);
-
-    // Set the new SHEntry's title (bug 655273).
-    nsString title;
     if (StaticPrefs::fission_sessionHistoryInParent()) {
-      title = mActiveEntry->GetTitle();
+      nsString title(mActiveEntry->GetTitle());
+      UpdateActiveEntry(false,
+                        /* aPreviousScrollPos = */ Some(scrollPos), aNewURI,
+                        /* aOriginalURI = */ nullptr,
+                        /* aTriggeringPrincipal = */ aDocument->NodePrincipal(),
+                        csp, title, Some(scrollRestorationIsManual), aData,
+                        uriWasModified);
     } else {
-      mOSHE->GetTitle(title);
-    }
-    newSHEntry->SetTitle(title);
+      // Since we're not changing which page we have loaded, pass
+      // true for aCloneChildren.
+      nsresult rv = AddToSessionHistory(
+          aNewURI, nullptr,
+          aDocument->NodePrincipal(),  // triggeringPrincipal
+          nullptr, nullptr, csp, true, getter_AddRefs(newSHEntry));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
-    // we'll just set mOSHE here.
-    mOSHE = newSHEntry;
+      NS_ENSURE_TRUE(newSHEntry, NS_ERROR_FAILURE);
+
+      // Session history entries created by pushState inherit scroll restoration
+      // mode from the current entry.
+      newSHEntry->SetScrollRestorationIsManual(scrollRestorationIsManual);
+
+      nsString title;
+      mOSHE->GetTitle(title);
+
+      // Set the new SHEntry's title (bug 655273).
+      newSHEntry->SetTitle(title);
+
+      // Link the new SHEntry to the old SHEntry's BFCache entry, since the
+      // two entries correspond to the same document.
+      NS_ENSURE_SUCCESS(newSHEntry->AdoptBFCacheEntry(oldOSHE),
+                        NS_ERROR_FAILURE);
+
+      // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
+      // we'll just set mOSHE here.
+      mOSHE = newSHEntry;
+    }
+  } else if (StaticPrefs::fission_sessionHistoryInParent()) {
+    UpdateActiveEntry(
+        true, /* aPreviousScrollPos = */ Nothing(), aNewURI, aNewURI,
+        aDocument->NodePrincipal(), aDocument->GetCsp(), EmptyString(),
+        /* aScrollRestorationIsManual = */ Nothing(), aData, uriWasModified);
   } else {
     // Step 3.
     newSHEntry = mOSHE;
@@ -10684,6 +10750,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
       NS_ENSURE_SUCCESS(rv, rv);
       mOSHE = newSHEntry;
     }
+
     newSHEntry->SetURI(aNewURI);
     newSHEntry->SetOriginalURI(aNewURI);
     // Setting the resultPrincipalURI to nullptr is fine here: it will cause
@@ -10693,31 +10760,26 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     newSHEntry->SetLoadReplace(false);
   }
 
-  // Step 2.4 and 3: Modify new/original session history entry and clear its
-  // POST data, if there is any.
-  newSHEntry->SetStateData(aData);
-  newSHEntry->SetPostData(nullptr);
+  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    // Step 2.4 and 3: Modify new/original session history entry and clear its
+    // POST data, if there is any.
+    newSHEntry->SetStateData(aData);
+    newSHEntry->SetPostData(nullptr);
 
-  // If this push/replaceState changed the document's current URI and the new
-  // URI differs from the old URI in more than the hash, or if the old
-  // SHEntry's URI was modified in this way by a push/replaceState call
-  // set URIWasModified to true for the current SHEntry (bug 669671).
-  bool sameExceptHashes = true;
-  aNewURI->EqualsExceptRef(aCurrentURI, &sameExceptHashes);
-  bool oldURIWasModified = oldOSHE && oldOSHE->GetURIWasModified();
-  newSHEntry->SetURIWasModified(!sameExceptHashes || oldURIWasModified);
+    newSHEntry->SetURIWasModified(uriWasModified);
 
-  // Step E as described at the top of AddState: If aReplace is false,
-  // indicating that we're doing a pushState rather than a replaceState, notify
-  // bfcache that we've added a page to the history so it can evict content
-  // viewers if appropriate. Otherwise call ReplaceEntry so that we notify
-  // nsIHistoryListeners that an entry was replaced.  We may not have a root
-  // session history if this call is coming from a document.open() in a docshell
-  // subtree that disables session history.
-  RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-  if (rootSH) {
-    rootSH->LegacySHistory()->EvictContentViewersOrReplaceEntry(newSHEntry,
-                                                                aReplace);
+    // Step E as described at the top of AddState: If aReplace is false,
+    // indicating that we're doing a pushState rather than a replaceState,
+    // notify bfcache that we've added a page to the history so it can evict
+    // content viewers if appropriate. Otherwise call ReplaceEntry so that we
+    // notify nsIHistoryListeners that an entry was replaced.  We may not have a
+    // root session history if this call is coming from a document.open() in a
+    // docshell subtree that disables session history.
+    RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
+    if (rootSH) {
+      rootSH->LegacySHistory()->EvictContentViewersOrReplaceEntry(newSHEntry,
+                                                                  aReplace);
+    }
   }
 
   // Step 4: If the document's URI changed, update document's URI and update
@@ -10827,6 +10889,7 @@ void nsDocShell::SetCacheKeyOnHistoryEntry(nsISHEntry* aSHEntry,
   }
 }
 
+/* static */
 bool nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel) {
   // I believe none of the about: urls should go in the history. But then
   // that could just be me... If the intent is only deny about:blank then we
@@ -11082,6 +11145,58 @@ nsresult nsDocShell::AddToSessionHistory(
   return rv;
 }
 
+void nsDocShell::UpdateActiveEntry(
+    bool aReplace, const Maybe<nsPoint>& aPreviousScrollPos, nsIURI* aURI,
+    nsIURI* aOriginalURI, nsIPrincipal* aTriggeringPrincipal,
+    nsIContentSecurityPolicy* aCsp, const nsAString& aTitle,
+    const Maybe<bool>& aScrollRestorationIsManual,
+    nsIStructuredCloneContainer* aData, bool aURIWasModified) {
+  MOZ_ASSERT(StaticPrefs::fission_sessionHistoryInParent());
+  MOZ_ASSERT(aURI, "uri is null");
+  MOZ_ASSERT(mLoadType == LOAD_PUSHSTATE,
+             "This code only deals with pushState");
+  MOZ_ASSERT_IF(aPreviousScrollPos.isSome(), !aReplace);
+
+  if (!aReplace || !mActiveEntry) {
+    if (mActiveEntry) {
+      // Link this entry to the previous active entry.
+      mActiveEntry =
+          MakeUnique<SessionHistoryInfo>(*mActiveEntry, aURI, HistoryID());
+    } else {
+      mActiveEntry = MakeUnique<SessionHistoryInfo>(
+          aURI, HistoryID(), aTriggeringPrincipal, aCsp, mContentTypeHint);
+    }
+    mActiveEntry->SetTitle(aTitle);
+    mActiveEntry->SetStateData(static_cast<nsStructuredCloneContainer*>(aData));
+    mActiveEntry->SetURIWasModified(aURIWasModified);
+    if (aScrollRestorationIsManual.isSome()) {
+      mActiveEntry->SetScrollRestorationIsManual(
+          aScrollRestorationIsManual.value());
+    }
+    if (mBrowsingContext->IsTop()) {
+      mBrowsingContext->SetActiveSessionHistoryEntryForTop(
+          aPreviousScrollPos, mActiveEntry.get(), mLoadType);
+      // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
+    } else {
+      // FIXME We should probably just compute mChildOffset in the parent
+      //       instead of passing it over IPC here.
+      mBrowsingContext->SetActiveSessionHistoryEntryForFrame(
+          aPreviousScrollPos, mActiveEntry.get(), mChildOffset);
+    }
+  } else {
+    mActiveEntry->SetResultPrincipalURI(nullptr);
+    mActiveEntry->SetLoadReplace(false);
+    mActiveEntry->SetStateData(static_cast<nsStructuredCloneContainer*>(aData));
+    mActiveEntry->SetPostData(nullptr);
+    mActiveEntry->SetURIWasModified(aURIWasModified);
+    if (aScrollRestorationIsManual.isSome()) {
+      mActiveEntry->SetScrollRestorationIsManual(
+          aScrollRestorationIsManual.value());
+    }
+    mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
+  }
+}
+
 nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
   NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
 
@@ -11097,6 +11212,13 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
   nsCOMPtr<nsISHEntry> kungFuDeathGrip(aEntry);
 
   return LoadHistoryEntry(loadState, aLoadType, aEntry == mOSHE);
+}
+
+nsresult nsDocShell::LoadHistoryEntry(const LoadingSessionHistoryInfo& aEntry,
+                                      uint32_t aLoadType) {
+  RefPtr<nsDocShellLoadState> loadState = aEntry.CreateLoadInfo();
+  return LoadHistoryEntry(loadState, aLoadType,
+                          aEntry.mLoadingCurrentActiveEntry);
 }
 
 nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,

@@ -28,11 +28,11 @@ const RESIZE_DEBOUNCE_RATE_MS = 500;
  *
  * @param id (Number)
  *   A unique numeric ID for the window, used for Telemetry Events.
- * @param originatingBrowser (xul:browser)
- *   The <xul:browser> that the Picture-in-Picture video is coming from.
+ * @param wgp (WindowGlobalParent)
+ *   The WindowGlobalParent that is hosting the originating video.
  */
-function setupPlayer(id, originatingBrowser) {
-  Player.init(id, originatingBrowser);
+function setupPlayer(id, wgp) {
+  Player.init(id, wgp);
 }
 
 /**
@@ -99,10 +99,10 @@ let Player = {
    *
    * @param id (Number)
    *   A unique numeric ID for the window, used for Telemetry Events.
-   * @param originatingBrowser (xul:browser)
-   *   The <xul:browser> that the Picture-in-Picture video is coming from.
+   * @param wgp (WindowGlobalParent)
+   *   The WindowGlobalParent that is hosting the originating video.
    */
-  init(id, originatingBrowser) {
+  init(id, wgp) {
     this.id = id;
 
     let holder = document.querySelector(".player-holder");
@@ -115,12 +115,10 @@ let Player = {
     // initial about:blank load. The combination of these two properties will
     // ensure that the browser loads in the same process as our originating
     // browser.
-    // FIXME: Make sure to use the correct remoteType & browsingContextGroupId
-    // in the case of remote subframes.
-    browser.setAttribute("remoteType", originatingBrowser.remoteType);
+    browser.setAttribute("remoteType", wgp.domProcess.remoteType);
     browser.setAttribute(
       "initialBrowsingContextGroupId",
-      originatingBrowser.browsingContext.group.id
+      wgp.browsingContext.group.id
     );
     holder.appendChild(browser);
 

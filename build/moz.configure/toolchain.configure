@@ -731,7 +731,12 @@ def toolchain_search_path_for(host_or_target):
             )]
 
         # Also add the rustup install directory for cargo/rustc.
-        rustup_path = os.path.expanduser(os.path.join('~', '.cargo', 'bin'))
+        cargo_home = environ.get('CARGO_HOME', '')
+        if cargo_home:
+            cargo_home = os.path.abspath(cargo_home)
+        else:
+            cargo_home = os.path.expanduser(os.path.join('~', '.cargo'))
+        rustup_path = os.path.join(cargo_home, 'bin')
         result.append(rustup_path)
 
         if developer_options:
