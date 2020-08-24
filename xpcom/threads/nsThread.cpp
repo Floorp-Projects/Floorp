@@ -94,14 +94,6 @@ using GetCurrentThreadStackLimitsFn = void(WINAPI*)(PULONG_PTR LowLimit,
 #  include "nsXULAppAPI.h"
 #endif
 
-#if defined(NS_FUNCTION_TIMER) && defined(_MSC_VER)
-#  include "nsTimerImpl.h"
-#  include "mozilla/StackWalk.h"
-#endif
-#ifdef NS_FUNCTION_TIMER
-#  include "nsCRT.h"
-#endif
-
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
 #  include "TracedTaskCommon.h"
