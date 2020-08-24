@@ -129,6 +129,8 @@ using JSActorMessageKind from "mozilla/dom/JSActor.h";
 using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
 using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/PermissionDelegateIPCUtils.h";
 using refcounted class nsILayoutHistoryState from "nsILayoutHistoryState.h";
+using class mozilla::dom::SessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
+using nsPoint from "mozilla/GfxMessageUtils.h";
 
 union ChromeRegistryItem
 {
@@ -1675,6 +1677,16 @@ parent:
                              OriginAttributes aOriginAttributes,
                              nsID? aAgentClusterId)
       returns (BlobURLDataRequestResult aResult);
+
+    async SetActiveSessionHistoryEntryForTop(MaybeDiscardedBrowsingContext aContext,
+                                       nsPoint? previousScrollPosition,
+                                       SessionHistoryInfo info, uint32_t loadType,
+                                       nsID changeID);
+    async SetActiveSessionHistoryEntryForFrame(
+        MaybeDiscardedBrowsingContext aContext, nsPoint? previousScrollPosition,
+        SessionHistoryInfo info, int32_t childOffset, nsID changeID);
+    async ReplaceActiveSessionHistoryEntry(
+        MaybeDiscardedBrowsingContext aContext, SessionHistoryInfo info);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,

@@ -13,6 +13,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIURI.h"
+#include "nsITransfer.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
 #  include <wininet.h>
@@ -1115,7 +1116,7 @@ void nsContentSecurityUtils::LogMessageToConsole(nsIHttpChannel* aChannel,
 }
 
 /* static */
-bool nsContentSecurityUtils::IsDownloadAllowed(
+long nsContentSecurityUtils::ClassifyDownload(
     nsIChannel* aChannel, const nsAutoCString& aMimeTypeGuess) {
   MOZ_ASSERT(aChannel, "IsDownloadAllowed without channel?");
 
@@ -1151,15 +1152,15 @@ bool nsContentSecurityUtils::IsDownloadAllowed(
     if (httpChannel) {
       LogMessageToConsole(httpChannel, "MixedContentBlockedDownload");
     }
-    return false;
+    return nsITransfer::DOWNLOAD_POTENTIALLY_UNSAFE;
   }
 
   if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
-    return true;
+    return nsITransfer::DOWNLOAD_ACCEPTABLE;
   }
 
   if (!StaticPrefs::dom_block_download_in_sandboxed_iframes()) {
-    return true;
+    return nsITransfer::DOWNLOAD_ACCEPTABLE;
   }
 
   uint32_t triggeringFlags = loadInfo->GetTriggeringSandboxFlags();
@@ -1171,8 +1172,8 @@ bool nsContentSecurityUtils::IsDownloadAllowed(
     if (httpChannel) {
       LogMessageToConsole(httpChannel, "IframeSandboxBlockedDownload");
     }
-    return false;
+    return nsITransfer::DOWNLOAD_FORBIDDEN;
   }
 
-  return true;
+  return nsITransfer::DOWNLOAD_ACCEPTABLE;
 }

@@ -490,6 +490,66 @@ class MOZ_MUST_USE_TYPE Result final {
   }
 
   /**
+   * Map a function E -> Result<V, E2> over this result's error variant. If
+   * this result is a success, do not invoke the function and move the success
+   * over.
+   *
+   * `orElse`ing over error values invokes the function to produce a new
+   * result:
+   *
+   *     // `orElse` Result<V, int> error variant to another Result<V, int>
+   *     // error variant or Result<V, int> success variant
+   *     auto orElse = [](int x) -> Result<V, int> {
+   *       if (x != 6) {
+   *         return Err(x * x);
+   *       }
+   *       return V(...);
+   *     };
+   *
+   *     Result<V, int> res(5);
+   *     auto res2 = res.orElse(orElse);
+   *     MOZ_ASSERT(res2.isErr());
+   *     MOZ_ASSERT(res2.unwrapErr() == 25);
+   *
+   *     Result<V, int> res3(6);
+   *     auto res4 = res3.orElse(orElse);
+   *     MOZ_ASSERT(res4.isOk());
+   *     MOZ_ASSERT(res4.unwrap() == ...);
+   *
+   *     // `orElse` Result<V, const char*> error variant to Result<V, size_t>
+   *     // error variant or Result<V, size_t> success variant
+   *     auto orElse = [](const char* s) -> Result<V, size_t> {
+   *       if (strcmp(s, "foo")) {
+   *         return Err(strlen(s));
+   *       }
+   *       return V(...);
+   *     };
+   *
+   *     Result<V, const char*> res("hello, orElse!");
+   *     auto res2 = res.orElse(orElse);
+   *     MOZ_ASSERT(res2.isErr());
+   *     MOZ_ASSERT(res2.unwrapErr() == 14);
+   *
+   *     Result<V, const char*> res3("foo");
+   *     auto res4 = ress.orElse(orElse);
+   *     MOZ_ASSERT(res4.isOk());
+   *     MOZ_ASSERT(res4.unwrap() == ...);
+   *
+   * `orElse`ing over a success does not invoke the function and moves the
+   * success:
+   *
+   *     Result<int, E> res(5);
+   *     MOZ_ASSERT(res.isOk());
+   *     Result<int, E2> res2 = res.orElse([](E e) { ... });
+   *     MOZ_ASSERT(res2.isOk());
+   *     MOZ_ASSERT(res2.unwrap() == 5);
+   */
+  template <typename F>
+  auto orElse(F f) -> Result<V, typename std::result_of_t<F(E)>::err_type> {
+    return MOZ_UNLIKELY(isErr()) ? f(unwrapErr()) : unwrap();
+  }
+
+  /**
    * Given a function V -> Result<V2, E>, apply it to this result's success
    * value and return its result. If this result is an error value, it is
    * propagated.

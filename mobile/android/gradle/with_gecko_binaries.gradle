@@ -6,13 +6,148 @@
 // The JNI wrapper generation tasks depend on the JAR creation task of the :annotations project.
 evaluationDependsOn(':annotations')
 
+import groovy.util.FileNameFinder
+
+import java.nio.file.Path
+import java.nio.file.Paths
+
+// Bug 1657190: This task works around a bug in the Android-Gradle plugin.  When using SNAPSHOT
+// builds (and possibly in other situations) the JNI library invalidation process isn't correct.  If
+// there are two JNI libs `a.so` and `b.so` and a new snapshot updates only `a.so`, then the
+// resulting AAR will include both JNI libs but the consuming project's resulting APK will include
+// only the modified `a.so`.  For GeckoView, it's usually `libxul.so` that is updated.  For a
+// consumer (like Fenix), this leads to a hard startup crash because `libmozglue.so` will be missing
+// when it is read (first, before `libxul.so`)
+//
+// For !MOZILLA_OFFICIAL builds, we work around this issue to ensure that when *any* library is
+// updated then *every* library is updated.  We use the ELF build ID baked into each library to
+// determine whether any library is updated.  We digest (SHA256, for now) all of the ELF build IDs
+// and use this as our own Mozilla-specific "library generation ID".  We then add our own
+// Mozilla-specific ELF section to every library so that they will all be invalidated by the
+// Android-Gradle plugin of a consuming project.
+class SyncLibsAndUpdateGeneration extends DefaultTask {
+    @InputDirectory
+    File source
+
+    @OutputDirectory
+    File destinationDir
+
+    // To find the LLVM tools from the Android NDK, there are a few wrinkles.  In a compiled build,
+    // we can use our own `ANDROID_NDK` configure option.  But in an artifact build, that isn't
+    // defined, so we fall back to `android.ndkDirectory` -- but that's defined in
+    // `local.properties`, which may not define it.  In that case, fall back to crawling the
+    // filesystem.
+    @Input
+    String ndkDirectory = {
+        if (project.mozconfig.substs.ANDROID_NDK) {
+            return project.mozconfig.substs.ANDROID_NDK
+        }
+        if (project.android.ndkDirectory) {
+            return project.android.ndkDirectory
+        }
+        def mozbuild = System.getenv('MOZBUILD_STATE_PATH') ?: "${System.getProperty('user.home')}/.mozbuild"
+        project.logger.lifecycle("mozbuild: ${mozbuild}")
+        def files = new FileNameFinder().getFileNames(mozbuild, "android-ndk-*/source.properties")
+        if (files) {
+            // It would be nice to sort these by version, but that's too much effort right now.
+            return project.file(files.first()).parentFile.toString()
+        }
+        throw new GradleException("Could not determine Android NDK directory.  Set `ndk.dir` in `${project.topsrcdir}/local.properties`")
+    }()
+
+    // The `**` in the pattern depends on the host architecture.  We could compute them or bake them
+    // in, but this is easy enough.  `FileNameFinder` won't return a directory, so we find a file
+    // and return its parent directory.
+    @Input
+    File llvmBin = project.file(new FileNameFinder().getFileNames(ndkDirectory, "toolchains/llvm/prebuilt/**/bin/llvm-*").first()).parentFile
+
+    // Sibling to `.note.gnu.build-id`.
+    @Input
+    String newElfSection = ".note.mozilla.build-id"
+
+    @TaskAction 
+    void execute() {
+        Path root = Paths.get(source.toString())
+
+        def libs = project.fileTree(source.toString()).files.collect { 
+            Path lib = Paths.get(it.toString())
+            root.relativize(lib).toString()
+        }
+
+        def generationId = new ByteArrayOutputStream().withStream { os ->
+            libs.each { lib ->
+                // This should never fail.  If it does, there's a real problem, so an exception is
+                // reasonable.
+                project.exec {
+                    commandLine "${llvmBin}/llvm-readobj"
+                    args '--hex-dump=.note.gnu.build-id'
+                    args "${source}/${lib}"
+                    standardOutput = os
+                }
+            }
+
+            // Glue all the ordered build ID section dumps together.
+            def allBuildIDs = os.toString()
+
+            // For detailed debugging.
+            new File("${destinationDir}/${newElfSection}-details").setText(allBuildIDs, 'utf-8')
+
+            allBuildIDs.sha256()
+        }
+
+        logger.info("Mozilla-specific library generation ID is ${generationId} (see ${destinationDir}/${newElfSection}-details)")
+
+        def generationIdIsStale = libs.any { lib ->
+            new ByteArrayOutputStream().withStream { os ->
+                // This can fail, but there's little value letting stderr go to the console in
+                // general, since it's just noise after a clobber build.
+                def execResult = project.exec {
+                    ignoreExitValue true
+                    commandLine "${llvmBin}/llvm-readobj"
+                    args "--hex-dump=${newElfSection}"
+                    args "${destinationDir}/${lib}"
+                    standardOutput = os
+                    errorOutput = new ByteArrayOutputStream()
+                }
+
+                if (execResult.exitValue != 0) {
+                    logger.info("Mozilla-specific library generation ID is missing: ${lib}")
+                } else if (!os.toString().contains(generationId)) {
+                    logger.info("Mozilla-specific library generation ID is stale: ${lib}")
+                } else {
+                    logger.debug("Mozilla-specific library generation ID is fresh: ${lib}")
+                }
+                execResult.exitValue != 0 || !os.toString().contains(generationId)
+            }
+        }
+
+        if (generationIdIsStale) {
+            project.mkdir destinationDir
+            new File("${destinationDir}/${newElfSection}").setText(generationId, 'utf-8')
+
+            libs.each { lib ->
+                project.mkdir project.file("${destinationDir}/${lib}").parent
+
+                new ByteArrayOutputStream().withStream { os ->
+                    // This should never fail: if it does, there's a real problem (again).
+                    project.exec {
+                        commandLine "${llvmBin}/llvm-objcopy"
+                        args "--add-section=${newElfSection}=${destinationDir}/${newElfSection}"
+                        args "${source}/${lib}"
+                        args "${destinationDir}/${lib}"
+                        standardOutput = os
+                    }
+                }
+            }
+        } else {
+            logger.info("Mozilla-specific library generation ID is fresh!")
+        }
+    }
+}
+
 ext.configureVariantWithGeckoBinaries = { variant ->
-    // :app needs the full Fennec omni.ja, whereas other projects need the
-    // GeckoView-specific omni.ja.
-    def omnijarDir = { "${topobjdir}/dist/${it}" }("app".equals(project.name) ? "fennec" : "geckoview")
-    // All projects take the same Gecko libraries, which (for historical
-    // reasons) are in "fennec".
-    def distDir = "${topobjdir}/dist/fennec"
+    def omnijarDir = "${topobjdir}/dist/geckoview"
+    def distDir = "${topobjdir}/dist/geckoview"
 
     def syncOmnijarFromDistDir = task("syncOmnijarFromDistDirFor${variant.name.capitalize()}", type: Sync) {
         onlyIf {
@@ -30,21 +165,30 @@ ext.configureVariantWithGeckoBinaries = { variant ->
         }
     }
 
-    def syncLibsFromDistDir = task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
-        onlyIf {
-            if (!mozconfig.substs.COMPILE_ENVIRONMENT && !mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
-                // We won't have JNI libraries if we're not compiling and we're not downloading
-                // artifacts.  Such a configuration is used for running lints, generating docs, etc.
-                return true
-            }
-            if (source.empty) {
-                throw new StopExecutionException("Required JNI libraries not found in ${distDir}/lib.  Have you built and packaged?")
-            }
+    // For !MOZILLA_OFFICIAL builds, work around an Android-Gradle plugin bug that causes startup
+    // crashes with local substitution.  See class comment above.
+    def syncLibsFromDistDir = { if (!mozconfig.substs.MOZILLA_OFFICIAL) {
+        task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: SyncLibsAndUpdateGeneration) {
+            source file("${distDir}/lib")
+            destinationDir file("${project.buildDir}/moz.build/src/${variant.name}/jniLibs")
+        }
+    } else {
+        task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
+            into("${project.buildDir}/moz.build/src/${variant.name}/jniLibs")
+            from("${distDir}/lib")
+        }
+    } }()
+
+    syncLibsFromDistDir.onlyIf { task ->
+        if (!mozconfig.substs.COMPILE_ENVIRONMENT && !mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+            // We won't have JNI libraries if we're not compiling and we're not downloading
+            // artifacts.  Such a configuration is used for running lints, generating docs, etc.
             return true
         }
-
-        into("${project.buildDir}/moz.build/src/${variant.name}/jniLibs")
-        from("${distDir}/lib")
+        if (files(task.source).empty) {
+            throw new StopExecutionException("Required JNI libraries not found in ${task.source}.  Have you built and packaged?")
+        }
+        return true
     }
 
     def syncAssetsFromDistDir = task("syncAssetsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
@@ -60,15 +204,9 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     // moz.build system, which can be re-entrant.  Official builds are driven by
     // the moz.build system and should never be re-entrant in this way.
     if (!mozconfig.substs.MOZILLA_OFFICIAL) {
-        if ("app".equals(project.name)) {
-            syncOmnijarFromDistDir.dependsOn rootProject.machStagePackageForFennec
-            syncLibsFromDistDir.dependsOn rootProject.machStagePackageForFennec
-            syncAssetsFromDistDir.dependsOn rootProject.machStagePackageForFennec
-        } else {
-            syncOmnijarFromDistDir.dependsOn rootProject.machStagePackageForGeckoview
-            syncLibsFromDistDir.dependsOn rootProject.machStagePackageForGeckoview
-            syncAssetsFromDistDir.dependsOn rootProject.machStagePackageForGeckoview
-        }
+        syncOmnijarFromDistDir.dependsOn rootProject.machStagePackage
+        syncLibsFromDistDir.dependsOn rootProject.machStagePackage
+        syncAssetsFromDistDir.dependsOn rootProject.machStagePackage
     }
 
     def assetGenTask = tasks.findByName("generate${variant.name.capitalize()}Assets")

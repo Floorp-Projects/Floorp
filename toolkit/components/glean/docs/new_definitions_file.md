@@ -27,13 +27,16 @@ But where can you find `metrics.yaml` or `pings.yaml`?
 If you're not the first person in your component to ask that question,
 the answer is likely "in the root of your component".
 Look for the definitions files near to where you are instrumenting your code.
+Or you can look in
+`toolkit/components/glean/metrics_index.py`
+to see the list of all currently-known definitions files.
 
 If you _are_ the first person in your component to ask that question,
 you get to choose where to start them!
 We recommend adding them in the root of your component, next to a `moz.build`.
 
-When you do so, be sure to edit `toolkit/components/glean/moz.build`,
-adding your definitions files to the `GeneratedFile` directives therein.
+When you do so, be sure to edit `toolkit/components/glean/metrics_index.py`,
+adding your definitions files to the Python lists therein.
 If you don't, no API will be generated for your metrics and your build will fail.
 
 In addition, do not forget to file a bug in `Data Platform and Tools :: General`

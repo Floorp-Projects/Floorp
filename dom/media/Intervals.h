@@ -614,6 +614,23 @@ class IntervalSet {
     return false;
   }
 
+  // Returns if there's any intersection between this and aOther.
+  bool IntersectsStrict(const SelfType& aOther) const {
+    const ContainerType& other = aOther.mIntervals;
+    IndexType i = 0, j = 0;
+    for (; i < mIntervals.Length() && j < other.Length();) {
+      if (mIntervals[i].IntersectsStrict(other[j])) {
+        return true;
+      }
+      if (mIntervals[i].mEnd < other[j].mEnd) {
+        i++;
+      } else {
+        j++;
+      }
+    }
+    return false;
+  }
+
   bool IntersectsWithStrictEnd(const ElemType& aInterval) const {
     for (const auto& interval : mIntervals) {
       if (interval.IntersectsWithStrictEnd(aInterval)) {

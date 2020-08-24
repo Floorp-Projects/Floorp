@@ -86,6 +86,7 @@ treeherder:
         'T-Prof-1proc': 'Talos performance tests on Firefox with Gecko Profiling and without e10s'
         'T-Prof-fis': 'Talos performance tests on Firefox with fission and Gecko Profiling'
         'T-Prof-gli': 'Talos performance tests with WebGL over IPC and Gecko Profiling'
+        'T-swr': 'Talos performance tests with software webrender enabled'
         'Tss': 'Talos performance tests, Stylo sequential'
         'Tss-fis': 'Talos performance tests, Stylo sequential with fission enabled'
         'Tss-1proc': 'Talos performance tests with Stylo sequential without e10s'

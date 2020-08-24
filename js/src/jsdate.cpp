@@ -1341,7 +1341,16 @@ static bool ParseDate(const CharT* s, size_t length, ClippedTime* result) {
             mday = mon;
             mon = action;
           } else if (year < 0) {
-            year = mon;
+            if (mday > 0) {
+              // If the date is of the form f l month, then when month is
+              // reached we have f in mon and l in mday. In order to be
+              // consistent with the f month l and month f l forms, we need to
+              // swap so that f is in mday and l is in year.
+              year = mday;
+              mday = mon;
+            } else {
+              year = mon;
+            }
             mon = action;
           } else {
             return false;
@@ -1379,8 +1388,8 @@ static bool ParseDate(const CharT* s, size_t length, ClippedTime* result) {
    *         If f and l are both greater than or equal to 100 the date
    *         is invalid.
    *
-   *         The year is taken to be either the greater of the values f, l or
-   *         whichever is set to zero.
+   *         The year is taken to be either l, f if f > 31, or whichever
+   *         is set to zero.
    *
    * Case 2. The input string is of the form "f/m/l" where f, m and l are
    *         integers, e.g. 7/16/45. mon, mday and year values are adjusted
@@ -1396,7 +1405,7 @@ static bool ParseDate(const CharT* s, size_t length, ClippedTime* result) {
       return false;
     }
 
-    if (year > 0 && (mday == 0 || mday > year) && !seenFullYear) {
+    if (year > 0 && (mday == 0 || mday > 31) && !seenFullYear) {
       int temp = year;
       year = mday;
       mday = temp;

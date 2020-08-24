@@ -7,6 +7,7 @@
 #include "nsSHEntryShared.h"
 
 #include "nsArray.h"
+#include "nsContentUtils.h"
 #include "nsDocShellEditorData.h"
 #include "nsIContentViewer.h"
 #include "nsISHistory.h"
@@ -23,24 +24,66 @@ namespace dom = mozilla::dom;
 
 namespace {
 uint64_t gSHEntrySharedID = 0;
+nsDataHashtable<nsUint64HashKey, mozilla::dom::SHEntrySharedParentState*>*
+    sIdToSharedState = nullptr;
 }  // namespace
 
 namespace mozilla {
 namespace dom {
 
-SHEntrySharedParentState::SHEntrySharedParentState()
-    : mDocShellID({0}),
-      mViewerBounds(0, 0, 0, 0),
-      mCacheKey(0),
-      mLastTouched(0),
-      mID(++gSHEntrySharedID),
-      mIsFrameNavigation(false),
-      mSticky(true),
-      mDynamicallyCreated(false),
-      mExpired(false),
-      mSaveLayoutState(true) {}
+/* static */
+uint64_t SHEntrySharedState::GenerateId() {
+  return nsContentUtils::GenerateProcessSpecificId(++gSHEntrySharedID);
+}
 
-SHEntrySharedParentState::~SHEntrySharedParentState() {}
+/* static */
+SHEntrySharedParentState* SHEntrySharedParentState::Lookup(uint64_t aId) {
+  MOZ_ASSERT(aId != 0);
+
+  return sIdToSharedState ? sIdToSharedState->Get(aId) : nullptr;
+}
+
+static void AddSHEntrySharedParentState(
+    SHEntrySharedParentState* aSharedState) {
+  MOZ_ASSERT(aSharedState->mId != 0);
+
+  if (!sIdToSharedState) {
+    sIdToSharedState =
+        new nsDataHashtable<nsUint64HashKey, SHEntrySharedParentState*>();
+  }
+  sIdToSharedState->Put(aSharedState->mId, aSharedState);
+}
+
+SHEntrySharedParentState::SHEntrySharedParentState() {
+  AddSHEntrySharedParentState(this);
+}
+
+SHEntrySharedParentState::SHEntrySharedParentState(
+    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
+    nsIPrincipal* aPartitionedPrincipalToInherit,
+    nsIContentSecurityPolicy* aCsp, const nsACString& aContentType)
+    : SHEntrySharedState(aTriggeringPrincipal, aPrincipalToInherit,
+                         aPartitionedPrincipalToInherit, aCsp, aContentType) {
+  AddSHEntrySharedParentState(this);
+}
+
+SHEntrySharedParentState::~SHEntrySharedParentState() {
+  MOZ_ASSERT(mId != 0);
+
+  sIdToSharedState->Remove(mId);
+  if (sIdToSharedState->IsEmpty()) {
+    delete sIdToSharedState;
+    sIdToSharedState = nullptr;
+  }
+}
+
+void SHEntrySharedParentState::ChangeId(uint64_t aId) {
+  MOZ_ASSERT(aId != 0);
+
+  sIdToSharedState->Remove(mId);
+  mId = aId;
+  sIdToSharedState->Put(mId, this);
+}
 
 void SHEntrySharedParentState::CopyFrom(SHEntrySharedParentState* aEntry) {
   mDocShellID = aEntry->mDocShellID;
