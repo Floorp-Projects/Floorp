@@ -16783,14 +16783,7 @@ void Document::AddPendingFrameStaticClone(nsFrameLoaderOwner* aElement,
 }
 
 bool Document::ShouldAvoidNativeTheme() const {
-  bool nativeThemeIsPrefDisabled = false;
-
-#ifndef ANDROID
-  nativeThemeIsPrefDisabled =
-      StaticPrefs::widget_disable_native_theme_for_content();
-#endif
-
-  return nativeThemeIsPrefDisabled &&
+  return StaticPrefs::widget_disable_native_theme_for_content() &&
          (!IsInChromeDocShell() || XRE_IsContentProcess());
 }
 
