@@ -154,13 +154,5 @@ dependencies {
     androidTestImplementation Dependencies.testing_mockwebserver
 }
 
-if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
-    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
-        ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
-    }
-    ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
-    apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
-}
-
 preBuild.dependsOn updateBorderifyExtensionVersion
 preBuild.dependsOn updateTestExtensionVersion
