@@ -9,6 +9,7 @@
 
 #include "mozilla/DebugOnly.h"      // mozilla::DebugOnly
 #include "mozilla/HashFunctions.h"  // HashString
+#include "mozilla/Range.h"          // mozilla::Range
 #include "mozilla/Variant.h"        // mozilla::Variant
 
 #include "ds/LifoAlloc.h"  // LifoAlloc
@@ -192,6 +193,10 @@ class alignas(alignof(void*)) ParserAtomEntry {
   // Used to dynamically optimize the mapping of ParserAtoms to JSAtom*s.
   // If the entry comes from an atom or has been mapped to an
   // atom previously, the atom reference is kept here.
+  //
+  // Note: if/when this field is removed, remove the comment
+  // in front of the call to `rt->initializeParserAtoms()` in
+  // `JS::InitSelfHostedCode`.
   mutable JSAtom* jsatom_ = nullptr;
 
  public:
@@ -248,6 +253,12 @@ class alignas(alignof(void*)) ParserAtomEntry {
   const char16_t* twoByteChars() const {
     MOZ_ASSERT(hasTwoByteChars());
     return variant_.getUnchecked<char16_t>();
+  }
+  mozilla::Range<const Latin1Char> latin1Range() const {
+    return mozilla::Range(latin1Chars(), length_);
+  }
+  mozilla::Range<const char16_t> twoByteRange() const {
+    return mozilla::Range(twoByteChars(), length_);
   }
 
   bool isIndex(uint32_t* indexp) const;
@@ -355,7 +366,8 @@ class WellKnownParserAtoms {
                            TempAllocPolicy>;
   EntrySet entrySet_;
 
-  bool initSingle(JSContext* cx, const ParserName** name, const char* str);
+  bool initSingle(JSContext* cx, const ParserName** name, const char* str,
+                  JSAtom* jsatom);
 
  public:
   explicit WellKnownParserAtoms(JSContext* cx) : entrySet_(cx) {}
