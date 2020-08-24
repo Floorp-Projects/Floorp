@@ -28,13 +28,11 @@ import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
+import kotlinx.android.synthetic.main.fragment_search_dialog.fill_link_from_clipboard
 import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
 import kotlinx.android.synthetic.main.fragment_search_dialog.qr_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.toolbar
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
-import kotlinx.android.synthetic.main.fragment_search_dialog.view.search_engines_shortcut_button
-import kotlinx.android.synthetic.main.fragment_search_dialog.view.qr_scan_button
-import kotlinx.android.synthetic.main.fragment_search_dialog.view.toolbar
 import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -53,6 +51,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentAction
@@ -186,6 +185,15 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             qrFeature.get()?.scan(R.id.search_wrapper)
         }
 
+        fill_link_from_clipboard.setOnClickListener {
+            (activity as HomeActivity)
+                .openToBrowserAndLoad(
+                    searchTermOrURL = requireContext().components.clipboardHandler.url ?: "",
+                    newTab = store.state.tabId == null,
+                    from = BrowserDirection.FromSearchDialog
+                )
+        }
+
         qrFeature.set(
             createQrFeature(),
             owner = this,
@@ -236,6 +244,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
             awesome_bar?.visibility = if (shouldShowAwesomebar) View.VISIBLE else View.INVISIBLE
             updateSearchSuggestionsHintVisibility(it)
+            updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
             toolbarView.update(it)
             awesomeBarView.update(it)
             firstUpdate = false
@@ -319,6 +328,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 connect(awesome_bar.id, TOP, PARENT_ID, TOP)
                 connect(pill_wrapper.id, BOTTOM, toolbar.id, TOP)
 
+                clear(fill_link_from_clipboard.id, TOP)
+                connect(fill_link_from_clipboard.id, BOTTOM, pill_wrapper.id, TOP)
+
                 applyTo(search_wrapper)
             }
         }
@@ -369,6 +381,19 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             Context.MODE_PRIVATE
         ).registerOnSharedPreferenceChangeListener(viewLifecycleOwner) { _, _ ->
             awesomeBarView.update(store.state)
+        }
+    }
+
+    private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
+        val visibility =
+            if (searchState.showClipboardSuggestions && searchState.query.isEmpty() && !clipboardUrl.isNullOrEmpty())
+                View.VISIBLE else View.GONE
+
+        fill_link_from_clipboard.visibility = visibility
+        clipboard_url.text = clipboardUrl
+
+        if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
+            requireComponents.core.engine.speculativeConnect(clipboardUrl)
         }
     }
 

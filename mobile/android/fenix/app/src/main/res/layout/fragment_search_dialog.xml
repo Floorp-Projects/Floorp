@@ -66,6 +66,57 @@
         app:layout_constraintBottom_toBottomOf="@id/search_suggestions_onboarding"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fill_link_from_clipboard"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/search_fragment_clipboard_item_height"
+        android:paddingStart="@dimen/search_fragment_clipboard_item_horizontal_margin"
+        android:paddingEnd="@dimen/search_fragment_clipboard_item_horizontal_margin"
+        android:background="?foundation"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <ImageView
+            android:id="@+id/link_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            app:tint="?primaryText"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_link" />
+
+        <TextView
+            android:id="@+id/clipboard_title"
+            style="@style/SearchClipboardTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/search_fragment_clipboard_item_title_margin_start"
+            android:text="@string/awesomebar_clipboard_title"
+            app:layout_constraintBottom_toTopOf="@id/clipboard_url"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/link_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <TextView
+            android:id="@+id/clipboard_url"
+            style="@style/SearchClipboardUrlStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/clipboard_title"
+            app:layout_constraintTop_toBottomOf="@id/clipboard_title"
+            app:layout_constraintVertical_chainStyle="packed" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <LinearLayout
         android:id="@+id/pill_wrapper"
         android:layout_width="0dp"
