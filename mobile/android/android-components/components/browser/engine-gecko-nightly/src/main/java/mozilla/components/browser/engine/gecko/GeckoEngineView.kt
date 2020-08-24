@@ -169,7 +169,7 @@ class GeckoEngineView @JvmOverloads constructor(
             val msg = "REBIND: Current activity: $activityClassName hashcode " +
                     "$activityClassHashCode Other activity: $otherActivityClassName " +
                     "hashcode $otherActivityClassHashcode"
-            throw IllegalStateException(msg, e)
+            throw IllegalArgumentException(msg, e)
         }
     }
 
