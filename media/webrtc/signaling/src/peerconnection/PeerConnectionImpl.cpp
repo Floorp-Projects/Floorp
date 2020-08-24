@@ -891,27 +891,8 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
     }
   }
 
-  if (!datachannelTransceiver) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<JsepTransceiver> transportTransceiver;
-  if (datachannelTransceiver->HasOwnTransport()) {
-    transportTransceiver = datachannelTransceiver;
-  } else if (datachannelTransceiver->HasBundleLevel()) {
-    // Find the actual transport.
-    for (const auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
-      (void)id;  // Lame, but no better way to do this right now.
-      if (transceiver->HasLevel() &&
-          transceiver->GetLevel() == datachannelTransceiver->BundleLevel() &&
-          transceiver->HasOwnTransport()) {
-        transportTransceiver = transceiver;
-        break;
-      }
-    }
-  }
-
-  if (!transportTransceiver) {
+  if (!datachannelTransceiver ||
+      !datachannelTransceiver->mTransport.mComponents) {
     return NS_ERROR_FAILURE;
   }
 
@@ -956,9 +937,9 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
     *remoteport = appCodec->mRemotePort;
     *remotemaxmessagesize = appCodec->mRemoteMaxMessageSize;
     *mmsset = appCodec->mRemoteMMSSet;
-    MOZ_ASSERT(!transportTransceiver->mTransport.mTransportId.empty());
-    *transportId = transportTransceiver->mTransport.mTransportId;
-    *client = transportTransceiver->mTransport.mDtls->GetRole() ==
+    MOZ_ASSERT(!datachannelTransceiver->mTransport.mTransportId.empty());
+    *transportId = datachannelTransceiver->mTransport.mTransportId;
+    *client = datachannelTransceiver->mTransport.mDtls->GetRole() ==
               JsepDtlsTransport::kJsepDtlsClient;
     return NS_OK;
   }

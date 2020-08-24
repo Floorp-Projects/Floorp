@@ -101,6 +101,7 @@ class JsepTransceiver {
   void ClearLevel() {
     MOZ_ASSERT(!IsAssociated());
     mLevel = SIZE_MAX;
+    mBundleLevel = SIZE_MAX;
   }
 
   size_t GetLevel() const {

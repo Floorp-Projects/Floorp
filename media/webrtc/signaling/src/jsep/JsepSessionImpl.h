@@ -214,6 +214,7 @@ class JsepSessionImpl : public JsepSession {
                                      JsepTransceiver* transceiverOut);
   void EnsureHasOwnTransport(const SdpMediaSection& msection,
                              JsepTransceiver* transceiver);
+  void CopyBundleTransports();
 
   nsresult FinalizeTransport(const SdpAttributeList& remote,
                              const SdpAttributeList& answer,

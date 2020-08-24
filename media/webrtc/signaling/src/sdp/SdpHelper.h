@@ -48,7 +48,9 @@ class SdpHelper {
 
   nsresult GetBundledMids(const Sdp& sdp, BundledMids* bundledMids);
 
-  bool HasOwnTransport(const Sdp& localSdp, uint16_t level);
+  bool OwnsTransport(const Sdp& localSdp, uint16_t level, sdp::SdpType type);
+  bool OwnsTransport(const SdpMediaSection& msection,
+                     const BundledMids& bundledMids, sdp::SdpType type);
   void GetBundleGroups(const Sdp& sdp,
                        std::vector<SdpGroupAttributeList::Group>* groups) const;
 
