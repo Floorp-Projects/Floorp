@@ -489,6 +489,27 @@ JsepSession::Result JsepSessionImpl::CreateAnswer(
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
   }
 
+  // Ensure that each bundle-group starts with a mid that has a transport, in
+  // case we've disabled what the offerer wanted to use. If the group doesn't
+  // contain anything that has a transport, remove it.
+  groupAttr.reset(new SdpGroupAttributeList);
+  std::vector<SdpGroupAttributeList::Group> bundleGroups;
+  mSdpHelper.GetBundleGroups(*sdp, &bundleGroups);
+  for (auto& group : bundleGroups) {
+    for (auto& mid : group.tags) {
+      const SdpMediaSection* msection =
+          mSdpHelper.FindMsectionByMid(offer, mid);
+
+      if (msection && !msection->GetAttributeList().HasAttribute(
+                          SdpAttribute::kBundleOnlyAttribute)) {
+        std::swap(group.tags[0], mid);
+        groupAttr->mGroups.push_back(group);
+        break;
+      }
+    }
+  }
+  sdp->GetAttributeList().SetAttribute(groupAttr.release());
+
   if (mCurrentLocalDescription) {
     // per discussion with bwc, 3rd parm here should be offer, not *sdp. (mjf)
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentRemoteDescription,
