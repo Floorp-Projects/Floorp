@@ -11122,6 +11122,12 @@ curv.dev
 cyon.link
 cyon.site
 
+// Danger Science Group: https://dangerscience.com/
+// Submitted by Skylar MacDonald <skylar@dangerscience.com>
+fnwk.site
+folionetwork.site
+platform0.app
+
 // Daplie, Inc : https://daplie.com
 // Submitted by AJ ONeal <aj@daplie.com>
 daplie.me
@@ -12302,6 +12308,10 @@ mayfirst.org
 // Submitted by Ilya Zaretskiy <zaretskiy@corp.mail.ru>
 hb.cldmail.ru
 
+// mcpe.me : https://mcpe.me
+// Submitted by Noa Heyl <hi@noa.dev>
+mcpe.me
+
 // McHost : https://mchost.ru
 // Submitted by Evgeniy Subbotin <e.subbotin@mchost.ru>
 mcdir.ru
@@ -12314,7 +12324,7 @@ memset.net
 
 // MetaCentrum, CESNET z.s.p.o. : https://www.metacentrum.cz/en/
 // Submitted by Zdeněk Šustr <zdenek.sustr@cesnet.cz>
-cloud.metacentrum.cz
+*.cloud.metacentrum.cz
 custom.metacentrum.cz
 
 // MetaCentrum, CESNET z.s.p.o. : https://www.metacentrum.cz/en/
@@ -12340,6 +12350,10 @@ cloudapp.net
 // minion.systems : http://minion.systems
 // Submitted by Robert Böttinger <r@minion.systems>
 csx.cc
+
+// MobileEducation, LLC : https://joinforte.com
+// Submitted by Grayson Martin <grayson.martin@mobileeducation.us>
+forte.id
 
 // Mozilla Corporation : https://mozilla.com
 // Submitted by Ben Francis <bfrancis@mozilla.com>
@@ -12615,6 +12629,10 @@ cya.gg
 // Omnibond Systems, LLC. : https://www.omnibond.com
 // Submitted by Cole Estep <cole@omnibond.com>
 cloudycluster.net
+
+// OmniWe Limited: https://omniwe.com
+// Submitted by Vicary Archangel <vicary@omniwe.com>
+omniwe.site
 
 // One Fold Media : http://www.onefoldmedia.com/
 // Submitted by Eddie Jones <eddie@onefoldmedia.com>
