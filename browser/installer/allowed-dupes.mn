@@ -100,7 +100,3 @@ browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/duckdu
 browser/chrome/browser/search-extensions/ddg/favicon.ico
 browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/google-com.ico
 browser/chrome/browser/search-extensions/google/favicon.ico
-
-# Bug 1660483 - Upstream project files we don't have direct control over
-chrome/pdfjs/content/web/images/findbarButton-next.svg
-chrome/pdfjs/content/web/images/toolbarButton-menuArrow.svg
