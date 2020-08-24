@@ -82,14 +82,15 @@ class CDMProxy {
 
   // Main thread only.
   CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
-           bool aDistinctiveIdentifierRequired, bool aPersistentStateRequired,
-           nsISerialEventTarget* aMainThread)
+           bool aDistinctiveIdentifierRequired, bool aPersistentStateRequired)
       : mKeys(aKeys),
         mKeySystem(aKeySystem),
         mCapabilites("CDMProxy::mCDMCaps"),
         mDistinctiveIdentifierRequired(aDistinctiveIdentifierRequired),
         mPersistentStateRequired(aPersistentStateRequired),
-        mMainThread(aMainThread) {}
+        mMainThread(GetMainThreadSerialEventTarget()) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
 
   // Main thread only.
   // Loads the CDM corresponding to mKeySystem.

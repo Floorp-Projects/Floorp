@@ -28,8 +28,7 @@ class MediaDrmCDMProxy : public CDMProxy {
 
   MediaDrmCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
                    bool aDistinctiveIdentifierRequired,
-                   bool aPersistentStateRequired,
-                   nsISerialEventTarget* aMainThread);
+                   bool aPersistentStateRequired);
 
   void Init(PromiseId aPromiseId, const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
