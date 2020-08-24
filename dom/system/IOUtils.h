@@ -54,8 +54,15 @@ class IOUtils final {
                                         const nsAString& aPath,
                                         const Optional<uint32_t>& aMaxBytes);
 
+  static already_AddRefed<Promise> ReadUTF8(GlobalObject& aGlobal,
+                                            const nsAString& aPath);
+
   static already_AddRefed<Promise> WriteAtomic(
       GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
+      const WriteAtomicOptions& aOptions);
+
+  static already_AddRefed<Promise> WriteAtomicUTF8(
+      GlobalObject& aGlobal, const nsAString& aPath, const nsAString& aString,
       const WriteAtomicOptions& aOptions);
 
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
@@ -163,6 +170,15 @@ class IOUtils final {
       const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes);
 
   /**
+   * Attempts to read the entire file at |aPath| as a UTF-8 string.
+   *
+   * @param aPath The location of the file as an absolute path string.
+   *
+   * @return The contents of the file re-encoded as a UTF-16 string.
+   */
+  static Result<nsString, IOError> ReadUTF8Sync(const nsAString& aPath);
+
+  /**
    * Attempts to write the entirety of |aByteArray| to the file at |aPath|.
    * This may occur by writing to an intermediate destination and performing a
    * move, depending on |aOptions|.
@@ -175,7 +191,11 @@ class IOUtils final {
    *         failed or was incomplete.
    */
   static Result<uint32_t, IOError> WriteAtomicSync(
-      const nsAString& aDestPath, const Buffer<uint8_t>& aByteArray,
+      const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
+      const InternalWriteAtomicOpts& aOptions);
+
+  static Result<uint32_t, IOError> WriteAtomicUTF8Sync(
+      const nsAString& aDestPath, const nsCString& aUTF8String,
       const InternalWriteAtomicOpts& aOptions);
 
   /**
@@ -190,7 +210,7 @@ class IOUtils final {
    */
   static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd,
                                              const nsACString& aPath,
-                                             const Buffer<uint8_t>& aBytes);
+                                             const Span<const uint8_t>& aBytes);
 
   /**
    * Attempts to move the file located at |aSource| to |aDest|.
@@ -371,6 +391,20 @@ struct IOUtils::InternalWriteAtomicOpts {
   bool mFlush;
   bool mNoOverwrite;
   Maybe<nsString> mTmpPath;
+
+  static inline InternalWriteAtomicOpts FromBinding(
+      const WriteAtomicOptions& aOptions) {
+    InternalWriteAtomicOpts opts;
+    opts.mFlush = aOptions.mFlush;
+    opts.mNoOverwrite = aOptions.mNoOverwrite;
+    if (aOptions.mBackupFile.WasPassed()) {
+      opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
+    }
+    if (aOptions.mTmpPath.WasPassed()) {
+      opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
+    }
+    return opts;
+  }
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
