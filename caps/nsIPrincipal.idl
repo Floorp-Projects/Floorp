@@ -533,6 +533,12 @@ interface nsIPrincipal : nsISerializable
      * Returns if the principal is for an IP address.
      */
     [infallible] readonly attribute boolean isIpAddress;
+
+    /**
+     * Returns if the principal is for a local IP address.
+     */
+    [infallible] readonly attribute boolean isLocalIpAddress;
+
 };
 
 /**
