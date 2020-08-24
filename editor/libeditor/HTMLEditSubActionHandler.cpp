@@ -2350,6 +2350,182 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   return EditActionHandled();
 }
 
+/**
+ * AutoDeleteRangesHandler class handles deleting ranges in HTMLEditor.
+ */
+class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
+ public:
+  /**
+   * HandleDeleteAroundCollapsedRanges() handles deletion with collapsed
+   * ranges.  Callers must guarantee that this is called only when
+   * aRangesToDelete.IsCollapsed() returns true.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aRangesToDelete     Ranges to delete.  This `IsCollapsed()` must
+   *                            return true.
+   * @param aWSRunScannerAtCaret        Scanner instance which scanned from
+   *                                    caret point.
+   * @param aScanFromCaretPointResult   Scan result of aWSRunScannerAtCaret
+   *                                    toward aDirectionAndAmount.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteAroundCollapsedRanges(
+      HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
+      const WSRunScanner& aWSRunScannerAtCaret,
+      const WSScanResult& aScanFromCaretPointResult);
+
+  /**
+   * HandleDeleteNonCollapsedRanges() handles deletion with non-collapsed
+   * ranges.  Callers must guarantee that this is called only when
+   * aRangesToDelete.IsCollapsed() returns false.
+   *
+   * @param aDirectionAndAmount         Direction of the deletion.
+   * @param aStripWrappers              Must be eStrip or eNoStrip.
+   * @param aRangesToDelete             The ranges to delete.
+   * @param aSelectionWasCollapsed      If the caller extended `Selection`
+   *                                    from collapsed, set this to `Yes`.
+   *                                    Otherwise, i.e., `Selection` is not
+   *                                    collapsed from the beginning, set
+   *                                    this to `No`.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteNonCollapsedRanges(HTMLEditor& aHTMLEditor,
+                                 nsIEditor::EDirection aDirectionAndAmount,
+                                 nsIEditor::EStripWrappers aStripWrappers,
+                                 AutoRangeArray& aRangesToDelete,
+                                 SelectionWasCollapsed aSelectionWasCollapsed);
+
+ private:
+  /**
+   * HandleDeleteTextAroundCollapsedSelection() handles deletion of
+   * collapsed selection in a text node.
+   *
+   * @param aDirectionAndAmount Must be eNext or ePrevious.
+   * @param aCaretPoisition     The position where caret is.  This container
+   *                            must be a text node.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteTextAroundCollapsedSelection(
+      HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      const EditorDOMPoint& aCaretPosition);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
+   * collapsed selection at white-spaces in a text node.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aPointToDelete      The point to delete.  I.e., typically, caret
+   *                            position.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteCollapsedSelectionAtWhiteSpaces(
+      HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      const EditorDOMPoint& aPointToDelete);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtVisibleChar() handles deletion of
+   * collapsed selection in a text node.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aPointToDelete      The point in a text node to delete character(s).
+   *                            Caller must guarantee that this is in a text
+   *                            node.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteCollapsedSelectionAtVisibleChar(
+      HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      const EditorDOMPoint& aPointToDelete);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtAtomicContent() handles deletion of
+   * atomic elements like `<br>`, `<hr>`, `<img>`, `<input>`, etc and
+   * data nodes except text node (e.g., comment node).
+   * Note that don't call this directly with `<hr>` element.  Instead, call
+   * `HandleDeleteCollapsedSelectionAtHRElement()`.
+   * Note that don't call this for invisible `<br>` element.
+   *
+   * @param aAtomicContent      The atomic content to be deleted.
+   * @param aCaretPoint         The caret point (i.e., selection start or
+   *                            end).
+   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
+   *                             with the caret point.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteCollapsedSelectionAtAtomicContent(
+      HTMLEditor& aHTMLEditor, nsIContent& aAtomicContent,
+      const EditorDOMPoint& aCaretPoint,
+      const WSRunScanner& aWSRunScannerAtCaret);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtHRElement() handles deletion around
+   * `<hr>` element.  If aDirectionAndAmount is nsIEditor::ePrevious,
+   * aHTElement is removed only when caret is at next sibling of the `<hr>`
+   * element and inter line position is "left".  Otherwise, caret is moved
+   * and does not remove the `<hr>` elemnent.
+   * XXX Perhaps, we can get rid of this special handling because the other
+   *     browsers don't do this, and our `<hr>` element handling is really
+   *     odd.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aHRElement          The `<hr>` element to be removed.
+   * @param aCaretPoint         The caret point (i.e., selection start or
+   *                            end).
+   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
+   *                             with the caret point.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteCollapsedSelectionAtHRElement(
+      HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      Element& aHRElement, const EditorDOMPoint& aCaretPoint,
+      const WSRunScanner& aWSRunScannerAtCaret);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
+   * other block boundary (i.e., immediately before or after a block).
+   * If this does not join blocks, `HandleDeleteSelectionInternal()` may be
+   * called recursively.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aOtherBlockElement  The block element which follows the caret or
+   *                            is followed by caret.
+   * @param aCaretPoint         The caret point (i.e., selection start or
+   *                            end).
+   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
+   *                             with the caret point.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
+      HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers, Element& aOtherBlockElement,
+      const EditorDOMPoint& aCaretPoint, WSRunScanner& aWSRunScannerAtCaret);
+
+  /**
+   * ExtendRangeToIncludeInvisibleNodes() extends aRange if there are some
+   * invisible nodes around it.
+   *
+   * @param aFrameSelection     If the caller wants range in selection limiter,
+   *                            set this to non-nullptr which knows the limiter.
+   * @param aRange              The range to be extended.  This must not be
+   *                            collapsed, must be positioned, and must not be
+   *                            in selection.
+   * @return                    true if succeeded to set the range.
+   */
+  bool ExtendRangeToIncludeInvisibleNodes(
+      const HTMLEditor& aHTMLEditor, const nsFrameSelection* aFrameSelection,
+      nsRange& aRange);
+
+  /**
+   * ShouldDeleteHRElement() checks whether aHRElement should be deleted
+   * when selection is collapsed at aCaretPoint.
+   */
+  Result<bool, nsresult> ShouldDeleteHRElement(
+      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      Element& aHRElement, const EditorDOMPoint& aCaretPoint) const;
+};
+
 EditActionResult HTMLEditor::HandleDeleteSelection(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers) {
@@ -2450,6 +2626,8 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
   if (mPaddingBRElementForEmptyEditor) {
     return EditActionCanceled();
   }
+
+  AutoDeleteRangesHandler handler;
 
   // selectionWasCollapsed is used later to determine whether we should join
   // blocks in HandleDeleteNonCollapsedRanges(). We don't really care about
@@ -2621,30 +2799,32 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
         }
       }
 
-      EditActionResult result = HandleDeleteAroundCollapsedRanges(
-          aDirectionAndAmount, aStripWrappers, aRangesToDelete,
+      EditActionResult result = handler.HandleDeleteAroundCollapsedRanges(
+          *this, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
           wsRunScannerAtCaret, scanFromCaretPointResult);
-      NS_WARNING_ASSERTION(
-          result.Succeeded(),
-          "HTMLEditor::HandleDeleteAroundCollapsedRanges() failed");
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "AutoDeleteRangesHandler::"
+                           "HandleDeleteAroundCollapsedRanges() failed");
       return result;
     }
   }
 
-  EditActionResult result =
-      HandleDeleteNonCollapsedRanges(aDirectionAndAmount, aStripWrappers,
-                                     aRangesToDelete, selectionWasCollapsed);
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "HTMLEditor::HandleDeleteNonCollapsedRanges() failed");
+  EditActionResult result = handler.HandleDeleteNonCollapsedRanges(
+      *this, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
+      selectionWasCollapsed);
+  NS_WARNING_ASSERTION(
+      result.Succeeded(),
+      "AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges() failed");
   return result;
 }
 
-EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
-    nsIEditor::EDirection aDirectionAndAmount,
+EditActionResult
+HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
     const WSRunScanner& aWSRunScannerAtCaret,
     const WSScanResult& aScanFromCaretPointResult) {
-  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(aHTMLEditor.IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(aRangesToDelete.IsCollapsed());
   MOZ_ASSERT(aDirectionAndAmount != nsIEditor::eNone);
   MOZ_ASSERT(aWSRunScannerAtCaret.ScanStartRef().IsInContentNode());
@@ -2656,20 +2836,21 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
     if (aScanFromCaretPointResult.InNormalWhiteSpaces() ||
         aScanFromCaretPointResult.InNormalText()) {
       EditActionResult result = HandleDeleteTextAroundCollapsedSelection(
-          aDirectionAndAmount, aScanFromCaretPointResult.Point());
-      NS_WARNING_ASSERTION(
-          result.Succeeded(),
-          "HTMLEditor::HandleDeleteCollapsedSelectionInTextNode() failed");
+          aHTMLEditor, aDirectionAndAmount, aScanFromCaretPointResult.Point());
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "AutoDeleteRangesHandler::"
+                           "HandleDeleteCollapsedSelectionInTextNode() failed");
       return result;
     }
   }
 
   if (aScanFromCaretPointResult.InNormalWhiteSpaces()) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtWhiteSpaces(
-        aDirectionAndAmount, aWSRunScannerAtCaret.ScanStartRef());
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::HandleDelectCollapsedSelectionAtWhiteSpaces() failed");
+        aHTMLEditor, aDirectionAndAmount, aWSRunScannerAtCaret.ScanStartRef());
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "AutoDeleteRangesHandler::"
+                         "HandleDelectCollapsedSelectionAtWhiteSpaces() "
+                         "failed");
     return result;
   }
 
@@ -2678,10 +2859,11 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
       return EditActionResult(NS_ERROR_FAILURE);
     }
     EditActionResult result = HandleDeleteCollapsedSelectionAtVisibleChar(
-        aDirectionAndAmount, aScanFromCaretPointResult.Point());
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar() failed");
+        aHTMLEditor, aDirectionAndAmount, aScanFromCaretPointResult.Point());
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "AutoDeleteRangesHandler::"
+                         "HandleDeleteCollapsedSelectionAtVisibleChar() "
+                         "failed");
     return result;
   }
 
@@ -2692,11 +2874,12 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
       return EditActionHandled();
     }
     EditActionResult result = HandleDeleteCollapsedSelectionAtAtomicContent(
-        MOZ_KnownLive(*aScanFromCaretPointResult.GetContent()),
+        aHTMLEditor, MOZ_KnownLive(*aScanFromCaretPointResult.GetContent()),
         aWSRunScannerAtCaret.ScanStartRef(), aWSRunScannerAtCaret);
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent() failed");
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "AutoDeleteRangesHandler::"
+                         "HandleDeleteCollapsedSelectionAtAtomicContent() "
+                         "failed");
     return result;
   }
 
@@ -2706,12 +2889,12 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
       return EditActionHandled();
     }
     EditActionResult result = HandleDeleteCollapsedSelectionAtHRElement(
-        aDirectionAndAmount,
+        aHTMLEditor, aDirectionAndAmount,
         MOZ_KnownLive(*aScanFromCaretPointResult.ElementPtr()),
         aWSRunScannerAtCaret.ScanStartRef(), aWSRunScannerAtCaret);
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement() failed");
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "AutoDeleteRangesHandler::"
+                         "HandleDeleteCollapsedSelectionAtHRElement() failed");
     return result;
   }
 
@@ -2721,16 +2904,16 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
     }
     AutoBlockElementsJoiner joiner;
     if (!joiner.PrepareToDeleteCollapsedSelectionAtOtherBlockBoundary(
-            *this, aDirectionAndAmount, *aScanFromCaretPointResult.ElementPtr(),
+            aHTMLEditor, aDirectionAndAmount,
+            *aScanFromCaretPointResult.ElementPtr(),
             aWSRunScannerAtCaret.ScanStartRef(), aWSRunScannerAtCaret)) {
       return EditActionCanceled();
     }
-    EditActionResult result = joiner.Run(*this, aDirectionAndAmount,
+    EditActionResult result = joiner.Run(aHTMLEditor, aDirectionAndAmount,
                                          aWSRunScannerAtCaret.ScanStartRef());
     if (result.Failed()) {
       NS_WARNING(
-          "HTMLEditor::AutoBlockElementsJoiner::Run() failed (other block "
-          "boundary)");
+          "AutoBlockElementsJoiner::Run() failed (other block boundary)");
       return result;
     }
     if (result.Handled() || result.Canceled()) {
@@ -2750,20 +2933,20 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
             ? EditorRawDOMPoint::AtEndOf(
                   *joiner.GetLeafContentInOtherBlockElement())
             : EditorRawDOMPoint(joiner.GetLeafContentInOtherBlockElement(), 0);
-    nsresult rv = CollapseSelectionTo(newCaretPoint);
+    nsresult rv = aHTMLEditor.CollapseSelectionTo(newCaretPoint);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (!SelectionRefPtr()->RangeCount()) {
+    if (!aHTMLEditor.SelectionRefPtr()->RangeCount()) {
       NS_WARNING("Failed to put caret to new position");
       return EditActionHandled(rv);
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::CollapseSelectionTo() failed, but ignored");
-    AutoRangeArray rangesToDelete(*SelectionRefPtr());
-    result = HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers,
-                                           rangesToDelete);
+    AutoRangeArray rangesToDelete(*aHTMLEditor.SelectionRefPtr());
+    result = aHTMLEditor.HandleDeleteSelectionInternal(
+        aDirectionAndAmount, aStripWrappers, rangesToDelete);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "Recursive HTMLEditor::HandleDeleteSelectionInternal() failed");
@@ -2776,15 +2959,16 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
     }
     AutoBlockElementsJoiner joiner;
     if (!joiner.PrepareToDeleteCollapsedSelectionAtCurrentBlockBoundary(
-            *this, aDirectionAndAmount, *aScanFromCaretPointResult.ElementPtr(),
+            aHTMLEditor, aDirectionAndAmount,
+            *aScanFromCaretPointResult.ElementPtr(),
             aWSRunScannerAtCaret.ScanStartRef())) {
       return EditActionCanceled();
     }
-    EditActionResult result = joiner.Run(*this, aDirectionAndAmount,
+    EditActionResult result = joiner.Run(aHTMLEditor, aDirectionAndAmount,
                                          aWSRunScannerAtCaret.ScanStartRef());
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::AutoBlockElementsJoiner::Run() failed "
-                         "(current block boundary)");
+    NS_WARNING_ASSERTION(
+        result.Succeeded(),
+        "AutoBlockElementsJoiner::Run() failed (current block boundary)");
     return result;
   }
 
@@ -2792,17 +2976,18 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
   return EditActionIgnored();
 }
 
-EditActionResult HTMLEditor::HandleDeleteTextAroundCollapsedSelection(
-    nsIEditor::EDirection aDirectionAndAmount,
+EditActionResult
+HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedSelection(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aCaretPosition) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
              aDirectionAndAmount == nsIEditor::ePrevious);
 
   EditorDOMRangeInTexts rangeToDelete;
   if (aDirectionAndAmount == nsIEditor::eNext) {
     Result<EditorDOMRangeInTexts, nsresult> result =
-        WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(*this,
+        WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(aHTMLEditor,
                                                              aCaretPosition);
     if (result.isErr()) {
       NS_WARNING(
@@ -2815,7 +3000,8 @@ EditActionResult HTMLEditor::HandleDeleteTextAroundCollapsedSelection(
     }
   } else {
     Result<EditorDOMRangeInTexts, nsresult> result =
-        WSRunScanner::GetRangeInTextNodesToBackspaceFrom(*this, aCaretPosition);
+        WSRunScanner::GetRangeInTextNodesToBackspaceFrom(aHTMLEditor,
+                                                         aCaretPosition);
     if (result.isErr()) {
       NS_WARNING("WSRunScanner::GetRangeInTextNodesToBackspaceFrom() failed");
       return EditActionHandled(result.unwrapErr());
@@ -2832,14 +3018,14 @@ EditActionResult HTMLEditor::HandleDeleteTextAroundCollapsedSelection(
   //      with
   //      HTMLEditUtils::GetMostDistantAnscestorEditableEmptyInlineElement().
 
-  AutoTransactionsConserveSelection dontChangeMySelection(*this);
+  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
   Result<EditorDOMPoint, nsresult> result =
-      DeleteTextAndNormalizeSurroundingWhiteSpaces(
+      aHTMLEditor.DeleteTextAndNormalizeSurroundingWhiteSpaces(
           rangeToDelete.StartRef(), rangeToDelete.EndRef(),
           TreatEmptyTextNodes::RemoveAllEmptyInlineAncestors,
           aDirectionAndAmount == nsIEditor::eNext ? DeleteDirection::Forward
                                                   : DeleteDirection::Backward);
-  TopLevelEditSubActionDataRef().mDidNormalizeWhitespaces = true;
+  aHTMLEditor.TopLevelEditSubActionDataRef().mDidNormalizeWhitespaces = true;
   if (result.isErr()) {
     NS_WARNING(
         "HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces() failed");
@@ -2848,22 +3034,23 @@ EditActionResult HTMLEditor::HandleDeleteTextAroundCollapsedSelection(
   const EditorDOMPoint& newCaretPosition = result.inspect();
   MOZ_ASSERT(newCaretPosition.IsSetAndValid());
 
-  DebugOnly<nsresult> rvIgnored =
-      SelectionRefPtr()->Collapse(newCaretPosition.ToRawRangeBoundary());
+  DebugOnly<nsresult> rvIgnored = aHTMLEditor.SelectionRefPtr()->Collapse(
+      newCaretPosition.ToRawRangeBoundary());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Selection::Collapse() failed, but ignored");
   return EditActionHandled();
 }
 
-EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
-    nsIEditor::EDirection aDirectionAndAmount,
-    const EditorDOMPoint& aPointToDelete) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+EditActionResult HTMLEditor::AutoDeleteRangesHandler::
+    HandleDeleteCollapsedSelectionAtWhiteSpaces(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        const EditorDOMPoint& aPointToDelete) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(!StaticPrefs::editor_white_space_normalization_blink_compatible());
 
   if (aDirectionAndAmount == nsIEditor::eNext) {
     nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
-        *this, aPointToDelete);
+        aHTMLEditor, aPointToDelete);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace() failed");
@@ -2871,15 +3058,16 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
     }
   } else {
     nsresult rv = WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
-        *this, aPointToDelete);
+        aHTMLEditor, aPointToDelete);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace() failed");
       return EditActionHandled(rv);
     }
   }
-  nsresult rv = InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
+  nsresult rv =
+      aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+          EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() "
@@ -2887,10 +3075,11 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
   return EditActionHandled(rv);
 }
 
-EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
-    nsIEditor::EDirection aDirectionAndAmount,
-    const EditorDOMPoint& aPointToDelete) {
-  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+EditActionResult HTMLEditor::AutoDeleteRangesHandler::
+    HandleDeleteCollapsedSelectionAtVisibleChar(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        const EditorDOMPoint& aPointToDelete) {
+  MOZ_ASSERT(aHTMLEditor.IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(!StaticPrefs::editor_white_space_normalization_blink_compatible());
   MOZ_ASSERT(aPointToDelete.IsSet());
   MOZ_ASSERT(aPointToDelete.IsInTextNode());
@@ -2912,7 +3101,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
       }
     }
   } else {
-    RefPtr<const nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+    RefPtr<const nsRange> range = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!range) ||
         NS_WARN_IF(range->GetStartContainer() !=
                    aPointToDelete.GetContainer()) ||
@@ -2923,8 +3112,8 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
     endToDelete = range->EndRef();
   }
   nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
-      *this, &startToDelete, &endToDelete);
-  if (NS_WARN_IF(Destroyed())) {
+      aHTMLEditor, &startToDelete, &endToDelete);
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
@@ -2933,7 +3122,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
         "failed");
     return EditActionResult(rv);
   }
-  if (MaybeHasMutationEventListeners(
+  if (aHTMLEditor.MaybeHasMutationEventListeners(
           NS_EVENT_BITS_MUTATION_NODEREMOVED |
           NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
           NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
@@ -2948,9 +3137,10 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
     NS_WARNING("Mutation event listener changed the DOM tree");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
-  rv = DeleteTextWithTransaction(visibleTextNode, startToDelete.Offset(),
-                                 endToDelete.Offset() - startToDelete.Offset());
-  if (NS_WARN_IF(Destroyed())) {
+  rv = aHTMLEditor.DeleteTextWithTransaction(
+      visibleTextNode, startToDelete.Offset(),
+      endToDelete.Offset() - startToDelete.Offset());
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
@@ -2971,7 +3161,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
   //     non-empty text node.  For now, we should keep our traditional
   //     behavior same as Chromium for backward compatibility.
 
-  rv = DeleteNodeIfInvisibleAndEditableTextNode(visibleTextNode);
+  rv = aHTMLEditor.DeleteNodeIfInvisibleAndEditableTextNode(visibleTextNode);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -2983,8 +3173,8 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
   //     that we should use EditorDOMPoint::AtEndOf(visibleTextNode)
   //     instead.  (Perhaps, we don't and/or shouldn't need to do this
   //     if the text node is preformatted.)
-  rv = InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
+  rv = aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary()"
@@ -2994,15 +3184,16 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
 
   // Remember that we did a ranged delete for the benefit of
   // AfterEditInner().
-  TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange = true;
+  aHTMLEditor.TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange = true;
 
   return EditActionHandled();
 }
 
-Result<bool, nsresult> HTMLEditor::ShouldDeleteHRElement(
-    nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
-    const EditorDOMPoint& aCaretPoint) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+Result<bool, nsresult>
+HTMLEditor::AutoDeleteRangesHandler::ShouldDeleteHRElement(
+    const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    Element& aHRElement, const EditorDOMPoint& aCaretPoint) const {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   if (aDirectionAndAmount != nsIEditor::ePrevious) {
     return true;
@@ -3028,7 +3219,8 @@ Result<bool, nsresult> HTMLEditor::ShouldDeleteHRElement(
   EditorRawDOMPoint atHRElement(&aHRElement);
 
   ErrorResult error;
-  bool interLineIsRight = SelectionRefPtr()->GetInterlinePosition(error);
+  bool interLineIsRight =
+      aHTMLEditor.SelectionRefPtr()->GetInterlinePosition(error);
   if (error.Failed()) {
     NS_WARNING("Selection::GetInterlinePosition() failed");
     nsresult rv = error.StealNSResult();
@@ -3040,26 +3232,28 @@ Result<bool, nsresult> HTMLEditor::ShouldDeleteHRElement(
          aCaretPoint.Offset() - 1 == atHRElement.Offset();
 }
 
-EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
-    nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
-    const EditorDOMPoint& aCaretPoint,
+EditActionResult
+HTMLEditor::AutoDeleteRangesHandler::HandleDeleteCollapsedSelectionAtHRElement(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    Element& aHRElement, const EditorDOMPoint& aCaretPoint,
     const WSRunScanner& aWSRunScannerAtCaret) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(aHRElement.IsHTMLElement(nsGkAtoms::hr));
   MOZ_ASSERT(&aHRElement != aWSRunScannerAtCaret.GetEditingHost());
 
-  Result<bool, nsresult> canDeleteHRElement =
-      ShouldDeleteHRElement(aDirectionAndAmount, aHRElement, aCaretPoint);
+  Result<bool, nsresult> canDeleteHRElement = ShouldDeleteHRElement(
+      aHTMLEditor, aDirectionAndAmount, aHRElement, aCaretPoint);
   if (canDeleteHRElement.isErr()) {
-    NS_WARNING("HTMLEditor::ShouldDeleteHRElement() failed");
+    NS_WARNING("AutoDeleteRangesHandler::ShouldDeleteHRElement() failed");
     return EditActionHandled(canDeleteHRElement.unwrapErr());
   }
   if (canDeleteHRElement.inspect()) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtAtomicContent(
-        aHRElement, aCaretPoint, aWSRunScannerAtCaret);
+        aHTMLEditor, aHRElement, aCaretPoint, aWSRunScannerAtCaret);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
-        "HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent() failed");
+        "AutoDeleteRangesHandler::"
+        "HandleDeleteCollapsedSelectionAtAtomicContent() failed");
     return result;
   }
 
@@ -3072,7 +3266,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
   {
     AutoEditorDOMPointChildInvalidator lockOffset(atNextOfHRElement);
 
-    nsresult rv = CollapseSelectionTo(atNextOfHRElement);
+    nsresult rv = aHTMLEditor.CollapseSelectionTo(atNextOfHRElement);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -3082,11 +3276,11 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
   }
 
   IgnoredErrorResult ignoredError;
-  SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
+  aHTMLEditor.SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
       "Selection::SetInterlinePosition(false) failed, but ignored");
-  TopLevelEditSubActionDataRef().mDidExplicitlySetInterLine = true;
+  aHTMLEditor.TopLevelEditSubActionDataRef().mDidExplicitlySetInterLine = true;
 
   // There is one exception to the move only case.  If the <hr> is
   // followed by a <br> we want to delete the <br>.
@@ -3100,7 +3294,8 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
   // Delete the <br>
   nsresult rv =
       WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
-          *this, MOZ_KnownLive(*forwardScanFromCaretResult.BRElementPtr()),
+          aHTMLEditor,
+          MOZ_KnownLive(*forwardScanFromCaretResult.BRElementPtr()),
           aCaretPoint);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "WhiteSpaceVisibilityKeeper::"
@@ -3108,17 +3303,19 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtHRElement(
   return EditActionHandled(rv);
 }
 
-EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
-    nsIContent& aAtomicContent, const EditorDOMPoint& aCaretPoint,
-    const WSRunScanner& aWSRunScannerAtCaret) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+EditActionResult HTMLEditor::AutoDeleteRangesHandler::
+    HandleDeleteCollapsedSelectionAtAtomicContent(
+        HTMLEditor& aHTMLEditor, nsIContent& aAtomicContent,
+        const EditorDOMPoint& aCaretPoint,
+        const WSRunScanner& aWSRunScannerAtCaret) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT_IF(aAtomicContent.IsHTMLElement(nsGkAtoms::br),
-                IsVisibleBRElement(&aAtomicContent));
+                aHTMLEditor.IsVisibleBRElement(&aAtomicContent));
   MOZ_ASSERT(&aAtomicContent != aWSRunScannerAtCaret.GetEditingHost());
 
   nsresult rv =
       WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
-          *this, aAtomicContent, aCaretPoint);
+          aHTMLEditor, aAtomicContent, aCaretPoint);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt("
@@ -3126,8 +3323,8 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
     return EditActionHandled(rv);
   }
 
-  rv = InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
+  rv = aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr()));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() "
@@ -3361,11 +3558,12 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   return result;
 }
 
-EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
-    nsIEditor::EDirection aDirectionAndAmount,
+EditActionResult
+HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
     SelectionWasCollapsed aSelectionWasCollapsed) {
-  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(aHTMLEditor.IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
 
   if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->StartRef().IsSet()) ||
@@ -3376,28 +3574,31 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
   // Else we have a non-collapsed selection.  First adjust the selection.
   // XXX Why do we extend selection only when there is only one range?
   if (aRangesToDelete.Ranges().Length() == 1) {
-    nsFrameSelection* frameSelection = SelectionRefPtr()->GetFrameSelection();
+    nsFrameSelection* frameSelection =
+        aHTMLEditor.SelectionRefPtr()->GetFrameSelection();
     if (NS_WARN_IF(!frameSelection)) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
-    if (!ExtendRangeToIncludeInvisibleNodes(frameSelection,
+    if (!ExtendRangeToIncludeInvisibleNodes(aHTMLEditor, frameSelection,
                                             aRangesToDelete.FirstRangeRef())) {
-      NS_WARNING("HTMLEditor::ExtendRangeToIncludeInvisibleNodes() failed");
+      NS_WARNING(
+          "AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes() "
+          "failed");
       return EditActionResult(NS_ERROR_FAILURE);
     }
   }
 
   // Remember that we did a ranged delete for the benefit of AfterEditInner().
-  TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange = true;
+  aHTMLEditor.TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange = true;
 
   // Figure out if the endpoints are in nodes that can be merged.  Adjust
   // surrounding white-space in preparation to delete selection.
-  if (!IsPlaintextEditor()) {
-    AutoTransactionsConserveSelection dontChangeMySelection(*this);
-    AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
+  if (!aHTMLEditor.IsPlaintextEditor()) {
+    AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
+    AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                         &aRangesToDelete.FirstRangeRef());
     nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-        *this, EditorDOMRange(aRangesToDelete.FirstRangeRef()));
+        aHTMLEditor, EditorDOMRange(aRangesToDelete.FirstRangeRef()));
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() "
@@ -3423,9 +3624,9 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     // If we've already removed all contents in the range, we shouldn't
     // delete anything around the caret.
     if (!aRangesToDelete.FirstRangeRef()->Collapsed()) {
-      AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
+      AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                           &aRangesToDelete.FirstRangeRef());
-      nsresult rv = DeleteRangesWithTransaction(
+      nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
           aDirectionAndAmount, aStripWrappers, aRangesToDelete);
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
@@ -3434,7 +3635,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     }
     // However, even if the range is removed, we may need to clean up the
     // containers which become empty.
-    nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
+    nsresult rv = aHTMLEditor.DeleteUnnecessaryNodesAndCollapseSelection(
         aDirectionAndAmount,
         EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
         EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
@@ -3452,9 +3653,9 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
   }
 
   // Figure out mailcite ancestors
-  RefPtr<Element> startCiteNode = GetMostAncestorMailCiteElement(
+  RefPtr<Element> startCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
       *aRangesToDelete.FirstRangeRef()->GetStartContainer());
-  RefPtr<Element> endCiteNode = GetMostAncestorMailCiteElement(
+  RefPtr<Element> endCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
       *aRangesToDelete.FirstRangeRef()->GetEndContainer());
 
   // If we only have a mailcite at one of the two endpoints, set the
@@ -3467,12 +3668,12 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
   }
 
   AutoBlockElementsJoiner joiner;
-  if (!joiner.PrepareToDeleteNonCollapsedRanges(*this, aRangesToDelete)) {
+  if (!joiner.PrepareToDeleteNonCollapsedRanges(aHTMLEditor, aRangesToDelete)) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
   EditActionResult result =
-      joiner.Run(*this, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
-                 aSelectionWasCollapsed);
+      joiner.Run(aHTMLEditor, aDirectionAndAmount, aStripWrappers,
+                 aRangesToDelete, aSelectionWasCollapsed);
   NS_WARNING_ASSERTION(result.Succeeded(),
                        "AutoBlockElementsJoiner::Run() failed");
   return result;
@@ -8291,9 +8492,10 @@ size_t HTMLEditor::CollectChildren(
   return numberOfFoundChildren;
 }
 
-bool HTMLEditor::ExtendRangeToIncludeInvisibleNodes(
-    const nsFrameSelection* aFrameSelection, nsRange& aRange) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
+    const HTMLEditor& aHTMLEditor, const nsFrameSelection* aFrameSelection,
+    nsRange& aRange) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(!aRange.Collapsed());
   MOZ_ASSERT(aRange.IsPositioned());
   MOZ_ASSERT(!aRange.IsInSelection());
@@ -8314,7 +8516,7 @@ bool HTMLEditor::ExtendRangeToIncludeInvisibleNodes(
   }
 
   // Set up for loops and cache our root element
-  Element* editingHost = GetActiveEditingHost();
+  Element* editingHost = aHTMLEditor.GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
     return false;
   }
@@ -8324,12 +8526,13 @@ bool HTMLEditor::ExtendRangeToIncludeInvisibleNodes(
       atStart.GetContainer() != editingHost) {
     for (;;) {
       WSScanResult backwardScanFromStartResult =
-          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(*this, atStart);
+          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(aHTMLEditor,
+                                                               atStart);
       if (!backwardScanFromStartResult.ReachedCurrentBlockBoundary()) {
         break;
       }
       MOZ_ASSERT(backwardScanFromStartResult.GetContent() ==
-                 WSRunScanner(*this, atStart).GetStartReasonContent());
+                 WSRunScanner(aHTMLEditor, atStart).GetStartReasonContent());
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
       if (HTMLEditUtils::IsAnyTableElement(
@@ -8356,7 +8559,7 @@ bool HTMLEditor::ExtendRangeToIncludeInvisibleNodes(
       atEnd.GetContainer() != editingHost) {
     EditorDOMPoint atFirstInvisibleBRElement;
     for (;;) {
-      WSRunScanner wsScannerAtEnd(*this, atEnd);
+      WSRunScanner wsScannerAtEnd(aHTMLEditor, atEnd);
       WSScanResult forwardScanFromEndResult =
           wsScannerAtEnd.ScanNextVisibleNodeOrBlockBoundaryFrom(atEnd);
       if (forwardScanFromEndResult.ReachedBRElement()) {
@@ -8368,7 +8571,8 @@ bool HTMLEditor::ExtendRangeToIncludeInvisibleNodes(
         NS_ASSERTION(wsScannerAtEnd.GetEndReasonContent() ==
                          forwardScanFromEndResult.BRElementPtr(),
                      "End reason is not the reached <br> element");
-        if (IsVisibleBRElement(wsScannerAtEnd.GetEndReasonContent())) {
+        if (aHTMLEditor.IsVisibleBRElement(
+                wsScannerAtEnd.GetEndReasonContent())) {
           break;
         }
         if (!atFirstInvisibleBRElement.IsSet()) {
