@@ -3216,8 +3216,19 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
                                                     uint32_t icScriptOffset,
                                                     CallFlags flags) {
   if (callInfo_->isInlined()) {
-    // We are transpiling to generate the correct guards. Code for the inlined
-    // function itself will be generated in WarpBuilder::buildInlinedCall.
+    // We are transpiling to generate the correct guards. We also
+    // update the CallInfo to use the correct arguments. Code for the
+    // inlined function itself will be generated in
+    // WarpBuilder::buildInlinedCall.
+    MDefinition* callee = getOperand(calleeId);
+    switch (updateCallInfo(callee, flags)) {
+      case ArgumentLocation::Standard:
+        break;
+      case ArgumentLocation::OOM:
+        return false;
+      default:
+        MOZ_CRASH("Unsupported argument location");
+    }
     return true;
   }
   return emitCallFunction(calleeId, argcId, flags, CallKind::Scripted);
