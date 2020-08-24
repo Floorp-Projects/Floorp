@@ -613,6 +613,7 @@ describe("Top Sites Feed", () => {
   describe("#refresh", () => {
     beforeEach(() => {
       sandbox.stub(feed, "_fetchIcon");
+      feed._startedUp = true;
     });
     it("should wait for tippytop to initialize", async () => {
       feed._tippyTopProvider.initialized = false;
@@ -1011,6 +1012,7 @@ describe("Top Sites Feed", () => {
     });
     it("should still dispatch an action even if there's no target provided", async () => {
       sandbox.stub(feed, "_fetchIcon");
+      feed._startedUp = true;
       await feed.refresh({ broadcast: true });
       assert.calledOnce(feed.store.dispatch);
       assert.propertyVal(
@@ -1354,6 +1356,7 @@ describe("Top Sites Feed", () => {
       feed.store.dispatch = sandbox.stub().callsFake(() => {
         resolvers.shift()();
       });
+      feed._startedUp = true;
       sandbox.stub(feed, "_fetchScreenshot");
     });
     afterEach(() => {
