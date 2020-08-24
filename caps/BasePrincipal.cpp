@@ -877,6 +877,26 @@ NS_IMETHODIMP BasePrincipal::GetIsIpAddress(bool* aIsIpAddress) {
   return NS_OK;
 }
 
+NS_IMETHODIMP BasePrincipal::GetIsLocalIpAddress(bool* aIsIpAddress) {
+  *aIsIpAddress = false;
+
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+  if (NS_FAILED(rv) || !ioService) {
+    return NS_OK;
+  }
+  rv = ioService->HostnameIsLocalIPAddress(prinURI, aIsIpAddress);
+  if (NS_FAILED(rv)) {
+    *aIsIpAddress = false;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 BasePrincipal::GetScheme(nsACString& aScheme) {
   aScheme.Truncate();
