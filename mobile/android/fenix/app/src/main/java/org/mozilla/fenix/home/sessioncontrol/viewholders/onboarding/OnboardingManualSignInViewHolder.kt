@@ -38,7 +38,7 @@ class OnboardingManualSignInViewHolder(view: View) : RecyclerView.ViewHolder(vie
 
     fun bind() {
         val context = itemView.context
-        headerText.text = context.getString(R.string.onboarding_firefox_account_header)
+        headerText.text = context.getString(R.string.onboarding_account_sign_in_header)
     }
 
     companion object {

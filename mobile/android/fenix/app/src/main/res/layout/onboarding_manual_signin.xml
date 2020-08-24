@@ -34,7 +34,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/avatar_icon"
         android:layout_marginStart="52dp"
-        tools:text="@string/onboarding_firefox_account_header"
+        tools:text="@string/onboarding_account_sign_in_header"
     />
 
     <org.mozilla.fenix.utils.LinkTextView

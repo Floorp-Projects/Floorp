@@ -972,8 +972,8 @@
     <string name="onboarding_whats_new_description">Have questions about the redesigned %s? Want to know what’s changed?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Get answers here</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Start syncing bookmarks, passwords, and more with your Firefox account.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Start syncing bookmarks, passwords, and more with your Firefox account.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Learn more</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
