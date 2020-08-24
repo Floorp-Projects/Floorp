@@ -244,9 +244,9 @@ class AddrHostRecord final : public nsHostRecord {
   mozilla::UniquePtr<mozilla::net::NetAddr> addr;
 
   // hold addr_info_lock when calling the blacklist functions
-  bool Blacklisted(mozilla::net::NetAddr* query);
+  bool Blacklisted(const mozilla::net::NetAddr* query);
   void ResetBlacklist();
-  void ReportUnusable(mozilla::net::NetAddr* addr);
+  void ReportUnusable(const mozilla::net::NetAddr* aAddress);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
