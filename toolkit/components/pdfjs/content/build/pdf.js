@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.6.276';
-const pdfjsBuild = '0d5ef5dd';
+const pdfjsVersion = '2.6.302';
+const pdfjsBuild = '0f4fc12c';
 ;
 
 /***/ }),
@@ -1912,7 +1912,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.276',
+    apiVersion: '2.6.302',
     source: {
       data: source.data,
       url: source.url,
@@ -3491,7 +3491,9 @@ class WorkerTransport {
       annotationStorage: annotationStorage && annotationStorage.getAll() || null,
       filename: this._fullReader ? this._fullReader.filename : null
     }).finally(() => {
-      annotationStorage.resetModified();
+      if (annotationStorage) {
+        annotationStorage.resetModified();
+      }
     });
   }
 
@@ -3835,9 +3837,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.276';
+const version = '2.6.302';
 exports.version = version;
-const build = '0d5ef5dd';
+const build = '0f4fc12c';
 exports.build = build;
 
 /***/ }),
@@ -4160,7 +4162,7 @@ class AnnotationStorage {
 
   setValue(key, value) {
     if (this._storage.get(key) !== value) {
-      this.setModified();
+      this._setModified();
     }
 
     this._storage.set(key, value);
@@ -4178,7 +4180,7 @@ class AnnotationStorage {
     return this._storage.size;
   }
 
-  setModified() {
+  _setModified() {
     if (!this._modified) {
       this._modified = true;
 
@@ -9422,6 +9424,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     this.container.className = "choiceWidgetAnnotation";
     const storage = this.annotationStorage;
     const id = this.data.id;
+    storage.getOrCreateValue(id, this.data.fieldValue.length > 0 ? this.data.fieldValue[0] : null);
     const selectElement = document.createElement("select");
     selectElement.disabled = this.data.readOnly;
     selectElement.name = this.data.fieldName;
@@ -9439,9 +9442,8 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       optionElement.textContent = option.displayValue;
       optionElement.value = option.exportValue;
 
-      if (this.data.fieldValue.includes(option.displayValue)) {
+      if (this.data.fieldValue.includes(option.exportValue)) {
         optionElement.setAttribute("selected", true);
-        storage.setValue(id, option.displayValue);
       }
 
       selectElement.appendChild(optionElement);
@@ -9449,7 +9451,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 
     selectElement.addEventListener("input", function (event) {
       const options = event.target.options;
-      const value = options[options.selectedIndex].text;
+      const value = options[options.selectedIndex].value;
       storage.setValue(id, value);
     });
     this.container.appendChild(selectElement);
@@ -9985,7 +9987,7 @@ class AnnotationLayer {
         linkService: parameters.linkService,
         downloadManager: parameters.downloadManager,
         imageResourcesPath: parameters.imageResourcesPath || "",
-        renderInteractiveForms: parameters.renderInteractiveForms || false,
+        renderInteractiveForms: typeof parameters.renderInteractiveForms === "boolean" ? parameters.renderInteractiveForms : true,
         svgFactory: new _display_utils.DOMSVGFactory(),
         annotationStorage: parameters.annotationStorage || new _annotation_storage.AnnotationStorage()
       });
