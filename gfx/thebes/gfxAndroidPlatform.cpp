@@ -103,6 +103,8 @@ gfxAndroidPlatform::gfxAndroidPlatform() {
 gfxAndroidPlatform::~gfxAndroidPlatform() {
   FT_Done_Library(gPlatformFTLibrary);
   gPlatformFTLibrary = nullptr;
+  layers::AndroidHardwareBufferManager::Shutdown();
+  layers::AndroidHardwareBufferApi::Shutdown();
 }
 
 void gfxAndroidPlatform::InitAcceleration() {
@@ -114,6 +116,7 @@ void gfxAndroidPlatform::InitAcceleration() {
   }
   if (gfx::gfxVars::UseAHardwareBufferContent()) {
     layers::AndroidHardwareBufferApi::Init();
+    layers::AndroidHardwareBufferManager::Init();
   }
 }
 

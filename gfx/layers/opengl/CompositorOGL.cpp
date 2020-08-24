@@ -57,7 +57,10 @@
 #  include "mozilla/widget/GtkCompositorWidget.h"
 #endif
 #if MOZ_WIDGET_ANDROID
+#  include "GLContextEGL.h"
+#  include "GLLibraryEGL.h"
 #  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
+#  include "mozilla/layers/AndroidHardwareBuffer.h"
 #endif
 
 #include "GeckoProfiler.h"
@@ -2059,6 +2062,22 @@ void CompositorOGL::InsertFrameDoneSync() {
   }
   mThisFrameDoneSync =
       mGLContext->fFenceSync(LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+#elif defined(MOZ_WIDGET_ANDROID)
+  const auto& gle = gl::GLContextEGL::Cast(mGLContext);
+  const auto& egl = gle->mEgl;
+
+  EGLSync sync = nullptr;
+  if (AndroidHardwareBufferApi::Get()) {
+    sync = egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr);
+  }
+  if (sync) {
+    int fenceFd = egl->fDupNativeFenceFDANDROID(sync);
+    if (fenceFd >= 0) {
+      mReleaseFenceFd = ipc::FileDescriptor(UniqueFileHandle(fenceFd));
+    }
+    egl->fDestroySync(sync);
+    sync = nullptr;
+  }
 #endif
 }
 
@@ -2073,6 +2092,8 @@ void CompositorOGL::WaitForGPU() {
   mPreviousFrameDoneSync = mThisFrameDoneSync;
   mThisFrameDoneSync = nullptr;
 }
+
+ipc::FileDescriptor CompositorOGL::GetReleaseFence() { return mReleaseFenceFd; }
 
 RefPtr<SurfacePoolHandle> CompositorOGL::GetSurfacePoolHandle() {
 #ifdef XP_MACOSX

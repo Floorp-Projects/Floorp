@@ -436,6 +436,18 @@ struct OpNotifyNotUsed {
   uint64_t fwdTransactionId;
 };
 
+struct OpDeliverAcquireFence {
+  PTexture texture;
+  FileDescriptor fenceFd;
+};
+
+struct OpDeliverReleaseFence {
+  FileDescriptor fenceFd;
+  uint64_t bufferId;
+  uint64_t fwdTransactionId;
+  bool usesImageBridge;
+};
+
 union CompositableOperationDetail {
   OpPaintTextureRegion;
 
@@ -445,6 +457,8 @@ union CompositableOperationDetail {
 
   OpUseTexture;
   OpUseComponentAlphaTextures;
+
+  OpDeliverAcquireFence;
 };
 
 struct CompositableOperation {
@@ -506,6 +520,7 @@ struct ImageCompositeNotification {
 
 union AsyncParentMessageData {
   OpNotifyNotUsed;
+  OpDeliverReleaseFence;
 };
 
 struct PaintTiming {

@@ -125,6 +125,19 @@ class AndroidHardwareBufferTextureData : public TextureData {
 
   void OnForwardedToHost() override;
 
+  TextureFlags GetTextureFlags() const override;
+
+  Maybe<uint64_t> GetBufferId() const override;
+
+  mozilla::ipc::FileDescriptor GetAcquireFence() override;
+
+  AndroidHardwareBufferTextureData* AsAndroidHardwareBufferTextureData()
+      override {
+    return this;
+  }
+
+  AndroidHardwareBuffer* GetBuffer() { return mAndroidHardwareBuffer; }
+
  protected:
   AndroidHardwareBufferTextureData(
       AndroidHardwareBuffer* aAndroidHardwareBuffer, gfx::IntSize aSize,

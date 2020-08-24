@@ -248,7 +248,7 @@ bool AndroidHardwareBufferTextureData::Serialize(
   int fd[2];
   if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd) != 0) {
     aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
-        ipc::FileDescriptor(), mSize, mFormat);
+        ipc::FileDescriptor(), mAndroidHardwareBuffer->mId, mSize, mFormat);
     return false;
   }
 
@@ -262,18 +262,21 @@ bool AndroidHardwareBufferTextureData::Serialize(
   int ret = mAndroidHardwareBuffer->SendHandleToUnixSocket(writerFd.get());
   if (ret < 0) {
     aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
-        ipc::FileDescriptor(), mSize, mFormat);
+        ipc::FileDescriptor(), mAndroidHardwareBuffer->mId, mSize, mFormat);
     return false;
   }
 
   aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(readerFd.release()), mSize, mFormat);
+      ipc::FileDescriptor(readerFd.release()), mAndroidHardwareBuffer->mId,
+      mSize, mFormat);
   return true;
 }
 
 bool AndroidHardwareBufferTextureData::Lock(OpenMode aMode) {
   if (!mIsLocked) {
     MOZ_ASSERT(!mAddress);
+
+    mAndroidHardwareBuffer->WaitForBufferOwnership();
 
     uint64_t usage = 0;
     if (aMode & OpenMode::OPEN_READ) {
@@ -283,7 +286,7 @@ bool AndroidHardwareBufferTextureData::Lock(OpenMode aMode) {
       usage |= AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN;
     }
 
-    int ret = mAndroidHardwareBuffer->Lock(usage, -1, 0, &mAddress);
+    int ret = mAndroidHardwareBuffer->Lock(usage, 0, &mAddress);
     if (ret) {
       mAddress = nullptr;
       return false;
@@ -319,11 +322,27 @@ AndroidHardwareBufferTextureData::BorrowDrawTarget() {
 
 void AndroidHardwareBufferTextureData::OnForwardedToHost() {
   if (mIsLocked) {
-    // XXX Need to handle fence fd when harware does rendering.
     mAndroidHardwareBuffer->Unlock(nullptr);
     mAddress = nullptr;
     mIsLocked = false;
   }
+}
+
+TextureFlags AndroidHardwareBufferTextureData::GetTextureFlags() const {
+  return TextureFlags::WAIT_HOST_USAGE_END;
+}
+
+Maybe<uint64_t> AndroidHardwareBufferTextureData::GetBufferId() const {
+  return Some(mAndroidHardwareBuffer->mId);
+}
+
+mozilla::ipc::FileDescriptor
+AndroidHardwareBufferTextureData::GetAcquireFence() {
+  if (!mAndroidHardwareBuffer) {
+    return ipc::FileDescriptor();
+  }
+
+  return mAndroidHardwareBuffer->GetAcquireFence();
 }
 
 #endif  // MOZ_WIDGET_ANDROID
