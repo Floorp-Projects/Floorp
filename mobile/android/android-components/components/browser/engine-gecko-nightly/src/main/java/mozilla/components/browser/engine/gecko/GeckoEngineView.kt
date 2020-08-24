@@ -158,7 +158,7 @@ class GeckoEngineView @JvmOverloads constructor(
     private fun rebind() {
         try {
             currentSession?.let { currentGeckoView.setSession(it.geckoSession) }
-        } catch (e: IllegalStateException) {
+        } catch (e: IllegalArgumentException) {
             // This is to debug "Display not attached" crashes
             val otherActivityClassName =
                 currentSession?.geckoSession?.accessibility?.view?.context?.javaClass?.simpleName
