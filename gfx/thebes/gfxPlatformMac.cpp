@@ -171,10 +171,10 @@ static const char kFontSTIXGeneral[] = "STIXGeneral";
 static const char kFontTamilMN[] = "Tamil MN";
 static const char kFontZapfDingbats[] = "Zapf Dingbats";
 
-void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
-                                            Script aRunScript,
+void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
+                                            eFontPresentation aPresentation,
                                             nsTArray<const char*>& aFontList) {
-  if (ShouldPreferEmojiFont(aCh, aNextCh)) {
+  if (aPresentation == eFontPresentation::Emoji) {
     aFontList.AppendElement(kFontAppleColorEmoji);
   }
 

@@ -863,20 +863,19 @@ void gfxPlatformFontList::GetFontFamilyList(
   }
 }
 
-gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
+gfxFont* gfxPlatformFontList::SystemFindFontForChar(
     uint32_t aCh, uint32_t aNextCh, Script aRunScript,
-    const gfxFontStyle* aStyle, FontVisibility* aVisibility,
-    FontMatchingStats* aFontMatchingStats) {
+    eFontPresentation aPresentation, const gfxFontStyle* aStyle,
+    FontVisibility* aVisibility, FontMatchingStats* aFontMatchingStats) {
   MOZ_ASSERT(!mCodepointsWithNoFonts.test(aCh),
              "don't call for codepoints already known to be unsupported");
-
-  gfxFontEntry* fontEntry = nullptr;
 
   // Try to short-circuit font fallback for U+FFFD, used to represent
   // encoding errors: just use cached family from last time U+FFFD was seen.
   // This helps speed up pages with lots of encoding errors, binary-as-text,
   // etc.
   if (aCh == 0xFFFD) {
+    gfxFontEntry* fontEntry = nullptr;
     if (mReplacementCharFallbackFamily.mIsShared &&
         mReplacementCharFallbackFamily.mShared) {
       fontlist::Face* face =
@@ -897,7 +896,7 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
     // this should never fail, as we must have found U+FFFD in order to set
     // mReplacementCharFallbackFamily at all, but better play it safe
     if (fontEntry && fontEntry->HasCharacter(aCh)) {
-      return fontEntry;
+      return fontEntry->FindOrMakeFont(aStyle);
     }
   }
 
@@ -906,15 +905,35 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
   // search commonly available fonts
   bool common = true;
   FontFamily fallbackFamily;
-  fontEntry =
-      CommonFontFallback(aCh, aNextCh, aRunScript, aStyle, fallbackFamily);
+  gfxFont* candidate = CommonFontFallback(
+      aCh, aNextCh, aRunScript, aPresentation, aStyle, fallbackFamily);
+  gfxFont* font = nullptr;
+  if (candidate) {
+    if (aPresentation == eFontPresentation::Any) {
+      font = candidate;
+    } else {
+      bool hasColorGlyph = candidate->HasColorGlyphFor(aCh, aNextCh);
+      if (hasColorGlyph == (aPresentation == eFontPresentation::Emoji)) {
+        font = candidate;
+      }
+    }
+  }
 
-  // if didn't find a font, do system-wide fallback (except for specials)
+  // If we didn't find a common font, or it was not the preferred type (color
+  // or monochrome), do system-wide fallback (except for specials).
   uint32_t cmapCount = 0;
-  if (!fontEntry) {
+  if (!font) {
     common = false;
-    fontEntry = GlobalFontFallback(aCh, aRunScript, aStyle, cmapCount,
-                                   fallbackFamily, aFontMatchingStats);
+    font = GlobalFontFallback(aCh, aNextCh, aRunScript, aPresentation, aStyle,
+                              cmapCount, fallbackFamily, aFontMatchingStats);
+    // If the font we found doesn't match the requested type, and we also found
+    // a candidate above, prefer that one.
+    if (font && aPresentation != eFontPresentation::Any && candidate) {
+      bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
+      if (hasColorGlyph != (aPresentation == eFontPresentation::Emoji)) {
+        font = candidate;
+      }
+    }
   }
   TimeDuration elapsed = TimeStamp::Now() - start;
 
@@ -927,12 +946,12 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
              "script: %d match: [%s]"
              " time: %dus cmaps: %d\n",
              (common ? "common" : "global"), aCh, static_cast<int>(script),
-             (fontEntry ? fontEntry->Name().get() : "<none>"),
+             (font ? font->GetFontEntry()->Name().get() : "<none>"),
              int32_t(elapsed.ToMicroseconds()), cmapCount));
   }
 
   // no match? add to set of non-matching codepoints
-  if (!fontEntry) {
+  if (!font) {
     mCodepointsWithNoFonts.set(aCh);
   } else {
     *aVisibility = fallbackFamily.mIsShared
@@ -957,18 +976,19 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
   Telemetry::Accumulate(Telemetry::SYSTEM_FONT_FALLBACK_SCRIPT,
                         int(aRunScript) + 1);
 
-  return fontEntry;
+  return font;
 }
 
 #define NUM_FALLBACK_FONTS 8
 
-gfxFontEntry* gfxPlatformFontList::CommonFontFallback(
+gfxFont* gfxPlatformFontList::CommonFontFallback(
     uint32_t aCh, uint32_t aNextCh, Script aRunScript,
-    const gfxFontStyle* aMatchStyle, FontFamily& aMatchedFamily) {
+    eFontPresentation aPresentation, const gfxFontStyle* aMatchStyle,
+    FontFamily& aMatchedFamily) {
   AutoTArray<const char*, NUM_FALLBACK_FONTS> defaultFallbacks;
-  gfxPlatform::GetPlatform()->GetCommonFallbackFonts(aCh, aNextCh, aRunScript,
-                                                     defaultFallbacks);
-  GlobalFontMatch data(aCh, *aMatchStyle);
+  gfxPlatform::GetPlatform()->GetCommonFallbackFonts(
+      aCh, aRunScript, aPresentation, defaultFallbacks);
+  GlobalFontMatch data(aCh, aNextCh, *aMatchStyle, aPresentation);
   if (SharedFontList()) {
     for (const auto name : defaultFallbacks) {
       fontlist::Family* family = FindSharedFamily(nsDependentCString(name));
@@ -978,7 +998,7 @@ gfxFontEntry* gfxPlatformFontList::CommonFontFallback(
       family->SearchAllFontsForChar(SharedFontList(), &data);
       if (data.mBestMatch) {
         aMatchedFamily = FontFamily(family);
-        return data.mBestMatch;
+        return data.mBestMatch->FindOrMakeFont(aMatchStyle);
       }
     }
   } else {
@@ -991,15 +1011,16 @@ gfxFontEntry* gfxPlatformFontList::CommonFontFallback(
       fallback->FindFontForChar(&data);
       if (data.mBestMatch) {
         aMatchedFamily = FontFamily(fallback);
-        return data.mBestMatch;
+        return data.mBestMatch->FindOrMakeFont(aMatchStyle);
       }
     }
   }
   return nullptr;
 }
 
-gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
-    const uint32_t aCh, Script aRunScript, const gfxFontStyle* aMatchStyle,
+gfxFont* gfxPlatformFontList::GlobalFontFallback(
+    uint32_t aCh, uint32_t aNextCh, Script aRunScript,
+    eFontPresentation aPresentation, const gfxFontStyle* aMatchStyle,
     uint32_t& aCmapCount, FontFamily& aMatchedFamily,
     FontMatchingStats* aFontMatchingStats) {
   bool useCmaps = IsFontFamilyWhitelistActive() ||
@@ -1012,12 +1033,30 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
     if (fe) {
       if (aMatchedFamily.mIsShared) {
         if (IsVisibleToCSS(*aMatchedFamily.mShared)) {
-          return fe;
+          gfxFont* font = fe->FindOrMakeFont(aMatchStyle);
+          if (font) {
+            if (aPresentation == eFontPresentation::Any) {
+              return font;
+            }
+            bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
+            if (hasColorGlyph == (aPresentation == eFontPresentation::Emoji)) {
+              return font;
+            }
+          }
         }
         rejectedFallbackVisibility = aMatchedFamily.mShared->Visibility();
       } else {
         if (IsVisibleToCSS(*aMatchedFamily.mUnshared)) {
-          return fe;
+          gfxFont* font = fe->FindOrMakeFont(aMatchStyle);
+          if (font) {
+            if (aPresentation == eFontPresentation::Any) {
+              return font;
+            }
+            bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
+            if (hasColorGlyph == (aPresentation == eFontPresentation::Emoji)) {
+              return font;
+            }
+          }
         }
         rejectedFallbackVisibility = aMatchedFamily.mUnshared->Visibility();
       }
@@ -1025,7 +1064,7 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
   }
 
   // otherwise, try to find it among local fonts
-  GlobalFontMatch data(aCh, *aMatchStyle);
+  GlobalFontMatch data(aCh, aNextCh, *aMatchStyle, aPresentation);
   if (SharedFontList()) {
     fontlist::Family* families = SharedFontList()->Families();
     if (families) {
@@ -1042,7 +1081,7 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
       }
       if (data.mBestMatch) {
         aMatchedFamily = FontFamily(data.mMatchedSharedFamily);
-        return data.mBestMatch;
+        return data.mBestMatch->FindOrMakeFont(aMatchStyle);
       }
     }
   } else {
@@ -1064,7 +1103,7 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
     aCmapCount = data.mCmapsTested;
     if (data.mBestMatch) {
       aMatchedFamily = FontFamily(data.mMatchedFamily);
-      return data.mBestMatch;
+      return data.mBestMatch->FindOrMakeFont(aMatchStyle);
     }
   }
 
