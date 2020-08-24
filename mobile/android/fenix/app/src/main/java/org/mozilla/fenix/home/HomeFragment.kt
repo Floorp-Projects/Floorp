@@ -42,6 +42,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.play.core.ktx.launchReview
+import com.google.android.play.core.ktx.requestReview
+import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.android.synthetic.main.no_collections_message.view.*
@@ -567,8 +570,24 @@ class HomeFragment : Fragment() {
             recommendPrivateBrowsingShortcut()
         }
 
+        // In-app review prompt
+        requireContext().settings().incrementNumTimesOpenedAfterInstall()
+        handleInAppReviewPrompt()
+
         // We only want this observer live just before we navigate away to the collection creation screen
         requireComponents.core.tabCollectionStorage.unregister(collectionStorageObserver)
+    }
+
+    private fun handleInAppReviewPrompt() {
+        if (requireContext().settings().shouldShowUserFeedbackPrompt) {
+            lifecycleScope.launch {
+                val manager = ReviewManagerFactory.create(requireContext())
+                val reviewInfo = manager.requestReview()
+                manager.launchReview(requireActivity(), reviewInfo)
+                
+                requireContext().settings().incrementNumTimesFeedbackPromptShown()
+            }
+        }
     }
 
     private fun dispatchModeChanges(mode: Mode) {

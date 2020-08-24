@@ -42,6 +42,9 @@ object Versions {
 
     const val google_ads_id_version = "16.0.0"
 
+    const val google_play_store_version = "1.8.0"
+    const val google_play_core_ktx_version = "1.8.1"
+
     const val airbnb_lottie = "3.4.0"
 }
 
@@ -208,6 +211,10 @@ object Deps {
     const val robolectric = "org.robolectric:robolectric:4.3.1"
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
+
+    // Required for in-app reviews
+    const val google_play_store = "com.google.android.play:core:${Versions.google_play_store_version}"
+    const val google_play_core_ktx = "com.google.android.play:core-ktx:${Versions.google_play_core_ktx_version}"
 
     const val lottie = "com.airbnb.android:lottie:${Versions.airbnb_lottie}"
 

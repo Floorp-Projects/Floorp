@@ -439,6 +439,9 @@ dependencies {
 
     implementation Deps.google_ads_id // Required for the Google Advertising ID
 
+    implementation Deps.google_play_store // Required for in-app reviews
+    implementation Deps.google_play_core_ktx // Required for in-app reviews
+
     androidTestImplementation Deps.uiautomator
 // Removed pending AndroidX fixes
     androidTestImplementation "tools.fastlane:screengrab:2.0.0"
