@@ -61,7 +61,6 @@ struct DefaultJitOptions {
   bool typeInference;
 #endif
   bool warpBuilder;
-  bool warpTrialInlining;
   bool jitForTrustedPrincipals;
   bool nativeRegExp;
   bool forceInlineCaches;

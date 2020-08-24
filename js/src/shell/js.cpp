@@ -10497,9 +10497,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.warpBuilder = true;
   }
 #endif
-  if (op.getBoolOption("warp-trial-inlining")) {
-    jit::JitOptions.warpTrialInlining = true;
-  }
 
   int32_t inliningEntryThreshold = op.getIntOption("inlining-entry-threshold");
   if (inliningEntryThreshold > 0) {
@@ -11031,9 +11028,6 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "warp", "No-op on non-Nightly") ||
 #endif
       !op.addBoolOption('\0', "no-warp", "Disable WarpBuilder (default)") ||
-      !op.addBoolOption('\0', "warp-trial-inlining",
-                        "Enable trial inlining "
-                        "for Warp") ||
       !op.addIntOption('\0', "inlining-entry-threshold", "COUNT",
                        "The minimum stub entry count before trial-inlining a"
                        " call",
