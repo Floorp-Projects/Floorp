@@ -28,7 +28,19 @@ class HyperTextIterator {
 
   bool Next();
 
-  bool Normalize();
+  // If offset is set to a child hyperlink, adjust it so it set on the first offset
+  // in the deepest link.
+  // Or, if the offset to the last character, set it to the outermost end offset
+  // in an ancestor.
+  // Returns true if iterator was mutated.
+  bool NormalizeForward();
+
+  // If offset is set right after child hyperlink, adjust it so it set on the last offset
+  // in the deepest link.
+  // Or, if the offset is on the first character of a link, set it to the outermost start offset
+  // in an ancestor.
+  // Returns true if iterator was mutated.
+  bool NormalizeBackward();
 
   HyperTextAccessible* mCurrentContainer;
   int32_t mCurrentStartOffset;
@@ -41,7 +53,7 @@ class HyperTextIterator {
   int32_t mEndOffset;
 };
 
-bool HyperTextIterator::Normalize() {
+bool HyperTextIterator::NormalizeForward() {
   if (mCurrentStartOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT ||
       mCurrentStartOffset >= static_cast<int32_t>(mCurrentContainer->CharacterCount())) {
     // If this is the end of the current container, mutate to its parent's
@@ -52,17 +64,12 @@ bool HyperTextIterator::Normalize() {
     }
     uint32_t endOffset = mCurrentContainer->EndOffset();
     if (endOffset != 0) {
-      Accessible* parent = mCurrentContainer->Parent();
-      if (!parent->IsLink()) {
-        // If the parent is the not a link, its a root doc.
-        return false;
-      }
-      mCurrentContainer = parent->AsHyperText();
+      mCurrentContainer = mCurrentContainer->Parent()->AsHyperText();
       mCurrentStartOffset = endOffset;
 
-      // Call Normalize recursively to get top-most link if at the end of one,
+      // Call NormalizeForward recursively to get top-most link if at the end of one,
       // or innermost link if at the beginning.
-      Normalize();
+      NormalizeForward();
       return true;
     }
   } else {
@@ -74,9 +81,45 @@ bool HyperTextIterator::Normalize() {
       mCurrentContainer = link->AsHyperText();
       mCurrentStartOffset = 0;
 
-      // Call Normalize recursively to get top-most link if at the end of one,
-      // or innermost link if at the beginning.
-      Normalize();
+      // Call NormalizeForward recursively to get top-most embedding ancestor
+      // if at the end of one, or innermost link if at the beginning.
+      NormalizeForward();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool HyperTextIterator::NormalizeBackward() {
+  if (mCurrentStartOffset == 0) {
+    // If this is the start of the current container, mutate to its parent's
+    // start offset.
+    if (!mCurrentContainer->IsLink()) {
+      // If we are not a link, it is a root hypertext accessible.
+      return false;
+    }
+
+    uint32_t startOffset = mCurrentContainer->StartOffset();
+    mCurrentContainer = mCurrentContainer->Parent()->AsHyperText();
+    mCurrentStartOffset = startOffset;
+
+    // Call NormalizeBackward recursively to get top-most link if at the beginning of one,
+    // or innermost link if at the end.
+    NormalizeBackward();
+    return true;
+  } else {
+    Accessible* link = mCurrentContainer->GetChildAtOffset(mCurrentStartOffset - 1);
+
+    // If there is a link before this offset, mutate into it,
+    // and set the offset to its last character.
+    if (link && link->IsHyperText()) {
+      mCurrentContainer = link->AsHyperText();
+      mCurrentStartOffset = mCurrentContainer->CharacterCount();
+
+      // Call NormalizeBackward recursively to get top-most top-most embedding ancestor
+      // if at the beginning of one, or innermost link if at the end.
+      NormalizeBackward();
       return true;
     }
   }
@@ -104,7 +147,7 @@ bool HyperTextIterator::Next() {
     return false;
   } else {
     mCurrentStartOffset = mCurrentEndOffset;
-    Normalize();
+    NormalizeForward();
   }
 
   int32_t nextLinkOffset = NextLinkOffset();
@@ -176,7 +219,8 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset, HyperTextAccessible**
                                           int32_t* aEndOffset) {
   TextPoint here(this, aOffset);
   TextPoint end = FindTextPoint(aOffset, eDirNext, eSelectWord, eEndWord);
-  if (!end.mContainer) {
+  if (!end.mContainer || end < here) {
+    // If we didn't find a word end, or if we wrapped around (bug 1652833), return with no result.
     return;
   }
 
@@ -204,9 +248,14 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset, HyperTextAccessible**
 
 void HyperTextAccessibleWrap::NextClusterAt(int32_t aOffset, HyperTextAccessible** aNextContainer,
                                             int32_t* aNextOffset) {
+  TextPoint here(this, aOffset);
   TextPoint next = FindTextPoint(aOffset, eDirNext, eSelectCluster, eDefaultBehavior);
 
-  if (next.mOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT && next.mContainer == Document()) {
+  if ((next.mOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT &&
+       next.mContainer == Document()) ||
+      (next < here)) {
+    // If we reached the end of the doc, or if we wrapped to the start of the doc
+    // return given offset as-is.
     *aNextContainer = this;
     *aNextOffset = aOffset;
   } else {
@@ -229,7 +278,11 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(int32_t aOffset, nsDirection aD
   // Layout can remain trapped in an editable. We normalize out of
   // it if we are in its last offset.
   HyperTextIterator iter(this, aOffset, this, CharacterCount());
-  iter.Normalize();
+  if (aDirection == eDirNext) {
+    iter.NormalizeForward();
+  } else {
+    iter.NormalizeBackward();
+  }
 
   // Find a leaf accessible frame to start with. PeekOffset wants this.
   HyperTextAccessible* text = iter.mCurrentContainer;
@@ -248,6 +301,17 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(int32_t aOffset, nsDirection aD
     }
 
     child = text->GetChildAt(childIdx);
+    if (child->IsHyperText() && !child->ChildCount()) {
+      // If this is a childless hypertext, jump to its
+      // previous or next sibling, depending on
+      // direction.
+      if (aDirection == eDirPrevious && childIdx > 0) {
+        child = text->GetChildAt(--childIdx);
+      } else if (aDirection == eDirNext &&
+                 childIdx + 1 < static_cast<int32_t>(text->ChildCount())) {
+        child = text->GetChildAt(++childIdx);
+      }
+    }
 
     innerOffset -= text->GetChildOffset(childIdx);
 
