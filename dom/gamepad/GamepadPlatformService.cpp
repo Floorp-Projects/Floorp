@@ -207,20 +207,22 @@ void GamepadPlatformService::AddChannelParent(
   MOZ_ASSERT(!mChannelParents.Contains(aParent));
 
   // We use mutex here to prevent race condition with monitor thread
-  MutexAutoLock autoLock(mMutex);
-  mChannelParents.AppendElement(aParent);
+  {
+    MutexAutoLock autoLock(mMutex);
+    mChannelParents.AppendElement(aParent);
 
-  // For a new GamepadEventChannel, we have to send the exising GamepadAdded
-  // to it to make it can have the same amount of gamepads with others.
-  if (mChannelParents.Length() > 1) {
-    for (const auto& evt : mGamepadAdded) {
-      GamepadChangeEventBody body(evt.second);
-      GamepadChangeEvent e(evt.first, GamepadServiceType::Standard, body);
-      aParent->DispatchUpdateEvent(e);
+    // For a new GamepadEventChannel, we have to send the exising GamepadAdded
+    // to it to make it can have the same amount of gamepads with others.
+    if (mChannelParents.Length() > 1) {
+      for (const auto& evt : mGamepadAdded) {
+        GamepadChangeEventBody body(evt.second);
+        GamepadChangeEvent e(evt.first, GamepadServiceType::Standard, body);
+        aParent->DispatchUpdateEvent(e);
+      }
     }
-  }
 
-  FlushPendingEvents();
+    FlushPendingEvents();
+  }
 
   StartGamepadMonitoring();
 }
