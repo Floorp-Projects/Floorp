@@ -407,7 +407,8 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
           null,
           null,
           persist,
-          isPrivate
+          isPrivate,
+          Ci.nsITransfer.DOWNLOAD_ACCEPTABLE
         );
         persist.progressListener = transfer;
 
