@@ -83,7 +83,7 @@ GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
 REMOTE_CPPUNITTESTS = \
 	$(PYTHON3) -u $(topsrcdir)/testing/remotecppunittests.py \
 	  --xre-path=$(DEPTH)/dist/bin \
-	  --localLib=$(DEPTH)/dist/fennec \
+	  --localLib=$(DEPTH)/dist/geckoview \
 	  --deviceIP=${TEST_DEVICE} \
 	  $(TEST_PATH) $(EXTRA_TEST_ARGS)
 
