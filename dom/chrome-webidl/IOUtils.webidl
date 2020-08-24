@@ -14,6 +14,13 @@ namespace IOUtils {
    */
   Promise<Uint8Array> read(DOMString path, optional unsigned long maxBytes);
   /**
+   * Reads the UTF-8 text file located at |path| and returns the decoded
+   * contents as a |DOMString|.
+   *
+   * @param path An absolute file path.
+   */
+  Promise<DOMString> readUTF8(DOMString path);
+  /**
    * Attempts to safely write |data| to a file at |path|.
    *
    * This operation can be made atomic by specifying the |tmpFile| option. If
@@ -28,6 +35,14 @@ namespace IOUtils {
    * @param data    Data to write to the file at path.
    */
   Promise<unsigned long long> writeAtomic(DOMString path, Uint8Array data, optional WriteAtomicOptions options = {});
+  /**
+   * Attempts to encode |string| to UTF-8, then safely write the result to a
+   * file at |path|. Works exactly like |writeAtomic|.
+   *
+   * @param path      An absolute file path.
+   * @param string    A string to encode to UTF-8 and write to the file at path.
+   */
+  Promise<unsigned long long> writeAtomicUTF8(DOMString path, DOMString string, optional WriteAtomicOptions options = {});
   /**
    * Moves the file from |sourcePath| to |destPath|, creating necessary parents.
    * If |destPath| is a directory, then the source file will be moved into the
