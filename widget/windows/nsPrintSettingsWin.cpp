@@ -497,6 +497,9 @@ nsPrintSettingsWin& nsPrintSettingsWin::operator=(
     mDevMode = nullptr;
   }
 
+  mPrintableWidthInInches = rhs.mPrintableWidthInInches;
+  mPrintableHeightInInches = rhs.mPrintableHeightInInches;
+
   return *this;
 }
 
