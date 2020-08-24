@@ -5,6 +5,10 @@
 <title>emoji fallback to text font</title>
 <style>
 #test {
+  /* Because of the presence of the U+FE0E variation selectors, we should prefer the
+     the monochrome fonts even though color-emoji fonts are listed first. */
+  font-family: 'Segoe UI Emoji', 'Twemoji Mozilla', 'Apple Color Emoji', 'Noto Color Emoji',
+               'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols';
   font-size: 24pt;
 }
 </style>

@@ -182,19 +182,6 @@ inline EmojiPresentation GetEmojiPresentation(uint32_t aCh) {
   return TextDefault;
 }
 
-inline bool ShouldPreferEmojiFont(uint32_t aCh, uint32_t aNextCh) {
-  EmojiPresentation emoji = GetEmojiPresentation(aCh);
-  if (emoji != EmojiPresentation::TextOnly) {
-    if (aNextCh == kVariationSelector16 ||
-        (aNextCh != kVariationSelector15 &&
-         emoji == EmojiPresentation::EmojiDefault) ||
-        (aNextCh >= kEmojiSkinToneFirst && aNextCh <= kEmojiSkinToneLast)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 // returns the simplified Gen Category as defined in nsUGenCategory
 inline nsUGenCategory GetGenCategory(uint32_t aCh) {
   return sDetailedToGeneralCategory[GetGeneralCategory(aCh)];
