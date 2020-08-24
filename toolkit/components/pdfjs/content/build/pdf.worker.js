@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.276';
-const pdfjsBuild = '0d5ef5dd';
+const pdfjsVersion = '2.6.302';
+const pdfjsBuild = '0f4fc12c';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.276';
+    const workerVersion = '2.6.302';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -19385,11 +19385,12 @@ class WidgetAnnotation extends Annotation {
     this.ref = params.ref;
     data.annotationType = _util.AnnotationType.WIDGET;
     data.fieldName = this._constructFieldName(dict);
-    data.fieldValue = (0, _core_utils.getInheritableProperty)({
+    const fieldValue = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "V",
       getArray: true
     });
+    data.fieldValue = this._decodeFormValue(fieldValue);
     data.alternativeText = (0, _util.stringToPDFString)(dict.get("TU") || "");
     data.defaultAppearance = (0, _core_utils.getInheritableProperty)({
       dict,
@@ -19452,6 +19453,18 @@ class WidgetAnnotation extends Annotation {
     }
 
     return fieldName.join(".");
+  }
+
+  _decodeFormValue(formValue) {
+    if (Array.isArray(formValue)) {
+      return formValue.filter(item => (0, _util.isString)(item)).map(item => (0, _util.stringToPDFString)(item));
+    } else if ((0, _primitives.isName)(formValue)) {
+      return (0, _util.stringToPDFString)(formValue.name);
+    } else if ((0, _util.isString)(formValue)) {
+      return (0, _util.stringToPDFString)(formValue);
+    }
+
+    return null;
   }
 
   hasFieldFlag(flag) {
@@ -19670,7 +19683,11 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     super(params);
     this._hasText = true;
     const dict = params.dict;
-    this.data.fieldValue = (0, _util.stringToPDFString)(this.data.fieldValue || "");
+
+    if (!(0, _util.isString)(this.data.fieldValue)) {
+      this.data.fieldValue = "";
+    }
+
     let alignment = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "Q"
@@ -19935,36 +19952,29 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   }
 
   _processCheckBox(params) {
-    if ((0, _primitives.isName)(this.data.fieldValue)) {
-      this.data.fieldValue = this.data.fieldValue.name;
-    }
-
     const customAppearance = params.dict.get("AP");
 
     if (!(0, _primitives.isDict)(customAppearance)) {
       return;
     }
 
-    const exportValueOptionsDict = customAppearance.get("D");
-
-    if (!(0, _primitives.isDict)(exportValueOptionsDict)) {
-      return;
-    }
-
-    const exportValues = exportValueOptionsDict.getKeys();
-    const hasCorrectOptionCount = exportValues.length === 2;
-
-    if (!hasCorrectOptionCount) {
-      return;
-    }
-
-    this.data.exportValue = exportValues[0] === "Off" ? exportValues[1] : exportValues[0];
     const normalAppearance = customAppearance.get("N");
 
     if (!(0, _primitives.isDict)(normalAppearance)) {
       return;
     }
 
+    const exportValues = normalAppearance.getKeys();
+
+    if (!exportValues.includes("Off")) {
+      exportValues.push("Off");
+    }
+
+    if (exportValues.length !== 2) {
+      return;
+    }
+
+    this.data.exportValue = exportValues[0] === "Off" ? exportValues[1] : exportValues[0];
     this.checkedAppearance = normalAppearance.get(this.data.exportValue);
     this.uncheckedAppearance = normalAppearance.get("Off") || null;
   }
@@ -19978,7 +19988,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
       if ((0, _primitives.isName)(fieldParentValue)) {
         this.parent = params.dict.getRaw("Parent");
-        this.data.fieldValue = fieldParentValue.name;
+        this.data.fieldValue = this._decodeFormValue(fieldParentValue);
       }
     }
 
@@ -20036,14 +20046,16 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
         const option = xref.fetchIfRef(options[i]);
         const isOptionArray = Array.isArray(option);
         this.data.options[i] = {
-          exportValue: isOptionArray ? xref.fetchIfRef(option[0]) : option,
-          displayValue: (0, _util.stringToPDFString)(isOptionArray ? xref.fetchIfRef(option[1]) : option)
+          exportValue: this._decodeFormValue(isOptionArray ? xref.fetchIfRef(option[0]) : option),
+          displayValue: this._decodeFormValue(isOptionArray ? xref.fetchIfRef(option[1]) : option)
         };
       }
     }
 
-    if (!Array.isArray(this.data.fieldValue)) {
+    if ((0, _util.isString)(this.data.fieldValue)) {
       this.data.fieldValue = [this.data.fieldValue];
+    } else if (!this.data.fieldValue) {
+      this.data.fieldValue = [];
     }
 
     this.data.combo = this.hasFieldFlag(_util.AnnotationFieldFlag.COMBO);
