@@ -522,7 +522,8 @@ nsresult HTMLEditor::SetFinalPosition(int32_t aX, int32_t aY) {
   y.AppendInt(newY);
 
   // we want one transaction only from a user's point of view
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
 
   if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
@@ -588,7 +589,8 @@ nsresult HTMLEditor::SetPositionToAbsoluteOrStatic(Element& aElement,
 nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
 
   int32_t x, y;
   DebugOnly<nsresult> rvIgnored = GetElementOrigin(aElement, x, y);
@@ -619,7 +621,8 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
 }
 
 nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
 
   DebugOnly<nsresult> rvIgnored = NS_OK;
   rvIgnored = mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::position,
@@ -701,7 +704,8 @@ NS_IMETHODIMP HTMLEditor::GetGridSize(uint32_t* aSize) {
 
 // self-explanatory
 void HTMLEditor::SetTopAndLeft(Element& aElement, int32_t aX, int32_t aY) {
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
   DebugOnly<nsresult> rvIgnored = NS_OK;
   rvIgnored =
       mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);

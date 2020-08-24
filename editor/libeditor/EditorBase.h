@@ -1924,7 +1924,9 @@ class EditorBase : public nsIEditor,
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void BeginPlaceholderTransaction(
       nsStaticAtom& aTransactionName);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void EndPlaceholderTransaction();
+  enum class ScrollSelectionIntoView { No, Yes };
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void EndPlaceholderTransaction(
+      ScrollSelectionIntoView aScrollSelectionIntoView);
 
   void BeginUpdateViewBatch();
   MOZ_CAN_RUN_SCRIPT void EndUpdateViewBatch();
@@ -2328,21 +2330,28 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoPlaceholderBatch final {
    public:
-    explicit AutoPlaceholderBatch(EditorBase& aEditorBase)
-        : mEditorBase(aEditorBase) {
+    AutoPlaceholderBatch(EditorBase& aEditorBase,
+                         ScrollSelectionIntoView aScrollSelectionIntoView)
+        : mEditorBase(aEditorBase),
+          mScrollSelectionIntoView(aScrollSelectionIntoView) {
       mEditorBase->BeginPlaceholderTransaction(*nsGkAtoms::_empty);
     }
 
     AutoPlaceholderBatch(EditorBase& aEditorBase,
-                         nsStaticAtom& aTransactionName)
-        : mEditorBase(aEditorBase) {
+                         nsStaticAtom& aTransactionName,
+                         ScrollSelectionIntoView aScrollSelectionIntoView)
+        : mEditorBase(aEditorBase),
+          mScrollSelectionIntoView(aScrollSelectionIntoView) {
       mEditorBase->BeginPlaceholderTransaction(aTransactionName);
     }
 
-    ~AutoPlaceholderBatch() { mEditorBase->EndPlaceholderTransaction(); }
+    ~AutoPlaceholderBatch() {
+      mEditorBase->EndPlaceholderTransaction(mScrollSelectionIntoView);
+    }
 
    protected:
     OwningNonNull<EditorBase> mEditorBase;
+    ScrollSelectionIntoView mScrollSelectionIntoView;
   };
 
   /**

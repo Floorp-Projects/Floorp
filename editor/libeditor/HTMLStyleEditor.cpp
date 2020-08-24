@@ -77,7 +77,10 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  // XXX Due to bug 1659276 and bug 1659924, we should not scroll selection
+  //     into view after setting the new style.
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::No);
 
   nsAtom* property = &aProperty;
   nsAtom* attribute = aAttribute;
@@ -220,7 +223,8 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
     return result.Rv();
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertElement, nsIEditor::eNext, ignoredError);
@@ -1615,7 +1619,8 @@ nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eRemoveAllTextProperties, nsIEditor::eNext,
@@ -1788,7 +1793,8 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
     return result.Rv();
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eRemoveTextProperty, nsIEditor::eNext,
@@ -2149,7 +2155,8 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
   }
 
   // Wrap with txn batching, rules sniffing, and selection preservation code
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSetTextProperty, nsIEditor::eNext, ignoredError);
