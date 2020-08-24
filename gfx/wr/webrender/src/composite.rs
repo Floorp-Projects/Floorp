@@ -113,7 +113,12 @@ pub enum ExternalSurfaceDependency {
 /// For now, we support only YUV images as compositor surfaces, but in future
 /// this will also support RGBA images.
 pub struct ExternalSurfaceDescriptor {
+    // Rectangle of this surface in owning picture's coordinate space
     pub local_rect: PictureRect,
+    // Rectangle of this surface in the compositor local space
+    // TODO(gw): Switch this to CompositorSurfaceRect (CompositorSurfacePixel) in compositor trait.
+    pub surface_rect: DeviceRect,
+    // Rectangle of this surface in true device pixels
     pub device_rect: DeviceRect,
     pub local_clip_rect: PictureRect,
     pub clip_rect: DeviceRect,
@@ -707,19 +712,12 @@ impl CompositeState {
                 },
             }
 
-            // Just use the device_rect for the tile's clip, since we'll clip
-            // in the compositor instead.
-            let tile_clip = if self.compositor_kind.supports_transforms() {
-                external_surface.device_rect
-            } else {
-                clip_rect
-            };
             let tile = CompositeTile {
                 surface,
-                rect: external_surface.device_rect,
+                rect: external_surface.surface_rect,
                 valid_rect: external_surface.device_rect.translate(-external_surface.device_rect.origin.to_vector()),
                 dirty_rect: external_surface.device_rect.translate(-external_surface.device_rect.origin.to_vector()),
-                clip_rect: tile_clip,
+                clip_rect,
                 z_id: external_surface.z_id,
             };
 

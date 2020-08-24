@@ -3052,16 +3052,16 @@ impl TileCacheInstance {
             return true;
         }
 
+        let world_rect = pic_to_world_mapper
+            .map(&prim_rect)
+            .expect("bug: unable to map the primitive to world space");
+        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
+
         // TODO(gw): Is there any case where if the primitive ends up on a fractional
         //           boundary we want to _skip_ promoting to a compositor surface and
         //           draw it as part of the content?
-        let (device_rect, transform) = match composite_state.compositor_kind {
+        let (surface_rect, transform) = match composite_state.compositor_kind {
             CompositorKind::Draw { .. } => {
-                let world_rect = pic_to_world_mapper
-                    .map(&prim_rect)
-                    .expect("bug: unable to map the primitive to world space");
-                let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
-
                 (device_rect, Transform3D::identity())
             }
             CompositorKind::Native { .. } => {
@@ -3084,8 +3084,8 @@ impl TileCacheInstance {
 
         let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
-        if device_rect.size.width >= MAX_COMPOSITOR_SURFACES_SIZE ||
-           device_rect.size.height >= MAX_COMPOSITOR_SURFACES_SIZE {
+        if surface_rect.size.width >= MAX_COMPOSITOR_SURFACES_SIZE ||
+           surface_rect.size.height >= MAX_COMPOSITOR_SURFACES_SIZE {
                return false;
         }
 
@@ -3109,7 +3109,7 @@ impl TileCacheInstance {
                 (None, None)
             }
             CompositorKind::Native { .. } => {
-                let native_surface_size = device_rect.size.round().to_i32();
+                let native_surface_size = surface_rect.size.round().to_i32();
 
                 let key = ExternalNativeSurfaceKey {
                     image_keys: *api_keys,
@@ -3135,7 +3135,7 @@ impl TileCacheInstance {
                                     DeviceIntPoint::zero(),
                                     native_surface_size,
                                     true,
-                                ); 
+                                );
 
                                 let tile_id = NativeTileId {
                                     surface_id: native_surface_id,
@@ -3203,6 +3203,7 @@ impl TileCacheInstance {
             dependency,
             image_rendering,
             device_rect,
+            surface_rect,
             clip_rect,
             transform: transform.cast_unit(),
             z_id: composite_state.z_generator.next(),
