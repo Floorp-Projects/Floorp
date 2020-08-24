@@ -48,7 +48,10 @@ MediaShutdownManager& MediaShutdownManager::Instance() {
 
 static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
   nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
-  MOZ_RELEASE_ASSERT(svc);
+  if (!svc) {
+    LOGW("Failed to get shutdown service in MediaShutdownManager!");
+    return nullptr;
+  }
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier;
   nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
@@ -71,9 +74,17 @@ void MediaShutdownManager::InitStatics() {
   sInstance = new MediaShutdownManager();
   MOZ_DIAGNOSTIC_ASSERT(sInstance);
 
-  nsresult rv = GetShutdownBarrier()->AddBlocker(
-      sInstance, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      u"MediaShutdownManager shutdown"_ns);
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+
+  if (!barrier) {
+    LOGW("Failed to get barrier, cannot add shutdown blocker!");
+    sInitPhase = InitFailed;
+    return;
+  }
+
+  nsresult rv =
+      barrier->AddBlocker(sInstance, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                          __LINE__, u"MediaShutdownManager shutdown"_ns);
   if (NS_FAILED(rv)) {
     LOGW("Failed to add shutdown blocker! rv=%x", uint32_t(rv));
     sInitPhase = InitFailed;
@@ -86,7 +97,14 @@ void MediaShutdownManager::RemoveBlocker() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(sInitPhase == XPCOMShutdownStarted);
   MOZ_ASSERT(mDecoders.Count() == 0);
-  GetShutdownBarrier()->RemoveBlocker(this);
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+  // xpcom should still be available because we blocked shutdown by having a
+  // blocker. Until it completely shuts down we should still be able to get
+  // the barrier.
+  MOZ_RELEASE_ASSERT(
+      barrier,
+      "Failed to get shutdown barrier, cannot remove shutdown blocker!");
+  barrier->RemoveBlocker(this);
   // Clear our singleton reference. This will probably delete
   // this instance, so don't deref |this| clearing sInstance.
   sInitPhase = XPCOMShutdownEnded;
