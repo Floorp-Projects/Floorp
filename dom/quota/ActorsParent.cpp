@@ -2400,20 +2400,14 @@ int64_t GetLastModifiedTime(nsIFile* aFile, bool aPersistent) {
   return timestamp;
 }
 
-bool FileAlreadyExists(nsresult aValue) {
-  return aValue == NS_ERROR_FILE_ALREADY_EXISTS;
-}
-
-bool FileCorrupted(nsresult aValue) {
-  return aValue == NS_ERROR_FILE_CORRUPTED;
-}
-
 nsresult EnsureDirectory(nsIFile* aDirectory, bool* aCreated) {
   AssertIsOnIOThread();
 
-  QM_TRY_VAR(const bool exists,
-             ToResult(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755),
-                      FileAlreadyExists));
+  // TODO: Convert to mapOrElse once mozilla::Result supports it.
+  QM_TRY_VAR(const auto exists,
+             ToResult(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755))
+                 .andThen(OkToOk<false>)
+                 .orElse(ErrToOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, true>));
 
   if (exists) {
     bool isDirectory;
@@ -6442,17 +6436,14 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     }
   }
 
-  nsCOMPtr<mozIStorageConnection> connection;
+  QM_TRY_VAR(auto connection,
+             ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
+                 std::mem_fn(&mozIStorageService::OpenUnsharedDatabase), ss,
+                 storageFile)
+                 .orElse(ErrToOkOrErr<NS_ERROR_FILE_CORRUPTED, nullptr,
+                                      nsCOMPtr<mozIStorageConnection>>));
 
-  // TODO: Result<V, E> could have own mapping function for filtering out
-  //       NS_ERROR_FILE_CORRUPTED.
-  // TODO: We can then use ToResultInvoke here (like below).
-  QM_TRY_VAR(const auto corrupted,
-             ToResult(ss->OpenUnsharedDatabase(storageFile,
-                                               getter_AddRefs(connection)),
-                      FileCorrupted));
-
-  if (corrupted) {
+  if (!connection) {
     // Nuke the database file.
     QM_TRY(storageFile->Remove(false));
 
