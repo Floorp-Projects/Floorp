@@ -6,6 +6,7 @@
 #include "HyperTextAccessibleWrap.h"
 
 #include "Accessible-inl.h"
+#include "HTMLListAccessible.h"
 #include "nsAccUtils.h"
 #include "nsFrameSelection.h"
 #include "TextRange.h"
@@ -19,12 +20,14 @@ using namespace mozilla::a11y;
 class HyperTextIterator {
  public:
   HyperTextIterator(HyperTextAccessible* aStartContainer, int32_t aStartOffset,
-                    HyperTextAccessible* aEndContainer, int32_t aEndOffset)
+                    HyperTextAccessible* aEndContainer, int32_t aEndOffset,
+                    bool aSkipBullet = false)
       : mCurrentContainer(aStartContainer),
         mCurrentStartOffset(aStartOffset),
         mCurrentEndOffset(aStartOffset),
         mEndContainer(aEndContainer),
-        mEndOffset(aEndOffset) {}
+        mEndOffset(aEndOffset),
+        mSkipBullet(aSkipBullet) {}
 
   bool Next();
 
@@ -51,6 +54,8 @@ class HyperTextIterator {
 
   HyperTextAccessible* mEndContainer;
   int32_t mEndOffset;
+
+  bool mSkipBullet;
 };
 
 bool HyperTextIterator::NormalizeForward() {
@@ -79,7 +84,12 @@ bool HyperTextIterator::NormalizeForward() {
     // If there is a link at this offset, mutate into it.
     if (link && link->IsHyperText()) {
       mCurrentContainer = link->AsHyperText();
-      mCurrentStartOffset = 0;
+      if (mSkipBullet && link->IsHTMLListItem()) {
+        Accessible* bullet = link->AsHTMLListItem()->Bullet();
+        mCurrentStartOffset = bullet ? nsAccUtils::TextLength(bullet) : 0;
+      } else {
+        mCurrentStartOffset = 0;
+      }
 
       // Call NormalizeForward recursively to get top-most embedding ancestor
       // if at the end of one, or innermost link if at the beginning.
@@ -119,6 +129,13 @@ bool HyperTextIterator::NormalizeBackward() {
 
       // Call NormalizeBackward recursively to get top-most top-most embedding ancestor
       // if at the beginning of one, or innermost link if at the end.
+      NormalizeBackward();
+      return true;
+    }
+
+    if (mSkipBullet && mCurrentContainer->IsHTMLListItem() &&
+        mCurrentContainer->AsHTMLListItem()->Bullet() == link) {
+      mCurrentStartOffset = 0;
       NormalizeBackward();
       return true;
     }
@@ -277,7 +294,7 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(int32_t aOffset, nsDirection aD
                                                  EWordMovementType aWordMovementType) {
   // Layout can remain trapped in an editable. We normalize out of
   // it if we are in its last offset.
-  HyperTextIterator iter(this, aOffset, this, CharacterCount());
+  HyperTextIterator iter(this, aOffset, this, CharacterCount(), true);
   if (aDirection == eDirNext) {
     iter.NormalizeForward();
   } else {
