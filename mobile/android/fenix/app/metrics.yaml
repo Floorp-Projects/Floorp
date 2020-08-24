@@ -253,7 +253,9 @@ events:
     extra_keys:
       mode:
         description: |
-          The mode the link was opened in. Either 'PRIVATE' or 'NORMAL'.
+          The mode the link was opened in. Either 'PRIVATE' or 'NORMAL'. N.B.:
+          this probe may be incorrectly implemented: see
+          https://github.com/mozilla-mobile/fenix/issues/14133
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5737
     data_reviews:
