@@ -148,8 +148,7 @@ class gfxWindowsPlatform final : public gfxPlatform {
    */
   void VerifyD2DDevice(bool aAttemptForce);
 
-  void GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
-                              eFontPresentation aPresentation,
+  void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh, Script aRunScript,
                               nsTArray<const char*>& aFontList) override;
 
   bool CanUseHardwareVideoDecoding() override;
