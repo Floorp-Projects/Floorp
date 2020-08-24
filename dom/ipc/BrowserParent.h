@@ -110,9 +110,6 @@ class BrowserParent final : public PBrowserParent,
                 CanonicalBrowsingContext* aBrowsingContext,
                 uint32_t aChromeFlags);
 
-  // Call from LayoutStatics only
-  static void InitializeStatics();
-
   /**
    * Returns the focused BrowserParent or nullptr if chrome or another app
    * is focused.
