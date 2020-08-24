@@ -154,6 +154,17 @@ void AsyncColorChooser::Update(COLORREF aColor) {
     return 0;
   }
 
+  if (aMsg == WM_INITDIALOG) {
+    // "The default dialog box procedure processes the WM_INITDIALOG message
+    // before passing it to the hook procedure.
+    // For all other messages, the hook procedure receives the message first."
+    // https://docs.microsoft.com/en-us/windows/win32/api/commdlg/nc-commdlg-lpcchookproc
+    // "The dialog box procedure should return TRUE to direct the system to
+    // set the keyboard focus to the control specified by wParam."
+    // https://docs.microsoft.com/en-us/windows/win32/dlgbox/wm-initdialog
+    return 1;
+  }
+
   if (aMsg == WM_CTLCOLORSTATIC) {
     // The color picker does not expose a proper way to retrieve the current
     // color, so we need to obtain it from the static control displaying the
@@ -164,6 +175,7 @@ void AsyncColorChooser::Update(COLORREF aColor) {
     }
   }
 
+  // Let the default dialog box procedure processes the message.
   return 0;
 }
 
