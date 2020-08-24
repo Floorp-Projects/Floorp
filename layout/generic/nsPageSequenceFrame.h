@@ -38,6 +38,7 @@ class nsSharedPageData {
 
   // Total number of pages (populated by PrintedSheetFrame when it determines
   // that it's reflowed the final page):
+  // XXXdholbert The next patch in this series will rename this to mRawNumPages.
   int32_t mTotNumPages = 0;
 
   // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX
@@ -88,7 +89,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   nsresult PrintNextPage();
   void ResetPrintCanvasList();
   int32_t GetCurrentPageNum() const { return mPageNum; }
-  int32_t GetNumPages() const { return mPageData->mTotNumPages; }
+  int32_t GetRawNumPages() const { return mPageData->mTotNumPages; }
   bool IsDoingPrintRange() const { return mDoingPageRange; }
   void GetPrintRange(int32_t* aFromPage, int32_t* aToPage) const;
   nsresult DoPageEnd();

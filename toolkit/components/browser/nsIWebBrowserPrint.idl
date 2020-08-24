@@ -50,6 +50,17 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute boolean doingPrintPreview;
 
   /**
+   * This represents the "raw" total number of pages, where "raw" means that
+   * this value is *not amended* to account for reductions from pages-per-sheet
+   * or page ranges (unlike other APIs on this interface).
+   *
+   * So e.g. for a 20-page document, this attribute will be 20, regardless of
+   * whether the user has chosen a smaller page range, and regardless of
+   * whether the user is using pages-per-sheet to reduce the number of sheets.
+   */
+  readonly attribute long rawNumPages;
+
+  /**
    * This returns the total number of pages for the Print Preview
    *
    * XXXdholbert Consider renaming this? Strictly speaking, this is the number

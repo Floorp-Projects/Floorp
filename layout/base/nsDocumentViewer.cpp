@@ -3342,9 +3342,9 @@ static const nsIFrame* GetTargetPageFrame(int32_t aTargetPageNum,
 // 1) Calculate the position of the center of |aFrame| in the print preview
 //    coordinates.
 // 2) Reduce the half height of the scroll port from the result of 1.
-static nscoord ScrollPositionForFrame(
-    const nsIFrame* aFrame, nsIScrollableFrame* aScrollable,
-    float aPreviewScale) {
+static nscoord ScrollPositionForFrame(const nsIFrame* aFrame,
+                                      nsIScrollableFrame* aScrollable,
+                                      float aPreviewScale) {
   // Note that even if the computed scroll position is out of the range of
   // the scroll port, it gets clamped in nsIScrollableFrame::ScrollTo.
   return nscoord(aPreviewScale * aFrame->GetRect().Center().y -
@@ -3577,6 +3577,15 @@ nsDocumentViewer::ExitPrintPreview() {
 #  endif  // NS_PRINT_PREVIEW
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentViewer::GetRawNumPages(int32_t* aRawNumPages) {
+  NS_ENSURE_ARG_POINTER(aRawNumPages);
+  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
+
+  *aRawNumPages = mPrintJob->GetRawNumPages();
+  return *aRawNumPages > 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
