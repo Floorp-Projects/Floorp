@@ -1,6 +1,6 @@
 use core::mem;
 use core::num::FpCategory;
-use core::ops::Neg;
+use core::ops::{Add, Div, Neg};
 
 use core::f32;
 use core::f64;
@@ -606,8 +606,8 @@ pub trait FloatCore: Num + NumCast + Neg<Output = Self> + PartialOrd + Copy {
     /// use num_traits::float::FloatCore;
     /// use std::{f32, f64};
     ///
-    /// fn check<T: FloatCore>(x: T, y: T, min: T) {
-    ///     assert!(x.max(y) == min);
+    /// fn check<T: FloatCore>(x: T, y: T, max: T) {
+    ///     assert!(x.max(y) == max);
     /// }
     ///
     /// check(1.0f32, 2.0, 2.0);
@@ -2247,6 +2247,21 @@ macro_rules! float_const_impl {
         #[allow(non_snake_case)]
         pub trait FloatConst {
             $(#[$doc] fn $constant() -> Self;)+
+            #[doc = "Return the full circle constant `τ`."]
+            #[inline]
+            fn TAU() -> Self where Self: Sized + Add<Self, Output = Self> {
+                Self::PI() + Self::PI()
+            }
+            #[doc = "Return `log10(2.0)`."]
+            #[inline]
+            fn LOG10_2() -> Self where Self: Sized + Div<Self, Output = Self> {
+                Self::LN_2() / Self::LN_10()
+            }
+            #[doc = "Return `log2(10.0)`."]
+            #[inline]
+            fn LOG2_10() -> Self where Self: Sized + Div<Self, Output = Self> {
+                Self::LN_10() / Self::LN_2()
+            }
         }
         float_const_impl! { @float f32, $($constant,)+ }
         float_const_impl! { @float f64, $($constant,)+ }
@@ -2255,6 +2270,9 @@ macro_rules! float_const_impl {
         impl FloatConst for $T {
             constant! {
                 $( $constant() -> $T::consts::$constant; )+
+                TAU() -> 6.28318530717958647692528676655900577;
+                LOG10_2() -> 0.301029995663981195213738894724493027;
+                LOG2_10() -> 3.32192809488736234787031942948939018;
             }
         }
     );
@@ -2289,7 +2307,7 @@ float_const_impl! {
     LOG10_E,
     #[doc = "Return `log2(e)`."]
     LOG2_E,
-    #[doc = "Return Archimedes’ constant."]
+    #[doc = "Return Archimedes’ constant `π`."]
     PI,
     #[doc = "Return `sqrt(2.0)`."]
     SQRT_2,
@@ -2349,5 +2367,24 @@ mod tests {
             FloatCore::to_degrees(1_f32),
             57.2957795130823208767981548141051703
         );
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    fn extra_logs() {
+        use float::{Float, FloatConst};
+
+        fn check<F: Float + FloatConst>(diff: F) {
+            let _2 = F::from(2.0).unwrap();
+            assert!((F::LOG10_2() - F::log10(_2)).abs() < diff);
+            assert!((F::LOG10_2() - F::LN_2() / F::LN_10()).abs() < diff);
+
+            let _10 = F::from(10.0).unwrap();
+            assert!((F::LOG2_10() - F::log2(_10)).abs() < diff);
+            assert!((F::LOG2_10() - F::LN_10() / F::LN_2()).abs() < diff);
+        }
+
+        check::<f32>(1e-6);
+        check::<f64>(1e-12);
     }
 }

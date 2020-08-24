@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,9 +12,10 @@
 
 [package]
 name = "num-integer"
-version = "0.1.39"
+version = "0.1.43"
 authors = ["The Rust Project Developers"]
 build = "build.rs"
+exclude = ["/bors.toml", "/ci/*", "/.github/*"]
 description = "Integer traits and functions"
 homepage = "https://github.com/rust-num/num-integer"
 documentation = "https://docs.rs/num-integer"
@@ -26,8 +27,10 @@ repository = "https://github.com/rust-num/num-integer"
 [package.metadata.docs.rs]
 features = ["std"]
 [dependencies.num-traits]
-version = "0.2.4"
+version = "0.2.11"
 default-features = false
+[build-dependencies.autocfg]
+version = "1"
 
 [features]
 default = ["std"]

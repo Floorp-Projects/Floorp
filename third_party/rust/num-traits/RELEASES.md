@@ -1,3 +1,29 @@
+# Release 0.2.12 (2020-06-11)
+
+- [The new `WrappingNeg` trait][153] will wrap the result if it exceeds the
+  boundary of the type, e.g. `i32::MIN.wrapping_neg() == i32::MIN`.
+- [The new `SaturatingAdd`, `SaturatingSub`, and `SaturatingMul` traits][165]
+  will saturate at the numeric bounds if the operation would overflow. These
+  soft-deprecate the existing `Saturating` trait that only has addition and
+  subtraction methods.
+- [Added new constants for logarithms, `FloatConst::{LOG10_2, LOG2_10}`][171].
+
+**Contributors**: @cuviper, @ocstl, @trepetti, @vallentin
+
+[153]: https://github.com/rust-num/num-traits/pull/153
+[165]: https://github.com/rust-num/num-traits/pull/165
+[171]: https://github.com/rust-num/num-traits/pull/171
+
+# Release 0.2.11 (2020-01-09)
+
+- [Added the full circle constant τ as `FloatConst::TAU`][145].
+- [Updated the `autocfg` build dependency to 1.0][148].
+
+**Contributors**: @cuviper, @m-ou-se
+
+[145]: https://github.com/rust-num/num-traits/pull/145
+[148]: https://github.com/rust-num/num-traits/pull/148
+
 # Release 0.2.10 (2019-11-22)
 
 - [Updated the `libm` dependency to 0.2][144].

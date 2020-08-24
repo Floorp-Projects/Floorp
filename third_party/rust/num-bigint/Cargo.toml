@@ -11,10 +11,12 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "num-bigint"
-version = "0.2.3"
+version = "0.3.0"
 authors = ["The Rust Project Developers"]
 build = "build.rs"
+exclude = ["/bors.toml", "/ci/*", "/.github/*"]
 description = "Big integer implementation for Rust"
 homepage = "https://github.com/rust-num/num-bigint"
 documentation = "https://docs.rs/num-bigint"
@@ -42,40 +44,32 @@ name = "roots"
 name = "shootout-pidigits"
 harness = false
 [dependencies.num-integer]
-version = "0.1.39"
+version = "0.1.42"
+features = ["i128"]
 default-features = false
 
 [dependencies.num-traits]
-version = "0.2.7"
+version = "0.2.11"
+features = ["i128"]
 default-features = false
 
 [dependencies.quickcheck]
-version = "0.8"
-optional = true
-default-features = false
-
-[dependencies.quickcheck_macros]
-version = "0.8"
+version = "0.9"
 optional = true
 default-features = false
 
 [dependencies.rand]
-version = "0.5"
-features = ["std"]
+version = "0.7"
 optional = true
 default-features = false
 
 [dependencies.serde]
 version = "1.0"
-features = ["std"]
 optional = true
 default-features = false
-[dev-dependencies.serde_test]
-version = "1.0"
 [build-dependencies.autocfg]
-version = "0.1.2"
+version = "1"
 
 [features]
 default = ["std"]
-i128 = ["num-integer/i128", "num-traits/i128"]
 std = ["num-integer/std", "num-traits/std"]

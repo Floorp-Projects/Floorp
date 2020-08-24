@@ -106,7 +106,7 @@ pub trait PrimInt:
     /// ```
     fn trailing_zeros(self) -> u32;
 
-    /// Shifts the bits to the left by a specified amount amount, `n`, wrapping
+    /// Shifts the bits to the left by a specified amount, `n`, wrapping
     /// the truncated bits to the end of the resulting integer.
     ///
     /// # Examples
@@ -121,7 +121,7 @@ pub trait PrimInt:
     /// ```
     fn rotate_left(self, n: u32) -> Self;
 
-    /// Shifts the bits to the right by a specified amount amount, `n`, wrapping
+    /// Shifts the bits to the right by a specified amount, `n`, wrapping
     /// the truncated bits to the beginning of the resulting integer.
     ///
     /// # Examples
@@ -136,7 +136,7 @@ pub trait PrimInt:
     /// ```
     fn rotate_right(self, n: u32) -> Self;
 
-    /// Shifts the bits to the left by a specified amount amount, `n`, filling
+    /// Shifts the bits to the left by a specified amount, `n`, filling
     /// zeros in the least significant bits.
     ///
     /// This is bitwise equivalent to signed `Shl`.
@@ -153,7 +153,7 @@ pub trait PrimInt:
     /// ```
     fn signed_shl(self, n: u32) -> Self;
 
-    /// Shifts the bits to the right by a specified amount amount, `n`, copying
+    /// Shifts the bits to the right by a specified amount, `n`, copying
     /// the "sign bit" in the most significant bits even for unsigned types.
     ///
     /// This is bitwise equivalent to signed `Shr`.
@@ -170,7 +170,7 @@ pub trait PrimInt:
     /// ```
     fn signed_shr(self, n: u32) -> Self;
 
-    /// Shifts the bits to the left by a specified amount amount, `n`, filling
+    /// Shifts the bits to the left by a specified amount, `n`, filling
     /// zeros in the least significant bits.
     ///
     /// This is bitwise equivalent to unsigned `Shl`.
@@ -187,7 +187,7 @@ pub trait PrimInt:
     /// ```
     fn unsigned_shl(self, n: u32) -> Self;
 
-    /// Shifts the bits to the right by a specified amount amount, `n`, filling
+    /// Shifts the bits to the right by a specified amount, `n`, filling
     /// zeros in the most significant bits.
     ///
     /// This is bitwise equivalent to unsigned `Shr`.

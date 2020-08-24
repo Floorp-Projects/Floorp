@@ -10,11 +10,7 @@ use std::mem;
 
 trait TestInteger: Roots + PrimInt + Debug + AsPrimitive<f64> + 'static {}
 
-impl<T> TestInteger for T
-where
-    T: Roots + PrimInt + Debug + AsPrimitive<f64> + 'static,
-{
-}
+impl<T> TestInteger for T where T: Roots + PrimInt + Debug + AsPrimitive<f64> + 'static {}
 
 /// Check that each root is correct
 ///

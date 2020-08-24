@@ -13,11 +13,7 @@ use test::{black_box, Bencher};
 
 trait BenchInteger: Integer + PrimInt + WrappingAdd + WrappingMul + 'static {}
 
-impl<T> BenchInteger for T
-where
-    T: Integer + PrimInt + WrappingAdd + WrappingMul + 'static,
-{
-}
+impl<T> BenchInteger for T where T: Integer + PrimInt + WrappingAdd + WrappingMul + 'static {}
 
 fn bench<T, F>(b: &mut Bencher, v: &[T], f: F, n: u32)
 where
