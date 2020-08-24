@@ -1363,11 +1363,16 @@ toolbarpaletteitem > toolbaritem {
 }
 
 /* Print pending */
-.previewRendering {
-  width: 500px;
-  height: 600px;
-  color: #0c0c0d;
+.printSettingsBrowser {
+  width: 250px !important;
+}
+
+.previewStack {
   background-color: #f9f9fa;
+  color: #0c0c0d;
+}
+
+.previewRendering {
   background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
   background-repeat: no-repeat;
   background-size: 60px 60px;
@@ -1398,7 +1403,7 @@ toolbarpaletteitem > toolbaritem {
 }
 
 @media (prefers-color-scheme: dark) {
-  .previewRendering {
+  .previewStack {
     background-color: #2A2A2E;
     color: rgb(249, 249, 250);
   }
@@ -1464,6 +1469,45 @@ toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabsto
   overflow: hidden;
   min-height: 20em;
   min-width: 66ch;
+}
+
+.dialogBox[sizeto="available"] {
+  --box-inline-margin: 4px;
+  --box-block-margin: 4px;
+  --box-ideal-width: 1000;
+  --box-ideal-height: 650;
+  --box-max-width-margin: calc(100vw - 2 * var(--box-inline-margin));
+  --box-max-height-margin: calc(100vh - var(--box-top-px) - var(--box-block-margin));
+  --box-max-width-ratio: 70vw;
+  --box-max-height-ratio: calc(var(--box-ideal-height) / var(--box-ideal-width) * var(--box-max-width-ratio));
+  max-width: min(max(var(--box-ideal-width) * 1px, var(--box-max-width-ratio)), var(--box-max-width-margin));
+  max-height: min(max(var(--box-ideal-height) * 1px, var(--box-max-height-ratio)), var(--box-max-height-margin));
+  width: 100vw;
+  height: 100vh;
+}
+
+@media (min-width: 550px) {
+  .dialogBox[sizeto="available"] {
+    --box-inline-margin: min(calc(4px + (100vw - 550px) / 4), 16px);
+  }
+}
+
+@media (min-width: 800px) {
+  .dialogBox[sizeto="available"] {
+    --box-inline-margin: min(calc(16px + (100vw - 800px) / 4), 32px);
+  }
+}
+
+@media (min-height: 350px) {
+  .dialogBox[sizeto="available"] {
+    --box-block-margin: min(calc(4px + (100vh - 350px) / 4), 16px);
+  }
+}
+
+@media (min-height: 550px) {
+  .dialogBox[sizeto="available"] {
+    --box-block-margin: min(calc(16px + (100vh - 550px) / 4), 32px);
+  }
 }
 
 .dialogFrame {
