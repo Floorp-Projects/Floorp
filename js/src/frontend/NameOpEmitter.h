@@ -80,7 +80,7 @@ class MOZ_STACK_CLASS NameOpEmitter {
 
   bool emittedBindOp_ = false;
 
-  const ParserAtom* name_;
+  Handle<JSAtom*> name_;
 
   GCThingIndex atomIndex_;
 
@@ -133,8 +133,8 @@ class MOZ_STACK_CLASS NameOpEmitter {
 #endif
 
  public:
-  NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name, Kind kind);
-  NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name,
+  NameOpEmitter(BytecodeEmitter* bce, Handle<JSAtom*> name, Kind kind);
+  NameOpEmitter(BytecodeEmitter* bce, Handle<JSAtom*> name,
                 const NameLocation& loc, Kind kind);
 
  private:

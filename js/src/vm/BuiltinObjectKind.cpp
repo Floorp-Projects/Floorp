@@ -74,48 +74,43 @@ static bool IsPrototype(BuiltinObjectKind kind) {
   MOZ_CRASH("Unexpected builtin object kind");
 }
 
-using BuiltinName =
-    const js::frontend::ParserName* js::frontend::WellKnownParserAtoms::*;
+using BuiltinName = js::ImmutablePropertyNamePtr JSAtomState::*;
 
 struct BuiltinObjectMap {
   BuiltinName name;
   BuiltinObjectKind kind;
 };
 
-BuiltinObjectKind js::BuiltinConstructorForName(
-    JSContext* cx, const js::frontend::ParserAtom* name) {
-  using WellKnownName = js::frontend::WellKnownParserAtoms;
+BuiltinObjectKind js::BuiltinConstructorForName(JSContext* cx, JSAtom* name) {
   static constexpr BuiltinObjectMap constructors[] = {
-      {&WellKnownName::Array, BuiltinObjectKind::Array},
-      {&WellKnownName::ArrayBuffer, BuiltinObjectKind::ArrayBuffer},
-      {&WellKnownName::Iterator, BuiltinObjectKind::Iterator},
-      {&WellKnownName::Promise, BuiltinObjectKind::Promise},
-      {&WellKnownName::RegExp, BuiltinObjectKind::RegExp},
-      {&WellKnownName::SharedArrayBuffer, BuiltinObjectKind::SharedArrayBuffer},
-      {&WellKnownName::DateTimeFormat, BuiltinObjectKind::DateTimeFormat},
-      {&WellKnownName::NumberFormat, BuiltinObjectKind::NumberFormat},
+      {&JSAtomState::Array, BuiltinObjectKind::Array},
+      {&JSAtomState::ArrayBuffer, BuiltinObjectKind::ArrayBuffer},
+      {&JSAtomState::Iterator, BuiltinObjectKind::Iterator},
+      {&JSAtomState::Promise, BuiltinObjectKind::Promise},
+      {&JSAtomState::RegExp, BuiltinObjectKind::RegExp},
+      {&JSAtomState::SharedArrayBuffer, BuiltinObjectKind::SharedArrayBuffer},
+      {&JSAtomState::DateTimeFormat, BuiltinObjectKind::DateTimeFormat},
+      {&JSAtomState::NumberFormat, BuiltinObjectKind::NumberFormat},
   };
 
   for (auto& builtin : constructors) {
-    if (name == cx->parserNames().*(builtin.name)) {
+    if (name == cx->names().*(builtin.name)) {
       return builtin.kind;
     }
   }
   return BuiltinObjectKind::None;
 }
 
-BuiltinObjectKind js::BuiltinPrototypeForName(
-    JSContext* cx, const js::frontend::ParserAtom* name) {
-  using WellKnownName = js::frontend::WellKnownParserAtoms;
+BuiltinObjectKind js::BuiltinPrototypeForName(JSContext* cx, JSAtom* name) {
   static constexpr BuiltinObjectMap prototypes[] = {
-      {&WellKnownName::Function, BuiltinObjectKind::FunctionPrototype},
-      {&WellKnownName::Object, BuiltinObjectKind::ObjectPrototype},
-      {&WellKnownName::RegExp, BuiltinObjectKind::RegExpPrototype},
-      {&WellKnownName::String, BuiltinObjectKind::StringPrototype},
+      {&JSAtomState::Function, BuiltinObjectKind::FunctionPrototype},
+      {&JSAtomState::Object, BuiltinObjectKind::ObjectPrototype},
+      {&JSAtomState::RegExp, BuiltinObjectKind::RegExpPrototype},
+      {&JSAtomState::String, BuiltinObjectKind::StringPrototype},
   };
 
   for (auto& builtin : prototypes) {
-    if (name == cx->parserNames().*(builtin.name)) {
+    if (name == cx->names().*(builtin.name)) {
       return builtin.kind;
     }
   }

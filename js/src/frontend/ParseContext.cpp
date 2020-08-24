@@ -62,7 +62,7 @@ bool DeclarationKindIsParameter(DeclarationKind kind) {
          kind == DeclarationKind::FormalParameter;
 }
 
-bool UsedNameTracker::noteUse(JSContext* cx, const ParserAtom* name,
+bool UsedNameTracker::noteUse(JSContext* cx, JSAtom* name,
                               NameVisibility visibility, uint32_t scriptId,
                               uint32_t scopeId,
                               mozilla::Maybe<TokenPos> tokenPosition) {
@@ -161,7 +161,7 @@ void ParseContext::Scope::dump(ParseContext* pc) {
 
   fprintf(stdout, "\n  decls:\n");
   for (DeclaredNameMap::Range r = declared_->all(); !r.empty(); r.popFront()) {
-    UniqueChars bytes = QuoteString(cx, r.front().key());
+    UniqueChars bytes = AtomToPrintableString(cx, r.front().key());
     if (!bytes) {
       return;
     }
@@ -195,11 +195,12 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
   if (this == &pc->varScope()) {
     // Base case: actually declare the Annex B vars and mark applicable
     // function boxes as Annex B.
+    RootedPropertyName name(pc->sc()->cx_);
     Maybe<DeclarationKind> redeclaredKind;
     uint32_t unused;
     for (FunctionBox* funbox : *possibleAnnexBFunctionBoxes_) {
       if (pc->annexBAppliesToLexicalFunctionInInnermostScope(funbox)) {
-        const ParserName* name = funbox->explicitName()->asName();
+        name = funbox->explicitName()->asPropertyName();
         if (!pc->tryDeclareVar(
                 name, DeclarationKind::VarForAnnexBLexicalFunction,
                 DeclaredNameInfo::npos, &redeclaredKind, &unused)) {
@@ -241,7 +242,7 @@ bool ParseContext::Scope::addCatchParameters(ParseContext* pc,
     DeclarationKind kind = r.front().value()->kind();
     uint32_t pos = r.front().value()->pos();
     MOZ_ASSERT(DeclarationKindIsCatchParameter(kind));
-    const ParserAtom* name = r.front().key();
+    JSAtom* name = r.front().key();
     AddDeclaredNamePtr p = lookupDeclaredNameForAdd(name);
     MOZ_ASSERT(!p);
     if (!addDeclaredName(pc, p, name, kind, pos)) {
@@ -347,7 +348,7 @@ bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
     FunctionBox* funbox) {
   MOZ_ASSERT(!sc()->strict());
 
-  const ParserName* name = funbox->explicitName()->asName();
+  RootedPropertyName name(sc()->cx_, funbox->explicitName()->asPropertyName());
   Maybe<DeclarationKind> redeclaredKind = isVarRedeclaredInInnermostScope(
       name, DeclarationKind::VarForAnnexBLexicalFunction);
 
@@ -376,7 +377,7 @@ bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
 }
 
 Maybe<DeclarationKind> ParseContext::isVarRedeclaredInInnermostScope(
-    const ParserName* name, DeclarationKind kind) {
+    HandlePropertyName name, DeclarationKind kind) {
   Maybe<DeclarationKind> redeclaredKind;
   uint32_t unused;
   MOZ_ALWAYS_TRUE(tryDeclareVarHelper<DryRunInnermostScopeOnly>(
@@ -384,19 +385,10 @@ Maybe<DeclarationKind> ParseContext::isVarRedeclaredInInnermostScope(
   return redeclaredKind;
 }
 
-bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
-                                         DeclarationKind kind,
-                                         Maybe<DeclarationKind>* out) {
-  MOZ_ASSERT(out);
+Maybe<DeclarationKind> ParseContext::isVarRedeclaredInEval(
+    HandlePropertyName name, DeclarationKind kind) {
   MOZ_ASSERT(DeclarationKindIsVar(kind));
   MOZ_ASSERT(sc()->isEvalContext());
-
-  // TODO-Stencil: After scope snapshotting, this can be done away with.
-  auto mbNameAtom = name->toJSAtom(sc()->cx_);
-  if (mbNameAtom.isErr()) {
-    return false;
-  }
-  JSAtom* nameAtom = mbNameAtom.unwrap();
 
   // In the case of eval, we also need to check enclosing VM scopes to see
   // if the var declaration is allowed in the context.
@@ -405,7 +397,7 @@ bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
   MOZ_ASSERT(varScope);
   for (ScopeIter si(enclosingScope); si; si++) {
     for (js::BindingIter bi(si.scope()); bi; bi++) {
-      if (bi.name() != nameAtom) {
+      if (bi.name() != name) {
         continue;
       }
 
@@ -415,17 +407,15 @@ bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
           // catch parameters with var declarations.
           bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch;
           if (!annexB35Allowance) {
-            *out = Some(ScopeKindIsCatch(si.kind())
+            return Some(ScopeKindIsCatch(si.kind())
                             ? DeclarationKind::CatchParameter
                             : DeclarationKind::Let);
-            return true;
           }
           break;
         }
 
         case BindingKind::Const:
-          *out = Some(DeclarationKind::Const);
-          return true;
+          return Some(DeclarationKind::Const);
 
         case BindingKind::Import:
         case BindingKind::FormalParameter:
@@ -440,11 +430,10 @@ bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
     }
   }
 
-  *out = Nothing();
-  return true;
+  return Nothing();
 }
 
-bool ParseContext::tryDeclareVar(const ParserName* name, DeclarationKind kind,
+bool ParseContext::tryDeclareVar(HandlePropertyName name, DeclarationKind kind,
                                  uint32_t beginPos,
                                  Maybe<DeclarationKind>* redeclaredKind,
                                  uint32_t* prevPos) {
@@ -453,7 +442,7 @@ bool ParseContext::tryDeclareVar(const ParserName* name, DeclarationKind kind,
 }
 
 template <ParseContext::DryRunOption dryRunOption>
-bool ParseContext::tryDeclareVarHelper(const ParserName* name,
+bool ParseContext::tryDeclareVarHelper(HandlePropertyName name,
                                        DeclarationKind kind, uint32_t beginPos,
                                        Maybe<DeclarationKind>* redeclaredKind,
                                        uint32_t* prevPos) {
@@ -523,9 +512,7 @@ bool ParseContext::tryDeclareVarHelper(const ParserName* name,
 
   if (!sc()->strict() && sc()->isEvalContext() &&
       (dryRunOption == NotDryRun || innermostScope() == &varScope())) {
-    if (!isVarRedeclaredInEval(name, kind, redeclaredKind)) {
-      return false;
-    }
+    *redeclaredKind = isVarRedeclaredInEval(name, kind);
     // We don't have position information at runtime.
     *prevPos = DeclaredNameInfo::npos;
   }
@@ -534,7 +521,7 @@ bool ParseContext::tryDeclareVarHelper(const ParserName* name,
 }
 
 bool ParseContext::hasUsedName(const UsedNameTracker& usedNames,
-                               const ParserName* name) {
+                               HandlePropertyName name) {
   if (auto p = usedNames.lookup(name)) {
     return p->value().isUsedInScript(scriptId());
   }
@@ -542,7 +529,7 @@ bool ParseContext::hasUsedName(const UsedNameTracker& usedNames,
 }
 
 bool ParseContext::hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
-                                              const ParserName* name) {
+                                              HandlePropertyName name) {
   MOZ_ASSERT(name == sc()->cx_->parserNames().arguments ||
              name == sc()->cx_->parserNames().dotThis);
   return hasUsedName(usedNames, name) ||
@@ -560,7 +547,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
   // Derived class constructors emit JSOp::CheckReturn, which requires
   // '.this' to be bound.
   FunctionBox* funbox = functionBox();
-  const ParserName* dotThis = sc()->cx_->parserNames().dotThis;
+  HandlePropertyName dotThis = sc()->cx_->parserNames().dotThis;
 
   bool declareThis;
   if (canSkipLazyClosedOverBindings) {
@@ -594,7 +581,7 @@ bool ParseContext::declareFunctionArgumentsObject(
   bool hasExtraBodyVarScope = &funScope != &_varScope;
 
   // Time to implement the odd semantics of 'arguments'.
-  const ParserName* argumentsName = sc()->cx_->parserNames().arguments;
+  HandlePropertyName argumentsName = sc()->cx_->parserNames().arguments;
 
   bool tryDeclareArguments;
   if (canSkipLazyClosedOverBindings) {
@@ -658,7 +645,7 @@ bool ParseContext::declareDotGeneratorName() {
   // The special '.generator' binding must be on the function scope, as
   // generators expect to find it on the CallObject.
   ParseContext::Scope& funScope = functionScope();
-  const ParserName* dotGenerator = sc()->cx_->parserNames().dotGenerator;
+  HandlePropertyName dotGenerator = sc()->cx_->parserNames().dotGenerator;
   AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
   if (!p &&
       !funScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,

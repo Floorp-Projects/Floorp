@@ -21,7 +21,7 @@
 #include "vm/NativeObject.h"           // NativeDefineDataProperty
 #include "vm/ObjectGroup.h"            // TenuredObject
 #include "vm/Opcodes.h"                // JSOp
-#include "vm/Runtime.h"                // cx->parserNames()
+#include "vm/Runtime.h"                // JSAtomState (cx->parserNames())
 #include "vm/SharedStencil.h"          // GCThingIndex
 
 #include "gc/ObjectKind-inl.h"  // GetGCObjectKind
@@ -263,8 +263,7 @@ bool PropertyEmitter::emitInitHomeObject() {
   return true;
 }
 
-bool PropertyEmitter::emitInit(AccessorType accessorType,
-                               const ParserAtom* key) {
+bool PropertyEmitter::emitInit(AccessorType accessorType, HandleAtom key) {
   switch (accessorType) {
     case AccessorType::None:
       return emitInit(isClass_ ? JSOp::InitHiddenProp : JSOp::InitProp, key);
@@ -295,7 +294,7 @@ bool PropertyEmitter::emitInitIndexOrComputed(AccessorType accessorType) {
   }
 }
 
-bool PropertyEmitter::emitInit(JSOp op, const ParserAtom* key) {
+bool PropertyEmitter::emitInit(JSOp op, JS::Handle<JSAtom*> key) {
   MOZ_ASSERT(propertyState_ == PropertyState::PropValue ||
              propertyState_ == PropertyState::InitHomeObj);
 
@@ -423,12 +422,12 @@ void AutoSaveLocalStrictMode::restore() {
 ClassEmitter::ClassEmitter(BytecodeEmitter* bce)
     : PropertyEmitter(bce),
       strictMode_(bce->sc),
-      name_(nullptr),
-      nameForAnonymousClass_(nullptr) {
+      name_(bce->cx),
+      nameForAnonymousClass_(bce->cx) {
   isClass_ = true;
 }
 
-bool ClassEmitter::emitScope(ParserLexicalScopeData* scopeBindings) {
+bool ClassEmitter::emitScope(JS::Handle<LexicalScope::Data*> scopeBindings) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start);
 
@@ -446,7 +445,8 @@ bool ClassEmitter::emitScope(ParserLexicalScopeData* scopeBindings) {
   return true;
 }
 
-bool ClassEmitter::emitBodyScope(ParserLexicalScopeData* scopeBindings) {
+bool ClassEmitter::emitBodyScope(
+    JS::Handle<LexicalScope::Data*> scopeBindings) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
              classState_ == ClassState::Scope);
@@ -465,8 +465,8 @@ bool ClassEmitter::emitBodyScope(ParserLexicalScopeData* scopeBindings) {
   return true;
 }
 
-bool ClassEmitter::emitClass(const ParserAtom* name,
-                             const ParserAtom* nameForAnonymousClass,
+bool ClassEmitter::emitClass(JS::Handle<JSAtom*> name,
+                             JS::Handle<JSAtom*> nameForAnonymousClass,
                              bool hasNameOnStack) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
@@ -493,8 +493,8 @@ bool ClassEmitter::emitClass(const ParserAtom* name,
   return true;
 }
 
-bool ClassEmitter::emitDerivedClass(const ParserAtom* name,
-                                    const ParserAtom* nameForAnonymousClass,
+bool ClassEmitter::emitDerivedClass(JS::Handle<JSAtom*> name,
+                                    JS::Handle<JSAtom*> nameForAnonymousClass,
                                     bool hasNameOnStack) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
@@ -616,7 +616,7 @@ bool ClassEmitter::emitInitDefaultConstructor(uint32_t classStart,
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Class);
 
-  const ParserAtom* className = name_;
+  RootedAtom className(bce_->cx, name_);
   if (!className) {
     if (nameForAnonymousClass_) {
       className = nameForAnonymousClass_;
@@ -707,9 +707,9 @@ bool ClassEmitter::prepareForMemberInitializers(size_t numInitializers,
   // .initializers is a variable that stores an array of lambdas containing
   // code (the initializer) for each field. Upon an object's construction,
   // these lambdas will be called, defining the values.
-  const ParserName* initializers =
-      isStatic ? bce_->cx->parserNames().dotStaticInitializers
-               : bce_->cx->parserNames().dotInitializers;
+  auto initializersName = isStatic ? &JSAtomState::dotStaticInitializers
+                                   : &JSAtomState::dotInitializers;
+  HandlePropertyName initializers = bce_->cx->parserNames().*initializersName;
   initializersAssignment_.emplace(bce_, initializers,
                                   NameOpEmitter::Kind::Initialize);
   if (!initializersAssignment_->prepareForRhs()) {

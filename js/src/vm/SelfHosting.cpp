@@ -42,7 +42,6 @@
 #include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
-#include "frontend/ParserAtom.h"  // js::frontend::ParserAtom
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
@@ -957,16 +956,6 @@ bool js::IsExtendedUnclonedSelfHostedFunctionName(JSAtom* name) {
     return false;
   }
   return name->latin1OrTwoByteChar(0) == '$';
-}
-bool js::IsExtendedUnclonedSelfHostedFunctionName(
-    const frontend::ParserAtom* id) {
-  if (id->length() < 2) {
-    return false;
-  }
-
-  char16_t ch =
-      id->hasLatin1Chars() ? id->latin1Chars()[0] : id->twoByteChars()[0];
-  return ch == '$';
 }
 
 static void SetUnclonedSelfHostedFunctionName(JSFunction* fun, JSAtom* name) {

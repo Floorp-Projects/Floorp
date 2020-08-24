@@ -58,12 +58,8 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     mozilla::Span<JS::GCCellPtr>& output;
 
     bool operator()(const ScriptAtom& data) {
-      auto maybeAtom = data->toJSAtom(cx);
-      if (maybeAtom.isErr()) {
-        return false;
-      }
-      MOZ_ASSERT(maybeAtom.unwrap());
-      output[i] = JS::GCCellPtr(maybeAtom.unwrap());
+      JSAtom* atom = data;
+      output[i] = JS::GCCellPtr(atom);
       return true;
     }
 
@@ -94,7 +90,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
 
     bool operator()(const ObjLiteralIndex& index) {
       ObjLiteralStencil& data = compilationInfo.objLiteralData[index];
-      JSObject* obj = data.create(cx, compilationInfo);
+      JSObject* obj = data.create(cx);
       if (!obj) {
         return false;
       }
@@ -167,9 +163,8 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   list[index].length = offset - list[index].start;
 }
 
-JSObject* ObjLiteralStencil::create(JSContext* cx,
-                                    CompilationInfo& compilationInfo) const {
-  return InterpretObjLiteral(cx, compilationInfo, atoms_, writer_);
+JSObject* ObjLiteralStencil::create(JSContext* cx) const {
+  return InterpretObjLiteral(cx, atoms_, writer_);
 }
 
 BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum)

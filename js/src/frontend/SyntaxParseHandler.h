@@ -36,7 +36,7 @@ namespace frontend {
 // amounts of code that never executes (which happens often).
 class SyntaxParseHandler {
   // Remember the last encountered name or string literal during syntax parses.
-  const ParserAtom* lastAtom;
+  JSAtom* lastAtom;
   TokenPos lastStringPos;
 
   // WARNING: Be careful about adding fields to this function, that might be
@@ -192,8 +192,7 @@ class SyntaxParseHandler {
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 #undef DECLARE_AS
 
-  NameNodeType newName(const ParserName* name, const TokenPos& pos,
-                       JSContext* cx) {
+  NameNodeType newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
     lastAtom = name;
     if (name == cx->parserNames().arguments) {
       return NodeArgumentsName;
@@ -212,12 +211,11 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-  NameNodeType newObjectLiteralPropertyName(const ParserAtom* atom,
-                                            const TokenPos& pos) {
+  NameNodeType newObjectLiteralPropertyName(JSAtom* atom, const TokenPos& pos) {
     return NodeName;
   }
 
-  NameNodeType newPrivateName(const ParserAtom* atom, const TokenPos& pos) {
+  NameNodeType newPrivateName(JSAtom* atom, const TokenPos& pos) {
     return NodePrivateName;
   }
 
@@ -232,14 +230,13 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-  NameNodeType newStringLiteral(const ParserAtom* atom, const TokenPos& pos) {
+  NameNodeType newStringLiteral(JSAtom* atom, const TokenPos& pos) {
     lastAtom = atom;
     lastStringPos = pos;
     return NodeUnparenthesizedString;
   }
 
-  NameNodeType newTemplateStringLiteral(const ParserAtom* atom,
-                                        const TokenPos& pos) {
+  NameNodeType newTemplateStringLiteral(JSAtom* atom, const TokenPos& pos) {
     return NodeGeneric;
   }
 
@@ -461,11 +458,11 @@ class SyntaxParseHandler {
   CaseClauseType newCaseOrDefault(uint32_t begin, Node expr, Node body) {
     return NodeGeneric;
   }
-  ContinueStatementType newContinueStatement(const ParserName* label,
+  ContinueStatementType newContinueStatement(PropertyName* label,
                                              const TokenPos& pos) {
     return NodeGeneric;
   }
-  BreakStatementType newBreakStatement(const ParserName* label,
+  BreakStatementType newBreakStatement(PropertyName* label,
                                        const TokenPos& pos) {
     return NodeBreak;
   }
@@ -477,7 +474,7 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-  LabeledStatementType newLabeledStatement(const ParserName* label, Node stmt,
+  LabeledStatementType newLabeledStatement(PropertyName* label, Node stmt,
                                            uint32_t begin) {
     return NodeGeneric;
   }
@@ -494,7 +491,7 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-  NameNodeType newPropertyName(const ParserName* name, const TokenPos& pos) {
+  NameNodeType newPropertyName(PropertyName* name, const TokenPos& pos) {
     lastAtom = name;
     return NodeGeneric;
   }
@@ -703,7 +700,7 @@ class SyntaxParseHandler {
   bool isPrivateName(Node node) { return node == NodePrivateName; }
   bool isPrivateField(Node node) { return node == NodePrivateElement; }
 
-  const ParserName* maybeDottedProperty(Node node) {
+  PropertyName* maybeDottedProperty(Node node) {
     // Note: |super.apply(...)| is a special form that calls an "apply"
     // method retrieved from one value, but using a *different* value as
     // |this|.  It's not really eligible for the funapply/funcall
@@ -712,10 +709,10 @@ class SyntaxParseHandler {
     if (node != NodeDottedProperty && node != NodeOptionalDottedProperty) {
       return nullptr;
     }
-    return lastAtom->asName();
+    return lastAtom->asPropertyName();
   }
 
-  const ParserAtom* isStringExprStatement(Node pn, TokenPos* pos) {
+  JSAtom* isStringExprStatement(Node pn, TokenPos* pos) {
     if (pn == NodeStringExprStatement) {
       *pos = lastStringPos;
       return lastAtom;

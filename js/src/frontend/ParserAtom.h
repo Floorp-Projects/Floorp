@@ -9,14 +9,12 @@
 
 #include "mozilla/DebugOnly.h"      // mozilla::DebugOnly
 #include "mozilla/HashFunctions.h"  // HashString
-#include "mozilla/Range.h"          // mozilla::Range
 #include "mozilla/Variant.h"        // mozilla::Variant
 
-#include "ds/LifoAlloc.h"    // LifoAlloc
-#include "js/GCPolicyAPI.h"  // JS::GCPolicy, JS::IgnoreGCPolicy
-#include "js/HashTable.h"    // HashSet
-#include "js/UniquePtr.h"    // js::UniquePtr
-#include "js/Vector.h"       // Vector
+#include "ds/LifoAlloc.h"  // LifoAlloc
+#include "js/HashTable.h"  // HashSet
+#include "js/UniquePtr.h"  // js::UniquePtr
+#include "js/Vector.h"     // Vector
 #include "vm/CommonPropertyNames.h"
 #include "vm/StringType.h"  // CompareChars, StringEqualsAscii
 
@@ -180,6 +178,7 @@ class alignas(alignof(void*)) ParserAtomEntry {
     }
   }
 
+ public:
  private:
   // Owned characters, either 8-bit Latin1Char, or 16-bit char16_t
   ContentPtrVariant variant_;
@@ -193,15 +192,9 @@ class alignas(alignof(void*)) ParserAtomEntry {
   // Used to dynamically optimize the mapping of ParserAtoms to JSAtom*s.
   // If the entry comes from an atom or has been mapped to an
   // atom previously, the atom reference is kept here.
-  //
-  // Note: if/when this field is removed, remove the comment
-  // in front of the call to `rt->initializeParserAtoms()` in
-  // `JS::InitSelfHostedCode`.
   mutable JSAtom* jsatom_ = nullptr;
 
  public:
-  static const uint32_t MAX_LENGTH = JSString::MAX_LENGTH;
-
   template <typename CharT>
   ParserAtomEntry(mozilla::UniquePtr<CharT[], JS::FreePolicy> chars,
                   uint32_t length, HashNumber hash)
@@ -255,12 +248,6 @@ class alignas(alignof(void*)) ParserAtomEntry {
   const char16_t* twoByteChars() const {
     MOZ_ASSERT(hasTwoByteChars());
     return variant_.getUnchecked<char16_t>();
-  }
-  mozilla::Range<const Latin1Char> latin1Range() const {
-    return mozilla::Range(latin1Chars(), length_);
-  }
-  mozilla::Range<const char16_t> twoByteRange() const {
-    return mozilla::Range(twoByteChars(), length_);
   }
 
   bool isIndex(uint32_t* indexp) const;
@@ -368,8 +355,7 @@ class WellKnownParserAtoms {
                            TempAllocPolicy>;
   EntrySet entrySet_;
 
-  bool initSingle(JSContext* cx, const ParserName** name, const char* str,
-                  JSAtom* jsatom);
+  bool initSingle(JSContext* cx, const ParserName** name, const char* str);
 
  public:
   explicit WellKnownParserAtoms(JSContext* cx) : entrySet_(cx) {}
@@ -462,8 +448,9 @@ class ParserAtomsTable {
 
   JS::Result<const ParserAtom*, OOM&> internJSAtom(JSContext* cx, JSAtom* atom);
 
-  JS::Result<const ParserAtom*, OOM&> concatAtoms(
-      JSContext* cx, mozilla::Range<const ParserAtom*> atoms);
+  JS::Result<const ParserAtom*, OOM&> concatAtoms(JSContext* cx,
+                                                  const ParserAtom* prefix,
+                                                  const ParserAtom* suffix);
 };
 
 template <typename CharT>
@@ -514,12 +501,5 @@ inline bool ParserAtomEntry::equalsSeq(
 
 } /* namespace frontend */
 } /* namespace js */
-
-namespace JS {
-// Dummy trace policy until tracing is removed.
-template <>
-struct GCPolicy<const js::frontend::ParserAtom*>
-    : IgnoreGCPolicy<const js::frontend::ParserAtom*> {};
-}  // namespace JS
 
 #endif  // frontend_ParserAtom_h
