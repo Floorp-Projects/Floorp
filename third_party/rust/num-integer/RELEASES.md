@@ -1,4 +1,43 @@
-# Release 0.1.39
+# Release 0.1.43 (2020-06-11)
+
+- [The new `Average` trait][31] computes fast integer averages, rounded up or
+  down, without any risk of overflow.
+
+**Contributors**: @althonos, @cuviper
+
+[31]: https://github.com/rust-num/num-integer/pull/31
+
+# Release 0.1.42 (2020-01-09)
+
+- [Updated the `autocfg` build dependency to 1.0][29].
+
+**Contributors**: @cuviper, @dingelish
+
+[29]: https://github.com/rust-num/num-integer/pull/29
+
+# Release 0.1.41 (2019-05-21)
+
+- [Fixed feature detection on `no_std` targets][25].
+
+**Contributors**: @cuviper
+
+[25]: https://github.com/rust-num/num-integer/pull/25
+
+# Release 0.1.40 (2019-05-20)
+
+- [Optimized primitive `gcd` by avoiding memory swaps][11].
+- [Fixed `lcm(0, 0)` to return `0`, rather than panicking][18].
+- [Added `Integer::div_ceil`, `next_multiple_of`, and `prev_multiple_of`][16].
+- [Added `Integer::gcd_lcm`, `extended_gcd`, and `extended_gcd_lcm`][19].
+
+**Contributors**: @cuviper, @ignatenkobrain, @smarnach, @strake
+
+[11]: https://github.com/rust-num/num-integer/pull/11
+[16]: https://github.com/rust-num/num-integer/pull/16
+[18]: https://github.com/rust-num/num-integer/pull/18
+[19]: https://github.com/rust-num/num-integer/pull/19
+
+# Release 0.1.39 (2018-06-20)
 
 - [The new `Roots` trait provides `sqrt`, `cbrt`, and `nth_root` methods][9],
   calculating an `Integer`'s principal roots rounded toward zero.
@@ -7,7 +46,7 @@
 
 [9]: https://github.com/rust-num/num-integer/pull/9
 
-# Release 0.1.38
+# Release 0.1.38 (2018-05-11)
 
 - [Support for 128-bit integers is now automatically detected and enabled.][8]
   Setting the `i128` crate feature now causes the build script to panic if such
@@ -17,7 +56,7 @@
 
 [8]: https://github.com/rust-num/num-integer/pull/8
 
-# Release 0.1.37
+# Release 0.1.37 (2018-05-10)
 
 - [`Integer` is now implemented for `i128` and `u128`][7] starting with Rust
   1.26, enabled by the new `i128` crate feature.
@@ -26,7 +65,7 @@
 
 [7]: https://github.com/rust-num/num-integer/pull/7
 
-# Release 0.1.36
+# Release 0.1.36 (2018-02-06)
 
 - [num-integer now has its own source repository][num-356] at [rust-num/num-integer][home].
 - [Corrected the argument order documented in `Integer::is_multiple_of`][1]

@@ -284,6 +284,22 @@ macro_rules! impl_to_primitive_float_to_float {
     )*}
 }
 
+#[cfg(has_to_int_unchecked)]
+macro_rules! float_to_int_unchecked {
+    // SAFETY: Must not be NaN or infinite; must be representable as the integer after truncating.
+    // We already checked that the float is in the exclusive range `(MIN-1, MAX+1)`.
+    ($float:expr => $int:ty) => {
+        unsafe { $float.to_int_unchecked::<$int>() }
+    };
+}
+
+#[cfg(not(has_to_int_unchecked))]
+macro_rules! float_to_int_unchecked {
+    ($float:expr => $int:ty) => {
+        $float as $int
+    };
+}
+
 macro_rules! impl_to_primitive_float_to_signed_int {
     ($f:ident : $( $(#[$cfg:meta])* fn $method:ident -> $i:ident ; )*) => {$(
         #[inline]
@@ -296,7 +312,7 @@ macro_rules! impl_to_primitive_float_to_signed_int {
                 const MIN_M1: $f = $i::MIN as $f - 1.0;
                 const MAX_P1: $f = $i::MAX as $f + 1.0;
                 if *self > MIN_M1 && *self < MAX_P1 {
-                    return Some(*self as $i);
+                    return Some(float_to_int_unchecked!(*self => $i));
                 }
             } else {
                 // We can't represent `MIN-1` exactly, but there's no fractional part
@@ -306,7 +322,7 @@ macro_rules! impl_to_primitive_float_to_signed_int {
                 // `MAX+1` (a power of two) when we cast it.
                 const MAX_P1: $f = $i::MAX as $f;
                 if *self >= MIN && *self < MAX_P1 {
-                    return Some(*self as $i);
+                    return Some(float_to_int_unchecked!(*self => $i));
                 }
             }
             None
@@ -325,7 +341,7 @@ macro_rules! impl_to_primitive_float_to_unsigned_int {
                 // With a larger size, we can represent the range exactly.
                 const MAX_P1: $f = $u::MAX as $f + 1.0;
                 if *self > -1.0 && *self < MAX_P1 {
-                    return Some(*self as $u);
+                    return Some(float_to_int_unchecked!(*self => $u));
                 }
             } else {
                 // We can't represent `MAX` exactly, but it will round up to exactly
@@ -333,7 +349,7 @@ macro_rules! impl_to_primitive_float_to_unsigned_int {
                 // (`u128::MAX as f32` is infinity, but this is still ok.)
                 const MAX_P1: $f = $u::MAX as $f;
                 if *self > -1.0 && *self < MAX_P1 {
-                    return Some(*self as $u);
+                    return Some(float_to_int_unchecked!(*self => $u));
                 }
             }
             None

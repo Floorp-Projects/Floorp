@@ -1,16 +1,13 @@
 #![feature(test)]
 #![cfg(feature = "rand")]
 
-extern crate num_bigint;
-extern crate num_integer;
-extern crate num_traits;
-extern crate rand;
 extern crate test;
 
 use num_bigint::{BigUint, RandBigInt};
 use num_integer::Integer;
 use num_traits::Zero;
-use rand::{SeedableRng, StdRng};
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use test::Bencher;
 
 fn get_rng() -> StdRng {
@@ -21,7 +18,7 @@ fn get_rng() -> StdRng {
     SeedableRng::from_seed(seed)
 }
 
-fn bench(b: &mut Bencher, bits: usize, gcd: fn(&BigUint, &BigUint) -> BigUint) {
+fn bench(b: &mut Bencher, bits: u64, gcd: fn(&BigUint, &BigUint) -> BigUint) {
     let mut rng = get_rng();
     let x = rng.gen_biguint(bits);
     let y = rng.gen_biguint(bits);
@@ -40,7 +37,7 @@ fn euclid(x: &BigUint, y: &BigUint) -> BigUint {
         m = n % &temp;
         n = temp;
     }
-    return n;
+    n
 }
 
 #[bench]

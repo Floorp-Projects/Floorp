@@ -38,10 +38,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 
-extern crate num_bigint;
-extern crate num_integer;
-extern crate num_traits;
-
 use std::io;
 use std::str::FromStr;
 
@@ -98,7 +94,7 @@ fn pidigits(n: isize, out: &mut dyn io::Write) -> io::Result<()> {
     let mut k = 0;
     let mut context = Context::new();
 
-    for i in 1..(n + 1) {
+    for i in 1..=n {
         let mut d;
         loop {
             k += 1;
@@ -111,7 +107,7 @@ fn pidigits(n: isize, out: &mut dyn io::Write) -> io::Result<()> {
 
         write!(out, "{}", d)?;
         if i % 10 == 0 {
-            write!(out, "\t:{}\n", i)?;
+            writeln!(out, "\t:{}", i)?;
         }
 
         context.eliminate_digit(d);
@@ -122,7 +118,7 @@ fn pidigits(n: isize, out: &mut dyn io::Write) -> io::Result<()> {
         for _ in m..10 {
             write!(out, " ")?;
         }
-        write!(out, "\t:{}\n", n)?;
+        writeln!(out, "\t:{}", n)?;
     }
     Ok(())
 }
