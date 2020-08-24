@@ -217,6 +217,14 @@ addAccessibleTask(
 );
 
 addAccessibleTask(
+  `<ul><li>hello</li><li>world</li></ul>
+   <ul style="list-style: none;"><li>goodbye</li><li>universe</li></ul>`,
+  (browser, accDoc) => {
+    testMarkerIntegrity(accDoc);
+  }
+);
+
+addAccessibleTask(
   `<div id="a">hello</div><div id="b">world</div>`,
   (browser, accDoc) => {
     testMarkerIntegrity(accDoc);
