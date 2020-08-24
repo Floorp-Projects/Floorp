@@ -240,11 +240,18 @@ nsresult JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   msection->SetPort(9);
 
   // We don't do this in AddTransportAttributes because that is also used for
-  // making answers, and we don't want to unconditionally set rtcp-mux there.
+  // making answers, and we don't want to unconditionally set rtcp-mux or
+  // rtcp-rsize there.
   if (mSdpHelper.HasRtcp(msection->GetProtocol())) {
     // Set RTCP-MUX.
     msection->GetAttributeList().SetAttribute(
         new SdpFlagAttribute(SdpAttribute::kRtcpMuxAttribute));
+    // Set RTCP-RSIZE
+    if (msection->GetMediaType() == SdpMediaSection::MediaType::kVideo &&
+        Preferences::GetBool("media.navigator.video.offer_rtcp_rsize", false)) {
+      msection->GetAttributeList().SetAttribute(
+          new SdpFlagAttribute(SdpAttribute::kRtcpRsizeAttribute));
+    }
   }
 
   nsresult rv = AddTransportAttributes(msection, SdpSetupAttribute::kActpass);
