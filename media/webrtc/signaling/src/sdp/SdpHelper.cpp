@@ -83,17 +83,13 @@ bool SdpHelper::AreOldTransportParamsValid(const Sdp& oldAnswer,
     return false;
   }
 
-  if (!HasOwnTransport(oldAnswer, level)) {
+  if (!OwnsTransport(oldAnswer, level, sdp::kAnswer)) {
     // The transport attributes on this m-section were thrown away, because it
     // was bundled.
     return false;
   }
 
-  if (newOffer.GetMediaSection(level).GetAttributeList().HasAttribute(
-          SdpAttribute::kBundleOnlyAttribute) &&
-      !HasOwnTransport(newOffer, level)) {
-    // It never makes sense to put transport attributes in a bundle-only
-    // m-section
+  if (!OwnsTransport(newOffer, level, sdp::kOffer)) {
     return false;
   }
 
@@ -236,14 +232,9 @@ nsresult SdpHelper::GetBundledMids(const Sdp& sdp, BundledMids* bundledMids) {
   return NS_OK;
 }
 
-bool SdpHelper::HasOwnTransport(const Sdp& sdp, uint16_t level) {
+bool SdpHelper::OwnsTransport(const Sdp& sdp, uint16_t level,
+                              sdp::SdpType type) {
   auto& msection = sdp.GetMediaSection(level);
-
-  if (!msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
-    // No mid, definitely no bundle for this m-section
-    return true;
-  }
-  std::string mid(msection.GetAttributeList().GetMid());
 
   BundledMids bundledMids;
   nsresult rv = GetBundledMids(sdp, &bundledMids);
@@ -253,9 +244,25 @@ bool SdpHelper::HasOwnTransport(const Sdp& sdp, uint16_t level) {
     return true;
   }
 
-  if (bundledMids.count(mid) && level != bundledMids[mid]->GetLevel()) {
-    // mid is bundled, and isn't the bundle m-section
-    return false;
+  return OwnsTransport(msection, bundledMids, type);
+}
+
+bool SdpHelper::OwnsTransport(const SdpMediaSection& msection,
+                              const BundledMids& bundledMids,
+                              sdp::SdpType type) {
+  if (!msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
+    // No mid, definitely no bundle for this m-section
+    return true;
+  }
+  std::string mid(msection.GetAttributeList().GetMid());
+  if (type != sdp::kOffer || msection.GetAttributeList().HasAttribute(
+                                 SdpAttribute::kBundleOnlyAttribute)) {
+    // If this is an answer, or this m-section is marked bundle-only, the group
+    // attribute is authoritative. Otherwise, we aren't sure.
+    if (bundledMids.count(mid) && &msection != bundledMids.at(mid)) {
+      // mid is bundled, and isn't the bundle m-section
+      return false;
+    }
   }
 
   return true;

@@ -58,6 +58,8 @@ inline std::ostream& operator<<(std::ostream& os, sdp::Direction d) {
   MOZ_CRASH("Unknown Direction");
 }
 
+enum SdpType { kOffer, kAnswer };
+
 }  // namespace sdp
 
 }  // namespace mozilla

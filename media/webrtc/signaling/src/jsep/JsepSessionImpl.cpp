@@ -709,6 +709,17 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
     }
   }
 
+  SdpHelper::BundledMids bundledMids;
+  rv = mSdpHelper.GetBundledMids(*parsed, &bundledMids);
+  NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
+
+  SdpHelper::BundledMids remoteBundledMids;
+  if (type != kJsepSdpOffer) {
+    rv = mSdpHelper.GetBundledMids(*mPendingRemoteDescription,
+                                   &remoteBundledMids);
+    NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
+  }
+
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
     JsepTransceiver* transceiver(GetTransceiverForLevel(i));
     if (!transceiver) {
@@ -716,18 +727,46 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
       JSEP_SET_ERROR("No transceiver for level " << i);
       return dom::PCError::OperationError;
     }
-    transceiver->Associate(
-        parsed->GetMediaSection(i).GetAttributeList().GetMid());
 
-    if (mSdpHelper.MsectionIsDisabled(parsed->GetMediaSection(i)) ||
-        parsed->GetMediaSection(i).GetAttributeList().HasAttribute(
-            SdpAttribute::kBundleOnlyAttribute)) {
+    const auto& msection = parsed->GetMediaSection(i);
+    transceiver->Associate(msection.GetAttributeList().GetMid());
+
+    if (mSdpHelper.MsectionIsDisabled(msection)) {
       transceiver->mTransport.Close();
       continue;
     }
 
-    EnsureHasOwnTransport(parsed->GetMediaSection(i), transceiver);
+    bool hasOwnTransport = mSdpHelper.OwnsTransport(
+        msection, bundledMids,
+        (type == kJsepSdpOffer) ? sdp::kOffer : sdp::kAnswer);
+    if (type != kJsepSdpOffer) {
+      const auto& remoteMsection =
+          mPendingRemoteDescription->GetMediaSection(i);
+      // Don't allow the answer to override what the offer allowed for
+      hasOwnTransport &= mSdpHelper.OwnsTransport(
+          remoteMsection, remoteBundledMids, sdp::kOffer);
+    }
+
+    if (hasOwnTransport) {
+      EnsureHasOwnTransport(parsed->GetMediaSection(i), transceiver);
+    }
+
+    if (type == kJsepSdpOffer) {
+      if (!hasOwnTransport) {
+        auto it = bundledMids.find(transceiver->GetMid());
+        if (it != bundledMids.end()) {
+          transceiver->SetBundleLevel(it->second->GetLevel());
+        }
+      }
+    } else {
+      auto it = remoteBundledMids.find(transceiver->GetMid());
+      if (it != remoteBundledMids.end()) {
+        transceiver->SetBundleLevel(it->second->GetLevel());
+      }
+    }
   }
+
+  CopyBundleTransports();
 
   switch (type) {
     case kJsepSdpOffer:
@@ -970,6 +1009,8 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  CopyBundleTransports();
+
   std::vector<JsepTrack*> remoteTracks;
   for (const auto& [id, transceiver] : mTransceivers) {
     (void)id;  // Lame, but no better way to do this right now.
@@ -1011,26 +1052,11 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
 
   transceiver->SetNegotiated();
 
-  JsepTransceiver* transportTransceiver = transceiver;
-  if (transceiver->HasBundleLevel()) {
-    size_t transportLevel = transceiver->BundleLevel();
-    transportTransceiver = GetTransceiverForLevel(transportLevel);
-    if (!transportTransceiver) {
-      MOZ_ASSERT(false);
-      JSEP_SET_ERROR("No transceiver for level " << transportLevel);
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   // Ensure that this is finalized in case we need to copy it below
   nsresult rv =
       FinalizeTransport(remote.GetAttributeList(), answer.GetAttributeList(),
                         &transceiver->mTransport);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (transportTransceiver != transceiver) {
-    transceiver->mTransport = transportTransceiver->mTransport;
-  }
 
   transceiver->mSendTrack.SetActive(sending);
   transceiver->mSendTrack.Negotiate(answer, remote);
@@ -1087,6 +1113,34 @@ void JsepSessionImpl::EnsureHasOwnTransport(const SdpMediaSection& msection,
     std::ostringstream os;
     os << "transport_" << mTransportIdCounter++;
     transport.mTransportId = os.str();
+  }
+}
+
+void JsepSessionImpl::CopyBundleTransports() {
+  for (auto& [id, transceiver] : mTransceivers) {
+    (void)id;  // Lame, but no better way to do this right now.
+    if (transceiver->HasBundleLevel()) {
+      MOZ_MTLOG(ML_DEBUG,
+                "[" << mName << "] Transceiver " << transceiver->GetLevel()
+                    << " is in a bundle; transceiver "
+                    << transceiver->BundleLevel() << " owns the transport.");
+      const JsepTransceiver* transportOwner =
+          GetTransceiverForLevel(transceiver->BundleLevel());
+      MOZ_ASSERT(transportOwner);
+      if (transportOwner) {
+        transceiver->mTransport = transportOwner->mTransport;
+      }
+    } else if (transceiver->HasLevel()) {
+      MOZ_MTLOG(ML_DEBUG, "[" << mName << "] Transceiver "
+                              << transceiver->GetLevel()
+                              << " is not necessarily in a bundle.");
+    }
+    if (transceiver->HasLevel()) {
+      MOZ_MTLOG(ML_DEBUG,
+                "[" << mName << "] Transceiver " << transceiver->GetLevel()
+                    << " transport-id: " << transceiver->mTransport.mTransportId
+                    << " components: " << transceiver->mTransport.mComponents);
+    }
   }
 }
 
@@ -2194,10 +2248,16 @@ nsresult JsepSessionImpl::UpdateDefaultCandidate(
         return NS_ERROR_FAILURE;
       }
 
-      mSdpHelper.SetDefaultAddresses(defaultCandidateAddr, defaultCandidatePort,
-                                     defaultRtcpCandidateAddrCopy,
-                                     defaultRtcpCandidatePort,
-                                     &sdp->GetMediaSection(level));
+      auto& msection = sdp->GetMediaSection(level);
+
+      // Do not add default candidate to a bundle-only m-section, sinice that
+      // might confuse endpoints that do not support bundle-only.
+      if (!msection.GetAttributeList().HasAttribute(
+              SdpAttribute::kBundleOnlyAttribute)) {
+        mSdpHelper.SetDefaultAddresses(
+            defaultCandidateAddr, defaultCandidatePort,
+            defaultRtcpCandidateAddrCopy, defaultRtcpCandidatePort, &msection);
+      }
     }
   }
 

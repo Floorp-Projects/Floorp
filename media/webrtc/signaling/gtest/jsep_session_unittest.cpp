@@ -159,7 +159,7 @@ class JsepSessionTest : public JsepSessionTestBase,
 
     std::cerr << "OFFER: " << offer << std::endl;
 
-    ValidateTransport(*mOffererTransport, offer);
+    ValidateTransport(*mOffererTransport, offer, sdp::kOffer);
 
     if (transceiversBefore.size() != mSessionOff->GetTransceivers().size()) {
       EXPECT_TRUE(false) << "CreateOffer changed number of transceivers!";
@@ -756,7 +756,7 @@ class JsepSessionTest : public JsepSessionTestBase,
 
     std::cerr << "ANSWER: " << answer << std::endl;
 
-    ValidateTransport(*mAnswererTransport, answer);
+    ValidateTransport(*mAnswererTransport, answer, sdp::kAnswer);
     CheckTransceiverInvariants(transceiversBefore,
                                mSessionAns->GetTransceivers());
 
@@ -1408,7 +1408,8 @@ class JsepSessionTest : public JsepSessionTestBase,
   std::vector<std::pair<std::string, uint16_t>> mGatheredCandidates;
 
  private:
-  void ValidateTransport(TransportData& source, const std::string& sdp_str) {
+  void ValidateTransport(TransportData& source, const std::string& sdp_str,
+                         sdp::SdpType type) {
     UniquePtr<Sdp> sdp(Parse(sdp_str));
     ASSERT_TRUE(!!sdp);
     size_t num_m_sections = sdp->GetMediaSectionCount();
@@ -1433,7 +1434,7 @@ class JsepSessionTest : public JsepSessionTestBase,
         ValidateDisabledMSection(&msection);
         continue;
       }
-      if (mSdpHelper.HasOwnTransport(*sdp, i)) {
+      if (mSdpHelper.OwnsTransport(*sdp, i, type)) {
         const SdpAttributeList& attrs = msection.GetAttributeList();
 
         ASSERT_FALSE(attrs.GetIceUfrag().empty());
@@ -2806,7 +2807,10 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates) {
       Parse(mSessionOff->GetLocalDescription(kJsepDescriptionPending)));
   for (size_t level = 1; level < types.size(); ++level) {
     std::string id = GetTransportId(*mSessionOff, level);
-    if (!id.empty()) {
+    bool bundleOnly =
+        localOffer->GetMediaSection(level).GetAttributeList().HasAttribute(
+            SdpAttribute::kBundleOnlyAttribute);
+    if (!id.empty() && !bundleOnly) {
       mOffCandidates->Gather(*mSessionOff, id, RTP);
       if (types[level] != SdpMediaSection::kApplication) {
         mOffCandidates->Gather(*mSessionOff, id, RTCP);
@@ -5039,8 +5043,18 @@ TEST_P(JsepSessionTest, TestMaxBundle) {
   }
 
   SetLocalOffer(offer);
-  CheckTransceiversAreBundled(*mSessionOff,
-                              "Offerer transceivers (in have-local-offer)");
+  for (const auto& [id, transceiver] : mSessionOff->GetTransceivers()) {
+    (void)id;  // Lame, but no better way to do this right now.
+    if (transceiver->GetLevel() == 0) {
+      // We do not set the bundle-level in have-local-offer unless the
+      // m-section is bundle-only.
+      ASSERT_FALSE(transceiver->HasBundleLevel());
+    } else {
+      ASSERT_TRUE(transceiver->HasBundleLevel());
+      ASSERT_EQ(0U, transceiver->BundleLevel());
+    }
+    ASSERT_NE("", transceiver->mTransport.mTransportId);
+  }
 
   SetRemoteOffer(offer);
   std::string answer = CreateAnswer();
