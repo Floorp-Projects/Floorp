@@ -208,7 +208,7 @@ void nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr) {
   if (aStr.Find(kPageAndTotal) != kNotFound) {
     nsAutoString uStr;
     nsTextFormatter::ssprintf(uStr, mPD->mPageNumAndTotalsFormat.get(),
-                              mPageNum, mPD->mTotNumPages);
+                              mPageNum, mPD->mRawNumPages);
     aNewStr.ReplaceSubstring(kPageAndTotal, uStr);
   }
 
@@ -235,7 +235,7 @@ void nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr) {
   if (aStr.Find(kPageTotal) != kNotFound) {
     nsAutoString uStr;
     nsTextFormatter::ssprintf(uStr, mPD->mPageNumFormat.get(),
-                              mPD->mTotNumPages);
+                              mPD->mRawNumPages);
     aNewStr.ReplaceSubstring(kPageTotal, uStr);
   }
 }
