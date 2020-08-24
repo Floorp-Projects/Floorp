@@ -8,11 +8,10 @@ installer:
 	@$(MAKE) -C mobile/android/installer installer
 
 package:
-	# Setting MOZ_GECKOVIEW_JAR makes the installer generate a separate GeckoView JAR
-	@$(MAKE) MOZ_GECKOVIEW_JAR=1 -C mobile/android/installer
+	@$(MAKE) -C mobile/android/installer
 
 stage-package:
-	$(MAKE) MOZ_GECKOVIEW_JAR=1 -C mobile/android/installer stage-package
+	$(MAKE) -C mobile/android/installer stage-package
 
 deb: package
 	@$(MAKE) -C mobile/android/installer deb

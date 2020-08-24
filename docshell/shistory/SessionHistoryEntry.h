@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsILayoutHistoryState.h"
 #include "nsISHEntry.h"
+#include "nsSHEntryShared.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsDataHashtable.h"
 
@@ -32,13 +33,37 @@ class SHEntrySharedParentState;
 class SessionHistoryInfo {
  public:
   SessionHistoryInfo() = default;
+  SessionHistoryInfo(const SessionHistoryInfo& aInfo) = default;
   SessionHistoryInfo(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
+  SessionHistoryInfo(const SessionHistoryInfo& aSharedStateFrom, nsIURI* aURI,
+                     const nsID& aDocShellID);
+  SessionHistoryInfo(nsIURI* aURI, const nsID& aDocShellID,
+                     nsIPrincipal* aTriggeringPrincipal,
+                     nsIContentSecurityPolicy* aCsp,
+                     const nsACString& aContentType);
+
+  void Reset(nsIURI* aURI, const nsID& aDocShellID, bool aDynamicCreation,
+             nsIPrincipal* aTriggeringPrincipal,
+             nsIPrincipal* aPrincipalToInherit,
+             nsIPrincipal* aPartitionedPrincipalToInherit,
+             nsIContentSecurityPolicy* aCsp, const nsACString& aContentType);
 
   bool operator==(const SessionHistoryInfo& aInfo) const {
     return false;  // FIXME
   }
 
+  nsIURI* GetURI() const { return mURI; }
+  void SetURI(nsIURI* aURI) { mURI = aURI; }
+
+  void SetOriginalURI(nsIURI* aOriginalURI) { mOriginalURI = aOriginalURI; }
+
+  void SetResultPrincipalURI(nsIURI* aResultPrincipalURI) {
+    mResultPrincipalURI = aResultPrincipalURI;
+  }
+
   nsIInputStream* GetPostData() const { return mPostData; }
+  void SetPostData(nsIInputStream* aPostData) { mPostData = aPostData; }
+
   void GetScrollPosition(int32_t* aScrollPositionX, int32_t* aScrollPositionY) {
     *aScrollPositionX = mScrollPositionX;
     *aScrollPositionY = mScrollPositionY;
@@ -53,21 +78,31 @@ class SessionHistoryInfo {
     mScrollRestorationIsManual = aIsManual;
   }
 
-  void SetCacheKey(uint32_t aCacheKey) { mCacheKey = aCacheKey; }
+  void SetStateData(nsStructuredCloneContainer* aStateData) {
+    mStateData = aStateData;
+  }
 
-  nsIURI* GetURI() const { return mURI; }
+  void SetLoadReplace(bool aLoadReplace) { mLoadReplace = aLoadReplace; }
 
+  void SetURIWasModified(bool aURIWasModified) {
+    mURIWasModified = aURIWasModified;
+  }
   bool GetURIWasModified() const { return mURIWasModified; }
 
-  nsILayoutHistoryState* GetLayoutHistoryState() { return mLayoutHistoryState; }
+  uint64_t SharedId() const;
 
-  void SetLayoutHistoryState(nsILayoutHistoryState* aState) {
-    mLayoutHistoryState = aState;
+  nsILayoutHistoryState* GetLayoutHistoryState();
+  void SetLayoutHistoryState(nsILayoutHistoryState* aState);
+
+  bool SharesDocumentWith(const SessionHistoryInfo& aOther) const {
+    return SharedId() == aOther.SharedId();
   }
+
+  void FillLoadInfo(nsDocShellLoadState& aLoadState) const;
 
  private:
   friend class SessionHistoryEntry;
-  friend struct mozilla::ipc::IPDLParamTraits<LoadingSessionHistoryInfo>;
+  friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
 
   void MaybeUpdateTitleFromURI();
 
@@ -83,24 +118,53 @@ class SessionHistoryInfo {
   RefPtr<nsStructuredCloneContainer> mStateData;
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
-  // mLayoutHistoryState is used to serialize layout history state across
-  // IPC. In the parent process this is then synchronized to
-  // SHEntrySharedParentState::mLayoutHistoryState
-  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-
-  // mCacheKey is handled similar way to mLayoutHistoryState.
-  uint32_t mCacheKey = 0;
 
   bool mLoadReplace = false;
   bool mURIWasModified = false;
   bool mIsSrcdocEntry = false;
   bool mScrollRestorationIsManual = false;
   bool mPersist = false;
+
+  union SharedState {
+    SharedState();
+    explicit SharedState(const SharedState& aOther);
+    ~SharedState();
+
+    SharedState& operator=(const SharedState& aOther);
+
+    SHEntrySharedState* Get() const;
+
+    void Set(SHEntrySharedParentState* aState) { mParent = aState; }
+
+    void ChangeId(uint64_t aId);
+
+    static SharedState Create(nsIPrincipal* aTriggeringPrincipal,
+                              nsIPrincipal* aPrincipalToInherit,
+                              nsIPrincipal* aPartitionedPrincipalToInherit,
+                              nsIContentSecurityPolicy* aCsp,
+                              const nsACString& aContentType);
+
+   private:
+    explicit SharedState(SHEntrySharedParentState* aParent)
+        : mParent(aParent) {}
+    explicit SharedState(UniquePtr<SHEntrySharedState>&& aChild)
+        : mChild(std::move(aChild)) {}
+
+    // In the parent process this holds a strong reference to the refcounted
+    // SHEntrySharedParentState. In the child processes this holds an owning
+    // pointer to a SHEntrySharedState.
+    RefPtr<SHEntrySharedParentState> mParent;
+    UniquePtr<SHEntrySharedState> mChild;
+  };
+
+  SharedState mSharedState;
 };
 
 struct LoadingSessionHistoryInfo {
   LoadingSessionHistoryInfo() = default;
   explicit LoadingSessionHistoryInfo(SessionHistoryEntry* aEntry);
+
+  already_AddRefed<nsDocShellLoadState> CreateLoadInfo() const;
 
   SessionHistoryInfo mInfo;
 
@@ -111,11 +175,14 @@ struct LoadingSessionHistoryInfo {
   // an nsISHEntry in the nsDocShellLoadState and access to the nsISHistory,
   // but session-history-in-parent needs to pass needed information explicitly
   // to the relevant child process.
-  bool mIsLoadFromSessionHistory = false;
-  // mRequestedIndex and mSessionHistoryLength are relevant
-  // only if mIsLoadFromSessionHistory is true.
+  bool mLoadIsFromSessionHistory = false;
+  // mRequestedIndex, mSessionHistoryLength and mLoadingCurrentActiveEntry are
+  // relevant only if mLoadIsFromSessionHistory is true.
   int32_t mRequestedIndex = -1;
   int32_t mSessionHistoryLength = 0;
+  // If we're loading from the current active entry we want to treat it as not
+  // a same-document navigation (see nsDocShell::IsSameDocumentNavigation).
+  bool mLoadingCurrentActiveEntry = false;
 };
 
 // SessionHistoryEntry is used to store session history data in the parent
@@ -132,12 +199,15 @@ class SessionHistoryEntry : public nsISHEntry {
  public:
   SessionHistoryEntry(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   SessionHistoryEntry();
+  explicit SessionHistoryEntry(SessionHistoryInfo* aInfo);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SESSIONHISTORYENTRY_IID)
 
   const SessionHistoryInfo& Info() const { return *mInfo; }
+
+  SHEntrySharedParentState* SharedInfo() const;
 
   void AddChild(SessionHistoryEntry* aChild, int32_t aOffset,
                 bool aUseRemoteSubframes);
@@ -147,12 +217,12 @@ class SessionHistoryEntry : public nsISHEntry {
   // then it returns false.
   bool ReplaceChild(SessionHistoryEntry* aNewChild);
 
+  void SetInfo(SessionHistoryInfo* aInfo);
+
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
   static void RemoveLoadId(uint64_t aLoadId);
-
-  static void MaybeSynchronizeSharedStateToInfo(nsISHEntry* aEntry);
 
  private:
   friend struct LoadingSessionHistoryInfo;
@@ -161,7 +231,6 @@ class SessionHistoryEntry : public nsISHEntry {
   const nsID& DocshellID() const;
 
   UniquePtr<SessionHistoryInfo> mInfo;
-  RefPtr<SHEntrySharedParentState> mSharedInfo;
   nsISHEntry* mParent = nullptr;
   uint32_t mID;
   nsTArray<RefPtr<SessionHistoryEntry>> mChildren;
@@ -174,6 +243,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(SessionHistoryEntry, NS_SESSIONHISTORYENTRY_IID)
 }  // namespace dom
 
 namespace ipc {
+
+// Allow sending SessionHistoryInfo objects over IPC.
+template <>
+struct IPDLParamTraits<dom::SessionHistoryInfo> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const dom::SessionHistoryInfo& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, dom::SessionHistoryInfo* aResult);
+};
 
 // Allow sending LoadingSessionHistoryInfo objects over IPC.
 template <>

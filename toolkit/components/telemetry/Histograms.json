@@ -15606,5 +15606,27 @@
       "misuse",
       "diskspace"
     ]
+  },
+  "REL_PRELOAD_MISS_RATIO": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "bug_numbers": [1658532, 1583604],
+    "expires_in_version": "84",
+    "kind": "categorical",
+    "labels": [
+      "TYPE_SCRIPT_USED",
+      "TYPE_SCRIPT_UNUSED",
+      "TYPE_STYLE_USED",
+      "TYPE_STYLE_UNUSED",
+      "TYPE_IMAGE_USED",
+      "TYPE_IMAGE_UNUSED",
+      "TYPE_FONT_USED",
+      "TYPE_FONT_UNUSED",
+      "TYPE_FETCH_USED",
+      "TYPE_FETCH_UNUSED"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "description": "Ratio of used and unused resources preloaded with link rel=preload tag or response header, broken down by supported resource type."
   }
 }

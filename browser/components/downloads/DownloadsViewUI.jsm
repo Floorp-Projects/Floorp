@@ -539,6 +539,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
               case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
                 this.showButton("askOpenOrRemoveFile");
                 break;
+              case Downloads.Error.BLOCK_VERDICT_INSECURE:
               case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
                 this.showButton("askRemoveFileOrAllow");
                 break;
@@ -626,6 +627,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     switch (this.download.error.reputationCheckVerdict) {
       case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
         return [s.blockedUncommon2, [s.unblockTypeUncommon2, s.unblockTip2]];
+      case Downloads.Error.BLOCK_VERDICT_INSECURE:
+        return [s.blockedInsecure, [s.blockedInsecure, s.unblockTip2]];
       case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
         return [
           s.blockedPotentiallyUnwanted,

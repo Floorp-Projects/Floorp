@@ -118,22 +118,17 @@ this.InsecurePasswordUtils = {
   },
 
   _isPrincipalForLocalIPAddress(aPrincipal) {
-    try {
-      let uri = aPrincipal.URI;
-      if (Services.io.hostnameIsLocalIPAddress(uri)) {
-        log.debug("hasInsecureLoginForms: detected local IP address:", uri);
-        return true;
-      }
-    } catch (e) {
+    let res = aPrincipal.isLocalIpAddress;
+    if (res) {
       log.debug(
-        "hasInsecureLoginForms: unable to check for local IP address:",
-        e
+        "hasInsecureLoginForms: detected local IP address:",
+        aPrincipal.asciispec
       );
     }
-    return false;
+    return res;
   },
 
-  /**
+  /**s
    * Checks if there are insecure password fields present on the form's document
    * i.e. passwords inside forms with http action, inside iframes with http src,
    * or on insecure web pages.

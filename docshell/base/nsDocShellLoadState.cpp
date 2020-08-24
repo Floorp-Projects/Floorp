@@ -78,7 +78,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mChannelInitialized = aLoadState.ChannelInitialized();
   if (aLoadState.loadingSessionHistoryInfo().isSome()) {
     mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
-        aLoadState.loadingSessionHistoryInfo().value());
+        aLoadState.loadingSessionHistoryInfo().ref());
   }
 }
 
@@ -528,12 +528,28 @@ nsDocShellLoadState::GetLoadingSessionHistoryInfo() const {
 }
 
 void nsDocShellLoadState::SetLoadIsFromSessionHistory(
-    int32_t aRequestedIndex, int32_t aSessionHistoryLength) {
+    int32_t aRequestedIndex, int32_t aSessionHistoryLength,
+    bool aLoadingFromActiveEntry) {
   if (mLoadingSessionHistoryInfo) {
-    mLoadingSessionHistoryInfo->mIsLoadFromSessionHistory = true;
+    mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory = true;
     mLoadingSessionHistoryInfo->mRequestedIndex = aRequestedIndex;
     mLoadingSessionHistoryInfo->mSessionHistoryLength = aSessionHistoryLength;
+    mLoadingSessionHistoryInfo->mLoadingCurrentActiveEntry =
+        aLoadingFromActiveEntry;
   }
+}
+
+void nsDocShellLoadState::ClearLoadIsFromSessionHistory() {
+  if (mLoadingSessionHistoryInfo) {
+    mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory = false;
+  }
+  mSHEntry = nullptr;
+}
+
+bool nsDocShellLoadState::LoadIsFromSessionHistory() const {
+  return mLoadingSessionHistoryInfo
+             ? mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory
+             : !!mSHEntry;
 }
 
 const nsString& nsDocShellLoadState::Target() const { return mTarget; }

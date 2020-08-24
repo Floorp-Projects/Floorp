@@ -1354,6 +1354,20 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext,
       const uint32_t& aCacheKey);
 
+  mozilla::ipc::IPCResult RecvSetActiveSessionHistoryEntryForTop(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
+      uint32_t aLoadType, const nsID& aChangeID);
+
+  mozilla::ipc::IPCResult RecvSetActiveSessionHistoryEntryForFrame(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
+      int32_t aChildOffset, const nsID& aChangeID);
+
+  mozilla::ipc::IPCResult RecvReplaceActiveSessionHistoryEntry(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      SessionHistoryInfo&& aInfo);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();

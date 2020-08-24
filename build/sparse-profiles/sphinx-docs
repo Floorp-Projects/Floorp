@@ -28,3 +28,9 @@ glob:**/moz.build
 
 # Read to set the version of the docs.
 path:config/milestone.txt
+
+# metrics.yaml and pings.yaml files (and their index) are needed to generate
+# Glean autodocs
+glob:**/metrics.yaml
+glob:**/pings.yaml
+path:toolkit/components/glean/metrics_index.py

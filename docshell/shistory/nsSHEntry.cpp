@@ -1057,6 +1057,6 @@ nsSHEntry::AbandonBFCacheEntry() {
 
 NS_IMETHODIMP
 nsSHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
-  *aBFCacheID = mShared->GetID();
+  *aBFCacheID = mShared->GetId();
   return NS_OK;
 }

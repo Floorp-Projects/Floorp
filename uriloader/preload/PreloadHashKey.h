@@ -73,6 +73,7 @@ class PreloadHashKey : public nsURIHashKey {
 
   bool KeyEquals(KeyTypePointer aOther) const;
   static PLDHashNumber HashKey(KeyTypePointer aKey);
+  ResourceType As() const { return mAs; }
 
 #ifdef MOZILLA_INTERNAL_API
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {

@@ -41,3 +41,42 @@ add_task(async function test_default_bookmark_toolbar_visibility() {
     "The bookmarks toolbar should be collapsed by default"
   );
 });
+
+/**
+ * Ensure that the bookmarks toolbar is visible in a new profile
+ * if the toolbar has > 3 (NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE) bookmarks.
+ */
+add_task(async function test_bookmark_toolbar_visible_when_populated() {
+  const { Bookmarks } = ChromeUtils.import(
+    "resource://gre/modules/Bookmarks.jsm"
+  );
+  const { PlacesUIUtils } = ChromeUtils.import(
+    "resource:///modules/PlacesUIUtils.jsm"
+  );
+
+  let bookmark = {
+    type: Bookmarks.TYPE_BOOKMARK,
+    parentGuid: Bookmarks.toolbarGuid,
+  };
+  let bookmarksInserted = await Promise.all([
+    Bookmarks.insert(Object.assign({ url: "https://example.com/1" }, bookmark)),
+    Bookmarks.insert(Object.assign({ url: "https://example.com/2" }, bookmark)),
+    Bookmarks.insert(Object.assign({ url: "https://example.com/3" }, bookmark)),
+    Bookmarks.insert(Object.assign({ url: "https://example.com/4" }, bookmark)),
+    Bookmarks.insert(Object.assign({ url: "https://example.com/5" }, bookmark)),
+    Bookmarks.insert(Object.assign({ url: "https://example.com/6" }, bookmark)),
+  ]);
+
+  PlacesUIUtils.maybeToggleBookmarkToolbarVisibility();
+
+  const personalToolbar = document.getElementById("PersonalToolbar");
+  ok(
+    !personalToolbar.collapsed,
+    "The bookmarks toolbar should be visible since it has many bookmarks"
+  );
+
+  for (let insertedBookmark of bookmarksInserted) {
+    await Bookmarks.remove(insertedBookmark.guid);
+  }
+  personalToolbar.collapsed = true;
+});

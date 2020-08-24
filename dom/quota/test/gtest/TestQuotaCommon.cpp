@@ -7,6 +7,8 @@
 #include "gtest/gtest.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/ResultExtensions.h"
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 
 using namespace mozilla;
 using namespace mozilla::dom::quota;
@@ -292,53 +294,88 @@ TEST(QuotaCommon_OkIf, True)
   EXPECT_TRUE(res.isOk());
 }
 
-TEST(QuotaCommon_SuccessIf, False)
+TEST(QuotaCommon_OkIf, False)
 {
   auto res = OkIf(false);
 
   EXPECT_TRUE(res.isErr());
 }
 
-TEST(QuotaCommon_ToResult, SuccessEnforcer_Success)
+TEST(QuotaCommon_OkToOk, OkToBool_True)
 {
-  bool flag = false;
-
-  auto res = ToResult(NS_OK, [&](auto aValue) {
-    flag = true;
-
-    return false;
-  });
-
+  auto res = OkToOk<true>(Ok());
   EXPECT_TRUE(res.isOk());
-  EXPECT_FALSE(res.unwrap());
-  EXPECT_FALSE(flag);
+  EXPECT_EQ(res.unwrap(), true);
 }
 
-TEST(QuotaCommon_ToResult, SuccessEnforcer_Failure_EnforcerReturnsTrue)
+TEST(QuotaCommon_OkToOk, OkToBool_False)
 {
-  bool flag = false;
-
-  auto res = ToResult(NS_ERROR_FAILURE, [&](auto aValue) {
-    flag = true;
-
-    return true;
-  });
-
+  auto res = OkToOk<false>(Ok());
   EXPECT_TRUE(res.isOk());
-  EXPECT_TRUE(res.unwrap());
-  EXPECT_TRUE(flag);
+  EXPECT_EQ(res.unwrap(), false);
 }
 
-TEST(QuotaCommon_ToResult, SuccessEnforcer_Failure_EnforcerReturnsFalse)
+TEST(QuotaCommon_OkToOk, OkToInt_42)
 {
-  bool flag = false;
+  auto res = OkToOk<42>(Ok());
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
 
-  auto res = ToResult(NS_ERROR_FAILURE, [&](auto aValue) {
-    flag = true;
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_True)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, true>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), true);
+}
 
-    return false;
-  });
-
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_True_Err)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, true>(NS_ERROR_UNEXPECTED);
   EXPECT_TRUE(res.isErr());
-  EXPECT_TRUE(flag);
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
+}
+
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_False)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, false>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), false);
+}
+
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_False_Err)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, false>(NS_ERROR_UNEXPECTED);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
+}
+
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToInt_42)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, 42>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToInt_42_Err)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, 42>(NS_ERROR_UNEXPECTED);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
+}
+
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, nullptr, nsCOMPtr<nsISupports>>(
+      NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), nullptr);
+}
+
+TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr_Err)
+{
+  auto res = ErrToOkOrErr<NS_ERROR_FAILURE, nullptr, nsCOMPtr<nsISupports>>(
+      NS_ERROR_UNEXPECTED);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }

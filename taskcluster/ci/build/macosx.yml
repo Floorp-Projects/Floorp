@@ -19,8 +19,6 @@ job-defaults:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-cctools-port
-            - linux64-clang-macosx-cross
             - linux64-dump-syms
             - linux64-hfsplus
             - linux64-libdmg
@@ -31,7 +29,6 @@ job-defaults:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
-            - wasi-sysroot
 
 macosx64/debug:
     description: "MacOS X x64 Cross-compile"
@@ -56,7 +53,10 @@ macosx64/debug:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot
 
 macosx64/opt:
     description: "MacOS X x64 Cross-compile"
@@ -81,7 +81,10 @@ macosx64/opt:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot
 
 macosx64-asan-fuzzing/opt:
     description: "MacOS X x64 Cross-compile Fuzzing ASAN"
@@ -103,7 +106,10 @@ macosx64-asan-fuzzing/opt:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot
     optimization:
         build-fuzzing: null
 
@@ -129,7 +135,10 @@ macosx64-fuzzing/debug:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot
     optimization:
         build-fuzzing: null
 
@@ -162,6 +171,11 @@ macosx64-devedition/opt:
             stage_platform: macosx64-devedition
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - wasi-sysroot
 
 macosx64-noopt/debug:
     description: "MacOS X x64 No-optimize Debug"
@@ -184,7 +198,10 @@ macosx64-noopt/debug:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot
 
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
@@ -206,7 +223,10 @@ macosx64-add-on-devel/opt:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot
 
 macosx64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
@@ -233,6 +253,11 @@ macosx64-shippable/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
             - taskcluster_nightly.py
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - wasi-sysroot
 
 macosx64-ccov/opt:
     description: "MacOS X x64 Cross-compile Code Coverage"
@@ -257,7 +282,10 @@ macosx64-ccov/opt:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port-clang-9
+            - linux64-clang-9-macosx-cross
             - linux64-sccache
+            - wasi-sysroot-9
 
 macosx64-gcp/debug:
     description: "MacOS X x64 Cross-compile - built on GCP"
@@ -283,7 +311,10 @@ macosx64-gcp/debug:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot
     optimization:
         push-interval-25: null
 
@@ -310,4 +341,7 @@ macosx64-gcp/opt:
     use-sccache: true
     fetches:
         toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
             - linux64-sccache
+            - wasi-sysroot

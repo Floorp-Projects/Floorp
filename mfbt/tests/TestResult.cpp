@@ -293,6 +293,125 @@ static void MapErrTest() {
   }
 }
 
+static Result<Ok, size_t> strlen_ResultWrapper(const char* aValue) {
+  return Err(strlen(aValue));
+}
+
+static void OrElseTest() {
+  struct MyError {
+    int x;
+
+    explicit MyError(int y) : x(y) {}
+  };
+
+  struct MyError2 {
+    int a;
+
+    explicit MyError2(int b) : a(b) {}
+  };
+
+  // `orElse`ing over error values, to Result<V, E> (the same error type) error
+  // variant.
+  {
+    MyError err(1);
+    Result<char, MyError> res(err);
+    MOZ_RELEASE_ASSERT(res.isErr());
+    bool invoked = false;
+    auto res2 = res.orElse([&invoked](const auto err) -> Result<char, MyError> {
+      MOZ_RELEASE_ASSERT(err.x == 1);
+      invoked = true;
+      if (err.x != 42) {
+        return Err(MyError(2));
+      }
+      return 'a';
+    });
+    MOZ_RELEASE_ASSERT(res2.isErr());
+    MOZ_RELEASE_ASSERT(invoked);
+    MOZ_RELEASE_ASSERT(res2.unwrapErr().x == 2);
+  }
+
+  // `orElse`ing over error values, to Result<V, E> (the same error type)
+  // success variant.
+  {
+    MyError err(42);
+    Result<char, MyError> res(err);
+    MOZ_RELEASE_ASSERT(res.isErr());
+    bool invoked = false;
+    auto res2 = res.orElse([&invoked](const auto err) -> Result<char, MyError> {
+      MOZ_RELEASE_ASSERT(err.x == 42);
+      invoked = true;
+      if (err.x != 42) {
+        return Err(MyError(2));
+      }
+      return 'a';
+    });
+    MOZ_RELEASE_ASSERT(res2.isOk());
+    MOZ_RELEASE_ASSERT(invoked);
+    MOZ_RELEASE_ASSERT(res2.unwrap() == 'a');
+  }
+
+  // `orElse`ing over error values, to Result<V, E2> (a different error type)
+  // error variant.
+  {
+    MyError err(1);
+    Result<char, MyError> res(err);
+    MOZ_RELEASE_ASSERT(res.isErr());
+    bool invoked = false;
+    auto res2 =
+        res.orElse([&invoked](const auto err) -> Result<char, MyError2> {
+          MOZ_RELEASE_ASSERT(err.x == 1);
+          invoked = true;
+          if (err.x != 42) {
+            return Err(MyError2(2));
+          }
+          return 'a';
+        });
+    MOZ_RELEASE_ASSERT(res2.isErr());
+    MOZ_RELEASE_ASSERT(invoked);
+    MOZ_RELEASE_ASSERT(res2.unwrapErr().a == 2);
+  }
+
+  // `orElse`ing over error values, to Result<V, E2> (a different error type)
+  // success variant.
+  {
+    MyError err(42);
+    Result<char, MyError> res(err);
+    MOZ_RELEASE_ASSERT(res.isErr());
+    bool invoked = false;
+    auto res2 =
+        res.orElse([&invoked](const auto err) -> Result<char, MyError2> {
+          MOZ_RELEASE_ASSERT(err.x == 42);
+          invoked = true;
+          if (err.x != 42) {
+            return Err(MyError2(2));
+          }
+          return 'a';
+        });
+    MOZ_RELEASE_ASSERT(res2.isOk());
+    MOZ_RELEASE_ASSERT(invoked);
+    MOZ_RELEASE_ASSERT(res2.unwrap() == 'a');
+  }
+
+  // `orElse`ing over success values.
+  {
+    Result<int, MyError> res(5);
+    auto res2 = res.orElse([](const auto err) -> Result<int, MyError> {
+      MOZ_RELEASE_ASSERT(false);
+      return Err(MyError(1));
+    });
+    MOZ_RELEASE_ASSERT(res2.isOk());
+    MOZ_RELEASE_ASSERT(res2.unwrap() == 5);
+  }
+
+  // Function pointers instead of lambdas as the `orElse`ing function.
+  {
+    Result<Ok, const char*> res("hello");
+    auto res2 = res.orElse(strlen_ResultWrapper);
+    MOZ_RELEASE_ASSERT(res2.isErr());
+    MOZ_RELEASE_ASSERT(res2.unwrapErr() == 5);
+  }
+}
+
 static void AndThenTest() {
   // `andThen`ing over success results.
   Result<int, const char*> r1(10);
@@ -384,6 +503,7 @@ int main() {
   ReferenceTest();
   MapTest();
   MapErrTest();
+  OrElseTest();
   AndThenTest();
   UniquePtrTest();
   return 0;

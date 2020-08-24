@@ -98,16 +98,6 @@ class MachCommands(MachCommandBase):
 
         return ret
 
-    @SubCommand('android', 'generate-fennec-jni-wrappers',
-                """Generate Fennec-specific JNI wrappers used when building
-                Firefox for Android.""")
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def android_generate_fennec_jni_wrappers(self, args):
-        ret = self.gradle(
-            self.substs['GRADLE_ANDROID_GENERATE_FENNEC_JNI_WRAPPERS_TASKS'] + args, verbose=True)
-
-        return ret
-
     @SubCommand('android', 'api-lint',
                 """Run Android api-lint.
 REMOVED/DEPRECATED: Use 'mach lint --linter android-api-lint'.""")

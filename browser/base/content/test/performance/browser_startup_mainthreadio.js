@@ -449,6 +449,14 @@ const startupPhases = {
       stat: 1,
       close: 1,
     },
+    {
+      // Bug 1660582 - access while running on windows10 hardware.
+      path: "ProfD:wmfvpxvideo.guard",
+      condition: WIN,
+      ignoreIfUnused: true,
+      stat: 1,
+      close: 1,
+    },
   ],
 
   // Things that are expected to be completely out of the startup path

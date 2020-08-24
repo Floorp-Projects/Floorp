@@ -502,6 +502,10 @@ class nsDocShell final : public nsDocLoader,
   void SetLoadingSessionHistoryInfo(
       const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo);
 
+  static bool ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel);
+
+  bool IsOSHE(nsISHEntry* aEntry) const { return mOSHE == aEntry; }
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
@@ -594,8 +598,6 @@ class nsDocShell final : public nsDocLoader,
   // Session History
   //
 
-  bool ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel);
-
   // Either aChannel or aOwner must be null. If aChannel is
   // present, the owner should be gotten from it.
   // If aCloneChildren is true, then our current session history's
@@ -613,6 +615,13 @@ class nsDocShell final : public nsDocLoader,
                                nsIPrincipal* aPartitionedPrincipalToInherit,
                                nsIContentSecurityPolicy* aCsp,
                                bool aCloneChildren, nsISHEntry** aNewEntry);
+
+  void UpdateActiveEntry(
+      bool aReplace, const mozilla::Maybe<nsPoint>& aPreviousScrollPos,
+      nsIURI* aURI, nsIURI* aOriginalURI, nsIPrincipal* aTriggeringPrincipal,
+      nsIContentSecurityPolicy* aCsp, const nsAString& aTitle,
+      const mozilla::Maybe<bool>& aScrollRestorationIsManual,
+      nsIStructuredCloneContainer* aData, bool aURIWasModified);
 
   nsresult AddChildSHEntryToParent(nsISHEntry* aNewEntry, int32_t aChildOffset,
                                    bool aCloneChildren);
@@ -981,6 +990,9 @@ class nsDocShell final : public nsDocLoader,
   nsPresContext* GetEldestPresContext();
   nsresult CheckLoadingPermissions();
   nsresult LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType);
+  nsresult LoadHistoryEntry(
+      const mozilla::dom::LoadingSessionHistoryInfo& aEntry,
+      uint32_t aLoadType);
   nsresult LoadHistoryEntry(nsDocShellLoadState* aLoadState, uint32_t aLoadType,
                             bool aReloadingActiveEntry);
   nsresult GetHttpChannel(nsIChannel* aChannel, nsIHttpChannel** aReturn);

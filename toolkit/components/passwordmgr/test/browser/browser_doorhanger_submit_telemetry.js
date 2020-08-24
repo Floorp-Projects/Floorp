@@ -24,7 +24,9 @@ const TEST_CASES = [
         type: "save",
         ping: {
           did_edit_un: "false",
+          did_select_un: "false",
           did_edit_pw: "false",
+          did_select_pw: "false",
         },
       },
     ],
@@ -35,15 +37,19 @@ const TEST_CASES = [
     userActions: [
       {
         pageChanges: { password: "pagePw" },
-        doorhangerChanges: {
-          username: "doorhangerUn",
-        },
+        doorhangerChanges: [
+          {
+            typedUsername: "doorhangerUn",
+          },
+        ],
       },
       {
         pageChanges: { password: "pagePw2" },
-        doorhangerChanges: {
-          password: "doorhangerPw",
-        },
+        doorhangerChanges: [
+          {
+            typedPassword: "doorhangerPw",
+          },
+        ],
       },
     ],
     expectedEvents: [
@@ -51,14 +57,18 @@ const TEST_CASES = [
         type: "save",
         ping: {
           did_edit_un: "true",
+          did_select_un: "false",
           did_edit_pw: "false",
+          did_select_pw: "false",
         },
       },
       {
         type: "update",
         ping: {
           did_edit_un: "false",
+          did_select_un: "false",
           did_edit_pw: "true",
+          did_select_pw: "false",
         },
       },
     ],
@@ -73,9 +83,11 @@ const TEST_CASES = [
     userActions: [
       {
         pageChanges: { password: "pagePw" },
-        doorhangerChanges: {
-          password: "doorhangerPw",
-        },
+        doorhangerChanges: [
+          {
+            typedPassword: "doorhangerPw",
+          },
+        ],
       },
     ],
     expectedEvents: [
@@ -83,7 +95,9 @@ const TEST_CASES = [
         type: "update",
         ping: {
           did_edit_un: "false",
+          did_select_un: "false",
           did_edit_pw: "true",
+          did_select_pw: "false",
         },
       },
     ],
@@ -99,9 +113,11 @@ const TEST_CASES = [
     userActions: [
       {
         pageChanges: { password: "pagePw" },
-        doorhangerChanges: {
-          username: "doorhangerUn",
-        },
+        doorhangerChanges: [
+          {
+            typedUsername: "doorhangerUn",
+          },
+        ],
       },
     ],
     expectedEvents: [
@@ -109,7 +125,104 @@ const TEST_CASES = [
         type: "update",
         ping: {
           did_edit_un: "true",
+          did_select_un: "false",
           did_edit_pw: "false",
+          did_select_pw: "false",
+        },
+      },
+    ],
+  },
+  ///////////////
+  {
+    description: "selecting a saved username sends a 'not edited' event",
+    savedLogin: {
+      username: "savedUn",
+      password: "savedPw",
+    },
+    userActions: [
+      {
+        pageChanges: { password: "pagePw" },
+        doorhangerChanges: [
+          {
+            selectUsername: "savedUn",
+          },
+        ],
+      },
+    ],
+    expectedEvents: [
+      {
+        type: "update",
+        ping: {
+          did_edit_un: "false",
+          did_select_un: "true",
+          did_edit_pw: "false",
+          did_select_pw: "false",
+        },
+      },
+    ],
+  },
+  /////////////////
+  {
+    description:
+      "typing a new username then selecting a saved username sends a 'not edited' event",
+    savedLogin: {
+      username: "savedUn",
+      password: "savedPw",
+    },
+    userActions: [
+      {
+        pageChanges: { password: "pagePw" },
+        doorhangerChanges: [
+          {
+            typedUsername: "doorhangerTypedUn",
+          },
+          {
+            selectUsername: "savedUn",
+          },
+        ],
+      },
+    ],
+    expectedEvents: [
+      {
+        type: "update",
+        ping: {
+          did_edit_un: "false",
+          did_select_un: "true",
+          did_edit_pw: "false",
+          did_select_pw: "false",
+        },
+      },
+    ],
+  },
+  /////////////////
+  {
+    description:
+      "selecting a saved username then typing a new username sends an 'edited' event",
+    savedLogin: {
+      username: "savedUn",
+      password: "savedPw",
+    },
+    userActions: [
+      {
+        pageChanges: { password: "pagePw" },
+        doorhangerChanges: [
+          {
+            selectUsername: "savedUn",
+          },
+          {
+            typedUsername: "doorhangerTypedUn",
+          },
+        ],
+      },
+    ],
+    expectedEvents: [
+      {
+        type: "update",
+        ping: {
+          did_edit_un: "true",
+          did_select_un: "false",
+          did_edit_pw: "false",
+          did_select_pw: "false",
         },
       },
     ],
@@ -125,6 +238,19 @@ for (let testData of TEST_CASES) {
     },
   };
   add_task(tmp[testData.description]);
+}
+
+function _validateTestCase(tc) {
+  for (let event of tc.expectedEvents) {
+    ok(
+      !(event.ping.did_edit_un && event.ping.did_select_un),
+      "'did_edit_un' and 'did_select_un' can never be true at the same time"
+    );
+    ok(
+      !(event.ping.did_edit_pw && event.ping.did_select_pw),
+      "'did_edit_pw' and 'did_select_pw' can never be true at the same time"
+    );
+  }
 }
 
 async function test_submit_telemetry(tc) {
@@ -168,6 +294,7 @@ async function test_submit_telemetry(tc) {
           await changeContentFormValues(browser, changeTo);
         }
 
+        info("Submitting form");
         let formSubmittedPromise = listenForTestNotification("FormSubmit");
         await SpecialPowers.spawn(browser, [], async function() {
           let doc = this.content.document;
@@ -177,11 +304,37 @@ async function test_submit_telemetry(tc) {
 
         let saveDoorhanger = waitForDoorhanger(browser, "password-save");
         let updateDoorhanger = waitForDoorhanger(browser, "password-change");
-        info("Waiting for doorhanger");
         notif = await Promise.race([saveDoorhanger, updateDoorhanger]);
 
-        await updateDoorhangerInputValues(userAction.doorhangerChanges);
+        if (PopupNotifications.panel.state !== "open") {
+          await BrowserTestUtils.waitForEvent(
+            PopupNotifications.panel,
+            "popupshown"
+          );
+        }
 
+        if (userAction.doorhangerChanges) {
+          for (let doorhangerChange of userAction.doorhangerChanges) {
+            if (
+              doorhangerChange.typedUsername ||
+              doorhangerChange.typedPassword
+            ) {
+              await updateDoorhangerInputValues({
+                username: doorhangerChange.typedUsername,
+                password: doorhangerChange.typedPassword,
+              });
+            }
+
+            if (doorhangerChange.selectUsername) {
+              await selectDoorhangerUsername(doorhangerChange.selectUsername);
+            }
+            if (doorhangerChange.selectPassword) {
+              await selectDoorhangerPassword(doorhangerChange.selectPassword);
+            }
+          }
+        }
+
+        info("Waiting for doorhanger");
         await clickDoorhangerButton(notif, REMEMBER_BUTTON);
       }
     );

@@ -44,6 +44,12 @@ Firefox Source Tree Documentation
 
    {python_doc}
 
+.. toctree::
+   :caption: Metrics Collected in Firefox
+   :maxdepth: 1
+
+   {metrics_doc}
+
 
 Indices and tables
 ==================
