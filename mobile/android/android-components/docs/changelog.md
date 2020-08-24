@@ -52,6 +52,11 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: The `SiteControlsBuilder` interface has changed. `buildNotification` now takes two parameters: `Context` and `Notification.Builder`.
   * `WebAppSiteControlsFeature` now supports displaying monochrome icons.
 
+* **service-glean**
+  * Glean was updated to v32.1.1
+      * Support installing glean_parser in offline mode.
+      * Fix a startup crash on some Android 8 (SDK=25) devices, due to a [bug in the Java compiler](https://issuetracker.google.com/issues/110848122#comment17).
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)
