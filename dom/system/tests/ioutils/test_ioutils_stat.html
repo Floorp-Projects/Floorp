@@ -27,7 +27,7 @@
       const emptyFileName = OS.Path.join(tmpDir, "test_stat_empty.tmp");
       await createFile(emptyFileName);
 
-      const emptyFileInfo = await window.IOUtils.stat(emptyFileName);
+      const emptyFileInfo = await IOUtils.stat(emptyFileName);
       is(emptyFileInfo.size, 0, "IOUtils::stat can get correct (empty) file size");
       is(emptyFileInfo.path, emptyFileName, "IOUtils::stat result contains the path");
       is(emptyFileInfo.type, "regular", "IOUtils::stat can stat regular (empty) files");
@@ -42,7 +42,7 @@
       const bytes = Uint8Array.of(...new Array(50).keys());
       await createFile(tempFileName, bytes);
 
-      const fileInfo = await window.IOUtils.stat(tempFileName);
+      const fileInfo = await IOUtils.stat(tempFileName);
       is(fileInfo.size, 50, "IOUtils::stat can get correct file size");
       is(fileInfo.path, tempFileName, "IOUtils::stat result contains the path");
       is(fileInfo.type, "regular", "IOUtils::stat can stat regular files");
@@ -56,7 +56,7 @@
       const tempDirName = OS.Path.join(tmpDir, "test_stat_dir.tmp.d");
       await OS.File.makeDir(tempDirName);
 
-      const dirInfo = await window.IOUtils.stat(tempDirName);
+      const dirInfo = await IOUtils.stat(tempDirName);
       is(dirInfo.size, -1, "IOUtils::stat reports -1 size for directories")
       is(fileInfo.path, tempFileName, "IOUtils::stat result contains the path");
       is(fileInfo.type, "regular", "IOUtils::stat can stat directories");
@@ -74,7 +74,7 @@
       const notExistsFile = OS.Path.join(tmpDir, "test_stat_not_exists.tmp");
 
       await Assert.rejects(
-        window.IOUtils.stat(notExistsFile),
+        IOUtils.stat(notExistsFile),
         /Could not stat file\(.*\) because it does not exist/,
         "IOUtils::stat throws if the target file does not exist"
       );
