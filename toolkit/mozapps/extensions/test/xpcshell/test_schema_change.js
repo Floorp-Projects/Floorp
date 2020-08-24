@@ -79,12 +79,9 @@ add_task(async function run_tests() {
       what: "Modified timestamp on the XPI causes a reload of the manifest.",
       expectedVersion: "2.0",
       async action() {
-        let stat = await OS.File.stat(xpiPath);
-        await OS.File.setDates(
-          xpiPath,
-          stat.lastAccessDate,
-          stat.lastModificationDate.valueOf() + 60 * 1000
-        );
+        let stat = await IOUtils.stat(xpiPath);
+        let newLastModTime = stat.lastModified + 60 * 1000;
+        await IOUtils.touch(xpiPath, newLastModTime);
       },
     },
   ];
@@ -104,16 +101,13 @@ add_task(async function run_tests() {
 
     await promiseShutdownManager();
 
-    let orig = await OS.File.stat(xpiPath);
+    let fileInfo = await IOUtils.stat(xpiPath);
 
     xpi2.copyTo(profileDir, `${ID}.xpi`);
 
-    // Make sure the timestamp is unchanged, so it is not re-scanned for that reason.
-    await OS.File.setDates(
-      xpiPath,
-      orig.lastAccessDate,
-      orig.lastModificationDate
-    );
+    // Make sure the timestamp of the extension is unchanged, so it is not
+    // re-scanned for that reason.
+    await IOUtils.touch(xpiPath, fileInfo.lastModified);
 
     await test.action();
 
