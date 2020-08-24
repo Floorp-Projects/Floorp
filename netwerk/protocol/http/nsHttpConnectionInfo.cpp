@@ -547,8 +547,7 @@ bool nsHttpConnectionInfo::HostIsLocalIPLiteral() const {
   } else if (PR_StringToNetAddr(Origin(), &prAddr) != PR_SUCCESS) {
     return false;
   }
-  NetAddr netAddr;
-  PRNetAddrToNetAddr(&prAddr, &netAddr);
+  NetAddr netAddr(&prAddr);
   return IsIPAddrLocal(&netAddr);
 }
 
