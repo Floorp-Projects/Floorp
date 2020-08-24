@@ -1443,7 +1443,7 @@ var AddonTestUtils = {
   },
 
   async promiseSetExtensionModifiedTime(path, time) {
-    await OS.File.setDates(path, time, time);
+    await IOUtils.touch(path, time);
 
     let iterator = new OS.File.DirectoryIterator(path);
     try {
