@@ -733,7 +733,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   // Now determine how to set up the Frame print UI
   printData->mPrintSettings->SetPrintOptions(
-      nsIPrintSettings::kEnableSelectionRB, !!printData->mSelectionRoot);
+      nsIPrintSettings::kEnableSelectionRB,
+      !mDisallowSelectionPrint && printData->mSelectionRoot);
 
   bool printingViaParent =
       XRE_IsContentProcess() && Preferences::GetBool("print.print_via_parent");
@@ -2534,7 +2535,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   // This means we are either printing a selected iframe or
   // we are printing the current selection.
   MOZ_ASSERT(printRangeType == nsIPrintSettings::kRangeSelection);
-  NS_ENSURE_STATE(printData->mSelectionRoot);
+  NS_ENSURE_STATE(!mDisallowSelectionPrint && printData->mSelectionRoot);
 
   // If mSelectionRoot is a selected iframe without a selection, then just
   // enable normally from that point.
