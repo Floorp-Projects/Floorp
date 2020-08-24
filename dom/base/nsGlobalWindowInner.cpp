@@ -21,6 +21,7 @@
 #include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CSPEvalChecker.h"
 #include "mozilla/dom/DebuggerNotification.h"
@@ -1216,6 +1217,8 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   mLocalStorage = nullptr;
   mSessionStorage = nullptr;
   mPerformance = nullptr;
+
+  mContentMediaController = nullptr;
 
   mSharedWorkers.Clear();
 
@@ -7364,6 +7367,18 @@ void nsGlobalWindowInner::StorageAccessPermissionGranted() {
   if (mDoc) {
     mDoc->ClearActiveStoragePrincipal();
   }
+}
+
+ContentMediaController* nsGlobalWindowInner::GetContentMediaController() {
+  if (mContentMediaController) {
+    return mContentMediaController;
+  }
+  if (!mBrowsingContext) {
+    return nullptr;
+  }
+
+  mContentMediaController = new ContentMediaController(mBrowsingContext->Id());
+  return mContentMediaController;
 }
 
 /* static */

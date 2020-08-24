@@ -15,11 +15,7 @@ class BrowsingContext;
 
 /**
  * ContentMediaControlKeyReceiver is an interface which is used to receive media
- * control key sent from the chrome process, this class MUST only be used
- * in PlaybackController.
- *
- * Each browsing context tree would only have one ContentMediaControlKeyReceiver
- * that is used to handle media control key for that browsing context tree.
+ * control key sent from the chrome process.
  */
 class ContentMediaControlKeyReceiver {
  public:
@@ -45,9 +41,6 @@ class ContentMediaControlKeyReceiver {
  * would notify all its receivers. In addition, whenever controlled media
  * changes its playback status or audible state, they should update their status
  * update via ContentMediaAgent.
- *
- * Each browsing context tree would only have one ContentMediaAgent that is used
- * to update controlled media status existing in that browsing context tree.
  */
 class ContentMediaAgent : public IMediaInfoUpdater {
  public:
@@ -83,21 +76,10 @@ class ContentMediaAgent : public IMediaInfoUpdater {
 };
 
 /**
- * ContentMediaController has a responsibility to update the content media state
- * to MediaController that exists in the chrome process and control all media
- * within a tab. It also delivers control commands from MediaController in order
- * to control media in the content page.
- *
- * Each ContentMediaController has its own ID that is corresponding to the top
- * level browsing context ID. That means we share same the
- * ContentMediaController for those media existing in the same browsing context
- * tree and same process.
- *
- * So if the content of a page are all in the same process, then we would only
- * create one ContentMediaController. However, if the content of a page are
- * running in different processes because a page has cross-origin iframes, then
- * we would have multiple ContentMediaController at the same time, creating one
- * ContentMediaController in each process to manage media.
+ * ContentMediaController exists in per inner window, which has a responsibility
+ * to update the content media state to MediaController (ContentMediaAgent) and
+ * delivers MediaControlKey to its receiver in order to control media in the
+ * content page (ContentMediaControlKeyReceiver).
  */
 class ContentMediaController final : public ContentMediaAgent,
                                      public ContentMediaControlKeyReceiver {
@@ -121,7 +103,6 @@ class ContentMediaController final : public ContentMediaAgent,
   void PauseOrStopMedia();
 
   nsTArray<RefPtr<ContentMediaControlKeyReceiver>> mReceivers;
-  uint64_t mTopLevelBrowsingContextId;
 };
 
 }  // namespace dom

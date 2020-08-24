@@ -106,6 +106,7 @@ class DocGroup;
 class External;
 class Function;
 class Gamepad;
+class ContentMediaController;
 enum class ImageBitmapFormat : uint8_t;
 class IdleRequest;
 class IdleRequestCallback;
@@ -1241,6 +1242,12 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   // Hint to the JS engine whether we are currently loading.
   void HintIsLoading(bool aIsLoading);
+
+ public:
+  mozilla::dom::ContentMediaController* GetContentMediaController();
+
+ private:
+  RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
 
  protected:
   // Window offline status. Checked to see if we need to fire offline event
