@@ -663,9 +663,9 @@ static const char kFontUtsaah[] = "Utsaah";
 static const char kFontYuGothic[] = "Yu Gothic";
 
 void gfxWindowsPlatform::GetCommonFallbackFonts(
-    uint32_t aCh, uint32_t aNextCh, Script aRunScript,
+    uint32_t aCh, Script aRunScript, eFontPresentation aPresentation,
     nsTArray<const char*>& aFontList) {
-  if (ShouldPreferEmojiFont(aCh, aNextCh)) {
+  if (aPresentation == eFontPresentation::Emoji) {
     aFontList.AppendElement(kFontSegoeUIEmoji);
     aFontList.AppendElement(kFontTwemojiMozilla);
   }
