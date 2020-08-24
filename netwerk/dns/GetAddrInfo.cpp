@@ -170,7 +170,7 @@ _GetAddrInfo_Portable(const nsACString& aCanonHost, uint16_t aAddressFamily,
   RefPtr<AddrInfo> ai(new AddrInfo(aCanonHost, prai, disableIPv4,
                                    filterNameCollision, canonName));
   PR_FreeAddrInfo(prai);
-  if (ai->mAddresses.IsEmpty()) {
+  if (ai->Addresses().IsEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -210,17 +210,19 @@ bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
 
   RefPtr<AddrInfo> ai;
 
-  if (!cname) {
-    ai = new AddrInfo(aHost, 0);
-  } else {
-    ai = new AddrInfo(aHost, *cname, 0);
-  }
-
+  nsTArray<NetAddr> addresses;
   for (const auto& ip : *overrides) {
     if (aAddressFamily != AF_UNSPEC && ip.raw.family != aAddressFamily) {
       continue;
     }
-    ai->AddAddress(&ip);
+    NetAddr addr(&ip);
+    addresses.AppendElement(addr);
+  }
+
+  if (!cname) {
+    ai = new AddrInfo(aHost, 0, std::move(addresses));
+  } else {
+    ai = new AddrInfo(aHost, *cname, 0, std::move(addresses));
   }
 
   ai.forget(aAddrInfo);
