@@ -238,7 +238,7 @@ class BrowserIcons(
      * If custom [IconLoader] and [IconProcessor] instances with a custom storage are provided to
      * [BrowserIcons] then the calling app is responsible for clearing that data.
      */
-    private fun clear() {
+    fun clear() {
         sharedDiskCache.clear(context)
         sharedMemoryCache.clear()
     }
