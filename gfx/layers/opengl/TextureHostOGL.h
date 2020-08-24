@@ -497,6 +497,11 @@ class AndroidHardwareBufferTextureHost : public TextureHost {
 
   const char* Name() override { return "AndroidHardwareBufferTextureHost"; }
 
+  AndroidHardwareBufferTextureHost* AsAndroidHardwareBufferTextureHost()
+      override {
+    return this;
+  }
+
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 
@@ -512,6 +517,16 @@ class AndroidHardwareBufferTextureHost : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
                         const bool aPreferCompositorSurface) override;
+
+  void SetAcquireFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;
+
+  void SetReleaseFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;
+
+  mozilla::ipc::FileDescriptor GetAndResetReleaseFence() override;
+
+  AndroidHardwareBuffer* GetAndroidHardwareBuffer() const override {
+    return mAndroidHardwareBuffer;
+  }
 
  protected:
   void DestroyEGLImage();

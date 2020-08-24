@@ -422,6 +422,14 @@ void ShadowLayerForwarder::UseTextures(
                      t.mPictureRect, t.mFrameID, t.mProducerID, readLocked));
     mClientLayerManager->GetCompositorBridgeChild()
         ->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
+
+    auto fenceFd = t.mTextureClient->GetInternalData()->GetAcquireFence();
+    if (fenceFd.IsValid()) {
+      mTxn->AddEdit(CompositableOperation(
+          aCompositable->GetIPCHandle(),
+          OpDeliverAcquireFence(nullptr, t.mTextureClient->GetIPDLActor(),
+                                fenceFd)));
+    }
   }
   mTxn->AddEdit(CompositableOperation(aCompositable->GetIPCHandle(),
                                       OpUseTexture(textures)));
@@ -454,6 +462,22 @@ void ShadowLayerForwarder::UseComponentAlphaTextures(
       ->HoldUntilCompositableRefReleasedIfNecessary(aTextureOnBlack);
   mClientLayerManager->GetCompositorBridgeChild()
       ->HoldUntilCompositableRefReleasedIfNecessary(aTextureOnWhite);
+
+  auto fenceFdB = aTextureOnBlack->GetInternalData()->GetAcquireFence();
+  if (fenceFdB.IsValid()) {
+    mTxn->AddEdit(CompositableOperation(
+        aCompositable->GetIPCHandle(),
+        OpDeliverAcquireFence(nullptr, aTextureOnBlack->GetIPDLActor(),
+                              fenceFdB)));
+  }
+
+  auto fenceFdW = aTextureOnWhite->GetInternalData()->GetAcquireFence();
+  if (fenceFdW.IsValid()) {
+    mTxn->AddEdit(CompositableOperation(
+        aCompositable->GetIPCHandle(),
+        OpDeliverAcquireFence(nullptr, aTextureOnWhite->GetIPDLActor(),
+                              fenceFdW)));
+  }
 
   mTxn->AddEdit(CompositableOperation(
       aCompositable->GetIPCHandle(),

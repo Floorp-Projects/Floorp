@@ -19,6 +19,7 @@
 #include "mozilla/gfx/2D.h"     // for DrawTarget
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/gfx/Types.h"  // for SurfaceFormat
+#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/Shmem.h"  // for Shmem
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
@@ -47,7 +48,7 @@ namespace mozilla {
 
 namespace layers {
 
-class AsyncTransactionWaiter;
+class AndroidHardwareBufferTextureData;
 class BufferTextureData;
 class CompositableForwarder;
 class KnowsCompositor;
@@ -311,6 +312,23 @@ class TextureData {
   virtual BufferTextureData* AsBufferTextureData() { return nullptr; }
 
   virtual GPUVideoTextureData* AsGPUVideoTextureData() { return nullptr; }
+
+  virtual AndroidHardwareBufferTextureData*
+  AsAndroidHardwareBufferTextureData() {
+    return nullptr;
+  }
+
+  // It is used by AndroidHardwareBufferTextureData and
+  // SharedSurfaceTextureData. Returns buffer id when it owns
+  // AndroidHardwareBuffer. It is used only on android.
+  virtual Maybe<uint64_t> GetBufferId() const { return Nothing(); }
+
+  // The acquire fence is a fence that is used for waiting until rendering to
+  // its AHardwareBuffer is completed.
+  // It is used only on android.
+  virtual mozilla::ipc::FileDescriptor GetAcquireFence() {
+    return mozilla::ipc::FileDescriptor();
+  }
 
  protected:
   MOZ_COUNTED_DEFAULT_CTOR(TextureData)

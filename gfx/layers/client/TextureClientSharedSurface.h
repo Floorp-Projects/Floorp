@@ -50,6 +50,12 @@ class SharedSurfaceTextureData : public TextureData {
   bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   void Deallocate(LayersIPCChannel*) override;
+
+  TextureFlags GetTextureFlags() const override;
+
+  Maybe<uint64_t> GetBufferId() const override;
+
+  mozilla::ipc::FileDescriptor GetAcquireFence() override;
 };
 /*
 class SharedSurfaceTextureClient : public TextureClient {

@@ -10,6 +10,8 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 namespace mozilla {
@@ -128,6 +130,13 @@ int AndroidHardwareBufferApi::RecvHandleFromUnixSocket(
 }
 
 /* static */
+uint64_t AndroidHardwareBuffer::GetNextId() {
+  static std::atomic<uint64_t> sNextId = 0;
+  uint64_t id = ++sNextId;
+  return id;
+}
+
+/* static */
 already_AddRefed<AndroidHardwareBuffer> AndroidHardwareBuffer::Create(
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   if (!AndroidHardwareBufferApi::Get()) {
@@ -162,13 +171,15 @@ already_AddRefed<AndroidHardwareBuffer> AndroidHardwareBuffer::Create(
   AndroidHardwareBufferApi::Get()->Describe(nativeBuffer, &bufferInfo);
 
   RefPtr<AndroidHardwareBuffer> buffer = new AndroidHardwareBuffer(
-      nativeBuffer, aSize, bufferInfo.stride, aFormat);
+      nativeBuffer, aSize, bufferInfo.stride, aFormat, GetNextId());
+  AndroidHardwareBufferManager::Get()->Register(buffer);
   return buffer.forget();
 }
 
 /* static */
 already_AddRefed<AndroidHardwareBuffer>
 AndroidHardwareBuffer::FromFileDescriptor(ipc::FileDescriptor& aFileDescriptor,
+                                          uint64_t aBufferId,
                                           gfx::IntSize aSize,
                                           gfx::SurfaceFormat aFormat) {
   if (!aFileDescriptor.IsValid()) {
@@ -189,18 +200,21 @@ AndroidHardwareBuffer::FromFileDescriptor(ipc::FileDescriptor& aFileDescriptor,
   AndroidHardwareBufferApi::Get()->Describe(nativeBuffer, &bufferInfo);
 
   RefPtr<AndroidHardwareBuffer> buffer = new AndroidHardwareBuffer(
-      nativeBuffer, aSize, bufferInfo.stride, aFormat);
+      nativeBuffer, aSize, bufferInfo.stride, aFormat, aBufferId);
   return buffer.forget();
 }
 
 AndroidHardwareBuffer::AndroidHardwareBuffer(AHardwareBuffer* aNativeBuffer,
                                              gfx::IntSize aSize,
                                              uint32_t aStride,
-                                             gfx::SurfaceFormat aFormat)
+                                             gfx::SurfaceFormat aFormat,
+                                             uint64_t aId)
     : mSize(aSize),
       mStride(aStride),
       mFormat(aFormat),
-      mNativeBuffer(aNativeBuffer) {
+      mId(aId),
+      mNativeBuffer(aNativeBuffer),
+      mIsRegistered(false) {
   MOZ_ASSERT(mNativeBuffer);
 #ifdef DEBUG
   AHardwareBuffer_Desc bufferInfo = {};
@@ -213,12 +227,22 @@ AndroidHardwareBuffer::AndroidHardwareBuffer(AHardwareBuffer* aNativeBuffer,
 }
 
 AndroidHardwareBuffer::~AndroidHardwareBuffer() {
+  if (mIsRegistered) {
+    AndroidHardwareBufferManager::Get()->Unregister(this);
+  }
   AndroidHardwareBufferApi::Get()->Release(mNativeBuffer);
 }
 
-int AndroidHardwareBuffer::Lock(uint64_t aUsage, int32_t aFence,
-                                const ARect* aRect, void** aOutVirtualAddress) {
-  return AndroidHardwareBufferApi::Get()->Lock(mNativeBuffer, aUsage, aFence,
+int AndroidHardwareBuffer::Lock(uint64_t aUsage, const ARect* aRect,
+                                void** aOutVirtualAddress) {
+  ipc::FileDescriptor fd = GetAndResetReleaseFence();
+  int32_t fenceFd = -1;
+  ipc::FileDescriptor::UniquePlatformHandle rawFd;
+  if (fd.IsValid()) {
+    rawFd = fd.TakePlatformHandle();
+    fenceFd = rawFd.get();
+  }
+  return AndroidHardwareBufferApi::Get()->Lock(mNativeBuffer, aUsage, fenceFd,
                                                aRect, aOutVirtualAddress);
 }
 
@@ -229,6 +253,221 @@ int AndroidHardwareBuffer::Unlock(int32_t* aFence) {
 int AndroidHardwareBuffer::SendHandleToUnixSocket(int aSocketFd) {
   return AndroidHardwareBufferApi::Get()->SendHandleToUnixSocket(mNativeBuffer,
                                                                  aSocketFd);
+}
+
+void AndroidHardwareBuffer::SetLastFwdTransactionId(
+    uint64_t aFwdTransactionId, bool aUsesImageBridge,
+    const MonitorAutoLock& aAutoLock) {
+  if (mTransactionId.isNothing()) {
+    mTransactionId =
+        Some(FwdTransactionId(aFwdTransactionId, aUsesImageBridge));
+    return;
+  }
+  MOZ_RELEASE_ASSERT(mTransactionId.ref().mUsesImageBridge == aUsesImageBridge);
+  MOZ_RELEASE_ASSERT(mTransactionId.ref().mId <= aFwdTransactionId);
+
+  mTransactionId.ref().mId = aFwdTransactionId;
+}
+
+uint64_t AndroidHardwareBuffer::GetLastFwdTransactionId(
+    const MonitorAutoLock& aAutoLock) {
+  if (mTransactionId.isNothing()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return 0;
+  }
+  return mTransactionId.ref().mId;
+}
+
+void AndroidHardwareBuffer::SetReleaseFence(ipc::FileDescriptor&& aFenceFd) {
+  MonitorAutoLock lock(AndroidHardwareBufferManager::Get()->GetMonitor());
+  SetReleaseFence(std::move(aFenceFd), lock);
+}
+
+void AndroidHardwareBuffer::SetReleaseFence(ipc::FileDescriptor&& aFenceFd,
+                                            const MonitorAutoLock& aAutoLock) {
+  mReleaseFenceFd = std::move(aFenceFd);
+}
+
+void AndroidHardwareBuffer::SetAcquireFence(ipc::FileDescriptor&& aFenceFd) {
+  MonitorAutoLock lock(AndroidHardwareBufferManager::Get()->GetMonitor());
+
+  mAcquireFenceFd = std::move(aFenceFd);
+}
+
+ipc::FileDescriptor AndroidHardwareBuffer::GetAndResetReleaseFence() {
+  MonitorAutoLock lock(AndroidHardwareBufferManager::Get()->GetMonitor());
+
+  if (!mReleaseFenceFd.IsValid()) {
+    return ipc::FileDescriptor();
+  }
+
+  return std::move(mReleaseFenceFd);
+}
+
+ipc::FileDescriptor AndroidHardwareBuffer::GetAndResetAcquireFence() {
+  MonitorAutoLock lock(AndroidHardwareBufferManager::Get()->GetMonitor());
+
+  if (!mAcquireFenceFd.IsValid()) {
+    return ipc::FileDescriptor();
+  }
+
+  return std::move(mAcquireFenceFd);
+}
+
+ipc::FileDescriptor AndroidHardwareBuffer::GetAcquireFence() {
+  MonitorAutoLock lock(AndroidHardwareBufferManager::Get()->GetMonitor());
+
+  if (!mAcquireFenceFd.IsValid()) {
+    return ipc::FileDescriptor();
+  }
+
+  return mAcquireFenceFd;
+}
+
+bool AndroidHardwareBuffer::WaitForBufferOwnership() {
+  return AndroidHardwareBufferManager::Get()->WaitForBufferOwnership(this);
+}
+
+bool AndroidHardwareBuffer::IsWaitingForBufferOwnership() {
+  return AndroidHardwareBufferManager::Get()->IsWaitingForBufferOwnership(this);
+}
+
+StaticAutoPtr<AndroidHardwareBufferManager>
+    AndroidHardwareBufferManager::sInstance;
+
+/* static */
+void AndroidHardwareBufferManager::Init() {
+  sInstance = new AndroidHardwareBufferManager();
+}
+
+/* static */
+void AndroidHardwareBufferManager::Shutdown() { sInstance = nullptr; }
+
+AndroidHardwareBufferManager::AndroidHardwareBufferManager()
+    : mMonitor("AndroidHardwareBufferManager.mMonitor") {}
+
+void AndroidHardwareBufferManager::Register(
+    RefPtr<AndroidHardwareBuffer> aBuffer) {
+  MonitorAutoLock lock(mMonitor);
+
+  aBuffer->mIsRegistered = true;
+  ThreadSafeWeakPtr<AndroidHardwareBuffer> weak(aBuffer);
+
+#ifdef DEBUG
+  const auto it = mBuffers.find(aBuffer->mId);
+  MOZ_ASSERT(it == mBuffers.end());
+#endif
+  mBuffers.emplace(aBuffer->mId, weak);
+}
+
+void AndroidHardwareBufferManager::Unregister(AndroidHardwareBuffer* aBuffer) {
+  MonitorAutoLock lock(mMonitor);
+
+  const auto it = mBuffers.find(aBuffer->mId);
+  MOZ_ASSERT(it != mBuffers.end());
+  if (it == mBuffers.end()) {
+    gfxCriticalNote << "AndroidHardwareBuffer id mismatch happened";
+    return;
+  }
+  mBuffers.erase(it);
+}
+
+already_AddRefed<AndroidHardwareBuffer> AndroidHardwareBufferManager::GetBuffer(
+    uint64_t aBufferId) {
+  MonitorAutoLock lock(mMonitor);
+
+  const auto it = mBuffers.find(aBufferId);
+  if (it == mBuffers.end()) {
+    return nullptr;
+  }
+  auto buffer = RefPtr<AndroidHardwareBuffer>(it->second);
+  return buffer.forget();
+}
+
+bool AndroidHardwareBufferManager::WaitForBufferOwnership(
+    AndroidHardwareBuffer* aBuffer) {
+  MonitorAutoLock lock(mMonitor);
+
+  if (aBuffer->mTransactionId.isNothing()) {
+    return true;
+  }
+
+  auto it = mWaitingNotifyNotUsed.find(aBuffer->mId);
+  if (it == mWaitingNotifyNotUsed.end()) {
+    return true;
+  }
+
+  const double maxTimeoutSec = 10;
+  auto begin = TimeStamp::Now();
+
+  // XXX fix wait implementation.
+  // When mMonitor.NotifyAll() is not called in NotifyNotUsed(),
+  // mMonitor.Wait() could wait forever.
+  bool isWaiting = true;
+  while (isWaiting) {
+    mMonitor.Wait();
+    const auto it = mWaitingNotifyNotUsed.find(aBuffer->mId);
+    if (it == mWaitingNotifyNotUsed.end()) {
+      return true;
+    }
+    auto now = TimeStamp::Now();
+    if ((now - begin).ToSeconds() > maxTimeoutSec) {
+      isWaiting = false;
+      gfxCriticalNote << "AndroidHardwareBuffer was waited too long";
+    }
+  }
+
+  return false;
+}
+
+bool AndroidHardwareBufferManager::IsWaitingForBufferOwnership(
+    AndroidHardwareBuffer* aBuffer) {
+  MonitorAutoLock lock(mMonitor);
+
+  if (aBuffer->mTransactionId.isNothing()) {
+    return false;
+  }
+
+  auto it = mWaitingNotifyNotUsed.find(aBuffer->mId);
+  if (it == mWaitingNotifyNotUsed.end()) {
+    return false;
+  }
+  return true;
+}
+
+void AndroidHardwareBufferManager::HoldUntilNotifyNotUsed(
+    uint64_t aBufferId, uint64_t aFwdTransactionId, bool aUsesImageBridge) {
+  MOZ_ASSERT(NS_IsMainThread() || InImageBridgeChildThread());
+
+  const auto it = mBuffers.find(aBufferId);
+  if (it == mBuffers.end()) {
+    return;
+  }
+  auto buffer = RefPtr<AndroidHardwareBuffer>(it->second);
+
+  MonitorAutoLock lock(mMonitor);
+  buffer->SetLastFwdTransactionId(aFwdTransactionId, aUsesImageBridge, lock);
+  mWaitingNotifyNotUsed.emplace(aBufferId, buffer);
+}
+
+void AndroidHardwareBufferManager::NotifyNotUsed(ipc::FileDescriptor&& aFenceFd,
+                                                 uint64_t aBufferId,
+                                                 uint64_t aTransactionId,
+                                                 bool aUsesImageBridge) {
+  MOZ_ASSERT(InImageBridgeChildThread());
+
+  MonitorAutoLock lock(mMonitor);
+
+  auto it = mWaitingNotifyNotUsed.find(aBufferId);
+  if (it != mWaitingNotifyNotUsed.end()) {
+    if (aTransactionId < it->second->GetLastFwdTransactionId(lock)) {
+      // Released on host side, but client already requested newer use texture.
+      return;
+    }
+    it->second->SetReleaseFence(std::move(aFenceFd), lock);
+    mWaitingNotifyNotUsed.erase(it);
+    mMonitor.NotifyAll();
+  }
 }
 
 }  // namespace layers
