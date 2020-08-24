@@ -21,9 +21,7 @@
 <script>
 <![CDATA[
 function text(n) {
-  // Include U+FE0E variation selector to ensure font selection doesn't
-  // seek out a color-emoji font in preference to Fira.
-  return "\u{1F310}\u{FE0E}".repeat(n);
+  return "\u{1F310}".repeat(n);
 }
 document.getElementById("start").value = text(10);
 document.getElementById("end").value = text(10);
