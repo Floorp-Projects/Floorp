@@ -55,8 +55,6 @@ already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
   return settings.forget();
 }
 
-nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) { *this = src; }
-
 nsPrintSettingsX::~nsPrintSettingsX() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -76,6 +74,11 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs) {
 
   [mPrintInfo release];
   mPrintInfo = [rhs.mPrintInfo copy];
+
+  mWidthScale = rhs.mWidthScale;
+  mHeightScale = rhs.mHeightScale;
+  mAdjustedPaperWidth = rhs.mAdjustedPaperWidth;
+  mAdjustedPaperHeight = rhs.mAdjustedPaperHeight;
 
   return *this;
 
@@ -194,12 +197,9 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs() {
 
 nsresult nsPrintSettingsX::_Clone(nsIPrintSettings** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nullptr;
-
-  nsPrintSettingsX* newSettings = new nsPrintSettingsX(*this);
-  if (!newSettings) return NS_ERROR_FAILURE;
-  *_retval = newSettings;
-  NS_ADDREF(*_retval);
+  auto newSettings = MakeRefPtr<nsPrintSettingsX>();
+  *newSettings = *this;
+  newSettings.forget(_retval);
   return NS_OK;
 }
 
