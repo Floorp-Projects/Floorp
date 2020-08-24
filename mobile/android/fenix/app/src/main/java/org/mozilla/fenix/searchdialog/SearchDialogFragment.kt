@@ -6,6 +6,7 @@ package org.mozilla.fenix.searchdialog
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Typeface
@@ -44,10 +45,13 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
+import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -59,6 +63,7 @@ import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import org.mozilla.fenix.widget.VoiceSearchActivity
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
@@ -136,10 +141,22 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             view.awesome_bar
         )
 
+        setShortcutsChangedListener(CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES)
+        setShortcutsChangedListener(FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES)
+
         view.awesome_bar.setOnTouchListener { _, _ ->
             view.hideKeyboard()
             false
         }
+
+        awesomeBarView.view.setOnEditSuggestionListener(toolbarView.view::setSearchTerms)
+
+        val urlView = toolbarView.view
+            .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
+        urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+
+        val isPrivate = (requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate
+        requireComponents.core.engine.speculativeCreateSession(isPrivate)
 
         return view
     }
@@ -345,6 +362,15 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     private fun isSpeechAvailable(): Boolean = speechIntent.resolveActivity(requireContext().packageManager) != null
+
+    private fun setShortcutsChangedListener(preferenceFileName: String) {
+        requireContext().getSharedPreferences(
+            preferenceFileName,
+            Context.MODE_PRIVATE
+        ).registerOnSharedPreferenceChangeListener(viewLifecycleOwner) { _, _ ->
+            awesomeBarView.update(store.state)
+        }
+    }
 
     companion object {
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
