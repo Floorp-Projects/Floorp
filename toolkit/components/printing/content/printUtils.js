@@ -159,60 +159,6 @@ var PrintUtils = {
   },
 
   /**
-   * Update a print preview for the provided source Browser, print preview Browser
-   * and nsIPrintSettings.
-   *
-   * @param sourceBrowsingContext
-   *        The source BrowsingContext (the one associated with a tab or
-   *        subdocument) that should be updated.
-   * @param printPreviewBrowser
-   *        The Browser that contains the print preview.
-   * @param printSettings
-   *        The nsIPrintSettings object to be used to render the preview.
-   *        Note: Only printerName is currently used.
-   *
-   * @return {Promise<Integer>} The number of pages that were rendered in the preview.
-   */
-  updatePrintPreview(
-    sourceBrowsingContext,
-    printPreviewBrowser,
-    printSettings
-  ) {
-    let stack = printPreviewBrowser.parentElement;
-    stack.setAttribute("rendering", true);
-
-    return new Promise(resolve => {
-      printPreviewBrowser.messageManager.addMessageListener(
-        "Printing:Preview:UpdatePageCount",
-        function done(message) {
-          printPreviewBrowser.messageManager.removeMessageListener(
-            "Printing:Preview:UpdatePageCount",
-            done
-          );
-
-          stack.removeAttribute("rendering");
-
-          resolve(message.data.numPages);
-        }
-      );
-
-      printPreviewBrowser.messageManager.sendAsyncMessage(
-        "Printing:Preview:Enter",
-        {
-          changingBrowsers: false,
-          lastUsedPrinterName: printSettings.printerName,
-          simplifiedMode: false,
-          browsingContextId: sourceBrowsingContext.id,
-          outputFormat: printSettings.outputFormat,
-          startPageRange: printSettings.startPageRange,
-          endPageRange: printSettings.endPageRange,
-          printRange: printSettings.printRange,
-        }
-      );
-    });
-  },
-
-  /**
    * Initialize a print, this will open the tab modal UI if it is enabled or
    * defer to the native dialog/silent print.
    *
