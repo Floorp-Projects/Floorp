@@ -61,6 +61,11 @@ ChromeUtils.defineModuleGetter(
   "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 
 const DEFAULT_SITES_PREF = "default.sites";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
@@ -128,9 +133,8 @@ this.TopSitesFeed = class TopSitesFeed {
 
   init() {
     // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
-    this._readDefaults();
+    this._readDefaults({ isStartup: true });
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
-    this.refresh({ broadcast: true, isStartup: true });
     Services.obs.addObserver(this, "browser-search-engine-modified");
     for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
       Services.prefs.addObserver(pref, this);
@@ -169,7 +173,6 @@ this.TopSitesFeed = class TopSitesFeed {
           data === REMOTE_SETTING_OVERRIDE_PREF
         ) {
           this._readDefaults();
-          this.refresh({ broadcast: true });
         } else if (SEARCH_TILE_OVERRIDE_PREFS.has(data)) {
           this.refresh({ broadcast: true });
         }
@@ -184,14 +187,15 @@ this.TopSitesFeed = class TopSitesFeed {
   /**
    * _readDefaults - sets DEFAULT_TOP_SITES
    */
-  _readDefaults() {
+  async _readDefaults({ isStartup = false } = {}) {
     this._useRemoteSetting = Services.prefs.getBoolPref(
       REMOTE_SETTING_DEFAULTS_PREF
     );
 
     if (!this._useRemoteSetting) {
       this.refreshDefaults(
-        this.store.getState().Prefs.values[DEFAULT_SITES_PREF]
+        this.store.getState().Prefs.values[DEFAULT_SITES_PREF],
+        { isStartup }
       );
       return;
     }
@@ -202,27 +206,12 @@ this.TopSitesFeed = class TopSitesFeed {
       sites = Services.prefs.getStringPref(REMOTE_SETTING_OVERRIDE_PREF);
     } catch (e) {}
     if (sites) {
-      this.refreshDefaults(sites);
+      this.refreshDefaults(sites, { isStartup });
       return;
     }
 
     // Read defaults from remote settings.
-    // Placeholder for the actual remote setting (bug 1653937).
-    let remoteSettingData = [
-      {
-        title: "Mozilla!",
-        url: "https://mozilla.org/#%YYYYMMDDHH%",
-        send_attribution_request: true,
-      },
-      {
-        url: "https://firefox.com",
-        url_urlbar_override: "https://firefox.com/#urlbar",
-      },
-      {
-        url: "https://foobar.com",
-        keyword: "@foobar",
-      },
-    ];
+    let remoteSettingData = await this._getRemoteConfig();
 
     // Clear out the array of any previous defaults.
     DEFAULT_TOP_SITES.length = 0;
@@ -246,9 +235,11 @@ this.TopSitesFeed = class TopSitesFeed {
       }
       DEFAULT_TOP_SITES.push(link);
     }
+
+    this.refresh({ broadcast: true, isStartup });
   }
 
-  refreshDefaults(sites) {
+  refreshDefaults(sites, { isStartup = false } = {}) {
     // Clear out the array of any previous defaults
     DEFAULT_TOP_SITES.length = 0;
 
@@ -263,6 +254,36 @@ this.TopSitesFeed = class TopSitesFeed {
         DEFAULT_TOP_SITES.push(site);
       }
     }
+
+    this.refresh({ broadcast: true, isStartup });
+  }
+
+  async _getRemoteConfig(firstTime = true) {
+    if (!this._remoteConfig) {
+      this._remoteConfig = await RemoteSettings("top-sites");
+    }
+
+    let result = [];
+    let failed = false;
+    try {
+      result = await this._remoteConfig.get();
+    } catch (ex) {
+      Cu.reportError(ex);
+      failed = true;
+    }
+    if (!result.length) {
+      Cu.reportError("Received empty search configuration!");
+      failed = true;
+    }
+    // If we failed, or the result is empty, try loading from the local dump.
+    if (firstTime && failed) {
+      await this._remoteConfig.db.clear();
+      // Now call this again.
+      return this._getRemoteConfig(false);
+    }
+    // Sort sites based on the "order" attribute.
+    result.sort((a, b) => a.order - b.order);
+    return result;
   }
 
   filterForThumbnailExpiration(callback) {
@@ -286,6 +307,7 @@ this.TopSitesFeed = class TopSitesFeed {
    */
   shouldFilterSearchTile(hostname) {
     if (
+      !this._useRemoteSetting &&
       this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF] &&
       (SEARCH_FILTERS.includes(hostname) ||
         hostname === this._currentSearchHostname)
@@ -379,9 +401,9 @@ this.TopSitesFeed = class TopSitesFeed {
     const numItems =
       this.store.getState().Prefs.values[ROWS_PREF] *
       TOP_SITES_MAX_SITES_PER_ROW;
-    const searchShortcutsExperiment = this.store.getState().Prefs.values[
-      SEARCH_SHORTCUTS_EXPERIMENT
-    ];
+    const searchShortcutsExperiment =
+      !this._useRemoteSetting &&
+      this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT];
     // We must wait for search services to initialize in order to access default
     // search engine properties without triggering a synchronous initialization
     await Services.search.init();
@@ -601,6 +623,12 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param {bool} options.isStartup Being called while TopSitesFeed is initting.
    */
   async refresh(options = {}) {
+    if (!this._startedUp && !options.isStartup) {
+      // Initial refresh still pending.
+      return;
+    }
+    this._startedUp = true;
+
     if (!this._tippyTopProvider.initialized) {
       await this._tippyTopProvider.init();
     }
