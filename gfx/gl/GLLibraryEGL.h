@@ -88,6 +88,7 @@ enum class EGLExtension {
   EXT_create_context_robustness,
   KHR_image,
   KHR_fence_sync,
+  KHR_wait_sync,
   ANDROID_native_fence_sync,
   EGL_ANDROID_image_crop,
   ANGLE_d3d_share_handle_client_buffer,
@@ -369,6 +370,10 @@ class GLLibraryEGL final {
     WRAP(fGetSyncAttribKHR(dpy, sync, attribute, value));
   }
 
+  EGLint fWaitSync(EGLDisplay dpy, EGLSync sync, EGLint flags) const {
+    WRAP(fWaitSyncKHR(dpy, sync, flags));
+  }
+
   EGLint fDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSync sync) const {
     WRAP(fDupNativeFenceFDANDROID(dpy, sync));
   }
@@ -523,6 +528,8 @@ class GLLibraryEGL final {
                                            EGLint flags, EGLTime timeout);
     EGLBoolean(GLAPIENTRY* fGetSyncAttribKHR)(EGLDisplay dpy, EGLSync sync,
                                               EGLint attribute, EGLint* value);
+    EGLint(GLAPIENTRY* fWaitSyncKHR)(EGLDisplay dpy, EGLSync sync,
+                                     EGLint flags);
     EGLint(GLAPIENTRY* fDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
     // KHR_stream
     EGLStreamKHR(GLAPIENTRY* fCreateStreamKHR)(EGLDisplay dpy,
@@ -729,6 +736,11 @@ class EglDisplay final {
                             EGLint* value) const {
     MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_fence_sync));
     return mLib->fGetSyncAttrib(mDisplay, sync, attribute, value);
+  }
+
+  EGLint fWaitSync(EGLSync sync, EGLint flags) const {
+    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_wait_sync));
+    return mLib->fWaitSync(mDisplay, sync, flags);
   }
 
   EGLint fDupNativeFenceFDANDROID(EGLSync sync) const {
