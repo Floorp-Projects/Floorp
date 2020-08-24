@@ -1,5 +1,5 @@
 use core::num::Wrapping;
-use core::ops::{Add, Mul, Shl, Shr, Sub};
+use core::ops::{Add, Mul, Neg, Shl, Shr, Sub};
 
 macro_rules! wrapping_impl {
     ($trait_name:ident, $method:ident, $t:ty) => {
@@ -88,6 +88,54 @@ wrapping_impl!(WrappingMul, wrapping_mul, i64);
 wrapping_impl!(WrappingMul, wrapping_mul, isize);
 #[cfg(has_i128)]
 wrapping_impl!(WrappingMul, wrapping_mul, i128);
+
+macro_rules! wrapping_unary_impl {
+    ($trait_name:ident, $method:ident, $t:ty) => {
+        impl $trait_name for $t {
+            #[inline]
+            fn $method(&self) -> $t {
+                <$t>::$method(*self)
+            }
+        }
+    };
+}
+
+/// Performs a negation that does not panic.
+pub trait WrappingNeg: Sized {
+    /// Wrapping (modular) negation. Computes `-self`,
+    /// wrapping around at the boundary of the type.
+    ///
+    /// Since unsigned types do not have negative equivalents
+    /// all applications of this function will wrap (except for `-0`).
+    /// For values smaller than the corresponding signed type's maximum
+    /// the result is the same as casting the corresponding signed value.
+    /// Any larger values are equivalent to `MAX + 1 - (val - MAX - 1)` where
+    /// `MAX` is the corresponding signed type's maximum.
+    ///
+    /// ```
+    /// use num_traits::WrappingNeg;
+    ///
+    /// assert_eq!(100i8.wrapping_neg(), -100);
+    /// assert_eq!((-100i8).wrapping_neg(), 100);
+    /// assert_eq!((-128i8).wrapping_neg(), -128); // wrapped!
+    /// ```
+    fn wrapping_neg(&self) -> Self;
+}
+
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, u8);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, u16);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, u32);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, u64);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, usize);
+#[cfg(has_i128)]
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, u128);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, i8);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, i16);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, i32);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, i64);
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, isize);
+#[cfg(has_i128)]
+wrapping_unary_impl!(WrappingNeg, wrapping_neg, i128);
 
 macro_rules! wrapping_shift_impl {
     ($trait_name:ident, $method:ident, $t:ty) => {
@@ -195,6 +243,14 @@ where
         Wrapping(self.0.wrapping_mul(&v.0))
     }
 }
+impl<T: WrappingNeg> WrappingNeg for Wrapping<T>
+where
+    Wrapping<T>: Neg<Output = Wrapping<T>>,
+{
+    fn wrapping_neg(&self) -> Self {
+        Wrapping(self.0.wrapping_neg())
+    }
+}
 impl<T: WrappingShl> WrappingShl for Wrapping<T>
 where
     Wrapping<T>: Shl<usize, Output = Wrapping<T>>,
@@ -223,6 +279,9 @@ fn test_wrapping_traits() {
     fn wrapping_mul<T: WrappingMul>(a: T, b: T) -> T {
         a.wrapping_mul(&b)
     }
+    fn wrapping_neg<T: WrappingNeg>(a: T) -> T {
+        a.wrapping_neg()
+    }
     fn wrapping_shl<T: WrappingShl>(a: T, b: u32) -> T {
         a.wrapping_shl(b)
     }
@@ -232,11 +291,14 @@ fn test_wrapping_traits() {
     assert_eq!(wrapping_add(255, 1), 0u8);
     assert_eq!(wrapping_sub(0, 1), 255u8);
     assert_eq!(wrapping_mul(255, 2), 254u8);
+    assert_eq!(wrapping_neg(255), 1u8);
     assert_eq!(wrapping_shl(255, 8), 255u8);
     assert_eq!(wrapping_shr(255, 8), 255u8);
     assert_eq!(wrapping_add(255, 1), (Wrapping(255u8) + Wrapping(1u8)).0);
     assert_eq!(wrapping_sub(0, 1), (Wrapping(0u8) - Wrapping(1u8)).0);
     assert_eq!(wrapping_mul(255, 2), (Wrapping(255u8) * Wrapping(2u8)).0);
+    // TODO: Test for Wrapping::Neg. Not possible yet since core::ops::Neg was
+    // only added to core::num::Wrapping<_> in Rust 1.10.
     assert_eq!(wrapping_shl(255, 8), (Wrapping(255u8) << 8).0);
     assert_eq!(wrapping_shr(255, 8), (Wrapping(255u8) >> 8).0);
 }
@@ -258,6 +320,9 @@ fn wrapping_is_wrappingmul() {
     fn require_wrappingmul<T: WrappingMul>(_: &T) {}
     require_wrappingmul(&Wrapping(42));
 }
+
+// TODO: Test for Wrapping::Neg. Not possible yet since core::ops::Neg was
+// only added to core::num::Wrapping<_> in Rust 1.10.
 
 #[test]
 fn wrapping_is_wrappingshl() {

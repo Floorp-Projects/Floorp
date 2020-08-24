@@ -3,7 +3,7 @@
 pub const N1: u32 = -1i32 as u32;
 pub const N2: u32 = -2i32 as u32;
 
-pub const SUM_TRIPLES: &'static [(&'static [u32], &'static [u32], &'static [u32])] = &[
+pub const SUM_TRIPLES: &[(&[u32], &[u32], &[u32])] = &[
     (&[], &[], &[]),
     (&[], &[1], &[1]),
     (&[1], &[1], &[2]),
@@ -17,7 +17,7 @@ pub const SUM_TRIPLES: &'static [(&'static [u32], &'static [u32], &'static [u32]
 ];
 
 pub const M: u32 = ::std::u32::MAX;
-pub const MUL_TRIPLES: &'static [(&'static [u32], &'static [u32], &'static [u32])] = &[
+pub const MUL_TRIPLES: &[(&[u32], &[u32], &[u32])] = &[
     (&[], &[], &[]),
     (&[], &[1], &[]),
     (&[2], &[], &[]),
@@ -41,12 +41,7 @@ pub const MUL_TRIPLES: &'static [(&'static [u32], &'static [u32], &'static [u32]
     (&[0, 0, 1], &[0, 0, 0, 1], &[0, 0, 0, 0, 0, 1]),
 ];
 
-pub const DIV_REM_QUADRUPLES: &'static [(
-    &'static [u32],
-    &'static [u32],
-    &'static [u32],
-    &'static [u32],
-)] = &[
+pub const DIV_REM_QUADRUPLES: &[(&[u32], &[u32], &[u32], &[u32])] = &[
     (&[1], &[2], &[], &[1]),
     (&[3], &[2], &[1], &[1]),
     (&[1, 1], &[2], &[M / 2 + 1], &[1]),

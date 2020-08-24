@@ -2344,7 +2344,7 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "num-iter",
- "num-rational",
+ "num-rational 0.2.1",
  "num-traits",
  "png",
 ]
@@ -3121,7 +3121,7 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.11.4"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=63325444ae3388599f2f222775eebdde4c2f9f30#63325444ae3388599f2f222775eebdde4c2f9f30"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=6ebb531e1b0381c7a5980279637ef6ae7a3b6bc2#6ebb531e1b0381c7a5980279637ef6ae7a3b6bc2"
 dependencies = [
  "bitreader",
  "byteorder",
@@ -3138,12 +3138,12 @@ version = "0.1.0"
 [[package]]
 name = "mp4parse_capi"
 version = "0.11.4"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=63325444ae3388599f2f222775eebdde4c2f9f30#63325444ae3388599f2f222775eebdde4c2f9f30"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=6ebb531e1b0381c7a5980279637ef6ae7a3b6bc2#6ebb531e1b0381c7a5980279637ef6ae7a3b6bc2"
 dependencies = [
  "byteorder",
  "log",
  "mp4parse",
- "num-traits",
+ "num",
 ]
 
 [[package]]
@@ -3365,6 +3365,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "num"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab3e176191bc4faad357e3122c4747aa098ac880e88b168f106386128736cf4a"
+dependencies = [
+ "num-bigint 0.3.0",
+ "num-complex",
+ "num-integer",
+ "num-iter",
+ "num-rational 0.3.0",
+ "num-traits",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3372,6 +3386,26 @@ checksum = "f9c3f34cdd24f334cb265d9bf8bfa8a241920d026916785747a92f0e55541a1a"
 dependencies = [
  "autocfg 0.1.6",
  "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7f3fc75e3697059fb1bc465e3d8cca6cf92f56854f201158b3f9c77d5a3cfa0"
+dependencies = [
+ "autocfg 1.0.0",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-complex"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b05ad05bd8977050b171b3f6b48175fea6e0565b7981059b486075e1026a9fb5"
+dependencies = [
  "num-traits",
 ]
 
@@ -3388,19 +3422,21 @@ dependencies = [
 
 [[package]]
 name = "num-integer"
-version = "0.1.39"
+version = "0.1.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e83d528d2677f0518c570baf2b7abdcf0cd2d248860b68507bdcb3e91d4c0cea"
+checksum = "8d59457e662d541ba17869cf51cf177c0b5f0cbf476c66bdc90bf1edac4f875b"
 dependencies = [
+ "autocfg 1.0.0",
  "num-traits",
 ]
 
 [[package]]
 name = "num-iter"
-version = "0.1.37"
+version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af3fdbbc3291a5464dc57b03860ec37ca6bf915ed6ee385e7c6c052c422b2124"
+checksum = "7a6e6b7c748f995c4c29c5f5ae0248536e04a5739927c74ec0fa564805094b9f"
 dependencies = [
+ "autocfg 1.0.0",
  "num-integer",
  "num-traits",
 ]
@@ -3416,12 +3452,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-traits"
-version = "0.2.10"
+name = "num-rational"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4c81ffc11c212fa327657cb19dd85eb7419e163b5b076bede2bdb5c974c07e4"
+checksum = "a5b4d7360f362cfb50dde8143501e6940b22f644be75a4cc90b2d81968908138"
 dependencies = [
- "autocfg 0.1.6",
+ "autocfg 1.0.0",
+ "num-bigint 0.3.0",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac267bcc07f48ee5f8935ab0d24f316fb722d7a1292e2913f0cc196b29ffd611"
+dependencies = [
+ "autocfg 1.0.0",
 ]
 
 [[package]]
@@ -3719,7 +3767,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c20593a99fe08068cbe2b59001527f36021d6ad53ac5f2d8793fcf2fe94015a0"
 dependencies = [
  "libloading 0.5.2",
- "num-bigint",
+ "num-bigint 0.2.3",
 ]
 
 [[package]]

@@ -2,8 +2,8 @@
 
 [![crate](https://img.shields.io/crates/v/num-bigint.svg)](https://crates.io/crates/num-bigint)
 [![documentation](https://docs.rs/num-bigint/badge.svg)](https://docs.rs/num-bigint)
-![minimum rustc 1.15](https://img.shields.io/badge/rustc-1.15+-red.svg)
-[![Travis status](https://travis-ci.org/rust-num/num-bigint.svg?branch=master)](https://travis-ci.org/rust-num/num-bigint)
+[![minimum rustc 1.31](https://img.shields.io/badge/rustc-1.31+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![build status](https://github.com/rust-num/num-bigint/workflows/master/badge.svg)](https://github.com/rust-num/num-bigint/actions)
 
 Big integer types for Rust, `BigInt` and `BigUint`.
 
@@ -13,25 +13,28 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-bigint = "0.2"
-```
-
-and this to your crate root:
-
-```rust
-extern crate num_bigint;
+num-bigint = "0.3"
 ```
 
 ## Features
 
-The `std` crate feature is mandatory and enabled by default.  If you depend on
-`num-bigint` with `default-features = false`, you must manually enable the
-`std` feature yourself.  In the future, we hope to support `#![no_std]` with
-the `alloc` crate when `std` is not enabled.
+The `std` crate feature is enabled by default, and is mandatory before Rust
+1.36 and the stabilized `alloc` crate.  If you depend on `num-bigint` with
+`default-features = false`, you must manually enable the `std` feature yourself
+if your compiler is not new enough.
 
-Implementations for `i128` and `u128` are only available with Rust 1.26 and
-later.  The build script automatically detects this, but you can make it
-mandatory by enabling the `i128` crate feature.
+### Random Generation
+
+`num-bigint` supports the generation of random big integers when the `rand`
+feature is enabled. To enable it include rand as
+
+```toml
+rand = "0.7"
+num-bigint = { version = "0.3", features = ["rand"] }
+```
+
+Note that you must use the version of `rand` that `num-bigint` is compatible
+with: `0.7`.
 
 ## Releases
 
@@ -39,7 +42,7 @@ Release notes are available in [RELEASES.md](RELEASES.md).
 
 ## Compatibility
 
-The `num-bigint` crate is tested for rustc 1.15 and greater.
+The `num-bigint` crate is tested for rustc 1.31 and greater.
 
 ## Alternatives
 
@@ -49,9 +52,9 @@ table offers a brief comparison to a few alternatives.
 
 | Crate            | License        | Min rustc | Implementation |
 | :--------------- | :------------- | :-------- | :------------- |
-| **`num-bigint`** | MIT/Apache-2.0 | 1.15      | pure rust |
+| **`num-bigint`** | MIT/Apache-2.0 | 1.31      | pure rust |
 | [`ramp`]         | Apache-2.0     | nightly   | rust and inline assembly |
-| [`rug`]          | LGPL-3.0+      | 1.31      | bundles [GMP] via [`gmp-mpfr-sys`] |
+| [`rug`]          | LGPL-3.0+      | 1.37      | bundles [GMP] via [`gmp-mpfr-sys`] |
 | [`rust-gmp`]     | MIT            | stable?   | links to [GMP] |
 | [`apint`]        | MIT/Apache-2.0 | 1.26      | pure rust (unfinished) |
 

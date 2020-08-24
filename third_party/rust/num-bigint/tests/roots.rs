@@ -1,13 +1,6 @@
-extern crate num_bigint;
-extern crate num_integer;
-extern crate num_traits;
-
-#[cfg(feature = "rand")]
-extern crate rand;
-
 mod biguint {
     use num_bigint::BigUint;
-    use num_traits::{One, Pow, Zero};
+    use num_traits::{One, Zero};
     use std::{i32, u32};
 
     fn check<T: Into<BigUint>>(x: T, n: u32) {
@@ -88,7 +81,7 @@ mod biguint {
         let x = BigUint::one() << LOG2;
 
         // the perfect divisors are just powers of two
-        for exp in 1..EXP + 1 {
+        for exp in 1..=EXP {
             let n = 2u32.pow(exp);
             let expected = BigUint::one() << (LOG2 / n as usize);
             assert_eq!(x.nth_root(n), expected);
@@ -99,25 +92,6 @@ mod biguint {
         assert!(x.nth_root(x.bits() as u32).is_one());
         assert!(x.nth_root(i32::MAX as u32).is_one());
         assert!(x.nth_root(u32::MAX).is_one());
-    }
-
-    #[cfg(feature = "rand")]
-    #[test]
-    fn test_roots_rand() {
-        use num_bigint::RandBigInt;
-        use rand::distributions::Uniform;
-        use rand::{thread_rng, Rng};
-
-        let mut rng = thread_rng();
-        let bit_range = Uniform::new(0, 2048);
-        let sample_bits: Vec<_> = rng.sample_iter(&bit_range).take(100).collect();
-        for bits in sample_bits {
-            let x = rng.gen_biguint(bits);
-            for n in 2..11 {
-                check(x.clone(), n);
-            }
-            check(x.clone(), 100);
-        }
     }
 
     #[test]
@@ -134,13 +108,13 @@ mod biguint {
         check(x.clone(), 2);
         check(x.clone(), 3);
         check(x.clone(), 10);
-        check(x.clone(), 100);
+        check(x, 100);
     }
 }
 
 mod bigint {
     use num_bigint::BigInt;
-    use num_traits::{Pow, Signed};
+    use num_traits::Signed;
 
     fn check(x: i64, n: u32) {
         let big_x = BigInt::from(x);
