@@ -37,6 +37,7 @@ import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import mozilla.components.support.ktx.kotlin.isSameOriginAs
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.utils.Browsers
 
@@ -85,17 +86,46 @@ class DownloadsFeature(
 
     private var scope: CoroutineScope? = null
 
+    @VisibleForTesting
+    internal var dismissPromptScope: CoroutineScope? = null
+    @VisibleForTesting
+    internal var previousTab: SessionState? = null
+
     /**
      * Starts observing downloads on the selected session and sends them to the [DownloadManager]
      * to be processed.
      */
     @Suppress("Deprecation")
     override fun start() {
+        // Dismiss the previous prompts when the user navigates to another site.
+        // This prevents prompts from the previous page from covering content.
+        dismissPromptScope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
+                    .ifChanged { it.content.url }
+                    .collect {
+                        val currentHost = previousTab?.content?.url
+                        val newHost = it.content.url
+
+                        // The user is navigating to another site
+                        if (currentHost?.isSameOriginAs(newHost) == false) {
+                            previousTab?.let { tab ->
+                                // We have an old download request.
+                                tab.content.download?.let { download ->
+                                    dismissAllDownloadDialogs()
+                                    useCases.consumeDownload(tab.id, download.id)
+                                    previousTab = null
+                                }
+                            }
+                        }
+                    }
+        }
+
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .ifChanged { it.content.download }
                 .collect { state ->
                     state.content.download?.let { downloadState ->
+                        previousTab = state
                         processDownload(state, downloadState)
                     }
                 }
@@ -115,6 +145,7 @@ class DownloadsFeature(
      */
     override fun stop() {
         scope?.cancel()
+        dismissPromptScope?.cancel()
         downloadManager.unregisterListeners()
     }
 
@@ -307,6 +338,12 @@ class DownloadsFeature(
         // Remove browsers and returns only the apps that can perform a download plus this app.
         return apps.filter { !browsers.contains(it.activityInfo.identifier) }
                 .map { it.toDownloaderApp(context, download) } + listOfNotNull(thisApp)
+    }
+
+    @VisibleForTesting
+    internal fun dismissAllDownloadDialogs() {
+        findPreviousDownloadDialogFragment()?.dismiss()
+        findPreviousAppDownloaderDialogFragment()?.dismiss()
     }
 
     private val ActivityInfo.identifier: String get() = packageName + name
