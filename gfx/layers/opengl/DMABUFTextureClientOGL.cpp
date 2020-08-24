@@ -35,6 +35,10 @@ DMABUFTextureData::~DMABUFTextureData() = default;
   }
   RefPtr<DMABufSurface> surf =
       DMABufSurfaceRGBA::CreateDMABufSurface(aSize.width, aSize.height, flags);
+  if (!surf) {
+    NS_WARNING("DMABUFTextureData::Create() failed!");
+    return nullptr;
+  }
   return new DMABUFTextureData(surf, aBackend);
 }
 
