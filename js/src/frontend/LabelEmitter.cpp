@@ -13,7 +13,7 @@
 using namespace js;
 using namespace js::frontend;
 
-void LabelEmitter::emitLabel(const ParserAtom* name) {
+void LabelEmitter::emitLabel(HandleAtom name) {
   MOZ_ASSERT(state_ == State::Start);
 
   controlInfo_.emplace(bce_, name, bce_->bytecodeSection().offset());

@@ -9,7 +9,6 @@
 #include "jsapi.h"
 
 #include "debugger/DebugAPI.h"
-#include "frontend/CompilationInfo.h"
 #include "proxy/DeadObjectProxy.h"
 
 #include "vm/JSObject-inl.h"
@@ -93,14 +92,15 @@ static bool StringToInstrumentationKind(JSContext* cx, HandleString str,
 }
 
 /* static */
-const frontend::ParserAtom* RealmInstrumentation::getInstrumentationKindName(
-    frontend::CompilationInfo& compilationInfo, InstrumentationKind kind) {
+JSAtom* RealmInstrumentation::getInstrumentationKindName(
+    JSContext* cx, InstrumentationKind kind) {
   for (size_t i = 0; i < mozilla::ArrayLength(instrumentationNames); i++) {
     if (kind == (InstrumentationKind)(1 << i)) {
-      return compilationInfo.parserAtoms
-          .internAscii(compilationInfo.cx, instrumentationNames[i],
-                       strlen(instrumentationNames[i]))
-          .unwrapOr(nullptr);
+      JSString* str = JS_AtomizeString(cx, instrumentationNames[i]);
+      if (!str) {
+        return nullptr;
+      }
+      return &str->asAtom();
     }
   }
   MOZ_CRASH("Unexpected instrumentation kind");

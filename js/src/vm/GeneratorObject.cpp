@@ -6,8 +6,6 @@
 
 #include "vm/GeneratorObject.h"
 
-#include "frontend/CompilationInfo.h"
-#include "frontend/ParserAtom.h"
 #include "js/PropertySpec.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -385,16 +383,14 @@ bool JSObject::is<js::AbstractGeneratorObject>() const {
          is<AsyncGeneratorObject>();
 }
 
-GeneratorResumeKind js::ParserAtomToResumeKind(
-    frontend::CompilationInfo& compilationInfo,
-    const frontend::ParserAtom* atom) {
-  if (atom == compilationInfo.cx->parserNames().next) {
+GeneratorResumeKind js::AtomToResumeKind(JSContext* cx, JSAtom* atom) {
+  if (atom == cx->names().next) {
     return GeneratorResumeKind::Next;
   }
-  if (atom == compilationInfo.cx->parserNames().throw_) {
+  if (atom == cx->names().throw_) {
     return GeneratorResumeKind::Throw;
   }
-  MOZ_ASSERT(atom == compilationInfo.cx->parserNames().return_);
+  MOZ_ASSERT(atom == cx->names().return_);
   return GeneratorResumeKind::Return;
 }
 

@@ -6,11 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "frontend/ObjLiteral.h"
-
 #include "mozilla/DebugOnly.h"
-
-#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo
-#include "frontend/ParserAtom.h"  // frontend::ParserAtom, frontend::ParserAtomTable
 #include "js/RootingAPI.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
@@ -24,47 +20,30 @@
 
 namespace js {
 
-static bool InterpretObjLiteralValue(const ObjLiteralAtomVector& atoms,
-                                     frontend::CompilationInfo& compilationInfo,
-                                     const ObjLiteralInsn& insn,
-                                     JS::Value* valOut) {
+static JS::Value InterpretObjLiteralValue(const ObjLiteralAtomVector& atoms,
+                                          const ObjLiteralInsn& insn) {
   switch (insn.getOp()) {
     case ObjLiteralOpcode::ConstValue:
-      *valOut = insn.getConstValue();
-      return true;
+      return insn.getConstValue();
     case ObjLiteralOpcode::ConstAtom: {
       uint32_t index = insn.getAtomIndex();
-      // TODO-Stencil
-      //   This needs to be coalesced to wherever jsatom creation is eventually
-      //   Seems like InterpretLiteralObj would be called from main-thread
-      //   stencil instantiation.
-      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(atoms[index]);
-      if (!jsatom) {
-        return false;
-      }
-      *valOut = StringValue(jsatom);
-      return true;
+      return StringValue(atoms[index]);
     }
     case ObjLiteralOpcode::Null:
-      *valOut = NullValue();
-      return true;
+      return NullValue();
     case ObjLiteralOpcode::Undefined:
-      *valOut = UndefinedValue();
-      return true;
+      return UndefinedValue();
     case ObjLiteralOpcode::True:
-      *valOut = BooleanValue(true);
-      return true;
+      return BooleanValue(true);
     case ObjLiteralOpcode::False:
-      *valOut = BooleanValue(false);
-      return true;
+      return BooleanValue(false);
     default:
       MOZ_CRASH("Unexpected object-literal instruction opcode");
   }
 }
 
 static JSObject* InterpretObjLiteralObj(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    const ObjLiteralAtomVector& atoms,
+    JSContext* cx, const ObjLiteralAtomVector& atoms,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   bool specificGroup = flags.contains(ObjLiteralFlag::SpecificGroup);
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
@@ -83,23 +62,12 @@ static JSObject* InterpretObjLiteralObj(
     if (insn.getKey().isArrayIndex()) {
       propId = INT_TO_JSID(insn.getKey().getArrayIndex());
     } else {
-      // TODO-Stencil
-      //   Just a note, but it seems like this is an OK place to convert atoms
-      //   since the other GC allocations in the function (properties vector,
-      //   etc.) would need to be addressed.
-      const frontend::ParserAtom* atom = atoms[insn.getKey().getAtomIndex()];
-      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(atom);
-      if (!jsatom) {
-        return nullptr;
-      }
-      propId = AtomToId(compilationInfo.liftParserAtomToJSAtom(atom));
+      propId = AtomToId(atoms[insn.getKey().getAtomIndex()]);
     }
 
     JS::Value propVal;
     if (!noValues) {
-      if (!InterpretObjLiteralValue(atoms, compilationInfo, insn, &propVal)) {
-        return nullptr;
-      }
+      propVal = InterpretObjLiteralValue(atoms, insn);
     }
 
     if (!properties.emplaceBack(propId, propVal)) {
@@ -118,8 +86,7 @@ static JSObject* InterpretObjLiteralObj(
 }
 
 static JSObject* InterpretObjLiteralArray(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
-    const ObjLiteralAtomVector& atoms,
+    JSContext* cx, const ObjLiteralAtomVector& atoms,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   bool isCow = flags.contains(ObjLiteralFlag::ArrayCOW);
   ObjLiteralReader reader(literalInsns);
@@ -130,10 +97,7 @@ static JSObject* InterpretObjLiteralArray(
   while (reader.readInsn(&insn)) {
     MOZ_ASSERT(insn.isValid());
 
-    JS::Value propVal;
-    if (!InterpretObjLiteralValue(atoms, compilationInfo, insn, &propVal)) {
-      return nullptr;
-    }
+    JS::Value propVal = InterpretObjLiteralValue(atoms, insn);
     if (!elements.append(propVal)) {
       return nullptr;
     }
@@ -152,16 +116,12 @@ static JSObject* InterpretObjLiteralArray(
   return result;
 }
 
-JSObject* InterpretObjLiteral(JSContext* cx,
-                              frontend::CompilationInfo& compilationInfo,
-                              const ObjLiteralAtomVector& atoms,
+JSObject* InterpretObjLiteral(JSContext* cx, const ObjLiteralAtomVector& atoms,
                               const mozilla::Span<const uint8_t> literalInsns,
                               ObjLiteralFlags flags) {
   return flags.contains(ObjLiteralFlag::Array)
-             ? InterpretObjLiteralArray(cx, compilationInfo, atoms,
-                                        literalInsns, flags)
-             : InterpretObjLiteralObj(cx, compilationInfo, atoms, literalInsns,
-                                      flags);
+             ? InterpretObjLiteralArray(cx, atoms, literalInsns, flags)
+             : InterpretObjLiteralObj(cx, atoms, literalInsns, flags);
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)

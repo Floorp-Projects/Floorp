@@ -21,22 +21,27 @@
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"   // CompilationInfo
 #include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData, NewEmptyVarScopeData, NewEmptyFunctionScopeData
-#include "frontend/ParserAtom.h"        // ParserAtomsTable
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
 #include "frontend/SourceNotes.h"       // SrcNote
 #include "frontend/Stencil.h"  // ScopeStencil, RegExpIndex, FunctionIndex, NullScriptThing
 #include "frontend/TokenStream.h"  // TokenStreamAnyChars
+#include "gc/Rooting.h"            // RootedScriptSourceObject
 #include "irregexp/RegExpAPI.h"    // irregexp::CheckPatternSyntax
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
 #include "js/GCAPI.h"              // JS::AutoCheckCannotGC
+#include "js/GCVector.h"           // JS::RootedVector
 #include "js/HeapAPI.h"            // JS::GCCellPtr
 #include "js/RegExpFlags.h"        // JS::RegExpFlag, JS::RegExpFlags
-#include "js/RootingAPI.h"         // JS::MutableHandle
-#include "js/UniquePtr.h"          // js::UniquePtr
-#include "js/Utility.h"            // JS::UniqueTwoByteChars, StringBufferArena
-#include "vm/JSScript.h"           // JSScript
-#include "vm/ScopeKind.h"          // ScopeKind
+#include "js/RootingAPI.h"         // JS::Handle, JS::Rooted
+#include "js/TypeDecls.h"  // Rooted{Script,Value,String,Object}, JS*:HandleVector, JS::MutableHandleVector
+#include "js/UniquePtr.h"  // js::UniquePtr
+#include "js/Utility.h"    // JS::UniqueTwoByteChars, StringBufferArena
+#include "vm/JSAtom.h"     // AtomizeUTF8Chars
+#include "vm/JSScript.h"   // JSScript
+#include "vm/Scope.h"      // BindingName
+#include "vm/ScopeKind.h"  // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote, GCThingIndex
+#include "vm/StringType.h"  // JSAtom
 
 #include "vm/JSContext-inl.h"  // AutoKeepAtoms (used by BytecodeCompiler)
 
@@ -51,10 +56,10 @@ namespace js {
 namespace frontend {
 
 // Given the result of SmooshMonkey's parser, Convert the list of atoms into
-// the list of ParserAtoms.
+// the list of JSAtoms.
 bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
                   CompilationInfo& compilationInfo,
-                  Vector<const ParserAtom*>& allAtoms) {
+                  JS::MutableHandleVector<JSAtom*> allAtoms) {
   size_t numAtoms = result.all_atoms_len;
 
   if (!allAtoms.reserve(numAtoms)) {
@@ -62,11 +67,9 @@ bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
   }
 
   for (size_t i = 0; i < numAtoms; i++) {
-    auto s = reinterpret_cast<const mozilla::Utf8Unit*>(
-        smoosh_get_atom_at(result, i));
+    auto s = smoosh_get_atom_at(result, i);
     auto len = smoosh_get_atom_len_at(result, i);
-    const ParserAtom* atom =
-        compilationInfo.parserAtoms.internUtf8(cx, s, len).unwrapOr(nullptr);
+    JSAtom* atom = AtomizeUTF8Chars(cx, s, len);
     if (!atom) {
       return false;
     }
@@ -77,22 +80,20 @@ bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
 }
 
 void CopyBindingNames(JSContext* cx, CVec<SmooshBindingName>& from,
-                      Vector<const ParserAtom*>& allAtoms,
-                      ParserBindingName* to) {
+                      JS::HandleVector<JSAtom*> allAtoms, BindingName* to) {
   // We're setting trailing array's content before setting its length.
   JS::AutoCheckCannotGC nogc(cx);
 
   size_t numBindings = from.len;
   for (size_t i = 0; i < numBindings; i++) {
     SmooshBindingName& name = from.data[i];
-    new (mozilla::KnownNotNull, &to[i]) ParserBindingName(
+    new (mozilla::KnownNotNull, &to[i]) BindingName(
         allAtoms[name.name], name.is_closed_over, name.is_top_level_function);
   }
 }
 
 void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
-                      Vector<const ParserAtom*>& allAtoms,
-                      ParserBindingName* to) {
+                      JS::HandleVector<JSAtom*> allAtoms, BindingName* to) {
   // We're setting trailing array's content before setting its length.
   JS::AutoCheckCannotGC nogc(cx);
 
@@ -101,11 +102,10 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
     COption<SmooshBindingName>& maybeName = from.data[i];
     if (maybeName.IsSome()) {
       SmooshBindingName& name = maybeName.AsSome();
-      new (mozilla::KnownNotNull, &to[i]) ParserBindingName(
+      new (mozilla::KnownNotNull, &to[i]) BindingName(
           allAtoms[name.name], name.is_closed_over, name.is_top_level_function);
     } else {
-      new (mozilla::KnownNotNull, &to[i])
-          ParserBindingName(nullptr, false, false);
+      new (mozilla::KnownNotNull, &to[i]) BindingName(nullptr, false, false);
     }
   }
 }
@@ -113,7 +113,7 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
 // Given the result of SmooshMonkey's parser, convert a list of scope data
 // into a list of ScopeStencil.
 bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
-                         Vector<const ParserAtom*>& allAtoms,
+                         JS::HandleVector<JSAtom*> allAtoms,
                          CompilationInfo& compilationInfo) {
   auto& alloc = compilationInfo.allocScope.alloc();
 
@@ -126,8 +126,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         auto& global = scopeData.AsGlobal();
 
         size_t numBindings = global.bindings.len;
-        ParserGlobalScopeData* data =
-            NewEmptyGlobalScopeData(cx, alloc, numBindings);
+        JS::Rooted<GlobalScope::Data*> data(
+            cx, NewEmptyGlobalScopeData(cx, alloc, numBindings));
         if (!data) {
           return false;
         }
@@ -150,8 +150,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         size_t numBindings = var.bindings.len;
 
-        ParserVarScopeData* data = NewEmptyVarScopeData(cx, alloc, numBindings);
-        ;
+        JS::Rooted<VarScope::Data*> data(
+            cx, NewEmptyVarScopeData(cx, alloc, numBindings));
         if (!data) {
           return false;
         }
@@ -177,8 +177,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         auto& lexical = scopeData.AsLexical();
 
         size_t numBindings = lexical.bindings.len;
-        ParserLexicalScopeData* data =
-            NewEmptyLexicalScopeData(cx, alloc, numBindings);
+        JS::Rooted<LexicalScope::Data*> data(
+            cx, NewEmptyLexicalScopeData(cx, alloc, numBindings));
         if (!data) {
           return false;
         }
@@ -205,8 +205,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         auto& function = scopeData.AsFunction();
 
         size_t numBindings = function.bindings.len;
-        ParserFunctionScopeData* data =
-            NewEmptyFunctionScopeData(cx, alloc, numBindings);
+        JS::Rooted<FunctionScope::Data*> data(
+            cx, NewEmptyFunctionScopeData(cx, alloc, numBindings));
         if (!data) {
           return false;
         }
@@ -343,7 +343,7 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
 // used by a script into ScriptThingsVector.
 bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
                      const SmooshScriptStencil& smooshStencil,
-                     Vector<const ParserAtom*>& allAtoms,
+                     JS::HandleVector<JSAtom*> allAtoms,
                      MutableHandle<ScriptStencil> stencil) {
   auto& gcThings = stencil.get().gcThings;
 
@@ -361,7 +361,8 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
         break;
       }
       case SmooshGCThing::Tag::Atom: {
-        gcThings.infallibleAppend(mozilla::AsVariant(allAtoms[item.AsAtom()]));
+        gcThings.infallibleAppend(
+            mozilla::AsVariant(allAtoms[item.AsAtom()].get()));
         break;
       }
       case SmooshGCThing::Tag::Function: {
@@ -392,7 +393,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
 // (until GC things gets removed from stencil) tracing API of the GC.
 bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           const SmooshScriptStencil& smooshStencil,
-                          Vector<const ParserAtom*>& allAtoms,
+                          JS::HandleVector<JSAtom*> allAtoms,
                           CompilationInfo& compilationInfo,
                           MutableHandle<ScriptStencil> stencil) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
@@ -539,8 +540,8 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
 
   *unimplemented = false;
 
-  Vector<const ParserAtom*> allAtoms(cx);
-  if (!ConvertAtoms(cx, result, compilationInfo, allAtoms)) {
+  JS::RootedVector<JSAtom*> allAtoms(cx);
+  if (!ConvertAtoms(cx, result, compilationInfo, &allAtoms)) {
     return false;
   }
 
