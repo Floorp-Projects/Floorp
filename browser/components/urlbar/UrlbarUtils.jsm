@@ -1175,7 +1175,6 @@ class UrlbarQueryContext {
     }
 
     this.lastResultCount = 0;
-    this.allHeuristicResults = [];
     this.pendingHeuristicProviders = new Set();
     this.trimmedSearchString = this.searchString.trim();
     this.userContextId =

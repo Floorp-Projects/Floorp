@@ -203,6 +203,8 @@ SearchSuggestionController.prototype = {
    * @param {int} userContextId - the userContextId of the selected tab.
    * @param {boolean} restrictToEngine - whether to restrict local historical
    *   suggestions to the ones registered under the given engine.
+   * @param {boolean} dedupeRemoteAndLocal - whether to remove remote
+   *   suggestions that dupe local suggestions
    *
    * @returns {Promise} resolving to an object with the following contents:
    * @returns {array<SearchSuggestionEntry>} results.local
@@ -215,7 +217,8 @@ SearchSuggestionController.prototype = {
     privateMode,
     engine,
     userContextId = 0,
-    restrictToEngine = false
+    restrictToEngine = false,
+    dedupeRemoteAndLocal = true
   ) {
     // There is no smart filtering from previous results here (as there is when looking through
     // history/form data) because the result set returned by the server is different for every typed
@@ -281,7 +284,7 @@ SearchSuggestionController.prototype = {
       return null;
     }
     return Promise.all(promises).then(
-      this._dedupeAndReturnResults.bind(this),
+      results => this._dedupeAndReturnResults(results, dedupeRemoteAndLocal),
       handleRejection
     );
   },
@@ -558,9 +561,11 @@ SearchSuggestionController.prototype = {
 
   /**
    * @param {Array} suggestResults - an array of result objects from different sources (local or remote)
+   * @param {boolean} dedupeRemoteAndLocal - whether to remove remote
+   *   suggestions that dupe local suggestions
    * @returns {object}
    */
-  _dedupeAndReturnResults(suggestResults) {
+  _dedupeAndReturnResults(suggestResults, dedupeRemoteAndLocal) {
     if (this._searchString === null) {
       // _searchString can be null if stop() was called and remote suggestions
       // were disabled (stopping if we are fetching remote suggestions will
@@ -612,7 +617,7 @@ SearchSuggestionController.prototype = {
 
     // We don't want things to appear in both history and suggestions so remove
     // entries from remote results that are already in local.
-    if (results.remote.length && results.local.length) {
+    if (results.remote.length && results.local.length && dedupeRemoteAndLocal) {
       for (let i = 0; i < results.local.length; ++i) {
         let dupIndex = results.remote.findIndex(e =>
           e.equals(results.local[i])

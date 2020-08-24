@@ -187,6 +187,49 @@ add_task(async function mixed_suggestions() {
 });
 
 /**
+ * Tests a suggestions provider that returns both normal and tail suggestions,
+ * with tail suggestions listed before normal suggestions.  In the real world
+ * we don't expect that to happen, but we should handle it by showing only the
+ * normal suggestions.
+ */
+add_task(async function mixed_suggestions_tail_first() {
+  setSuggestionsFn(searchStr => {
+    let suffixes = ["toronto", "tunisia"];
+    return [
+      "what time is it in t",
+      suffixes
+        .map(s => searchStr + s.slice(1))
+        .concat(["what is the time today texas"]),
+      [],
+      {
+        "google:irrelevantparameter": [],
+        "google:suggestdetail": suffixes
+          .map(s => ({
+            mp: "… ",
+            t: s,
+          }))
+          .concat([{}]),
+      },
+    ];
+  });
+
+  const query = "what time is it in t";
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        suggestion: "what is the time today texas",
+        tail: undefined,
+      }),
+    ],
+  });
+  await cleanUpSuggestions();
+});
+
+/**
  * Tests a search that returns history results, bookmark results and tail
  * suggestions. Only the history and bookmark results should be shown.
  */
