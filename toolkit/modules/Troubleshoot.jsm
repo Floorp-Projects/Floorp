@@ -22,10 +22,6 @@ const { FeatureGate } = ChromeUtils.import(
   "resource://featuregates/FeatureGate.jsm"
 );
 
-let { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
-);
-
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 // We use a preferences whitelist to make sure we only show preferences that
@@ -441,6 +437,16 @@ var dataProviders = {
   },
 
   async environmentVariables(done) {
+    let Subprocess;
+    try {
+      // Subprocess is not available in all builds
+      Subprocess = ChromeUtils.import("resource://gre/modules/Subprocess.jsm")
+        .Subprocess;
+    } catch (ex) {
+      done({});
+      return;
+    }
+
     let environment = Subprocess.getEnvironment();
     let filteredEnvironment = {};
     // Limit the environment variables to those that we
