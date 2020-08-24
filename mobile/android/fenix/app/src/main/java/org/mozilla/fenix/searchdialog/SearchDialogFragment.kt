@@ -245,6 +245,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             awesome_bar?.visibility = if (shouldShowAwesomebar) View.VISIBLE else View.INVISIBLE
             updateSearchSuggestionsHintVisibility(it)
             updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
+            updateToolbarContentDescription(it)
             toolbarView.update(it)
             awesomeBarView.update(it)
             firstUpdate = false
@@ -386,7 +387,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
         val visibility =
-            if (searchState.showClipboardSuggestions && searchState.query.isEmpty() && !clipboardUrl.isNullOrEmpty())
+            if (
+                searchState.showClipboardSuggestions &&
+                searchState.query.isEmpty() &&
+                !clipboardUrl.isNullOrEmpty() &&
+                !searchState.showSearchShortcuts
+            )
                 View.VISIBLE else View.GONE
 
         fill_link_from_clipboard.visibility = visibility
@@ -395,6 +401,14 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
             requireComponents.core.engine.speculativeConnect(clipboardUrl)
         }
+    }
+
+    private fun updateToolbarContentDescription(searchState: SearchFragmentState) {
+        val urlView = toolbarView.view
+            .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
+        toolbarView.view.contentDescription =
+            searchState.searchEngineSource.searchEngine.name + ", " + urlView.hint
+        urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
     companion object {
