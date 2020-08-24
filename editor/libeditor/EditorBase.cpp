@@ -993,7 +993,8 @@ void EditorBase::BeginPlaceholderTransaction(nsStaticAtom& aTransactionName) {
   mPlaceholderBatch++;
 }
 
-void EditorBase::EndPlaceholderTransaction() {
+void EditorBase::EndPlaceholderTransaction(
+    ScrollSelectionIntoView aScrollSelectionIntoView) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch > 0,
              "zero or negative placeholder batch count when ending batch!");
@@ -1015,10 +1016,12 @@ void EditorBase::EndPlaceholderTransaction() {
     // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     // XXX Even if we're destroyed, we need to keep handling below because
     //     this method changes a lot of status.  We should rewrite this safer.
-    DebugOnly<nsresult> rvIgnored = ScrollSelectionFocusIntoView();
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "EditorBase::ScrollSelectionFocusIntoView() failed, but Ignored");
+    if (aScrollSelectionIntoView == ScrollSelectionIntoView::Yes) {
+      DebugOnly<nsresult> rvIgnored = ScrollSelectionFocusIntoView();
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "EditorBase::ScrollSelectionFocusIntoView() failed, but Ignored");
+    }
 
     // cached for frame offset are Not available now
     SelectionRefPtr()->SetCanCacheFrameOffset(false);
@@ -2142,7 +2145,8 @@ NS_IMETHODIMP EditorBase::CloneAttributes(Element* aDestElement,
 
 void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
                                                 Element& aSourceElement) {
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
 
   // Use transaction system for undo only if destination is already in the
   // document
@@ -3703,7 +3707,8 @@ nsresult EditorBase::DeleteSelectionAsAction(
   }
 
   // delete placeholder txns merge.
-  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName,
+                                             ScrollSelectionIntoView::Yes);
   rv = DeleteSelectionAsSubAction(aDirectionAndAmount, aStripWrappers);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DeleteSelectionAsSubAction() failed");
@@ -4951,7 +4956,8 @@ nsresult EditorBase::InsertTextAsAction(const nsAString& aStringToInsert,
   if (!AsHTMLEditor()) {
     nsContentUtils::PlatformToDOMLineBreaks(stringToInsert);
   }
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
   rv = InsertTextAsSubAction(stringToInsert);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertTextAsSubAction() failed");
@@ -5003,7 +5009,8 @@ NS_IMETHODIMP EditorBase::InsertLineBreak() {
     return NS_ERROR_FAILURE;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
   rv = InsertLineBreakAsSubAction();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::InsertLineBreakAsSubAction() failed");
