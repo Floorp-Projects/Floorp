@@ -11,6 +11,7 @@ FINAL_TARGET_FILES.defaults.settings.main += [
     'search-config.json',
     'search-default-override-allowlist.json',
     'sites-classification.json',
+    'top-sites.json',
     'url-classifier-skip-urls.json',
 ]
 
