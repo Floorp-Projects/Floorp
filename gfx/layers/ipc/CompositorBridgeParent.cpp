@@ -142,6 +142,14 @@ void CompositorBridgeParentBase::NotifyNotUsed(PTextureParent* aTexture,
     return;
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  if (texture->GetAndroidHardwareBuffer()) {
+    MOZ_ASSERT(texture->GetFlags() & TextureFlags::RECYCLE);
+    ImageBridgeParent::NotifyBufferNotUsedOfCompositorBridge(
+        GetChildProcessId(), texture, aTransactionId);
+  }
+#endif
+
   if (!(texture->GetFlags() & TextureFlags::RECYCLE) &&
       !(texture->GetFlags() & TextureFlags::WAIT_HOST_USAGE_END)) {
     return;

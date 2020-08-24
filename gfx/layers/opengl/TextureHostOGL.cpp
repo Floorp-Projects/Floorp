@@ -727,8 +727,8 @@ AndroidHardwareBufferTextureHost::Create(
     TextureFlags aFlags, const SurfaceDescriptorAndroidHardwareBuffer& aDesc) {
   RefPtr<AndroidHardwareBuffer> buffer =
       AndroidHardwareBuffer::FromFileDescriptor(
-          const_cast<ipc::FileDescriptor&>(aDesc.handle()), aDesc.size(),
-          aDesc.format());
+          const_cast<ipc::FileDescriptor&>(aDesc.handle()), aDesc.bufferId(),
+          aDesc.size(), aDesc.format());
   if (!buffer) {
     return nullptr;
   }
@@ -852,6 +852,29 @@ gl::GLContext* AndroidHardwareBufferTextureHost::gl() const {
 }
 
 bool AndroidHardwareBufferTextureHost::Lock() {
+  if (!mAndroidHardwareBuffer) {
+    return false;
+  }
+
+  auto fenceFd = mAndroidHardwareBuffer->GetAndResetAcquireFence();
+  if (fenceFd.IsValid()) {
+    const auto& gle = gl::GLContextEGL::Cast(gl());
+    const auto& egl = gle->mEgl;
+
+    auto rawFD = fenceFd.TakePlatformHandle();
+    const EGLint attribs[] = {LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID,
+                              rawFD.get(), LOCAL_EGL_NONE};
+
+    EGLSync sync =
+        egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, attribs);
+    if (sync) {
+      egl->fClientWaitSync(sync, 0, LOCAL_EGL_FOREVER);
+      egl->fDestroySync(sync);
+    } else {
+      gfxCriticalNote << "Failed to create EGLSync from acquire fence fd";
+    }
+  }
+
   return mTextureSource && mTextureSource->IsValid();
 }
 
@@ -894,6 +917,30 @@ void AndroidHardwareBufferTextureHost::DeallocateDeviceData() {
     mTextureSource = nullptr;
   }
   DestroyEGLImage();
+}
+
+void AndroidHardwareBufferTextureHost::SetAcquireFence(
+    mozilla::ipc::FileDescriptor&& aFenceFd) {
+  if (!mAndroidHardwareBuffer) {
+    return;
+  }
+  mAndroidHardwareBuffer->SetAcquireFence(std::move(aFenceFd));
+}
+
+void AndroidHardwareBufferTextureHost::SetReleaseFence(
+    mozilla::ipc::FileDescriptor&& aFenceFd) {
+  if (!mAndroidHardwareBuffer) {
+    return;
+  }
+  mAndroidHardwareBuffer->SetReleaseFence(std::move(aFenceFd));
+}
+
+mozilla::ipc::FileDescriptor
+AndroidHardwareBufferTextureHost::GetAndResetReleaseFence() {
+  if (!mAndroidHardwareBuffer) {
+    return mozilla::ipc::FileDescriptor();
+  }
+  return mAndroidHardwareBuffer->GetAndResetReleaseFence();
 }
 
 void AndroidHardwareBufferTextureHost::CreateRenderTexture(
@@ -1065,6 +1112,7 @@ bool EGLImageTextureHost::Lock() {
 
   if (mSync) {
     MOZ_ASSERT(egl->IsExtensionSupported(EGLExtension::KHR_fence_sync));
+    // XXX eglWaitSyncKHR() is better api. Bug 1660434 is going to fix it.
     status = egl->fClientWaitSync(mSync, 0, LOCAL_EGL_FOREVER);
   }
 

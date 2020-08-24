@@ -12,20 +12,21 @@
 #include <unordered_set>
 
 #include "gfx2DGlue.h"
-#include "GLContextTypes.h"             // for GLContext, etc
-#include "GLDefs.h"                     // for GLuint, LOCAL_GL_TEXTURE_2D, etc
-#include "OGLShaderConfig.h"            // for ShaderConfigOGL
-#include "Units.h"                      // for ScreenPoint
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"         // for override, final
-#include "mozilla/RefPtr.h"             // for already_AddRefed, RefPtr
-#include "mozilla/gfx/2D.h"             // for DrawTarget
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
-#include "mozilla/gfx/Point.h"          // for IntSize, Point
-#include "mozilla/gfx/Rect.h"           // for Rect, IntRect
-#include "mozilla/gfx/Triangle.h"       // for Triangle
-#include "mozilla/gfx/Types.h"          // for Float, SurfaceFormat, etc
+#include "GLContextTypes.h"         // for GLContext, etc
+#include "GLDefs.h"                 // for GLuint, LOCAL_GL_TEXTURE_2D, etc
+#include "OGLShaderConfig.h"        // for ShaderConfigOGL
+#include "Units.h"                  // for ScreenPoint
+#include "mozilla/Assertions.h"     // for MOZ_ASSERT, etc
+#include "mozilla/Attributes.h"     // for override, final
+#include "mozilla/RefPtr.h"         // for already_AddRefed, RefPtr
+#include "mozilla/gfx/2D.h"         // for DrawTarget
+#include "mozilla/gfx/BaseSize.h"   // for BaseSize
+#include "mozilla/gfx/MatrixFwd.h"  // for Matrix4x4
+#include "mozilla/gfx/Point.h"      // for IntSize, Point
+#include "mozilla/gfx/Rect.h"       // for Rect, IntRect
+#include "mozilla/gfx/Triangle.h"   // for Triangle
+#include "mozilla/gfx/Types.h"      // for Float, SurfaceFormat, etc
+#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, Compositor, etc
 #include "mozilla/layers/CompositorTypes.h"  // for MaskType::MaskType::NumMaskTypes, etc
 #include "mozilla/layers/LayersTypes.h"
@@ -262,6 +263,8 @@ class CompositorOGL final : public Compositor {
   // destroying this CompositorOGL.
   void RegisterTextureSource(TextureSource* aTextureSource);
   void UnregisterTextureSource(TextureSource* aTextureSource);
+
+  ipc::FileDescriptor GetReleaseFence();
 
  private:
   template <typename Geometry>
@@ -500,6 +503,12 @@ class CompositorOGL final : public Compositor {
   // destroying this CompositorOGL.
   std::unordered_set<TextureSource*> mRegisteredTextureSources;
 #endif
+
+  // FileDescriptor of release fence.
+  // Release fence is a fence that is used for waiting until usage/composite of
+  // AHardwareBuffer is ended. The fence is delivered to client side via
+  // ImageBridge. It is used only on android.
+  ipc::FileDescriptor mReleaseFenceFd;
 
   bool mDestroyed;
 
