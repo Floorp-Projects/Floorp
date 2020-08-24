@@ -20,6 +20,7 @@ const PRIVATE_SEARCH_PREF = "browser.search.separatePrivateDefault.ui.enabled";
 const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 const MAX_FORM_HISTORY_PREF = "browser.urlbar.maxHistoricalSearchSuggestions";
 const SEARCH_STRING = "hello";
+const MATCH_BUCKETS_VALUE = "general:5,suggestion:Infinity";
 
 var suggestionsFn;
 var previousSuggestionsFn;
@@ -106,7 +107,7 @@ function makeExpectedSuggestionResults(
 add_task(async function setup() {
   Services.prefs.setCharPref(
     "browser.urlbar.matchBuckets",
-    "general:5,suggestion:Infinity"
+    MATCH_BUCKETS_VALUE
   );
 
   let engine = await addTestSuggestionsEngine(searchStr => {
@@ -721,7 +722,7 @@ add_task(async function mixup_frecency() {
 
   Services.prefs.setCharPref(
     "browser.urlbar.matchBuckets",
-    "general:5,suggestion:Infinity"
+    MATCH_BUCKETS_VALUE
   );
   Services.prefs.clearUserPref("browser.urlbar.matchBucketsSearch");
   Services.prefs.clearUserPref(MAX_RICH_RESULTS_PREF);
@@ -1430,6 +1431,7 @@ add_task(async function formHistory() {
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
       ...makeExpectedRemoteSuggestionResults(context),
+      ...makeExpectedFormHistoryResults(context, 2),
     ],
   });
 
@@ -1439,8 +1441,9 @@ add_task(async function formHistory() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      ...makeExpectedFormHistoryResults(context).slice(0, 1),
+      ...makeExpectedFormHistoryResults(context, 2).slice(0, 1),
       ...makeExpectedRemoteSuggestionResults(context),
+      ...makeExpectedFormHistoryResults(context, 2).slice(1),
     ],
   });
 
@@ -1450,7 +1453,7 @@ add_task(async function formHistory() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      ...makeExpectedFormHistoryResults(context).slice(0, 2),
+      ...makeExpectedFormHistoryResults(context, 2),
       ...makeExpectedRemoteSuggestionResults(context),
     ],
   });
@@ -1490,12 +1493,16 @@ add_task(async function formHistory() {
         suggestion: "foobar",
         engineName: ENGINE_NAME,
       }),
+      ...makeExpectedRemoteSuggestionResults(context, {
+        suggestionPrefix: "foo",
+      }),
+      // Note that the second form history result appears after the remote
+      // suggestions.  This isn't ideal because it should appear right after the
+      // first form history result, but it doesn't because the actual first form
+      // history result duped the heuristic, so the muxer discarded it.
       makeFormHistoryResult(context, {
         suggestion: "fooquux",
         engineName: ENGINE_NAME,
-      }),
-      ...makeExpectedRemoteSuggestionResults(context, {
-        suggestionPrefix: "foo",
       }),
     ],
   });
@@ -1524,19 +1531,29 @@ add_task(async function formHistory() {
       ...makeExpectedRemoteSuggestionResults(context, {
         suggestionPrefix: "foo",
       }),
+      makeFormHistoryResult(context, {
+        suggestion: "fooquux",
+        engineName: ENGINE_NAME,
+      }),
     ],
   });
   await PlacesUtils.history.clear();
 
   // Add SERPs for "foobar" and "food" and search for "foo".  The "foo" form
   // history should be excluded since it dupes the heuristic; the "foobar" and
-  // "fooquux" form history should be included; the "foobar" SERP visit should
-  // be excluded since it dupes the "foobar" form history; the "food" SERP
-  // should be included.
+  // "fooquux" form history should be included; the "food" SERP should be
+  // included since it doesn't dupe either form history result; and the "foobar"
+  // SERP depends on the match buckets, see below.
   let engine = await Services.search.getDefault();
   let [serpURL1] = UrlbarUtils.getSearchQueryUrl(engine, "foobar");
   let [serpURL2] = UrlbarUtils.getSearchQueryUrl(engine, "food");
   await PlacesTestUtils.addVisits([serpURL1, serpURL2]);
+
+  // First, use the MATCH_BUCKETS_VALUE that the test set above.  General
+  // results appear before suggestions, which means that the muxer visits the
+  // "foobar" SERP before visiting the "foobar" form history, and so it doesn't
+  // see that the SERP dupes the form history.  The "foobar" SERP is therefore
+  // included.
   context = createContext("foo", { isPrivate: false });
   await check_results({
     context,
@@ -1546,19 +1563,62 @@ add_task(async function formHistory() {
         uri: "http://localhost:9000/search?terms=food",
         title: "test visit for http://localhost:9000/search?terms=food",
       }),
-      makeFormHistoryResult(context, {
-        suggestion: "foobar",
-        engineName: ENGINE_NAME,
+      makeVisitResult(context, {
+        uri: "http://localhost:9000/search?terms=foobar",
+        title: "test visit for http://localhost:9000/search?terms=foobar",
       }),
       makeFormHistoryResult(context, {
-        suggestion: "fooquux",
+        suggestion: "foobar",
         engineName: ENGINE_NAME,
       }),
       ...makeExpectedRemoteSuggestionResults(context, {
         suggestionPrefix: "foo",
       }),
+      makeFormHistoryResult(context, {
+        suggestion: "fooquux",
+        engineName: ENGINE_NAME,
+      }),
     ],
   });
+
+  // Now use Firefox's default match buckets, where suggestions appear before
+  // general results.  Now the muxer will see that the "foobar" SERP dupes the
+  // "foobar" form history, so it will exclude the SERP.
+  Services.prefs.setCharPref(
+    "browser.urlbar.matchBuckets",
+    "suggestion:4,general:Infinity"
+  );
+  context = createContext("foo", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      // Note that the remote suggestions appear in between the two form history
+      // results.  Ideally the form history would appear together before the
+      // remote suggestions, but they don't because the actual first form
+      // history result duped the heuristic, so the muxer discarded it.
+      makeFormHistoryResult(context, {
+        suggestion: "foobar",
+        engineName: ENGINE_NAME,
+      }),
+      ...makeExpectedRemoteSuggestionResults(context, {
+        suggestionPrefix: "foo",
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "fooquux",
+        engineName: ENGINE_NAME,
+      }),
+      makeVisitResult(context, {
+        uri: "http://localhost:9000/search?terms=food",
+        title: "test visit for http://localhost:9000/search?terms=food",
+      }),
+    ],
+  });
+  Services.prefs.setCharPref(
+    "browser.urlbar.matchBuckets",
+    MATCH_BUCKETS_VALUE
+  );
+
   await PlacesUtils.history.clear();
 
   await UrlbarTestUtils.formHistory.remove(formHistoryStrings);
