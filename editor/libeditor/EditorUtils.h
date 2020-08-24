@@ -741,8 +741,13 @@ class MOZ_STACK_CLASS AutoSelectionRangeArray final {
  *****************************************************************************/
 class MOZ_STACK_CLASS AutoRangeArray final {
  public:
-  explicit AutoRangeArray(const dom::Selection& aSelection)
-      : mDirection(aSelection.GetDirection()) {
+  explicit AutoRangeArray(const dom::Selection& aSelection) {
+    Initialize(aSelection);
+  }
+
+  void Initialize(const dom::Selection& aSelection) {
+    mDirection = aSelection.GetDirection();
+    mRanges.Clear();
     for (uint32_t i = 0; i < aSelection.RangeCount(); i++) {
       mRanges.AppendElement(aSelection.GetRangeAt(i)->CloneRange());
       if (aSelection.GetRangeAt(i) == aSelection.GetAnchorFocusRange()) {
@@ -846,7 +851,7 @@ class MOZ_STACK_CLASS AutoRangeArray final {
  private:
   AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;
   RefPtr<nsRange> mAnchorFocusRange;
-  nsDirection mDirection;
+  nsDirection mDirection = nsDirection::eDirNext;
 };
 
 /******************************************************************************
