@@ -19,6 +19,9 @@
 //! ## Example
 //!
 //! ```rust
+//! extern crate num_bigint;
+//! extern crate num_traits;
+//!
 //! # fn main() {
 //! use num_bigint::BigUint;
 //! use num_traits::{Zero, One};
@@ -43,8 +46,14 @@
 //!
 //! It's easy to generate large random numbers:
 //!
-//! ```rust,ignore
-//! use num_bigint::{ToBigInt, RandBigInt};
+//! ```rust
+//! # #[cfg(feature = "rand")]
+//! extern crate rand;
+//! extern crate num_bigint as bigint;
+//!
+//! # #[cfg(feature = "rand")]
+//! # fn main() {
+//! use bigint::{ToBigInt, RandBigInt};
 //!
 //! let mut rng = rand::thread_rng();
 //! let a = rng.gen_bigint(1000);
@@ -55,67 +64,34 @@
 //!
 //! // Probably an even larger number.
 //! println!("{}", a * b);
+//! # }
+//!
+//! # #[cfg(not(feature = "rand"))]
+//! # fn main() {
+//! # }
 //! ```
-//!
-//! See the "Features" section for instructions for enabling random number generation.
-//!
-//! ## Features
-//!
-//! The `std` crate feature is enabled by default, and is mandatory before Rust
-//! 1.36 and the stabilized `alloc` crate.  If you depend on `num-bigint` with
-//! `default-features = false`, you must manually enable the `std` feature yourself
-//! if your compiler is not new enough.
-//!
-//! ### Random Generation
-//!
-//! `num-bigint` supports the generation of random big integers when the `rand`
-//! feature is enabled. To enable it include rand as
-//!
-//! ```toml
-//! rand = "0.7"
-//! num-bigint = { version = "0.3", features = ["rand"] }
-//! ```
-//!
-//! Note that you must use the version of `rand` that `num-bigint` is compatible
-//! with: `0.7`.
-//!
 //!
 //! ## Compatibility
 //!
-//! The `num-bigint` crate is tested for rustc 1.31 and greater.
+//! The `num-bigint` crate is tested for rustc 1.15 and greater.
 
-#![doc(html_root_url = "https://docs.rs/num-bigint/0.3")]
-#![no_std]
+#![doc(html_root_url = "https://docs.rs/num-bigint/0.2")]
+// We don't actually support `no_std` yet, and probably won't until `alloc` is stable.  We're just
+// reserving this ability with the "std" feature now, and compilation will fail without.
+#![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(feature = "std")]
-#[macro_use]
-extern crate std;
+#[cfg(feature = "rand")]
+extern crate rand;
+#[cfg(feature = "serde")]
+extern crate serde;
 
-#[cfg(feature = "std")]
-mod std_alloc {
-    pub(crate) use std::borrow::Cow;
-    #[cfg(feature = "quickcheck")]
-    pub(crate) use std::boxed::Box;
-    pub(crate) use std::string::String;
-    pub(crate) use std::vec::Vec;
-}
+extern crate num_integer as integer;
+extern crate num_traits as traits;
+#[cfg(feature = "quickcheck")]
+extern crate quickcheck;
 
-#[cfg(not(feature = "std"))]
-#[macro_use]
-extern crate alloc;
-
-#[cfg(not(feature = "std"))]
-mod std_alloc {
-    pub(crate) use alloc::borrow::Cow;
-    #[cfg(feature = "quickcheck")]
-    pub(crate) use alloc::boxed::Box;
-    pub(crate) use alloc::string::String;
-    pub(crate) use alloc::vec::Vec;
-}
-
-use core::fmt;
-#[cfg(feature = "std")]
 use std::error::Error;
+use std::fmt;
 
 #[macro_use]
 mod macros;
@@ -149,7 +125,7 @@ enum BigIntErrorKind {
 
 impl ParseBigIntError {
     fn __description(&self) -> &str {
-        use crate::BigIntErrorKind::*;
+        use BigIntErrorKind::*;
         match self.kind {
             Empty => "cannot parse integer from empty string",
             InvalidDigit => "invalid digit found in string",
@@ -170,102 +146,42 @@ impl ParseBigIntError {
 }
 
 impl fmt::Display for ParseBigIntError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.__description().fmt(f)
     }
 }
 
-#[cfg(feature = "std")]
 impl Error for ParseBigIntError {
     fn description(&self) -> &str {
         self.__description()
     }
 }
 
-/// The error type returned when a checked conversion regarding big integer fails.
-#[cfg(has_try_from)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct TryFromBigIntError<T> {
-    original: T,
-}
+pub use biguint::BigUint;
+pub use biguint::ToBigUint;
 
-#[cfg(has_try_from)]
-impl<T> TryFromBigIntError<T> {
-    fn new(original: T) -> Self {
-        TryFromBigIntError { original }
-    }
-
-    fn __description(&self) -> &str {
-        "out of range conversion regarding big integer attempted"
-    }
-
-    /// Extract the original value, if available. The value will be available
-    /// if the type before conversion was either [`BigInt`] or [`BigUint`].
-    ///
-    /// [`BigInt`]: struct.BigInt.html
-    /// [`BigUint`]: struct.BigUint.html
-    pub fn into_original(self) -> T {
-        self.original
-    }
-}
-
-#[cfg(all(feature = "std", has_try_from))]
-impl<T> std::error::Error for TryFromBigIntError<T>
-where
-    T: fmt::Debug,
-{
-    fn description(&self) -> &str {
-        self.__description()
-    }
-}
-
-#[cfg(has_try_from)]
-impl<T> fmt::Display for TryFromBigIntError<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.__description().fmt(f)
-    }
-}
-
-pub use crate::biguint::BigUint;
-pub use crate::biguint::ToBigUint;
-
-pub use crate::bigint::BigInt;
-pub use crate::bigint::Sign;
-pub use crate::bigint::ToBigInt;
+pub use bigint::BigInt;
+pub use bigint::Sign;
+pub use bigint::ToBigInt;
 
 #[cfg(feature = "rand")]
-pub use crate::bigrand::{RandBigInt, RandomBits, UniformBigInt, UniformBigUint};
+pub use bigrand::{RandBigInt, RandomBits, UniformBigInt, UniformBigUint};
 
 mod big_digit {
     /// A `BigDigit` is a `BigUint`'s composing element.
-    #[cfg(not(u64_digit))]
-    pub(crate) type BigDigit = u32;
-    #[cfg(u64_digit)]
-    pub(crate) type BigDigit = u64;
+    pub type BigDigit = u32;
 
     /// A `DoubleBigDigit` is the internal type used to do the computations.  Its
     /// size is the double of the size of `BigDigit`.
-    #[cfg(not(u64_digit))]
-    pub(crate) type DoubleBigDigit = u64;
-    #[cfg(u64_digit)]
-    pub(crate) type DoubleBigDigit = u128;
+    pub type DoubleBigDigit = u64;
 
     /// A `SignedDoubleBigDigit` is the signed version of `DoubleBigDigit`.
-    #[cfg(not(u64_digit))]
-    pub(crate) type SignedDoubleBigDigit = i64;
-    #[cfg(u64_digit)]
-    pub(crate) type SignedDoubleBigDigit = i128;
+    pub type SignedDoubleBigDigit = i64;
 
     // `DoubleBigDigit` size dependent
-    #[cfg(not(u64_digit))]
-    pub(crate) const BITS: u8 = 32;
-    #[cfg(u64_digit)]
-    pub(crate) const BITS: u8 = 64;
+    pub const BITS: usize = 32;
 
-    pub(crate) const HALF_BITS: u8 = BITS / 2;
-    pub(crate) const HALF: BigDigit = (1 << HALF_BITS) - 1;
-
-    const LO_MASK: DoubleBigDigit = (1 << BITS) - 1;
+    const LO_MASK: DoubleBigDigit = (-1i32 as DoubleBigDigit) >> BITS;
 
     #[inline]
     fn get_hi(n: DoubleBigDigit) -> BigDigit {
@@ -278,13 +194,13 @@ mod big_digit {
 
     /// Split one `DoubleBigDigit` into two `BigDigit`s.
     #[inline]
-    pub(crate) fn from_doublebigdigit(n: DoubleBigDigit) -> (BigDigit, BigDigit) {
+    pub fn from_doublebigdigit(n: DoubleBigDigit) -> (BigDigit, BigDigit) {
         (get_hi(n), get_lo(n))
     }
 
     /// Join two `BigDigit`s into one `DoubleBigDigit`
     #[inline]
-    pub(crate) fn to_doublebigdigit(hi: BigDigit, lo: BigDigit) -> DoubleBigDigit {
+    pub fn to_doublebigdigit(hi: BigDigit, lo: BigDigit) -> DoubleBigDigit {
         DoubleBigDigit::from(lo) | (DoubleBigDigit::from(hi) << BITS)
     }
 }

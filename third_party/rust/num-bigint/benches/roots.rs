@@ -1,11 +1,14 @@
 #![feature(test)]
 #![cfg(feature = "rand")]
 
+extern crate num_bigint;
+extern crate num_traits;
+extern crate rand;
 extern crate test;
 
 use num_bigint::{BigUint, RandBigInt};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
+use num_traits::Pow;
+use rand::{SeedableRng, StdRng};
 use test::Bencher;
 
 // The `big64` cases demonstrate the speed of cases where the value
@@ -43,7 +46,7 @@ fn check(x: &BigUint, n: u32) {
     assert_eq!((&hi - 1u32).nth_root(n), root);
 }
 
-fn bench_sqrt(b: &mut Bencher, bits: u64) {
+fn bench_sqrt(b: &mut Bencher, bits: usize) {
     let x = get_rng().gen_biguint(bits);
     eprintln!("bench_sqrt({})", x);
 
@@ -71,7 +74,7 @@ fn big4k_sqrt(b: &mut Bencher) {
     bench_sqrt(b, 4096);
 }
 
-fn bench_cbrt(b: &mut Bencher, bits: u64) {
+fn bench_cbrt(b: &mut Bencher, bits: usize) {
     let x = get_rng().gen_biguint(bits);
     eprintln!("bench_cbrt({})", x);
 
@@ -99,7 +102,7 @@ fn big4k_cbrt(b: &mut Bencher) {
     bench_cbrt(b, 4096);
 }
 
-fn bench_nth_root(b: &mut Bencher, bits: u64, n: u32) {
+fn bench_nth_root(b: &mut Bencher, bits: usize, n: u32) {
     let x = get_rng().gen_biguint(bits);
     eprintln!("bench_{}th_root({})", n, x);
 

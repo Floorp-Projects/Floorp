@@ -1,3 +1,4 @@
+#![allow(unknown_lints)] // older rustc doesn't know `unused_macros`
 #![allow(unused_macros)]
 
 macro_rules! forward_val_val_binop {
@@ -283,7 +284,8 @@ macro_rules! promote_scalars {
             impl $imp<$scalar> for $res {
                 type Output = $res;
 
-                #[allow(clippy::cast_lossless)]
+                #[cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
+                #[cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
                 #[inline]
                 fn $method(self, other: $scalar) -> $res {
                     $imp::$method(self, other as $promo)
@@ -293,7 +295,8 @@ macro_rules! promote_scalars {
             impl $imp<$res> for $scalar {
                 type Output = $res;
 
-                #[allow(clippy::cast_lossless)]
+                #[cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
+                #[cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
                 #[inline]
                 fn $method(self, other: $res) -> $res {
                     $imp::$method(self as $promo, other)
@@ -306,7 +309,8 @@ macro_rules! promote_scalars_assign {
     (impl $imp:ident<$promo:ty> for $res:ty, $method:ident, $( $scalar:ty ),*) => {
         $(
             impl $imp<$scalar> for $res {
-                #[allow(clippy::cast_lossless)]
+                #[cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
+                #[cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
                 #[inline]
                 fn $method(&mut self, other: $scalar) {
                     self.$method(other as $promo);
@@ -340,7 +344,7 @@ macro_rules! promote_signed_scalars {
 macro_rules! promote_signed_scalars_assign {
     (impl $imp:ident for $res:ty, $method:ident) => {
         promote_scalars_assign!(impl $imp<i32> for $res, $method, i8, i16);
-        promote_scalars_assign!(impl $imp<IsizePromotion> for $res, $method, isize);
+        promote_scalars_assign!(impl $imp<UsizePromotion> for $res, $method, isize);
     }
 }
 

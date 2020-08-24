@@ -1,5 +1,7 @@
 #![feature(test)]
 
+extern crate num_bigint;
+extern crate num_traits;
 extern crate test;
 
 use num_bigint::BigUint;

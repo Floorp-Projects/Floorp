@@ -42,10 +42,8 @@ pub use ops::checked::{
 };
 pub use ops::inv::Inv;
 pub use ops::mul_add::{MulAdd, MulAddAssign};
-pub use ops::saturating::{Saturating, SaturatingAdd, SaturatingMul, SaturatingSub};
-pub use ops::wrapping::{
-    WrappingAdd, WrappingMul, WrappingNeg, WrappingShl, WrappingShr, WrappingSub,
-};
+pub use ops::saturating::Saturating;
+pub use ops::wrapping::{WrappingAdd, WrappingMul, WrappingShl, WrappingShr, WrappingSub};
 pub use pow::{checked_pow, pow, Pow};
 pub use sign::{abs, abs_sub, signum, Signed, Unsigned};
 
