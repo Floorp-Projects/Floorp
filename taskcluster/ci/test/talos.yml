@@ -54,6 +54,10 @@ talos-bcv:
     description: "Talos basic compositor video"
     try-name: bcv
     treeherder-symbol: T(bcv)
+    variants:
+        by-test-platform:
+            linux64.*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             .*(?:shippable-qr|-qr)/.*: []
@@ -195,6 +199,10 @@ talos-g1:
     description: "Talos g1"
     try-name: g1
     treeherder-symbol: T(g1)
+    variants:
+        by-test-platform:
+            linux64.*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time:
         by-test-platform:
             linux64.*: 3600
@@ -241,6 +249,10 @@ talos-g4:
     description: "Talos g4"
     try-name: g4
     treeherder-symbol: T(g4)
+    variants:
+        by-test-platform:
+            linux64.*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
@@ -357,6 +369,10 @@ talos-other:
     description: "Talos other"
     try-name: other
     treeherder-symbol: T(o)
+    variants:
+        by-test-platform:
+            linux64.*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -441,6 +457,10 @@ talos-svgr:
     description: "Talos svgr"
     try-name: svgr
     treeherder-symbol: T(s)
+    variants:
+        by-test-platform:
+            linux64.*-qr.*: ['fission', 'webrender-sw']
+            default: ['fission']
     max-run-time: 1800
     # Bug 1651311 - Disabled for high intermittent failure rate
     run-on-projects: []
