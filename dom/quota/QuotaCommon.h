@@ -21,6 +21,13 @@
 #define MOZ_REMOVE_PAREN_HELPER3(...) MOZ_REMOVE_PAREN_HELPER4_##__VA_ARGS__
 #define MOZ_REMOVE_PAREN_HELPER4_MOZ_REMOVE_PAREN_HELPER
 
+// See https://florianjw.de/en/passing_overloaded_functions.html
+// TODO: Add a test for this macro.
+#define MOZ_SELECT_OVERLOAD(func)                         \
+  [](auto&&... aArgs) -> decltype(auto) {                 \
+    return func(std::forward<decltype(aArgs)>(aArgs)...); \
+  }
+
 #define BEGIN_QUOTA_NAMESPACE \
   namespace mozilla {         \
   namespace dom {             \
@@ -445,6 +452,17 @@ auto ErrToOkOrErr(nsresult aValue) -> Result<V, nsresult> {
     return V{SuccessValue};
   }
   return Err(aValue);
+}
+
+// TODO: Maybe move this to mfbt/ResultExtensions.h
+template <typename R, typename Func, typename... Args>
+Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
+  nsresult rv;
+  R res = aFunc(std::forward<Args>(aArgs)..., &rv);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
+  return res;
 }
 
 namespace dom {
