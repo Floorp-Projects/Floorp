@@ -2886,7 +2886,8 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       RefPtr<Element> mLeftBlockElement;
       RefPtr<Element> mRightBlockElement;
       Maybe<nsAtom*> mNewListElementTagNameOfRightListElement;
-    };
+    };  // HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+        // AutoInclusiveAncestorBlockElementsJoiner
 
     enum class Mode {
       NotInitialized,
@@ -2904,8 +2905,68 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
     RefPtr<dom::HTMLBRElement> mBRElement;
     Mode mMode = Mode::NotInitialized;
     bool mNeedsToFallbackToDeleteSelectionWithTransaction = false;
-  };
-};
+  };  // HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner
+
+  class MOZ_STACK_CLASS AutoEmptyBlockAncestorDeleter final {
+   public:
+    /**
+     * ScanEmptyBlockInclusiveAncestor() scans an inclusive ancestor element
+     * which is empty and a block element.  Then, stores the result and
+     * returns the found empty block element.
+     *
+     * @param aHTMLEditor         The HTMLEditor.
+     * @param aStartContent       Start content to look for empty ancestors.
+     * @param aEditingHostElement Current editing host.
+     */
+    [[nodiscard]] Element* ScanEmptyBlockInclusiveAncestor(
+        const HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
+        Element& aEditingHostElement);
+
+    /**
+     * Deletes found empty block element by `ScanEmptyBlockInclusiveAncestor()`.
+     * If found one is a list item element, calls
+     * `MaybeInsertBRElementBeforeEmptyListItemElement()` before deleting
+     * the list item element.
+     * If found empty ancestor is not a list item element,
+     * `GetNewCaretPoisition()` will be called to determine new caret position.
+     * Finally, removes the empty block ancestor.
+     *
+     * @param aHTMLEditor         The HTMLEditor.
+     * @param aDirectionAndAmount If found empty ancestor block is a list item
+     *                            element, this is ignored.  Otherwise:
+     *                            - If eNext, eNextWord or eToEndOfLine,
+     *                              collapse Selection to after found empty
+     *                              ancestor.
+     *                            - If ePrevious, ePreviousWord or
+     *                              eToBeginningOfLine, collapse Selection to
+     *                              end of previous editable node.
+     *                            - Otherwise, eNone is allowed but does
+     *                              nothing.
+     */
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+    Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount);
+
+   private:
+    /**
+     * MaybeInsertBRElementBeforeEmptyListItemElement() inserts a `<br>` element
+     * if `mEmptyInclusiveAncestorBlockElement` is a list item element which
+     * is first editable element in its parent, and its grand parent is not a
+     * list element, inserts a `<br>` element before the empty list item.
+     */
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+    MaybeInsertBRElementBeforeEmptyListItemElement(HTMLEditor& aHTMLEditor);
+
+    /**
+     * GetNewCaretPoisition() returns new caret position after deleting
+     * `mEmptyInclusiveAncestorBlockElement`.
+     */
+    [[nodiscard]] Result<EditorDOMPoint, nsresult> GetNewCaretPoisition(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount) const;
+
+    RefPtr<Element> mEmptyInclusiveAncestorBlockElement;
+  };  // HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter
+};    // HTMLEditor::AutoDeleteRangesHandler
 
 EditActionResult HTMLEditor::HandleDeleteSelection(
     nsIEditor::EDirection aDirectionAndAmount,
@@ -8774,10 +8835,10 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   return NS_OK;
 }
 
-Element*
-HTMLEditor::AutoEmptyBlockAncestorDeleter::ScanEmptyBlockInclusiveAncestor(
-    const HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
-    Element& aEditingHostElement) {
+Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
+    ScanEmptyBlockInclusiveAncestor(const HTMLEditor& aHTMLEditor,
+                                    nsIContent& aStartContent,
+                                    Element& aEditingHostElement) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   // If the editing host is an inline element, bail out early.
@@ -8814,7 +8875,8 @@ HTMLEditor::AutoEmptyBlockAncestorDeleter::ScanEmptyBlockInclusiveAncestor(
   return mEmptyInclusiveAncestorBlockElement;
 }
 
-Result<RefPtr<Element>, nsresult> HTMLEditor::AutoEmptyBlockAncestorDeleter::
+Result<RefPtr<Element>, nsresult>
+HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
     MaybeInsertBRElementBeforeEmptyListItemElement(HTMLEditor& aHTMLEditor) {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
@@ -8853,10 +8915,10 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::AutoEmptyBlockAncestorDeleter::
   return brElement;
 }
 
-Result<EditorDOMPoint, nsresult>
-HTMLEditor::AutoEmptyBlockAncestorDeleter::GetNewCaretPoisition(
-    const HTMLEditor& aHTMLEditor,
-    nsIEditor::EDirection aDirectionAndAmount) const {
+Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
+    AutoEmptyBlockAncestorDeleter::GetNewCaretPoisition(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount) const {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
@@ -8917,7 +8979,8 @@ HTMLEditor::AutoEmptyBlockAncestorDeleter::GetNewCaretPoisition(
   }
 }
 
-EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
+EditActionResult
+HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount) {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
