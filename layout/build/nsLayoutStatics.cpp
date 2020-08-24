@@ -273,8 +273,6 @@ nsresult nsLayoutStatics::Initialize() {
     // On content process we initialize these components when PContentChild is
     // fully initialized.
     mozilla::dom::RemoteWorkerService::Initialize();
-    // This one should be initialized on the parent only
-    mozilla::dom::BrowserParent::InitializeStatics();
   }
 
   nsThreadManager::InitializeShutdownObserver();

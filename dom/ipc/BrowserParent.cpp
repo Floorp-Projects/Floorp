@@ -239,9 +239,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
 BrowserParent::~BrowserParent() = default;
 
 /* static */
-void BrowserParent::InitializeStatics() { MOZ_ASSERT(XRE_IsParentProcess()); }
-
-/* static */
 BrowserParent* BrowserParent::GetFocused() { return sFocus; }
 
 /* static */
@@ -658,7 +655,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnsureLayersConnected(
 }
 
 mozilla::ipc::IPCResult BrowserParent::Recv__delete__() {
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   Manager()->NotifyTabDestroyed(mTabId, mMarkedDestroying);
   return IPC_OK();
 }
@@ -701,22 +697,6 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
         CrashReport::Deliver(principal, is_oom);
       }
     }
-  }
-
-  // Prevent executing ContentParent::NotifyTabDestroying in
-  // BrowserParent::Destroy() called by frameLoader->DestroyComplete() below
-  // when tab crashes in contentprocess because ContentParent::ActorDestroy()
-  // in main process will be triggered before this function
-  // and remove the process information that
-  // ContentParent::NotifyTabDestroying need from mContentParentMap.
-
-  // When tab crashes in content process,
-  // there is no need to call ContentParent::NotifyTabDestroying
-  // because the jobs in ContentParent::NotifyTabDestroying
-  // will be done by ContentParent::ActorDestroy.
-  if (XRE_IsContentProcess() && why == AbnormalShutdown && !mIsDestroyed) {
-    DestroyInternal();
-    mIsDestroyed = true;
   }
 
   // If we were shutting down normally, we held a reference to our
@@ -944,12 +924,10 @@ void BrowserParent::InitRendering() {
   }
 
 #if defined(MOZ_WIDGET_ANDROID)
-  if (XRE_IsParentProcess()) {
-    MOZ_ASSERT(widget);
+  MOZ_ASSERT(widget);
 
-    Unused << SendDynamicToolbarMaxHeightChanged(
-        widget->GetDynamicToolbarMaxHeight());
-  }
+  Unused << SendDynamicToolbarMaxHeightChanged(
+      widget->GetDynamicToolbarMaxHeight());
 #endif
 }
 
