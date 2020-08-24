@@ -2390,6 +2390,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
    *                                    collapsed from the beginning, set
    *                                    this to `No`.
    */
+  enum class SelectionWasCollapsed { Yes, No };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteNonCollapsedRanges(HTMLEditor& aHTMLEditor,
                                  nsIEditor::EDirection aDirectionAndAmount,
@@ -2650,7 +2651,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
     Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         nsIEditor::EStripWrappers aStripWrappers,
         AutoRangeArray& aRangesToDelete,
-        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed) {
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed) {
       switch (mMode) {
         case Mode::JoinCurrentBlock:
         case Mode::JoinOtherBlock:
@@ -2725,7 +2726,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         nsIEditor::EStripWrappers aStripWrappers,
         AutoRangeArray& aRangesToDelete,
-        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed);
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed);
 
     /**
      * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".
@@ -2758,7 +2759,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
     MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
     DeleteNodesEntirelyInRangeButKeepTableStructure(
         HTMLEditor& aHTMLEditor, nsRange& aRange,
-        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed);
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed);
 
     /**
      * DeleteContentButKeepTableStructure() removes aContent if it's an element
@@ -2954,11 +2955,13 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
   // of a block element, in which case
   // AutoRangeArray::ExtendAnchorFocusRangeFor() would always make the selection
   // not collapsed.
-  SelectionWasCollapsed selectionWasCollapsed = aRangesToDelete.IsCollapsed()
-                                                    ? SelectionWasCollapsed::Yes
-                                                    : SelectionWasCollapsed::No;
+  AutoDeleteRangesHandler::SelectionWasCollapsed selectionWasCollapsed =
+      aRangesToDelete.IsCollapsed()
+          ? AutoDeleteRangesHandler::SelectionWasCollapsed::Yes
+          : AutoDeleteRangesHandler::SelectionWasCollapsed::No;
 
-  if (selectionWasCollapsed == SelectionWasCollapsed::Yes) {
+  if (selectionWasCollapsed ==
+      AutoDeleteRangesHandler::SelectionWasCollapsed::Yes) {
     EditorDOMPoint startPoint(aRangesToDelete.GetStartPointOfFirstRange());
     if (NS_WARN_IF(!startPoint.IsSet())) {
       return EditActionResult(NS_ERROR_FAILURE);
@@ -4128,7 +4131,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     AutoBlockElementsJoiner::DeleteNodesEntirelyInRangeButKeepTableStructure(
         HTMLEditor& aHTMLEditor, nsRange& aRange,
-        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed) {
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   // Build a list of direct child nodes in the range
@@ -4167,8 +4170,8 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     // all nodes except non-visible textnodes and breaks.
     // XXX Odd.  Why do we check the visibility after removing the node
     //     from the DOM tree?
-    if (!join ||
-        aSelectionWasCollapsed == HTMLEditor::SelectionWasCollapsed::No) {
+    if (!join || aSelectionWasCollapsed ==
+                     AutoDeleteRangesHandler::SelectionWasCollapsed::No) {
       continue;
     }
     if (content->IsText()) {
@@ -4224,7 +4227,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         nsIEditor::EStripWrappers aStripWrappers,
         AutoRangeArray& aRangesToDelete,
-        HTMLEditor::SelectionWasCollapsed aSelectionWasCollapsed) {
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
   MOZ_ASSERT(mLeftContent);

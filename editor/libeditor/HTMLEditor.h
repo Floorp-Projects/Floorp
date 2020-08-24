@@ -2618,7 +2618,6 @@ class HTMLEditor final : public TextEditor,
     RefPtr<Element> mEmptyInclusiveAncestorBlockElement;
   };
 
-  enum class SelectionWasCollapsed { Yes, No };
   /**
    * DeleteUnnecessaryNodesAndCollapseSelection() removes unnecessary nodes
    * around aSelectionStartPoint and aSelectionEndPoint.  Then, collapse
