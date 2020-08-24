@@ -2045,6 +2045,10 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
     if (status != Method_Compiled) {
       return status;
     }
+    // Bytecode analysis may forbid compilation for a script.
+    if (!script->canIonCompile()) {
+      return Method_CantCompile;
+    }
   }
 
   MOZ_ASSERT(!script->isIonCompilingOffThread());
