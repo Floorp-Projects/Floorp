@@ -16,10 +16,13 @@ add_task(async function() {
     async function(browser) {
       // Ensure the parent has heard before the client.
       // In practice, this is always true for GMP crashes (but not for NPAPI ones!)
-      PluginManager.gmpCrashes.set(1, {
-        pluginID: 1,
-        pluginName: "GlobalTestPlugin",
-      });
+      let props = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+        Ci.nsIWritablePropertyBag2
+      );
+      props.setPropertyAsUint32("pluginID", 1);
+      props.setPropertyAsACString("pluginName", "GlobalTestPlugin");
+      props.setPropertyAsACString("pluginDumpID", "1234");
+      Services.obs.notifyObservers(props, "gmp-plugin-crash");
 
       await SpecialPowers.spawn(browser, [], async function() {
         const GMP_CRASH_EVENT = {
