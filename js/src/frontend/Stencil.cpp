@@ -120,46 +120,8 @@ Scope* ScopeStencil::createScope(JSContext* cx,
 }
 
 void ScopeStencil::trace(JSTracer* trc) {
-  // Trace Datas
-  if (data_) {
-    switch (kind()) {
-      case ScopeKind::Function: {
-        data<FunctionScope>().trace(trc);
-        break;
-      }
-      case ScopeKind::Lexical:
-      case ScopeKind::SimpleCatch:
-      case ScopeKind::Catch:
-      case ScopeKind::NamedLambda:
-      case ScopeKind::StrictNamedLambda:
-      case ScopeKind::FunctionLexical:
-      case ScopeKind::ClassBody: {
-        data<LexicalScope>().trace(trc);
-        break;
-      }
-      case ScopeKind::FunctionBodyVar: {
-        data<VarScope>().trace(trc);
-        break;
-      }
-      case ScopeKind::Global:
-      case ScopeKind::NonSyntactic: {
-        data<GlobalScope>().trace(trc);
-        break;
-      }
-      case ScopeKind::Eval:
-      case ScopeKind::StrictEval: {
-        data<EvalScope>().trace(trc);
-        break;
-      }
-      case ScopeKind::Module: {
-        data<ModuleScope>().trace(trc);
-        break;
-      }
-      case ScopeKind::With:
-      default:
-        MOZ_CRASH("Unexpected data type");
-    }
-  }
+  // NOTE: Scope::Data fields such as `canonicalFunction` are always nullptr
+  //       while owned by a ScopeStencil so no additional tracing is needed.
 }
 
 uint32_t ScopeStencil::nextFrameSlot() const {
@@ -197,20 +159,7 @@ uint32_t ScopeStencil::nextFrameSlot() const {
   MOZ_CRASH("Not an enclosing intra-frame scope");
 }
 
-void StencilModuleEntry::trace(JSTracer* trc) {
-  if (specifier) {
-    TraceManuallyBarrieredEdge(trc, &specifier, "module specifier");
-  }
-  if (localName) {
-    TraceManuallyBarrieredEdge(trc, &localName, "module local name");
-  }
-  if (importName) {
-    TraceManuallyBarrieredEdge(trc, &importName, "module import name");
-  }
-  if (exportName) {
-    TraceManuallyBarrieredEdge(trc, &exportName, "module export name");
-  }
-}
+void StencilModuleEntry::trace(JSTracer* trc) {}
 
 void StencilModuleMetadata::trace(JSTracer* trc) {
   requestedModules.trace(trc);
@@ -220,19 +169,7 @@ void StencilModuleMetadata::trace(JSTracer* trc) {
   starExportEntries.trace(trc);
 }
 
-void ScriptStencil::trace(JSTracer* trc) {
-  for (ScriptThingVariant& thing : gcThings) {
-    if (thing.is<ScriptAtom>()) {
-      JSAtom* atom = thing.as<ScriptAtom>();
-      TraceRoot(trc, &atom, "script-atom");
-      MOZ_ASSERT(atom == thing.as<ScriptAtom>(), "Atoms should be unmovable");
-    }
-  }
-
-  if (functionAtom) {
-    TraceRoot(trc, &functionAtom, "script-atom");
-  }
-}
+void ScriptStencil::trace(JSTracer* trc) {}
 
 static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                              ScriptStencil& stencil, HandleFunction function) {
@@ -283,7 +220,14 @@ static JSFunction* CreateFunction(JSContext* cx,
 
   JSNative maybeNative = isAsmJS ? InstantiateAsmJS : nullptr;
 
-  RootedAtom displayAtom(cx, stencil.functionAtom);
+  RootedAtom displayAtom(cx);
+  if (stencil.functionAtom) {
+    displayAtom.set(
+        compilationInfo.liftParserAtomToJSAtom(stencil.functionAtom));
+    if (!displayAtom) {
+      return nullptr;
+    }
+  }
   RootedFunction fun(
       cx, NewFunctionWithProto(cx, maybeNative, stencil.nargs,
                                stencil.functionFlags, nullptr, displayAtom,
@@ -347,7 +291,7 @@ static bool MaybeInstantiateModule(JSContext* cx,
     }
 
     if (!compilationInfo.moduleMetadata.get().initModule(
-            cx, compilationInfo.module)) {
+            cx, compilationInfo, compilationInfo.module)) {
       return false;
     }
   }
@@ -515,7 +459,7 @@ static bool InstantiateTopLevel(JSContext* cx,
 // to update it with information determined by the BytecodeEmitter. This applies
 // to both initial and delazification parses. The functions being update may or
 // may not have bytecode at this point.
-static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
+static bool UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
     auto& stencil = item.stencil;
     auto& fun = item.function;
@@ -545,15 +489,24 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
     // Inferred and Guessed names are computed by BytecodeEmitter and so may
     // need to be applied to existing JSFunctions during delazification.
     if (fun->displayAtom() == nullptr) {
+      JSAtom* funcAtom = nullptr;
+      if (stencil.functionFlags.hasInferredName() ||
+          stencil.functionFlags.hasGuessedAtom()) {
+        funcAtom = compilationInfo.liftParserAtomToJSAtom(stencil.functionAtom);
+        if (!funcAtom) {
+          return false;
+        }
+      }
       if (stencil.functionFlags.hasInferredName()) {
-        fun->setInferredName(stencil.functionAtom);
+        fun->setInferredName(funcAtom);
       }
 
       if (stencil.functionFlags.hasGuessedAtom()) {
-        fun->setGuessedAtom(stencil.functionAtom);
+        fun->setGuessedAtom(funcAtom);
       }
     }
   }
+  return true;
 }
 
 // During initial parse we must link lazy-functions-inside-lazy-functions to
@@ -640,7 +593,9 @@ bool CompilationInfo::instantiateStencils() {
 
   // Must be infallible from here forward.
 
-  UpdateEmittedInnerFunctions(*this);
+  if (!UpdateEmittedInnerFunctions(*this)) {
+    return false;
+  }
 
   if (lazy == nullptr) {
     LinkEnclosingLazyScript(*this);
@@ -759,12 +714,12 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
   json.beginObjectProperty("data");
 
-  AbstractTrailingNamesArray<JSAtom>* trailingNames = nullptr;
+  AbstractTrailingNamesArray<const ParserAtom>* trailingNames = nullptr;
   uint32_t length = 0;
 
   switch (kind_) {
     case ScopeKind::Function: {
-      auto* data = static_cast<FunctionScope::Data*>(data_.get());
+      auto* data = static_cast<ParserFunctionScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("hasParameterExprs", data->hasParameterExprs);
       json.property("nonPositionalFormalStart", data->nonPositionalFormalStart);
@@ -776,7 +731,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::FunctionBodyVar: {
-      auto* data = static_cast<VarScope::Data*>(data_.get());
+      auto* data = static_cast<ParserVarScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -791,7 +746,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      auto* data = static_cast<LexicalScope::Data*>(data_.get());
+      auto* data = static_cast<ParserLexicalScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("constStart", data->constStart);
 
@@ -806,7 +761,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      auto* data = static_cast<EvalScope::Data*>(data_.get());
+      auto* data = static_cast<ParserEvalScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -816,7 +771,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      auto* data = static_cast<GlobalScope::Data*>(data_.get());
+      auto* data = static_cast<ParserGlobalScopeData*>(data_);
       json.property("letStart", data->letStart);
       json.property("constStart", data->constStart);
 
@@ -826,7 +781,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::Module: {
-      auto* data = static_cast<ModuleScope::Data*>(data_.get());
+      auto* data = static_cast<ParserModuleScopeData*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("varStart", data->varStart);
       json.property("letStart", data->letStart);
@@ -838,7 +793,9 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::WasmInstance: {
-      auto* data = static_cast<WasmInstanceScope::Data*>(data_.get());
+      auto* data =
+          static_cast<AbstractScopeData<WasmInstanceScope, const ParserAtom>*>(
+              data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("globalsStart", data->globalsStart);
 
@@ -848,7 +805,9 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::WasmFunction: {
-      auto* data = static_cast<WasmFunctionScope::Data*>(data_.get());
+      auto* data =
+          static_cast<AbstractScopeData<WasmFunctionScope, const ParserAtom>*>(
+              data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -1143,7 +1102,7 @@ static void DumpScriptThing(js::JSONPrinter& json, ScriptThingVariant& thing) {
     void operator()(ScriptAtom& data) {
       json.beginObject();
       json.property("type", "ScriptAtom");
-      JSAtom* atom = data;
+      const ParserAtom* atom = data;
       GenericPrinter& out = json.beginStringProperty("value");
       atom->dumpCharsNoQuote(out);
       json.endStringProperty();

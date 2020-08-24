@@ -18,9 +18,7 @@
 #include "frontend/NameOpEmitter.h"   // NameOpEmitter
 #include "frontend/ParseNode.h"       // AccessorType
 #include "frontend/TDZCheckCache.h"   // TDZCheckCache
-#include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
 #include "vm/BytecodeUtil.h"          // JSOp
-#include "vm/JSAtom.h"                // JSAtom
 #include "vm/NativeObject.h"          // PlainObject
 #include "vm/Scope.h"                 // LexicalScope
 
@@ -235,7 +233,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
 
   // @param key
   //        Property key
-  MOZ_MUST_USE bool emitInit(AccessorType accessorType, HandleAtom key);
+  MOZ_MUST_USE bool emitInit(AccessorType accessorType, const ParserAtom* key);
 
   MOZ_MUST_USE bool emitInitIndexOrComputed(AccessorType accessorType);
 
@@ -247,7 +245,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //        Opcode for initializing property
   // @param key
   //        Atom of the property if the property key is not computed
-  MOZ_MUST_USE bool emitInit(JSOp op, JS::Handle<JSAtom*> key);
+  MOZ_MUST_USE bool emitInit(JSOp op, const ParserAtom* key);
   MOZ_MUST_USE bool emitInitIndexOrComputed(JSOp op);
 
   MOZ_MUST_USE bool emitPopClassConstructor();
@@ -755,8 +753,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   size_t numInitializers_ = 0;
 #endif
 
-  JS::Rooted<JSAtom*> name_;
-  JS::Rooted<JSAtom*> nameForAnonymousClass_;
+  const ParserAtom* name_;
+  const ParserAtom* nameForAnonymousClass_;
   bool hasNameOnStack_ = false;
   mozilla::Maybe<NameOpEmitter> initializersAssignment_;
   size_t initializerIndex_ = 0;
@@ -764,9 +762,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
  public:
   explicit ClassEmitter(BytecodeEmitter* bce);
 
-  bool emitScope(JS::Handle<LexicalScope::Data*> scopeBindings);
-
-  bool emitBodyScope(JS::Handle<LexicalScope::Data*> scopeBindings);
+  bool emitScope(ParserLexicalScopeData* scopeBindings);
+  bool emitBodyScope(ParserLexicalScopeData* scopeBindings);
 
   // @param name
   //        Name of the class (nullptr if this is anonymous class)
@@ -774,11 +771,11 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //        Statically inferred name of the class (only for anonymous classes)
   // @param hasNameOnStack
   //        If true the name is on the stack (only for anonymous classes)
-  MOZ_MUST_USE bool emitClass(JS::Handle<JSAtom*> name,
-                              JS::Handle<JSAtom*> nameForAnonymousClass,
+  MOZ_MUST_USE bool emitClass(const ParserAtom* name,
+                              const ParserAtom* nameForAnonymousClass,
                               bool hasNameOnStack);
-  MOZ_MUST_USE bool emitDerivedClass(JS::Handle<JSAtom*> name,
-                                     JS::Handle<JSAtom*> nameForAnonymousClass,
+  MOZ_MUST_USE bool emitDerivedClass(const ParserAtom* name,
+                                     const ParserAtom* nameForAnonymousClass,
                                      bool hasNameOnStack);
 
   // @param needsHomeObject

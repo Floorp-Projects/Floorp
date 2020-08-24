@@ -122,7 +122,7 @@ bool SwitchEmitter::emitDiscriminant(const Maybe<uint32_t>& switchPos) {
   return true;
 }
 
-bool SwitchEmitter::emitLexical(Handle<LexicalScope::Data*> bindings) {
+bool SwitchEmitter::emitLexical(ParserLexicalScopeData* bindings) {
   MOZ_ASSERT(state_ == State::Discriminant);
   MOZ_ASSERT(bindings);
 
