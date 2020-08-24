@@ -2386,20 +2386,6 @@ class HTMLEditor final : public TextEditor,
   RemoveEmptyInclusiveAncestorInlineElements(nsIContent& aContent);
 
   /**
-   * ExtendRangeToIncludeInvisibleNodes() extends aRange if there are some
-   * invisible nodes around it.
-   *
-   * @param aFrameSelection     If the caller wants range in selection limiter,
-   *                            set this to non-nullptr which knows the limiter.
-   * @param aRange              The range to be extended.  This must not be
-   *                            collapsed, must be positioned, and must not be
-   *                            in selection.
-   * @return                    true if succeeded to set the range.
-   */
-  bool ExtendRangeToIncludeInvisibleNodes(
-      const nsFrameSelection* aFrameSelection, nsRange& aRange);
-
-  /**
    * DeleteTextAndNormalizeSurroundingWhiteSpaces() deletes text between
    * aStartToDelete and immediately before aEndToDelete and return new caret
    * position.  If surrounding characters are white-spaces, this normalize them
@@ -2571,83 +2557,6 @@ class HTMLEditor final : public TextEditor,
       nsAString& aResult, uint32_t aLength,
       const CharPointData& aPreviousCharPointData,
       const CharPointData& aNextCharPointData);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
-   * collapsed selection at white-spaces in a text node.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aPointToDelete      The point to delete.  I.e., typically, caret
-   *                            position.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteCollapsedSelectionAtWhiteSpaces(
-      nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aPointToDelete);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtVisibleChar() handles deletion of
-   * collapsed selection in a text node.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aPointToDelete      The point in a text node to delete character(s).
-   *                            Caller must guarantee that this is in a text
-   *                            node.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteCollapsedSelectionAtVisibleChar(
-      nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aPointToDelete);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtAtomicContent() handles deletion of
-   * atomic elements like `<br>`, `<hr>`, `<img>`, `<input>`, etc and
-   * data nodes except text node (e.g., comment node).
-   * Note that don't call this directly with `<hr>` element.  Instead, call
-   * `HandleDeleteCollapsedSelectionAtHRElement()`.
-   * Note that don't call this for invisible `<br>` element.
-   *
-   * @param aAtomicContent      The atomic content to be deleted.
-   * @param aCaretPoint         The caret point (i.e., selection start or
-   *                            end).
-   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
-   *                             with the caret point.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteCollapsedSelectionAtAtomicContent(
-      nsIContent& aAtomicContent, const EditorDOMPoint& aCaretPoint,
-      const WSRunScanner& aWSRunScannerAtCaret);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtHRElement() handles deletion around
-   * `<hr>` element.  If aDirectionAndAmount is nsIEditor::ePrevious,
-   * aHTElement is removed only when caret is at next sibling of the `<hr>`
-   * element and inter line position is "left".  Otherwise, caret is moved
-   * and does not remove the `<hr>` elemnent.
-   * XXX Perhaps, we can get rid of this special handling because the other
-   *     browsers don't do this, and our `<hr>` element handling is really
-   *     odd.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aHRElement          The `<hr>` element to be removed.
-   * @param aCaretPoint         The caret point (i.e., selection start or
-   *                            end).
-   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
-   *                             with the caret point.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteCollapsedSelectionAtHRElement(
-      nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
-      const EditorDOMPoint& aCaretPoint,
-      const WSRunScanner& aWSRunScannerAtCaret);
-
-  /**
-   * ShouldDeleteHRElement() checks whether aHRElement should be deleted
-   * when selection is collapsed at aCaretPoint.
-   */
-  Result<bool, nsresult> ShouldDeleteHRElement(
-      nsIEditor::EDirection aDirectionAndAmount, Element& aHRElement,
-      const EditorDOMPoint& aCaretPoint) const;
 
   class MOZ_STACK_CLASS AutoEmptyBlockAncestorDeleter final {
    public:
@@ -3027,27 +2936,6 @@ class HTMLEditor final : public TextEditor,
   };
 
   /**
-   * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
-   * other block boundary (i.e., immediately before or after a block).
-   * If this does not join blocks, `HandleDeleteSelectionInternal()` may be
-   * called recursively.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
-   * @param aOtherBlockElement  The block element which follows the caret or
-   *                            is followed by caret.
-   * @param aCaretPoint         The caret point (i.e., selection start or
-   *                            end).
-   * @param aWSRunScannerAtCaret WSRunScanner instance which was initialized
-   *                             with the caret point.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers, Element& aOtherBlockElement,
-      const EditorDOMPoint& aCaretPoint, WSRunScanner& aWSRunScannerAtCaret);
-
-  /**
    * DeleteUnnecessaryNodesAndCollapseSelection() removes unnecessary nodes
    * around aSelectionStartPoint and aSelectionEndPoint.  Then, collapse
    * selection at aSelectionStartPoint or aSelectionEndPoint (depending on
@@ -3068,60 +2956,6 @@ class HTMLEditor final : public TextEditor,
       nsIEditor::EDirection aDirectionAndAmount,
       const EditorDOMPoint& aSelectionStartPoint,
       const EditorDOMPoint& aSelectionEndPoint);
-
-  /**
-   * HandleDeleteAroundCollapsedRanges() handles deletion with collapsed
-   * ranges.  Callers must guarantee that this is called only when
-   * aRangesToDelete.IsCollapsed() returns true.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
-   * @param aRangesToDelete     Ranges to delete.  This `IsCollapsed()` must
-   *                            return true.
-   * @param aWSRunScannerAtCaret        Scanner instance which scanned from
-   *                                    caret point.
-   * @param aScanFromCaretPointResult   Scan result of aWSRunScannerAtCaret
-   *                                    toward aDirectionAndAmount.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteAroundCollapsedRanges(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
-      const WSRunScanner& aWSRunScannerAtCaret,
-      const WSScanResult& aScanFromCaretPointResult);
-
-  /**
-   * HandleDeleteTextAroundCollapsedSelection() handles deletion of
-   * collapsed selection in a text node.
-   *
-   * @param aDirectionAndAmount Must be eNext or ePrevious.
-   * @param aCaretPoisition     The position where caret is.  This container
-   *                            must be a text node.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteTextAroundCollapsedSelection(
-      nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aCaretPosition);
-
-  /**
-   * HandleDeleteNonCollapsedRanges() handles deletion with non-collapsed
-   * ranges.  Callers must guarantee that this is called only when
-   * aRangesToDelete.IsCollapsed() returns false.
-   *
-   * @param aDirectionAndAmount         Direction of the deletion.
-   * @param aStripWrappers              Must be eStrip or eNoStrip.
-   * @param aRangesToDelete             The ranges to delete.
-   * @param aSelectionWasCollapsed      If the caller extended `Selection`
-   *                                    from collapsed, set this to `Yes`.
-   *                                    Otherwise, i.e., `Selection` is not
-   *                                    collapsed from the beginning, set
-   *                                    this to `No`.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteNonCollapsedRanges(nsIEditor::EDirection aDirectionAndAmount,
-                                 nsIEditor::EStripWrappers aStripWrappers,
-                                 AutoRangeArray& aRangesToDelete,
-                                 SelectionWasCollapsed aSelectionWasCollapsed);
 
   /**
    * HandleDeleteSelectionInternal() is a helper method of
@@ -3148,6 +2982,8 @@ class HTMLEditor final : public TextEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                         nsIEditor::EStripWrappers aStripWrappers) final;
+
+  class AutoDeleteRangesHandler;
 
   /**
    * DeleteMostAncestorMailCiteElementIfEmpty() deletes most ancestor
