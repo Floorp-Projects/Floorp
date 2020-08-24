@@ -507,6 +507,13 @@ class nsDisplayVideo : public nsPaintedDisplayItem {
     return elem->IsPotentiallyPlaying() ? LayerState::LAYER_ACTIVE_FORCE
                                         : LayerState::LAYER_INACTIVE;
   }
+
+  // Only report FirstContentfulPaint when the video is set
+  virtual bool IsContentful() const override {
+    nsVideoFrame* f = static_cast<nsVideoFrame*>(Frame());
+    HTMLVideoElement* video = HTMLVideoElement::FromNode(f->GetContent());
+    return video->VideoWidth() > 0;
+  }
 };
 
 void nsVideoFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
