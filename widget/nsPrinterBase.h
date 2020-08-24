@@ -11,13 +11,13 @@
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
+#include "nsPrintSettingsImpl.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Result.h"
 
 namespace mozilla {
 
 struct PaperInfo;
-struct PrintSettingsInitializer;
 
 namespace dom {
 class Promise;
@@ -46,6 +46,13 @@ class nsPrinterBase : public nsIPrinter {
 
   void QueryMarginsForPaper(Promise&, uint64_t aPaperId);
 
+  /**
+   * Caches the argument by copying it into mPrintSettingsInitializer.
+   * If mPrintSettingsInitializer is already populated this is a no-op.
+   */
+  void CachePrintSettingsInitializer(
+      const PrintSettingsInitializer& aInitializer);
+
  private:
   enum class AsyncAttribute {
     SupportsDuplex = 0,
@@ -64,6 +71,13 @@ class nsPrinterBase : public nsIPrinter {
   nsresult AsyncPromiseAttributeGetter(JSContext*, Promise**, AsyncAttribute,
                                        BackgroundTask<T, Args...>,
                                        Args... aArgs);
+
+  /**
+   * A cache to store the result of DefaultSettings() to ensure
+   * that subsequent calls to CreateDefaultSettings() will not
+   * have to spawn another background task to fetch the same info.
+   */
+  Maybe<PrintSettingsInitializer> mPrintSettingsInitializer;
 
  protected:
   nsPrinterBase();

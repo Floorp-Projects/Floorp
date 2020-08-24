@@ -31,7 +31,7 @@ struct PrintSettingsInitializer {
   bool mPrintInColor = false;
   int mResolution = 0;
 #ifdef XP_WIN
-  nsTArray<uint8_t> mDevmodeWStorage;
+  CopyableTArray<uint8_t> mDevmodeWStorage;
 #endif
 };
 
