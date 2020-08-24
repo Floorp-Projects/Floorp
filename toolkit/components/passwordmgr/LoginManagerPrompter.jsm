@@ -66,6 +66,34 @@ const NOTIFICATION_TIMEOUT_MS = 10 * 1000; // 10 seconds
  */
 const ATTENTION_NOTIFICATION_TIMEOUT_MS = 60 * 1000; // 1 minute
 
+function autocompleteSelected(popup) {
+  let doc = popup.ownerDocument;
+  let nameField = doc.getElementById("password-notification-username");
+  let passwordField = doc.getElementById("password-notification-password");
+
+  let activeElement = nameField.ownerDocument.activeElement;
+  if (activeElement == nameField) {
+    popup.onUsernameSelect();
+  } else if (activeElement == passwordField) {
+    popup.onPasswordSelect();
+  }
+}
+
+const observer = {
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+
+  // nsIObserver
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "autocomplete-did-enter-text": {
+        let input = subject.QueryInterface(Ci.nsIAutoCompleteInput);
+        autocompleteSelected(input.popupElement);
+        break;
+      }
+    }
+  },
+};
+
 /**
  * Implements interfaces for prompting the user to enter/save/change login info
  * found in HTML forms.
@@ -218,7 +246,9 @@ class LoginManagerPrompter {
     let wasModifiedEvent = {
       // Values are mutated
       did_edit_un: "false",
+      did_select_un: "false",
       did_edit_pw: "false",
+      did_select_pw: "false",
     };
 
     let updateButtonStatus = element => {
@@ -312,12 +342,24 @@ class LoginManagerPrompter {
 
     let onUsernameInput = () => {
       wasModifiedEvent.did_edit_un = "true";
+      wasModifiedEvent.did_select_un = "false";
       onInput();
+    };
+
+    let onUsernameSelect = () => {
+      wasModifiedEvent.did_edit_un = "false";
+      wasModifiedEvent.did_select_un = "true";
     };
 
     let onPasswordInput = () => {
       wasModifiedEvent.did_edit_pw = "true";
+      wasModifiedEvent.did_select_pw = "false";
       onInput();
+    };
+
+    let onPasswordSelect = () => {
+      wasModifiedEvent.did_edit_pw = "false";
+      wasModifiedEvent.did_select_pw = "true";
     };
 
     let onKeyUp = e => {
@@ -676,6 +718,10 @@ class LoginManagerPrompter {
                       Date.now() - VISIBILITY_TOGGLE_MAX_PW_AGE_MS);
                 toggleBtn.setAttribute("hidden", hideToggle);
               }
+
+              let popup = chromeDoc.getElementById("PopupAutoComplete");
+              popup.onUsernameSelect = onUsernameSelect;
+              popup.onPasswordSelect = onPasswordSelect;
 
               LoginManagerPrompter._setUsernameAutocomplete(
                 login,
@@ -1044,6 +1090,9 @@ class LoginManagerPrompter {
       .filter(suggestion => !!suggestion.text);
   }
 }
+
+// Add this observer once for the process.
+Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("LoginManagerPrompter");

@@ -880,13 +880,15 @@ pwmgr:
   doorhanger_submitted:
     description: >
       A login is saved or updated via the capture doorhanger. Carries information about whether 
-      or not the username and password were modified by the user. 
+      the username and password _that were saved/updated by the user_ were modified in the 
+      doorhanger, selected from the suggestion autocomplete, or neither. `did_edit_X` and 
+      `did_select_X` will never both be true in the same event.
       
       The `object` describes the type of doorhanger when it was originally created. Note that user 
       updates to the doorhanger may change whether a login is actually saved or updated, but will 
       not impact the sent object.
     objects: ["save", "update"]
-    bug_numbers: [1650929]
+    bug_numbers: [1650929, 1650941]
     expiry_version: "86"
     release_channel_collection: opt-out
     products: ["firefox"]
@@ -894,11 +896,17 @@ pwmgr:
     notification_emails: ["srudie@mozilla.com", "passwords-dev@mozilla.org"]
     extra_keys:
       did_edit_un: >
-        Whether or not the username field of the doorhanger was modified by the user.  
-        This does not count selecting an autocompleted value.
+        Whether or not the saved/updated username was modified by the user typing into the 
+        username field.
+      did_select_un: >
+        Whether or not the saved/updated username was selected by the user choosing a suggested 
+        value from the autocomplete popup.
       did_edit_pw: >
-        Whether or not the password field of the doorhanger was modified by the user.  
-        This does not count selecting an autocompleted value.
+        Whether or not the saved/updated password was modified by the user typing into the 
+        password field.
+      did_select_pw: >
+        Whether or not the saved/updated password was selected by the user choosing a suggested 
+        value from the autocomplete popup.
 
 jsonfile:
   load:
