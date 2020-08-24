@@ -220,7 +220,7 @@ class DisplayToolbarTest {
         menuView.impl.performClick()
 
         verify(menuBuilder).build(testContext)
-        verify(menu).show(eq(menuView.impl), any(), anyBoolean(), any())
+        verify(menu).show(eq(menuView.impl), any(), any(), anyBoolean(), any())
         verify(menu, never()).invalidate()
 
         displayToolbar.invalidateActions()
