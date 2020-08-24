@@ -98,7 +98,7 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
     if (status.IsFullyComplete()) {
       // The page we just reflowed is the final page! Record its page number
       // as the number of pages:
-      mPD->mTotNumPages = pageFrame->GetPageNum();
+      mPD->mRawNumPages = pageFrame->GetPageNum();
 
       // Normally, we (the parent frame) would be responsible for deleting the
       // next-in-flow of our fully-complete children. But since we don't
