@@ -84,9 +84,10 @@ Family::Family(FontList* aList, const InitData& aData)
       mFaces(Pointer::Null()),
       mIndex(aData.mIndex),
       mVisibility(aData.mVisibility),
+      mIsSimple(false),
       mIsBadUnderlineFamily(aData.mBadUnderline),
       mIsForceClassic(aData.mForceClassic),
-      mIsSimple(false) {
+      mIsAltLocale(aData.mAltLocale) {
   MOZ_ASSERT(aData.mIndex <= 0x7fffffffu);
   mIndex = aData.mIndex | (aData.mBundled ? 0x80000000u : 0u);
 }
