@@ -371,6 +371,23 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
     mNumCopies = aDevMode->dmCopies;
   }
 
+  if (aDevMode->dmFields & DM_DUPLEX) {
+    switch (aDevMode->dmDuplex) {
+      default:
+        MOZ_ASSERT_UNREACHABLE("bad value for dmDuplex field");
+        [[fallthrough]];
+      case DMDUP_SIMPLEX:
+        mDuplex = kSimplex;
+        break;
+      case DMDUP_HORIZONTAL:
+        mDuplex = kDuplexHorizontal;
+        break;
+      case DMDUP_VERTICAL:
+        mDuplex = kDuplexVertical;
+        break;
+    }
+  }
+
   // Since we do the scaling, grab their value and reset back to 100.
   if (aDevMode->dmFields & DM_SCALE) {
     double scale = double(aDevMode->dmScale) / 100.0f;
@@ -477,6 +494,25 @@ void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
   // Setup Number of Copies
   aDevMode->dmCopies = mNumCopies;
   aDevMode->dmFields |= DM_COPIES;
+
+  // Setup Simplex/Duplex mode
+  switch (mDuplex) {
+    case kSimplex:
+      aDevMode->dmDuplex = DMDUP_SIMPLEX;
+      aDevMode->dmFields |= DM_DUPLEX;
+      break;
+    case kDuplexHorizontal:
+      aDevMode->dmDuplex = DMDUP_HORIZONTAL;
+      aDevMode->dmFields |= DM_DUPLEX;
+      break;
+    case kDuplexVertical:
+      aDevMode->dmDuplex = DMDUP_VERTICAL;
+      aDevMode->dmFields |= DM_DUPLEX;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("bad value for duplex option");
+      break;
+  }
 }
 
 //-------------------------------------------
