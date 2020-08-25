@@ -23,6 +23,7 @@ class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
         win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
         self.marionette.switch_to_window(win)
 
-        title = self.marionette.execute_script(
-            "return window.document.documentElement.getAttribute('title');")
-        self.assertEqual(title, self.marionette.title)
+        expected_title = self.marionette.execute_script("""
+            return window.document.documentElement.getAttribute('title');
+        """)
+        self.assertEqual(self.marionette.title, expected_title)
