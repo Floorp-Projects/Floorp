@@ -262,12 +262,12 @@ interface nsIPrincipal : nsISerializable
      * follows the format scheme:
      * "scheme://username:password@hostname:portnumber/"
      */
-    [noscript] readonly attribute ACString prepath;
+    readonly attribute ACString prepath;
 
     /**
      * Returns the filePath of the principals uri. See nsIURI.
      */
-    [noscript] readonly attribute ACString filePath;
+    readonly attribute ACString filePath;
 
     /**
       * Returns the ASCII Spec from the Principals URI.

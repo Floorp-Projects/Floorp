@@ -267,25 +267,25 @@ let RemotePageAccessManager = {
    * @returns non-null whitelist if access is allowed or null otherwise
    */
   checkAllowAccessToFeature(aPrincipal, aFeature, aDocument) {
-    let uri;
-    if (aPrincipal.isNullPrincipal || !aPrincipal.URI) {
+    let spec;
+    if (aPrincipal.isNullPrincipal) {
       // Null principals have a null-principal URI, but for the sake of remote
       // pages we want to access the "real" document URI directly, e.g. if the
       // about: page is sandboxed.
       if (!aDocument) {
         return null;
       }
-
-      uri = aDocument.documentURIObject;
+      if (!aDocument.documentURIObject.schemeIs("about")) {
+        return null;
+      }
+      spec =
+        aDocument.documentURIObject.prePath +
+        aDocument.documentURIObject.filePath;
     } else {
-      uri = aPrincipal.URI;
-    }
-
-    // Cut query params
-    let spec = uri.prePath + uri.filePath;
-
-    if (!uri.schemeIs("about")) {
-      return null;
+      if (!aPrincipal.schemeIs("about")) {
+        return null;
+      }
+      spec = aPrincipal.prepath + aPrincipal.filePath;
     }
 
     // Check if there is an entry for that requestying URI in the accessMap;
