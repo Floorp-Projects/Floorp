@@ -451,7 +451,7 @@ with Files("tests/eventsource/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("tests/feature-policy/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
