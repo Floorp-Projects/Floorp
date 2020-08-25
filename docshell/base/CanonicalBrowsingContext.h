@@ -122,6 +122,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void ReplaceActiveSessionHistoryEntry(SessionHistoryInfo* aInfo);
 
+  void RemoveDynEntriesFromActiveSessionHistoryEntry();
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 

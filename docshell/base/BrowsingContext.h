@@ -648,6 +648,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // implementing history.replaceState.
   void ReplaceActiveSessionHistoryEntry(SessionHistoryInfo* aInfo);
 
+  // Removes dynamic child entries of the active entry.
+  void RemoveDynEntriesFromActiveSessionHistoryEntry();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,

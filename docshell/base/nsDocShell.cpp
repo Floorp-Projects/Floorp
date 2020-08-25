@@ -1057,9 +1057,15 @@ void nsDocShell::FirePageHideNotificationInternal(
     // If the document is unloading, remove all dynamic subframe entries.
     if (aIsUnload && !aSkipCheckingDynEntries) {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-      if (rootSH && mOSHE) {
-        int32_t index = rootSH->Index();
-        rootSH->LegacySHistory()->RemoveDynEntries(index, mOSHE);
+      if (rootSH) {
+        if (StaticPrefs::fission_sessionHistoryInParent()) {
+          if (mActiveEntry) {
+            mBrowsingContext->RemoveDynEntriesFromActiveSessionHistoryEntry();
+          }
+        } else if (mOSHE) {
+          int32_t index = rootSH->Index();
+          rootSH->LegacySHistory()->RemoveDynEntries(index, mOSHE);
+        }
       }
     }
 
