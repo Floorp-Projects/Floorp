@@ -1055,6 +1055,11 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
     return true;
   };
 
+  nsAutoCString locale;
+  OSPreferences::GetInstance()->GetSystemLocale(locale);
+  ToLowerCase(locale);
+  NS_ConvertUTF8toUTF16 loc16(locale);
+
   for (unsigned i = 0; i < aCollection->GetFontFamilyCount(); ++i) {
     RefPtr<IDWriteFontFamily> family;
     aCollection->GetFontFamily(i, getter_AddRefs(family));
@@ -1064,7 +1069,7 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
       continue;
     }
 
-    auto addFamily = [&](const nsACString& name) {
+    auto addFamily = [&](const nsACString& name, bool altLocale = false) {
       nsAutoCString key;
       key = name;
       BuildKeyNameFromFontName(key);
@@ -1084,7 +1089,8 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
                                                  : FontVisibility::Base;
       }
       aFamilies.AppendElement(fontlist::Family::InitData(
-          key, name, i, visibility, aCollection != mSystemFonts, bad, classic));
+          key, name, i, visibility, aCollection != mSystemFonts, bad, classic,
+          altLocale));
     };
 
     unsigned count = localizedNames->GetCount();
@@ -1098,17 +1104,39 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
       addFamily(name);
     } else {
       AutoTArray<nsCString, 4> names;
+      int sysLocIndex = -1;
       for (unsigned index = 0; index < count; ++index) {
         nsAutoCString name;
         if (!GetNameAsUtf8(name, localizedNames, index)) {
           continue;
         }
         if (!names.Contains(name)) {
+          if (sysLocIndex == -1) {
+            WCHAR buf[32];
+            if (FAILED(localizedNames->GetLocaleName(index, buf, 32))) {
+              continue;
+            }
+            if (loc16.Equals(buf)) {
+              sysLocIndex = names.Length();
+            }
+          }
           names.AppendElement(name);
         }
       }
-      for (const auto& name : names) {
-        addFamily(name);
+      // If we didn't find a name that matched the system locale, use the
+      // first (which is most often en-US).
+      if (sysLocIndex == -1) {
+        sysLocIndex = 0;
+      }
+      // Hack to work around EPSON fonts with bad names (tagged as MacRoman
+      // but actually contain MacJapanese data): if we've chosen the first
+      // name, *and* it is non-ASCII, *and* there is an alternative present,
+      // use the next option instead as being more likely to be valid.
+      if (sysLocIndex == 0 && names.Length() > 1 && !IsAscii(names[0])) {
+        sysLocIndex = 1;
+      }
+      for (unsigned index = 0; index < names.Length(); ++index) {
+        addFamily(names[index], index != sysLocIndex);
       }
     }
   }
