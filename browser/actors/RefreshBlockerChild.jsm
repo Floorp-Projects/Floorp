@@ -2,14 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env mozilla/frame-script */
+/**
+ * This file has two actors, RefreshBlockerChild js a window actor which
+ * handles the refresh notifications. RefreshBlockerObserverChild is a process
+ * actor that enables refresh blocking on each docshell that is created.
+ */
+
+var EXPORTED_SYMBOLS = ["RefreshBlockerChild", "RefreshBlockerObserverChild"];
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-var RefreshBlocker = {
-  PREF: "accessibility.blockautorefresh",
+const REFRESHBLOCKING_PREF = "accessibility.blockautorefresh";
 
+var progressListener = {
   // Bug 1247100 - When a refresh is caused by an HTTP header,
   // onRefreshAttempted will be fired before onLocationChange.
   // When a refresh is caused by a <meta> tag in the document,
@@ -42,68 +48,6 @@ var RefreshBlocker = {
   // otherwise, null is set as the value of the mapping.
   blockedWindows: new WeakMap(),
 
-  init() {
-    if (Services.prefs.getBoolPref(this.PREF)) {
-      this.enable();
-    }
-
-    Services.prefs.addObserver(this.PREF, this);
-  },
-
-  uninit() {
-    if (Services.prefs.getBoolPref(this.PREF)) {
-      this.disable();
-    }
-
-    Services.prefs.removeObserver(this.PREF, this);
-  },
-
-  observe(subject, topic, data) {
-    if (topic == "nsPref:changed" && data == this.PREF) {
-      if (Services.prefs.getBoolPref(this.PREF)) {
-        this.enable();
-      } else {
-        this.disable();
-      }
-    }
-  },
-
-  enable() {
-    this._filter = Cc[
-      "@mozilla.org/appshell/component/browser-status-filter;1"
-    ].createInstance(Ci.nsIWebProgress);
-    this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
-    this._filter.target = tabEventTarget;
-
-    let webProgress = docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this._filter, Ci.nsIWebProgress.NOTIFY_ALL);
-
-    addMessageListener("RefreshBlocker:Refresh", this);
-  },
-
-  disable() {
-    let webProgress = docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-    webProgress.removeProgressListener(this._filter);
-
-    this._filter.removeProgressListener(this);
-    this._filter = null;
-
-    removeMessageListener("RefreshBlocker:Refresh", this);
-  },
-
-  send(data) {
-    // Due to the |nsDocLoader| calling its |nsIWebProgressListener|s in
-    // reverse order, this will occur *before* the |BrowserChild| can send its
-    // |OnLocationChange| event to the parent, but we need this message to
-    // arrive after to ensure that the refresh blocker notification is not
-    // immediately cleared by the |OnLocationChange| from |BrowserChild|.
-    setTimeout(() => sendAsyncMessage("RefreshBlocker:Blocked", data), 0);
-  },
-
   /**
    * Notices when the nsIWebProgress transitions to STATE_STOP for
    * the STATE_IS_WINDOW case, which will clear any mappings from
@@ -130,7 +74,7 @@ var RefreshBlocker = {
       if (data) {
         // We saw onRefreshAttempted before onLocationChange, so
         // send the message to the parent to show the notification.
-        this.send(data);
+        this.send(win, data);
       }
     } else {
       this.blockedWindows.set(win, null);
@@ -144,19 +88,18 @@ var RefreshBlocker = {
    */
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
     let win = aWebProgress.DOMWindow;
-    let outerWindowID = win.docShell.outerWindowID;
 
     let data = {
+      browsingContext: win.browsingContext,
       URI: aURI.spec,
       delay: aDelay,
       sameURI: aSameURI,
-      outerWindowID,
     };
 
     if (this.blockedWindows.has(win)) {
       // onLocationChange must have fired before, so we can tell the
       // parent to show the notification.
-      this.send(data);
+      this.send(win, data);
     } else {
       // onLocationChange hasn't fired yet, so stash the data in the
       // map so that onLocationChange can send it when it fires.
@@ -166,17 +109,22 @@ var RefreshBlocker = {
     return false;
   },
 
-  receiveMessage(message) {
-    let data = message.data;
-
-    if (message.name == "RefreshBlocker:Refresh") {
-      let win = Services.wm.getOuterWindowWithId(data.outerWindowID);
-      let refreshURI = win.docShell.QueryInterface(Ci.nsIRefreshURI);
-
-      let URI = Services.io.newURI(data.URI);
-
-      refreshURI.forceRefreshURI(URI, null, data.delay, true);
-    }
+  send(win, data) {
+    // Due to the |nsDocLoader| calling its |nsIWebProgressListener|s in
+    // reverse order, this will occur *before* the |BrowserChild| can send its
+    // |OnLocationChange| event to the parent, but we need this message to
+    // arrive after to ensure that the refresh blocker notification is not
+    // immediately cleared by the |OnLocationChange| from |BrowserChild|.
+    setTimeout(() => {
+      // An exception can occur if refresh blocking was turned off
+      // during a pageload.
+      try {
+        let actor = win.windowGlobalChild.getActor("RefreshBlocker");
+        if (actor) {
+          actor.sendAsyncMessage("RefreshBlocker:Blocked", data);
+        }
+      } catch (ex) {}
+    }, 0);
   },
 
   QueryInterface: ChromeUtils.generateQI([
@@ -186,8 +134,104 @@ var RefreshBlocker = {
   ]),
 };
 
-RefreshBlocker.init();
+class RefreshBlockerChild extends JSWindowActorChild {
+  didDestroy() {
+    // If the refresh blocking preference is turned off, all of the
+    // RefreshBlockerChild actors will get destroyed, so disable
+    // refresh blocking only in this case.
+    if (!Services.prefs.getBoolPref(REFRESHBLOCKING_PREF)) {
+      this.disable(this.docShell);
+    }
+  }
 
-addEventListener("unload", () => {
-  RefreshBlocker.uninit();
-});
+  enable() {
+    ChromeUtils.domProcessChild
+      .getActor("RefreshBlockerObserver")
+      .enable(this.docShell);
+  }
+
+  disable() {
+    ChromeUtils.domProcessChild
+      .getActor("RefreshBlockerObserver")
+      .disable(this.docShell);
+  }
+
+  receiveMessage(message) {
+    let data = message.data;
+
+    switch (message.name) {
+      case "RefreshBlocker:Refresh":
+        let docShell = data.browsingContext.docShell;
+        let refreshURI = docShell.QueryInterface(Ci.nsIRefreshURI);
+        let URI = Services.io.newURI(data.URI);
+        refreshURI.forceRefreshURI(URI, null, data.delay, true);
+        break;
+
+      case "PreferenceChanged":
+        if (data.isEnabled) {
+          this.enable(this.docShell);
+        } else {
+          this.disable(this.docShell);
+        }
+    }
+  }
+}
+
+class RefreshBlockerObserverChild extends JSProcessActorChild {
+  constructor() {
+    super();
+    this.filtersMap = new Map();
+  }
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "webnavigation-create":
+      case "chrome-webnavigation-create":
+        if (Services.prefs.getBoolPref(REFRESHBLOCKING_PREF)) {
+          this.enable(subject.QueryInterface(Ci.nsIDocShell));
+        }
+        break;
+
+      case "webnavigation-destroy":
+      case "chrome-webnavigation-destroy":
+        if (Services.prefs.getBoolPref(REFRESHBLOCKING_PREF)) {
+          this.disable(subject.QueryInterface(Ci.nsIDocShell));
+        }
+        break;
+    }
+  }
+
+  enable(docShell) {
+    if (this.filtersMap.has(docShell)) {
+      return;
+    }
+
+    let filter = Cc[
+      "@mozilla.org/appshell/component/browser-status-filter;1"
+    ].createInstance(Ci.nsIWebProgress);
+
+    filter.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);
+
+    this.filtersMap.set(docShell, filter);
+
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+    webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
+  }
+
+  disable(docShell) {
+    let filter = this.filtersMap.get(docShell);
+    if (!filter) {
+      return;
+    }
+
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+    webProgress.removeProgressListener(filter);
+
+    filter.removeProgressListener(progressListener);
+    this.filtersMap.delete(docShell);
+  }
+}

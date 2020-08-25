@@ -92,6 +92,34 @@ let JSPROCESSACTORS = {
       ],
     },
   },
+
+  RefreshBlockerObserver: {
+    child: {
+      moduleURI: "resource:///actors/RefreshBlockerChild.jsm",
+      observers: [
+        "webnavigation-create",
+        "chrome-webnavigation-create",
+        "webnavigation-destroy",
+        "chrome-webnavigation-destroy",
+      ],
+    },
+
+    enablePreference: "accessibility.blockautorefresh",
+    onPreferenceChanged: (prefName, prevValue, isEnabled) => {
+      BrowserWindowTracker.orderedWindows.forEach(win => {
+        for (let browser of win.gBrowser.browsers) {
+          try {
+            browser.sendMessageToActor(
+              "PreferenceChanged",
+              { isEnabled },
+              "RefreshBlocker",
+              "all"
+            );
+          } catch (ex) {}
+        }
+      });
+    },
+  },
 };
 
 /**
@@ -512,6 +540,18 @@ let JSWINDOWACTORS = {
     },
     includeChrome: true,
     allFrames: true,
+  },
+
+  RefreshBlocker: {
+    parent: {
+      moduleURI: "resource:///actors/RefreshBlockerParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/RefreshBlockerChild.jsm",
+    },
+
+    messageManagerGroups: ["browsers"],
+    enablePreference: "accessibility.blockautorefresh",
   },
 
   SearchTelemetry: {

@@ -1871,7 +1871,6 @@ var gBrowserInit = {
     BrowserSearch.init();
     BrowserPageActions.init();
     gAccessibilityServiceIndicator.init();
-    AccessibilityRefreshBlocker.init();
     if (gToolbarKeyNavEnabled) {
       ToolbarKeyboardNavigator.init();
     }
@@ -2456,8 +2455,6 @@ var gBrowserInit = {
     DownloadsButton.uninit();
 
     gAccessibilityServiceIndicator.uninit();
-
-    AccessibilityRefreshBlocker.uninit();
 
     if (gToolbarKeyNavEnabled) {
       ToolbarKeyboardNavigator.uninit();
@@ -5792,50 +5789,6 @@ var CombinedStopReload = {
     if (this._timer) {
       clearTimeout(this._timer);
       this._timer = 0;
-    }
-  },
-};
-
-// This helper only cares about loading the frame
-// script if the pref is seen as true.
-// After the frame script is loaded, it takes over
-// the responsibility of watching the pref and
-// enabling/disabling itself.
-const AccessibilityRefreshBlocker = {
-  PREF: "accessibility.blockautorefresh",
-
-  init() {
-    if (Services.prefs.getBoolPref(this.PREF)) {
-      this.loadFrameScript();
-    } else {
-      Services.prefs.addObserver(this.PREF, this);
-    }
-  },
-
-  uninit() {
-    Services.prefs.removeObserver(this.PREF, this);
-  },
-
-  observe(aSubject, aTopic, aPrefName) {
-    if (
-      aTopic == "nsPref:changed" &&
-      aPrefName == this.PREF &&
-      Services.prefs.getBoolPref(this.PREF)
-    ) {
-      this.loadFrameScript();
-      Services.prefs.removeObserver(this.PREF, this);
-    }
-  },
-
-  loadFrameScript() {
-    if (!this._loaded) {
-      this._loaded = true;
-      let mm = window.getGroupMessageManager("browsers");
-      mm.loadFrameScript(
-        "chrome://browser/content/content-refreshblocker.js",
-        true,
-        true
-      );
     }
   },
 };

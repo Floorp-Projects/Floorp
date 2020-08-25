@@ -72,6 +72,8 @@ FINAL_TARGET_FILES.actors += [
     'PluginChild.jsm',
     'PluginParent.jsm',
     'PromptParent.jsm',
+    'RefreshBlockerChild.jsm',
+    'RefreshBlockerParent.jsm',
     'RFPHelperChild.jsm',
     'RFPHelperParent.jsm',
     'SearchTelemetryChild.jsm',
