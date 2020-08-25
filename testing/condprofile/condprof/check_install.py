@@ -54,7 +54,7 @@ def install_reqs():
                             "--no-cache-dir",
                             "--isolated",
                             "--find-links",
-                            "https://pypi.pub.build.mozilla.org/pub",
+                            "https://pypi.pub.build.mozilla.org/pub/",
                             req,
                         ]
                     )
