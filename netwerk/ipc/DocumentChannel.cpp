@@ -31,7 +31,6 @@
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
-#include "nsStreamListenerWrapper.h"
 #include "nsStringStream.h"
 #include "nsURLHelper.h"
 
@@ -54,7 +53,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIIdentChannel)
-  NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequest)
 NS_INTERFACE_MAP_END
@@ -195,22 +193,6 @@ already_AddRefed<DocumentChannel> DocumentChannel::CreateForObject(
     nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks) {
   return CreateForDocument(aLoadState, aLoadInfo, aLoadFlags,
                            aNotificationCallbacks, 0, false, false);
-}
-
-//-----------------------------------------------------------------------------
-// DocumentChannel::nsITraceableChannel
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-DocumentChannel::SetNewListener(nsIStreamListener* aListener,
-                                nsIStreamListener** _retval) {
-  NS_ENSURE_ARG_POINTER(aListener);
-
-  nsCOMPtr<nsIStreamListener> wrapper = new nsStreamListenerWrapper(mListener);
-
-  wrapper.forget(_retval);
-  mListener = aListener;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
