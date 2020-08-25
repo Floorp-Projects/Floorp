@@ -273,19 +273,33 @@ body {
     span {
       position: relative;
       z-index: 1;
+      white-space: nowrap;
     }
 
-    span::after {
-      display: block;
-      background: center / contain no-repeat url('../data/content/assets/zap.svg');
-      content: '';
-      position: absolute;
-      top: calc(100% - 0.2em);
-      width: 100%;
-      height: 0.3em;
-      left: 0;
-      z-index: -1;
+    .zap {
+      &::after {
+        display: block;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        content: '';
+        position: absolute;
+        top: calc(100% - 0.15em);
+        width: 100%;
+        height: 0.3em;
+        left: 0;
+        z-index: -1;
+      }
+
+      &.short::after {
+        background-image:  url('../data/content/assets/short-zap.svg');
+      }
+
+      &.long::after {
+        background-image:  url('../data/content/assets/long-zap.svg');
+      }
     }
+
+
   }
 
   .welcome-text {

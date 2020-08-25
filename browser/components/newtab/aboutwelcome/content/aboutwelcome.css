@@ -280,17 +280,23 @@ body {
       margin-top: 25px; }
   .multistageContainer .welcomeZap span {
     position: relative;
-    z-index: 1; }
-  .multistageContainer .welcomeZap span::after {
+    z-index: 1;
+    white-space: nowrap; }
+  .multistageContainer .welcomeZap .zap::after {
     display: block;
-    background: center/contain no-repeat url("../data/content/assets/zap.svg");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     content: '';
     position: absolute;
-    top: calc(100% - 0.2em);
+    top: calc(100% - 0.15em);
     width: 100%;
     height: 0.3em;
     left: 0;
     z-index: -1; }
+  .multistageContainer .welcomeZap .zap.short::after {
+    background-image: url("../data/content/assets/short-zap.svg"); }
+  .multistageContainer .welcomeZap .zap.long::after {
+    background-image: url("../data/content/assets/long-zap.svg"); }
   .multistageContainer .welcome-text {
     display: flex;
     flex-direction: column;
