@@ -4696,9 +4696,8 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
     preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
   }
 
-  // Shape guard the holder.
-  ObjOperandId holderId = objId;
-  writer.guardShape(holderId, oldShape);
+  // Shape guard the object.
+  writer.guardShape(objId, oldShape);
 
   ShapeGuardProtoChain(writer, obj, objId);
 
@@ -4711,22 +4710,21 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
 
   if (holder->isFixedSlot(propShape->slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(propShape->slot());
-    writer.addAndStoreFixedSlot(holderId, offset, rhsValId, changeGroup,
-                                newGroup, propShape);
+    writer.addAndStoreFixedSlot(objId, offset, rhsValId, changeGroup, newGroup,
+                                propShape);
     trackAttached("AddSlot");
   } else {
     size_t offset = holder->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::dynamicSlotsCount(oldShape);
     uint32_t numNewSlots = NativeObject::dynamicSlotsCount(propShape);
     if (numOldSlots == numNewSlots) {
-      writer.addAndStoreDynamicSlot(holderId, offset, rhsValId, changeGroup,
+      writer.addAndStoreDynamicSlot(objId, offset, rhsValId, changeGroup,
                                     newGroup, propShape);
       trackAttached("AddSlot");
     } else {
       MOZ_ASSERT(numNewSlots > numOldSlots);
-      writer.allocateAndStoreDynamicSlot(holderId, offset, rhsValId,
-                                         changeGroup, newGroup, propShape,
-                                         numNewSlots);
+      writer.allocateAndStoreDynamicSlot(objId, offset, rhsValId, changeGroup,
+                                         newGroup, propShape, numNewSlots);
       trackAttached("AllocateSlot");
     }
   }
