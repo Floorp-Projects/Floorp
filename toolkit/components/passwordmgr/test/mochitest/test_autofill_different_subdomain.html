@@ -47,8 +47,9 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
     await LoginManager.addLogin(login);
   }
 
+  let processedPromise = promiseFormsProcessedInChildFrame();
   iframe.src = url;
-  await promiseFormsProcessed();
+  await processedPromise;
 }
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_wildcard_formActionOrigin() {

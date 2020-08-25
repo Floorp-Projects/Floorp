@@ -72,8 +72,8 @@ const HTTPS_FORM_URL = "https://example.com/tests/toolkit/components/passwordmgr
 async function setup(formUrl = HTTPS_FORM_URL) {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 
+  let processedPromise = promiseFormsProcessedInChildFrame();
   iframe.src = formUrl;
-  let processedPromise = promiseFormsProcessed();
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
       resolve();
