@@ -39,6 +39,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 * [0001 - Introducing a lightweight RFC process]({{ site.baseurl }}/rfc/0001-rfc-process)
 * [0002 - Moving search state to BrowserState and introducing a SearchMiddleware]({{ site.baseurl }}/rfc/0002-search-state-in-browser-store)
 * [0003 - Adding a `concept-base` component]({{ site.baseurl }}/rfc/0003-concept-base-component)
+* [0004 - Introducing a Top Sites Feature]({{ site.baseurl }}/rfc/0004-top-sites-feature)
 
 ### Presentations
 
