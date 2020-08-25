@@ -88,6 +88,10 @@ body[loading] {
   visibility: hidden;
 }
 
+#print:not([platform="win"]) button[name="print"] {
+  order: 1;
+}
+
 form#print {
   display: flex;
   flex: 1 1 auto;
