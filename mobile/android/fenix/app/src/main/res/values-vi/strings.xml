@@ -101,7 +101,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Dừng</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Dấu trang</string>
+    <string name="browser_menu_bookmark">Đánh dấu</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Chỉnh sửa dấu trang</string>
     <!-- Browser menu button that opens the addon manager -->

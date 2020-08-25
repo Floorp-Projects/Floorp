@@ -315,6 +315,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Notificaties</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Nu synchroniseren</string>
@@ -583,6 +586,13 @@
     <string name="history_older">Ouder</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Geen geschiedenis hier</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Geen downloads hier</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d geselecteerd</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -991,9 +1001,10 @@
     <string name="onboarding_whats_new_description">Hebt u vragen over het opnieuw ontworpen %s? Wilt u weten wat er is gewijzigd?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Hier vindt u antwoorden</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">Haal het meeste uit %s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Meer info</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1483,6 +1494,9 @@
 
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Aanmelden om te synchroniseren</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Geen open tabbladen</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

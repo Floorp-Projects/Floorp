@@ -306,6 +306,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ایڈ اون</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">اعلانات</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ابھی sync کریں</string>
@@ -578,6 +581,10 @@
     <string name="history_older">‏‏زیادہ پرانا</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">یہاں کوئی سابقات نہیں ہے</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">یہاں کوئی ڈاؤن لوڈ نہیں</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -976,8 +983,7 @@
     <string name="onboarding_whats_new_header1">دیکھیں نیا کیا ہے</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">یہاں جوابات حاصل کریں</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <!-- text for the firefox account onboarding card header -->
     <string name="onboarding_firefox_account_header">%s کا زیادہ سے زیادہ فائدہ اٹھائیں۔</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ہاں ، مجھے سائن ان کریں</string>
@@ -1433,6 +1439,9 @@
     <string name="synced_tabs_sign_in_message">دیگر آلات سے ٹیبیں کی فہرست دیکھیں۔</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">sync کے لئے سائن ان کریں</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">کوئی کھلے ٹیب نہیں</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

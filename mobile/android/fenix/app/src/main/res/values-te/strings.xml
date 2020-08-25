@@ -534,7 +534,7 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">సేకరణ పేరుమార్చు</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">తెరిచివున్న ట్యాబులు</string>
+    <string name="collection_open_tabs">ట్యాబులను తెరువు</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">తీసివేయి</string>
 

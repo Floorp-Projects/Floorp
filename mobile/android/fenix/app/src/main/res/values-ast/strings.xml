@@ -28,9 +28,12 @@
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d esbillaes</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
-    <string name="tab_tray_add_new_collection">Amiestu d\'una coleción nueva</string>
+    <string name="tab_tray_add_new_collection">Coleición nueva</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Nome</string>
+
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Esbilla d\'una coleición</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ta producíu por Mozilla.</string>
@@ -285,6 +288,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Complementos</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Avisos</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar agora</string>
@@ -516,6 +522,10 @@
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nun hai nada</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Equí nun hai descargues</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->

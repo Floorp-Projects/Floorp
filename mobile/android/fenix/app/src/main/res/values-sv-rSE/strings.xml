@@ -748,10 +748,8 @@
     <string name="collections_header">Samlingar</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Samlingsmeny</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Samla de saker som är viktiga för dig</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Gruppera liknande sökningar, webbplatser och flikar för snabb åtkomst senare.</string>
+    <string name="no_collections_description2">Samla de saker som är viktiga för dig.\nGruppera liknande sökningar, webbplatser och flikar för snabb åtkomst senare.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Välj flikar</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1005,8 +1003,8 @@
     <string name="onboarding_whats_new_description">Har du frågor om omgjorda %s? Vill du veta vad som har förändrats?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Få svar här</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Få ut det mesta av %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Börja synkronisera bokmärken, lösenord och mer med ditt Firefox-konto.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Läs mer</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1510,4 +1508,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, jag förstår</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Ta bort</string>
+</resources>
