@@ -375,6 +375,11 @@ nsDNSByTypeRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
 }
 
 NS_IMETHODIMP
+nsDNSByTypeRecord::GetHasIPAddresses(bool* aResult) {
+  return mHostRecord->GetHasIPAddresses(aResult);
+}
+
+NS_IMETHODIMP
 nsDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
   *aResults = mHostRecord->GetResults();
   return NS_OK;

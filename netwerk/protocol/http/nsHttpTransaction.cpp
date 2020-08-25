@@ -429,6 +429,8 @@ nsresult nsHttpTransaction::Init(
   }
 
   if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled()) {
+    mHTTPSSVCReceivedStage.emplace(HTTPSSVC_NOT_PRESENT);
+
     nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
     nsCOMPtr<nsIEventTarget> target;
     Unused << gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
@@ -544,11 +546,6 @@ void nsHttpTransaction::OnActivated() {
 
   if (mActivated) {
     return;
-  }
-
-  if (mDNSRequest) {
-    mDNSRequest->Cancel(NS_ERROR_ABORT);
-    mDNSRequest = nullptr;
   }
 
   if (mTrafficCategory != HttpTrafficCategory::eInvalid) {
@@ -1084,6 +1081,11 @@ void nsHttpTransaction::Close(nsresult reason) {
   if (!mClosed) {
     gHttpHandler->ConnMgr()->RemoveActiveTransaction(this);
     mActivated = false;
+  }
+
+  if (mDNSRequest) {
+    mDNSRequest->Cancel(reason);
+    mDNSRequest = nullptr;
   }
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -2703,14 +2705,24 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
 
   MakeDontWaitHTTPSSVC();
 
-  if (mActivated) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIDNSHTTPSSVCRecord> record = do_QueryInterface(aRecord);
   if (!record || NS_FAILED(aStatus)) {
     return NS_ERROR_FAILURE;
   }
+
+  bool hasIPAddress = false;
+  Unused << record->GetHasIPAddresses(&hasIPAddress);
+
+  if (mActivated) {
+    mHTTPSSVCReceivedStage =
+        Some(hasIPAddress ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_2
+                          : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_2);
+    return NS_OK;
+  }
+
+  mHTTPSSVCReceivedStage =
+      Some(hasIPAddress ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_1
+                        : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_1);
 
   nsCOMPtr<nsISVCBRecord> svcbRecord;
   if (NS_FAILED(record->GetServiceModeRecord(mCaps & NS_HTTP_DISALLOW_SPDY,
@@ -2731,6 +2743,10 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
     UpdateConnectionInfo(newInfo);
   }
   return NS_OK;
+}
+
+Maybe<uint32_t> nsHttpTransaction::HTTPSSVCReceivedStage() {
+  return mHTTPSSVCReceivedStage;
 }
 
 }  // namespace net

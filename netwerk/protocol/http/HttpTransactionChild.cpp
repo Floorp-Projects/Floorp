@@ -492,12 +492,14 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   int32_t proxyConnectResponseCode =
       mTransaction->GetProxyConnectResponseCode();
 
+  Maybe<uint32_t> stage = mTransaction->HTTPSSVCReceivedStage();
+
   Unused << SendOnStartRequest(status, optionalHead, serializedSecurityInfoOut,
                                mTransaction->ProxyConnectFailed(),
                                ToTimingStructArgs(mTransaction->Timings()),
                                proxyConnectResponseCode, dataForSniffer,
                                optionalAltSvcUsed, !!mDataBridgeParent,
-                               mTransaction->TakeRestartedState());
+                               mTransaction->TakeRestartedState(), stage);
   return NS_OK;
 }
 

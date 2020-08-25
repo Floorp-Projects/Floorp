@@ -9,7 +9,7 @@
 #include "nsISupports.h"
 #include "TimingStruct.h"
 #include "nsInputStreamPump.h"
-
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
 class nsIEventTraget;
@@ -153,6 +153,7 @@ class HttpTransactionShell : public nsISupports {
   virtual HttpTransactionParent* AsHttpTransactionParent() = 0;
 
   virtual bool TakeRestartedState() = 0;
+  virtual Maybe<uint32_t> HTTPSSVCReceivedStage() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
@@ -207,7 +208,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual bool DataSentToChildProcess() override;                              \
   virtual nsHttpTransaction* AsHttpTransaction() override;                     \
   virtual HttpTransactionParent* AsHttpTransactionParent() override;           \
-  virtual bool TakeRestartedState() override;
+  virtual bool TakeRestartedState() override;                                  \
+  virtual Maybe<uint32_t> HTTPSSVCReceivedStage() override;
 }  // namespace net
 }  // namespace mozilla
 

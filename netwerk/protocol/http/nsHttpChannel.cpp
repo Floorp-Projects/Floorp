@@ -389,6 +389,7 @@ nsHttpChannel::nsHttpChannel()
       mDataSentToChildProcess(0),
       mUseHTTPSSVC(0),
       mWaitHTTPSSVCRecord(0),
+      mHTTPSSVCTelemetryReported(0),
       mPushedStreamId(0),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
@@ -7651,6 +7652,14 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
       // is guaranteed to own a reference to the connection.
       mSecurityInfo = mTransaction->SecurityInfo();
     }
+
+    if (!mHTTPSSVCTelemetryReported) {
+      Maybe<uint32_t> stage = mTransaction->HTTPSSVCReceivedStage();
+      if (stage) {
+        Telemetry::Accumulate(Telemetry::DNS_HTTPSSVC_RECORD_RECEIVING_STAGE,
+                              *stage);
+      }
+    }
   }
 
   // don't enter this block if we're reading from the cache...
@@ -9221,6 +9230,18 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
     if (NS_FAILED(rv)) {
       CloseCacheEntry(false);
       Unused << AsyncAbort(rv);
+    }
+  } else {
+    // This channel is not canceled and the transaction is not created.
+    if (NS_SUCCEEDED(mStatus) && !mTransaction &&
+        (mFirstResponseSource != RESPONSE_FROM_CACHE)) {
+      bool hasIPAddress = false;
+      Unused << httpSSVCRecord->GetHasIPAddresses(&hasIPAddress);
+      Telemetry::Accumulate(Telemetry::DNS_HTTPSSVC_RECORD_RECEIVING_STAGE,
+                            hasIPAddress
+                                ? HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_0
+                                : HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_0);
+      mHTTPSSVCTelemetryReported = true;
     }
   }
 

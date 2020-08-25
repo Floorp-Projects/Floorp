@@ -739,6 +739,9 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   uint32_t mUseHTTPSSVC : 1;
   uint32_t mWaitHTTPSSVCRecord : 1;
+  // Only set to true when we receive an HTTPSSVC record before the transaction
+  // is created.
+  uint32_t mHTTPSSVCTelemetryReported : 1;
 
   // The origin of the top window, only valid when mTopWindowOriginComputed is
   // true.

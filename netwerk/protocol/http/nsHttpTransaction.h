@@ -444,6 +444,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       mIDToStreamMap;
 
   nsCOMPtr<nsICancelable> mDNSRequest;
+  Maybe<uint32_t> mHTTPSSVCReceivedStage;
 };
 
 }  // namespace net
