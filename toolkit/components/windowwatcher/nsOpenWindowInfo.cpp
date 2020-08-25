@@ -22,6 +22,16 @@ NS_IMETHODIMP nsOpenWindowInfo::GetIsRemote(bool* aIsRemote) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOpenWindowInfo::GetIsForPrintPreview(bool* aIsForPrinPreview) {
+  *aIsForPrinPreview = mIsForPrintPreview;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOpenWindowInfo::GetIsForPrinting(bool* aIsForPrinting) {
+  *aIsForPrinting = mIsForPrinting;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOpenWindowInfo::GetForceNoOpener(bool* aForceNoOpener) {
   *aForceNoOpener = mForceNoOpener;
   return NS_OK;

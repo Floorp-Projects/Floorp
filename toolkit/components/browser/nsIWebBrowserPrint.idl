@@ -94,13 +94,11 @@ interface nsIWebBrowserPrint : nsISupports
    *
    * @param aThePrintSettings - Printer Settings for the print preview, if aThePrintSettings is null
    *                            then the global PS will be used.
-   * @param aChildDOMWin - DOM Window to be print previewed.
    * @param aWPListener - is updated during the printpreview
    * @return void
    */
-  void printPreview(in nsIPrintSettings aThePrintSettings,
-                    in mozIDOMWindowProxy aChildDOMWin,
-                    in nsIWebProgressListener aWPListener);
+  [noscript] void printPreview(in nsIPrintSettings aThePrintSettings,
+                               in nsIWebProgressListener aWPListener);
 
   /**
    * @param aNavType - navigation enum

@@ -54,8 +54,8 @@ class nsWindowWatcher : public nsIWindowWatcher,
 
   static int32_t GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
                                        uint32_t aChromeFlags,
-                                       bool aCalledFromJS,
-                                       bool aWidthSpecified);
+                                       bool aCalledFromJS, bool aWidthSpecified,
+                                       bool aIsForPrinting);
 
   // Will first look for a caller on the JS stack, and then fall back on
   // aCurrentContext if it can't find one.
@@ -81,7 +81,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
                               const nsACString& aFeatures, bool aCalledFromJS,
                               bool aDialog, bool aNavigate, nsIArray* aArgv,
                               bool aIsPopupSpam, bool aForceNoOpener,
-                              bool aForceNoReferrer,
+                              bool aForceNoReferrer, PrintKind,
                               nsDocShellLoadState* aLoadState,
                               mozilla::dom::BrowsingContext** aResult);
 

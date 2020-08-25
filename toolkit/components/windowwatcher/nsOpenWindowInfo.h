@@ -20,6 +20,8 @@ class nsOpenWindowInfo : public nsIOpenWindowInfo {
 
   bool mForceNoOpener = false;
   bool mIsRemote = false;
+  bool mIsForPrinting = false;
+  bool mIsForPrintPreview = false;
   RefPtr<mozilla::dom::BrowserParent> mNextRemoteBrowser;
   mozilla::OriginAttributes mOriginAttributes;
   RefPtr<mozilla::dom::BrowsingContext> mParent;

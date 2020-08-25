@@ -1435,6 +1435,8 @@ parent:
                        uint32_t aChromeFlags,
                        bool aCalledFromJS,
                        bool aWidthSpecified,
+                       bool aForPrinting,
+                       bool aForPrintPreview,
                        nsIURI aURIToLoad,
                        nsCString aFeatures,
                        float aFullZoom,
