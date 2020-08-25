@@ -23,6 +23,9 @@ interface nsITraceableChannel : nsISupports
      * The caller of setNewListener has no way to control at which place
      * in the chain its listener is placed.
      *
+     * @param aMustApplyContentConversion Pass true if the new listener requires
+     * content conversion to already be applied by the channel.
+     *
      * Note: The caller of setNewListener must not delay passing
      * OnStartRequest to the original listener.
      *
@@ -30,5 +33,5 @@ interface nsITraceableChannel : nsISupports
      * It is not recommended to allow listener replacement after OnStartRequest
      * has been called.
      */
-    nsIStreamListener setNewListener(in nsIStreamListener aListener);
+    nsIStreamListener setNewListener(in nsIStreamListener aListener, [optional] in boolean aMustApplyContentConversion);
 };

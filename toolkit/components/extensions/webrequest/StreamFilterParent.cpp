@@ -159,7 +159,9 @@ void StreamFilterParent::Init(nsIChannel* aChannel) {
   nsCOMPtr<nsITraceableChannel> traceable = do_QueryInterface(aChannel);
   MOZ_RELEASE_ASSERT(traceable);
 
-  nsresult rv = traceable->SetNewListener(this, getter_AddRefs(mOrigListener));
+  nsresult rv =
+      traceable->SetNewListener(this, /* aMustApplyContentConversion = */ true,
+                                getter_AddRefs(mOrigListener));
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 }
 

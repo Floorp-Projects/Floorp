@@ -855,38 +855,46 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Number of internal redirects that has occurred.
   int8_t mInternalRedirectCount;
 
-  bool mAsyncOpenTimeOverriden;
-  bool mForcePending;
+  bool mAsyncOpenTimeOverriden : 1;
+  bool mForcePending : 1;
 
   // true if the channel is deliving alt-data.
-  bool mDeliveringAltData;
+  bool mDeliveringAltData : 1;
 
-  bool mCorsIncludeCredentials;
+  bool mCorsIncludeCredentials : 1;
 
   // These parameters are used to ensure that we do not call OnStartRequest and
   // OnStopRequest more than once.
-  bool mOnStartRequestCalled;
-  bool mOnStopRequestCalled;
+  bool mOnStartRequestCalled : 1;
+  bool mOnStopRequestCalled : 1;
 
   // Defaults to false. Is set to true at the begining of OnStartRequest.
   // Used to ensure methods can't be called before OnStartRequest.
-  bool mAfterOnStartRequestBegun;
+  bool mAfterOnStartRequestBegun : 1;
 
-  bool mRequireCORSPreflight;
+  bool mRequireCORSPreflight : 1;
 
   // This flag will be true if the consumer is requesting alt-data AND the
   // consumer is in the child process.
-  bool mAltDataForChild;
+  bool mAltDataForChild : 1;
 
   // This flag will be true if the consumer cannot process alt-data.  This
   // is used in the webextension StreamFilter handler.  If true, we bypass
   // using alt-data for the request.
-  bool mDisableAltDataCache;
+  bool mDisableAltDataCache : 1;
 
-  bool mForceMainDocumentChannel;
+  bool mForceMainDocumentChannel : 1;
   // This is set true if the channel is waiting for the
   // InputStreamLengthHelper::GetAsyncLength callback.
-  bool mPendingInputStreamLengthOperation;
+  bool mPendingInputStreamLengthOperation : 1;
+
+  // Set to true if our listener has indicated that it requires
+  // content conversion to be done by us.
+  bool mListenerRequiresContentConversion : 1;
+
+  // True if this is a navigation to a page with a different cross origin
+  // opener policy ( see ComputeCrossOriginOpenerPolicyMismatch )
+  uint32_t mHasCrossOriginOpenerPolicyMismatch : 1;
 
   bool EnsureRequestContextID();
   bool EnsureRequestContext();
@@ -898,10 +906,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void RemoveAsNonTailRequest();
 
   void EnsureTopLevelOuterContentWindowId();
-
-  // True if this is a navigation to a page with a different cross origin
-  // opener policy ( see ComputeCrossOriginOpenerPolicyMismatch )
-  uint32_t mHasCrossOriginOpenerPolicyMismatch : 1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)
