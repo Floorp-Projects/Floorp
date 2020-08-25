@@ -559,7 +559,8 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
     // that their type information can be tracked more precisely. Limit
     // this group change to plain objects, to avoid issues with other types
     // of singletons like typed arrays.
-    if (protoObj->is<PlainObject>() && !protoObj->isSingleton()) {
+    if (protoObj->is<PlainObject>() && !protoObj->isSingleton() &&
+        IsTypeInferenceEnabled()) {
       if (!JSObject::changeToSingleton(cx, protoObj)) {
         return nullptr;
       }
