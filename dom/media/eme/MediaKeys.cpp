@@ -408,25 +408,39 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   }
   mPrincipal = sop->GetPrincipal();
 
-  // Determine principal of the "top-level" window; the principal of the
-  // page that will display in the URL bar.
   nsCOMPtr<nsPIDOMWindowInner> window = GetParentObject();
-  if (!window) {
-    promise->MaybeRejectWithInvalidStateError(
-        "Couldn't get top-level window in MediaKeys::Init");
-    return promise.forget();
-  }
-  nsCOMPtr<nsPIDOMWindowOuter> top =
-      window->GetOuterWindow()->GetInProcessTop();
-  if (!top || !top->GetExtantDoc()) {
+  mDocument = window->GetExtantDoc();
+  if (!mDocument) {
+    NS_WARNING("Failed to get document when creating MediaKeys");
     promise->MaybeRejectWithInvalidStateError(
         "Couldn't get document in MediaKeys::Init");
     return promise.forget();
   }
 
-  mDocument = top->GetExtantDoc();
+  // Get the top-level principal so we can partition the GMP based on
+  // the current + top level principal.
+  nsIChannel* channel = mDocument->GetChannel();
+  if (!channel) {
+    NS_WARNING("Failed to get channel when creating MediaKeys");
+    promise->MaybeRejectWithInvalidStateError(
+        "Couldn't get channel in MediaKeys::Init");
+    return promise.forget();
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  MOZ_RELEASE_ASSERT(loadInfo, "Channels should always have LoadInfo");
 
-  mTopLevelPrincipal = mDocument->NodePrincipal();
+  if (loadInfo->GetIsTopLevelLoad()) {
+    // We're in a top level context so our principal is already top level.
+    mTopLevelPrincipal = mPrincipal;
+  } else {
+    mTopLevelPrincipal = loadInfo->GetTopLevelPrincipal();
+    if (!mTopLevelPrincipal) {
+      NS_WARNING("Failed to get top level principal when creating MediaKeys");
+      promise->MaybeRejectWithInvalidStateError(
+          "Couldn't get top level principal in MediaKeys::Init");
+      return promise.forget();
+    }
+  }
 
   if (!mPrincipal || !mTopLevelPrincipal) {
     NS_WARNING("Failed to get principals when creating MediaKeys");
@@ -453,8 +467,7 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   EME_LOG("MediaKeys[%p]::Create() (%s, %s)", this, origin.get(),
           topLevelOrigin.get());
 
-  mProxy =
-      CreateCDMProxy(top->GetExtantDoc()->EventTargetFor(TaskCategory::Other));
+  mProxy = CreateCDMProxy(mDocument->EventTargetFor(TaskCategory::Other));
 
   // The CDMProxy's initialization is asynchronous. The MediaKeys is
   // refcounted, and its instance is returned to JS by promise once
