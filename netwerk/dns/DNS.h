@@ -15,6 +15,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsTArray.h"
 
 #if !defined(XP_WIN)
 #  include <arpa/inet.h>
@@ -109,18 +110,11 @@ union NetAddr {
   // introduced to support nsTArray<NetAddr> comparisons and sorting
   bool operator==(const NetAddr& other) const;
   bool operator<(const NetAddr& other) const;
-};
 
-// This class wraps a NetAddr union to provide C++ linked list
-// capabilities and other methods. It is created from a PRNetAddr,
-// which is converted to a mozilla::dns::NetAddr.
-class NetAddrElement : public LinkedListElement<NetAddrElement> {
- public:
-  explicit NetAddrElement(const PRNetAddr* prNetAddr);
-  NetAddrElement(const NetAddrElement& netAddr);
-  ~NetAddrElement();
-
-  NetAddr mAddress;
+  inline NetAddr& operator=(const NetAddr& other) {
+    memcpy(this, &other, sizeof(NetAddr));
+    return *this;
+  }
 };
 
 class AddrInfo {
@@ -142,16 +136,16 @@ class AddrInfo {
 
   explicit AddrInfo(const AddrInfo* src);  // copy
 
-  void AddAddress(NetAddrElement* address);
+  void AddAddress(const PRNetAddr* address);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   nsCString mHostName;
   nsCString mCanonicalName;
-  uint32_t ttl;
   static const uint32_t NO_TTL_DATA = (uint32_t)-1;
+  uint32_t ttl = NO_TTL_DATA;
 
-  AutoCleanLinkedList<NetAddrElement> mAddresses;
+  nsTArray<NetAddr> mAddresses;
   unsigned int IsTRR() { return mFromTRR; }
 
   double GetTrrFetchDuration() { return mTrrFetchDuration; }
@@ -165,9 +159,9 @@ class AddrInfo {
 
  private:
   ~AddrInfo();
-  unsigned int mFromTRR;
-  double mTrrFetchDuration;
-  double mTrrFetchDurationNetworkOnly;
+  unsigned int mFromTRR = 0;
+  double mTrrFetchDuration = 0;
+  double mTrrFetchDurationNetworkOnly = 0;
 };
 
 // Copies the contents of a PRNetAddr to a NetAddr.
