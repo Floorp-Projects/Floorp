@@ -1354,7 +1354,7 @@ TraceLoggerThread* TraceLoggerThreadState::forCurrentThread(
       logger->initGraph();
     }
 
-    if (CurrentHelperThread() ? helperThreadEnabled : mainThreadEnabled) {
+    if (cx->isHelperThreadContext() ? helperThreadEnabled : mainThreadEnabled) {
       logger->enable();
     }
   }
