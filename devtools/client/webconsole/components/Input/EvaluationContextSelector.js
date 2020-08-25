@@ -52,6 +52,23 @@ class EvaluationContextSelector extends Component {
     };
   }
 
+  shouldComponentUpdate(nextProps) {
+    if (this.props.selectedTarget !== nextProps.selectedTarget) {
+      return true;
+    }
+    if (this.props.targets.length !== nextProps.targets.length) {
+      return true;
+    }
+    for (let i = 0; i < nextProps.targets.length; i++) {
+      const target = this.props.targets[i];
+      const nextTarget = nextProps.targets[i];
+      if (target.url != nextTarget.url || target.name != nextTarget.name) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   componentDidUpdate(prevProps) {
     if (this.props.selectedTarget !== prevProps.selectedTarget) {
       this.props.updateInstantEvaluationResultForCurrentExpression();
