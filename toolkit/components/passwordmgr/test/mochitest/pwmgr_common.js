@@ -423,6 +423,21 @@ function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
+async function promiseFormsProcessedInChildFrame() {
+  return new Promise(resolve => {
+    PWMGR_COMMON_PARENT.addMessageListener(
+      "formProcessed",
+      function formProcessed() {
+        PWMGR_COMMON_PARENT.removeMessageListener(
+          "formProcessed",
+          formProcessed
+        );
+        resolve();
+      }
+    );
+  });
+}
+
 function getTelemetryEvents(options) {
   return new Promise(resolve => {
     PWMGR_COMMON_PARENT.addMessageListener(
