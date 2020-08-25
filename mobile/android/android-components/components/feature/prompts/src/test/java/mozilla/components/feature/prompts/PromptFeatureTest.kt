@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
@@ -1025,7 +1026,7 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `dialog will be dismissed if progress reaches 90%`() {
+    fun `dialog will be dismissed if tab ID changes`() {
         val feature = spy(
             PromptFeature(
                 activity = mock(),
@@ -1047,15 +1048,15 @@ class PromptFeatureTest {
         whenever(fragment.shouldDismissOnLoad()).thenReturn(true)
         feature.activePrompt = WeakReference(fragment)
 
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 0)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 10)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 11)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 28)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 32)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 49)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 60)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 89)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 90)).joinBlocking()
+        val secondTabId = "second-test-tab"
+        store.dispatch(
+            TabListAction.AddTabAction(
+                TabSessionState(
+                    id = secondTabId,
+                    content = ContentState(url = "mozilla.org")
+                ), select = true
+            )
+        ).joinBlocking()
 
         verify(fragment, times(1)).dismiss()
     }
@@ -1091,7 +1092,7 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `dialog will be dismissed if new page load progress skips past 90%`() {
+    fun `dialog will be dismissed if tab URL changes`() {
         val feature = spy(
             PromptFeature(
                 activity = mock(),
@@ -1113,10 +1114,7 @@ class PromptFeatureTest {
         whenever(fragment.shouldDismissOnLoad()).thenReturn(true)
         feature.activePrompt = WeakReference(fragment)
 
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 0)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 10)).joinBlocking()
-        store.dispatch(ContentAction.UpdateProgressAction(tabId, 100)).joinBlocking()
-
+        store.dispatch(ContentAction.UpdateUrlAction(tabId, "mozilla.org")).joinBlocking()
         verify(fragment, times(1)).dismiss()
     }
 

@@ -4,11 +4,11 @@
 
 package mozilla.components.feature.prompts.login
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.consumePromptFrom
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * The [LoginPicker] displays a list of possible logins in a [LoginPickerView] for a site after
@@ -34,21 +34,13 @@ internal class LoginPicker(
     }
 
     internal fun handleSelectLoginRequest(request: PromptRequest.SelectLoginPrompt) {
-        if (currentRequest != null) {
-            store.consumePromptFrom(sessionId) {
-                (it as PromptRequest.SelectLoginPrompt).onDismiss()
-            }
-        }
-        currentRequest = request
         loginSelectBar.showPicker(request.logins)
     }
 
-    @VisibleForTesting
-    internal var currentRequest: PromptRequest.SelectLoginPrompt? = null
-
     override fun onLoginSelected(login: Login) {
-        (currentRequest as PromptRequest.SelectLoginPrompt).onConfirm(login)
-        currentRequest = null
+        store.consumePromptFrom(sessionId) {
+            if (it is PromptRequest.SelectLoginPrompt) it.onConfirm(login)
+        }
         loginSelectBar.hidePicker()
     }
 
@@ -57,13 +49,15 @@ internal class LoginPicker(
         dismissCurrentLoginSelect()
     }
 
-    fun dismissCurrentLoginSelect() {
-        if (currentRequest != null) {
-            store.consumePromptFrom(sessionId) {
-                (it as PromptRequest.SelectLoginPrompt).onDismiss()
+    @Suppress("TooGenericExceptionCaught")
+    fun dismissCurrentLoginSelect(promptRequest: PromptRequest.SelectLoginPrompt? = null) {
+        try {
+            promptRequest?.let { it.onDismiss() } ?: store.consumePromptFrom(sessionId) {
+                if (it is PromptRequest.SelectLoginPrompt) it.onDismiss()
             }
+        } catch (e: RuntimeException) {
+            Logger.error("Can't dismiss this login select prompt", e)
         }
-        currentRequest = null
         loginSelectBar.hidePicker()
     }
 }
