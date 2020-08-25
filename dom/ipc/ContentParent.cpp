@@ -7046,6 +7046,14 @@ ContentParent::RecvRemoveDynEntriesFromActiveSessionHistoryEntry(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvRemoveFromSessionHistory(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (!aContext.IsDiscarded()) {
+    aContext.get_canonical()->RemoveFromSessionHistory();
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
     const MaybeDiscarded<WindowContext>& aContext,
     WindowContext::BaseTransaction&& aTransaction, uint64_t aEpoch) {
