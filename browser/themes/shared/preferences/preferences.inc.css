@@ -211,7 +211,7 @@ button > hbox > label {
 }
 
 #category-experimental > .category-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/category-experiments.svg");
+  list-style-image: url("chrome://browser/skin/preferences/experiments.svg");
 }
 
 /* header */
