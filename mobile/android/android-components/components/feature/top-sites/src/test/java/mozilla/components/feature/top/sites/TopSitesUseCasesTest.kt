@@ -20,7 +20,7 @@ class TopSitesUseCasesTest {
         val useCases = TopSitesUseCases(topSitesStorage)
 
         useCases.addPinnedSites("Mozilla", "https://www.mozilla.org", isDefault = true)
-        verify(topSitesStorage).addPinnedSite(
+        verify(topSitesStorage).addTopSite(
             "Mozilla",
             "https://www.mozilla.org",
             isDefault = true

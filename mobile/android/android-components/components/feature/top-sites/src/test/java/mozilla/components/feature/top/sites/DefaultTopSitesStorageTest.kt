@@ -61,7 +61,7 @@ class DefaultTopSitesStorageTest {
             listOf(),
             coroutineContext
         )
-        defaultTopSitesStorage.addPinnedSite("Mozilla", "https://mozilla.com", isDefault = false)
+        defaultTopSitesStorage.addTopSite("Mozilla", "https://mozilla.com", isDefault = false)
 
         verify(pinnedSitesStorage).addPinnedSite(
             "Mozilla",

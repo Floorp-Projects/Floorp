@@ -40,13 +40,13 @@ class DefaultTopSitesStorage(
         if (defaultTopSites.isNotEmpty()) {
             scope.launch {
                 defaultTopSites.forEach { (title, url) ->
-                    addPinnedSite(title, url, isDefault = true)
+                    addTopSite(title, url, isDefault = true)
                 }
             }
         }
     }
 
-    override fun addPinnedSite(title: String, url: String, isDefault: Boolean) {
+    override fun addTopSite(title: String, url: String, isDefault: Boolean) {
         scope.launch {
             pinnedSitesStorage.addPinnedSite(title, url, isDefault)
             notifyObservers { onStorageUpdated() }

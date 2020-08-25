@@ -11,14 +11,14 @@ import mozilla.components.support.base.observer.Observable
  */
 interface TopSitesStorage : Observable<TopSitesStorage.Observer> {
     /**
-     * Adds a new pinned site.
+     * Adds a new top site.
      *
      * @param title The title string.
      * @param url The URL string.
      * @param isDefault Whether or not the pinned site added should be a default pinned site. This
      * is used to identify pinned sites that are added by the application.
      */
-    fun addPinnedSite(title: String, url: String, isDefault: Boolean = false)
+    fun addTopSite(title: String, url: String, isDefault: Boolean = false)
 
     /**
      * Removes the given [TopSite].

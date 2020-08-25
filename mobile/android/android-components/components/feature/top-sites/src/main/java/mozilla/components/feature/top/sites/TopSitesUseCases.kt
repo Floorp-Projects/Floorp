@@ -19,7 +19,7 @@ class TopSitesUseCases(topSitesStorage: TopSitesStorage) {
          * @param url The URL string.
          */
         operator fun invoke(title: String, url: String, isDefault: Boolean = false) {
-            storage.addPinnedSite(title, url, isDefault)
+            storage.addTopSite(title, url, isDefault)
         }
     }
 
