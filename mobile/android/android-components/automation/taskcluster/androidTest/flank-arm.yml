@@ -34,7 +34,7 @@ gcloud:
   performance-metrics: true
 
   device:
-   - model: walleye
+   - model: blueline
      version: 28
    - model: Nexus6
      version: 21
