@@ -5964,6 +5964,14 @@ MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
+  auto AssertShape = [](TempAllocator& alloc, MGuardShape* ins) {
+#ifdef DEBUG
+    auto* assert = MAssertShape::New(alloc, ins->object(),
+                                     const_cast<Shape*>(ins->shape()));
+    ins->block()->insertBefore(ins, assert);
+#endif
+  };
+
   if (ins->isAddAndStoreSlot()) {
     auto* add = ins->toAddAndStoreSlot();
 
@@ -5972,7 +5980,7 @@ MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
       return this;
     }
 
-    // TODO(Warp): Here and below add MAssertShape.
+    AssertShape(alloc, this);
     return object();
   }
 
@@ -5984,6 +5992,7 @@ MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
       return this;
     }
 
+    AssertShape(alloc, this);
     return object();
   }
 
@@ -6004,6 +6013,7 @@ MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
       return this;
     }
 
+    AssertShape(alloc, this);
     return object();
   }
 

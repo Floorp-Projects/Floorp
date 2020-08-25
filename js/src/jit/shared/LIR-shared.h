@@ -7648,6 +7648,20 @@ class LAssertClass : public LInstructionHelper<0, 1, 1> {
   MAssertClass* mir() { return mir_->toAssertClass(); }
 };
 
+class LAssertShape : public LInstructionHelper<0, 1, 0> {
+ public:
+  LIR_HEADER(AssertShape)
+
+  explicit LAssertShape(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+
+  const LAllocation* input() { return getOperand(0); }
+
+  MAssertShape* mir() { return mir_->toAssertShape(); }
+};
+
 class LAssertResultT : public LInstructionHelper<0, 1, 0> {
  public:
   LIR_HEADER(AssertResultT)
