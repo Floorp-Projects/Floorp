@@ -471,6 +471,12 @@ void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
 }
 
+void CanonicalBrowsingContext::RemoveDynEntriesFromActiveSessionHistoryEntry() {
+  nsISHistory* shistory = GetSessionHistory();
+  nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(mActiveEntry);
+  shistory->RemoveDynEntries(shistory->GetIndexOfEntry(root), mActiveEntry);
+}
+
 JSObject* CanonicalBrowsingContext::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
