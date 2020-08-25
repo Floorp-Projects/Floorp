@@ -33,7 +33,7 @@ import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
 import kotlinx.android.synthetic.main.fragment_search_dialog.qr_scan_button
 import kotlinx.android.synthetic.main.fragment_search_dialog.toolbar
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
-import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
+import kotlinx.android.synthetic.main.search_suggestions_hint.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.qr.QrFeature
@@ -161,6 +161,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     @ExperimentalCoroutinesApi
+    @SuppressWarnings("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -214,8 +215,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
             inflated.allow.setOnClickListener {
                 inflated.visibility = View.GONE
-                context?.settings()?.shouldShowSearchSuggestionsInPrivate = true
-                context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+                requireContext().settings().also {
+                    it.shouldShowSearchSuggestionsInPrivate = true
+                    it.showSearchSuggestionsInPrivateOnboardingFinished = true
+                }
                 store.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true))
                 store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
                 requireComponents.analytics.metrics.track(Event.PrivateBrowsingShowSearchSuggestions)
@@ -223,8 +226,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
             inflated.dismiss.setOnClickListener {
                 inflated.visibility = View.GONE
-                context?.settings()?.shouldShowSearchSuggestionsInPrivate = false
-                context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+                requireContext().settings().also {
+                    it.shouldShowSearchSuggestionsInPrivate = false
+                    it.showSearchSuggestionsInPrivateOnboardingFinished = true
+                }
             }
 
             inflated.text.text =
@@ -234,7 +239,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 getString(R.string.search_suggestions_onboarding_title)
         }
 
-        view.search_suggestions_onboarding.setOnInflateListener((stubListener))
+        view.search_suggestions_hint.setOnInflateListener((stubListener))
 
         consumeFrom(store) {
             val shouldShowAwesomebar =
@@ -339,8 +344,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun updateSearchSuggestionsHintVisibility(state: SearchFragmentState) {
         view?.apply {
-            findViewById<View>(R.id.search_suggestions_onboarding)?.isVisible = state.showSearchSuggestionsHint
-            search_suggestions_onboarding_divider?.isVisible = state.showSearchSuggestionsHint
+            findViewById<View>(R.id.search_suggestions_hint)?.isVisible = state.showSearchSuggestionsHint
+            search_suggestions_hint_divider?.isVisible = state.showSearchSuggestionsHint
         }
     }
 
@@ -386,16 +391,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
-        val visibility =
-            if (
-                searchState.showClipboardSuggestions &&
+        val shouldShowView = searchState.showClipboardSuggestions &&
                 searchState.query.isEmpty() &&
                 !clipboardUrl.isNullOrEmpty() &&
                 !searchState.showSearchShortcuts
-            )
-                View.VISIBLE else View.GONE
 
-        fill_link_from_clipboard.visibility = visibility
+        fill_link_from_clipboard.visibility = if (shouldShowView) View.VISIBLE else View.GONE
         clipboard_url.text = clipboardUrl
 
         if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
