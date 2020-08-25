@@ -24,7 +24,7 @@ ContentProcessController::ContentProcessController(
 }
 
 void ContentProcessController::NotifyLayerTransforms(
-    const nsTArray<MatrixMessage>& aTransforms) {
+    nsTArray<MatrixMessage>&& aTransforms) {
   // This should never get called
   MOZ_ASSERT(false);
 }

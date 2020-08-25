@@ -1468,7 +1468,7 @@ void CompositorBridgeParent::GetFrameUniformity(const LayersId& aLayersId,
 
 void CompositorBridgeParent::SetConfirmedTargetAPZC(
     const LayersId& aLayersId, const uint64_t& aInputBlockId,
-    const nsTArray<ScrollableLayerGuid>& aTargets) {
+    nsTArray<ScrollableLayerGuid>&& aTargets) {
   if (!mApzcTreeManager || !mApzUpdater) {
     return;
   }
@@ -1476,10 +1476,12 @@ void CompositorBridgeParent::SetConfirmedTargetAPZC(
   void (APZCTreeManager::*setTargetApzcFunc)(
       uint64_t, const nsTArray<ScrollableLayerGuid>&) =
       &APZCTreeManager::SetTargetAPZC;
-  RefPtr<Runnable> task = NewRunnableMethod<
-      uint64_t, StoreCopyPassByConstLRef<CopyableTArray<ScrollableLayerGuid>>>(
-      "layers::CompositorBridgeParent::SetConfirmedTargetAPZC",
-      mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets);
+  RefPtr<Runnable> task =
+      NewRunnableMethod<uint64_t,
+                        StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
+          "layers::CompositorBridgeParent::SetConfirmedTargetAPZC",
+          mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId,
+          std::move(aTargets));
   mApzUpdater->RunOnControllerThread(aLayersId, task.forget());
 }
 
@@ -1902,7 +1904,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
       // Clear the current transforms.
       nsTArray<MatrixMessage> clear;
       clear.AppendElement(MatrixMessage(Nothing(), ScreenRect(), child));
-      oldRootController->NotifyLayerTransforms(clear);
+      oldRootController->NotifyLayerTransforms(std::move(clear));
     }
   }
   if (mApzUpdater) {

@@ -38,8 +38,7 @@ class RemoteContentController : public GeckoContentController,
 
   virtual ~RemoteContentController();
 
-  void NotifyLayerTransforms(
-      const nsTArray<MatrixMessage>& aTransforms) override;
+  void NotifyLayerTransforms(nsTArray<MatrixMessage>&& aTransforms) override;
 
   void RequestContentRepaint(const RepaintRequest& aRequest) override;
 

@@ -147,7 +147,7 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
                           FrameUniformityData* aOutData) override;
   void SetConfirmedTargetAPZC(
       const LayersId& aLayersId, const uint64_t& aInputBlockId,
-      const nsTArray<ScrollableLayerGuid>& aTargets) override;
+      nsTArray<ScrollableLayerGuid>&& aTargets) override;
 
   AsyncCompositionManager* GetCompositionManager(
       LayerTransactionParent* aParent) override;
