@@ -118,7 +118,8 @@ class DNSHTTPSSVCRecordBase {
   virtual ~DNSHTTPSSVCRecordBase() = default;
 
   already_AddRefed<nsISVCBRecord> GetServiceModeRecordInternal(
-      bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords);
+      bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords,
+      bool& aRecordsAllExcluded);
 
   bool HasIPAddressesInternal(const nsTArray<SVCB>& aRecords);
 
