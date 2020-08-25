@@ -104,4 +104,9 @@ interface nsIDNSHTTPSSVCRecord : nsISupports
    * Returns true if one of SVCB records has IPv4 or IPv6 hint addresses.
    */
   readonly attribute boolean hasIPAddresses;
+
+  /**
+   * Returns true when all names of SVCB records are in exclusion list.
+   */
+  readonly attribute boolean allRecordsExcluded;
 };

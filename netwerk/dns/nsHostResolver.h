@@ -363,6 +363,7 @@ class TypeHostRecord final : public nsHostRecord,
 
   // When the lookups of this record started (for telemetry).
   mozilla::TimeStamp mStart;
+  bool mAllRecordsExcluded = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(TypeHostRecord, TYPEHOSTRECORD_IID)
