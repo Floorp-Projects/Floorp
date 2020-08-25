@@ -97,14 +97,18 @@ function updateTooltipContent(toolbox) {
    *  | Icon | Preference name             | Value | Toggle button |
    *  +------+-----------------------------+-------+---------------+
    */
-  container.style.display = "grid";
-  container.style.gridTemplateColumns =
-    "max-content minmax(300px, auto) max-content max-content";
-  container.style.gridColumnGap = "8px";
-  container.style.gridTemplateRows = `repeat(${PREFERENCES.length + 1}, auto)`;
-  container.style.gridRowGap = "8px";
-  container.style.padding = "12px";
-  container.style.fontSize = "11px";
+
+  Object.assign(container.style, {
+    display: "grid",
+    gridTemplateColumns:
+      "max-content minmax(300px, auto) max-content max-content",
+    gridColumnGap: "8px",
+    gridTemplateRows: `repeat(${PREFERENCES.length + 1}, auto)`,
+    gridRowGap: "8px",
+    padding: "12px",
+    fontSize: "11px",
+  });
+
   container.classList.add("theme-body");
 
   const headerContainer = toolbox.doc.createElement("header");
@@ -115,15 +119,22 @@ function updateTooltipContent(toolbox) {
    *  | Header text             | Reset button |
    *  +-------------------------+--------------+
    */
-  headerContainer.style.display = "grid";
-  headerContainer.style.gridTemplateColumns = "subgrid";
-  headerContainer.style.gridColumn = "1 / -1";
+
+  Object.assign(headerContainer.style, {
+    display: "grid",
+    gridTemplateColumns: "subgrid",
+    gridColumn: "1 / -1",
+  });
 
   const header = toolbox.doc.createElement("h1");
-  header.style.gridColumn = "1 / -2";
-  header.style.fontSize = "11px";
-  header.style.margin = "0";
-  header.style.padding = "0";
+
+  Object.assign(header.style, {
+    gridColumn: "1 / -2",
+    fontSize: "11px",
+    margin: "0",
+    padding: "0",
+  });
+
   header.textContent = "DevTools Fission preferences";
 
   const resetButton = toolbox.doc.createElement("button");
@@ -138,17 +149,17 @@ function updateTooltipContent(toolbox) {
   headerContainer.append(header, resetButton);
 
   const prefList = toolbox.doc.createElement("ul");
-  prefList.style.display = "grid";
-  prefList.style.gridTemplateColumns = "subgrid";
-  prefList.style.gridTemplateRows = "subgrid";
-
-  // Subgrid should span all grid columns
-  prefList.style.gridColumn = "1 / -1";
-
-  prefList.style.gridRow = "2 / -1";
-  prefList.style.listStyle = "none";
-  prefList.style.margin = "0";
-  prefList.style.padding = "0";
+  Object.assign(prefList.style, {
+    display: "grid",
+    gridTemplateColumns: "subgrid",
+    gridTemplateRows: "subgrid",
+    // Subgrid should span all grid columns
+    gridColumn: "1 / -1",
+    gridRow: "2 / -1",
+    listStyle: "none",
+    margin: "0",
+    padding: "0",
+  });
 
   for (const [name, desc] of PREFERENCES) {
     const prefEl = createPreferenceListItem(toolbox, name, desc);
@@ -168,9 +179,6 @@ function createPreferenceListItem(toolbox, name, desc) {
   const isPrefEnabled = Services.prefs.getBoolPref(name, false);
 
   const prefEl = toolbox.doc.createElement("li");
-  prefEl.classList.toggle("theme-comment", !isPrefEnabled);
-  prefEl.style.margin = "0";
-  prefEl.style.lineHeight = "12px";
 
   /**
    * The grid layout of a preference line is as follows:
@@ -179,23 +187,38 @@ function createPreferenceListItem(toolbox, name, desc) {
    *  | Icon | Preference name             | Value | Toggle button |
    *  +------+-----------------------------+-------+---------------+
    */
-  prefEl.style.display = "grid";
-  prefEl.style.alignItems = "center";
-  prefEl.style.gridTemplateColumns = "subgrid";
-  prefEl.style.gridColumn = "1 / -1";
+
+  Object.assign(prefEl.style, {
+    margin: "0",
+    lineHeight: "12px",
+    display: "grid",
+    alignItems: "center",
+    gridTemplateColumns: "subgrid",
+    gridColumn: "1 / -1",
+  });
+
+  prefEl.classList.toggle("theme-comment", !isPrefEnabled);
 
   // Icon
   const prefInfo = toolbox.doc.createElement("div");
   prefInfo.title = desc;
-  prefInfo.style.width = "12px";
-  prefInfo.style.height = "12px";
+
+  Object.assign(prefInfo.style, {
+    width: "12px",
+    height: "12px",
+  });
+
   prefInfo.classList.add("fission-pref-icon");
 
   // Preference name
   const prefTitle = toolbox.doc.createElement("span");
+
+  Object.assign(prefTitle.style, {
+    userSelect: "text",
+    fontWeight: isPrefEnabled ? "bold" : "normal",
+  });
+
   prefTitle.textContent = name;
-  prefTitle.style.userSelect = "text";
-  prefTitle.style.fontWeight = isPrefEnabled ? "bold" : "normal";
 
   // Value
   const prefValue = toolbox.doc.createElement("span");
