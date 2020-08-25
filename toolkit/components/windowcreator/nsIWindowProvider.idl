@@ -93,6 +93,7 @@ interface nsIWindowProvider : nsISupports
    * @see nsIWindowWatcher for more information on aFeatures.
    * @see nsIWebBrowserChrome for more information on aChromeFlags.
    */
+  [noscript]
   BrowsingContext provideWindow(in nsIOpenWindowInfo aOpenWindowInfo,
                                 in unsigned long aChromeFlags,
                                 in boolean aCalledFromJS,

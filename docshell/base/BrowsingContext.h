@@ -94,9 +94,6 @@ class WindowProxyHolder;
   FIELD(CurrentInnerWindowId, uint64_t)                                      \
   FIELD(HadOriginalOpener, bool)                                             \
   FIELD(IsPopupSpam, bool)                                                   \
-  /* Whether the window is currently blocked spinning the event loop in the  \
-   * middle of a window.print() operation */                                 \
-  FIELD(IsAwaitingPrint, bool)                                               \
   /* Controls whether the BrowsingContext is currently considered to be      \
    * activated by a gesture */                                               \
   FIELD(UserActivationState, UserActivation::State)                          \
@@ -418,8 +415,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool FullscreenAllowed() const;
 
-  bool IsAwaitingPrint() const { return GetIsAwaitingPrint(); }
-
   float FullZoom() const { return GetFullZoom(); }
   float TextZoom() const { return GetTextZoom(); }
 
@@ -714,8 +709,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   void DidSet(FieldIndex<IDX_IsActive>, bool aOldValue);
-
-  void DidSet(FieldIndex<IDX_IsAwaitingPrint>, bool aOldValue);
 
   // Ensure that we only set the flag on the top level browsingContext.
   // And then, we do a pre-order walk in the tree to refresh the

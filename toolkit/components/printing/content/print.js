@@ -84,11 +84,27 @@ var PrintEventHandler = {
     // is initiated and the print preview clone must be a snapshot from the
     // time that the print was started.
     let sourceBrowsingContext = this.getSourceBrowsingContext();
+    this.previewBrowser = this._createPreviewBrowser(sourceBrowsingContext);
+
+    // Get the temporary browser that will previously have been created for the
+    // platform code to generate the static clone printing doc into if this
+    // print is for a window.print() call.  In that case we steal the browser's
+    // docshell to get the static clone, then discard it.
+    let existingBrowser = window.arguments[0].getProperty("previewBrowser");
+    if (existingBrowser) {
+      sourceBrowsingContext = existingBrowser.browsingContext;
+      this.previewBrowser.swapDocShells(existingBrowser);
+      existingBrowser.remove();
+    } else {
+      this.previewBrowser.loadURI("about:printpreview", {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+    }
+
     this.originalSourceContentTitle =
       sourceBrowsingContext.currentWindowContext.documentTitle;
     this.originalSourceCurrentURI =
       sourceBrowsingContext.currentWindowContext.documentURI.spec;
-    this.previewBrowser = this._createPreviewBrowser(sourceBrowsingContext);
 
     // Let the dialog appear before doing any potential main thread work.
     await ourBrowser._dialogReady;
@@ -188,10 +204,6 @@ var PrintEventHandler = {
 
     previewStack.append(printPreviewBrowser);
     ourBrowser.parentElement.prepend(previewStack);
-
-    printPreviewBrowser.loadURI("about:printpreview", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
 
     return printPreviewBrowser;
   },

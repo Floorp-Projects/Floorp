@@ -3210,23 +3210,19 @@ already_AddRefed<Promise> nsFrameLoader::Print(uint64_t aOuterWindowID,
     return promise.forget();
   }
 
-  nsGlobalWindowOuter* outerWindow =
+  RefPtr<nsGlobalWindowOuter> outerWindow =
       nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowID);
   if (NS_WARN_IF(!outerWindow)) {
     promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
     return promise.forget();
   }
 
-  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
-      do_GetInterface(ToSupports(outerWindow));
-  if (NS_WARN_IF(!webBrowserPrint)) {
-    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
-    return promise.forget();
-  }
-
-  nsresult rv = webBrowserPrint->Print(aPrintSettings, listener);
-  if (NS_FAILED(rv)) {
-    promise->MaybeReject(ErrorResult(rv));
+  ErrorResult rv;
+  outerWindow->Print(aPrintSettings, listener,
+                     /* aDocShellToCloneInto = */ nullptr,
+                     /* aIsPreview = */ false, rv);
+  if (rv.Failed()) {
+    promise->MaybeReject(std::move(rv));
   }
 
   return promise.forget();

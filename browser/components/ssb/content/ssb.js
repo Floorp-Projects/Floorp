@@ -144,10 +144,6 @@ class BrowserDOMWindow {
     throw Components.Exception("", Cr.NS_ERROR_FAILURE);
   }
 
-  print(aBrowsingContext) {
-    PrintUtils.startPrintWindow(aBrowsingContext);
-  }
-
   /**
    * Finds a new frame to load some content in.
    *
@@ -170,6 +166,12 @@ class BrowserDOMWindow {
     // It's been determined that this load needs to happen in a new frame.
     // Either onBeforeLinkTraversal set this correctly or this is the result
     // of a window.open call.
+    if (where == Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
+      return PrintUtils.startPrintWindow(
+        params.openWindowInfo.parent,
+        params.openWindowInfo
+      );
+    }
 
     // If this ssb can load the url then just load it internally.
     if (gSSB.canLoad(uri)) {

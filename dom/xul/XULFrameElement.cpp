@@ -162,8 +162,7 @@ nsresult XULFrameElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 }
 
 void XULFrameElement::UnbindFromTree(bool aNullParent) {
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  if (frameLoader) {
+  if (RefPtr<nsFrameLoader> frameLoader = GetFrameLoader()) {
     frameLoader->Destroy();
   }
   mFrameLoader = nullptr;

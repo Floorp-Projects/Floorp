@@ -50,16 +50,6 @@ class nsIDocumentViewerPrint : public nsISupports {
   virtual void OnDonePrinting() = 0;
 
   /**
-   * Returns true is InitializeForPrintPreview() has been called.
-   */
-  virtual bool IsInitializedForPrintPreview() = 0;
-
-  /**
-   * Marks this viewer to be used for print preview.
-   */
-  virtual void InitializeForPrintPreview() = 0;
-
-  /**
    * Replaces the current presentation with print preview presentation.
    */
   virtual void SetPrintPreviewPresentation(nsViewManager* aViewManager,
@@ -79,8 +69,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
   void IncrementDestroyBlockedCount() override;                 \
   void DecrementDestroyBlockedCount() override;                 \
   void OnDonePrinting() override;                               \
-  bool IsInitializedForPrintPreview() override;                 \
-  void InitializeForPrintPreview() override;                    \
   void SetPrintPreviewPresentation(nsViewManager* aViewManager, \
                                    nsPresContext* aPresContext, \
                                    mozilla::PresShell* aPresShell) override;

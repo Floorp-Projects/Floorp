@@ -49,6 +49,17 @@ interface nsIOpenWindowInfo : nsISupports {
   [infallible]
   readonly attribute boolean forceNoOpener;
 
+  /** Whether this is a window opened for printing */
+  [infallible]
+  readonly attribute boolean isForPrinting;
+
+  /**
+   * Whether this is a window opened for print preview.
+   * When this is true, isForPrinting is necessarily true as well.
+   */
+  [infallible]
+  readonly attribute boolean isForPrintPreview;
+
   /** BrowserParent instance to use in the new window */
   [notxpcom, nostdcall]
   BrowserParent getNextRemoteBrowser();
