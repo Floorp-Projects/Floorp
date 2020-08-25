@@ -323,6 +323,9 @@ void ContentMediaController::RemoveReceiver(
 
 void ContentMediaController::HandleMediaKey(MediaControlKey aKey) {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mReceivers.IsEmpty()) {
+    return;
+  }
   LOG("Handle '%s' event, receiver num=%zu", ToMediaControlKeyStr(aKey),
       mReceivers.Length());
   // We have default handlers for play, pause and stop.
