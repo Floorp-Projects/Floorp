@@ -539,6 +539,12 @@ bool GLContext::InitImpl() {
     mProfile = ContextProfile::OpenGLES;
   }
 
+  if (versionStr.empty()) {
+    // This can happen with Pernosco.
+    NS_WARNING("Empty GL version string");
+    return false;
+  }
+
   uint32_t majorVer, minorVer;
   if (!ParseVersion(versionStr, &majorVer, &minorVer)) {
     MOZ_ASSERT(false, "Failed to parse GL_VERSION");
