@@ -98,14 +98,30 @@ var PrintEventHandler = {
     } = await this.getPrintDestinations();
     PrintSettingsViewProxy.availablePrinters = printersByName;
 
-    document.addEventListener("print", e => this.print({ silent: true }));
+    document.addEventListener("print", e => this.print());
     document.addEventListener("update-print-settings", e =>
       this.updateSettings(e.detail)
     );
     document.addEventListener("cancel-print", () => this.cancelPrint());
-    document.addEventListener("open-system-dialog", () =>
-      this.print({ silent: false })
-    );
+    document.addEventListener("open-system-dialog", () => {
+      // This file in only used if pref print.always_print_silent is false, so
+      // no need to check that here.
+
+      // Use our settings to prepopulate the system dialog
+      let settings = this.settings.clone();
+      const PRINTPROMPTSVC = Cc[
+        "@mozilla.org/embedcomp/printingprompt-service;1"
+      ].getService(Ci.nsIPrintingPromptService);
+      try {
+        PRINTPROMPTSVC.showPrintDialog(window, settings);
+      } catch (e) {
+        if (e.result == Cr.NS_ERROR_ABORT) {
+          return; // user cancelled
+        }
+        throw e;
+      }
+      this.print(settings);
+    });
 
     await this.refreshSettings(selectedPrinter.value);
     this.updatePrintPreview(sourceBrowsingContext);
@@ -178,9 +194,9 @@ var PrintEventHandler = {
     this.viewSettings.printerName = printerName;
   },
 
-  async print({ silent } = {}) {
-    let settings = this.settings;
-    settings.printSilent = silent;
+  async print(systemDialogSettings) {
+    let settings = systemDialogSettings || this.settings;
+    settings.printSilent = true;
 
     if (settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
       try {
@@ -194,10 +210,8 @@ var PrintEventHandler = {
       }
     }
 
-    if (silent) {
-      // This seems like it should be handled automatically but it isn't.
-      Services.prefs.setStringPref("print_printer", settings.printerName);
-    }
+    // This seems like it should be handled automatically but it isn't.
+    Services.prefs.setStringPref("print_printer", settings.printerName);
 
     PrintUtils.printWindow(this.previewBrowser.browsingContext, settings);
   },
