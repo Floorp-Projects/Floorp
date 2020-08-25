@@ -40,6 +40,21 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 const PREF_DEPRECATED_DEVICE_NAME = "services.sync.client.name";
 
+// Sanitizes all characters which the FxA server considers invalid, replacing
+// them with the unicode replacement character.
+// At time of writing, FxA has a regex DISPLAY_SAFE_UNICODE_WITH_NON_BMP, which
+// the regex below is based on.
+// eslint-disable-next-line no-control-regex
+const INVALID_NAME_CHARS = /[\u0000-\u001F\u007F\u0080-\u009F\u2028-\u2029\uE000-\uF8FF\uFFF9-\uFFFC\uFFFE-\uFFFF]/g;
+const MAX_NAME_LEN = 255;
+const REPLACEMENT_CHAR = "\uFFFD";
+
+function sanitizeDeviceName(name) {
+  return name
+    .substr(0, MAX_NAME_LEN)
+    .replace(INVALID_NAME_CHARS, REPLACEMENT_CHAR);
+}
+
 // Everything to do with FxA devices.
 class FxAccountsDevice {
   constructor(fxai) {
@@ -125,11 +140,13 @@ class FxAccountsDevice {
     let syncStrings = Services.strings.createBundle(
       "chrome://weave/locale/sync.properties"
     );
-    return syncStrings.formatStringFromName("client.name2", [
-      user,
-      brandName,
-      system,
-    ]);
+    return sanitizeDeviceName(
+      syncStrings.formatStringFromName("client.name2", [
+        user,
+        brandName,
+        system,
+      ])
+    );
   }
 
   getLocalName() {
@@ -148,12 +165,17 @@ class FxAccountsDevice {
       name = this.getDefaultLocalName();
       Services.prefs.setStringPref(PREF_LOCAL_DEVICE_NAME, name);
     }
-    return name;
+    // We need to sanitize here because some names were generated before we
+    // started sanitizing.
+    return sanitizeDeviceName(name);
   }
 
   setLocalName(newName) {
     Services.prefs.clearUserPref(PREF_DEPRECATED_DEVICE_NAME);
-    Services.prefs.setStringPref(PREF_LOCAL_DEVICE_NAME, newName);
+    Services.prefs.setStringPref(
+      PREF_LOCAL_DEVICE_NAME,
+      sanitizeDeviceName(newName)
+    );
     // Update the registration in the background.
     this.updateDeviceRegistration().catch(error => {
       log.warn("failed to update fxa device registration", error);
