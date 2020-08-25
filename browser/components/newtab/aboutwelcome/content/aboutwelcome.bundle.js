@@ -701,7 +701,29 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const MS_STRING_PROP = "string_id";
+const ZAP_SIZE_THRESHOLD = 160;
+
+function calculateZapLength() {
+  let span = document.querySelector(".zap");
+
+  if (!span) {
+    return;
+  }
+
+  let rect = span.getBoundingClientRect();
+
+  if (rect && rect.width > ZAP_SIZE_THRESHOLD) {
+    span.classList.add("long");
+  } else {
+    span.classList.add("short");
+  }
+}
+
 const Zap = props => {
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    requestAnimationFrame(() => calculateZapLength());
+  });
+
   if (!props.text) {
     return null;
   }
@@ -713,7 +735,8 @@ const Zap = props => {
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
         className: "welcomeZap"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
-        "data-l10n-name": "zap"
+        "data-l10n-name": "zap",
+        className: "zap"
       })));
     } else if (typeof props.text === "string") {
       // Parse string to zap style last word of the props.text
@@ -721,7 +744,9 @@ const Zap = props => {
       let lastWord = `${titleArray.pop()}`;
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
         className: "welcomeZap"
-      }, titleArray.join(" ").concat(" "), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null, lastWord));
+      }, titleArray.join(" ").concat(" "), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+        className: "zap"
+      }, lastWord));
     }
   } else {
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
