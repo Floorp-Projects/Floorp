@@ -754,9 +754,11 @@ class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
   }
 
   handleEvent(e) {
-    this.dispatchSettingsChange({
-      numCopies: e.target.value,
-    });
+    if (this.checkValidity()) {
+      this.dispatchSettingsChange({
+        numCopies: e.target.value,
+      });
+    }
   }
 }
 customElements.define("copy-count-input", CopiesInput, {
