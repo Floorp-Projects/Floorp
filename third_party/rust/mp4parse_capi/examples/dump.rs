@@ -62,9 +62,7 @@ fn dump_file(filename: &str) {
         for i in 0..counts {
             let mut track_info = Mp4parseTrackInfo {
                 track_type: Mp4parseTrackType::Audio,
-                track_id: 0,
-                duration: 0,
-                media_time: 0,
+                ..Default::default()
             };
             match mp4parse_get_track_info(parser, i, &mut track_info) {
                 Mp4parseStatus::Ok => {
