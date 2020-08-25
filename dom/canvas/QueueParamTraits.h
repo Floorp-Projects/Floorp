@@ -65,8 +65,8 @@ inline size_t FreeBytes(size_t aQueueBufferSize, size_t aRead, size_t aWrite) {
 
 template <typename T>
 struct IsTriviallySerializable
-    : public std::integral_constant<bool, std::is_enum<T>::value ||
-                                              std::is_arithmetic<T>::value> {};
+    : public std::integral_constant<bool, std::is_arithmetic<T>::value &&
+                                              !std::is_same<T, bool>::value> {};
 
 /**
  * QueueParamTraits provide the user with a way to implement PCQ argument
@@ -301,6 +301,30 @@ struct QueueParamTraits {
 
 // ---------------------------------------------------------------
 
+template <>
+struct QueueParamTraits<bool> {
+  using ParamType = bool;
+
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView,
+                           const ParamType& aArg) {
+    uint8_t temp = aArg ? 1 : 0;
+    return aProducerView.WriteParam(temp);
+  }
+
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
+    uint8_t temp;
+    if (IsSuccess(aConsumerView.ReadParam(&temp))) {
+      MOZ_ASSERT(temp == 1 || temp == 0);
+      *aArg = temp ? true : false;
+    }
+    return aConsumerView.GetStatus();
+  }
+};
+
+// ---------------------------------------------------------------
+
 // Adapted from IPC::EnumSerializer, this class safely handles enum values,
 // validating that they are in range using the same EnumValidators as IPDL
 // (namely ContiguousEnumValidator and ContiguousEnumValidatorInclusive).
@@ -310,27 +334,28 @@ struct EnumSerializer {
   typedef typename std::underlying_type<E>::type DataType;
 
   template <typename U>
-  static auto Write(ProducerView<U>& aProducerView, const ParamType& aValue) {
+  static QueueStatus Write(ProducerView<U>& aProducerView,
+                           const ParamType& aValue) {
     MOZ_RELEASE_ASSERT(EnumValidator::IsLegalValue(aValue));
     return aProducerView.WriteParam(DataType(aValue));
   }
 
   template <typename U>
-  static bool Read(ConsumerView<U>& aConsumerView, ParamType* aResult) {
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aResult) {
     DataType value;
     if (!aConsumerView.ReadParam(&value)) {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IPCReadErrorReason, "Bad iter"_ns);
-      return IsSuccess(aConsumerView.GetStatus());
+      return aConsumerView.GetStatus();
     }
     if (!EnumValidator::IsLegalValue(ParamType(value))) {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IPCReadErrorReason, "Illegal value"_ns);
-      return IsSuccess(aConsumerView.GetStatus());
+      return QueueStatus::kFatalError;
     }
 
     *aResult = ParamType(value);
-    return true;
+    return QueueStatus::kSuccess;
   }
 };
 

@@ -248,6 +248,23 @@ struct QueueParamTraits<CompileResult> {
   }
 };
 
+template <>
+struct QueueParamTraits<mozilla::layers::TextureType>
+    : public ContiguousEnumSerializer<mozilla::layers::TextureType,
+                                      mozilla::layers::TextureType::Unknown,
+                                      mozilla::layers::TextureType::Last> {};
+
+template <>
+struct QueueParamTraits<mozilla::gfx::SurfaceFormat>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::gfx::SurfaceFormat, mozilla::gfx::SurfaceFormat::B8G8R8A8,
+          mozilla::gfx::SurfaceFormat::UNKNOWN> {};
+
+template <>
+struct QueueParamTraits<gfxAlphaType>
+    : public ContiguousEnumSerializerInclusive<
+          gfxAlphaType, gfxAlphaType::Opaque, gfxAlphaType::NonPremult> {};
+
 }  // namespace webgl
 }  // namespace mozilla
 
