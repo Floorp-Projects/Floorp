@@ -1260,10 +1260,7 @@ void ContentChild::InitXPCOM(
 
   ClientManager::Startup();
 
-  // RemoteWorkerService will be initialized in RecvRemoteType, to avoid to
-  // register it to the RemoteWorkerManager while it is still a prealloc
-  // remoteType and defer it to the point the child process is assigned a.
-  // actual remoteType.
+  RemoteWorkerService::Initialize();
 
   nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!svc) {
@@ -2635,13 +2632,6 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
   // Use the prefix to avoid URIs from Fission isolated processes.
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
                                      remoteTypePrefix);
-
-  // Defer RemoteWorkerService initialization until the child process does
-  // receive its specific remoteType and can become actionable for the
-  // RemoteWorkerManager in the parent process.
-  if (mRemoteType != PREALLOC_REMOTE_TYPE) {
-    RemoteWorkerService::Initialize();
-  }
 
   return IPC_OK();
 }
