@@ -15,11 +15,6 @@ interface nsIURI;
  */
 [scriptable, uuid(1e18680e-052d-4509-a17e-678f5c495e02)]
 interface nsIE10SUtils : nsISupports {
-  cenum RemoteWorkerType: 8 {
-    REMOTE_WORKER_TYPE_SHARED,
-    REMOTE_WORKER_TYPE_SERVICE,
-  };
-
   /**
    * Determine what remote type should be used to load a document with the given
    * principal.
@@ -44,28 +39,4 @@ interface nsIE10SUtils : nsISupports {
                                         in AUTF8String aPreferredRemoteType,
                                         in nsIPrincipal aCurrentPrincipal,
                                         in boolean aIsSubframe);
-
-  /**
-   * Determine what remote type should be used to launch a worker script with
-   * the given principal.
-   *
-   * @param aPrincipal  
-   *   The result principal for the document being loaded.
-   * @param aWorkerTypeName
-   *   The type of remote worker being launched (Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_*).
-   * @param aIsMultiProcess
-   *   A boolean to indicate if e10s enabled.
-   * @param aIsFission
-   *   A boolean to indicate if fission is enabled.
-   * @param aPreferredRemoteType
-   *   If multiple remote types are compatible with the worker,
-   *   prefer staying in this remote type.
-   *
-   * @return  The remote type to launch the worker in.
-   */
-  AUTF8String getRemoteTypeForWorkerPrincipal(in nsIPrincipal aPrincipal,
-                                              in nsIE10SUtils_RemoteWorkerType aWorkerType,
-                                              in boolean aIsMultiProcess,
-                                              in boolean aIsFission,
-                                              in AUTF8String aPreferredRemoteType);
 };
