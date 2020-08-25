@@ -8283,19 +8283,19 @@ JS::GCCellPtr::GCCellPtr(const Value& v) : ptr(0) {
   switch (v.type()) {
     case ValueType::String:
       ptr = checkedCast(v.toString(), JS::TraceKind::String);
-      break;
+      return;
     case ValueType::Object:
       ptr = checkedCast(&v.toObject(), JS::TraceKind::Object);
-      break;
+      return;
     case ValueType::Symbol:
       ptr = checkedCast(v.toSymbol(), JS::TraceKind::Symbol);
-      break;
+      return;
     case ValueType::BigInt:
       ptr = checkedCast(v.toBigInt(), JS::TraceKind::BigInt);
-      break;
+      return;
     case ValueType::PrivateGCThing:
       ptr = checkedCast(v.toGCThing(), v.toGCThing()->getTraceKind());
-      break;
+      return;
     case ValueType::Double:
     case ValueType::Int32:
     case ValueType::Boolean:
@@ -8304,9 +8304,11 @@ JS::GCCellPtr::GCCellPtr(const Value& v) : ptr(0) {
     case ValueType::Magic: {
       MOZ_ASSERT(!v.isGCThing());
       ptr = checkedCast(nullptr, JS::TraceKind::Null);
-      break;
+      return;
     }
   }
+
+  ReportBadValueTypeAndCrash(v);
 }
 
 JS::TraceKind JS::GCCellPtr::outOfLineKind() const {
