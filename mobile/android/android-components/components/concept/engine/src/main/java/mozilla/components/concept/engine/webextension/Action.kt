@@ -28,13 +28,14 @@ data class Action(
 ) {
     /**
      * Returns a copy of this [Action] with the provided override applied e.g. for tab-specific overrides.
+     * If the override is null, the original class is returned without making a new instance.
      *
      * @param override the action to use for overriding properties. Note that only the provided
      * (non-null) properties of the override will be applied, all other properties will remain
      * unchanged. An extension can send a tab-specific action and only include the properties
      * it wants to override for the tab.
      */
-    fun copyWithOverride(override: Action) =
+    fun copyWithOverride(override: Action?) = if (override != null) {
         Action(
             title = override.title ?: title,
             enabled = override.enabled ?: enabled,
@@ -44,6 +45,9 @@ data class Action(
             loadIcon = override.loadIcon ?: loadIcon,
             onClick = override.onClick
         )
+    } else {
+        this
+    }
 }
 
 typealias WebExtensionBrowserAction = Action

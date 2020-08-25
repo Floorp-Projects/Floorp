@@ -2,17 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.ui
+package mozilla.components.feature.addons.ui
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.ui.createdAtDate
-import mozilla.components.feature.addons.ui.getFormattedAmount
-import mozilla.components.feature.addons.ui.toLocalizedString
-import mozilla.components.feature.addons.ui.translate
-import mozilla.components.feature.addons.ui.translatedName
-import mozilla.components.feature.addons.ui.updatedAtDate
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable

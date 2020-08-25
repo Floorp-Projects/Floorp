@@ -63,6 +63,7 @@ dependencies {
     implementation project(':browser-state')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
+    implementation project(':concept-menu')
     implementation project(':support-base')
     implementation project(':support-ktx')
     implementation project(':support-webextensions')

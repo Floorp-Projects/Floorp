@@ -5,6 +5,7 @@
 package mozilla.components.browser.menu
 
 import android.content.Context
+import androidx.annotation.ColorRes
 import mozilla.components.browser.menu.item.BackPressMenuItem
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
@@ -32,7 +33,7 @@ class WebExtensionBrowserMenuBuilder(
     extras: Map<String, Any> = emptyMap(),
     endOfMenuAlwaysVisible: Boolean = false,
     private val store: BrowserStore,
-    private val webExtIconTintColorResource: Int = NO_ID,
+    @ColorRes private val webExtIconTintColorResource: Int = NO_ID,
     private val onAddonsManagerTapped: () -> Unit = {},
     private val appendExtensionSubMenuAtStart: Boolean = false
 ) : BrowserMenuBuilder(items, extras, endOfMenuAlwaysVisible) {

@@ -2,13 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.update
+package mozilla.components.feature.addons.update
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import junit.framework.TestCase.assertEquals
 import mozilla.components.feature.addons.AddonManager
-import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test

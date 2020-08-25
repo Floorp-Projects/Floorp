@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.ui
+package mozilla.components.feature.addons.ui
 
 import android.widget.ImageButton
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -10,8 +10,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
-import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapter
-import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapterDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock

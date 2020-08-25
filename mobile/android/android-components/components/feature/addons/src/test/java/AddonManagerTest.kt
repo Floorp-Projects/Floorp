@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.addons.amo
+package mozilla.components.feature.addons
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -23,11 +23,7 @@ import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
-import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManager.Companion.TEMPORARY_ADDON_ICON_SIZE
-import mozilla.components.feature.addons.AddonManagerException
-import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
