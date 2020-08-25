@@ -3605,6 +3605,15 @@ void nsGlobalWindowInner::Print(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(PrintOuter, (aError), aError, );
 }
 
+Nullable<WindowProxyHolder> nsGlobalWindowInner::PrintPreview(
+    nsIPrintSettings* aSettings, nsIWebProgressListener* aListener,
+    nsIDocShell* aDocShellToCloneInto, ErrorResult& aError) {
+  FORWARD_TO_OUTER_OR_THROW(Print,
+                            (aSettings, aListener, aDocShellToCloneInto,
+                             /* aIsPreview = */ true, aError),
+                            aError, nullptr);
+}
+
 void nsGlobalWindowInner::MoveTo(int32_t aXPos, int32_t aYPos,
                                  CallerType aCallerType, ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(MoveToOuter, (aXPos, aYPos, aCallerType, aError),

@@ -43,6 +43,12 @@ interface nsPIWindowWatcher : nsISupports
   */
   void removeWindow(in mozIDOMWindowProxy aWindow);
 
+  cenum PrintKind : 8 {
+    PRINT_NONE,
+    PRINT_REGULAR,
+    PRINT_PREVIEW,
+  };
+
   /** Like the public interface's open(), but can handle openDialog-style
       arguments and calls which shouldn't result in us navigating the window.
 
@@ -82,6 +88,7 @@ interface nsPIWindowWatcher : nsISupports
             (which is determined based on the JS stack and the value of
             aParent).  This is not guaranteed, however.
   */
+  [noscript]
   BrowsingContext openWindow2(in mozIDOMWindowProxy aParent, in ACString aUrl,
                               in ACString aName, in ACString aFeatures,
                               in boolean aCalledFromScript,
@@ -91,6 +98,7 @@ interface nsPIWindowWatcher : nsISupports
                               in boolean aIsPopupSpam,
                               in boolean aForceNoOpener,
                               in boolean aForceNoReferrer,
+                              in nsPIWindowWatcher_PrintKind aPrintKind,
                               in nsDocShellLoadStatePtr aLoadState);
 
   /**

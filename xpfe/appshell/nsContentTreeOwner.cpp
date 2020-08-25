@@ -604,7 +604,7 @@ nsContentTreeOwner::ProvideWindow(
     bool aCalledFromJS, bool aWidthSpecified, nsIURI* aURI,
     const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
     bool aForceNoReferrer, nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-    BrowsingContext** aReturn) {
+    dom::BrowsingContext** aReturn) {
   NS_ENSURE_ARG_POINTER(aOpenWindowInfo);
 
   RefPtr<dom::BrowsingContext> parent = aOpenWindowInfo->GetParent();
@@ -625,10 +625,12 @@ nsContentTreeOwner::ProvideWindow(
 #endif
 
   int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified);
+      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified,
+      aOpenWindowInfo->GetIsForPrinting());
 
   if (openLocation != nsIBrowserDOMWindow::OPEN_NEWTAB &&
-      openLocation != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+      openLocation != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW &&
+      openLocation != nsIBrowserDOMWindow::OPEN_PRINT_BROWSER) {
     // Just open a window normally
     return NS_OK;
   }
