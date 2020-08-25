@@ -144,7 +144,7 @@ Bookmarks.prototype = {
         // the unfiled root seems to be the best choice.
         folderGuid = PlacesUtils.bookmarks.unfiledGuid;
         this._histogramBookmarkRoots |=
-          MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_UNFILED;
+          MigrationUtils.SOURCE_BOOKMARK_ROOTS_UNFILED;
         break;
       }
       case this.MENU_COLLECTION: {
