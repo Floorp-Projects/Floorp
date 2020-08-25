@@ -316,17 +316,51 @@ var PrintEventHandler = {
     let stack = previewBrowser.parentElement;
     stack.setAttribute("rendering", true);
 
+    let networkDone = false;
+    let documentDone = false;
+
     let totalPages = await new Promise(resolve => {
+      let numPages;
+
+      function onStateChange(msg) {
+        // We get 2 STATE_STOP events, make sure they've both completed.
+        if (msg.data.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+          networkDone =
+            networkDone ||
+            msg.data.stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
+          documentDone =
+            documentDone ||
+            msg.data.stateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+
+          if (networkDone && documentDone) {
+            cleanup();
+            resolve(numPages);
+          }
+        }
+      }
+
+      function onUpdatePageCount(msg) {
+        numPages = msg.data.numPages;
+      }
+
+      function cleanup() {
+        previewBrowser.messageManager.removeMessageListener(
+          "Printing:Preview:UpdatePageCount",
+          onUpdatePageCount
+        );
+        previewBrowser.messageManager.removeMessageListener(
+          "Printing:Preview:StateChange",
+          onStateChange
+        );
+      }
+
+      previewBrowser.messageManager.addMessageListener(
+        "Printing:Preview:StateChange",
+        onStateChange
+      );
       previewBrowser.messageManager.addMessageListener(
         "Printing:Preview:UpdatePageCount",
-        function done(message) {
-          previewBrowser.messageManager.removeMessageListener(
-            "Printing:Preview:UpdatePageCount",
-            done
-          );
-
-          resolve(message.data.numPages);
-        }
+        onUpdatePageCount
       );
 
       previewBrowser.messageManager.sendAsyncMessage("Printing:Preview:Enter", {
@@ -342,23 +376,22 @@ var PrintEventHandler = {
       });
     });
 
-    stack.removeAttribute("rendering");
-
-    let numPages = totalPages;
-    // Adjust number of pages if the user specifies the pages they want printed
-    if (settings.printRange == Ci.nsIPrintSettings.kRangeSpecifiedPageRange) {
-      numPages = settings.endPageRange - settings.startPageRange + 1;
-    }
-    document.dispatchEvent(
-      new CustomEvent("page-count", { detail: { numPages, totalPages } })
-    );
-
     if (this._queuedPreviewUpdatePromise) {
       // Now that we're done, the queued update (if there is one) will start.
       this._previewUpdatingPromise = this._queuedPreviewUpdatePromise;
       this._queuedPreviewUpdatePromise = null;
     } else {
-      // Nothing queued so throw our promise away.
+      // No other update queued, send the page count and show the preview.
+      let numPages = totalPages;
+      // Adjust number of pages if the user specifies the pages they want printed
+      if (settings.printRange == Ci.nsIPrintSettings.kRangeSpecifiedPageRange) {
+        numPages = settings.endPageRange - settings.startPageRange + 1;
+      }
+      document.dispatchEvent(
+        new CustomEvent("page-count", { detail: { numPages, totalPages } })
+      );
+
+      stack.removeAttribute("rendering");
       this._previewUpdatingPromise = null;
     }
   },
