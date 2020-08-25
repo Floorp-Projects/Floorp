@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-tabstray**
+ * Removed the `BrowserTabsTray` that was deprecated in previous releases.
+
 # 58.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v57.0.0...v58.0.0)
@@ -45,7 +48,7 @@ permalink: /changelog/
 
 * **lib-push-firebase**
   * Removed non-essential dependency on `com.google.firebase:firebase-core`.
-  
+
 * **lib-crash**
   * Crash report timestamp is now set to when the crash occurred.
   * When breadcrumbs limit is reached, oldest breadcrumbs are dropped.
