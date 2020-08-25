@@ -618,6 +618,13 @@
   args:
     fun: ObjId
 
+- name: GuardFunctionIsNonBuiltinCtor
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    fun: ObjId
+
 - name: GuardFunctionIsConstructor
   shared: true
   transpile: true
