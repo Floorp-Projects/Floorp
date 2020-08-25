@@ -51,32 +51,26 @@ class TestSwitchFrame(MarionetteTestCase):
 
 
 class TestSwitchParentFrame(MarionetteTestCase):
-    def test_simple(self):
-        frame_html = self.marionette.absolute_url("frameset.html")
-        self.marionette.navigate(frame_html)
-        frame = self.marionette.find_element(By.NAME, "third")
-        self.marionette.switch_to_frame(frame)
-
-        # If we don't find the following element we aren't on the right page
-        self.marionette.find_element(By.ID, "checky")
-        form_page_title = self.marionette.execute_script("return document.title")
-        self.assertEqual("We Leave From Here", form_page_title)
-
-        self.marionette.switch_to_parent_frame()
-
-        current_page_title = self.marionette.execute_script("return document.title")
-        self.assertEqual("Unique title", current_page_title)
-
     def test_from_default_context_is_a_noop(self):
         formpage = self.marionette.absolute_url("formPage.html")
         self.marionette.navigate(formpage)
+        self.marionette.find_element(By.ID, "checky")
 
         self.marionette.switch_to_parent_frame()
+        self.marionette.find_element(By.ID, "checky")
 
-        form_page_title = self.marionette.execute_script("return document.title")
-        self.assertEqual("We Leave From Here", form_page_title)
+    def test_frameset(self):
+        frame_html = self.marionette.absolute_url("frameset.html")
+        self.marionette.navigate(frame_html)
 
-    def test_from_second_level(self):
+        frame = self.marionette.find_element(By.NAME, "third")
+        self.marionette.switch_to_frame(frame)
+        self.marionette.find_element(By.ID, "checky")
+
+        self.marionette.switch_to_parent_frame()
+        self.marionette.find_element(By.NAME, "third")
+
+    def test_frameset_nested(self):
         frame_html = self.marionette.absolute_url("frameset.html")
         self.marionette.navigate(frame_html)
         frame = self.marionette.find_element(By.NAME, "fourth")
@@ -87,19 +81,15 @@ class TestSwitchParentFrame(MarionetteTestCase):
         self.marionette.find_element(By.NAME, "myCheckBox")
 
         self.marionette.switch_to_parent_frame()
+        self.marionette.find_element(By.NAME, "child1")
 
-        second_level = self.marionette.find_element(By.NAME, "child1")
-
-    def test_from_iframe(self):
+    def test_iframe(self):
         frame_html = self.marionette.absolute_url("test_iframe.html")
         self.marionette.navigate(frame_html)
+
         frame = self.marionette.find_element(By.ID, "test_iframe")
         self.marionette.switch_to_frame(frame)
-
-        current_page_title = self.marionette.execute_script("return document.title")
-        self.assertEqual("Marionette Test", current_page_title)
+        self.marionette.find_element(By.ID, "testDiv")
 
         self.marionette.switch_to_parent_frame()
-
-        parent_page_title = self.marionette.execute_script("return document.title")
-        self.assertEqual("Marionette IFrame Test", parent_page_title)
+        self.marionette.find_element(By.ID, "test_iframe")
