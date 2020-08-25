@@ -20,8 +20,8 @@ var ok = window.arguments[0].ok;
 var todo = window.arguments[0].todo;
 var SimpleTest = window.arguments[0].SimpleTest;
 var gWbp;
+var gPrintPreviewWin;
 function printpreview() {
-  gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress,
@@ -38,14 +38,19 @@ function printpreview() {
       throw Components.Exception("", Cr.NS_NOINTERFACE);
     }
   }
+
   let settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
                        .getService(Ci.nsIPrintSettingsService).globalPrintSettings;
-  settings.showPrintProgress = false; 
-  gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
+  settings.showPrintProgress = false;
+
+  gPrintPreviewWin = frameElts[0].contentWindow.printPreview(settings, listener);
+  gWbp = gPrintPreviewWin.docShell.contentViewer;
+  gWbp.QueryInterface(Ci.nsIWebBrowserPrint);
 }
 
 function exitprintpreview() {
-  frameElts[1].contentWindow.docShell.exitPrintPreview();
+  gPrintPreviewWin.docShell.exitPrintPreview();
+  gPrintPreviewWin.close();
 }
 
 function finish() {

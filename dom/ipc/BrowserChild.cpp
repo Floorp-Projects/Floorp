@@ -836,7 +836,8 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
 
   int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified);
+      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified,
+      aOpenWindowInfo->GetIsForPrinting());
 
   // If it turns out we're opening in the current browser, just hand over the
   // current browser's docshell.
@@ -1380,16 +1381,7 @@ void BrowserChild::ZoomToRect(const uint32_t& aPresShellId,
 
 mozilla::ipc::IPCResult BrowserChild::RecvActivate() {
   MOZ_ASSERT(mWebBrowser);
-  // Ensure that the PresShell exists, otherwise focusing
-  // is definitely not going to work. GetPresShell should
-  // create a PresShell if one doesn't exist yet.
-  RefPtr<PresShell> presShell = GetTopLevelPresShell();
-  NS_ASSERTION(presShell, "Need a PresShell to activate!");
-  Unused << presShell;
-
-  if (presShell) {
-    mWebBrowser->FocusActivate();
-  }
+  mWebBrowser->FocusActivate();
   return IPC_OK();
 }
 
@@ -2256,15 +2248,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleAccessKey(
 mozilla::ipc::IPCResult BrowserChild::RecvPrint(const uint64_t& aOuterWindowID,
                                                 const PrintData& aPrintData) {
 #ifdef NS_PRINTING
-  nsGlobalWindowOuter* outerWindow =
+  RefPtr<nsGlobalWindowOuter> outerWindow =
       nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowID);
   if (NS_WARN_IF(!outerWindow)) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
-      do_GetInterface(ToSupports(outerWindow));
-  if (NS_WARN_IF(!webBrowserPrint)) {
     return IPC_OK();
   }
 
@@ -2289,11 +2275,16 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(const uint64_t& aOuterWindowID,
 
   printSettings->SetPrintSession(printSession);
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
-  rv = webBrowserPrint->Print(printSettings, nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
+  {
+    IgnoredErrorResult rv;
+    outerWindow->Print(printSettings,
+                       /* aListener = */ nullptr,
+                       /* aWindowToCloneInto = */ nullptr,
+                       /* aIsPreview = */ false, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return IPC_OK();
+    }
   }
-
 #endif
   return IPC_OK();
 }

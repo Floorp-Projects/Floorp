@@ -360,16 +360,14 @@ class PrintingChild extends ActorChild {
           this.mm.sendAsyncMessage("Printing:Preview:Entered", {
             failed: true,
           });
-          browsingContext.isAwaitingPrint = false;
           return;
         }
+
         try {
           let listener = new PrintingListener(this.mm);
 
           this.printPreviewInitializingInfo = { changingBrowsers };
-          docShell
-            .initOrReusePrintPreviewViewer()
-            .printPreview(printSettings, contentWindow, listener);
+          contentWindow.printPreview(printSettings, listener, docShell);
         } catch (error) {
           // This might fail if we, for example, attempt to print a XUL document.
           // In that case, we inform the parent to bail out of print preview.
@@ -379,8 +377,6 @@ class PrintingChild extends ActorChild {
             failed: true,
           });
         }
-
-        browsingContext.isAwaitingPrint = false;
       };
 
       // If printPreviewInitializingInfo.entered is not set we are still in the
@@ -400,27 +396,26 @@ class PrintingChild extends ActorChild {
       // In that case, we inform the parent to bail out of print preview.
       Cu.reportError(error);
       this.mm.sendAsyncMessage("Printing:Preview:Entered", { failed: true });
-      browsingContext.isAwaitingPrint = false;
     }
   }
 
   exitPrintPreview(glo) {
     this.printPreviewInitializingInfo = null;
-    this.docShell.initOrReusePrintPreviewViewer().exitPrintPreview();
+    this.docShell.exitPrintPreview();
   }
 
   updatePageCount() {
-    let numPages = this.docShell.initOrReusePrintPreviewViewer()
-      .printPreviewNumPages;
+    let cv = this.docShell.contentViewer;
+    cv.QueryInterface(Ci.nsIWebBrowserPrint);
     this.mm.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
-      numPages,
+      numPages: cv.printPreviewNumPages,
     });
   }
 
   navigate(navType, pageNum) {
-    this.docShell
-      .initOrReusePrintPreviewViewer()
-      .printPreviewScrollToPage(navType, pageNum);
+    let cv = this.docShell.contentViewer;
+    cv.QueryInterface(Ci.nsIWebBrowserPrint);
+    cv.printPreviewScrollToPage(navType, pageNum);
   }
 }
 

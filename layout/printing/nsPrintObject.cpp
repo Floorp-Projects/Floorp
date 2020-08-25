@@ -62,59 +62,13 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
   NS_ENSURE_STATE(aDocShell);
   NS_ENSURE_STATE(aDoc);
 
-  if (aForPrintPreview) {
-    nsCOMPtr<nsIContentViewer> viewer;
-    aDocShell->GetContentViewer(getter_AddRefs(viewer));
-    if (viewer && viewer->GetDocument() && viewer->GetDocument()->IsShowing()) {
-      // We're about to discard this document, and it needs mIsShowing to be
-      // false to avoid triggering the assertion in its dtor.
-      viewer->GetDocument()->OnPageHide(false, nullptr);
-    }
-    mDocShell = aDocShell;
-  } else {
-    // When doing an actual print, we create a BrowsingContext/nsDocShell that
-    // is detached from any browser window or tab.
+  MOZ_ASSERT(aDoc->IsStaticDocument());
 
-    // Create a new BrowsingContext to create our DocShell in.
-    RefPtr<BrowsingContext> bc = BrowsingContext::CreateIndependent(
-        nsDocShell::Cast(aDocShell)->GetBrowsingContext()->GetType());
+  mDocShell = aDocShell;
+  mDocument = aDoc;
 
-    // Create a container docshell for printing.
-    mDocShell = nsDocShell::Create(bc);
-    NS_ENSURE_TRUE(mDocShell, NS_ERROR_OUT_OF_MEMORY);
-
-    mDidCreateDocShell = true;
-    MOZ_ASSERT(mDocShell->ItemType() == aDocShell->ItemType());
-
-    mTreeOwner = do_GetInterface(aDocShell);
-    mDocShell->SetTreeOwner(mTreeOwner);
-
-    // Make sure nsDocShell::EnsureContentViewer() is called:
-    mozilla::Unused << nsDocShell::Cast(mDocShell)->GetDocument();
-  }
-
-  // If we are cloning from a document in a different BrowsingContext, we need
-  // to make sure to copy over our opener policy information from that
-  // BrowsingContext.
-  BrowsingContext* targetBC = mDocShell->GetBrowsingContext();
-  BrowsingContext* sourceBC = aDoc->GetBrowsingContext();
-  NS_ENSURE_STATE(sourceBC);
-  if (targetBC != sourceBC) {
-    MOZ_ASSERT(targetBC->IsTopContent());
-    // In the case where the source is an iframe, this information needs to be
-    // copied from the toplevel source BrowsingContext, as we may be making a
-    // static clone of a single subframe.
-    MOZ_ALWAYS_SUCCEEDS(
-        targetBC->SetOpenerPolicy(sourceBC->Top()->GetOpenerPolicy()));
-  }
-
-  mDocument = aDoc->CreateStaticClone(mDocShell);
-  NS_ENSURE_STATE(mDocument);
-
-  nsCOMPtr<nsIContentViewer> viewer;
-  mDocShell->GetContentViewer(getter_AddRefs(viewer));
-  NS_ENSURE_STATE(viewer);
-  viewer->SetDocument(mDocument);
+  // Ensure the document has no presentation.
+  DestroyPresentation();
 
   return NS_OK;
 }
@@ -141,20 +95,22 @@ nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
     // Assume something iframe-like, i.e. iframe, object, or embed
     mFrameType = eIFrame;
   }
-
   return NS_OK;
 }
 
 //------------------------------------------------------------------
 // Resets PO by destroying the presentation
 void nsPrintObject::DestroyPresentation() {
-  if (mPresShell) {
-    mPresShell->EndObservingDocument();
-    nsAutoScriptBlocker scriptBlocker;
-    RefPtr<PresShell> presShell = mPresShell;
-    mPresShell = nullptr;
-    presShell->Destroy();
+  if (mDocument) {
+    if (RefPtr<PresShell> ps = mDocument->GetPresShell()) {
+      MOZ_DIAGNOSTIC_ASSERT(!mPresShell || ps == mPresShell);
+      mPresShell = nullptr;
+      nsAutoScriptBlocker scriptBlocker;
+      ps->EndObservingDocument();
+      ps->Destroy();
+    }
   }
+  mPresShell = nullptr;
   mPresContext = nullptr;
   mViewManager = nullptr;
 }

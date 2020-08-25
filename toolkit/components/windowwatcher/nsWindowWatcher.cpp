@@ -295,7 +295,7 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent, const nsACString& aUrl,
                              /* navigate = */ true, argv,
                              /* aIsPopupSpam = */ false,
                              /* aForceNoOpener = */ false,
-                             /* aForceNoReferrer = */ false,
+                             /* aForceNoReferrer = */ false, PRINT_NONE,
                              /* aLoadState = */ nullptr, getter_AddRefs(bc)));
   if (bc) {
     nsCOMPtr<mozIDOMWindowProxy> win(bc->GetDOMWindow());
@@ -355,7 +355,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              bool aCalledFromScript, bool aDialog,
                              bool aNavigate, nsISupports* aArguments,
                              bool aIsPopupSpam, bool aForceNoOpener,
-                             bool aForceNoReferrer,
+                             bool aForceNoReferrer, PrintKind aPrintKind,
                              nsDocShellLoadState* aLoadState,
                              BrowsingContext** aResult) {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -375,8 +375,8 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures, aCalledFromScript,
                             dialog, aNavigate, argv, aIsPopupSpam,
-                            aForceNoOpener, aForceNoReferrer, aLoadState,
-                            aResult);
+                            aForceNoOpener, aForceNoReferrer, aPrintKind,
+                            aLoadState, aResult);
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
@@ -587,8 +587,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     mozIDOMWindowProxy* aParent, const nsACString& aUrl,
     const nsACString& aName, const nsACString& aFeatures, bool aCalledFromJS,
     bool aDialog, bool aNavigate, nsIArray* aArgv, bool aIsPopupSpam,
-    bool aForceNoOpener, bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
-    BrowsingContext** aResult) {
+    bool aForceNoOpener, bool aForceNoReferrer, PrintKind aPrintKind,
+    nsDocShellLoadState* aLoadState, BrowsingContext** aResult) {
   MOZ_ASSERT_IF(aForceNoReferrer, aForceNoOpener);
 
   nsresult rv = NS_OK;
@@ -775,6 +775,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     openWindowInfo = new nsOpenWindowInfo();
     openWindowInfo->mForceNoOpener = aForceNoOpener;
     openWindowInfo->mParent = parentBC;
+    openWindowInfo->mIsForPrinting = aPrintKind != PRINT_NONE;
+    openWindowInfo->mIsForPrintPreview = aPrintKind == PRINT_PREVIEW;
 
     // We're going to want the window to be immediately available, meaning we
     // want it to match the current remoteness.
@@ -2437,8 +2439,13 @@ void nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
 int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
                                                uint32_t aChromeFlags,
                                                bool aCalledFromJS,
-                                               bool aWidthSpecified) {
-  bool isFullScreen = aParent->GetFullScreen();
+                                               bool aWidthSpecified,
+                                               bool aIsForPrinting) {
+  // These windows are not actually visible to the user, so we return the thing
+  // that we can always handle.
+  if (aIsForPrinting) {
+    return nsIBrowserDOMWindow::OPEN_PRINT_BROWSER;
+  }
 
   // Where should we open this?
   int32_t containerPref;
@@ -2449,8 +2456,9 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
   }
 
   bool isDisabledOpenNewWindow =
-      isFullScreen && Preferences::GetBool(
-                          "browser.link.open_newwindow.disabled_in_fullscreen");
+      aParent->GetFullScreen() &&
+      Preferences::GetBool(
+          "browser.link.open_newwindow.disabled_in_fullscreen");
 
   if (isDisabledOpenNewWindow &&
       (containerPref == nsIBrowserDOMWindow::OPEN_NEWWINDOW)) {
