@@ -202,6 +202,10 @@ void nsPrintSettingsWin::InitWithInitializer(
     SetPaperData(-1);
   }
 
+  if (devmode->dmFields & DM_COLOR) {
+    SetPrintInColor(devmode->dmColor == DMCOLOR_COLOR);
+  }
+
   // Set the paper sizes to match the unit.
   double pointsToSizeUnit =
       mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0;
@@ -386,6 +390,10 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
     mPaperData = -1;
   }
 
+  if (aDevMode->dmFields & DM_COLOR) {
+    mPrintInColor = aDevMode->dmColor == DMCOLOR_COLOR;
+  }
+
   InitUnwriteableMargin(aHdc);
 
   // The length and width in DEVMODE are always in tenths of a millimeter.
@@ -433,6 +441,9 @@ void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
     aDevMode->dmPaperSize = 0;
     aDevMode->dmFields &= ~DM_PAPERSIZE;
   }
+
+  aDevMode->dmFields |= DM_COLOR;
+  aDevMode->dmColor = mPrintInColor ? DMCOLOR_COLOR : DMCOLOR_MONOCHROME;
 
   // The length and width in DEVMODE are always in tenths of a millimeter.
   double sizeUnitToTenthsOfAmm =
