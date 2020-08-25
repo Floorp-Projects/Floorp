@@ -436,8 +436,8 @@ wasi-sdk:
     description: wasi-sdk source code
     fetch:
         type: git
-        repo: https://github.com/CraneStation/wasi-sdk
-        revision: 5225b05436ce57f01fe649f411f3ff701246628b
+        repo: https://github.com/WebAssembly/wasi-sdk
+        revision: 8446a3f8d49f70d17e38cefd9990a9e79bf3e78a
 
 ninja:
     description: ninja 1.9.0
