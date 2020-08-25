@@ -52,6 +52,29 @@ static __inline void BuildKeyNameFromFontName(nsACString& aName) {
 
 gfxDWriteFontFamily::~gfxDWriteFontFamily() {}
 
+static bool GetNameAsUtf8(nsACString& aName, IDWriteLocalizedStrings* aStrings,
+                          UINT32 aIndex) {
+  AutoTArray<WCHAR, 32> name;
+  UINT32 length;
+  HRESULT hr = aStrings->GetStringLength(aIndex, &length);
+  if (FAILED(hr)) {
+    return false;
+  }
+  if (!name.SetLength(length + 1, fallible)) {
+    return false;
+  }
+  hr = aStrings->GetString(aIndex, name.Elements(), length + 1);
+  if (FAILED(hr)) {
+    return false;
+  }
+  aName.Truncate();
+  AppendUTF16toUTF8(
+      Substring(reinterpret_cast<const char16_t*>(name.Elements()),
+                name.Length() - 1),
+      aName);
+  return true;
+}
+
 static bool GetEnglishOrFirstName(nsACString& aName,
                                   IDWriteLocalizedStrings* aStrings) {
   UINT32 englishIdx = 0;
@@ -64,23 +87,7 @@ static bool GetEnglishOrFirstName(nsACString& aName,
     // Use 0 index if english is not found.
     englishIdx = 0;
   }
-  AutoTArray<WCHAR, 32> enName;
-  UINT32 length;
-  hr = aStrings->GetStringLength(englishIdx, &length);
-  if (FAILED(hr)) {
-    return false;
-  }
-  if (!enName.SetLength(length + 1, fallible)) {
-    // Eeep - running out of memory. Unlikely to end well.
-    return false;
-  }
-  hr = aStrings->GetString(englishIdx, enName.Elements(), length + 1);
-  if (FAILED(hr)) {
-    return false;
-  }
-  aName.Append(NS_ConvertUTF16toUTF8((const char16_t*)enName.Elements(),
-                                     enName.Length() - 1));
-  return true;
+  return GetNameAsUtf8(aName, aStrings, englishIdx);
 }
 
 static HRESULT GetDirectWriteFontName(IDWriteFont* aFont,
@@ -1051,33 +1058,59 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
   for (unsigned i = 0; i < aCollection->GetFontFamilyCount(); ++i) {
     RefPtr<IDWriteFontFamily> family;
     aCollection->GetFontFamily(i, getter_AddRefs(family));
-    RefPtr<IDWriteLocalizedStrings> names;
-    HRESULT hr = family->GetFamilyNames(getter_AddRefs(names));
+    RefPtr<IDWriteLocalizedStrings> localizedNames;
+    HRESULT hr = family->GetFamilyNames(getter_AddRefs(localizedNames));
     if (FAILED(hr)) {
       continue;
     }
-    nsAutoCString key, name;
-    if (!GetEnglishOrFirstName(name, names)) {
-      continue;
-    }
-    key = name;
-    BuildKeyNameFromFontName(key);
-    bool bad = mBadUnderlineFamilyNames.ContainsSorted(key);
-    bool classic = aForceClassicFams && aForceClassicFams->ContainsSorted(key);
-    FontVisibility visibility;
-    // Special case: hide the "Gill Sans" family that contains only UltraBold
-    // faces, as this leads to breakage on sites with CSS that targeted the
-    // Gill Sans family as found on macOS. (Bug 551313, bug 1632738)
-    // TODO (jfkthame): the ultrabold faces from Gill Sans should be treated
-    // as belonging to the Gill Sans MT family.
-    if (key.EqualsLiteral("gill sans") && allFacesUltraBold(family)) {
-      visibility = FontVisibility::Hidden;
+
+    auto addFamily = [&](const nsACString& name) {
+      nsAutoCString key;
+      key = name;
+      BuildKeyNameFromFontName(key);
+      bool bad = mBadUnderlineFamilyNames.ContainsSorted(key);
+      bool classic =
+          aForceClassicFams && aForceClassicFams->ContainsSorted(key);
+      FontVisibility visibility;
+      // Special case: hide the "Gill Sans" family that contains only UltraBold
+      // faces, as this leads to breakage on sites with CSS that targeted the
+      // Gill Sans family as found on macOS. (Bug 551313, bug 1632738)
+      // TODO (jfkthame): the ultrabold faces from Gill Sans should be treated
+      // as belonging to the Gill Sans MT family.
+      if (key.EqualsLiteral("gill sans") && allFacesUltraBold(family)) {
+        visibility = FontVisibility::Hidden;
+      } else {
+        visibility = aCollection == mSystemFonts ? GetVisibilityForFamily(name)
+                                                 : FontVisibility::Base;
+      }
+      aFamilies.AppendElement(fontlist::Family::InitData(
+          key, name, i, visibility, aCollection != mSystemFonts, bad, classic));
+    };
+
+    unsigned count = localizedNames->GetCount();
+    if (count == 1) {
+      // This is the common case: the great majority of fonts only provide an
+      // en-US family name.
+      nsAutoCString name;
+      if (!GetNameAsUtf8(name, localizedNames, 0)) {
+        continue;
+      }
+      addFamily(name);
     } else {
-      visibility = aCollection == mSystemFonts ? GetVisibilityForFamily(name)
-                                               : FontVisibility::Base;
+      AutoTArray<nsCString, 4> names;
+      for (unsigned index = 0; index < count; ++index) {
+        nsAutoCString name;
+        if (!GetNameAsUtf8(name, localizedNames, index)) {
+          continue;
+        }
+        if (!names.Contains(name)) {
+          names.AppendElement(name);
+        }
+      }
+      for (const auto& name : names) {
+        addFamily(name);
+      }
     }
-    aFamilies.AppendElement(fontlist::Family::InitData(
-        key, name, i, visibility, aCollection != mSystemFonts, bad, classic));
   }
 }
 
