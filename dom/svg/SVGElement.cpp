@@ -89,6 +89,11 @@ using namespace SVGUnitTypes_Binding;
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGElement)
 
+// Use the CC variant of this, even though this class does not define
+// a new CC participant, to make QIing to the CC interfaces faster.
+NS_IMPL_QUERY_INTERFACE_CYCLE_COLLECTION_INHERITED(SVGElement, SVGElementBase,
+                                                   SVGElement)
+
 SVGEnumMapping SVGElement::sSVGUnitTypesMap[] = {
     {nsGkAtoms::userSpaceOnUse, SVG_UNIT_TYPE_USERSPACEONUSE},
     {nsGkAtoms::objectBoundingBox, SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
@@ -1474,6 +1479,15 @@ void SVGElement::DidAnimateLength(uint8_t aAttrEnum) {
                             info.mLengthInfo[aAttrEnum].mName,
                             MutationEvent_Binding::SMIL);
   }
+}
+
+SVGAnimatedLength* SVGElement::GetAnimatedLength(uint8_t aAttrEnum) {
+  LengthAttributesInfo info = GetLengthInfo();
+  if (aAttrEnum < info.mLengthCount) {
+    return &info.mLengths[aAttrEnum];
+  }
+  MOZ_ASSERT_UNREACHABLE("Bad attrEnum");
+  return nullptr;
 }
 
 SVGAnimatedLength* SVGElement::GetAnimatedLength(const nsAtom* aAttrName) {

@@ -17,6 +17,14 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Unused.h"
 
+// {cbecb7a4-d6f3-47b5-b5a3-3e5bdbf5b2f9}
+#define MOZILLA_DOMSVGLENGTHLIST_IID                 \
+  {                                                  \
+    0xcbecb7a4, 0xd6f3, 0xd6f3, {                    \
+      0xb5, 0xa3, 0x3e, 0x5b, 0xdb, 0xf5, 0xb2, 0xf9 \
+    }                                                \
+  }
+
 namespace mozilla {
 
 namespace dom {
@@ -83,6 +91,7 @@ class DOMSVGLengthList final : public nsISupports, public nsWrapperCache {
   }
 
  public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGLENGTHLIST_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGLengthList)
 
@@ -191,6 +200,8 @@ class DOMSVGLengthList final : public nsISupports, public nsWrapperCache {
 
   RefPtr<DOMSVGAnimatedLengthList> mAList;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGLengthList, MOZILLA_DOMSVGLENGTHLIST_IID)
 
 }  // namespace dom
 }  // namespace mozilla
