@@ -51,6 +51,8 @@ class RemoteWorkerManager final {
    */
   static bool IsRemoteTypeAllowed(const RemoteWorkerData& aData);
 
+  static bool HasExtensionPrincipal(const RemoteWorkerData& aData);
+
  private:
   RemoteWorkerManager();
   ~RemoteWorkerManager();

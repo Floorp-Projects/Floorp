@@ -7,6 +7,12 @@
 // - SharedWorkers can be created and successfully spawned by web extensions
 //   when web-extensions run in their own child process.
 add_task(async function test_spawn_shared_worker() {
+  if (!WebExtensionPolicy.useRemoteWebExtensions) {
+    // Ensure RemoteWorkerService has been initialized in the main
+    // process.
+    Services.obs.notifyObservers(null, "profile-after-change");
+  }
+
   const background = async function() {
     const worker = new SharedWorker("worker.js");
     await new Promise(resolve => {
