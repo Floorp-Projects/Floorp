@@ -349,7 +349,7 @@ class HomeFragment : Fragment() {
 
         view.toolbar_wrapper.setOnLongClickListener {
             ToolbarPopupWindow.show(
-                WeakReference(view),
+                WeakReference(it),
                 handlePasteAndGo = sessionControlInteractor::onPasteAndGo,
                 handlePaste = sessionControlInteractor::onPaste,
                 copyVisible = false
