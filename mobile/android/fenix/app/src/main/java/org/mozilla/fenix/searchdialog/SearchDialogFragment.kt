@@ -100,6 +100,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         val args by navArgs<SearchDialogFragmentArgs>()
         val view = inflater.inflate(R.layout.fragment_search_dialog, container, false)
 
+        requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
+
         store = SearchDialogFragmentStore(
             createInitialSearchFragmentState(
                 activity as HomeActivity,

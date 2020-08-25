@@ -29,7 +29,7 @@ object FeatureFlags {
     /**
      * Enables the new search experience
      */
-    val newSearchExperience = Config.channel.isNightlyOrDebug
+    const val newSearchExperience = true
 
     /**
      * Enables wait til first contentful paint
