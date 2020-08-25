@@ -1088,11 +1088,9 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
               // Search for any valid address in the AF_UNSPEC entry
               // in the cache (not blacklisted and from the right
               // family).
-              NetAddrElement* addrIter =
-                  addrUnspecRec->addr_info->mAddresses.getFirst();
-              while (addrIter) {
-                if ((af == addrIter->mAddress.inet.family) &&
-                    !addrUnspecRec->Blacklisted(&addrIter->mAddress)) {
+              for (auto& addr : addrUnspecRec->addr_info->mAddresses) {
+                if ((af == addr.inet.family) &&
+                    !addrUnspecRec->Blacklisted(&addr)) {
                   if (!addrRec->addr_info) {
                     addrRec->addr_info =
                         new AddrInfo(addrUnspecRec->addr_info->mHostName,
@@ -1101,9 +1099,8 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
                     addrRec->addr_info_gencnt++;
                     rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
                   }
-                  addrRec->addr_info->AddAddress(new NetAddrElement(*addrIter));
+                  addrRec->addr_info->mAddresses.AppendElement(addr);
                 }
-                addrIter = addrIter->getNext();
               }
             }
             // Now check if we have a new record.
@@ -1780,20 +1777,20 @@ static nsresult merge_rrset(AddrInfo* rrto, AddrInfo* rrfrom) {
   if (!rrto || !rrfrom) {
     return NS_ERROR_NULL_POINTER;
   }
-  NetAddrElement* element;
   // Each of the arguments are all-IPv4 or all-IPv6 hence judging
   // by the first element. This is true only for TRR resolutions.
-  bool isIPv6 = (element = rrfrom->mAddresses.getFirst()) &&
-                element->mAddress.raw.family == PR_AF_INET6;
-  while ((element = rrfrom->mAddresses.getFirst())) {
-    element->remove();  // unlist from old
+  bool isIPv6 = rrfrom->mAddresses.Length() > 0 &&
+                rrfrom->mAddresses[0].raw.family == PR_AF_INET6;
+  for (auto& addr : rrfrom->mAddresses) {
     if (isIPv6) {
       // rrfrom has IPv6 so it should be first
-      rrto->mAddresses.insertFront(element);
+      rrto->mAddresses.InsertElementAt(0, addr);
     } else {
-      rrto->mAddresses.insertBack(element);
+      rrto->mAddresses.AppendElement(addr);
     }
   }
+
+  rrfrom->mAddresses.Clear();  // needed?
   return NS_OK;
 }
 
@@ -1803,48 +1800,28 @@ static bool different_rrset(AddrInfo* rrset1, AddrInfo* rrset2) {
   }
 
   LOG(("different_rrset %s\n", rrset1->mHostName.get()));
-  nsTArray<NetAddr> orderedSet1;
-  nsTArray<NetAddr> orderedSet2;
 
   if (rrset1->IsTRR() != rrset2->IsTRR()) {
     return true;
   }
 
-  for (NetAddrElement* element = rrset1->mAddresses.getFirst(); element;
-       element = element->getNext()) {
-    if (LOG_ENABLED()) {
-      char buf[128];
-      NetAddrToString(&element->mAddress, buf, 128);
-      LOG(("different_rrset add to set 1 %s\n", buf));
-    }
-    orderedSet1.InsertElementAt(orderedSet1.Length(), element->mAddress);
-  }
+  nsTArray<NetAddr> orderedSet1 = rrset1->mAddresses.Clone();
+  nsTArray<NetAddr> orderedSet2 = rrset2->mAddresses.Clone();
 
-  for (NetAddrElement* element = rrset2->mAddresses.getFirst(); element;
-       element = element->getNext()) {
-    if (LOG_ENABLED()) {
-      char buf[128];
-      NetAddrToString(&element->mAddress, buf, 128);
-      LOG(("different_rrset add to set 2 %s\n", buf));
-    }
-    orderedSet2.InsertElementAt(orderedSet2.Length(), element->mAddress);
-  }
-
-  if (orderedSet1.Length() != orderedSet2.Length()) {
+  if (rrset1->mAddresses.Length() != rrset2->mAddresses.Length()) {
     LOG(("different_rrset true due to length change\n"));
     return true;
   }
   orderedSet1.Sort();
   orderedSet2.Sort();
 
-  for (uint32_t i = 0; i < orderedSet1.Length(); ++i) {
-    if (!(orderedSet1[i] == orderedSet2[i])) {
-      LOG(("different_rrset true due to content change\n"));
-      return true;
-    }
+  bool eq = orderedSet1 == orderedSet2;
+  if (eq) {
+    LOG(("different_rrset true due to content change\n"));
+  } else {
+    LOG(("different_rrset false\n"));
   }
-  LOG(("different_rrset false\n"));
-  return false;
+  return eq;
 }
 
 void nsHostResolver::AddToEvictionQ(nsHostRecord* rec) {
@@ -2081,12 +2058,10 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
 
   if (LOG_ENABLED()) {
     MutexAutoLock lock(addrRec->addr_info_lock);
-    NetAddrElement* element;
     if (addrRec->addr_info) {
-      for (element = addrRec->addr_info->mAddresses.getFirst(); element;
-           element = element->getNext()) {
+      for (auto& elem : addrRec->addr_info->mAddresses) {
         char buf[128];
-        NetAddrToString(&element->mAddress, buf, sizeof(buf));
+        NetAddrToString(&elem, buf, sizeof(buf));
         LOG(("CompleteLookup: %s has %s\n", addrRec->host.get(), buf));
       }
     } else {
@@ -2399,21 +2374,10 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
 
     {
       MutexAutoLock lock(addrRec->addr_info_lock);
-
-      NetAddr* addr = nullptr;
-      NetAddrElement* addrElement = addrRec->addr_info->mAddresses.getFirst();
-      if (addrElement) {
-        addr = &addrElement->mAddress;
-      }
-      while (addr) {
+      for (auto& addr : addrRec->addr_info->mAddresses) {
         char buf[kIPv6CStrBufSize];
-        if (NetAddrToString(addr, buf, sizeof(buf))) {
+        if (NetAddrToString(&addr, buf, sizeof(buf))) {
           info.hostaddr.AppendElement(buf);
-        }
-        addr = nullptr;
-        addrElement = addrElement->getNext();
-        if (addrElement) {
-          addr = &addrElement->mAddress;
         }
       }
       info.TRR = addrRec->addr_info->IsTRR();
