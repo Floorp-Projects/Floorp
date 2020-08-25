@@ -56,6 +56,8 @@ class SVGUseFrame final : public SVGGFrame {
   // ISVGDisplayableFrame interface:
   void ReflowSVG() override;
   void NotifySVGChanged(uint32_t aFlags) override;
+  SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
+                              uint32_t aFlags) override;
 
  private:
   bool mHasValidDimensions;

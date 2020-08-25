@@ -97,6 +97,7 @@ class SVGBBox final {
   bool IsFinite() const { return mBBox.IsFinite(); }
 
   void Scale(float aScale) { mBBox.Scale(aScale); }
+  void MoveBy(float x, float y) { mBBox.MoveBy(x, y); }
 
   void UnionEdges(const SVGBBox& aSVGBBox) {
     if (aSVGBBox.mIsEmpty) {
