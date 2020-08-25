@@ -112,7 +112,7 @@ class DocGroup final {
   // microtask.
   void SignalSlotChange(HTMLSlotElement& aSlot);
 
-  void MoveSignalSlotListTo(nsTArray<RefPtr<HTMLSlotElement>>& aDest);
+  nsTArray<RefPtr<HTMLSlotElement>> MoveSignalSlotList();
 
   // List of DocGroups that has non-empty signal slot list.
   static AutoTArray<RefPtr<DocGroup>, 2>* sPendingDocGroups;

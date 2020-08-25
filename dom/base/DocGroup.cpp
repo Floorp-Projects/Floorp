@@ -382,13 +382,11 @@ void DocGroup::FlushIframePostMessageQueue() {
   }
 }
 
-void DocGroup::MoveSignalSlotListTo(nsTArray<RefPtr<HTMLSlotElement>>& aDest) {
-  aDest.SetCapacity(aDest.Length() + mSignalSlotList.Length());
-  for (RefPtr<HTMLSlotElement>& slot : mSignalSlotList) {
+nsTArray<RefPtr<HTMLSlotElement>> DocGroup::MoveSignalSlotList() {
+  for (const RefPtr<HTMLSlotElement>& slot : mSignalSlotList) {
     slot->RemovedFromSignalSlotList();
-    aDest.AppendElement(std::move(slot));
   }
-  mSignalSlotList.Clear();
+  return std::move(mSignalSlotList);
 }
 
 bool DocGroup::IsActive() const {
