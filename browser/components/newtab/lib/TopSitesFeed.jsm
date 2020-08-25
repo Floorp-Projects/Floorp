@@ -66,6 +66,11 @@ ChromeUtils.defineModuleGetter(
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "Region",
+  "resource://gre/modules/Region.jsm"
+);
 
 const DEFAULT_SITES_PREF = "default.sites";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
@@ -271,7 +276,7 @@ this.TopSitesFeed = class TopSitesFeed {
       failed = true;
     }
     if (!result.length) {
-      Cu.reportError("Received empty search configuration!");
+      Cu.reportError("Received empty top sites configuration!");
       failed = true;
     }
     // If we failed, or the result is empty, try loading from the local dump.
@@ -280,8 +285,27 @@ this.TopSitesFeed = class TopSitesFeed {
       // Now call this again.
       return this._getRemoteConfig(false);
     }
+
     // Sort sites based on the "order" attribute.
     result.sort((a, b) => a.order - b.order);
+
+    // Filter by region.
+    result = result.filter(topsite => {
+      if (
+        topsite.exclude_regions &&
+        topsite.exclude_regions.includes(Region.home)
+      ) {
+        return false;
+      }
+      if (
+        topsite.include_regions &&
+        !topsite.include_regions.includes(Region.home)
+      ) {
+        return false;
+      }
+      return true;
+    });
+
     return result;
   }
 
