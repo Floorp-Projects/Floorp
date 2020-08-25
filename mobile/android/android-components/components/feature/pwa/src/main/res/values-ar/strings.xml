@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Refresh button in site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_refresh">أعِد التحميل</string>
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">نُسِخَ المسار.</string>
+</resources>

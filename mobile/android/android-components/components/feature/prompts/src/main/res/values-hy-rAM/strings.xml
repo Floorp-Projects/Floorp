@@ -29,11 +29,11 @@
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">Գաղտնաբառի դաշտը չպետք է դատարկ լինի</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Անհնար է պահել մուտքագրումը</string>
+    <string name="mozac_feature_prompt_error_unknown_cause">Անհնար է պահել մուտքանունը</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Պահպանե՞լ մուտքագրումը</string>
+    <string name="mozac_feature_prompt_login_save_headline">Պահպանե՞լ մուտքանունը</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Թարմացնե՞լ մուտքագրումը:</string>
+    <string name="mozac_feature_prompt_login_update_headline">Թարմացնե՞լ մուտքանունը:</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Ավելացնե՞լ օգտվողի անունը գաղտնաբառին:</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->

@@ -76,6 +76,9 @@
     <string name="mozac_browser_errorpages_corrupted_content_title">Zədəli məzmun xətası</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Məzmun çökdü</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Məzmun kodlama səhvi</string>
 
     <!-- The document title and heading of an error page. -->
@@ -83,6 +86,8 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">İnternet bağlantısı yoxdur</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Şəbəkə əlaqənizi yoxlayın və ya səhifəni az sonra təkrar yeniləməyi yoxlayın.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Yenilə</string>
 
@@ -107,4 +112,15 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server tapılmadı</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ziyanverici sayt problemi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">İstənməyən sayt problemi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Zərərli sayt problemi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Aldadıcı sayt problemi</string>
     </resources>
