@@ -9,7 +9,10 @@ import six
 
 from mozbuild.backend.base import PartialBackend
 from mozbuild.backend.make import MakeBackend
-from mozbuild.frontend.context import ObjDirPath
+from mozbuild.frontend.context import (
+    ObjDirPath,
+    Path,
+)
 from mozbuild.frontend.data import (
     ChromeManifestEntry,
     FinalTargetPreprocessedFiles,
@@ -276,4 +279,6 @@ class FasterMakeBackend(MakeBackend, PartialBackend):
         return self._pretty_path(path.full_path, obj)
 
     def _format_generated_file_output_name(self, path, obj):
-        return self._pretty_path(mozpath.join(obj.objdir, path), obj)
+        if not isinstance(path, Path):
+            path = ObjDirPath(obj._context, '!' + path)
+        return self._pretty_path(path.full_path, obj)
