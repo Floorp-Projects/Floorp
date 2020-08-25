@@ -826,7 +826,7 @@ void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
     if (families) {
       for (uint32_t i = 0; i < list->NumFamilies(); i++) {
         auto& f = families[i];
-        if (!IsVisibleToCSS(f)) {
+        if (!IsVisibleToCSS(f) || f.IsAltLocaleFamily()) {
           continue;
         }
         // XXX TODO: filter families for aGenericFamily, if supported by
