@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import androidx.annotation.VisibleForTesting
 import androidx.constraintlayout.widget.ConstraintLayout
 import mozilla.components.concept.menu.Side
+import mozilla.components.concept.menu.candidate.AsyncDrawableMenuIcon
 import mozilla.components.concept.menu.candidate.DrawableButtonMenuIcon
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.MenuIcon
@@ -44,6 +45,7 @@ internal class MenuIconAdapter(
     internal fun createViewHolder(item: MenuIcon): MenuIconViewHolder<*> = when (item) {
         is DrawableMenuIcon -> DrawableMenuIconViewHolder(parent, inflater, side)
         is DrawableButtonMenuIcon -> DrawableButtonMenuIconViewHolder(parent, inflater, side, dismiss)
+        is AsyncDrawableMenuIcon -> AsyncDrawableMenuIconViewHolder(parent, inflater, side)
         is TextMenuIcon -> TextMenuIconViewHolder(parent, inflater, side)
     }
 }

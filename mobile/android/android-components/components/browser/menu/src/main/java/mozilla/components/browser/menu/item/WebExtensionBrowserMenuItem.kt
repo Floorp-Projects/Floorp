@@ -13,16 +13,15 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.graphics.drawable.toDrawable
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.menu.candidate.AsyncDrawableMenuIcon
 import mozilla.components.concept.menu.candidate.ContainerStyle
-import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuIcon
 import mozilla.components.concept.menu.candidate.TextStyle
-import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.support.base.log.Log
 
 /**
@@ -83,17 +82,18 @@ class WebExtensionBrowserMenuItem(
 
     override fun asCandidate(context: Context) = TextMenuCandidate(
         action.title.orEmpty(),
-        start = runBlocking {
-            val height = context.resources
-                .getDimensionPixelSize(R.dimen.mozac_browser_menu_item_web_extension_icon_height)
-            loadIcon(context, height)?.let { DrawableMenuIcon(it) }
-        },
-        end = TextMenuIcon(
-            action.badgeText.orEmpty(),
-            textStyle = TextStyle(
-                color = action.badgeTextColor
-            )
+        start = AsyncDrawableMenuIcon(
+            loadDrawable = { _, height -> loadIcon(context, height) }
         ),
+        end = action.badgeText?.let { badgeText ->
+            TextMenuIcon(
+                badgeText,
+                backgroundTint = action.badgeBackgroundColor,
+                textStyle = TextStyle(
+                    color = action.badgeTextColor
+                )
+            )
+        },
         containerStyle = ContainerStyle(
             isVisible = visible(),
             isEnabled = action.enabled ?: false

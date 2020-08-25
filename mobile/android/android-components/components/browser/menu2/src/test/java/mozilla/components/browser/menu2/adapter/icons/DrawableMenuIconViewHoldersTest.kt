@@ -11,24 +11,38 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.menu2.R
 import mozilla.components.concept.menu.Side
+import mozilla.components.concept.menu.candidate.AsyncDrawableMenuIcon
 import mozilla.components.concept.menu.candidate.DrawableButtonMenuIcon
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.clearInvocations
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class DrawableMenuIconViewHoldersTest {
+
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     private lateinit var parent: ConstraintLayout
     private lateinit var layoutInflater: LayoutInflater
@@ -45,6 +59,7 @@ class DrawableMenuIconViewHoldersTest {
         doReturn(testContext).`when`(parent).context
         doReturn(testContext.resources).`when`(parent).resources
         doReturn(imageView).`when`(layoutInflater).inflate(DrawableMenuIconViewHolder.layoutResource, parent, false)
+        doReturn(imageView).`when`(layoutInflater).inflate(AsyncDrawableMenuIconViewHolder.layoutResource, parent, false)
         doReturn(imageButton).`when`(layoutInflater).inflate(DrawableButtonMenuIconViewHolder.layoutResource, parent, false)
         doReturn(imageView).`when`(imageView).findViewById<TextView>(R.id.icon)
         doReturn(imageButton).`when`(imageButton).findViewById<TextView>(R.id.icon)
@@ -69,6 +84,36 @@ class DrawableMenuIconViewHoldersTest {
         holder.bindAndCast(DrawableButtonMenuIcon(drawable), null)
         verify(imageButton).setImageDrawable(drawable)
         verify(imageButton).imageTintList = null
+    }
+
+    @Test
+    fun `async view holder sets icon on view`() = testDispatcher.runBlockingTest {
+        val holder = AsyncDrawableMenuIconViewHolder(parent, layoutInflater, Side.END)
+
+        val drawable = mock<Drawable>()
+        holder.bindAndCast(AsyncDrawableMenuIcon(loadDrawable = { _, _ -> drawable }), null)
+        verify(imageView).setImageDrawable(null)
+        verify(imageView).setImageDrawable(drawable)
+    }
+
+    @Test
+    fun `async view holder uses loading icon and fallback icon`() = testDispatcher.runBlockingTest {
+        val logger = mock<Logger>()
+        val holder = AsyncDrawableMenuIconViewHolder(parent, layoutInflater, Side.END, logger)
+
+        val loading = mock<Drawable>()
+        val fallback = mock<Drawable>()
+        holder.bindAndCast(
+            AsyncDrawableMenuIcon(
+                loadDrawable = { _, _ -> throw Exception() },
+                loadingDrawable = loading,
+                fallbackDrawable = fallback
+            ),
+            null
+        )
+        verify(imageView, never()).setImageDrawable(null)
+        verify(imageView).setImageDrawable(loading)
+        verify(imageView).setImageDrawable(fallback)
     }
 
     @Test
@@ -97,6 +142,20 @@ class DrawableMenuIconViewHoldersTest {
 
         verify(parent).setConstraintSet(any())
         verify(parent).removeView(imageButton)
+    }
+
+    @Test
+    fun `async holder removes image view on disconnect`() {
+        val holder = AsyncDrawableMenuIconViewHolder(parent, layoutInflater, Side.START)
+
+        verify(parent).setConstraintSet(any())
+        verify(parent).addView(imageView)
+        clearInvocations(parent)
+
+        holder.disconnect()
+
+        verify(parent).setConstraintSet(any())
+        verify(parent).removeView(imageView)
     }
 
     @Test

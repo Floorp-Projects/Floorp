@@ -58,6 +58,23 @@ data class DrawableButtonMenuIcon(
 }
 
 /**
+ * Menu icon that displays a drawable.
+ *
+ * @property loadDrawable Function that creates drawable icon to display.
+ * @property loadingDrawable Drawable that is displayed while loadDrawable is running.
+ * @property fallbackDrawable Drawable that is displayed if loadDrawable fails.
+ * @property tint Tint to apply to the drawable.
+ * @property effect Effects to apply to the icon.
+ */
+data class AsyncDrawableMenuIcon(
+    val loadDrawable: suspend (width: Int, height: Int) -> Drawable?,
+    val loadingDrawable: Drawable? = null,
+    val fallbackDrawable: Drawable? = null,
+    @ColorInt val tint: Int? = null,
+    val effect: MenuIconEffect? = null
+) : MenuIcon()
+
+/**
  * Menu icon to display additional text at the end of a menu option.
  *
  * @property text Text to display.
