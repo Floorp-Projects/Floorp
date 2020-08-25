@@ -46,6 +46,7 @@ class WebGLChild final : public PWebGLChild, public SupportsWeakPtr {
 
   Maybe<Range<uint8_t>> AllocPendingCmdBytes(size_t);
   void FlushPendingCmds();
+  void ActorDestroy(ActorDestroyReason why) override;
 
  private:
   friend PWebGLChild;
