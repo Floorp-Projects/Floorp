@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-search**
+  * ⚠️ **This is a breaking change**: `SearchFeature.performSearch` now takes a second parameter.
+  * `BrowserStoreSearchAdapter` and `SearchFeature` can now take a `tabId` parameter.
+
 # 56.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v55.0.0...v56.0.0)

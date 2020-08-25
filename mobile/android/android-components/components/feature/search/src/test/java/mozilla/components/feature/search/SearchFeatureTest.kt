@@ -9,7 +9,9 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -20,8 +22,6 @@ import org.junit.Test
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
-
 private const val SELECTED_TAB_ID = "1"
 
 class SearchFeatureTest {
@@ -31,7 +31,7 @@ class SearchFeatureTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
-    private lateinit var performSearch: (SearchRequest) -> Unit
+    private lateinit var performSearch: (SearchRequest, String) -> Unit
     private lateinit var store: BrowserStore
     private lateinit var searchFeature: SearchFeature
 
@@ -41,7 +41,7 @@ class SearchFeatureTest {
             mockBrowserState()
         )
         performSearch = mock()
-        searchFeature = SearchFeature(store, performSearch).apply {
+        searchFeature = SearchFeature(store, null, performSearch).apply {
             start()
         }
     }
@@ -64,38 +64,38 @@ class SearchFeatureTest {
 
     @Test
     fun `GIVEN a tab is selected WHEN a search request is sent THEN a search should be performed`() {
-        verify(performSearch, times(0)).invoke(any())
+        verify(performSearch, times(0)).invoke(any(), eq(SELECTED_TAB_ID))
 
         val normalSearchRequest = SearchRequest(isPrivate = false, query = "query")
         store.dispatch(ContentAction.UpdateSearchRequestAction(SELECTED_TAB_ID, normalSearchRequest)).joinBlocking()
 
-        verify(performSearch, times(1)).invoke(any())
-        verify(performSearch, times(1)).invoke(normalSearchRequest)
+        verify(performSearch, times(1)).invoke(any(), eq(SELECTED_TAB_ID))
+        verify(performSearch, times(1)).invoke(normalSearchRequest, SELECTED_TAB_ID)
 
         val privateSearchRequest = SearchRequest(isPrivate = true, query = "query")
         store.dispatch(ContentAction.UpdateSearchRequestAction(SELECTED_TAB_ID, privateSearchRequest)).joinBlocking()
 
-        verify(performSearch, times(2)).invoke(any())
-        verify(performSearch, times(1)).invoke(privateSearchRequest)
+        verify(performSearch, times(2)).invoke(any(), eq(SELECTED_TAB_ID))
+        verify(performSearch, times(1)).invoke(privateSearchRequest, SELECTED_TAB_ID)
     }
 
     @Test
     fun `GIVEN no tab is selected WHEN a search request is sent THEN no search should be performed`() {
         store.dispatch(TabListAction.RemoveTabAction(tabId = SELECTED_TAB_ID, selectParentIfExists = false))
 
-        verify(performSearch, times(0)).invoke(any())
+        verify(performSearch, times(0)).invoke(any(), eq(SELECTED_TAB_ID))
 
         val normalSearchRequest = SearchRequest(isPrivate = false, query = "query")
         store.dispatch(ContentAction.UpdateSearchRequestAction(SELECTED_TAB_ID, normalSearchRequest)).joinBlocking()
 
-        verify(performSearch, times(0)).invoke(any())
-        verify(performSearch, times(0)).invoke(normalSearchRequest)
+        verify(performSearch, times(0)).invoke(any(), eq(SELECTED_TAB_ID))
+        verify(performSearch, times(0)).invoke(normalSearchRequest, SELECTED_TAB_ID)
 
         val privateSearchRequest = SearchRequest(isPrivate = true, query = "query")
         store.dispatch(ContentAction.UpdateSearchRequestAction(SELECTED_TAB_ID, privateSearchRequest)).joinBlocking()
 
-        verify(performSearch, times(0)).invoke(any())
-        verify(performSearch, times(0)).invoke(privateSearchRequest)
+        verify(performSearch, times(0)).invoke(any(), eq(SELECTED_TAB_ID))
+        verify(performSearch, times(0)).invoke(privateSearchRequest, SELECTED_TAB_ID)
     }
 
     @Test
