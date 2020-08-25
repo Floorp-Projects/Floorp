@@ -13,10 +13,18 @@ add_task(async function() {
   // on the actual favorites stored on the local machine's IE favorites database.
   // As such, we can't assert that bookmarks were migrated to both the bookmarks
   // menu and the bookmarks toolbar.
+  let bookmarkRoots = 0;
   let itemCount = 0;
   let listener = events => {
     for (let event of events) {
       if (event.itemType == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+        if (event.parentGuid == PlacesUtils.bookmarks.toolbarGuid) {
+          bookmarkRoots |=
+            MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
+        } else if (event.parentGuid == PlacesUtils.bookmarks.menuGuid) {
+          bookmarkRoots |= MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
+        }
+        info("bookmark added: " + event.parentGuid);
         itemCount++;
       }
     }
@@ -45,6 +53,19 @@ add_task(async function() {
     itemCount,
     "Ensure telemetry matches actual number of imported items."
   );
+  await TestUtils.waitForCondition(() => {
+    let snapshot = Services.telemetry.getSnapshotForKeyedHistograms(
+      "main",
+      false
+    ).parent.FX_MIGRATION_BOOKMARKS_ROOTS;
+    if (!snapshot || !snapshot.ie) {
+      return false;
+    }
+    let sum = arr => Object.values(arr).reduce((a, b) => a + b, 0);
+    let sumOfValues = sum(snapshot.ie.values);
+    info(`Expected ${bookmarkRoots}, got ${sumOfValues}`);
+    return sumOfValues == bookmarkRoots;
+  }, "Wait until telemetry is updated");
 
   // Check the bookmarks have been imported to all the expected parents.
   Assert.ok(observerNotified, "The observer should be notified upon migration");
