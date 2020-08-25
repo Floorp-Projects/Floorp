@@ -819,10 +819,11 @@ void nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso) {
   //    contexts' signal slot list.
   //  * Empty unit of related similar-origin browsing contexts' signal slot
   //    list.
-  nsTArray<RefPtr<HTMLSlotElement>> signalList;
+  nsTArray<nsTArray<RefPtr<HTMLSlotElement>>> signalLists;
   if (DocGroup::sPendingDocGroups) {
+    signalLists.SetCapacity(DocGroup::sPendingDocGroups->Length());
     for (DocGroup* docGroup : *DocGroup::sPendingDocGroups) {
-      docGroup->MoveSignalSlotListTo(signalList);
+      signalLists.AppendElement(docGroup->MoveSignalSlotList());
     }
     delete DocGroup::sPendingDocGroups;
     DocGroup::sPendingDocGroups = nullptr;
@@ -859,9 +860,11 @@ void nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso) {
     suppressedObservers = nullptr;
   }
 
-  // Fire slotchange event for each slot in signalList.
-  for (uint32_t i = 0; i < signalList.Length(); ++i) {
-    signalList[i]->FireSlotChangeEvent();
+  // Fire slotchange event for each slot in signalLists.
+  for (const nsTArray<RefPtr<HTMLSlotElement>>& signalList : signalLists) {
+    for (const RefPtr<HTMLSlotElement>& signal : signalList) {
+      signal->FireSlotChangeEvent();
+    }
   }
 }
 
