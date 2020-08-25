@@ -387,6 +387,7 @@ test_description_schema = Schema({
     Optional('run-on-projects'): optionally_keyed_by(
         'test-platform',
         'test-name',
+        'variant',
         Any([text_type], 'built-projects')),
 
     # When set only run on projects where the build would already be running.
@@ -1054,7 +1055,7 @@ def handle_keyed_by(config, tasks):
     ]
     for task in tasks:
         for field in fields:
-            resolve_keyed_by(task, field, item_name=task['test-name'],
+            resolve_keyed_by(task, field, item_name=task['test-name'], defer=['variant'],
                              project=config.params['project'])
         yield task
 
@@ -1364,6 +1365,19 @@ def split_variants(config, tasks):
                 taskv['tier'] = max(taskv['tier'], 2)
 
             yield merge(taskv, variant.get('merge', {}))
+
+
+@transforms.add
+def handle_keyed_by_variant(config, tasks):
+    """Resolve fields that can be keyed by platform, etc."""
+    fields = [
+        'run-on-projects',
+    ]
+    for task in tasks:
+        for field in fields:
+            resolve_keyed_by(task, field, item_name=task['test-name'],
+                             variant=task['attributes'].get('unittest_variant'))
+        yield task
 
 
 @transforms.add

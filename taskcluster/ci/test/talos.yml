@@ -60,7 +60,10 @@ talos-bcv:
             default: ['fission']
     run-on-projects:
         by-test-platform:
-            .*(?:shippable-qr|-qr)/.*: []
+            .*(?:shippable-qr|-qr)/.*:
+                by-variant:
+                    webrender-sw: ['trunk']
+                    default: []
             (linux|windows|macos)(?!.*shippable)(?!.*-qr).*: []
             default: ['mozilla-beta', 'trunk']
     tier:
