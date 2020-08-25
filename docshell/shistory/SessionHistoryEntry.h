@@ -200,6 +200,7 @@ class SessionHistoryEntry : public nsISHEntry {
   SessionHistoryEntry(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   SessionHistoryEntry();
   explicit SessionHistoryEntry(SessionHistoryInfo* aInfo);
+  explicit SessionHistoryEntry(const SessionHistoryEntry& aEntry);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY

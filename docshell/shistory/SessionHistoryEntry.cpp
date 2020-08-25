@@ -285,6 +285,11 @@ SessionHistoryEntry::SessionHistoryEntry(nsDocShellLoadState* aLoadState,
 SessionHistoryEntry::SessionHistoryEntry(SessionHistoryInfo* aInfo)
     : mInfo(MakeUnique<SessionHistoryInfo>(*aInfo)), mID(++gEntryID) {}
 
+SessionHistoryEntry::SessionHistoryEntry(const SessionHistoryEntry& aEntry)
+    : mInfo(MakeUnique<SessionHistoryInfo>(*aEntry.mInfo)),
+      mParent(aEntry.mParent),
+      mID(aEntry.mID) {}
+
 SessionHistoryEntry::~SessionHistoryEntry() {
   if (sLoadIdToEntry) {
     sLoadIdToEntry->RemoveIf(
@@ -820,9 +825,20 @@ SessionHistoryEntry::Create(
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::Clone(nsISHEntry** _retval) {
-  MOZ_CRASH("Might need to implement this");
-  return NS_ERROR_NOT_IMPLEMENTED;
+SessionHistoryEntry::Clone(nsISHEntry** aEntry) {
+  RefPtr<SessionHistoryEntry> entry = new SessionHistoryEntry(*this);
+
+  // These are not copied for some reason, we're not sure why.
+  entry->mInfo->mLoadType = 0;
+  entry->mInfo->mScrollPositionX = 0;
+  entry->mInfo->mScrollPositionY = 0;
+  entry->mInfo->mScrollRestorationIsManual = false;
+
+  // entry->mInfo->mHasUserInteraction = false;
+
+  entry.forget(aEntry);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(nsDocShellEditorData*)
