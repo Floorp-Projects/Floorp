@@ -94,7 +94,7 @@ function run_tests() {
     is(newItem, points.getItem(0), name + " return value is correct when passed currentTranslate");
     isnot(newItem, existingItem, name + " made a copy when passed currentTranslate");
     is(newItem.value, existingItem.value, name + " made a copy with the right values when passed currentTranslate");
-    todo(svg.currentTranslate == existingItem, name + " left the original object alone when passed currentTranslate");
+    is(svg.currentTranslate, existingItem, name + " left the original object alone when passed currentTranslate");
   });
   subtests.forEach(function(aFunction) {
     // -- Adding an SVGPoint that is in a baseVal list

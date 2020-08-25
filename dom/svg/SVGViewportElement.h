@@ -17,7 +17,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedViewBox.h"
 #include "SVGGraphicsElement.h"
-#include "nsISVGPoint.h"
+#include "SVGPoint.h"
 #include "SVGPreserveAspectRatio.h"
 
 namespace mozilla {
@@ -166,12 +166,6 @@ class SVGViewportElement : public SVGGraphicsElement {
    */
   SVGViewBox GetViewBoxWithSynthesis(float aViewportWidth,
                                      float aViewportHeight) const;
-
-  /**
-   * Retrieve the value of currentScale and currentTranslate.
-   */
-  virtual SVGPoint GetCurrentTranslate() const { return SVGPoint(0.0f, 0.0f); }
-  virtual float GetCurrentScale() const { return 1.0f; }
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   SVGAnimatedLength mLengthAttributes[4];

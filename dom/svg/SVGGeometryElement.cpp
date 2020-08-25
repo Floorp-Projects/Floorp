@@ -226,7 +226,7 @@ float SVGGeometryElement::GetTotalLength() {
   return flat ? flat->ComputeLength() : 0.f;
 }
 
-already_AddRefed<nsISVGPoint> SVGGeometryElement::GetPointAtLength(
+already_AddRefed<DOMSVGPoint> SVGGeometryElement::GetPointAtLength(
     float distance, ErrorResult& rv) {
   RefPtr<Path> path = GetOrBuildPathForMeasuring();
   if (!path) {
@@ -234,7 +234,7 @@ already_AddRefed<nsISVGPoint> SVGGeometryElement::GetPointAtLength(
     return nullptr;
   }
 
-  nsCOMPtr<nsISVGPoint> point = new DOMSVGPoint(path->ComputePointAtLength(
+  RefPtr<DOMSVGPoint> point = new DOMSVGPoint(path->ComputePointAtLength(
       clamped(distance, 0.f, path->ComputeLength())));
   return point.forget();
 }
