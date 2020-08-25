@@ -239,6 +239,7 @@ HttpBaseChannel::HttpBaseChannel()
       mDisableAltDataCache(false),
       mForceMainDocumentChannel(false),
       mPendingInputStreamLengthOperation(false),
+      mListenerRequiresContentConversion(false),
       mHasCrossOriginOpenerPolicyMismatch(0) {
   this->mSelfAddr.inet = {};
   this->mPeerAddr.inet = {};
@@ -1188,6 +1189,11 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 
   if (!mApplyConversion) {
     LOG(("not applying conversion per mApplyConversion\n"));
+    return NS_OK;
+  }
+
+  if (mHasAppliedConversion) {
+    LOG(("not applying conversion because mHasAppliedConversion is true\n"));
     return NS_OK;
   }
 
@@ -3228,6 +3234,7 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
 
 NS_IMETHODIMP
 HttpBaseChannel::SetNewListener(nsIStreamListener* aListener,
+                                bool aMustApplyContentConversion,
                                 nsIStreamListener** _retval) {
   LOG((
       "HttpBaseChannel::SetNewListener [this=%p, mListener=%p, newListener=%p]",
@@ -3242,6 +3249,9 @@ HttpBaseChannel::SetNewListener(nsIStreamListener* aListener,
 
   wrapper.forget(_retval);
   mListener = aListener;
+  if (aMustApplyContentConversion) {
+    mListenerRequiresContentConversion = true;
+  }
   return NS_OK;
 }
 
