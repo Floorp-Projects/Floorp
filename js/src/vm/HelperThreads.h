@@ -28,6 +28,7 @@
 #include "js/SourceText.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
+#include "threading/Thread.h"
 #include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
 #include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseTask
@@ -42,7 +43,6 @@ namespace js {
 class AutoLockHelperThreadState;
 class AutoUnlockHelperThreadState;
 class CompileError;
-struct HelperThread;
 struct ParseTask;
 struct PromiseHelperTask;
 
@@ -104,17 +104,17 @@ class GlobalHelperThreadState {
   typedef Vector<PromiseHelperTask*, 0, SystemAllocPolicy>
       PromiseHelperTaskVector;
   typedef Vector<JSContext*, 0, SystemAllocPolicy> ContextVector;
-
-  // List of available threads, or null if the thread state has not been
-  // initialized.
-  using HelperThreadVector = Vector<HelperThread, 0, SystemAllocPolicy>;
-  UniquePtr<HelperThreadVector> threads;
+  using HelperThreadVector =
+      Vector<UniquePtr<HelperThread>, 0, SystemAllocPolicy>;
 
   WriteOnceData<JS::RegisterThreadCallback> registerThread;
   WriteOnceData<JS::UnregisterThreadCallback> unregisterThread;
 
  private:
   // The lists below are all protected by |lock|.
+
+  // List of available helper threads.
+  HelperThreadVector threads_;
 
   // Ion compilation worklist and finished jobs.
   IonCompileTaskVector ionWorklist_, ionFinishedList_, ionFreeList_;
@@ -171,10 +171,18 @@ class GlobalHelperThreadState {
 
   GlobalHelperThreadState();
 
+  HelperThreadVector& threads(const AutoLockHelperThreadState& lock) {
+    return threads_;
+  }
+  const HelperThreadVector& threads(
+      const AutoLockHelperThreadState& lock) const {
+    return threads_;
+  }
+
   bool ensureInitialized();
-  bool ensureThreadCount(size_t minimumThreadCount);
+  bool ensureThreadCount(size_t count);
   void finish();
-  void finishThreads(HelperThreadVector& threads);
+  void finishThreads();
 
   MOZ_MUST_USE bool ensureContextList(size_t count);
   JSContext* getFirstUnusedContext(AutoLockHelperThreadState& locked);
@@ -346,7 +354,13 @@ class GlobalHelperThreadState {
   void waitForAllThreadsLocked(AutoLockHelperThreadState&);
 
   template <typename T>
-  bool checkTaskThreadLimit(size_t maxThreads, bool isMaster = false) const;
+  bool checkTaskThreadLimit(size_t maxThreads, bool isMaster,
+                            const AutoLockHelperThreadState& lock) const;
+  template <typename T>
+  bool checkTaskThreadLimit(size_t maxThreads,
+                            const AutoLockHelperThreadState& lock) const {
+    return checkTaskThreadLimit<T>(maxThreads, /* isMaster */ false, lock);
+  }
 
   void triggerFreeUnusedMemory();
 
@@ -386,19 +400,38 @@ typedef mozilla::Variant<jit::IonCompileTask*, wasm::CompileTask*,
     HelperTaskUnion;
 
 /* Individual helper thread, one allocated per core. */
-struct HelperThread {
-  mozilla::Maybe<Thread> thread;
+class HelperThread {
+  Thread thread;
+
+  /* The current task being executed by this thread, if any. */
+  mozilla::Maybe<HelperTaskUnion> currentTask;
+
+  /*
+   * The profiling thread for this helper thread, which can be used to push
+   * and pop label frames.
+   * This field being non-null indicates that this thread has been registered
+   * and needs to be unregistered at shutdown.
+   */
+  ProfilingStack* profilingStack = nullptr;
 
   /*
    * Indicate to a thread that it should terminate itself. This is only read
    * or written with the helper thread state lock held.
    */
-  bool terminate;
+  bool terminate = false;
 
-  /* The current task being executed by this thread, if any. */
-  mozilla::Maybe<HelperTaskUnion> currentTask;
+ public:
+  HelperThread();
+  MOZ_MUST_USE bool init();
+
+  ThreadId threadId() { return thread.get_id(); }
 
   bool idle() const { return currentTask.isNothing(); }
+
+  template <typename T>
+  bool hasTask() const {
+    return !idle() && currentTask->is<T>();
+  }
 
   /* Any builder currently being compiled by Ion on this thread. */
   jit::IonCompileTask* ionCompileTask() {
@@ -445,14 +478,6 @@ struct HelperThread {
    private:
     ProfilingStack* profilingStack;
   };
-
-  /*
-   * The profiling thread for this helper thread, which can be used to push
-   * and pop label frames.
-   * This field being non-null Indicates that this thread has been registered
-   * and needs to be unregistered at shutdown.
-   */
-  ProfilingStack* profilingStack;
 
   struct TaskSpec {
     using Selector =
@@ -506,9 +531,6 @@ bool EnsureHelperThreadsInitialized();
 // This allows the JS shell to override GetCPUCount() when passed the
 // --thread-count=N option.
 bool SetFakeCPUCount(size_t count);
-
-// Get the current helper thread, or null.
-HelperThread* CurrentHelperThread();
 
 // Enqueues a wasm compilation task.
 bool StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode);
@@ -801,7 +823,7 @@ extern bool OffThreadParsingMustWaitForGC(JSRuntime* rt);
 // phase by AttachCompressedSourcesTask, which runs in parallel with other GC
 // sweeping tasks.
 class SourceCompressionTask : public RunnableTask {
-  friend struct HelperThread;
+  friend class HelperThread;
   friend class ScriptSource;
 
   // The runtime that the ScriptSource is associated with, in the sense that
