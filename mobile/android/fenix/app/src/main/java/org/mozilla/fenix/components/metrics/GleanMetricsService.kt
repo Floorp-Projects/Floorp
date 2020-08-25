@@ -531,15 +531,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PrivacyNoticeTapped -> EventWrapper<NoExtraKeys>(
             { AboutPage.privacyNoticeTapped.record(it) }
         )
-        is Event.RightsTapped -> EventWrapper<NoExtraKeys>(
-            { AboutPage.rightsTapped.record(it) }
-        )
-        is Event.LicensingTapped -> EventWrapper<NoExtraKeys>(
-            { AboutPage.licensingTapped.record(it) }
-        )
-        is Event.LibrariesThatWeUseTapped -> EventWrapper<NoExtraKeys>(
-            { AboutPage.librariesTapped.record(it) }
-        )
         is Event.PocketTopSiteClicked -> EventWrapper<NoExtraKeys>(
             { Pocket.pocketTopSiteClicked.record(it) }
         )

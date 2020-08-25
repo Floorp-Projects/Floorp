@@ -186,18 +186,12 @@ class AboutFragment : Fragment(), AboutPageListener {
                     PRIVACY_NOTICE -> {
                         requireComponents.analytics.metrics.track(Event.PrivacyNoticeTapped)
                     }
-                    RIGHTS -> {
-                        requireComponents.analytics.metrics.track(Event.RightsTapped)
-                    }
-                    LICENSING_INFO -> {
-                        requireComponents.analytics.metrics.track(Event.LicensingTapped)
-                    }
+                    LICENSING_INFO, RIGHTS -> {} // no telemetry needed
                 }
 
                 openLinkInNormalTab(item.url)
             }
             is AboutItem.Libraries -> {
-                requireComponents.analytics.metrics.track(Event.LibrariesThatWeUseTapped)
                 openLibrariesPage()
             }
             is AboutItem.Crashes -> {
