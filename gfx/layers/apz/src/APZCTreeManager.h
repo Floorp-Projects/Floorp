@@ -425,9 +425,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   APZInputBridge* InputBridge() override { return this; }
 
-  void AddInputBlockCallback(uint64_t aInputBlockId,
-                             InputBlockCallback&& aCallback) override;
-
   // Methods to help process WidgetInputEvents (or manage conversion to/from
   // InputData)
 
@@ -561,7 +558,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     // Make it move-only.
     HitTestResult(HitTestResult&&) = default;
     HitTestResult& operator=(HitTestResult&&) = default;
-    Maybe<bool> HandledByRoot() const;
+    bool TargetIsConfirmedRoot() const;
   };
 
   /* Some helper functions to find an APZC given some identifying input. These

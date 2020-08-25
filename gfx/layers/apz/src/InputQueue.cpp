@@ -640,12 +640,6 @@ InputBlockState* InputQueue::GetBlockForId(uint64_t aInputBlockId) {
   return FindBlockForId(aInputBlockId, nullptr);
 }
 
-void InputQueue::AddInputBlockCallback(uint64_t aInputBlockId,
-                                       InputBlockCallback&& aCallback) {
-  mInputBlockCallbacks.insert(
-      InputBlockCallbackMap::value_type(aInputBlockId, std::move(aCallback)));
-}
-
 InputBlockState* InputQueue::FindBlockForId(uint64_t aInputBlockId,
                                             InputData** aOutFirstInput) {
   for (const auto& queuedInput : mQueuedInputs) {
@@ -827,18 +821,6 @@ void InputQueue::ProcessQueue() {
         curBlock, cancelable && cancelable->IsDefaultPrevented(),
         curBlock->ShouldDropEvents(), curBlock->GetTargetApzc().get());
     RefPtr<AsyncPanZoomController> target = curBlock->GetTargetApzc();
-
-    // If there is an input block callback registered for this
-    // input block, invoke it.
-    auto it = mInputBlockCallbacks.find(curBlock->GetBlockId());
-    if (it != mInputBlockCallbacks.end()) {
-      bool handledByRootApzc =
-          !curBlock->ShouldDropEvents() && target && target->IsRootContent();
-      it->second(curBlock->GetBlockId(), handledByRootApzc);
-      // The callback is one-shot; discard it after calling it.
-      mInputBlockCallbacks.erase(it);
-    }
-
     // target may be null here if the initial target was unconfirmed and then
     // we later got a confirmed null target. in that case drop the events.
     if (target) {
