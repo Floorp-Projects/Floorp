@@ -1,7 +1,5 @@
 package org.mozilla.geckoview.test
 
-import android.os.SystemClock
-import android.view.MotionEvent
 import org.mozilla.geckoview.ScreenLength
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
@@ -10,11 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.GeckoResult
-import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.PanZoomController
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
-import org.mozilla.geckoview.test.util.Callbacks
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -22,14 +16,10 @@ class PanZoomControllerTest : BaseSessionTest() {
     private val errorEpsilon = 3.0
     private val scrollWaitTimeout = 10000.0 // 10 seconds
 
-    private fun setupScroll() {
+    private fun setup() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
         sessionRule.session.loadTestPath(SCROLL_TEST_PATH)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @GeckoSessionTestRule.AssertCalled(count = 1)
-            override fun onFirstContentfulPaint(session: GeckoSession) {
-            }
-        })
+        sessionRule.waitForPageStop()
     }
 
     private fun waitForScroll(offset: Double, timeout: Double, param: String) {
@@ -60,7 +50,7 @@ class PanZoomControllerTest : BaseSessionTest() {
 
 
     private fun scrollByVertical(mode: Int) {
-        setupScroll()
+        setup()
         val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
         assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollBy(ScreenLength.zero(), ScreenLength.fromVisualViewportHeight(1.0), mode)
@@ -71,7 +61,7 @@ class PanZoomControllerTest : BaseSessionTest() {
 
 
     private fun scrollByHorizontal(mode: Int) {
-        setupScroll()
+        setup()
         val vw = mainSession.evaluateJS("window.visualViewport.width") as Double
         assertThat("Visual viewport width is not zero", vw, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollBy(ScreenLength.fromVisualViewportWidth(1.0), ScreenLength.zero(), mode)
@@ -105,7 +95,7 @@ class PanZoomControllerTest : BaseSessionTest() {
     }
 
     private fun scrollByVerticalTwice(mode: Int) {
-        setupScroll()
+        setup()
         val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
         assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollBy(ScreenLength.zero(), ScreenLength.fromVisualViewportHeight(1.0), mode)
@@ -129,7 +119,7 @@ class PanZoomControllerTest : BaseSessionTest() {
     }
 
     private fun scrollToVertical(mode: Int) {
-        setupScroll()
+        setup()
         val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
         assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollTo(ScreenLength.zero(), ScreenLength.fromVisualViewportHeight(1.0), mode)
@@ -140,7 +130,7 @@ class PanZoomControllerTest : BaseSessionTest() {
 
 
     private fun scrollToHorizontal(mode: Int) {
-        setupScroll()
+        setup()
         val vw = mainSession.evaluateJS("window.visualViewport.width") as Double
         assertThat("Visual viewport width is not zero", vw, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollTo(ScreenLength.fromVisualViewportWidth(1.0), ScreenLength.zero(), mode)
@@ -174,7 +164,7 @@ class PanZoomControllerTest : BaseSessionTest() {
     }
 
     private fun scrollToVerticalOnZoomedContent(mode: Int) {
-        setupScroll()
+        setup()
 
         val originalVH = mainSession.evaluateJS("window.visualViewport.height") as Double
         assertThat("Visual viewport height is not zero", originalVH, greaterThan(0.0))
@@ -214,7 +204,7 @@ class PanZoomControllerTest : BaseSessionTest() {
     }
 
     private fun scrollToVerticalTwice(mode: Int) {
-        setupScroll()
+        setup()
         val vh = mainSession.evaluateJS("window.visualViewport.height") as Double
         assertThat("Visual viewport height is not zero", vh, greaterThan(0.0))
         sessionRule.session.panZoomController.scrollTo(ScreenLength.zero(), ScreenLength.fromVisualViewportHeight(1.0), mode)
@@ -235,52 +225,5 @@ class PanZoomControllerTest : BaseSessionTest() {
     @Test
     fun scrollToVerticalTwiceAuto() {
         scrollToVerticalTwice(PanZoomController.SCROLL_BEHAVIOR_AUTO)
-    }
-
-    private fun setupTouch() {
-        mainSession.loadTestPath(TOUCH_HTML_PATH)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @GeckoSessionTestRule.AssertCalled(count = 1)
-            override fun onFirstContentfulPaint(session: GeckoSession) {
-            }
-        })
-    }
-
-    private fun sendDownEvent(x: Float, y: Float): GeckoResult<Int> {
-        val downTime = SystemClock.uptimeMillis();
-        val down = MotionEvent.obtain(
-                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, x, y, 0);
-
-        val result = mainSession.panZoomController.onTouchEventForResult(down)
-
-        val up = MotionEvent.obtain(
-                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y, 0);
-
-        mainSession.panZoomController.onTouchEvent(up)
-
-        return result
-    }
-
-    @WithDisplay(width = 100, height = 100)
-    @Test
-    fun touchEventForResult() {
-        setupTouch()
-
-        // No touch handlers, without scrolling
-        var value = sessionRule.waitForResult(sendDownEvent(50f, 15f))
-        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
-
-        // Touch handler with preventDefault
-        value = sessionRule.waitForResult(sendDownEvent(50f, 45f))
-        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
-
-        // Touch handler without preventDefault
-        value = sessionRule.waitForResult(sendDownEvent(50f, 75f))
-        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
-
-        // No touch handlers, with scrolling
-        setupScroll()
-        value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
     }
 }
