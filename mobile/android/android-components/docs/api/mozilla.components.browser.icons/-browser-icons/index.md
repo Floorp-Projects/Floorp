@@ -10,7 +10,7 @@ Entry point for loading icons for websites.
 
 `generator` - The [IconGenerator](../../mozilla.components.browser.icons.generator/-icon-generator/index.md) to generate an icon if no icon could be loaded.
 
-`decoders` - List of [IconDecoder](#) instances to use when decoding a loaded icon into a [android.graphics.Bitmap](#).
+`decoders` - List of [ImageDecoder](../../mozilla.components.support.images.decoder/-image-decoder/index.md) instances to use when decoding a loaded icon into a [android.graphics.Bitmap](#).
 
 ### Constructors
 
@@ -37,6 +37,7 @@ Entry point for loading icons for websites.
 
 | Name | Summary |
 |---|---|
+| [clear](clear.md) | `fun clear(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears all icons and metadata from disk and memory. |
 | [install](install.md) | `fun install(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Installs the "icons" extension in the engine in order to dynamically load icons for loaded websites. |
 | [loadIcon](load-icon.md) | `fun loadIcon(request: `[`IconRequest`](../-icon-request/index.md)`): Deferred<`[`Icon`](../-icon/index.md)`>`<br>Asynchronously loads an [Icon](../-icon/index.md) for the given [IconRequest](../-icon-request/index.md). |
 | [loadIntoView](load-into-view.md) | `fun loadIntoView(view: <ERROR CLASS>, request: `[`IconRequest`](../-icon-request/index.md)`, placeholder: <ERROR CLASS>? = null, error: <ERROR CLASS>? = null): Job`<br>Loads an icon asynchronously using [BrowserIcons](./index.md) and then displays it in the [ImageView](#). If the view is detached from the window before loading is completed, then loading is cancelled. |

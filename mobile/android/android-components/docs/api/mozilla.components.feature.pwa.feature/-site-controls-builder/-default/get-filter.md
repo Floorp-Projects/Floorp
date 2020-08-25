@@ -2,7 +2,7 @@
 
 # getFilter
 
-`open fun getFilter(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/SiteControlsBuilder.kt#L47)
+`open fun getFilter(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/SiteControlsBuilder.kt#L50)
 
 Overrides [SiteControlsBuilder.getFilter](../get-filter.md)
 
