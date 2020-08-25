@@ -2056,6 +2056,7 @@ bool js::SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
 
 /* static */
 bool JSObject::changeToSingleton(JSContext* cx, HandleObject obj) {
+  MOZ_ASSERT(IsTypeInferenceEnabled());
   MOZ_ASSERT(!obj->isSingleton());
 
   MarkObjectGroupUnknownProperties(cx, obj->group());
