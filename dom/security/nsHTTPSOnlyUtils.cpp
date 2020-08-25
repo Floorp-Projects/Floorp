@@ -197,9 +197,11 @@ bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
     return false;
   }
 
-  // If the load is exempt, then there is nothing to do here.
+  // If the load is exempt or did not get upgraded,
+  // then there is nothing to do here.
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT ||
+      httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UNINITIALIZED) {
     return false;
   }
 
