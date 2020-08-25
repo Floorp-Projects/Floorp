@@ -173,7 +173,7 @@ interface nsIContentViewer : nsISupports
    * close the DOM window as soon as practical.
    */
 
-  boolean requestWindowClose();
+  boolean requestWindowClose(in boolean isPrintPending);
 
   /**
    * Attach the content viewer to its DOM window and docshell.

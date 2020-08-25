@@ -1325,6 +1325,8 @@ nsGlobalWindowOuter::nsGlobalWindowOuter(uint64_t aWindowID)
       mAllowScriptsToClose(false),
       mTopLevelOuterContentWindow(false),
       mStorageAccessPermissionGranted(false),
+      mDelayedPrintUntilAfterLoad(false),
+      mShouldDelayPrintUntilAfterLoad(false),
 #ifdef DEBUG
       mSerial(0),
       mSetOpenerWindowCalled(false),
@@ -2065,7 +2067,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
                    GetCurrentInnerWindow()->GetExtantDoc() == mDoc,
                "Uh, mDoc doesn't match the current inner window "
                "document!");
-
   bool wouldReuseInnerWindow = WouldReuseInnerWindow(aDocument);
   if (aForceReuseInnerWindow && !wouldReuseInnerWindow && mDoc &&
       mDoc->NodePrincipal() != aDocument->NodePrincipal()) {
@@ -2121,6 +2122,11 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   // having to *always* reach into the inner window to find the
   // document.
   mDoc = aDocument;
+
+  // We drop the print request for the old document on the floor, it never made
+  // it.
+  mShouldDelayPrintUntilAfterLoad = true;
+  mDelayedPrintUntilAfterLoad = false;
 
   // Take this opportunity to clear mSuspendedDoc. Our old inner window is now
   // responsible for unsuspending it.
@@ -5215,6 +5221,18 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return aError.ThrowNotAllowedError("Prompt was canceled by the user");
   }
 
+  // If we're loading, queue the print for later. This is a special-case that
+  // only applies to the window.print() call, for compat with other engines and
+  // pre-existing behavior.
+  if (mShouldDelayPrintUntilAfterLoad) {
+    if (nsIDocShell* docShell = GetDocShell()) {
+      if (docShell->GetBusyFlags() & nsIDocShell::BUSY_FLAGS_PAGE_LOADING) {
+        mDelayedPrintUntilAfterLoad = true;
+        return;
+      }
+    }
+  }
+
   const bool isPreview = StaticPrefs::print_tab_modal_enabled() &&
                          !StaticPrefs::print_always_print_silent();
   Print(nullptr, nullptr, nullptr, isPreview, aError);
@@ -6195,7 +6213,9 @@ bool nsGlobalWindowOuter::CanClose() {
     nsresult rv = cv->PermitUnload(&canClose);
     if (NS_SUCCEEDED(rv) && !canClose) return false;
 
-    rv = cv->RequestWindowClose(&canClose);
+    rv = cv->RequestWindowClose(
+        mShouldDelayPrintUntilAfterLoad && mDelayedPrintUntilAfterLoad,
+        &canClose);
     if (NS_SUCCEEDED(rv) && !canClose) return false;
   }
 
