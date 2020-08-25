@@ -146,6 +146,8 @@ reftest.Runner = class {
       reftestWin = await this.openWindow(width, height);
     }
 
+    this.lastURL = this.driver.currentURL.href;
+
     this.setupWindow(reftestWin, width, height);
     this.windowUtils = reftestWin.windowUtils;
     this.reftestWin = reftestWin;
