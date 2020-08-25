@@ -739,7 +739,15 @@ public class GeckoView extends FrameLayout {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
-        mSession.getPanZoomController().onTouchEventForResult(event);
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            requestFocus();
+        }
+
+        if (mSession == null) {
+            return false;
+        }
+
+        mSession.getPanZoomController().onTouchEvent(event);
         return true;
     }
 
