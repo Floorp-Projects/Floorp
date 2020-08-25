@@ -147,7 +147,7 @@ You can find all important Telemetry resources listed on `telemetry.mozilla.org 
 
 The Telemetry team is there to help with any problems. You can reach us via:
 
-- IRC in `#telemetry <https://chat.mibbit.com/?server=irc.mozilla.org&channel=%23telemetry>`_
-- Slack in `#fx-metrics <https://mozilla.slack.com/messages/fx-metrics/>`_
+- Matrix in `#telemetry:mozilla.org <https://chat.mozilla.org/#/room/#telemetry:mozilla.org>`_
+- Slack in `#data-help <https://mozilla.slack.com/messages/data-help/>`_
 - the `fx-data-dev mailing list <https://mail.mozilla.org/listinfo/fx-data-dev>`_
 - flags for `one of the peers <https://wiki.mozilla.org/Modules/Toolkit#Telemetry>`_ on Bugzilla or send us an e-mail
