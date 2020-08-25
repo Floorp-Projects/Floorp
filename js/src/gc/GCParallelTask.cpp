@@ -28,7 +28,7 @@ js::GCParallelTask::~GCParallelTask() {
 
 void js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(CanUseExtraThreads());
-  MOZ_ASSERT(!HelperThreadState().threads(lock).empty());
+  MOZ_ASSERT(HelperThreadState().threads);
   assertIdle();
 
   HelperThreadState().gcParallelWorklist(lock).insertBack(this);
