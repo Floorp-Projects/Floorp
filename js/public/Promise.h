@@ -135,7 +135,7 @@ extern JS_PUBLIC_API void SetJobQueue(JSContext* cx, JobQueue* queue);
  * interruption began must wait for the debuggee to be continued - and thus run
  * after microtasks enqueued after they were.
  *
- * Fortunately, this reordering is visible olny at the global level: when
+ * Fortunately, this reordering is visible only at the global level: when
  * implemented correctly, it is not detectable by an individual debuggee. Note
  * that a debuggee should generally be a complete unit of similar-origin related
  * browsing contexts. Since non-debuggee activity falls outside that unit, it
