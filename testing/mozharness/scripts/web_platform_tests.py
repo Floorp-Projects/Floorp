@@ -177,7 +177,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         if self.is_android:
             dirs['abs_xre_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'hostutils')
         if self.is_emulator:
-            dirs['abs_avds_dir'] = self.config.get('avds_dir')
+            dirs['abs_avds_dir'] = os.path.join(abs_dirs["abs_work_dir"], ".android")
             fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
             if fetches_dir:
                 dirs['abs_sdk_dir'] = os.path.join(fetches_dir, 'android-sdk-linux')

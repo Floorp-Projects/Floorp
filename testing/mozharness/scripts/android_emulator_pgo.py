@@ -103,7 +103,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         dirs['abs_xre_dir'] = os.path.join(
             abs_dirs['abs_work_dir'], 'hostutils')
         dirs['abs_blob_upload_dir'] = '/builds/worker/artifacts/blobber_upload_dir'
-        dirs['abs_avds_dir'] = self.config.get("avds_dir", "/home/cltbld/.android")
+        dirs['abs_avds_dir'] = os.path.join(abs_dirs["abs_work_dir"], ".android")
 
         for key in dirs.keys():
             if key not in abs_dirs:
