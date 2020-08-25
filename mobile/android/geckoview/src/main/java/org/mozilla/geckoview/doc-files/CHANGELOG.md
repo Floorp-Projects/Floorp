@@ -13,6 +13,10 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v82
+- ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
+  WebExtension notifications which don't have a `source` field.
+
 ## v81
 - Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
   to [`ContentBlocking.Settings`][81.2].
@@ -770,4 +774,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: ca995cc1f0626ab33312d27e35100485d35333a7
+[api-version]: c19f556017d98a8e4c8087ca59bde83e11aa56da
