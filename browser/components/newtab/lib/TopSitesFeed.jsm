@@ -299,7 +299,26 @@ this.TopSitesFeed = class TopSitesFeed {
       }
       if (
         topsite.include_regions &&
+        topsite.include_regions.length &&
         !topsite.include_regions.includes(Region.home)
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    // Filter by locale.
+    result = result.filter(topsite => {
+      if (
+        topsite.exclude_locales &&
+        topsite.exclude_locales.includes(Services.locale.appLocaleAsBCP47)
+      ) {
+        return false;
+      }
+      if (
+        topsite.include_locales &&
+        topsite.include_locales.length &&
+        !topsite.include_locales.includes(Services.locale.appLocaleAsBCP47)
       ) {
         return false;
       }
