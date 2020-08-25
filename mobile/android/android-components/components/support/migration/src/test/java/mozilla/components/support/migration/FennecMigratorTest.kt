@@ -34,7 +34,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.top.sites.TopSiteStorage
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
@@ -160,7 +160,7 @@ class FennecMigratorTest {
     fun `migrations versioning basics`() = runBlocking {
         val historyStore = PlacesHistoryStorage(testContext)
         val bookmarksStore = PlacesBookmarksStorage(testContext)
-        val topSiteStorage = mock<TopSiteStorage>()
+        val topSiteStorage = mock<PinnedSiteStorage>()
 
         // Clear-up storage layers between test runs.
         historyStore.deleteEverything()
@@ -257,7 +257,7 @@ class FennecMigratorTest {
     fun `pinned sites migration`() = runBlocking {
         val historyStore = PlacesHistoryStorage(testContext)
         val bookmarksStore = PlacesBookmarksStorage(testContext)
-        val topSiteStorage = mock<TopSiteStorage>()
+        val topSiteStorage = mock<PinnedSiteStorage>()
 
         val migrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)
@@ -272,7 +272,7 @@ class FennecMigratorTest {
         assertTrue(historyStore.getVisited().isEmpty())
         assertTrue(bookmarksStore.searchBookmarks("mozilla").isEmpty())
 
-        verify(topSiteStorage, never()).addTopSite(any(), any(), anyBoolean())
+        verify(topSiteStorage, never()).addPinnedSite(any(), any(), anyBoolean())
 
         // Can run once.
         with(migrator.migrateAsync(mock()).await()) {
@@ -300,12 +300,12 @@ class FennecMigratorTest {
 
         assertEquals(5, historyStore.getVisited().size)
         assertEquals(2, bookmarksStore.searchBookmarks("mozilla").size)
-        verify(topSiteStorage, times(2)).addTopSite(any(), any(), anyBoolean())
-        verify(topSiteStorage).addTopSite(
+        verify(topSiteStorage, times(2)).addPinnedSite(any(), any(), anyBoolean())
+        verify(topSiteStorage).addPinnedSite(
             "Featured extensions for Android – Add-ons for Firefox Android (en-US)",
             "https://addons.mozilla.org/en-US/android/collections/4757633/mob/?page=1&collection_sort=-popularity"
         )
-        verify(topSiteStorage).addTopSite(
+        verify(topSiteStorage).addPinnedSite(
             "Internet for people, not profit — Mozilla",
             "https://www.mozilla.org/en-US/"
         )

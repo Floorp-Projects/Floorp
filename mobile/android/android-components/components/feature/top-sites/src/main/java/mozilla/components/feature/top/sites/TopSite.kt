@@ -6,25 +6,37 @@ package mozilla.components.feature.top.sites
 
 /**
  * A top site.
+ *
+ * @property id Unique ID of this top site.
+ * @property title The title of the top site.
+ * @property url The URL of the top site.
+ * @property createdAt The optional date the top site was added.
+ * @property type The type of a top site.
  */
-interface TopSite {
+data class TopSite(
+    val id: Long?,
+    val title: String?,
+    val url: String,
+    val createdAt: Long?,
+    val type: Type
+) {
     /**
-     * Unique ID of this top site.
+     * The type of a [TopSite].
      */
-    val id: Long
+    enum class Type {
+        /**
+         * This top site was added as a default by the application.
+         */
+        DEFAULT,
 
-    /**
-     * The title of the top site.
-     */
-    val title: String
+        /**
+         * This top site was pinned by an user.
+         */
+        PINNED,
 
-    /**
-     * The URL of the top site.
-     */
-    val url: String
-
-    /**
-     * Whether or not the top site is a default top site (added as a default by the application).
-     */
-    val isDefault: Boolean
+        /**
+         * This top site is auto-generated from the history storage based on the most frecent site.
+         */
+        FRECENT
+    }
 }

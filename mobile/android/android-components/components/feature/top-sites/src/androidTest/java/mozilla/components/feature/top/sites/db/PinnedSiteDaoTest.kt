@@ -6,7 +6,6 @@ package mozilla.components.feature.top.sites.db
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import org.junit.After
@@ -17,12 +16,12 @@ import org.junit.Test
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class TopSiteDaoTest {
+class PinnedSiteDaoTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
     private lateinit var database: TopSiteDatabase
-    private lateinit var topSiteDao: TopSiteDao
+    private lateinit var pinnedSiteDao: PinnedSiteDao
     private lateinit var executor: ExecutorService
 
     @get:Rule
@@ -31,7 +30,7 @@ class TopSiteDaoTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(context, TopSiteDatabase::class.java).build()
-        topSiteDao = database.topSiteDao()
+        pinnedSiteDao = database.pinnedSiteDao()
         executor = Executors.newSingleThreadExecutor()
     }
 
@@ -43,56 +42,46 @@ class TopSiteDaoTest {
 
     @Test
     fun testAddingTopSite() {
-        val topSite = TopSiteEntity(
+        val topSite = PinnedSiteEntity(
             title = "Mozilla",
             url = "https://www.mozilla.org",
             isDefault = false,
             createdAt = 200
         ).also {
-            it.id = topSiteDao.insertTopSite(it)
+            it.id = pinnedSiteDao.insertPinnedSite(it)
         }
 
-        val dataSource = topSiteDao.getTopSitesPaged().create()
+        val pinnedSites = pinnedSiteDao.getPinnedSites()
 
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        assertEquals(1, pagedList.size)
-        assertEquals(topSite, pagedList[0]!!)
+        assertEquals(1, pinnedSites.size)
+        assertEquals(topSite, pinnedSites[0])
     }
 
     @Test
     fun testRemovingTopSite() {
-        val topSite1 = TopSiteEntity(
+        val topSite1 = PinnedSiteEntity(
             title = "Mozilla",
             url = "https://www.mozilla.org",
             isDefault = false,
             createdAt = 200
         ).also {
-            it.id = topSiteDao.insertTopSite(it)
+            it.id = pinnedSiteDao.insertPinnedSite(it)
         }
 
-        val topSite2 = TopSiteEntity(
+        val topSite2 = PinnedSiteEntity(
             title = "Firefox",
             url = "https://www.firefox.com",
             isDefault = false,
             createdAt = 100
         ).also {
-            it.id = topSiteDao.insertTopSite(it)
+            it.id = pinnedSiteDao.insertPinnedSite(it)
         }
 
-        topSiteDao.deleteTopSite(topSite1)
+        pinnedSiteDao.deletePinnedSite(topSite1)
 
-        val dataSource = topSiteDao.getTopSitesPaged().create()
+        val pinnedSites = pinnedSiteDao.getPinnedSites()
 
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        assertEquals(1, pagedList.size)
-        assertEquals(topSite2, pagedList[0])
+        assertEquals(1, pinnedSites.size)
+        assertEquals(topSite2, pinnedSites[0])
     }
 }

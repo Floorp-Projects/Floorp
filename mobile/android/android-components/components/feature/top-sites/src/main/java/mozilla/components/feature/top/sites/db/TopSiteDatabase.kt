@@ -14,9 +14,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 /**
  * Internal database for storing top sites.
  */
-@Database(entities = [TopSiteEntity::class], version = 3)
+@Database(entities = [PinnedSiteEntity::class], version = 3)
 internal abstract class TopSiteDatabase : RoomDatabase() {
-    abstract fun topSiteDao(): TopSiteDao
+    abstract fun pinnedSiteDao(): PinnedSiteDao
 
     companion object {
         @Volatile
