@@ -1262,10 +1262,9 @@ nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
       field.mValue = AsVariant(SvcParamIpv4Hint());
       auto& ipv4array = field.mValue.as<SvcParamIpv4Hint>().mValue;
       while (length > 0) {
-        NetAddr addr;
-        addr.inet.family = AF_INET;
-        addr.inet.port = 0;
-        addr.inet.ip = ntohl(get32bit(mResponse, svcbIndex));
+        NetAddr addr = {.inet = {.family = AF_INET,
+                                 .port = 0,
+                                 .ip = ntohl(get32bit(mResponse, svcbIndex))}};
         ipv4array.AppendElement(addr);
         length -= 4;
         svcbIndex += 4;
@@ -1286,7 +1285,7 @@ nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
       field.mValue = AsVariant(SvcParamIpv6Hint());
       auto& ipv6array = field.mValue.as<SvcParamIpv6Hint>().mValue;
       while (length > 0) {
-        NetAddr addr;
+        NetAddr addr = {{.family = 0, .data = {0}}};
         addr.inet6.family = AF_INET6;
         addr.inet6.port = 0;      // unknown
         addr.inet6.flowinfo = 0;  // unknown
@@ -1312,11 +1311,14 @@ nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
 nsresult TRR::ReturnData(nsIChannel* aChannel) {
   if (mType != TRRTYPE_TXT && mType != TRRTYPE_HTTPSSVC) {
     // create and populate an AddrInfo instance to pass on
+    RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType));
     DOHaddr* item;
     uint32_t ttl = AddrInfo::NO_TTL_DATA;
-    nsTArray<NetAddr> addresses;
     while ((item = static_cast<DOHaddr*>(mDNS.mAddresses.popFirst()))) {
-      addresses.AppendElement(item->mNet);
+      PRNetAddr prAddr;
+      NetAddrToPRNetAddr(&item->mNet, &prAddr);
+      auto* addrElement = new NetAddrElement(&prAddr);
+      ai->AddAddress(addrElement);
       if (item->mTtl < ttl) {
         // While the DNS packet might return individual TTLs for each address,
         // we can only return one value in the AddrInfo class so pick the
@@ -1324,9 +1326,7 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
         ttl = item->mTtl;
       }
     }
-    RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType, nsTArray<NetAddr>(), ttl));
-    auto builder = ai->Build();
-    builder.SetAddresses(std::move(addresses));
+    ai->ttl = ttl;
 
     // Set timings.
     nsCOMPtr<nsITimedChannel> timedChan = do_QueryInterface(aChannel);
@@ -1334,16 +1334,15 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
       TimeStamp asyncOpen, start, end;
       if (NS_SUCCEEDED(timedChan->GetAsyncOpen(&asyncOpen)) &&
           !asyncOpen.IsNull()) {
-        builder.SetTrrFetchDuration(
+        ai->SetTrrFetchDuration(
             (TimeStamp::Now() - asyncOpen).ToMilliseconds());
       }
       if (NS_SUCCEEDED(timedChan->GetRequestStart(&start)) &&
           NS_SUCCEEDED(timedChan->GetResponseEnd(&end)) && !start.IsNull() &&
           !end.IsNull()) {
-        builder.SetTrrFetchDurationNetworkOnly((end - start).ToMilliseconds());
+        ai->SetTrrFetchDurationNetworkOnly((end - start).ToMilliseconds());
       }
     }
-    ai = builder.Finish();
 
     if (!mHostResolver) {
       return NS_ERROR_FAILURE;
@@ -1372,8 +1371,7 @@ nsresult TRR::FailData(nsresult error) {
   } else {
     // create and populate an TRR AddrInfo instance to pass on to signal that
     // this comes from TRR
-    nsTArray<NetAddr> noAddresses;
-    RefPtr<AddrInfo> ai = new AddrInfo(mHost, mType, std::move(noAddresses));
+    RefPtr<AddrInfo> ai = new AddrInfo(mHost, mType);
 
     (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB, mOriginSuffix,
                                         mTRRSkippedReason);

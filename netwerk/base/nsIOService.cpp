@@ -738,7 +738,8 @@ nsresult nsIOService::RecheckCaptivePortalIfLocalRedirect(nsIChannel* newChan) {
     return NS_OK;
   }
 
-  NetAddr netAddr(&prAddr);
+  NetAddr netAddr;
+  PRNetAddrToNetAddr(&prAddr, &netAddr);
   if (IsIPAddrLocal(&netAddr)) {
     // Redirects to local IP addresses are probably captive portals
     RecheckCaptivePortal();
@@ -946,7 +947,8 @@ nsIOService::HostnameIsLocalIPAddress(nsIURI* aURI, bool* aResult) {
   PRNetAddr addr;
   PRStatus result = PR_StringToNetAddr(host.get(), &addr);
   if (result == PR_SUCCESS) {
-    NetAddr netAddr(&addr);
+    NetAddr netAddr;
+    PRNetAddrToNetAddr(&addr, &netAddr);
     if (IsIPAddrLocal(&netAddr)) {
       *aResult = true;
     }
@@ -973,7 +975,8 @@ nsIOService::HostnameIsSharedIPAddress(nsIURI* aURI, bool* aResult) {
   PRNetAddr addr;
   PRStatus result = PR_StringToNetAddr(host.get(), &addr);
   if (result == PR_SUCCESS) {
-    NetAddr netAddr(&addr);
+    NetAddr netAddr;
+    PRNetAddrToNetAddr(&addr, &netAddr);
     if (IsIPAddrShared(&netAddr)) {
       *aResult = true;
     }
