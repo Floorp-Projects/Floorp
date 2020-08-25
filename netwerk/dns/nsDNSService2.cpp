@@ -72,7 +72,7 @@ class nsDNSRecord : public nsIDNSAddrRecord {
   NS_DECL_NSIDNSADDRRECORD
 
   explicit nsDNSRecord(nsHostRecord* hostRecord)
-      : mIterGenCnt(-1), mDone(false) {
+      : mIter(nullptr), mIterGenCnt(-1), mDone(false) {
     mHostRecord = do_QueryObject(hostRecord);
   }
 
@@ -80,16 +80,7 @@ class nsDNSRecord : public nsIDNSAddrRecord {
   virtual ~nsDNSRecord() = default;
 
   RefPtr<AddrHostRecord> mHostRecord;
-  nsTArray<NetAddr>::const_iterator mIter;
-  const NetAddr* iter() {
-    if (!mIter.GetArray()) {
-      return nullptr;
-    }
-    if (mIter.GetArray()->end() == mIter) {
-      return nullptr;
-    }
-    return &*mIter;
-  }
+  NetAddrElement* mIter;
   int mIterGenCnt;  // the generation count of
                     // mHostRecord->addr_info when we
                     // start iterating
@@ -113,10 +104,10 @@ nsDNSRecord::GetCanonicalName(nsACString& result) {
     return NS_OK;
   }
 
-  if (mHostRecord->addr_info->CanonicalHostname().IsEmpty()) {
-    result = mHostRecord->addr_info->Hostname();
+  if (mHostRecord->addr_info->mCanonicalName.IsEmpty()) {
+    result = mHostRecord->addr_info->mHostName;
   } else {
-    result = mHostRecord->addr_info->CanonicalHostname();
+    result = mHostRecord->addr_info->mCanonicalName;
   }
   return NS_OK;
 }
@@ -164,35 +155,35 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
   if (mHostRecord->addr_info) {
     if (mIterGenCnt != mHostRecord->addr_info_gencnt) {
       // mHostRecord->addr_info has changed, restart the iteration.
-      mIter = nsTArray<NetAddr>::const_iterator();
+      mIter = nullptr;
       mIterGenCnt = mHostRecord->addr_info_gencnt;
     }
 
-    bool startedFresh = !iter();
+    bool startedFresh = !mIter;
 
     do {
-      if (!iter()) {
-        mIter = mHostRecord->addr_info->Addresses().begin();
+      if (!mIter) {
+        mIter = mHostRecord->addr_info->mAddresses.getFirst();
       } else {
-        mIter++;
+        mIter = mIter->getNext();
       }
-    } while (iter() && mHostRecord->Blacklisted(iter()));
+    } while (mIter && mHostRecord->Blacklisted(&mIter->mAddress));
 
-    if (!iter() && startedFresh) {
+    if (!mIter && startedFresh) {
       // If everything was blacklisted we want to reset the blacklist (and
       // likely relearn it) and return the first address. That is better
       // than nothing.
       mHostRecord->ResetBlacklist();
-      mIter = mHostRecord->addr_info->Addresses().begin();
+      mIter = mHostRecord->addr_info->mAddresses.getFirst();
     }
 
-    if (iter()) {
-      *addr = *mIter;
+    if (mIter) {
+      memcpy(addr, &mIter->mAddress, sizeof(NetAddr));
     }
 
     mHostRecord->addr_info_lock.Unlock();
 
-    if (!iter()) {
+    if (!mIter) {
       mDone = true;
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -228,11 +219,13 @@ nsDNSRecord::GetAddresses(nsTArray<NetAddr>& aAddressArray) {
 
   mHostRecord->addr_info_lock.Lock();
   if (mHostRecord->addr_info) {
-    for (const auto& address : mHostRecord->addr_info->Addresses()) {
-      if (mHostRecord->Blacklisted(&address)) {
+    for (NetAddrElement* iter = mHostRecord->addr_info->mAddresses.getFirst();
+         iter; iter = iter->getNext()) {
+      if (mHostRecord->Blacklisted(&iter->mAddress)) {
         continue;
       }
-      NetAddr* addr = aAddressArray.AppendElement(address);
+      NetAddr* addr = aAddressArray.AppendElement(NetAddr());
+      memcpy(addr, &iter->mAddress, sizeof(NetAddr));
       if (addr->raw.family == AF_INET) {
         addr->inet.port = 0;
       } else if (addr->raw.family == AF_INET6) {
@@ -291,7 +284,7 @@ nsDNSRecord::HasMore(bool* result) {
     return NS_OK;
   }
 
-  nsTArray<NetAddr>::const_iterator iterCopy = mIter;
+  NetAddrElement* iterCopy = mIter;
   int iterGenCntCopy = mIterGenCnt;
 
   NetAddr addr;
@@ -306,7 +299,7 @@ nsDNSRecord::HasMore(bool* result) {
 
 NS_IMETHODIMP
 nsDNSRecord::Rewind() {
-  mIter = nsTArray<NetAddr>::const_iterator();
+  mIter = nullptr;
   mIterGenCnt = -1;
   mDone = false;
   return NS_OK;
@@ -323,8 +316,8 @@ nsDNSRecord::ReportUnusable(uint16_t aPort) {
   // ignore the report.
 
   if (mHostRecord->addr_info && mIterGenCnt == mHostRecord->addr_info_gencnt &&
-      iter()) {
-    mHostRecord->ReportUnusable(iter());
+      mIter) {
+    mHostRecord->ReportUnusable(&mIter->mAddress);
   }
 
   return NS_OK;

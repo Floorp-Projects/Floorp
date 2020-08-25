@@ -297,7 +297,7 @@ AddrHostRecord::~AddrHostRecord() {
   Telemetry::Accumulate(Telemetry::DNS_BLACKLIST_COUNT, mBlacklistedCount);
 }
 
-bool AddrHostRecord::Blacklisted(const NetAddr* aQuery) {
+bool AddrHostRecord::Blacklisted(NetAddr* aQuery) {
   // must call locked
   LOG(("Checking blacklist for host [%s], host record [%p].\n", host.get(),
        this));
@@ -323,7 +323,7 @@ bool AddrHostRecord::Blacklisted(const NetAddr* aQuery) {
   return false;
 }
 
-void AddrHostRecord::ReportUnusable(const NetAddr* aAddress) {
+void AddrHostRecord::ReportUnusable(NetAddr* aAddress) {
   // must call locked
   LOG(
       ("Adding address to blacklist for host [%s], host record [%p]."
@@ -1023,7 +1023,8 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
 
         // ok, just copy the result into the host record, and be
         // done with it! ;-)
-        addrRec->addr = MakeUnique<NetAddr>(&tempAddr);
+        addrRec->addr = MakeUnique<NetAddr>();
+        PRNetAddrToNetAddr(&tempAddr, addrRec->addr.get());
         // put reference to host record on stack...
         Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2, METHOD_LITERAL);
         result = rec;
@@ -1087,20 +1088,22 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
               // Search for any valid address in the AF_UNSPEC entry
               // in the cache (not blacklisted and from the right
               // family).
-              nsTArray<NetAddr> addresses;
-              for (const auto& addr : addrUnspecRec->addr_info->Addresses()) {
-                if ((af == addr.inet.family) &&
-                    !addrUnspecRec->Blacklisted(&addr)) {
-                  addresses.AppendElement(addr);
+              NetAddrElement* addrIter =
+                  addrUnspecRec->addr_info->mAddresses.getFirst();
+              while (addrIter) {
+                if ((af == addrIter->mAddress.inet.family) &&
+                    !addrUnspecRec->Blacklisted(&addrIter->mAddress)) {
+                  if (!addrRec->addr_info) {
+                    addrRec->addr_info =
+                        new AddrInfo(addrUnspecRec->addr_info->mHostName,
+                                     addrUnspecRec->addr_info->mCanonicalName,
+                                     addrUnspecRec->addr_info->IsTRR());
+                    addrRec->addr_info_gencnt++;
+                    rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
+                  }
+                  addrRec->addr_info->AddAddress(new NetAddrElement(*addrIter));
                 }
-              }
-              if (!addresses.IsEmpty()) {
-                addrRec->addr_info = new AddrInfo(
-                    addrUnspecRec->addr_info->Hostname(),
-                    addrUnspecRec->addr_info->CanonicalHostname(),
-                    addrUnspecRec->addr_info->IsTRR(), std::move(addresses));
-                addrRec->addr_info_gencnt++;
-                rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
+                addrIter = addrIter->getNext();
               }
             }
             // Now check if we have a new record.
@@ -1761,8 +1764,8 @@ void nsHostResolver::PrepareRecordExpirationAddrRecord(
 
   unsigned int ttl = mDefaultCacheLifetime;
   if (sGetTtlEnabled || rec->addr_info->IsTRR()) {
-    if (rec->addr_info && rec->addr_info->TTL() != AddrInfo::NO_TTL_DATA) {
-      ttl = rec->addr_info->TTL();
+    if (rec->addr_info && rec->addr_info->ttl != AddrInfo::NO_TTL_DATA) {
+      ttl = rec->addr_info->ttl;
     }
     lifetime = ttl;
     grace = 0;
@@ -1773,26 +1776,25 @@ void nsHostResolver::PrepareRecordExpirationAddrRecord(
        lifetime, grace));
 }
 
-static already_AddRefed<AddrInfo> merge_rrset(AddrInfo* rrto,
-                                              AddrInfo* rrfrom) {
-  MOZ_ASSERT(rrto && rrfrom);
+static nsresult merge_rrset(AddrInfo* rrto, AddrInfo* rrfrom) {
+  if (!rrto || !rrfrom) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  NetAddrElement* element;
   // Each of the arguments are all-IPv4 or all-IPv6 hence judging
   // by the first element. This is true only for TRR resolutions.
-  bool isIPv6 = rrfrom->Addresses().Length() > 0 &&
-                rrfrom->Addresses()[0].raw.family == PR_AF_INET6;
-
-  nsTArray<NetAddr> addresses = rrto->Addresses().Clone();
-  for (const auto& addr : rrfrom->Addresses()) {
+  bool isIPv6 = (element = rrfrom->mAddresses.getFirst()) &&
+                element->mAddress.raw.family == PR_AF_INET6;
+  while ((element = rrfrom->mAddresses.getFirst())) {
+    element->remove();  // unlist from old
     if (isIPv6) {
       // rrfrom has IPv6 so it should be first
-      addresses.InsertElementAt(0, addr);
+      rrto->mAddresses.insertFront(element);
     } else {
-      addresses.AppendElement(addr);
+      rrto->mAddresses.insertBack(element);
     }
   }
-  auto builder = rrto->Build();
-  builder.SetAddresses(std::move(addresses));
-  return builder.Finish();
+  return NS_OK;
 }
 
 static bool different_rrset(AddrInfo* rrset1, AddrInfo* rrset2) {
@@ -1800,29 +1802,49 @@ static bool different_rrset(AddrInfo* rrset1, AddrInfo* rrset2) {
     return true;
   }
 
-  LOG(("different_rrset %s\n", rrset1->Hostname().get()));
+  LOG(("different_rrset %s\n", rrset1->mHostName.get()));
+  nsTArray<NetAddr> orderedSet1;
+  nsTArray<NetAddr> orderedSet2;
 
   if (rrset1->IsTRR() != rrset2->IsTRR()) {
     return true;
   }
 
-  if (rrset1->Addresses().Length() != rrset2->Addresses().Length()) {
+  for (NetAddrElement* element = rrset1->mAddresses.getFirst(); element;
+       element = element->getNext()) {
+    if (LOG_ENABLED()) {
+      char buf[128];
+      NetAddrToString(&element->mAddress, buf, 128);
+      LOG(("different_rrset add to set 1 %s\n", buf));
+    }
+    orderedSet1.InsertElementAt(orderedSet1.Length(), element->mAddress);
+  }
+
+  for (NetAddrElement* element = rrset2->mAddresses.getFirst(); element;
+       element = element->getNext()) {
+    if (LOG_ENABLED()) {
+      char buf[128];
+      NetAddrToString(&element->mAddress, buf, 128);
+      LOG(("different_rrset add to set 2 %s\n", buf));
+    }
+    orderedSet2.InsertElementAt(orderedSet2.Length(), element->mAddress);
+  }
+
+  if (orderedSet1.Length() != orderedSet2.Length()) {
     LOG(("different_rrset true due to length change\n"));
     return true;
   }
-
-  nsTArray<NetAddr> orderedSet1 = rrset1->Addresses().Clone();
-  nsTArray<NetAddr> orderedSet2 = rrset2->Addresses().Clone();
   orderedSet1.Sort();
   orderedSet2.Sort();
 
-  bool eq = orderedSet1 == orderedSet2;
-  if (eq) {
-    LOG(("different_rrset true due to content change\n"));
-  } else {
-    LOG(("different_rrset false\n"));
+  for (uint32_t i = 0; i < orderedSet1.Length(); ++i) {
+    if (!(orderedSet1[i] == orderedSet2[i])) {
+      LOG(("different_rrset true due to content change\n"));
+      return true;
+    }
   }
-  return eq;
+  LOG(("different_rrset false\n"));
+  return false;
 }
 
 void nsHostResolver::AddToEvictionQ(nsHostRecord* rec) {
@@ -1893,7 +1915,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
   if (trrResult) {
     MutexAutoLock trrlock(addrRec->mTrrLock);
     LOG(("TRR lookup Complete (%d) %s %s\n", newRRSet->IsTRR(),
-         newRRSet->Hostname().get(), NS_SUCCEEDED(status) ? "OK" : "FAILED"));
+         newRRSet->mHostName.get(), NS_SUCCEEDED(status) ? "OK" : "FAILED"));
     MOZ_ASSERT(TRROutstanding());
     if (newRRSet->IsTRR() == TRRTYPE_A) {
       MOZ_ASSERT(addrRec->mTrrA);
@@ -1959,7 +1981,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       if (addrRec->mFirstTRR) {
         if (NS_SUCCEEDED(status)) {
           LOG(("Merging responses"));
-          newRRSet = merge_rrset(newRRSet, addrRec->mFirstTRR);
+          merge_rrset(newRRSet, addrRec->mFirstTRR);
         } else {
           LOG(("Will use previous response"));
           newRRSet.swap(addrRec->mFirstTRR);  // transfers
@@ -2035,14 +2057,12 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       addrRec->addr_info_gencnt++;
     } else {
       if (addrRec->addr_info && newRRSet) {
-        auto builder = addrRec->addr_info->Build();
-        builder.SetTTL(newRRSet->TTL());
+        addrRec->addr_info->ttl = newRRSet->ttl;
         // Update trr timings
-        builder.SetTrrFetchDuration(newRRSet->GetTrrFetchDuration());
-        builder.SetTrrFetchDurationNetworkOnly(
+        addrRec->addr_info->SetTrrFetchDuration(
+            newRRSet->GetTrrFetchDuration());
+        addrRec->addr_info->SetTrrFetchDurationNetworkOnly(
             newRRSet->GetTrrFetchDurationNetworkOnly());
-
-        addrRec->addr_info = builder.Finish();
       }
       old_addr_info = std::move(newRRSet);
     }
@@ -2061,10 +2081,12 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
 
   if (LOG_ENABLED()) {
     MutexAutoLock lock(addrRec->addr_info_lock);
+    NetAddrElement* element;
     if (addrRec->addr_info) {
-      for (const auto& elem : addrRec->addr_info->Addresses()) {
+      for (element = addrRec->addr_info->mAddresses.getFirst(); element;
+           element = element->getNext()) {
         char buf[128];
-        NetAddrToString(&elem, buf, sizeof(buf));
+        NetAddrToString(&element->mAddress, buf, sizeof(buf));
         LOG(("CompleteLookup: %s has %s\n", addrRec->host.get(), buf));
       }
     } else {
@@ -2377,10 +2399,21 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
 
     {
       MutexAutoLock lock(addrRec->addr_info_lock);
-      for (const auto& addr : addrRec->addr_info->Addresses()) {
+
+      NetAddr* addr = nullptr;
+      NetAddrElement* addrElement = addrRec->addr_info->mAddresses.getFirst();
+      if (addrElement) {
+        addr = &addrElement->mAddress;
+      }
+      while (addr) {
         char buf[kIPv6CStrBufSize];
-        if (NetAddrToString(&addr, buf, sizeof(buf))) {
+        if (NetAddrToString(addr, buf, sizeof(buf))) {
           info.hostaddr.AppendElement(buf);
+        }
+        addr = nullptr;
+        addrElement = addrElement->getNext();
+        if (addrElement) {
+          addr = &addrElement->mAddress;
         }
       }
       info.TRR = addrRec->addr_info->IsTRR();
