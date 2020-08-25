@@ -1,4 +1,6 @@
+/* clang-format off */
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -77,12 +79,14 @@ enum CheckboxValue {
 
 - (BOOL)moxIgnoreWithParent:(mozAccessible*)parent {
   if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
-    if (acc->IsContent() && acc->GetContent()->IsXULElement(nsGkAtoms::menulist)) {
-      // The way select elements work is that content has a COMBOBOX accessible, when it is clicked
-      // it expands a COMBOBOX in our top-level main XUL window. The latter COMBOBOX is a stand-in
-      // for the content one while it is expanded.
-      // XXX: VO focus behaves weirdly if we expose the dummy XUL COMBOBOX in the tree.
-      // We are only interested in its menu child.
+    if (acc->IsContent() &&
+        acc->GetContent()->IsXULElement(nsGkAtoms::menulist)) {
+      // The way select elements work is that content has a COMBOBOX accessible,
+      // when it is clicked it expands a COMBOBOX in our top-level main XUL
+      // window. The latter COMBOBOX is a stand-in for the content one while it
+      // is expanded.
+      // XXX: VO focus behaves weirdly if we expose the dummy XUL COMBOBOX in
+      // the tree. We are only interested in its menu child.
       return YES;
     }
   }
@@ -112,7 +116,8 @@ enum CheckboxValue {
       return radioSiblings;
     } else {
       ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
-      nsTArray<ProxyAccessible*> accs = proxy->RelationByType(RelationType::MEMBER_OF);
+      nsTArray<ProxyAccessible*> accs =
+          proxy->RelationByType(RelationType::MEMBER_OF);
       return utils::ConvertToNSArray(accs);
     }
   }
@@ -128,7 +133,8 @@ enum CheckboxValue {
 
 - (int)isChecked {
   // check if we're checked or in a mixed state
-  uint64_t state = [self stateWithMask:(states::CHECKED | states::PRESSED | states::MIXED)];
+  uint64_t state =
+      [self stateWithMask:(states::CHECKED | states::PRESSED | states::MIXED)];
   if (state & (states::CHECKED | states::PRESSED)) {
     return kChecked;
   }
@@ -155,18 +161,22 @@ enum CheckboxValue {
 - (NSArray*)moxChildren {
   if (!mGeckoAccessible.AsAccessible()) return nil;
 
-  nsDeckFrame* deckFrame = do_QueryFrame(mGeckoAccessible.AsAccessible()->GetFrame());
+  nsDeckFrame* deckFrame =
+      do_QueryFrame(mGeckoAccessible.AsAccessible()->GetFrame());
   nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nullptr;
 
   Accessible* selectedAcc = nullptr;
   if (selectedFrame) {
     nsINode* node = selectedFrame->GetContent();
-    selectedAcc = mGeckoAccessible.AsAccessible()->Document()->GetAccessible(node);
+    selectedAcc =
+        mGeckoAccessible.AsAccessible()->Document()->GetAccessible(node);
   }
 
   if (selectedAcc) {
     mozAccessible* curNative = GetNativeFromGeckoAccessible(selectedAcc);
-    if (curNative) return [NSArray arrayWithObjects:GetObjectOrRepresentedView(curNative), nil];
+    if (curNative)
+      return
+          [NSArray arrayWithObjects:GetObjectOrRepresentedView(curNative), nil];
   }
 
   return nil;

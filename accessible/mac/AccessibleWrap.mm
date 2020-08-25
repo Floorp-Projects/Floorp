@@ -40,16 +40,17 @@ mozAccessible* AccessibleWrap::GetNativeObject() {
     // We don't creat OSX accessibles for xul tooltips, defunct accessibles,
     // <br> (whitespace) elements, or pruned children.
     //
-    // We also don't create a native object if we're child of a "flat" accessible;
-    // for example, on OS X buttons shouldn't have any children, because that
-    // makes the OS confused.
+    // We also don't create a native object if we're child of a "flat"
+    // accessible; for example, on OS X buttons shouldn't have any children,
+    // because that makes the OS confused.
     //
     // To maintain a scripting environment where the XPCOM accessible hierarchy
     // look the same on all platforms, we still let the C++ objects be created
     // though.
     Accessible* parent = Parent();
     bool mustBePruned = parent && nsAccUtils::MustPrune(parent);
-    if (!IsXULTooltip() && !IsDefunct() && !mustBePruned && Role() != roles::WHITESPACE) {
+    if (!IsXULTooltip() && !IsDefunct() && !mustBePruned &&
+        Role() != roles::WHITESPACE) {
       mNativeObject = [[GetNativeType() alloc] initWithAccessible:this];
     }
   }
@@ -65,8 +66,8 @@ void AccessibleWrap::GetNativeInterface(void** aOutInterface) {
   *aOutInterface = static_cast<void*>(GetNativeObject());
 }
 
-// overridden in subclasses to create the right kind of object. by default we create a generic
-// 'mozAccessible' node.
+// overridden in subclasses to create the right kind of object. by default we
+// create a generic 'mozAccessible' node.
 Class AccessibleWrap::GetNativeType() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -83,9 +84,9 @@ Class AccessibleWrap::GetNativeType() {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-// this method is very important. it is fired when an accessible object "dies". after this point
-// the object might still be around (because some 3rd party still has a ref to it), but it is
-// in fact 'dead'.
+// this method is very important. it is fired when an accessible object "dies".
+// after this point the object might still be around (because some 3rd party
+// still has a ref to it), but it is in fact 'dead'.
 void AccessibleWrap::Shutdown() {
   // this ensure we will not try to re-create the native object.
   mNativeInited = true;
@@ -147,7 +148,8 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_STATE_CHANGE: {
       AccStateChangeEvent* event = downcast_accEvent(aEvent);
-      [nativeAcc stateChanged:event->GetState() isEnabled:event->IsStateEnabled()];
+      [nativeAcc stateChanged:event->GetState()
+                    isEnabled:event->IsStateEnabled()];
       break;
     }
 
@@ -177,7 +179,10 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
         MOXTextMarkerDelegate* delegate =
             [MOXTextMarkerDelegate getOrCreateForDoc:aEvent->Document()];
         int32_t caretOffset = event->GetCaretOffset();
-        [delegate setSelectionFrom:eventTarget at:caretOffset to:eventTarget at:caretOffset];
+        [delegate setSelectionFrom:eventTarget
+                                at:caretOffset
+                                to:eventTarget
+                                at:caretOffset];
       }
 
       [nativeAcc handleAccessibleEvent:eventType];
@@ -187,7 +192,8 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
     case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
       AccTextChangeEvent* tcEvent = downcast_accEvent(aEvent);
-      [nativeAcc handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(tcEvent->ModifiedText())
+      [nativeAcc handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(
+                                                     tcEvent->ModifiedText())
                                         inserted:tcEvent->IsTextInserted()
                                      inContainer:aEvent->GetAccessible()
                                               at:tcEvent->GetStartOffset()];
