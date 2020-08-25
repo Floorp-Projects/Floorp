@@ -24,6 +24,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -1135,15 +1136,8 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
     }
 
     uint64_t windowID = 0;
-    nsCOMPtr<nsPIDOMWindowOuter> topWindow =
-        aWindow->GetInProcessScriptableTop();
-    nsCOMPtr<nsPIDOMWindowInner> topInner;
-    if (topWindow) {
-      topInner = topWindow->GetCurrentInnerWindow();
-    }
-
-    if (topInner) {
-      windowID = topInner->WindowID();
+    if (WindowContext* wc = aWindow->GetWindowContext()) {
+      windowID = wc->TopWindowContext()->InnerWindowId();
     }
 
     mErrorCode = mImpl->AsyncOpen(principal, windowID, nullptr, EmptyCString(),
@@ -1349,7 +1343,6 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     MOZ_ASSERT(principal);
 
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(global);
-    nsPIDOMWindowOuter* outerWindow = ownerWindow->GetOuterWindow();
 
     UniquePtr<SerializedStackHolder> stack;
     BrowsingContext* browsingContext = ownerWindow->GetBrowsingContext();
@@ -1358,15 +1351,8 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     }
 
     uint64_t windowID = 0;
-    nsCOMPtr<nsPIDOMWindowOuter> topWindow =
-        outerWindow->GetInProcessScriptableTop();
-    nsCOMPtr<nsPIDOMWindowInner> topInner;
-    if (topWindow) {
-      topInner = topWindow->GetCurrentInnerWindow();
-    }
-
-    if (topInner) {
-      windowID = topInner->WindowID();
+    if (WindowContext* wc = ownerWindow->GetWindowContext()) {
+      windowID = wc->TopWindowContext()->InnerWindowId();
     }
 
     aRv = webSocket->mImpl->AsyncOpen(principal, windowID, aTransportProvider,
