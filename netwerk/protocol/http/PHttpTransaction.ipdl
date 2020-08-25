@@ -46,7 +46,8 @@ parent:
                        uint8_t[]                  dataForSniffer,
                        nsCString?                 altSvcUsed,
                        bool                       dataToChildProcess,
-                       bool                       restarted);
+                       bool                       restarted,
+                       uint32_t?                  HTTPSSVCReceivedStage);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
                           int64_t progressMax,

@@ -4124,6 +4124,16 @@
     "n_buckets": 20,
     "description": "The number of unusable addresses reported for each record"
   },
+  "DNS_HTTPSSVC_RECORD_RECEIVING_STAGE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "n_values": 50,
+    "bug_numbers": [1652667],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "kind": "enumerated",
+    "description": "Record at which stage an HTTPSSVC record is received"
+  },
   "REFRESH_DRIVER_TICK" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
