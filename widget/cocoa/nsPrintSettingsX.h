@@ -26,18 +26,17 @@ class nsPrintSettingsX : public nsPrintSettings {
   nsresult Init();
   NSPrintInfo* GetCocoaPrintInfo() { return mPrintInfo; }
   void SetCocoaPrintInfo(NSPrintInfo* aPrintInfo);
-  virtual nsresult ReadPageFormatFromPrefs();
-  virtual nsresult WritePageFormatToPrefs();
-  virtual nsresult GetEffectivePageSize(double* aWidth,
-                                        double* aHeight) override;
+  nsresult ReadPageFormatFromPrefs();
+  nsresult WritePageFormatToPrefs();
+  nsresult GetEffectivePageSize(double* aWidth, double* aHeight) override;
   void GetFilePageSize(double* aWidth, double* aHeight);
 
   // In addition to setting the paper width and height, these
   // overrides set the adjusted width and height returned from
   // GetEffectivePageSize. This is needed when a paper size is
   // set manually without using a print dialog a la reftest-paged.
-  virtual nsresult SetPaperWidth(double aPaperWidth) override;
-  virtual nsresult SetPaperHeight(double aPaperWidth) override;
+  nsresult SetPaperWidth(double aPaperWidth) override;
+  nsresult SetPaperHeight(double aPaperWidth) override;
 
   PMPrintSettings GetPMPrintSettings();
   PMPrintSession GetPMPrintSession();

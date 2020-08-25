@@ -149,7 +149,7 @@ void nsPrintSettingsX::SetCocoaPrintInfo(NSPrintInfo* aPrintInfo) {
   }
 }
 
-NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs() {
+nsresult nsPrintSettingsX::ReadPageFormatFromPrefs() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsAutoCString encodedData;
@@ -175,7 +175,7 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs() {
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs() {
+nsresult nsPrintSettingsX::WritePageFormatToPrefs() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   PMPageFormat pageFormat = GetPMPageFormat();
