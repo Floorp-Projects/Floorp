@@ -46,7 +46,7 @@ class VendorManifest(MozbuildObject):
             )
             return
         elif check_for_update:
-            print("%s" % commit)
+            print("%s %s" % (commit, timestamp))
             return
 
         self.fetch_and_unpack(commit)
