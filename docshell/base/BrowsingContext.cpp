@@ -2595,6 +2595,14 @@ void BrowsingContext::RemoveDynEntriesFromActiveSessionHistoryEntry() {
   }
 }
 
+void BrowsingContext::RemoveFromSessionHistory() {
+  if (XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()->SendRemoveFromSessionHistory(this);
+  } else {
+    Canonical()->RemoveFromSessionHistory();
+  }
+}
+
 }  // namespace dom
 
 namespace ipc {

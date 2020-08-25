@@ -651,6 +651,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // Removes dynamic child entries of the active entry.
   void RemoveDynEntriesFromActiveSessionHistoryEntry();
 
+  // Removes entries corresponding to this BrowsingContext from session history.
+  void RemoveFromSessionHistory();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,

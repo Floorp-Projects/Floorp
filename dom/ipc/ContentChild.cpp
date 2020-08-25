@@ -4197,6 +4197,14 @@ mozilla::ipc::IPCResult ContentChild::RecvHistoryCommitIndexAndLength(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvDispatchLocationChangeEvent(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (!aContext.IsNullOrDiscarded() && aContext.get()->GetDocShell()) {
+    aContext.get()->GetDocShell()->DispatchLocationChangeEvent();
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvGoBack(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<int32_t>& aCancelContentJSEpoch, bool aRequireUserInteraction) {

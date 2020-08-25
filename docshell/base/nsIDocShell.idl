@@ -716,12 +716,6 @@ interface nsIDocShell : nsIDocShellTreeItem
                        in boolean aCloneChilden);
 
   /**
-   * Removes nsISHEntry objects related to this docshell from session history.
-   * Use this only with subdocuments, like iframes.
-   */
-  void removeFromSessionHistory();
-
-  /**
    * Set when an iframe/frame is added dynamically.
    */
   [infallible] attribute boolean createdDynamically;

@@ -2938,18 +2938,6 @@ nsresult nsDocShell::AddChildSHEntryToParent(nsISHEntry* aNewEntry,
 }
 
 NS_IMETHODIMP
-nsDocShell::RemoveFromSessionHistory() {
-  RefPtr<ChildSHistory> sessionHistory = GetRootSessionHistory();
-  if (!sessionHistory) {
-    return NS_OK;
-  }
-  int32_t index = sessionHistory->Index();
-  AutoTArray<nsID, 16> ids({mHistoryID});
-  sessionHistory->LegacySHistory()->RemoveEntries(ids, index);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetCreatedDynamically(bool aDynamic) {
   mDynamicallyCreated = aDynamic;
   return NS_OK;

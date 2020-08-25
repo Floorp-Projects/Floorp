@@ -48,6 +48,7 @@
 #include "nsQueryObject.h"
 #include "ReferrerInfo.h"
 #include "nsIOpenWindowInfo.h"
+#include "nsISHistory.h"
 
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -74,6 +75,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/Element.h"
@@ -1868,8 +1870,19 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
 
   // Seems like this is a dynamic frame removal.
   if (dynamicSubframeRemoval) {
-    if (GetDocShell()) {
-      GetDocShell()->RemoveFromSessionHistory();
+    BrowsingContext* browsingContext = GetExtantBrowsingContext();
+    if (browsingContext) {
+      RefPtr<ChildSHistory> childSHistory =
+          browsingContext->Top()->GetChildSessionHistory();
+      if (childSHistory) {
+        if (StaticPrefs::fission_sessionHistoryInParent()) {
+          browsingContext->RemoveFromSessionHistory();
+        } else {
+          AutoTArray<nsID, 16> ids({browsingContext->GetHistoryID()});
+          childSHistory->LegacySHistory()->RemoveEntries(
+              ids, childSHistory->Index());
+        }
+      }
     }
   }
 

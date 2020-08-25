@@ -477,6 +477,28 @@ void CanonicalBrowsingContext::RemoveDynEntriesFromActiveSessionHistoryEntry() {
   shistory->RemoveDynEntries(shistory->GetIndexOfEntry(root), mActiveEntry);
 }
 
+void CanonicalBrowsingContext::RemoveFromSessionHistory() {
+  nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
+  if (shistory) {
+    nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(mActiveEntry);
+    bool didRemove;
+    AutoTArray<nsID, 16> ids({GetHistoryID()});
+    shistory->RemoveEntries(ids, shistory->GetIndexOfEntry(root), &didRemove);
+    if (didRemove) {
+      BrowsingContext* rootBC = shistory->GetBrowsingContext();
+      if (rootBC) {
+        if (!rootBC->IsInProcess()) {
+          Unused << rootBC->Canonical()
+                        ->GetContentParent()
+                        ->SendDispatchLocationChangeEvent(rootBC);
+        } else if (rootBC->GetDocShell()) {
+          rootBC->GetDocShell()->DispatchLocationChangeEvent();
+        }
+      }
+    }
+  }
+}
+
 JSObject* CanonicalBrowsingContext::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
