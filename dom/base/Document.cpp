@@ -8981,6 +8981,8 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
   // we do anything else, so we can then proceed to later ready state levels.
   SetReadyStateInternal(READYSTATE_UNINITIALIZED,
                         /* updateTimingInformation = */ false);
+  // Reset a flag that affects readyState behavior.
+  mSetCompleteAfterDOMContentLoaded = false;
 
   // Step 13 -- set our compat mode to standards.
   SetCompatibilityMode(eCompatibility_FullStandards);
