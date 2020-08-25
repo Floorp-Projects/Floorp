@@ -39,8 +39,7 @@ class GeckoContentController {
    *  MatrixMessage for each layers id in the current APZ tree, along with the
    * corresponding transform.
    */
-  virtual void NotifyLayerTransforms(
-      const nsTArray<MatrixMessage>& aTransforms) = 0;
+  virtual void NotifyLayerTransforms(nsTArray<MatrixMessage>&& aTransforms) = 0;
 
   /**
    * Requests a paint of the given RepaintRequest |aRequest| from Gecko.

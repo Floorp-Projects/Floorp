@@ -127,7 +127,7 @@ class ScopedGfxSetting {
 
 class MockContentController : public GeckoContentController {
  public:
-  MOCK_METHOD1(NotifyLayerTransforms, void(const nsTArray<MatrixMessage>&));
+  MOCK_METHOD1(NotifyLayerTransforms, void(nsTArray<MatrixMessage>&&));
   MOCK_METHOD1(RequestContentRepaint, void(const RepaintRequest&));
   MOCK_METHOD2(RequestFlingSnap,
                void(const ScrollableLayerGuid::ViewID& aScrollId,

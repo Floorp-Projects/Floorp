@@ -26,7 +26,7 @@ class APZChild final : public PAPZChild {
   virtual ~APZChild();
 
   mozilla::ipc::IPCResult RecvLayerTransforms(
-      const nsTArray<MatrixMessage>& aTransforms);
+      nsTArray<MatrixMessage>&& aTransforms);
 
   mozilla::ipc::IPCResult RecvRequestContentRepaint(
       const RepaintRequest& aRequest);
