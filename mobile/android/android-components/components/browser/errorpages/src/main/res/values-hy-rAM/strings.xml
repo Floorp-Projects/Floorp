@@ -151,7 +151,7 @@
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p> Դիտարկիչը չկարողացավ գտնել տրամադրված հասցեի հոսթի սպասարկիչը:</p>
       <ul>
-        <li> Ստուգեք հասցեն՝ արդյոք մուտքագրելու սխալների համար, ինչպիսիք են
+        <li> Ստուգեք հասցեն՝ մուտքագրելու սխալների համար, ինչպիսիք են
           <strong> ww </strong>.example.com
           <strong> www </strong>.example.com-ի փոխարեն</li>
         <li>Եթե որևէ էջ չի բեռնվում, ապա ստուգեք ձեր սարքի տվյալները կամ Wi-Fi կապակցումը:</li>
@@ -160,13 +160,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Չկա համացանցային կապակցում</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
-    <string name="mozac_browser_errorpages_no_internet_message">Ստուգեք ձեր ցանցային կապակցումը կամ փորձեք կրկին բեռնել էջը մի քանի վայրկյանում:</string>
+    <string name="mozac_browser_errorpages_no_internet_message">Ստուգեք ձեր ցանցային կապակցումը կամ փորձեք կրկին բեռնել էջը մի քանի վայրկյանից:</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Կրկին բեռնել</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Անվավեր Հասցե</string>
-    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Ներկայացված հասցեն ճանաչված ձևաչափով չէ: Խնդրում ենք ստուգել տեղադրության գոնտին սխալների համար և կրկին փորձել:</p>]]></string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Ներկայացված հասցեն ճանաչված ձևաչափով չէ: Խնդրում ենք ստուգել տեղադրության գոտին՝ արդյոք սխալ կա, և կրկին փորձել:</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Հասցեն վավեր չէ</string>
 
