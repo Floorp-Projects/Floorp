@@ -1976,7 +1976,6 @@ bool CacheIRCompiler::emitGuardIsExtensible(ObjOperandId objId) {
   return true;
 }
 
-
 bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
     ObjOperandId objId, ObjOperandId expectedId, uint32_t slotOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -3608,6 +3607,32 @@ bool CacheIRCompiler::emitGuardFunctionHasNoJitEntry(ObjOperandId funId) {
 
   masm.branchIfFunctionHasJitEntry(obj, /*isConstructing =*/false,
                                    failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardFunctionIsNonBuiltinCtor(ObjOperandId funId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register fun = allocator.useRegister(masm, funId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Guard the function has the BASESCRIPT and CONSTRUCTOR flags and does NOT
+  // have the SELF_HOSTED flag.
+  // This is equivalent to JSFunction::isNonBuiltinConstructor.
+  constexpr uint32_t mask = FunctionFlags::BASESCRIPT |
+                            FunctionFlags::SELF_HOSTED |
+                            FunctionFlags::CONSTRUCTOR;
+  constexpr uint32_t expected =
+      FunctionFlags::BASESCRIPT | FunctionFlags::CONSTRUCTOR;
+  masm.load16ZeroExtend(Address(fun, JSFunction::offsetOfFlags()), scratch);
+  masm.and32(Imm32(mask), scratch);
+  masm.branch32(Assembler::NotEqual, scratch, Imm32(expected),
+                failure->label());
   return true;
 }
 

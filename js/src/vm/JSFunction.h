@@ -173,6 +173,10 @@ class JSFunction : public js::NativeObject {
 
   bool isConstructor() const { return flags_.isConstructor(); }
 
+  bool isNonBuiltinConstructor() const {
+    return flags_.isNonBuiltinConstructor();
+  }
+
   /* Possible attributes of a native function: */
   bool isAsmJSNative() const { return flags_.isAsmJSNative(); }
 
