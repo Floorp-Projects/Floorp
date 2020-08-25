@@ -59,7 +59,7 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
 
     override fun onMigrationCompleted(results: MigrationResults) {
         // Enable clicking the finish button
-        migration_button_text_view.apply {
+        migration_button.apply {
             setOnClickListener {
                 AbstractMigrationService.dismissNotification(context)
 
@@ -78,6 +78,8 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
                     startActivity(Intent(this@MigrationProgressActivity, HomeActivity::class.java))
                 }
             }
+        }
+        migration_button_text_view.apply {
             text = getString(R.string.migration_update_app_button, getString(R.string.app_name))
             setTextColor(ContextCompat.getColor(context, R.color.white_color))
         }
