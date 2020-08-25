@@ -7,3 +7,4 @@
 | Name | Summary |
 |---|---|
 | [toIconRequest](to-icon-request.md) | `fun `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`.toIconRequest(): `[`IconRequest`](../mozilla.components.browser.icons/-icon-request/index.md)<br>Creates an [IconRequest](../mozilla.components.browser.icons/-icon-request/index.md) for retrieving the icon specified in the manifest. |
+| [toMonochromeIconRequest](to-monochrome-icon-request.md) | `fun `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`.toMonochromeIconRequest(): `[`IconRequest`](../mozilla.components.browser.icons/-icon-request/index.md)<br>Creates an [IconRequest](../mozilla.components.browser.icons/-icon-request/index.md) for retrieving a monochrome icon specified in the manifest. |

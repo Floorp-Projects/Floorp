@@ -8,6 +8,6 @@
 
 | Name | Summary |
 |---|---|
-| [BADGE](-b-a-d-g-e.md) | A user agent can present this icon where space constraints and/or color requirements differ from those of the application icon. |
+| [MONOCHROME](-m-o-n-o-c-h-r-o-m-e.md) | A user agent can present this icon where space constraints and/or color requirements differ from those of the application icon. |
 | [MASKABLE](-m-a-s-k-a-b-l-e.md) | The image is designed with icon masks and safe zone in mind, such that any part of the image that is outside the safe zone can safely be ignored and masked away by the user agent. |
 | [ANY](-a-n-y.md) | The user agent is free to display the icon in any context (this is the default value). |

@@ -2,7 +2,7 @@
 
 # WebAppInstallState
 
-`enum class WebAppInstallState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L242)
+`enum class WebAppInstallState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L241)
 
 Possible install states of a Web App.
 
