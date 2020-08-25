@@ -74,17 +74,18 @@ async function runTest(options) {
       );
 
       [jpeg, png] = await Promise.all(promises);
-      let tabDims = `${tab.width}\u00d7${tab.height}`;
-
       let images = { jpeg, png };
       for (let format of Object.keys(images)) {
         let img = images[format];
 
-        let dims = `${img.width}\u00d7${img.height}`;
-        browser.test.assertEq(
-          tabDims,
-          dims,
-          `${format} dimensions are correct`
+        // WGP.drawSnapshot() deals in int coordinates, and rounds down.
+        browser.test.assertTrue(
+          Math.abs(tab.width - img.width) <= 1,
+          `${format} ok image width: ${img.width}, from a tab: ${tab.width}`
+        );
+        browser.test.assertTrue(
+          Math.abs(tab.height - img.height) <= 1,
+          `${format} ok image height ${img.height}, from a tab: ${tab.height}`
         );
 
         let canvas = document.createElement("canvas");

@@ -2,35 +2,13 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-async function runTest(options) {
-  options.neutral = [0xaa, 0xaa, 0xaa];
-
-  let html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head><meta charset="UTF-8"></head>
-    <body style="background-color: rgb(${options.color})">
-      <!-- Fill most of the image with a neutral color to test edge-to-edge scaling. -->
-      <div style="position: absolute;
-                  left: 2px;
-                  right: 2px;
-                  top: 2px;
-                  bottom: 2px;
-                  background: rgb(${options.neutral});"></div>
-    </body>
-    </html>
-  `;
-
-  let url = `data:text/html,${encodeURIComponent(html)}`;
+async function runTest({ html, fullZoom = 1, coords }) {
+  let url = `data:text/html,${encodeURIComponent(html)}#scroll`;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
 
-  tab.linkedBrowser.fullZoom = options.fullZoom;
+  tab.linkedBrowser.fullZoom = fullZoom;
 
-  async function background(options) {
-    browser.test.log(
-      `Test color ${options.color} at fullZoom=${options.fullZoom}`
-    );
-
+  async function background(coords) {
     try {
       let [tab] = await browser.tabs.query({
         currentWindow: true,
@@ -68,17 +46,18 @@ async function runTest(options) {
       );
 
       [jpeg, png] = await Promise.all(promises);
-      let tabDims = `${tab.width}\u00d7${tab.height}`;
-
       let images = { jpeg, png };
       for (let format of Object.keys(images)) {
         let img = images[format];
 
-        let dims = `${img.width}\u00d7${img.height}`;
-        browser.test.assertEq(
-          tabDims,
-          dims,
-          `${format} dimensions are correct`
+        // WGP.drawSnapshot() deals in int coordinates, and rounds down.
+        browser.test.assertTrue(
+          Math.abs(tab.width - img.width) <= 1,
+          `${format} ok image width: ${img.width}, from a tab: ${tab.width}`
+        );
+        browser.test.assertTrue(
+          Math.abs(tab.height - img.height) <= 1,
+          `${format} ok image height ${img.height}, from a tab: ${tab.height}`
         );
 
         let canvas = document.createElement("canvas");
@@ -89,19 +68,9 @@ async function runTest(options) {
         let ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
 
-        // Check the colors of the first and last pixels of the image, to make
-        // sure we capture the entire frame, and scale it correctly.
-        let coords = [
-          { x: 0, y: 0, color: options.color },
-          { x: img.width - 1, y: img.height - 1, color: options.color },
-          {
-            x: (img.width / 2) | 0,
-            y: (img.height / 2) | 0,
-            color: options.neutral,
-          },
-        ];
-
         for (let { x, y, color } of coords) {
+          x = (x + img.width) % img.width;
+          y = (y + img.height) % img.height;
           let imageData = ctx.getImageData(x, y, 1, 1).data;
 
           if (format == "png") {
@@ -153,7 +122,7 @@ async function runTest(options) {
       permissions: ["<all_urls>"],
     },
 
-    background: `(${background})(${JSON.stringify(options)})`,
+    background: `(${background})(${JSON.stringify(coords)})`,
   });
 
   await extension.startup();
@@ -165,14 +134,77 @@ async function runTest(options) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function testCaptureTab() {
-  await runTest({ color: [0, 0, 0], fullZoom: 1 });
+function testEdgeToEdge({ color, fullZoom }) {
+  let neutral = [0xaa, 0xaa, 0xaa];
 
-  await runTest({ color: [0, 0, 0], fullZoom: 2 });
+  let html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="UTF-8"></head>
+    <body style="background-color: rgb(${color})">
+      <!-- Fill most of the image with a neutral color to test edge-to-edge scaling. -->
+      <div style="position: absolute;
+                  left: 2px;
+                  right: 2px;
+                  top: 2px;
+                  bottom: 2px;
+                  background: rgb(${neutral});"></div>
+    </body>
+    </html>
+  `;
 
-  await runTest({ color: [0, 0, 0], fullZoom: 0.5 });
+  // Check the colors of the first and last pixels of the image, to make
+  // sure we capture the entire frame, and scale it correctly.
+  let coords = [
+    { x: 0, y: 0, color },
+    { x: -1, y: -1, color },
+    { x: 300, y: 200, color: neutral },
+  ];
 
-  await runTest({ color: [255, 255, 255], fullZoom: 1 });
+  info(`Test edge to edge color ${color} at fullZoom=${fullZoom}`);
+  return runTest({ html, fullZoom, coords });
+}
+
+add_task(async function testCaptureEdgeToEdge() {
+  await testEdgeToEdge({ color: [0, 0, 0], fullZoom: 1 });
+
+  await testEdgeToEdge({ color: [0, 0, 0], fullZoom: 2 });
+
+  await testEdgeToEdge({ color: [0, 0, 0], fullZoom: 0.5 });
+
+  await testEdgeToEdge({ color: [255, 255, 255], fullZoom: 1 });
+});
+
+// Test currently visible viewport is captured if scrolling is involved.
+add_task(async function testScrolledViewport() {
+  await runTest({
+    html: `<!DOCTYPE html>
+      <meta charset=utf-8>
+      <div style="background: yellow; width: 50%; height: 500px;"></div>
+      <div id=scroll style="background: red; width: 25%; height: 5000px;"></div>
+      Opened with the #scroll fragment, scrolls the div ^ into view.
+    `,
+    coords: [
+      { x: 50, y: 50, color: [255, 0, 0] },
+      { x: 50, y: -50, color: [255, 0, 0] },
+      { x: -50, y: -50, color: [255, 255, 255] },
+    ],
+  });
+});
+
+// Test OOP iframes are captured, for Fission compatibility.
+add_task(async function testOOPiframe() {
+  await runTest({
+    html: `<!DOCTYPE html>
+      <meta charset=utf-8>
+      <iframe src="http://example.com/browser/browser/components/extensions/test/browser/file_green.html"></iframe>
+    `,
+    coords: [
+      { x: 50, y: 50, color: [0, 255, 0] },
+      { x: 50, y: -50, color: [255, 255, 255] },
+      { x: -50, y: 50, color: [255, 255, 255] },
+    ],
+  });
 });
 
 add_task(async function testCaptureTabPermissions() {

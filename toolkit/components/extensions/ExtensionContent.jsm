@@ -1101,34 +1101,6 @@ var ExtensionContent = {
     return context;
   },
 
-  handleExtensionCapture(global, width, height, options) {
-    let win = global.content;
-
-    const XHTML_NS = "http://www.w3.org/1999/xhtml";
-    let canvas = win.document.createElementNS(XHTML_NS, "canvas");
-    canvas.width = width;
-    canvas.height = height;
-    canvas.mozOpaque = true;
-
-    let ctx = canvas.getContext("2d");
-
-    // We need to scale the image to the visible size of the browser,
-    // in order for the result to appear as the user sees it when
-    // settings like full zoom come into play.
-    ctx.scale(canvas.width / win.innerWidth, canvas.height / win.innerHeight);
-
-    ctx.drawWindow(
-      win,
-      win.scrollX,
-      win.scrollY,
-      win.innerWidth,
-      win.innerHeight,
-      "#fff"
-    );
-
-    return canvas.toDataURL(`image/${options.format}`, options.quality / 100);
-  },
-
   handleDetectLanguage(global, target) {
     let doc = target.content.document;
 
@@ -1217,13 +1189,6 @@ var ExtensionContent = {
 
   async receiveMessage(global, name, target, data, recipient) {
     switch (name) {
-      case "Extension:Capture":
-        return this.handleExtensionCapture(
-          global,
-          data.width,
-          data.height,
-          data.options
-        );
       case "Extension:DetectLanguage":
         return this.handleDetectLanguage(global, target);
       case "WebNavigation:GetFrame":

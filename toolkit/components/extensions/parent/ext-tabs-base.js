@@ -7,16 +7,11 @@
 
 /* globals EventEmitter */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "containersEnabled",
@@ -112,7 +107,7 @@ class TabBase {
   }
 
   /**
-   * Capture the visible area of this tab, and return the result as a data: URL.
+   * Capture the visible area of this tab, and return the result as a data: URI.
    *
    * @param {BaseContext} context
    *        The extension context for which to perform the capture.
@@ -127,24 +122,23 @@ class TabBase {
    *
    * @returns {Promise<string>}
    */
-  capture(context, options = null) {
-    if (!options) {
-      options = {};
-    }
-    if (options.format == null) {
-      options.format = "png";
-    }
-    if (options.quality == null) {
-      options.quality = 92;
-    }
+  async capture(context, options = null) {
+    let { ZoomManager, devicePixelRatio } = this.nativeTab.ownerGlobal;
+    let scale = ZoomManager.getZoomForBrowser(this.browser) * devicePixelRatio;
 
-    let message = {
-      options,
-      width: this.width,
-      height: this.height,
-    };
+    let wgp = this.browsingContext.currentWindowGlobal;
+    let image = await wgp.drawSnapshot(null, scale, "white");
 
-    return this.sendMessage(context, "Extension:Capture", message);
+    let win = Services.appShell.hiddenDOMWindow;
+    let canvas = win.document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+
+    let ctx = canvas.getContext("2d", { alpha: false });
+    ctx.drawImage(image, 0, 0);
+    image.close();
+
+    return canvas.toDataURL(`image/${options?.format}`, options?.quality / 100);
   }
 
   /**

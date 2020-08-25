@@ -623,8 +623,13 @@ already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
     return nullptr;
   }
 
-  if (!gfx::CrossProcessPaint::Start(this, aRect, (float)aScale, color,
-                                     gfx::CrossProcessPaintFlags::None,
+  gfx::CrossProcessPaintFlags flags = gfx::CrossProcessPaintFlags::None;
+  if (!aRect) {
+    // If no explicit Rect was passed, we want the currently visible viewport.
+    flags = gfx::CrossProcessPaintFlags::DrawView;
+  }
+
+  if (!gfx::CrossProcessPaint::Start(this, aRect, (float)aScale, color, flags,
                                      promise)) {
     aRv = NS_ERROR_FAILURE;
     return nullptr;
