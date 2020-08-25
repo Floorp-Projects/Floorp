@@ -13,7 +13,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIChannel.h"
 #include "nsIChildChannel.h"
-#include "nsITraceableChannel.h"
 
 class nsDocShell;
 
@@ -39,13 +38,12 @@ uint64_t InnerWindowIDForExtantDoc(nsDocShell* docShell);
  * channel with the real one, otherwise the originating docshell will be removed
  * during the process switch.
  */
-class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
+class DocumentChannel : public nsIIdentChannel {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIIDENTCHANNEL
-  NS_DECL_NSITRACEABLECHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_IID)
 
