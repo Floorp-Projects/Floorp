@@ -2586,6 +2586,15 @@ void BrowsingContext::ReplaceActiveSessionHistoryEntry(
   }
 }
 
+void BrowsingContext::RemoveDynEntriesFromActiveSessionHistoryEntry() {
+  if (XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()
+        ->SendRemoveDynEntriesFromActiveSessionHistoryEntry(this);
+  } else {
+    Canonical()->RemoveDynEntriesFromActiveSessionHistoryEntry();
+  }
+}
+
 }  // namespace dom
 
 namespace ipc {

@@ -1370,6 +1370,9 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext,
       SessionHistoryInfo&& aInfo);
 
+  mozilla::ipc::IPCResult RecvRemoveDynEntriesFromActiveSessionHistoryEntry(
+      const MaybeDiscarded<BrowsingContext>& aContext);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();

@@ -1690,6 +1690,9 @@ parent:
     async ReplaceActiveSessionHistoryEntry(
         MaybeDiscardedBrowsingContext aContext, SessionHistoryInfo info);
 
+    async RemoveDynEntriesFromActiveSessionHistoryEntry(
+        MaybeDiscardedBrowsingContext aContext);
+
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                       uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
