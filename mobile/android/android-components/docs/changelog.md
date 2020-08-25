@@ -48,6 +48,10 @@ permalink: /changelog/
 * **feature-downloads**
   * 🚒 Fix [issue #8202](https://github.com/mozilla-mobile/android-components/issues/8202) Download's ui were always showing failed status.
 
+* **feature-pwa**
+  * ⚠️ **This is a breaking change**: The `SiteControlsBuilder` interface has changed. `buildNotification` now takes two parameters: `Context` and `Notification.Builder`.
+  * `WebAppSiteControlsFeature` now supports displaying monochrome icons.
+
 # 55.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v54.0.0...v55.0.0)

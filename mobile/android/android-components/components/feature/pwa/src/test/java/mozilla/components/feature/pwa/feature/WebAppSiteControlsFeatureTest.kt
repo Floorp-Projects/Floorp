@@ -5,9 +5,14 @@
 package mozilla.components.feature.pwa.feature
 
 import android.content.Intent
+import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.manifest.Size
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -28,7 +33,7 @@ class WebAppSiteControlsFeatureTest {
         val context = spy(testContext)
 
         val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock())
-        feature.onResume()
+        feature.onResume(mock())
 
         verify(context).registerReceiver(eq(feature), any())
     }
@@ -57,5 +62,49 @@ class WebAppSiteControlsFeatureTest {
         feature.onReceive(testContext, Intent("mozilla.components.feature.pwa.REFRESH"))
 
         verify(reloadUrlUseCase).invoke(session)
+    }
+
+    @Test
+    fun `load monochrome icon if defined in manifest`() {
+        val sessionManager: SessionManager = mock()
+        val session: Session = mock()
+        val icons: BrowserIcons = mock()
+        val manifest = WebAppManifest(
+            name = "Mozilla",
+            startUrl = "https://mozilla.org",
+            scope = "https://mozilla.org",
+            icons = listOf(
+                WebAppManifest.Icon(
+                    src = "https://mozilla.org/logo_color.svg",
+                    sizes = listOf(Size.ANY),
+                    type = "image/svg+xml",
+                    purpose = setOf(WebAppManifest.Icon.Purpose.ANY, WebAppManifest.Icon.Purpose.MASKABLE)
+                ),
+                WebAppManifest.Icon(
+                    src = "https://mozilla.org/logo_black.svg",
+                    sizes = listOf(Size.ANY),
+                    type = "image/svg+xml",
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
+                )
+            )
+        )
+
+        doReturn(session).`when`(sessionManager).findSessionById("session-id")
+
+        val feature = WebAppSiteControlsFeature(testContext, sessionManager, "session-id", manifest, icons = icons)
+        feature.onCreate()
+
+        verify(icons).loadIcon(IconRequest(
+            url = "https://mozilla.org",
+            size = IconRequest.Size.DEFAULT,
+            resources = listOf(IconRequest.Resource(
+                url = "https://mozilla.org/logo_black.svg",
+                type = IconRequest.Resource.Type.MANIFEST_ICON,
+                sizes = listOf(Size.ANY),
+                mimeType = "image/svg+xml",
+                maskable = false
+            )),
+            color = Color.WHITE
+        ))
     }
 }

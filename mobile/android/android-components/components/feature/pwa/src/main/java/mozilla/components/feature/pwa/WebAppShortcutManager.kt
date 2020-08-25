@@ -61,7 +61,6 @@ class WebAppShortcutManager(
     internal val supportWebApps: Boolean = true
 ) {
 
-    @VisibleForTesting
     internal val icons = webAppIcons(context, httpClient)
 
     private val fallbackLabel = context.getString(R.string.mozac_feature_pwa_default_shortcut_label)

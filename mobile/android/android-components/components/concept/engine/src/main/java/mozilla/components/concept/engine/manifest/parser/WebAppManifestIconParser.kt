@@ -64,7 +64,7 @@ private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
     return purpose
         .mapNotNull {
             when (it.toLowerCase(Locale.ROOT)) {
-                "badge" -> WebAppManifest.Icon.Purpose.BADGE
+                "monochrome" -> WebAppManifest.Icon.Purpose.MONOCHROME
                 "maskable" -> WebAppManifest.Icon.Purpose.MASKABLE
                 "any" -> WebAppManifest.Icon.Purpose.ANY
                 else -> null

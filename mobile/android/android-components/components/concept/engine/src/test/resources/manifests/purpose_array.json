@@ -6,7 +6,7 @@
       "src": "/images/icon/favicon.ico",
       "type": "image/png",
       "sizes": "48x48 96x96 128x128",
-      "purpose": ["badge"]
+      "purpose": ["monochrome"]
     },
     {
       "src": "/images/icon/512-512.png",

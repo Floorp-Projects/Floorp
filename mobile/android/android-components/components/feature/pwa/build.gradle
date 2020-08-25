@@ -55,6 +55,7 @@ dependencies {
 
     implementation Dependencies.androidx_browser
     implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_lifecycle_runtime
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 

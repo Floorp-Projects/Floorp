@@ -60,7 +60,7 @@ class SessionKtTest {
                 demoManifest.copy(icons = listOf(
                     demoIcon.copy(
                         sizes = listOf(Size(512, 512)),
-                        purpose = setOf(WebAppManifest.Icon.Purpose.BADGE)
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
                     )
                 ))
             )
@@ -128,7 +128,7 @@ class SessionKtTest {
                     demoIcon.copy(sizes = listOf(Size(512, 512))),
                     demoIcon.copy(
                         sizes = listOf(Size(192, 192)),
-                        purpose = setOf(WebAppManifest.Icon.Purpose.BADGE)
+                        purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
                     )
                 ))
             )
@@ -139,7 +139,7 @@ class SessionKtTest {
                 demoIcon.copy(sizes = listOf(Size(512, 512))),
                 demoIcon.copy(
                     sizes = listOf(Size(192, 192)),
-                    purpose = setOf(WebAppManifest.Icon.Purpose.BADGE)
+                    purpose = setOf(WebAppManifest.Icon.Purpose.MONOCHROME)
                 )
             )),
             multiIconSession.installableManifest()
