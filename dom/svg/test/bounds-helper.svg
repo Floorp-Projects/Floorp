@@ -14,6 +14,10 @@ text { font: 20px monospace; }
   <svg id="svg3" width="1" height="1" overflow="hidden">
     <rect width="2" height="2" fill="yellow"/>
   </svg>
+  <symbol>
+    <rect id="use-test" width="50" height="10"/>
+  </symbol>
+  <use id="use1" href="#use-test" x="100" y="50" fill="yellow"/>
   <text id="text1" x="25" y="25">abc</text>
   <text id="text1a" x="85" y="25" stroke="black" stroke-width="4">abc</text>
   <rect id="rect1" x="50" y="50" width="50" height="50" fill="green"/>

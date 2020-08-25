@@ -132,4 +132,18 @@ void SVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
   SVGGFrame::NotifySVGChanged(aFlags);
 }
 
+SVGBBox SVGUseFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
+                                         uint32_t aFlags) {
+  SVGBBox bbox =
+      SVGDisplayContainerFrame::GetBBoxContribution(aToBBoxUserspace, aFlags);
+
+  if (aFlags & SVGUtils::eForGetClientRects) {
+    float x, y;
+    static_cast<SVGUseElement*>(GetContent())
+        ->GetAnimatedLengthValues(&x, &y, nullptr);
+    bbox.MoveBy(x, y);
+  }
+  return bbox;
+}
+
 }  // namespace mozilla
