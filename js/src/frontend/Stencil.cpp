@@ -410,8 +410,12 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo) {
 // enclosing script is compiled, we have more precise heuristic information and
 // now compute their final group. These functions have not been exposed to
 // script before this point.
-static bool SetTypeForExposedFunctions(JSContext* cx,
-                                       CompilationInfo& compilationInfo) {
+//
+// As well, anonymous functions may have either an "inferred" or a "guessed"
+// name assigned to them. This name isn't known until the enclosing function is
+// compiled so we must update it here.
+static bool SetTypeAndNameForExposedFunctions(
+    JSContext* cx, CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
     auto& stencil = item.stencil;
     auto& fun = item.function;
@@ -428,6 +432,18 @@ static bool SetTypeForExposedFunctions(JSContext* cx,
     if (!JSFunction::setTypeForScriptedFunction(cx, fun,
                                                 stencil.isSingletonFunction)) {
       return false;
+    }
+
+    // Inferred and Guessed names are computed by BytecodeEmitter and so may
+    // need to be applied to existing JSFunctions during delazification.
+    if (fun->displayAtom() == nullptr) {
+      if (stencil.functionFlags.hasInferredName()) {
+        fun->setInferredName(stencil.functionAtom);
+      }
+
+      if (stencil.functionFlags.hasGuessedAtom()) {
+        fun->setGuessedAtom(stencil.functionAtom);
+      }
     }
   }
 
@@ -541,18 +557,6 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
         script->setMemberInitializers(*stencil.memberInitializers);
       }
     }
-
-    // Inferred and Guessed names are computed by BytecodeEmitter and so may
-    // need to be applied to existing JSFunctions during delazification.
-    if (fun->displayAtom() == nullptr) {
-      if (stencil.functionFlags.hasInferredName()) {
-        fun->setInferredName(stencil.functionAtom);
-      }
-
-      if (stencil.functionFlags.hasGuessedAtom()) {
-        fun->setGuessedAtom(stencil.functionAtom);
-      }
-    }
   }
 }
 
@@ -626,7 +630,7 @@ bool CompilationInfo::instantiateStencils() {
     return false;
   }
 
-  if (!SetTypeForExposedFunctions(cx, *this)) {
+  if (!SetTypeAndNameForExposedFunctions(cx, *this)) {
     return false;
   }
 
