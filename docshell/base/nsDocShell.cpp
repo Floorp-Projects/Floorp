@@ -10370,23 +10370,26 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     ClearFrameHistory(mOSHE);
   }
 
-  if (updateSHistory) {
-    // Update session history if necessary...
-    if (!mLSHE && (mItemType == typeContent) && mURIResultedInDocument) {
-      /* This is  a fresh page getting loaded for the first time
-       *.Create a Entry for it and add it to SH, if this is the
-       * rootDocShell
-       */
-      (void)AddToSessionHistory(aURI, aChannel, aTriggeringPrincipal,
-                                aPrincipalToInherit,
-                                aPartitionedPrincipalToInherit, aCsp,
-                                aCloneSHChildren, getter_AddRefs(mLSHE));
-    }
-  } else if (GetSessionHistory() && mLSHE && mURIResultedInDocument) {
-    // Even if we don't add anything to SHistory, ensure the current index
-    // points to the same SHEntry as our mLSHE.
+  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    if (updateSHistory) {
+      // Update session history if necessary...
+      if (!mLSHE && (mItemType == typeContent) && mURIResultedInDocument) {
+        /* This is  a fresh page getting loaded for the first time
+         *.Create a Entry for it and add it to SH, if this is the
+         * rootDocShell
+         */
+        (void)AddToSessionHistory(aURI, aChannel, aTriggeringPrincipal,
+                                  aPrincipalToInherit,
+                                  aPartitionedPrincipalToInherit, aCsp,
+                                  aCloneSHChildren, getter_AddRefs(mLSHE));
+      }
+    } else if (GetSessionHistory() && mLSHE && mURIResultedInDocument) {
+      // Even if we don't add anything to SHistory, ensure the current index
+      // points to the same SHEntry as our mLSHE.
 
-    GetSessionHistory()->LegacySHistory()->EnsureCorrectEntryAtCurrIndex(mLSHE);
+      GetSessionHistory()->LegacySHistory()->EnsureCorrectEntryAtCurrIndex(
+          mLSHE);
+    }
   }
 
   // If this is a POST request, we do not want to include this in global
