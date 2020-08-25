@@ -31,6 +31,7 @@
 #include "nsIRaceCacheWithNetwork.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
+#include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/Mutex.h"
 
 class nsDNSPrefetch;
@@ -628,6 +629,8 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   nsCOMPtr<nsICacheEntry> mOfflineCacheEntry;
   uint32_t mOfflineCacheLastModifiedTime;
+
+  nsTArray<StreamFilterRequest> mStreamFilterRequests;
 
   mozilla::TimeStamp mOnStartRequestTimestamp;
   // Timestamp of the time the channel was suspended.
