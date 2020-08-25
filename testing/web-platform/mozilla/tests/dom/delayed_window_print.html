@@ -21,13 +21,13 @@ window.addEventListener("beforeprint", t.step_func(function() {
   setTimeout(function() { t.done(); }, 0);
 }));
 
-window.print();
+t.step(function() {
+  window.print();
 
-{
   let div = document.createElement("div");
   div.id = "before-load";
   document.body.appendChild(div);
-}
+});
 
 window.addEventListener("load", t.step_func(function() {
   window.print();
