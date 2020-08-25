@@ -81,9 +81,8 @@ interface WindowGlobalParent : WindowContext {
   /**
    * Renders a region of the frame into an image bitmap.
    *
-   * @param rect Specify the area of the window to render, in CSS pixels. This
-   * is relative to the current scroll position. If null, the entire viewport
-   * is rendered.
+   * @param rect Specify the area of the document to render, in CSS pixels,
+   * relative to the page. If null, the currently visible viewport is rendered.
    * @param scale The scale to render the window at. Use devicePixelRatio
    * to have comparable rendering to the OS.
    * @param backgroundColor The background color to use.
