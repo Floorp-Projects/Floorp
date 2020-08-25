@@ -14661,45 +14661,6 @@
     "description": "The amount of async paint tasks queued to the paint thread during a layer transaction.",
     "bug_numbers": [1483245]
   },
-  "PREFERENCES_FILE_LOAD_TIME_US": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "62",
-    "kind": "exponential",
-    "high": 1000000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "The time (in microseconds) to load, parse and process each prefs file, keyed by filename.",
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1426270],
-    "alert_emails": ["nnethercote@mozilla.com"]
-  },
-  "PREFERENCES_FILE_LOAD_SIZE_B": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "62",
-    "kind": "exponential",
-    "high": 2000000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "The size (in bytes) of each prefs file loaded, keyed by filename.",
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1426270],
-    "alert_emails": ["nnethercote@mozilla.com"]
-  },
-  "PREFERENCES_FILE_LOAD_NUM_PREFS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "62",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "The number of prefs in each prefs file loaded, keyed by filename.",
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1426270],
-    "alert_emails": ["nnethercote@mozilla.com"]
-  },
   "PERMISSION_REQUEST_ORIGIN_SCHEME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],

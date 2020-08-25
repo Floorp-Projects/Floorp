@@ -52,7 +52,6 @@
 #include "nsCRT.h"
 #include "nsDataHashtable.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsHashKeys.h"
 #include "nsIConsoleService.h"
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"
@@ -1722,14 +1721,6 @@ static void NotifyCallbacks(const nsCString& aPrefName,
 // Prefs parsing
 //===========================================================================
 
-struct TelemetryLoadData {
-  uint32_t mFileLoadSize_B;
-  uint32_t mFileLoadNumPrefs;
-  uint32_t mFileLoadTime_us;
-};
-
-static nsDataHashtable<nsCStringHashKey, TelemetryLoadData>* gTelemetryLoadData;
-
 extern "C" {
 
 // Keep this in sync with PrefFn in parser/src/lib.rs.
@@ -1754,25 +1745,10 @@ class Parser {
   Parser() = default;
   ~Parser() = default;
 
-  bool Parse(const nsCString& aName, PrefValueKind aKind, const char* aPath,
-             const TimeStamp& aStartTime, const nsCString& aBuf) {
+  bool Parse(PrefValueKind aKind, const char* aPath, const nsCString& aBuf) {
     MOZ_ASSERT(XRE_IsParentProcess());
-    sNumPrefs = 0;
-    bool ok = prefs_parser_parse(aPath, aKind, aBuf.get(), aBuf.Length(),
-                                 HandlePref, HandleError);
-    if (!ok) {
-      return false;
-    }
-
-    uint32_t loadTime_us = (TimeStamp::Now() - aStartTime).ToMicroseconds();
-
-    // Most prefs files are read before telemetry initializes, so we have to
-    // save these measurements now and send them to telemetry later.
-    TelemetryLoadData loadData = {uint32_t(aBuf.Length()), sNumPrefs,
-                                  loadTime_us};
-    gTelemetryLoadData->Put(aName, loadData);
-
-    return true;
+    return prefs_parser_parse(aPath, aKind, aBuf.get(), aBuf.Length(),
+                              HandlePref, HandleError);
   }
 
  private:
@@ -1780,7 +1756,6 @@ class Parser {
                          PrefValueKind aKind, PrefValue aValue, bool aIsSticky,
                          bool aIsLocked) {
     MOZ_ASSERT(XRE_IsParentProcess());
-    sNumPrefs++;
     pref_SetPref(nsDependentCString(aPrefName), aType, aKind, aValue, aIsSticky,
                  aIsLocked,
                  /* fromInit */ true);
@@ -1799,13 +1774,7 @@ class Parser {
     printf_stderr("%s\n", aMsg);
 #endif
   }
-
-  // This is static so that HandlePref() can increment it easily. This is ok
-  // because prefs files are read one at a time.
-  static uint32_t sNumPrefs;
 };
-
-uint32_t Parser::sNumPrefs = 0;
 
 // The following code is test code for the gtest.
 
@@ -1830,21 +1799,6 @@ void TestParseError(PrefValueKind aKind, const char* aText,
   // gTestParseErrorMsgs.
   aErrorMsg.Assign(gTestParseErrorMsgs);
   gTestParseErrorMsgs.Truncate();
-}
-
-void SendTelemetryLoadData() {
-  for (auto iter = gTelemetryLoadData->Iter(); !iter.Done(); iter.Next()) {
-    const nsCString& filename = PromiseFlatCString(iter.Key());
-    const TelemetryLoadData& data = iter.Data();
-    Telemetry::Accumulate(Telemetry::PREFERENCES_FILE_LOAD_SIZE_B, filename,
-                          data.mFileLoadSize_B);
-    Telemetry::Accumulate(Telemetry::PREFERENCES_FILE_LOAD_NUM_PREFS, filename,
-                          data.mFileLoadNumPrefs);
-    Telemetry::Accumulate(Telemetry::PREFERENCES_FILE_LOAD_TIME_US, filename,
-                          data.mFileLoadTime_us);
-  }
-
-  gTelemetryLoadData->Clear();
 }
 
 //===========================================================================
@@ -3386,9 +3340,6 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
                                        ? kHashTableInitialLengthParent
                                        : kHashTableInitialLengthContent);
 
-  gTelemetryLoadData =
-      new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
-
 #ifdef DEBUG
   gOnceStaticPrefsAntiFootgun = new AntiFootgunMap();
 #endif
@@ -3513,9 +3464,6 @@ Preferences::~Preferences() {
 
   delete HashTable();
   HashTable() = nullptr;
-
-  delete gTelemetryLoadData;
-  gTelemetryLoadData = nullptr;
 
 #ifdef DEBUG
   delete gOnceStaticPrefsAntiFootgun;
@@ -3654,10 +3602,6 @@ void Preferences::InitializeUserPrefs() {
 /* static */
 void Preferences::FinishInitializingUserPrefs() {
   sPreferences->NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
-
-  // At this point all the prefs files have been read and telemetry has been
-  // initialized. Send all the file load measurements to telemetry.
-  SendTelemetryLoadData();
 }
 
 NS_IMETHODIMP
@@ -4142,8 +4086,6 @@ nsresult Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod) {
 static nsresult openPrefFile(nsIFile* aFile, PrefValueKind aKind) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  TimeStamp startTime = TimeStamp::Now();
-
   nsCString data;
   MOZ_TRY_VAR(data, URLPreloader::ReadFile(aFile));
 
@@ -4155,8 +4097,7 @@ static nsresult openPrefFile(nsIFile* aFile, PrefValueKind aKind) {
   aFile->GetPath(path);
 
   Parser parser;
-  if (!parser.Parse(filename, aKind, NS_ConvertUTF16toUTF8(path).get(),
-                    startTime, data)) {
+  if (!parser.Parse(aKind, NS_ConvertUTF16toUTF8(path).get(), data)) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -4164,11 +4105,10 @@ static nsresult openPrefFile(nsIFile* aFile, PrefValueKind aKind) {
 }
 
 static nsresult parsePrefData(const nsCString& aData, PrefValueKind aKind) {
-  TimeStamp startTime = TimeStamp::Now();
   const nsCString path = "$MOZ_DEFAULT_PREFS"_ns;
 
   Parser parser;
-  if (!parser.Parse(path, aKind, path.get(), startTime, aData)) {
+  if (!parser.Parse(aKind, path.get(), aData)) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -4280,15 +4220,12 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir,
 
 static nsresult pref_ReadPrefFromJar(CacheAwareZipReader* aJarReader,
                                      const char* aName) {
-  TimeStamp startTime = TimeStamp::Now();
-
   nsCString manifest;
   MOZ_TRY_VAR(manifest,
               URLPreloader::ReadZip(aJarReader, nsDependentCString(aName)));
 
   Parser parser;
-  if (!parser.Parse(nsDependentCString(aName), PrefValueKind::Default, aName,
-                    startTime, manifest)) {
+  if (!parser.Parse(PrefValueKind::Default, aName, manifest)) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
