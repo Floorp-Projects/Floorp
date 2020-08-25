@@ -1045,7 +1045,8 @@ void ChannelWrapper::ErrorCheck() {
  *****************************************************************************/
 
 NS_IMPL_ISUPPORTS(ChannelWrapper::RequestListener, nsIStreamListener,
-                  nsIRequestObserver, nsIThreadRetargetableStreamListener)
+                  nsIMultiPartChannelListener, nsIRequestObserver,
+                  nsIThreadRetargetableStreamListener)
 
 ChannelWrapper::RequestListener::~RequestListener() {
   NS_ReleaseOnMainThread("RequestListener::mChannelWrapper",
@@ -1092,6 +1093,16 @@ ChannelWrapper::RequestListener::OnDataAvailable(nsIRequest* request,
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
   return mOrigStreamListener->OnDataAvailable(request, inStr, sourceOffset,
                                               count);
+}
+
+NS_IMETHODIMP
+ChannelWrapper::RequestListener::OnAfterLastPart(nsresult aStatus) {
+  MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
+  if (nsCOMPtr<nsIMultiPartChannelListener> listener =
+          do_QueryInterface(mOrigStreamListener)) {
+    return listener->OnAfterLastPart(aStatus);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
