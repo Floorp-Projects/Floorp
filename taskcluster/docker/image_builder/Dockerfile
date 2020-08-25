@@ -5,8 +5,8 @@
 FROM golang:1.14 as skopeo
 
 WORKDIR /go/src/
-RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v1.1.0", "https://github.com/containers/skopeo", "."]
-RUN ["/usr/bin/git", "checkout", "63085f5bef1131aa9ec0907a5c8d66b67de7c4b2"]
+RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v1.1.1", "https://github.com/containers/skopeo", "."]
+RUN ["/usr/bin/git", "checkout", "67abbb3cefbdc876447583d5ea45e76bf441eba7"]
 ENV GO111MODULE=on CGO_ENABLED=0
 RUN ["/usr/local/go/bin/go", "build", \
 	"-mod=vendor", "-o", "out/skopeo", \
@@ -18,8 +18,8 @@ RUN ["/usr/local/go/bin/go", "build", \
 
 FROM golang:1.14 as kaniko
 WORKDIR /go/src/
-RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v0.24.0", "https://github.com/GoogleContainerTools/kaniko", "."]
-RUN ["/usr/bin/git", "checkout", "cdbd8af0578c56e2801b57461e9f417f9479d303"]
+RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v1.0.0", "https://github.com/GoogleContainerTools/kaniko", "."]
+RUN ["/usr/bin/git", "checkout", "146ec6a9cd6f87b4a12e8119ded575d5edca35ac"]
 RUN ["/usr/bin/make"]
 
 # Build the `build-image` command as a static binary using musl
