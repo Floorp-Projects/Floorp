@@ -243,5 +243,23 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
   return selectedRecord.forget();
 }
 
+bool DNSHTTPSSVCRecordBase::HasIPAddressesInternal(
+    const nsTArray<SVCB>& aRecords) {
+  for (const SVCB& record : aRecords) {
+    if (record.mSvcFieldPriority != 0) {
+      for (const auto& value : record.mSvcFieldValue) {
+        if (value.mValue.is<SvcParamIpv4Hint>()) {
+          return true;
+        }
+        if (value.mValue.is<SvcParamIpv6Hint>()) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
 }  // namespace net
 }  // namespace mozilla

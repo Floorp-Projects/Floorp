@@ -46,6 +46,22 @@
 namespace mozilla {
 namespace net {
 
+// IMPORTANT: when adding new values, always add them to the end, otherwise
+// it will mess up telemetry.
+// Stage_0: Receive the record before the http transaction is created.
+// Stage_1: Receive the record after the http transaction is created and the
+//          transaction is not dispatched.
+// Stage_2: Receive the record after the http transaction is dispatched.
+enum HTTPSSVC_RECEIVED_STAGE : uint32_t {
+  HTTPSSVC_NOT_PRESENT = 0,
+  HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_0 = 1,
+  HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_0 = 2,
+  HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_1 = 3,
+  HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_1 = 4,
+  HTTPSSVC_WITH_IPHINT_RECEIVED_STAGE_2 = 5,
+  HTTPSSVC_WITHOUT_IPHINT_RECEIVED_STAGE_2 = 6,
+};
+
 // Required buffer size for text form of an IP address.
 // Includes space for null termination. We make our own contants
 // because we don't want higher-level code depending on things

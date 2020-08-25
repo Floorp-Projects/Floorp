@@ -269,6 +269,19 @@ ChildDNSByTypeRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
 }
 
 NS_IMETHODIMP
+ChildDNSByTypeRecord::GetHasIPAddresses(bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  if (!mResults.is<TypeRecordHTTPSSVC>()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto& results = mResults.as<TypeRecordHTTPSSVC>();
+  *aResult = HasIPAddressesInternal(results);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ChildDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
   *aResults = mResults;
   return NS_OK;

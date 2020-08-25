@@ -624,6 +624,19 @@ TypeHostRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TypeHostRecord::GetHasIPAddresses(bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  if (!mResults.is<TypeRecordHTTPSSVC>()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto& results = mResults.as<TypeRecordHTTPSSVC>();
+  *aResult = HasIPAddressesInternal(results);
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------------
 
 static const char kPrefGetTtl[] = "network.dns.get-ttl";
