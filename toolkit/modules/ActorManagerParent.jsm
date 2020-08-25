@@ -651,6 +651,9 @@ var ActorManagerParent = {
             } else {
               unregister(actorName, actor);
             }
+            if (actor.onPreferenceChanged) {
+              actor.onPreferenceChanged(prefName, prevValue, isEnabled);
+            }
           }
         );
         if (!this[actorNameProp]) {
