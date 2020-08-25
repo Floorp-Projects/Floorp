@@ -797,12 +797,8 @@ nsresult NS_MaybeOpenChannelUsingAsyncOpen(nsIChannel* aChannel,
  *
  * See: https://mikewest.github.io/corpp/#parsing
  */
-inline nsILoadInfo::CrossOriginEmbedderPolicy
-NS_GetCrossOriginEmbedderPolicyFromHeader(const nsACString& aHeader) {
-  return aHeader.EqualsLiteral("require-corp")
-             ? nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP
-             : nsILoadInfo::EMBEDDER_POLICY_NULL;
-}
+nsILoadInfo::CrossOriginEmbedderPolicy
+NS_GetCrossOriginEmbedderPolicyFromHeader(const nsACString& aHeader);
 
 /** Given the first (disposition) token from a Content-Disposition header,
  * tell whether it indicates the content is inline or attachment
