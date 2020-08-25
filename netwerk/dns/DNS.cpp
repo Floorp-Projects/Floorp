@@ -116,7 +116,7 @@ bool NetAddrToString(const NetAddr* addr, char* buf, uint32_t bufSize) {
     return !!inet_ntop_internal(AF_INET6, &nativeAddr, buf, bufSize);
   }
 #if defined(XP_UNIX)
-  else if (addr->raw.family == AF_LOCAL) {
+  if (addr->raw.family == AF_LOCAL) {
     if (bufSize < sizeof(addr->local.path)) {
       // Many callers don't bother checking our return value, so
       // null-terminate just in case.
@@ -173,6 +173,8 @@ bool IsIPAddrAny(const NetAddr* addr) {
   }
   return false;
 }
+
+NetAddr::NetAddr(const PRNetAddr* prAddr) { PRNetAddrToNetAddr(prAddr, this); }
 
 bool IsIPAddrV4(const NetAddr* addr) { return addr->raw.family == AF_INET; }
 
@@ -301,19 +303,26 @@ AddrInfo::AddrInfo(const nsACString& host, const PRAddrInfo* prAddrInfo,
                  (!filterNameCollision || tmpAddr.raw.family != PR_AF_INET ||
                   (tmpAddr.inet.ip != nameCollisionAddr));
     if (addIt) {
-      NetAddr elem;
-      PRNetAddrToNetAddr(&tmpAddr, &elem);
+      NetAddr elem(&tmpAddr);
       mAddresses.AppendElement(elem);
     }
   } while (iter);
 }
 
 AddrInfo::AddrInfo(const nsACString& host, const nsACString& cname,
-                   unsigned int aTRR)
-    : mHostName(host), mCanonicalName(cname), mFromTRR(aTRR) {}
+                   unsigned int aTRR, nsTArray<NetAddr>&& addresses)
+    : mHostName(host),
+      mCanonicalName(cname),
+      mFromTRR(aTRR),
+      mAddresses(std::move(addresses)) {}
 
-AddrInfo::AddrInfo(const nsACString& host, unsigned int aTRR)
-    : mHostName(host), mCanonicalName(EmptyCString()), mFromTRR(aTRR) {}
+AddrInfo::AddrInfo(const nsACString& host, unsigned int aTRR,
+                   nsTArray<NetAddr>&& addresses, uint32_t aTTL)
+    : ttl(aTTL),
+      mHostName(host),
+      mCanonicalName(EmptyCString()),
+      mFromTRR(aTRR),
+      mAddresses(std::move(addresses)) {}
 
 // deep copy constructor
 AddrInfo::AddrInfo(const AddrInfo* src) {
@@ -328,12 +337,6 @@ AddrInfo::AddrInfo(const AddrInfo* src) {
 }
 
 AddrInfo::~AddrInfo() = default;
-
-void AddrInfo::AddAddress(const PRNetAddr* address) {
-  NetAddr elem;
-  PRNetAddrToNetAddr(address, &elem);
-  mAddresses.AppendElement(elem);
-}
 
 size_t AddrInfo::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);

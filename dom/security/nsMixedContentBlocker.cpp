@@ -241,8 +241,7 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
   }
 
   using namespace mozilla::net;
-  NetAddr addr;
-  PRNetAddrToNetAddr(&tempAddr, &addr);
+  NetAddr addr(&tempAddr);
 
   // Step 4 of
   // https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy says
