@@ -57,9 +57,6 @@
         );
       }
 
-      let messageManager = window.getGroupMessageManager("browsers");
-      messageManager.addMessageListener("RefreshBlocker:Blocked", this);
-
       this._setFindbarData();
 
       XPCOMUtils.defineLazyModuleGetters(this, {
@@ -5125,76 +5122,6 @@
       }
     },
 
-    receiveMessage(aMessage) {
-      let data = aMessage.data;
-      let browser = aMessage.target;
-
-      switch (aMessage.name) {
-        case "RefreshBlocker:Blocked": {
-          // The data object is expected to contain the following properties:
-          //  - URI (string)
-          //     The URI that a page is attempting to refresh or redirect to.
-          //  - delay (int)
-          //     The delay (in milliseconds) before the page was going to
-          //     reload or redirect.
-          //  - sameURI (bool)
-          //     true if we're refreshing the page. false if we're redirecting.
-          //  - outerWindowID (int)
-          //     The outerWindowID of the frame that requested the refresh or
-          //     redirect.
-
-          let brandBundle = document.getElementById("bundle_brand");
-          let brandShortName = brandBundle.getString("brandShortName");
-          let message = gNavigatorBundle.getFormattedString(
-            "refreshBlocked." +
-              (data.sameURI ? "refreshLabel" : "redirectLabel"),
-            [brandShortName]
-          );
-
-          let notificationBox = this.getNotificationBox(browser);
-          let notification = notificationBox.getNotificationWithValue(
-            "refresh-blocked"
-          );
-
-          if (notification) {
-            notification.label = message;
-          } else {
-            let refreshButtonText = gNavigatorBundle.getString(
-              "refreshBlocked.goButton"
-            );
-            let refreshButtonAccesskey = gNavigatorBundle.getString(
-              "refreshBlocked.goButton.accesskey"
-            );
-
-            let buttons = [
-              {
-                label: refreshButtonText,
-                accessKey: refreshButtonAccesskey,
-                callback() {
-                  if (browser.messageManager) {
-                    browser.messageManager.sendAsyncMessage(
-                      "RefreshBlocker:Refresh",
-                      data
-                    );
-                  }
-                },
-              },
-            ];
-
-            notificationBox.appendNotification(
-              message,
-              "refresh-blocked",
-              "chrome://browser/skin/notification-icons/popup.svg",
-              notificationBox.PRIORITY_INFO_MEDIUM,
-              buttons
-            );
-          }
-          break;
-        }
-      }
-      return undefined;
-    },
-
     observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case "contextual-identity-updated": {
@@ -5206,6 +5133,58 @@
           }
           break;
         }
+      }
+    },
+
+    refreshBlocked(actor, browser, data) {
+      // The data object is expected to contain the following properties:
+      //  - URI (string)
+      //     The URI that a page is attempting to refresh or redirect to.
+      //  - delay (int)
+      //     The delay (in milliseconds) before the page was going to
+      //     reload or redirect.
+      //  - sameURI (bool)
+      //     true if we're refreshing the page. false if we're redirecting.
+
+      let brandBundle = document.getElementById("bundle_brand");
+      let brandShortName = brandBundle.getString("brandShortName");
+      let message = gNavigatorBundle.getFormattedString(
+        "refreshBlocked." + (data.sameURI ? "refreshLabel" : "redirectLabel"),
+        [brandShortName]
+      );
+
+      let notificationBox = this.getNotificationBox(browser);
+      let notification = notificationBox.getNotificationWithValue(
+        "refresh-blocked"
+      );
+
+      if (notification) {
+        notification.label = message;
+      } else {
+        let refreshButtonText = gNavigatorBundle.getString(
+          "refreshBlocked.goButton"
+        );
+        let refreshButtonAccesskey = gNavigatorBundle.getString(
+          "refreshBlocked.goButton.accesskey"
+        );
+
+        let buttons = [
+          {
+            label: refreshButtonText,
+            accessKey: refreshButtonAccesskey,
+            callback() {
+              actor.sendAsyncMessage("RefreshBlocker:Refresh", data);
+            },
+          },
+        ];
+
+        notificationBox.appendNotification(
+          message,
+          "refresh-blocked",
+          "chrome://browser/skin/notification-icons/popup.svg",
+          notificationBox.PRIORITY_INFO_MEDIUM,
+          buttons
+        );
       }
     },
 
