@@ -62,12 +62,6 @@ with Files('**/Makefile.in'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
     FINAL = True
 
-with Files("**/*.js"):
-    SCHEDULES.inclusive += ['docs']
-
-with Files("**/*.jsm"):
-    SCHEDULES.inclusive += ['docs']
-
 with Files("**/*.rst"):
     SCHEDULES.inclusive += ['docs']
 
