@@ -90,3 +90,27 @@ add_task(async function test_reset() {
   await fxAccounts.signOut(/* localOnly = */ true);
   ok(!Services.prefs.prefHasUserValue(namePref));
 });
+
+add_task(async function test_name_sanitization() {
+  fxAccounts.device.setLocalName("emoji is valid \u2665");
+  Assert.equal(fxAccounts.device.getLocalName(), "emoji is valid \u2665");
+
+  let invalid = "x\uFFFD\n\r\t" + "x".repeat(255);
+  let sanitized = "x\uFFFD\uFFFD\uFFFD\uFFFD" + "x".repeat(250); // 255 total.
+
+  // If the pref already has the invalid value we still get the valid one back.
+  Services.prefs.setStringPref(
+    "identity.fxaccounts.account.device.name",
+    invalid
+  );
+  Assert.equal(fxAccounts.device.getLocalName(), sanitized);
+
+  // But if we explicitly set it to an invalid name, the sanitized value ends
+  // up in the pref.
+  fxAccounts.device.setLocalName(invalid);
+  Assert.equal(fxAccounts.device.getLocalName(), sanitized);
+  Assert.equal(
+    Services.prefs.getStringPref("identity.fxaccounts.account.device.name"),
+    sanitized
+  );
+});
