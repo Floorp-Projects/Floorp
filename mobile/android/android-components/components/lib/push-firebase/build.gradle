@@ -28,7 +28,6 @@ dependencies {
     implementation project(':concept-push')
     implementation project(':support-base')
 
-    implementation Dependencies.firebase_core
     api Dependencies.firebase_messaging
 
     testImplementation project(':support-test')
