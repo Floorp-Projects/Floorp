@@ -795,7 +795,8 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvSetConfirmedTargetAPZC(
       return IPC_FAIL(this, "Bad layers id");
     }
   }
-  mCompositorBridge->SetConfirmedTargetAPZC(GetId(), aBlockId, aTargets);
+  mCompositorBridge->SetConfirmedTargetAPZC(GetId(), aBlockId,
+                                            std::move(aTargets));
   return IPC_OK();
 }
 

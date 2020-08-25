@@ -39,8 +39,7 @@ class ContentProcessController final : public GeckoContentController {
 
   // GeckoContentController
 
-  void NotifyLayerTransforms(
-      const nsTArray<MatrixMessage>& aTransforms) override;
+  void NotifyLayerTransforms(nsTArray<MatrixMessage>&& aTransforms) override;
 
   void RequestContentRepaint(const RepaintRequest& aRequest) override;
 

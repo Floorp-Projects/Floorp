@@ -3713,7 +3713,7 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
           }
         });
   }
-  controller->NotifyLayerTransforms(messages);
+  controller->NotifyLayerTransforms(std::move(messages));
 }
 
 void APZCTreeManager::SetFixedLayerMargins(ScreenIntCoord aTop,

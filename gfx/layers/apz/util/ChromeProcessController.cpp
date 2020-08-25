@@ -7,6 +7,7 @@
 #include "ChromeProcessController.h"
 
 #include "MainThreadUtils.h"  // for NS_IsMainThread()
+#include "base/task.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -51,11 +52,13 @@ void ChromeProcessController::InitializeRoot() {
 }
 
 void ChromeProcessController::NotifyLayerTransforms(
-    const nsTArray<MatrixMessage>& aTransforms) {
+    nsTArray<MatrixMessage>&& aTransforms) {
   if (!mUIThread->IsOnCurrentThread()) {
-    mUIThread->Dispatch(NewRunnableMethod<CopyableTArray<MatrixMessage>>(
-        "layers::ChromeProcessController::NotifyLayerTransforms", this,
-        &ChromeProcessController::NotifyLayerTransforms, aTransforms));
+    mUIThread->Dispatch(
+        NewRunnableMethod<StoreCopyPassByRRef<nsTArray<MatrixMessage>>>(
+            "layers::ChromeProcessController::NotifyLayerTransforms", this,
+            &ChromeProcessController::NotifyLayerTransforms,
+            std::move(aTransforms)));
     return;
   }
 
