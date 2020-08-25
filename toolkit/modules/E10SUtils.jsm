@@ -169,7 +169,8 @@ function validatedWebRemoteType(
   aTargetUri,
   aCurrentUri,
   aResultPrincipal,
-  aRemoteSubframes
+  aRemoteSubframes,
+  aIsWorker = false
 ) {
   // To load into the Privileged Mozilla Content Process you must be https,
   // and be an exact match or a subdomain of an allowlisted domain.
@@ -189,6 +190,15 @@ function validatedWebRemoteType(
   // If we're in the parent and we were passed a web-handled scheme,
   // transform it now to avoid trying to load it in the wrong process.
   if (aRemoteSubframes && hasPotentiallyWebHandledScheme(aTargetUri)) {
+    // We shouldn't even get to this for a worker, throw an unexpected error
+    // if we do.
+    if (aIsWorker) {
+      throw Components.Exception(
+        "Unexpected remote worker with a web handled scheme",
+        Cr.NS_ERROR_UNEXPECTED
+      );
+    }
+
     if (
       Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT &&
       Services.appinfo.remoteType.startsWith(FISSION_WEB_REMOTE_TYPE + "=")
@@ -198,6 +208,7 @@ function validatedWebRemoteType(
       // we know the "real" URL to which we'll redirect.
       return Services.appinfo.remoteType;
     }
+
     // This doesn't work (throws) in the child - see
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1589082
     // Even if it did, it'd cause sync IPC
@@ -222,7 +233,7 @@ function validatedWebRemoteType(
   // If the domain is whitelisted to allow it to use file:// URIs, then we have
   // to run it in a file content process, in case it uses file:// sub-resources.
   const sm = Services.scriptSecurityManager;
-  if (sm.inFileURIAllowlist(aTargetUri)) {
+  if (!aIsWorker && sm.inFileURIAllowlist(aTargetUri)) {
     return FILE_REMOTE_TYPE;
   }
 
@@ -264,7 +275,11 @@ function validatedWebRemoteType(
     return aPreferredRemoteType;
   }
 
-  if (aPreferredRemoteType == FILE_REMOTE_TYPE && !aRemoteSubframes) {
+  if (
+    aPreferredRemoteType == FILE_REMOTE_TYPE &&
+    !aRemoteSubframes &&
+    !aIsWorker
+  ) {
     E10SUtils.log().debug("checking allowLinkedWebInFileUriProcess");
     if (!aCurrentUri) {
       E10SUtils.log().debug("No aCurrentUri");
@@ -294,6 +309,12 @@ function validatedWebRemoteType(
   return WEB_REMOTE_TYPE;
 }
 
+// remoteTypes allowed to host system-principal remote workers.
+const SYSTEM_WORKERS_REMOTE_TYPES_ALLOWED = [
+  NOT_REMOTE,
+  PRIVILEGEDABOUT_REMOTE_TYPE,
+];
+
 var E10SUtils = {
   DEFAULT_REMOTE_TYPE,
   NOT_REMOTE,
@@ -304,6 +325,7 @@ var E10SUtils = {
   PRIVILEGEDABOUT_REMOTE_TYPE,
   PRIVILEGEDMOZILLA_REMOTE_TYPE,
   LARGE_ALLOCATION_REMOTE_TYPE,
+  FISSION_WEB_REMOTE_TYPE,
 
   useCrossOriginOpenerPolicy() {
     return useCrossOriginOpenerPolicy;
@@ -429,7 +451,8 @@ var E10SUtils = {
     aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
     aCurrentUri = null,
     aResultPrincipal = null,
-    aIsSubframe = false
+    aIsSubframe = false,
+    aIsWorker = false
   ) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
@@ -527,6 +550,15 @@ var E10SUtils = {
         // Protocols that redirect to http(s) will just flip back to a
         // regular content process after the redirect.
         if (aURI.scheme.startsWith("ext+")) {
+          // We shouldn't even get to this for a worker, throw an unexpected error
+          // if we do.
+          if (aIsWorker) {
+            throw Components.Exception(
+              "Unexpected remote worker with extension handled scheme",
+              Cr.NS_ERROR_UNEXPECTED
+            );
+          }
+
           return WebExtensionPolicy.useRemoteWebExtensions
             ? EXTENSION_REMOTE_TYPE
             : NOT_REMOTE;
@@ -540,6 +572,15 @@ var E10SUtils = {
         // innermost URI. Any URIs like this will need to be handled in the
         // cases above, so we don't still end up using the fake inner URI here.
         if (aURI instanceof Ci.nsINestedURI) {
+          // We shouldn't even get to this for a worker, throw an unexpected error
+          // if we do.
+          if (aIsWorker) {
+            throw Components.Exception(
+              "Unexpected worker with a NestedURI",
+              Cr.NS_ERROR_UNEXPECTED
+            );
+          }
+
           let innerURI = aURI.QueryInterface(Ci.nsINestedURI).innerURI;
           return this.getRemoteTypeForURIObject(
             innerURI,
@@ -561,7 +602,8 @@ var E10SUtils = {
           aURI,
           aCurrentUri,
           aResultPrincipal,
-          aRemoteSubframes
+          aRemoteSubframes,
+          aIsWorker
         );
         log.debug(`  validatedWebRemoteType() returning: ${remoteType}`);
         return remoteType;
@@ -622,6 +664,90 @@ var E10SUtils = {
       currentURI,
       aPrincipal,
       aIsSubframe
+    );
+  },
+
+  getRemoteTypeForWorkerPrincipal(
+    aPrincipal,
+    aWorkerType,
+    aIsMultiProcess,
+    aIsFission,
+    aPreferredRemoteType = DEFAULT_REMOTE_TYPE
+  ) {
+    if (aPrincipal.isExpandedPrincipal) {
+      // Explicitly disallow expanded principals:
+      // The worker principal is based on the worker script, an expanded principal
+      // is not expected.
+      throw new Error("Unexpected expanded principal worker");
+    }
+
+    if (
+      aWorkerType === Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_SERVICE &&
+      !aPrincipal.isContentPrincipal
+    ) {
+      // Fails earlier on service worker with a non content principal.
+      throw new Error("Unexpected system or null principal service worker");
+    }
+
+    if (!aIsMultiProcess) {
+      // Return earlier when multiprocess is disabled.
+      return NOT_REMOTE;
+    }
+
+    if (
+      // We don't want to launch workers in a large allocation remote type,
+      // change it to the web remote type (then getRemoteTypeForURIObject
+      // may change it to an isolated one).
+      aPreferredRemoteType === LARGE_ALLOCATION_REMOTE_TYPE ||
+      // Similarly to the large allocation remote type, we don't want to
+      // launch the shared worker in a web coop+coep remote type even if
+      // was registered from a frame loaded in a child process with that
+      // remote type.
+      aPreferredRemoteType?.startsWith(WEB_REMOTE_COOP_COEP_TYPE_PREFIX)
+    ) {
+      aPreferredRemoteType = DEFAULT_REMOTE_TYPE;
+    }
+
+    // System principal shared workers are allowed to run in the main process
+    // or in the privilegedabout child process. Early return the preferred remote type
+    // if it is one where a system principal worked is allowed to run.
+    if (
+      aPrincipal.isSystemPrincipal &&
+      SYSTEM_WORKERS_REMOTE_TYPES_ALLOWED.includes(aPreferredRemoteType)
+    ) {
+      return aPreferredRemoteType;
+    }
+
+    // Allow null principal shared workers to run in the same process type where they
+    // have been registered (the preferredRemoteType), but return the DEFAULT_REMOTE_TYPE
+    // if the preferred remote type was NOT_REMOTE.
+    if (aPrincipal.isNullPrincipal) {
+      return aPreferredRemoteType === NOT_REMOTE
+        ? DEFAULT_REMOTE_TYPE
+        : aPreferredRemoteType;
+    }
+
+    // Sanity check, there shouldn't be any system or null principal after this point.
+    if (aPrincipal.isContentPrincipal) {
+      // For content principal, get a remote type based on the worker principal URI
+      // (which is based on the worker script url) and an initial preferredRemoteType
+      // (only set for shared worker, based on the remote type where the shared worker
+      // was registered from).
+      return E10SUtils.getRemoteTypeForURIObject(
+        aPrincipal.URI,
+        aIsMultiProcess,
+        aIsFission,
+        aPreferredRemoteType,
+        null,
+        aPrincipal,
+        false, // aIsSubFrame
+        true // aIsWorker
+      );
+    }
+
+    // Throw explicitly if we were unable to get a remoteType for the worker.
+    throw new Error(
+      "Failed to get a remoteType for a non content principal worker"
     );
   },
 
