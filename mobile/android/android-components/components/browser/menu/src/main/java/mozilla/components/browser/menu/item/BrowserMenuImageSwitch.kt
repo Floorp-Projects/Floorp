@@ -39,7 +39,7 @@ class BrowserMenuImageSwitch(
     }
 
     private fun bindImage(switch: SwitchCompat) {
-        switch.setCompoundDrawablesWithIntrinsicBounds(
+        switch.setCompoundDrawablesRelativeWithIntrinsicBounds(
             imageResource, 0, 0, 0)
     }
 
