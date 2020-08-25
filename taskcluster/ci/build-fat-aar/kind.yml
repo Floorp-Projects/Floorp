@@ -37,6 +37,12 @@ job-defaults:
             - name: public/build
               path: /builds/worker/artifacts/
               type: directory
+            - name: public/build/geckoview-androidTest.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+              type: file
+            - name: public/build/geckoview_example.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+              type: file
     run:
         using: mozharness
         script: "mozharness/scripts/fx_desktop_build.py"
