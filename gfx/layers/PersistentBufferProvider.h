@@ -14,6 +14,7 @@
 #include "mozilla/RefCounted.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/Vector.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 
@@ -34,7 +35,8 @@ class TextureClient;
  * from the provider again, the provider will guarantee the contents of the
  * previously returned DrawTarget is persisted into the one newly returned.
  */
-class PersistentBufferProvider : public RefCounted<PersistentBufferProvider> {
+class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
+                                 public SupportsWeakPtr {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProvider)
 
