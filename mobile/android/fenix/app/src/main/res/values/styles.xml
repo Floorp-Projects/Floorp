@@ -81,6 +81,8 @@
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
 
         <!-- Shared widget colors -->
+        <item name="mozac_primary_text_color">@color/primary_text_normal_theme</item>
+        <item name="mozac_caption_text_color">@color/caption_text_normal_theme</item>
         <item name="mozac_widget_favicon_background_color">@color/mozac_widget_favicon_background_normal_theme</item>
         <item name="mozac_widget_favicon_border_color">@color/mozac_widget_favicon_border_normal_theme</item>
 
@@ -221,6 +223,8 @@
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_dark_theme</item>
 
         <!-- Shared widget colors -->
+        <item name="mozac_primary_text_color">@color/primary_text_private_theme</item>
+        <item name="mozac_caption_text_color">@color/caption_text_private_theme</item>
         <item name="mozac_widget_favicon_background_color">@color/mozac_widget_favicon_background_private_theme</item>
         <item name="mozac_widget_favicon_border_color">@color/mozac_widget_favicon_border_private_theme</item>
 

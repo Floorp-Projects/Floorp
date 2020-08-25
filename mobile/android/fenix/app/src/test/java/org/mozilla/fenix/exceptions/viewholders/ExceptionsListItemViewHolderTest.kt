@@ -5,9 +5,6 @@
 package org.mozilla.fenix.exceptions.viewholders
 
 import android.view.View
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.every
@@ -18,17 +15,14 @@ import io.mockk.slot
 import io.mockk.verify
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.R
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
 
 class ExceptionsListItemViewHolderTest {
 
-    @MockK private lateinit var view: View
-    @MockK(relaxUnitFun = true) private lateinit var url: TextView
-    @MockK(relaxUnitFun = true) private lateinit var deleteButton: ImageButton
-    @MockK private lateinit var favicon: ImageView
+    @MockK(relaxed = true) private lateinit var view: WidgetSiteItemView
     @MockK private lateinit var icons: BrowserIcons
     @MockK private lateinit var interactor: ExceptionsInteractor<Exception>
 
@@ -36,37 +30,34 @@ class ExceptionsListItemViewHolderTest {
     fun setup() {
         MockKAnnotations.init(this)
 
-        every { view.findViewById<TextView>(R.id.webAddressView) } returns url
-        every { view.findViewById<ImageButton>(R.id.delete_exception) } returns deleteButton
-        every { view.findViewById<ImageView>(R.id.favicon_image) } returns favicon
-        every { icons.loadIntoView(favicon, any()) } returns mockk()
+        every { icons.loadIntoView(view.iconView, any()) } returns mockk()
     }
 
     @Test
     fun `sets url text and loads favicon - mozilla`() {
         ExceptionsListItemViewHolder(view, interactor, icons)
             .bind(Exception(), url = "mozilla.org")
-        verify { url.text = "mozilla.org" }
-        verify { icons.loadIntoView(favicon, IconRequest("mozilla.org")) }
+        verify { view.setText(label = "mozilla.org", caption = null) }
+        verify { icons.loadIntoView(view.iconView, IconRequest("mozilla.org")) }
     }
 
     @Test
     fun `sets url text and loads favicon - example`() {
         ExceptionsListItemViewHolder(view, interactor, icons)
             .bind(Exception(), url = "https://example.com/icon.svg")
-        verify { url.text = "https://example.com/icon.svg" }
-        verify { icons.loadIntoView(favicon, IconRequest("https://example.com/icon.svg")) }
+        verify { view.setText(label = "https://example.com/icon.svg", caption = null) }
+        verify { icons.loadIntoView(view.iconView, IconRequest("https://example.com/icon.svg")) }
     }
 
     @Test
     fun `delete button calls interactor`() {
-        val slot = slot<View.OnClickListener>()
+        val slot = slot<(View) -> Unit>()
         val exception = Exception()
-        every { deleteButton.setOnClickListener(capture(slot)) } just Runs
+        every { view.setSecondaryButton(any(), any<Int>(), capture(slot)) } just Runs
         ExceptionsListItemViewHolder(view, interactor, icons).bind(exception, url = "mozilla.org")
 
         every { interactor.onDeleteOne(exception) } just Runs
-        slot.captured.onClick(mockk())
+        slot.captured.invoke(mockk())
         verify { interactor.onDeleteOne(exception) }
     }
 

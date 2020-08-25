@@ -11,6 +11,7 @@ import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsDeleteButtonViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsHeaderViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
@@ -67,7 +68,7 @@ abstract class ExceptionsAdapter<T : Any>(
             ExceptionsHeaderViewHolder.LAYOUT_ID ->
                 ExceptionsHeaderViewHolder(view, headerDescriptionResource)
             ExceptionsListItemViewHolder.LAYOUT_ID ->
-                ExceptionsListItemViewHolder(view, interactor)
+                ExceptionsListItemViewHolder(view as WidgetSiteItemView, interactor)
             else -> throw IllegalStateException()
         }
     }

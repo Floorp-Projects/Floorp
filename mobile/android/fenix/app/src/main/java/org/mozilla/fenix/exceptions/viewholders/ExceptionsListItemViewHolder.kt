@@ -4,39 +4,41 @@
 
 package org.mozilla.fenix.exceptions.viewholders
 
-import android.view.View
-import kotlinx.android.synthetic.main.exception_item.*
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
-import org.mozilla.fenix.utils.view.ViewHolder
 
 /**
  * View holder for a single website that is exempted from Tracking Protection or Logins.
  */
 class ExceptionsListItemViewHolder<T : Any>(
-    view: View,
+    private val view: WidgetSiteItemView,
     private val interactor: ExceptionsInteractor<T>,
     private val icons: BrowserIcons = view.context.components.core.icons
-) : ViewHolder(view) {
+) : RecyclerView.ViewHolder(view) {
 
     private lateinit var item: T
 
     init {
-        delete_exception.setOnClickListener {
+        view.setSecondaryButton(
+            icon = R.drawable.ic_close,
+            contentDescription = R.string.history_delete_item
+        ) {
             interactor.onDeleteOne(item)
         }
     }
 
     fun bind(item: T, url: String) {
         this.item = item
-        webAddressView.text = url
-        icons.loadIntoView(favicon_image, url)
+        view.setText(label = url, caption = null)
+        icons.loadIntoView(view.iconView, url)
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.exception_item
+        const val LAYOUT_ID = R.layout.site_list_item
     }
 }
