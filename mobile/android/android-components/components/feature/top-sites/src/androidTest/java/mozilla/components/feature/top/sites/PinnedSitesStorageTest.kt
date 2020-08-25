@@ -108,7 +108,7 @@ class PinnedSitesStorageTest {
         with(topSites[0]) {
             assertEquals("Mozilla", title)
             assertEquals("https://www.mozilla.org", url)
-            assertEquals(DEFAULT, type)
+            assertEquals(PINNED, type)
         }
 
         with(topSites[1]) {
