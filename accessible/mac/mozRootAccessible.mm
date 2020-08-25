@@ -1,4 +1,6 @@
+/* clang-format off */
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,8 +16,10 @@
 
 using namespace mozilla::a11y;
 
-static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aAccessible) {
-  RootAccessibleWrap* root = static_cast<RootAccessibleWrap*>(aAccessible->AsRoot());
+static id<mozAccessible, mozView> getNativeViewFromRootAccessible(
+    Accessible* aAccessible) {
+  RootAccessibleWrap* root =
+      static_cast<RootAccessibleWrap*>(aAccessible->AsRoot());
   id<mozAccessible, mozView> nativeView = nil;
   root->GetNativeWidget((void**)&nativeView);
   return nativeView;
@@ -49,10 +53,12 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
 - (id)moxUnignoredParent {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (!mParallelView) mParallelView = (id<mozView, mozAccessible>)[self representedView];
+  if (!mParallelView)
+    mParallelView = (id<mozView, mozAccessible>)[self representedView];
 
   if (mParallelView)
-    return [mParallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
+    return [mParallelView
+        accessibilityAttributeValue:NSAccessibilityParentAttribute];
 
   MOZ_ASSERT(mParallelView, "we're a root accessible w/o native view?");
   return [super moxUnignoredParent];
@@ -68,7 +74,8 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
 - (id)representedView {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  MOZ_ASSERT(mParallelView, "root accessible does not have a native parallel view.");
+  MOZ_ASSERT(mParallelView,
+             "root accessible does not have a native parallel view.");
 
   return mParallelView;
 

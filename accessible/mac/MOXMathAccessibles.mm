@@ -1,4 +1,6 @@
-/* -*- (Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset:) 2 -*- */
+/* clang-format off */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,7 +59,8 @@ using namespace mozilla::a11y;
   // attribute is of the form [zero-float][optional-unit]. In that case we
   // set line thickness to zero and in the other cases we set it to one.
   if (NSString* thickness = utils::GetAccAttr(self, "thickness")) {
-    NSNumberFormatter* formatter = [[[NSNumberFormatter alloc] init] autorelease];
+    NSNumberFormatter* formatter =
+        [[[NSNumberFormatter alloc] init] autorelease];
     NSNumber* value = [formatter numberFromString:thickness];
     return [NSNumber numberWithBool:[value boolValue]];
   } else {
