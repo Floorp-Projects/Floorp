@@ -9391,6 +9391,12 @@ bool BytecodeEmitter::emitPrivateMethodInitializer(ClassEmitter& ce,
       MOZ_CRASH("Invalid op");
   }
 
+  // Pop remaining THIS.
+  if (!bce2.emit1(JSOp::Pop)) {
+    //              [stack]
+    return false;
+  }
+
   if (!fse.emitEndBody()) {
     //              [stack]
     return false;
