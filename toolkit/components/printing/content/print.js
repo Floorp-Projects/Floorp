@@ -6,6 +6,7 @@ const {
   gBrowser,
   PrintUtils,
   Services,
+  AppConstants,
 } = window.docShell.chromeEventHandler.ownerGlobal;
 
 ChromeUtils.defineModuleGetter(
@@ -765,6 +766,8 @@ customElements.define("copy-count-input", CopiesInput, {
 class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   initialize() {
     super.initialize();
+
+    this.setAttribute("platform", AppConstants.platform);
 
     this.addEventListener("change", this);
     this.addEventListener("submit", this);
