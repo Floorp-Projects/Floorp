@@ -172,38 +172,41 @@ void nsPrintSettingsWin::InitWithInitializer(
     return;
   }
 
-  const DEVMODEW* devmode =
-      reinterpret_cast<const DEVMODEW*>(aSettings.mDevmodeWStorage.Elements());
+  // SetDevMode copies the DEVMODE.
+  SetDevMode(const_cast<DEVMODEW*>(reinterpret_cast<const DEVMODEW*>(
+      aSettings.mDevmodeWStorage.Elements())));
 
-  if (devmode->dmFields & DM_ORIENTATION) {
-    SetOrientation(devmode->dmOrientation == DMORIENT_PORTRAIT
+  if (mDevMode->dmFields & DM_ORIENTATION) {
+    SetOrientation(mDevMode->dmOrientation == DMORIENT_PORTRAIT
                        ? kPortraitOrientation
                        : kLandscapeOrientation);
   }
 
-  if (devmode->dmFields & DM_COPIES) {
-    SetNumCopies(devmode->dmCopies);
+  if (mDevMode->dmFields & DM_COPIES) {
+    SetNumCopies(mDevMode->dmCopies);
   }
 
-  if (devmode->dmFields & DM_SCALE) {
-    double scale = double(devmode->dmScale) / 100.0f;
+  if (mDevMode->dmFields & DM_SCALE) {
+    // Since we do the scaling, grab the DEVMODE value and reset it back to 100.
+    double scale = double(mDevMode->dmScale) / 100.0f;
     if (mScaling == 1.0 || scale != 1.0) {
       SetScaling(scale);
     }
+    mDevMode->dmScale = 100;
   }
 
-  if (devmode->dmFields & DM_PAPERSIZE) {
-    SetPaperData(devmode->dmPaperSize);
-    if (devmode->dmPaperSize > 0 &&
-        devmode->dmPaperSize < int32_t(mozilla::ArrayLength(kPaperSizeUnits))) {
+  if (mDevMode->dmFields & DM_PAPERSIZE) {
+    SetPaperData(mDevMode->dmPaperSize);
+    if (mDevMode->dmPaperSize > 0 &&
+        mDevMode->dmPaperSize < int32_t(ArrayLength(kPaperSizeUnits))) {
       SetPaperSizeUnit(kPaperSizeUnits[mPaperData]);
     }
   } else {
     SetPaperData(-1);
   }
 
-  if (devmode->dmFields & DM_COLOR) {
-    SetPrintInColor(devmode->dmColor == DMCOLOR_COLOR);
+  if (mDevMode->dmFields & DM_COLOR) {
+    SetPrintInColor(mDevMode->dmColor == DMCOLOR_COLOR);
   }
 
   // Set the paper sizes to match the unit.
@@ -229,8 +232,6 @@ void nsPrintSettingsWin::InitWithInitializer(
     mPrintableHeightInInches = printableWidthInPoints / POINTS_PER_INCH_FLOAT;
     mPrintableWidthInInches = printableHeightInPoints / POINTS_PER_INCH_FLOAT;
   }
-
-  SetDevMode(const_cast<DEVMODEW*>(devmode));  // copies devmode
 }
 
 already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
