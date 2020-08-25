@@ -3121,7 +3121,7 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.11.4"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=63325444ae3388599f2f222775eebdde4c2f9f30#63325444ae3388599f2f222775eebdde4c2f9f30"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=d5a37fd0bd51e06a53274c68213b00136aba83a6#d5a37fd0bd51e06a53274c68213b00136aba83a6"
 dependencies = [
  "bitreader",
  "byteorder",
@@ -3138,7 +3138,7 @@ version = "0.1.0"
 [[package]]
 name = "mp4parse_capi"
 version = "0.11.4"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=63325444ae3388599f2f222775eebdde4c2f9f30#63325444ae3388599f2f222775eebdde4c2f9f30"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=d5a37fd0bd51e06a53274c68213b00136aba83a6#d5a37fd0bd51e06a53274c68213b00136aba83a6"
 dependencies = [
  "byteorder",
  "log",
@@ -3388,19 +3388,21 @@ dependencies = [
 
 [[package]]
 name = "num-integer"
-version = "0.1.39"
+version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e83d528d2677f0518c570baf2b7abdcf0cd2d248860b68507bdcb3e91d4c0cea"
+checksum = "b85e541ef8255f6cf42bbfe4ef361305c6c135d10919ecc26126c4e5ae94bc09"
 dependencies = [
+ "autocfg 0.1.6",
  "num-traits",
 ]
 
 [[package]]
 name = "num-iter"
-version = "0.1.37"
+version = "0.1.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af3fdbbc3291a5464dc57b03860ec37ca6bf915ed6ee385e7c6c052c422b2124"
+checksum = "76bd5272412d173d6bf9afdf98db8612bbabc9a7a830b7bfc9c188911716132e"
 dependencies = [
+ "autocfg 0.1.6",
  "num-integer",
  "num-traits",
 ]
