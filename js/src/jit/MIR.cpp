@@ -6126,6 +6126,17 @@ MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
+  KnownClass known = GetObjectKnownClass(object());
+  if (known == KnownClass::None) {
+    return this;
+  }
+
+  MOZ_ASSERT(!GetObjectKnownJSClass(object())->isProxy());
+  AssertKnownClass(alloc, this, object());
+  return object();
+}
+
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
   const JSClass* clasp = GetObjectKnownJSClass(object());
   if (!clasp || getClass() != clasp) {
@@ -6172,6 +6183,25 @@ MDefinition* MIsArray::foldsTo(TempAllocator& alloc) {
 
   AssertKnownClass(alloc, this, input());
   return MConstant::New(alloc, BooleanValue(known == KnownClass::Array));
+}
+
+MDefinition* MGuardIsNotArrayBufferMaybeShared::foldsTo(TempAllocator& alloc) {
+  switch (GetObjectKnownClass(object())) {
+    case KnownClass::PlainObject:
+    case KnownClass::Array:
+    case KnownClass::Function:
+    case KnownClass::RegExp:
+    case KnownClass::ArrayIterator:
+    case KnownClass::StringIterator:
+    case KnownClass::RegExpStringIterator: {
+      AssertKnownClass(alloc, this, object());
+      return object();
+    }
+    case KnownClass::None:
+      break;
+  }
+
+  return this;
 }
 
 MDefinition* MCheckIsObj::foldsTo(TempAllocator& alloc) {
