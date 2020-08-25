@@ -43,7 +43,7 @@ class ReaderView {
 
     let article = Object.assign(
       result,
-      {url: new URL(url).hostname},
+      {url: new URL(url)},
       {readingTime: this.getReadingTime(result.length, result.language)},
       {byline: this.getByline()},
       {dir: this.getTextDirection(result)},
@@ -131,7 +131,7 @@ class ReaderView {
       <body class="mozac-readerview-body">
         <div id="mozac-readerview-container" class="container" dir=${article.dir}>
           <div class="header">
-            <a class="domain">${article.url}</a>
+            <a class="domain" href=${article.url.href}>${article.url.hostname}</a>
             <div class="domain-border"></div>
             <h1>${article.title}</h1>
             <div class="credits">${article.byline}</div>
