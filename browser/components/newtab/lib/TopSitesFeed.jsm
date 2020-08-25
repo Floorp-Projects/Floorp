@@ -229,9 +229,8 @@ this.TopSitesFeed = class TopSitesFeed {
       if (siteData.title) {
         link.label = siteData.title;
       }
-      if (siteData.keyword) {
-        link.searchTopSite = true;
-        link.label = siteData.keyword;
+      if (siteData.search_shortcut) {
+        link = await this.topSiteToSearchTopSite(link);
       }
       DEFAULT_TOP_SITES.push(link);
     }
