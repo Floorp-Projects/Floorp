@@ -12,6 +12,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.RelativeLayout
+import androidx.core.view.updatePadding
 import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
 import org.mozilla.fenix.R
 import java.text.NumberFormat
@@ -178,7 +179,7 @@ class TabCounter @JvmOverloads constructor(
 
     private fun formatForDisplay(count: Int): String {
         return if (count > MAX_VISIBLE_TABS) {
-            counter_text.setPadding(0, 0, 0, INFINITE_CHAR_PADDING_BOTTOM)
+            counter_text.updatePadding(bottom = INFINITE_CHAR_PADDING_BOTTOM)
             SO_MANY_TABS_OPEN
         } else NumberFormat.getInstance().format(count.toLong())
     }

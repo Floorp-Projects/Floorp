@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.CheckedTextView
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import androidx.core.view.updatePaddingRelative
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
@@ -36,7 +37,7 @@ internal class CollectionsAdapter(
     override fun onBindViewHolder(holder: CollectionItemViewHolder, position: Int) {
         if (position == 0) {
             val displayMetrics = holder.textView.context.resources.displayMetrics
-            holder.textView.setPadding(NEW_COLLECTION_PADDING_START.dpToPx(displayMetrics), 0, 0, 0)
+            holder.textView.updatePaddingRelative(start = NEW_COLLECTION_PADDING_START.dpToPx(displayMetrics))
             holder.textView.compoundDrawablePadding =
                 NEW_COLLECTION_DRAWABLE_PADDING.dpToPx(displayMetrics)
             holder.textView.setCompoundDrawablesWithIntrinsicBounds(

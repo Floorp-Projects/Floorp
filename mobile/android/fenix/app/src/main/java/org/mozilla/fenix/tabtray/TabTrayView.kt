@@ -16,6 +16,7 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
@@ -36,7 +37,6 @@ import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -51,6 +51,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.MultiselectModeChange
 import org.mozilla.fenix.tabtray.TabTrayDialogFragmentState.Mode
 import java.text.NumberFormat
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 
 /**
  * View that contains and configures the BrowserAwesomeBar
@@ -493,7 +494,7 @@ class TabTrayView(
 
     private fun updateTabCounter(count: Int): String {
         if (count > MAX_VISIBLE_TABS) {
-            counter_text.setPadding(0, 0, 0, INFINITE_CHAR_PADDING_BOTTOM)
+            counter_text.updatePadding(bottom = INFINITE_CHAR_PADDING_BOTTOM)
             return SO_MANY_TABS_OPEN
         }
         return NumberFormat.getInstance().format(count.toLong())

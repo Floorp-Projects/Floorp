@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.ContentFrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.updatePadding
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
@@ -124,11 +125,8 @@ class FenixSnackbar private constructor(
             return FenixSnackbar(parent, content, callback, isError).also {
                 it.duration = durationOrAccessibleDuration
 
-                it.view.setPadding(
-                    0,
-                    0,
-                    0,
-                    if (
+                it.view.updatePadding(
+                    bottom = if (
                         isDisplayedWithBrowserToolbar &&
                         shouldUseBottomToolbar &&
                         // If the view passed in is a ContentFrameLayout, it does not matter

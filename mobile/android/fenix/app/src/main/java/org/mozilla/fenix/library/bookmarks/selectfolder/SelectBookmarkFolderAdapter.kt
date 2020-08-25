@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.core.view.updatePaddingRelative
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -86,7 +87,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
             }
             val pxToIndent = dpsToIndent.dpToPx(view.context.resources.displayMetrics)
             val padding = pxToIndent * if (folder.depth > maxDepth) maxDepth else folder.depth
-            view.setPadding(padding, 0, 0, 0)
+            view.updatePaddingRelative(start = padding)
         }
 
         companion object {

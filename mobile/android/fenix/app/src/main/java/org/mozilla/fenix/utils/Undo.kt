@@ -6,6 +6,7 @@ package org.mozilla.fenix.utils
 
 import android.view.View
 import androidx.appcompat.widget.ContentFrameLayout
+import androidx.core.view.updatePadding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -70,11 +71,8 @@ fun CoroutineScope.allowUndo(
         val toolbarHeight = view.context.resources
             .getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
-        snackbar.view.setPadding(
-            0,
-            0,
-            0,
-            if (
+        snackbar.view.updatePadding(
+            bottom = if (
                 paddedForBottomToolbar &&
                 shouldUseBottomToolbar &&
                 // If the view passed in is a ContentFrameLayout, it does not matter
