@@ -51,6 +51,7 @@ let iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
 add_task(async function setup() {
+  let processedPromise = promiseFormsProcessedInChildFrame();
   iframe.src = "/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
@@ -58,7 +59,7 @@ add_task(async function setup() {
     }, {once: true});
   });
 
-  await promiseFormsProcessed();
+  await processedPromise;
 
   hostname = await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     return this.content.document.documentURIObject.host;

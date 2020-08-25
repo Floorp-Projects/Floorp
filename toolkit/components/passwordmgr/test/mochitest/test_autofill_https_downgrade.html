@@ -31,9 +31,10 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
 
 async function prepareAndProcessForm(url, login) {
+  let processedPromise = promiseFormsProcessedInChildFrame();
   iframe.src = url;
   info("prepareAndProcessForm, assigned iframe.src: " + url);
-  await promiseFormsProcessed();
+  await processedPromise;
 }
 
 async function checkFormsWithLogin(formUrls, login, expectedUsername, expectedPassword) {

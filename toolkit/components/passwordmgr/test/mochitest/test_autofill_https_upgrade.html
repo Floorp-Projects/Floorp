@@ -41,8 +41,9 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
     await LoginManager.addLogin(login);
   }
 
+  let processedPromise = promiseFormsProcessedInChildFrame();
   iframe.src = url;
-  await promiseFormsProcessed();
+  await processedPromise;
 }
 
 add_task(async function setup() {
