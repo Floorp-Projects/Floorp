@@ -170,6 +170,7 @@ void nsServerSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
 
   PRFileDesc* clientFD;
   PRNetAddr prClientAddr;
+  NetAddr clientAddr;
 
   // NSPR doesn't tell us the peer address's length (as provided by the
   // 'accept' system call), so we can't distinguish between named,
@@ -179,13 +180,13 @@ void nsServerSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
   memset(&prClientAddr, 0, sizeof(prClientAddr));
 
   clientFD = PR_Accept(mFD, &prClientAddr, PR_INTERVAL_NO_WAIT);
+  PRNetAddrToNetAddr(&prClientAddr, &clientAddr);
   if (!clientFD) {
     NS_WARNING("PR_Accept failed");
     mCondition = NS_ERROR_UNEXPECTED;
     return;
   }
 
-  NetAddr clientAddr(&prClientAddr);
   // Accept succeeded, create socket transport and notify consumer
   CreateClientTransport(clientFD, clientAddr);
 }

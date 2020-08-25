@@ -139,7 +139,8 @@ nsresult UDPSocketParent::BindInternal(const nsCString& aHost,
       return NS_ERROR_FAILURE;
     }
 
-    mozilla::net::NetAddr addr(&prAddr);
+    mozilla::net::NetAddr addr;
+    PRNetAddrToNetAddr(&prAddr, &addr);
     rv = sock->InitWithAddress(&addr, mPrincipal, aAddressReuse,
                                /* optional_argc = */ 1);
   }
@@ -287,7 +288,9 @@ nsresult UDPSocketParent::ConnectInternal(const nsCString& aHost,
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::net::NetAddr addr(&prAddr);
+  mozilla::net::NetAddr addr;
+  PRNetAddrToNetAddr(&prAddr, &addr);
+
   rv = mSocket->Connect(&addr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
