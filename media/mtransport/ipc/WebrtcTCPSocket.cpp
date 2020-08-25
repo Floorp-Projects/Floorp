@@ -322,7 +322,8 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
     return;
   }
 
-  mozilla::net::NetAddr addr(&prAddr);
+  mozilla::net::NetAddr addr;
+  PRNetAddrToNetAddr(&prAddr, &addr);
   rv = mTransport->Bind(&addr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     CloseWithReason(rv);
