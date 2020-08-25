@@ -95,7 +95,7 @@ struct CanvasRendererData final {
 
 class BorrowedSourceSurface final {
  public:
-  PersistentBufferProvider* const mReturnTo;
+  const WeakPtr<PersistentBufferProvider> mReturnTo;
   const RefPtr<gfx::SourceSurface> mSurf;  /// non-null
 
   BorrowedSourceSurface(PersistentBufferProvider*, RefPtr<gfx::SourceSurface>);
