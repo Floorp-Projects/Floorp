@@ -35,15 +35,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGLength)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGLength)
   tmp->CleanupWeakRefs();
-  tmp->mVal = nullptr;  // (owned by mSVGElement, which we drop our ref to here)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mList)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSVGElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGLength)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSVGElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGLength)
@@ -55,60 +52,53 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGLength, Release)
 
 DOMSVGLength::DOMSVGLength(DOMSVGLengthList* aList, uint8_t aAttrEnum,
                            uint32_t aListIndex, bool aIsAnimValItem)
-    : mList(aList),
+    : mOwner(aList),
       mListIndex(aListIndex),
       mAttrEnum(aAttrEnum),
       mIsAnimValItem(aIsAnimValItem),
-      mUnit(SVGLength_Binding::SVG_LENGTHTYPE_NUMBER),
-      mValue(0.0f),
-      mVal(nullptr) {
-  // These shifts are in sync with the members in the header.
-  MOZ_ASSERT(aList && aAttrEnum < (1 << 4) && aListIndex <= MaxListIndex(),
-             "bad arg");
-
+      mUnit(SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {
+  MOZ_ASSERT(aList, "bad arg");
+  MOZ_ASSERT(mAttrEnum == aAttrEnum, "bitfield too small");
+  MOZ_ASSERT(aListIndex <= MaxListIndex(), "list index too large");
   MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
 
 DOMSVGLength::DOMSVGLength()
-    : mList(nullptr),
+    : mOwner(nullptr),
       mListIndex(0),
       mAttrEnum(0),
       mIsAnimValItem(false),
-      mUnit(SVGLength_Binding::SVG_LENGTHTYPE_NUMBER),
-      mValue(0.0f),
-      mVal(nullptr) {}
+      mUnit(SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {}
 
 DOMSVGLength::DOMSVGLength(SVGAnimatedLength* aVal, SVGElement* aSVGElement,
                            bool aAnimVal)
-    : mList(nullptr),
+    : mOwner(aSVGElement),
       mListIndex(0),
-      mAttrEnum(0),
+      mAttrEnum(aVal->mAttrEnum),
       mIsAnimValItem(aAnimVal),
-      mUnit(SVGLength_Binding::SVG_LENGTHTYPE_NUMBER),
-      mValue(0.0f),
-      mVal(aVal),
-      mSVGElement(aSVGElement) {}
+      mUnit(SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {
+  MOZ_ASSERT(aVal, "bad arg");
+  MOZ_ASSERT(mAttrEnum == aVal->mAttrEnum, "bitfield too small");
+}
 
 void DOMSVGLength::CleanupWeakRefs() {
   // Our mList's weak ref to us must be nulled out when we die (or when we're
   // cycle collected), so we that don't leave behind a pointer to
   // free / soon-to-be-free memory.
-  if (mList) {
-    MOZ_ASSERT(mList->mItems[mListIndex] == this,
+  if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
+    MOZ_ASSERT(lengthList->mItems[mListIndex] == this,
                "Clearing out the wrong list index...?");
-    mList->mItems[mListIndex] = nullptr;
+    lengthList->mItems[mListIndex] = nullptr;
   }
 
   // Similarly, we must update the tearoff table to remove its (non-owning)
   // pointer to mVal.
-  if (mVal) {
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
     auto& table = mIsAnimValItem ? sAnimSVGLengthTearOffTable
                                  : sBaseSVGLengthTearOffTable;
-    table.RemoveTearoff(mVal);
+    table.RemoveTearoff(svg->GetAnimatedLength(mAttrEnum));
   }
 }
-
-DOMSVGLength::~DOMSVGLength() { CleanupWeakRefs(); }
 
 already_AddRefed<DOMSVGLength> DOMSVGLength::GetTearOff(SVGAnimatedLength* aVal,
                                                         SVGElement* aSVGElement,
@@ -125,15 +115,17 @@ already_AddRefed<DOMSVGLength> DOMSVGLength::GetTearOff(SVGAnimatedLength* aVal,
 }
 
 DOMSVGLength* DOMSVGLength::Copy() {
-  NS_ASSERTION(HasOwner() || IsReflectingAttribute(), "unexpected caller");
+  NS_ASSERTION(HasOwner(), "unexpected caller");
   DOMSVGLength* copy = new DOMSVGLength();
   uint16_t unit;
   float value;
-  if (mVal) {
-    unit = mVal->mSpecifiedUnitType;
-    value = mIsAnimValItem ? mVal->mAnimVal : mVal->mBaseVal;
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
+    unit = length->GetSpecifiedUnitType();
+    value = mIsAnimValItem ? length->GetAnimValInSpecifiedUnits()
+                           : length->GetBaseValInSpecifiedUnits();
   } else {
-    SVGLength& length = InternalItem();
+    const SVGLength& length = InternalItem();
     unit = length.GetUnit();
     value = length.GetValueInCurrentUnits();
   }
@@ -142,33 +134,29 @@ DOMSVGLength* DOMSVGLength::Copy() {
 }
 
 uint16_t DOMSVGLength::UnitType() {
-  if (mVal) {
-    if (mIsAnimValItem) {
-      mSVGElement->FlushAnimations();
-    }
-    return mVal->mSpecifiedUnitType;
+  if (mIsAnimValItem) {
+    Element()->FlushAnimations();
   }
-
-  if (mIsAnimValItem && HasOwner()) {
-    Element()->FlushAnimations();  // May make HasOwner() == false
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    return svg->GetAnimatedLength(mAttrEnum)->GetSpecifiedUnitType();
   }
   return HasOwner() ? InternalItem().GetUnit() : mUnit;
 }
 
 float DOMSVGLength::GetValue(ErrorResult& aRv) {
-  if (mVal) {
-    if (mIsAnimValItem) {
-      mSVGElement->FlushAnimations();
-      return mVal->GetAnimValue(mSVGElement);
-    }
-    return mVal->GetBaseValue(mSVGElement);
-  }
-
-  if (mIsAnimValItem && HasOwner()) {
+  if (mIsAnimValItem) {
     Element()->FlushAnimations();  // May make HasOwner() == false
   }
-  if (HasOwner()) {
-    float value = InternalItem().GetValueInUserUnits(Element(), Axis());
+
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
+    return mIsAnimValItem ? length->GetAnimValue(svg)
+                          : length->GetBaseValue(svg);
+  }
+
+  if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
+    float value = InternalItem().GetValueInUserUnits(lengthList->Element(),
+                                                     lengthList->Axis());
     if (!IsFinite(value)) {
       aRv.Throw(NS_ERROR_FAILURE);
     }
@@ -192,8 +180,9 @@ void DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv) {
     return;
   }
 
-  if (mVal) {
-    aRv = mVal->SetBaseValue(aUserUnitValue, mSVGElement, true);
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    aRv = svg->GetAnimatedLength(mAttrEnum)->SetBaseValue(aUserUnitValue, svg,
+                                                          true);
     return;
   }
 
@@ -202,17 +191,19 @@ void DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv) {
   // value to this length's current unit and sets that, leaving this length's
   // unit as it is.
 
-  if (HasOwner()) {
-    if (InternalItem().GetValueInUserUnits(Element(), Axis()) ==
-        aUserUnitValue) {
+  if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
+    SVGLength& internalItem = InternalItem();
+    if (internalItem.GetValueInUserUnits(
+            lengthList->Element(), lengthList->Axis()) == aUserUnitValue) {
       return;
     }
-    float uuPerUnit = InternalItem().GetUserUnitsPerUnit(Element(), Axis());
+    float uuPerUnit = internalItem.GetUserUnitsPerUnit(lengthList->Element(),
+                                                       lengthList->Axis());
     if (uuPerUnit > 0) {
       float newValue = aUserUnitValue / uuPerUnit;
       if (IsFinite(newValue)) {
         AutoChangeLengthListNotifier notifier(this);
-        InternalItem().SetValueAndUnit(newValue, InternalItem().GetUnit());
+        internalItem.SetValueAndUnit(newValue, internalItem.GetUnit());
         return;
       }
     }
@@ -227,17 +218,15 @@ void DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv) {
 }
 
 float DOMSVGLength::ValueInSpecifiedUnits() {
-  if (mVal) {
-    if (mIsAnimValItem) {
-      mSVGElement->FlushAnimations();
-      return mVal->mAnimVal;
-    }
-    return mVal->mBaseVal;
-  }
-
-  if (mIsAnimValItem && HasOwner()) {
+  if (mIsAnimValItem) {
     Element()->FlushAnimations();  // May make HasOwner() == false
   }
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
+    return mIsAnimValItem ? length->GetAnimValInSpecifiedUnits()
+                          : length->GetBaseValInSpecifiedUnits();
+  }
+
   return HasOwner() ? InternalItem().GetValueInCurrentUnits() : mValue;
 }
 
@@ -247,17 +236,19 @@ void DOMSVGLength::SetValueInSpecifiedUnits(float aValue, ErrorResult& aRv) {
     return;
   }
 
-  if (mVal) {
-    mVal->SetBaseValueInSpecifiedUnits(aValue, mSVGElement, true);
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    svg->GetAnimatedLength(mAttrEnum)->SetBaseValueInSpecifiedUnits(aValue, svg,
+                                                                    true);
     return;
   }
 
   if (HasOwner()) {
-    if (InternalItem().GetValueInCurrentUnits() == aValue) {
+    SVGLength& internalItem = InternalItem();
+    if (internalItem.GetValueInCurrentUnits() == aValue) {
       return;
     }
     AutoChangeLengthListNotifier notifier(this);
-    InternalItem().SetValueInCurrentUnits(aValue);
+    internalItem.SetValueInCurrentUnits(aValue);
     return;
   }
   mValue = aValue;
@@ -269,8 +260,9 @@ void DOMSVGLength::SetValueAsString(const nsAString& aValue, ErrorResult& aRv) {
     return;
   }
 
-  if (mVal) {
-    aRv = mVal->SetBaseValueString(aValue, mSVGElement, true);
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    aRv = svg->GetAnimatedLength(mAttrEnum)->SetBaseValueString(aValue, svg,
+                                                                true);
     return;
   }
 
@@ -280,11 +272,12 @@ void DOMSVGLength::SetValueAsString(const nsAString& aValue, ErrorResult& aRv) {
     return;
   }
   if (HasOwner()) {
-    if (InternalItem() == value) {
+    SVGLength& internalItem = InternalItem();
+    if (internalItem == value) {
       return;
     }
     AutoChangeLengthListNotifier notifier(this);
-    InternalItem() = value;
+    internalItem = value;
     return;
   }
   mValue = value.GetValueInCurrentUnits();
@@ -292,18 +285,18 @@ void DOMSVGLength::SetValueAsString(const nsAString& aValue, ErrorResult& aRv) {
 }
 
 void DOMSVGLength::GetValueAsString(nsAString& aValue) {
-  if (mVal) {
-    if (mIsAnimValItem) {
-      mSVGElement->FlushAnimations();
-      mVal->GetAnimValueString(aValue);
-    } else {
-      mVal->GetBaseValueString(aValue);
-    }
-    return;
+  if (mIsAnimValItem) {
+    Element()->FlushAnimations();  // May make HasOwner() == false
   }
 
-  if (mIsAnimValItem && HasOwner()) {
-    Element()->FlushAnimations();  // May make HasOwner() == false
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
+    if (mIsAnimValItem) {
+      length->GetAnimValueString(aValue);
+    } else {
+      length->GetBaseValueString(aValue);
+    }
+    return;
   }
   if (HasOwner()) {
     InternalItem().GetValueAsString(aValue);
@@ -319,8 +312,9 @@ void DOMSVGLength::NewValueSpecifiedUnits(uint16_t aUnit, float aValue,
     return;
   }
 
-  if (mVal) {
-    mVal->NewValueSpecifiedUnits(aUnit, aValue, mSVGElement);
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    svg->GetAnimatedLength(mAttrEnum)->NewValueSpecifiedUnits(aUnit, aValue,
+                                                              svg);
     return;
   }
 
@@ -329,12 +323,12 @@ void DOMSVGLength::NewValueSpecifiedUnits(uint16_t aUnit, float aValue,
     return;
   }
   if (HasOwner()) {
-    if (InternalItem().GetUnit() == aUnit &&
-        InternalItem().GetValueInCurrentUnits() == aValue) {
+    SVGLength& internalItem = InternalItem();
+    if (internalItem == SVGLength(aValue, aUnit)) {
       return;
     }
     AutoChangeLengthListNotifier notifier(this);
-    InternalItem().SetValueAndUnit(aValue, uint8_t(aUnit));
+    internalItem.SetValueAndUnit(aValue, uint8_t(aUnit));
     return;
   }
   mUnit = uint8_t(aUnit);
@@ -347,8 +341,8 @@ void DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv) {
     return;
   }
 
-  if (mVal) {
-    mVal->ConvertToSpecifiedUnits(aUnit, mSVGElement);
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    svg->GetAnimatedLength(mAttrEnum)->ConvertToSpecifiedUnits(aUnit, svg);
     return;
   }
 
@@ -356,25 +350,27 @@ void DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
-  if (HasOwner()) {
-    if (InternalItem().GetUnit() == aUnit) {
+
+  float val;
+  if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
+    SVGLength& length = InternalItem();
+    if (length.GetUnit() == aUnit) {
       return;
     }
-    float val =
-        InternalItem().GetValueInSpecifiedUnit(aUnit, Element(), Axis());
-    if (IsFinite(val)) {
+    val = length.GetValueInSpecifiedUnit(aUnit, lengthList->Element(),
+                                         lengthList->Axis());
+  } else {
+    val = SVGLength(mValue, mUnit).GetValueInSpecifiedUnit(aUnit, nullptr, 0);
+  }
+  if (IsFinite(val)) {
+    if (HasOwner()) {
       AutoChangeLengthListNotifier notifier(this);
       InternalItem().SetValueAndUnit(val, aUnit);
-      return;
-    }
-  } else {
-    SVGLength len(mValue, mUnit);
-    float val = len.GetValueInSpecifiedUnit(aUnit, nullptr, 0);
-    if (IsFinite(val)) {
+    } else {
       mValue = val;
       mUnit = aUnit;
-      return;
     }
+    return;
   }
   // else [SVGWG issue] Can't convert unit
   // ReportToConsole
@@ -390,7 +386,7 @@ void DOMSVGLength::InsertingIntoList(DOMSVGLengthList* aList, uint8_t aAttrEnum,
                                      uint32_t aListIndex, bool aIsAnimValItem) {
   NS_ASSERTION(!HasOwner(), "Inserting item that is already in a list");
 
-  mList = aList;
+  mOwner = aList;
   mAttrEnum = aAttrEnum;
   mListIndex = aListIndex;
   mIsAnimValItem = aIsAnimValItem;
@@ -401,27 +397,49 @@ void DOMSVGLength::InsertingIntoList(DOMSVGLengthList* aList, uint8_t aAttrEnum,
 void DOMSVGLength::RemovingFromList() {
   mValue = InternalItem().GetValueInCurrentUnits();
   mUnit = InternalItem().GetUnit();
-  mList = nullptr;
+  mOwner = nullptr;
   mIsAnimValItem = false;
 }
 
 SVGLength DOMSVGLength::ToSVGLength() {
-  if (HasOwner()) {
-    return SVGLength(InternalItem().GetValueInCurrentUnits(),
-                     InternalItem().GetUnit());
+  if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
+    SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
+    return SVGLength(mIsAnimValItem ? length->GetAnimValInSpecifiedUnits()
+                                    : length->GetBaseValInSpecifiedUnits(),
+                     length->GetSpecifiedUnitType());
   }
-  return SVGLength(mValue, mUnit);
+  return HasOwner() ? InternalItem() : SVGLength(mValue, mUnit);
+}
+
+bool DOMSVGLength::IsAnimating() const {
+  if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
+    return lengthList->IsAnimating();
+  }
+  nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner);
+  return svg && svg->GetAnimatedLength(mAttrEnum)->IsAnimated();
+}
+
+SVGElement* DOMSVGLength::Element() {
+  if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
+    return lengthList->Element();
+  }
+  nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner);
+  return svg;
 }
 
 SVGLength& DOMSVGLength::InternalItem() {
-  SVGAnimatedLengthList* alist = Element()->GetAnimatedLengthList(mAttrEnum);
+  nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner);
+  SVGAnimatedLengthList* alist =
+      lengthList->Element()->GetAnimatedLengthList(mAttrEnum);
   return mIsAnimValItem && alist->mAnimVal ? (*alist->mAnimVal)[mListIndex]
                                            : alist->mBaseVal[mListIndex];
 }
 
 #ifdef DEBUG
 bool DOMSVGLength::IndexIsValid() {
-  SVGAnimatedLengthList* alist = Element()->GetAnimatedLengthList(mAttrEnum);
+  nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner);
+  SVGAnimatedLengthList* alist =
+      lengthList->Element()->GetAnimatedLengthList(mAttrEnum);
   return (mIsAnimValItem && mListIndex < alist->GetAnimValue().Length()) ||
          (!mIsAnimValItem && mListIndex < alist->GetBaseValue().Length());
 }

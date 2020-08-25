@@ -64,6 +64,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGLengthList)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGLengthList)
+  NS_INTERFACE_MAP_ENTRY(DOMSVGLengthList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
@@ -158,7 +159,7 @@ already_AddRefed<DOMSVGLength> DOMSVGLengthList::Initialize(
   // prevent that from happening we have to do the clone here, if necessary.
 
   RefPtr<DOMSVGLength> domItem = &newItem;
-  if (domItem->HasOwner() || domItem->IsReflectingAttribute()) {
+  if (domItem->HasOwner()) {
     domItem = domItem->Copy();
   }
 
@@ -204,7 +205,7 @@ already_AddRefed<DOMSVGLength> DOMSVGLengthList::InsertItemBefore(
   }
 
   RefPtr<DOMSVGLength> domItem = &newItem;
-  if (domItem->HasOwner() || domItem->IsReflectingAttribute()) {
+  if (domItem->HasOwner()) {
     domItem = domItem->Copy();  // must do this before changing anything!
   }
 
@@ -252,7 +253,7 @@ already_AddRefed<DOMSVGLength> DOMSVGLengthList::ReplaceItem(
   }
 
   RefPtr<DOMSVGLength> domItem = &newItem;
-  if (domItem->HasOwner() || domItem->IsReflectingAttribute()) {
+  if (domItem->HasOwner()) {
     domItem = domItem->Copy();  // must do this before changing anything!
   }
 

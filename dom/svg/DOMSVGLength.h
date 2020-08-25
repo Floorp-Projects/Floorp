@@ -77,7 +77,7 @@ class DOMSVGLength final : public nsWrapperCache {
   DOMSVGLength(SVGAnimatedLength* aVal, dom::SVGElement* aSVGElement,
                bool aAnimVal);
 
-  ~DOMSVGLength();
+  ~DOMSVGLength() { CleanupWeakRefs(); }
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGLength)
@@ -105,26 +105,16 @@ class DOMSVGLength final : public nsWrapperCache {
    */
   DOMSVGLength* Copy();
 
-  bool IsInList() const { return !!mList; }
-
   /**
    * Returns true if our attribute is animating.
    */
-  bool IsAnimating() const { return mList && mList->IsAnimating(); }
+  bool IsAnimating() const;
 
   /**
    * In future, if this class is used for non-list lengths, this will be
    * different to IsInList().
    */
-  bool HasOwner() const { return !!mList; }
-
-  /**
-   * Returns whether this length object is reflecting a single SVG element
-   * attribute.  This includes the baseVal or animVal of SVGRectElement.x, for
-   * example, but not an item in an SVGLengthList, such as those in the
-   * baseVal or animVal of SVGTextElement.x.
-   */
-  bool IsReflectingAttribute() const { return mVal; }
+  bool HasOwner() const { return !!mOwner; }
 
   /**
    * This method is called to notify this DOM object that it is being inserted
@@ -166,24 +156,15 @@ class DOMSVGLength final : public nsWrapperCache {
   void NewValueSpecifiedUnits(uint16_t aUnit, float aValue, ErrorResult& aRv);
   void ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv);
 
-  nsISupports* GetParentObject() const {
-    auto svgElement = mList ? Element() : mSVGElement.get();
-    return svgElement;
-  }
+  nsISupports* GetParentObject() { return mOwner; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  dom::SVGElement* Element() const { return mList->Element(); }
+  dom::SVGElement* Element();
 
   uint8_t AttrEnum() const { return mAttrEnum; }
-
-  /**
-   * Get the axis that this length lies along. This method must only be called
-   * when this object is associated with an element (HasOwner() returns true).
-   */
-  uint8_t Axis() const { return mList->Axis(); }
 
   /**
    * Get a reference to the internal SVGLength list item that this DOM wrapper
@@ -207,7 +188,8 @@ class DOMSVGLength final : public nsWrapperCache {
    */
   void CleanupWeakRefs();
 
-  RefPtr<DOMSVGLengthList> mList;
+  RefPtr<nsISupports> mOwner;  // Either a DOMSVGLengthList if we're in a list,
+                               // an SVGElement if we're an attribute or null
 
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
@@ -219,11 +201,7 @@ class DOMSVGLength final : public nsWrapperCache {
   // The following members are only used when we're not in a list:
   uint32_t mUnit : 5;  // can handle 31 units (the 10 SVG 1.1 units + rem, vw,
                        // vh, wm, calc + future additions)
-  float mValue;
-
-  // The following members are only used when we have an SVGAnimatedLength
-  SVGAnimatedLength* mVal;  // kept alive because it belongs to mSVGElement
-  RefPtr<dom::SVGElement> mSVGElement;
+  float mValue = 0.0f;
 };
 
 }  // namespace dom
