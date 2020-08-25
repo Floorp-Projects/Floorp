@@ -14071,6 +14071,16 @@ void CodeGenerator::visitAssertClass(LAssertClass* ins) {
   masm.bind(&success);
 }
 
+void CodeGenerator::visitAssertShape(LAssertShape* ins) {
+  Register obj = ToRegister(ins->input());
+
+  Label success;
+  masm.branchTestObjShapeNoSpectreMitigations(Assembler::Equal, obj,
+                                              ins->mir()->shape(), &success);
+  masm.assumeUnreachable("Wrong Shape during run-time");
+  masm.bind(&success);
+}
+
 void CodeGenerator::visitAssertResultV(LAssertResultV* ins) {
 #ifdef DEBUG
   const ValueOperand value = ToValue(ins, LAssertResultV::Input);
