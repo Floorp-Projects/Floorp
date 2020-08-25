@@ -6,6 +6,10 @@
 
 #include "js/Value.h"
 
+#include "mozilla/Assertions.h"
+
+#include <inttypes.h>
+
 static const JS::Value JSVAL_NULL =
     JS::Value::fromTagAndPayload(JSVAL_TAG_NULL, 0);
 static const JS::Value JSVAL_FALSE =
@@ -30,3 +34,8 @@ const Handle<mozilla::Maybe<Value>> NothingHandleValue =
     Handle<mozilla::Maybe<Value>>::fromMarkedLocation(&JSVAL_NOTHING);
 
 }  // namespace JS
+
+void js::ReportBadValueTypeAndCrash(const JS::Value& value) {
+  MOZ_CRASH_UNSAFE_PRINTF("JS::Value has illegal type: 0x%" PRIx64,
+                          value.asRawBits());
+}

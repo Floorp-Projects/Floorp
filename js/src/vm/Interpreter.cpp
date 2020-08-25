@@ -970,7 +970,7 @@ JSType js::TypeOfValue(const Value& v) {
       break;
   }
 
-  MOZ_CRASH("unexpected type");
+  ReportBadValueTypeAndCrash(v);
 }
 
 bool js::CheckClassHeritageOperation(JSContext* cx, HandleValue heritage) {
