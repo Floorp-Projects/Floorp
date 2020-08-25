@@ -1,20 +1,23 @@
-/* -*- Mode: Objective-C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format off */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @protocol MOXTextMarkerSupport;
 
-// This protocol's primary use is for abstracting the NSAccessibility informal protocol
-// into a formal internal API. Conforming classes get to choose a subset of the optional
-// methods to implement. Those methods will be mapped to NSAccessibility attributes or actions.
-// A conforming class can implement moxBlockSelector to control which of its implemented
-// methods should be exposed to NSAccessibility.
+// This protocol's primary use is for abstracting the NSAccessibility informal
+// protocol into a formal internal API. Conforming classes get to choose a
+// subset of the optional methods to implement. Those methods will be mapped to
+// NSAccessibility attributes or actions. A conforming class can implement
+// moxBlockSelector to control which of its implemented methods should be
+// exposed to NSAccessibility.
 
 @protocol MOXAccessible
 
-// The deepest descendant of the accessible subtree that contains the specified point.
-// Forwarded from accessibilityHitTest.
+// The deepest descendant of the accessible subtree that contains the specified
+// point. Forwarded from accessibilityHitTest.
 - (id _Nullable)moxHitTest:(NSPoint)point;
 
 // The deepest descendant of the accessible subtree that has the focus.
@@ -319,13 +322,16 @@
 - (NSValue* _Nullable)moxStyleRangeForIndex:(NSNumber* _Nonnull)index;
 
 // AttributedStringForRange
-- (NSAttributedString* _Nullable)moxAttributedStringForRange:(NSValue* _Nonnull)range;
+- (NSAttributedString* _Nullable)moxAttributedStringForRange:
+    (NSValue* _Nonnull)range;
 
 // AXUIElementsForSearchPredicate
-- (NSArray* _Nullable)moxUIElementsForSearchPredicate:(NSDictionary* _Nonnull)searchPredicate;
+- (NSArray* _Nullable)moxUIElementsForSearchPredicate:
+    (NSDictionary* _Nonnull)searchPredicate;
 
 // AXUIElementCountForSearchPredicate
-- (NSNumber* _Nullable)moxUIElementCountForSearchPredicate:(NSDictionary* _Nonnull)searchPredicate;
+- (NSNumber* _Nullable)moxUIElementCountForSearchPredicate:
+    (NSDictionary* _Nonnull)searchPredicate;
 
 // AXCellForColumnAndRow
 - (id _Nullable)moxCellForColumnAndRow:(NSArray* _Nonnull)columnAndRow;
@@ -356,16 +362,19 @@
 - (NSString* _Nullable)moxStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
 
 // AXTextMarkerRangeForUnorderedTextMarkers
-- (id _Nullable)moxTextMarkerRangeForUnorderedTextMarkers:(NSArray* _Nonnull)textMarkers;
+- (id _Nullable)moxTextMarkerRangeForUnorderedTextMarkers:
+    (NSArray* _Nonnull)textMarkers;
 
 // AXLeftWordTextMarkerRangeForTextMarker
 - (id _Nullable)moxLeftWordTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
 
 // AXRightWordTextMarkerRangeForTextMarker
-- (id _Nullable)moxRightWordTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+- (id _Nullable)moxRightWordTextMarkerRangeForTextMarker:
+    (id _Nonnull)textMarker;
 
 // AXStartTextMarkerForTextMarkerRange
-- (id _Nullable)moxStartTextMarkerForTextMarkerRange:(id _Nonnull)textMarkerRange;
+- (id _Nullable)moxStartTextMarkerForTextMarkerRange:
+    (id _Nonnull)textMarkerRange;
 
 // AXEndTextMarkerForTextMarkerRange
 - (id _Nullable)moxEndTextMarkerForTextMarkerRange:(id _Nonnull)textMarkerRange;
@@ -377,7 +386,8 @@
 - (id _Nullable)moxPreviousTextMarkerForTextMarker:(id _Nonnull)textMarker;
 
 // AXAttributedStringForTextMarkerRange
-- (NSAttributedString* _Nullable)moxAttributedStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
+- (NSAttributedString* _Nullable)moxAttributedStringForTextMarkerRange:
+    (id _Nonnull)textMarkerRange;
 
 // AXBoundsForTextMarkerRange
 - (NSValue* _Nullable)moxBoundsForTextMarkerRange:(id _Nonnull)textMarkerRange;

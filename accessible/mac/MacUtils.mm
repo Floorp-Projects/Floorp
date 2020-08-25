@@ -1,5 +1,6 @@
+/* clang-format off */
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,13 +25,15 @@ NSMutableArray* ConvertToNSArray(nsTArray<Accessible*>& aArray) {
   for (size_t i = 0; i < totalCount; i++) {
     Accessible* curAccessible = aArray.ElementAt(i);
     mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
-    if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
   }
 
   return nativeArray;
 }
 
-// convert an array of Gecko proxy accessibles to an NSArray of native accessibles
+// convert an array of Gecko proxy accessibles to an NSArray of native
+// accessibles
 NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray) {
   NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
 
@@ -39,7 +42,8 @@ NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray) {
   for (size_t i = 0; i < totalCount; i++) {
     ProxyAccessible* curAccessible = aArray.ElementAt(i);
     mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
-    if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
   }
 
   return nativeArray;
@@ -62,7 +66,8 @@ NSString* GetAccAttr(mozAccessible* aNativeAccessible, const char* aAttrName) {
   if (Accessible* acc = [aNativeAccessible geckoAccessible].AsAccessible()) {
     nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
     attributes->GetStringProperty(nsCString(aAttrName), result);
-  } else if (ProxyAccessible* proxy = [aNativeAccessible geckoAccessible].AsProxy()) {
+  } else if (ProxyAccessible* proxy =
+                 [aNativeAccessible geckoAccessible].AsProxy()) {
     AutoTArray<Attribute, 10> attrs;
     proxy->Attributes(&attrs);
     for (size_t i = 0; i < attrs.Length(); i++) {

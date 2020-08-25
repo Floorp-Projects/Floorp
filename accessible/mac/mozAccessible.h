@@ -1,4 +1,6 @@
+/* clang-format off */
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -23,7 +25,8 @@
 namespace mozilla {
 namespace a11y {
 
-inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrProxy aAccOrProxy) {
+inline mozAccessible* GetNativeFromGeckoAccessible(
+    mozilla::a11y::AccessibleOrProxy aAccOrProxy) {
   MOZ_ASSERT(!aAccOrProxy.IsNull(), "Cannot get native from null accessible");
   if (Accessible* acc = aAccOrProxy.AsAccessible()) {
     mozAccessible* native = nil;
@@ -78,7 +81,9 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
                                inserted:(BOOL)isInserted
-                            inContainer:(const mozilla::a11y::AccessibleOrProxy&)container
+                            inContainer:
+                                (const mozilla::a11y::AccessibleOrProxy&)
+                                    container
                                      at:(int32_t)start;
 
 // internal method to retrieve a child at a given index.

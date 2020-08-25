@@ -1,4 +1,6 @@
+/* clang-format off */
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -67,7 +69,8 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 - (NSArray*)accessibilityParameterizedAttributeNames;
 
 // override, final
-- (id)accessibilityAttributeValue:(NSString*)attribute forParameter:(id)parameter;
+- (id)accessibilityAttributeValue:(NSString*)attribute
+                     forParameter:(id)parameter;
 
 // override, final
 - (id)accessibilityHitTest:(NSPoint)point;
@@ -93,7 +96,8 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 - (void)moxPostNotification:(NSString*)notification;
 
 // override
-- (void)moxPostNotification:(NSString*)notification withUserInfo:(NSDictionary*)userInfo;
+- (void)moxPostNotification:(NSString*)notification
+               withUserInfo:(NSDictionary*)userInfo;
 
 // override
 - (BOOL)moxBlockSelector:(SEL)selector;

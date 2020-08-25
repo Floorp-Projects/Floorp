@@ -1,4 +1,6 @@
+/* clang-format off */
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -79,7 +81,8 @@ inline NSString* ToNSString(id aValue) {
         return @"true";
       }
       nsAutoString invalidStr;
-      nsCOMPtr<nsIPersistentProperties> attributes = text->DefaultTextAttributes();
+      nsCOMPtr<nsIPersistentProperties> attributes =
+          text->DefaultTextAttributes();
       nsAccUtils::GetAccAttr(attributes, nsGkAtoms::invalid, invalidStr);
       if (invalidStr.IsEmpty()) {
         // if the attribute had no value, we should still respect the
@@ -117,7 +120,8 @@ inline NSString* ToNSString(id aValue) {
 
   int32_t lineNumber = -1;
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       lineNumber = textAcc->CaretLineNumber() - 1;
     }
   } else {
@@ -164,7 +168,8 @@ inline NSString* ToNSString(id aValue) {
   int32_t start = 0, end = 0;
   nsAutoString selText;
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       textAcc->SelectionBoundsAt(0, &start, &end);
       if (start != end) {
         textAcc->TextSubstring(start, end, selText);
@@ -183,7 +188,8 @@ inline NSString* ToNSString(id aValue) {
   int32_t start = 0;
   int32_t end = 0;
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       if (textAcc->SelectionCount()) {
         textAcc->SelectionBoundsAt(0, &start, &end);
       } else {
@@ -216,7 +222,8 @@ inline NSString* ToNSString(id aValue) {
   }
 
   return [NSValue
-      valueWithRange:NSMakeRange(0, textAcc ? textAcc->CharacterCount() : proxy->CharacterCount())];
+      valueWithRange:NSMakeRange(0, textAcc ? textAcc->CharacterCount()
+                                            : proxy->CharacterCount())];
 }
 
 - (BOOL)moxBlockSelector:(SEL)selector {
@@ -233,7 +240,8 @@ inline NSString* ToNSString(id aValue) {
   nsString text;
   nsCocoaUtils::GetStringForNSString(value, text);
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       textAcc->ReplaceText(text);
     }
   } else {
@@ -252,7 +260,8 @@ inline NSString* ToNSString(id aValue) {
   int32_t start = 0, end = 0;
   nsString text;
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       textAcc->SelectionBoundsAt(0, &start, &end);
       textAcc->DeleteText(start, end - start);
       nsCocoaUtils::GetStringForNSString(stringValue, text);
@@ -277,12 +286,14 @@ inline NSString* ToNSString(id aValue) {
   }
 
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
-      textAcc->SetSelectionBoundsAt(0, range.location, range.location + range.length);
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
+      textAcc->SetSelectionBoundsAt(0, range.location,
+                                    range.location + range.length);
     }
   } else {
-    mGeckoAccessible.AsProxy()->SetSelectionBoundsAt(0, range.location,
-                                                     range.location + range.length);
+    mGeckoAccessible.AsProxy()->SetSelectionBoundsAt(
+        0, range.location, range.location + range.length);
   }
 }
 
@@ -295,13 +306,15 @@ inline NSString* ToNSString(id aValue) {
   }
 
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       textAcc->ScrollSubstringTo(range.location, range.location + range.length,
                                  nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE);
     }
   } else {
-    mGeckoAccessible.AsProxy()->ScrollSubstringTo(range.location, range.location + range.length,
-                                                  nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE);
+    mGeckoAccessible.AsProxy()->ScrollSubstringTo(
+        range.location, range.location + range.length,
+        nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE);
   }
 }
 
@@ -311,18 +324,21 @@ inline NSString* ToNSString(id aValue) {
   NSRange r = [range rangeValue];
   nsAutoString text;
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       textAcc->TextSubstring(r.location, r.location + r.length, text);
     }
   } else {
-    mGeckoAccessible.AsProxy()->TextSubstring(r.location, r.location + r.length, text);
+    mGeckoAccessible.AsProxy()->TextSubstring(r.location, r.location + r.length,
+                                              text);
   }
 
   return nsCocoaUtils::ToNSString(text);
 }
 
 - (NSAttributedString*)moxAttributedStringForRange:(NSValue*)range {
-  return [[[NSAttributedString alloc] initWithString:[self moxStringForRange:range]] autorelease];
+  return [[[NSAttributedString alloc]
+      initWithString:[self moxStringForRange:range]] autorelease];
 }
 
 - (NSValue*)moxRangeForLine:(NSNumber*)line {
@@ -343,11 +359,13 @@ inline NSString* ToNSString(id aValue) {
   int32_t end = start + r.length;
   DesktopIntRect bounds;
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
       bounds = DesktopIntRect::FromUnknownRect(textAcc->TextBounds(start, end));
     }
   } else {
-    bounds = DesktopIntRect::FromUnknownRect(mGeckoAccessible.AsProxy()->TextBounds(start, end));
+    bounds = DesktopIntRect::FromUnknownRect(
+        mGeckoAccessible.AsProxy()->TextBounds(start, end));
   }
 
   return [NSValue valueWithRect:nsCocoaUtils::GeckoRectToCocoaRect(bounds)];
@@ -384,13 +402,16 @@ enum AXTextStateChangeType {
     @"AXTextChangeValues" : @[ @{
       @"AXTextChangeValue" : (change ? change : @""),
       @"AXTextChangeValueStartMarker" : startMarker.CreateAXTextMarker(),
-      @"AXTextEditType" : isInserted ? @(AXTextEditTypeTyping) : @(AXTextEditTypeDelete)
+      @"AXTextEditType" : isInserted ? @(AXTextEditTypeTyping)
+                                     : @(AXTextEditTypeDelete)
     } ]
   };
 
   mozAccessible* webArea = GetNativeFromGeckoAccessible([self geckoDocument]);
-  [webArea moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
-  [self moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
+  [webArea moxPostNotification:NSAccessibilityValueChangedNotification
+                  withUserInfo:userInfo];
+  [self moxPostNotification:NSAccessibilityValueChangedNotification
+               withUserInfo:userInfo];
 
   [self moxPostNotification:NSAccessibilityValueChangedNotification];
 }
@@ -432,11 +453,14 @@ enum AXTextStateChangeType {
 
   nsAutoString text;
   if (mGeckoAccessible.IsAccessible()) {
-    if (HyperTextAccessible* textAcc = mGeckoAccessible.AsAccessible()->AsHyperText()) {
-      textAcc->TextSubstring(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, text);
+    if (HyperTextAccessible* textAcc =
+            mGeckoAccessible.AsAccessible()->AsHyperText()) {
+      textAcc->TextSubstring(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT,
+                             text);
     }
   } else {
-    mGeckoAccessible.AsProxy()->TextSubstring(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, text);
+    mGeckoAccessible.AsProxy()->TextSubstring(
+        0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, text);
   }
 
   return nsCocoaUtils::ToNSString(text);
@@ -447,7 +471,8 @@ enum AXTextStateChangeType {
 @implementation mozTextLeafAccessible
 
 - (BOOL)moxBlockSelector:(SEL)selector {
-  if (selector == @selector(moxChildren) || selector == @selector(moxTitleUIElement)) {
+  if (selector == @selector(moxChildren) || selector == @selector
+                                                (moxTitleUIElement)) {
     return YES;
   }
 
