@@ -201,6 +201,21 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   already_AddRefed<Http2PushedStreamWrapper> TakePushedStreamById(
       uint32_t aStreamId);
 
+  // IMPORTANT: when adding new values, always add them to the end, otherwise
+  // it will mess up telemetry.
+  enum HTTPSSVC_CONNECTION_FAILED_REASON : uint32_t {
+    HTTPSSVC_CONNECTION_OK = 0,
+    HTTPSSVC_CONNECTION_UNKNOWN_HOST = 1,
+    HTTPSSVC_CONNECTION_UNREACHABLE = 2,
+    HTTPSSVC_CONNECTION_421_RECEIVED = 3,
+    HTTPSSVC_CONNECTION_SECURITY_ERROR = 4,
+    HTTPSSVC_CONNECTION_NO_USABLE_RECORD = 5,
+    HTTPSSVC_CONNECTION_ALL_RECORDS_EXCLUDED = 6,
+    HTTPSSVC_CONNECTION_OTHERS = 7,
+  };
+  HTTPSSVC_CONNECTION_FAILED_REASON ErrorCodeToFailedReason(
+      nsresult aErrorCode);
+
  private:
   class UpdateSecurityCallbacks : public Runnable {
    public:
@@ -445,6 +460,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   nsCOMPtr<nsICancelable> mDNSRequest;
   Maybe<uint32_t> mHTTPSSVCReceivedStage;
+  bool m421Received = false;
 };
 
 }  // namespace net

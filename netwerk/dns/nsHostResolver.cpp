@@ -522,7 +522,8 @@ TypeHostRecord::TypeHostRecord(const nsHostKey& key)
     : nsHostRecord(key),
       DNSHTTPSSVCRecordBase(key.host),
       mTrrLock("TypeHostRecord.mTrrLock"),
-      mResultsLock("TypeHostRecord.mResultsLock") {}
+      mResultsLock("TypeHostRecord.mResultsLock"),
+      mAllRecordsExcluded(false) {}
 
 TypeHostRecord::~TypeHostRecord() { mCallbacks.clear(); }
 
@@ -614,8 +615,8 @@ TypeHostRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
   }
 
   auto& results = mResults.as<TypeRecordHTTPSSVC>();
-  nsCOMPtr<nsISVCBRecord> result =
-      GetServiceModeRecordInternal(aNoHttp2, aNoHttp3, results);
+  nsCOMPtr<nsISVCBRecord> result = GetServiceModeRecordInternal(
+      aNoHttp2, aNoHttp3, results, mAllRecordsExcluded);
   if (!result) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -634,6 +635,18 @@ TypeHostRecord::GetHasIPAddresses(bool* aResult) {
 
   auto& results = mResults.as<TypeRecordHTTPSSVC>();
   *aResult = HasIPAddressesInternal(results);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TypeHostRecord::GetAllRecordsExcluded(bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  if (!mResults.is<TypeRecordHTTPSSVC>()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aResult = mAllRecordsExcluded;
   return NS_OK;
 }
 

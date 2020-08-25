@@ -190,6 +190,7 @@ class ChildDNSByTypeRecord : public nsIDNSByTypeRecord,
   virtual ~ChildDNSByTypeRecord() = default;
 
   TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
+  bool mAllRecordsExcluded = false;
 };
 
 NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord,
@@ -197,7 +198,7 @@ NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord,
 
 ChildDNSByTypeRecord::ChildDNSByTypeRecord(const TypeRecordResultType& reply,
                                            const nsACString& aHost)
-    : DNSHTTPSSVCRecordBase(aHost) {
+    : DNSHTTPSSVCRecordBase(aHost), mAllRecordsExcluded(false) {
   mResults = reply;
 }
 
@@ -258,8 +259,8 @@ ChildDNSByTypeRecord::GetServiceModeRecord(bool aNoHttp2, bool aNoHttp3,
   }
 
   auto& results = mResults.as<TypeRecordHTTPSSVC>();
-  nsCOMPtr<nsISVCBRecord> result =
-      GetServiceModeRecordInternal(aNoHttp2, aNoHttp3, results);
+  nsCOMPtr<nsISVCBRecord> result = GetServiceModeRecordInternal(
+      aNoHttp2, aNoHttp3, results, mAllRecordsExcluded);
   if (!result) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -278,6 +279,18 @@ ChildDNSByTypeRecord::GetHasIPAddresses(bool* aResult) {
 
   auto& results = mResults.as<TypeRecordHTTPSSVC>();
   *aResult = HasIPAddressesInternal(results);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ChildDNSByTypeRecord::GetAllRecordsExcluded(bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  if (!mResults.is<TypeRecordHTTPSSVC>()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aResult = mAllRecordsExcluded;
   return NS_OK;
 }
 

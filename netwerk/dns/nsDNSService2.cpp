@@ -380,6 +380,11 @@ nsDNSByTypeRecord::GetHasIPAddresses(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsDNSByTypeRecord::GetAllRecordsExcluded(bool* aResult) {
+  return mHostRecord->GetAllRecordsExcluded(aResult);
+}
+
+NS_IMETHODIMP
 nsDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
   *aResults = mHostRecord->GetResults();
   return NS_OK;
