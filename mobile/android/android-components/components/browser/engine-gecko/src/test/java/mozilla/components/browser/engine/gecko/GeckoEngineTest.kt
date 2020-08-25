@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.app.Activity
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -43,11 +44,13 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlocking.CookieBehavior
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.ContentBlockingController.Event
 import org.mozilla.geckoview.GeckoResult
@@ -252,7 +255,7 @@ class GeckoEngineTest {
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         val artificialCategory =
-            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
+            TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
         assertEquals(
             trackingStrictCategories - artificialCategory,
             contentBlockingSettings.antiTrackingCategories
@@ -280,29 +283,30 @@ class GeckoEngineTest {
 
     @Test
     fun `the SCRIPTS_AND_SUB_RESOURCES tracking protection category must not be passed to gecko view`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
 
-        val geckoRunTime = GeckoRuntime.getDefault(testContext)
-
-        val engine = GeckoEngine(testContext, runtime = geckoRunTime)
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
-        val artificialCategory =
-            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
+        val artificialCategory = TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
 
         assertEquals(
             trackingStrictCategories - artificialCategory,
-            geckoRunTime.settings.contentBlocking.antiTrackingCategories
+            mockRuntime.settings.contentBlocking.antiTrackingCategories
         )
 
-        geckoRunTime.settings.contentBlocking.setAntiTracking(0)
+        mockRuntime.settings.contentBlocking.setAntiTracking(0)
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
-            arrayOf(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
+            arrayOf(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
         )
 
-        assertEquals(0, geckoRunTime.settings.contentBlocking.antiTrackingCategories)
+        assertEquals(0, mockRuntime.settings.contentBlocking.antiTrackingCategories)
     }
 
     @Test
@@ -334,10 +338,62 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `setAntiTracking is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+        val policy = TrackingProtectionPolicy.recommended()
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking).setAntiTracking(
+            policy.getAntiTrackingPolicy()
+        )
+
+        reset(settings)
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking, never()).setAntiTracking(
+            policy.getAntiTrackingPolicy()
+        )
+    }
+
+    @Test
+    fun `setCookieBehavior is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+        whenever(mockRuntime.settings.contentBlocking.cookieBehavior).thenReturn(CookieBehavior.ACCEPT_NONE)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+        val policy = TrackingProtectionPolicy.recommended()
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking).setCookieBehavior(
+            policy.cookiePolicy.id
+        )
+
+        reset(settings)
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking, never()).setCookieBehavior(
+            policy.cookiePolicy.id
+        )
+    }
+
+    @Test
     fun `setEnhancedTrackingProtectionLevel MUST always be set to STRICT unless the tracking protection policy is none`() {
         val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
         whenever(mockRuntime.settings).thenReturn(mock())
-        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
 
         val engine = GeckoEngine(testContext, runtime = mockRuntime)
 
@@ -347,16 +403,42 @@ class GeckoEngineTest {
             ContentBlocking.EtpLevel.STRICT
         )
 
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+        reset(settings)
 
-        verify(mockRuntime.settings.contentBlocking, times(2)).setEnhancedTrackingProtectionLevel(
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
+
+        verify(mockRuntime.settings.contentBlocking, never()).setEnhancedTrackingProtectionLevel(
             ContentBlocking.EtpLevel.STRICT
         )
 
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
+        reset(settings)
 
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking, never()).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.STRICT
+        )
+
+        reset(settings)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
         verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
             ContentBlocking.EtpLevel.NONE
+        )
+
+        reset(settings)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
+        verify(mockRuntime.settings.contentBlocking, never()).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.NONE
+        )
+
+        reset(settings)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.STRICT
         )
     }
 
@@ -365,6 +447,7 @@ class GeckoEngineTest {
         val mockRuntime = mock<GeckoRuntime>()
         whenever(mockRuntime.settings).thenReturn(mock())
         whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking.strictSocialTrackingProtection).thenReturn(true)
 
         val engine = GeckoEngine(testContext, runtime = mockRuntime)
 
@@ -393,6 +476,7 @@ class GeckoEngineTest {
         val mockRuntime = mock<GeckoRuntime>()
         whenever(mockRuntime.settings).thenReturn(mock())
         whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking.strictSocialTrackingProtection).thenReturn(true)
 
         val engine = GeckoEngine(testContext, runtime = mockRuntime)
 
@@ -439,7 +523,7 @@ class GeckoEngineTest {
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         val artificialCategory =
-            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
+            TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
         assertEquals(
             trackingStrictCategories - artificialCategory,
             contentBlockingSettings.antiTrackingCategories

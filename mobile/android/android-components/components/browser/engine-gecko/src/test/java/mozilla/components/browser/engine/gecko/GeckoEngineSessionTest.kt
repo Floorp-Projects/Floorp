@@ -15,10 +15,10 @@ import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -462,23 +462,27 @@ class GeckoEngineSessionTest {
 
     @Test
     fun reload() {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
         engineSession.loadUrl("http://mozilla.org")
 
+        // Initial load is still in progress so reload should not be called.
+        // Instead we should have called loadUrl again to prevent reloading
+        // about:blank.
         engineSession.reload()
+        verify(geckoSession, never()).reload(GeckoSession.LOAD_FLAGS_BYPASS_CACHE)
+        verify(geckoSession, times(2)).loadUri(
+            "http://mozilla.org",
+            null as GeckoSession?,
+            GeckoSession.LOAD_FLAGS_NONE,
+            null
+        )
 
+        // Subsequent reloads should simply call reload on the gecko session.
+        engineSession.initialLoadRequest = null
+        engineSession.reload()
         verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_NONE)
-    }
-
-    @Test
-    fun reloadBypassingCache() {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
-        engineSession.loadUrl("http://mozilla.org")
 
         engineSession.reload(flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE))
-
         verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_BYPASS_CACHE)
     }
 
@@ -640,7 +644,7 @@ class GeckoEngineSessionTest {
     fun `keeps track of current url via onLocationChange events`() {
         val mockedContentBlockingController = mock<ContentBlockingController>()
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
-        val geckoResult = GeckoResult<Boolean?>()
+        var geckoResult = GeckoResult<Boolean?>()
         whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
@@ -661,7 +665,7 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider,
             context = coroutineContext)
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
-        val geckoResult = GeckoResult<Boolean?>()
+        var geckoResult = GeckoResult<Boolean?>()
         whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
@@ -1954,15 +1958,202 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `Handle new window load requests`() {
-        GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+    fun `onLoadRequest will try to intercept new window load requests`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
         captureDelegates()
 
-        val result = navigationDelegate.value.onLoadRequest(geckoSession,
-                mockLoadRequest("sample:about", null, GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
+        var observedUrl: String? = null
+        var observedIntent: Intent? = null
 
-        assertNotNull(result)
+        var observedLoadUrl: String? = null
+        var observedTriggeredByRedirect: Boolean? = null
+        var observedTriggeredByWebContent: Boolean? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                lastUri: String?,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean,
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLaunchIntentRequest(
+                url: String,
+                appIntent: Intent?
+            ) {
+                observedUrl = url
+                observedIntent = appIntent
+            }
+
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedLoadUrl = url
+                observedTriggeredByRedirect = triggeredByRedirect
+                observedTriggeredByWebContent = triggeredByWebContent
+            }
+        })
+
+        var result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = true)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.DENY)
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+
+        result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = false)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.DENY)
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+    }
+
+    @Test
+    fun `onLoadRequest allows new window requests if not intercepted`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observedUrl: String? = null
+        var observedIntent: Intent? = null
+
+        var observedLoadUrl: String? = null
+        var observedTriggeredByRedirect: Boolean? = null
+        var observedTriggeredByWebContent: Boolean? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                lastUri: String?,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean,
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLaunchIntentRequest(
+                url: String,
+                appIntent: Intent?
+            ) {
+                observedUrl = url
+                observedIntent = appIntent
+            }
+
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedLoadUrl = url
+                observedTriggeredByRedirect = triggeredByRedirect
+                observedTriggeredByWebContent = triggeredByWebContent
+            }
+        })
+
+        var result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("about:blank", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = true)
+        )
+
         assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
+        assertNull(observedIntent)
+        assertNull(observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+
+        result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("https://www.example.com", null,
+            GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW, triggeredByRedirect = true)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
+        assertNull(observedIntent)
+        assertNull(observedUrl)
+        assertNull(observedLoadUrl)
+        assertNull(observedTriggeredByRedirect)
+        assertNull(observedTriggeredByWebContent)
+    }
+
+    @Test
+    fun `onLoadRequest not intercepted and not new window will notify observer`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observedLoadUrl: String? = null
+        var observedTriggeredByRedirect: Boolean? = null
+        var observedTriggeredByWebContent: Boolean? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                lastUri: String?,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean,
+                isRedirect: Boolean,
+                isDirectNavigation: Boolean,
+                isSubframeRequest: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedLoadUrl = url
+                observedTriggeredByRedirect = triggeredByRedirect
+                observedTriggeredByWebContent = triggeredByWebContent
+            }
+        })
+
+        val result = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("https://www.example.com", null, triggeredByRedirect = true)
+        )
+
+        assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
+        assertEquals("https://www.example.com", observedLoadUrl)
+        assertEquals(true, observedTriggeredByRedirect)
+        assertEquals(false, observedTriggeredByWebContent)
     }
 
     @Test
@@ -2419,6 +2610,7 @@ class GeckoEngineSessionTest {
         fakePageLoad(true)
 
         // reload()
+        engineSession.initialLoadRequest = null
         engineSession.reload()
         verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_NONE)
         fakePageLoad(false)
