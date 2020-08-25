@@ -50,6 +50,6 @@ internal fun TopSite.toPinnedSite(): PinnedSiteEntity {
         title = title ?: "",
         url = url,
         isDefault = type === DEFAULT,
-        createdAt = createdAt!!
+        createdAt = createdAt ?: 0
     )
 }
