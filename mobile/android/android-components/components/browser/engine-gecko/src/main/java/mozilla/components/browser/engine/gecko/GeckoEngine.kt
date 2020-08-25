@@ -7,9 +7,13 @@ package mozilla.components.browser.engine.gecko
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
+import mozilla.components.browser.engine.gecko.ext.getEtpLevel
+import mozilla.components.browser.engine.gecko.ext.getStrictSocialTrackingProtection
 import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
+import mozilla.components.browser.engine.gecko.profiler.Profiler
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
 import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushDelegate
@@ -27,7 +31,6 @@ import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
-import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
@@ -478,7 +481,7 @@ class GeckoEngine(
     /**
      * See [Engine.profiler].
      */
-    override val profiler: Profiler? = null
+    override val profiler: Profiler? = Profiler(runtime)
 
     override fun name(): String = "Gecko"
 
@@ -527,41 +530,28 @@ class GeckoEngine(
         override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
             set(value) {
                 value?.let { policy ->
-                    val activateStrictSocialTracking =
-                        policy.strictSocialTrackingProtection ?: policy.trackingCategories.contains(
-                            TrackingCategory.STRICT
-                        )
-                    val etpLevel =
-                        when {
-                            policy.trackingCategories.contains(TrackingCategory.NONE) ->
-                                ContentBlocking.EtpLevel.NONE
-                            else -> ContentBlocking.EtpLevel.STRICT
+                    with(runtime.settings.contentBlocking) {
+                        if (enhancedTrackingProtectionLevel != value.getEtpLevel()) {
+                            enhancedTrackingProtectionLevel = value.getEtpLevel()
                         }
-                    runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(etpLevel)
-                    runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
-                        activateStrictSocialTracking
-                    )
-                    runtime.settings.contentBlocking.setAntiTracking(policy.getAntiTrackingPolicy())
-                    runtime.settings.contentBlocking.setCookieBehavior(policy.cookiePolicy.id)
+
+                        if (strictSocialTrackingProtection != value.getStrictSocialTrackingProtection()) {
+                            strictSocialTrackingProtection = policy.getStrictSocialTrackingProtection()
+                        }
+
+                        if (antiTrackingCategories != value.getAntiTrackingPolicy()) {
+                            setAntiTracking(policy.getAntiTrackingPolicy())
+                        }
+
+                        if (cookieBehavior != value.cookiePolicy.id) {
+                            cookieBehavior = value.cookiePolicy.id
+                        }
+                    }
+
                     defaultSettings?.trackingProtectionPolicy = value
                     field = value
                 }
             }
-
-        private fun TrackingProtectionPolicy.getAntiTrackingPolicy(): Int {
-            /**
-             * The [TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES] is an
-             * artificial category, created with the sole purpose of going around this bug
-             * https://bugzilla.mozilla.org/show_bug.cgi?id=1579264, for this reason we have to
-             * remove its value from the valid anti tracking categories, when is present.
-             */
-            val total = trackingCategories.sumBy { it.id }
-            return if (contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)) {
-                total - TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
-            } else {
-                total
-            }
-        }
 
         override var remoteDebuggingEnabled: Boolean
             get() = runtime.settings.remoteDebuggingEnabled
