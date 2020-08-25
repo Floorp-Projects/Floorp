@@ -16,6 +16,14 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `SearchFeature.performSearch` now takes a second parameter.
   * `BrowserStoreSearchAdapter` and `SearchFeature` can now take a `tabId` parameter.
 
+* **feature-top-sites**
+  * ⚠️ **This is a breaking change**: Renames `TopSiteStorage` to `PinnedSitesStorage`.
+  * ⚠️ **This is a breaking change**: Renames `TopSiteDao` to `PinnedSiteDao`.
+  * ⚠️ **This is a breaking change**: Renames `TopSiteEntity` to `PinnedSiteEntity`.
+  * ⚠️ **This is a breaking change**: Replaces `TopSite` interface with a new generic `TopSite` data class.
+  * Implements TopSitesFeature based on the RFC [0006-top-sites-feature.md](https://github.com/mozilla-mobile/android-components/blob/master/docs/rfcs/0006-top-sites-feature.md).
+  * Downloads, redirect targets, reloads, embedded resources, and frames are no longer considered for inclusion in top sites. Please see [this Application Services PR](https://github.com/mozilla/application-services/pull/3505) for more details.
+
 # 56.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v55.0.0...v56.0.0)
@@ -79,16 +87,6 @@ permalink: /changelog/
 
 * **feature-addons**
   * 🌟 Feature [issue #8200](https://github.com/mozilla-mobile/android-components/issues/8200): "users" in add-ons manager should be renamed to "reviews".
-
-* **feature-top-sites**:
-  * ⚠️ **This is a breaking change**: Renames `TopSiteStorage` to `PinnedSitesStorage`.
-  * ⚠️ **This is a breaking change**: Renames `TopSiteDao` to `PinnedSiteDao`.
-  * ⚠️ **This is a breaking change**: Renames `TopSiteEntity` to `PinnedSiteEntity`.
-  * ⚠️ **This is a breaking change**: Replaces `TopSite` interface with a new generic `TopSite` data class.
-  * Implements TopSitesFeature based on the RFC [0006-top-sites-feature.md](https://github.com/mozilla-mobile/android-components/blob/master/docs/rfcs/0006-top-sites-feature.md).
-
-* **feature-top-sites**
-  * Downloads, redirect targets, reloads, embedded resources, and frames are no longer considered for inclusion in top sites. Please see [this Application Services PR](https://github.com/mozilla/application-services/pull/3505) for more details.
 
 # 55.0.0
 
