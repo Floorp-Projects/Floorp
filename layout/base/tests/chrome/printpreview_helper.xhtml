@@ -28,6 +28,7 @@ var todo = window.arguments[0].todo;
 var info = window.arguments[0].info;
 var SimpleTest = window.arguments[0].SimpleTest;
 var gWbp;
+var gPrintPreviewWindow;
 var ctx1;
 var ctx2;
 var counter = 0;
@@ -38,7 +39,6 @@ var file = Cc["@mozilla.org/file/directory_service;1"]
 filePath = file.path;
 
 function printpreview(options = {}) {
-  gWbp = frameElts[1].docShell.initOrReusePrintPreviewViewer();
   let resolve;
   let promise = new Promise(r => { resolve = r });
   var listener = {
@@ -74,6 +74,8 @@ function printpreview(options = {}) {
   settings.printBGColors = true;
   settings.headerStrLeft = "";
   settings.headerStrRight = "";
+  settings.footerStrLeft = "";
+  settings.footerStrRight = "";
   if (options.settings) {
     for (let key in options.settings) {
       settings[key] = options.settings[key];
@@ -85,7 +87,9 @@ function printpreview(options = {}) {
   function afterprint() { ++after; }
   frameElts[0].contentWindow.addEventListener("beforeprint", beforeprint, true);
   frameElts[0].contentWindow.addEventListener("afterprint", afterprint, true);
-  gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
+  gPrintPreviewWindow = frameElts[0].contentWindow.printPreview(settings, listener);
+  gWbp = gPrintPreviewWindow.docShell.contentViewer;
+  gWbp.QueryInterface(Ci.nsIWebBrowserPrint);
   is(before, 1, "Should have called beforeprint listener!");
   if (!options.hasMozPrintCallback) {
     // If there's a mozPrintCallback the after print event won't fire until
@@ -98,7 +102,8 @@ function printpreview(options = {}) {
 }
 
 function exitprintpreview() {
-  frameElts[1].contentWindow.docShell.exitPrintPreview();
+  gPrintPreviewWindow.docShell.exitPrintPreview();
+  gPrintPreviewWindow.close();
 }
 
 function finish() {
@@ -153,7 +158,7 @@ function startTest1() {
   frameElts[0].contentDocument.body.firstChild.innerHTML = "Print preview";
 
   let ppfinished = printpreview();
-  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
+  drawPrintPreviewWindow(ctx1);
   frameElts[0].contentDocument.body.firstChild.innerHTML = "Galley presentation";
 
   // Add some elements.
@@ -170,7 +175,7 @@ function startTest1() {
 
 async function finalizeTest1(ppfinished) {
   await ppfinished;
-  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
+  drawPrintPreviewWindow(ctx2);
   exitprintpreview();
   ok(compareCanvases(), "Canvas should be the same!");
   counter = frameElts[0].contentWindow.counter;
@@ -240,13 +245,13 @@ async function compareFormElementPrint(el1, el2, equals) {
   frameElts[0].contentDocument.body.firstChild.value =
     frameElts[0].contentDocument.body.firstChild.getAttribute('value');
   await printpreview();
-  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
+  drawPrintPreviewWindow(ctx1);
   exitprintpreview();
   frameElts[0].contentDocument.body.innerHTML = el2;
   frameElts[0].contentDocument.body.firstChild.value =
     frameElts[0].contentDocument.body.firstChild.getAttribute('value');
   await printpreview();
-  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
+  drawPrintPreviewWindow(ctx2);
   exitprintpreview();
   is(compareCanvases(), equals,
      "Comparing print preview didn't succeed [" + el1 + " : " + el2 + "]");
@@ -302,14 +307,14 @@ async function runTest7() {
   frameElts[0].contentDocument.body.firstChild.value =
     frameElts[0].contentDocument.body.firstChild.getAttribute('value');
   await printpreview();
-  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx1);
   exitprintpreview();
 
   frameElts[0].contentDocument.body.innerHTML = "<div></div>";
   var sr = frameElts[0].contentDocument.body.firstChild.attachShadow({mode: "open"});
   sr.innerHTML = contentText;
   await printpreview();
-  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx2);
   exitprintpreview();
   ok(compareCanvases(), "Printing light DOM and shadow DOM should create same output");
 
@@ -326,7 +331,7 @@ async function runTest8() {
     iframeElement.setAttribute("src", "printpreview_font_api_ref.html");
   });
   await printpreview();
-  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx1);
   exitprintpreview();
 
   // Second, snapshot the page with font loaded in JS.
@@ -335,7 +340,7 @@ async function runTest8() {
     iframeElement.setAttribute("src", "printpreview_font_api.html");
   });
   await printpreview();
-  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx2);
   exitprintpreview();
   ok(compareCanvases(), "Printing pages with fonts loaded from CSS and JS should be the same.");
 
@@ -351,7 +356,7 @@ async function runTest9() {
   `;
 
   await printpreview();
-  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx1);
   exitprintpreview();
 
   frameElts[0].contentDocument.body.innerHTML = `
@@ -373,11 +378,17 @@ async function runTest9() {
   frameElts[0].contentDocument.body.offsetTop;
 
   await printpreview();
-  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx2);
   exitprintpreview();
   ok(compareCanvases(), "Printing <use> subtrees should create same output");
 
   requestAnimationFrame(function() { setTimeout(runTest10); } );
+}
+
+function drawPrintPreviewWindow(ctx) {
+  ctx.canvas.width = gPrintPreviewWindow.innerWidth;
+  ctx.canvas.height = gPrintPreviewWindow.innerHeight;
+  ctx.drawWindow(gPrintPreviewWindow, 0, 0, gPrintPreviewWindow.innerWidth, gPrintPreviewWindow.innerHeight, "rgb(255, 255, 255)");
 }
 
 // Test for bug 1524640
@@ -396,7 +407,7 @@ async function runTest10() {
   });
   await printpreview({ hasMozPrintCallback: true });
   await mozPrintCallbackDone;
-  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx1);
   exitprintpreview();
 
   // Second, snapshot the page with font loaded in JS.
@@ -410,7 +421,7 @@ async function runTest10() {
   await printpreview({ hasMozPrintCallback: true });
   // Wait for the mozprintcallback to finish.
   await mozPrintCallbackDone;
-  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx2);
 
   exitprintpreview();
   ok(compareCanvases(), "Printing pages with fonts loaded from a mozPrintCallback should be the same.");
@@ -442,7 +453,7 @@ async function compareFiles(src1, src2, options = {}) {
   }
 
   await printpreview(options.test || options);
-  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx1);
   exitprintpreview();
 
   await new Promise((resolve) => {
@@ -451,7 +462,7 @@ async function compareFiles(src1, src2, options = {}) {
   });
 
   await printpreview(options.ref || options);
-  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  drawPrintPreviewWindow(ctx2);
   exitprintpreview();
 
   ok(compareCanvases(options), `Printing ${src1} and ${src2} should produce the same results`);
