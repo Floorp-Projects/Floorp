@@ -56,18 +56,20 @@ if (parent) {
   } catch (e) {
     console.log('Warning: No SpecialPowers.');
   }
+};
+
+////////////////////////////////////////////////////////////////////////
+
+function runTest() {
+  var testPath = location.search.substr(1);
+  console.log('testPath: ' + testPath);
+  frameElem.src = testPath;
 }
 
 SpecialPowers.pushPrefEnv({"set": [
   ['webgl.force-enabled', true],
   ['webgl.enable-draft-extensions', true],
-]});
-
-////////////////////////////////////////////////////////////////////////
-
-var testPath = location.search.substr(1);
-console.log('testPath: ' + testPath);
-frameElem.src = testPath;
+]}, runTest);
 
 </script>
 </body>
