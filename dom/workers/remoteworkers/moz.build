@@ -40,8 +40,6 @@ IPDL_SOURCES += [
     'RemoteWorkerTypes.ipdlh',
 ]
 
-TEST_DIRS += ['gtest']
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
