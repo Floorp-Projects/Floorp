@@ -406,8 +406,7 @@ nsresult UDPSocket::InitLocal(const nsAString& aLocalAddress,
     UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__,
                    NS_ConvertUTF16toUTF8(aLocalAddress).get(), aLocalPort));
 
-    mozilla::net::NetAddr addr;
-    PRNetAddrToNetAddr(&prAddr, &addr);
+    mozilla::net::NetAddr addr(&prAddr);
     rv = sock->InitWithAddress(&addr, principal, mAddressReuse,
                                /* optionalArgc = */ 1);
   }
