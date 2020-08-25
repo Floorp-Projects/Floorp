@@ -22,6 +22,7 @@
 interface nsIBrowserDOMWindow;
 interface XULControllers;
 interface nsIDOMWindowUtils;
+interface nsIPrintSettings;
 
 typedef OfflineResourceList ApplicationCache;
 
@@ -255,6 +256,15 @@ typedef OfflineResourceList ApplicationCache;
   [Throws, NeedsSubjectPrincipal] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   [Throws, Pref="dom.enable_window_print"]
   void print();
+
+  // Returns a window that you can use for a print preview.
+  //
+  // This may reuse an existing window if this window is already a print
+  // preview document, or if you pass a docshell explicitly.
+  [Throws, ChromeOnly]
+  WindowProxy? printPreview(optional nsIPrintSettings? settings = null,
+                            optional nsIWebProgressListener? listener = null,
+                            optional nsIDocShell? docShellToPreviewInto = null);
 
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal,
    BinaryName="postMessageMoz"]

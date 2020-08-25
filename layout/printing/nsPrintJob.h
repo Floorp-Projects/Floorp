@@ -178,7 +178,7 @@ class nsPrintJob final : public nsIObserver,
   nsresult ReflowPrintObject(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   void CalcNumPrintablePages(int32_t& aNumPages);
-  void ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify);
+  void ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify, Document* aDoc);
   void SetURLAndTitleOnProgressParams(
       const mozilla::UniquePtr<nsPrintObject>& aPO,
       nsIPrintProgressParams* aParams);
@@ -190,8 +190,11 @@ class nsPrintJob final : public nsIObserver,
 
   /**
    * @return The document from the focused windows for a document viewer.
+   *
+   * FIXME: This is somewhat unsound, this looks at the original document, which
+   * could've mutated after print was initiated.
    */
-  Document* FindFocusedDocument() const;
+  Document* FindFocusedDocument(Document* aDoc) const;
 
   /// Customizes the behaviour of GetDisplayTitleAndURL.
   enum class DocTitleDefault : uint32_t { eDocURLElseFallback, eFallback };
