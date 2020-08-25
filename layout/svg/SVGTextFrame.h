@@ -33,7 +33,7 @@ class TextRenderedRunIterator;
 
 namespace dom {
 struct DOMPointInit;
-class nsISVGPoint;
+class DOMSVGPoint;
 class SVGRect;
 class SVGGeometryElement;
 }  // namespace dom
@@ -244,9 +244,9 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   int32_t GetCharNumAtPosition(nsIContent* aContent,
                                const dom::DOMPointInit& aPoint);
 
-  already_AddRefed<dom::nsISVGPoint> GetStartPositionOfChar(
+  already_AddRefed<dom::DOMSVGPoint> GetStartPositionOfChar(
       nsIContent* aContent, uint32_t aCharNum, ErrorResult& aRv);
-  already_AddRefed<dom::nsISVGPoint> GetEndPositionOfChar(nsIContent* aContent,
+  already_AddRefed<dom::DOMSVGPoint> GetEndPositionOfChar(nsIContent* aContent,
                                                           uint32_t aCharNum,
                                                           ErrorResult& aRv);
   already_AddRefed<dom::SVGRect> GetExtentOfChar(nsIContent* aContent,

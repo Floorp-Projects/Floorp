@@ -20,8 +20,6 @@ namespace mozilla {
 
 namespace dom {
 
-class nsISVGPoint;
-
 using SVGPathElementBase = SVGGeometryElement;
 
 class SVGPathElement final : public SVGPathElementBase {

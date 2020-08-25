@@ -14,6 +14,14 @@ nsresult NS_NewSVGSVGElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser);
 
+// {4b83982c-e5e9-4ca1-abd4-14d27e8b3531}
+#define MOZILLA_SVGSVGELEMENT_IID                    \
+  {                                                  \
+    0x4b83982c, 0xe5e9, 0x4ca1, {                    \
+      0xab, 0xd4, 0x14, 0xd2, 0x7e, 0x8b, 0x35, 0x31 \
+    }                                                \
+  }
+
 namespace mozilla {
 class AutoSVGViewHandler;
 class SMILTimeContainer;
@@ -25,6 +33,7 @@ struct DOMMatrix2DInit;
 class DOMSVGAngle;
 class DOMSVGLength;
 class DOMSVGNumber;
+class DOMSVGPoint;
 class SVGMatrix;
 class SVGRect;
 class SVGSVGElement;
@@ -38,35 +47,6 @@ class SVGView {
   SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
   UniquePtr<SVGAnimatedTransformList> mTransforms;
-};
-
-class DOMSVGTranslatePoint final : public nsISVGPoint {
- public:
-  DOMSVGTranslatePoint(SVGPoint* aPt, SVGSVGElement* aElement)
-      : nsISVGPoint(aPt, true), mElement(aElement) {}
-
-  explicit DOMSVGTranslatePoint(DOMSVGTranslatePoint* aPt)
-      : nsISVGPoint(&aPt->mPt, true), mElement(aPt->mElement) {}
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
-
-  virtual DOMSVGPoint* Copy() override;
-
-  // WebIDL
-  virtual float X() override { return mPt.GetX(); }
-  virtual float Y() override { return mPt.GetY(); }
-  virtual void SetX(float aValue, ErrorResult& rv) override;
-  virtual void SetY(float aValue, ErrorResult& rv) override;
-  virtual already_AddRefed<nsISVGPoint> MatrixTransform(
-      const DOMMatrix2DInit& aMatrix, ErrorResult& aRv) override;
-
-  virtual nsISupports* GetParentObject() override;
-
-  RefPtr<SVGSVGElement> mElement;
-
- private:
-  ~DOMSVGTranslatePoint() = default;
 };
 
 using SVGSVGElementBase = SVGViewportElement;
@@ -93,18 +73,16 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
  public:
   // interfaces:
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_SVGSVGELEMENT_IID)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGSVGElement, SVGSVGElementBase)
 
-  /**
-   * For use by zoom controls to allow currentScale, currentTranslate.x and
-   * currentTranslate.y to be set by a single operation that dispatches a
-   * single SVGZoom event (instead of one SVGZoom and two SVGScroll events).
-   *
-   * XXX SVGZoomEvent is no more, is this needed?
+  /*
+   * Send appropriate events and updates if our root translate
+   * has changed.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetCurrentScaleTranslate(float s, float x,
-                                                            float y);
+  MOZ_CAN_RUN_SCRIPT
+  void DidChangeTranslate();
 
   // nsIContent interface
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
@@ -118,11 +96,10 @@ class SVGSVGElement final : public SVGSVGElementBase {
   already_AddRefed<DOMSVGAnimatedLength> Y();
   already_AddRefed<DOMSVGAnimatedLength> Width();
   already_AddRefed<DOMSVGAnimatedLength> Height();
-  bool UseCurrentView();
-  float CurrentScale();
+  bool UseCurrentView() const;
+  float CurrentScale() const;
   void SetCurrentScale(float aCurrentScale);
-  already_AddRefed<nsISVGPoint> CurrentTranslate();
-  void SetCurrentTranslate(float x, float y);
+  already_AddRefed<DOMSVGPoint> CurrentTranslate();
   uint32_t SuspendRedraw(uint32_t max_wait_milliseconds);
   void UnsuspendRedraw(uint32_t suspend_handle_id);
   void UnsuspendRedrawAll();
@@ -136,14 +113,14 @@ class SVGSVGElement final : public SVGSVGElementBase {
   already_AddRefed<DOMSVGNumber> CreateSVGNumber();
   already_AddRefed<DOMSVGLength> CreateSVGLength();
   already_AddRefed<DOMSVGAngle> CreateSVGAngle();
-  already_AddRefed<nsISVGPoint> CreateSVGPoint();
+  already_AddRefed<DOMSVGPoint> CreateSVGPoint();
   already_AddRefed<SVGMatrix> CreateSVGMatrix();
   already_AddRefed<SVGRect> CreateSVGRect();
   already_AddRefed<DOMSVGTransform> CreateSVGTransform();
   already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(
       const DOMMatrix2DInit& matrix, ErrorResult& rv);
   using nsINode::GetElementById;  // This does what we want
-  uint16_t ZoomAndPan();
+  uint16_t ZoomAndPan() const;
   void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);
 
   // SVGElement overrides
@@ -164,6 +141,11 @@ class SVGSVGElement final : public SVGSVGElementBase {
   SMILTimeContainer* GetTimedDocumentRoot();
 
   // public helpers:
+
+  const SVGPoint& GetCurrentTranslate() const { return mCurrentTranslate; }
+  bool IsScaledOrTranslated() const {
+    return mCurrentTranslate != SVGPoint() || mCurrentScale != 1.0f;
+  }
 
   /**
    * Returns -1 if the width/height is a percentage, else returns the user unit
@@ -217,11 +199,6 @@ class SVGSVGElement final : public SVGSVGElementBase {
   const SVGPreserveAspectRatio* GetPreserveAspectRatioProperty() const;
   bool ClearPreserveAspectRatioProperty();
 
-  virtual SVGPoint GetCurrentTranslate() const override {
-    return mCurrentTranslate;
-  }
-  virtual float GetCurrentScale() const override { return mCurrentScale; }
-
   virtual const SVGAnimatedViewBox& GetViewBoxInternal() const override;
   virtual SVGAnimatedTransformList* GetTransformInternal() const override;
 
@@ -236,13 +213,8 @@ class SVGSVGElement final : public SVGSVGElementBase {
   // for all outermost <svg> elements (not nested <svg> elements).
   UniquePtr<SMILTimeContainer> mTimedDocumentRoot;
 
-  // zoom and pan
-  // IMPORTANT: see the comment in RecordCurrentScaleTranslate before writing
-  // code to change any of these!
   SVGPoint mCurrentTranslate;
   float mCurrentScale;
-  SVGPoint mPreviousTranslate;
-  float mPreviousScale;
 
   // For outermost <svg> elements created from parsing, animation is started by
   // the onload event in accordance with the SVG spec, but for <svg> elements
@@ -257,6 +229,8 @@ class SVGSVGElement final : public SVGSVGElementBase {
   UniquePtr<nsString> mCurrentViewID;
   UniquePtr<SVGView> mSVGView;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGSVGElement, MOZILLA_SVGSVGELEMENT_IID)
 
 }  // namespace dom
 

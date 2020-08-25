@@ -10,7 +10,6 @@
 #include "mozilla/dom/SVGGraphicsElement.h"
 #include "mozilla/gfx/2D.h"
 #include "SVGAnimatedNumber.h"
-#include "nsISVGPoint.h"
 
 namespace mozilla {
 
@@ -32,6 +31,7 @@ struct SVGMark {
 namespace dom {
 
 class DOMSVGAnimatedNumber;
+class DOMSVGPoint;
 
 using SVGGeometryElementBase = mozilla::dom::SVGGraphicsElement;
 
@@ -219,7 +219,7 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   bool IsPointInFill(const DOMPointInit& aPoint);
   bool IsPointInStroke(const DOMPointInit& aPoint);
   float GetTotalLength();
-  already_AddRefed<nsISVGPoint> GetPointAtLength(float distance,
+  already_AddRefed<DOMSVGPoint> GetPointAtLength(float distance,
                                                  ErrorResult& rv);
 
  protected:

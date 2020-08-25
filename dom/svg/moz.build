@@ -121,7 +121,6 @@ UNIFIED_SOURCES += [
     'DOMSVGStringList.cpp',
     'DOMSVGTransform.cpp',
     'DOMSVGTransformList.cpp',
-    'nsISVGPoint.cpp',
     'SVGAElement.cpp',
     'SVGAnimatedBoolean.cpp',
     'SVGAnimatedClass.cpp',
