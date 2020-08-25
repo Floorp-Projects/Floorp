@@ -55,6 +55,7 @@ void ContentPlaybackController::NotifyMediaSession(
   if (RefPtr<MediaSession> session = GetMediaSession()) {
     LOG("Handle '%s' in media session behavior",
         ToMediaSessionActionStr(aDetails.mAction));
+    MOZ_ASSERT(session->IsActive(), "Notify inactive media session!");
     session->NotifyHandler(aDetails);
   }
 }
@@ -69,7 +70,8 @@ void ContentPlaybackController::NotifyMediaSessionWhenActionIsSupported(
 bool ContentPlaybackController::IsMediaSessionActionSupported(
     MediaSessionAction aAction) const {
   RefPtr<MediaSession> session = GetMediaSession();
-  return session ? session->IsSupportedAction(aAction) : false;
+  return session ? session->IsActive() && session->IsSupportedAction(aAction)
+                 : false;
 }
 
 void ContentPlaybackController::Focus() {
