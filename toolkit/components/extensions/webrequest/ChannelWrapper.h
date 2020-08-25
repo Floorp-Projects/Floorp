@@ -25,6 +25,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIMultiPartChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIRemoteTab.h"
 #include "nsIThreadRetargetableStreamListener.h"
@@ -320,11 +321,13 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   mozilla::TimeStamp mSuspendTime;
 
   class RequestListener final : public nsIStreamListener,
+                                public nsIMultiPartChannelListener,
                                 public nsIThreadRetargetableStreamListener {
    public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIMULTIPARTCHANNELLISTENER
     NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
     explicit RequestListener(ChannelWrapper* aWrapper)
