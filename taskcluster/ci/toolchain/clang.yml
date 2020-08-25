@@ -314,3 +314,198 @@ win64-clang-cl-9-2stage:
             - clang-9
             - cmake
             - ninja
+
+linux64-clang-11:
+    description: "Clang 11 toolchain build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TL(clang11)
+    run-on-projects: [trunk]
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-11-linux64.json'
+        resources:
+            - 'build/build-clang/clang-11-linux64.json'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-11
+        toolchain:
+            - linux64-binutils
+            - linux64-gcc-7
+            - wasi-sysroot-11
+
+linux64-clang-11-android-cross:
+    description: "Clang 11 toolchain build"
+    treeherder:
+        symbol: TL(clang11-android)
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-11-android.json'
+        resources:
+            - 'build/build-clang/clang-11-android.json'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-11
+        toolchain:
+            - linux64-binutils
+            - linux64-gcc-7
+            - linux64-android-ndk-linux-repack
+
+linux64-clang-11-aarch64-cross:
+    description: "Clang 11 toolchain build with aarch64 runtime"
+    treeherder:
+        symbol: TL(clang11-aarch64)
+    worker-type: b-linux
+    worker:
+        max-run-time: 5400
+        docker-image: {in-tree: toolchain-arm64-build}
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-11-linux64-aarch64-cross.json'
+        resources:
+            - 'build/build-clang/clang-11-linux64-aarch64-cross.json'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-11
+        toolchain:
+            - linux64-binutils
+            - linux64-gcc-7
+
+linux64-clang-11-macosx-cross:
+    description: "Clang 11 toolchain repack with MacOS Compiler RT libs"
+    treeherder:
+        symbol: TL(clang11-macosx-cross)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run:
+        script: repack-clang-linux-macosx-cross.sh
+        toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        macosx64-clang-11: toolchain-macosx64-clang-11
+    fetches:
+        toolchain:
+            - linux64-clang-11
+        macosx64-clang-11:
+            # Put this into a new directory so it doesn't conflict with the linux toolchain
+            - artifact: clang.tar.zst
+              dest: clang-mac
+
+linux64-clang-11-win-cross:
+    description: "Clang 11 toolchain repack with Windows Compiler RT libs"
+    treeherder:
+        symbol: TL(clang11-win-cross)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run:
+        script: repack-clang-linux-win-cross.sh
+        toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        win64-clang-cl-11-2stage: toolchain-win64-clang-cl-11-2stage
+    fetches:
+        toolchain:
+            - linux64-clang-11
+        win64-clang-cl-11-2stage:
+            # Put this into a new directory so it doesn't conflict with the linux toolchain
+            - artifact: clang.tar.zst
+              dest: clang-cl
+              extract: false
+
+macosx64-clang-11:
+    description: "Clang 11 toolchain build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TM(clang-11)
+    worker-type: b-linux-large
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng-12.manifest"
+    run-on-projects:
+        - trunk
+    run:
+        script: build-clang.sh
+        tooltool-downloads: internal
+        arguments:
+            - 'build/build-clang/clang-11-macosx64.json'
+        resources:
+            - 'build/build-clang/clang-11-macosx64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-11
+        toolchain:
+            # Note: clang-9 below is not a typo. Indirectly due to SDK changes,
+            # we need to build with a linux64-...-macosx-cross toolchain rather
+            # than a simple linux64-clang. linux64-clang-11-macosx-cross is
+            # not an option because it would create a circular dependency on
+            # this toolchain. So we have to start from something older.
+            - linux64-binutils
+            - linux64-cctools-port-clang-9
+            - linux64-clang-9-macosx-cross
+            - linux64-gcc-7
+            - linux64-node
+
+win64-clang-cl-11:
+    description: "Clang-cl 11 toolchain build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TW64(clang-cl-11)
+    worker-type: b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+        max-run-time: 9000
+    run-on-projects:
+        - trunk
+    run:
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-11-win64.json'
+        resources:
+            - 'build/build-clang/clang-11-win64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.zst
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - clang-11
+            - cmake
+            - ninja
+
+win64-clang-cl-11-2stage:
+    description: "Clang-cl 11 toolchain 2-stage quick build"
+    treeherder:
+        symbol: TW64(clang-cl-11-2stage)
+    worker-type: b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+    run:
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-11-win64-2stage.json'
+        resources:
+            - 'build/build-clang/clang-11-win64-2stage.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.zst
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - clang-11
+            - cmake
+            - ninja
