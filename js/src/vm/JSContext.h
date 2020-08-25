@@ -78,6 +78,8 @@ class MOZ_RAII AutoCycleDetector {
 
 struct AutoResolving;
 
+struct HelperThread;
+
 struct ParseTask;
 
 class InternalJobQueue : public JS::JobQueue {
