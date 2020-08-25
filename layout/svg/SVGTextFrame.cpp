@@ -3829,7 +3829,7 @@ int32_t SVGTextFrame::GetCharNumAtPosition(nsIContent* aContent,
  * Implements the SVG DOM GetStartPositionOfChar method for the specified
  * text content element.
  */
-already_AddRefed<nsISVGPoint> SVGTextFrame::GetStartPositionOfChar(
+already_AddRefed<DOMSVGPoint> SVGTextFrame::GetStartPositionOfChar(
     nsIContent* aContent, uint32_t aCharNum, ErrorResult& aRv) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (kid->IsSubtreeDirty()) {
@@ -3913,7 +3913,7 @@ static gfxFloat GetGlyphAdvance(SVGTextFrame* aFrame, nsIContent* aContent,
  * Implements the SVG DOM GetEndPositionOfChar method for the specified
  * text content element.
  */
-already_AddRefed<nsISVGPoint> SVGTextFrame::GetEndPositionOfChar(
+already_AddRefed<DOMSVGPoint> SVGTextFrame::GetEndPositionOfChar(
     nsIContent* aContent, uint32_t aCharNum, ErrorResult& aRv) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (kid->IsSubtreeDirty()) {

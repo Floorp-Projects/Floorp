@@ -65,6 +65,8 @@ fuzzy(0-11,0-7155) == blur-inside-clipPath.svg blur-inside-clipPath-ref.svg
 == border-radius-01.html pass.svg
 == mask-image-filter-transform.html mask-image-filter-transform-ref.html
 
+== current-translate-01.svg pass.svg
+
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg

@@ -19,7 +19,7 @@ class SVGTextFrame;
 namespace dom {
 
 struct DOMPointInit;
-class nsISVGPoint;
+class DOMSVGPoint;
 class SVGRect;
 
 using SVGTextContentElementBase = SVGGraphicsElement;
@@ -40,10 +40,10 @@ class SVGTextContentElement : public SVGTextContentElementBase {
   MOZ_CAN_RUN_SCRIPT
   float GetSubStringLength(uint32_t charnum, uint32_t nchars, ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<nsISVGPoint> GetStartPositionOfChar(uint32_t charnum,
+  already_AddRefed<DOMSVGPoint> GetStartPositionOfChar(uint32_t charnum,
                                                        ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<nsISVGPoint> GetEndPositionOfChar(uint32_t charnum,
+  already_AddRefed<DOMSVGPoint> GetEndPositionOfChar(uint32_t charnum,
                                                      ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
   already_AddRefed<SVGRect> GetExtentOfChar(uint32_t charnum, ErrorResult& rv);
