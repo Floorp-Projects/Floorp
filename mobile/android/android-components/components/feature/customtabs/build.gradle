@@ -33,6 +33,7 @@ dependencies {
     implementation project(':browser-toolbar')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
+    implementation project(':concept-menu')
     implementation project(':feature-session')
     implementation project(':feature-intent')
     implementation project(':service-digitalassetlinks')

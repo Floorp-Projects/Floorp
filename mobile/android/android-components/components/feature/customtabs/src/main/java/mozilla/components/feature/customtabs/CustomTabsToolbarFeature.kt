@@ -5,7 +5,6 @@
 package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.Window
@@ -13,7 +12,6 @@ import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.graphics.drawable.toDrawable
-import androidx.core.net.toUri
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
@@ -25,6 +23,7 @@ import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.customtabs.feature.CustomTabSessionTitleObserver
+import mozilla.components.feature.customtabs.menu.sendWithUrl
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.content.share
@@ -177,7 +176,7 @@ class CustomTabsToolbarFeature(
                 config.description
             ) {
                 emitActionButtonFact()
-                config.pendingIntent.sendWithSession(session)
+                config.pendingIntent.sendWithUrl(context, session.url)
             }
 
             toolbar.addBrowserAction(button)
@@ -216,7 +215,7 @@ class CustomTabsToolbarFeature(
     ) {
         menuItems.map { item ->
             SimpleBrowserMenuItem(item.name) {
-                item.pendingIntent.sendWithSession(session)
+                item.pendingIntent.sendWithUrl(context, session.url)
             }
         }.also { items ->
             val combinedItems = menuBuilder?.let { builder ->
@@ -253,10 +252,4 @@ class CustomTabsToolbarFeature(
             }
         }
     }
-
-    private fun PendingIntent.sendWithSession(session: Session) = send(
-        context,
-        0,
-        Intent(null, session.url.toUri())
-    )
 }
