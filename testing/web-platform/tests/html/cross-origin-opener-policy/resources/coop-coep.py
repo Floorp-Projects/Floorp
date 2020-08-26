@@ -1,16 +1,16 @@
 def main(request, response):
     coop = request.GET.first(b"coop")
-    coopReportOnly = request.GET.first(b"coop-report-only") if b"coop-report-only" in request.GET else b""
+    coopReportOnly = request.GET.first(b"coop-report-only", None)
     coep = request.GET.first(b"coep")
-    coepReportOnly = request.GET.first(b"coep-report-only") if b"coep-report-only" in request.GET else b""
+    coepReportOnly = request.GET.first(b"coep-report-only", None)
     redirect = request.GET.first(b"redirect", None)
     if coop != b"":
         response.headers.set(b"Cross-Origin-Opener-Policy", coop)
-    if coop != b"":
+    if coopReportOnly is not None:
         response.headers.set(b"Cross-Origin-Opener-Policy-Report-Only", coopReportOnly)
     if coep != b"":
         response.headers.set(b"Cross-Origin-Embedder-Policy", coep)
-    if coep != b"":
+    if coepReportOnly is not None:
         response.headers.set(b"Cross-Origin-Embedder-Policy-Report-Only", coepReportOnly)
     if b'cache' in request.GET:
         response.headers.set(b'Cache-Control', b'max-age=3600')
