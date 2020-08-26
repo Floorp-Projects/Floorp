@@ -91,26 +91,46 @@ decl_mct_fn(dav1d_prep_bilin_ssse3);
 decl_mct_fn(dav1d_prep_bilin_sse2);
 
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_smooth_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_smooth_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_sharp_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_sharp_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_regular_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_regular_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_sharp_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_sharp_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_regular_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_regular_ssse3);
 decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_smooth_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_smooth_ssse3);
 decl_mc_scaled_fn(dav1d_put_bilin_scaled_avx2);
+decl_mc_scaled_fn(dav1d_put_bilin_scaled_ssse3);
 
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_smooth_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_smooth_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_sharp_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_sharp_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_regular_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_regular_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_sharp_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_sharp_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_regular_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_regular_ssse3);
 decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_smooth_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_smooth_ssse3);
 decl_mct_scaled_fn(dav1d_prep_bilin_scaled_avx2);
+decl_mct_scaled_fn(dav1d_prep_bilin_scaled_ssse3);
 
 decl_avg_fn(dav1d_avg_avx512icl);
 decl_avg_fn(dav1d_avg_avx2);
@@ -206,6 +226,30 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  ssse3);
     init_mct_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   ssse3);
     init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          ssse3);
+
+#if ARCH_X86_64
+    init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR,        8tap_scaled_regular,        ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_scaled_regular_smooth, ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_scaled_regular_sharp,  ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_scaled_smooth_regular, ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SMOOTH,         8tap_scaled_smooth,         ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_scaled_smooth_sharp,   ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_scaled_sharp_regular,  ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_scaled_sharp_smooth,   ssse3);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SHARP,          8tap_scaled_sharp,          ssse3);
+    init_mc_scaled_fn(FILTER_2D_BILINEAR,            bilin_scaled,               ssse3);
+
+    init_mct_scaled_fn(FILTER_2D_8TAP_REGULAR,        8tap_scaled_regular,        ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_scaled_regular_smooth, ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_scaled_regular_sharp,  ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_scaled_smooth_regular, ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SMOOTH,         8tap_scaled_smooth,         ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_scaled_smooth_sharp,   ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_scaled_sharp_regular,  ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_scaled_sharp_smooth,   ssse3);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SHARP,          8tap_scaled_sharp,          ssse3);
+    init_mct_scaled_fn(FILTER_2D_BILINEAR,            bilin_scaled,               ssse3);
+#endif
 
     c->avg = dav1d_avg_ssse3;
     c->w_avg = dav1d_w_avg_ssse3;

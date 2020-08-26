@@ -351,6 +351,7 @@ cdata.set10('ARCH_X86_64', host_machine.cpu_family() == 'x86_64')
 cdata.set10('ARCH_X86_32', host_machine.cpu_family() == 'x86')
 
 if host_machine.cpu_family().startswith('x86')
+    cdata_asm.set('private_prefix', 'dav1d')
     cdata_asm.set10('ARCH_X86_64', host_machine.cpu_family() == 'x86_64')
     cdata_asm.set10('ARCH_X86_32', host_machine.cpu_family() == 'x86')
     cdata_asm.set10('PIC', true)

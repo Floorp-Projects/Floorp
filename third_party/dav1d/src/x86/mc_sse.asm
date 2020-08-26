@@ -24,6 +24,7 @@
 ; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+%include "config.asm"
 %include "ext/x86/x86inc.asm"
 
 SECTION_RODATA 16
@@ -54,12 +55,19 @@ subpel_h_shuf4: db 0,  1,  2,  3,  1,  2,  3,  4,  8,  9, 10, 11,  9, 10, 11, 12
 subpel_h_shufA: db 0,  1,  2,  3,  1,  2,  3,  4,  2,  3,  4,  5,  3,  4,  5,  6
 subpel_h_shufB: db 4,  5,  6,  7,  5,  6,  7,  8,  6,  7,  8,  9,  7,  8,  9, 10
 subpel_h_shufC: db 8,  9, 10, 11,  9, 10, 11, 12, 10, 11, 12, 13, 11, 12, 13, 14
+subpel_s_shuf2: db 0,  1,  2,  3,  0,  1,  2,  3,  8,  9, 10, 11,  8,  9, 10, 11
+subpel_s_shuf8: db 0,  1,  8,  9,  2,  3, 10, 11,  4,  5, 12, 13,  6,  7, 14, 15
 bilin_h_shuf4:  db 1,  0,  2,  1,  3,  2,  4,  3,  9,  8, 10,  9, 11, 10, 12, 11
 bilin_h_shuf8:  db 1,  0,  2,  1,  3,  2,  4,  3,  5,  4,  6,  5,  7,  6,  8,  7
+unpckw:         db 0,  1,  4,  5,  8,  9, 12, 13,  2,  3,  6,  7, 10, 11, 14, 15
 
 pb_8x0_8x8: times 8 db 0
             times 8 db 8
-resize_mul: dd 0, 1, 2, 3
+bdct_lb_dw: times 4 db 0
+            times 4 db 4
+            times 4 db 8
+            times 4 db 12
+rescale_mul: dd 0, 1, 2, 3
 resize_shuf: times 5 db 0
              db 1, 2, 3, 4, 5, 6
              times 5+16 db 7
@@ -82,6 +90,9 @@ pd_512:   times 4 dd 512
 pd_16384: times 4 dd 16484
 pd_32768: times 4 dd 32768
 pd_262144:times 4 dd 262144
+pd_0x3ff: times 4 dd 0x3ff
+pd_0x4000:times 4 dd 0x4000
+pq_0x40000000: times 2 dq 0x40000000
 
 pw_258:  times 2 dw 258
 
@@ -164,6 +175,35 @@ HV_JMP_TABLE put,   8tap, ssse3, 3, 2, 4, 8, 16, 32, 64, 128
 HV_JMP_TABLE prep,  8tap, ssse3, 1,    4, 8, 16, 32, 64, 128
 HV_JMP_TABLE put,  bilin, ssse3, 7, 2, 4, 8, 16, 32, 64, 128
 HV_JMP_TABLE prep, bilin, ssse3, 7,    4, 8, 16, 32, 64, 128
+
+%macro SCALED_JMP_TABLE 1-*
+    %xdefine %1_table (%%table - %2)
+    %xdefine %%base mangle(private_prefix %+ _%1)
+%%table:
+    %rep %0 - 1
+        dw %%base %+ .w%2 - %%base
+        %rotate 1
+    %endrep
+    %rotate 1
+%%dy_1024:
+    %xdefine %1_dy1_table (%%dy_1024 - %2)
+    %rep %0 - 1
+        dw %%base %+ .dy1_w%2 - %%base
+        %rotate 1
+    %endrep
+    %rotate 1
+%%dy_2048:
+    %xdefine %1_dy2_table (%%dy_2048 - %2)
+    %rep %0 - 1
+        dw %%base %+ .dy2_w%2 - %%base
+        %rotate 1
+    %endrep
+%endmacro
+
+%if ARCH_X86_64
+SCALED_JMP_TABLE put_8tap_scaled_ssse3, 2, 4, 8, 16, 32, 64, 128
+SCALED_JMP_TABLE prep_8tap_scaled_ssse3,   4, 8, 16, 32, 64, 128
+%endif
 
 %define table_offset(type, fn) type %+ fn %+ SUFFIX %+ _table - type %+ SUFFIX
 
@@ -1464,8 +1504,8 @@ cglobal prep_bilin, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
 %assign FILTER_SMOOTH  (1*15 << 16) | 4*15
 %assign FILTER_SHARP   (2*15 << 16) | 3*15
 
-%macro MC_8TAP_FN 4 ; prefix, type, type_h, type_v
-cglobal %1_8tap_%2
+%macro FN 4 ; prefix, type, type_h, type_v
+cglobal %1_%2
     mov                 t0d, FILTER_%3
 %ifidn %3, %4
     mov                 t1d, t0d
@@ -1473,7 +1513,7 @@ cglobal %1_8tap_%2
     mov                 t1d, FILTER_%4
 %endif
 %ifnidn %2, regular ; skip the jump in the last filter
-    jmp mangle(private_prefix %+ _%1_8tap %+ SUFFIX)
+    jmp mangle(private_prefix %+ _%1 %+ SUFFIX)
 %endif
 %endmacro
 
@@ -1485,15 +1525,15 @@ DECLARE_REG_TMP 4, 5
 DECLARE_REG_TMP 7, 8
 %endif
 
-MC_8TAP_FN put, sharp,          SHARP,   SHARP
-MC_8TAP_FN put, sharp_smooth,   SHARP,   SMOOTH
-MC_8TAP_FN put, smooth_sharp,   SMOOTH,  SHARP
-MC_8TAP_FN put, smooth,         SMOOTH,  SMOOTH
-MC_8TAP_FN put, sharp_regular,  SHARP,   REGULAR
-MC_8TAP_FN put, regular_sharp,  REGULAR, SHARP
-MC_8TAP_FN put, smooth_regular, SMOOTH,  REGULAR
-MC_8TAP_FN put, regular_smooth, REGULAR, SMOOTH
-MC_8TAP_FN put, regular,        REGULAR, REGULAR
+FN put_8tap, sharp,          SHARP,   SHARP
+FN put_8tap, sharp_smooth,   SHARP,   SMOOTH
+FN put_8tap, smooth_sharp,   SMOOTH,  SHARP
+FN put_8tap, smooth,         SMOOTH,  SMOOTH
+FN put_8tap, sharp_regular,  SHARP,   REGULAR
+FN put_8tap, regular_sharp,  REGULAR, SHARP
+FN put_8tap, smooth_regular, SMOOTH,  REGULAR
+FN put_8tap, regular_smooth, REGULAR, SMOOTH
+FN put_8tap, regular,        REGULAR, REGULAR
 
 %if ARCH_X86_32
  %define base_reg r1
@@ -2773,15 +2813,15 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
  DECLARE_REG_TMP 6, 7
 %endif
 
-MC_8TAP_FN prep, sharp,          SHARP,   SHARP
-MC_8TAP_FN prep, sharp_smooth,   SHARP,   SMOOTH
-MC_8TAP_FN prep, smooth_sharp,   SMOOTH,  SHARP
-MC_8TAP_FN prep, smooth,         SMOOTH,  SMOOTH
-MC_8TAP_FN prep, sharp_regular,  SHARP,   REGULAR
-MC_8TAP_FN prep, regular_sharp,  REGULAR, SHARP
-MC_8TAP_FN prep, smooth_regular, SMOOTH,  REGULAR
-MC_8TAP_FN prep, regular_smooth, REGULAR, SMOOTH
-MC_8TAP_FN prep, regular,        REGULAR, REGULAR
+FN prep_8tap, sharp,          SHARP,   SHARP
+FN prep_8tap, sharp_smooth,   SHARP,   SMOOTH
+FN prep_8tap, smooth_sharp,   SMOOTH,  SHARP
+FN prep_8tap, smooth,         SMOOTH,  SMOOTH
+FN prep_8tap, sharp_regular,  SHARP,   REGULAR
+FN prep_8tap, regular_sharp,  REGULAR, SHARP
+FN prep_8tap, smooth_regular, SMOOTH,  REGULAR
+FN prep_8tap, regular_smooth, REGULAR, SMOOTH
+FN prep_8tap, regular,        REGULAR, REGULAR
 
 %if ARCH_X86_32
  %define base_reg r2
@@ -3911,6 +3951,1738 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
     jg .hv_w8_loop0
     RET
 %endmacro
+
+%macro movifprep 2
+ %if isprep
+    mov %1, %2
+ %endif
+%endmacro
+
+%macro REMAP_REG 2
+ %xdefine r%1  r%2
+ %xdefine r%1q r%2q
+ %xdefine r%1d r%2d
+%endmacro
+
+%macro MCT_8TAP_SCALED_REMAP_REGS_TO_PREV 0
+ %if isprep
+  %xdefine r14_save r14
+  %assign %%i 14
+  %rep 14
+   %assign %%j %%i-1
+   REMAP_REG %%i, %%j
+   %assign %%i %%i-1
+  %endrep
+ %endif
+%endmacro
+
+%macro MCT_8TAP_SCALED_REMAP_REGS_TO_DEFAULT 0
+ %if isprep
+  %assign %%i 1
+  %rep 13
+   %assign %%j %%i+1
+   REMAP_REG %%i, %%j
+   %assign %%i %%i+1
+  %endrep
+  %xdefine r14 r14_save
+  %undef r14_save
+ %endif
+%endmacro
+
+%macro MC_8TAP_SCALED_RET 0-1 1 ; leave_mapping_unchanged
+    MCT_8TAP_SCALED_REMAP_REGS_TO_DEFAULT
+    RET
+ %if %1
+    MCT_8TAP_SCALED_REMAP_REGS_TO_PREV
+ %endif
+%endmacro
+
+%macro MC_8TAP_SCALED_H 12 ; dst[0-1], tmp[0-5], weights[0-3]
+    SWAP                m%2, m%5
+    movq                m%1, [srcq+ r4]
+    movq                m%2, [srcq+ r6]
+    movhps              m%1, [srcq+ r7]
+    movhps              m%2, [srcq+ r9]
+    movq                m%3, [srcq+r10]
+    movq                m%4, [srcq+r11]
+    movhps              m%3, [srcq+r13]
+    movhps              m%4, [srcq+ rX]
+    add                srcq, ssq
+    movq                m%5, [srcq+ r4]
+    movq                m%6, [srcq+ r6]
+    movhps              m%5, [srcq+ r7]
+    movhps              m%6, [srcq+ r9]
+    movq                m%7, [srcq+r10]
+    movq                m%8, [srcq+r11]
+    movhps              m%7, [srcq+r13]
+    movhps              m%8, [srcq+ rX]
+    add                srcq, ssq
+    pmaddubsw           m%1, m%9
+    pmaddubsw           m%5, m%9
+    pmaddubsw           m%2, m%10
+    pmaddubsw           m%6, m%10
+    pmaddubsw           m%3, m%11
+    pmaddubsw           m%7, m%11
+    pmaddubsw           m%4, m%12
+    pmaddubsw           m%8, m%12
+    phaddw              m%1, m%2
+    phaddw              m%5, m%6
+    phaddw              m%3, m%4
+    phaddw              m%7, m%8
+    phaddw              m%1, m%3
+    phaddw              m%5, m%7
+    pmulhrsw            m%1, m12
+    pmulhrsw            m%5, m12
+    SWAP                m%2, m%5
+%endmacro
+
+%macro MC_8TAP_SCALED 1
+%ifidn %1, put
+ %assign isprep 0
+ %if required_stack_alignment <= STACK_ALIGNMENT
+cglobal put_8tap_scaled, 4, 15, 16, 0x180, dst, ds, src, ss, w, h, mx, my, dx, dy
+ %else
+cglobal put_8tap_scaled, 4, 14, 16, 0x180, dst, ds, src, ss, w, h, mx, my, dx, dy
+ %endif
+ %xdefine base_reg r12
+ %define rndshift 10
+%else
+ %assign isprep 1
+ %if required_stack_alignment <= STACK_ALIGNMENT
+cglobal prep_8tap_scaled, 4, 15, 16, 0x180, tmp, src, ss, w, h, mx, my, dx, dy
+  %xdefine tmp_stridem r14q
+ %else
+cglobal prep_8tap_scaled, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx, dy
+  %define tmp_stridem qword [rsp+0x138]
+ %endif
+ %xdefine base_reg r11
+ %define rndshift 6
+%endif
+    LEA            base_reg, %1_8tap_scaled_ssse3
+%define base base_reg-%1_8tap_scaled_ssse3
+    tzcnt                wd, wm
+    movd                 m8, dxm
+    movd                m14, mxm
+    pshufd               m8, m8, q0000
+    pshufd              m14, m14, q0000
+%if isprep && UNIX64
+    mov                 r5d, t0d
+ DECLARE_REG_TMP 5, 7
+%endif
+    mov                 dyd, dym
+%ifidn %1, put
+ %if WIN64
+    mov                 r8d, hm
+  DEFINE_ARGS dst, ds, src, ss, w, _, _, my, h, dy, ss3
+  %define hm r5m
+  %define dxm r8m
+ %else
+  DEFINE_ARGS dst, ds, src, ss, w, h, _, my, dx, dy, ss3
+  %define hm r6m
+ %endif
+ %if required_stack_alignment > STACK_ALIGNMENT
+  %define dsm [rsp+0x138]
+  %define rX r1
+  %define rXd r1d
+ %else
+  %define dsm dsq
+  %define rX r14
+  %define rXd r14d
+ %endif
+%else ; prep
+ %if WIN64
+    mov                 r7d, hm
+  DEFINE_ARGS tmp, src, ss, w, _, _, my, h, dy, ss3
+  %define hm r4m
+  %define dxm r7m
+ %else
+  DEFINE_ARGS tmp, src, ss, w, h, _, my, dx, dy, ss3
+  %define hm [rsp+0x94]
+ %endif
+ MCT_8TAP_SCALED_REMAP_REGS_TO_PREV
+ %define rX r14
+ %define rXd r14d
+%endif
+    mova                m10, [base+pd_0x3ff]
+    mova                m12, [base+pw_8192]
+%ifidn %1, put
+    mova                m13, [base+pd_512]
+%else
+    mova                m13, [base+pd_32]
+%endif
+    pxor                 m9, m9
+    lea                ss3q, [ssq*3]
+    movzx               r7d, t1b
+    shr                 t1d, 16
+    cmp                  hd, 6
+    cmovs               t1d, r7d
+    sub                srcq, ss3q
+    cmp                 dyd, 1024
+    je .dy1
+    cmp                 dyd, 2048
+    je .dy2
+    movzx                wd, word [base+%1_8tap_scaled_ssse3_table+wq*2]
+    add                  wq, base_reg
+    jmp                  wq
+%ifidn %1, put
+.w2:
+    mov                 myd, mym
+    movzx               t0d, t0b
+    dec                srcq
+    movd                m15, t0d
+    punpckldq            m9, m8
+    SWAP                 m8, m9
+    paddd               m14, m8 ; mx+dx*[0-1]
+    mova                m11, [base+pd_0x4000]
+    pshufd              m15, m15, q0000
+    pand                 m8, m14, m10
+    psrld                m8, 6
+    paddd               m15, m8
+    movd                r4d, m15
+    psrldq              m15, 4
+    movd                r6d, m15
+    mova                 m5, [base+bdct_lb_dw]
+    mova                 m6, [base+subpel_s_shuf2]
+    movd                m15, [base+subpel_filters+r4*8+2]
+    movd                 m7, [base+subpel_filters+r6*8+2]
+    pxor                 m9, m9
+    pcmpeqd              m8, m9
+    psrld               m14, 10
+    movq                 m0, [srcq+ssq*0]
+    movq                 m2, [srcq+ssq*2]
+    movhps               m0, [srcq+ssq*1]
+    movhps               m2, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    pshufb              m14, m5
+    paddb               m14, m6
+    movq                 m1, [srcq+ssq*0]
+    movq                 m3, [srcq+ssq*2]
+    movhps               m1, [srcq+ssq*1]
+    movhps               m3, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    punpckldq           m15, m7
+    punpcklqdq          m15, m15
+    pand                m11, m8
+    pandn                m8, m15
+    SWAP                m15, m8
+    por                 m15, m11
+    pshufb               m0, m14
+    pshufb               m2, m14
+    pshufb               m1, m14
+    pshufb               m3, m14
+    pmaddubsw            m0, m15
+    pmaddubsw            m2, m15
+    pmaddubsw            m1, m15
+    pmaddubsw            m3, m15
+    phaddw               m0, m2
+    phaddw               m1, m3
+    pmulhrsw             m0, m12       ; 0 1 2 3
+    pmulhrsw             m1, m12       ; 4 5 6 7
+    palignr              m2, m1, m0, 4 ; 1 2 3 4
+    punpcklwd            m3, m0, m2    ; 01 12
+    punpckhwd            m0, m2        ; 23 34
+    pshufd               m5, m1, q0321 ; 5 6 7 _
+    punpcklwd            m2, m1, m5    ; 45 56
+    punpckhwd            m4, m1, m5    ; 67 __
+.w2_loop:
+    and                 myd, 0x3ff
+    mov                 r6d, 64 << 24
+    mov                 r4d, myd
+    shr                 r4d, 6
+    lea                 r4d, [t1+r4]
+    cmovnz              r6q, [base+subpel_filters+r4*8]
+    movq                m11, r6q
+    punpcklbw           m11, m11
+    psraw               m11, 8
+    pshufd               m8, m11, q0000
+    pshufd               m9, m11, q1111
+    pshufd              m10, m11, q2222
+    pshufd              m11, m11, q3333
+    pmaddwd              m5, m3, m8
+    pmaddwd              m6, m0, m9
+    pmaddwd              m7, m2, m10
+    pmaddwd              m8, m4, m11
+    paddd                m5, m6
+    paddd                m7, m8
+    paddd                m5, m13
+    paddd                m5, m7
+    psrad                m5, 10
+    packssdw             m5, m5
+    packuswb             m5, m5
+    pextrw              r6d, m5, 0
+    mov              [dstq], r6w
+    add                dstq, dsq
+    dec                  hd
+    jz .ret
+    add                 myd, dyd
+    test                myd, ~0x3ff
+    jz .w2_loop
+    movq                 m5, [srcq]
+    test                myd, 0x400
+    jz .w2_skip_line
+    add                srcq, ssq
+    shufps               m3, m0, q1032      ; 01 12
+    shufps               m0, m2, q1032      ; 23 34
+    shufps               m2, m4, q1032      ; 45 56
+    pshufb               m5, m14
+    pmaddubsw            m5, m15
+    phaddw               m5, m5
+    pmulhrsw             m5, m12
+    palignr              m4, m5, m1, 12
+    punpcklqdq           m1, m4, m4         ; 6 7 6 7
+    punpcklwd            m4, m1, m5         ; 67 __
+    jmp .w2_loop
+.w2_skip_line:
+    movhps               m5, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    mova                 m3, m0             ; 01 12
+    mova                 m0, m2             ; 23 34
+    pshufb               m5, m14
+    pmaddubsw            m5, m15
+    phaddw               m5, m5
+    pmulhrsw             m5, m12            ; 6 7 6 7
+    palignr              m4, m5, m1, 8      ; 4 5 6 7
+    pshufd               m5, m4, q0321      ; 5 6 7 _
+    mova                 m1, m4
+    punpcklwd            m2, m4, m5         ; 45 56
+    punpckhwd            m4, m5             ; 67 __
+    jmp .w2_loop
+    SWAP                m15, m8, m9
+%endif
+.w4:
+    mov                 myd, mym
+    mova                 m7, [base+rescale_mul]
+    movzx               t0d, t0b
+    dec                srcq
+    movd                m15, t0d
+    pmaddwd              m8, m7
+    mova                m11, [base+pd_0x4000]
+    pshufd              m15, m15, q0000
+    paddd               m14, m8 ; mx+dx*[0-3]
+    pand                 m0, m14, m10
+    psrld                m0, 6
+    paddd               m15, m0
+    psrldq               m7, m15, 8
+    movd                r4d, m15
+    movd               r11d, m7
+    psrldq              m15, 4
+    psrldq               m7, 4
+    movd                r6d, m15
+    movd               r13d, m7
+    movd                m15, [base+subpel_filters+ r4*8+2]
+    movd                 m2, [base+subpel_filters+r11*8+2]
+    movd                 m3, [base+subpel_filters+ r6*8+2]
+    movd                 m4, [base+subpel_filters+r13*8+2]
+    mova                 m5, [base+bdct_lb_dw]
+    movq                 m6, [base+subpel_s_shuf2]
+    pcmpeqd              m0, m9
+    psrld               m14, 10
+    movu                 m7, [srcq+ssq*0]
+    movu                 m9, [srcq+ssq*1]
+    movu                 m8, [srcq+ssq*2]
+    movu                m10, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    punpckldq           m15, m3
+    punpckldq            m2, m4
+    punpcklqdq           m6, m6
+    punpcklqdq          m15, m2
+    pshufb              m14, m5
+    paddb               m14, m6
+    movu                 m2, [srcq+ssq*0]
+    movu                 m4, [srcq+ssq*1]
+    movu                 m3, [srcq+ssq*2]
+    movu                 m5, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    pand                m11, m0
+    pandn                m0, m15
+    SWAP                m15, m0
+    por                 m15, m11
+    pshufb               m7, m14
+    pshufb               m9, m14
+    pshufb               m8, m14
+    pshufb              m10, m14
+    pshufb               m2, m14
+    pshufb               m4, m14
+    pshufb               m3, m14
+    pshufb               m5, m14
+    pmaddubsw            m7, m15
+    pmaddubsw            m9, m15
+    pmaddubsw            m8, m15
+    pmaddubsw           m10, m15
+    pmaddubsw            m2, m15
+    pmaddubsw            m4, m15
+    pmaddubsw            m3, m15
+    pmaddubsw            m5, m15
+    phaddw               m7, m9
+    phaddw               m8, m10
+    phaddw               m9, m2, m4
+    phaddw               m3, m5
+    pmulhrsw             m7, m12            ; 0 1
+    pmulhrsw             m8, m12            ; 2 3
+    pmulhrsw             m9, m12            ; 4 5
+    pmulhrsw             m3, m12            ; 6 7
+    shufps               m4, m7, m8, q1032  ; 1 2
+    shufps               m5, m8, m9, q1032  ; 3 4
+    shufps               m6, m9, m3, q1032  ; 5 6
+    psrldq              m11, m3, 8          ; 7 _
+    punpcklwd            m0, m7, m4 ; 01
+    punpckhwd            m7, m4     ; 12
+    punpcklwd            m1, m8, m5 ; 23
+    punpckhwd            m8, m5     ; 34
+    punpcklwd            m2, m9, m6 ; 45
+    punpckhwd            m9, m6     ; 56
+    punpcklwd            m3, m11    ; 67
+    mova         [rsp+0x00], m7
+    mova         [rsp+0x10], m8
+    mova         [rsp+0x20], m9
+.w4_loop:
+    and                 myd, 0x3ff
+    mov                 r6d, 64 << 24
+    mov                 r4d, myd
+    shr                 r4d, 6
+    lea                 r4d, [t1+r4]
+    cmovnz              r6q, [base+subpel_filters+r4*8]
+    movq                m10, r6q
+    punpcklbw           m10, m10
+    psraw               m10, 8
+    pshufd               m7, m10, q0000
+    pshufd               m8, m10, q1111
+    pshufd               m9, m10, q2222
+    pshufd              m10, m10, q3333
+    pmaddwd              m4, m0, m7
+    pmaddwd              m5, m1, m8
+    pmaddwd              m6, m2, m9
+    pmaddwd              m7, m3, m10
+    paddd                m4, m5
+    paddd                m6, m7
+    paddd                m4, m13
+    paddd                m4, m6
+    psrad                m4, rndshift
+    packssdw             m4, m4
+%ifidn %1, put
+    packuswb             m4, m4
+    movd             [dstq], m4
+    add                dstq, dsq
+%else
+    movq             [tmpq], m4
+    add                tmpq, 8
+%endif
+    dec                  hd
+    jz .ret
+    add                 myd, dyd
+    test                myd, ~0x3ff
+    jz .w4_loop
+    movu                 m4, [srcq]
+    test                myd, 0x400
+    jz .w4_skip_line
+    mova                 m0, [rsp+0x00]
+    mova         [rsp+0x00], m1
+    mova                 m1, [rsp+0x10]
+    mova         [rsp+0x10], m2
+    mova                 m2, [rsp+0x20]
+    mova         [rsp+0x20], m3
+    pshufb               m4, m14
+    pmaddubsw            m4, m15
+    phaddw               m4, m4
+    pmulhrsw             m4, m12
+    punpcklwd            m3, m11, m4
+    mova                m11, m4
+    add                srcq, ssq
+    jmp .w4_loop
+.w4_skip_line:
+    movu                 m5, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    mova                 m6, [rsp+0x10]
+    mova                 m7, [rsp+0x20]
+    pshufb               m4, m14
+    pshufb               m5, m14
+    pmaddubsw            m4, m15
+    pmaddubsw            m5, m15
+    phaddw               m4, m5
+    pmulhrsw             m4, m12
+    punpcklwd            m9, m11, m4
+    mova         [rsp+0x00], m6
+    mova         [rsp+0x10], m7
+    mova         [rsp+0x20], m9
+    psrldq              m11, m4, 8
+    mova                 m0, m1
+    mova                 m1, m2
+    mova                 m2, m3
+    punpcklwd            m3, m4, m11
+    jmp .w4_loop
+    SWAP                 m0, m15
+.w8:
+    mov    dword [rsp+0x90], 1
+    movifprep   tmp_stridem, 16
+    jmp .w_start
+.w16:
+    mov    dword [rsp+0x90], 2
+    movifprep   tmp_stridem, 32
+    jmp .w_start
+.w32:
+    mov    dword [rsp+0x90], 4
+    movifprep   tmp_stridem, 64
+    jmp .w_start
+.w64:
+    mov    dword [rsp+0x90], 8
+    movifprep   tmp_stridem, 128
+    jmp .w_start
+.w128:
+    mov    dword [rsp+0x90], 16
+    movifprep   tmp_stridem, 256
+.w_start:
+%ifidn %1, put
+    movifnidn           dsm, dsq
+%endif
+    shr                 t0d, 16
+    sub                srcq, 3
+    movd                m15, t0d
+    pslld                m7, m8, 2 ; dx*4
+    pmaddwd              m8, [base+rescale_mul] ; dx*[0-3]
+    pshufd              m15, m15, q0000
+    paddd               m14, m8 ; mx+dx*[0-3]
+    mova        [rsp+0x100], m7
+    mova        [rsp+0x120], m15
+    mov         [rsp+0x098], srcq
+    mov         [rsp+0x130], r0q ; dstq / tmpq
+%if UNIX64
+    mov                  hm, hd
+%endif
+    jmp .hloop
+.hloop_prep:
+    dec   dword [rsp+0x090]
+    jz .ret
+    add   qword [rsp+0x130], 8*(isprep+1)
+    mov                  hd, hm
+    mova                 m7, [rsp+0x100]
+    mova                m14, [rsp+0x110]
+    mova                m10, [base+pd_0x3ff]
+    mova                m15, [rsp+0x120]
+    pxor                 m9, m9
+    mov                srcq, [rsp+0x098]
+    mov                 r0q, [rsp+0x130] ; dstq / tmpq
+    paddd               m14, m7
+.hloop:
+    mova                m11, [base+pq_0x40000000]
+    psrld                m4, m14, 10
+    mova              [rsp], m4
+    pand                 m6, m14, m10
+    psrld                m6, 6
+    paddd                m5, m15, m6
+    pcmpeqd              m6, m9
+    psrldq               m4, m5, 8
+    movd                r4d, m5
+    movd                r6d, m4
+    psrldq               m5, 4
+    psrldq               m4, 4
+    movd                r7d, m5
+    movd                r9d, m4
+    movq                 m0, [base+subpel_filters+r4*8]
+    movq                 m1, [base+subpel_filters+r6*8]
+    movhps               m0, [base+subpel_filters+r7*8]
+    movhps               m1, [base+subpel_filters+r9*8]
+    paddd               m14, m7 ; mx+dx*[4-7]
+    pand                 m5, m14, m10
+    psrld                m5, 6
+    paddd               m15, m5
+    pcmpeqd              m5, m9
+    mova        [rsp+0x110], m14
+    psrldq               m4, m15, 8
+    movd               r10d, m15
+    movd               r11d, m4
+    psrldq              m15, 4
+    psrldq               m4, 4
+    movd               r13d, m15
+    movd                rXd, m4
+    movq                 m2, [base+subpel_filters+r10*8]
+    movq                 m3, [base+subpel_filters+r11*8]
+    movhps               m2, [base+subpel_filters+r13*8]
+    movhps               m3, [base+subpel_filters+ rX*8]
+    psrld               m14, 10
+    psrldq               m4, m14, 8
+    movd               r10d, m14
+    movd               r11d, m4
+    psrldq              m14, 4
+    psrldq               m4, 4
+    movd               r13d, m14
+    movd                rXd, m4
+    mov                 r4d, [rsp+ 0]
+    mov                 r6d, [rsp+ 8]
+    mov                 r7d, [rsp+ 4]
+    mov                 r9d, [rsp+12]
+    pshufd               m4, m6, q1100
+    pshufd               m6, m6, q3322
+    pshufd              m14, m5, q1100
+    pshufd               m5, m5, q3322
+    pand                 m7, m11, m4
+    pand                 m8, m11, m6
+    pand                m15, m11, m14
+    pand                m11, m11, m5
+    pandn                m4, m0
+    pandn                m6, m1
+    pandn               m14, m2
+    pandn                m5, m3
+    por                  m7, m4
+    por                  m8, m6
+    por                 m15, m14
+    por                 m11, m5
+    mova         [rsp+0x10], m7
+    mova         [rsp+0x20], m8
+    mova         [rsp+0x30], m15
+    mova         [rsp+0x40], m11
+    MC_8TAP_SCALED_H 1, 2, 3, 4, 5, 6, 9, 10, 7, 8, 15, 11 ; 0-1
+    mova         [rsp+0x50], m1
+    mova         [rsp+0x60], m2
+    MC_8TAP_SCALED_H 3, 4, 5, 6, 1, 2, 9, 10, 7, 8, 15, 11 ; 2-3
+    mova         [rsp+0x70], m3
+    mova         [rsp+0x80], m4
+    MC_8TAP_SCALED_H 5, 6, 1, 2, 3, 4, 9, 10, 7, 8, 15, 11 ; 4-5
+    MC_8TAP_SCALED_H 0,14, 1, 2, 3, 4, 9, 10, 7, 8, 15, 11 ; 6-7
+    SWAP                 m7, m0
+    SWAP                 m8, m14
+    mova                 m1, [rsp+0x50]
+    mova                 m2, [rsp+0x60]
+    mova                 m3, [rsp+0x70]
+    mova                 m9, [rsp+0x80]
+    mov                 myd, mym
+    mov                 dyd, dym
+    punpcklwd            m4, m5, m6 ; 45a
+    punpckhwd            m5, m6     ; 45b
+    punpcklwd            m6, m7, m8 ; 67a
+    punpckhwd            m7, m8     ; 67b
+    punpcklwd            m0, m1, m2 ; 01a
+    punpckhwd            m1, m2     ; 01b
+    punpcklwd            m2, m3, m9 ; 23a
+    punpckhwd            m3, m9     ; 23b
+    mova         [rsp+0x50], m4
+    mova         [rsp+0x60], m5
+    mova         [rsp+0x70], m6
+    mova         [rsp+0x80], m7
+    SWAP                m14, m8
+.vloop:
+    and                 myd, 0x3ff
+    mov                 r6d, 64 << 24
+    mov                 r4d, myd
+    shr                 r4d, 6
+    lea                 r4d, [t1+r4]
+    cmovnz              r6q, [base+subpel_filters+r4*8]
+    movq                m11, r6q
+    punpcklbw           m11, m11
+    psraw               m11, 8
+    pshufd               m5, m11, q0000
+    pshufd               m7, m11, q1111
+    pshufd              m10, m11, q2222
+    pshufd              m11, m11, q3333
+    pmaddwd              m4, m5, m0
+    pmaddwd              m5, m5, m1
+    pmaddwd              m6, m7, m2
+    pmaddwd              m7, m7, m3
+    paddd                m4, m13
+    paddd                m5, m13
+    paddd                m4, m6
+    paddd                m5, m7
+    pmaddwd              m6, [rsp+0x50], m10
+    pmaddwd              m7, [rsp+0x60], m10
+    pmaddwd              m8, [rsp+0x70], m11
+    pmaddwd              m9, [rsp+0x80], m11
+    paddd                m4, m6
+    paddd                m5, m7
+    paddd                m4, m8
+    paddd                m5, m9
+    psrad                m4, rndshift
+    psrad                m5, rndshift
+    packssdw             m4, m5
+%ifidn %1, put
+    packuswb             m4, m4
+    movq             [dstq], m4
+    add                dstq, dsm
+%else
+    mova             [tmpq], m4
+    add                tmpq, tmp_stridem
+%endif
+    dec                  hd
+    jz .hloop_prep
+    add                 myd, dyd
+    test                myd, ~0x3ff
+    jz .vloop
+    test                myd, 0x400
+    mov         [rsp+0x140], myd
+    mov                 r4d, [rsp+ 0]
+    mov                 r6d, [rsp+ 8]
+    mov                 r7d, [rsp+ 4]
+    mov                 r9d, [rsp+12]
+    jz .skip_line
+    mova                m14, [base+unpckw]
+    movq                 m6, [srcq+r10]
+    movq                 m7, [srcq+r11]
+    movhps               m6, [srcq+r13]
+    movhps               m7, [srcq+ rX]
+    movq                 m4, [srcq+ r4]
+    movq                 m5, [srcq+ r6]
+    movhps               m4, [srcq+ r7]
+    movhps               m5, [srcq+ r9]
+    add                srcq, ssq
+    mov                 myd, [rsp+0x140]
+    mov                 dyd, dym
+    pshufd               m9, m14, q1032
+    pshufb               m0, m14                ; 0a 1a
+    pshufb               m1, m14                ; 0b 1b
+    pshufb               m2, m9                 ; 3a 2a
+    pshufb               m3, m9                 ; 3b 2b
+    pmaddubsw            m6, [rsp+0x30]
+    pmaddubsw            m7, [rsp+0x40]
+    pmaddubsw            m4, [rsp+0x10]
+    pmaddubsw            m5, [rsp+0x20]
+    phaddw               m6, m7
+    phaddw               m4, m5
+    phaddw               m4, m6
+    pmulhrsw             m4, m12
+    pshufb               m5, [rsp+0x50], m14    ; 4a 5a
+    pshufb               m6, [rsp+0x60], m14    ; 4b 5b
+    pshufb               m7, [rsp+0x70], m9     ; 7a 6a
+    pshufb               m8, [rsp+0x80], m9     ; 7b 6b
+    punpckhwd            m0, m2 ; 12a
+    punpckhwd            m1, m3 ; 12b
+    punpcklwd            m2, m5 ; 34a
+    punpcklwd            m3, m6 ; 34b
+    punpckhwd            m5, m7 ; 56a
+    punpckhwd            m6, m8 ; 56b
+    punpcklwd            m7, m4 ; 78a
+    punpckhqdq           m4, m4
+    punpcklwd            m8, m4 ; 78b
+    mova         [rsp+0x50], m5
+    mova         [rsp+0x60], m6
+    mova         [rsp+0x70], m7
+    mova         [rsp+0x80], m8
+    jmp .vloop
+.skip_line:
+    mova                 m0, [rsp+0x10]
+    mova                 m1, [rsp+0x20]
+    mova                m14, [rsp+0x30]
+    mova                m15, [rsp+0x40]
+    MC_8TAP_SCALED_H 4, 8, 5, 6, 7, 9, 10, 11, 0, 1, 14, 15
+    mov                 myd, [rsp+0x140]
+    mov                 dyd, dym
+    mova                 m0, m2         ; 01a
+    mova                 m1, m3         ; 01b
+    mova                 m2, [rsp+0x50] ; 23a
+    mova                 m3, [rsp+0x60] ; 23b
+    mova                 m5, [rsp+0x70] ; 45a
+    mova                 m6, [rsp+0x80] ; 45b
+    punpcklwd            m7, m4, m8     ; 67a
+    punpckhwd            m4, m8         ; 67b
+    mova         [rsp+0x50], m5
+    mova         [rsp+0x60], m6
+    mova         [rsp+0x70], m7
+    mova         [rsp+0x80], m4
+    jmp .vloop
+.dy1:
+    movzx                wd, word [base+%1_8tap_scaled_ssse3_dy1_table+wq*2]
+    add                  wq, base_reg
+    jmp                  wq
+%ifidn %1, put
+.dy1_w2:
+    mov                 myd, mym
+    movzx               t0d, t0b
+    dec                srcq
+    movd                m15, t0d
+    punpckldq            m9, m8
+    SWAP                 m8, m9
+    paddd               m14, m8 ; mx+dx*[0-1]
+    mova                m11, [base+pd_0x4000]
+    pshufd              m15, m15, q0000
+    pand                 m8, m14, m10
+    psrld                m8, 6
+    paddd               m15, m8
+    movd                r4d, m15
+    psrldq              m15, 4
+    movd                r6d, m15
+    mova                 m5, [base+bdct_lb_dw]
+    mova                 m6, [base+subpel_s_shuf2]
+    movd                m15, [base+subpel_filters+r4*8+2]
+    movd                 m7, [base+subpel_filters+r6*8+2]
+    pxor                 m9, m9
+    pcmpeqd              m8, m9
+    psrld               m14, 10
+    movq                 m0, [srcq+ssq*0]
+    movq                 m2, [srcq+ssq*2]
+    movhps               m0, [srcq+ssq*1]
+    movhps               m2, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    shr                 myd, 6
+    mov                 r4d, 64 << 24
+    lea                 myd, [t1+myq]
+    cmovnz              r4q, [base+subpel_filters+myq*8]
+    pshufb              m14, m5
+    paddb               m14, m6
+    movq                 m1, [srcq+ssq*0]
+    movq                 m3, [srcq+ssq*2]
+    movhps               m1, [srcq+ssq*1]
+    add                srcq, ss3q
+    movq               xm10, r4q
+    punpcklbw          xm10, xm10
+    psraw              xm10, 8
+    punpckldq           m15, m7
+    punpcklqdq          m15, m15
+    pand                m11, m8
+    pandn                m8, m15
+    SWAP                m15, m8
+    por                 m15, m11
+    pshufd               m8, m10, q0000
+    pshufd               m9, m10, q1111
+    pshufd              m11, m10, q3333
+    pshufd              m10, m10, q2222
+    pshufb               m0, m14
+    pshufb               m2, m14
+    pshufb               m1, m14
+    pshufb               m3, m14
+    pmaddubsw            m0, m15
+    pmaddubsw            m2, m15
+    pmaddubsw            m1, m15
+    pmaddubsw            m3, m15
+    phaddw               m0, m2
+    phaddw               m1, m3
+    pmulhrsw             m0, m12
+    pmulhrsw             m1, m12
+    palignr              m2, m1, m0, 4
+    pshufd               m4, m1, q2121
+    punpcklwd            m3, m0, m2     ; 01 12
+    punpckhwd            m0, m2         ; 23 34
+    punpcklwd            m2, m1, m4     ; 45 56
+.dy1_w2_loop:
+    movq                 m1, [srcq+ssq*0]
+    movhps               m1, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    pmaddwd              m5, m3, m8
+    pmaddwd              m6, m0, m9
+    pmaddwd              m7, m2, m10
+    mova                 m3, m0
+    mova                 m0, m2
+    paddd                m5, m13
+    paddd                m6, m7
+    pshufb               m1, m14
+    pmaddubsw            m1, m15
+    phaddw               m1, m1
+    pmulhrsw             m1, m12
+    palignr              m7, m1, m4, 12
+    punpcklwd            m2, m7, m1     ; 67 78
+    pmaddwd              m7, m2, m11
+    mova                 m4, m1
+    paddd                m5, m6
+    paddd                m5, m7
+    psrad                m5, rndshift
+    packssdw             m5, m5
+    packuswb             m5, m5
+    pextrw              r4d, m5, 0
+    pextrw              r6d, m5, 1
+    mov        [dstq+dsq*0], r4w
+    mov        [dstq+dsq*1], r6w
+    lea                dstq, [dstq+dsq*2]
+    sub                  hd, 2
+    jg .dy1_w2_loop
+    RET
+    SWAP                m15, m8, m9
+%endif
+.dy1_w4:
+    mov                 myd, mym
+    mova                 m7, [base+rescale_mul]
+    movzx               t0d, t0b
+    dec                srcq
+    movd                m15, t0d
+    pmaddwd              m8, m7
+    mova                m11, [base+pd_0x4000]
+    pshufd              m15, m15, q0000
+    paddd               m14, m8 ; mx+dx*[0-3]
+    pand                 m8, m14, m10
+    psrld                m8, 6
+    paddd               m15, m8
+    psrldq               m7, m15, 8
+    movd                r4d, m15
+    movd               r11d, m7
+    psrldq              m15, 4
+    psrldq               m7, 4
+    movd                r6d, m15
+    movd               r13d, m7
+    movd                m15, [base+subpel_filters+ r4*8+2]
+    movd                 m4, [base+subpel_filters+r11*8+2]
+    movd                 m5, [base+subpel_filters+ r6*8+2]
+    movd                 m7, [base+subpel_filters+r13*8+2]
+    movq                 m6, [base+subpel_s_shuf2]
+    shr                 myd, 6
+    mov                 r4d, 64 << 24
+    lea                 myd, [t1+myq]
+    cmovnz              r4q, [base+subpel_filters+myq*8]
+    pcmpeqd              m8, m9
+    psrld               m14, 10
+    movu                 m0, [srcq+ssq*0]
+    movu                 m1, [srcq+ssq*1]
+    movu                 m2, [srcq+ssq*2]
+    movu                 m3, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    punpckldq           m15, m5
+    punpckldq            m4, m7
+    punpcklqdq           m6, m6
+    punpcklqdq          m15, m4
+    pshufb              m14, [base+bdct_lb_dw]
+    movu                 m4, [srcq+ssq*0]
+    movu                 m5, [srcq+ssq*1]
+    movu                 m7, [srcq+ssq*2]
+    add                srcq, ss3q
+    pand                m11, m8
+    pandn                m8, m15
+    SWAP                m15, m8
+    por                 m15, m11
+    paddb               m14, m6
+    movq                m10, r4q
+    punpcklbw           m10, m10
+    psraw               m10, 8
+    pshufb               m0, m14
+    pshufb               m1, m14
+    pshufb               m2, m14
+    pshufb               m3, m14
+    pshufb               m4, m14
+    pshufb               m5, m14
+    pshufb               m7, m14
+    pmaddubsw            m0, m15
+    pmaddubsw            m1, m15
+    pmaddubsw            m2, m15
+    pmaddubsw            m3, m15
+    pmaddubsw            m4, m15
+    pmaddubsw            m5, m15
+    pmaddubsw            m7, m15
+    phaddw               m0, m1
+    phaddw               m2, m3
+    phaddw               m4, m5
+    phaddw               m6, m7, m7
+    pmulhrsw             m0, m12    ; 0 1
+    pmulhrsw             m2, m12    ; 2 3
+    pmulhrsw             m4, m12    ; 4 5
+    pmulhrsw             m6, m12    ; 6 _
+    shufps               m1, m0, m2, q1032  ; 1 2
+    shufps               m3, m2, m4, q1032  ; 3 4
+    shufps               m5, m4, m6, q1032  ; 5 6
+    punpcklwd            m7, m0, m1 ; 01
+    punpckhwd            m0, m1     ; 12
+    punpcklwd            m8, m2, m3 ; 23
+    punpckhwd            m2, m3     ; 34
+    punpcklwd            m9, m4, m5 ; 45
+    punpckhwd            m4, m5     ; 56
+    pshufd               m1, m10, q0000
+    pshufd               m3, m10, q1111
+    pshufd               m5, m10, q2222
+    pshufd              m10, m10, q3333
+    mova         [rsp+0x00], m8
+    mova         [rsp+0x10], m2
+    mova         [rsp+0x20], m9
+    mova         [rsp+0x30], m4
+.dy1_w4_loop:
+    movu                m11, [srcq+ssq*0]
+    pmaddwd              m7, m1
+    pmaddwd              m8, m3
+    pmaddwd              m0, m1
+    pmaddwd              m2, m3
+    pmaddwd              m9, m5
+    pmaddwd              m4, m5
+    paddd                m7, m8
+    paddd                m0, m2
+    movu                 m8, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    pshufb              m11, m14
+    pmaddubsw           m11, m15
+    paddd                m7, m13
+    paddd                m0, m13
+    paddd                m7, m9
+    paddd                m0, m4
+    pshufb               m8, m14
+    pmaddubsw            m8, m15
+    phaddw              m11, m8
+    mova                 m8, [rsp+0x20]
+    pmulhrsw            m11, m12
+    punpcklwd            m9, m6, m11    ; 67
+    psrldq               m6, m11, 8
+    punpcklwd            m4, m11, m6    ; 78
+    pmaddwd              m2, m9, m10
+    pmaddwd             m11, m4, m10
+    paddd                m7, m2
+    mova                 m2, [rsp+0x30]
+    paddd                m0, m11
+    psrad                m7, rndshift
+    psrad                m0, rndshift
+    packssdw             m7, m0
+    mova                 m0, [rsp+0x10]
+%ifidn %1, put
+    packuswb             m7, m7
+    psrldq              m11, m7, 4
+    movd       [dstq+dsq*0], m7
+    movd       [dstq+dsq*1], m11
+    lea                dstq, [dstq+dsq*2]
+%else
+    mova             [tmpq], m7
+    add                tmpq, 16
+%endif
+    sub                  hd, 2
+    jz .ret
+    mova                 m7, [rsp+0x00]
+    mova         [rsp+0x00], m8
+    mova         [rsp+0x10], m2
+    mova         [rsp+0x20], m9
+    mova         [rsp+0x30], m4
+    jmp .dy1_w4_loop
+    SWAP                 m8, m15
+.dy1_w8:
+    mov    dword [rsp+0x90], 1
+    movifprep   tmp_stridem, 16
+    jmp .dy1_w_start
+.dy1_w16:
+    mov    dword [rsp+0x90], 2
+    movifprep   tmp_stridem, 32
+    jmp .dy1_w_start
+.dy1_w32:
+    mov    dword [rsp+0x90], 4
+    movifprep   tmp_stridem, 64
+    jmp .dy1_w_start
+.dy1_w64:
+    mov    dword [rsp+0x90], 8
+    movifprep   tmp_stridem, 128
+    jmp .dy1_w_start
+.dy1_w128:
+    mov    dword [rsp+0x90], 16
+    movifprep   tmp_stridem, 256
+.dy1_w_start:
+    mov                 myd, mym
+%ifidn %1, put
+    movifnidn           dsm, dsq
+%endif
+    shr                 t0d, 16
+    sub                srcq, 3
+    shr                 myd, 6
+    mov                 r4d, 64 << 24
+    lea                 myd, [t1+myq]
+    cmovnz              r4q, [base+subpel_filters+myq*8]
+    movd                m15, t0d
+    pslld                m7, m8, 2 ; dx*4
+    pmaddwd              m8, [base+rescale_mul] ; dx*[0-3]
+    pshufd              m15, m15, q0000
+    paddd               m14, m8 ; mx+dx*[0-3]
+    movq                 m3, r4q
+    punpcklbw            m3, m3
+    psraw                m3, 8
+    mova        [rsp+0x100], m7
+    mova        [rsp+0x120], m15
+    mov         [rsp+0x098], srcq
+    mov         [rsp+0x130], r0q ; dstq / tmpq
+    pshufd               m0, m3, q0000
+    pshufd               m1, m3, q1111
+    pshufd               m2, m3, q2222
+    pshufd               m3, m3, q3333
+    mova        [rsp+0x140], m0
+    mova        [rsp+0x150], m1
+    mova        [rsp+0x160], m2
+    mova        [rsp+0x170], m3
+%if UNIX64
+    mov                  hm, hd
+%endif
+    jmp .dy1_hloop
+.dy1_hloop_prep:
+    dec   dword [rsp+0x090]
+    jz .ret
+    add   qword [rsp+0x130], 8*(isprep+1)
+    mov                  hd, hm
+    mova                 m7, [rsp+0x100]
+    mova                m14, [rsp+0x110]
+    mova                m10, [base+pd_0x3ff]
+    mova                m15, [rsp+0x120]
+    pxor                 m9, m9
+    mov                srcq, [rsp+0x098]
+    mov                 r0q, [rsp+0x130] ; dstq / tmpq
+    paddd               m14, m7
+.dy1_hloop:
+    mova                m11, [base+pq_0x40000000]
+    psrld                m4, m14, 10
+    mova              [rsp], m4
+    pand                 m6, m14, m10
+    psrld                m6, 6
+    paddd                m5, m15, m6
+    pcmpeqd              m6, m9
+    psrldq               m4, m5, 8
+    movd                r4d, m5
+    movd                r6d, m4
+    psrldq               m5, 4
+    psrldq               m4, 4
+    movd                r7d, m5
+    movd                r9d, m4
+    movq                 m0, [base+subpel_filters+r4*8]
+    movq                 m1, [base+subpel_filters+r6*8]
+    movhps               m0, [base+subpel_filters+r7*8]
+    movhps               m1, [base+subpel_filters+r9*8]
+    paddd               m14, m7 ; mx+dx*[4-7]
+    pand                 m5, m14, m10
+    psrld                m5, 6
+    paddd               m15, m5
+    pcmpeqd              m5, m9
+    mova        [rsp+0x110], m14
+    psrldq               m4, m15, 8
+    movd               r10d, m15
+    movd               r11d, m4
+    psrldq              m15, 4
+    psrldq               m4, 4
+    movd               r13d, m15
+    movd                rXd, m4
+    movq                 m2, [base+subpel_filters+r10*8]
+    movq                 m3, [base+subpel_filters+r11*8]
+    movhps               m2, [base+subpel_filters+r13*8]
+    movhps               m3, [base+subpel_filters+ rX*8]
+    psrld               m14, 10
+    psrldq               m4, m14, 8
+    movd               r10d, m14
+    movd               r11d, m4
+    psrldq              m14, 4
+    psrldq               m4, 4
+    movd               r13d, m14
+    movd                rXd, m4
+    punpcklbw           m14, m14
+    psraw               m14, 8
+    mov                 r4d, [rsp+ 0]
+    mov                 r6d, [rsp+ 8]
+    mov                 r7d, [rsp+ 4]
+    mov                 r9d, [rsp+12]
+    pshufd               m4, m6, q1100
+    pshufd               m6, m6, q3322
+    pshufd               m7, m5, q1100
+    pshufd               m5, m5, q3322
+    pand                 m8, m11, m4
+    pand                 m9, m11, m6
+    pand                m15, m11, m7
+    pand                m11, m11, m5
+    pandn                m4, m0
+    pandn                m6, m1
+    pandn                m7, m2
+    pandn                m5, m3
+    por                  m8, m4
+    por                  m9, m6
+    por                 m15, m7
+    por                 m11, m5
+    mova         [rsp+0x10], m8
+    mova         [rsp+0x20], m9
+    mova         [rsp+0x30], m15
+    mova         [rsp+0x40], m11
+    MC_8TAP_SCALED_H 1, 2, 3, 4, 5, 6, 7, 10, 8, 9, 15, 11 ; 0-1
+    mova         [rsp+0x50], m1
+    mova         [rsp+0x60], m2
+    MC_8TAP_SCALED_H 3, 4, 5, 6, 1, 2, 7, 10, 8, 9, 15, 11 ; 2-3
+    mova         [rsp+0x70], m3
+    mova         [rsp+0x80], m4
+    MC_8TAP_SCALED_H 5, 6, 1, 2, 3, 4, 7, 10, 8, 9, 15, 11 ; 4-5
+    MC_8TAP_SCALED_H 0,14, 1, 2, 3, 4, 7, 10, 8, 9, 15, 11 ; 6-7
+    SWAP                 m7, m0
+    SWAP                 m8, m14
+    mova                 m1, [rsp+0x50]
+    mova                 m2, [rsp+0x60]
+    mova                 m3, [rsp+0x70]
+    mova                m15, [rsp+0x80]
+    punpcklwd            m4, m5, m6 ; 45a
+    punpckhwd            m5, m6     ; 45b
+    punpcklwd            m6, m7, m8 ; 67a
+    punpckhwd            m7, m8     ; 67b
+    SWAP                m14, m8
+    mova                 m8, [rsp+0x140]
+    mova                 m9, [rsp+0x150]
+    mova                m10, [rsp+0x160]
+    mova                m11, [rsp+0x170]
+    punpcklwd            m0, m1, m2 ; 01a
+    punpckhwd            m1, m2     ; 01b
+    punpcklwd            m2, m3, m15; 23a
+    punpckhwd            m3, m15    ; 23b
+    mova         [rsp+0x50], m4
+    mova         [rsp+0x60], m5
+    mova         [rsp+0x70], m6
+    mova         [rsp+0x80], m7
+    mova                m14, [base+unpckw]
+.dy1_vloop:
+    pmaddwd              m4, m0, m8
+    pmaddwd              m5, m1, m8
+    pmaddwd              m6, m2, m9
+    pmaddwd              m7, m3, m9
+    paddd                m4, m13
+    paddd                m5, m13
+    paddd                m4, m6
+    paddd                m5, m7
+    pmaddwd              m6, [rsp+0x50], m10
+    pmaddwd              m7, [rsp+0x60], m10
+    pmaddwd             m15, [rsp+0x70], m11
+    paddd                m4, m6
+    pmaddwd              m6, [rsp+0x80], m11
+    paddd                m5, m7
+    paddd                m4, m15
+    paddd                m5, m6
+    psrad                m4, rndshift
+    psrad                m5, rndshift
+    packssdw             m4, m5
+%ifidn %1, put
+    packuswb             m4, m4
+    movq             [dstq], m4
+    add                dstq, dsm
+%else
+    mova             [tmpq], m4
+    add                tmpq, tmp_stridem
+%endif
+    dec                  hd
+    jz .dy1_hloop_prep
+    movq                 m4, [srcq+ r4]
+    movq                 m5, [srcq+ r6]
+    movhps               m4, [srcq+ r7]
+    movhps               m5, [srcq+ r9]
+    movq                 m6, [srcq+r10]
+    movq                 m7, [srcq+r11]
+    movhps               m6, [srcq+r13]
+    movhps               m7, [srcq+ rX]
+    add                srcq, ssq
+    pshufd              m15, m14, q1032
+    pshufb               m0, m14                ; 0a 1a
+    pshufb               m1, m14                ; 0b 1b
+    pshufb               m2, m15                ; 3a 2a
+    pshufb               m3, m15                ; 3b 2b
+    pmaddubsw            m4, [rsp+0x10]
+    pmaddubsw            m5, [rsp+0x20]
+    pmaddubsw            m6, [rsp+0x30]
+    pmaddubsw            m7, [rsp+0x40]
+    phaddw               m4, m5
+    phaddw               m6, m7
+    phaddw               m4, m6
+    pmulhrsw             m4, m12
+    pshufb               m5, [rsp+0x70], m15    ; 7a 6a
+    pshufb               m7, [rsp+0x80], m15    ; 7b 6b
+    pshufb               m6, [rsp+0x50], m14    ; 4a 5a
+    pshufb              m15, [rsp+0x60], m14    ; 4b 5b
+    punpckhwd            m0, m2  ; 12a
+    punpckhwd            m1, m3  ; 12b
+    punpcklwd            m2, m6  ; 34a
+    punpcklwd            m3, m15 ; 34b
+    punpckhwd            m6, m5  ; 56a
+    punpckhwd           m15, m7  ; 56b
+    punpcklwd            m5, m4  ; 78a
+    psrldq               m4, 8
+    punpcklwd            m7, m4  ; 78b
+    mova         [rsp+0x50], m6
+    mova         [rsp+0x60], m15
+    mova         [rsp+0x70], m5
+    mova         [rsp+0x80], m7
+    jmp .dy1_vloop
+.dy2:
+    movzx                wd, word [base+%1_8tap_scaled_ssse3_dy2_table+wq*2]
+    add                  wq, base_reg
+    jmp                  wq
+%ifidn %1, put
+.dy2_w2:
+    mov                 myd, mym
+    movzx               t0d, t0b
+    dec                srcq
+    movd                m15, t0d
+    punpckldq            m9, m8
+    SWAP                 m8, m9
+    paddd               m14, m8 ; mx+dx*[0-1]
+    mova                m11, [base+pd_0x4000]
+    pshufd              m15, m15, q0000
+    pand                 m8, m14, m10
+    psrld                m8, 6
+    paddd               m15, m8
+    movd                r4d, m15
+    psrldq              m15, 4
+    movd                r6d, m15
+    mova                 m5, [base+bdct_lb_dw]
+    mova                 m6, [base+subpel_s_shuf2]
+    movd                m15, [base+subpel_filters+r4*8+2]
+    movd                 m7, [base+subpel_filters+r6*8+2]
+    pxor                 m9, m9
+    pcmpeqd              m8, m9
+    psrld               m14, 10
+    movq                 m0, [srcq+ssq*0]
+    movq                 m1, [srcq+ssq*1]
+    movhps               m0, [srcq+ssq*2]
+    movhps               m1, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    pshufb              m14, m5
+    paddb               m14, m6
+    punpckldq           m15, m7
+    punpcklqdq          m15, m15
+    pand                m11, m8
+    pandn                m8, m15
+    SWAP                m15, m8
+    por                 m15, m11
+    movq                 m3, [srcq+ssq*0]
+    movhps               m3, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    shr                 myd, 6
+    mov                 r4d, 64 << 24
+    lea                 myd, [t1+myq]
+    cmovnz              r4q, [base+subpel_filters+myq*8]
+    pshufb               m0, m14
+    pshufb               m1, m14
+    pshufb               m3, m14
+    pmaddubsw            m0, m15
+    pmaddubsw            m1, m15
+    pmaddubsw            m3, m15
+    movq                m11, r4q
+    punpcklbw           m11,  m11
+    psraw               m11, 8
+    pslldq               m2, m3, 8
+    phaddw               m0, m2
+    phaddw               m1, m3
+    pmulhrsw             m0, m12            ; 0 2 _ 4
+    pmulhrsw             m1, m12            ; 1 3 _ 5
+    pshufd               m8, m11, q0000
+    pshufd               m9, m11, q1111
+    pshufd              m10, m11, q2222
+    pshufd              m11, m11, q3333
+    pshufd               m2, m0, q3110      ; 0 2 2 4
+    pshufd               m1, m1, q3110      ; 1 3 3 5
+    punpcklwd            m3, m2, m1         ; 01 23
+    punpckhwd            m2, m1             ; 23 45
+.dy2_w2_loop:
+    movq                 m6, [srcq+ssq*0]
+    movq                 m7, [srcq+ssq*1]
+    movhps               m6, [srcq+ssq*2]
+    movhps               m7, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    pmaddwd              m4, m3, m8
+    pmaddwd              m5, m2, m9
+    pshufb               m6, m14
+    pshufb               m7, m14
+    pmaddubsw            m6, m15
+    pmaddubsw            m7, m15
+    phaddw               m6, m7
+    pmulhrsw             m6, m12
+    psrldq               m7, m6, 8
+    palignr              m6, m0, 8
+    palignr              m7, m1, 8
+    mova                 m0, m6
+    mova                 m1, m7
+    pshufd               m6, m6, q3221
+    pshufd               m7, m7, q3221
+    punpcklwd            m3, m6, m7       ; 45 67
+    punpckhwd            m2, m6, m7       ; 67 89
+    pmaddwd              m6, m3, m10
+    pmaddwd              m7, m2, m11
+    paddd                m4, m5
+    paddd                m4, m13
+    paddd                m6, m7
+    paddd                m4, m6
+    psrad                m4, rndshift
+    packssdw             m4, m4
+    packuswb             m4, m4
+    movd                r4d, m4
+    mov        [dstq+dsq*0], r4w
+    shr                 r4d, 16
+    mov        [dstq+dsq*1], r4w
+    lea                dstq, [dstq+dsq*2]
+    sub                  hd, 2
+    jg .dy2_w2_loop
+    RET
+    SWAP                m15, m8, m9
+%endif
+.dy2_w4:
+    mov                 myd, mym
+    mova                 m7, [base+rescale_mul]
+    movzx               t0d, t0b
+    dec                srcq
+    movd                m15, t0d
+    pmaddwd              m8, m7
+    mova                m11, [base+pd_0x4000]
+    pshufd              m15, m15, q0000
+    paddd               m14, m8 ; mx+dx*[0-3]
+    pand                 m8, m14, m10
+    psrld                m8, 6
+    paddd               m15, m8
+    psrldq               m7, m15, 8
+    movd                r4d, m15
+    movd               r11d, m7
+    psrldq              m15, 4
+    psrldq               m7, 4
+    movd                r6d, m15
+    movd               r13d, m7
+    movd                m15, [base+subpel_filters+ r4*8+2]
+    movd                 m4, [base+subpel_filters+r11*8+2]
+    movd                 m5, [base+subpel_filters+ r6*8+2]
+    movd                 m7, [base+subpel_filters+r13*8+2]
+    movq                 m6, [base+subpel_s_shuf2]
+    shr                 myd, 6
+    mov                 r4d, 64 << 24
+    lea                 myd, [t1+myq]
+    cmovnz              r4q, [base+subpel_filters+myq*8]
+    pcmpeqd              m8, m9
+    psrld               m14, 10
+    movu                 m0, [srcq+ssq*0]
+    movu                 m2, [srcq+ssq*2]
+    movu                 m1, [srcq+ssq*1]
+    movu                 m3, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    punpckldq           m15, m5
+    punpckldq            m4, m7
+    punpcklqdq           m6, m6
+    punpcklqdq          m15, m4
+    pshufb              m14, [base+bdct_lb_dw]
+    movu                 m4, [srcq+ssq*0]
+    movu                 m5, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    pand                m11, m8
+    pandn                m8, m15
+    SWAP                m15, m8
+    por                 m15, m11
+    paddb               m14, m6
+    movq                m11, r4q
+    punpcklbw           m11, m11
+    psraw               m11, 8
+    pshufb               m0, m14
+    pshufb               m2, m14
+    pshufb               m1, m14
+    pshufb               m3, m14
+    pshufb               m4, m14
+    pshufb               m5, m14
+    pmaddubsw            m0, m15
+    pmaddubsw            m2, m15
+    pmaddubsw            m1, m15
+    pmaddubsw            m3, m15
+    pmaddubsw            m4, m15
+    pmaddubsw            m5, m15
+    phaddw               m0, m2
+    phaddw               m1, m3
+    phaddw               m4, m5
+    pmulhrsw             m0, m12    ; 0 2
+    pmulhrsw             m1, m12    ; 1 3
+    pmulhrsw             m4, m12    ; 4 5
+    pshufd               m8, m11, q0000
+    pshufd               m9, m11, q1111
+    pshufd              m10, m11, q2222
+    pshufd              m11, m11, q3333
+    psrldq               m5, m4, 8  ; 5 _
+    punpckhwd            m2, m0, m1 ; 23
+    punpcklwd            m0, m1     ; 01
+    punpcklwd            m4, m5     ; 45
+.dy2_w4_loop:
+    pmaddwd              m0, m8         ; a0
+    pmaddwd              m5, m2, m8     ; b0
+    pmaddwd              m2, m9         ; a1
+    pmaddwd              m7, m4, m9     ; b1
+    pmaddwd              m3, m4, m10    ; a2
+    paddd                m0, m13
+    paddd                m5, m13
+    paddd                m0, m2
+    paddd                m5, m7
+    paddd                m0, m3
+    movu                 m6, [srcq+ssq*0]
+    movu                 m7, [srcq+ssq*1]
+    movu                 m3, [srcq+ssq*2]
+    movu                 m1, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    pshufb               m6, m14
+    pshufb               m7, m14
+    pshufb               m3, m14
+    pshufb               m1, m14
+    pmaddubsw            m6, m15
+    pmaddubsw            m7, m15
+    pmaddubsw            m3, m15
+    pmaddubsw            m1, m15
+    phaddw               m6, m7
+    phaddw               m3, m1
+    pmulhrsw             m6, m12    ; 6 7
+    pmulhrsw             m3, m12    ; 8 9
+    psrldq               m7, m6, 8
+    psrldq               m1, m3, 8
+    punpcklwd            m6, m7     ; 67
+    punpcklwd            m3, m1     ; 89
+    mova                 m2, m6
+    pmaddwd              m1, m6, m10    ; b2
+    pmaddwd              m6, m11        ; a3
+    pmaddwd              m7, m3, m11    ; b3
+    paddd                m5, m1
+    paddd                m0, m6
+    paddd                m5, m7
+    psrad                m0, rndshift
+    psrad                m5, rndshift
+    packssdw             m0, m5
+%ifidn %1, put
+    packuswb             m0, m0
+    psrldq               m1, m0, 4
+    movd       [dstq+dsq*0], m0
+    movd       [dstq+dsq*1], m1
+    lea                dstq, [dstq+dsq*2]
+%else
+    mova             [tmpq], m0
+    add                tmpq, 16
+%endif
+    mova                 m0, m4
+    mova                 m4, m3
+    sub                  hd, 2
+    jg .dy2_w4_loop
+    MC_8TAP_SCALED_RET
+    SWAP                 m8, m15
+.dy2_w8:
+    mov    dword [rsp+0x90], 1
+    movifprep   tmp_stridem, 16
+    jmp .dy2_w_start
+.dy2_w16:
+    mov    dword [rsp+0x90], 2
+    movifprep   tmp_stridem, 32
+    jmp .dy2_w_start
+.dy2_w32:
+    mov    dword [rsp+0x90], 4
+    movifprep   tmp_stridem, 64
+    jmp .dy2_w_start
+.dy2_w64:
+    mov    dword [rsp+0x90], 8
+    movifprep   tmp_stridem, 128
+    jmp .dy2_w_start
+.dy2_w128:
+    mov    dword [rsp+0x90], 16
+    movifprep   tmp_stridem, 256
+.dy2_w_start:
+    mov                 myd, mym
+%ifidn %1, put
+    movifnidn           dsm, dsq
+%endif
+    shr                 t0d, 16
+    sub                srcq, 3
+    shr                 myd, 6
+    mov                 r4d, 64 << 24
+    lea                 myd, [t1+myq]
+    cmovnz              r4q, [base+subpel_filters+myq*8]
+    movd                m15, t0d
+    pslld                m7, m8, 2 ; dx*4
+    pmaddwd              m8, [base+rescale_mul] ; dx*[0-3]
+    pshufd              m15, m15, q0000
+    paddd               m14, m8 ; mx+dx*[0-3]
+    movq                 m3, r4q
+    punpcklbw            m3, m3
+    psraw                m3, 8
+    mova        [rsp+0x100], m7
+    mova        [rsp+0x120], m15
+    mov         [rsp+0x098], srcq
+    mov         [rsp+0x130], r0q ; dstq / tmpq
+    pshufd               m0, m3, q0000
+    pshufd               m1, m3, q1111
+    pshufd               m2, m3, q2222
+    pshufd               m3, m3, q3333
+    mova        [rsp+0x140], m0
+    mova        [rsp+0x150], m1
+    mova        [rsp+0x160], m2
+    mova        [rsp+0x170], m3
+%if UNIX64
+    mov                  hm, hd
+%endif
+    jmp .dy2_hloop
+.dy2_hloop_prep:
+    dec   dword [rsp+0x090]
+    jz .ret
+    add   qword [rsp+0x130], 8*(isprep+1)
+    mov                  hd, hm
+    mova                 m7, [rsp+0x100]
+    mova                m14, [rsp+0x110]
+    mova                m10, [base+pd_0x3ff]
+    mova                m15, [rsp+0x120]
+    pxor                 m9, m9
+    mov                srcq, [rsp+0x098]
+    mov                 r0q, [rsp+0x130] ; dstq / tmpq
+    paddd               m14, m7
+.dy2_hloop:
+    mova                m11, [base+pq_0x40000000]
+    psrld                m4, m14, 10
+    mova              [rsp], m4
+    pand                 m6, m14, m10
+    psrld                m6, 6
+    paddd                m5, m15, m6
+    pcmpeqd              m6, m9
+    psrldq               m4, m5, 8
+    movd                r4d, m5
+    movd                r6d, m4
+    psrldq               m5, 4
+    psrldq               m4, 4
+    movd                r7d, m5
+    movd                r9d, m4
+    movq                 m0, [base+subpel_filters+r4*8]
+    movq                 m1, [base+subpel_filters+r6*8]
+    movhps               m0, [base+subpel_filters+r7*8]
+    movhps               m1, [base+subpel_filters+r9*8]
+    paddd               m14, m7 ; mx+dx*[4-7]
+    pand                 m5, m14, m10
+    psrld                m5, 6
+    paddd               m15, m5
+    pcmpeqd              m5, m9
+    mova        [rsp+0x110], m14
+    psrldq               m4, m15, 8
+    movd               r10d, m15
+    movd               r11d, m4
+    psrldq              m15, 4
+    psrldq               m4, 4
+    movd               r13d, m15
+    movd                rXd, m4
+    movq                 m2, [base+subpel_filters+r10*8]
+    movq                 m3, [base+subpel_filters+r11*8]
+    movhps               m2, [base+subpel_filters+r13*8]
+    movhps               m3, [base+subpel_filters+ rX*8]
+    psrld               m14, 10
+    psrldq               m4, m14, 8
+    movd               r10d, m14
+    movd               r11d, m4
+    psrldq              m14, 4
+    psrldq               m4, 4
+    movd               r13d, m14
+    movd                rXd, m4
+    mov                 r4d, [rsp+ 0]
+    mov                 r6d, [rsp+ 8]
+    mov                 r7d, [rsp+ 4]
+    mov                 r9d, [rsp+12]
+    pshufd               m4, m6, q1100
+    pshufd               m6, m6, q3322
+    pshufd               m7, m5, q1100
+    pshufd               m5, m5, q3322
+    pand                 m8, m11, m4
+    pand                 m9, m11, m6
+    pand                m15, m11, m7
+    pand                m11, m11, m5
+    pandn                m4, m0
+    pandn                m6, m1
+    pandn                m7, m2
+    pandn                m5, m3
+    por                  m8, m4
+    por                  m9, m6
+    por                 m15, m7
+    por                 m11, m5
+    mova         [rsp+0x10], m8
+    mova         [rsp+0x20], m9
+    mova         [rsp+0x30], m15
+    mova         [rsp+0x40], m11
+    MC_8TAP_SCALED_H 1, 2, 3, 4, 5, 6, 7, 10, 8, 9, 15, 11 ; 0-1
+    mova         [rsp+0x50], m1
+    mova         [rsp+0x60], m2
+    MC_8TAP_SCALED_H 3, 4, 5, 6, 1, 2, 7, 10, 8, 9, 15, 11 ; 2-3
+    mova         [rsp+0x70], m3
+    mova         [rsp+0x80], m4
+    MC_8TAP_SCALED_H 5, 6, 1, 2, 3, 4, 7, 10, 8, 9, 15, 11 ; 4-5
+    MC_8TAP_SCALED_H 0,14, 1, 2, 3, 4, 7, 10, 8, 9, 15, 11 ; 6-7
+    SWAP                 m7, m0
+    SWAP                 m8, m14
+    mova                 m1, [rsp+0x50]
+    mova                 m2, [rsp+0x60]
+    mova                 m3, [rsp+0x70]
+    mova                m15, [rsp+0x80]
+    punpcklwd            m4, m5, m6 ; 45a
+    punpckhwd            m5, m6     ; 45b
+    punpcklwd            m6, m7, m8 ; 67a
+    punpckhwd            m7, m8     ; 67b
+    SWAP                m14, m8
+    mova                 m8, [rsp+0x140]
+    mova                 m9, [rsp+0x150]
+    mova                m10, [rsp+0x160]
+    mova                m11, [rsp+0x170]
+    punpcklwd            m0, m1, m2 ; 01a
+    punpckhwd            m1, m2     ; 01b
+    punpcklwd            m2, m3, m15; 23a
+    punpckhwd            m3, m15    ; 23b
+    mova         [rsp+0x50], m4
+    mova         [rsp+0x60], m5
+    mova         [rsp+0x70], m6
+    mova         [rsp+0x80], m7
+.dy2_vloop:
+    pmaddwd              m4, m0, m8
+    pmaddwd              m5, m1, m8
+    pmaddwd              m6, m2, m9
+    pmaddwd              m7, m3, m9
+    paddd                m4, m13
+    paddd                m5, m13
+    paddd                m4, m6
+    paddd                m5, m7
+    pmaddwd              m6, [rsp+0x50], m10
+    pmaddwd              m7, [rsp+0x60], m10
+    pmaddwd             m15, [rsp+0x70], m11
+    paddd                m4, m6
+    pmaddwd              m6, [rsp+0x80], m11
+    paddd                m5, m7
+    paddd                m4, m15
+    paddd                m5, m6
+    psrad                m4, rndshift
+    psrad                m5, rndshift
+    packssdw             m4, m5
+%ifidn %1, put
+    packuswb             m4, m4
+    movq             [dstq], m4
+    add                dstq, dsm
+%else
+    mova             [tmpq], m4
+    add                tmpq, tmp_stridem
+%endif
+    dec                  hd
+    jz .dy2_hloop_prep
+    mova                 m8, [rsp+0x10]
+    mova                 m9, [rsp+0x20]
+    mova                m10, [rsp+0x30]
+    mova                m11, [rsp+0x40]
+    mova                 m0, m2             ; 01a
+    mova                 m1, m3             ; 01b
+    MC_8TAP_SCALED_H 2, 6, 3, 4, 5, 7, 14, 15, 8, 9, 10, 11
+    mova                 m3, [rsp+0x50] ; 23a
+    mova                 m4, [rsp+0x60] ; 23b
+    mova                 m5, [rsp+0x70] ; 45a
+    mova                 m7, [rsp+0x80] ; 45b
+    mova                 m8, [rsp+0x140]
+    mova                 m9, [rsp+0x150]
+    mova                m10, [rsp+0x160]
+    mova                m11, [rsp+0x170]
+    punpcklwd           m14, m2, m6     ; 67a
+    punpckhwd            m2, m6         ; 67b
+    mova         [rsp+0x50], m5
+    mova         [rsp+0x60], m7
+    mova         [rsp+0x70], m14
+    mova         [rsp+0x80], m2
+    mova                 m2, m3
+    mova                 m3, m4
+    jmp .dy2_vloop
+.ret:
+    MC_8TAP_SCALED_RET 0
+%undef isprep
+%endmacro
+
+%macro BILIN_SCALED_FN 1
+cglobal %1_bilin_scaled
+    mov                 t0d, (5*15 << 16) | 5*15
+    mov                 t1d, (5*15 << 16) | 5*15
+    jmp mangle(private_prefix %+ _%1_8tap_scaled %+ SUFFIX)
+%endmacro
+
+%if ARCH_X86_64
+%if WIN64
+DECLARE_REG_TMP 6, 5
+%else
+DECLARE_REG_TMP 6, 8
+%endif
+BILIN_SCALED_FN put
+FN put_8tap_scaled, sharp,          SHARP,   SHARP
+FN put_8tap_scaled, sharp_smooth,   SHARP,   SMOOTH
+FN put_8tap_scaled, smooth_sharp,   SMOOTH,  SHARP
+FN put_8tap_scaled, smooth,         SMOOTH,  SMOOTH
+FN put_8tap_scaled, sharp_regular,  SHARP,   REGULAR
+FN put_8tap_scaled, regular_sharp,  REGULAR, SHARP
+FN put_8tap_scaled, smooth_regular, SMOOTH,  REGULAR
+FN put_8tap_scaled, regular_smooth, REGULAR, SMOOTH
+FN put_8tap_scaled, regular,        REGULAR, REGULAR
+MC_8TAP_SCALED put
+
+%if WIN64
+DECLARE_REG_TMP 5, 4
+%else
+DECLARE_REG_TMP 6, 7
+%endif
+BILIN_SCALED_FN prep
+FN prep_8tap_scaled, sharp,          SHARP,   SHARP
+FN prep_8tap_scaled, sharp_smooth,   SHARP,   SMOOTH
+FN prep_8tap_scaled, smooth_sharp,   SMOOTH,  SHARP
+FN prep_8tap_scaled, smooth,         SMOOTH,  SMOOTH
+FN prep_8tap_scaled, sharp_regular,  SHARP,   REGULAR
+FN prep_8tap_scaled, regular_sharp,  REGULAR, SHARP
+FN prep_8tap_scaled, smooth_regular, SMOOTH,  REGULAR
+FN prep_8tap_scaled, regular_smooth, REGULAR, SMOOTH
+FN prep_8tap_scaled, regular,        REGULAR, REGULAR
+MC_8TAP_SCALED prep
+%endif
 
 %if ARCH_X86_32
  %macro SAVE_ALPHA_BETA 0
@@ -5715,7 +7487,7 @@ cglobal resize, 0, 6, 8, 3 * 16, dst, dst_stride, src, src_stride, \
 %define m11 [base+pd_63]
 %define m10 [base+pb_8x0_8x8]
 %endif
-    pmaddwd              m4, m7, [base+resize_mul]  ; dx*[0,1,2,3]
+    pmaddwd              m4, m7, [base+rescale_mul] ; dx*[0,1,2,3]
     pslld                m7, 2                      ; dx*4
     pslld                m5, 14
     paddd                m6, m4                     ; mx+[0..3]*dx

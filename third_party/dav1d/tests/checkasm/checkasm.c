@@ -518,9 +518,7 @@ static void print_cpu_name(void) {
 }
 
 int main(int argc, char *argv[]) {
-    (void)func_new, (void)func_ref;
     state.seed = get_seed();
-    int ret = 0;
 
     while (argc > 1) {
         if (!strncmp(argv[1], "--help", 6)) {
@@ -567,6 +565,24 @@ int main(int argc, char *argv[]) {
     }
 
     dav1d_init_cpu();
+
+#ifdef readtime
+    if (state.bench_pattern) {
+        static int testing = 0;
+        checkasm_save_context();
+        if (!testing) {
+            checkasm_set_signal_handler_state(1);
+            testing = 1;
+            readtime();
+            checkasm_set_signal_handler_state(0);
+        } else {
+            fprintf(stderr, "checkasm: unable to access cycle counter\n");
+            return 1;
+        }
+    }
+#endif
+
+    int ret = 0;
 
     if (!state.function_listing) {
         fprintf(stderr, "checkasm: using random seed %u\n", state.seed);
@@ -672,7 +688,9 @@ int checkasm_bench_func(void) {
 /* Indicate that the current test has failed, return whether verbose printing
  * is requested. */
 int checkasm_fail_func(const char *const msg, ...) {
-    if (state.current_func_ver->cpu && state.current_func_ver->ok) {
+    if (state.current_func_ver && state.current_func_ver->cpu &&
+        state.current_func_ver->ok)
+    {
         va_list arg;
 
         print_cpu_name();

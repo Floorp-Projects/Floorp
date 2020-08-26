@@ -1,5 +1,5 @@
 ;*****************************************************************************
-;* x86inc.asm: x264asm abstraction layer
+;* x86inc.asm: x86 abstraction layer
 ;*****************************************************************************
 ;* Copyright (C) 2005-2020 x264 project
 ;*
@@ -21,23 +21,14 @@
 ;* OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ;*****************************************************************************
 
-; This is a header file for the x264ASM assembly language, which uses
+; This is a header file for the x86inc.asm assembly language, which uses
 ; NASM/YASM syntax combined with a large number of macros to provide easy
 ; abstraction between different calling conventions (x86_32, win64, linux64).
 ; It also has various other useful features to simplify writing the kind of
-; DSP functions that are most often used in x264.
-
-; Unlike the rest of x264, this file is available under an ISC license, as it
-; has significant usefulness outside of x264 and we want it to be available
-; to the largest audience possible.  Of course, if you modify it for your own
-; purposes to add a new feature, we strongly encourage contributing a patch
-; as this feature might be useful for others as well.  Send patches or ideas
-; to x264-devel@videolan.org .
-
-%include "config.asm"
+; DSP functions that are most often used.
 
 %ifndef private_prefix
-    %define private_prefix dav1d
+    %error private_prefix not defined
 %endif
 
 %ifndef public_prefix
@@ -118,7 +109,7 @@
 ; Macros to eliminate most code duplication between x86_32 and x86_64:
 ; Currently this works only for leaf functions which load all their arguments
 ; into registers at the start, and make no other use of the stack. Luckily that
-; covers most of x264's asm.
+; covers most use cases.
 
 ; PROLOGUE:
 ; %1 = number of arguments. loads them from stack if needed.
@@ -1522,18 +1513,18 @@ AVX_INSTR orps, sse, 1, 0, 1
 AVX_INSTR pabsb, ssse3
 AVX_INSTR pabsd, ssse3
 AVX_INSTR pabsw, ssse3
-AVX_INSTR packsswb, mmx, 0, 0, 0
 AVX_INSTR packssdw, mmx, 0, 0, 0
-AVX_INSTR packuswb, mmx, 0, 0, 0
+AVX_INSTR packsswb, mmx, 0, 0, 0
 AVX_INSTR packusdw, sse4, 0, 0, 0
+AVX_INSTR packuswb, mmx, 0, 0, 0
 AVX_INSTR paddb, mmx, 0, 0, 1
-AVX_INSTR paddw, mmx, 0, 0, 1
 AVX_INSTR paddd, mmx, 0, 0, 1
 AVX_INSTR paddq, sse2, 0, 0, 1
 AVX_INSTR paddsb, mmx, 0, 0, 1
 AVX_INSTR paddsw, mmx, 0, 0, 1
 AVX_INSTR paddusb, mmx, 0, 0, 1
 AVX_INSTR paddusw, mmx, 0, 0, 1
+AVX_INSTR paddw, mmx, 0, 0, 1
 AVX_INSTR palignr, ssse3, 0, 1, 0
 AVX_INSTR pand, mmx, 0, 0, 1
 AVX_INSTR pandn, mmx, 0, 0, 0
@@ -1541,71 +1532,71 @@ AVX_INSTR pavgb, mmx2, 0, 0, 1
 AVX_INSTR pavgw, mmx2, 0, 0, 1
 AVX_INSTR pblendvb, sse4 ; can't be emulated
 AVX_INSTR pblendw, sse4, 0, 1, 0
-AVX_INSTR pclmulqdq, fnord, 0, 1, 0
 AVX_INSTR pclmulhqhqdq, fnord, 0, 0, 0
 AVX_INSTR pclmulhqlqdq, fnord, 0, 0, 0
 AVX_INSTR pclmullqhqdq, fnord, 0, 0, 0
 AVX_INSTR pclmullqlqdq, fnord, 0, 0, 0
-AVX_INSTR pcmpestri, sse42
-AVX_INSTR pcmpestrm, sse42
-AVX_INSTR pcmpistri, sse42
-AVX_INSTR pcmpistrm, sse42
+AVX_INSTR pclmulqdq, fnord, 0, 1, 0
 AVX_INSTR pcmpeqb, mmx, 0, 0, 1
-AVX_INSTR pcmpeqw, mmx, 0, 0, 1
 AVX_INSTR pcmpeqd, mmx, 0, 0, 1
 AVX_INSTR pcmpeqq, sse4, 0, 0, 1
+AVX_INSTR pcmpeqw, mmx, 0, 0, 1
+AVX_INSTR pcmpestri, sse42
+AVX_INSTR pcmpestrm, sse42
 AVX_INSTR pcmpgtb, mmx, 0, 0, 0
-AVX_INSTR pcmpgtw, mmx, 0, 0, 0
 AVX_INSTR pcmpgtd, mmx, 0, 0, 0
 AVX_INSTR pcmpgtq, sse42, 0, 0, 0
+AVX_INSTR pcmpgtw, mmx, 0, 0, 0
+AVX_INSTR pcmpistri, sse42
+AVX_INSTR pcmpistrm, sse42
 AVX_INSTR pextrb, sse4
 AVX_INSTR pextrd, sse4
 AVX_INSTR pextrq, sse4
 AVX_INSTR pextrw, mmx2
-AVX_INSTR phaddw, ssse3, 0, 0, 0
 AVX_INSTR phaddd, ssse3, 0, 0, 0
 AVX_INSTR phaddsw, ssse3, 0, 0, 0
+AVX_INSTR phaddw, ssse3, 0, 0, 0
 AVX_INSTR phminposuw, sse4
-AVX_INSTR phsubw, ssse3, 0, 0, 0
 AVX_INSTR phsubd, ssse3, 0, 0, 0
 AVX_INSTR phsubsw, ssse3, 0, 0, 0
+AVX_INSTR phsubw, ssse3, 0, 0, 0
 AVX_INSTR pinsrb, sse4, 0, 1, 0
 AVX_INSTR pinsrd, sse4, 0, 1, 0
 AVX_INSTR pinsrq, sse4, 0, 1, 0
 AVX_INSTR pinsrw, mmx2, 0, 1, 0
-AVX_INSTR pmaddwd, mmx, 0, 0, 1
 AVX_INSTR pmaddubsw, ssse3, 0, 0, 0
+AVX_INSTR pmaddwd, mmx, 0, 0, 1
 AVX_INSTR pmaxsb, sse4, 0, 0, 1
-AVX_INSTR pmaxsw, mmx2, 0, 0, 1
 AVX_INSTR pmaxsd, sse4, 0, 0, 1
+AVX_INSTR pmaxsw, mmx2, 0, 0, 1
 AVX_INSTR pmaxub, mmx2, 0, 0, 1
-AVX_INSTR pmaxuw, sse4, 0, 0, 1
 AVX_INSTR pmaxud, sse4, 0, 0, 1
+AVX_INSTR pmaxuw, sse4, 0, 0, 1
 AVX_INSTR pminsb, sse4, 0, 0, 1
-AVX_INSTR pminsw, mmx2, 0, 0, 1
 AVX_INSTR pminsd, sse4, 0, 0, 1
+AVX_INSTR pminsw, mmx2, 0, 0, 1
 AVX_INSTR pminub, mmx2, 0, 0, 1
-AVX_INSTR pminuw, sse4, 0, 0, 1
 AVX_INSTR pminud, sse4, 0, 0, 1
+AVX_INSTR pminuw, sse4, 0, 0, 1
 AVX_INSTR pmovmskb, mmx2
-AVX_INSTR pmovsxbw, sse4
 AVX_INSTR pmovsxbd, sse4
 AVX_INSTR pmovsxbq, sse4
+AVX_INSTR pmovsxbw, sse4
+AVX_INSTR pmovsxdq, sse4
 AVX_INSTR pmovsxwd, sse4
 AVX_INSTR pmovsxwq, sse4
-AVX_INSTR pmovsxdq, sse4
-AVX_INSTR pmovzxbw, sse4
 AVX_INSTR pmovzxbd, sse4
 AVX_INSTR pmovzxbq, sse4
+AVX_INSTR pmovzxbw, sse4
+AVX_INSTR pmovzxdq, sse4
 AVX_INSTR pmovzxwd, sse4
 AVX_INSTR pmovzxwq, sse4
-AVX_INSTR pmovzxdq, sse4
 AVX_INSTR pmuldq, sse4, 0, 0, 1
 AVX_INSTR pmulhrsw, ssse3, 0, 0, 1
 AVX_INSTR pmulhuw, mmx2, 0, 0, 1
 AVX_INSTR pmulhw, mmx, 0, 0, 1
-AVX_INSTR pmullw, mmx, 0, 0, 1
 AVX_INSTR pmulld, sse4, 0, 0, 1
+AVX_INSTR pmullw, mmx, 0, 0, 1
 AVX_INSTR pmuludq, sse2, 0, 0, 1
 AVX_INSTR por, mmx, 0, 0, 1
 AVX_INSTR psadbw, mmx2, 0, 0, 1
@@ -1614,35 +1605,35 @@ AVX_INSTR pshufd, sse2
 AVX_INSTR pshufhw, sse2
 AVX_INSTR pshuflw, sse2
 AVX_INSTR psignb, ssse3, 0, 0, 0
-AVX_INSTR psignw, ssse3, 0, 0, 0
 AVX_INSTR psignd, ssse3, 0, 0, 0
-AVX_INSTR psllw, mmx, 0, 0, 0
+AVX_INSTR psignw, ssse3, 0, 0, 0
 AVX_INSTR pslld, mmx, 0, 0, 0
-AVX_INSTR psllq, mmx, 0, 0, 0
 AVX_INSTR pslldq, sse2, 0, 0, 0
-AVX_INSTR psraw, mmx, 0, 0, 0
+AVX_INSTR psllq, mmx, 0, 0, 0
+AVX_INSTR psllw, mmx, 0, 0, 0
 AVX_INSTR psrad, mmx, 0, 0, 0
-AVX_INSTR psrlw, mmx, 0, 0, 0
+AVX_INSTR psraw, mmx, 0, 0, 0
 AVX_INSTR psrld, mmx, 0, 0, 0
-AVX_INSTR psrlq, mmx, 0, 0, 0
 AVX_INSTR psrldq, sse2, 0, 0, 0
+AVX_INSTR psrlq, mmx, 0, 0, 0
+AVX_INSTR psrlw, mmx, 0, 0, 0
 AVX_INSTR psubb, mmx, 0, 0, 0
-AVX_INSTR psubw, mmx, 0, 0, 0
 AVX_INSTR psubd, mmx, 0, 0, 0
 AVX_INSTR psubq, sse2, 0, 0, 0
 AVX_INSTR psubsb, mmx, 0, 0, 0
 AVX_INSTR psubsw, mmx, 0, 0, 0
 AVX_INSTR psubusb, mmx, 0, 0, 0
 AVX_INSTR psubusw, mmx, 0, 0, 0
+AVX_INSTR psubw, mmx, 0, 0, 0
 AVX_INSTR ptest, sse4
 AVX_INSTR punpckhbw, mmx, 0, 0, 0
-AVX_INSTR punpckhwd, mmx, 0, 0, 0
 AVX_INSTR punpckhdq, mmx, 0, 0, 0
 AVX_INSTR punpckhqdq, sse2, 0, 0, 0
+AVX_INSTR punpckhwd, mmx, 0, 0, 0
 AVX_INSTR punpcklbw, mmx, 0, 0, 0
-AVX_INSTR punpcklwd, mmx, 0, 0, 0
 AVX_INSTR punpckldq, mmx, 0, 0, 0
 AVX_INSTR punpcklqdq, sse2, 0, 0, 0
+AVX_INSTR punpcklwd, mmx, 0, 0, 0
 AVX_INSTR pxor, mmx, 0, 0, 1
 AVX_INSTR rcpps, sse, 1
 AVX_INSTR rcpss, sse, 1, 0, 0
@@ -1674,8 +1665,8 @@ AVX_INSTR xorps, sse, 1, 0, 1
 
 ; 3DNow instructions, for sharing code between AVX, SSE and 3DN
 AVX_INSTR pfadd, 3dnow, 1, 0, 1
-AVX_INSTR pfsub, 3dnow, 1, 0, 0
 AVX_INSTR pfmul, 3dnow, 1, 0, 1
+AVX_INSTR pfsub, 3dnow, 1, 0, 0
 
 ;%1 == instruction
 ;%2 == minimal instruction set
@@ -1740,9 +1731,9 @@ GPR_INSTR shrx, bmi2
     %endmacro
 %endmacro
 
-FMA_INSTR  pmacsww,  pmullw, paddw
-FMA_INSTR  pmacsdd,  pmulld, paddd ; sse4 emulation
-FMA_INSTR pmacsdql,  pmuldq, paddq ; sse4 emulation
+FMA_INSTR pmacsdd,  pmulld,  paddd ; sse4 emulation
+FMA_INSTR pmacsdql, pmuldq,  paddq ; sse4 emulation
+FMA_INSTR pmacsww,  pmullw,  paddw
 FMA_INSTR pmadcswd, pmaddwd, paddd
 
 ; Macros for consolidating FMA3 and FMA4 using 4-operand (dst, src1, src2, src3) syntax.
