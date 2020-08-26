@@ -1757,6 +1757,8 @@ both:
     async SetActiveBrowsingContext(MaybeDiscardedBrowsingContext aContext);
     async UnsetActiveBrowsingContext(MaybeDiscardedBrowsingContext aContext);
     async SetFocusedElement(MaybeDiscardedBrowsingContext aContext, bool aNeedsFocus);
+    async FinalizeFocusOuter(MaybeDiscardedBrowsingContext aContext, bool aCanFocus,
+                             CallerType aCallerType);
 parent:
     async BlurToParent(MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
                       MaybeDiscardedBrowsingContext aBrowsingContextToClear,
