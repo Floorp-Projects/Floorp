@@ -16,7 +16,7 @@ partial interface HTMLVideoElement {
 partial interface Document {
   readonly attribute boolean pictureInPictureEnabled;
 
-  [NewObject] Promise<void> exitPictureInPicture();
+  [NewObject] Promise<undefined> exitPictureInPicture();
 };
 
 partial interface mixin DocumentOrShadowRoot {
