@@ -23,3 +23,21 @@
 /automation/ @mozilla-mobile/releng @mozilla-mobile/fenix
 /taskcluster/ /@mozilla-mobile/releng @mozilla-mobile/fenix
 /.github/ @mozilla-mobile/releng @mozilla-mobile/fenix
+
+# --- PERFORMANCE START --- #
+# The performance team would like to monitor some files to understand
+# when performance-impacting changes occur. Our intent is not to block
+# these changes (for now) but to be aware of them. Please let us know
+# if the CODEOWNERS system makes this impractical. We're available at
+# #perf-android-frontend on Matrix.
+/app/src/*/java/org/mozilla/fenix/perf/** @mozilla-mobile/Performance
+*.pro @mozilla-mobile/Performance
+*proguard* @mozilla-mobile/Performance
+
+# Possible startup regressions
+*Application.kt @mozilla-mobile/Performance
+
+# We want to be aware of new features behind flags as well as features
+# about to be enabled.
+FeatureFlags.kt @mozilla-mobile/Performance
+# --- PERFORMANCE END --- #
