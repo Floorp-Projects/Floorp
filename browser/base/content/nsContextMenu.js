@@ -926,7 +926,9 @@ class nsContextMenu {
       if (
         !loginFillInfo ||
         !loginFillInfo.passwordField.found ||
-        documentURI.schemeIs("about")
+        documentURI.schemeIs("about") ||
+        this.browser.contentPrincipal.spec ==
+          "resource://pdf.js/web/viewer.html"
       ) {
         // Both generation and fill will default to disabled.
         return;
