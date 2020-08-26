@@ -419,44 +419,64 @@ nsresult HTMLEditor::RefreshInlineTableEditingUIInternal() {
     return rv;
   }
 
-  RefPtr<Element> addColumunBeforeButton = mAddColumnBeforeButton.get();
-  SetAnonymousElementPosition(centerOfCellX - 10, cellY - 7,
-                              addColumunBeforeButton);
-  if (NS_WARN_IF(addColumunBeforeButton != mAddColumnBeforeButton.get())) {
-    return NS_ERROR_FAILURE;
-  }
+  auto setInlineTableEditButtonPosition =
+      [this](ManualNACPtr& aButtonElement, int32_t aNewX, int32_t aNewY)
+          MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> nsresult {
+    nsCOMPtr<nsStyledElement> buttonStyledElement =
+        do_QueryInterface(aButtonElement.get());
+    if (!buttonStyledElement) {
+      return NS_OK;
+    }
+    nsresult rv = SetAnonymousElementPositionWithTransaction(
+        *buttonStyledElement, aNewX, aNewY);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::SetAnonymousElementPositionWithTransaction() failed");
+      return rv;
+    }
+    return NS_WARN_IF(buttonStyledElement != aButtonElement.get())
+               ? NS_ERROR_FAILURE
+               : NS_OK;
+  };
 
-  RefPtr<Element> removeColumnButton = mRemoveColumnButton.get();
-  SetAnonymousElementPosition(centerOfCellX - 4, cellY - 7, removeColumnButton);
-  if (NS_WARN_IF(removeColumnButton != mRemoveColumnButton.get())) {
-    return NS_ERROR_FAILURE;
+  // clang-format off
+  rv = setInlineTableEditButtonPosition(mAddColumnBeforeButton,
+                                        centerOfCellX - 10, cellY - 7);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to move button for add-column-before");
+    return rv;
   }
-
-  RefPtr<Element> addColumnAfterButton = mAddColumnAfterButton.get();
-  SetAnonymousElementPosition(centerOfCellX + 6, cellY - 7,
-                              addColumnAfterButton);
-  if (NS_WARN_IF(addColumnAfterButton != mAddColumnAfterButton.get())) {
-    return NS_ERROR_FAILURE;
+  rv = setInlineTableEditButtonPosition(mRemoveColumnButton,
+                                        centerOfCellX - 4, cellY - 7);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to move button for remove-column");
+    return rv;
   }
-
-  RefPtr<Element> addRowBeforeButton = mAddRowBeforeButton.get();
-  SetAnonymousElementPosition(cellX - 7, centerOfCellY - 10,
-                              addRowBeforeButton);
-  if (NS_WARN_IF(addRowBeforeButton != mAddRowBeforeButton.get())) {
-    return NS_ERROR_FAILURE;
+  rv = setInlineTableEditButtonPosition(mAddColumnAfterButton,
+                                        centerOfCellX + 6, cellY - 7);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to move button for add-column-after");
+    return rv;
   }
-
-  RefPtr<Element> removeRowButton = mRemoveRowButton.get();
-  SetAnonymousElementPosition(cellX - 7, centerOfCellY - 4, removeRowButton);
-  if (NS_WARN_IF(removeRowButton != mRemoveRowButton.get())) {
-    return NS_ERROR_FAILURE;
+  rv = setInlineTableEditButtonPosition(mAddRowBeforeButton,
+                                        cellX - 7, centerOfCellY - 10);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to move button for add-row-before");
+    return rv;
   }
-
-  RefPtr<Element> addRowAfterButton = mAddRowAfterButton.get();
-  SetAnonymousElementPosition(cellX - 7, centerOfCellY + 6, addRowAfterButton);
-  if (NS_WARN_IF(addRowAfterButton != mAddRowAfterButton.get())) {
-    return NS_ERROR_FAILURE;
+  rv = setInlineTableEditButtonPosition(mRemoveRowButton,
+                                        cellX - 7, centerOfCellY - 4);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to move button for remove-row");
+    return rv;
   }
+  rv = setInlineTableEditButtonPosition(mAddRowAfterButton,
+                                        cellX - 7, centerOfCellY + 6);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to move button for add-row-after");
+    return rv;
+  }
+  // clang-format on
 
   return NS_OK;
 }

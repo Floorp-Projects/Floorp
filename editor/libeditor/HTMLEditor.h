@@ -38,6 +38,7 @@ class nsITransferable;
 class nsIClipboard;
 class nsRange;
 class nsStaticAtom;
+class nsStyledElement;
 class nsTableWrapperFrame;
 
 namespace mozilla {
@@ -833,13 +834,13 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * adds aChange to the z-index of an arbitrary element.
-   * @param aElement [IN] the element
-   * @param aChange  [IN] relative change to apply to current z-index of
-   *                      the element
-   * @param aReturn  [OUT] the new z-index of the element
+   * @param aElement    [IN] the element
+   * @param aChange     [IN] relative change to apply to current z-index of
+   *                    the element
+   * @return            The new z-index of the element
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RelativeChangeElementZIndex(
-      Element& aElement, int32_t aChange, int32_t* aReturn);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<int32_t, nsresult>
+  AddZIndexWithTransaction(nsStyledElement& aStyledElement, int32_t aChange);
 
   /**
    * Join together any adjacent editable text nodes in the range.
@@ -4342,12 +4343,12 @@ class HTMLEditor final : public TextEditor,
   /**
    * sets the position of an element; warning it does NOT check if the
    * element is already positioned or not and that's on purpose.
-   * @param aElement [IN] the element
-   * @param aX       [IN] the x position in pixels.
-   * @param aY       [IN] the y position in pixels.
+   * @param aStyledElement      [IN] the element
+   * @param aX                  [IN] the x position in pixels.
+   * @param aY                  [IN] the y position in pixels.
    */
-  MOZ_CAN_RUN_SCRIPT void SetTopAndLeft(Element& aElement, int32_t aX,
-                                        int32_t aY);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetTopAndLeftWithTransaction(
+      nsStyledElement& aStyledElement, int32_t aX, int32_t aY);
 
   /**
    * Reset a selected cell or collapsed selection (the caret) after table
@@ -4427,8 +4428,9 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult RefreshResizersInternal();
 
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
-  MOZ_CAN_RUN_SCRIPT void SetAnonymousElementPosition(int32_t aX, int32_t aY,
-                                                      Element* aResizer);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetAnonymousElementPositionWithTransaction(nsStyledElement& aStyledElement,
+                                             int32_t aX, int32_t aY);
 
   ManualNACPtr CreateShadow(nsIContent& aParentContent,
                             Element& aOriginalObject);
@@ -4457,13 +4459,14 @@ class HTMLEditor final : public TextEditor,
   };
   int32_t GetNewResizingIncrement(int32_t aX, int32_t aY, ResizeAt aResizeAt);
 
-  MOZ_CAN_RUN_SCRIPT nsresult StartResizing(Element* aHandle);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult StartResizing(Element& aHandle);
   int32_t GetNewResizingX(int32_t aX, int32_t aY);
   int32_t GetNewResizingY(int32_t aX, int32_t aY);
   int32_t GetNewResizingWidth(int32_t aX, int32_t aY);
   int32_t GetNewResizingHeight(int32_t aX, int32_t aY);
   void HideShadowAndInfo();
-  MOZ_CAN_RUN_SCRIPT void SetFinalSize(int32_t aX, int32_t aY);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetFinalSizeWithTransaction(int32_t aX, int32_t aY);
   void SetResizeIncrements(int32_t aX, int32_t aY, int32_t aW, int32_t aH,
                            bool aPreserveRatio);
 
@@ -4484,7 +4487,8 @@ class HTMLEditor final : public TextEditor,
    * @param aElement [IN] the element
    * @param aZorder  [IN] the z-index
    */
-  MOZ_CAN_RUN_SCRIPT void SetZIndex(Element& aElement, int32_t aZorder);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetZIndexWithTransaction(nsStyledElement& aElement, int32_t aZIndex);
 
   /**
    * shows a grabber attached to an arbitrary element. The grabber is an image
