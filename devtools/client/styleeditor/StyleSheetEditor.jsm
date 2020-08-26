@@ -82,8 +82,7 @@ function StyleSheetEditor(
 ) {
   EventEmitter.decorate(this);
 
-  this.resourceId = resource.resourceId;
-  this.styleSheet = resource.styleSheet;
+  this._resource = resource;
   this._inputElement = null;
   this.sourceEditor = null;
   this._window = win;
@@ -115,7 +114,7 @@ function StyleSheetEditor(
     this._styleSheetFilePath = this.styleSheet.href;
   }
 
-  this._onPropertyChange = this._onPropertyChange.bind(this);
+  this.onPropertyChange = this.onPropertyChange.bind(this);
   this._onError = this._onError.bind(this);
   this._onMediaRulesChanged = this._onMediaRulesChanged.bind(this);
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
@@ -132,7 +131,6 @@ function StyleSheetEditor(
   );
 
   this._focusOnSourceEditorReady = false;
-  this.cssSheet.on("property-change", this._onPropertyChange);
   this.styleSheet.on("error", this._onError);
   this.mediaRules = [];
   if (this.cssSheet.getMediaRules) {
@@ -146,6 +144,14 @@ function StyleSheetEditor(
 }
 
 StyleSheetEditor.prototype = {
+  get resourceId() {
+    return this._resource.resourceId;
+  },
+
+  get styleSheet() {
+    return this._resource;
+  },
+
   /**
    * Whether there are unsaved changes in the editor
    */
@@ -377,7 +383,7 @@ StyleSheetEditor.prototype = {
    * @param  {string} property
    *         Property that has changed on sheet
    */
-  _onPropertyChange: function(property, value) {
+  onPropertyChange: function(property, value) {
     this.emit("property-change", property, value);
   },
 
@@ -476,7 +482,7 @@ StyleSheetEditor.prototype = {
     };
     const sourceEditor = (this._sourceEditor = new Editor(config));
 
-    sourceEditor.on("dirty-change", this._onPropertyChange);
+    sourceEditor.on("dirty-change", this.onPropertyChange);
 
     return sourceEditor.appendTo(inputElement).then(() => {
       sourceEditor.on("saveRequested", this.saveToFile);
@@ -845,7 +851,7 @@ StyleSheetEditor.prototype = {
    */
   destroy: function() {
     if (this._sourceEditor) {
-      this._sourceEditor.off("dirty-change", this._onPropertyChange);
+      this._sourceEditor.off("dirty-change", this.onPropertyChange);
       this._sourceEditor.off("saveRequested", this.saveToFile);
       this._sourceEditor.off("change", this.updateStyleSheet);
       if (
@@ -861,7 +867,6 @@ StyleSheetEditor.prototype = {
       }
       this._sourceEditor.destroy();
     }
-    this.cssSheet.off("property-change", this._onPropertyChange);
     this.cssSheet.off("media-rules-changed", this._onMediaRulesChanged);
     this.styleSheet.off("error", this._onError);
     this._isDestroyed = true;

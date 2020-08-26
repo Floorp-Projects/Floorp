@@ -82,45 +82,37 @@ class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
   }
 
   _onPropertyChange(property, value) {
-    this._form[property] = value;
+    this[property] = value;
   }
 
   form(form) {
     this.actorID = form.actor;
-    this._form = form;
+    this.href = form.href;
+    this.nodeHref = form.nodeHref;
+    this.disabled = form.disabled;
+    this.title = form.title;
+    this.system = form.system;
+    this.styleSheetIndex = form.styleSheetIndex;
+    this.ruleCount = form.ruleCount;
+    this.sourceMapURL = form.sourceMapURL;
+    this._sourceMapBaseURL = form.sourceMapBaseURL;
   }
 
-  get href() {
-    return this._form.href;
-  }
-  get nodeHref() {
-    return this._form.nodeHref;
-  }
-  get disabled() {
-    return !!this._form.disabled;
-  }
-  get title() {
-    return this._form.title;
-  }
   get isSystem() {
-    return this._form.system;
+    return this.system;
   }
-  get styleSheetIndex() {
-    return this._form.styleSheetIndex;
-  }
-  get ruleCount() {
-    return this._form.ruleCount;
-  }
+
   get sourceMapBaseURL() {
     // Handle backward-compat for servers that don't return sourceMapBaseURL.
-    if (this._form.sourceMapBaseURL === undefined) {
+    if (this._sourceMapBaseURL === undefined) {
       return this.href || this.nodeHref;
     }
 
-    return this._form.sourceMapBaseURL;
+    return this._sourceMapBaseURL;
   }
-  get sourceMapURL() {
-    return this._form.sourceMapURL;
+
+  set sourceMapBaseURL(sourceMapBaseURL) {
+    this._sourceMapBaseURL = sourceMapBaseURL;
   }
 
   /**

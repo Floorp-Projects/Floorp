@@ -26,11 +26,11 @@ add_task(async function() {
 
 function onPropertyChange(editor) {
   return new Promise(resolve => {
-    editor.styleSheet.on("property-change", function onProp(property) {
+    editor.on("property-change", function onProp(property) {
       // wait for text to be entered fully
       const text = editor.sourceEditor.getText();
       if (property == "ruleCount" && text == TESTCASE_CSS_SOURCE + "}") {
-        editor.styleSheet.off("property-change", onProp);
+        editor.off("property-change", onProp);
         resolve();
       }
     });

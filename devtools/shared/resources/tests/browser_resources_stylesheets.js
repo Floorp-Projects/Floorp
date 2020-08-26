@@ -125,7 +125,7 @@ add_task(async function() {
 
   info("Check whether the stylesheet actor is updated correctly or not");
   const firstResource = availableResources[0];
-  await firstResource.styleSheet.update("", false);
+  await firstResource.update("", false);
   const expectedResource = findMatchingExpectedResource(firstResource);
   await assertResource(
     availableResources[0],
@@ -139,22 +139,19 @@ add_task(async function() {
 function findMatchingExpectedResource(resource) {
   return EXISTING_RESOURCES.find(
     expected =>
-      resource.styleSheet.href === expected.href &&
-      resource.styleSheet.nodeHref === expected.nodeHref
+      resource.href === expected.href && resource.nodeHref === expected.nodeHref
   );
 }
 
 async function assertResource(resource, expected) {
-  const { resourceType, styleSheet } = resource;
   is(
-    resourceType,
+    resource.resourceType,
     ResourceWatcher.TYPES.STYLESHEET,
     "Resource type is correct"
   );
-  ok(styleSheet, "Stylesheet object is in the resource");
-  const styleText = (await styleSheet.getText()).str.trim();
+  const styleText = (await resource.getText()).str.trim();
   is(styleText, expected.styleText, "Style text is correct");
-  is(styleSheet.href, expected.href, "href is correct");
-  is(styleSheet.nodeHref, expected.nodeHref, "nodeHref is correct");
-  is(styleSheet.isNew, expected.isNew, "Flag isNew is correct");
+  is(resource.href, expected.href, "href is correct");
+  is(resource.nodeHref, expected.nodeHref, "nodeHref is correct");
+  is(resource.isNew, expected.isNew, "Flag isNew is correct");
 }
