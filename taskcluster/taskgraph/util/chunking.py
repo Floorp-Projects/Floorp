@@ -22,7 +22,6 @@ from moztest.resolve import (
 )
 
 from taskgraph import GECKO
-from taskgraph.util.backstop import is_backstop
 from taskgraph.util.bugbug import BugbugTimeoutException, CT_LOW, push_schedules
 
 logger = logging.getLogger(__name__)
@@ -221,7 +220,7 @@ class BugbugLoader(DefaultLoader):
         manifests = super(BugbugLoader, self).get_manifests(suite, mozinfo)
 
         # Don't prune any manifests if we're on a backstop push or there was a timeout.
-        if is_backstop(self.params) or self.timedout:
+        if self.params["backstop"] or self.timedout:
             return manifests
 
         try:

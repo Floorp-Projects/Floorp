@@ -17,6 +17,7 @@ class TestParameters(unittest.TestCase):
 
     vals = {
         'app_version': 'app_version',
+        'backstop': False,
         'base_repository': 'base_repository',
         'build_date': 0,
         'build_number': 0,
