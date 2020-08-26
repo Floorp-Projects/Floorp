@@ -41,23 +41,27 @@ void SpawnPrintBackgroundTask(
   // See
   // https://stackoverflow.com/questions/47496358/c-lambdas-how-to-capture-variadic-parameter-pack-from-the-upper-scope
   // about the tuple shenanigans. It could be improved with C++20
-  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-      "SpawnPrintBackgroundTask",
-      [holder = std::move(holder), promiseHolder = std::move(promiseHolder),
-       aBackgroundTask, aArgs = std::make_tuple(std::forward<Args>(aArgs)...)] {
-        Result result = std::apply(
-            [&](auto&&... args) {
-              return (holder->get()->*aBackgroundTask)(args...);
-            },
-            std::move(aArgs));
-        NS_DispatchToMainThread(NS_NewRunnableFunction(
-            "SpawnPrintBackgroundTaskResolution",
-            [holder = std::move(holder),
-             promiseHolder = std::move(promiseHolder),
-             result = std::move(result)] {
-              ResolveOrReject(*promiseHolder->get(), *holder->get(), result);
-            }));
-      }));
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "SpawnPrintBackgroundTask",
+          [holder = std::move(holder), promiseHolder = std::move(promiseHolder),
+           aBackgroundTask,
+           aArgs = std::make_tuple(std::forward<Args>(aArgs)...)] {
+            Result result = std::apply(
+                [&](auto&&... args) {
+                  return (holder->get()->*aBackgroundTask)(args...);
+                },
+                std::move(aArgs));
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "SpawnPrintBackgroundTaskResolution",
+                [holder = std::move(holder),
+                 promiseHolder = std::move(promiseHolder),
+                 result = std::move(result)] {
+                  ResolveOrReject(*promiseHolder->get(), *holder->get(),
+                                  result);
+                }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
 }
 
 // Gets a fresh promise into aResultPromise, that resolves whenever the print
