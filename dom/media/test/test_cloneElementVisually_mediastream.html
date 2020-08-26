@@ -45,19 +45,14 @@ add_task(async () => {
   await playingPromise
 
   await withNewClone(originalVideo, async clone => {
-    SpecialPowers.wrap(streamTarget).cloneElementVisually(clone);
+    await SpecialPowers.wrap(streamTarget).cloneElementVisually(clone);
 
-    // Waiting for the original and stream target videos to send
-    // timeupdate events seems to be sufficient to ensure that the
-    // stream target video is actually showing some frames.
-    await Promise.all([
-      waitForEventOnce(originalVideo, "timeupdate"),
-      waitForEventOnce(streamTarget, "timeupdate"),
-    ]);
+    originalVideo.loop = false;
+    originalVideo.currentTime = originalVideo.duration - 0.1;
+    await waitForEventOnce(streamTarget, "ended");
 
-    originalVideo.pause();
-    await waitForEventOnce(originalVideo, "pause");
-
+    ok(await assertVideosMatch(originalVideo, streamTarget),
+       "Should match Original video");
     ok(await assertVideosMatch(streamTarget, clone),
        "Should match MediaStream");
   });
