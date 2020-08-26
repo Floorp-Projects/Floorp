@@ -62,8 +62,7 @@ def run_telemetry(tests, binary=None, topsrcdir=None, **kwargs):
     failed = MarionetteHarness(TelemetryTestRunner, args=vars(args)).run()
     if failed > 0:
         return 1
-    else:
-        return 0
+    return 0
 
 
 @CommandProvider
