@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppShortcutManager
+import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.support.base.crash.CrashReporting
 
 class TestCore(context: Context, crashReporter: CrashReporting) : Core(context, crashReporter) {
@@ -26,4 +27,5 @@ class TestCore(context: Context, crashReporter: CrashReporting) : Core(context, 
     override val client = mockk<Client>()
     override val webAppShortcutManager = mockk<WebAppShortcutManager>()
     override val thumbnailStorage = mockk<ThumbnailStorage>()
+    override val topSiteStorage = mockk<DefaultTopSitesStorage>()
 }

@@ -32,14 +32,17 @@ class TopSiteViewHolderTest {
 
     @Test
     fun `binds list of top sites`() {
-        TopSiteViewHolder(view, interactor).bind(listOf(
-            object : TopSite {
-                override val id = 1L
-                override val isDefault = true
-                override val title = "Pocket"
-                override val url = "https://getpocket.com"
-            }
-        ))
+        TopSiteViewHolder(view, interactor).bind(
+            listOf(
+                TopSite(
+                    id = 1L,
+                    title = "Pocket",
+                    url = "https://getpocket.com",
+                    createdAt = 0,
+                    type = TopSite.Type.DEFAULT
+                )
+            )
+        )
 
         assertEquals(1, view.top_sites_list.adapter!!.itemCount)
     }
