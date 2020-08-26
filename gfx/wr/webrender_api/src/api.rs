@@ -307,14 +307,6 @@ impl Transaction {
         );
     }
 
-    /// Scrolls the scrolling layer under the `cursor`
-    ///
-    /// WebRender looks for the layer closest to the user
-    /// which has `ScrollPolicy::Scrollable` set.
-    pub fn scroll(&mut self, scroll_location: ScrollLocation, cursor: WorldPoint) {
-        self.frame_ops.push(FrameMsg::Scroll(scroll_location, cursor));
-    }
-
     /// Scrolls the node identified by the given external scroll id to the
     /// given scroll position, relative to the pre-scrolled offset for the
     /// scrolling layer. That is, providing an origin of (0,0) will reset
@@ -751,17 +743,6 @@ pub struct HitTestResult {
     pub items: Vec<HitTestItem>,
 }
 
-bitflags! {
-    #[derive(Deserialize, MallocSizeOf, Serialize)]
-    ///
-    pub struct HitTestFlags: u8 {
-        ///
-        const FIND_ALL = 0b00000001;
-        ///
-        const POINT_RELATIVE_TO_PIPELINE_VIEWPORT = 0b00000010;
-    }
-}
-
 /// Creates a font instance resource.
 ///
 /// Must be matched with a corresponding `DeleteFontInstance` at some point
@@ -826,13 +807,11 @@ pub enum FrameMsg {
     ///
     UpdateEpoch(PipelineId, Epoch),
     ///
-    HitTest(Option<PipelineId>, WorldPoint, HitTestFlags, Sender<HitTestResult>),
+    HitTest(Option<PipelineId>, WorldPoint, Sender<HitTestResult>),
     ///
     RequestHitTester(Sender<Arc<dyn ApiHitTester>>),
     ///
     SetPan(DeviceIntPoint),
-    ///
-    Scroll(ScrollLocation, WorldPoint),
     ///
     ScrollNodeWithId(LayoutPoint, di::ExternalScrollId, ScrollClamping),
     ///
@@ -868,7 +847,6 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::HitTest(..) => "FrameMsg::HitTest",
             FrameMsg::RequestHitTester(..) => "FrameMsg::RequestHitTester",
             FrameMsg::SetPan(..) => "FrameMsg::SetPan",
-            FrameMsg::Scroll(..) => "FrameMsg::Scroll",
             FrameMsg::ScrollNodeWithId(..) => "FrameMsg::ScrollNodeWithId",
             FrameMsg::GetScrollNodeState(..) => "FrameMsg::GetScrollNodeState",
             FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",
@@ -1673,21 +1651,19 @@ impl RenderApi {
 
     /// Does a hit test on display items in the specified document, at the given
     /// point. If a pipeline_id is specified, it is used to further restrict the
-    /// hit results so that only items inside that pipeline are matched. If the
-    /// HitTestFlags argument contains the FIND_ALL flag, then the vector of hit
-    /// results will contain all display items that match, ordered from front
-    /// to back.
+    /// hit results so that only items inside that pipeline are matched. The vector
+    /// of hit results will contain all display items that match, ordered from
+    /// front to back.
     pub fn hit_test(&self,
-                    document_id: DocumentId,
-                    pipeline_id: Option<PipelineId>,
-                    point: WorldPoint,
-                    flags: HitTestFlags)
-                    -> HitTestResult {
+        document_id: DocumentId,
+        pipeline_id: Option<PipelineId>,
+        point: WorldPoint,
+    ) -> HitTestResult {
         let (tx, rx) = single_msg_channel();
 
         self.send_frame_msg(
             document_id,
-            FrameMsg::HitTest(pipeline_id, point, flags, tx)
+            FrameMsg::HitTest(pipeline_id, point, tx)
         );
         rx.recv().unwrap()
     }
@@ -2059,11 +2035,10 @@ impl NotificationRequest {
 pub trait ApiHitTester: Send + Sync {
     /// Does a hit test on display items in the specified document, at the given
     /// point. If a pipeline_id is specified, it is used to further restrict the
-    /// hit results so that only items inside that pipeline are matched. If the
-    /// HitTestFlags argument contains the FIND_ALL flag, then the vector of hit
-    /// results will contain all display items that match, ordered from front
-    /// to back.
-    fn hit_test(&self, pipeline_id: Option<PipelineId>, point: WorldPoint, flags: HitTestFlags) -> HitTestResult;
+    /// hit results so that only items inside that pipeline are matched. The vector
+    /// of hit results will contain all display items that match, ordered from
+    /// front to back.
+    fn hit_test(&self, pipeline_id: Option<PipelineId>, point: WorldPoint) -> HitTestResult;
 }
 
 impl Drop for NotificationRequest {
