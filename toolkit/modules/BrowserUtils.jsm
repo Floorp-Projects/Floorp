@@ -87,7 +87,7 @@ var BrowserUtils = {
     }
     let contentPrincipal = browser.contentPrincipal;
     // Not all principals have URIs...
-    if (contentPrincipal.isContentPrincipal) {
+    if (contentPrincipal.URI) {
       // There are two special-cases involving about:blank. One is where
       // the user has manually loaded it and it got created with a null
       // principal. The other involves the case where we load
@@ -109,7 +109,7 @@ var BrowserUtils = {
       ) {
         return true;
       }
-      return contentPrincipal.equalsURI(uri);
+      return contentPrincipal.URI.equals(uri);
     }
     // ... so for those that don't have them, enforce that the page has the
     // system principal (this matches e.g. on about:newtab).
