@@ -118,33 +118,51 @@ EventLoop.prototype = {
    * Retrieve the list of all DOM Windows debugged by the current thread actor.
    */
   getAllWindowDebuggees() {
-    return (
-      this._thread.dbg
-        .getDebuggees()
-        .filter(debuggee => {
-          // Select only debuggee that relates to windows
-          // e.g. ignore sandboxes, jsm and such
-          return debuggee.class == "Window";
-        })
-        .map(debuggee => {
-          // Retrieve the JS reference for these windows
-          return debuggee.unsafeDereference();
-        })
-        // Ignore iframes as they will be paused automatically when pausing their
-        // owner top level document
-        .filter(window => {
-          try {
-            return window.top === window;
-          } catch (e) {
-            // Warn if this is throwing for an unknown reason, but suppress the
-            // exception regardless so that we can enter the nested event loop.
-            if (!Cu.isDeadWrapper(window) && !/not initialized/.test(e)) {
-              console.warn(`Exception in getAllWindowDebuggees: ${e}`);
-            }
-            return false;
+    return this._thread.dbg
+      .getDebuggees()
+      .filter(debuggee => {
+        // Select only debuggee that relates to windows
+        // e.g. ignore sandboxes, jsm and such
+        return debuggee.class == "Window";
+      })
+      .map(debuggee => {
+        // Retrieve the JS reference for these windows
+        return debuggee.unsafeDereference();
+      })
+
+      .filter(window => {
+        // Ignore document which have already been nuked,
+        // so navigated to another location and removed from memory completely.
+        if (Cu.isDeadWrapper(window)) {
+          return false;
+        }
+        // Also ignore document which are closed, as trying to access window.parent or top would throw NS_ERROR_NOT_INITIALIZED
+        if (window.closed) {
+          return false;
+        }
+        // Ignore remote iframes, which will be debugged by another thread actor,
+        // running in the remote process
+        if (Cu.isRemoteProxy(window)) {
+          return false;
+        }
+        // Accept "top remote iframe document":
+        // document of iframe whose immediate parent is in another process.
+        if (Cu.isRemoteProxy(window.parent) && !Cu.isRemoteProxy(window)) {
+          return true;
+        }
+        try {
+          // Ignore iframes running in the same process as their parent document,
+          // as they will be paused automatically when pausing their owner top level document
+          return window.top === window;
+        } catch (e) {
+          // Warn if this is throwing for an unknown reason, but suppress the
+          // exception regardless so that we can enter the nested event loop.
+          if (!/not initialized/.test(e)) {
+            console.warn(`Exception in getAllWindowDebuggees: ${e}`);
           }
-        })
-    );
+          return false;
+        }
+      });
   },
 
   /**
