@@ -218,7 +218,7 @@ UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther) {
                                              iter.get().value());
     }
     UniquePtr<char[]> stringTableJSON =
-        aOther.mStringTableWriter.ChunkedWriteFunc()->CopyData();
+        aOther.mStringTableWriter.ChunkedWriteFunc().CopyData();
     mStringTableWriter.Splice(stringTableJSON.get());
   }
 }
@@ -380,12 +380,12 @@ uint32_t UniqueStacks::GetOrAddFrameIndex(const FrameKey& aFrame) {
 
 void UniqueStacks::SpliceFrameTableElements(SpliceableJSONWriter& aWriter) {
   mFrameTableWriter.EndBareList();
-  aWriter.TakeAndSplice(mFrameTableWriter.ChunkedWriteFunc());
+  aWriter.TakeAndSplice(mFrameTableWriter.TakeChunkedWriteFunc());
 }
 
 void UniqueStacks::SpliceStackTableElements(SpliceableJSONWriter& aWriter) {
   mStackTableWriter.EndBareList();
-  aWriter.TakeAndSplice(mStackTableWriter.ChunkedWriteFunc());
+  aWriter.TakeAndSplice(mStackTableWriter.TakeChunkedWriteFunc());
 }
 
 void UniqueStacks::StreamStack(const StackKey& aStack) {

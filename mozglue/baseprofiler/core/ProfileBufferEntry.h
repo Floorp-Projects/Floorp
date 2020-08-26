@@ -86,7 +86,7 @@ class UniqueJSONStrings {
   explicit UniqueJSONStrings(const UniqueJSONStrings& aOther);
 
   void SpliceStringTableElements(SpliceableJSONWriter& aWriter) {
-    aWriter.TakeAndSplice(mStringTableWriter.ChunkedWriteFunc());
+    aWriter.TakeAndSplice(mStringTableWriter.TakeChunkedWriteFunc());
   }
 
   void WriteProperty(JSONWriter& aWriter, const char* aName, const char* aStr) {
