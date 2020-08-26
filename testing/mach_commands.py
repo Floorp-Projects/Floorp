@@ -513,7 +513,8 @@ class SpiderMonkeyTests(MachCommandBase):
         return subprocess.call(jstest_cmd)
 
     @Command('jit-test', category='testing',
-             description='Run SpiderMonkey jit-tests in the JS shell.')
+             description='Run SpiderMonkey jit-tests in the JS shell.',
+             ok_if_tests_disabled=True)
     @CommandArgument('--shell', help='The shell to be used')
     @CommandArgument('params', nargs=argparse.REMAINDER,
                      help="Extra arguments to pass down to the test harness.")

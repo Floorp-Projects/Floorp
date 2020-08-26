@@ -265,7 +265,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         # the build, tests will be disabled. Instead of trying to run
         # nonexistent tests then reporting a failure, this will prevent mach
         # from progressing beyond this point.
-        if handler.category == 'testing':
+        if handler.category == 'testing' and not handler.ok_if_tests_disabled:
             from mozbuild.base import BuildEnvironmentNotFoundException
             try:
                 from mozbuild.base import MozbuildObject
