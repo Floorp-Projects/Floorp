@@ -443,6 +443,10 @@ void MediaEngineDefaultAudioSource::SetTrack(
 nsresult MediaEngineDefaultAudioSource::Start() {
   AssertIsOnOwningThread();
 
+  if (mState == kStarted) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
   MOZ_ASSERT(mTrack, "SetTrack() must happen before Start()");
 
