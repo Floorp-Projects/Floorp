@@ -46,6 +46,10 @@ class PR_CloseDelete {
 
 namespace dom {
 
+/**
+ * Implementation for the Web IDL interface at dom/chrome-webidl/IOUtils.webidl.
+ * Methods of this class must only be called from the parent process.
+ */
 class IOUtils final {
  public:
   class IOError;
