@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define MOZ_USE_LAUNCHER_ERROR
+
 #include "sandboxBroker.h"
 
 #include <string>
@@ -31,10 +33,6 @@
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/security_level.h"
 #include "WinUtils.h"
-
-#if defined(MOZ_LAUNCHER_PROCESS)
-#  include "mozilla/LauncherRegistryInfo.h"
-#endif  // defined(MOZ_LAUNCHER_PROCESS)
 
 namespace mozilla {
 
@@ -321,6 +319,8 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
         dllSvc->InitDllBlocklistOOP(aPath, targetInfo.hProcess,
                                     aCachedNtdllThunk);
     if (blocklistInitOk.isErr()) {
+      dllSvc->HandleLauncherError(blocklistInitOk.unwrapErr(),
+                                  XRE_GeckoProcessTypeToString(aProcessType));
       LOG_E("InitDllBlocklistOOP failed at %s:%d with HRESULT 0x%08lX",
             blocklistInitOk.unwrapErr().mFile,
             blocklistInitOk.unwrapErr().mLine,
@@ -328,16 +328,6 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
       TerminateProcess(targetInfo.hProcess, 1);
       CloseHandle(targetInfo.hThread);
       CloseHandle(targetInfo.hProcess);
-
-#if defined(MOZ_LAUNCHER_PROCESS)
-      // The launcher process had started the browser process successfully, but
-      // the browser process failed start to a content process.  We're entering
-      // into a situation where the browser is opened without content processes.
-      // To stop it next time, we disable the launcher process.
-      LauncherRegistryInfo regInfo;
-      Unused << regInfo.DisableDueToFailure();
-#endif  // defined(MOZ_LAUNCHER_PROCESS)
-
       return false;
     }
   } else {
@@ -358,8 +348,11 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
     if (procExeModule.isOk()) {
       realBase = procExeModule.unwrap();
     } else {
+      RefPtr<DllServices> dllSvc(DllServices::Get());
+      dllSvc->HandleLauncherError(procExeModule.unwrapErr(),
+                                  XRE_GeckoProcessTypeToString(aProcessType));
       LOG_E("nt::GetProcessExeModule failed with HRESULT 0x%08lX",
-            procExeModule.unwrapErr().AsHResult());
+            procExeModule.unwrapErr().mError.AsHResult());
     }
 
     if (moduleHandle && realBase) {
@@ -368,8 +361,12 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
         LauncherVoidResult importsRestored = RestoreImportDirectory(
             aPath, exeImage, targetInfo.hProcess, realBase);
         if (importsRestored.isErr()) {
+          RefPtr<DllServices> dllSvc(DllServices::Get());
+          dllSvc->HandleLauncherError(
+              importsRestored.unwrapErr(),
+              XRE_GeckoProcessTypeToString(aProcessType));
           LOG_E("Failed to restore import directory with HRESULT 0x%08lX",
-                importsRestored.unwrapErr().AsHResult());
+                importsRestored.unwrapErr().mError.AsHResult());
           TerminateProcess(targetInfo.hProcess, 1);
           CloseHandle(targetInfo.hThread);
           CloseHandle(targetInfo.hProcess);

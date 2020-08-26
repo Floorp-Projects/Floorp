@@ -450,11 +450,14 @@ static bool AddModuleInfo(const nsAutoHandle& aSnapshot,
 namespace {
 
 struct PingThreadContext {
-  explicit PingThreadContext(const mozilla::LauncherError& aError)
+  explicit PingThreadContext(const mozilla::LauncherError& aError,
+                             const char* aProcessType)
       : mLauncherError(aError),
-        mModulesSnapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0)) {}
+        mModulesSnapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0)),
+        mProcessType(aProcessType ? aProcessType : "") {}
   mozilla::LauncherError mLauncherError;
   nsAutoHandle mModulesSnapshot;
+  std::string mProcessType;
 };
 
 }  // anonymous namespace
@@ -545,6 +548,10 @@ static bool PrepPing(const PingThreadContext& aContext, const std::wstring& aId,
       mozilla::IsAdminWithoutUac();
   if (isAdminWithoutUac.isOk()) {
     aJson.BoolProperty("is_admin_without_uac", isAdminWithoutUac.unwrap());
+  }
+
+  if (!aContext.mProcessType.empty()) {
+    aJson.StringProperty("process_type", aContext.mProcessType.c_str());
   }
 
   MEMORYSTATUSEX memStatus = {sizeof(memStatus)};
@@ -692,7 +699,8 @@ static unsigned __stdcall SendPingThread(void* aContext) {
 
 #endif  // defined(MOZ_TELEMETRY_REPORTING)
 
-static bool SendPing(const mozilla::LauncherError& aError) {
+static bool SendPing(const mozilla::LauncherError& aError,
+                     const char* aProcessType) {
 #if defined(MOZ_TELEMETRY_REPORTING)
 #  if defined(MOZ_LAUNCHER_PROCESS)
   mozilla::LauncherRegistryInfo regInfo;
@@ -712,7 +720,7 @@ static bool SendPing(const mozilla::LauncherError& aError) {
 
   // Capture aError and our module list into context for processing on another
   // thread.
-  auto thdParam = mozilla::MakeUnique<PingThreadContext>(aError);
+  auto thdParam = mozilla::MakeUnique<PingThreadContext>(aError, aProcessType);
 
   // The ping does a lot of file I/O. Since we want this thread to continue
   // executing browser startup, we should gather that information on a
@@ -736,13 +744,14 @@ static bool SendPing(const mozilla::LauncherError& aError) {
 
 namespace mozilla {
 
-void HandleLauncherError(const LauncherError& aError) {
+void HandleLauncherError(const LauncherError& aError,
+                         const char* aProcessType) {
 #if defined(MOZ_LAUNCHER_PROCESS)
   LauncherRegistryInfo regInfo;
   Unused << regInfo.DisableDueToFailure();
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
-  if (SendPing(aError) && !gForceEventLog) {
+  if (SendPing(aError, aProcessType) && !gForceEventLog) {
     return;
   }
 
