@@ -10,7 +10,7 @@
 <script>
     test(t => {
         s = new Sanitizer();
-        assert_equals("test", s.saneStringFrom("test"));
+        assert_equals("test", s.sanitizeToString("test"));
     }, "SanitizerAPI exists!");
 </script>
 </body>
