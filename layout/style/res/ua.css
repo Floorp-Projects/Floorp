@@ -312,7 +312,7 @@
   margin: 0.125in 0.25in;
 }
 
-@media (monochrome) {
+@media (monochrome) and (-moz-print-preview) {
   *|*::-moz-page {
     filter: grayscale(1);
   }
