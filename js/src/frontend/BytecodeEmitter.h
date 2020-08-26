@@ -303,7 +303,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                    unsigned errorNumber, ...);
 
   // Fill in a ScriptStencil using this BCE data.
-  bool intoScriptStencil(ScriptStencil* stencil);
+  bool intoScriptStencil(ScriptStencil* script);
 
   // If pn contains a useful expression, return true with *answer set to true.
   // If pn contains a useless expression, return true with *answer set to
