@@ -34,7 +34,7 @@ UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
 
 RenderCompositorOGL::RenderCompositorOGL(
     RefPtr<gl::GLContext>&& aGL, RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositor(std::move(aWidget)), mGL(aGL) {
+    : RenderCompositor(std::move(aWidget)), mGL(aGL), mBufferAge(0) {
   MOZ_ASSERT(mGL);
 
   mIsEGL = aGL->GetContextType() == mozilla::gl::GLContextType::EGL;
