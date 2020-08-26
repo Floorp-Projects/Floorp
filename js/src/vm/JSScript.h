@@ -1384,7 +1384,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
                               js::frontend::CompilationInfo& compilationInfo,
-                              const js::frontend::ScriptStencil& stencil);
+                              const js::frontend::ScriptStencil& scriptStencil);
 
   void trace(JSTracer* trc);
 
@@ -1442,7 +1442,7 @@ class RuntimeScriptData {
                                     js::HandleScript script);
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
-                              js::frontend::ScriptStencil& stencil);
+                              js::frontend::ScriptStencil& scriptStencil);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(this) + mallocSizeOf(isd_.get());
@@ -1998,7 +1998,7 @@ class JSScript : public js::BaseScript {
 
   friend bool js::RuntimeScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
-      js::frontend::ScriptStencil& stencil);
+      js::frontend::ScriptStencil& scriptStencil);
 
   template <js::XDRMode mode>
   friend js::XDRResult js::PrivateScriptData::XDR(
@@ -2013,7 +2013,7 @@ class JSScript : public js::BaseScript {
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
       js::frontend::CompilationInfo& compilationInfo,
-      const js::frontend::ScriptStencil& stencil);
+      const js::frontend::ScriptStencil& scriptStencil);
 
  private:
   using js::BaseScript::BaseScript;
@@ -2039,14 +2039,14 @@ class JSScript : public js::BaseScript {
  public:
   static bool fullyInitFromStencil(
       JSContext* cx, js::frontend::CompilationInfo& compilationInfo,
-      js::HandleScript script, js::frontend::ScriptStencil& stencil,
+      js::HandleScript script, js::frontend::ScriptStencil& scriptStencil,
       js::HandleFunction function);
 
   // Allocate a JSScript and initialize it with bytecode. This consumes
   // allocations within the stencil.
   static JSScript* fromStencil(JSContext* cx,
                                js::frontend::CompilationInfo& compilationInfo,
-                               js::frontend::ScriptStencil& stencil,
+                               js::frontend::ScriptStencil& scriptStencil,
                                js::HandleFunction function);
 
 #ifdef DEBUG

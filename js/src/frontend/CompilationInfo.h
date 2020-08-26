@@ -95,14 +95,14 @@ class ScriptStencilIterable {
  public:
   class ScriptAndFunction {
    public:
-    ScriptStencil& stencil;
+    ScriptStencil& script;
     HandleFunction function;
     FunctionIndex functionIndex;
 
     ScriptAndFunction() = delete;
-    ScriptAndFunction(ScriptStencil& stencil, HandleFunction function,
+    ScriptAndFunction(ScriptStencil& script, HandleFunction function,
                       FunctionIndex functionIndex)
-        : stencil(stencil), function(function), functionIndex(functionIndex) {}
+        : script(script), function(function), functionIndex(functionIndex) {}
   };
 
   class Iterator {
@@ -331,10 +331,10 @@ inline void ScriptStencilIterable::Iterator::skipNonFunctions() {
 
 inline ScriptStencilIterable::ScriptAndFunction
 ScriptStencilIterable::Iterator::operator*() {
-  ScriptStencil& stencil = compilationInfo_->scriptData[index_];
+  ScriptStencil& script = compilationInfo_->scriptData[index_];
 
   FunctionIndex functionIndex = FunctionIndex(index_);
-  return ScriptAndFunction(stencil, compilationInfo_->functions[functionIndex],
+  return ScriptAndFunction(script, compilationInfo_->functions[functionIndex],
                            functionIndex);
 }
 

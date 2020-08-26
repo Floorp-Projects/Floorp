@@ -278,7 +278,7 @@ class SharedContext {
   inline JSAtom* liftParserAtomToJSAtom(const ParserAtom* atomId);
   inline const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom);
 
-  void copyScriptFields(ScriptStencil& stencil);
+  void copyScriptFields(ScriptStencil& script);
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
@@ -710,8 +710,8 @@ class FunctionBox : public SharedContext {
   FunctionBox* traceLink() { return traceLink_; }
 
   void finishScriptFlags();
-  void copyScriptFields(ScriptStencil& stencil);
-  void copyFunctionFields(ScriptStencil& stencil);
+  void copyScriptFields(ScriptStencil& script);
+  void copyFunctionFields(ScriptStencil& script);
 
   // * setTreatAsRunOnce can be called to a lazy function, while emitting
   //   enclosing script
