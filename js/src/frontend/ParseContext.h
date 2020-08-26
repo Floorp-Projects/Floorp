@@ -69,13 +69,13 @@ class ParseContext : public Nestable<ParseContext> {
   };
 
   class LabelStatement : public Statement {
-    RootedAtom label_;
+    const ParserAtom* label_;
 
    public:
-    LabelStatement(ParseContext* pc, JSAtom* label)
-        : Statement(pc, StatementKind::Label), label_(pc->sc_->cx_, label) {}
+    LabelStatement(ParseContext* pc, const ParserAtom* label)
+        : Statement(pc, StatementKind::Label), label_(label) {}
 
-    HandleAtom label() const { return label_; }
+    const ParserAtom* label() const { return label_; }
   };
 
   struct ClassStatement : public Statement {
@@ -140,17 +140,17 @@ class ParseContext : public Nestable<ParseContext> {
 
     bool isEmpty() const { return declared_->all().empty(); }
 
-    DeclaredNamePtr lookupDeclaredName(JSAtom* name) {
+    DeclaredNamePtr lookupDeclaredName(const ParserAtom* name) {
       return declared_->lookup(name);
     }
 
-    AddDeclaredNamePtr lookupDeclaredNameForAdd(JSAtom* name) {
+    AddDeclaredNamePtr lookupDeclaredNameForAdd(const ParserAtom* name) {
       return declared_->lookupForAdd(name);
     }
 
     MOZ_MUST_USE bool addDeclaredName(ParseContext* pc, AddDeclaredNamePtr& p,
-                                      JSAtom* name, DeclarationKind kind,
-                                      uint32_t pos) {
+                                      const ParserAtom* name,
+                                      DeclarationKind kind, uint32_t pos) {
       return maybeReportOOM(
           pc, declared_->add(p, name, DeclaredNameInfo(kind, pos)));
     }
@@ -212,7 +212,7 @@ class ParseContext : public Nestable<ParseContext> {
 
       explicit operator bool() const { return !done(); }
 
-      JSAtom* name() {
+      const ParserAtom* name() {
         MOZ_ASSERT(!done());
         return declaredRange_.front().key();
       }
@@ -402,14 +402,14 @@ class ParseContext : public Nestable<ParseContext> {
   // Return Err(true) if we have encountered at least one loop,
   // Err(false) otherwise.
   MOZ_MUST_USE inline JS::Result<Ok, BreakStatementError> checkBreakStatement(
-      PropertyName* label);
+      const ParserName* label);
 
   enum class ContinueStatementError {
     NotInALoop,
     LabelNotFound,
   };
   MOZ_MUST_USE inline JS::Result<Ok, ContinueStatementError>
-  checkContinueStatement(PropertyName* label);
+  checkContinueStatement(const ParserName* label);
 
   // True if we are at the topmost level of a entire script or function body.
   // For example, while parsing this code we would encounter f1 and f2 at
@@ -480,14 +480,14 @@ class ParseContext : public Nestable<ParseContext> {
 
   bool annexBAppliesToLexicalFunctionInInnermostScope(FunctionBox* funbox);
 
-  bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind,
+  bool tryDeclareVar(const ParserName* name, DeclarationKind kind,
                      uint32_t beginPos,
                      mozilla::Maybe<DeclarationKind>* redeclaredKind,
                      uint32_t* prevPos);
 
-  bool hasUsedName(const UsedNameTracker& usedNames, HandlePropertyName name);
+  bool hasUsedName(const UsedNameTracker& usedNames, const ParserName* name);
   bool hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
-                                  HandlePropertyName name);
+                                  const ParserName* name);
 
   bool declareFunctionThis(const UsedNameTracker& usedNames,
                            bool canSkipLazyClosedOverBindings);
@@ -497,13 +497,15 @@ class ParseContext : public Nestable<ParseContext> {
 
  private:
   mozilla::Maybe<DeclarationKind> isVarRedeclaredInInnermostScope(
-      HandlePropertyName name, DeclarationKind kind);
-  mozilla::Maybe<DeclarationKind> isVarRedeclaredInEval(HandlePropertyName name,
-                                                        DeclarationKind kind);
+      const ParserName* name, DeclarationKind kind);
+
+  MOZ_MUST_USE bool isVarRedeclaredInEval(const ParserName* name,
+                                          DeclarationKind kind,
+                                          mozilla::Maybe<DeclarationKind>* out);
 
   enum DryRunOption { NotDryRun, DryRunInnermostScopeOnly };
   template <DryRunOption dryRunOption>
-  bool tryDeclareVarHelper(HandlePropertyName name, DeclarationKind kind,
+  bool tryDeclareVarHelper(const ParserName* name, DeclarationKind kind,
                            uint32_t beginPos,
                            mozilla::Maybe<DeclarationKind>* redeclaredKind,
                            uint32_t* prevPos);

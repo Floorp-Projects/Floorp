@@ -66,27 +66,27 @@ class EmitterScope : public Nestable<EmitterScope> {
   MOZ_MUST_USE bool ensureCache(BytecodeEmitter* bce);
 
   MOZ_MUST_USE bool checkSlotLimits(BytecodeEmitter* bce,
-                                    const BindingIter& bi);
+                                    const ParserBindingIter& bi);
 
   MOZ_MUST_USE bool checkEnvironmentChainLength(BytecodeEmitter* bce);
 
-  void updateFrameFixedSlots(BytecodeEmitter* bce, const BindingIter& bi);
+  void updateFrameFixedSlots(BytecodeEmitter* bce, const ParserBindingIter& bi);
 
-  MOZ_MUST_USE bool putNameInCache(BytecodeEmitter* bce, JSAtom* name,
+  MOZ_MUST_USE bool putNameInCache(BytecodeEmitter* bce, const ParserAtom* name,
                                    NameLocation loc);
 
   mozilla::Maybe<NameLocation> lookupInCache(BytecodeEmitter* bce,
-                                             JSAtom* name);
+                                             const ParserAtom* name);
 
   EmitterScope* enclosing(BytecodeEmitter** bce) const;
 
   mozilla::Maybe<ScopeIndex> enclosingScopeIndex(BytecodeEmitter* bce) const;
 
-  static bool nameCanBeFree(BytecodeEmitter* bce, JSAtom* name);
+  static bool nameCanBeFree(BytecodeEmitter* bce, const ParserAtom* name);
 
   static NameLocation searchInEnclosingScope(JSAtom* name, Scope* scope,
                                              uint8_t hops);
-  NameLocation searchAndCache(BytecodeEmitter* bce, JSAtom* name);
+  NameLocation searchAndCache(BytecodeEmitter* bce, const ParserAtom* name);
 
   MOZ_MUST_USE bool internEmptyGlobalScopeAsBody(BytecodeEmitter* bce);
 
@@ -109,7 +109,7 @@ class EmitterScope : public Nestable<EmitterScope> {
   void dump(BytecodeEmitter* bce);
 
   MOZ_MUST_USE bool enterLexical(BytecodeEmitter* bce, ScopeKind kind,
-                                 Handle<LexicalScope::Data*> bindings);
+                                 ParserLexicalScopeData* bindings);
   MOZ_MUST_USE bool enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox);
   MOZ_MUST_USE bool enterFunction(BytecodeEmitter* bce, FunctionBox* funbox);
   MOZ_MUST_USE bool enterFunctionExtraBodyVar(BytecodeEmitter* bce,
@@ -152,9 +152,9 @@ class EmitterScope : public Nestable<EmitterScope> {
     return Nestable<EmitterScope>::enclosing();
   }
 
-  NameLocation lookup(BytecodeEmitter* bce, JSAtom* name);
+  NameLocation lookup(BytecodeEmitter* bce, const ParserAtom* name);
 
-  mozilla::Maybe<NameLocation> locationBoundInScope(JSAtom* name,
+  mozilla::Maybe<NameLocation> locationBoundInScope(const ParserAtom* name,
                                                     EmitterScope* target);
 };
 

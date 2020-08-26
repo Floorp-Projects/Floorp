@@ -7,6 +7,7 @@
 #include "frontend/FoldConstants.h"
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Range.h"
 
 #include "jslibmath.h"
 #include "jsnum.h"
@@ -16,6 +17,7 @@
 #include "frontend/Parser.h"
 #include "js/Conversions.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
+#include "js/Vector.h"
 #include "vm/StringType.h"
 
 using namespace js;
@@ -462,7 +464,7 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
       case ParseNodeKind::NumberExpr:
         if (pn->isKind(ParseNodeKind::StringExpr)) {
           double d;
-          if (!StringToNumber(info.cx(), pn->as<NameNode>().atom(), &d)) {
+          if (!pn->as<NameNode>().atom()->toNumber(info.cx(), &d)) {
             return false;
           }
           if (!TryReplaceNode(
@@ -474,7 +476,8 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
 
       case ParseNodeKind::StringExpr:
         if (pn->isKind(ParseNodeKind::NumberExpr)) {
-          JSAtom* atom = pn->as<NumericLiteral>().toAtom(info.cx());
+          const ParserAtom* atom =
+              pn->as<NumericLiteral>().toAtom(info.compilationInfo);
           if (!atom) {
             return false;
           }
@@ -576,21 +579,21 @@ static bool FoldTypeOfExpr(FoldInfo info, ParseNode** nodePtr) {
   ParseNode* expr = node->kid();
 
   // Constant-fold the entire |typeof| if given a constant with known type.
-  RootedPropertyName result(info.cx());
+  const ParserName* result = nullptr;
   if (expr->isKind(ParseNodeKind::StringExpr) ||
       expr->isKind(ParseNodeKind::TemplateStringExpr)) {
-    result = info.cx()->names().string;
+    result = info.cx()->parserNames().string;
   } else if (expr->isKind(ParseNodeKind::NumberExpr)) {
-    result = info.cx()->names().number;
+    result = info.cx()->parserNames().number;
   } else if (expr->isKind(ParseNodeKind::BigIntExpr)) {
-    result = info.cx()->names().bigint;
+    result = info.cx()->parserNames().bigint;
   } else if (expr->isKind(ParseNodeKind::NullExpr)) {
-    result = info.cx()->names().object;
+    result = info.cx()->parserNames().object;
   } else if (expr->isKind(ParseNodeKind::TrueExpr) ||
              expr->isKind(ParseNodeKind::FalseExpr)) {
-    result = info.cx()->names().boolean;
+    result = info.cx()->parserNames().boolean;
   } else if (expr->is<FunctionNode>()) {
-    result = info.cx()->names().function;
+    result = info.cx()->parserNames().function;
   }
 
   if (result) {
@@ -1081,9 +1084,9 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
 
   ParseNode* expr = &elem->expression();
   ParseNode* key = &elem->key();
-  PropertyName* name = nullptr;
+  const ParserName* name = nullptr;
   if (key->isKind(ParseNodeKind::StringExpr)) {
-    JSAtom* atom = key->as<NameNode>().atom();
+    const ParserAtom* atom = key->as<NameNode>().atom();
     uint32_t index;
 
     if (atom->isIndex(&index)) {
@@ -1096,7 +1099,7 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
       }
       key = &elem->key();
     } else {
-      name = atom->asPropertyName();
+      name = atom->asName();
     }
   } else if (key->isKind(ParseNodeKind::NumberExpr)) {
     auto* numeric = &key->as<NumericLiteral>();
@@ -1105,11 +1108,11 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
       // Optimization 2: We have something like expr[3.14]. The number
       // isn't an array index, so it converts to a string ("3.14"),
       // enabling optimization 3 below.
-      JSAtom* atom = numeric->toAtom(info.cx());
+      const ParserAtom* atom = numeric->toAtom(info.compilationInfo);
       if (!atom) {
         return false;
       }
-      name = atom->asPropertyName();
+      name = atom->asName();
     }
   }
 
@@ -1202,15 +1205,16 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       break;
     }
 
-    RootedString combination(info.cx());
-    RootedString tmp(info.cx());
+    Vector<const ParserAtom*, 8> accum(info.cx());
     do {
-      // Create a rope of the current string and all succeeding
-      // constants that we can convert to strings, then atomize it
-      // and replace them all with that fresh string.
+      // Create a vector of all the folded strings and concatenate them.
       MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
 
-      combination = (*current)->as<NameNode>().atom();
+      accum.clear();
+      const ParserAtom* atom = (*current)->as<NameNode>().atom();
+      if (!accum.append(atom)) {
+        return false;
+      }
 
       do {
         // Try folding the next operand to a string.
@@ -1223,10 +1227,9 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
           break;
         }
 
-        // Add this string to the combination and remove the node.
-        tmp = (*next)->as<NameNode>().atom();
-        combination = ConcatStrings<CanGC>(info.cx(), combination, tmp);
-        if (!combination) {
+        // Add this string to the accumulator and remove the node.
+        const ParserAtom* nextAtom = (*next)->as<NameNode>().atom();
+        if (!accum.append(nextAtom)) {
           return false;
         }
 
@@ -1236,13 +1239,19 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
         node->unsafeDecrementCount();
       } while (*next);
 
-      // Replace |current|'s string with the entire combination.
-      MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
-      combination = AtomizeString(info.cx(), combination);
+      // Construct the concatenated atom.
+      const ParserAtom* combination =
+          info.compilationInfo.parserAtoms
+              .concatAtoms(info.cx(),
+                           mozilla::Range(accum.begin(), accum.length()))
+              .unwrapOr(nullptr);
       if (!combination) {
         return false;
       }
-      (*current)->as<NameNode>().setAtom(&combination->asAtom());
+
+      // Replace |current|'s string with the entire combination.
+      MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
+      (*current)->as<NameNode>().setAtom(combination);
 
       // If we're out of nodes, we're done.
       if (!*next) {

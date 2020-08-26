@@ -2473,7 +2473,13 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::ContinueStmt: {
       LoopControlStatement* node = &pn->as<LoopControlStatement>();
       RootedValue label(cx);
-      RootedAtom pnAtom(cx, node->label());
+      RootedAtom pnAtom(cx);
+      if (node->label()) {
+        pnAtom.set(parser->liftParserAtomToJSAtom(node->label()));
+        if (!pnAtom) {
+          return false;
+        }
+      }
       return optIdentifier(pnAtom, nullptr, &label) &&
              (node->isKind(ParseNodeKind::BreakStmt)
                   ? builder.breakStatement(label, &node->pn_pos, dst)
@@ -2486,7 +2492,10 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
       MOZ_ASSERT(labelNode->pn_pos.encloses(stmtNode->pn_pos));
 
       RootedValue label(cx), stmt(cx);
-      RootedAtom pnAtom(cx, labelNode->label());
+      RootedAtom pnAtom(cx, parser->liftParserAtomToJSAtom(labelNode->label()));
+      if (!pnAtom.get()) {
+        return false;
+      }
       return identifier(pnAtom, nullptr, &label) &&
              statement(stmtNode, &stmt) &&
              builder.labeledStatement(label, stmt, &labelNode->pn_pos, dst);
@@ -2919,7 +2928,10 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
 
       RootedValue expr(cx);
       RootedValue propname(cx);
-      RootedAtom pnAtom(cx, prop->key().atom());
+      RootedAtom pnAtom(cx, parser->liftParserAtomToJSAtom(prop->key().atom()));
+      if (!pnAtom.get()) {
+        return false;
+      }
 
       if (isSuper) {
         if (!builder.super(&prop->expression().pn_pos, &expr)) {
@@ -2977,8 +2989,11 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
         NameNode* rawItem = &item->as<NameNode>();
         MOZ_ASSERT(callSiteObj->pn_pos.encloses(rawItem->pn_pos));
 
-        RootedValue expr(cx);
-        expr.setString(rawItem->atom());
+        JSAtom* exprAtom = parser->liftParserAtomToJSAtom(rawItem->atom());
+        if (!exprAtom) {
+          return false;
+        }
+        RootedValue expr(cx, StringValue(exprAtom));
         raw.infallibleAppend(expr);
       }
 
@@ -2996,7 +3011,12 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
           expr.setUndefined();
         } else {
           MOZ_ASSERT(cookedItem->isKind(ParseNodeKind::TemplateStringExpr));
-          expr.setString(cookedItem->as<NameNode>().atom());
+          JSAtom* exprAtom =
+              parser->liftParserAtomToJSAtom(cookedItem->as<NameNode>().atom());
+          if (!exprAtom) {
+            return false;
+          }
+          expr.setString(exprAtom);
         }
         cooked.infallibleAppend(expr);
       }
@@ -3250,9 +3270,15 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
   RootedValue val(cx);
   switch (pn->getKind()) {
     case ParseNodeKind::TemplateStringExpr:
-    case ParseNodeKind::StringExpr:
-      val.setString(pn->as<NameNode>().atom());
+    case ParseNodeKind::StringExpr: {
+      JSAtom* exprAtom =
+          parser->liftParserAtomToJSAtom(pn->as<NameNode>().atom());
+      if (!exprAtom) {
+        return false;
+      }
+      val.setString(exprAtom);
       break;
+    }
 
     case ParseNodeKind::RegExpExpr: {
       RegExpObject* re =
@@ -3415,7 +3441,10 @@ bool ASTSerializer::identifier(HandleAtom atom, TokenPos* pos,
 bool ASTSerializer::identifier(NameNode* id, MutableHandleValue dst) {
   LOCAL_ASSERT(id->atom());
 
-  RootedAtom pnAtom(cx, id->atom());
+  RootedAtom pnAtom(cx, parser->liftParserAtomToJSAtom(id->atom()));
+  if (!pnAtom.get()) {
+    return false;
+  }
   return identifier(pnAtom, &id->pn_pos, dst);
 }
 
@@ -3430,7 +3459,13 @@ bool ASTSerializer::function(FunctionNode* funNode, ASTType type,
   bool isExpression = funbox->hasExprBody();
 
   RootedValue id(cx);
-  RootedAtom funcAtom(cx, funbox->explicitName());
+  RootedAtom funcAtom(cx);
+  if (funbox->explicitName()) {
+    funcAtom.set(parser->liftParserAtomToJSAtom(funbox->explicitName()));
+    if (!funcAtom) {
+      return false;
+    }
+  }
   if (!optIdentifier(funcAtom, nullptr, &id)) {
     return false;
   }
