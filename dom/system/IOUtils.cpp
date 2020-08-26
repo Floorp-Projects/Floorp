@@ -235,6 +235,7 @@ already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
 already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
                                         const Optional<uint32_t>& aMaxBytes) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -260,6 +261,7 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
 /* static */
 already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
                                             const nsAString& aPath) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
@@ -274,6 +276,7 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
 already_AddRefed<Promise> IOUtils::WriteAtomic(
     GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
     const WriteAtomicOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -298,6 +301,7 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
 already_AddRefed<Promise> IOUtils::WriteAtomicUTF8(
     GlobalObject& aGlobal, const nsAString& aPath, const nsAString& aString,
     const WriteAtomicOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -323,6 +327,7 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
                                         const MoveOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -341,6 +346,7 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
 already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const nsAString& aPath,
                                           const RemoveOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -356,6 +362,7 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
 already_AddRefed<Promise> IOUtils::MakeDirectory(
     GlobalObject& aGlobal, const nsAString& aPath,
     const MakeDirectoryOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -370,6 +377,7 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
 
 already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -385,6 +393,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
                                         const CopyOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -403,6 +412,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
 already_AddRefed<Promise> IOUtils::Touch(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aModification) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
@@ -554,7 +564,6 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
   // Ensure that CREATE_FILE and EXCL flags were not included, as we do not
   // want to create a new file.
   MOZ_ASSERT((aFlags & (PR_CREATE_FILE | PR_EXCL)) == 0);
-
   // We open the file descriptor through an nsLocalFile to ensure that the paths
   // are interpreted/encoded correctly on all platforms.
   RefPtr<nsLocalFile> file = new nsLocalFile();
@@ -572,6 +581,7 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
 UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
     const nsAString& aPath, int32_t aFlags, int32_t aMode) {
   MOZ_ASSERT(!NS_IsMainThread());
+
   // We open the file descriptor through an nsLocalFile to ensure that the paths
   // are interpreted/encoded correctly on all platforms.
   RefPtr<nsLocalFile> file = new nsLocalFile();
@@ -901,11 +911,11 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
     CopyOrMoveFn aMethod, const char* aMethodName,
     const RefPtr<nsLocalFile>& aSource, const RefPtr<nsLocalFile>& aDest,
     bool aNoOverwrite) {
-  nsresult rv = NS_OK;
+  MOZ_ASSERT(!NS_IsMainThread());
 
   // Normalize the file paths.
   MOZ_TRY(aSource->Normalize());
-  rv = aDest->Normalize();
+  nsresult rv = aDest->Normalize();
   // Normalize can fail for a number of reasons, including if the file doesn't
   // exist. It is expected that the file might not exist for a number of calls
   // (e.g. if we want to copy or move a file to a new location).
