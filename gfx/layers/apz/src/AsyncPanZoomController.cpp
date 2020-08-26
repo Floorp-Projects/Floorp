@@ -4710,8 +4710,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         aScrollMetadata.GetOverscrollBehavior());
 
     if (scrollOffsetUpdated) {
-      // Send an acknowledgement with the new scroll generation so that any
-      // repaint requests later in this function go through.
       // Because of the scroll generation update, any inflight paint requests
       // are going to be ignored by layout, and so mExpectedGeckoMetrics becomes
       // incorrect for the purposes of calculating the LD transform. To correct

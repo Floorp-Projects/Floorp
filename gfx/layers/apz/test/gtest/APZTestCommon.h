@@ -132,9 +132,6 @@ class MockContentController : public GeckoContentController {
   MOCK_METHOD2(RequestFlingSnap,
                void(const ScrollableLayerGuid::ViewID& aScrollId,
                     const mozilla::CSSPoint& aDestination));
-  MOCK_METHOD2(AcknowledgeScrollUpdate,
-               void(const ScrollableLayerGuid::ViewID&,
-                    const uint32_t& aScrollGeneration));
   MOCK_METHOD5(HandleTap, void(TapType, const LayoutDevicePoint&, Modifiers,
                                const ScrollableLayerGuid&, uint64_t));
   MOCK_METHOD5(NotifyPinchGesture,
