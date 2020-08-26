@@ -766,6 +766,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return NumberOperandId(input.id());
   }
 
+  ValOperandId boxObject(ObjOperandId input) {
+    return ValOperandId(input.id());
+  }
+
   void guardShapeForClass(ObjOperandId obj, Shape* shape) {
     // Guard shape to ensure that object class is unchanged. This is true
     // for all shapes.
@@ -1179,7 +1183,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   PreliminaryObjectAction preliminaryObjectAction_;
 
   AttachDecision tryAttachNative(HandleObject obj, ObjOperandId objId,
-                                 HandleId id);
+                                 HandleId id, ValOperandId receiverId);
   AttachDecision tryAttachUnboxed(HandleObject obj, ObjOperandId objId,
                                   HandleId id);
   AttachDecision tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId,
@@ -1199,20 +1203,22 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                   HandleId id);
   AttachDecision tryAttachXrayCrossCompartmentWrapper(HandleObject obj,
                                                       ObjOperandId objId,
-                                                      HandleId id);
+                                                      HandleId id,
+                                                      ValOperandId receiverId);
   AttachDecision tryAttachFunction(HandleObject obj, ObjOperandId objId,
                                    HandleId id);
 
   AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
                                        HandleId id, bool handleDOMProxies);
   AttachDecision tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
-                                          HandleId id);
+                                          HandleId id, ValOperandId receiverId);
   AttachDecision tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
                                            HandleId id);
   AttachDecision tryAttachDOMProxyUnshadowed(HandleObject obj,
-                                             ObjOperandId objId, HandleId id);
+                                             ObjOperandId objId, HandleId id,
+                                             ValOperandId receiverId);
   AttachDecision tryAttachProxy(HandleObject obj, ObjOperandId objId,
-                                HandleId id);
+                                HandleId id, ValOperandId receiverId);
 
   AttachDecision tryAttachPrimitive(ValOperandId valId, HandleId id);
   AttachDecision tryAttachStringChar(ValOperandId valId, ValOperandId indexId);

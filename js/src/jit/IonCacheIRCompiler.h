@@ -69,12 +69,6 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
       CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
       bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
       mozilla::Maybe<uint32_t> numNewSlotsOffset);
-  MOZ_MUST_USE bool emitCallScriptedGetterResultShared(
-      TypedOrValueRegister receiver, uint32_t getterOffset, bool sameRealm,
-      TypedOrValueRegister output);
-  MOZ_MUST_USE bool emitCallNativeGetterResultShared(
-      TypedOrValueRegister receiver, uint32_t getterOffset,
-      const AutoOutputRegister& output, AutoSaveLiveRegisters& save);
 
   bool needsPostBarrier() const;
 

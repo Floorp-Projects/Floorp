@@ -1075,11 +1075,8 @@ MOZ_MUST_USE bool BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame,
                                           MutableHandleValue res);
 
 MOZ_MUST_USE bool CallNativeGetter(JSContext* cx, HandleFunction callee,
-                                   HandleObject obj, MutableHandleValue result);
-
-MOZ_MUST_USE bool CallNativeGetterByValue(JSContext* cx, HandleFunction callee,
-                                          HandleValue receiver,
-                                          MutableHandleValue result);
+                                   HandleValue receiver,
+                                   MutableHandleValue result);
 
 MOZ_MUST_USE bool CallNativeSetter(JSContext* cx, HandleFunction callee,
                                    HandleObject obj, HandleValue rhs);

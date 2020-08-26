@@ -496,8 +496,11 @@ bool BaselineCacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallScriptedGetterResultShared(
-    TypedOrValueRegister receiver, uint32_t getterOffset, bool sameRealm) {
+bool BaselineCacheIRCompiler::emitCallScriptedGetterResult(
+    ValOperandId receiverId, uint32_t getterOffset, bool sameRealm) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand receiver = allocator.useValueRegister(masm, receiverId);
   Address getterAddr(stubAddress(getterOffset));
 
   AutoScratchRegister code(allocator, masm);
@@ -554,27 +557,11 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterResultShared(
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallScriptedGetterResult(
-    ObjOperandId objId, uint32_t getterOffset, bool sameRealm) {
+bool BaselineCacheIRCompiler::emitCallNativeGetterResult(
+    ValOperandId receiverId, uint32_t getterOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
 
-  return emitCallScriptedGetterResultShared(
-      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), getterOffset,
-      sameRealm);
-}
-
-bool BaselineCacheIRCompiler::emitCallScriptedGetterByValueResult(
-    ValOperandId valId, uint32_t getterOffset, bool sameRealm) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, valId);
-
-  return emitCallScriptedGetterResultShared(val, getterOffset, sameRealm);
-}
-
-template <typename T, typename CallVM>
-bool BaselineCacheIRCompiler::emitCallNativeGetterResultShared(
-    T receiver, uint32_t getterOffset, const CallVM& emitCallVM) {
+  ValueOperand receiver = allocator.useValueRegister(masm, receiverId);
   Address getterAddr(stubAddress(getterOffset));
 
   AutoScratchRegister scratch(allocator, masm);
@@ -590,34 +577,12 @@ bool BaselineCacheIRCompiler::emitCallNativeGetterResultShared(
   masm.Push(receiver);
   masm.Push(scratch);
 
-  emitCallVM();
+  using Fn =
+      bool (*)(JSContext*, HandleFunction, HandleValue, MutableHandleValue);
+  callVM<Fn, CallNativeGetter>(masm);
 
   stubFrame.leave(masm);
   return true;
-}
-
-bool BaselineCacheIRCompiler::emitCallNativeGetterResult(
-    ObjOperandId objId, uint32_t getterOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-
-  return emitCallNativeGetterResultShared(obj, getterOffset, [this]() {
-    using Fn =
-        bool (*)(JSContext*, HandleFunction, HandleObject, MutableHandleValue);
-    callVM<Fn, CallNativeGetter>(masm);
-  });
-}
-
-bool BaselineCacheIRCompiler::emitCallNativeGetterByValueResult(
-    ValOperandId valId, uint32_t getterOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, valId);
-
-  return emitCallNativeGetterResultShared(val, getterOffset, [this]() {
-    using Fn =
-        bool (*)(JSContext*, HandleFunction, HandleValue, MutableHandleValue);
-    callVM<Fn, CallNativeGetterByValue>(masm);
-  });
 }
 
 bool BaselineCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,

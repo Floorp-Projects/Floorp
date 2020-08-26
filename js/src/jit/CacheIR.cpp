@@ -319,13 +319,6 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
 
   AutoAssertNoPendingException aanpe(cx_);
 
-  // Non-object receivers are a degenerate case, so don't try to attach
-  // stubs. The stubs we do emit will still perform runtime checks and
-  // fallback as needed.
-  if (isSuper() && !receiver_.isObject()) {
-    return AttachDecision::NoAction;
-  }
-
   ValOperandId valId(writer.setInputOperandId(0));
   if (cacheKind_ != CacheKind::GetProp) {
     MOZ_ASSERT_IF(cacheKind_ == CacheKind::GetPropSuper,
@@ -346,20 +339,25 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
     return AttachDecision::NoAction;
   }
 
+  // |super.prop| getter calls use a |this| value that differs from lookup
+  // object.
+  ValOperandId receiverId = isSuper() ? getSuperReceiverValueId() : valId;
+
   if (val_.isObject()) {
     RootedObject obj(cx_, &val_.toObject());
     ObjOperandId objId = writer.guardToObject(valId);
     if (nameOrSymbol) {
       TRY_ATTACH(tryAttachObjectLength(obj, objId, id));
       TRY_ATTACH(tryAttachTypedArrayLength(obj, objId, id));
-      TRY_ATTACH(tryAttachNative(obj, objId, id));
+      TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachTypedObject(obj, objId, id));
       TRY_ATTACH(tryAttachModuleNamespace(obj, objId, id));
       TRY_ATTACH(tryAttachWindowProxy(obj, objId, id));
       TRY_ATTACH(tryAttachCrossCompartmentWrapper(obj, objId, id));
-      TRY_ATTACH(tryAttachXrayCrossCompartmentWrapper(obj, objId, id));
+      TRY_ATTACH(
+          tryAttachXrayCrossCompartmentWrapper(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachFunction(obj, objId, id));
-      TRY_ATTACH(tryAttachProxy(obj, objId, id));
+      TRY_ATTACH(tryAttachProxy(obj, objId, id, receiverId));
 
       trackAttached(IRGenerator::NotAttached);
       return AttachDecision::NoAction;
@@ -425,14 +423,15 @@ AttachDecision GetPropIRGenerator::tryAttachIdempotentStub() {
   ValOperandId valId(writer.setInputOperandId(0));
   ObjOperandId objId = writer.guardToObject(valId);
 
-  TRY_ATTACH(tryAttachNative(obj, objId, id));
+  ValOperandId receiverId = valId;
+  TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
 
   // Object lengths are supported only if int32 results are allowed.
   TRY_ATTACH(tryAttachObjectLength(obj, objId, id));
 
   // Also support native data properties on DOMProxy prototypes.
   if (GetProxyStubType(cx_, obj, id) == ProxyStubType::DOMUnshadowed) {
-    return tryAttachDOMProxyUnshadowed(obj, objId, id);
+    return tryAttachDOMProxyUnshadowed(obj, objId, id, receiverId);
   }
 
   return AttachDecision::NoAction;
@@ -1002,7 +1001,7 @@ static void EmitReadSlotReturn(CacheIRWriter& writer, JSObject*,
 static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
                                          JSObject* obj, JSObject* holder,
                                          Shape* shape,
-                                         ObjOperandId receiverId) {
+                                         ValOperandId receiverId) {
   switch (IsCacheableGetPropCall(obj, holder, shape)) {
     case CanAttachNativeGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
@@ -1050,47 +1049,10 @@ static void EmitCallGetterResultGuards(CacheIRWriter& writer, JSObject* obj,
 
 static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
                                  JSObject* obj, JSObject* holder, Shape* shape,
-                                 ObjOperandId objId, ObjOperandId receiverId,
+                                 ObjOperandId objId, ValOperandId receiverId,
                                  ICState::Mode mode) {
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode);
   EmitCallGetterResultNoGuards(cx, writer, obj, holder, shape, receiverId);
-}
-
-static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
-                                 JSObject* obj, JSObject* holder, Shape* shape,
-                                 ObjOperandId objId, ICState::Mode mode) {
-  EmitCallGetterResult(cx, writer, obj, holder, shape, objId, objId, mode);
-}
-
-static void EmitCallGetterByValueResult(JSContext* cx, CacheIRWriter& writer,
-                                        JSObject* obj, JSObject* holder,
-                                        Shape* shape, ObjOperandId objId,
-                                        ValOperandId receiverId,
-                                        ICState::Mode mode) {
-  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode);
-
-  switch (IsCacheableGetPropCall(obj, holder, shape)) {
-    case CanAttachNativeGetter: {
-      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      MOZ_ASSERT(target->isNativeWithoutJitEntry());
-      writer.callNativeGetterByValueResult(receiverId, target);
-      writer.typeMonitorResult();
-      break;
-    }
-    case CanAttachScriptedGetter: {
-      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      MOZ_ASSERT(target->hasJitEntry());
-      bool sameRealm = cx->realm() == target->realm();
-      writer.callScriptedGetterByValueResult(receiverId, target, sameRealm);
-      writer.typeMonitorResult();
-      break;
-    }
-    default:
-      // CanAttachNativeGetProp guarantees that the getter is either a native or
-      // a scripted function.
-      MOZ_ASSERT_UNREACHABLE("Can't attach getter");
-      break;
-  }
 }
 
 void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
@@ -1123,7 +1085,8 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
 
 AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
                                                    ObjOperandId objId,
-                                                   HandleId id) {
+                                                   HandleId id,
+                                                   ValOperandId receiverId) {
   RootedShape shape(cx_);
   RootedNativeObject holder(cx_);
 
@@ -1155,11 +1118,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       return AttachDecision::Attach;
     case CanAttachScriptedGetter:
     case CanAttachNativeGetter: {
-      // |super.prop| accesses use a |this| value that differs from lookup
-      // object
       MOZ_ASSERT(!idempotent());
-      ObjOperandId receiverId =
-          isSuper() ? writer.guardToObject(getSuperReceiverValueId()) : objId;
       maybeEmitIdGuard(id);
       EmitCallGetterResult(cx_, writer, obj, holder, shape, objId, receiverId,
                            mode_);
@@ -1268,8 +1227,9 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       maybeEmitIdGuard(id);
       ObjOperandId windowObjId =
           GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
+      ValOperandId receiverId = writer.boxObject(windowObjId);
       EmitCallGetterResult(cx_, writer, windowObj, holder, shape, windowObjId,
-                           mode_);
+                           receiverId, mode_);
 
       trackAttached("WindowProxyGetter");
       return AttachDecision::Attach;
@@ -1390,7 +1350,8 @@ static bool GetXrayExpandoShapeWrapper(JSContext* cx, HandleObject xray,
 }
 
 AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
-    HandleObject obj, ObjOperandId objId, HandleId id) {
+    HandleObject obj, ObjOperandId objId, HandleId id,
+    ValOperandId receiverId) {
   if (!IsProxy(obj)) {
     return AttachDecision::NoAction;
   }
@@ -1488,7 +1449,7 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
     }
   }
 
-  writer.callNativeGetterResult(objId, &getter->as<JSFunction>());
+  writer.callNativeGetterResult(receiverId, &getter->as<JSFunction>());
   writer.typeMonitorResult();
 
   trackAttached("XrayGetter");
@@ -1546,9 +1507,9 @@ ObjOperandId IRGenerator::guardDOMProxyExpandoObjectAndShape(
   return expandoObjId;
 }
 
-AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
-                                                            ObjOperandId objId,
-                                                            HandleId id) {
+AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
+    HandleObject obj, ObjOperandId objId, HandleId id,
+    ValOperandId receiverId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   RootedValue expandoVal(cx_, GetProxyPrivate(obj));
@@ -1593,7 +1554,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
     MOZ_ASSERT(canCache == CanAttachNativeGetter ||
                canCache == CanAttachScriptedGetter);
     EmitCallGetterResultNoGuards(cx_, writer, expandoObj, expandoObj, propShape,
-                                 objId);
+                                 receiverId);
   }
 
   trackAttached("DOMProxyExpando");
@@ -1652,7 +1613,8 @@ static void CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer,
 }
 
 AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
-    HandleObject obj, ObjOperandId objId, HandleId id) {
+    HandleObject obj, ObjOperandId objId, HandleId id,
+    ValOperandId receiverId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   RootedObject checkObj(cx_, obj->staticPrototype());
@@ -1694,7 +1656,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       MOZ_ASSERT(canCache == CanAttachNativeGetter ||
                  canCache == CanAttachScriptedGetter);
       MOZ_ASSERT(!isSuper());
-      EmitCallGetterResultNoGuards(cx_, writer, checkObj, holder, shape, objId);
+      EmitCallGetterResultNoGuards(cx_, writer, checkObj, holder, shape,
+                                   receiverId);
     }
   } else {
     // Property was not found on the prototype chain. Deoptimize down to
@@ -1710,7 +1673,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
 
 AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
                                                   ObjOperandId objId,
-                                                  HandleId id) {
+                                                  HandleId id,
+                                                  ValOperandId receiverId) {
   ProxyStubType type = GetProxyStubType(cx_, obj, id);
   if (type == ProxyStubType::None) {
     return AttachDecision::NoAction;
@@ -1729,12 +1693,12 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
     case ProxyStubType::None:
       break;
     case ProxyStubType::DOMExpando:
-      TRY_ATTACH(tryAttachDOMProxyExpando(obj, objId, id));
+      TRY_ATTACH(tryAttachDOMProxyExpando(obj, objId, id, receiverId));
       [[fallthrough]];  // Fall through to the generic shadowed case.
     case ProxyStubType::DOMShadowed:
       return tryAttachDOMProxyShadowed(obj, objId, id);
     case ProxyStubType::DOMUnshadowed:
-      TRY_ATTACH(tryAttachDOMProxyUnshadowed(obj, objId, id));
+      TRY_ATTACH(tryAttachDOMProxyUnshadowed(obj, objId, id, receiverId));
       return tryAttachGenericProxy(obj, objId, id,
                                    /* handleDOMProxies = */ true);
     case ProxyStubType::Generic:
@@ -2060,8 +2024,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       maybeEmitIdGuard(id);
 
       ObjOperandId protoId = writer.loadObject(proto);
-      EmitCallGetterByValueResult(cx_, writer, proto, holder, shape, protoId,
-                                  valId, mode_);
+      EmitCallGetterResult(cx_, writer, proto, holder, shape, protoId, valId,
+                           mode_);
 
       trackAttached("PrimitiveGetter");
       return AttachDecision::Attach;
@@ -2750,8 +2714,9 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     writer.guardShape(holderId, holder->lastProperty());
   }
 
+  ValOperandId receiverId = writer.boxObject(globalId);
   EmitCallGetterResultNoGuards(cx_, writer, &globalLexical->global(), holder,
-                               shape, globalId);
+                               shape, receiverId);
 
   trackAttached("GlobalNameGetter");
   return AttachDecision::Attach;

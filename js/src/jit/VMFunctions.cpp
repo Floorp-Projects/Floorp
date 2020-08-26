@@ -1479,27 +1479,8 @@ bool BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame,
   return GetFunctionThis(cx, frame, res);
 }
 
-bool CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
-                      MutableHandleValue result) {
-  AutoRealm ar(cx, callee);
-
-  MOZ_ASSERT(callee->isNative());
-  JSNative natfun = callee->native();
-
-  JS::RootedValueArray<2> vp(cx);
-  vp[0].setObject(*callee.get());
-  vp[1].setObject(*obj.get());
-
-  if (!natfun(cx, 0, vp.begin())) {
-    return false;
-  }
-
-  result.set(vp[0]);
-  return true;
-}
-
-bool CallNativeGetterByValue(JSContext* cx, HandleFunction callee,
-                             HandleValue receiver, MutableHandleValue result) {
+bool CallNativeGetter(JSContext* cx, HandleFunction callee,
+                      HandleValue receiver, MutableHandleValue result) {
   AutoRealm ar(cx, callee);
 
   MOZ_ASSERT(callee->isNative());
