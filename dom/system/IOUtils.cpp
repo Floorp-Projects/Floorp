@@ -9,7 +9,9 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
+#include "nsPrintfCString.h"
 #include "nspr/prerror.h"
 #include "nspr/prio.h"
 #include "nspr/private/pprio.h"
@@ -256,6 +258,19 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
 }
 
 /* static */
+already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
+                                            const nsAString& aPath) {
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  NS_ENSURE_TRUE(!!promise, nullptr);
+
+  // Process arguments.
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsAutoString path(aPath);
+
+  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, path);
+}
+
+/* static */
 already_AddRefed<Promise> IOUtils::WriteAtomic(
     GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
     const WriteAtomicOptions& aOptions) {
@@ -268,22 +283,39 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
   aData.ComputeState();
   auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
   if (buf.isNothing()) {
-    promise->MaybeRejectWithOperationError("Out of memory");
+    promise->MaybeRejectWithOperationError(
+        "Out of memory: Could not allocate buffer while writing to file");
     return promise.forget();
   }
   nsAutoString destPath(aPath);
-  InternalWriteAtomicOpts opts;
-  opts.mFlush = aOptions.mFlush;
-  opts.mNoOverwrite = aOptions.mNoOverwrite;
-  if (aOptions.mBackupFile.WasPassed()) {
-    opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
-  }
-  if (aOptions.mTmpPath.WasPassed()) {
-    opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
-  }
+  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
 
   return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicSync, destPath,
                                          std::move(*buf), std::move(opts));
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::WriteAtomicUTF8(
+    GlobalObject& aGlobal, const nsAString& aPath, const nsAString& aString,
+    const WriteAtomicOptions& aOptions) {
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  // Process arguments.
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsCString utf8Str;
+  if (!CopyUTF16toUTF8(aString, utf8Str, fallible)) {
+    promise->MaybeRejectWithOperationError(
+        "Out of memory: Could not allocate buffer while writing to file");
+    return promise.forget();
+  }
+  nsAutoString destPath(aPath);
+  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
+
+  return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicUTF8Sync,
+                                         destPath, std::move(utf8Str),
+                                         std::move(opts));
 }
 
 /* static */
@@ -500,6 +532,10 @@ void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
       aPromise->MaybeRejectWithOperationError(
           errMsg.refOr("Target directory is not empty"_ns));
       break;
+    case NS_ERROR_FILE_CORRUPTED:
+      aPromise->MaybeRejectWithNotReadableError(
+          errMsg.refOr("Target file could not be read and may be corrupt"_ns));
+      break;
     case NS_ERROR_ILLEGAL_INPUT:
     case NS_ERROR_ILLEGAL_VALUE:
       aPromise->MaybeRejectWithDataError(
@@ -622,8 +658,40 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
 }
 
 /* static */
+Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
+    const nsAString& aPath) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  return ReadSync(aPath, Nothing())
+      .andThen([&aPath](const nsTArray<uint8_t>& bytes)
+                   -> Result<nsString, IOError> {
+        auto utf8Span = Span(reinterpret_cast<const char*>(bytes.Elements()),
+                             bytes.Length());
+        if (!IsUtf8(utf8Span)) {
+          return Err(
+              IOError(NS_ERROR_FILE_CORRUPTED)
+                  .WithMessage(
+                      "Could not read file(%s) because it is not UTF-8 encoded",
+                      NS_ConvertUTF16toUTF8(aPath).get()));
+        }
+
+        nsDependentCSubstring utf8Str(utf8Span.Elements(), utf8Span.Length());
+        nsString utf16Str;
+        if (!CopyUTF8toUTF16(utf8Str, utf16Str, fallible)) {
+          return Err(
+              IOError(NS_ERROR_OUT_OF_MEMORY)
+                  .WithMessage("Could not allocate buffer to convert UTF-8 "
+                               "contents of file at (%s) to UTF-16",
+                               NS_ConvertUTF16toUTF8(aPath).get()));
+        }
+
+        return utf16Str;
+      });
+}
+
+/* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
-    const nsAString& aDestPath, const Buffer<uint8_t>& aByteArray,
+    const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
     const IOUtils::InternalWriteAtomicOpts& aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -705,8 +773,21 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
 }
 
 /* static */
+Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicUTF8Sync(
+    const nsAString& aDestPath, const nsCString& aUTF8String,
+    const InternalWriteAtomicOpts& aOptions) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  Span utf8Bytes(reinterpret_cast<const uint8_t*>(aUTF8String.get()),
+                 aUTF8String.Length());
+
+  return WriteAtomicSync(aDestPath, utf8Bytes, aOptions);
+}
+
+/* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
-    PRFileDesc* aFd, const nsACString& aPath, const Buffer<uint8_t>& aBytes) {
+    PRFileDesc* aFd, const nsACString& aPath,
+    const Span<const uint8_t>& aBytes) {
   // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max
   // length.
   MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
@@ -721,13 +802,13 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   // PR_Write can only write up to PR_INT32_MAX bytes at a time, but the data
   // source might be as large as UINT32_MAX bytes.
   uint32_t chunkSize = PR_INT32_MAX;
-  uint32_t pendingBytes = aBytes.Length();
+  Span<const uint8_t> pendingBytes = aBytes;
 
-  while (pendingBytes > 0) {
-    if (pendingBytes < chunkSize) {
-      chunkSize = pendingBytes;
+  while (pendingBytes.Length() > 0) {
+    if (pendingBytes.Length() < chunkSize) {
+      chunkSize = pendingBytes.Length();
     }
-    int32_t rv = PR_Write(aFd, aBytes.begin() + bytesWritten, chunkSize);
+    int32_t rv = PR_Write(aFd, pendingBytes.Elements(), chunkSize);
     if (rv < 0) {
       return Err(IOError(NS_ERROR_FILE_CORRUPTED)
                      .WithMessage("Could not write chunk(size=%" PRIu32
@@ -735,8 +816,8 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
                                   "The file may be corrupt",
                                   chunkSize, aPath.BeginReading()));
     }
-    pendingBytes -= rv;
     bytesWritten += rv;
+    pendingBytes = pendingBytes.From(rv);
   }
 
   return bytesWritten;
