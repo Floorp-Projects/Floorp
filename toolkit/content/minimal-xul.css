@@ -34,11 +34,7 @@
 
 /* Rules required for style caching of anonymous content scrollbar parts */
 @supports -moz-bool-pref("layout.css.cached-scrollbar-styles.enabled") {
-  scrollcorner:-moz-native-anonymous-no-specificity,
-  resizer:-moz-native-anonymous-no-specificity,
-  scrollbar:-moz-native-anonymous-no-specificity,
-  scrollbarbutton:-moz-native-anonymous-no-specificity,
-  slider:-moz-native-anonymous-no-specificity {
+  :is(scrollcorner, resizer, scrollbar, scrollbarbutton, slider):where(:-moz-native-anonymous) {
     /* All scrollbar parts must not inherit any properties from the scrollable
      * element (except for visibility and pointer-events), for the anonymous
      * content style caching system to work.
@@ -98,9 +94,7 @@
    * expecting them to inherit into its children.  Explicitly inherit those,
    * overriding the 'all: initial; direction: ltr;' declarations above.
    */
-  scrollbarbutton:-moz-native-anonymous-no-specificity,
-  slider:-moz-native-anonymous-no-specificity,
-  thumb:-moz-native-anonymous-no-specificity {
+  :is(scrollbarbutton, slider, thumb):where(:-moz-native-anonymous) {
     direction: inherit;
     cursor: inherit;
   }
