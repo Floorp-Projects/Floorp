@@ -15,7 +15,6 @@ import kotlin.coroutines.CoroutineContext
 interface DeleteBrowsingDataController {
     suspend fun deleteTabs()
     suspend fun deleteBrowsingData()
-    suspend fun deleteHistoryAndDOMStorages()
     suspend fun deleteCookies()
     suspend fun deleteCachedFiles()
     suspend fun deleteSitePermissions()
@@ -36,14 +35,10 @@ class DefaultDeleteBrowsingDataController(
     }
 
     override suspend fun deleteBrowsingData() {
-        deleteHistoryAndDOMStorages()
-    }
-
-    override suspend fun deleteHistoryAndDOMStorages() {
         withContext(coroutineContext) {
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
+            historyStorage.deleteEverything()
         }
-        historyStorage.deleteEverything()
     }
 
     override suspend fun deleteCookies() {
