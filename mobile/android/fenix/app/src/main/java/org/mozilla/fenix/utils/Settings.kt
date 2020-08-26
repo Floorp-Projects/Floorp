@@ -102,9 +102,19 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
 
     var showTopFrecentSites by featureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),
+        appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),    
         default = false,
         featureFlag = FeatureFlags.topFrecentSite
+    )
+
+    var numberOfAppLaunches by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_times_app_opened),
+        default = 0
+    )
+
+    var lastReviewPromptTimeInMillis by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_last_review_prompt_shown_time),
+        default = 0L
     )
 
     var waitToShowPageUntilFirstPaint by featureFlagPreference(
@@ -794,62 +804,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             appContext.getPreferenceKey(R.string.pref_key_private_mode_opened),
             0
         )
-
-    private val numTimesFeedbackPromptShown: Int
-        get() = preferences.getInt(
-            appContext.getPreferenceKey(R.string.pref_key_feedback_prompt_shown),
-            0
-        )
-
-    fun incrementNumTimesFeedbackPromptShown() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_feedback_prompt_shown),
-            numTimesFeedbackPromptShown + 1
-        ).apply()
-    }
-
-    private val numTimesOpenedAfterInstall: Int
-        get() = preferences.getInt(
-            appContext.getPreferenceKey(R.string.pref_key_times_opened_after_install),
-            0
-        )
-
-    fun incrementNumTimesOpenedAfterInstall() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_times_opened_after_install),
-            numTimesOpenedAfterInstall + 1
-        ).apply()
-    }
-
-    private val timeWhenPromptWasLastShown: Int
-        get() = preferences.getInt(
-            appContext.getPreferenceKey(R.string.pref_key_time_prompt_shown),
-            0
-        )
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun incrementTimeWhenPromptWasLastShown() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_time_prompt_shown),
-            LocalDate.now().dayOfYear
-        ).apply()
-    }
-
-    /*
-     * User feedback prompt is shown when Firefox is set as the default browser and after the
-     * 5th time the user opened the app. This prompt should only be shown once every four months.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    val shouldShowUserFeedbackPrompt: Boolean =
-        numTimesOpenedAfterInstall >= 5
-                && isDefaultBrowser()
-                && (hasBeenFourMonthsSince(timeWhenPromptWasLastShown))
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun hasBeenFourMonthsSince(timeWhenPromptWasLastShown: Int): Boolean {
-        val numDays = LocalDate.now().dayOfYear - timeWhenPromptWasLastShown
-        return numDays >= MIN_DAYS_SINCE_FEEDBACK_PROMPT
-    }
 
     val showPrivateModeContextualFeatureRecommender: Boolean
         get() {
