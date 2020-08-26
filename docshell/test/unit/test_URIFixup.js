@@ -56,7 +56,11 @@ var data = [
 var len = data.length;
 
 add_task(async function setup() {
-  await Services.search.init();
+  await setupSearchService();
+  // Now we've initialised the search service, we force remove the engines
+  // it has, so they don't interfere with this test.
+  // Search engine integration is tested in test_URIFixup_search.js.
+  Services.search.wrappedJSObject._engines.clear();
 });
 
 // Make sure we fix what needs fixing when there is no pref set.
