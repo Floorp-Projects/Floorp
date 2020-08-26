@@ -153,11 +153,10 @@ class StringTable:
         """
         if string in self.table:
             return self.table[string]
-        else:
-            result = self.current_index
-            self.table[string] = result
-            self.current_index += self.c_strlen(string)
-            return result
+        result = self.current_index
+        self.table[string] = result
+        self.current_index += self.c_strlen(string)
+        return result
 
     def stringIndexes(self, strings):
         """ Returns a list of indexes for the provided list of strings.
@@ -185,8 +184,7 @@ class StringTable:
             def toCChar(s):
                 if s == "'":
                     return "'\\''"
-                else:
-                    return "'%s'" % s
+                return "'%s'" % s
             return ", ".join(map(toCChar, string))
 
         f.write("#if defined(_MSC_VER) && !defined(__clang__)\n")
