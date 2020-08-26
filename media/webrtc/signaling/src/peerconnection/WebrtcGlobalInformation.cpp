@@ -604,7 +604,7 @@ int32_t WebrtcGlobalInformation::DebugLevel(const GlobalObject& aGlobal) {
 void WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal,
                                           bool aEnable) {
   if (aEnable) {
-    sAecDebugLogDir.emplace(StartAecLog());
+    sAecDebugLogDir = Some(StartAecLog());
   } else {
     StopAecLog();
   }
