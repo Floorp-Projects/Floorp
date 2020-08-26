@@ -9,18 +9,12 @@ from taskgraph.util.attributes import match_run_on_projects
 from taskgraph.util.backstop import is_backstop, BACKSTOP_PUSH_INTERVAL, BACKSTOP_TIME_INTERVAL
 
 
-@register_strategy('backstop', args=(BACKSTOP_PUSH_INTERVAL, BACKSTOP_TIME_INTERVAL, {'all'}))
-@register_strategy("push-interval-10", args=(10, 0, {'try'}))
-@register_strategy("backstop-10-pushes-2-hours", args=(10, 120, {'try'}))
-@register_strategy("backstop-20-pushes-4-hours", args=(20, 240, {'try'}))
-@register_strategy("push-interval-20", args=(20, 0, {'try'}))
-@register_strategy("push-interval-25", args=(25, 0, {'try'}))
+@register_strategy("backstop", args=(BACKSTOP_PUSH_INTERVAL, BACKSTOP_TIME_INTERVAL))
+@register_strategy("push-interval-10", args=(10, 0))
+@register_strategy("push-interval-20", args=(20, 0))
+@register_strategy("push-interval-25", args=(25, 0))
 class Backstop(OptimizationStrategy):
-    """Ensures that no task gets left behind.
-
-    Will schedule all tasks either every Nth push, or M minutes. This behaviour
-    is only enabled on autoland. For all other projects, the
-    `remove_on_projects` flag determines what will happen.
+    """Runs tasks every N pushes.
 
     Args:
         push_interval (int): Number of pushes
@@ -30,10 +24,10 @@ class Backstop(OptimizationStrategy):
             be removed if we're running on one of these projects, otherwise
             it will be kept.
     """
-    def __init__(self, push_interval, time_interval, remove_on_projects):
+    def __init__(self, push_interval, time_interval, remove_on_projects=None):
         self.push_interval = push_interval
         self.time_interval = time_interval
-        self.remove_on_projects = remove_on_projects
+        self.remove_on_projects = remove_on_projects or {'try'}
 
     def should_remove_task(self, task, params, _):
         project = params["project"]
