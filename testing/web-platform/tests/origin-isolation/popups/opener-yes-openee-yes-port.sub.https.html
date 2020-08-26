@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Opener is not isolated, openee is isolated, openee is different-origin to the opener because of a port mismatch</title>
+<title>Opener is isolated, openee is isolated, openee is different-origin to the opener because of a port mismatch</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
@@ -18,11 +18,11 @@ promise_setup(async () => {
   openee = await openWindow("{{hosts[][]}}:{{ports[https][1]}}", "?1");
 });
 
-// Since they're different-origin, the openee's isolation request is respected,
-// so the opener ends up in the site-keyed agent cluster and the openee in the
-// origin-keyed one.
+// Both request isolation, so the opener ends up in one origin-keyed agent
+// cluster (the default port's origin), and the openee ends up in a different
+// origin-keyed agent cluster (the other port's origin).
 testOpenedWindowIsInADifferentAgentCluster(() => openee);
 
-testGetter(self, false, "opener");
+testGetter(self, true, "opener");
 testGetter(() => openee, true, "openee");
 </script>
