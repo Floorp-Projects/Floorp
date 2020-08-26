@@ -29,8 +29,9 @@ void nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator) {
   e.forget(anEnumerator);
 }
 
-void nsObserverList::FillObserverArray(nsCOMArray<nsIObserver>& aArray) {
-  aArray.SetCapacity(mObservers.Length());
+nsCOMArray<nsIObserver> nsObserverList::ReverseCloneObserverArray() {
+  nsCOMArray<nsIObserver> array;
+  array.SetCapacity(mObservers.Length());
 
   // XXX This could also use RemoveElementsBy if we lifted the promise to fill
   // aArray in reverse order. Although there shouldn't be anyone explicitly
@@ -40,12 +41,14 @@ void nsObserverList::FillObserverArray(nsCOMArray<nsIObserver>& aArray) {
   for (int32_t i = mObservers.Length() - 1; i >= 0; --i) {
     nsCOMPtr<nsIObserver> observer = mObservers[i].GetValue();
     if (observer) {
-      aArray.AppendObject(observer);
+      array.AppendElement(observer.forget());
     } else {
       // the object has gone away, remove the weakref
       mObservers.RemoveElementAt(i);
     }
   }
+
+  return array;
 }
 
 void nsObserverList::AppendStrongObservers(nsCOMArray<nsIObserver>& aArray) {
@@ -61,8 +64,7 @@ void nsObserverList::AppendStrongObservers(nsCOMArray<nsIObserver>& aArray) {
 
 void nsObserverList::NotifyObservers(nsISupports* aSubject, const char* aTopic,
                                      const char16_t* someData) {
-  nsCOMArray<nsIObserver> observers;
-  FillObserverArray(observers);
+  const nsCOMArray<nsIObserver> observers = ReverseCloneObserverArray();
 
   for (int32_t i = 0; i < observers.Count(); ++i) {
     observers[i]->Observe(aSubject, aTopic, someData);
@@ -70,9 +72,7 @@ void nsObserverList::NotifyObservers(nsISupports* aSubject, const char* aTopic,
 }
 
 nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
-    : mIndex(0) {
-  aObserverList->FillObserverArray(mObservers);
-}
+    : mIndex(0), mObservers(aObserverList->ReverseCloneObserverArray()) {}
 
 NS_IMETHODIMP
 nsObserverEnumerator::HasMoreElements(bool* aResult) {
