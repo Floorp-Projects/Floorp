@@ -1619,7 +1619,7 @@
 # Otherwise, nested calls just return false.
 - name: dom.document.exec_command.nested_calls_allowed
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 - name: dom.enable_window_print
