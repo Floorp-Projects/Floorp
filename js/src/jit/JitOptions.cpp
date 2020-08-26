@@ -327,6 +327,17 @@ void DefaultJitOptions::setEagerIonCompilation() {
   fullIonWarmUpThreshold = 0;
 }
 
+void DefaultJitOptions::setFastWarmUp() {
+  baselineInterpreterWarmUpThreshold = 4;
+  baselineJitWarmUpThreshold = 10;
+  trialInliningWarmUpThreshold = 16;
+  normalIonWarmUpThreshold = 25;
+  fullIonWarmUpThreshold = 55;
+
+  inliningEntryThreshold = 0;
+  smallFunctionMaxBytecodeLength = INT32_MAX;
+}
+
 void DefaultJitOptions::setNormalIonWarmUpThreshold(uint32_t warmUpThreshold) {
   normalIonWarmUpThreshold = warmUpThreshold;
 
