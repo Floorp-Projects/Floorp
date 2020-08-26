@@ -902,9 +902,9 @@ bool IonCacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallScriptedGetterResult(ValOperandId receiverId,
-                                                      uint32_t getterOffset,
-                                                      bool sameRealm) {
+bool IonCacheIRCompiler::emitCallScriptedGetterResult(
+    ValOperandId receiverId, uint32_t getterOffset, bool sameRealm,
+    uint32_t nargsAndFlagsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
   AutoOutputRegister output(*this);
@@ -973,8 +973,9 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(ValOperandId receiverId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallNativeGetterResult(ValOperandId receiverId,
-                                                    uint32_t getterOffset) {
+bool IonCacheIRCompiler::emitCallNativeGetterResult(
+    ValOperandId receiverId, uint32_t getterOffset,
+    uint32_t nargsAndFlagsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
   AutoOutputRegister output(*this);

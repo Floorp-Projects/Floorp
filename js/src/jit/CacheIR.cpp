@@ -1005,14 +1005,12 @@ static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
   switch (IsCacheableGetPropCall(obj, holder, shape)) {
     case CanAttachNativeGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      MOZ_ASSERT(target->isNativeWithoutJitEntry());
       writer.callNativeGetterResult(receiverId, target);
       writer.typeMonitorResult();
       break;
     }
     case CanAttachScriptedGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      MOZ_ASSERT(target->hasJitEntry());
       bool sameRealm = cx->realm() == target->realm();
       writer.callScriptedGetterResult(receiverId, target, sameRealm);
       writer.typeMonitorResult();

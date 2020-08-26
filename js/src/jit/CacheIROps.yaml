@@ -1817,18 +1817,22 @@
   shared: false
   transpile: false
   cost_estimate: 5
+  custom_writer: true
   args:
     receiver: ValId
     getter: ObjectField
     sameRealm: BoolImm
+    nargsAndFlags: RawWordField
 
 - name: CallNativeGetterResult
   shared: false
   transpile: false
   cost_estimate: 5
+  custom_writer: true
   args:
     receiver: ValId
     getter: ObjectField
+    nargsAndFlags: RawWordField
 
 - name: ProxyGetResult
   shared: false
