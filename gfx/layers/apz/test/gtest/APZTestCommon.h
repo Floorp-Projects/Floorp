@@ -129,9 +129,6 @@ class MockContentController : public GeckoContentController {
  public:
   MOCK_METHOD1(NotifyLayerTransforms, void(nsTArray<MatrixMessage>&&));
   MOCK_METHOD1(RequestContentRepaint, void(const RepaintRequest&));
-  MOCK_METHOD2(RequestFlingSnap,
-               void(const ScrollableLayerGuid::ViewID& aScrollId,
-                    const mozilla::CSSPoint& aDestination));
   MOCK_METHOD5(HandleTap, void(TapType, const LayoutDevicePoint&, Modifiers,
                                const ScrollableLayerGuid&, uint64_t));
   MOCK_METHOD5(NotifyPinchGesture,
