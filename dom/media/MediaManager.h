@@ -255,6 +255,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
 
   void OnNavigation(uint64_t aWindowID);
   void OnCameraMute(bool aMute);
+  void OnMicrophoneMute(bool aMute);
   bool IsActivelyCapturingOrHasAPermission(uint64_t aWindowId);
 
   MediaEventSource<void>& DeviceListChangeEvent() {
