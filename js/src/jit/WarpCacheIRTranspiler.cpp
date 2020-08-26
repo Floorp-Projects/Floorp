@@ -193,6 +193,10 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitCallGetterResult(CallKind kind, ValOperandId receiverId,
                                          uint32_t getterOffset, bool sameRealm,
                                          uint32_t nargsAndFlagsOffset);
+  MOZ_MUST_USE bool emitCallSetter(CallKind kind, ObjOperandId receiverId,
+                                   uint32_t setterOffset, ValOperandId rhsId,
+                                   bool sameRealm,
+                                   uint32_t nargsAndFlagsOffset);
 
   CACHE_IR_TRANSPILER_GENERATED
 
@@ -3291,6 +3295,55 @@ bool WarpCacheIRTranspiler::emitCallNativeGetterResult(
     uint32_t nargsAndFlagsOffset) {
   return emitCallGetterResult(CallKind::Native, receiverId, getterOffset,
                               sameRealm, nargsAndFlagsOffset);
+}
+
+bool WarpCacheIRTranspiler::emitCallSetter(CallKind kind,
+                                           ObjOperandId receiverId,
+                                           uint32_t setterOffset,
+                                           ValOperandId rhsId, bool sameRealm,
+                                           uint32_t nargsAndFlagsOffset) {
+  MDefinition* receiver = getOperand(receiverId);
+  MDefinition* setter = objectStubField(setterOffset);
+  MDefinition* rhs = getOperand(rhsId);
+  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
+
+  uint16_t nargs = nargsAndFlags >> 16;
+  FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
+  WrappedFunction* wrappedTarget =
+      maybeWrappedFunction(setter, kind, nargs, flags);
+
+  jsbytecode* pc = loc_.toRawBytecode();
+  CallInfo callInfo(alloc(), pc, /* constructing = */ false,
+                    /* ignoresReturnValue = */ true);
+  callInfo.initForSetterCall(setter, receiver, rhs);
+
+  MCall* call = makeCall(callInfo, /* needsThisCheck = */ false, wrappedTarget);
+  if (!call) {
+    return false;
+  }
+
+  if (sameRealm) {
+    call->setNotCrossRealm();
+  }
+
+  addEffectful(call);
+  return resumeAfter(call);
+}
+
+bool WarpCacheIRTranspiler::emitCallScriptedSetter(
+    ObjOperandId receiverId, uint32_t setterOffset, ValOperandId rhsId,
+    bool sameRealm, uint32_t nargsAndFlagsOffset) {
+  return emitCallSetter(CallKind::Scripted, receiverId, setterOffset, rhsId,
+                        sameRealm, nargsAndFlagsOffset);
+}
+
+bool WarpCacheIRTranspiler::emitCallNativeSetter(ObjOperandId receiverId,
+                                                 uint32_t setterOffset,
+                                                 ValOperandId rhsId,
+                                                 bool sameRealm,
+                                                 uint32_t nargsAndFlagsOffset) {
+  return emitCallSetter(CallKind::Native, receiverId, setterOffset, rhsId,
+                        sameRealm, nargsAndFlagsOffset);
 }
 
 // TODO: rename the MetaTwoByte op when IonBuilder is gone.
