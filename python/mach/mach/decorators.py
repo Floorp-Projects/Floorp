@@ -26,6 +26,7 @@ class _MachCommand(object):
         'arguments',
         'argument_group_names',
         'virtualenv_name',
+        'ok_if_tests_disabled',
 
         # By default, subcommands will be sorted. If this is set to
         # 'declaration', they will be left in declaration order.
@@ -54,7 +55,7 @@ class _MachCommand(object):
 
     def __init__(self, name=None, subcommand=None, category=None,
                  description=None, conditions=None, parser=None,
-                 order=None, virtualenv_name=None):
+                 order=None, virtualenv_name=None, ok_if_tests_disabled=False):
         self.name = name
         self.subcommand = subcommand
         self.category = category
@@ -65,6 +66,10 @@ class _MachCommand(object):
         self.argument_group_names = []
         self.virtualenv_name = virtualenv_name
         self.order = order
+        if ok_if_tests_disabled and category != 'testing':
+            raise ValueError('ok_if_tests_disabled should only be set for '
+                             '`testing` mach commands')
+        self.ok_if_tests_disabled = ok_if_tests_disabled
 
         self.cls = None
         self.method = None
