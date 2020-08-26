@@ -23,8 +23,9 @@
 ; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-%define private_prefix checkasm
 %include "config.asm"
+%undef private_prefix
+%define private_prefix checkasm
 %include "ext/x86/x86inc.asm"
 
 SECTION_RODATA 16
