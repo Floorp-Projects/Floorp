@@ -7,8 +7,6 @@
 #include "nsIPrinter.idl"
 #include "nsIPrintSettings.idl"
 
-interface nsIStringEnumerator;
-
 [scriptable, uuid(5e738fff-404c-4c94-9189-e8f2cce93e94)]
 interface nsIPrinterList : nsISupports
 {
@@ -46,4 +44,10 @@ interface nsIPrinterList : nsISupports
    * Returns a promise that resolves to an array of printers.
    */
   [implicit_jscontext] readonly attribute Promise printers;
+
+  /**
+   * Returns a Promise that resolves to an array of nsIPaper instances
+   * for common paper sizes suitable to be supported for Save to PDF.
+   */
+  [implicit_jscontext] readonly attribute Promise fallbackPaperList;
 };

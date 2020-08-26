@@ -144,6 +144,7 @@ EXPORTS += [
     'nsIRollupListener.h',
     'nsIWidget.h',
     'nsIWidgetListener.h',
+    'nsPaper.h',
     'nsPrinterListBase.h',
     'nsUserIdleService.h',
     'nsWidgetInitData.h',

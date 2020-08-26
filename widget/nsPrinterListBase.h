@@ -10,6 +10,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
+#include "nsPaper.h"
 #include "nsString.h"
 
 class nsPrinterListBase : public nsIPrinterList {
@@ -26,6 +27,7 @@ class nsPrinterListBase : public nsIPrinterList {
                              Promise** aResult) final;
   NS_IMETHOD GetNamedOrDefaultPrinter(const nsAString& aPrinterName,
                                       JSContext* aCx, Promise** aResult) final;
+  NS_IMETHOD GetFallbackPaperList(JSContext*, Promise**) final;
 
   struct PrinterInfo {
     // Both windows and CUPS: The name of the printer.
@@ -60,6 +62,10 @@ class nsPrinterListBase : public nsIPrinterList {
   // This is implemented separately from the IDL interface version so that it
   // can be made const, which allows it to be used while resolving promises.
   virtual nsresult SystemDefaultPrinterName(nsAString&) const = 0;
+
+  // Return "paper" sizes to be supported by the Save to PDF destination;
+  // for actual printer drivers the list is retrieved from nsIPrinter.
+  nsTArray<RefPtr<nsPaper>> FallbackPaperList() const;
 
   RefPtr<Promise> mPrintersPromise;
 };
