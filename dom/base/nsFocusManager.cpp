@@ -2727,11 +2727,13 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
       return;
     }
   } else {
-    // We can only test for top-level Web content. We can't return
-    // early for out-of-process iframes, because when they need to
-    // to be "raised", their top-level Web content may already be
-    // "raised".
-    if (aWindow->GetBrowsingContext() == GetActiveBrowsingContext()) {
+    BrowsingContext* bc = aWindow->GetBrowsingContext();
+    // TODO: Deeper OOP frame hierarchies are
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1661227
+    if (bc == GetActiveBrowsingContext()) {
+      return;
+    }
+    if (bc == GetFocusedBrowsingContext()) {
       return;
     }
   }
