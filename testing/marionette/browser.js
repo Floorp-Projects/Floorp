@@ -16,9 +16,7 @@ const { WebElementEventTarget } = ChromeUtils.import(
 const { element } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const { NoSuchWindowError, UnsupportedOperationError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 const {
   MessageManagerDestroyedPromise,
@@ -335,7 +333,7 @@ browser.Context = class {
         return win;
 
       default:
-        throw new UnsupportedOperationError(
+        throw new error.UnsupportedOperationError(
           `openWindow() not supported in ${this.driver.appName}`
         );
     }
@@ -372,7 +370,7 @@ browser.Context = class {
         break;
 
       default:
-        throw new UnsupportedOperationError(
+        throw new error.UnsupportedOperationError(
           `closeTab() not supported in ${this.driver.appName}`
         );
     }
@@ -423,7 +421,7 @@ browser.Context = class {
         break;
 
       default:
-        throw new UnsupportedOperationError(
+        throw new error.UnsupportedOperationError(
           `openTab() not supported in ${this.driver.appName}`
         );
     }
@@ -474,7 +472,7 @@ browser.Context = class {
           break;
 
         default:
-          throw new UnsupportedOperationError(
+          throw new error.UnsupportedOperationError(
             `switchToTab() not supported in ${this.driver.appName}`
           );
       }

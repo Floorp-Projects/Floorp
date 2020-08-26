@@ -26,7 +26,10 @@ const MAX_STRING_LENGTH = 250;
  *
  * Usage::
  *
- *     const {pprint} = Cu.import("chrome://marionette/content/error.js", {});
+ *     const { pprint } = Cu.import(
+ *       "chrome://marionette/content/format.js", {}
+ *     );
+ *
  *     let bool = {value: true};
  *     pprint`Expected boolean, got ${bool}`;
  *     => 'Expected boolean, got [object Object] {"value": true}'

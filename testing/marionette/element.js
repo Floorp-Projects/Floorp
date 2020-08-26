@@ -7,12 +7,7 @@
 
 const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
 const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
-const {
-  InvalidArgumentError,
-  InvalidSelectorError,
-  NoSuchElementError,
-  StaleElementReferenceError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 const { PollPromise } = ChromeUtils.import(
   "chrome://marionette/content/sync.js"
@@ -218,7 +213,7 @@ element.Store = class {
       throw new TypeError(pprint`Expected web element, got: ${webEl}`);
     }
     if (!this.has(webEl)) {
-      throw new NoSuchElementError(
+      throw new error.NoSuchElementError(
         "Web element reference not seen before: " + webEl.uuid
       );
     }
@@ -232,7 +227,7 @@ element.Store = class {
     }
 
     if (element.isStale(el, win)) {
-      throw new StaleElementReferenceError(
+      throw new error.StaleElementReferenceError(
         pprint`The element reference of ${el || webEl.uuid} is stale; ` +
           "either the element is no longer attached to the DOM, " +
           "it is not in the current frame context, " +
@@ -327,7 +322,7 @@ element.find = function(container, strategy, selector, opts = {}) {
       // and findElements when bug 1254486 is addressed
       if (!opts.all && (!foundEls || foundEls.length == 0)) {
         let msg = `Unable to locate element: ${selector}`;
-        reject(new NoSuchElementError(msg));
+        reject(new error.NoSuchElementError(msg));
       }
 
       if (opts.all) {
@@ -355,7 +350,7 @@ function find_(
   try {
     res = searchFn(strategy, selector, rootNode, startNode);
   } catch (e) {
-    throw new InvalidSelectorError(
+    throw new error.InvalidSelectorError(
       `Given ${strategy} expression "${selector}" is invalid: ${e}`
     );
   }
@@ -547,11 +542,11 @@ function findElement(strategy, selector, document, startNode = undefined) {
       try {
         return startNode.querySelector(selector);
       } catch (e) {
-        throw new InvalidSelectorError(`${e.message}: "${selector}"`);
+        throw new error.InvalidSelectorError(`${e.message}: "${selector}"`);
       }
   }
 
-  throw new InvalidSelectorError(`No such strategy: ${strategy}`);
+  throw new error.InvalidSelectorError(`No such strategy: ${strategy}`);
 }
 
 /**
@@ -611,7 +606,7 @@ function findElements(strategy, selector, document, startNode = undefined) {
       return startNode.querySelectorAll(selector);
 
     default:
-      throw new InvalidSelectorError(`No such strategy: ${strategy}`);
+      throw new error.InvalidSelectorError(`No such strategy: ${strategy}`);
   }
 }
 
@@ -1401,7 +1396,7 @@ class WebElement {
       return new ChromeWebElement(uuid);
     }
 
-    throw new InvalidArgumentError(
+    throw new error.InvalidArgumentError(
       "Expected DOM window/element " + pprint`or XUL element, got: ${node}`
     );
   }
@@ -1442,7 +1437,7 @@ class WebElement {
       }
     }
 
-    throw new InvalidArgumentError(
+    throw new error.InvalidArgumentError(
       pprint`Expected web element reference, got: ${json}`
     );
   }
@@ -1482,7 +1477,7 @@ class WebElement {
         return new ContentWebElement(uuid);
 
       default:
-        throw new InvalidArgumentError("Unknown context: " + context);
+        throw new error.InvalidArgumentError("Unknown context: " + context);
     }
   }
 
@@ -1538,7 +1533,7 @@ class ContentWebElement extends WebElement {
     const { Identifier } = ContentWebElement;
 
     if (!(Identifier in json)) {
-      throw new InvalidArgumentError(
+      throw new error.InvalidArgumentError(
         pprint`Expected web element reference, got: ${json}`
       );
     }
@@ -1562,7 +1557,7 @@ class ContentWebWindow extends WebElement {
 
   static fromJSON(json) {
     if (!(ContentWebWindow.Identifier in json)) {
-      throw new InvalidArgumentError(
+      throw new error.InvalidArgumentError(
         pprint`Expected web window reference, got: ${json}`
       );
     }
@@ -1585,7 +1580,7 @@ class ContentWebFrame extends WebElement {
 
   static fromJSON(json) {
     if (!(ContentWebFrame.Identifier in json)) {
-      throw new InvalidArgumentError(
+      throw new error.InvalidArgumentError(
         pprint`Expected web frame reference, got: ${json}`
       );
     }
@@ -1607,7 +1602,7 @@ class ChromeWebElement extends WebElement {
 
   static fromJSON(json) {
     if (!(ChromeWebElement.Identifier in json)) {
-      throw new InvalidArgumentError(
+      throw new error.InvalidArgumentError(
         "Expected chrome element reference " +
           pprint`for XUL element, got: ${json}`
       );

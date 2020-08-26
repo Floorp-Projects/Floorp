@@ -13,11 +13,7 @@ const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
 const { element } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const {
-  InvalidArgumentError,
-  MoveTargetOutOfBoundsError,
-  UnsupportedOperationError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { event } = ChromeUtils.import("chrome://marionette/content/event.js");
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 const { Sleep } = ChromeUtils.import("chrome://marionette/content/sync.js");
@@ -369,7 +365,7 @@ action.PointerOrigin.get = function(obj) {
     assert.in(name, this, pprint`Unknown pointer-move origin: ${obj}`);
     origin = this[name];
   } else if (!element.isDOMElement(obj)) {
-    throw new InvalidArgumentError(
+    throw new error.InvalidArgumentError(
       "Expected 'origin' to be undefined, " +
         '"viewport", "pointer", ' +
         pprint`or an element, got: ${obj}`
@@ -473,7 +469,7 @@ class InputState {
         !obj.pointerType &&
         (!obj.parameters || !obj.parameters.pointerType)
       ) {
-        throw new InvalidArgumentError(
+        throw new error.InvalidArgumentError(
           pprint`Expected obj to have pointerType, got ${obj}`
         );
       }
@@ -515,7 +511,7 @@ action.InputState.Key = class Key extends InputState {
     if (key in MODIFIER_NAME_LOOKUP) {
       this[MODIFIER_NAME_LOOKUP[key]] = value;
     } else {
-      throw new InvalidArgumentError(
+      throw new error.InvalidArgumentError(
         "Expected 'key' to be one of " +
           Object.keys(MODIFIER_NAME_LOOKUP) +
           pprint`, got ${key}`
@@ -658,7 +654,7 @@ action.InputState.Pointer = class Pointer extends InputState {
 action.Action = class {
   constructor(id, type, subtype) {
     if ([id, type, subtype].includes(undefined)) {
-      throw new InvalidArgumentError("Missing id, type or subtype");
+      throw new error.InvalidArgumentError("Missing id, type or subtype");
     }
     for (let attr of [id, type, subtype]) {
       assert.string(attr, pprint`Expected string, got ${attr}`);
@@ -692,11 +688,11 @@ action.Action = class {
     let id = actionSequence.id;
     let subtypes = ACTIONS[type];
     if (!subtypes) {
-      throw new InvalidArgumentError("Unknown type: " + type);
+      throw new error.InvalidArgumentError("Unknown type: " + type);
     }
     let subtype = actionItem.type;
     if (!subtypes.has(subtype)) {
-      throw new InvalidArgumentError(
+      throw new error.InvalidArgumentError(
         `Unknown subtype for ${type} action: ${subtype}`
       );
     }
@@ -760,7 +756,7 @@ action.Action = class {
         break;
 
       case action.PointerCancel:
-        throw new UnsupportedOperationError();
+        throw new error.UnsupportedOperationError();
 
       case action.Pause:
         item.duration = actionItem.duration;
@@ -858,7 +854,7 @@ action.Sequence = class extends Array {
     if (!action.inputStateMap.has(id)) {
       action.inputStateMap.set(id, inputSourceState);
     } else if (!action.inputStateMap.get(id).is(inputSourceState)) {
-      throw new InvalidArgumentError(
+      throw new error.InvalidArgumentError(
         `Expected ${id} to be mapped to ${inputSourceState}, ` +
           `got ${action.inputStateMap.get(id)}`
       );
@@ -926,7 +922,7 @@ action.processPointerAction = function(id, pointerParams, act) {
     action.inputStateMap.has(id) &&
     action.inputStateMap.get(id).type !== act.type
   ) {
-    throw new InvalidArgumentError(
+    throw new error.InvalidArgumentError(
       `Expected 'id' ${id} to be mapped to InputState whose type is ` +
         action.inputStateMap.get(id).type +
         pprint` , got ${act.type}`
@@ -937,7 +933,7 @@ action.processPointerAction = function(id, pointerParams, act) {
     action.inputStateMap.has(id) &&
     action.inputStateMap.get(id).subtype !== pointerType
   ) {
-    throw new InvalidArgumentError(
+    throw new error.InvalidArgumentError(
       `Expected 'id' ${id} to be mapped to InputState whose subtype is ` +
         action.inputStateMap.get(id).subtype +
         pprint` , got ${pointerType}`
@@ -1150,7 +1146,7 @@ function toEvents(tickDuration, win) {
         return dispatchPointerMove(a, inputState, tickDuration, win);
 
       case action.PointerCancel:
-        throw new UnsupportedOperationError();
+        throw new error.UnsupportedOperationError();
 
       case action.Pause:
         return dispatchPause(a, tickDuration);
@@ -1287,7 +1283,7 @@ function dispatchPointerDown(a, inputState, win) {
 
       case action.PointerType.Pen:
       case action.PointerType.Touch:
-        throw new UnsupportedOperationError(
+        throw new error.UnsupportedOperationError(
           "Only 'mouse' pointer type is supported"
         );
 
@@ -1339,7 +1335,7 @@ function dispatchPointerUp(a, inputState, win) {
 
       case action.PointerType.Pen:
       case action.PointerType.Touch:
-        throw new UnsupportedOperationError(
+        throw new error.UnsupportedOperationError(
           "Only 'mouse' pointer type is supported"
         );
 
@@ -1385,7 +1381,7 @@ function dispatchPointerMove(a, inputState, tickDuration, win) {
     const [targetX, targetY] = [target.x, target.y];
 
     if (!inViewPort(targetX, targetY, win)) {
-      throw new MoveTargetOutOfBoundsError(
+      throw new error.MoveTargetOutOfBoundsError(
         `(${targetX}, ${targetY}) is out of bounds of viewport ` +
           `width (${win.innerWidth}) ` +
           `and height (${win.innerHeight})`
@@ -1453,7 +1449,7 @@ function performOnePointerMove(inputState, targetX, targetY, win) {
 
     case action.PointerType.Pen:
     case action.PointerType.Touch:
-      throw new UnsupportedOperationError(
+      throw new error.UnsupportedOperationError(
         "Only 'mouse' pointer type is supported"
       );
 

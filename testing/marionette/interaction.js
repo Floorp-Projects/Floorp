@@ -19,12 +19,7 @@ const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
 const { element } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const {
-  ElementClickInterceptedError,
-  ElementNotInteractableError,
-  InvalidArgumentError,
-  InvalidElementStateError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { event } = ChromeUtils.import("chrome://marionette/content/event.js");
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 const { TimedPromise } = ChromeUtils.import(
@@ -139,7 +134,9 @@ async function webdriverClickElement(el, a11y) {
 
   // step 3
   if (el.localName == "input" && el.type == "file") {
-    throw new InvalidArgumentError("Cannot click <input type=file> elements");
+    throw new error.InvalidArgumentError(
+      "Cannot click <input type=file> elements"
+    );
   }
 
   let containerEl = element.getContainer(el);
@@ -156,7 +153,7 @@ async function webdriverClickElement(el, a11y) {
   // if we cannot bring the container element into the viewport
   // there is no point in checking if it is pointer-interactable
   if (!element.isInView(containerEl)) {
-    throw new ElementNotInteractableError(
+    throw new error.ElementNotInteractableError(
       pprint`Element ${el} could not be scrolled into view`
     );
   }
@@ -166,7 +163,7 @@ async function webdriverClickElement(el, a11y) {
   let clickPoint = element.getInViewCentrePoint(rects[0], win);
 
   if (element.isObscured(containerEl)) {
-    throw new ElementClickInterceptedError(containerEl, clickPoint);
+    throw new error.ElementClickInterceptedError(containerEl, clickPoint);
   }
 
   let acc = await a11y.getAccessible(el, true);
@@ -191,7 +188,7 @@ async function webdriverClickElement(el, a11y) {
 
 async function chromeClick(el, a11y) {
   if (!atom.isElementEnabled(el)) {
-    throw new InvalidElementStateError("Element is not enabled");
+    throw new error.InvalidElementStateError("Element is not enabled");
   }
 
   let acc = await a11y.getAccessible(el, true);
@@ -215,11 +212,11 @@ async function seleniumClickElement(el, a11y) {
   }
 
   if (!element.isVisible(visibilityCheckEl)) {
-    throw new ElementNotInteractableError();
+    throw new error.ElementNotInteractableError();
   }
 
   if (!atom.isElementEnabled(el)) {
-    throw new InvalidElementStateError("Element is not enabled");
+    throw new error.InvalidElementStateError("Element is not enabled");
   }
 
   let acc = await a11y.getAccessible(el, true);
@@ -312,13 +309,17 @@ interaction.selectOption = function(el) {
  */
 interaction.clearElement = function(el) {
   if (element.isDisabled(el)) {
-    throw new InvalidElementStateError(pprint`Element is disabled: ${el}`);
+    throw new error.InvalidElementStateError(
+      pprint`Element is disabled: ${el}`
+    );
   }
   if (element.isReadOnly(el)) {
-    throw new InvalidElementStateError(pprint`Element is read-only: ${el}`);
+    throw new error.InvalidElementStateError(
+      pprint`Element is read-only: ${el}`
+    );
   }
   if (!element.isEditable(el)) {
-    throw new InvalidElementStateError(
+    throw new error.InvalidElementStateError(
       pprint`Unable to clear element that cannot be edited: ${el}`
     );
   }
@@ -327,7 +328,7 @@ interaction.clearElement = function(el) {
     element.scrollIntoView(el);
   }
   if (!element.isInView(el)) {
-    throw new ElementNotInteractableError(
+    throw new error.ElementNotInteractableError(
       pprint`Element ${el} could not be scrolled into view`
     );
   }
@@ -351,7 +352,7 @@ function clearContentEditableElement(el) {
 
 function clearResettableElement(el) {
   if (!element.isMutableFormControl(el)) {
-    throw new InvalidElementStateError(
+    throw new error.InvalidElementStateError(
       pprint`Not an editable form control: ${el}`
     );
   }
@@ -493,7 +494,7 @@ interaction.uploadFiles = async function(el, paths) {
     // for multiple file uploads new files will be appended
     files = Array.prototype.slice.call(el.files);
   } else if (paths.length > 1) {
-    throw new InvalidArgumentError(
+    throw new error.InvalidArgumentError(
       pprint`Element ${el} doesn't accept multiple files`
     );
   }
@@ -504,7 +505,7 @@ interaction.uploadFiles = async function(el, paths) {
     try {
       file = await File.createFromFileName(path);
     } catch (e) {
-      throw new InvalidArgumentError("File not found: " + path);
+      throw new error.InvalidArgumentError("File not found: " + path);
     }
 
     files.push(file);
@@ -589,7 +590,7 @@ async function webdriverSendKeysToElement(
 
     // TODO: Wait for element to be keyboard-interactible
     if (!interaction.isKeyboardInteractable(containerEl)) {
-      throw new ElementNotInteractableError(
+      throw new error.ElementNotInteractableError(
         pprint`Element ${el} is not reachable by keyboard`
       );
     }
@@ -632,7 +633,7 @@ async function legacySendKeysToElement(el, value, a11y) {
     }
 
     if (!element.isVisible(visibilityCheckEl)) {
-      throw new ElementNotInteractableError("Element is not visible");
+      throw new error.ElementNotInteractableError("Element is not visible");
     }
 
     let acc = await a11y.getAccessible(el, true);

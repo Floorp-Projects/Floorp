@@ -8,9 +8,7 @@ const { Preferences } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { WebDriverError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { element, WebElement } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
@@ -197,7 +195,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
     // if mouseEventsOnly, then touchIds isn't used
     if (!(touchId in this.touchIds) && !this.mouseEventsOnly) {
       this.resetValues();
-      throw new WebDriverError("Element has not been pressed");
+      throw new error.WebDriverError("Element has not been pressed");
     }
   }
 
@@ -251,7 +249,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
           keyModifiers
         );
         this.resetValues();
-        throw new WebDriverError(
+        throw new error.WebDriverError(
           "Invalid Command: press cannot follow an active touch event"
         );
       }
@@ -528,7 +526,7 @@ action.Chain.prototype.generateEvents = function(
       break;
 
     default:
-      throw new WebDriverError("Unknown event type: " + type);
+      throw new error.WebDriverError("Unknown event type: " + type);
   }
   return null;
 };

@@ -419,7 +419,7 @@ add_test(function test_WebElement_from() {
   ok(WebElement.from(domFrame) instanceof ContentWebFrame);
   ok(WebElement.from(xulEl) instanceof ChromeWebElement);
 
-  Assert.throws(() => WebElement.from({}), InvalidArgumentError);
+  Assert.throws(() => WebElement.from({}), /InvalidArgumentError/);
 
   run_next_test();
 });
@@ -470,8 +470,8 @@ add_test(function test_WebElement_fromJSON_ChromeWebElement() {
 });
 
 add_test(function test_WebElement_fromJSON_malformed() {
-  Assert.throws(() => WebElement.fromJSON({}), InvalidArgumentError);
-  Assert.throws(() => WebElement.fromJSON(null), InvalidArgumentError);
+  Assert.throws(() => WebElement.fromJSON({}), /InvalidArgumentError/);
+  Assert.throws(() => WebElement.fromJSON(null), /InvalidArgumentError/);
   run_next_test();
 });
 
@@ -484,7 +484,10 @@ add_test(function test_WebElement_fromUUID() {
   ok(domWebEl instanceof ContentWebElement);
   equal(domWebEl.uuid, "bar");
 
-  Assert.throws(() => WebElement.fromUUID("baz", "bah"), InvalidArgumentError);
+  Assert.throws(
+    () => WebElement.fromUUID("baz", "bah"),
+    /InvalidArgumentError/
+  );
 
   run_next_test();
 });
@@ -526,7 +529,7 @@ add_test(function test_ContentWebElement_fromJSON() {
   ok(el instanceof ContentWebElement);
   equal(el.uuid, "foo");
 
-  Assert.throws(() => ContentWebElement.fromJSON({}), InvalidArgumentError);
+  Assert.throws(() => ContentWebElement.fromJSON({}), /InvalidArgumentError/);
 
   run_next_test();
 });

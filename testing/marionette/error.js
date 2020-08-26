@@ -45,119 +45,119 @@ const BUILTIN_ERRORS = new Set([
   "URIError",
 ]);
 
-this.EXPORTED_SYMBOLS = ["error", "stack"].concat(Array.from(ERRORS));
+this.EXPORTED_SYMBOLS = ["error"];
 
 /** @namespace */
-this.error = {};
-
-/**
- * Check if ``val`` is an instance of the ``Error`` prototype.
- *
- * Because error objects may originate from different globals, comparing
- * the prototype of the left hand side with the prototype property from
- * the right hand side, which is what ``instanceof`` does, will not work.
- * If the LHS and RHS come from different globals, this check will always
- * fail because the two objects will not have the same identity.
- *
- * Therefore it is not safe to use ``instanceof`` in any multi-global
- * situation, e.g. in content across multiple ``Window`` objects or anywhere
- * in chrome scope.
- *
- * This function also contains a special check if ``val`` is an XPCOM
- * ``nsIException`` because they are special snowflakes and may indeed
- * cause Firefox to crash if used with ``instanceof``.
- *
- * @param {*} val
- *     Any value that should be undergo the test for errorness.
- * @return {boolean}
- *     True if error, false otherwise.
- */
-error.isError = function(val) {
-  if (val === null || typeof val != "object") {
-    return false;
-  } else if (val instanceof Ci.nsIException) {
-    return true;
-  }
-
-  // DOMRectList errors on string comparison
-  try {
-    let proto = Object.getPrototypeOf(val);
-    return BUILTIN_ERRORS.has(proto.toString());
-  } catch (e) {
-    return false;
-  }
-};
-
-/**
- * Checks if ``obj`` is an object in the :js:class:`WebDriverError`
- * prototypal chain.
- *
- * @param {*} obj
- *     Arbitrary object to test.
- *
- * @return {boolean}
- *     True if ``obj`` is of the WebDriverError prototype chain,
- *     false otherwise.
- */
-error.isWebDriverError = function(obj) {
-  return error.isError(obj) && "name" in obj && ERRORS.has(obj.name);
-};
-
-/**
- * Ensures error instance is a :js:class:`WebDriverError`.
- *
- * If the given error is already in the WebDriverError prototype
- * chain, ``err`` is returned unmodified.  If it is not, it is wrapped
- * in :js:class:`UnknownError`.
- *
- * @param {Error} err
- *     Error to conditionally turn into a WebDriverError.
- *
- * @return {WebDriverError}
- *     If ``err`` is a WebDriverError, it is returned unmodified.
- *     Otherwise an UnknownError type is returned.
- */
-error.wrap = function(err) {
-  if (error.isWebDriverError(err)) {
-    return err;
-  }
-  return new UnknownError(err);
-};
-
-/**
- * Unhandled error reporter.  Dumps the error and its stacktrace to console,
- * and reports error to the Browser Console.
- */
-error.report = function(err) {
-  let msg = "Marionette threw an error: " + error.stringify(err);
-  dump(msg + "\n");
-  if (Cu.reportError) {
-    Cu.reportError(msg);
-  }
-};
-
-/**
- * Prettifies an instance of Error and its stacktrace to a string.
- */
-error.stringify = function(err) {
-  try {
-    let s = err.toString();
-    if ("stack" in err) {
-      s += "\n" + err.stack;
+this.error = {
+  /**
+   * Check if ``val`` is an instance of the ``Error`` prototype.
+   *
+   * Because error objects may originate from different globals, comparing
+   * the prototype of the left hand side with the prototype property from
+   * the right hand side, which is what ``instanceof`` does, will not work.
+   * If the LHS and RHS come from different globals, this check will always
+   * fail because the two objects will not have the same identity.
+   *
+   * Therefore it is not safe to use ``instanceof`` in any multi-global
+   * situation, e.g. in content across multiple ``Window`` objects or anywhere
+   * in chrome scope.
+   *
+   * This function also contains a special check if ``val`` is an XPCOM
+   * ``nsIException`` because they are special snowflakes and may indeed
+   * cause Firefox to crash if used with ``instanceof``.
+   *
+   * @param {*} val
+   *     Any value that should be undergo the test for errorness.
+   * @return {boolean}
+   *     True if error, false otherwise.
+   */
+  isError(val) {
+    if (val === null || typeof val != "object") {
+      return false;
+    } else if (val instanceof Ci.nsIException) {
+      return true;
     }
-    return s;
-  } catch (e) {
-    return "<unprintable error>";
-  }
-};
 
-/** Create a stacktrace to the current line in the program. */
-this.stack = function() {
-  let trace = new Error().stack;
-  let sa = trace.split("\n");
-  sa = sa.slice(1);
-  let rv = "stacktrace:\n" + sa.join("\n");
-  return rv.trimEnd();
+    // DOMRectList errors on string comparison
+    try {
+      let proto = Object.getPrototypeOf(val);
+      return BUILTIN_ERRORS.has(proto.toString());
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * Checks if ``obj`` is an object in the :js:class:`WebDriverError`
+   * prototypal chain.
+   *
+   * @param {*} obj
+   *     Arbitrary object to test.
+   *
+   * @return {boolean}
+   *     True if ``obj`` is of the WebDriverError prototype chain,
+   *     false otherwise.
+   */
+  isWebDriverError(obj) {
+    return error.isError(obj) && "name" in obj && ERRORS.has(obj.name);
+  },
+
+  /**
+   * Ensures error instance is a :js:class:`WebDriverError`.
+   *
+   * If the given error is already in the WebDriverError prototype
+   * chain, ``err`` is returned unmodified.  If it is not, it is wrapped
+   * in :js:class:`UnknownError`.
+   *
+   * @param {Error} err
+   *     Error to conditionally turn into a WebDriverError.
+   *
+   * @return {WebDriverError}
+   *     If ``err`` is a WebDriverError, it is returned unmodified.
+   *     Otherwise an UnknownError type is returned.
+   */
+  wrap(err) {
+    if (error.isWebDriverError(err)) {
+      return err;
+    }
+    return new UnknownError(err);
+  },
+
+  /**
+   * Unhandled error reporter.  Dumps the error and its stacktrace to console,
+   * and reports error to the Browser Console.
+   */
+  report(err) {
+    let msg = "Marionette threw an error: " + error.stringify(err);
+    dump(msg + "\n");
+    if (Cu.reportError) {
+      Cu.reportError(msg);
+    }
+  },
+
+  /**
+   * Prettifies an instance of Error and its stacktrace to a string.
+   */
+  stringify(err) {
+    try {
+      let s = err.toString();
+      if ("stack" in err) {
+        s += "\n" + err.stack;
+      }
+      return s;
+    } catch (e) {
+      return "<unprintable error>";
+    }
+  },
+
+  /** Create a stacktrace to the current line in the program. */
+  stack() {
+    let trace = new Error().stack;
+    let sa = trace.split("\n");
+    sa = sa.slice(1);
+    let rv = "stacktrace:\n" + sa.join("\n");
+    return rv.trimEnd();
+  },
 };
 
 /**
@@ -528,5 +528,5 @@ const STATUSES = new Map([
 // We could assign each error definition directly to |this|, but
 // because they are Error prototypes this would mess up their names.
 for (let cls of STATUSES.values()) {
-  this[cls.name] = cls;
+  error[cls.name] = cls;
 }

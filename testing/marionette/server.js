@@ -23,9 +23,7 @@ const { GeckoDriver } = ChromeUtils.import(
 const { WebElement } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const { error, UnknownCommandError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Command, Message, Response } = ChromeUtils.import(
   "chrome://marionette/content/message.js"
 );
@@ -292,7 +290,7 @@ class TCPConnection {
   async despatch(cmd, resp) {
     let fn = this.driver.commands[cmd.name];
     if (typeof fn == "undefined") {
-      throw new UnknownCommandError(cmd.name);
+      throw new error.UnknownCommandError(cmd.name);
     }
 
     if (cmd.name != "WebDriver:NewSession") {
