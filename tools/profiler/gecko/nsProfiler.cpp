@@ -807,7 +807,8 @@ void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
                      "Should always have a writer if mGathering is true");
 
   if (!aProfile.IsEmpty()) {
-    mWriter->Splice(PromiseFlatCString(aProfile).get());
+    // TODO: Remove PromiseFlatCString, see bug 1657033.
+    mWriter->Splice(PromiseFlatCString(aProfile).get(), aProfile.Length());
   }
 
   mPendingProfiles--;
@@ -890,7 +891,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   Vector<nsCString> exitProfiles = profiler_move_exit_profiles();
   for (auto& exitProfile : exitProfiles) {
     if (!exitProfile.IsEmpty()) {
-      mWriter->Splice(exitProfile.get());
+      mWriter->Splice(exitProfile.get(), exitProfile.Length());
     }
   }
 

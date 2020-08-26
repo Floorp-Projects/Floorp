@@ -186,10 +186,24 @@ class SpliceableJSONWriter : public JSONWriter {
     mNeedComma[mDepth] = true;
   }
 
+  void Splice(const char* aStr, size_t aLen) {
+    Separator();
+    WriteFunc()->Write(aStr, aLen);
+    mNeedComma[mDepth] = true;
+  }
+
   // Splice the given JSON directly in, without quoting.
   void SplicedJSONProperty(const char* aMaybePropertyName,
                            const char* aJsonValue) {
     Scalar(aMaybePropertyName, aJsonValue);
+  }
+
+  void CopyAndSplice(const ChunkedJSONWriteFunc& aFunc) {
+    Separator();
+    for (size_t i = 0; i < aFunc.mChunkList.length(); i++) {
+      WriteFunc()->Write(aFunc.mChunkList[i].get(), aFunc.mChunkLengths[i]);
+    }
+    mNeedComma[mDepth] = true;
   }
 
   // Takes the chunks from aFunc and write them. If move is not possible
