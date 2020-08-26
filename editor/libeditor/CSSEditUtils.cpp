@@ -1197,21 +1197,31 @@ bool CSSEditUtils::DoElementsHaveSameStyle(const Element& aElement,
     return false;
   }
 
-  nsCOMPtr<nsICSSDeclaration> firstCSSDecl, otherCSSDecl;
-  uint32_t firstLength, otherLength;
-  nsresult rv =
-      GetInlineStyles(aElement, getter_AddRefs(firstCSSDecl), &firstLength);
-  if (NS_FAILED(rv) || !firstCSSDecl) {
-    NS_WARNING("CSSEditUtils::GetInlineStyles() failed");
+  nsCOMPtr<nsStyledElement> styledElement =
+      do_QueryInterface(const_cast<Element*>(&aElement));
+  if (NS_WARN_IF(!styledElement)) {
     return false;
   }
-  rv = GetInlineStyles(aOtherElement, getter_AddRefs(otherCSSDecl),
-                       &otherLength);
-  if (NS_FAILED(rv) || !otherCSSDecl) {
-    NS_WARNING("CSSEditUtils::GetInlineStyles() failed");
+  // XXX If `GetPropertyValue()` won't run script, we can stop using
+  //     nsCOMPtr here.
+  nsCOMPtr<nsICSSDeclaration> firstCSSDecl = styledElement->Style();
+  if (!firstCSSDecl) {
+    NS_WARNING("nsStyledElement::Style() failed");
+    return false;
+  }
+  nsCOMPtr<nsStyledElement> otherStyledElement =
+      do_QueryInterface(const_cast<Element*>(&aOtherElement));
+  if (NS_WARN_IF(!otherStyledElement)) {
+    return false;
+  }
+  nsCOMPtr<nsICSSDeclaration> otherCSSDecl = otherStyledElement->Style();
+  if (!otherCSSDecl) {
+    NS_WARNING("nsStyledElement::Style() failed");
     return false;
   }
 
+  const uint32_t firstLength = firstCSSDecl->Length();
+  const uint32_t otherLength = otherCSSDecl->Length();
   if (firstLength != otherLength) {
     // early way out if we can
     return false;
@@ -1256,29 +1266,6 @@ bool CSSEditUtils::DoElementsHaveSameStyle(const Element& aElement,
   }
 
   return true;
-}
-
-// static
-nsresult CSSEditUtils::GetInlineStyles(const Element& aElement,
-                                       nsICSSDeclaration** aCssDecl,
-                                       uint32_t* aLength) {
-  if (NS_WARN_IF(!aLength)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aLength = 0;
-  // TODO: Perhaps, this method should take nsStyledElement& instead.
-  nsCOMPtr<nsStyledElement> styledElement =
-      do_QueryInterface(const_cast<Element*>(&aElement));
-  if (NS_WARN_IF(!styledElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsICSSDeclaration> cssDecl = styledElement->Style();
-  MOZ_ASSERT(cssDecl);
-
-  cssDecl.forget(aCssDecl);
-  *aLength = (*aCssDecl)->Length();
-  return NS_OK;
 }
 
 }  // namespace mozilla

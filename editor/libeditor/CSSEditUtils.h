@@ -18,6 +18,7 @@ class nsIContent;
 class nsICSSDeclaration;
 class nsINode;
 class nsStaticAtom;
+class nsStyledElement;
 
 namespace mozilla {
 
@@ -310,18 +311,6 @@ class CSSEditUtils final {
    */
   static bool DoElementsHaveSameStyle(const dom::Element& aElement,
                                       const dom::Element& aOtherElement);
-
-  /**
-   * Get the specified inline styles (style attribute) for an element.
-   *
-   * @param aElement        [IN] The element node.
-   * @param aCssDecl        [OUT] The CSS declaration corresponding to the
-   *                              style attribute.
-   * @param aLength         [OUT] The number of declarations in aCssDecl.
-   */
-  static nsresult GetInlineStyles(const dom::Element& aElement,
-                                  nsICSSDeclaration** aCssDecl,
-                                  uint32_t* aLength);
 
  public:
   /**
