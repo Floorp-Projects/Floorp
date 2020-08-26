@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+   content/browser/preferences/dialogs/addEngine.xhtml
+   content/browser/preferences/dialogs/addEngine.js
+   content/browser/preferences/dialogs/addEngine.css
    content/browser/preferences/dialogs/applicationManager.xhtml
    content/browser/preferences/dialogs/applicationManager.js
    content/browser/preferences/dialogs/blocklists.xhtml
