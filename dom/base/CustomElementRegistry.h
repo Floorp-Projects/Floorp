@@ -536,21 +536,6 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
   bool mIsCustomDefinitionRunning;
 
  private:
-  class MOZ_RAII AutoSetRunningFlag final {
-   public:
-    explicit AutoSetRunningFlag(CustomElementRegistry* aRegistry)
-        : mRegistry(aRegistry) {
-      MOZ_ASSERT(!mRegistry->mIsCustomDefinitionRunning,
-                 "IsCustomDefinitionRunning flag should be initially false");
-      mRegistry->mIsCustomDefinitionRunning = true;
-    }
-
-    ~AutoSetRunningFlag() { mRegistry->mIsCustomDefinitionRunning = false; }
-
-   private:
-    CustomElementRegistry* mRegistry;
-  };
-
   int32_t InferNamespace(JSContext* aCx, JS::Handle<JSObject*> constructor);
 
  public:
