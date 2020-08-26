@@ -61,6 +61,7 @@ def get_app_version(product_dir='browser'):
 
 base_schema = Schema({
     Required('app_version'): text_type,
+    Required('backstop'): bool,
     Required('base_repository'): text_type,
     Required('build_date'): int,
     Required('build_number'): int,
@@ -149,6 +150,7 @@ class Parameters(ReadOnlyDict):
 
         defaults = {
             'app_version': get_app_version(),
+            'backstop': False,
             'base_repository': 'https://hg.mozilla.org/mozilla-unified',
             'build_date': seconds_from_epoch,
             'build_number': 1,

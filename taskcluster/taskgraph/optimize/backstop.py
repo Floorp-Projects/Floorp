@@ -5,26 +5,30 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.optimize import OptimizationStrategy, register_strategy
-from taskgraph.util.backstop import is_backstop, BACKSTOP_PUSH_INTERVAL, BACKSTOP_TIME_INTERVAL
 
 
-@register_strategy("backstop", args=(BACKSTOP_PUSH_INTERVAL, BACKSTOP_TIME_INTERVAL))
-@register_strategy("push-interval-10", args=(10, 0))
-@register_strategy("push-interval-20", args=(20, 0))
-@register_strategy("push-interval-25", args=(25, 0))
+@register_strategy("backstop")
 class Backstop(OptimizationStrategy):
+    """Ensures that no task gets left behind.
+
+    Will schedule all tasks if this is a backstop push.
+    """
+    def should_remove_task(self, task, params, _):
+        return not params["backstop"]
+
+
+@register_strategy("push-interval-10", args=(10,))
+@register_strategy("push-interval-20", args=(20,))
+@register_strategy("push-interval-25", args=(25,))
+class PushInterval(OptimizationStrategy):
     """Runs tasks every N pushes.
 
     Args:
         push_interval (int): Number of pushes
-        time_interval (int): Minutes between forced schedules.
-                             Use 0 to disable.
     """
-    def __init__(self, push_interval, time_interval, remove_on_projects=None):
+    def __init__(self, push_interval):
         self.push_interval = push_interval
-        self.time_interval = time_interval
 
     def should_remove_task(self, task, params, _):
-        if is_backstop(params, self.push_interval, self.time_interval):
-            return False
-        return True
+        # On every Nth push, want to run all tasks.
+        return int(params["pushlog_id"]) % self.push_interval != 0

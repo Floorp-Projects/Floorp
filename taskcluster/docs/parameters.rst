@@ -22,6 +22,11 @@ topic.
 Push Information
 ----------------
 
+``backstop``
+   Whether or not this push is a "backstop" push. That is a push where all
+   builds and tests should run to ensure regressions aren't accidentally
+   missed.
+
 ``base_repository``
    The repository from which to do an initial clone, utilizing any available
    caching.
