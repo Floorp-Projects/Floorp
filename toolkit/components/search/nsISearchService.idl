@@ -285,6 +285,21 @@ interface nsISearchService : nsISupports
   Promise addPolicyEngine(in jsval details);
 
   /**
+   * Adds a new search engine defined by the user.
+   *
+   * @param name
+   *        The name of the engine.
+   * @param url
+   *        The url of the engine with %s denoting where to
+   *        replace the search term.
+   * @param alias [optional]
+   *        The alias to refer to the engine.
+   */
+  Promise addUserEngine(in AString name,
+                        in AString url,
+                        [optional] in AString alias);
+
+  /**
    * Test-only function for adding an engine. This should be considered obsolete,
    * and will be replaced soon (bug 1649186).
    */
