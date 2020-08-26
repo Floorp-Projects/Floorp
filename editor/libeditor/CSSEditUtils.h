@@ -250,14 +250,25 @@ class CSSEditUtils final {
    * @param aAttribute     [IN] An atom to an attribute name or nullptr
    *                            if irrelevant.
    * @param aValue         [IN] The attribute value.
-   * @param aSuppressTransaction [IN] A boolean indicating, when true,
-   *                                  that no transaction should be recorded.
    *
    * @return               The number of CSS properties set by the call.
    */
-  MOZ_CAN_RUN_SCRIPT int32_t SetCSSEquivalentToHTMLStyle(
-      dom::Element* aElement, nsAtom* aProperty, nsAtom* aAttribute,
-      const nsAString* aValue, bool aSuppressTransaction);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<int32_t, nsresult>
+  SetCSSEquivalentToHTMLStyleWithTransaction(nsStyledElement& aStyledElement,
+                                             nsAtom* aProperty,
+                                             nsAtom* aAttribute,
+                                             const nsAString* aValue) {
+    return SetCSSEquivalentToHTMLStyleInternal(aStyledElement, aProperty,
+                                               aAttribute, aValue, false);
+  }
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<int32_t, nsresult>
+  SetCSSEquivalentToHTMLStyleWithoutTransaction(nsStyledElement& aStyledElement,
+                                                nsAtom* aProperty,
+                                                nsAtom* aAttribute,
+                                                const nsAString* aValue) {
+    return SetCSSEquivalentToHTMLStyleInternal(aStyledElement, aProperty,
+                                               aAttribute, aValue, true);
+  }
 
   /**
    * Removes from the node the CSS inline styles equivalent to the HTML style.
@@ -427,6 +438,11 @@ class CSSEditUtils final {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SetCSSPropertyInternal(nsStyledElement& aStyledElement, nsAtom& aProperty,
                          const nsAString& aValue, bool aSuppressTxn = false);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<int32_t, nsresult>
+  SetCSSEquivalentToHTMLStyleInternal(nsStyledElement& aStyledElement,
+                                      nsAtom* aProperty, nsAtom* aAttribute,
+                                      const nsAString* aValue,
+                                      bool aSuppressTransaction);
 
  private:
   HTMLEditor* mHTMLEditor;

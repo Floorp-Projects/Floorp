@@ -8674,11 +8674,23 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
       }
 
       if (useCSS) {
-        mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-            MOZ_KnownLive(listOrListItemElement), nullptr, nsGkAtoms::align,
-            &aAlignType, false);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        if (nsCOMPtr<nsStyledElement> styledListOrListItemElement =
+                do_QueryInterface(listOrListItemElement)) {
+          Result<int32_t, nsresult> result =
+              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+                  *styledListOrListItemElement, nullptr, nsGkAtoms::align,
+                  &aAlignType);
+          if (result.isErr()) {
+            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+              NS_WARNING(
+                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                  "nsGkAtoms::align) destroyed the editor");
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                "nsGkAtoms::align) failed, but ignored");
+          }
         }
         createdDivElement = nullptr;
         continue;
