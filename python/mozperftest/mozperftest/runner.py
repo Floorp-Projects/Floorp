@@ -56,6 +56,7 @@ SEARCH_PATHS = [
     "third_party/python/dlmanager",
     "third_party/python/esprima",
     "third_party/python/importlib_metadata",
+    "third_party/python/jsmin",
     "third_party/python/jsonschema",
     "third_party/python/pyrsistent",
     "third_party/python/PyYAML/lib3",
