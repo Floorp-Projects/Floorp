@@ -257,9 +257,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         // no-op, LeakCanary is disabled by default
     }
 
-    /**
-     * See [TopsiteStore.prefetch] for details on pre fetching.
-     */
+    // This is for issue https://github.com/mozilla-mobile/fenix/issues/11660. We prefetch our info for startup
+    // so that we're sure that we have all the data available as our fragment is launched.
     private fun prefetchForHomeFragment() {
         StrictMode.allowThreadDiskReads().resetPoliciesAfter {
             components.core.topSiteStorage.prefetch()
