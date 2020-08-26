@@ -84,3 +84,48 @@ Maybe<PrinterInfo> nsPrinterListBase::NamedOrDefaultPrinter(
 
   return Nothing();
 }
+
+NS_IMETHODIMP nsPrinterListBase::GetFallbackPaperList(JSContext* aCx,
+                                                      Promise** aResult) {
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    *aResult = nullptr;
+    return rv.StealNSResult();
+  }
+  promise->MaybeResolve(FallbackPaperList());
+  promise.forget(aResult);
+  return NS_OK;
+}
+
+nsTArray<RefPtr<nsPaper>> nsPrinterListBase::FallbackPaperList() const {
+#define mm *72.0 / 25.4
+#define in *72.0
+  static const mozilla::PaperInfo kPapers[] = {
+      {u"A5"_ns, {148 mm, 210 mm}, Some(MarginDouble{})},
+      {u"A4"_ns, {210 mm, 297 mm}, Some(MarginDouble{})},
+      {u"A3"_ns, {297 mm, 420 mm}, Some(MarginDouble{})},
+      {u"B5"_ns, {176 mm, 250 mm}, Some(MarginDouble{})},
+      {u"B4"_ns, {250 mm, 353 mm}, Some(MarginDouble{})},
+      {u"JIS-B5"_ns, {182 mm, 257 mm}, Some(MarginDouble{})},
+      {u"JIS-B4"_ns, {257 mm, 364 mm}, Some(MarginDouble{})},
+      {u"US Letter"_ns, {8.5 in, 11 in}, Some(MarginDouble{})},
+      {u"US Legal"_ns, {8.5 in, 14 in}, Some(MarginDouble{})},
+      {u"Tabloid"_ns, {11 in, 17 in}, Some(MarginDouble{})},
+  };
+#undef mm
+#undef in
+
+  // TODO:
+  // Replace the en-US strings above with lowercased, "US"-stripped versions
+  // as found in printUI.ftl, and call Fluent to get localized paper names.
+  // Consider whether any more sizes should be included (A0-A2?).
+
+  nsTArray<RefPtr<nsPaper>> result;
+  result.SetCapacity(mozilla::ArrayLength(kPapers));
+  for (const auto& info : kPapers) {
+    result.AppendElement(MakeRefPtr<nsPaper>(info));
+  }
+
+  return result;
+}
