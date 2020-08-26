@@ -27,6 +27,7 @@
 #include "jsfriendapi.h"
 
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/ParserAtom.h"
 #include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
@@ -1503,6 +1504,14 @@ bool AutoStableStringChars::copyTwoByteChars(JSContext* cx,
   twoByteChars_ = chars;
   s_ = linearString;
   return true;
+}
+
+UniqueChars js::ParserAtomToNewUTF8CharsZ(
+    JSContext* maybecx, const js::frontend::ParserAtom* atom) {
+  return UniqueChars(
+      atom->hasLatin1Chars()
+          ? JS::CharsToNewUTF8CharsZ(maybecx, atom->latin1Range()).c_str()
+          : JS::CharsToNewUTF8CharsZ(maybecx, atom->twoByteRange()).c_str());
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)

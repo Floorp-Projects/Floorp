@@ -26,17 +26,23 @@
 namespace js {
 
 namespace frontend {
+struct CompilationInfo;
 class ScriptStencil;
 class ScopeStencil;
+class ParserAtom;
 };  // namespace frontend
 
 template <typename NameT>
 class AbstractBaseScopeData;
 
 template <typename NameT>
+class BaseAbstractBindingIter;
+
+template <typename NameT>
 class AbstractBindingIter;
 
-class BindingIter;
+using BindingIter = AbstractBindingIter<JSAtom>;
+
 class ModuleObject;
 class AbstractScopePtr;
 
@@ -72,6 +78,9 @@ const char* ScopeKindString(ScopeKind kind);
 
 template <typename NameT>
 class AbstractBindingName {
+  template <typename OtherNameT>
+  friend class AbstractBindingName;
+
   // A JSAtom* with its low bit used as a tag for the:
   //  * whether it is closed over (i.e., exists in the environment shape)
   //  * whether it is a top-level function binding in global or eval scope,
@@ -86,6 +95,10 @@ class AbstractBindingName {
 
  public:
   AbstractBindingName() : bits_(0) {}
+
+  template <typename OldNameT>
+  AbstractBindingName(NameT* name, const AbstractBindingName<OldNameT>& old)
+      : bits_(uintptr_t(name) | (old.bits_ & FlagMask)) {}
 
   AbstractBindingName(NameT* name, bool closedOver,
                       bool isTopLevelFunction = false)
@@ -112,8 +125,13 @@ class AbstractBindingName {
 
   bool closedOver() const { return bits_ & ClosedOverFlag; }
 
+  template <typename NewNameT>
+  AbstractBindingName<NewNameT> transformName(NewNameT* newName) const {
+    return AbstractBindingName<NewNameT>(newName, *this);
+  }
+
  private:
-  friend class AbstractBindingIter<NameT>;
+  friend class BaseAbstractBindingIter<NameT>;
   friend class frontend::ScopeStencil;
 
   // This method should be called only for binding names in `vars` range in
@@ -135,7 +153,10 @@ const size_t ScopeDataAlignBytes = size_t(1) << gc::CellFlagBitsReservedForGC;
  * suitably aligned to allow storing GC flags in the low bits.
  */
 template <typename NameT>
-class alignas(ScopeDataAlignBytes) AbstractBaseScopeData {};
+class alignas(ScopeDataAlignBytes) AbstractBaseScopeData {
+ public:
+  using NameType = NameT;
+};
 
 using BaseScopeData = AbstractBaseScopeData<JSAtom>;
 
@@ -154,7 +175,7 @@ using BaseScopeData = AbstractBaseScopeData<JSAtom>;
  *
  * The names array is implemented in terms of an generic type that
  * allows specialization between a (JSAtom*) BindingName and a
- * ParserAtomId
+ * ParserAtom
  */
 template <typename NameT>
 class AbstractTrailingNamesArray {
@@ -277,7 +298,7 @@ class WrappedPtrOperations<Scope*, Wrapper> {
 class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   friend class GCMarker;
   friend class frontend::ScopeStencil;
-  friend class js::BindingIter;
+  friend class js::AbstractBindingIter<JSAtom>;
 
  protected:
   // The raw data pointer, stored in the cell header.
@@ -316,11 +337,11 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   template <typename F>
   void applyScopeDataTyped(F&& f);
 
-  template <typename EnvironmentType>
+  template <typename EnvironmentT>
   static bool updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape shape,
                                        bool needsEnvironment);
 
-  template <typename EnvironmentType>
+  template <typename EnvironmentT>
   static bool updateEnvShapeIfRequired(JSContext* cx,
                                        mozilla::Maybe<uint32_t>* envShape,
                                        bool needsEnvironment);
@@ -412,13 +433,24 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
 };
 
 template <class Data>
-inline size_t SizeOfData(uint32_t numBindings) {
-  static_assert(std::is_base_of_v<BaseScopeData, Data>,
-                "Data must be the correct sort of data, i.e. it must "
-                "inherit from BaseScopeData");
-  return sizeof(Data) +
-         (numBindings ? numBindings - 1 : 0) * sizeof(BindingName);
+inline size_t SizeOfScopeData(uint32_t numBindings) {
+  return sizeof(Data) + ((numBindings ? numBindings - 1 : 0) *
+                         sizeof(AbstractBindingName<typename Data::NameType>));
 }
+
+//
+// A useful typedef for selecting between a gc-aware wrappers
+// around pointers to BaseScopeData-derived types, and around raw
+// pointer wrappers around BaseParserScopeData-derived types.
+//
+template <typename ScopeT, typename AtomT>
+using AbstractScopeData = typename ScopeT::template AbstractData<AtomT>;
+
+template <typename ScopeT, typename AtomT>
+using MaybeRootedScopeData = std::conditional_t<
+    std::is_same_v<AtomT, JSAtom>,
+    MaybeRooted<UniquePtr<typename ScopeT::Data>, AllowGC::CanGC>,
+    MaybeRooted<AbstractScopeData<ScopeT, AtomT>*, AllowGC::NoGC>>;
 
 //
 // A lexical scope that holds let and const bindings. There are 4 kinds of
@@ -443,7 +475,7 @@ inline size_t SizeOfData(uint32_t numBindings) {
 //
 class LexicalScope : public Scope {
   friend class Scope;
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class GCMarker;
   friend class frontend::ScopeStencil;
 
@@ -484,11 +516,12 @@ class LexicalScope : public Scope {
                                       uint32_t firstFrameSlot,
                                       HandleScope enclosing);
 
-  template <typename ShapeType>
-  static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
-                                      uint32_t firstFrameSlot,
-                                      MutableHandle<UniquePtr<Data>> data,
-                                      ShapeType envShape);
+  template <typename AtomT, typename ShapeT>
+  static bool prepareForScopeCreation(
+      JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
+      typename MaybeRootedScopeData<LexicalScope, AtomT>::MutableHandleType
+          data,
+      ShapeT envShape);
 
   Data& data() { return *static_cast<Data*>(rawData()); }
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
@@ -531,7 +564,7 @@ inline bool Scope::is<LexicalScope>() const {
 //
 class FunctionScope : public Scope {
   friend class GCMarker;
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class PositionalFormalParameterIter;
   friend class Scope;
   friend class AbstractScopePtr;
@@ -597,12 +630,13 @@ class FunctionScope : public Scope {
 
   using Data = AbstractData<JSAtom>;
 
-  template <typename ShapeType>
-  static bool prepareForScopeCreation(JSContext* cx,
-                                      MutableHandle<UniquePtr<Data>> data,
-                                      bool hasParameterExprs,
-                                      bool needsEnvironment, HandleFunction fun,
-                                      ShapeType envShape);
+  template <typename AtomT, typename ShapeT>
+  static bool prepareForScopeCreation(
+      JSContext* cx,
+      typename MaybeRootedScopeData<FunctionScope, AtomT>::MutableHandleType
+          data,
+      bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
+      ShapeT envShape);
 
   static FunctionScope* clone(JSContext* cx, Handle<FunctionScope*> scope,
                               HandleFunction fun, HandleScope enclosing);
@@ -637,6 +671,7 @@ class FunctionScope : public Scope {
   }
 
   static bool isSpecialName(JSContext* cx, JSAtom* name);
+  static bool isSpecialName(JSContext* cx, const frontend::ParserAtom* name);
 };
 
 //
@@ -650,7 +685,7 @@ class FunctionScope : public Scope {
 //
 class VarScope : public Scope {
   friend class GCMarker;
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class Scope;
   friend class frontend::ScopeStencil;
 
@@ -688,12 +723,11 @@ class VarScope : public Scope {
                                   uint32_t firstFrameSlot,
                                   bool needsEnvironment, HandleScope enclosing);
 
-  template <typename ShapeType>
-  static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
-                                      MutableHandle<UniquePtr<Data>> data,
-                                      uint32_t firstFrameSlot,
-                                      bool needsEnvironment,
-                                      ShapeType envShape);
+  template <typename AtomT, typename ShapeT>
+  static bool prepareForScopeCreation(
+      JSContext* cx, ScopeKind kind,
+      typename MaybeRootedScopeData<VarScope, AtomT>::MutableHandleType data,
+      uint32_t firstFrameSlot, bool needsEnvironment, ShapeT envShape);
 
   Data& data() { return *static_cast<Data*>(rawData()); }
 
@@ -729,14 +763,14 @@ inline bool Scope::is<VarScope>() const {
 //
 class GlobalScope : public Scope {
   friend class Scope;
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class GCMarker;
 
  public:
   // Data is public because it is created by the frontend. See
   // Parser<FullParseHandler>::newGlobalScopeData.
   template <typename NameT>
-  struct AbstractData : BaseScopeData {
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
     // Bindings are sorted by kind.
     // `vars` includes top-level functions which is distinguished by a bit
     // on the BindingName.
@@ -821,7 +855,7 @@ class WithScope : public Scope {
 //
 class EvalScope : public Scope {
   friend class Scope;
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class GCMarker;
   friend class frontend::ScopeStencil;
 
@@ -862,10 +896,11 @@ class EvalScope : public Scope {
                                    MutableHandle<UniquePtr<Data>> data,
                                    HandleScope enclosing);
 
-  template <typename ShapeType>
-  static bool prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
-                                      MutableHandle<UniquePtr<Data>> data,
-                                      ShapeType envShape);
+  template <typename AtomT, typename ShapeT>
+  static bool prepareForScopeCreation(
+      JSContext* cx, ScopeKind scopeKind,
+      typename MaybeRootedScopeData<EvalScope, AtomT>::MutableHandleType data,
+      ShapeT envShape);
 
   Data& data() { return *static_cast<Data*>(rawData()); }
 
@@ -905,7 +940,7 @@ inline bool Scope::is<EvalScope>() const {
 //
 class ModuleScope : public Scope {
   friend class GCMarker;
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class Scope;
   friend class AbstractScopePtr;
   friend class frontend::ScopeStencil;
@@ -915,7 +950,7 @@ class ModuleScope : public Scope {
   // Data is public because it is created by the frontend. See
   // Parser<FullParseHandler>::newModuleScopeData.
   template <typename NameT>
-  struct AbstractData : BaseScopeData {
+  struct AbstractData : public AbstractBaseScopeData<NameT> {
     // The module of the scope.
     GCPtr<ModuleObject*> module = {};
 
@@ -954,11 +989,11 @@ class ModuleScope : public Scope {
                                      MutableHandle<UniquePtr<Data>> data,
                                      Handle<ModuleObject*> module,
                                      HandleScope enclosing);
-  template <typename ShapeType>
-  static bool prepareForScopeCreation(JSContext* cx,
-                                      MutableHandle<UniquePtr<Data>> data,
-                                      HandleModuleObject module,
-                                      ShapeType envShape);
+  template <typename AtomT, typename ShapeT>
+  static bool prepareForScopeCreation(
+      JSContext* cx,
+      typename MaybeRootedScopeData<ModuleScope, AtomT>::MutableHandleType data,
+      HandleModuleObject module, ShapeT envShape);
 
   Data& data() { return *static_cast<Data*>(rawData()); }
 
@@ -971,7 +1006,7 @@ class ModuleScope : public Scope {
 };
 
 class WasmInstanceScope : public Scope {
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class Scope;
   friend class GCMarker;
   friend class AbstractScopePtr;
@@ -1025,7 +1060,7 @@ class WasmInstanceScope : public Scope {
 // Debugger only, and not for wasm execution.
 //
 class WasmFunctionScope : public Scope {
-  friend class BindingIter;
+  friend class AbstractBindingIter<JSAtom>;
   friend class Scope;
   friend class GCMarker;
   friend class AbstractScopePtr;
@@ -1117,7 +1152,7 @@ void Scope::applyScopeDataTyped(F&& f) {
 //   }
 //
 template <typename NameT>
-class AbstractBindingIter {
+class BaseAbstractBindingIter {
  protected:
   // Bindings are sorted by kind. Because different Scopes have differently
   // laid out Data for packing, BindingIter must handle all binding kinds.
@@ -1259,43 +1294,44 @@ class AbstractBindingIter {
     }
   }
 
-  AbstractBindingIter() = default;
+  BaseAbstractBindingIter() = default;
 
  public:
-  AbstractBindingIter(LexicalScope::AbstractData<NameT>& data,
-                      uint32_t firstFrameSlot, bool isNamedLambda) {
+  BaseAbstractBindingIter(LexicalScope::AbstractData<NameT>& data,
+                          uint32_t firstFrameSlot, bool isNamedLambda) {
     init(data, firstFrameSlot, isNamedLambda ? IsNamedLambda : 0);
   }
 
-  AbstractBindingIter(FunctionScope::AbstractData<NameT>& data,
-                      bool hasParameterExprs) {
+  BaseAbstractBindingIter(FunctionScope::AbstractData<NameT>& data,
+                          bool hasParameterExprs) {
     init(data, IgnoreDestructuredFormalParameters |
                    (hasParameterExprs ? HasFormalParameterExprs : 0));
   }
 
-  AbstractBindingIter(VarScope::AbstractData<NameT>& data,
-                      uint32_t firstFrameSlot) {
+  BaseAbstractBindingIter(VarScope::AbstractData<NameT>& data,
+                          uint32_t firstFrameSlot) {
     init(data, firstFrameSlot);
   }
 
-  explicit AbstractBindingIter(GlobalScope::AbstractData<NameT>& data) {
+  explicit BaseAbstractBindingIter(GlobalScope::AbstractData<NameT>& data) {
     init(data);
   }
 
-  explicit AbstractBindingIter(ModuleScope::AbstractData<NameT>& data) {
+  explicit BaseAbstractBindingIter(ModuleScope::AbstractData<NameT>& data) {
     init(data);
   }
 
-  explicit AbstractBindingIter(WasmFunctionScope::AbstractData<NameT>& data) {
+  explicit BaseAbstractBindingIter(
+      WasmFunctionScope::AbstractData<NameT>& data) {
     init(data);
   }
 
-  AbstractBindingIter(EvalScope::AbstractData<NameT>& data, bool strict) {
+  BaseAbstractBindingIter(EvalScope::AbstractData<NameT>& data, bool strict) {
     init(data, strict);
   }
 
-  MOZ_IMPLICIT AbstractBindingIter(const AbstractBindingIter<NameT>& bi) =
-      default;
+  MOZ_IMPLICIT BaseAbstractBindingIter(
+      const BaseAbstractBindingIter<NameT>& bi) = default;
 
   bool done() const { return index_ == length_; }
 
@@ -1408,20 +1444,32 @@ class AbstractBindingIter {
   }
 };
 
-class BindingIter : public AbstractBindingIter<JSAtom> {
-  using Base = AbstractBindingIter<JSAtom>;
+template <typename NameT>
+class AbstractBindingIter;
+
+template <>
+class AbstractBindingIter<JSAtom> : public BaseAbstractBindingIter<JSAtom> {
+  using Base = BaseAbstractBindingIter<JSAtom>;
 
  public:
-  BindingIter(ScopeKind kind, BaseScopeData* data, uint32_t firstFrameSlot);
+  AbstractBindingIter<JSAtom>(ScopeKind kind, BaseScopeData* data,
+                              uint32_t firstFrameSlot);
 
-  explicit BindingIter(Scope* scope);
-  explicit BindingIter(JSScript* script);
+  explicit AbstractBindingIter<JSAtom>(Scope* scope);
+  explicit AbstractBindingIter<JSAtom>(JSScript* script);
 
   using Base::Base;
 
-  MOZ_IMPLICIT BindingIter(const BindingIter& bi) = default;
-
   void trace(JSTracer* trc);
+};
+
+template <>
+class AbstractBindingIter<const frontend::ParserAtom>
+    : public BaseAbstractBindingIter<const frontend::ParserAtom> {
+  using Base = BaseAbstractBindingIter<const frontend::ParserAtom>;
+
+ public:
+  using Base::Base;
 };
 
 void DumpBindings(JSContext* cx, Scope* scope);
@@ -1583,6 +1631,10 @@ class MutableWrappedPtrOperations<ScopeIter, Wrapper>
 Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                               const JSClass* cls, uint32_t numSlots,
                               uint32_t baseShapeFlags);
+
+Shape* CreateEnvironmentShape(
+    JSContext* cx, AbstractBindingIter<const frontend::ParserAtom>& bi,
+    const JSClass* cls, uint32_t numSlots, uint32_t baseShapeFlags);
 
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                              uint32_t numSlots, uint32_t baseShapeFlags);

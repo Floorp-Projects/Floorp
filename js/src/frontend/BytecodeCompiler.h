@@ -107,6 +107,7 @@ namespace frontend {
 class ErrorReporter;
 class FunctionBox;
 class ParseNode;
+class ParserAtom;
 
 // Compile a module of the given source using the given options.
 ModuleObject* CompileModule(JSContext* cx,
@@ -174,8 +175,10 @@ MOZ_MUST_USE JSFunction* CompileStandaloneAsyncGenerator(
  * Defined in TokenStream.cpp.
  */
 bool IsIdentifier(JSLinearString* str);
+bool IsIdentifier(const ParserAtom* atom);
 
 bool IsIdentifierNameOrPrivateName(JSLinearString* str);
+bool IsIdentifierNameOrPrivateName(const ParserAtom* atom);
 
 /*
  * As above, but taking chars + length.
@@ -187,6 +190,7 @@ bool IsIdentifierNameOrPrivateName(const Latin1Char* chars, size_t length);
 bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length);
 
 /* True if str is a keyword. Defined in TokenStream.cpp. */
+bool IsKeyword(const ParserAtom* atom);
 bool IsKeyword(JSLinearString* str);
 
 class MOZ_STACK_CLASS AutoFrontendTraceLog {
