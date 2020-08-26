@@ -178,6 +178,15 @@ class MOZ_STACK_CLASS CallInfo {
     setCallee(callee);
     setThis(thisVal);
   }
+  void initForSetterCall(MDefinition* callee, MDefinition* thisVal,
+                         MDefinition* rhs) {
+    MOZ_ASSERT(args_.empty());
+    setCallee(callee);
+    setThis(thisVal);
+    static_assert(decltype(args_)::InlineLength >= 1,
+                  "Appending one argument should be infallible");
+    MOZ_ALWAYS_TRUE(args_.append(rhs));
+  }
 
   // Before doing any pop to the stack, capture whatever flows into the
   // instruction, such that we can restore it later.
