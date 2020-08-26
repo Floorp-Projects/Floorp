@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for multiple submissions in straightline code</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+
+add_task(async function double_submit() {
+  dump("test start\n");
+  let popup = window.open("file_double_submit.html");
+  await new Promise(resolve => {
+    popup.addEventListener("load", resolve, {once: true})
+  });
+
+  let numCalls = 0;
+  popup.addEventListener("beforeunload", () => {
+    numCalls++;
+    info("beforeunload called " + numCalls + " times");
+  });
+
+  info("clicking button");
+  popup.document.querySelector("button").click();
+
+  is(numCalls, 1, "beforeunload should only fire once");
+  popup.close();
+});
+
+</script>
+</body>
+</html>
