@@ -58,7 +58,9 @@ EGLSurface RenderCompositorEGL::CreateEGLSurface() {
 
 RenderCompositorEGL::RenderCompositorEGL(
     RefPtr<widget::CompositorWidget> aWidget)
-    : RenderCompositor(std::move(aWidget)), mEGLSurface(EGL_NO_SURFACE) {}
+    : RenderCompositor(std::move(aWidget)),
+      mEGLSurface(EGL_NO_SURFACE),
+      mBufferAge(0) {}
 
 RenderCompositorEGL::~RenderCompositorEGL() {
 #ifdef MOZ_WIDGET_ANDROID
