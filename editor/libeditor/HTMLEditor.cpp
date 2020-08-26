@@ -58,6 +58,7 @@
 #include "nsNetUtil.h"
 #include "nsPresContext.h"
 #include "nsPIDOMWindow.h"
+#include "nsStyledElement.h"
 #include "nsTextFragment.h"
 #include "nsUnicharUtils.h"
 
@@ -5179,17 +5180,26 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
   if (!IsCSSEnabled() || !mCSSEditUtils) {
     // we are not in an HTML+CSS editor; let's set the attribute the HTML way
     if (mCSSEditUtils) {
-      nsresult rv = mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
-          aElement, nullptr, aAttribute, nullptr, aSuppressTransaction);
-      if (rv == NS_ERROR_EDITOR_DESTROYED) {
-        NS_WARNING(
-            "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle() destroyed the "
-            "editor");
-        return NS_ERROR_EDITOR_DESTROYED;
+      if (nsCOMPtr<nsStyledElement> styledElement =
+              do_QueryInterface(aElement)) {
+        nsresult rv =
+            aSuppressTransaction
+                ? mCSSEditUtils
+                      ->RemoveCSSEquivalentToHTMLStyleWithoutTransaction(
+                          *styledElement, nullptr, aAttribute, nullptr)
+                : mCSSEditUtils->RemoveCSSEquivalentToHTMLStyleWithTransaction(
+                      *styledElement, nullptr, aAttribute, nullptr);
+        if (rv == NS_ERROR_EDITOR_DESTROYED) {
+          NS_WARNING(
+              "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle*Transaction() "
+              "destroyed the editor");
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle*Transaction() "
+            "failed, but ignored");
       }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle() failed, but ignored");
     }
     if (aSuppressTransaction) {
       nsresult rv =
@@ -5269,11 +5279,23 @@ nsresult HTMLEditor::RemoveAttributeOrEquivalent(Element* aElement,
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aAttribute);
 
-  if (IsCSSEnabled() && mCSSEditUtils) {
-    nsresult rv = mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
-        aElement, nullptr, aAttribute, nullptr, aSuppressTransaction);
+  if (IsCSSEnabled() && mCSSEditUtils &&
+      CSSEditUtils::IsCSSEditableProperty(aElement, nullptr, aAttribute)) {
+    // XXX It might be keep handling attribute even if aElement is not
+    //     an nsStyledElement instance.
+    nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(aElement);
+    if (NS_WARN_IF(!styledElement)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    nsresult rv =
+        aSuppressTransaction
+            ? mCSSEditUtils->RemoveCSSEquivalentToHTMLStyleWithoutTransaction(
+                  *styledElement, nullptr, aAttribute, nullptr)
+            : mCSSEditUtils->RemoveCSSEquivalentToHTMLStyleWithTransaction(
+                  *styledElement, nullptr, aAttribute, nullptr);
     if (NS_FAILED(rv)) {
-      NS_WARNING("CSSEditUtils::RemoveCSSEquivalentToHTMLStyle() failed");
+      NS_WARNING(
+          "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle*Transaction() failed");
       return rv;
     }
   }
