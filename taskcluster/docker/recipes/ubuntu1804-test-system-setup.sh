@@ -183,6 +183,3 @@ apt-get -y autoremove
 apt-get clean
 apt-get autoclean
 rm -f "$0"
-
-# Pre-create caches for user "worker"
-su --command "fc-cache -vf" worker
