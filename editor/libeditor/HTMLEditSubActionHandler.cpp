@@ -12912,16 +12912,23 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
   }
 
   if (0 < f) {
-    nsAutoString newValue;
-    newValue.AppendFloat(f);
-    newValue.Append(nsDependentAtomString(unit));
-    DebugOnly<nsresult> rvIgnored = mCSSEditUtils->SetCSSProperty(
-        aElement, MOZ_KnownLive(marginProperty), newValue);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    if (nsCOMPtr<nsStyledElement> styledElement =
+            do_QueryInterface(&aElement)) {
+      nsAutoString newValue;
+      newValue.AppendFloat(f);
+      newValue.Append(nsDependentAtomString(unit));
+      nsresult rv = mCSSEditUtils->SetCSSPropertyWithTransaction(
+          *styledElement, MOZ_KnownLive(marginProperty), newValue);
+      if (rv == NS_ERROR_EDITOR_DESTROYED) {
+        NS_WARNING(
+            "CSSEditUtils::SetCSSPropertyWithTransaction() destroyed the "
+            "editor");
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "CSSEditUtils::SetCSSPropertyWithTransaction() failed, but ignored");
     }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "CSSEditUtils::SetCSSProperty() failed, but ignored");
     return NS_OK;
   }
 
@@ -13489,15 +13496,20 @@ EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
 
+  nsCOMPtr<nsStyledElement> absolutelyPositionedStyledElement =
+      do_QueryInterface(absolutelyPositionedElement);
+  if (NS_WARN_IF(!absolutelyPositionedStyledElement)) {
+    return EditActionHandled(NS_ERROR_FAILURE);
+  }
+
   {
     AutoSelectionRestorer restoreSelectionLater(*this);
 
-    int32_t zIndex;
-    nsresult rv = RelativeChangeElementZIndex(*absolutelyPositionedElement,
-                                              aChange, &zIndex);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::RelativeChangeElementZIndex() failed");
-      return EditActionHandled(rv);
+    Result<int32_t, nsresult> result =
+        AddZIndexWithTransaction(*absolutelyPositionedStyledElement, aChange);
+    if (result.isErr()) {
+      NS_WARNING("HTMLEditor::AddZIndexWithTransaction() failed");
+      return EditActionHandled(result.unwrapErr());
     }
   }
 

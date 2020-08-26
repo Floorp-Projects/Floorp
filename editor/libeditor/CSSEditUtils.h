@@ -85,23 +85,21 @@ class CSSEditUtils final {
                                     nsAtom* aAttribute);
 
   /**
-   * Adds/remove a CSS declaration to the STYLE atrribute carried by a given
+   * Adds/remove a CSS declaration to the STYLE attribute carried by a given
    * element.
    *
-   * @param aElement       [IN] A DOM element.
+   * @param aStyledElement [IN] A DOM styled element.
    * @param aProperty      [IN] An atom containing the CSS property to set.
    * @param aValue         [IN] A string containing the value of the CSS
    *                            property.
-   * @param aSuppressTransaction [IN] A boolean indicating, when true,
-   *                                  that no transaction should be recorded.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult SetCSSProperty(dom::Element& aElement,
-                                             nsAtom& aProperty,
-                                             const nsAString& aValue,
-                                             bool aSuppressTxn = false);
-  MOZ_CAN_RUN_SCRIPT nsresult SetCSSPropertyPixels(dom::Element& aElement,
-                                                   nsAtom& aProperty,
-                                                   int32_t aIntValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetCSSPropertyWithTransaction(nsStyledElement& aStyledElement,
+                                nsAtom& aProperty, const nsAString& aValue) {
+    return SetCSSPropertyInternal(aStyledElement, aProperty, aValue, false);
+  }
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetCSSPropertyPixelsWithTransaction(
+      nsStyledElement& aStyledElement, nsAtom& aProperty, int32_t aIntValue);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSPropertyWithTransaction(
       nsStyledElement& aStyledElement, nsAtom& aProperty,
       const nsAString& aPropertyValue) {
@@ -426,6 +424,9 @@ class CSSEditUtils final {
                                          nsAtom* aAttribute,
                                          const nsAString* aValue,
                                          bool aSuppressTransaction);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetCSSPropertyInternal(nsStyledElement& aStyledElement, nsAtom& aProperty,
+                         const nsAString& aValue, bool aSuppressTxn = false);
 
  private:
   HTMLEditor* mHTMLEditor;

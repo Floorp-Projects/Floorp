@@ -379,38 +379,40 @@ bool CSSEditUtils::IsCSSEditableProperty(nsINode* aNode, nsAtom* aProperty,
 }
 
 // The lowest level above the transaction; adds the CSS declaration
-// "aProperty : aValue" to the inline styles carried by aElement
-nsresult CSSEditUtils::SetCSSProperty(Element& aElement, nsAtom& aProperty,
-                                      const nsAString& aValue,
-                                      bool aSuppressTxn) {
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
-  if (NS_WARN_IF(!styledElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+// "aProperty : aValue" to the inline styles carried by aStyledElement
+nsresult CSSEditUtils::SetCSSPropertyInternal(nsStyledElement& aStyledElement,
+                                              nsAtom& aProperty,
+                                              const nsAString& aValue,
+                                              bool aSuppressTxn) {
   RefPtr<ChangeStyleTransaction> transaction =
-      ChangeStyleTransaction::Create(*styledElement, aProperty, aValue);
+      ChangeStyleTransaction::Create(aStyledElement, aProperty, aValue);
   if (aSuppressTxn) {
-    return transaction->DoTransaction();
+    nsresult rv = transaction->DoTransaction();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "ChangeStyleTransaction::DoTransaction() failed");
+    return rv;
   }
   if (NS_WARN_IF(!mHTMLEditor)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
   nsresult rv = htmlEditor->DoTransactionInternal(transaction);
+  if (NS_WARN_IF(htmlEditor->Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
   return rv;
 }
 
-nsresult CSSEditUtils::SetCSSPropertyPixels(Element& aElement,
-                                            nsAtom& aProperty,
-                                            int32_t aIntValue) {
+nsresult CSSEditUtils::SetCSSPropertyPixelsWithTransaction(
+    nsStyledElement& aStyledElement, nsAtom& aProperty, int32_t aIntValue) {
   nsAutoString s;
   s.AppendInt(aIntValue);
-  nsresult rv = SetCSSProperty(aElement, aProperty, s + u"px"_ns,
-                               /* suppress txn */ false);
+  nsresult rv =
+      SetCSSPropertyWithTransaction(aStyledElement, aProperty, s + u"px"_ns);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "CSSEditUtils::SetCSSProperty() failed");
+                       "CSSEditUtils::SetCSSPropertyWithTransaction() failed");
   return rv;
 }
 
@@ -839,13 +841,20 @@ int32_t CSSEditUtils::SetCSSEquivalentToHTMLStyle(Element* aElement,
                                        false);
 
   // set the individual CSS inline styles
-  size_t count = cssPropertyArray.Length();
+  const size_t count = cssPropertyArray.Length();
+  if (!count) {
+    return 0;
+  }
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(aElement);
+  if (NS_WARN_IF(!styledElement)) {
+    return 0;
+  }
   for (size_t index = 0; index < count; index++) {
-    nsresult rv =
-        SetCSSProperty(*aElement, MOZ_KnownLive(*cssPropertyArray[index]),
-                       cssValueArray[index], aSuppressTransaction);
+    nsresult rv = SetCSSPropertyInternal(
+        *styledElement, MOZ_KnownLive(*cssPropertyArray[index]),
+        cssValueArray[index], aSuppressTransaction);
     if (NS_FAILED(rv)) {
-      NS_WARNING("CSSEditUtils::SetCSSProperty() failed");
+      NS_WARNING("CSSEditUtils::SetCSSPropertyInternal() failed");
       return 0;
     }
   }
