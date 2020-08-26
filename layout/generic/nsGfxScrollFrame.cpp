@@ -78,6 +78,7 @@
 #include "ViewportFrame.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/layers/AxisPhysicsModel.h"
 #include "mozilla/layers/AxisPhysicsMSDModel.h"
 #include "mozilla/layers/LayerTransactionChild.h"
@@ -89,6 +90,7 @@
 #include <algorithm>
 #include <cstdlib>  // for std::abs(int/long)
 #include <cmath>    // for std::abs(float/double)
+#include <tuple>    // for std::tie
 
 static mozilla::LazyLogModule sApzPaintSkipLog("apz.paintskip");
 #define PAINT_SKIP_LOG(...) \
@@ -2118,6 +2120,10 @@ ComputeBezierAnimationSettingsForOrigin(ScrollOrigin aOrigin) {
     nsAutoCString prefMax = prefBase + ".durationMaxMS"_ns;
     minMS = Preferences::GetInt(prefMin.get(), kDefaultMinMS);
     maxMS = Preferences::GetInt(prefMax.get(), kDefaultMaxMS);
+
+    if (aOrigin == ScrollOrigin::MouseWheel) {
+      std::tie(minMS, maxMS) = layers::apz::GetMouseWheelAnimationDurations();
+    }
 
     static const int32_t kSmoothScrollMaxAllowedAnimationDurationMS = 10000;
     maxMS = clamped(maxMS, 0, kSmoothScrollMaxAllowedAnimationDurationMS);

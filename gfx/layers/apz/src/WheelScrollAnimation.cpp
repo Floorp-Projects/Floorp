@@ -5,11 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WheelScrollAnimation.h"
-#include "ScrollAnimationBezierPhysics.h"
 
+#include <tuple>
 #include "AsyncPanZoomController.h"
 #include "mozilla/StaticPrefs_general.h"
+#include "mozilla/layers/APZPublicUtils.h"
 #include "nsPoint.h"
+#include "ScrollAnimationBezierPhysics.h"
 
 namespace mozilla {
 namespace layers {
@@ -33,12 +35,9 @@ static ScrollAnimationBezierPhysicsSettings SettingsForDeltaType(
                       0, maxMS);
       break;
     case ScrollWheelInput::SCROLLDELTA_LINE:
-      maxMS =
-          clamped(StaticPrefs::general_smoothScroll_mouseWheel_durationMaxMS(),
-                  0, 10000);
-      minMS =
-          clamped(StaticPrefs::general_smoothScroll_mouseWheel_durationMinMS(),
-                  0, maxMS);
+      std::tie(minMS, maxMS) = apz::GetMouseWheelAnimationDurations();
+      maxMS = clamped(maxMS, 0, 10000);
+      minMS = clamped(minMS, 0, maxMS);
       break;
   }
 
