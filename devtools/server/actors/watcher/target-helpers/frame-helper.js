@@ -180,10 +180,7 @@ function getFilteredRemoteBrowsingContext(browserElement) {
   return getAllRemoteBrowsingContexts(
     browserElement?.browsingContext
   ).filter(browsingContext =>
-    shouldNotifyWindowGlobal(
-      browsingContext.currentWindowGlobal,
-      browserElement?.browserId
-    )
+    shouldNotifyWindowGlobal(browsingContext, browserElement?.browserId)
   );
 }
 
@@ -250,8 +247,13 @@ function getAllRemoteBrowsingContexts(topBrowsingContext) {
  * but may be not, it looks like the checks are really differents because WindowGlobalParent and WindowGlobalChild
  * expose very different attributes. (WindowGlobalChild exposes much less!)
  */
-function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
-  const browsingContext = windowGlobal.browsingContext;
+function shouldNotifyWindowGlobal(browsingContext, watchedBrowserId) {
+  const windowGlobal = browsingContext.currentWindowGlobal;
+  // Loading or destroying BrowsingContext won't have any associated WindowGlobal.
+  // Ignore them. They should be either handled via DOMWindowCreated event or JSWindowActor destroy
+  if (!windowGlobal) {
+    return false;
+  }
   // Ignore extension for now as attaching to them is special.
   if (browsingContext.currentRemoteType == "extension") {
     return false;
