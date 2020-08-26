@@ -91,6 +91,7 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
       : newURI.spec;
     aBrowser.loadURI(insecureSpec, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
     });
   }
 
