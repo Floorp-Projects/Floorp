@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle};
-use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSensitivity};
+use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollSensitivity};
 use api::units::*;
 use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
@@ -440,34 +440,6 @@ impl SpatialTree {
 
         self.pending_scroll_offsets.insert(id, (origin, clamp));
         false
-    }
-
-    fn find_nearest_scrolling_ancestor(
-        &self,
-        index: Option<SpatialNodeIndex>
-    ) -> SpatialNodeIndex {
-        let index = match index {
-            Some(index) => index,
-            None => return self.topmost_scroll_node_index(),
-        };
-
-        let node = &self.spatial_nodes[index.0 as usize];
-        match node.node_type {
-            SpatialNodeType::ScrollFrame(state) if state.sensitive_to_input_events() => index,
-            _ => self.find_nearest_scrolling_ancestor(node.parent)
-        }
-    }
-
-    pub fn scroll_nearest_scrolling_ancestor(
-        &mut self,
-        scroll_location: ScrollLocation,
-        node_index: Option<SpatialNodeIndex>,
-    ) -> bool {
-        if self.spatial_nodes.is_empty() {
-            return false;
-        }
-        let node_index = self.find_nearest_scrolling_ancestor(node_index);
-        self.spatial_nodes[node_index.0 as usize].scroll(scroll_location)
     }
 
     pub fn update_tree(

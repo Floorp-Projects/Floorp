@@ -20,6 +20,7 @@ use winit::dpi::LogicalPosition;
 
 struct App {
     cursor_position: WorldPoint,
+    scroll_origin: LayoutPoint,
 }
 
 impl Example for App {
@@ -83,7 +84,7 @@ impl Example for App {
             // be relative to the stacking context.
             let space_and_clip2 = builder.define_scroll_frame(
                 &space_and_clip1,
-                None,
+                Some(ExternalScrollId(0, PipelineId::dummy())),
                 (0, 100).to(300, 1000),
                 (0, 100).to(200, 300),
                 ScrollSensitivity::ScriptAndInputEvents,
@@ -159,10 +160,10 @@ impl Example for App {
                 ..
             } => {
                 let offset = match key {
-                    winit::VirtualKeyCode::Down => Some((0.0, -10.0)),
-                    winit::VirtualKeyCode::Up => Some((0.0, 10.0)),
-                    winit::VirtualKeyCode::Right => Some((-10.0, 0.0)),
-                    winit::VirtualKeyCode::Left => Some((10.0, 0.0)),
+                    winit::VirtualKeyCode::Down => Some(LayoutVector2D::new(0.0, -10.0)),
+                    winit::VirtualKeyCode::Up => Some(LayoutVector2D::new(0.0, 10.0)),
+                    winit::VirtualKeyCode::Right => Some(LayoutVector2D::new(-10.0, 0.0)),
+                    winit::VirtualKeyCode::Left => Some(LayoutVector2D::new(10.0, 0.0)),
                     _ => None,
                 };
                 let zoom = match key {
@@ -173,9 +174,12 @@ impl Example for App {
                 };
 
                 if let Some(offset) = offset {
-                    txn.scroll(
-                        ScrollLocation::Delta(LayoutVector2D::new(offset.0, offset.1)),
-                        self.cursor_position,
+                    self.scroll_origin += offset;
+
+                    txn.scroll_node_with_id(
+                        self.scroll_origin,
+                        ExternalScrollId(0, PipelineId::dummy()),
+                        ScrollClamping::ToContentBounds,
                     );
                     txn.generate_frame();
                 }
@@ -194,10 +198,14 @@ impl Example for App {
                     winit::MouseScrollDelta::PixelDelta(pos) => (pos.x as f32, pos.y as f32),
                 };
 
-                txn.scroll(
-                    ScrollLocation::Delta(LayoutVector2D::new(dx, dy)),
-                    self.cursor_position,
+                self.scroll_origin += LayoutVector2D::new(dx, dy);
+
+                txn.scroll_node_with_id(
+                    self.scroll_origin,
+                    ExternalScrollId(0, PipelineId::dummy()),
+                    ScrollClamping::ToContentBounds,
                 );
+
                 txn.generate_frame();
             }
             winit::WindowEvent::MouseInput { .. } => {
@@ -205,7 +213,6 @@ impl Example for App {
                     document_id,
                     None,
                     self.cursor_position,
-                    HitTestFlags::FIND_ALL
                 );
 
                 println!("Hit test results:");
@@ -226,6 +233,7 @@ impl Example for App {
 fn main() {
     let mut app = App {
         cursor_position: WorldPoint::zero(),
+        scroll_origin: LayoutPoint::zero(),
     };
     boilerplate::main_wrapper(&mut app, None);
 }

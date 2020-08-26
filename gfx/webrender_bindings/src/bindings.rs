@@ -3772,7 +3772,7 @@ pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle, point: WorldPoint, ou
         .hit_tester
         .as_ref()
         .unwrap()
-        .hit_test(None, point, HitTestFlags::FIND_ALL);
+        .hit_test(None, point);
 
     for item in &result.items {
         out_results.push(HitResult {
