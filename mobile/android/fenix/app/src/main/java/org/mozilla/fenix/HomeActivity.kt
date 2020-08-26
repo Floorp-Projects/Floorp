@@ -6,6 +6,7 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
@@ -69,6 +70,7 @@ import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
+import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -155,6 +157,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             super.onCreate(savedInstanceState)
         }
 
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onCreate()",
+            data = mapOf(
+                "recreated" to (savedInstanceState != null).toString(),
+                "intent" to (intent?.action ?: "null")
+            )
+        )
+
         components.publicSuffixList.prefetch()
 
         setupThemeAndBrowsingMode(getModeFromIntentOrLastKnown(intent))
@@ -233,6 +245,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     override fun onResume() {
         super.onResume()
 
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onResume()"
+        )
+
         components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
             lifecycleScope.launch {
                 // Make sure accountManager is initialized.
@@ -260,12 +278,44 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onStart()"
+        )
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onStop()",
+            data = mapOf(
+                "finishing" to isFinishing.toString()
+            )
+        )
+    }
+
     final override fun onPause() {
         if (settings().lastKnownMode.isPrivate) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
 
         super.onPause()
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onPause()",
+            data = mapOf(
+                "finishing" to isFinishing.toString()
+            )
+        )
 
         // Every time the application goes into the background, it is possible that the user
         // is about to change the browsers installed on their system. Therefore, we reset the cache of
@@ -277,7 +327,37 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onDestroy()",
+            data = mapOf(
+                "finishing" to isFinishing.toString()
+            )
+        )
+
         privateNotificationObserver?.stop()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onConfigurationChanged()"
+        )
+    }
+
+    override fun recreate() {
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "recreate()"
+        )
+
+        super.recreate()
     }
 
     /**
@@ -286,6 +366,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     final override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent ?: return
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onNewIntent()",
+            data = mapOf(
+                "intent" to intent.action.toString()
+            )
+        )
 
         val intentProcessors =
             listOf(CrashReporterIntentProcessor()) + externalSourceIntentProcessors

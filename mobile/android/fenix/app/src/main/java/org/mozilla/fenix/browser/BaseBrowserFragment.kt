@@ -98,6 +98,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.ext.accessibilityManager
+import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -169,6 +170,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     ): View {
         require(arguments != null)
         customTabSessionId = arguments?.getString(EXTRA_SESSION_ID)
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onCreateView()",
+            data = mapOf(
+                "customTabSessionId" to customTabSessionId.toString()
+            )
+        )
 
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
@@ -1061,9 +1071,36 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
      */
     override fun onDestroyView() {
         super.onDestroyView()
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onDestroyView()"
+        )
+
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
         _browserToolbarView = null
         _browserInteractor = null
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onAttach()"
+        )
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+
+        // Diagnostic breadcrumb for "Display already aquired" crash:
+        // https://github.com/mozilla-mobile/android-components/issues/7960
+        breadcrumb(
+            message = "onDetach()"
+        )
     }
 
     companion object {

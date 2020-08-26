@@ -12,6 +12,7 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.navigation.fragment.findNavController
+import mozilla.components.support.base.crash.Breadcrumb
 import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
@@ -56,4 +57,24 @@ fun Fragment.redirectToReAuth(destinations: List<Int>, currentDestination: Int?)
     if (currentDestination !in destinations) {
         findNavController().popBackStack(R.id.savedLoginsAuthFragment, false)
     }
+}
+
+fun Fragment.breadcrumb(
+    message: String,
+    data: Map<String, String> = emptyMap()
+) {
+    val activityName = activity?.let { it::class.java.simpleName } ?: "null"
+
+    requireComponents.analytics.crashReporter.recordCrashBreadcrumb(
+        Breadcrumb(
+            category = this::class.java.simpleName,
+            message = message,
+            data = data + mapOf(
+                "instance" to hashCode().toString(),
+                "activityInstance" to activity?.hashCode().toString(),
+                "activityName" to activityName
+            ),
+            level = Breadcrumb.Level.INFO
+        )
+    )
 }

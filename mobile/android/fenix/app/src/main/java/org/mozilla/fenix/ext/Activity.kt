@@ -7,6 +7,7 @@ package org.mozilla.fenix.ext
 import android.app.Activity
 import android.view.View
 import android.view.WindowManager
+import mozilla.components.support.base.crash.Breadcrumb
 
 /**
  * Attempts to call immersive mode using the View to hide the status bar and navigation buttons.
@@ -21,4 +22,20 @@ fun Activity.enterToImmersiveMode() {
             or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
             or View.SYSTEM_UI_FLAG_FULLSCREEN
             or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+}
+
+fun Activity.breadcrumb(
+    message: String,
+    data: Map<String, String> = emptyMap()
+) {
+    components.analytics.crashReporter.recordCrashBreadcrumb(
+        Breadcrumb(
+            category = this::class.java.simpleName,
+            message = message,
+            data = data + mapOf(
+                "instance" to this.hashCode().toString()
+            ),
+            level = Breadcrumb.Level.INFO
+        )
+    )
 }
