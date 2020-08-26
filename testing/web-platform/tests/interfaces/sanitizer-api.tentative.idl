@@ -4,5 +4,5 @@
   Exposed=Window
 ] interface Sanitizer {
   [RaisesException] constructor();
-  DOMString saneStringFrom(DOMString input);
+  DOMString sanitizeToString(DOMString input);
 };
