@@ -1148,12 +1148,10 @@
       let timevals = new Type.timevals.implementation();
       let timevalsPtr = timevals.address();
 
-      // JavaScript date values are expressed in milliseconds since epoch.
-      // Split this up into second and microsecond components.
       timevals[0].tv_sec = (accessDate / 1000) | 0;
-      timevals[0].tv_usec = ((accessDate % 1000) * 1000) | 0;
+      timevals[0].tv_usec = 0;
       timevals[1].tv_sec = (modificationDate / 1000) | 0;
-      timevals[1].tv_usec = ((modificationDate % 1000) * 1000) | 0;
+      timevals[1].tv_usec = 0;
 
       return { value: timevals, ptr: timevalsPtr };
     }

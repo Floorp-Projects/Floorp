@@ -4,22 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/IOUtils.h"
+#include <algorithm>
+
 #include "ErrorList.h"
+#include "mozilla/dom/IOUtils.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
-#include "nsError.h"
-#include "nsIDirectoryEnumerator.h"
-#include "nsPrintfCString.h"
 #include "nspr/prerror.h"
 #include "nspr/prio.h"
 #include "nspr/private/pprio.h"
 #include "nspr/prtypes.h"
-#include "nspr/prtime.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
 #include "nsReadableUtils.h"
@@ -78,16 +75,13 @@ namespace dom {
  * @see nsLocalFileUnix.cpp
  */
 static bool IsFileNotFound(nsresult aResult) {
-  return aResult == NS_ERROR_FILE_NOT_FOUND ||
-         aResult == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
-}
-/**
- * Like |IsFileNotFound|, but checks for known results that suggest a file
- * is not a directory.
- */
-static bool IsNotDirectory(nsresult aResult) {
-  return aResult == NS_ERROR_FILE_DESTINATION_NOT_DIR ||
-         aResult == NS_ERROR_FILE_NOT_DIRECTORY;
+  switch (aResult) {
+    case NS_ERROR_FILE_NOT_FOUND:
+    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -241,7 +235,6 @@ already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
 already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
                                         const Optional<uint32_t>& aMaxBytes) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -265,24 +258,9 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
-                                            const nsAString& aPath) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
-
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
-
-  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, path);
-}
-
-/* static */
 already_AddRefed<Promise> IOUtils::WriteAtomic(
     GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
     const WriteAtomicOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -292,40 +270,22 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
   aData.ComputeState();
   auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
   if (buf.isNothing()) {
-    promise->MaybeRejectWithOperationError(
-        "Out of memory: Could not allocate buffer while writing to file");
+    promise->MaybeRejectWithOperationError("Out of memory");
     return promise.forget();
   }
   nsAutoString destPath(aPath);
-  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
+  InternalWriteAtomicOpts opts;
+  opts.mFlush = aOptions.mFlush;
+  opts.mNoOverwrite = aOptions.mNoOverwrite;
+  if (aOptions.mBackupFile.WasPassed()) {
+    opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
+  }
+  if (aOptions.mTmpPath.WasPassed()) {
+    opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
+  }
 
   return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicSync, destPath,
                                          std::move(*buf), std::move(opts));
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::WriteAtomicUTF8(
-    GlobalObject& aGlobal, const nsAString& aPath, const nsAString& aString,
-    const WriteAtomicOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
-  REJECT_IF_SHUTTING_DOWN(promise);
-
-  // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsCString utf8Str;
-  if (!CopyUTF16toUTF8(aString, utf8Str, fallible)) {
-    promise->MaybeRejectWithOperationError(
-        "Out of memory: Could not allocate buffer while writing to file");
-    return promise.forget();
-  }
-  nsAutoString destPath(aPath);
-  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
-
-  return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicUTF8Sync,
-                                         destPath, std::move(utf8Str),
-                                         std::move(opts));
 }
 
 /* static */
@@ -333,7 +293,6 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
                                         const MoveOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -352,7 +311,6 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
 already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const nsAString& aPath,
                                           const RemoveOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -368,7 +326,6 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
 already_AddRefed<Promise> IOUtils::MakeDirectory(
     GlobalObject& aGlobal, const nsAString& aPath,
     const MakeDirectoryOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -383,7 +340,6 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
 
 already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -399,7 +355,6 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
                                         const CopyOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
   REJECT_IF_SHUTTING_DOWN(promise);
@@ -412,39 +367,6 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
 
   return RunOnBackgroundThread<Ok>(promise, &CopySync, sourcePath, destPath,
                                    aOptions.mNoOverwrite, aOptions.mRecursive);
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Touch(
-    GlobalObject& aGlobal, const nsAString& aPath,
-    const Optional<int64_t>& aModification) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
-
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
-
-  Maybe<int64_t> newTime = Nothing();
-  if (aModification.WasPassed()) {
-    newTime = Some(aModification.Value());
-  }
-
-  return RunOnBackgroundThread<int64_t>(promise, &TouchSync, path, newTime);
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
-                                               const nsAString& aPath) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
-
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
-
-  return RunOnBackgroundThread<nsTArray<nsString>>(promise, &GetChildrenSync,
-                                                   path);
 }
 
 /* static */
@@ -481,7 +403,7 @@ already_AddRefed<nsIAsyncShutdownClient> IOUtils::GetShutdownBarrier() {
     MOZ_ASSERT(svc);
 
     nsCOMPtr<nsIAsyncShutdownClient> barrier;
-    nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
+    nsresult rv = svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
     NS_ENSURE_SUCCESS(rv, nullptr);
     sBarrier = barrier;
   }
@@ -562,15 +484,6 @@ void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
       aPromise->MaybeRejectWithOperationError(
           errMsg.refOr("Target directory is not empty"_ns));
       break;
-    case NS_ERROR_FILE_CORRUPTED:
-      aPromise->MaybeRejectWithNotReadableError(
-          errMsg.refOr("Target file could not be read and may be corrupt"_ns));
-      break;
-    case NS_ERROR_ILLEGAL_INPUT:
-    case NS_ERROR_ILLEGAL_VALUE:
-      aPromise->MaybeRejectWithDataError(
-          errMsg.refOr("Argument is not allowed"_ns));
-      break;
     default:
       aPromise->MaybeRejectWithUnknownError(
           errMsg.refOr(FormatErrorMessage(aError.Code(), "Unexpected error")));
@@ -584,6 +497,7 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
   // Ensure that CREATE_FILE and EXCL flags were not included, as we do not
   // want to create a new file.
   MOZ_ASSERT((aFlags & (PR_CREATE_FILE | PR_EXCL)) == 0);
+
   // We open the file descriptor through an nsLocalFile to ensure that the paths
   // are interpreted/encoded correctly on all platforms.
   RefPtr<nsLocalFile> file = new nsLocalFile();
@@ -601,7 +515,6 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
 UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
     const nsAString& aPath, int32_t aFlags, int32_t aMode) {
   MOZ_ASSERT(!NS_IsMainThread());
-
   // We open the file descriptor through an nsLocalFile to ensure that the paths
   // are interpreted/encoded correctly on all platforms.
   RefPtr<nsLocalFile> file = new nsLocalFile();
@@ -688,40 +601,8 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
 }
 
 /* static */
-Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
-    const nsAString& aPath) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  return ReadSync(aPath, Nothing())
-      .andThen([&aPath](const nsTArray<uint8_t>& bytes)
-                   -> Result<nsString, IOError> {
-        auto utf8Span = Span(reinterpret_cast<const char*>(bytes.Elements()),
-                             bytes.Length());
-        if (!IsUtf8(utf8Span)) {
-          return Err(
-              IOError(NS_ERROR_FILE_CORRUPTED)
-                  .WithMessage(
-                      "Could not read file(%s) because it is not UTF-8 encoded",
-                      NS_ConvertUTF16toUTF8(aPath).get()));
-        }
-
-        nsDependentCSubstring utf8Str(utf8Span.Elements(), utf8Span.Length());
-        nsString utf16Str;
-        if (!CopyUTF8toUTF16(utf8Str, utf16Str, fallible)) {
-          return Err(
-              IOError(NS_ERROR_OUT_OF_MEMORY)
-                  .WithMessage("Could not allocate buffer to convert UTF-8 "
-                               "contents of file at (%s) to UTF-16",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
-        }
-
-        return utf16Str;
-      });
-}
-
-/* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
-    const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
+    const nsAString& aDestPath, const Buffer<uint8_t>& aByteArray,
     const IOUtils::InternalWriteAtomicOpts& aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -803,21 +684,8 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
 }
 
 /* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicUTF8Sync(
-    const nsAString& aDestPath, const nsCString& aUTF8String,
-    const InternalWriteAtomicOpts& aOptions) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  Span utf8Bytes(reinterpret_cast<const uint8_t*>(aUTF8String.get()),
-                 aUTF8String.Length());
-
-  return WriteAtomicSync(aDestPath, utf8Bytes, aOptions);
-}
-
-/* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
-    PRFileDesc* aFd, const nsACString& aPath,
-    const Span<const uint8_t>& aBytes) {
+    PRFileDesc* aFd, const nsACString& aPath, const Buffer<uint8_t>& aBytes) {
   // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max
   // length.
   MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
@@ -832,13 +700,13 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   // PR_Write can only write up to PR_INT32_MAX bytes at a time, but the data
   // source might be as large as UINT32_MAX bytes.
   uint32_t chunkSize = PR_INT32_MAX;
-  Span<const uint8_t> pendingBytes = aBytes;
+  uint32_t pendingBytes = aBytes.Length();
 
-  while (pendingBytes.Length() > 0) {
-    if (pendingBytes.Length() < chunkSize) {
-      chunkSize = pendingBytes.Length();
+  while (pendingBytes > 0) {
+    if (pendingBytes < chunkSize) {
+      chunkSize = pendingBytes;
     }
-    int32_t rv = PR_Write(aFd, pendingBytes.Elements(), chunkSize);
+    int32_t rv = PR_Write(aFd, aBytes.begin() + bytesWritten, chunkSize);
     if (rv < 0) {
       return Err(IOError(NS_ERROR_FILE_CORRUPTED)
                      .WithMessage("Could not write chunk(size=%" PRIu32
@@ -846,8 +714,8 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
                                   "The file may be corrupt",
                                   chunkSize, aPath.BeginReading()));
     }
+    pendingBytes -= rv;
     bytesWritten += rv;
-    pendingBytes = pendingBytes.From(rv);
   }
 
   return bytesWritten;
@@ -931,11 +799,11 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
     CopyOrMoveFn aMethod, const char* aMethodName,
     const RefPtr<nsLocalFile>& aSource, const RefPtr<nsLocalFile>& aDest,
     bool aNoOverwrite) {
-  MOZ_ASSERT(!NS_IsMainThread());
+  nsresult rv = NS_OK;
 
   // Normalize the file paths.
   MOZ_TRY(aSource->Normalize());
-  nsresult rv = aDest->Normalize();
+  rv = aDest->Normalize();
   // Normalize can fail for a number of reasons, including if the file doesn't
   // exist. It is expected that the file might not exist for a number of calls
   // (e.g. if we want to copy or move a file to a new location).
@@ -1161,96 +1029,6 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   info.mLastModified = static_cast<int64_t>(lastModified);
 
   return info;
-}
-
-/* static */
-Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
-    const nsAString& aPath, const Maybe<int64_t>& aNewModTime) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
-
-  int64_t now = aNewModTime.valueOrFrom([]() {
-    // NB: PR_Now reports time in microseconds since the Unix epoch
-    //     (1970-01-01T00:00:00Z). Both nsLocalFile's lastModifiedTime and
-    //     JavaScript's Date primitive values are to be expressed in
-    //     milliseconds since Epoch.
-    int64_t nowMicros = PR_Now();
-    int64_t nowMillis = nowMicros / PR_USEC_PER_MSEC;
-    return nowMillis;
-  });
-
-  // nsIFile::SetLastModifiedTime will *not* do what is expected when passed 0
-  // as an argument. Rather than setting the time to 0, it will recalculate the
-  // system time and set it to that value instead. We explicit forbid this,
-  // because this side effect is surprising.
-  //
-  // If it ever becomes possible to set a file time to 0, this check should be
-  // removed, though this use case seems rare.
-  if (now == 0) {
-    return Err(
-        IOError(NS_ERROR_ILLEGAL_VALUE)
-            .WithMessage(
-                "Refusing to set the modification time of file(%s) to 0.\n"
-                "To use the current system time, call `touch` with no "
-                "arguments"));
-  }
-
-  nsresult rv = file->SetLastModifiedTime(now);
-
-  if (NS_FAILED(rv)) {
-    IOError err(rv);
-    if (IsFileNotFound(rv)) {
-      return Err(
-          err.WithMessage("Could not touch file(%s) because it does not exist",
-                          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    return Err(err);
-  }
-  return now;
-}
-
-/* static */
-Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
-    const nsAString& aPath) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
-
-  RefPtr<nsIDirectoryEnumerator> iter;
-  nsresult rv = file->GetDirectoryEntries(getter_AddRefs(iter));
-  if (NS_FAILED(rv)) {
-    IOError err(rv);
-    if (IsFileNotFound(rv)) {
-      return Err(err.WithMessage(
-          "Could not get children of file(%s) because it does not exist",
-          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    if (IsNotDirectory(rv)) {
-      return Err(err.WithMessage(
-          "Could not get children of file(%s) because it is not a directory",
-          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    return Err(err);
-  }
-  nsTArray<nsString> children;
-
-  bool hasMoreElements = false;
-  MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
-  while (hasMoreElements) {
-    nsCOMPtr<nsIFile> child;
-    MOZ_TRY(iter->GetNextFile(getter_AddRefs(child)));
-    if (child) {
-      nsString path;
-      MOZ_TRY(child->GetPath(path));
-      children.AppendElement(path);
-    }
-    MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
-  }
-
-  return children;
 }
 
 NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);
