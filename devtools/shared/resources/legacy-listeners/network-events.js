@@ -60,6 +60,7 @@ module.exports = async function({
       isThirdPartyTrackingResource: actor.isThirdPartyTrackingResource,
       referrerPolicy: actor.referrerPolicy,
       blockedReason: actor.blockedReason,
+      blockingExtension: actor.blockingExtension,
       channelId: actor.channelId,
       updates: [],
     };
