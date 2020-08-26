@@ -520,7 +520,25 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
       mMissingFonts = nullptr;
     }
   }
-  if (prefName.EqualsLiteral("font.internaluseonly.changed")) {
+  if (prefName.EqualsLiteral("font.internaluseonly.changed") &&
+      !IsPrintingOrPrintPreview()) {
+    // If there's a change to the font list, we generally need to reconstruct
+    // frames, as the existing frames may be referring to fonts that are no
+    // longer available. But in the case of a static-clone document used for
+    // printing or print-preview, this is undesirable because the nsPrintJob
+    // is holding weak refs to frames that will get blown away unexpectedly by
+    // this reconstruction. So the prescontext for a print/preview doc ignores
+    // the font-list update.
+    //
+    // This means the print document may still be using cached fonts that are
+    // no longer present in the font list, but that should be safe given that
+    // all the required font instances have already been created, so it won't
+    // be depending on access to the font-list entries.
+    //
+    // XXX Actually, I think it's probably a bad idea to do *any* restyling of
+    // print documents in response to pref changes. We could be in the middle
+    // of printing the document, and reflowing all the frames might cause some
+    // kind of unwanted mid-document discontinuity.
     mChangeHintForPrefChange |= nsChangeHint_ReconstructFrame;
   } else if (StringBeginsWith(prefName, "font."_ns) ||
              // Changes to font family preferences don't change anything in the
