@@ -856,10 +856,6 @@ class HTMLMediaElement::MediaStreamRenderer
     }
 
     if (mVideoTrack) {
-      if (mFirstFrameVideoOutput) {
-        mVideoTrack->AsVideoStreamTrack()->RemoveVideoOutput(
-            mFirstFrameVideoOutput);
-      }
       mVideoTrack->AsVideoStreamTrack()->AddVideoOutput(mVideoContainer);
     }
   }
@@ -883,10 +879,6 @@ class HTMLMediaElement::MediaStreamRenderer
 
     if (mVideoTrack) {
       mVideoTrack->AsVideoStreamTrack()->RemoveVideoOutput(mVideoContainer);
-      if (mFirstFrameVideoOutput) {
-        mVideoTrack->AsVideoStreamTrack()->AddVideoOutput(
-            mFirstFrameVideoOutput);
-      }
     }
   }
 
@@ -958,10 +950,14 @@ class HTMLMediaElement::MediaStreamRenderer
     }
     mVideoTrack = aTrack;
     EnsureGraphTimeDummy();
+    if (mFirstFrameVideoOutput) {
+      // Add the first frame output even if we are rendering. It will only
+      // accept one frame. If we are rendering, then the main output will
+      // overwrite that with the same frame (and possibly more frames).
+      aTrack->AddVideoOutput(mFirstFrameVideoOutput);
+    }
     if (mRendering) {
       aTrack->AddVideoOutput(mVideoContainer);
-    } else if (mFirstFrameVideoOutput) {
-      aTrack->AddVideoOutput(mFirstFrameVideoOutput);
     }
   }
 
@@ -977,10 +973,11 @@ class HTMLMediaElement::MediaStreamRenderer
     if (!mVideoContainer) {
       return;
     }
+    if (mFirstFrameVideoOutput) {
+      aTrack->RemoveVideoOutput(mFirstFrameVideoOutput);
+    }
     if (mRendering) {
       aTrack->RemoveVideoOutput(mVideoContainer);
-    } else if (mFirstFrameVideoOutput) {
-      aTrack->RemoveVideoOutput(mFirstFrameVideoOutput);
     }
     mVideoTrack = nullptr;
   }
