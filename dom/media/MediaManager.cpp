@@ -409,6 +409,7 @@ class SourceListener : public SupportsWeakPtr {
    * Mutes or unmutes the associated video device if it is a camera.
    */
   void MuteOrUnmuteCamera(bool aMute);
+  void MuteOrUnmuteMicrophone(bool aMute);
 
   MediaDevice* GetAudioDevice() const {
     return mAudioDeviceState ? mAudioDeviceState->mDevice.get() : nullptr;
@@ -529,7 +530,7 @@ class GetUserMediaWindowListener {
     mInactiveListeners.RemoveElement(aListener);
     aListener->Activate(std::move(aAudioDevice), std::move(aAudioTrackSource),
                         std::move(aVideoDevice), std::move(aVideoTrackSource),
-                        mCamerasAreMuted, /* aStartAudioMuted */ false);
+                        mCamerasAreMuted, mMicrophonesAreMuted);
     mActiveListeners.AppendElement(std::move(aListener));
   }
 
@@ -675,6 +676,7 @@ class GetUserMediaWindowListener {
   void StopRawID(const nsString& removedDeviceID);
 
   void MuteOrUnmuteCameras(bool aMute);
+  void MuteOrUnmuteMicrophones(bool aMute);
 
   /**
    * Called by one of our SourceListeners when one of its tracks has changed so
@@ -750,11 +752,12 @@ class GetUserMediaWindowListener {
   nsTArray<RefPtr<SourceListener>> mInactiveListeners;
   nsTArray<RefPtr<SourceListener>> mActiveListeners;
 
-  // Whether camera access in this window is currently User Agent (UA) muted.
-  // When true, new camera tracks must start out muted, to avoid JS
-  // circumventing UA mute by calling getUserMedia again.
-  // Per-camera UA muting is not supported.
+  // Whether camera and microphone access in this window are currently
+  // User Agent (UA) muted. When true, new and cloned tracks must start
+  // out muted, to avoid JS circumventing UA mute. Per-camera and
+  // per-microphone UA muting is not supported.
   bool mCamerasAreMuted = false;
+  bool mMicrophonesAreMuted = false;
 };
 
 class LocalTrackSource : public MediaStreamTrackSource {
@@ -2051,8 +2054,8 @@ MediaManager* MediaManager::Get() {
       obs->AddObserver(sSingleton, "getUserMedia:revoke", false);
       obs->AddObserver(sSingleton, "getUserMedia:muteVideo", false);
       obs->AddObserver(sSingleton, "getUserMedia:unmuteVideo", false);
-      obs->AddObserver(sSingleton, "application-background", false);
-      obs->AddObserver(sSingleton, "application-foreground", false);
+      obs->AddObserver(sSingleton, "getUserMedia:muteAudio", false);
+      obs->AddObserver(sSingleton, "getUserMedia:unmuteAudio", false);
     }
     // else MediaManager won't work properly and will leak (see bug 837874)
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -3461,6 +3464,16 @@ void MediaManager::OnCameraMute(bool aMute) {
   }
 }
 
+void MediaManager::OnMicrophoneMute(bool aMute) {
+  MOZ_ASSERT(NS_IsMainThread());
+  LOG("OnMicrophoneMute for all windows");
+  // This is safe since we're on main-thread, and the windowlist can only
+  // be added to from the main-thread
+  for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
+    iter.UserData()->MuteOrUnmuteMicrophones(aMute);
+  }
+}
+
 void MediaManager::AddWindowID(uint64_t aWindowId,
                                RefPtr<GetUserMediaWindowListener> aListener) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -3591,6 +3604,8 @@ void MediaManager::Shutdown() {
   obs->RemoveObserver(this, "getUserMedia:revoke");
   obs->RemoveObserver(this, "getUserMedia:muteVideo");
   obs->RemoveObserver(this, "getUserMedia:unmuteVideo");
+  obs->RemoveObserver(this, "getUserMedia:muteAudio");
+  obs->RemoveObserver(this, "getUserMedia:unmuteAudio");
   obs->RemoveObserver(this, "application-background");
   obs->RemoveObserver(this, "application-foreground");
 
@@ -3878,6 +3893,10 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
              !strcmp(aTopic, "getUserMedia:unmuteVideo")) {
     OnCameraMute(!strcmp(aTopic, "getUserMedia:muteVideo"));
     return NS_OK;
+  } else if (!strcmp(aTopic, "getUserMedia:muteAudio") ||
+             !strcmp(aTopic, "getUserMedia:unmuteAudio")) {
+    OnMicrophoneMute(!strcmp(aTopic, "getUserMedia:muteAudio"));
+    return NS_OK;
   } else if ((!strcmp(aTopic, "application-background") ||
               !strcmp(aTopic, "application-foreground")) &&
              StaticPrefs::media_getusermedia_camera_background_mute_enabled()) {
@@ -3889,8 +3908,8 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     // NOTE: If a mobile device ever wants to implement "getUserMedia:muteVideo"
     // as well, it'd need to update this code to handle & test the combinations.
     OnCameraMute(!strcmp(aTopic, "application-background"));
-    return NS_OK;
   }
+
   return NS_OK;
 }
 
@@ -4674,6 +4693,22 @@ void SourceListener::MuteOrUnmuteCamera(bool aMute) {
   }
 }
 
+void SourceListener::MuteOrUnmuteMicrophone(bool aMute) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mStopped) {
+    return;
+  }
+
+  MOZ_RELEASE_ASSERT(mWindowListener);
+  LOG("SourceListener %p MuteOrUnmuteMicrophone", this);
+
+  if (mAudioDeviceState && (mAudioDeviceState->mDevice->GetMediaSource() ==
+                            MediaSourceEnum::Microphone)) {
+    SetMutedFor(mAudioDeviceState->mTrackSource, aMute);
+  }
+}
+
 bool SourceListener::CapturingVideo() const {
   MOZ_ASSERT(NS_IsMainThread());
   return Activated() && mVideoDeviceState && !mVideoDeviceState->mStopped &&
@@ -4834,6 +4869,21 @@ void GetUserMediaWindowListener::MuteOrUnmuteCameras(bool aMute) {
   for (auto& source : mActiveListeners) {
     if (source->GetVideoDevice()) {
       source->MuteOrUnmuteCamera(aMute);
+    }
+  }
+}
+
+void GetUserMediaWindowListener::MuteOrUnmuteMicrophones(bool aMute) {
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
+
+  if (mMicrophonesAreMuted == aMute) {
+    return;
+  }
+  mMicrophonesAreMuted = aMute;
+
+  for (auto& source : mActiveListeners) {
+    if (source->GetAudioDevice()) {
+      source->MuteOrUnmuteMicrophone(aMute);
     }
   }
 }

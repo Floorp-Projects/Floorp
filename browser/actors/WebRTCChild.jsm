@@ -136,6 +136,20 @@ class WebRTCChild extends JSWindowActorChild {
           aMessage.data
         );
         break;
+      case "webrtc:MuteMicrophone":
+        Services.obs.notifyObservers(
+          null,
+          "getUserMedia:muteAudio",
+          aMessage.data
+        );
+        break;
+      case "webrtc:UnmuteMicrophone":
+        Services.obs.notifyObservers(
+          null,
+          "getUserMedia:unmuteAudio",
+          aMessage.data
+        );
+        break;
     }
   }
 }
