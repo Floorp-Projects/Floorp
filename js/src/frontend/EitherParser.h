@@ -149,6 +149,15 @@ class EitherParser : public BCEParserHandle {
         matcher{offset, line, column};
     return parser.match(std::move(matcher));
   }
+
+  JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
+    ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
+    return base.liftParserAtomToJSAtom(parserAtom);
+  }
+  const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom) {
+    ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
+    return base.lowerJSAtomToParserAtom(atom);
+  }
 };
 
 } /* namespace frontend */
