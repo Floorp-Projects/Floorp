@@ -2,7 +2,7 @@ import { sendWasmModule } from "./helpers.mjs";
 
 // This is done for the window.open() case. For <iframe>s we use the
 // <iframe> element's load event instead.
-const usp = new URLSearchParams(location.href);
+const usp = new URLSearchParams(location.search);
 if (usp.has("send-loaded-message")) {
   opener.postMessage("loaded", "*");
 }
