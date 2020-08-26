@@ -1,14 +1,6 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
-
-const kSearchEngineID = "test_urifixup_search_engine";
-const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
-const kPrivateSearchEngineID = "test_urifixup_search_engine_private";
-const kPrivateSearchEngineURL = "http://www.example.org/?private={searchTerms}";
 
 var isWin = AppConstants.platform == "win";
 
@@ -117,17 +109,9 @@ if (extProtocolSvc && extProtocolSvc.externalProtocolHandlerExists("mailto")) {
 
 var len = data.length;
 
-AddonTestUtils.init(this);
-AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo(
-  "xpcshell@tests.mozilla.org",
-  "XPCShell",
-  "1",
-  "42"
-);
-
 add_task(async function setup() {
-  await AddonTestUtils.promiseStartupManager();
+  await setupSearchService();
+  await addTestEngines();
 
   Services.prefs.setBoolPref("keyword.enabled", true);
   Services.prefs.setBoolPref("browser.search.separatePrivateDefault", true);
@@ -136,50 +120,12 @@ add_task(async function setup() {
     true
   );
 
-  Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler)
-    .setSubstitution(
-      "search-extensions",
-      Services.io.newURI("chrome://mozapps/locale/searchextensions/")
-    );
-
-  var oldCurrentEngine = await Services.search.getDefault();
-  var oldPrivateEngine = await Services.search.getDefaultPrivate();
-
-  let newCurrentEngine = await Services.search.addEngineWithDetails(
-    kSearchEngineID,
-    {
-      method: "get",
-      template: kSearchEngineURL,
-    }
+  await Services.search.setDefault(
+    Services.search.getEngineByName(kSearchEngineID)
   );
-  await Services.search.setDefault(newCurrentEngine);
-
-  let newPrivateEngine = await Services.search.addEngineWithDetails(
-    kPrivateSearchEngineID,
-    {
-      method: "get",
-      template: kPrivateSearchEngineURL,
-    }
+  await Services.search.setDefaultPrivate(
+    Services.search.getEngineByName(kPrivateSearchEngineID)
   );
-  await Services.search.setDefaultPrivate(newPrivateEngine);
-
-  registerCleanupFunction(async function() {
-    if (oldCurrentEngine) {
-      await Services.search.setDefault(oldCurrentEngine);
-    }
-    if (oldPrivateEngine) {
-      await Services.search.setDefault(oldPrivateEngine);
-    }
-    await Services.search.removeEngine(newCurrentEngine);
-    await Services.search.removeEngine(newPrivateEngine);
-    Services.prefs.clearUserPref("keyword.enabled");
-    Services.prefs.clearUserPref("browser.search.separatePrivateDefault");
-    Services.prefs.clearUserPref(
-      "browser.search.separatePrivateDefault.ui.enabled"
-    );
-  });
 });
 
 // Make sure we fix what needs fixing
