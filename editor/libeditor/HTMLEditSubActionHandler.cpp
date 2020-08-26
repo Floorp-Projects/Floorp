@@ -12734,16 +12734,18 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
           return rv;
         }
       } else {
-        nsAutoString dummyCssValue;
-        nsresult rv = mCSSEditUtils->RemoveCSSInlineStyle(
-            blockOrHRElement, nsGkAtoms::textAlign, dummyCssValue);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        nsCOMPtr<nsStyledElement> styledBlockOrHRElement =
+            do_QueryInterface(blockOrHRElement);
+        if (NS_WARN_IF(!styledBlockOrHRElement)) {
+          return NS_ERROR_FAILURE;
         }
+        nsAutoString dummyCssValue;
+        nsresult rv = mCSSEditUtils->RemoveCSSInlineStyleWithTransaction(
+            *styledBlockOrHRElement, nsGkAtoms::textAlign, dummyCssValue);
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "CSSEditUtils::RemoveCSSInlineStyle(nsGkAtoms::textAlign) "
-              "failed");
+              "CSSEditUtils::RemoveCSSInlineStyleWithTransaction(nsGkAtoms::"
+              "textAlign) failed");
           return rv;
         }
       }

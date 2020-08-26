@@ -534,28 +534,27 @@ already_AddRefed<nsComputedDOMStyle> CSSEditUtils::GetComputedStyle(
 
 // remove the CSS style "aProperty : aPropertyValue" and possibly remove the
 // whole node if it is a span and if its only attribute is _moz_dirty
-nsresult CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode, nsAtom* aProperty,
-                                            const nsAString& aPropertyValue) {
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aNode);
-  if (NS_WARN_IF(!styledElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+nsresult CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
+    nsStyledElement& aStyledElement, nsAtom* aProperty,
+    const nsAString& aPropertyValue) {
   // remove the property from the style attribute
-  nsresult rv = RemoveCSSPropertyWithTransaction(*styledElement, *aProperty,
+  nsresult rv = RemoveCSSPropertyWithTransaction(aStyledElement, *aProperty,
                                                  aPropertyValue);
   if (NS_FAILED(rv)) {
     NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithTransaction() failed");
     return rv;
   }
 
-  if (!styledElement->IsHTMLElement(nsGkAtoms::span) ||
-      HTMLEditor::HasAttributes(styledElement)) {
+  if (!aStyledElement.IsHTMLElement(nsGkAtoms::span) ||
+      HTMLEditor::HasAttributes(&aStyledElement)) {
     return NS_OK;
   }
 
   OwningNonNull<HTMLEditor> htmlEditor(*mHTMLEditor);
-  rv = htmlEditor->RemoveContainerWithTransaction(*styledElement);
+  rv = htmlEditor->RemoveContainerWithTransaction(aStyledElement);
+  if (NS_WARN_IF(htmlEditor->Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::RemoveContainerWithTransaction() failed");
   return rv;
