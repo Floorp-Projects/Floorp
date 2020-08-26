@@ -22,6 +22,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPaper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPaper)
 
+nsPaper::nsPaper(const mozilla::PaperInfo& aInfo)
+    : mPrinter(nullptr), mInfo(aInfo) {}
+
 nsPaper::nsPaper(nsPrinterBase& aPrinter, const mozilla::PaperInfo& aInfo)
     : mPrinter(&aPrinter), mInfo(aInfo) {}
 
@@ -65,7 +68,12 @@ nsPaper::GetUnwriteableMargin(JSContext* aCx, Promise** aPromise) {
     auto margin = mozilla::MakeRefPtr<nsPaperMargin>(*mInfo.mUnwriteableMargin);
     mMarginPromise->MaybeResolve(margin);
   } else {
-    mPrinter->QueryMarginsForPaper(*mMarginPromise, mInfo.mPaperId);
+    if (mPrinter) {
+      mPrinter->QueryMarginsForPaper(*mMarginPromise, mInfo.mPaperId);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("common paper sizes should know their margins");
+      mMarginPromise->MaybeRejectWithNotSupportedError("Margins unavailable");
+    }
   }
 
   promise.forget(aPromise);
