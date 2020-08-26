@@ -3623,6 +3623,12 @@ impl Renderer {
             compositor.begin_frame();
         }
 
+        if let Some(device_size) = device_size {
+            // Update the state of the debug overlay surface, ensuring that
+            // the compositor mode has a suitable surface to draw to, if required.
+            self.update_debug_overlay(device_size);
+        }
+
         profile_timers.cpu_time.profile(|| {
             //Note: another borrowck dance
             let mut active_documents = mem::replace(&mut self.active_documents, Vec::default());
@@ -3699,10 +3705,6 @@ impl Renderer {
         });
 
         if let Some(device_size) = device_size {
-            // Update the state of the debug overlay surface, ensuring that
-            // the compositor mode has a suitable surface to draw to, if required.
-            self.update_debug_overlay(device_size);
-
             // Bind a surface to draw the debug / profiler information to.
             self.bind_debug_overlay();
 
@@ -5130,9 +5132,11 @@ impl Renderer {
         let mut partial_present_mode = None;
 
         if max_partial_present_rects > 0 {
-            // We can only use partial present if we have valid dirty rects and the
-            // client hasn't reset partial present state since last frame.
-            if composite_state.dirty_rects_are_valid && !self.force_redraw {
+            let can_use_partial_present = composite_state.dirty_rects_are_valid &&
+                                          !self.force_redraw &&
+                                          !self.debug_overlay_state.is_enabled;
+
+            if can_use_partial_present {
                 let mut combined_dirty_rect = DeviceRect::zero();
 
                 // Work out how many dirty rects WR produced, and if that's more than
