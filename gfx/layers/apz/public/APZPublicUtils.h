@@ -12,6 +12,7 @@
 
 #include <stdint.h>  // for uint32_t
 #include <type_traits>
+#include <utility>
 #include "gfxTypes.h"
 #include "FrameMetrics.h"
 #include "LayersTypes.h"
@@ -72,6 +73,15 @@ void InitializeGlobalState();
  */
 const ScreenMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity);
+
+/**
+ * This computes the min/max values to use for the mousewheel animation
+ * duration. Normally this just comes from prefs but we are doing a gradual
+ * migration of users from old values to new values so this encapsulates some
+ * of that behaviour. Values are in milliseconds, same as the
+ * general.smoothScroll.mouseWheel.duration* prefs.
+ */
+std::pair<int32_t, int32_t> GetMouseWheelAnimationDurations();
 
 }  // namespace apz
 
