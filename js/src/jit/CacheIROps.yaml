@@ -1818,16 +1818,7 @@
   transpile: false
   cost_estimate: 5
   args:
-    obj: ObjId
-    getter: ObjectField
-    sameRealm: BoolImm
-
-- name: CallScriptedGetterByValueResult
-  shared: false
-  transpile: false
-  cost_estimate: 5
-  args:
-    val: ValId
+    receiver: ValId
     getter: ObjectField
     sameRealm: BoolImm
 
@@ -1836,15 +1827,7 @@
   transpile: false
   cost_estimate: 5
   args:
-    obj: ObjId
-    getter: ObjectField
-
-- name: CallNativeGetterByValueResult
-  shared: false
-  transpile: false
-  cost_estimate: 5
-  args:
-    val: ValId
+    receiver: ValId
     getter: ObjectField
 
 - name: ProxyGetResult
