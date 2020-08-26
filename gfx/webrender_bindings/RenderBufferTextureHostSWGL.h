@@ -19,6 +19,8 @@ class RenderBufferTextureHostSWGL final : public RenderTextureHostSWGL {
 
   size_t GetPlaneCount() override;
 
+  gfx::YUVColorSpace GetYUVColorSpace() const override;
+
   bool MapPlane(uint8_t aChannelIndex, PlaneInfo& aPlaneInfo) override;
 
   void UnmapPlanes() override;

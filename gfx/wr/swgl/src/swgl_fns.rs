@@ -286,6 +286,12 @@ extern "C" {
     fn LockTexture(tex: GLuint) -> *mut LockedTexture;
     fn LockResource(resource: *mut LockedTexture);
     fn UnlockResource(resource: *mut LockedTexture);
+    fn GetResourceBuffer(
+        resource: *mut LockedTexture,
+        width: *mut i32,
+        height: *mut i32,
+        stride: *mut i32,
+    ) -> *mut c_void;
     fn Composite(
         locked_dst: *mut LockedTexture,
         locked_src: *mut LockedTexture,
@@ -301,13 +307,29 @@ extern "C" {
         flip: GLboolean,
         filter: GLenum,
     );
+    fn CompositeYUV(
+        locked_dst: *mut LockedTexture,
+        locked_y: *mut LockedTexture,
+        locked_u: *mut LockedTexture,
+        locked_v: *mut LockedTexture,
+        color_space: YUVColorSpace,
+        src_x: GLint,
+        src_y: GLint,
+        src_width: GLsizei,
+        src_height: GLsizei,
+        dst_x: GLint,
+        dst_y: GLint,
+        dst_width: GLsizei,
+        dst_height: GLsizei,
+        flip: GLboolean,
+    );
     fn CreateContext() -> *mut c_void;
     fn ReferenceContext(ctx: *mut c_void);
     fn DestroyContext(ctx: *mut c_void);
     fn MakeCurrent(ctx: *mut c_void);
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Context(*mut c_void);
 
 impl Context {
@@ -2287,6 +2309,14 @@ pub struct LockedResource(*mut LockedTexture);
 unsafe impl Send for LockedResource {}
 unsafe impl Sync for LockedResource {}
 
+#[repr(C)]
+pub enum YUVColorSpace {
+    Rec601 = 0,
+    Rec709,
+    Rec2020,
+    Identity,
+}
+
 impl LockedResource {
     /// Composites from a locked resource to another locked resource
     pub fn composite(
@@ -2320,6 +2350,54 @@ impl LockedResource {
                 flip as GLboolean,
                 filter,
             );
+        }
+    }
+
+    /// Composites from locked resources representing YUV planes
+    pub fn composite_yuv(
+        &self,
+        locked_y: &LockedResource,
+        locked_u: &LockedResource,
+        locked_v: &LockedResource,
+        color_space: YUVColorSpace,
+        src_x: GLint,
+        src_y: GLint,
+        src_width: GLsizei,
+        src_height: GLsizei,
+        dst_x: GLint,
+        dst_y: GLint,
+        dst_width: GLsizei,
+        dst_height: GLsizei,
+        flip: bool,
+    ) {
+        unsafe {
+            CompositeYUV(
+                self.0,
+                locked_y.0,
+                locked_u.0,
+                locked_v.0,
+                color_space,
+                src_x,
+                src_y,
+                src_width,
+                src_height,
+                dst_x,
+                dst_y,
+                dst_width,
+                dst_height,
+                flip as GLboolean,
+            );
+        }
+    }
+
+    /// Get the underlying buffer for a locked resource
+    pub fn get_buffer(&self) -> (*mut c_void, i32, i32, i32) {
+        unsafe {
+            let mut width: i32 = 0;
+            let mut height: i32 = 0;
+            let mut stride: i32 = 0;
+            let data_ptr = GetResourceBuffer(self.0, &mut width, &mut height, &mut stride);
+            (data_ptr, width, height, stride)
         }
     }
 }

@@ -847,8 +847,13 @@ pub struct CompositorCapabilities {
 }
 
 /// The transform type to apply to Compositor surfaces.
-pub struct CompositorSurfacePixel;
-pub type CompositorSurfaceTransform = Transform3D<f32, CompositorSurfacePixel, DevicePixel>;
+// TODO: Should transform from CompositorSurfacePixel instead, but this requires a cleanup of the
+// Compositor API to use CompositorSurface-space geometry instead of Device-space where necessary
+// to avoid a bunch of noisy cast_unit calls and make it actually type-safe. May be difficult due
+// to pervasive use of Device-space nomenclature inside WR.
+// pub struct CompositorSurfacePixel;
+// pub type CompositorSurfaceTransform = Transform3D<f32, CompositorSurfacePixel, DevicePixel>;
+pub type CompositorSurfaceTransform = Transform3D<f32, DevicePixel, DevicePixel>;
 
 /// Defines an interface to a native (OS level) compositor. If supplied
 /// by the client application, then picture cache slices will be

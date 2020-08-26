@@ -128,6 +128,7 @@ fn main() {
 
     write_load_shader(&shaders);
 
+    println!("cargo:rerun-if-changed=src/composite.h");
     println!("cargo:rerun-if-changed=src/gl_defs.h");
     println!("cargo:rerun-if-changed=src/glsl.h");
     println!("cargo:rerun-if-changed=src/program.h");
