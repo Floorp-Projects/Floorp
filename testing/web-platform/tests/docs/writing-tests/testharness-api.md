@@ -185,7 +185,20 @@ assertions don't need to be wrapped in `step` or `step_func`
 calls. However when mixing event handlers and `promise_test`, the
 event handler callback functions *do* need to be wrapped since an
 exception in these functions does not cause the promise chain to
-reject.
+reject. In the example below, omitting `t.step_func` leads to a
+timeout if the assertion fails, as the exception it throws is
+not caught and `resolve` is never called.
+
+```js
+promise_test(t => {
+  return new Promise(resolve => {
+    window.addEventListener("DOMContentLoaded", t.step_func(event => {
+      assert_true(event.bubbles, "bubbles should be true");
+      resolve();
+    }));
+  });
+}, "DOMContentLoaded");
+```
 
 Unlike Asynchronous Tests, Promise Tests don't start running until after the
 previous Promise Test finishes. [Under rare
