@@ -490,7 +490,7 @@ import_sibling_modules()
 
 # Register composite strategies.
 register_strategy('build', args=('skip-unless-schedules',))(Alias)
-register_strategy('build-fuzzing', args=('backstop-10-pushes-2-hours',))(Alias)
+register_strategy('build-fuzzing', args=('push-interval-10', 'backstop'))(All)
 register_strategy('test', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 
@@ -501,15 +501,12 @@ register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 class project(object):
     """Strategies that should be applied per-project."""
 
-    # Optimize everything away, except on 20th pushes.
-    register_strategy('full-backstop', args=('backstop-20-pushes-4-hours',))(Alias)
-
     # Optimize everything away, except on 10th pushes, where we run everything that was selected by
     # bugbug for the last 10 pushes.
     register_strategy(
         'optimized-backstop',
         args=(
-            'backstop-10-pushes-2-hours',
+            'push-interval-10',
             Any(
                 'skip-unless-schedules',
                 Any(
@@ -523,19 +520,19 @@ class project(object):
 
     # The three strategies are part of an All composite strategy, which means they are linked
     # by AND.
-    # - On 20th pushes, "full-backstop" will not allow the strategy to optimize anything away.
-    # - On 10th pushes, "full-backstop" allows the strategy to optimize things away, but
+    # - On 20th pushes, "backstop" will not allow the strategy to optimize anything away.
+    # - On 10th pushes, "backstop" allows the strategy to optimize things away, but
     #   "optimized-backstop" will apply the relaxed bugbug optimization and will not allow the
     #   normal bugbug optimization to apply.
     # - On all other pushes, the normal bugbug optimization is applied.
     autoland = {
         'test': All(
-            'full-backstop',
+            'backstop',
             'optimized-backstop',
             Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
         ),
         'build': All(
-            'backstop-10-pushes-2-hours',
+            'push-interval-10',
             Any(
                 'skip-unless-schedules',
                 'bugbug-reduced-fallback',
