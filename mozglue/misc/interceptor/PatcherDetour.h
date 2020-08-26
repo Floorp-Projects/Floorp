@@ -36,6 +36,8 @@ enum class DetourFlags : uint32_t {
   eEnable10BytePatch = 1,  // Allow 10-byte patches when conditions allow
   eTestOnlyForceShortPatch =
       2,  // Force short patches at all times (x86-64 and arm64 testing only)
+  eDontResolveRedirection =
+      4,  // Don't resolve the redirection of JMP (e.g. kernel32 -> kernelbase)
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DetourFlags)
@@ -425,7 +427,10 @@ class WindowsDllDetourPatcher final
 
   bool AddHook(FARPROC aTargetFn, intptr_t aHookDest, void** aOrigFunc) {
     ReadOnlyTargetFunction<MMPolicyT> target(
-        this->ResolveRedirectedAddress(aTargetFn));
+        (mFlags.value() & DetourFlags::eDontResolveRedirection)
+            ? ReadOnlyTargetFunction<MMPolicyT>(
+                  this->mVMPolicy, reinterpret_cast<uintptr_t>(aTargetFn))
+            : this->ResolveRedirectedAddress(aTargetFn));
 
     TrampPoolT* trampPool = nullptr;
 
