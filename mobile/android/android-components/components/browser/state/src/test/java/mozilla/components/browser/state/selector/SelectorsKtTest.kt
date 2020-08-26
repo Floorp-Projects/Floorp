@@ -41,7 +41,7 @@ class SelectorsKtTest {
 
         assertEquals(tab, store.state.selectedTab)
 
-        store.dispatch(TabListAction.SelectTabAction(otherTab.id, tabLastAccessTimeStamp)).joinBlocking()
+        store.dispatch(TabListAction.SelectTabAction(otherTab.id)).joinBlocking()
 
         assertEquals(otherTab, store.state.selectedTab)
     }

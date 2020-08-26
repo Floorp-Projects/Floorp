@@ -73,7 +73,8 @@ class SnapshotSerializerTest {
         val json = serializer.itemToJSON(
             Snapshot.Item(
                 originalSession,
-                engineSession = engineSession
+                engineSession = engineSession,
+                lastAccess = 1
             )
         )
         val restoredItem = serializer.itemFromJSON(engine, json)
@@ -83,6 +84,7 @@ class SnapshotSerializerTest {
         assertEquals("test-id", restoredItem.session.id)
         assertEquals("test-context-id", restoredItem.session.contextId)
         assertEquals("Hello World", restoredItem.session.title)
+        assertEquals(1, restoredItem.lastAccess)
         assertSame(restoredEngineSessionState, restoredItem.engineSessionState)
     }
 

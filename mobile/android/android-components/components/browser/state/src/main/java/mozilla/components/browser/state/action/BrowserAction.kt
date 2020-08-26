@@ -80,7 +80,7 @@ sealed class TabListAction : BrowserAction() {
      *
      * @property tabId the ID of the tab to select.
      */
-    data class SelectTabAction(val tabId: String, val timeSelected: Long = System.currentTimeMillis()) : TabListAction()
+    data class SelectTabAction(val tabId: String) : TabListAction()
 
     /**
      * Removes the [TabSessionState] with the given [tabId] from the list of sessions.
@@ -113,6 +113,22 @@ sealed class TabListAction : BrowserAction() {
      * Removes all non-private [TabSessionState]s.
      */
     object RemoveAllNormalTabsAction : TabListAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating the [TabSessionState] inside [BrowserState].
+ */
+sealed class LastAccessAction : BrowserAction() {
+    /**
+     * Updates the timestamp of the [TabSessionState] with the given [tabId].
+     *
+     * @property tabId the ID of the tab to update.
+     * @property lastAccess the value to signify when the tab was last accessed; defaults to [System.currentTimeMillis].
+     */
+    data class UpdateLastAccessAction(
+        val tabId: String,
+        val lastAccess: Long = System.currentTimeMillis()
+    ) : LastAccessAction()
 }
 
 /**

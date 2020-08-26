@@ -52,6 +52,8 @@ class BrowserStateSerializer {
         if (tab.readerState.active && tab.readerState.activeUrl != null) {
             sessionJson.put(Keys.SESSION_READER_MODE_ACTIVE_URL_KEY, tab.readerState.activeUrl)
         }
+        sessionJson.put(Keys.SESSION_LAST_ACCESS, tab.lastAccess)
+
         itemJson.put(Keys.SESSION_KEY, sessionJson)
 
         val engineSessionState = tab.engineState.engineSessionState
