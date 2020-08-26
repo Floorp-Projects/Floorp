@@ -146,8 +146,10 @@ var PrintUtils = {
    *        The BrowsingContext of the window to print.
    * @param aExistingPreviewBrowser
    *        An existing browser created for printing from window.print().
+   * @return promise resolving when the dialog is open, rejected if the preview
+   *         fails.
    */
-  _openTabModalPrint(aBrowsingContext, aExistingPreviewBrowser) {
+  async _openTabModalPrint(aBrowsingContext, aExistingPreviewBrowser) {
     let sourceBrowser = aBrowsingContext.top.embedderElement;
     let previewBrowser = this.getPreviewBrowser(sourceBrowser);
     if (previewBrowser) {
@@ -159,7 +161,7 @@ var PrintUtils = {
       if (aExistingPreviewBrowser) {
         aExistingPreviewBrowser.remove();
       }
-      return;
+      return Promise.reject();
     }
 
     // Create a preview browser.
@@ -167,7 +169,7 @@ var PrintUtils = {
       previewBrowser: aExistingPreviewBrowser,
     });
     let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
-    dialogBox.open(
+    return dialogBox.open(
       `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`,
       "resizable=no",
       args,
@@ -216,7 +218,7 @@ var PrintUtils = {
       !PRINT_ALWAYS_SILENT &&
       (!aOpenWindowInfo || aOpenWindowInfo.isForPrintPreview)
     ) {
-      this._openTabModalPrint(aBrowsingContext, browser);
+      this._openTabModalPrint(aBrowsingContext, browser).catch(() => {});
       return browser;
     }
 
@@ -322,8 +324,7 @@ var PrintUtils = {
    */
   printPreview(aListenerObj) {
     if (PRINT_TAB_MODAL) {
-      this._openTabModalPrint(gBrowser.selectedBrowser.browsingContext);
-      return;
+      return this._openTabModalPrint(gBrowser.selectedBrowser.browsingContext);
     }
 
     // If we already have a toolbar someone is calling printPreview() to get us
@@ -369,6 +370,11 @@ var PrintUtils = {
     let PPROMPTSVC = Cc[
       "@mozilla.org/embedcomp/printingprompt-service;1"
     ].getService(Ci.nsIPrintingPromptService);
+
+    let promise = new Promise((resolve, reject) => {
+      this._onEntered.push({ resolve, reject });
+    });
+
     // just in case we are already printing,
     // an error code could be returned if the Progress Dialog is already displayed
     try {
@@ -394,6 +400,7 @@ var PrintUtils = {
     } catch (e) {
       this._enterPrintPreview();
     }
+    return promise;
   },
 
   // "private" methods and members. Don't use them.
@@ -608,6 +615,8 @@ var PrintUtils = {
     this._shouldSimplify = shouldSimplify;
   },
 
+  _onEntered: [],
+
   /**
    * Currently, we create a new print preview browser to host the simplified
    * cloned-document when Simplify Page option is used on preview. To accomplish
@@ -706,7 +715,14 @@ var PrintUtils = {
 
     let onEntered = message => {
       mm.removeMessageListener("Printing:Preview:Entered", onEntered);
-
+      for (let { resolve, reject } of this._onEntered) {
+        if (message.data.failed) {
+          reject();
+        } else {
+          resolve();
+        }
+      }
+      this._onEntered = [];
       if (message.data.failed) {
         // Something went wrong while putting the document into print preview
         // mode. Bail out.
