@@ -61,7 +61,7 @@ def optionally_keyed_by(*arguments):
     return schema
 
 
-def resolve_keyed_by(item, field, item_name, **extra_values):
+def resolve_keyed_by(item, field, item_name, defer=None, **extra_values):
     """
     For values which can either accept a literal value, or be keyed by some
     other attribute of the item, perform that lookup and replacement in-place
@@ -100,6 +100,12 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
                         cedar: ..
                 linux: 13
                 default: 12
+
+    The `defer` parameter allows evaluating a by-* entry at a later time. In the
+    example above it's possible that the project attribute hasn't been set
+    yet, in which case we'd want to stop before resolving that subkey and then
+    call this function again later. This can be accomplished by setting
+    `defer=["project"]` in this example.
     """
     # find the field, returning the item unchanged if anything goes wrong
     container, subfield = item, field
@@ -117,6 +123,7 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
     container[subfield] = evaluate_keyed_by(
         value=container[subfield],
         item_name="`{}` in `{}`".format(field, item_name),
+        defer=defer,
         attributes=dict(item, **extra_values),
     )
 

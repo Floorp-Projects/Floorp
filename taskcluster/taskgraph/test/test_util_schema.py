@@ -98,6 +98,11 @@ class TestResolveKeyedBy(unittest.TestCase):
             resolve_keyed_by({'x': x}, 'x', 'x', foo='F99', bar='B1'),
             {'x': 0})
 
+        # bar is deferred
+        self.assertEqual(
+            resolve_keyed_by({'x': x}, 'x', 'x', defer=["bar"], foo='F1', bar='B1'),
+            {'x': {'by-bar': {'B1': 11, 'B2': 12}}})
+
     def test_no_by_empty_dict(self):
         self.assertEqual(
             resolve_keyed_by({'x': {}}, 'x', 'n'),
