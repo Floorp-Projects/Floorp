@@ -1815,7 +1815,7 @@
 
 - name: CallScriptedGetterResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   custom_writer: true
   args:
@@ -1826,7 +1826,7 @@
 
 - name: CallNativeGetterResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   custom_writer: true
   args:
