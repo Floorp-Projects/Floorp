@@ -31,6 +31,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsStyledElement.h"
 #include "nsTextNode.h"
 #include "nscore.h"
 #include <algorithm>
@@ -1267,19 +1268,36 @@ void HTMLEditor::SetFinalSize(int32_t aX, int32_t aY) {
           "failed, but ignored");
     }
 
-    if (setWidth) {
-      DebugOnly<nsresult> rvIgnored = mCSSEditUtils->RemoveCSSProperty(
-          *resizedObject, *nsGkAtoms::width, EmptyString());
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                           "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::width) "
-                           "failed, but ignored");
-    }
-    if (setHeight) {
-      DebugOnly<nsresult> rvIgnored = mCSSEditUtils->RemoveCSSProperty(
-          *resizedObject, *nsGkAtoms::height, EmptyString());
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                           "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::height) "
-                           "failed, but ignored");
+    if (setWidth || setHeight) {
+      if (nsCOMPtr<nsStyledElement> resizedStyledElement =
+              do_QueryInterface(resizedObject)) {
+        if (setWidth) {
+          nsresult rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+              *resizedStyledElement, *nsGkAtoms::width, EmptyString());
+          if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+            NS_WARNING(
+                "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::"
+                "width) destroyed the editor");
+            return;
+          }
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                               "CSSEditUtils::RemoveCSSPropertyWithTransaction("
+                               "nsGkAtoms::width) failed, but ignored");
+        }
+        if (setHeight) {
+          nsresult rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+              *resizedStyledElement, *nsGkAtoms::height, EmptyString());
+          if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+            NS_WARNING(
+                "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::"
+                "height) destroyed the editor");
+            return;
+          }
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                               "CSSEditUtils::RemoveCSSPropertyWithTransaction("
+                               "nsGkAtoms::height) failed, but ignored");
+        }
+      }
     }
   }
 

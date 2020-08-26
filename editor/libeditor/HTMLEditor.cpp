@@ -5179,8 +5179,17 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
   if (!IsCSSEnabled() || !mCSSEditUtils) {
     // we are not in an HTML+CSS editor; let's set the attribute the HTML way
     if (mCSSEditUtils) {
-      mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
+      nsresult rv = mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
           aElement, nullptr, aAttribute, nullptr, aSuppressTransaction);
+      if (rv == NS_ERROR_EDITOR_DESTROYED) {
+        NS_WARNING(
+            "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle() destroyed the "
+            "editor");
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle() failed, but ignored");
     }
     if (aSuppressTransaction) {
       nsresult rv =
