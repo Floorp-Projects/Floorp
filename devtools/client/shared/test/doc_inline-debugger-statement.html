@@ -14,10 +14,8 @@
     <script type="text/javascript">
       "use strict";
       
-      var increment = 0; 
       /* exported runDebuggerStatement */
       function runDebuggerStatement() {
-        setTimeout(() => increment++, 0);
         // eslint-disable-next-line no-debugger
         debugger;
       }
