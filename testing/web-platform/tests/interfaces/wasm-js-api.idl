@@ -82,7 +82,7 @@ interface Table {
   constructor(TableDescriptor descriptor);
   unsigned long grow([EnforceRange] unsigned long delta);
   Function? get([EnforceRange] unsigned long index);
-  void set([EnforceRange] unsigned long index, Function? value);
+  undefined set([EnforceRange] unsigned long index, Function? value);
   readonly attribute unsigned long length;
 };
 
