@@ -10,6 +10,7 @@ import groovy.util.FileNameFinder
 
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.security.MessageDigest
 
 // Bug 1657190: This task works around a bug in the Android-Gradle plugin.  When using SNAPSHOT
 // builds (and possibly in other situations) the JNI library invalidation process isn't correct.  If
@@ -28,6 +29,9 @@ import java.nio.file.Paths
 class SyncLibsAndUpdateGeneration extends DefaultTask {
     @InputDirectory
     File source
+
+    @InputFile
+    File extraSource
 
     @OutputDirectory
     File destinationDir
@@ -75,6 +79,15 @@ class SyncLibsAndUpdateGeneration extends DefaultTask {
         }
 
         def generationId = new ByteArrayOutputStream().withStream { os ->
+            // Start with the hash of any extra source.
+            def digest = MessageDigest.getInstance("SHA-256")
+            extraSource.eachByte(64 * 1024) { byte[] buf, int bytesRead ->
+                digest.update(buf, 0, bytesRead);
+            }
+            def extraSourceHex = new BigInteger(1, digest.digest()).toString(16).padLeft(64, '0')
+            os.write("${extraSource.toString()}  ${extraSourceHex}\n".getBytes("utf-8"));
+
+            // Follow with all the ordered build ID section dumps.
             libs.each { lib ->
                 // This should never fail.  If it does, there's a real problem, so an exception is
                 // reasonable.
@@ -86,7 +99,6 @@ class SyncLibsAndUpdateGeneration extends DefaultTask {
                 }
             }
 
-            // Glue all the ordered build ID section dumps together.
             def allBuildIDs = os.toString()
 
             // For detailed debugging.
@@ -168,9 +180,17 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     // For !MOZILLA_OFFICIAL builds, work around an Android-Gradle plugin bug that causes startup
     // crashes with local substitution.  See class comment above.
     def syncLibsFromDistDir = { if (!mozconfig.substs.MOZILLA_OFFICIAL) {
+        def jarTask = tasks["bundleLibRuntime${variant.name.capitalize()}"]
+        def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
+
         task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: SyncLibsAndUpdateGeneration) {
             source file("${distDir}/lib")
             destinationDir file("${project.buildDir}/moz.build/src/${variant.name}/jniLibs")
+            // Include the hash of classes.jar as well, so that JVM-only changes don't leave every
+            // JNI library unchanged and therefore invalidate all of the JNI libraries in a consumer
+            // doing local substitution.
+            extraSource bundleJar
+            dependsOn jarTask
         }
     } else {
         task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
