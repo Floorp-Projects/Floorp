@@ -3833,19 +3833,17 @@ static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
                                    JSObject* obj, JSObject* holder,
                                    Shape* shape, ObjOperandId objId,
                                    ValOperandId rhsId) {
-  if (IsCacheableSetPropCallNative(obj, holder, shape)) {
-    JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
-    MOZ_ASSERT(target->isNativeWithoutJitEntry());
-    writer.callNativeSetter(objId, target, rhsId);
+  JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
+  bool sameRealm = cx->realm() == target->realm();
+
+  if (target->isNativeWithoutJitEntry()) {
+    MOZ_ASSERT(IsCacheableSetPropCallNative(obj, holder, shape));
+    writer.callNativeSetter(objId, target, rhsId, sameRealm);
     writer.returnFromIC();
     return;
   }
 
   MOZ_ASSERT(IsCacheableSetPropCallScripted(obj, holder, shape));
-
-  JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
-  MOZ_ASSERT(target->hasJitEntry());
-  bool sameRealm = cx->realm() == target->realm();
   writer.callScriptedSetter(objId, target, rhsId, sameRealm);
   writer.returnFromIC();
 }

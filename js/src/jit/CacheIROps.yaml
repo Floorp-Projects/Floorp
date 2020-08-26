@@ -1400,20 +1400,25 @@
   shared: false
   transpile: false
   cost_estimate: 5
+  custom_writer: true
   args:
-    obj: ObjId
+    receiver: ObjId
     setter: ObjectField
     rhs: ValId
+    sameRealm: BoolImm
+    nargsAndFlags: RawWordField
 
 - name: CallScriptedSetter
   shared: false
   transpile: false
   cost_estimate: 3
+  custom_writer: true
   args:
-    obj: ObjId
+    receiver: ObjId
     setter: ObjectField
     rhs: ValId
     sameRealm: BoolImm
+    nargsAndFlags: RawWordField
 
 - name: CallSetArrayLength
   shared: false
