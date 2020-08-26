@@ -385,7 +385,7 @@
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Poskusi</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Dovoli Mozilli namestitev in pridobivanje informacij eksperimentalnih funkcij</string>
+    <string name="preference_experiments_summary">Dovoli Mozilli namestitev in pridobivanje podatkov poskusnih zmogljivosti</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Poročevalec o sesutju</string>
 
@@ -732,10 +732,6 @@
     <string name="collections_header">Zbirke</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Meni zbirk</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Zbirajte stvari, ki vam kaj pomenijo</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Združite podobna iskanja, spletne strani in zavihke za hitrejši dostop.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Izberi zavihke</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -984,8 +980,6 @@
     <string name="onboarding_whats_new_description">Imate vprašanja o preoblikovanem %su? Želite izvedeti, kaj se je spremenilo?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Tukaj poiščite odgovore</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Kar najbolje izkoristite %s.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Več o tem</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to

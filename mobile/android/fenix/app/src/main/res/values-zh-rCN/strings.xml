@@ -762,10 +762,8 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">收藏集菜单</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">有用的东西收藏在这</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">将相似的搜索查询、网站和标签页归入一组，方便以后快速访问。</string>
+    <string name="no_collections_description2">有用的东西收藏在这。\n将相似的搜索查询、网站和标签页归入一组，方便以后快速访问。</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">选取标签页</string>
 
@@ -1032,8 +1030,8 @@
     <string name="onboarding_whats_new_description">对重新设计的 %s 有好奇的地方吗？想知道哪里变得不一样了？</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">在此寻找答案</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">畅享 %s。</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">使用您的 Firefox 账户开始同步书签、历史记录等数据。</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">详细了解</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1532,4 +1530,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">我知道了</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">移除</string>
+</resources>

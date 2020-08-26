@@ -738,10 +738,8 @@
     <string name="collections_header">Bộ sưu tập</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu bộ sưu tập</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Thu thập những thứ quan trọng với bạn</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Nhóm các tìm kiếm, trang web và thẻ tương tự để truy cập nhanh sau này.</string>
+    <string name="no_collections_description2">Thu thập những thứ quan trọng đối với bạn.\nNhóm các tìm kiếm, trang web và thẻ tương tự lại với nhau để truy cập nhanh sau này.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Chọn các thẻ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -986,8 +984,8 @@
     <string name="onboarding_whats_new_description">Có câu hỏi nào về %s được thiết kế lại không? Bạn muốn biết những gì đã thay đổi?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Nhận câu trả lời tại đây</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Tận dụng tối đa %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Bắt đầu đồng bộ hóa dấu trang, mật khẩu và nhiều hơn nữa với tài khoản Firefox của bạn.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Tìm hiểu thêm</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1487,4 +1485,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, đã hiểu</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Xóa</string>
+</resources>

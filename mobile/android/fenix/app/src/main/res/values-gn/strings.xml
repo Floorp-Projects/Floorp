@@ -752,10 +752,8 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Ñembyatyha poravorã</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Embyaty umi mba’ekuéra ehayhu añetéva</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Embyaty jehekaha, tenda ha tendayke ojueheguáva eike pya’eve hag̃ua ag̃ave.</string>
+    <string name="no_collections_description2">Embyaty umi mba’e ehayhuvéva.\nEmboaty umi jeheka, tenda ha tendayke ojueheguáva eike hag̃ua pype pya’e.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Eiporavo tendayke</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1008,8 +1006,8 @@
     <string name="onboarding_whats_new_description">¿Ereko porandu %s jejapojey rehegua? ¿Eikuaase mba’épa iñambuéra’e?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Umi ñembohovái oĩ ápe</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Eguenohẽ %s-gui eikotevẽva.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Embojuehe techaukaha, ñe’ẽñemi ha hetave ne mba’ete Firefox pegua ndive.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Eikuaave</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1522,4 +1520,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Mboguete</string>
+</resources>

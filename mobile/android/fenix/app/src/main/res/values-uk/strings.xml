@@ -748,10 +748,8 @@
     <string name="collections_header">Збірки</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Меню збірок</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Зберігайте важливі для вас речі</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Групуйте подібні пошуки, сайти та вкладки для швидкого доступу.</string>
+    <string name="no_collections_description2">Збирайте все важливе для вас. \nГрупуйте подібні пошуки, вебсайти та вкладки для швидкого доступу надалі.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Виберіть вкладки</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1002,9 +1000,8 @@
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Отримайте відповіді тут</string>
 
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Отримайте максимум від %s.</string>
-
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Почніть синхронізувати закладки, паролі та інші дані з Обліковим записом Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Докладніше</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1511,4 +1508,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Гаразд, зрозуміло</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Вилучити</string>
+</resources>
