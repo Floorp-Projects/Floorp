@@ -513,22 +513,19 @@ LogModule* GetQuotaManagerLogger();
 
 void AnonymizeCString(nsACString& aCString);
 
-class AnonymizedCString : public nsCString {
- public:
-  explicit AnonymizedCString(const nsACString& aCString) : nsCString(aCString) {
-    AnonymizeCString(*this);
-  }
-};
+inline auto AnonymizedCString(const nsACString& aCString) {
+  nsAutoCString result{aCString};
+  AnonymizeCString(result);
+  return result;
+}
 
 void AnonymizeOriginString(nsACString& aOriginString);
 
-class AnonymizedOriginString : public nsCString {
- public:
-  explicit AnonymizedOriginString(const nsACString& aOriginString)
-      : nsCString(aOriginString) {
-    AnonymizeOriginString(*this);
-  }
-};
+inline auto AnonymizedOriginString(const nsACString& aOriginString) {
+  nsAutoCString result{aOriginString};
+  AnonymizeOriginString(result);
+  return result;
+}
 
 template <typename T>
 void StringifyTableKeys(const T& aTable, nsACString& aResult) {
