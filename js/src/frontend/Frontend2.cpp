@@ -224,7 +224,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         bool hasParameterExprs = function.has_parameter_exprs;
         bool needsEnvironment = function.non_positional_formal_start;
-        FunctionIndex functionIndex = FunctionIndex(function.function_index);
+        FunctionIndex functionIndex =
+            FunctionIndex(function.function_index + 1);
         bool isArrow = function.is_arrow;
 
         ScopeIndex enclosingIndex(function.enclosing);
@@ -366,7 +367,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
       }
       case SmooshGCThing::Tag::Function: {
         gcThings.infallibleAppend(
-            mozilla::AsVariant(FunctionIndex(item.AsFunction())));
+            mozilla::AsVariant(FunctionIndex(item.AsFunction() + 1)));
         break;
       }
       case SmooshGCThing::Tag::Scope: {
@@ -551,20 +552,24 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
     return false;
   }
 
-  if (!ConvertScriptStencil(cx, result, result.top_level_script, allAtoms,
-                            compilationInfo, compilationInfo.topLevel)) {
+  if (!compilationInfo.scriptData.reserve(result.functions.len + 1)) {
     return false;
   }
 
-  if (!compilationInfo.funcData.reserve(result.functions.len)) {
+  compilationInfo.scriptData.infallibleEmplaceBack(cx);
+
+  if (!ConvertScriptStencil(
+          cx, result, result.top_level_script, allAtoms, compilationInfo,
+          compilationInfo.scriptData[CompilationInfo::TopLevelIndex])) {
     return false;
   }
 
   for (size_t i = 0; i < result.functions.len; i++) {
-    compilationInfo.funcData.infallibleEmplaceBack(cx);
+    compilationInfo.scriptData.infallibleEmplaceBack(cx);
 
     if (!ConvertScriptStencil(cx, result, result.functions.data[i], allAtoms,
-                              compilationInfo, compilationInfo.funcData[i])) {
+                              compilationInfo,
+                              compilationInfo.scriptData[i + 1])) {
       return false;
     }
   }
