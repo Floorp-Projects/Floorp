@@ -380,6 +380,24 @@ TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr_Err)
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
 
+class StringPairParameterized
+    : public ::testing::TestWithParam<std::pair<const char*, const char*>> {};
+
+TEST_P(StringPairParameterized, AnonymizedOriginString) {
+  const auto [in, expectedAnonymized] = GetParam();
+  const auto anonymized = AnonymizedOriginString(nsDependentCString(in));
+  EXPECT_STREQ(anonymized.get(), expectedAnonymized);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    QuotaCommon, StringPairParameterized,
+    ::testing::Values(
+        // XXX Do we really want to anonymize about: origins?
+        std::pair("about:home", "about:aaaa"),
+        std::pair("https://foo.bar.com", "https://aaa.aaa.aaa"),
+        std::pair("https://foo.bar.com:8000", "https://aaa.aaa.aaa:DDDD"),
+        std::pair("file://UNIVERSAL_FILE_ORIGIN",
+                  "file://aaaaaaaaa_aaaa_aaaaaa")));
 TEST(QuotaCommon_ToResultGet, Lambda_NoInput)
 {
   auto task = [](nsresult* aRv) -> int32_t {
