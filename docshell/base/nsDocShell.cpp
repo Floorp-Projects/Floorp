@@ -1773,7 +1773,10 @@ nsDocShell::GetAllowContentRetargeting(bool* aAllowContentRetargeting) {
 
 NS_IMETHODIMP
 nsDocShell::SetAllowContentRetargeting(bool aAllowContentRetargeting) {
-  return mBrowsingContext->SetAllowContentRetargeting(aAllowContentRetargeting);
+  BrowsingContext::Transaction txn;
+  txn.SetAllowContentRetargeting(aAllowContentRetargeting);
+  txn.SetAllowContentRetargetingOnChildren(aAllowContentRetargeting);
+  return txn.Commit(mBrowsingContext);
 }
 
 NS_IMETHODIMP
