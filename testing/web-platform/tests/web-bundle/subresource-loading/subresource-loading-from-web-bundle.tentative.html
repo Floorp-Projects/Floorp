@@ -8,10 +8,10 @@
 <script src="/resources/testharnessreport.js"></script>
 <body>
   <link id="link-web-bundle" rel="webbundle" href="../resources/wbn/subresource.wbn"
-        resources="https://subresource-wbn.example/root.js https://subresource-wbn.example/submodule.js" />
+        resources="http://web-platform.test:8001/root.js http://web-platform.test:8001/submodule.js" />
   <script>
     promise_test(async () => {
-      const module = await import('https://subresource-wbn.example/root.js');
+      const module = await import('http://web-platform.test:8001/root.js');
       assert_equals(module.result, 'OK');
     }, "Subresource loading with WebBundle");
 
@@ -49,8 +49,18 @@
     }, '<link rel="webbundle"> fires an error event on load failure');
 
     promise_test(async () => {
+      const link = document.createElement('link');
+      link.rel = 'webbundle';
+      link.href = '../resources/wbn/dynamic1-crossorigin.wbn';
+      link.resources = 'https://web-platform.test:8444/web-bundle/resources/dynamic/resource1.js';
+      document.body.appendChild(link);
+      const module = await import(link.resources);
+      assert_equals(module.result, 'resource1 from network');
+    }, 'Subresource URL must be same-origin with bundle URL');
+
+    promise_test(async () => {
       const wbn_url = 'http://web-platform.test:8001/web-bundle/resources/wbn/subresource.wbn?test-resources-update';
-      const resource_url = 'https://subresource-wbn.example/submodule.js';
+      const resource_url = 'http://web-platform.test:8001/submodule.js';
       const link = await addLinkAndWaitForLoad(wbn_url);
       link.resources.add(resource_url);
       const resp = await fetch(resource_url, {cache: 'no-store'});
