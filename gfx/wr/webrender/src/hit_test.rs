@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag, PrimitiveFlags};
+use api::{BorderRadius, ClipMode, HitTestItem, HitTestResult, ItemTag, PrimitiveFlags};
 use api::{PipelineId, ApiHitTester};
 use api::units::*;
 use crate::clip::{ClipChainId, ClipDataStore, ClipNode, ClipItemKind, ClipStore};
@@ -43,9 +43,8 @@ impl ApiHitTester for SharedHitTester {
     fn hit_test(&self,
         pipeline_id: Option<PipelineId>,
         point: WorldPoint,
-        flags: HitTestFlags
     ) -> HitTestResult {
-        self.get_ref().hit_test(HitTest::new(pipeline_id, point, flags))
+        self.get_ref().hit_test(HitTest::new(pipeline_id, point))
     }
 }
 
@@ -227,7 +226,7 @@ enum HitTestRegion {
 }
 
 impl HitTestRegion {
-    pub fn contains(&self, point: &LayoutPoint) -> bool {
+    fn contains(&self, point: &LayoutPoint) -> bool {
         match *self {
             HitTestRegion::Rectangle(ref rectangle, ClipMode::Clip) =>
                 rectangle.contains(*point),
@@ -402,61 +401,7 @@ impl HitTester {
         true
     }
 
-    pub fn find_node_under_point(&self, mut test: HitTest) -> Option<SpatialNodeIndex> {
-        let point = test.get_absolute_point(self);
-        let mut current_spatial_node_index = SpatialNodeIndex::INVALID;
-        let mut point_in_layer = None;
-
-        // For each hit test primitive
-        for item in self.scene.items.iter().rev() {
-            let scroll_node = &self.spatial_nodes[item.spatial_node_index.0 as usize];
-
-            // Update the cached point in layer space, if the spatial node
-            // changed since last primitive.
-            if item.spatial_node_index != current_spatial_node_index {
-                point_in_layer = scroll_node
-                    .world_content_transform
-                    .inverse()
-                    .and_then(|inverted| inverted.transform_point2d(point));
-
-                current_spatial_node_index = item.spatial_node_index;
-            }
-
-            // Only consider hit tests on transformable layers.
-            if let Some(point_in_layer) = point_in_layer {
-                // If the item's rect or clip rect don't contain this point,
-                // it's not a valid hit.
-                if !item.rect.contains(point_in_layer) {
-                    continue;
-                }
-                if !item.clip_rect.contains(point_in_layer) {
-                    continue;
-                }
-
-                // See if any of the clip chain roots for this primitive
-                // cull out the item.
-                let clip_chains = self.scene.get_clip_chains_for_item(item);
-                let mut is_valid = true;
-                for clip_chain_id in clip_chains {
-                    if !self.is_point_clipped_in_for_clip_chain(point, *clip_chain_id, &mut test) {
-                        is_valid = false;
-                        break;
-                    }
-                }
-
-                // Found a valid hit test result!
-                if is_valid {
-                    return Some(item.spatial_node_index);
-                }
-            }
-        }
-
-        None
-    }
-
     pub fn hit_test(&self, mut test: HitTest) -> HitTestResult {
-        let point = test.get_absolute_point(self);
-
         let mut result = HitTestResult::default();
         let mut current_spatial_node_index = SpatialNodeIndex::INVALID;
         let mut point_in_layer = None;
@@ -478,7 +423,7 @@ impl HitTester {
                 point_in_layer = scroll_node
                     .world_content_transform
                     .inverse()
-                    .and_then(|inverted| inverted.transform_point2d(point));
+                    .and_then(|inverted| inverted.transform_point2d(test.point));
                 current_spatial_node_index = item.spatial_node_index;
             }
 
@@ -498,7 +443,7 @@ impl HitTester {
                 let clip_chains = self.scene.get_clip_chains_for_item(item);
                 let mut is_valid = true;
                 for clip_chain_id in clip_chains {
-                    if !self.is_point_clipped_in_for_clip_chain(point, *clip_chain_id, &mut test) {
+                    if !self.is_point_clipped_in_for_clip_chain(test.point, *clip_chain_id, &mut test) {
                         is_valid = false;
                         break;
                     }
@@ -522,7 +467,7 @@ impl HitTester {
                     point_in_viewport = root_node
                         .world_viewport_transform
                         .inverse()
-                        .and_then(|inverted| inverted.transform_point2d(point))
+                        .and_then(|inverted| inverted.transform_point2d(test.point))
                         .map(|pt| pt - scroll_node.external_scroll_offset);
 
                     current_root_spatial_node_index = root_spatial_node_index;
@@ -535,20 +480,12 @@ impl HitTester {
                         point_in_viewport,
                         point_relative_to_item: point_in_layer - item.rect.origin.to_vector(),
                     });
-
-                    if !test.flags.contains(HitTestFlags::FIND_ALL) {
-                        return result;
-                    }
                 }
             }
         }
 
         result.items.dedup();
         result
-    }
-
-    pub fn get_pipeline_root(&self, pipeline_id: PipelineId) -> &HitTestSpatialNode {
-        &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0 as usize]
     }
 }
 
@@ -562,7 +499,6 @@ enum ClippedIn {
 pub struct HitTest {
     pipeline_id: Option<PipelineId>,
     point: WorldPoint,
-    flags: HitTestFlags,
     node_cache: FastHashMap<HitTestClipChainId, ClippedIn>,
     clip_chain_cache: Vec<Option<ClippedIn>>,
 }
@@ -571,12 +507,10 @@ impl HitTest {
     pub fn new(
         pipeline_id: Option<PipelineId>,
         point: WorldPoint,
-        flags: HitTestFlags,
     ) -> HitTest {
         HitTest {
             pipeline_id,
             point,
-            flags,
             node_cache: FastHashMap::default(),
             clip_chain_cache: Vec::new(),
         }
@@ -597,23 +531,5 @@ impl HitTest {
             self.clip_chain_cache.resize(index + 1, None);
         }
         self.clip_chain_cache[index] = Some(value);
-    }
-
-    fn get_absolute_point(&self, hit_tester: &HitTester) -> WorldPoint {
-        if !self.flags.contains(HitTestFlags::POINT_RELATIVE_TO_PIPELINE_VIEWPORT) {
-            return self.point;
-        }
-
-        let point = LayoutPoint::new(self.point.x, self.point.y);
-        self.pipeline_id
-            .and_then(|id|
-                hit_tester
-                    .get_pipeline_root(id)
-                    .world_viewport_transform
-                    .transform_point2d(point)
-            )
-            .unwrap_or_else(|| {
-                WorldPoint::new(self.point.x, self.point.y)
-            })
     }
 }

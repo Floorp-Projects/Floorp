@@ -9,9 +9,9 @@
 //! how these two pieces interact.
 
 use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags, BlobImageHandler};
-use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
+use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, ScrollClamping};
-use api::{ScrollLocation, TransactionMsg, ResourceUpdate};
+use api::{TransactionMsg, ResourceUpdate};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 use api::units::*;
@@ -20,7 +20,6 @@ use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
 use api::channel::{single_msg_channel, Sender, Receiver};
-use crate::spatial_tree::SpatialNodeIndex;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::CaptureConfig;
 use crate::composite::{CompositorKind, CompositeDescriptor};
@@ -531,42 +530,14 @@ impl Document {
             FrameMsg::UpdateEpoch(pipeline_id, epoch) => {
                 self.scene.pipeline_epochs.insert(pipeline_id, epoch);
             }
-            FrameMsg::Scroll(delta, cursor) => {
-                profile_scope!("Scroll");
-
-                let node_index = match self.hit_tester {
-                    Some(ref hit_tester) => {
-                        // Ideally we would call self.scroll_nearest_scrolling_ancestor here, but
-                        // we need have to avoid a double-borrow.
-                        let test = HitTest::new(None, cursor, HitTestFlags::empty());
-                        hit_tester.find_node_under_point(test)
-                    }
-                    None => {
-                        None
-                    }
-                };
-
-                if self.hit_tester.is_some()
-                    && self.scroll_nearest_scrolling_ancestor(delta, node_index) {
-                    self.hit_tester_is_valid = false;
-                    self.frame_is_valid = false;
-                }
-
-                return DocumentOps {
-                    // TODO: Does it make sense to track this as a scrolling even if we
-                    // ended up not scrolling anything?
-                    scroll: true,
-                    ..DocumentOps::nop()
-                };
-            }
-            FrameMsg::HitTest(pipeline_id, point, flags, tx) => {
+            FrameMsg::HitTest(pipeline_id, point, tx) => {
                 if !self.hit_tester_is_valid {
                     self.rebuild_hit_tester();
                 }
 
                 let result = match self.hit_tester {
                     Some(ref hit_tester) => {
-                        hit_tester.hit_test(HitTest::new(pipeline_id, point, flags))
+                        hit_tester.hit_test(HitTest::new(pipeline_id, point))
                     }
                     None => HitTestResult { items: Vec::new() },
                 };
@@ -704,15 +675,6 @@ impl Document {
                 .map(|(&pipeline_id, &epoch)| ((pipeline_id, self.id), epoch)).collect(),
             removed_pipelines,
         }
-    }
-
-    /// Returns true if any nodes actually changed position or false otherwise.
-    pub fn scroll_nearest_scrolling_ancestor(
-        &mut self,
-        scroll_location: ScrollLocation,
-        scroll_node_index: Option<SpatialNodeIndex>,
-    ) -> bool {
-        self.scene.spatial_tree.scroll_nearest_scrolling_ancestor(scroll_location, scroll_node_index)
     }
 
     /// Returns true if the node actually changed position or false otherwise.
