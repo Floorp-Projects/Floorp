@@ -1444,6 +1444,12 @@ toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabsto
  * Tab Dialogs
  */
 
+.dialogStack {
+  /* Should outrank the z-index values of other UI elements, particularly the devtools
+     splitter element. */
+  z-index: 2;
+}
+
 .dialogOverlay {
   visibility: hidden;
 }
