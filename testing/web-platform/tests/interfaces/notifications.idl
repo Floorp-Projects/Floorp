@@ -33,7 +33,7 @@ interface Notification : EventTarget {
   [SameObject] readonly attribute any data;
   [SameObject] readonly attribute FrozenArray<NotificationAction> actions;
 
-  void close();
+  undefined close();
 };
 
 dictionary NotificationOptions {
@@ -71,14 +71,14 @@ dictionary NotificationAction {
   USVString icon;
 };
 
-callback NotificationPermissionCallback = void (NotificationPermission permission);
+callback NotificationPermissionCallback = undefined (NotificationPermission permission);
 
 dictionary GetNotificationOptions {
   DOMString tag = "";
 };
 
 partial interface ServiceWorkerRegistration {
-  Promise<void> showNotification(DOMString title, optional NotificationOptions options = {});
+  Promise<undefined> showNotification(DOMString title, optional NotificationOptions options = {});
   Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter = {});
 };
 
