@@ -125,9 +125,14 @@ void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
   }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  auto hostEntry = mHosts.Lookup(aProcess->GetRemoteType());
-  MOZ_DIAGNOSTIC_ASSERT(hostEntry && hostEntry.Data() == aProcess,
-                        "Cannot subscribe a non-host process");
+  // If the process is already marked as dead, we won't be the host, but may
+  // still need to subscribe to the process due to creating a popup while
+  // shutting down.
+  if (!aProcess->IsDead()) {
+    auto hostEntry = mHosts.Lookup(aProcess->GetRemoteType());
+    MOZ_DIAGNOSTIC_ASSERT(hostEntry && hostEntry.Data() == aProcess,
+                          "Cannot subscribe a non-host process");
+  }
 #endif
 
   // FIXME: This won't send non-discarded children of discarded BCs, but those
