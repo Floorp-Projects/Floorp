@@ -36,14 +36,14 @@ interface Animation : EventTarget {
              attribute EventHandler             onfinish;
              attribute EventHandler             oncancel;
              attribute EventHandler             onremove;
-    void cancel();
-    void finish();
-    void play();
-    void pause();
-    void updatePlaybackRate(double playbackRate);
-    void reverse();
-    void persist();
-    void commitStyles();
+    undefined cancel();
+    undefined finish();
+    undefined play();
+    undefined pause();
+    undefined updatePlaybackRate(double playbackRate);
+    undefined reverse();
+    undefined persist();
+    undefined commitStyles();
 };
 
 enum AnimationPlayState { "idle", "running", "paused", "finished" };
@@ -56,7 +56,7 @@ enum TimelinePhase { "inactive", "before", "active", "after" };
 interface AnimationEffect {
     EffectTiming         getTiming();
     ComputedEffectTiming getComputedTiming();
-    void                 updateTiming(optional OptionalEffectTiming timing = {});
+    undefined            updateTiming(optional OptionalEffectTiming timing = {});
 };
 
 dictionary EffectTiming {
@@ -103,7 +103,7 @@ interface KeyframeEffect : AnimationEffect {
     attribute CSSOMString?       pseudoElement;
     attribute CompositeOperation composite;
     sequence<object> getKeyframes();
-    void             setKeyframes(object? keyframes);
+    undefined        setKeyframes(object? keyframes);
 };
 
 dictionary BaseComputedKeyframe {
