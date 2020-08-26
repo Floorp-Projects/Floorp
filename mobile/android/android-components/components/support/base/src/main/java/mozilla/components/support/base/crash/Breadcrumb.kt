@@ -103,11 +103,7 @@ data class Breadcrumb(
     }
 
     override fun compareTo(other: Breadcrumb): Int {
-        if (this.level.ordinal == other.level.ordinal) {
-            return this.date.compareTo(other.date)
-        }
-
-        return this.level.ordinal.compareTo(other.level.ordinal)
+        return this.date.compareTo(other.date)
     }
 
     /**
