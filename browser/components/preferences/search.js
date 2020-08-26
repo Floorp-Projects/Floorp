@@ -111,6 +111,7 @@ var gSearchPane = {
     this._initDefaultEngines();
     this._initShowSearchSuggestionsFirst();
     this._updateSuggestionCheckboxes();
+    this._showAddEngineButton();
   },
 
   /**
@@ -241,6 +242,17 @@ var gSearchPane = {
     permanentPBLabel.hidden = urlbarSuggests.hidden || !permanentPB;
   },
 
+  _showAddEngineButton() {
+    let aliasRefresh = Services.prefs.getBoolPref(
+      "browser.urlbar.update2.engineAliasRefresh",
+      false
+    );
+    if (aliasRefresh) {
+      let addButton = document.getElementById("addEngineButton");
+      addButton.hidden = false;
+    }
+  },
+
   /**
    * Builds the default and private engines drop down lists. This is called
    * each time something affects the list of engines.
@@ -367,6 +379,12 @@ var gSearchPane = {
           case "removeEngineButton":
             Services.search.removeEngine(
               gEngineView.selectedEngine.originalEngine
+            );
+            break;
+          case "addEngineButton":
+            gSubDialog.open(
+              "chrome://browser/content/preferences/dialogs/addEngine.xhtml",
+              "resizable=no, modal=yes"
             );
             break;
         }

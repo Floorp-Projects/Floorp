@@ -2482,6 +2482,30 @@ SearchService.prototype = {
   },
 
   /**
+   * Adds a search engine that is specified by the user.
+   *
+   * @param {string} name
+   * @param {string} url
+   * @param {string} alias
+   */
+  async addUserEngine(name, url, alias) {
+    await this._createAndAddEngine({
+      extensionID: "set-via-user",
+      extensionBaseURI: "",
+      isAppProvided: false,
+      manifest: {
+        chrome_settings_overrides: {
+          search_provider: {
+            name,
+            search_url: encodeURI(url),
+            keyword: alias,
+          },
+        },
+      },
+    });
+  },
+
+  /**
    * Adds an engine with specific details, only used for tests and should
    * be considered obsolete, see bug 1649186.
    *
