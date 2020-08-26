@@ -17,8 +17,8 @@ interface MediaList {
   stringifier attribute [LegacyNullToEmptyString] CSSOMString mediaText;
   readonly attribute unsigned long length;
   getter CSSOMString? item(unsigned long index);
-  void appendMedium(CSSOMString medium);
-  void deleteMedium(CSSOMString medium);
+  undefined appendMedium(CSSOMString medium);
+  undefined deleteMedium(CSSOMString medium);
 };
 
 [Exposed=Window]
@@ -37,13 +37,13 @@ interface CSSStyleSheet : StyleSheet {
   readonly attribute CSSRule? ownerRule;
   [SameObject] readonly attribute CSSRuleList cssRules;
   unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
-  void deleteRule(unsigned long index);
+  undefined deleteRule(unsigned long index);
 };
 
 partial interface CSSStyleSheet {
   [SameObject] readonly attribute CSSRuleList rules;
   long addRule(optional DOMString selector = "undefined", optional DOMString style = "undefined", optional unsigned long index);
-  void removeRule(optional unsigned long index = 0);
+  undefined removeRule(optional unsigned long index = 0);
 };
 
 [Exposed=Window]
@@ -102,7 +102,7 @@ interface CSSImportRule : CSSRule {
 interface CSSGroupingRule : CSSRule {
   [SameObject] readonly attribute CSSRuleList cssRules;
   unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
-  void deleteRule(unsigned long index);
+  undefined deleteRule(unsigned long index);
 };
 
 [Exposed=Window]
@@ -130,7 +130,7 @@ interface CSSStyleDeclaration {
   getter CSSOMString item(unsigned long index);
   CSSOMString getPropertyValue(CSSOMString property);
   CSSOMString getPropertyPriority(CSSOMString property);
-  [CEReactions] void setProperty(CSSOMString property, [LegacyNullToEmptyString] CSSOMString value, optional [LegacyNullToEmptyString] CSSOMString priority = "");
+  [CEReactions] undefined setProperty(CSSOMString property, [LegacyNullToEmptyString] CSSOMString value, optional [LegacyNullToEmptyString] CSSOMString priority = "");
   [CEReactions] CSSOMString removeProperty(CSSOMString property);
   readonly attribute CSSRule? parentRule;
   [CEReactions] attribute [LegacyNullToEmptyString] CSSOMString cssFloat;
