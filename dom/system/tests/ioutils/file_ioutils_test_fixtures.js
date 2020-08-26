@@ -1,5 +1,7 @@
 // Utility functions.
 
+/* global IOUtils */
+
 Uint8Array.prototype.equals = function equals(other) {
   if (this.byteLength !== other.byteLength) {
     return false;
@@ -80,8 +82,4 @@ async function cleanup(...files) {
     const exists = await fileOrDirExists(file);
     ok(!exists, `Removed temporary file: ${file}`);
   }
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
