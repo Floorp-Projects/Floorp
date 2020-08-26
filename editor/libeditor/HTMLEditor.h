@@ -1153,7 +1153,8 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aPoint, nsAtom* aProperty, nsAtom* aAttribute);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsolute(Element& aElement);
-  MOZ_CAN_RUN_SCRIPT nsresult SetPositionToStatic(Element& aElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetPositionToStatic(Element& aElement);
 
   /**
    * OnModifyDocument() is called when the editor is changed.  This should

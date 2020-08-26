@@ -36,6 +36,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsStyledElement.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
 #include "nscore.h"
@@ -1138,14 +1139,16 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
       CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(aElement, aProperty,
                                                      aAttribute)) {
     // If aElement has CSS declaration of the given style, remove it.
-    DebugOnly<nsresult> rvIgnored =
-        mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
-            &aElement, aProperty, aAttribute, nullptr, false);
-    if (NS_WARN_IF(Destroyed())) {
+    nsresult rv = mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
+        &aElement, aProperty, aAttribute, nullptr, false);
+    if (rv == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING(
+          "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle() destroyed the "
+          "editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
+        NS_SUCCEEDED(rv),
         "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle() failed, but ignored");
     // Additionally, remove aElement itself if it's a `<span>` or `<font>`
     // and it does not have non-empty `style`, `id` nor `class` attribute.

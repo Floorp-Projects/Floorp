@@ -102,10 +102,12 @@ class CSSEditUtils final {
   MOZ_CAN_RUN_SCRIPT nsresult SetCSSPropertyPixels(dom::Element& aElement,
                                                    nsAtom& aProperty,
                                                    int32_t aIntValue);
-  MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSProperty(dom::Element& aElement,
-                                                nsAtom& aProperty,
-                                                const nsAString& aPropertyValue,
-                                                bool aSuppressTxn = false);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSPropertyWithTransaction(
+      nsStyledElement& aStyledElement, nsAtom& aProperty,
+      const nsAString& aPropertyValue) {
+    return RemoveCSSPropertyInternal(aStyledElement, aProperty, aPropertyValue,
+                                     false);
+  }
 
   /**
    * Gets the specified/computed style value of a CSS property for a given
@@ -269,7 +271,7 @@ class CSSEditUtils final {
    * @param aSuppressTransaction [IN] A boolean indicating, when true,
    *                                  that no transaction should be recorded.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSEquivalentToHTMLStyle(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSEquivalentToHTMLStyle(
       dom::Element* aElement, nsAtom* aHTMLProperty, nsAtom* aAttribute,
       const nsAString* aValue, bool aSuppressTransaction);
 
@@ -403,6 +405,10 @@ class CSSEditUtils final {
   MOZ_CAN_RUN_SCRIPT static bool HaveCSSEquivalentStylesInternal(
       nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute,
       StyleType aStyleType);
+
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSPropertyInternal(
+      nsStyledElement& aStyledElement, nsAtom& aProperty,
+      const nsAString& aPropertyValue, bool aSuppressTxn = false);
 
  private:
   HTMLEditor* mHTMLEditor;
