@@ -49,13 +49,14 @@ test(t => {
 test(t => {
   assert_equals(
       new ScrollTimeline({scrollSource: null, timeRange: 100}).scrollSource,
-      document.scrollingElement);
-  // The default value for scrollSource should also map to the
-  // document.scrollingElement.
+      null);
+}, 'A ScrollTimeline created with a null scrollSource should have no scrollSource');
+
+test(t => {
   assert_equals(
       new ScrollTimeline({timeRange: 100}).scrollSource,
       document.scrollingElement);
-}, 'A ScrollTimeline created with a null scrollSource should use the document.scrollingElement');
+}, 'A ScrollTimeline created without a scrollSource should use the document.scrollingElement');
 
 // orientation
 
