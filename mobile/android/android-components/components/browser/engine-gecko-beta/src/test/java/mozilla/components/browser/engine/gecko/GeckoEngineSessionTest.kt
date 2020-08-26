@@ -53,9 +53,10 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -1761,14 +1762,14 @@ class GeckoEngineSessionTest {
     fun `toggleDesktopMode should reload a non-mobile url when set to desktop mode`() {
         val mobileUrl = "https://m.example.com"
         val nonMobileUrl = "https://example.com"
-        val engineSession = Mockito.spy(GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider))
+        val engineSession = spy(GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider))
         engineSession.currentUrl = mobileUrl
 
         engineSession.toggleDesktopMode(true, reload = true)
-        verify(engineSession, Mockito.atLeastOnce()).loadUrl(nonMobileUrl, null, LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY), null)
+        verify(engineSession, atLeastOnce()).loadUrl(nonMobileUrl, null, LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY), null)
 
         engineSession.toggleDesktopMode(false, reload = true)
-        verify(engineSession, Mockito.atLeastOnce()).reload()
+        verify(engineSession, atLeastOnce()).reload()
     }
 
     @Test
@@ -2191,6 +2192,25 @@ class GeckoEngineSessionTest {
         })
 
         contentDelegate.value.onFirstContentfulPaint(mock())
+        assertTrue(observed)
+    }
+
+    @Test
+    fun `onPaintStatusReset notifies observers`() {
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observed = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPaintStatusReset() {
+                observed = true
+            }
+        })
+
+        contentDelegate.value.onPaintStatusReset(mock())
         assertTrue(observed)
     }
 

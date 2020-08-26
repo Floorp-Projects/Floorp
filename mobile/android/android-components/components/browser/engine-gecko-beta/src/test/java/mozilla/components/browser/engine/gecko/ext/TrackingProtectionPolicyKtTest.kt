@@ -27,7 +27,8 @@ class TrackingProtectionPolicyKtTest {
         assertEquals(policy.getAntiTrackingPolicy(), setting.antiTrackingCategories)
         assertEquals(policy.cookiePolicy.id, setting.cookieBehavior)
         assertEquals(defaultSafeBrowsing.sumBy { it.id }, setting.safeBrowsingCategories)
-        assertEquals(setting.strictSocialTrackingProtection, setting.strictSocialTrackingProtection)
+        assertEquals(setting.strictSocialTrackingProtection, policy.strictSocialTrackingProtection)
+        assertEquals(setting.cookiePurging, policy.cookiePurging)
 
         val policyWithSafeBrowsing = TrackingProtectionPolicy.recommended().toContentBlockingSetting(emptyArray())
         assertEquals(0, policyWithSafeBrowsing.safeBrowsingCategories)
