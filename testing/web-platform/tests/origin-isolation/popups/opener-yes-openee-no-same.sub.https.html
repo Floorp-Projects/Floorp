@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Opener is not isolated, openee is isolated, openee is same-origin to the opener</title>
+<title>Opener is isolated, openee is not isolated, openee is same-origin to the opener</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
@@ -15,13 +15,13 @@ import {
 
 let openee;
 promise_setup(async () => {
-  openee = await openWindow("{{hosts[][]}}", "?1");
+  openee = await openWindow("{{hosts[][]}}");
 });
 
-// Since they're same-origin, and the opener loaded without isolation, the
-// child's request for isolation gets ignored, and both end up site-keyed.
+// Since they're same-origin, the openee's isolation non-request is ignored,
+// so both end up in the origin-keyed agent cluster.
 testOpenedWindowIsInSameAgentCluster(() => openee);
 
-testGetter(self, false, "opener");
-testGetter(() => openee, false, "openee");
+testGetter(self, true, "opener");
+testGetter(() => openee, true, "openee");
 </script>
