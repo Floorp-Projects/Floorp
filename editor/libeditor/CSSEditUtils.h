@@ -312,17 +312,17 @@ class CSSEditUtils final {
   bool IsCSSPrefChecked() const;
 
   /**
-   * DoElementsHaveSameStyle compares two elements and checks if they have the
-   * same specified CSS declarations in the STYLE attribute. The answer is
+   * DoStyledElementsHaveSameStyle compares two elements and checks if they have
+   * the same specified CSS declarations in the STYLE attribute. The answer is
    * always false if at least one of them carries an ID or a class.
    *
-   * @param aElement             [IN] A DOM node.
-   * @param aOtherElement        [IN] A DOM node.
-   * @return                     true if the two elements are considered to
-   *                             have same styles.
+   * @param aStyledElement      [IN] A styled element.
+   * @param aOtherStyledElement [IN] The other styled element.
+   * @return                    true if the two elements are considered to
+   *                            have same styles.
    */
-  static bool DoElementsHaveSameStyle(const dom::Element& aElement,
-                                      const dom::Element& aOtherElement);
+  static bool DoStyledElementsHaveSameStyle(
+      nsStyledElement& aStyledElement, nsStyledElement& aOtherStyledElement);
 
  public:
   /**
