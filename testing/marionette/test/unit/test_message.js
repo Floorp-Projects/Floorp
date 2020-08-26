@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { InvalidArgumentError, WebDriverError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Command, Message, Response } = ChromeUtils.import(
   "chrome://marionette/content/message.js"
 );
@@ -53,7 +51,7 @@ add_test(function test_Command_onresponse() {
   cmd.onresult = () => (onresultOk = true);
 
   let errorResp = new Response(8, () => {});
-  errorResp.error = new WebDriverError("foo");
+  errorResp.error = new error.WebDriverError("foo");
 
   let bodyResp = new Response(9, () => {});
   bodyResp.body = "bar";
@@ -171,7 +169,7 @@ add_test(function test_Response_send() {
 
 add_test(function test_Response_sendError_sent() {
   let resp = new Response(42, r => equal(false, r.sent));
-  resp.sendError(new WebDriverError());
+  resp.sendError(new error.WebDriverError());
   ok(resp.sent);
   Assert.throws(() => resp.send(), /already been sent/);
 
@@ -180,19 +178,19 @@ add_test(function test_Response_sendError_sent() {
 
 add_test(function test_Response_sendError_body() {
   let resp = new Response(42, r => equal(null, r.body));
-  resp.sendError(new WebDriverError());
+  resp.sendError(new error.WebDriverError());
 
   run_next_test();
 });
 
 add_test(function test_Response_sendError_errorSerialisation() {
-  let err1 = new WebDriverError();
+  let err1 = new error.WebDriverError();
   let resp1 = new Response(42);
   resp1.sendError(err1);
   equal(err1.status, resp1.error.error);
   deepEqual(err1.toJSON(), resp1.error);
 
-  let err2 = new InvalidArgumentError();
+  let err2 = new error.InvalidArgumentError();
   let resp2 = new Response(43);
   resp2.sendError(err2);
   equal(err2.status, resp2.error.error);
@@ -254,19 +252,19 @@ add_test(function test_Response_fromPacket() {
 
   Assert.throws(
     () => Response.fromPacket([null, 2, "foo", {}]),
-    InvalidArgumentError
+    /InvalidArgumentError/
   );
   Assert.throws(
     () => Response.fromPacket([0, 2, "foo", {}]),
-    InvalidArgumentError
+    /InvalidArgumentError/
   );
   Assert.throws(
     () => Response.fromPacket([1, null, "foo", {}]),
-    InvalidArgumentError
+    /InvalidArgumentError/
   );
   Assert.throws(
     () => Response.fromPacket([1, 2, null, {}]),
-    InvalidArgumentError
+    /InvalidArgumentError/
   );
   Response.fromPacket([1, 2, "foo", null]);
 

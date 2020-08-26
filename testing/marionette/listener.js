@@ -26,16 +26,7 @@ const { Capabilities, PageLoadStrategy } = ChromeUtils.import(
 const { element, WebElement } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const {
-  ElementNotInteractableError,
-  InsecureCertificateError,
-  InvalidArgumentError,
-  InvalidSelectorError,
-  NoSuchElementError,
-  NoSuchFrameError,
-  TimeoutError,
-  UnknownError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Sandboxes, evaluate, sandbox } = ChromeUtils.import(
   "chrome://marionette/content/evaluate.js"
 );
@@ -292,12 +283,12 @@ const loadListener = {
       case "interactive":
         if (documentURI.startsWith("about:certerror")) {
           this.stop();
-          sendError(new InsecureCertificateError(), this.commandID);
+          sendError(new error.InsecureCertificateError(), this.commandID);
           finished = true;
         } else if (/about:.*(error)\?/.exec(documentURI)) {
           this.stop();
           sendError(
-            new UnknownError(`Reached error page: ${documentURI}`),
+            new error.UnknownError(`Reached error page: ${documentURI}`),
             this.commandID
           );
           finished = true;
@@ -368,7 +359,9 @@ const loadListener = {
       case this.timerPageLoad:
         this.stop();
         sendError(
-          new TimeoutError(`Timeout loading page after ${this.timeout}ms`),
+          new error.TimeoutError(
+            `Timeout loading page after ${this.timeout}ms`
+          ),
           this.commandID
         );
         break;
@@ -793,7 +786,7 @@ async function singleTap(el, corx, cory) {
   // after this block, the element will be scrolled into view
   let visible = element.isVisible(el, corx, cory);
   if (!visible) {
-    throw new ElementNotInteractableError(
+    throw new error.ElementNotInteractableError(
       "Element is not currently visible and may not be manipulated"
     );
   }
@@ -1268,7 +1261,7 @@ async function findElementsContent(strategy, selector, opts = {}) {
 function getActiveElement() {
   let el = curContainer.frame.document.activeElement;
   if (!el) {
-    throw new NoSuchElementError();
+    throw new error.NoSuchElementError();
   }
   return evaluate.toJSON(el, seenEls);
 }
@@ -1465,7 +1458,9 @@ function switchToShadowRoot(el) {
 
   let foundShadowRoot = el.shadowRoot;
   if (!foundShadowRoot) {
-    throw new NoSuchElementError(pprint`Unable to locate shadow root: ${el}`);
+    throw new error.NoSuchElementError(
+      pprint`Unable to locate shadow root: ${el}`
+    );
   }
   curContainer.shadowRoot = foundShadowRoot;
 }
@@ -1533,7 +1528,9 @@ function switchToFrame({ json }) {
 
   if (webEl) {
     if (!seenEls.has(webEl)) {
-      let err = new NoSuchElementError(`Unable to locate element: ${webEl}`);
+      let err = new error.NoSuchElementError(
+        `Unable to locate element: ${webEl}`
+      );
       sendError(err, commandID);
       return;
     }
@@ -1603,7 +1600,9 @@ function switchToFrame({ json }) {
 
   if (!foundFrame) {
     let failedFrame = id || element;
-    let err = new NoSuchFrameError(`Unable to locate frame: ${failedFrame}`);
+    let err = new error.NoSuchFrameError(
+      `Unable to locate frame: ${failedFrame}`
+    );
     sendError(err, commandID);
     return;
   }

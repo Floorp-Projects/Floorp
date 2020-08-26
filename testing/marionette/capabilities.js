@@ -13,9 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { InvalidArgumentError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
@@ -96,7 +94,7 @@ class Timeouts {
           break;
 
         default:
-          throw new InvalidArgumentError("Unrecognised timeout: " + type);
+          throw new error.InvalidArgumentError("Unrecognised timeout: " + type);
       }
     }
 
@@ -241,7 +239,7 @@ class Proxy {
       );
 
       if (host.includes("://")) {
-        throw new InvalidArgumentError(`${host} contains a scheme`);
+        throw new error.InvalidArgumentError(`${host} contains a scheme`);
       }
 
       let url;
@@ -256,7 +254,7 @@ class Proxy {
           url = new URL("https://" + host);
         }
       } catch (e) {
-        throw new InvalidArgumentError(e.message);
+        throw new error.InvalidArgumentError(e.message);
       }
 
       let hostname = stripBracketsFromIpv6Hostname(url.hostname);
@@ -279,7 +277,7 @@ class Proxy {
         url.search != "" ||
         url.hash != ""
       ) {
-        throw new InvalidArgumentError(
+        throw new error.InvalidArgumentError(
           `${host} was not of the form host[:port]`
         );
       }
@@ -351,7 +349,9 @@ class Proxy {
         break;
 
       default:
-        throw new InvalidArgumentError(`Invalid type of proxy: ${p.proxyType}`);
+        throw new error.InvalidArgumentError(
+          `Invalid type of proxy: ${p.proxyType}`
+        );
     }
 
     return p;
@@ -531,7 +531,9 @@ class Capabilities extends Map {
         case "pageLoadStrategy":
           assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
           if (!Object.values(PageLoadStrategy).includes(v)) {
-            throw new InvalidArgumentError("Unknown page load strategy: " + v);
+            throw new error.InvalidArgumentError(
+              "Unknown page load strategy: " + v
+            );
           }
           break;
 
@@ -542,9 +544,11 @@ class Capabilities extends Map {
         case "setWindowRect":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           if (!Services.androidBridge && !v) {
-            throw new InvalidArgumentError("setWindowRect cannot be disabled");
+            throw new error.InvalidArgumentError(
+              "setWindowRect cannot be disabled"
+            );
           } else if (Services.androidBridge && v) {
-            throw new InvalidArgumentError(
+            throw new error.InvalidArgumentError(
               "setWindowRect is only supported on desktop"
             );
           }
@@ -561,7 +565,7 @@ class Capabilities extends Map {
         case "unhandledPromptBehavior":
           assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
           if (!Object.values(UnhandledPromptBehavior).includes(v)) {
-            throw new InvalidArgumentError(
+            throw new error.InvalidArgumentError(
               `Unknown unhandled prompt behavior: ${v}`
             );
           }

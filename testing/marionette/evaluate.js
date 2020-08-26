@@ -15,9 +15,7 @@ const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
 const { element, WebElement } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const { JavaScriptError, ScriptTimeoutError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
@@ -106,7 +104,7 @@ evaluate.sandbox = function(
   if (timeout !== null) {
     timeoutPromise = new Promise((resolve, reject) => {
       scriptTimeoutID = setTimeout(() => {
-        reject(new ScriptTimeoutError(`Timed out after ${timeout} ms`));
+        reject(new error.ScriptTimeoutError(`Timed out after ${timeout} ms`));
       }, timeout);
     });
   }
@@ -129,7 +127,7 @@ evaluate.sandbox = function(
     }).apply(null, ${ARGUMENTS})`;
 
     unloadHandler = sandbox.cloneInto(
-      () => reject(new JavaScriptError("Document was unloaded")),
+      () => reject(new error.JavaScriptError("Document was unloaded")),
       marionetteSandbox
     );
     marionetteSandbox.window.addEventListener("unload", unloadHandler);
@@ -167,10 +165,10 @@ evaluate.sandbox = function(
   return Promise.race([promise, timeoutPromise])
     .catch(err => {
       // Only raise valid errors for both the sync and async scripts.
-      if (err instanceof ScriptTimeoutError) {
+      if (err instanceof error.ScriptTimeoutError) {
         throw err;
       }
-      throw new JavaScriptError(err);
+      throw new error.JavaScriptError(err);
     })
     .finally(() => {
       clearTimeout(scriptTimeoutID);

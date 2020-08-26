@@ -17,9 +17,7 @@ const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
 const { capture } = ChromeUtils.import(
   "chrome://marionette/content/capture.js"
 );
-const { InvalidArgumentError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 const { print } = ChromeUtils.import("chrome://marionette/content/print.js");
 
@@ -455,7 +453,9 @@ max-width: ${width}px; max-height: ${height}px`;
     logger.info(`Testing ${lhsUrl} ${relation} ${rhsUrl}`);
 
     if (relation !== "==" && relation != "!=") {
-      throw new InvalidArgumentError("Reftest operator should be '==' or '!='");
+      throw new error.InvalidArgumentError(
+        "Reftest operator should be '==' or '!='"
+      );
     }
 
     let lhsIter, lhsCount, rhsIter, rhsCount;

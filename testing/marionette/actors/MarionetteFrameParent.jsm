@@ -14,9 +14,7 @@ const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 
-const { WebDriverError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { evaluate } = ChromeUtils.import(
   "chrome://marionette/content/evaluate.js"
 );
@@ -50,7 +48,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
     const result = await super.sendQuery(name, serializedData);
 
     if ("error" in result) {
-      throw WebDriverError.fromJSON(result.error);
+      throw error.WebDriverError.fromJSON(result.error);
     } else {
       return evaluate.fromJSON(result.data);
     }
