@@ -766,7 +766,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   class MediaLoadListener;
   class MediaStreamRenderer;
   class MediaStreamTrackListener;
-  class FirstFrameListener;
   class ShutdownObserver;
   class MediaControlKeyListener;
 

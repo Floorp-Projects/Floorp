@@ -225,6 +225,63 @@ class VideoOutput : public DirectMediaTrackListener {
       layers::ImageContainer::AllocateProducerID();
 };
 
+/**
+ * This listener observes the first video frame to arrive with a non-empty size,
+ * and renders it to its VideoFrameContainer.
+ */
+class FirstFrameVideoOutput : public VideoOutput {
+ public:
+  FirstFrameVideoOutput(VideoFrameContainer* aContainer,
+                        AbstractThread* aMainThread)
+      : VideoOutput(aContainer, aMainThread) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  // NB that this overrides VideoOutput::NotifyRealtimeTrackData, so we can
+  // filter out all frames but the first one with a real size. This allows us to
+  // later re-use the logic in VideoOutput for rendering that frame.
+  void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
+                               const MediaSegment& aMedia) override {
+    MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
+
+    if (mInitialSizeFound) {
+      return;
+    }
+
+    const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
+    for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
+      if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0, 0)) {
+        mInitialSizeFound = true;
+
+        mMainThread->Dispatch(NS_NewRunnableFunction(
+            "FirstFrameVideoOutput::FirstFrameRenderedSetter",
+            [self = RefPtr<FirstFrameVideoOutput>(this)] {
+              self->mFirstFrameRendered = true;
+            }));
+
+        // Pick the first frame and run it through the rendering code.
+        VideoSegment segment;
+        segment.AppendFrame(do_AddRef(c->mFrame.GetImage()),
+                            c->mFrame.GetIntrinsicSize(),
+                            c->mFrame.GetPrincipalHandle(),
+                            c->mFrame.GetForceBlack(), c->mTimeStamp);
+        VideoOutput::NotifyRealtimeTrackData(aGraph, aTrackOffset, segment);
+        return;
+      }
+    }
+  }
+
+  // Main thread only.
+  Watchable<bool> mFirstFrameRendered = {
+      false, "FirstFrameVideoOutput::mFirstFrameRendered"};
+
+ private:
+  // Whether a frame with a concrete size has been received. May only be
+  // accessed on the MTG's appending thread. (this is a direct listener so we
+  // get called by whoever is producing this track's data)
+  bool mInitialSizeFound = false;
+};
+
 }  // namespace mozilla
 
 #endif  // VideoOutput_h
