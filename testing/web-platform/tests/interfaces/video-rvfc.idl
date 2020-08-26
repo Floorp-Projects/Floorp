@@ -19,9 +19,9 @@ dictionary VideoFrameMetadata {
   unsigned long rtpTimestamp;
 };
 
-callback VideoFrameRequestCallback = void(DOMHighResTimeStamp now, VideoFrameMetadata metadata);
+callback VideoFrameRequestCallback = undefined(DOMHighResTimeStamp now, VideoFrameMetadata metadata);
 
 partial interface HTMLVideoElement {
     unsigned long requestVideoFrameCallback(VideoFrameRequestCallback callback);
-    void cancelVideoFrameCallback(unsigned long handle);
+    undefined cancelVideoFrameCallback(unsigned long handle);
 };
