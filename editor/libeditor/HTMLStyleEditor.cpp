@@ -410,8 +410,17 @@ bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
   mCSSEditUtils->SetCSSEquivalentToHTMLStyle(newSpanElement, aProperty,
                                              aAttribute, aValue,
                                              /*suppress transaction*/ true);
-
-  return CSSEditUtils::DoElementsHaveSameStyle(*newSpanElement, *element);
+  nsCOMPtr<nsStyledElement> styledNewSpanElement =
+      do_QueryInterface(newSpanElement);
+  if (!styledNewSpanElement) {
+    return false;
+  }
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(element);
+  if (!styledElement) {
+    return false;
+  }
+  return CSSEditUtils::DoStyledElementsHaveSameStyle(*styledNewSpanElement,
+                                                     *styledElement);
 }
 
 nsresult HTMLEditor::SetInlinePropertyOnTextNode(

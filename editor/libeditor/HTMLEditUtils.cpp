@@ -25,6 +25,7 @@
 #include "nsLiteralString.h"     // for NS_LITERAL_STRING
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsString.h"            // for nsAutoString
+#include "nsStyledElement.h"
 
 namespace mozilla {
 
@@ -45,9 +46,21 @@ bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
       !aLeftContent.IsHTMLElement(nsGkAtoms::span)) {
     return true;
   }
-  MOZ_DIAGNOSTIC_ASSERT(aRightContent.IsElement());
-  return CSSEditUtils::DoElementsHaveSameStyle(*aLeftContent.AsElement(),
-                                               *aRightContent.AsElement());
+  if (!aLeftContent.IsElement() || !aRightContent.IsElement()) {
+    return false;
+  }
+  nsCOMPtr<nsStyledElement> leftStyledElement =
+      do_QueryInterface(const_cast<nsIContent*>(&aLeftContent));
+  if (!leftStyledElement) {
+    return false;
+  }
+  nsCOMPtr<nsStyledElement> rightStyledElement =
+      do_QueryInterface(const_cast<nsIContent*>(&aRightContent));
+  if (!rightStyledElement) {
+    return false;
+  }
+  return CSSEditUtils::DoStyledElementsHaveSameStyle(*leftStyledElement,
+                                                     *rightStyledElement);
 }
 
 bool HTMLEditUtils::IsBlockElement(const nsIContent& aContent) {
