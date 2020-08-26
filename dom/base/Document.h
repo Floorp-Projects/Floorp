@@ -2156,9 +2156,7 @@ class Document : public nsINode,
     // When a document is set as TopLevelContentDocument, it must be
     // allowpaymentrequest. We handle the false case while a document is
     // appended in SetSubDocumentFor
-    if (aIsTopLevelContentDocument) {
-      SetAllowPaymentRequest(true);
-    }
+    SetAllowPaymentRequest(aIsTopLevelContentDocument);
   }
 
   bool IsContentDocument() const { return mIsContentDocument; }
