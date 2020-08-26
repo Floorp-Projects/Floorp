@@ -58,15 +58,11 @@ class nsPaper final : public nsIPaper {
   NS_DECL_NSIPAPER
 
   nsPaper() = delete;
-  explicit nsPaper(const mozilla::PaperInfo&);
   nsPaper(nsPrinterBase&, const mozilla::PaperInfo&);
 
  private:
   ~nsPaper();
-
-  // null if not associated with a printer (for "Save-to-PDF" paper sizes)
   RefPtr<nsPrinterBase> mPrinter;
-
   RefPtr<Promise> mMarginPromise;
   const mozilla::PaperInfo mInfo;
 };
