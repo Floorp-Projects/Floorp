@@ -88,6 +88,11 @@ printui-paper-letter = US Letter
 printui-paper-legal = US Legal
 printui-paper-tabloid = Tabloid
 
+# Reported by screen readers and other accessibility tools to indicate that
+# the print preview has focus.
+printui-preview-label =
+    .aria-label = Print Preview
+
 ## Error messages shown when a user has an invalid input
 
 printui-error-invalid-scale = Scale must be a number between 10 and 200.

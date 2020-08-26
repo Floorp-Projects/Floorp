@@ -155,6 +155,8 @@ var PrintEventHandler = {
       })
     );
 
+    await document.l10n.translateElements([this.previewBrowser]);
+
     document.body.removeAttribute("loading");
   },
 
@@ -174,6 +176,7 @@ var PrintEventHandler = {
     printPreviewBrowser.classList.add("printPreviewBrowser");
     printPreviewBrowser.setAttribute("flex", "1");
     printPreviewBrowser.setAttribute("printpreview", "true");
+    document.l10n.setAttributes(printPreviewBrowser, "printui-preview-label");
 
     // Create the stack for the loading indicator.
     let ourBrowser = window.docShell.chromeEventHandler;
