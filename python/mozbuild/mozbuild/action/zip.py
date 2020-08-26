@@ -11,6 +11,7 @@ from mozpack.files import FileFinder
 from mozpack.copier import Jarrer
 from mozpack.errors import errors
 from mozpack.path import match
+from mozbuild.action.util import log_build_task
 
 import argparse
 import mozpack.path as mozpath
@@ -43,4 +44,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    log_build_task(main, sys.argv[1:])

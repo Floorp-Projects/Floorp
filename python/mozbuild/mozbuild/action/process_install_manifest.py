@@ -21,6 +21,7 @@ from mozpack.manifests import (
     InstallManifest,
 )
 from mozbuild.util import DefinesAction
+from mozbuild.action.util import log_build_task
 
 
 COMPLETE = 'Elapsed: {elapsed:.2f}s; From {dest}: Kept {existing} existing; ' \
@@ -111,4 +112,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    log_build_task(main, sys.argv[1:])
