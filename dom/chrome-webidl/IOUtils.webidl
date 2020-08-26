@@ -3,6 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
+/**
+ * IOUtils is a simple, efficient interface for performing file I/O from a
+ * privileged chrome-only context. All asynchronous I/O tasks are run on
+ * a background thread.
+ *
+ * Pending I/O tasks will block shutdown at the |profileBeforeChange| phase.
+ * During this shutdown phase, no additional I/O tasks will be accepted --
+ * method calls to this interface will reject once shutdown has entered this
+ * phase.
+ */
 [ChromeOnly, Exposed=(Window, Worker)]
 namespace IOUtils {
  /**

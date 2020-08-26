@@ -451,7 +451,7 @@ already_AddRefed<nsIAsyncShutdownClient> IOUtils::GetShutdownBarrier() {
     MOZ_ASSERT(svc);
 
     nsCOMPtr<nsIAsyncShutdownClient> barrier;
-    nsresult rv = svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
+    nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
     NS_ENSURE_SUCCESS(rv, nullptr);
     sBarrier = barrier;
   }
