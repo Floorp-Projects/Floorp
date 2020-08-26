@@ -429,7 +429,7 @@ const ParserAtom* WellKnownParserAtoms::lookupChar16Seq(
 }
 
 bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
-                                      const char* str) {
+                                      const char* str, JSAtom* jsatom) {
   MOZ_ASSERT(name != nullptr);
 
   unsigned int len = strlen(str);
@@ -466,6 +466,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
     }
     entry = maybeEntry.unwrap();
   }
+  entry->jsatom_ = jsatom;
 
   // Save name for returning after moving entry into set.
   const ParserName* nm = entry.get()->asName();
@@ -478,16 +479,16 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
 }
 
 bool WellKnownParserAtoms::init(JSContext* cx) {
-#define COMMON_NAME_INIT_(idpart, id, text) \
-  if (!initSingle(cx, &(id), text)) {       \
-    return false;                           \
+#define COMMON_NAME_INIT_(idpart, id, text)           \
+  if (!initSingle(cx, &(id), text, cx->names().id)) { \
+    return false;                                     \
   }
   FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
 
-#define COMMON_NAME_INIT_(name, clasp)   \
-  if (!initSingle(cx, &(name), #name)) { \
-    return false;                        \
+#define COMMON_NAME_INIT_(name, clasp)                     \
+  if (!initSingle(cx, &(name), #name, cx->names().name)) { \
+    return false;                                          \
   }
   JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_

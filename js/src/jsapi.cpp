@@ -465,6 +465,8 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx) {
     return false;
   }
 
+  // Initialization of well-known ParserAtoms must happen AFTER
+  // initialization of the coresponding JSAtoms.
   if (!rt->initializeParserAtoms(cx)) {
     return false;
   }
