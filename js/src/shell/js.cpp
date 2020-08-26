@@ -10519,6 +10519,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   if (op.getBoolOption("ion-eager")) {
     jit::JitOptions.setEagerIonCompilation();
   }
+  if (op.getBoolOption("fast-warmup")) {
+    jit::JitOptions.setFastWarmUp();
+  }
 
   offthreadCompilation = true;
   if (const char* str = op.getStringOption("ion-offthread-compile")) {
@@ -11184,6 +11187,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption(
           '\0', "ion-eager",
           "Always ion-compile methods (implies --baseline-eager)") ||
+      !op.addBoolOption('\0', "fast-warmup",
+                        "Reduce warmup thresholds for each tier.") ||
       !op.addStringOption('\0', "ion-offthread-compile", "on/off",
                           "Compile scripts off thread (default: on)") ||
       !op.addStringOption('\0', "ion-parallel-compile", "on/off",
