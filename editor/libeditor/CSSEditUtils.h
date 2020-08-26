@@ -127,14 +127,15 @@ class CSSEditUtils final {
    * Removes a CSS property from the specified declarations in STYLE attribute
    * and removes the node if it is an useless span.
    *
-   * @param aNode           [IN] The specific node we want to remove a style
+   * @param aStyledElement  [IN] The styled element we want to remove a style
    *                             from.
    * @param aProperty       [IN] The CSS property atom to remove.
    * @param aPropertyValue  [IN] The value of the property we have to remove
    *                             if the property accepts more than one value.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSInlineStyle(
-      nsINode& aNode, nsAtom* aProperty, const nsAString& aPropertyValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSInlineStyleWithTransaction(
+      nsStyledElement& aStyledElement, nsAtom* aProperty,
+      const nsAString& aPropertyValue);
 
   /**
    * Answers true is the property can be removed by setting a "none" CSS value
