@@ -87,13 +87,18 @@ uint32_t CPU::GetCacheType() {
 
 void CPU::EnsureIAndDCacheCoherency(void *address, size_t length) {
 #if defined(JS_SIMULATOR_ARM64) && defined(JS_CACHE_SIMULATOR_ARM64)
-  // This code attempt to emulate what the following assembly sequence is doing,
-  // which is sending the information to other cores that some cache line have
-  // to be invalidated and applying them on the current core.
+  // This code attempts to emulate what the following assembly sequence is
+  // doing, which is sending the information to all cores that some cache line
+  // have to be invalidated and invalidating them only on the current core.
   //
   // This is done by recording the current range to be flushed to all
   // simulators, then if there is a simulator associated with the current
   // thread, applying all flushed ranges as the "isb" instruction would do.
+  //
+  // As we have no control over the CPU cores used by the code generator and the
+  // execution threads, this code assumes that each thread runs on its own core.
+  //
+  // See Bug 1529933 for more detailed explanation of this issue.
   using js::jit::SimulatorProcess;
   js::jit::AutoLockSimulatorCache alsc;
   if (length > 0) {
