@@ -36,21 +36,7 @@ const { WebElementEventTarget } = ChromeUtils.import(
 const { ChromeWebElement, element, WebElement } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const {
-  ElementNotInteractableError,
-  InsecureCertificateError,
-  InvalidArgumentError,
-  InvalidCookieDomainError,
-  InvalidSelectorError,
-  NoSuchAlertError,
-  NoSuchFrameError,
-  NoSuchWindowError,
-  SessionNotCreatedError,
-  UnexpectedAlertOpenError,
-  UnknownError,
-  UnsupportedOperationError,
-  WebDriverError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Sandboxes, evaluate } = ChromeUtils.import(
   "chrome://marionette/content/evaluate.js"
 );
@@ -365,7 +351,7 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
       let target = `Marionette:${name}`;
       this.curBrowser.messageManager.sendAsyncMessage(target, payload);
     } else {
-      throw new NoSuchWindowError(
+      throw new error.NoSuchWindowError(
         "No such content frame; perhaps the listener was not registered?"
       );
     }
@@ -460,7 +446,9 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
   this.mozBrowserClose = e => {
     if (e.target.id == this.oopFrameId) {
       win.removeEventListener("mozbrowserclose", this.mozBrowserClose, true);
-      throw new NoSuchWindowError("The window closed during action: " + action);
+      throw new error.NoSuchWindowError(
+        "The window closed during action: " + action
+      );
     }
   };
   win.addEventListener("mozbrowserclose", this.mozBrowserClose, true);
@@ -751,7 +739,7 @@ GeckoDriver.prototype.listeningPromise = function() {
  */
 GeckoDriver.prototype.newSession = async function(cmd) {
   if (this.sessionID) {
-    throw new SessionNotCreatedError("Maximum number of active sessions");
+    throw new error.SessionNotCreatedError("Maximum number of active sessions");
   }
   this.sessionID = WebElement.generateUUID();
 
@@ -767,7 +755,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       logger.info("Proxy settings initialised: " + JSON.stringify(this.proxy));
     }
   } catch (e) {
-    throw new SessionNotCreatedError(e);
+    throw new error.SessionNotCreatedError(e);
   }
 
   // If we are testing accessibility with marionette, start a11y service in
@@ -839,7 +827,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     this.addBrowser(win);
     this.whenBrowserStarted(win, false);
   } else {
-    throw new WebDriverError("Session already running");
+    throw new error.WebDriverError("Session already running");
   }
 
   await registerBrowsers;
@@ -1169,7 +1157,7 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
   try {
     validURL = new URL(cmd.parameters.url);
   } catch (e) {
-    throw new InvalidArgumentError(`Malformed URL: ${e.message}`);
+    throw new error.InvalidArgumentError(`Malformed URL: ${e.message}`);
   }
 
   // We need to move to the top frame before navigating
@@ -1500,7 +1488,7 @@ GeckoDriver.prototype.getChromeWindowHandle = function() {
     }
   }
 
-  throw new UnknownError("Invalid browsing context");
+  throw new error.UnknownError("Invalid browsing context");
 };
 
 /**
@@ -1633,7 +1621,7 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
   if (found) {
     await this.setWindowHandle(found, focus);
   } else {
-    throw new NoSuchWindowError(`Unable to locate window: ${handle}`);
+    throw new error.NoSuchWindowError(`Unable to locate window: ${handle}`);
   }
 };
 
@@ -1821,9 +1809,9 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
       } else if (win.document.readyState == "interactive") {
         let documentURI = win.document.documentURI;
         if (documentURI.startsWith("about:certerror")) {
-          throw new InsecureCertificateError();
+          throw new error.InsecureCertificateError();
         } else if (otherErrorsExpr.exec(documentURI)) {
-          throw new UnknownError("Reached error page: " + documentURI);
+          throw new error.UnknownError("Reached error page: " + documentURI);
         }
       }
     });
@@ -1837,7 +1825,9 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
       browsingContext = this.getBrowsingContext({ top: true });
     } else if (typeof id == "number") {
       if (id < 0 || id >= childContexts.length) {
-        throw new NoSuchFrameError(`Unable to locate frame with index: ${id}`);
+        throw new error.NoSuchFrameError(
+          `Unable to locate frame with index: ${id}`
+        );
       }
       browsingContext = childContexts[id];
     } else {
@@ -1846,7 +1836,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
         return context.embedderElement === wantedFrame;
       });
       if (!context) {
-        throw new NoSuchFrameError(
+        throw new error.NoSuchFrameError(
           `Unable to locate frame for element: ${byFrame}`
         );
       }
@@ -1897,7 +1887,7 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      throw new UnsupportedOperationError(
+      throw new error.UnsupportedOperationError(
         "Command 'singleTap' is not yet available in chrome context"
       );
 
@@ -2035,7 +2025,7 @@ GeckoDriver.prototype.findElement = async function(cmd) {
   const { element: el, using, value } = cmd.parameters;
 
   if (!SUPPORTED_STRATEGIES.has(using)) {
-    throw new InvalidSelectorError(`Strategy not supported: ${using}`);
+    throw new error.InvalidSelectorError(`Strategy not supported: ${using}`);
   }
 
   const win = assert.open(this.getCurrentWindow());
@@ -2085,7 +2075,7 @@ GeckoDriver.prototype.findElements = async function(cmd) {
   const { element: el, using, value } = cmd.parameters;
 
   if (!SUPPORTED_STRATEGIES.has(using)) {
-    throw new InvalidSelectorError(`Strategy not supported: ${using}`);
+    throw new error.InvalidSelectorError(`Strategy not supported: ${using}`);
   }
 
   const win = assert.open(this.getCurrentWindow());
@@ -2704,7 +2694,7 @@ GeckoDriver.prototype.addCookie = async function(cmd) {
 
   const networkSchemes = ["ftp:", "http:", "https:"];
   if (!networkSchemes.includes(protocol)) {
-    throw new InvalidCookieDomainError("Document is cookie-averse");
+    throw new error.InvalidCookieDomainError("Document is cookie-averse");
   }
 
   let newCookie = cookie.fromJSON(cmd.parameters.cookie);
@@ -3115,11 +3105,11 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd) {
   assert.string(or);
   let mozOr = or.toLowerCase();
   if (!ors.includes(mozOr)) {
-    throw new InvalidArgumentError(`Unknown screen orientation: ${or}`);
+    throw new error.InvalidArgumentError(`Unknown screen orientation: ${or}`);
   }
 
   if (!win.screen.mozLockOrientation(mozOr)) {
-    throw new WebDriverError(`Unable to set screen orientation: ${or}`);
+    throw new error.WebDriverError(`Unable to set screen orientation: ${or}`);
   }
 };
 
@@ -3348,14 +3338,14 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
   switch (promptType) {
     case "alert":
     case "confirm":
-      throw new ElementNotInteractableError(
+      throw new error.ElementNotInteractableError(
         `User prompt of type ${promptType} is not interactable`
       );
     case "prompt":
       break;
     default:
       await this.dismissDialog();
-      throw new UnsupportedOperationError(
+      throw new error.UnsupportedOperationError(
         `User prompt of type ${promptType} is not supported`
       );
   }
@@ -3367,7 +3357,7 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
 
 GeckoDriver.prototype._checkIfAlertIsPresent = function() {
   if (!this.dialog || !this.dialog.ui) {
-    throw new NoSuchAlertError();
+    throw new error.NoSuchAlertError();
   }
 };
 
@@ -3386,7 +3376,7 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
 
     case UnhandledPromptBehavior.AcceptAndNotify:
       await this.acceptDialog();
-      throw new UnexpectedAlertOpenError(
+      throw new error.UnexpectedAlertOpenError(
         `Accepted user prompt dialog: ${textContent}`
       );
 
@@ -3396,12 +3386,12 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
 
     case UnhandledPromptBehavior.DismissAndNotify:
       await this.dismissDialog();
-      throw new UnexpectedAlertOpenError(
+      throw new error.UnexpectedAlertOpenError(
         `Dismissed user prompt dialog: ${textContent}`
       );
 
     case UnhandledPromptBehavior.Ignore:
-      throw new UnexpectedAlertOpenError(
+      throw new error.UnexpectedAlertOpenError(
         "Encountered unhandled user prompt dialog"
       );
 
@@ -3475,7 +3465,7 @@ GeckoDriver.prototype.quit = async function(cmd) {
 
       if (quits.includes(k)) {
         if (quitSeen) {
-          throw new InvalidArgumentError(
+          throw new error.InvalidArgumentError(
             `${k} cannot be combined with ${quitSeen}`
           );
         }
@@ -3508,7 +3498,7 @@ GeckoDriver.prototype.installAddon = function(cmd) {
     typeof path != "string" ||
     typeof temp != "boolean"
   ) {
-    throw new InvalidArgumentError();
+    throw new error.InvalidArgumentError();
   }
 
   return Addon.install(path, temp);
@@ -3519,7 +3509,7 @@ GeckoDriver.prototype.uninstallAddon = function(cmd) {
 
   let id = cmd.parameters.id;
   if (typeof id == "undefined" || typeof id != "string") {
-    throw new InvalidArgumentError();
+    throw new error.InvalidArgumentError();
   }
 
   return Addon.uninstall(id);
@@ -3576,10 +3566,14 @@ GeckoDriver.prototype.localizeEntity = function(cmd) {
   let { urls, id } = cmd.parameters;
 
   if (!Array.isArray(urls)) {
-    throw new InvalidArgumentError("Value of `urls` should be of type 'Array'");
+    throw new error.InvalidArgumentError(
+      "Value of `urls` should be of type 'Array'"
+    );
   }
   if (typeof id != "string") {
-    throw new InvalidArgumentError("Value of `id` should be of type 'string'");
+    throw new error.InvalidArgumentError(
+      "Value of `id` should be of type 'string'"
+    );
   }
 
   return l10n.localizeEntity(urls, id);
@@ -3605,10 +3599,14 @@ GeckoDriver.prototype.localizeProperty = function(cmd) {
   let { urls, id } = cmd.parameters;
 
   if (!Array.isArray(urls)) {
-    throw new InvalidArgumentError("Value of `urls` should be of type 'Array'");
+    throw new error.InvalidArgumentError(
+      "Value of `urls` should be of type 'Array'"
+    );
   }
   if (typeof id != "string") {
-    throw new InvalidArgumentError("Value of `id` should be of type 'string'");
+    throw new error.InvalidArgumentError(
+      "Value of `id` should be of type 'string'"
+    );
   }
 
   return l10n.localizeProperty(urls, id);
@@ -3619,13 +3617,13 @@ GeckoDriver.prototype.localizeProperty = function(cmd) {
  */
 GeckoDriver.prototype.setupReftest = async function(cmd) {
   if (this._reftest) {
-    throw new UnsupportedOperationError(
+    throw new error.UnsupportedOperationError(
       "Called reftest:setup with a reftest session already active"
     );
   }
 
   if (this.context !== Context.Chrome) {
-    throw new UnsupportedOperationError(
+    throw new error.UnsupportedOperationError(
       "Must set chrome context before running reftests"
     );
   }
@@ -3636,7 +3634,7 @@ GeckoDriver.prototype.setupReftest = async function(cmd) {
     isPrint = false,
   } = cmd.parameters;
   if (!["always", "fail", "unexpected"].includes(screenshot)) {
-    throw new InvalidArgumentError(
+    throw new error.InvalidArgumentError(
       "Value of `screenshot` should be 'always', 'fail' or 'unexpected'"
     );
   }
@@ -3658,7 +3656,7 @@ GeckoDriver.prototype.runReftest = async function(cmd) {
   } = cmd.parameters;
 
   if (!this._reftest) {
-    throw new UnsupportedOperationError(
+    throw new error.UnsupportedOperationError(
       "Called reftest:run before reftest:start"
     );
   }
@@ -3688,7 +3686,7 @@ GeckoDriver.prototype.runReftest = async function(cmd) {
  */
 GeckoDriver.prototype.teardownReftest = function() {
   if (!this._reftest) {
-    throw new UnsupportedOperationError(
+    throw new error.UnsupportedOperationError(
       "Called reftest:teardown before reftest:start"
     );
   }

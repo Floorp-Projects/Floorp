@@ -5,9 +5,6 @@
 "use strict";
 
 const { action } = ChromeUtils.import("chrome://marionette/content/action.js");
-const { InvalidArgumentError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
 
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 
@@ -22,12 +19,12 @@ action.inputStateMap = new Map();
 add_test(function test_createAction() {
   Assert.throws(
     () => new action.Action(),
-    InvalidArgumentError,
+    /InvalidArgumentError/,
     "Missing Action constructor args"
   );
   Assert.throws(
     () => new action.Action(1, 2),
-    InvalidArgumentError,
+    /InvalidArgumentError/,
     "Missing Action constructor args"
   );
   Assert.throws(
@@ -254,13 +251,13 @@ add_test(function test_computePointerDestinationElement() {
 
   Assert.throws(
     () => action.computePointerDestination(act, inputState, { a: 1 }),
-    InvalidArgumentError,
+    /InvalidArgumentError/,
     "Invalid element center coordinates."
   );
 
   Assert.throws(
     () => action.computePointerDestination(act, inputState, undefined),
-    InvalidArgumentError,
+    /InvalidArgumentError/,
     "Undefined element center coordinates."
   );
 
@@ -354,7 +351,7 @@ add_test(function test_processKeyActionUpDown() {
     let message = `actionItem.value: (${getTypeString(v)})`;
     Assert.throws(
       () => action.Action.fromJSON(actionSequence, actionItem),
-      InvalidArgumentError,
+      /InvalidArgumentError/,
       message
     );
     Assert.throws(
@@ -545,12 +542,12 @@ add_test(function test_createInputState() {
   }
   Assert.throws(
     () => new action.InputState.Pointer(),
-    InvalidArgumentError,
+    /InvalidArgumentError/,
     "Missing InputState.Pointer constructor arg"
   );
   Assert.throws(
     () => new action.InputState.Pointer("foo"),
-    InvalidArgumentError,
+    /InvalidArgumentError/,
     "Invalid InputState.Pointer constructor arg"
   );
   run_next_test();
@@ -561,7 +558,7 @@ add_test(function test_extractActionChainValidation() {
     let message = `actions: ${getTypeString(actions)}`;
     Assert.throws(
       () => action.Chain.fromJSON(actions),
-      InvalidArgumentError,
+      /InvalidArgumentError/,
       message
     );
     Assert.throws(
@@ -710,6 +707,6 @@ function checkErrors(regex, func, args, message) {
   if (typeof message == "undefined") {
     message = `actionFunc: ${func.name}; args: ${args}`;
   }
-  Assert.throws(() => func.apply(this, args), InvalidArgumentError, message);
+  Assert.throws(() => func.apply(this, args), /InvalidArgumentError/, message);
   Assert.throws(() => func.apply(this, args), regex, message);
 }

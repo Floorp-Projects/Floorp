@@ -9,9 +9,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { error, WebDriverError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { evaluate } = ChromeUtils.import(
   "chrome://marionette/content/evaluate.js"
 );
@@ -139,7 +137,7 @@ proxy.AsyncMessageChannel = class {
             break;
 
           case proxy.AsyncMessageChannel.ReplyType.Error:
-            let err = WebDriverError.fromJSON(data);
+            let err = error.WebDriverError.fromJSON(data);
             reject(err);
             break;
 
@@ -248,7 +246,7 @@ proxy.AsyncMessageChannel = class {
    *         messageManager, sendAsyncMessage.bind(this));
    *
    *     // throws in requester:
-   *     channel.reply(uuid, new WebDriverError());
+   *     channel.reply(uuid, new error.WebDriverError());
    *
    *     // returns with value:
    *     channel.reply(uuid, "hello world!");

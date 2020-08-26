@@ -11,9 +11,7 @@ const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
 
-const { UnknownError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 
 this.EXPORTED_SYMBOLS = ["Addon"];
 
@@ -32,11 +30,11 @@ async function installAddon(file) {
   });
 
   if (install.error) {
-    throw new UnknownError(ERRORS[install.error]);
+    throw new error.UnknownError(ERRORS[install.error]);
   }
 
   return install.install().catch(err => {
-    throw new UnknownError(ERRORS[install.error]);
+    throw new error.UnknownError(ERRORS[install.error]);
   });
 }
 
@@ -69,11 +67,11 @@ class Addon {
     try {
       file = new FileUtils.File(path);
     } catch (e) {
-      throw new UnknownError(`Expected absolute path: ${e}`, e);
+      throw new error.UnknownError(`Expected absolute path: ${e}`, e);
     }
 
     if (!file.exists()) {
-      throw new UnknownError(`No such file or directory: ${path}`);
+      throw new error.UnknownError(`No such file or directory: ${path}`);
     }
 
     try {
@@ -83,7 +81,7 @@ class Addon {
         addon = await installAddon(file);
       }
     } catch (e) {
-      throw new UnknownError(
+      throw new error.UnknownError(
         `Could not install add-on: ${path}: ${e.message}`,
         e
       );
@@ -114,7 +112,7 @@ class Addon {
         onOperationCancelled: addon => {
           if (addon.id === candidate.id) {
             AddonManager.removeAddonListener(listener);
-            throw new UnknownError(
+            throw new error.UnknownError(
               `Uninstall of ${candidate.id} has been canceled`
             );
           }

@@ -27,9 +27,7 @@ XPCOMUtils.defineLazyGetter(this, "domParser", () => {
   return parser;
 });
 
-const { NoSuchElementError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 
 this.EXPORTED_SYMBOLS = ["l10n"];
 
@@ -64,7 +62,9 @@ l10n.localizeEntity = function(urls, id) {
   let element = doc.querySelector("elem[id='elementID']");
 
   if (element === null) {
-    throw new NoSuchElementError(`Entity with id='${id}' hasn't been found`);
+    throw new error.NoSuchElementError(
+      `Entity with id='${id}' hasn't been found`
+    );
   }
 
   return element.textContent;
@@ -98,7 +98,9 @@ l10n.localizeProperty = function(urls, id) {
   }
 
   if (property === null) {
-    throw new NoSuchElementError(`Property with ID '${id}' hasn't been found`);
+    throw new error.NoSuchElementError(
+      `Property with ID '${id}' hasn't been found`
+    );
   }
 
   return property;

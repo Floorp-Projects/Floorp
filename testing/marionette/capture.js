@@ -8,9 +8,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { InvalidArgumentError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);

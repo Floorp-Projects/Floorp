@@ -12,9 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { error, stack, TimeoutError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { truncate } = ChromeUtils.import(
   "chrome://marionette/content/format.js"
 );
@@ -213,7 +211,7 @@ function PollPromise(func, { timeout = null, interval = 10 } = {}) {
  */
 function TimedPromise(
   fn,
-  { timeout = PROMISE_TIMEOUT, throws = TimeoutError } = {}
+  { timeout = PROMISE_TIMEOUT, throws = error.TimeoutError } = {}
 ) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
@@ -242,7 +240,7 @@ function TimedPromise(
       }
     };
 
-    trace = stack();
+    trace = error.stack();
     timer.initWithCallback({ notify: bail }, timeout, TYPE_ONE_SHOT);
 
     try {

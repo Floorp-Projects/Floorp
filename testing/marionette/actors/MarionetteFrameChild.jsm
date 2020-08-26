@@ -13,9 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { element } = ChromeUtils.import(
   "chrome://marionette/content/element.js"
 );
-const { error, NoSuchFrameError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { evaluate } = ChromeUtils.import(
   "chrome://marionette/content/evaluate.js"
 );
@@ -182,7 +180,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
       browsingContext = this.browsingContext.top;
     } else if (typeof id == "number") {
       if (id < 0 || id >= childContexts.length) {
-        throw new NoSuchFrameError(`Unable to locate frame with index: ${id}`);
+        throw new error.NoSuchFrameError(
+          `Unable to locate frame with index: ${id}`
+        );
       }
       browsingContext = childContexts[id];
       this.seenEls.add(browsingContext.embedderElement);
@@ -192,7 +192,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         return context.embedderElement === frameElement;
       });
       if (!context) {
-        throw new NoSuchFrameError(`Unable to locate frame for element: ${id}`);
+        throw new error.NoSuchFrameError(
+          `Unable to locate frame for element: ${id}`
+        );
       }
       browsingContext = context;
     }

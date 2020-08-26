@@ -4,9 +4,6 @@
 
 "use strict";
 
-const { InvalidArgumentError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
 const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
 
 const mockModalDialog = {

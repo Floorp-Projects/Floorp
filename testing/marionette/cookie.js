@@ -7,9 +7,7 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { InvalidCookieDomainError, UnableToSetCookieError } = ChromeUtils.import(
-  "chrome://marionette/content/error.js"
-);
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 
 this.EXPORTED_SYMBOLS = ["cookie"];
@@ -164,7 +162,7 @@ cookie.add = function(
         isIpAddress = true;
         break;
       default:
-        throw new InvalidCookieDomainError(newCookie.domain);
+        throw new error.InvalidCookieDomainError(newCookie.domain);
     }
   }
 
@@ -180,7 +178,7 @@ cookie.add = function(
       "." + restrictToHost !== newCookie.domain &&
       restrictToHost !== newCookie.domain
     ) {
-      throw new InvalidCookieDomainError(
+      throw new error.InvalidCookieDomainError(
         `Cookies may only be set ` +
           `for the current domain (${restrictToHost})`
       );
@@ -220,7 +218,7 @@ cookie.add = function(
       schemeType
     );
   } catch (e) {
-    throw new UnableToSetCookieError(e);
+    throw new error.UnableToSetCookieError(e);
   }
 };
 
