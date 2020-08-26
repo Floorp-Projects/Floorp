@@ -10,14 +10,6 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/ajv-4.1.1.js"
 );
 
-const { TelemetryArchive } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryArchive.jsm"
-);
-
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
-);
-
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
 const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
@@ -337,30 +329,17 @@ add_task(async function testAboutPage() {
           "Before study enrollment, join button is enabled."
         );
 
-        const studyCancelButton = content.document.getElementById(
-          "join-study-cancel-dialog-button"
-        );
-
-        const joinDialogOpen = new Promise(resolve => {
-          content.document
-            .getElementById("join-study-consent-dialog")
-            .addEventListener("open", () => {
-              resolve();
-            });
-        });
-
-        await waitForAnimationFrame();
-        await waitForAnimationFrame();
-
         joinButton.click();
-
         await waitForAnimationFrame();
-        await joinDialogOpen;
 
         ok(
           content.document.getElementById("join-study-consent").textContent ==
             cachedAddon.joinStudyConsent,
           "Join consent text matches remote settings data."
+        );
+
+        const studyCancelButton = content.document.getElementById(
+          "join-study-cancel-dialog-button"
         );
 
         studyCancelButton.click();
@@ -393,31 +372,21 @@ add_task(async function testAboutPage() {
           "After study enrollment, leave button is enabled."
         );
 
+        joinButton.click();
+        await waitForAnimationFrame();
+
         const leaveStudyCancelButton = content.document.getElementById(
           "leave-study-cancel-dialog-button"
         );
 
-        const leaveDialogOpen = new Promise(resolve => {
-          content.document
-            .getElementById("leave-study-consent-dialog")
-            .addEventListener("open", () => {
-              resolve();
-            });
-        });
-
-        joinButton.click();
-
+        leaveStudyCancelButton.click();
         await waitForAnimationFrame();
-        await leaveDialogOpen;
 
         ok(
           content.document.getElementById("leave-study-consent").textContent ==
             cachedAddon.leaveStudyConsent,
           "Leave consent text matches remote settings data."
         );
-
-        leaveStudyCancelButton.click();
-        await waitForAnimationFrame();
 
         ok(
           !joinButton.disabled,
@@ -469,29 +438,12 @@ add_task(async function testAboutPage() {
       const acceptUnenrollmentDialogButton = content.document.getElementById(
         "leave-pioneer-accept-dialog-button"
       );
-
       acceptUnenrollmentDialogButton.click();
 
-      // Wait for deletion ping, uninstalls, and UI updates...
-      const pioneerUnenrolled = await new Promise((resolve, reject) => {
-        Services.prefs.addObserver(PREF_PIONEER_ID, function observer(
-          subject,
-          topic,
-          data
-        ) {
-          try {
-            const prefValue = Services.prefs.getStringPref(
-              PREF_PIONEER_ID,
-              null
-            );
-            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
-            resolve(prefValue);
-          } catch (ex) {
-            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
-            reject(ex);
-          }
-        });
-      });
+      const pioneerUnenrolled = Services.prefs.getStringPref(
+        PREF_PIONEER_ID,
+        null
+      );
 
       ok(
         !pioneerUnenrolled,
@@ -525,22 +477,6 @@ add_task(async function testAboutPage() {
       }
     }
   );
-
-  // Wait for any pending pings to settle.
-  await TelemetryStorage.testClearPendingPings();
-
-  let pings = await TelemetryArchive.promiseArchivedPingList();
-  ok(
-    pings.length == CACHED_ADDONS.length + 1,
-    "The expected number of archived telemetry pings are present."
-  );
-  for (const ping of pings) {
-    // TODO this test would be better if it verified that each ping actually matched each study correctly.
-    ok(
-      ping.type === "pioneer-study",
-      "Deletion request telemetry ping was sent."
-    );
-  }
 });
 
 add_task(async function testPioneerBadge() {
@@ -577,8 +513,6 @@ add_task(async function testPioneerBadge() {
 
   toolbarButton.click();
 
-  await pioneerTab;
-
   ok(
     !toolbarBadge.classList.contains("feature-callout"),
     "When about:pioneer toolbar button is pressed, call-out is removed."
@@ -599,7 +533,7 @@ add_task(async function testPioneerBadge() {
   await BrowserTestUtils.removeTab(blankTab);
 });
 
-add_task(async function testContentReplacement() {
+add_task(async function testAboutPage() {
   const cachedContent = JSON.stringify(CACHED_CONTENT);
 
   await SpecialPowers.pushPrefEnv({
