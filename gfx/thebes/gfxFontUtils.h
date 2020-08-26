@@ -1159,6 +1159,7 @@ class gfxFontUtils {
       const mozilla::gfx::DeviceColor& aDefaultColor,
       nsTArray<uint16_t>& aGlyphs,
       nsTArray<mozilla::gfx::DeviceColor>& aColors);
+  static bool HasColorLayersForGlyph(hb_blob_t* aCOLR, uint32_t aGlyphId);
 
   // Helper used to implement gfxFontEntry::GetVariation{Axes,Instances} for
   // platforms where the native font APIs don't provide the info we want
@@ -1203,6 +1204,16 @@ class gfxFontUtils {
   static const mozilla::Encoding* gISOFontNameCharsets[];
   static const mozilla::Encoding* gMSFontNameCharsets[];
 };
+
+// Factors used to weight the distances between the available and target font
+// properties during font-matching. These ensure that we respect the CSS-fonts
+// requirement that font-stretch >> font-style >> font-weight; and in addition,
+// a mismatch between the desired and actual glyph presentation (emoji vs text)
+// will take precedence over any of the style attributes.
+constexpr double kPresentationMismatch = 1.0e12;
+constexpr double kStretchFactor = 1.0e8;
+constexpr double kStyleFactor = 1.0e4;
+constexpr double kWeightFactor = 1.0e0;
 
 // style distance ==> [0,500]
 static inline double StyleDistance(const mozilla::SlantStyleRange& aRange,

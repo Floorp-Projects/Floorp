@@ -33,7 +33,8 @@ static double WSSDistance(const Face* aFace, const gfxFontStyle& aStyle) {
   // weight/style/stretch priority: stretch >> style >> weight
   // so we multiply the stretch and style values to make them dominate
   // the result
-  return stretchDist * 1.0e8 + styleDist * 1.0e4 + weightDist;
+  return stretchDist * kStretchFactor + styleDist * kStyleFactor +
+         weightDist * kWeightFactor;
 }
 
 void* Pointer::ToPtr(FontList* aFontList) const {
@@ -398,6 +399,21 @@ void Family::SearchAllFontsForChar(FontList* aList,
         }
         if (!charmap && !fe->HasCharacter(aMatchData->mCh)) {
           continue;
+        }
+        if (aMatchData->mPresentation != eFontPresentation::Any) {
+          gfxFont* font = fe->FindOrMakeFont(&aMatchData->mStyle);
+          if (!font) {
+            continue;
+          }
+          bool hasColorGlyph =
+              font->HasColorGlyphFor(aMatchData->mCh, aMatchData->mNextCh);
+          if (hasColorGlyph !=
+              (aMatchData->mPresentation == eFontPresentation::Emoji)) {
+            distance += kPresentationMismatch;
+            if (distance >= aMatchData->mMatchDistance) {
+              continue;
+            }
+          }
         }
         aMatchData->mBestMatch = fe;
         aMatchData->mMatchDistance = distance;
