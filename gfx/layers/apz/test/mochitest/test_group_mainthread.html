@@ -11,6 +11,9 @@
 var subtests = [
   {"file": "helper_scrollby_bug1531796.html"},
   {"file": "helper_scroll_anchoring_smooth_scroll.html"},
+  {"file": "helper_visualscroll_clamp_restore.html", prefs: [
+    ["apz.test.logging_enabled", true],
+  ]},
 ];
 
 if (isApzEnabled()) {
