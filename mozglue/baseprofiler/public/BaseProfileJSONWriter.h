@@ -195,15 +195,15 @@ class SpliceableJSONWriter : public JSONWriter {
   // Takes the chunks from aFunc and write them. If move is not possible
   // (e.g., using OStreamJSONWriteFunc), aFunc's chunks are copied and its
   // storage cleared.
-  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) {
+  virtual void TakeAndSplice(ChunkedJSONWriteFunc&& aFunc) {
     Separator();
-    for (size_t i = 0; i < aFunc->mChunkList.length(); i++) {
-      WriteFunc()->Write(aFunc->mChunkList[i].get());
+    for (size_t i = 0; i < aFunc.mChunkList.length(); i++) {
+      WriteFunc()->Write(aFunc.mChunkList[i].get());
     }
-    aFunc->mChunkPtr = nullptr;
-    aFunc->mChunkEnd = nullptr;
-    aFunc->mChunkList.clear();
-    aFunc->mChunkLengths.clear();
+    aFunc.mChunkPtr = nullptr;
+    aFunc.mChunkEnd = nullptr;
+    aFunc.mChunkList.clear();
+    aFunc.mChunkLengths.clear();
     mNeedComma[mDepth] = true;
   }
 };
@@ -213,18 +213,41 @@ class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
   explicit SpliceableChunkedJSONWriter()
       : SpliceableJSONWriter(MakeUnique<ChunkedJSONWriteFunc>()) {}
 
-  ChunkedJSONWriteFunc* ChunkedWriteFunc() const {
-    // The WriteFunc was initialized with a ChunkedJSONWriteFunc in the only
-    // constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
-    return static_cast<ChunkedJSONWriteFunc*>(WriteFunc());
+  // Access the ChunkedJSONWriteFunc as reference-to-const, usually to copy data
+  // out.
+  const ChunkedJSONWriteFunc& ChunkedWriteFunc() const {
+    MOZ_ASSERT(!mTaken);
+    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
+    return *static_cast<const ChunkedJSONWriteFunc*>(WriteFunc());
+  }
+
+  // Access the ChunkedJSONWriteFunc as rvalue-reference, usually to take its
+  // data out. This writer shouldn't be used anymore after this.
+  ChunkedJSONWriteFunc&& TakeChunkedWriteFunc() {
+#ifdef DEBUG
+    MOZ_ASSERT(!mTaken);
+    mTaken = true;
+#endif  //
+    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
+    return std::move(*static_cast<ChunkedJSONWriteFunc*>(WriteFunc()));
   }
 
   // Adopts the chunks from aFunc without copying.
-  void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override {
+  void TakeAndSplice(ChunkedJSONWriteFunc&& aFunc) override {
+    MOZ_ASSERT(!mTaken);
     Separator();
-    ChunkedWriteFunc()->Take(std::move(*aFunc));
+    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
+    static_cast<ChunkedJSONWriteFunc*>(WriteFunc())->Take(std::move(aFunc));
     mNeedComma[mDepth] = true;
   }
+
+#ifdef DEBUG
+ private:
+  bool mTaken = false;
+#endif  //
 };
 
 class JSONSchemaWriter {
