@@ -31,8 +31,8 @@ async_test(async (t) => {
 
   // VideoEncoderInit has required fields.
   let encoder = new VideoEncoder({
-    output(chunk) { assert_unreached("Unexpected output");  },
-    error(error) { assert_unreached("Unexpected error:" + error); },
+    output(chunk) { t.unreached_func("Unexpected output").call(); },
+    error(error) { t.unreached_func("Unexpected error:" + error).call(); },
   });
   encoder.close();
 
@@ -41,8 +41,8 @@ async_test(async (t) => {
 
 async_test(async (t) => {
   let encoder = new VideoEncoder({
-    output(chunk) { assert_unreached("Unexpected output");  },
-    error(error) { assert_unreached("Unexpected error:" + error); },
+    output(chunk) { t.unreached_func("Unexpected output").call(); },
+    error(error) { t.unreached_func("Unexpected error:" + error).call(); },
   });
 
   const requiredConfigPairs = {
@@ -54,13 +54,34 @@ async_test(async (t) => {
   let incrementalConfig = {};
 
   for (let key in requiredConfigPairs) {
-    // Configure  should fail while required keys are missing.
+    // Configure should fail while required keys are missing.
     assert_throws_js(TypeError, () => { encoder.configure(incrementalConfig); });
     incrementalConfig[key] = requiredConfigPairs[key];
   }
 
   // Configure should pass once incrementalConfig meets all requirements.
   encoder.configure(incrementalConfig);
+
+  // We should be able to reconfigure the encoder.
+  encoder.configure(incrementalConfig);
+
+  let config = incrementalConfig;
+
+  // Bogus codec rejected.
+  config.codec = 'bogus';
+  assert_throws_js(TypeError, () => { encoder.configure(config); });
+
+  // Audio codec rejected.
+  config.codec = 'vorbis';
+  assert_throws_js(TypeError, () => { encoder.configure(config); });
+
+  // Ambiguous codec rejected.
+  config.codec = 'vp9';
+  assert_throws_js(TypeError, () => { encoder.configure(config); });
+
+  // Codec with mime type rejected.
+  config.codec = 'video/webm; codecs="vp9"';
+  assert_throws_js(TypeError, () => { encoder.configure(config); });
 
   encoder.close();
 
@@ -69,8 +90,8 @@ async_test(async (t) => {
 
 async_test(async (t) => {
   let encoder = new VideoEncoder({
-    output(chunk) { assert_unreached("Unexpected output"); },
-    error(error) { assert_unreached("Unexpected error:" + error); },
+    output(chunk) { t.unreached_func("Unexpected output").call(); },
+    error(error) { t.unreached_func("Unexpected error:" + error).call(); },
   });
 
   let videoFrame = await createVideoFrame(640, 480, 0);
@@ -93,7 +114,7 @@ async_test(async (t) => {
   let output_chunks = [];
   let encoder = new VideoEncoder({
     output(chunk) { output_chunks.push(chunk); },
-    error(error) { assert_unreached("Unexpected error:" + error); },
+    error(error) { t.unreached_func("Unexpected error:" + error).call(); },
   });
 
   // No encodes yet.
@@ -133,5 +154,75 @@ async_test(async (t) => {
 
   asyncDone(t);
 }, 'Test successful configure(), encode(), and flush()');
+
+async_test(async (t) => {
+  let output_chunks = [];
+  let encoder = new VideoEncoder({
+    output(chunk) { output_chunks.push(chunk); },
+    error(error) { t.unreached_func("Unexpected error:" + error).call(); },
+  });
+
+  // No encodes yet.
+  assert_equals(encoder.encodeQueueSize, 0);
+
+  const config = {
+    codec: 'vp8',
+    framerate: 25,
+    width: 640,
+    height: 480
+  };
+  encoder.configure(config);
+
+  let frame1 = await createVideoFrame(640, 480, 0);
+  let frame2 = await createVideoFrame(640, 480, 33333);
+
+  encoder.encode(frame1);
+  encoder.configure(config);
+
+  encoder.encode(frame2);
+
+  await encoder.flush();
+
+  // We can guarantee that all encodes are processed after a flush.
+  assert_equals(encoder.encodeQueueSize, 0);
+
+  // The first frame may have been dropped when reconfiguring.
+  // This shouldn't happen, and should be fixed/called out in the spec, but
+  // this is preptively added to prevent flakiness.
+  // TODO: Remove these checks when implementations handle this correctly.
+  assert_true(output_chunks.length == 1 || output_chunks.length == 2);
+
+  if (output_chunks.length == 1) {
+    // If we only have one chunk frame, make sure we droped the frame that was
+    // in flight when we reconfigured.
+    assert_equals(output_chunks[0].timestamp, frame2.timestamp);
+  } else {
+    assert_equals(output_chunks[0].timestamp, frame1.timestamp);
+    assert_equals(output_chunks[1].timestamp, frame2.timestamp);
+  }
+
+  output_chunks = [];
+
+  let frame3 = await createVideoFrame(640, 480, 66666);
+  let frame4 = await createVideoFrame(640, 480, 100000);
+
+  encoder.encode(frame3);
+
+  // Verify that a failed call to configure does not change the encoder's state.
+  config.codec = 'bogus';
+  assert_throws_js(TypeError, () => encoder.configure(config));
+
+  encoder.encode(frame4);
+
+  await encoder.flush();
+
+  assert_equals(output_chunks[0].timestamp, frame3.timestamp);
+  assert_equals(output_chunks[1].timestamp, frame4.timestamp);
+
+  encoder.close();
+
+  asyncDone(t);
+}, 'Test successful encode() after re-configure().');
+
 </script>
 </html>
