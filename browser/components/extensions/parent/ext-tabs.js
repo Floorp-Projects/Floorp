@@ -1259,29 +1259,14 @@ this.tabs = class extends ExtensionAPI {
           PrintUtils.startPrintWindow(activeTab.linkedBrowser.browsingContext);
         },
 
-        printPreview() {
+        async printPreview() {
           let activeTab = getTabOrActive(null);
           let { PrintUtils, PrintPreviewListener } = activeTab.ownerGlobal;
-
-          return new Promise((resolve, reject) => {
-            let ppBrowser = PrintUtils.shouldSimplify
-              ? PrintPreviewListener.getSimplifiedPrintPreviewBrowser()
-              : PrintPreviewListener.getPrintPreviewBrowser();
-
-            let mm = ppBrowser.messageManager;
-
-            let onEntered = message => {
-              mm.removeMessageListener("Printing:Preview:Entered", onEntered);
-              if (message.data.failed) {
-                reject({ message: "Print preview failed" });
-              }
-              resolve();
-            };
-
-            mm.addMessageListener("Printing:Preview:Entered", onEntered);
-
-            PrintUtils.printPreview(PrintPreviewListener);
-          });
+          try {
+            await PrintUtils.printPreview(PrintPreviewListener);
+          } catch (ex) {
+            return Promise.reject({ message: "Print preview failed" });
+          }
         },
 
         saveAsPDF(pageSettings) {
