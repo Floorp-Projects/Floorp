@@ -7820,7 +7820,7 @@ nsresult nsContentUtils::SendMouseEvent(
   if (!widget) return NS_ERROR_FAILURE;
 
   EventMessage msg;
-  WidgetMouseEvent::ExitFrom exitFrom = WidgetMouseEvent::eChild;
+  Maybe<WidgetMouseEvent::ExitFrom> exitFrom;
   bool contextMenuKey = false;
   if (aType.EqualsLiteral("mousedown")) {
     msg = eMouseDown;
@@ -7832,9 +7832,10 @@ nsresult nsContentUtils::SendMouseEvent(
     msg = eMouseEnterIntoWidget;
   } else if (aType.EqualsLiteral("mouseout")) {
     msg = eMouseExitFromWidget;
+    exitFrom = Some(WidgetMouseEvent::eChild);
   } else if (aType.EqualsLiteral("mousecancel")) {
     msg = eMouseExitFromWidget;
-    exitFrom = WidgetMouseEvent::eTopLevel;
+    exitFrom = Some(WidgetMouseEvent::eTopLevel);
   } else if (aType.EqualsLiteral("mouselongtap")) {
     msg = eMouseLongTap;
   } else if (aType.EqualsLiteral("contextmenu")) {
