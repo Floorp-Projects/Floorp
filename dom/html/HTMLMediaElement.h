@@ -1410,9 +1410,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   nsRefPtrHashtable<nsStringHashKey, MediaElementTrackSource>
       mOutputTrackSources;
 
-  // Holds a reference to the first-frame-getting track listener attached to
-  // mSelectedVideoStreamTrack.
-  RefPtr<FirstFrameListener> mFirstFrameListener;
   // The currently selected video stream track.
   RefPtr<VideoStreamTrack> mSelectedVideoStreamTrack;
 
