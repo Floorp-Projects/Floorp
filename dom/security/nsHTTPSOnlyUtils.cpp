@@ -197,9 +197,19 @@ bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
     return false;
   }
 
-  // If the load is exempt, then there is nothing to do here.
+  // httpsOnlyStatus is reset to it's default value in the child-process after
+  // our forced timeout. Until we figure out why it's reset (bug 1661275) we
+  // have this workaround:
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UNINITIALIZED &&
+      !XRE_IsParentProcess() && aError == NS_ERROR_NET_TIMEOUT) {
+    return true;
+  }
+
+  // If the load is exempt or did not get upgraded,
+  // then there is nothing to do here.
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT ||
+      httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UNINITIALIZED) {
     return false;
   }
 
