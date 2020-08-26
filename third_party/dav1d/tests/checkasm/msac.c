@@ -140,11 +140,11 @@ static void check_decode_symbol(MsacDSPContext *const c, uint8_t *const buf) {
     report("decode_symbol");
 }
 
-static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
+static void check_decode_bool_adapt(MsacDSPContext *const c, uint8_t *const buf) {
     MsacContext s_c, s_a;
 
+    declare_func(unsigned, MsacContext *s, uint16_t *cdf);
     if (check_func(c->bool_adapt, "msac_decode_bool_adapt")) {
-        declare_func(unsigned, MsacContext *s, uint16_t *cdf);
         uint16_t cdf[2][2];
         for (int cdf_update = 0; cdf_update <= 1; cdf_update++) {
             dav1d_msac_init(&s_c, buf, BUF_SIZE, !cdf_update);
@@ -165,9 +165,13 @@ static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
                 bench_new(&s_a, cdf[1]);
         }
     }
+}
 
+static void check_decode_bool_equi(MsacDSPContext *const c, uint8_t *const buf) {
+    MsacContext s_c, s_a;
+
+    declare_func(unsigned, MsacContext *s);
     if (check_func(c->bool_equi, "msac_decode_bool_equi")) {
-        declare_func(unsigned, MsacContext *s);
         dav1d_msac_init(&s_c, buf, BUF_SIZE, 1);
         s_a = s_c;
         for (int i = 0; i < 64; i++) {
@@ -180,9 +184,13 @@ static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
         }
         bench_new(&s_a);
     }
+}
 
+static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
+    MsacContext s_c, s_a;
+
+    declare_func(unsigned, MsacContext *s, unsigned f);
     if (check_func(c->bool, "msac_decode_bool")) {
-        declare_func(unsigned, MsacContext *s, unsigned f);
         dav1d_msac_init(&s_c, buf, BUF_SIZE, 1);
         s_a = s_c;
         for (int i = 0; i < 64; i++) {
@@ -197,6 +205,12 @@ static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
         bench_new(&s_a, 16384);
     }
 
+}
+
+static void check_decode_bool_funcs(MsacDSPContext *const c, uint8_t *const buf) {
+    check_decode_bool_adapt(c, buf);
+    check_decode_bool_equi(c, buf);
+    check_decode_bool(c, buf);
     report("decode_bool");
 }
 
@@ -204,8 +218,8 @@ static void check_decode_hi_tok(MsacDSPContext *const c, uint8_t *const buf) {
     ALIGN_STK_16(uint16_t, cdf, 2, [16]);
     MsacContext s_c, s_a;
 
+    declare_func(unsigned, MsacContext *s, uint16_t *cdf);
     if (check_func(c->hi_tok, "msac_decode_hi_tok")) {
-        declare_func(unsigned, MsacContext *s, uint16_t *cdf);
         for (int cdf_update = 0; cdf_update <= 1; cdf_update++) {
             dav1d_msac_init(&s_c, buf, BUF_SIZE, !cdf_update);
             s_a = s_c;
@@ -272,6 +286,6 @@ void checkasm_check_msac(void) {
         buf[i] = rnd();
 
     check_decode_symbol(&c, buf);
-    check_decode_bool(&c, buf);
+    check_decode_bool_funcs(&c, buf);
     check_decode_hi_tok(&c, buf);
 }

@@ -66,6 +66,8 @@ if stack_alignment == 0:
 DEFINES['STACK_ALIGNMENT'] = stack_alignment
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    ASFLAGS += ['-Dprivate_prefix=dav1d']
+
     SOURCES += [
         '../../../third_party/dav1d/src/x86/cpu.c',
         '../../../third_party/dav1d/src/x86/msac_init.c',
