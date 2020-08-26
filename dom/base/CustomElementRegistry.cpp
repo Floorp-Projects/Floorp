@@ -19,6 +19,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/AutoRestore.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
@@ -855,7 +856,8 @@ void CustomElementRegistry::Define(
     /**
      * 9. Set this CustomElementRegistry's element definition is running flag.
      */
-    AutoSetRunningFlag as(this);
+    AutoRestore<bool> restoreRunning(mIsCustomDefinitionRunning);
+    mIsCustomDefinitionRunning = true;
 
     /**
      * 14.1. Let prototype be Get(constructor, "prototype"). Rethrow any
