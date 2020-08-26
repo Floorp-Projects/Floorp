@@ -5,5 +5,5 @@
 
 partial interface Document {
   Promise<boolean> hasStorageAccess();
-  Promise<void> requestStorageAccess();
+  Promise<undefined> requestStorageAccess();
 };
