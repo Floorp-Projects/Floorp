@@ -903,153 +903,19 @@
     },
 
     "Preferences": {
-      "type": "object",
-      "properties": {
-        "accessibility.force_disabled": {
-          "type": "number",
-          "enum": [-1, 0, 1]
-        },
-        "browser.bookmarks.autoExportHTML": {
-          "type": "boolean"
-        },
-        "browser.bookmarks.file": {
-          "type": "string"
-        },
-        "browser.places.importBookmarksHTML": {
-          "type": "boolean"
-        },
-        "browser.bookmarks.restore_default_bookmarks": {
-          "type": "boolean"
-        },
-        "browser.cache.disk.enable": {
-          "type": "boolean"
-        },
-        "browser.fixup.dns_first_for_single_words": {
-          "type": "boolean"
-        },
-        "browser.urlbar.dnsResolveSingleWordsAfterSearch": {
-          "type": "number",
-          "enum": [0, 1, 2]
-        },
-        "browser.newtabpage.activity-stream.default.sites": {
-          "type": "string"
-        },
-        "browser.safebrowsing.phishing.enabled": {
-          "type": "boolean"
-        },
-        "browser.safebrowsing.malware.enabled": {
-          "type": "boolean"
-        },
-        "browser.search.update": {
-          "type": "boolean"
-        },
-        "browser.tabs.warnOnClose": {
-          "type": "boolean"
-        },
-        "browser.cache.disk.parent_directory": {
-          "type": "string"
-        },
-        "browser.slowStartup.notificationDisabled": {
-          "type": "boolean"
-        },
-        "browser.taskbar.previews.enable": {
-          "type": "boolean"
-        },
-        "browser.urlbar.suggest.bookmark": {
-          "type": "boolean"
-        },
-        "browser.urlbar.suggest.openpage": {
-          "type": "boolean"
-        },
-        "browser.urlbar.suggest.history": {
-          "type": "boolean"
-        },
-        "datareporting.policy.dataSubmissionPolicyBypassNotification": {
-          "type": "boolean"
-        },
-        "dom.allow_scripts_to_close_windows": {
-          "type": "boolean"
-        },
-        "dom.disable_window_flip": {
-          "type": "boolean"
-        },
-        "dom.disable_window_move_resize": {
-          "type": "boolean"
-        },
-        "dom.event.contextmenu.enabled": {
-          "type": "boolean"
-        },
-        "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys.addl": {
-          "type": "string"
-        },
-        "dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode.addl": {
-          "type": "string"
-        },
-        "extensions.blocklist.enabled": {
-          "type": "boolean"
-        },
-        "extensions.getAddons.showPane": {
-          "type": "boolean"
-        },
-        "extensions.htmlaboutaddons.recommendations.enabled": {
-          "type": "boolean"
-        },
-        "geo.enabled": {
-          "type": "boolean"
-        },
-        "intl.accept_languages": {
-          "type": "string"
-        },
-        "media.eme.enabled": {
-          "type": "boolean"
-        },
-        "media.gmp-gmpopenh264.enabled": {
-          "type": "boolean"
-        },
-        "media.gmp-widevinecdm.enabled": {
-          "type": "boolean"
-        },
-        "media.peerconnection.enabled": {
-          "type": "boolean"
-        },
-        "media.peerconnection.ice.obfuscate_host_addresses.blocklist": {
-          "type": "string"
-        },
-        "network.dns.disableIPv6": {
-          "type": "boolean"
-        },
-        "network.IDN_show_punycode": {
-          "type": "boolean"
-        },
-        "places.history.enabled": {
-          "type": "boolean"
-        },
-        "print.save_print_settings": {
-          "type": "boolean"
-        },
-        "privacy.file_unique_origin": {
-          "type": "boolean"
-        },
-        "security.default_personal_cert": {
-          "type": "string"
-        },
-        "security.mixed_content.block_active_content": {
-          "type": "boolean"
-        },
-        "security.osclientcerts.autoload": {
-          "type": "boolean"
-        },
-        "security.ssl.errorReporting.enabled": {
-          "type": "boolean"
-        },
-        "security.tls.hello_downgrade_check": {
-          "type": "boolean"
-        },
-        "ui.key.menuAccessKeyFocuses": {
-          "type": "boolean"
-        },
-        "widget.content.gtk-theme-override": {
-          "type": "string"
+      "type": ["JSON", "object"],
+      "patternProperties": {
+        "^.*$": {
+          "type": ["number", "boolean", "string", "object"],
+          "properties": {
+            "Value": {
+              "type": ["number", "boolean", "string"]
+            },
+            "Status": {
+              "type": "string",
+              "enum": ["default", "locked", "user", "clear"]
+            }
+          }
         }
       }
     },
