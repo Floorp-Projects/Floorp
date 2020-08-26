@@ -1398,7 +1398,7 @@
 
 - name: CallNativeSetter
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   custom_writer: true
   args:
@@ -1410,7 +1410,7 @@
 
 - name: CallScriptedSetter
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 3
   custom_writer: true
   args:
