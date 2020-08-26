@@ -1,16 +1,28 @@
 import { sendWasmModule } from "./helpers.mjs";
 
+// This is done for the window.open() case. For <iframe>s we use the
+// <iframe> element's load event instead.
+const usp = new URLSearchParams(location.href);
+if (usp.has("send-loaded-message")) {
+  opener.postMessage("loaded", "*");
+}
+
 window.onmessage = async (e) => {
-  // These could come from the parent or siblings.
+  // These could come from the parent, opener, or siblings.
   if (e.data.constructor === WebAssembly.Module) {
     e.source.postMessage("WebAssembly.Module message received", "*");
   }
 
-  // These only come from the parent.
+  // These could come from the parent or opener.
   if (e.data.command === "set document.domain") {
     document.domain = e.data.newDocumentDomain;
-    parent.postMessage("document.domain is set", "*");
-  } else if (e.data.command === "send WASM module") {
+    e.source.postMessage("document.domain is set", "*");
+  } else if (e.data.command === "get originIsolated") {
+    e.source.postMessage(self.originIsolated, "*");
+  }
+
+  // These only come from the parent.
+  if (e.data.command === "send WASM module") {
     const destinationFrameWindow = parent.frames[e.data.indexIntoParentFrameOfDestination];
     const whatHappened = await sendWasmModule(destinationFrameWindow);
     parent.postMessage(whatHappened, "*");
@@ -38,8 +50,6 @@ window.onmessage = async (e) => {
     } else {
       parent.postMessage("something wierd happened", "*");
     }
-  } else if (e.data.command === "get originIsolated") {
-    parent.postMessage(self.originIsolated, "*");
   }
 
   // We could also receive e.data === "WebAssembly.Module message received",
