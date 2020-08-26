@@ -391,6 +391,12 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
         endSettingAutocomplete()
 
+        // Invoke textChangeListener manually, because previous autocomplete text is now committed
+        textChangeListener?.apply {
+            val fullText = text.toString()
+            invoke(fullText, fullText)
+        }
+
         return true
     }
 
