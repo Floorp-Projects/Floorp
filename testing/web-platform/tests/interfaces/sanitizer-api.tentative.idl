@@ -1,0 +1,8 @@
+// https://wicg.github.io/sanitizer-api/
+
+[
+  Exposed=Window
+] interface Sanitizer {
+  [RaisesException] constructor();
+  DOMString saneStringFrom(DOMString input);
+};

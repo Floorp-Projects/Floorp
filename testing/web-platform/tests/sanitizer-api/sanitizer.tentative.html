@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+    <script src="support/helper.sub.js"></script>
+</head>
+
+<body>
+<script>
+    test(t => {
+        s = new Sanitizer();
+        assert_equals("test", s.saneStringFrom("test"));
+    }, "SanitizerAPI exists!");
+</script>
+</body>
+</html>
