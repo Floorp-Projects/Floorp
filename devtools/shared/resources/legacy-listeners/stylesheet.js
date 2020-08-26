@@ -26,6 +26,17 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
       ]);
     });
 
+    styleSheet.on("property-change", (property, value) => {
+      onUpdated([
+        {
+          resourceType: resource.resourceType,
+          resourceId: resource.resourceId,
+          updateType: "property-change",
+          resourceUpdates: { [property]: value },
+        },
+      ]);
+    });
+
     return resource;
   };
 
@@ -49,9 +60,11 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
 };
 
 function toResource(styleSheet, isNew, fileName) {
-  return {
+  Object.assign(styleSheet, {
     resourceId: styleSheet.actorID,
     resourceType: ResourceWatcher.TYPES.STYLESHEET,
-    styleSheet: Object.assign(styleSheet, { isNew, fileName }),
-  };
+    isNew,
+    fileName,
+  });
+  return styleSheet;
 }

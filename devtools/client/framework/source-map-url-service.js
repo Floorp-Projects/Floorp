@@ -440,7 +440,7 @@ class SourceMapURLService {
 
         this._onResourceAvailable = async ({ resource }) => {
           if (this._sourcesLoading === sourcesLoading) {
-            this._onNewStyleSheet(resource.styleSheet);
+            this._onNewStyleSheet(resource);
           }
         };
 
