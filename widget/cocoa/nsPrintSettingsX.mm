@@ -531,6 +531,76 @@ nsPrintSettingsX::SetNumCopies(int32_t aCopies) {
 }
 
 NS_IMETHODIMP
+nsPrintSettingsX::GetDuplex(int32_t* aDuplex) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (XRE_IsParentProcess()) {
+    NSDictionary* settings = [mPrintInfo printSettings];
+    NSNumber* value = [settings objectForKey:@"com_apple_print_PrintSettings_PMDuplexing"];
+    if (value) {
+      PMDuplexMode duplexSetting = [value unsignedShortValue];
+      switch (duplexSetting) {
+        case kPMDuplexNone:
+          *aDuplex = kSimplex;
+          break;
+        case kPMDuplexNoTumble:
+          *aDuplex = kDuplexHorizontal;
+          break;
+        case kPMDuplexTumble:
+          *aDuplex = kDuplexVertical;
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unknown duplex value");
+          return NS_ERROR_FAILURE;
+      }
+    } else {
+      // By default a printSettings dictionary doesn't initially contain the
+      // duplex key at all, so this is not an error; its absence just means no
+      // duplexing has been requested, so we return kSimplex.
+      *aDuplex = kSimplex;
+    }
+  } else {
+    nsPrintSettings::GetDuplex(aDuplex);
+  }
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsX::SetDuplex(int32_t aDuplex) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (XRE_IsParentProcess()) {
+    // Map nsIPrintSetting constants to macOS settings:
+    PMDuplexMode duplexSetting;
+    switch (aDuplex) {
+      case kSimplex:
+        duplexSetting = kPMDuplexNone;
+        break;
+      case kDuplexVertical:
+        duplexSetting = kPMDuplexNoTumble;
+        break;
+      case kDuplexHorizontal:
+        duplexSetting = kPMDuplexTumble;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown duplex value");
+        return NS_ERROR_FAILURE;
+    }
+    NSMutableDictionary* settings = [mPrintInfo printSettings];
+    [settings setObject:[NSNumber numberWithUnsignedShort:duplexSetting]
+                 forKey:@"com_apple_print_PrintSettings_PMDuplexing"];
+  } else {
+    nsPrintSettings::SetDuplex(aDuplex);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
 nsPrintSettingsX::SetUnwriteableMarginTop(double aUnwriteableMarginTop) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
