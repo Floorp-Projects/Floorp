@@ -1462,8 +1462,99 @@ var Policies = {
 
   Preferences: {
     onBeforeAddons(manager, param) {
+      const allowedPrefixes = [
+        "accessibility.",
+        "browser.",
+        "datareporting.policy.",
+        "dom.",
+        "extensions.",
+        "geo.",
+        "intl.",
+        "layout.",
+        "media.",
+        "network.",
+        "places.",
+        "print.",
+        "ui.",
+        "widget.",
+      ];
+      const allowedSecurityPrefs = [
+        "security.default_personal_cert",
+        "security.insecure_connection_text.enabled",
+        "security.insecure_connection_text.pbmode.enabled",
+        "security.insecure_field_warning.contextual.enabled",
+        "security.mixed_content.block_active_content",
+        "security.osclientcerts.autoload",
+        "security.ssl.errorReporting.enabled",
+        "security.tls.hello_downgrade_check",
+        "security.warn_submit_secure_to_insecure",
+      ];
+      const blockedPrefs = [];
+
       for (let preference in param) {
-        setAndLockPref(preference, param[preference]);
+        if (blockedPrefs.includes(preference)) {
+          log.error(
+            `Unable to set preference ${preference}. Preference not allowed for security reasons.`
+          );
+          continue;
+        }
+        if (preference.startsWith("security.")) {
+          if (!allowedSecurityPrefs.includes(preference)) {
+            log.error(
+              `Unable to set preference ${preference}. Preference not allowed for security reasons.`
+            );
+            continue;
+          }
+        } else if (
+          !allowedPrefixes.some(prefix => preference.startsWith(prefix))
+        ) {
+          log.error(
+            `Unable to set preference ${preference}. Preference not allowed for stability reasons.`
+          );
+          continue;
+        }
+        if (typeof param[preference] != "object") {
+          // Legacy policy preferences
+          setAndLockPref(preference, param[preference]);
+        } else {
+          if (param[preference].Status == "clear") {
+            Services.prefs.clearUserPref(preference);
+            continue;
+          }
+
+          if (param[preference].Status == "user") {
+            var prefBranch = Services.prefs;
+          } else {
+            prefBranch = Services.prefs.getDefaultBranch("");
+          }
+
+          try {
+            switch (typeof param[preference].Value) {
+              case "boolean":
+                prefBranch.setBoolPref(preference, param[preference].Value);
+                break;
+
+              case "number":
+                if (!Number.isInteger(param[preference].Value)) {
+                  throw new Error(`Non-integer value for ${preference}`);
+                }
+                prefBranch.setIntPref(preference, param[preference].Value);
+                break;
+
+              case "string":
+                prefBranch.setStringPref(preference, param[preference].Value);
+                break;
+            }
+          } catch (e) {
+            log.error(
+              `Unable to set preference ${preference}. Probable type mismatch.`
+            );
+          }
+
+          if (param[preference].Status == "locked") {
+            Services.prefs.lockPref(preference);
+          }
+        }
       }
     },
   },
