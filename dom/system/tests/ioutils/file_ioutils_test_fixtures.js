@@ -81,3 +81,7 @@ async function cleanup(...files) {
     ok(!exists, `Removed temporary file: ${file}`);
   }
 }
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

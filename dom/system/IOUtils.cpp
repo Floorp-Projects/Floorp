@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
-
-#include "ErrorList.h"
 #include "mozilla/dom/IOUtils.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -17,6 +14,7 @@
 #include "nspr/prio.h"
 #include "nspr/private/pprio.h"
 #include "nspr/prtypes.h"
+#include "nspr/prtime.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
 #include "nsReadableUtils.h"
@@ -370,6 +368,24 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
 }
 
 /* static */
+already_AddRefed<Promise> IOUtils::Touch(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const Optional<int64_t>& aModification) {
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  NS_ENSURE_TRUE(!!promise, nullptr);
+
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsAutoString path(aPath);
+
+  Maybe<int64_t> newTime = Nothing();
+  if (aModification.WasPassed()) {
+    newTime = Some(aModification.Value());
+  }
+
+  return RunOnBackgroundThread<int64_t>(promise, &TouchSync, path, newTime);
+}
+
+/* static */
 already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
   if (sShutdownStarted) {
     return nullptr;
@@ -483,6 +499,11 @@ void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
     case NS_ERROR_FILE_DIR_NOT_EMPTY:
       aPromise->MaybeRejectWithOperationError(
           errMsg.refOr("Target directory is not empty"_ns));
+      break;
+    case NS_ERROR_ILLEGAL_INPUT:
+    case NS_ERROR_ILLEGAL_VALUE:
+      aPromise->MaybeRejectWithDataError(
+          errMsg.refOr("Argument is not allowed"_ns));
       break;
     default:
       aPromise->MaybeRejectWithUnknownError(
@@ -1029,6 +1050,54 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   info.mLastModified = static_cast<int64_t>(lastModified);
 
   return info;
+}
+
+/* static */
+Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
+    const nsAString& aPath, const Maybe<int64_t>& aNewModTime) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  RefPtr<nsLocalFile> file = new nsLocalFile();
+  MOZ_TRY(file->InitWithPath(aPath));
+
+  int64_t now = aNewModTime.valueOrFrom([]() {
+    // NB: PR_Now reports time in microseconds since the Unix epoch
+    //     (1970-01-01T00:00:00Z). Both nsLocalFile's lastModifiedTime and
+    //     JavaScript's Date primitive values are to be expressed in
+    //     milliseconds since Epoch.
+    int64_t nowMicros = PR_Now();
+    int64_t nowMillis = nowMicros / PR_USEC_PER_MSEC;
+    return nowMillis;
+  });
+
+  // nsIFile::SetLastModifiedTime will *not* do what is expected when passed 0
+  // as an argument. Rather than setting the time to 0, it will recalculate the
+  // system time and set it to that value instead. We explicit forbid this,
+  // because this side effect is surprising.
+  //
+  // If it ever becomes possible to set a file time to 0, this check should be
+  // removed, though this use case seems rare.
+  if (now == 0) {
+    return Err(
+        IOError(NS_ERROR_ILLEGAL_VALUE)
+            .WithMessage(
+                "Refusing to set the modification time of file(%s) to 0.\n"
+                "To use the current system time, call `touch` with no "
+                "arguments"));
+  }
+
+  nsresult rv = file->SetLastModifiedTime(now);
+
+  if (NS_FAILED(rv)) {
+    IOError err(rv);
+    if (IsFileNotFound(rv)) {
+      return Err(
+          err.WithMessage("Could not touch file(%s) because it does not exist",
+                          NS_ConvertUTF16toUTF8(aPath).get()));
+    }
+    return Err(err);
+  }
+  return now;
 }
 
 NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);
