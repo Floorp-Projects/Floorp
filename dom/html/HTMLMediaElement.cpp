@@ -2004,6 +2004,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
       // guard for this.
       tmp->mMediaStreamRenderer = nullptr;
     }
+    if (tmp->mSecondaryMediaStreamRenderer) {
+      tmp->mSecondaryMediaStreamRenderer->Shutdown();
+      tmp->mSecondaryMediaStreamRenderer = nullptr;
+    }
     if (tmp->mMediaStreamTrackListener) {
       tmp->mSrcStream->UnregisterTrackListener(
           tmp->mMediaStreamTrackListener.get());
@@ -2560,6 +2564,12 @@ void HTMLMediaElement::ResetState() {
     mMediaStreamRenderer->Shutdown();
     mMediaStreamRenderer = nullptr;
   }
+  if (mSecondaryMediaStreamRenderer) {
+    // mSecondaryMediaStreamRenderer, has a strong reference to
+    // the secondary VideoFrameContainer.
+    mSecondaryMediaStreamRenderer->Shutdown();
+    mSecondaryMediaStreamRenderer = nullptr;
+  }
 }
 
 void HTMLMediaElement::SelectResourceWrapper() {
@@ -2696,6 +2706,9 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(dom::MediaTrack* aTrack) {
       if (mMediaStreamRenderer) {
         mMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
       }
+      if (mSecondaryMediaStreamRenderer) {
+        mSecondaryMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+      }
       nsContentUtils::CombineResourcePrincipals(
           &mSrcStreamVideoPrincipal, mSelectedVideoStreamTrack->GetPrincipal());
     }
@@ -2748,6 +2761,9 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(dom::MediaTrack* aTrack) {
                             aTrack->AsVideoTrack()->GetVideoStreamTrack());
       if (mMediaStreamRenderer) {
         mMediaStreamRenderer->RemoveTrack(mSelectedVideoStreamTrack);
+      }
+      if (mSecondaryMediaStreamRenderer) {
+        mSecondaryMediaStreamRenderer->RemoveTrack(mSelectedVideoStreamTrack);
       }
       mSelectedVideoStreamTrack->RemovePrincipalChangeObserver(this);
       mSelectedVideoStreamTrack = nullptr;
@@ -5224,6 +5240,9 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
     if (mMediaStreamRenderer) {
       mMediaStreamRenderer->Start();
     }
+    if (mSecondaryMediaStreamRenderer) {
+      mSecondaryMediaStreamRenderer->Start();
+    }
 
     SetCapturedOutputStreamsEnabled(true);  // Unmute
     // If the input is a media stream, we don't check its data and always regard
@@ -5232,6 +5251,9 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
   } else {
     if (mMediaStreamRenderer) {
       mMediaStreamRenderer->Stop();
+    }
+    if (mSecondaryMediaStreamRenderer) {
+      mSecondaryMediaStreamRenderer->Stop();
     }
     SetCapturedOutputStreamsEnabled(false);  // Mute
   }
@@ -5316,6 +5338,8 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
   }
   mSelectedVideoStreamTrack = nullptr;
 
+  MOZ_ASSERT_IF(mSecondaryMediaStreamRenderer,
+                !mMediaStreamRenderer == !mSecondaryMediaStreamRenderer);
   if (mMediaStreamRenderer) {
     mWatchManager.Unwatch(mPaused,
                           &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
@@ -5330,6 +5354,10 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
                           &HTMLMediaElement::UpdateSrcStreamTime);
     mMediaStreamRenderer->Shutdown();
     mMediaStreamRenderer = nullptr;
+  }
+  if (mSecondaryMediaStreamRenderer) {
+    mSecondaryMediaStreamRenderer->Shutdown();
+    mSecondaryMediaStreamRenderer = nullptr;
   }
 
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener.get());
@@ -7901,6 +7929,27 @@ void HTMLMediaElement::StartMediaControlKeyListenerIfNeeded() {
     return;
   }
   mMediaControlKeyListener->Start();
+}
+
+void HTMLMediaElement::SetSecondaryMediaStreamRenderer(
+    VideoFrameContainer* aContainer,
+    FirstFrameVideoOutput* aFirstFrameOutput /* = nullptr */) {
+  MOZ_ASSERT(mSrcStream);
+  MOZ_ASSERT(mMediaStreamRenderer);
+  if (mSecondaryMediaStreamRenderer) {
+    mSecondaryMediaStreamRenderer->Shutdown();
+    mSecondaryMediaStreamRenderer = nullptr;
+  }
+  if (aContainer) {
+    mSecondaryMediaStreamRenderer = MakeAndAddRef<MediaStreamRenderer>(
+        mAbstractMainThread, aContainer, aFirstFrameOutput, this);
+    if (mSrcStreamIsPlaying) {
+      mSecondaryMediaStreamRenderer->Start();
+    }
+    if (mSelectedVideoStreamTrack) {
+      mSecondaryMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+    }
+  }
 }
 
 void HTMLMediaElement::UpdateMediaControlAfterPictureInPictureModeChanged() {

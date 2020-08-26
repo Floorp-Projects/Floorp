@@ -152,6 +152,8 @@ class HTMLVideoElement final : public HTMLMediaElement {
   void OnSecondaryVideoContainerInstalled(
       const RefPtr<VideoFrameContainer>& aSecondaryContainer) override;
 
+  void OnSecondaryVideoOutputFirstFrameRendered();
+
  protected:
   virtual ~HTMLVideoElement();
 
@@ -175,6 +177,8 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   bool mIsOrientationLocked;
 
+  WatchManager<HTMLVideoElement> mVideoWatchManager;
+
  private:
   bool SetVisualCloneTarget(
       RefPtr<HTMLVideoElement> aVisualCloneTarget,
@@ -192,11 +196,11 @@ class HTMLVideoElement final : public HTMLMediaElement {
   // Set when mVisualCloneTarget is set, and resolved (and unset) when the
   // secondary container has been applied to the underlying resource.
   RefPtr<Promise> mVisualCloneTargetPromise;
-  // Set when mVisualCloneTarget is set and we are playing a MediaStream with a
-  // video track. This is the output wrapping the VideoFrameContainer of
-  // mVisualCloneTarget, so the selected video track can render its frames to
-  // it.
-  RefPtr<SecondaryVideoOutput> mSecondaryVideoOutput;
+  // Set when beginning to clone visually and we are playing a MediaStream.
+  // This is the output wrapping the VideoFrameContainer of mVisualCloneTarget,
+  // so we can render its first frame, and resolve mVisualCloneTargetPromise as
+  // we do.
+  RefPtr<FirstFrameVideoOutput> mSecondaryVideoOutput;
   // If this video is the clone target of another video element,
   // then mVisualCloneSource points to that originating video
   // element.
