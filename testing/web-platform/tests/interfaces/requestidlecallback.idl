@@ -5,7 +5,7 @@
 
 partial interface Window {
   unsigned long requestIdleCallback(IdleRequestCallback callback, optional IdleRequestOptions options = {});
-  void cancelIdleCallback(unsigned long handle);
+  undefined cancelIdleCallback(unsigned long handle);
 };
 
 dictionary IdleRequestOptions {
@@ -17,4 +17,4 @@ dictionary IdleRequestOptions {
   readonly attribute boolean didTimeout;
 };
 
-callback IdleRequestCallback = void (IdleDeadline deadline);
+callback IdleRequestCallback = undefined (IdleDeadline deadline);
