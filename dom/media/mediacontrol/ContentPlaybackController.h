@@ -56,6 +56,7 @@ class MOZ_STACK_CLASS ContentPlaybackController {
   void NotifyMediaSession(const MediaSessionActionDetails& aDetails);
   void NotifyMediaSessionWhenActionIsSupported(MediaSessionAction aAction);
   bool IsMediaSessionActionSupported(MediaSessionAction aAction) const;
+  Maybe<uint64_t> GetActiveMediaSessionId() const;
   MediaSession* GetMediaSession() const;
 
   RefPtr<BrowsingContext> mBC;

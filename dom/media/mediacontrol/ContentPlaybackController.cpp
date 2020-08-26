@@ -75,6 +75,11 @@ bool ContentPlaybackController::IsMediaSessionActionSupported(
                  : false;
 }
 
+Maybe<uint64_t> ContentPlaybackController::GetActiveMediaSessionId() const {
+  RefPtr<WindowContext> wc = mBC->GetTopWindowContext();
+  return wc ? wc->GetActiveMediaSessionContextId() : Nothing();
+}
+
 void ContentPlaybackController::Focus() {
   // Focus is not part of the MediaSession standard, so always use the
   // default behavior and focus the window currently playing media.
@@ -85,9 +90,17 @@ void ContentPlaybackController::Focus() {
 
 void ContentPlaybackController::Play() {
   const MediaSessionAction action = MediaSessionAction::Play;
+  RefPtr<MediaSession> session = GetMediaSession();
   if (IsMediaSessionActionSupported(action)) {
     NotifyMediaSession(action);
-  } else {
+  }
+  // We don't want to arbitrarily call play default handler, because we want to
+  // resume the frame which a user really gets interest in, not all media in the
+  // same page. Therefore, we would only call default handler for `play` when
+  // (1) We don't have an active media session (If we have one, the play action
+  // handler should only be triggered on that session)
+  // (2) Active media session without setting action handler for `play`
+  else if (!GetActiveMediaSessionId() || (session && session->IsActive())) {
     NotifyContentMediaControlKeyReceiver(MediaControlKey::Play);
   }
 }
