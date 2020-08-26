@@ -150,8 +150,9 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
 }
 
 Shape* js::CreateEnvironmentShape(
-    JSContext* cx, AbstractBindingIter<const frontend::ParserAtom>& bi,
-    const JSClass* cls, uint32_t numSlots, uint32_t baseShapeFlags) {
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    AbstractBindingIter<const frontend::ParserAtom>& bi, const JSClass* cls,
+    uint32_t numSlots, uint32_t baseShapeFlags) {
   RootedShape shape(cx,
                     EmptyEnvironmentShape(cx, cls, numSlots, baseShapeFlags));
   if (!shape) {
@@ -163,7 +164,7 @@ Shape* js::CreateEnvironmentShape(
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
-      auto mbJSAtom = bi.name()->toJSAtom(cx);
+      auto mbJSAtom = bi.name()->toJSAtom(cx, compilationInfo);
       if (mbJSAtom.isErr()) {
         return nullptr;
       }
@@ -295,7 +296,8 @@ static UniquePtr<AbstractScopeData<ConcreteScope, AtomT>> NewEmptyScopeData(
 
 template <typename ConcreteScope>
 static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
-    JSContext* cx, ParserScopeData<ConcreteScope>* data) {
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    ParserScopeData<ConcreteScope>* data) {
   using ConcreteData = typename ConcreteScope::Data;
 
   // Convert all scope ParserAtoms to rooted JSAtoms.
@@ -309,7 +311,7 @@ static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
   for (size_t i = 0; i < length; i++) {
     JSAtom* jsatom = nullptr;
     if (names[i].name()) {
-      jsatom = names[i].name()->toJSAtom(cx).unwrapOr(nullptr);
+      jsatom = names[i].name()->toJSAtom(cx, compilationInfo).unwrapOr(nullptr);
       if (jsatom == nullptr) {
         return nullptr;
       }
@@ -2168,7 +2170,8 @@ bool ScopeStencil::createForWithScope(
 template <typename SpecificScopeT>
 UniquePtr<typename SpecificScopeT::Data> ScopeStencil::createSpecificScopeData(
     JSContext* cx, CompilationInfo& compilationInfo) {
-  return LiftParserScopeData<SpecificScopeT>(cx, &data<SpecificScopeT>());
+  return LiftParserScopeData<SpecificScopeT>(cx, compilationInfo,
+                                             &data<SpecificScopeT>());
 }
 
 template <>
@@ -2176,8 +2179,8 @@ UniquePtr<FunctionScope::Data>
 ScopeStencil::createSpecificScopeData<FunctionScope>(
     JSContext* cx, CompilationInfo& compilationInfo) {
   // Allocate a new vm function-scope.
-  UniquePtr<FunctionScope::Data> data =
-      LiftParserScopeData<FunctionScope>(cx, &this->data<FunctionScope>());
+  UniquePtr<FunctionScope::Data> data = LiftParserScopeData<FunctionScope>(
+      cx, compilationInfo, &this->data<FunctionScope>());
   if (!data) {
     return nullptr;
   }
@@ -2192,8 +2195,8 @@ template <>
 UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
     JSContext* cx, CompilationInfo& compilationInfo) {
   // Allocate a new vm module-scope.
-  UniquePtr<ModuleScope::Data> data =
-      LiftParserScopeData<ModuleScope>(cx, &this->data<ModuleScope>());
+  UniquePtr<ModuleScope::Data> data = LiftParserScopeData<ModuleScope>(
+      cx, compilationInfo, &this->data<ModuleScope>());
   if (!data) {
     return nullptr;
   }

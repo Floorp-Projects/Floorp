@@ -1633,8 +1633,9 @@ Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                               uint32_t baseShapeFlags);
 
 Shape* CreateEnvironmentShape(
-    JSContext* cx, AbstractBindingIter<const frontend::ParserAtom>& bi,
-    const JSClass* cls, uint32_t numSlots, uint32_t baseShapeFlags);
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    AbstractBindingIter<const frontend::ParserAtom>& bi, const JSClass* cls,
+    uint32_t numSlots, uint32_t baseShapeFlags);
 
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                              uint32_t numSlots, uint32_t baseShapeFlags);

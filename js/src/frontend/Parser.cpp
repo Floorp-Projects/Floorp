@@ -832,7 +832,8 @@ bool PerHandlerParser<ParseHandler>::
       // TODO-Stencil
       //   After closed-over-bindings are snapshotted in the handler,
       //   remove this.
-      auto mbNameId = compilationInfo_.parserAtoms.internJSAtom(cx_, name);
+      auto mbNameId = compilationInfo_.parserAtoms.internJSAtom(
+          cx_, this->getCompilationInfo(), name);
       if (mbNameId.isErr()) {
         return false;
       }
