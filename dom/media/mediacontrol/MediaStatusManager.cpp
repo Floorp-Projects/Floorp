@@ -146,6 +146,11 @@ void MediaStatusManager::SetActiveMediaSessionContextId(
       *mActiveMediaSessionContextId);
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
   mSupportedActionsChangedEvent.Notify(GetSupportedActions());
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "active-media-session-changed", nullptr);
+    }
+  }
 }
 
 void MediaStatusManager::ClearActiveMediaSessionContextIdIfNeeded() {
@@ -157,6 +162,11 @@ void MediaStatusManager::ClearActiveMediaSessionContextIdIfNeeded() {
   StoreMediaSessionContextIdOnWindowContext();
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
   mSupportedActionsChangedEvent.Notify(GetSupportedActions());
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "active-media-session-changed", nullptr);
+    }
+  }
 }
 
 void MediaStatusManager::StoreMediaSessionContextIdOnWindowContext() {
