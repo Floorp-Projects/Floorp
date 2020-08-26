@@ -423,34 +423,30 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
       aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::height,
                                      aSizeInfo.height, true);
     }
-  } else {
-    nsCOMPtr<nsStyledElement> inlineStyleContent = do_QueryInterface(aContent);
-    if (inlineStyleContent) {
-      nsICSSDeclaration* decl = inlineStyleContent->Style();
+  } else if (RefPtr<nsStyledElement> inlineStyleContent =
+                 nsStyledElement::FromNode(aContent)) {
+    nsICSSDeclaration* decl = inlineStyleContent->Style();
 
-      if (aOriginalSizeInfo) {
-        decl->GetPropertyValue("width"_ns, aOriginalSizeInfo->width);
-        decl->GetPropertyValue("height"_ns, aOriginalSizeInfo->height);
-      }
+    if (aOriginalSizeInfo) {
+      decl->GetPropertyValue("width"_ns, aOriginalSizeInfo->width);
+      decl->GetPropertyValue("height"_ns, aOriginalSizeInfo->height);
+    }
 
-      // only set the property if the element could have changed in that
-      // direction
-      if (aDirection.mHorizontal) {
-        NS_ConvertUTF16toUTF8 widthstr(aSizeInfo.width);
-        if (!widthstr.IsEmpty() &&
-            !Substring(widthstr, widthstr.Length() - 2, 2).EqualsLiteral("px"))
-          widthstr.AppendLiteral("px");
-        decl->SetProperty("width"_ns, widthstr, EmptyString(), IgnoreErrors());
-      }
-      if (aDirection.mVertical) {
-        NS_ConvertUTF16toUTF8 heightstr(aSizeInfo.height);
-        if (!heightstr.IsEmpty() &&
-            !Substring(heightstr, heightstr.Length() - 2, 2)
-                 .EqualsLiteral("px"))
-          heightstr.AppendLiteral("px");
-        decl->SetProperty("height"_ns, heightstr, EmptyString(),
-                          IgnoreErrors());
-      }
+    // only set the property if the element could have changed in that
+    // direction
+    if (aDirection.mHorizontal) {
+      NS_ConvertUTF16toUTF8 widthstr(aSizeInfo.width);
+      if (!widthstr.IsEmpty() &&
+          !Substring(widthstr, widthstr.Length() - 2, 2).EqualsLiteral("px"))
+        widthstr.AppendLiteral("px");
+      decl->SetProperty("width"_ns, widthstr, EmptyString(), IgnoreErrors());
+    }
+    if (aDirection.mVertical) {
+      NS_ConvertUTF16toUTF8 heightstr(aSizeInfo.height);
+      if (!heightstr.IsEmpty() &&
+          !Substring(heightstr, heightstr.Length() - 2, 2).EqualsLiteral("px"))
+        heightstr.AppendLiteral("px");
+      decl->SetProperty("height"_ns, heightstr, EmptyString(), IgnoreErrors());
     }
   }
 }

@@ -400,14 +400,16 @@ Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
     NS_WARNING("EditorBase::CreateHTMLContent(nsGkAtoms::span) failed");
     return false;
   }
-  nsCOMPtr<nsStyledElement> styledNewSpanElement =
-      do_QueryInterface(newSpanElement);
+  nsStyledElement* styledNewSpanElement =
+      nsStyledElement::FromNode(newSpanElement);
   if (!styledNewSpanElement) {
     return false;
   }
+  // MOZ_KnownLive(*styledNewSpanElement): It's newSpanElement whose type is
+  // RefPtr.
   Result<int32_t, nsresult> result =
       mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithoutTransaction(
-          *styledNewSpanElement, aProperty, aAttribute, aValue);
+          MOZ_KnownLive(*styledNewSpanElement), aProperty, aAttribute, aValue);
   if (result.isErr()) {
     // The call shouldn't return destroyed error because it must be
     // impossible to run script with modifying the new orphan node.
@@ -417,7 +419,7 @@ Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
     }
     return false;
   }
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
+  nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement);
   if (!styledElement) {
     return false;
   }
@@ -675,11 +677,14 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
     }
 
     // Add the CSS styles corresponding to the HTML style request
-    if (nsCOMPtr<nsStyledElement> spanStyledElement =
-            do_QueryInterface(spanElement)) {
+    if (nsStyledElement* spanStyledElement =
+            nsStyledElement::FromNode(spanElement)) {
+      // MOZ_KnownLive(*spanStyledElement): It's spanElement whose type is
+      // RefPtr.
       Result<int32_t, nsresult> result =
           mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-              *spanStyledElement, &aProperty, aAttribute, &aValue);
+              MOZ_KnownLive(*spanStyledElement), &aProperty, aAttribute,
+              &aValue);
       if (result.isErr()) {
         if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
           NS_WARNING(
@@ -1215,12 +1220,13 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
   if (CSSEditUtils::IsCSSEditableProperty(&aElement, aProperty, aAttribute) &&
       CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(aElement, aProperty,
                                                      aAttribute)) {
-    if (nsCOMPtr<nsStyledElement> styledElement =
-            do_QueryInterface(&aElement)) {
+    if (nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement)) {
       // If aElement has CSS declaration of the given style, remove it.
+      // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must be
+      // guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
       nsresult rv =
           mCSSEditUtils->RemoveCSSEquivalentToHTMLStyleWithTransaction(
-              *styledElement, aProperty, aAttribute, nullptr);
+              MOZ_KnownLive(*styledElement), aProperty, aAttribute, nullptr);
       if (rv == NS_ERROR_EDITOR_DESTROYED) {
         NS_WARNING(
             "CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithTransaction() "

@@ -523,6 +523,11 @@ class nsINode : public mozilla::dom::EventTarget {
   inline const mozilla::dom::Element* AsElement() const;
 
   /**
+   * Return whether the node is an nsStyledElement instance or not.
+   */
+  virtual bool IsStyledElement() const { return false; }
+
+  /**
    * Return this node as nsIContent.  Should only be used for nodes for which
    * IsContent() is true.
    *
