@@ -77,12 +77,6 @@ function evalInTab(tab, string) {
   return jsonrpc(tab, "_eval", [string]);
 }
 
-function callInTab(tab, name) {
-  info("Calling function with name '" + name + "' in tab.");
-
-  return jsonrpc(tab, "call", [name, Array.prototype.slice.call(arguments, 2)]);
-}
-
 function connect(client) {
   info("Connecting client.");
   return client.connect();
