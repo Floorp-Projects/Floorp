@@ -382,10 +382,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx,
 }
 
 ScriptStencil& FunctionBox::functionStencil() const {
-  if (isTopLevel_ == TopLevelFunction::Yes) {
-    return compilationInfo_.topLevel;
-  }
-  return compilationInfo_.funcData[funcDataIndex_];
+  return compilationInfo_.scriptData[funcDataIndex_];
 }
 
 void SharedContext::copyScriptFields(ScriptStencil& stencil) {

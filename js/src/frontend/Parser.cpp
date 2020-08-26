@@ -252,13 +252,11 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     TopLevelFunction isTopLevel) {
   MOZ_ASSERT(funNode);
 
-  FunctionIndex index = FunctionIndex(compilationInfo_.funcData.length());
+  FunctionIndex index = FunctionIndex(compilationInfo_.scriptData.length());
   MOZ_ASSERT_IF(isTopLevel == TopLevelFunction::Yes,
-                index == CompilationInfo::TopLevelFunctionIndex);
+                index == CompilationInfo::TopLevelIndex);
 
-  // Allocate `funcData` item even if isTopLevel == Yes, to use same index
-  // with `compilationInfo_.functions` and `compilationInfo_.asmJS`.
-  if (!compilationInfo_.funcData.emplaceBack(cx_)) {
+  if (!compilationInfo_.scriptData.emplaceBack(cx_)) {
     return nullptr;
   }
 
@@ -11480,17 +11478,17 @@ template class Parser<SyntaxParseHandler, char16_t>;
 
 CompilationInfo::RewindToken CompilationInfo::getRewindToken() {
   MOZ_ASSERT(functions.empty());
-  return RewindToken{funcData.length(), asmJS.count()};
+  return RewindToken{scriptData.length(), asmJS.count()};
 }
 
 void CompilationInfo::rewind(const CompilationInfo::RewindToken& pos) {
   if (asmJS.count() != pos.asmJSCount) {
-    for (size_t i = pos.funcDataLength; i < funcData.length(); i++) {
+    for (size_t i = pos.scriptDataLength; i < scriptData.length(); i++) {
       asmJS.remove(FunctionIndex(i));
     }
     MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
   }
-  funcData.shrinkTo(pos.funcDataLength);
+  scriptData.shrinkTo(pos.scriptDataLength);
 }
 
 }  // namespace js::frontend

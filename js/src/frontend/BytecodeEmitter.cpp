@@ -2478,7 +2478,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   // Create a Stencil and convert it into a JSScript.
-  return intoScriptStencil(&compilationInfo.topLevel);
+  return intoScriptStencil(
+      &compilationInfo.scriptData[CompilationInfo::TopLevelIndex]);
 }
 
 js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
