@@ -2715,7 +2715,7 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
 }
 
 template <typename S>
-static U16 textureLinearPackedR8(S sampler, ivec2 i, int32_t zoffset) {
+static inline U16 textureLinearPackedR8(S sampler, ivec2 i, int32_t zoffset) {
   assert(sampler->format == TextureFormat::R8);
   ivec2 frac = i & (I32)0x7F;
   i >>= 7;

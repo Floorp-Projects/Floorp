@@ -21,7 +21,17 @@ class RenderTextureHostSWGL : public RenderTextureHost {
 
   void UnlockSWGL() override;
 
+  RenderTextureHostSWGL* AsRenderTextureHostSWGL() override { return this; }
+
   virtual size_t GetPlaneCount() = 0;
+
+  gfx::SurfaceFormat GetFormat() const {
+    return !mPlanes.empty() ? mPlanes[0].mFormat : gfx::SurfaceFormat::UNKNOWN;
+  }
+
+  virtual gfx::YUVColorSpace GetYUVColorSpace() const {
+    return gfx::YUVColorSpace::UNKNOWN;
+  }
 
   struct PlaneInfo {
     explicit PlaneInfo(GLuint aTexture) : mTexture(aTexture) {}
@@ -37,10 +47,19 @@ class RenderTextureHostSWGL : public RenderTextureHost {
 
   virtual void UnmapPlanes() = 0;
 
+  // Lock this texture host as an attached external image for a SWGL compositor
+  // surface. See swgl_bindings.rs for a description of the resulting
+  // WrSWGLCompositeSurfaceInfo. This is paired with a call to UnlockSWGL when
+  // composition is done.
+  bool LockSWGLCompositeSurface(void* aContext,
+                                wr::WrSWGLCompositeSurfaceInfo* aInfo);
+
  protected:
   bool mLocked = false;
   void* mContext = nullptr;
   std::vector<PlaneInfo> mPlanes;
+
+  bool SetContext(void* aContext);
 
   bool UpdatePlanes(wr::ImageRendering aRendering);
 

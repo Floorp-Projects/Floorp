@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RenderTextureHostSWGL.h"
+#include "RenderThread.h"
 
 namespace mozilla {
 namespace wr {
@@ -63,14 +64,18 @@ bool RenderTextureHostSWGL::UpdatePlanes(wr::ImageRendering aRendering) {
   return true;
 }
 
-wr::WrExternalImage RenderTextureHostSWGL::LockSWGL(
-    uint8_t aChannelIndex, void* aContext, wr::ImageRendering aRendering) {
+bool RenderTextureHostSWGL::SetContext(void* aContext) {
   if (mContext != aContext) {
     CleanupPlanes();
     mContext = aContext;
     wr_swgl_reference_context(mContext);
   }
-  if (!mContext) {
+  return mContext != nullptr;
+}
+
+wr::WrExternalImage RenderTextureHostSWGL::LockSWGL(
+    uint8_t aChannelIndex, void* aContext, wr::ImageRendering aRendering) {
+  if (!SetContext(aContext)) {
     return InvalidToWrExternalImage();
   }
   if (!mLocked) {
@@ -110,6 +115,67 @@ void RenderTextureHostSWGL::CleanupPlanes() {
 }
 
 RenderTextureHostSWGL::~RenderTextureHostSWGL() { CleanupPlanes(); }
+
+bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
+    void* aContext, wr::WrSWGLCompositeSurfaceInfo* aInfo) {
+  if (!SetContext(aContext)) {
+    return false;
+  }
+  if (!mLocked) {
+    if (!UpdatePlanes(mCachedRendering)) {
+      return false;
+    }
+    mLocked = true;
+  }
+  MOZ_ASSERT(mPlanes.size() <= 3);
+  for (size_t i = 0; i < mPlanes.size(); i++) {
+    aInfo->textures[i] = mPlanes[i].mTexture;
+  }
+  switch (mPlanes[0].mFormat) {
+    case gfx::SurfaceFormat::YUV:
+    case gfx::SurfaceFormat::NV12: {
+      aInfo->yuv_planes = mPlanes.size();
+      auto colorSpace = GetYUVColorSpace();
+      MOZ_ASSERT(colorSpace != gfx::YUVColorSpace::UNKNOWN);
+      aInfo->color_space = ToWrYuvColorSpace(colorSpace);
+      break;
+    }
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8:
+      break;
+    default:
+      MOZ_RELEASE_ASSERT(false, "Unhandled external image format");
+      break;
+  }
+  aInfo->size.width = mPlanes[0].mSize.width;
+  aInfo->size.height = mPlanes[0].mSize.height;
+  return true;
+}
+
+bool wr_swgl_lock_composite_surface(void* aContext, wr::ExternalImageId aId,
+                                    wr::WrSWGLCompositeSurfaceInfo* aInfo) {
+  RenderTextureHost* texture = RenderThread::Get()->GetRenderTexture(aId);
+  if (!texture) {
+    return false;
+  }
+  RenderTextureHostSWGL* swglTex = texture->AsRenderTextureHostSWGL();
+  if (!swglTex) {
+    return false;
+  }
+  return swglTex->LockSWGLCompositeSurface(aContext, aInfo);
+}
+
+void wr_swgl_unlock_composite_surface(void* aContext, wr::ExternalImageId aId) {
+  RenderTextureHost* texture = RenderThread::Get()->GetRenderTexture(aId);
+  if (!texture) {
+    return;
+  }
+  RenderTextureHostSWGL* swglTex = texture->AsRenderTextureHostSWGL();
+  if (!swglTex) {
+    return;
+  }
+  swglTex->UnlockSWGL();
+}
 
 }  // namespace wr
 }  // namespace mozilla

@@ -27,6 +27,7 @@ class RenderDXGITextureHostOGL;
 class RenderMacIOSurfaceTextureHostOGL;
 class RenderBufferTextureHost;
 class RenderTextureHostOGL;
+class RenderTextureHostSWGL;
 
 void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
                                   GLenum aBindTarget, GLuint aBindTexture,
@@ -74,6 +75,8 @@ class RenderTextureHost {
   AsRenderMacIOSurfaceTextureHostOGL() {
     return nullptr;
   }
+
+  virtual RenderTextureHostSWGL* AsRenderTextureHostSWGL() { return nullptr; }
 
  protected:
   virtual ~RenderTextureHost();
