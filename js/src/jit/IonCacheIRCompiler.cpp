@@ -974,7 +974,7 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(
 }
 
 bool IonCacheIRCompiler::emitCallNativeGetterResult(
-    ValOperandId receiverId, uint32_t getterOffset,
+    ValOperandId receiverId, uint32_t getterOffset, bool sameRealm,
     uint32_t nargsAndFlagsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
@@ -1017,7 +1017,7 @@ bool IonCacheIRCompiler::emitCallNativeGetterResult(
   }
   masm.enterFakeExitFrame(argJSContext, scratch, ExitFrameType::IonOOLNative);
 
-  if (target->realm() != cx_->realm()) {
+  if (!sameRealm) {
     masm.switchToRealm(target->realm(), scratch);
   }
 
@@ -1033,7 +1033,7 @@ bool IonCacheIRCompiler::emitCallNativeGetterResult(
   // Test for failure.
   masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
-  if (target->realm() != cx_->realm()) {
+  if (!sameRealm) {
     masm.switchToRealm(cx_->realm(), ReturnReg);
   }
 
