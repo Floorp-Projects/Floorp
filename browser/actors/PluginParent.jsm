@@ -736,9 +736,6 @@ class PluginParent extends JSWindowActorParent {
     let crashurl = Services.urlFormatter.formatURLPref("app.support.baseURL");
     crashurl += "plugin-crashed-notificationbar";
     link.href = crashurl;
-    // Append a blank text node to make sure we don't put
-    // the link right next to the end of the message text.
-    notification.messageText.appendChild(new Text(" "));
     notification.messageText.appendChild(link);
   }
 }
