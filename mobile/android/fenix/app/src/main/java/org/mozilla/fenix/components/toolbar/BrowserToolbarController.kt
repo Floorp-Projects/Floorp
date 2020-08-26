@@ -23,6 +23,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.isUrl
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -79,7 +80,7 @@ class DefaultBrowserToolbarController(
 ) : BrowserToolbarController {
 
     private val useNewSearchExperience
-        get() = activity.settings().useNewSearchExperience
+        get() = FeatureFlags.newSearchExperience
 
     private val currentSession
         get() = customTabSession ?: activity.components.core.sessionManager.selectedSession

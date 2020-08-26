@@ -74,6 +74,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -444,7 +445,7 @@ class HomeFragment : Fragment() {
 
         updateTabCounter(requireComponents.core.store.state)
 
-        if (args.focusOnAddressBar && requireContext().settings().useNewSearchExperience) {
+        if (args.focusOnAddressBar && FeatureFlags.newSearchExperience) {
             navigateToSearch()
         }
     }
@@ -705,7 +706,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToSearch() {
-        val directions = if (requireContext().settings().useNewSearchExperience) {
+        val directions = if (FeatureFlags.newSearchExperience) {
             HomeFragmentDirections.actionGlobalSearchDialog(
                 sessionId = null
             )

@@ -25,12 +25,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.secret_settings_preferences, rootKey)
 
-        requirePreference<SwitchPreference>(R.string.pref_key_use_new_search_experience).apply {
-            isVisible = FeatureFlags.newSearchExperience
-            isChecked = context.settings().useNewSearchExperience
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_enable_top_frecent_sites).apply {
             isVisible = FeatureFlags.topFrecentSite
             isChecked = context.settings().showTopFrecentSites

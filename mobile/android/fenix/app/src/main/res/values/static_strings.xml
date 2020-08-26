@@ -32,8 +32,6 @@
 
     <!-- Label for the secret settings preference -->
     <string name="preferences_debug_settings">Secret Settings</string>
-    <!-- Label for the new search experience preference -->
-    <string name="preferences_debug_settings_use_new_search_experience">Use New Search Experience</string>
     <!-- Label for the show top frequently visited sites preference -->
     <string name="preferences_debug_settings_enable_top_frecent_sites">Show Top Frequently Visited Sites</string>
     <!-- Label for the wait until first paint preference -->
