@@ -7835,7 +7835,8 @@ nsresult nsContentUtils::SendMouseEvent(
     exitFrom = Some(WidgetMouseEvent::eChild);
   } else if (aType.EqualsLiteral("mousecancel")) {
     msg = eMouseExitFromWidget;
-    exitFrom = Some(WidgetMouseEvent::eTopLevel);
+    exitFrom = Some(XRE_IsParentProcess() ? WidgetMouseEvent::eTopLevel
+                                          : WidgetMouseEvent::ePuppet);
   } else if (aType.EqualsLiteral("mouselongtap")) {
     msg = eMouseLongTap;
   } else if (aType.EqualsLiteral("contextmenu")) {
