@@ -557,15 +557,12 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
   if (mDecoder) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
-    if (container) {
-      mDecoder->SetSecondaryVideoContainer(container);
-    }
+    mDecoder->SetSecondaryVideoContainer(container);
     UpdateMediaControlAfterPictureInPictureModeChanged();
   } else if (mSrcStream) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
     if (container && mSelectedVideoStreamTrack) {
-      MOZ_DIAGNOSTIC_ASSERT(!mSecondaryVideoOutput);
       mSecondaryVideoOutput = MakeRefPtr<SecondaryVideoOutput>(
           this, container, mAbstractMainThread);
       mSelectedVideoStreamTrack->AddVideoOutput(mSecondaryVideoOutput);
@@ -580,10 +577,8 @@ void HTMLVideoElement::EndCloningVisually() {
   if (mDecoder) {
     mDecoder->SetSecondaryVideoContainer(nullptr);
   } else if (mSrcStream) {
-    if (mSecondaryVideoOutput &&
-        mVisualCloneTarget->mSelectedVideoStreamTrack) {
-      mVisualCloneTarget->mSelectedVideoStreamTrack->RemoveVideoOutput(
-          mSecondaryVideoOutput);
+    if (mSecondaryVideoOutput && mSelectedVideoStreamTrack) {
+      mSelectedVideoStreamTrack->RemoveVideoOutput(mSecondaryVideoOutput);
       mSecondaryVideoOutput->Forget();
       mSecondaryVideoOutput = nullptr;
     }
