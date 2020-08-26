@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.settings.deletebrowsingdata
 
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -13,6 +14,7 @@ import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tabs.TabsUseCases
@@ -41,6 +43,7 @@ class DeleteAndQuitTest {
     private val tabUseCases: TabsUseCases = mockk(relaxed = true)
     private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
     private val permissionStorage: PermissionStorage = mockk(relaxed = true)
+    private val iconsStorage: BrowserIcons = mockk()
     private val engine: Engine = mockk(relaxed = true)
     private val removeAllTabsUseCases: TabsUseCases.RemoveAllTabsUseCase = mockk(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
@@ -53,6 +56,7 @@ class DeleteAndQuitTest {
         every { tabUseCases.removeAllTabs } returns removeAllTabsUseCases
         every { activity.components.core.engine } returns engine
         every { activity.components.settings } returns settings
+        every { activity.components.core.icons } returns iconsStorage
     }
 
     @Test
@@ -69,8 +73,6 @@ class DeleteAndQuitTest {
         }
 
         verify(exactly = 0) {
-            historyStorage
-
             engine.clearData(
                 Engine.BrowsingData.select(
                     Engine.BrowsingData.COOKIES
@@ -80,6 +82,11 @@ class DeleteAndQuitTest {
             permissionStorage.deleteAllSitePermissions()
 
             engine.clearData(Engine.BrowsingData.allCaches())
+        }
+
+        coVerify(exactly = 0) {
+            historyStorage.deleteEverything()
+            iconsStorage.clear()
         }
     }
 
@@ -115,9 +122,12 @@ class DeleteAndQuitTest {
 
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
 
-            historyStorage
-
             activity.finish()
+        }
+
+        coVerify {
+            historyStorage.deleteEverything()
+            iconsStorage.clear()
         }
     }
 }

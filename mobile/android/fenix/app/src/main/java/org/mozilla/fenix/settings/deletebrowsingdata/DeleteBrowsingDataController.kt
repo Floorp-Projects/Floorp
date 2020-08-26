@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.deletebrowsingdata
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.tabs.TabsUseCases
@@ -24,6 +25,7 @@ class DefaultDeleteBrowsingDataController(
     private val removeAllTabs: TabsUseCases.RemoveAllTabsUseCase,
     private val historyStorage: HistoryStorage,
     private val permissionStorage: PermissionStorage,
+    private val iconsStorage: BrowserIcons,
     private val engine: Engine,
     private val coroutineContext: CoroutineContext = Dispatchers.Main
 ) : DeleteBrowsingDataController {
@@ -38,6 +40,7 @@ class DefaultDeleteBrowsingDataController(
         withContext(coroutineContext) {
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
             historyStorage.deleteEverything()
+            iconsStorage.clear()
         }
     }
 

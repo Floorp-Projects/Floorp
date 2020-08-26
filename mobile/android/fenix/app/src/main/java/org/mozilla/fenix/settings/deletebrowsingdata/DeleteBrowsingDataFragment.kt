@@ -45,6 +45,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
             requireContext().components.useCases.tabsUseCases.removeAllTabs,
             requireContext().components.core.historyStorage,
             requireContext().components.core.permissionStorage,
+            requireContext().components.core.icons,
             requireContext().components.core.engine
         )
         settings = requireContext().settings()

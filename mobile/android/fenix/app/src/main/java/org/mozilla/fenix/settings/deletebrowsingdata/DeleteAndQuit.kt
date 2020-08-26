@@ -26,6 +26,7 @@ fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope, snackbar: 
             activity.components.useCases.tabsUseCases.removeAllTabs,
             activity.components.core.historyStorage,
             activity.components.core.permissionStorage,
+            activity.components.core.icons,
             activity.components.core.engine,
             coroutineContext
         )
