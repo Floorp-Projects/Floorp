@@ -348,6 +348,13 @@ class PackageFrontend(MachCommandBase):
                 if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              _COULD_NOT_FIND_ARTIFACTS_TEMPLATE)
+                    if 'TASKCLUSTER_ROOT_URL' in os.environ:
+                        self.log(logging.ERROR, 'artifact', {'build': user_value},
+                                 'Due to the environment variable TASKCLUSTER_ROOT_URL '
+                                 'being set, the artifacts were expected to be found '
+                                 'on {}. If this was unintended, unset '
+                                 'TASKCLUSTER_ROOT_URL and try again.'.format(
+                                     os.environ['TASKCLUSTER_ROOT_URL']))
                     return 1
 
                 self.log(logging.DEBUG, 'artifact',
