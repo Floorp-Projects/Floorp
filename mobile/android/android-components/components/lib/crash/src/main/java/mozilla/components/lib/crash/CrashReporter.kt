@@ -58,7 +58,7 @@ import mozilla.components.support.base.log.logger.Logger
  *                            happened. This gives the app the opportunity to show an in-app confirmation UI before
  *                            sending a crash report. See component README for details.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class CrashReporter(
     context: Context,
     private val services: List<CrashReporterService> = emptyList(),
@@ -67,12 +67,15 @@ class CrashReporter(
     var enabled: Boolean = true,
     internal val promptConfiguration: PromptConfiguration = PromptConfiguration(),
     private val nonFatalCrashIntent: PendingIntent? = null,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    private val maxBreadCrumbs: Int = 30
 ) : CrashReporting {
     private val database: CrashDatabase by lazy { CrashDatabase.get(context) }
 
     internal val logger = Logger("mozac/CrashReporter")
-    internal val crashBreadcrumbs = BreadcrumbPriorityQueue(BREADCRUMB_MAX_NUM)
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val crashBreadcrumbs = ArrayList<Breadcrumb>()
 
     init {
         if (services.isEmpty() and telemetryServices.isEmpty()) {
@@ -155,7 +158,7 @@ class CrashReporter(
         logger.info("Caught Exception report submitted to ${services.size} services")
         return scope.launch {
             services.forEach {
-                it.report(reportThrowable, crashBreadcrumbs.toSortedArrayList())
+                it.report(reportThrowable, crashBreadcrumbs)
             }
         }
     }
@@ -170,6 +173,10 @@ class CrashReporter(
      * ```
      */
     override fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {
+        if (crashBreadcrumbs.size >= maxBreadCrumbs) {
+            crashBreadcrumbs.removeAt(0)
+        }
+
         crashBreadcrumbs.add(breadcrumb)
     }
 
@@ -288,9 +295,6 @@ class CrashReporter(
     )
 
     companion object {
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal const val BREADCRUMB_MAX_NUM = 20
-
         @Volatile
         private var instance: CrashReporter? = null
 

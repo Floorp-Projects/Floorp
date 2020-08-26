@@ -35,6 +35,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
+import java.lang.Thread.sleep
 import java.lang.reflect.Modifier
 
 @ExperimentalCoroutinesApi
@@ -616,6 +617,126 @@ class CrashReporterTest {
     fun `CrashReporter instance writes are visible across threads`() {
         val instanceField = CrashReporter::class.java.getDeclaredField("instance")
         assertTrue(Modifier.isVolatile(instanceField.modifiers))
+    }
+
+    @Test
+    fun `Breadcrumbs stores only max number of breadcrumbs`() {
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testLevel = Breadcrumb.Level.CRITICAL
+        val testType = Breadcrumb.Type.USER
+
+        var crashReporter = CrashReporter(
+            context = testContext,
+            services = listOf(mock()),
+            maxBreadCrumbs = 5
+        )
+
+        repeat(10) {
+            crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
+        }
+        assertEquals(crashReporter.crashBreadcrumbs.size, 5)
+
+        crashReporter = CrashReporter(
+            context = testContext,
+            services = listOf(mock()),
+            maxBreadCrumbs = 5
+        )
+        repeat(15) {
+            crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
+        }
+        assertEquals(crashReporter.crashBreadcrumbs.size, 5)
+    }
+
+    @Test
+    fun `Breadcrumb priority queue stores the latest breadcrumbs`() {
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testType = Breadcrumb.Type.USER
+        val maxNum = 10
+
+        var crashReporter = CrashReporter(
+            context = testContext,
+            services = listOf(mock()),
+            maxBreadCrumbs = maxNum
+        )
+
+        repeat(maxNum) {
+            crashReporter.recordCrashBreadcrumb(
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.CRITICAL, testType)
+            )
+            sleep(10) /* make sure time elapsed */
+        }
+
+        for (i in 0 until maxNum) {
+            assertEquals(crashReporter.crashBreadcrumbs.elementAt(i).level, Breadcrumb.Level.CRITICAL)
+        }
+
+        var time = crashReporter.crashBreadcrumbs[0].date
+        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
+            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
+            time = crashReporter.crashBreadcrumbs[i].date
+        }
+
+        repeat(maxNum) {
+            crashReporter.recordCrashBreadcrumb(
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType)
+            )
+            sleep(10) /* make sure time elapsed */
+        }
+
+        for (i in 0 until maxNum) {
+            assertEquals(crashReporter.crashBreadcrumbs.elementAt(i).level, Breadcrumb.Level.DEBUG)
+        }
+
+        time = crashReporter.crashBreadcrumbs[0].date
+        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
+            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
+            time = crashReporter.crashBreadcrumbs[i].date
+        }
+    }
+
+    @Test
+    fun `Breadcrumb priority queue output list result is sorted by time`() {
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testType = Breadcrumb.Type.USER
+        val maxNum = 10
+
+        var crashReporter = CrashReporter(
+            context = testContext,
+            services = listOf(mock()),
+            maxBreadCrumbs = 5
+        )
+
+        repeat(maxNum) {
+            crashReporter.recordCrashBreadcrumb(
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType)
+            )
+            sleep(10) /* make sure time elapsed */
+        }
+
+        var time = crashReporter.crashBreadcrumbs[0].date
+        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
+            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
+            time = crashReporter.crashBreadcrumbs[i].date
+        }
+
+        repeat(maxNum / 2) {
+            crashReporter.recordCrashBreadcrumb(
+                Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.INFO, testType)
+            )
+            sleep(10) /* make sure time elapsed */
+        }
+
+        time = crashReporter.crashBreadcrumbs[0].date
+        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
+            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
+            time = crashReporter.crashBreadcrumbs[i].date
+        }
     }
 }
 
