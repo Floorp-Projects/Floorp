@@ -85,7 +85,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
         }
         val onDismiss: () -> Unit = {
-            geckoResult.complete(prompt.dismiss())
+            prompt.dismissSafely(geckoResult)
         }
 
         geckoEngineSession.notifyObservers {
@@ -110,7 +110,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
         }
         val onDismiss: () -> Unit = {
-            geckoResult.complete(prompt.dismiss())
+            prompt.dismissSafely(geckoResult)
         }
 
         // Exactly one of `httpRealm` and `formSubmitURL` must be present to be a valid login entry.
@@ -174,7 +174,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         prompt: PromptDelegate.AlertPrompt
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
-        val onConfirm: () -> Unit = { geckoResult.complete(prompt.dismiss()) }
+        val onConfirm: () -> Unit = { prompt.dismissSafely(geckoResult) }
         val title = prompt.title ?: ""
         val message = prompt.message ?: ""
 
@@ -219,7 +219,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
 
         val onDismiss: () -> Unit = {
-            geckoResult.complete(prompt.dismiss())
+            prompt.dismissSafely(geckoResult)
         }
 
         geckoEngineSession.notifyObservers {
@@ -298,7 +298,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 }
             }
 
-        val onDismiss: () -> Unit = { geckoResult.complete(geckoPrompt.dismiss()) }
+        val onDismiss: () -> Unit = { geckoPrompt.dismissSafely(geckoResult) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
@@ -328,7 +328,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val title = prompt.title ?: ""
         val inputLabel = prompt.message ?: ""
         val inputValue = prompt.defaultValue ?: ""
-        val onDismiss: () -> Unit = { geckoResult.complete(prompt.dismiss()) }
+        val onDismiss: () -> Unit = { prompt.dismissSafely(geckoResult) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
@@ -352,7 +352,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirm: (String) -> Unit = { geckoResult.complete(prompt.confirm(it)) }
-        val onDismiss: () -> Unit = { geckoResult.complete(prompt.dismiss()) }
+        val onDismiss: () -> Unit = { prompt.dismissSafely(geckoResult) }
 
         val defaultColor = prompt.defaultValue ?: ""
 
@@ -403,7 +403,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val geckoResult = GeckoResult<PromptResponse>()
         val onSuccess = { geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.SUCCESS)) }
         val onFailure = { geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.FAILURE)) }
-        val onDismiss = { geckoResult.complete(prompt.dismiss()) }
+        val onDismiss = { prompt.dismissSafely(geckoResult) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
@@ -437,7 +437,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             geckoResult.complete(prompt.confirm(PromptDelegate.ButtonPrompt.Type.NEGATIVE))
         }
 
-        val onDismiss: (Boolean) -> Unit = { geckoResult.complete(prompt.dismiss()) }
+        val onDismiss: (Boolean) -> Unit = { prompt.dismissSafely(geckoResult) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
@@ -572,4 +572,15 @@ internal fun Array<Choice>.toIdsArray(): Array<String> {
 internal fun Date.toString(format: String): String {
     val formatter = SimpleDateFormat(format, Locale.ROOT)
     return formatter.format(this) ?: ""
+}
+
+/**
+ * Only dismiss if the prompt is not already dismissed.
+ */
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+
+internal fun PromptDelegate.BasePrompt.dismissSafely(geckoResult: GeckoResult<PromptResponse>) {
+    if (!this.isComplete) {
+        geckoResult.complete(dismiss())
+    }
 }

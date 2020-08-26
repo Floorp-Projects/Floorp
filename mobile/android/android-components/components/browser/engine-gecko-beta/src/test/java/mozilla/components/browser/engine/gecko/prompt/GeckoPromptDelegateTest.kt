@@ -26,10 +26,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito
+import org.mockito.Mockito.doReturn
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.Autocomplete
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATE
@@ -1078,6 +1080,30 @@ class GeckoPromptDelegateTest {
 
         request.onDismiss()
         assertTrue(dismissWasCalled)
+    }
+
+    @Test
+    fun `dismissSafely only dismiss if the prompt is NOT already dismissed`() {
+        val prompt = spy(GeckoAlertPrompt())
+        val geckoResult = mock<GeckoResult<GeckoSession.PromptDelegate.PromptResponse>>()
+
+        doReturn(false).`when`(prompt).isComplete
+
+        prompt.dismissSafely(geckoResult)
+
+        Mockito.verify(geckoResult).complete(any())
+    }
+
+    @Test
+    fun `dismissSafely do nothing if the prompt is already dismissed`() {
+        val prompt = spy(GeckoAlertPrompt())
+        val geckoResult = mock<GeckoResult<GeckoSession.PromptDelegate.PromptResponse>>()
+
+        doReturn(true).`when`(prompt).isComplete
+
+        prompt.dismissSafely(geckoResult)
+
+        Mockito.verify(geckoResult, Mockito.never()).complete(any())
     }
 
     class GeckoChoicePrompt(
