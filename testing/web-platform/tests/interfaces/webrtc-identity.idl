@@ -11,7 +11,7 @@ interface RTCIdentityProviderGlobalScope : WorkerGlobalScope {
 
 [Exposed=RTCIdentityProviderGlobalScope]
 interface RTCIdentityProviderRegistrar {
-    void register(RTCIdentityProvider idp);
+    undefined register(RTCIdentityProvider idp);
 };
 
 dictionary RTCIdentityProvider {
@@ -42,7 +42,7 @@ dictionary RTCIdentityValidationResult {
 };
 
 partial interface RTCPeerConnection {
-    void               setIdentityProvider (DOMString provider, optional RTCIdentityProviderOptions options = {});
+    undefined               setIdentityProvider (DOMString provider, optional RTCIdentityProviderOptions options = {});
     Promise<DOMString> getIdentityAssertion ();
     readonly        attribute Promise<RTCIdentityAssertion> peerIdentity;
     readonly        attribute DOMString?                    idpLoginUrl;
