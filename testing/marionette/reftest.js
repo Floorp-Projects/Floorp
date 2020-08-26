@@ -134,7 +134,7 @@ reftest.Runner = class {
         commandID: this.driver.listener.activeMessageId,
         pageTimeout: timeout,
         url: "about:blank",
-        loadEventExpected: false,
+        loadEventExpected: true,
       });
     } else {
       logger.debug("Using separate window");
