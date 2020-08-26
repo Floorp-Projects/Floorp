@@ -2,7 +2,7 @@
 
 # stop
 
-`fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchFeature.kt#L50)
+`fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchFeature.kt#L56)
 
 Overrides [LifecycleAwareFeature.stop](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/stop.md)
 

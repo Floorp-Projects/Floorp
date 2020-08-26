@@ -2,7 +2,7 @@
 
 # isPrivateSession
 
-`fun isPrivateSession(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/BrowserStoreSearchAdapter.kt#L31)
+`fun isPrivateSession(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/BrowserStoreSearchAdapter.kt#L39)
 
 Overrides [SearchAdapter.isPrivateSession](../-search-adapter/is-private-session.md)
 

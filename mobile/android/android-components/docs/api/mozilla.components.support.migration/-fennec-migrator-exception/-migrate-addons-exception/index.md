@@ -2,7 +2,7 @@
 
 # MigrateAddonsException
 
-`class MigrateAddonsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L184)
+`class MigrateAddonsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L185)
 
 Unexpected exception while migrating addons.
 

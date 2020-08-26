@@ -2,7 +2,7 @@
 
 # HighLevel
 
-`class HighLevel : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L142)
+`class HighLevel : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L143)
 
 Unexpected exception during high level migration processing.
 
