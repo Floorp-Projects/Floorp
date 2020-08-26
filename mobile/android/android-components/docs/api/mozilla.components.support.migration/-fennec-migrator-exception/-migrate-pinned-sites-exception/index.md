@@ -2,7 +2,7 @@
 
 # MigratePinnedSitesException
 
-`class MigratePinnedSitesException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L208)
+`class MigratePinnedSitesException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L209)
 
 Unexpected exception while migrating pinned sites.
 

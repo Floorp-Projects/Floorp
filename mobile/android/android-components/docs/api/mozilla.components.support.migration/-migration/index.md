@@ -2,7 +2,7 @@
 
 # Migration
 
-`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L60)
+`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L61)
 
 Supported Fennec migrations and their current versions.
 

@@ -2,7 +2,7 @@
 
 # MigrateFxaException
 
-`class MigrateFxaException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L190)
+`class MigrateFxaException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L191)
 
 Unexpected exception while migrating FxA.
 

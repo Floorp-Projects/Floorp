@@ -2,7 +2,7 @@
 
 # migration
 
-`val migration: `[`Migration`](../-migration/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L123)
+`val migration: `[`Migration`](../-migration/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L124)
 
 A [Migration](../-migration/index.md) in question.
 

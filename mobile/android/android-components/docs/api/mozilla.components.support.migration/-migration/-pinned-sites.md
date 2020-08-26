@@ -2,7 +2,7 @@
 
 # PinnedSites
 
-`object PinnedSites : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L114)
+`object PinnedSites : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L115)
 
 Migrates Fennec's pinned sites.
 

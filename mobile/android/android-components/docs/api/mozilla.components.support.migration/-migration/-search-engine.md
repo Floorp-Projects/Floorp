@@ -2,7 +2,7 @@
 
 # SearchEngine
 
-`object SearchEngine : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L109)
+`object SearchEngine : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L110)
 
 Migrates Fennec's default search engine.
 

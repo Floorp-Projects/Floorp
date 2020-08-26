@@ -2,7 +2,7 @@
 
 # TelemetryIdentifiers
 
-`object TelemetryIdentifiers : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L104)
+`object TelemetryIdentifiers : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L105)
 
 Migrates Fennec's telemetry identifiers.
 

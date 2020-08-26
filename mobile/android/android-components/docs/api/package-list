@@ -12,6 +12,7 @@ $dokka.location:mozilla.components.concept.menu.ext$effects(kotlin.collections.L
 $dokka.location:mozilla.components.concept.menu.ext$findNestedMenuCandidate(kotlin.collections.List((mozilla.components.concept.menu.candidate.MenuCandidate)), kotlin.Int)mozilla.components.concept.menu.ext/kotlin.collections.-list/find-nested-menu-candidate.md
 $dokka.location:mozilla.components.concept.menu.ext$max(kotlin.sequences.Sequence((mozilla.components.concept.menu.candidate.MenuEffect)))mozilla.components.concept.menu.ext/kotlin.sequences.-sequence/max.md
 $dokka.location:mozilla.components.feature.downloads$toMegabyteString(kotlin.Long)mozilla.components.feature.downloads/kotlin.-long/to-megabyte-string.md
+$dokka.location:mozilla.components.feature.top.sites.ext$hasUrl(kotlin.collections.List((mozilla.components.feature.top.sites.TopSite)), kotlin.String)mozilla.components.feature.top.sites.ext/kotlin.collections.-list/has-url.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Boolean)mozilla.components.lib.jexl.ext/kotlin.-boolean/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Double)mozilla.components.lib.jexl.ext/kotlin.-double/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.components.lib.jexl.ext/kotlin.-float/to-jexl.md
@@ -203,6 +204,7 @@ mozilla.components.feature.contextmenu.ext
 mozilla.components.feature.contextmenu.facts
 mozilla.components.feature.customtabs
 mozilla.components.feature.customtabs.feature
+mozilla.components.feature.customtabs.menu
 mozilla.components.feature.customtabs.store
 mozilla.components.feature.customtabs.verify
 mozilla.components.feature.downloads
@@ -257,6 +259,9 @@ mozilla.components.feature.tabs.tabstray
 mozilla.components.feature.tabs.toolbar
 mozilla.components.feature.toolbar
 mozilla.components.feature.top.sites
+mozilla.components.feature.top.sites.ext
+mozilla.components.feature.top.sites.presenter
+mozilla.components.feature.top.sites.view
 mozilla.components.feature.webcompat
 mozilla.components.feature.webcompat.reporter
 mozilla.components.feature.webnotifications

@@ -24,3 +24,4 @@ Information about a top frecent site. This represents a most frequently visited 
 | Name | Summary |
 |---|---|
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+| [toTopSite](../../mozilla.components.feature.top.sites.ext/to-top-site.md) | `fun `[`TopFrecentSiteInfo`](./index.md)`.toTopSite(): `[`TopSite`](../../mozilla.components.feature.top.sites/-top-site/index.md)<br>Returns a [TopSite](../../mozilla.components.feature.top.sites/-top-site/index.md) for the given [TopFrecentSiteInfo](./index.md). |

@@ -2,7 +2,7 @@
 
 # MigrateBookmarksException
 
-`class MigrateBookmarksException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L154)
+`class MigrateBookmarksException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L155)
 
 Unexpected exception while migrating bookmarks.
 
