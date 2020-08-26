@@ -2004,6 +2004,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
     }
     if (tmp->mMediaStreamRenderer) {
       tmp->mMediaStreamRenderer->Shutdown();
+      // We null out mMediaStreamRenderer here since Shutdown() will shut down
+      // its WatchManager, and UpdateSrcStreamPotentiallyPlaying() contains a
+      // guard for this.
+      tmp->mMediaStreamRenderer = nullptr;
     }
     if (tmp->mMediaStreamTrackListener) {
       tmp->mSrcStream->UnregisterTrackListener(
