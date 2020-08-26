@@ -701,6 +701,10 @@ class GeckoEngineSession(
             notifyObservers { onFirstContentfulPaint() }
         }
 
+        override fun onPaintStatusReset(session: GeckoSession) {
+            notifyObservers { onPaintStatusReset() }
+        }
+
         override fun onContextMenu(
             session: GeckoSession,
             screenX: Int,

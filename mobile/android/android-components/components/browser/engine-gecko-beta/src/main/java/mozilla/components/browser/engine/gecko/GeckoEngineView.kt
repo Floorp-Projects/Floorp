@@ -38,7 +38,7 @@ class GeckoEngineView @JvmOverloads constructor(
             } catch (e: IllegalStateException) {
                 // This is to debug "display already acquired" crashes
                 val otherActivityClassName =
-                        this.session?.accessibility?.view?.context?.javaClass?.simpleName
+                    this.session?.accessibility?.view?.context?.javaClass?.simpleName
                 val otherActivityClassHashcode =
                         this.session?.accessibility?.view?.context?.hashCode()
                 val activityClassName = context.javaClass.simpleName
@@ -156,7 +156,21 @@ class GeckoEngineView @JvmOverloads constructor(
      * GeckoEngineSession) - since the previous one is no longer usable.
      */
     private fun rebind() {
-        currentSession?.let { currentGeckoView.setSession(it.geckoSession) }
+        try {
+            currentSession?.let { currentGeckoView.setSession(it.geckoSession) }
+        } catch (e: IllegalArgumentException) {
+            // This is to debug "Display not attached" crashes
+            val otherActivityClassName =
+                currentSession?.geckoSession?.accessibility?.view?.context?.javaClass?.simpleName
+            val otherActivityClassHashcode =
+                    currentSession?.geckoSession?.accessibility?.view?.context?.hashCode()
+            val activityClassName = context.javaClass.simpleName
+            val activityClassHashCode = context.hashCode()
+            val msg = "REBIND: Current activity: $activityClassName hashcode " +
+                    "$activityClassHashCode Other activity: $otherActivityClassName " +
+                    "hashcode $otherActivityClassHashcode"
+            throw IllegalArgumentException(msg, e)
+        }
     }
 
     @Synchronized
