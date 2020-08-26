@@ -25,18 +25,18 @@
     add_task(async function test_create_and_remove_file() {
       info("Test creating and removing a single file");
       const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp");
-      await window.IOUtils.writeAtomic(tmpFileName, new Uint8Array(0));
+      await IOUtils.writeAtomic(tmpFileName, new Uint8Array(0));
       ok(await fileExists(tmpFileName), `Expected file ${tmpFileName} to exist`);
 
-      await window.IOUtils.remove(tmpFileName);
+      await IOUtils.remove(tmpFileName);
       ok(!await fileExists(tmpFileName), "IOUtils::remove can remove files");
 
       info("Test creating and removing an empty directory");
       const tmpDirName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp.d");
-      await window.IOUtils.makeDirectory(tmpDirName);
+      await IOUtils.makeDirectory(tmpDirName);
       ok(await dirExists(tmpDirName), `Expected directory ${tmpDirName} to exist`);
 
-      await window.IOUtils.remove(tmpDirName);
+      await IOUtils.remove(tmpDirName);
       ok(!await dirExists(tmpDirName), "IOUtils::remove can remove empty directories");
     });
 
@@ -44,11 +44,11 @@
       const tmpFileName = OS.Path.join(tmpDir, "test_ioutil_remove_non_existing.tmp");
       ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
 
-      await window.IOUtils.remove(tmpFileName, { ignoreAbsent: true });
+      await IOUtils.remove(tmpFileName, { ignoreAbsent: true });
       ok(!await fileExists(tmpFileName), "IOUtils::remove can ignore missing files without error");
 
       await Assert.rejects(
-        window.IOUtils.remove(tmpFileName, { ignoreAbsent: false }),
+        IOUtils.remove(tmpFileName, { ignoreAbsent: false }),
         /Could not remove the file at .* because it does not exist/,
         "IOUtils::remove can throw an error when target file is missing"
       );
@@ -74,12 +74,12 @@
       );
 
       await Assert.rejects(
-        window.IOUtils.remove(tmpParentDir, { recursive: false }),
+        IOUtils.remove(tmpParentDir, { recursive: false }),
         /Could not remove the non-empty directory at .*/,
         "IOUtils::remove fails if non-recursively removing directory with contents"
       );
 
-      await window.IOUtils.remove(tmpParentDir, { recursive: true });
+      await IOUtils.remove(tmpParentDir, { recursive: true });
       ok(
         !await dirExists(tmpParentDir),
         "IOUtils::remove can recursively remove a directory"
