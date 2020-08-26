@@ -186,7 +186,13 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitFunApplyArgs(MDefinition* callee, CallFlags flags,
                                      CallKind kind);
 
+  WrappedFunction* maybeWrappedFunction(MDefinition* callee, CallKind kind,
+                                        uint16_t nargs, FunctionFlags flags);
   WrappedFunction* maybeCallTarget(MDefinition* callee, CallKind kind);
+
+  MOZ_MUST_USE bool emitCallGetterResult(CallKind kind, ValOperandId receiverId,
+                                         uint32_t getterOffset, bool sameRealm,
+                                         uint32_t nargsAndFlagsOffset);
 
   CACHE_IR_TRANSPILER_GENERATED
 
@@ -3000,6 +3006,32 @@ bool WarpCacheIRTranspiler::emitLoadArgumentDynamicSlot(ValOperandId resultId,
   return emitLoadArgumentSlot(resultId, callInfo_->argc() + slotIndex);
 }
 
+WrappedFunction* WarpCacheIRTranspiler::maybeWrappedFunction(
+    MDefinition* callee, CallKind kind, uint16_t nargs, FunctionFlags flags) {
+  MOZ_ASSERT(callee->isConstant() || callee->isNurseryObject());
+
+  // If this is a native without a JitEntry, WrappedFunction needs to know the
+  // target JSFunction.
+  // TODO: support nursery-allocated natives with WrappedFunction, maybe by
+  // storing the JSNative in the Baseline stub like flags/nargs.
+  bool isNative = flags.isNativeWithoutJitEntry();
+  if (isNative && !callee->isConstant()) {
+    return nullptr;
+  }
+
+  JSFunction* nativeTarget = nullptr;
+  if (isNative) {
+    nativeTarget = &callee->toConstant()->toObject().as<JSFunction>();
+  }
+
+  WrappedFunction* wrappedTarget =
+      new (alloc()) WrappedFunction(nativeTarget, nargs, flags);
+  MOZ_ASSERT_IF(kind == CallKind::Native,
+                wrappedTarget->isNativeWithoutJitEntry());
+  MOZ_ASSERT_IF(kind == CallKind::Scripted, wrappedTarget->hasJitEntry());
+  return wrappedTarget;
+}
+
 WrappedFunction* WarpCacheIRTranspiler::maybeCallTarget(MDefinition* callee,
                                                         CallKind kind) {
   // CacheIR emits the following for specialized calls:
@@ -3010,29 +3042,8 @@ WrappedFunction* WarpCacheIRTranspiler::maybeCallTarget(MDefinition* callee,
     return nullptr;
   }
   auto* guard = callee->toGuardSpecificFunction();
-
-  MDefinition* expectedDef = guard->expected();
-  MOZ_ASSERT(expectedDef->isConstant() || expectedDef->isNurseryObject());
-
-  // If this is a native without a JitEntry, WrappedFunction needs to know the
-  // target JSFunction.
-  // TODO: support nursery-allocated natives with WrappedFunction, maybe by
-  // storing the JSNative in the Baseline stub like flags/nargs.
-  bool isNative = guard->flags().isNativeWithoutJitEntry();
-  if (isNative && !expectedDef->isConstant()) {
-    return nullptr;
-  }
-
-  JSFunction* nativeTarget = nullptr;
-  if (isNative) {
-    nativeTarget = &expectedDef->toConstant()->toObject().as<JSFunction>();
-  }
-  WrappedFunction* wrappedTarget = new (alloc())
-      WrappedFunction(nativeTarget, guard->nargs(), guard->flags());
-  MOZ_ASSERT_IF(kind == CallKind::Native,
-                wrappedTarget->isNativeWithoutJitEntry());
-  MOZ_ASSERT_IF(kind == CallKind::Scripted, wrappedTarget->hasJitEntry());
-  return wrappedTarget;
+  return maybeWrappedFunction(guard->expected(), kind, guard->nargs(),
+                              guard->flags());
 }
 
 // If it is possible to use MCall for this call, update callInfo_ to
@@ -3232,6 +3243,54 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
     return true;
   }
   return emitCallFunction(calleeId, argcId, flags, CallKind::Scripted);
+}
+
+bool WarpCacheIRTranspiler::emitCallGetterResult(CallKind kind,
+                                                 ValOperandId receiverId,
+                                                 uint32_t getterOffset,
+                                                 bool sameRealm,
+                                                 uint32_t nargsAndFlagsOffset) {
+  MDefinition* receiver = getOperand(receiverId);
+  MDefinition* getter = objectStubField(getterOffset);
+  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
+
+  uint16_t nargs = nargsAndFlags >> 16;
+  FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
+  WrappedFunction* wrappedTarget =
+      maybeWrappedFunction(getter, kind, nargs, flags);
+
+  jsbytecode* pc = loc_.toRawBytecode();
+  bool ignoresRval = BytecodeIsPopped(pc);
+  CallInfo callInfo(alloc(), pc, /* constructing = */ false, ignoresRval);
+  callInfo.initForGetterCall(getter, receiver);
+
+  MCall* call = makeCall(callInfo, /* needsThisCheck = */ false, wrappedTarget);
+  if (!call) {
+    return false;
+  }
+
+  if (sameRealm) {
+    call->setNotCrossRealm();
+  }
+
+  addEffectful(call);
+  pushResult(call);
+
+  return resumeAfter(call);
+}
+
+bool WarpCacheIRTranspiler::emitCallScriptedGetterResult(
+    ValOperandId receiverId, uint32_t getterOffset, bool sameRealm,
+    uint32_t nargsAndFlagsOffset) {
+  return emitCallGetterResult(CallKind::Scripted, receiverId, getterOffset,
+                              sameRealm, nargsAndFlagsOffset);
+}
+
+bool WarpCacheIRTranspiler::emitCallNativeGetterResult(
+    ValOperandId receiverId, uint32_t getterOffset, bool sameRealm,
+    uint32_t nargsAndFlagsOffset) {
+  return emitCallGetterResult(CallKind::Native, receiverId, getterOffset,
+                              sameRealm, nargsAndFlagsOffset);
 }
 
 // TODO: rename the MetaTwoByte op when IonBuilder is gone.
