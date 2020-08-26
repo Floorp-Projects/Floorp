@@ -52,7 +52,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mIsFormSubmission = aLoadState.IsFormSubmission();
   mLoadType = aLoadState.LoadType();
   mTarget = aLoadState.Target();
-  mTargetBrowsingContext = aLoadState.SourceBrowsingContext();
+  mTargetBrowsingContext = aLoadState.TargetBrowsingContext();
   mLoadFlags = aLoadState.LoadFlags();
   mFirstParty = aLoadState.FirstParty();
   mHasValidUserGestureActivation = aLoadState.HasValidUserGestureActivation();
