@@ -10,6 +10,8 @@ import androidx.annotation.VisibleForTesting
 import com.google.android.play.core.ktx.launchReview
 import com.google.android.play.core.ktx.requestReview
 import com.google.android.play.core.review.ReviewManagerFactory
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.withContext
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -47,9 +49,15 @@ class ReviewPromptController(
     private val tryPromptReview: suspend (Activity) -> Unit = {
         val manager = ReviewManagerFactory.create(context)
         val reviewInfo = manager.requestReview()
-        manager.launchReview(it, reviewInfo)
+
+        withContext(Main) {
+            manager.launchReview(it, reviewInfo)
+        }
     }
 ) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Volatile var reviewPromptIsReady = false
+
     suspend fun promptReview(activity: Activity) {
         if (shouldShowPrompt()) {
             tryPromptReview(activity)
@@ -59,10 +67,19 @@ class ReviewPromptController(
 
     fun trackApplicationLaunch() {
         reviewSettings.numberOfAppLaunches = reviewSettings.numberOfAppLaunches + 1
+        // We only want to show the the prompt after we've finished "launching" the application.
+        reviewPromptIsReady = true
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun shouldShowPrompt(): Boolean {
+        if (!reviewPromptIsReady) {
+            return false
+        } else {
+            // We only want to try to show it once to avoid unnecessary disk reads
+            reviewPromptIsReady = false
+        }
+
         if (!reviewSettings.isDefaultBrowser) { return false }
 
         val hasOpenedFiveTimes = reviewSettings.numberOfAppLaunches >= NUMBER_OF_LAUNCHES_REQUIRED

@@ -19,6 +19,7 @@ import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.AppAllSourceStartTelemetry
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.Settings
@@ -114,4 +115,11 @@ class Components(private val context: Context) {
     val wifiConnectionMonitor by lazy { WifiConnectionMonitor(context.getSystemService()!!) }
 
     val settings by lazy { Settings(context) }
+
+    val reviewPromptController by lazy {
+        ReviewPromptController(
+            context,
+            FenixReviewSettings(settings)
+        )
+    }
 }

@@ -43,6 +43,7 @@ import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.StrictModeManager.enableStrictMode
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.StorageStatsMetrics
@@ -217,6 +218,12 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
         }
 
+        fun queueReviewPrompt() {
+            GlobalScope.launch(Dispatchers.IO) {
+                components.reviewPromptController.trackApplicationLaunch()
+            }
+        }
+
         initQueue()
 
         // We init these items in the visual completeness queue to avoid them initing in the critical
@@ -224,6 +231,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         queueInitExperiments()
         queueInitStorageAndServices()
         queueMetrics()
+        queueReviewPrompt()
     }
 
     private fun startMetricsIfEnabled() {

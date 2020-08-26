@@ -43,7 +43,9 @@ class ReviewPromptControllerTest {
             { promptWasCalled = true }
         )
 
+        controller.reviewPromptIsReady = true
         controller.promptReview(HomeActivity())
+
         assertEquals(settings.lastReviewPromptTimeInMillis, 0L)
         assertFalse(promptWasCalled)
     }
@@ -64,8 +66,54 @@ class ReviewPromptControllerTest {
             { promptWasCalled = true }
         )
 
+        controller.reviewPromptIsReady = true
         controller.promptReview(HomeActivity())
         assertEquals(100L, settings.lastReviewPromptTimeInMillis)
+        assertTrue(promptWasCalled)
+    }
+
+    @Test
+    fun promptReviewWillNotBeCalledIfNotReady() = runBlockingTest {
+        var promptWasCalled = false
+        val settings = TestReviewSettings(
+            numberOfAppLaunches = 5,
+            isDefault = true,
+            lastReviewPromptTimeInMillis = 0L
+        )
+
+        val controller = ReviewPromptController(
+            testContext,
+            settings,
+            { 100L },
+            { promptWasCalled = true }
+        )
+
+        controller.promptReview(HomeActivity())
+        assertFalse(promptWasCalled)
+    }
+
+    @Test
+    fun promptReviewWillUnreadyPromptAfterCalled() = runBlockingTest {
+        var promptWasCalled = false
+        val settings = TestReviewSettings(
+            numberOfAppLaunches = 5,
+            isDefault = true,
+            lastReviewPromptTimeInMillis = 0L
+        )
+
+        val controller = ReviewPromptController(
+            testContext,
+            settings,
+            { 100L },
+            { promptWasCalled = true }
+        )
+
+        controller.reviewPromptIsReady = true
+
+        assertTrue(controller.reviewPromptIsReady)
+        controller.promptReview(HomeActivity())
+
+        assertFalse(controller.reviewPromptIsReady)
         assertTrue(promptWasCalled)
     }
 
@@ -80,12 +128,16 @@ class ReviewPromptControllerTest {
         val controller = ReviewPromptController(
             testContext,
             settings,
-            { 100L }
+            { 0L }
         )
 
+        assertFalse(controller.reviewPromptIsReady)
         assertEquals(4, settings.numberOfAppLaunches)
+
         controller.trackApplicationLaunch()
+
         assertEquals(5, settings.numberOfAppLaunches)
+        assertTrue(controller.reviewPromptIsReady)
     }
 
     @Test
@@ -99,28 +151,31 @@ class ReviewPromptControllerTest {
         val controller = ReviewPromptController(
             testContext,
             settings,
-            { 1598416882805L }
+            { TEST_TIME_NOW }
         )
 
         // Test first success criteria
+        controller.reviewPromptIsReady = true
         assertTrue(controller.shouldShowPrompt())
 
         // Test with last prompt approx 4 months earlier
         settings.apply {
             numberOfAppLaunches = 5
             isDefault = true
-            lastReviewPromptTimeInMillis = 1588048882804L
+            lastReviewPromptTimeInMillis = MORE_THAN_4_MONTHS_FROM_TEST_TIME_NOW
         }
 
+        controller.reviewPromptIsReady = true
         assertTrue(controller.shouldShowPrompt())
 
         // Test without being the default browser
         settings.apply {
             numberOfAppLaunches = 5
             isDefault = false
-            lastReviewPromptTimeInMillis = 1595824882805L
+            lastReviewPromptTimeInMillis = 0L
         }
 
+        controller.reviewPromptIsReady = true
         assertFalse(controller.shouldShowPrompt())
 
         // Test with number of app launches < 5
@@ -130,15 +185,23 @@ class ReviewPromptControllerTest {
             lastReviewPromptTimeInMillis = 0L
         }
 
+        controller.reviewPromptIsReady = true
         assertFalse(controller.shouldShowPrompt())
 
         // Test with last prompt less than 4 months ago
         settings.apply {
             numberOfAppLaunches = 5
             isDefault = true
-            lastReviewPromptTimeInMillis = 1595824882905L
+            lastReviewPromptTimeInMillis = LESS_THAN_4_MONTHS_FROM_TEST_TIME_NOW
         }
 
+        controller.reviewPromptIsReady = true
         assertFalse(controller.shouldShowPrompt())
+    }
+
+    companion object {
+        private const val TEST_TIME_NOW = 1598416882805L
+        private const val MORE_THAN_4_MONTHS_FROM_TEST_TIME_NOW = 1588048882804L
+        private const val LESS_THAN_4_MONTHS_FROM_TEST_TIME_NOW = 1595824882905L
     }
 }

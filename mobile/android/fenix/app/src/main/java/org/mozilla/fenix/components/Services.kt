@@ -14,7 +14,6 @@ import mozilla.components.feature.app.links.AppLinksInterceptor
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Mockable
 
@@ -43,13 +42,6 @@ class Services(
                 PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
                     context.getPreferenceKey(R.string.pref_key_open_links_in_external_app), false)
             }
-        )
-    }
-
-    val reviewPromptController by lazy {
-        ReviewPromptController(
-            context,
-            FenixReviewSettings(context.settings())
         )
     }
 }

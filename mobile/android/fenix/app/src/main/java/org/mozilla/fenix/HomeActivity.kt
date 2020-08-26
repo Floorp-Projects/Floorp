@@ -232,8 +232,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         setAppAllStartTelemetry(intent.toSafeIntent())
 
-        components.services.reviewPromptController.trackApplicationLaunch()
-
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }
 

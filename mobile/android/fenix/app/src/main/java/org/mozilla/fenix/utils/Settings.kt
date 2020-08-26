@@ -100,7 +100,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
 
     var showTopFrecentSites by featureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),    
+        appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),
         default = false,
         featureFlag = FeatureFlags.topFrecentSite
     )
