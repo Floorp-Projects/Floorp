@@ -149,92 +149,87 @@ class TabbedBrowsingTest {
 
     @Test
     fun closeTabTest() {
-        var genericURLS = TestAssetHelper.getGenericAssets(mockWebServer)
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        genericURLS.forEachIndexed { index, element ->
-            navigationToolbar {
-            }.openNewTabAndEnterToBrowser(element.url) {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-                verifyCloseTabsButton("Test_Page_${index + 1}")
-                closeTabViaXButton("Test_Page_${index + 1}")
-                verifySnackBarText("Tab closed")
-                snackBarButtonClick("UNDO")
-            }
+        navigationToolbar {
+        }.openNewTabAndEnterToBrowser(genericURL.url) {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
+            verifyCloseTabsButton("Test_Page_1")
+            closeTabViaXButton("Test_Page_1")
+            verifySnackBarText("Tab closed")
+            snackBarButtonClick("UNDO")
+        }
 
-            mDevice.waitForIdle()
+        mDevice.waitForIdle()
 
-            browserScreen {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-                swipeTabRight("Test_Page_${index + 1}")
-                verifySnackBarText("Tab closed")
-                snackBarButtonClick("UNDO")
-            }
+        browserScreen {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabRight("Test_Page_1")
+            verifySnackBarText("Tab closed")
+            snackBarButtonClick("UNDO")
+        }
 
-            mDevice.waitForIdle()
+        mDevice.waitForIdle()
 
-            browserScreen {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-                swipeTabLeft("Test_Page_${index + 1}")
-                verifySnackBarText("Tab closed")
-                snackBarButtonClick("UNDO")
-            }
+        browserScreen {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabLeft("Test_Page_1")
+            verifySnackBarText("Tab closed")
+            snackBarButtonClick("UNDO")
+        }
 
-            mDevice.waitForIdle()
+        mDevice.waitForIdle()
 
-            browserScreen {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-            }.openHomeScreen {
-            }
+        browserScreen {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
+        }.openHomeScreen {
         }
     }
 
     @Test
     fun closePrivateTabTest() {
-        var genericURLS = TestAssetHelper.getGenericAssets(mockWebServer)
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen { }.togglePrivateBrowsingMode()
-        genericURLS.forEachIndexed { index, element ->
-            navigationToolbar {
-            }.openNewTabAndEnterToBrowser(element.url) {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-                verifyCloseTabsButton("Test_Page_${index + 1}")
-                closeTabViaXButton("Test_Page_${index + 1}")
-                verifySnackBarText("Private tab closed")
-                snackBarButtonClick("UNDO")
-            }
+        navigationToolbar {
+        }.openNewTabAndEnterToBrowser(genericURL.url) {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
+            verifyCloseTabsButton("Test_Page_1")
+            closeTabViaXButton("Test_Page_1")
+            verifySnackBarText("Private tab closed")
+            snackBarButtonClick("UNDO")
+        }
 
-            mDevice.waitForIdle()
+        mDevice.waitForIdle()
 
-            browserScreen {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-                swipeTabRight("Test_Page_${index + 1}")
-                verifySnackBarText("Private tab closed")
-                snackBarButtonClick("UNDO")
-            }
+        browserScreen {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabRight("Test_Page_1")
+            verifySnackBarText("Private tab closed")
+            snackBarButtonClick("UNDO")
+        }
 
-            mDevice.waitForIdle()
+        mDevice.waitForIdle()
 
-            browserScreen {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-                swipeTabLeft("Test_Page_${index + 1}")
-                verifySnackBarText("Private tab closed")
-                snackBarButtonClick("UNDO")
-            }
+        browserScreen {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabLeft("Test_Page_1")
+            verifySnackBarText("Private tab closed")
+            snackBarButtonClick("UNDO")
+        }
 
-            mDevice.waitForIdle()
+        mDevice.waitForIdle()
 
-            browserScreen {
-            }.openTabDrawer {
-                verifyExistingOpenTabs("Test_Page_${index + 1}")
-                closeTabViaXButton("Test_Page_${index + 1}")
-            }
+        browserScreen {
+        }.openTabDrawer {
+            verifyExistingOpenTabs("Test_Page_1")
         }
     }
 
