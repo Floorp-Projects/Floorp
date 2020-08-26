@@ -9,8 +9,8 @@ import logging
 from taskgraph.util.hg import get_push_data
 
 
-BACKSTOP_PUSH_INTERVAL = 10
-BACKSTOP_TIME_INTERVAL = 60  # minutes
+BACKSTOP_PUSH_INTERVAL = 20
+BACKSTOP_TIME_INTERVAL = 60 * 4  # minutes
 
 logger = logging.getLogger(__name__)
 
