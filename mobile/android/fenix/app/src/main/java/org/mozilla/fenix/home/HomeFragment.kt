@@ -16,7 +16,6 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.accessibility.AccessibilityEvent
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -412,19 +411,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        val args by navArgs<HomeFragmentArgs>()
-
-        if (view.context.settings().accessibilityServicesEnabled &&
-            args.focusOnAddressBar
-        ) {
-            // We cannot put this in the fragment_home.xml file as it breaks tests
-            view.toolbar_wrapper.isFocusableInTouchMode = true
-            viewLifecycleOwner.lifecycleScope.launch {
-                view.toolbar_wrapper?.requestFocus()
-                view.toolbar_wrapper?.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
-            }
-        }
-
         if (browsingModeManager.mode.isPrivate) {
             requireActivity().window.addFlags(FLAG_SECURE)
         } else {
@@ -445,7 +431,7 @@ class HomeFragment : Fragment() {
 
         updateTabCounter(requireComponents.core.store.state)
 
-        if (args.focusOnAddressBar && FeatureFlags.newSearchExperience) {
+        if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) && FeatureFlags.newSearchExperience) {
             navigateToSearch()
         }
     }

@@ -186,8 +186,8 @@ class TabbedBrowsingTest {
         browserScreen {
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
-        }.openHomeScreen {
-        }
+        }.openNewTab {
+        }.dismiss { }
     }
 
     @Test
@@ -285,8 +285,8 @@ class TabbedBrowsingTest {
             verifyTabTrayOverflowMenu(true)
             verifyExistingOpenTabs(defaultWebPage.title)
             verifyCloseTabsButton(defaultWebPage.title)
-        }.openHomeScreen {
-        }
+        }.openNewTab {
+        }.dismiss { }
     }
 
     @Test

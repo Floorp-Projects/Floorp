@@ -194,7 +194,8 @@ class SettingsPrivacyTest {
             // Click save to save the login
             saveLoginFromPrompt("Save")
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
         }.openThreeDotMenu {
         }.openSettings {
             TestHelper.scrollToElementByText("Logins and passwords")
@@ -219,7 +220,8 @@ class SettingsPrivacyTest {
             // Don't save the login, add to exceptions
             saveLoginFromPrompt("Never save")
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -274,7 +276,7 @@ class SettingsPrivacyTest {
         browserScreen {
         }.openTabDrawer {
             verifyPrivateModeSelected()
-        }.openHomeScreen { }
+        }.openNewTab { }.dismiss { }
 
         setOpenLinksInPrivateOff()
 
@@ -321,7 +323,7 @@ class SettingsPrivacyTest {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(pageShortcutName) {
         }.openTabDrawer {
-        }.openHomeScreen { }
+        }.openNewTab { }.dismiss { }
 
         setOpenLinksInPrivateOff()
         restartApp(activityTestRule)
@@ -331,7 +333,8 @@ class SettingsPrivacyTest {
         }.searchAndOpenHomeScreenShortcut(pageShortcutName) {
         }.openTabDrawer {
             verifyNormalModeSelected()
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
         }.openThreeDotMenu {
         }.openSettings {
         }.openPrivateBrowsingSubMenu {

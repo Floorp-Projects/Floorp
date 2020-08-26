@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -58,7 +57,8 @@ class SmokeTest {
             }.goBackToWebsite {
             }.openTabDrawer {
                 verifyExistingTabList()
-            }.openHomeScreen {
+            }.openNewTab {
+            }.dismiss {
                 verifyHomeScreen()
             }
         }
@@ -106,7 +106,8 @@ class SmokeTest {
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
             verifyExistingTopSitesTabs(defaultWebPage.title)
         }.openTabDrawer {
         }.openTab(defaultWebPage.title) {
@@ -132,13 +133,11 @@ class SmokeTest {
             verifyUrl(defaultWebPage.url.toString())
         }.openTabDrawer {
             closeTabViaXButton(defaultWebPage.title)
-        }.openHomeScreen {
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(youtubeUrl.toUri()) {
-                verifyBlueDot()
-            }.openThreeDotMenu {
-                verifyOpenInAppButton()
-            }
+        }.openNewTab {
+        }.submitQuery(youtubeUrl) {
+            verifyBlueDot()
+        }.openThreeDotMenu {
+            verifyOpenInAppButton()
         }
     }
 
@@ -185,7 +184,8 @@ class SmokeTest {
             }.addToFirefoxHome {
                 verifySnackBarText("Added to top sites!")
             }.openTabDrawer {
-            }.openHomeScreen {
+            }.openNewTab {
+            }.dismiss {
                 togglePrivateBrowsingModeOnOff()
                 verifyExistingTopSitesTabs(defaultWebPage.title)
                 togglePrivateBrowsingModeOnOff()
@@ -209,13 +209,11 @@ class SmokeTest {
                 verifyUrl(defaultWebPage.url.toString())
             }.openTabDrawer {
                 closeTabViaXButton(defaultWebPage.title)
-            }.openHomeScreen {
-                navigationToolbar {
-                }.enterURLAndEnterToBrowser(youtubeUrl.toUri()) {
-                    verifyBlueDot()
-                }.openThreeDotMenu {
-                    verifyOpenInAppButton()
-                }
+            }.openNewTab {
+            }.submitQuery(youtubeUrl) {
+                verifyBlueDot()
+            }.openThreeDotMenu {
+                verifyOpenInAppButton()
             }
         }
     }
@@ -240,7 +238,8 @@ class SmokeTest {
                 verifyUrl("webcompat.com/issues/new")
                 verifyTabCounter("2")
             }.openTabDrawer {
-            }.openHomeScreen {
+            }.openNewTab {
+            }.dismiss {
             }.openThreeDotMenu {
             }.openSettings {
             }.openEnhancedTrackingProtectionSubMenu {
@@ -270,9 +269,7 @@ class SmokeTest {
         }.goToSearchEngine {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
-            // Changing search engine to Bing
-        }.openHomeScreen {
-        }.openSearch {
+        }.openNewTab {
             clickSearchEngineButton()
             mDevice.waitForIdle()
             changeDefaultSearchEngine("Bing")
@@ -280,9 +277,7 @@ class SmokeTest {
         }.goToSearchEngine {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
-            // Changing search engine to DuckDuckGo
-        }.openHomeScreen {
-        }.openSearch {
+        }.openNewTab {
             clickSearchEngineButton()
             mDevice.waitForIdle()
             changeDefaultSearchEngine("DuckDuckGo")
@@ -290,9 +285,7 @@ class SmokeTest {
         }.goToSearchEngine {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
-            // Changing search engine to Twitter
-        }.openHomeScreen {
-        }.openSearch {
+        }.openNewTab {
             clickSearchEngineButton()
             mDevice.waitForIdle()
             changeDefaultSearchEngine("Twitter")
@@ -300,9 +293,7 @@ class SmokeTest {
         }.goToSearchEngine {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
-            // Changing search engine to Wikipedia
-        }.openHomeScreen {
-        }.openSearch {
+        }.openNewTab {
             clickSearchEngineButton()
             changeDefaultSearchEngine("Wikipedia")
             verifySearchEngineIcon("Wikipedia")
@@ -310,8 +301,7 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
             // Checking whether the next search will be with default or not
-        }.openHomeScreen {
-        }.openSearch {
+        }.openNewTab {
         }.goToSearchEngine {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openNavigationToolbar {

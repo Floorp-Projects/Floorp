@@ -135,12 +135,12 @@ class TabDrawerRobot {
             return BrowserRobot.Transition()
         }
 
-        fun openHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun openNewTab(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             mDevice.waitForIdle()
 
             newTabButton().perform(click())
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            SearchRobot().interact()
+            return SearchRobot.Transition()
         }
 
         fun toggleToNormalTabs(interact: TabDrawerRobot.() -> Unit): Transition {

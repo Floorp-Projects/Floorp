@@ -58,7 +58,8 @@ class TopSitesTest {
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }
@@ -76,13 +77,15 @@ class TopSitesTest {
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openTopSiteTabWithTitle(title = defaultWebPageTitle) {
             verifyUrl(defaultWebPage.url.toString().replace("http://", ""))
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {
@@ -105,7 +108,8 @@ class TopSitesTest {
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {
@@ -127,7 +131,8 @@ class TopSitesTest {
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {

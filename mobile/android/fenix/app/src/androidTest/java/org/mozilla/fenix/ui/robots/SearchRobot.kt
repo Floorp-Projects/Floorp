@@ -106,10 +106,10 @@ class SearchRobot {
 
     fun scrollToSearchEngineSettings() {
         // Soft keyboard is visible on screen on view access; hide it
-        onView(allOf(withId(R.id.search_layout))).perform(
+        onView(allOf(withId(R.id.search_wrapper))).perform(
             closeSoftKeyboard()
         )
-        onView(allOf(withId(R.id.awesomeBar))).perform(ViewActions.swipeUp())
+        onView(allOf(withId(R.id.awesome_bar))).perform(ViewActions.swipeUp())
     }
 
     fun clickSearchEngineSettings() {
@@ -123,9 +123,24 @@ class SearchRobot {
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
+        fun dismiss(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.waitForIdle()
+            mDevice.pressBack()
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
+
         fun openBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitForIdle()
             browserToolbarEditView().perform(typeText("mozilla\n"))
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun submitQuery(query: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.waitForIdle()
+            browserToolbarEditView().perform(typeText(query + "\n"))
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -138,7 +153,7 @@ class SearchRobot {
     }
 }
 
-private fun awesomeBar() = onView(withId(R.id.awesomeBar))
+private fun awesomeBar() = onView(withId(R.id.awesome_bar))
 
 private fun browserToolbarEditView() =
     onView(Matchers.allOf(withId(R.id.mozac_browser_toolbar_edit_url_view)))
@@ -164,6 +179,8 @@ private fun scanButton(): ViewInteraction {
 }
 
 private fun clearButton() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
+
+private fun searchWrapper() = onView(withId(R.id.search_wrapper))
 
 private fun assertSearchEngineURL(searchEngineName: String) {
     mDevice.waitNotNull(

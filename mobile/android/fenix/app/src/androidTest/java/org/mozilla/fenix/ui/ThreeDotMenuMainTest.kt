@@ -68,13 +68,14 @@ class ThreeDotMenuMainTest {
         }.openHelp {
             verifyHelpUrl()
         }.openTabDrawer {
-        }.openHomeScreen {
+        }.openNewTab {
+        }.dismiss {
         }.openThreeDotMenu {
         }.openWhatsNew {
             verifyWhatsNewURL()
         }.openTabDrawer {
-        }.openHomeScreen {
-        }
+        }.openNewTab {
+        }.dismiss { }
 
         homeScreen {
         }.openThreeDotMenu {

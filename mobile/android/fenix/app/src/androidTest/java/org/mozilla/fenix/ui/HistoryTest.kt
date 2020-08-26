@@ -254,11 +254,9 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openTabDrawer { }.openHomeScreen { }
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(secondWebPage.url) {
-            mDevice.waitForIdle()
+        }.openTabDrawer {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
         }.openThreeDotMenu {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)

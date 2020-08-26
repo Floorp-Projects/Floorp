@@ -57,7 +57,7 @@ class SearchTest {
         }.goBack {
         }.goBack {
         }.openSearch {
-            verifySearchWithText()
+//            verifySearchWithText()
             clickSearchEngineButton("DuckDuckGo")
             typeSearch("mozilla")
             verifySearchEngineResults("DuckDuckGo")
