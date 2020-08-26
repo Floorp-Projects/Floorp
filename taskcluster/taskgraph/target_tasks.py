@@ -13,7 +13,6 @@ import six
 from taskgraph import try_option_syntax
 from taskgraph.parameters import Parameters
 from taskgraph.util.attributes import match_run_on_projects, match_run_on_hg_branches
-from taskgraph.util.backstop import is_backstop
 from taskgraph.util.platforms import platform_family
 
 _target_task_methods = {}
@@ -351,7 +350,7 @@ def target_tasks_autoland(full_task_graph, parameters, graph_config):
         if task.kind != "test":
             return True
 
-        if is_backstop(parameters):
+        if parameters["backstop"]:
             return True
 
         build_type = task.attributes.get('build_type')
