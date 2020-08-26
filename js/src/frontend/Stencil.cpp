@@ -142,13 +142,13 @@ uint32_t ScopeStencil::nextFrameSlot() const {
 }
 
 static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
-                             ScriptStencil& stencil, HandleFunction function) {
-  const ScriptThingsVector& gcthings = stencil.gcThings;
+                             ScriptStencil& script, HandleFunction function) {
+  const ScriptThingsVector& gcthings = script.gcThings;
 
   Rooted<BaseScript*> lazy(
       cx, BaseScript::CreateRawLazy(cx, gcthings.length(), function,
-                                    compilationInfo.sourceObject,
-                                    stencil.extent, stencil.immutableFlags));
+                                    compilationInfo.sourceObject, script.extent,
+                                    script.immutableFlags));
   if (!lazy) {
     return false;
   }
@@ -165,14 +165,14 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
 
 static JSFunction* CreateFunction(JSContext* cx,
                                   CompilationInfo& compilationInfo,
-                                  ScriptStencil& stencil,
+                                  ScriptStencil& script,
                                   FunctionIndex functionIndex) {
   GeneratorKind generatorKind =
-      stencil.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
+      script.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsGenerator)
           ? GeneratorKind::Generator
           : GeneratorKind::NotGenerator;
   FunctionAsyncKind asyncKind =
-      stencil.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsAsync)
+      script.immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsAsync)
           ? FunctionAsyncKind::AsyncFunction
           : FunctionAsyncKind::SyncFunction;
 
@@ -183,24 +183,24 @@ static JSFunction* CreateFunction(JSContext* cx,
     return nullptr;
   }
 
-  gc::AllocKind allocKind = stencil.functionFlags.isExtended()
+  gc::AllocKind allocKind = script.functionFlags.isExtended()
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
-  bool isAsmJS = stencil.functionFlags.isAsmJSNative();
+  bool isAsmJS = script.functionFlags.isAsmJSNative();
 
   JSNative maybeNative = isAsmJS ? InstantiateAsmJS : nullptr;
 
   RootedAtom displayAtom(cx);
-  if (stencil.functionAtom) {
+  if (script.functionAtom) {
     displayAtom.set(
-        compilationInfo.liftParserAtomToJSAtom(stencil.functionAtom));
+        compilationInfo.liftParserAtomToJSAtom(script.functionAtom));
     if (!displayAtom) {
       return nullptr;
     }
   }
   RootedFunction fun(
-      cx, NewFunctionWithProto(cx, maybeNative, stencil.nargs,
-                               stencil.functionFlags, nullptr, displayAtom,
+      cx, NewFunctionWithProto(cx, maybeNative, script.nargs,
+                               script.functionFlags, nullptr, displayAtom,
                                proto, allocKind, TenuredObject));
   if (!fun) {
     return nullptr;
@@ -273,13 +273,13 @@ static bool MaybeInstantiateModule(JSContext* cx,
 static bool InstantiateFunctions(JSContext* cx,
                                  CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
-    auto& stencil = item.stencil;
+    auto& scriptStencil = item.script;
     auto functionIndex = item.functionIndex;
 
     MOZ_ASSERT(!item.function);
 
     RootedFunction fun(
-        cx, CreateFunction(cx, compilationInfo, stencil, functionIndex));
+        cx, CreateFunction(cx, compilationInfo, scriptStencil, functionIndex));
     if (!fun) {
       return false;
     }
@@ -331,20 +331,21 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo) {
 static bool SetTypeAndNameForExposedFunctions(
     JSContext* cx, CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
-    auto& stencil = item.stencil;
+    auto& scriptStencil = item.script;
     auto& fun = item.function;
-    if (!stencil.functionFlags.hasBaseScript()) {
+    if (!scriptStencil.functionFlags.hasBaseScript()) {
       continue;
     }
 
     // If the function was not referenced by enclosing script's bytecode, we do
     // not generate a BaseScript for it. For example, `(function(){});`.
-    if (!stencil.wasFunctionEmitted && !stencil.isStandaloneFunction) {
+    if (!scriptStencil.wasFunctionEmitted &&
+        !scriptStencil.isStandaloneFunction) {
       continue;
     }
 
-    if (!JSFunction::setTypeForScriptedFunction(cx, fun,
-                                                stencil.isSingletonFunction)) {
+    if (!JSFunction::setTypeForScriptedFunction(
+            cx, fun, scriptStencil.isSingletonFunction)) {
       return false;
     }
 
@@ -352,18 +353,19 @@ static bool SetTypeAndNameForExposedFunctions(
     // need to be applied to existing JSFunctions during delazification.
     if (fun->displayAtom() == nullptr) {
       JSAtom* funcAtom = nullptr;
-      if (stencil.functionFlags.hasInferredName() ||
-          stencil.functionFlags.hasGuessedAtom()) {
-        funcAtom = compilationInfo.liftParserAtomToJSAtom(stencil.functionAtom);
+      if (scriptStencil.functionFlags.hasInferredName() ||
+          scriptStencil.functionFlags.hasGuessedAtom()) {
+        funcAtom =
+            compilationInfo.liftParserAtomToJSAtom(scriptStencil.functionAtom);
         if (!funcAtom) {
           return false;
         }
       }
-      if (stencil.functionFlags.hasInferredName()) {
+      if (scriptStencil.functionFlags.hasInferredName()) {
         fun->setInferredName(funcAtom);
       }
 
-      if (stencil.functionFlags.hasGuessedAtom()) {
+      if (scriptStencil.functionFlags.hasGuessedAtom()) {
         fun->setGuessedAtom(funcAtom);
       }
     }
@@ -378,27 +380,27 @@ static bool SetTypeAndNameForExposedFunctions(
 static bool InstantiateScriptStencils(JSContext* cx,
                                       CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
-    auto& stencil = item.stencil;
+    auto& scriptStencil = item.script;
     auto& fun = item.function;
-    if (stencil.immutableScriptData) {
+    if (scriptStencil.immutableScriptData) {
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
-      if (!stencil.wasFunctionEmitted) {
+      if (!scriptStencil.wasFunctionEmitted) {
         continue;
       }
 
       RootedScript script(
-          cx, JSScript::fromStencil(cx, compilationInfo, stencil, fun));
+          cx, JSScript::fromStencil(cx, compilationInfo, scriptStencil, fun));
       if (!script) {
         return false;
       }
-    } else if (stencil.functionFlags.isAsmJSNative()) {
+    } else if (scriptStencil.functionFlags.isAsmJSNative()) {
       MOZ_ASSERT(fun->isAsmJSNative());
     } else if (fun->isIncomplete()) {
       // Lazy functions are generally only allocated in the initial parse.
       MOZ_ASSERT(compilationInfo.lazy == nullptr);
 
-      if (!CreateLazyScript(cx, compilationInfo, stencil, fun)) {
+      if (!CreateLazyScript(cx, compilationInfo, scriptStencil, fun)) {
         return false;
       }
     }
@@ -411,34 +413,34 @@ static bool InstantiateScriptStencils(JSContext* cx,
 // includes standalone functions and functions being delazified.
 static bool InstantiateTopLevel(JSContext* cx,
                                 CompilationInfo& compilationInfo) {
-  ScriptStencil& stencil =
+  ScriptStencil& script =
       compilationInfo.scriptData[CompilationInfo::TopLevelIndex];
   RootedFunction fun(cx);
-  if (stencil.isFunction()) {
+  if (script.isFunction()) {
     fun = compilationInfo.functions[CompilationInfo::TopLevelIndex];
   }
 
   // Top-level asm.js does not generate a JSScript.
-  if (stencil.functionFlags.isAsmJSNative()) {
+  if (script.functionFlags.isAsmJSNative()) {
     return true;
   }
 
-  MOZ_ASSERT(stencil.immutableScriptData);
+  MOZ_ASSERT(script.immutableScriptData);
 
   if (compilationInfo.lazy) {
     compilationInfo.script = JSScript::CastFromLazy(compilationInfo.lazy);
     return JSScript::fullyInitFromStencil(cx, compilationInfo,
-                                          compilationInfo.script, stencil, fun);
+                                          compilationInfo.script, script, fun);
   }
 
   compilationInfo.script =
-      JSScript::fromStencil(cx, compilationInfo, stencil, fun);
+      JSScript::fromStencil(cx, compilationInfo, script, fun);
   if (!compilationInfo.script) {
     return false;
   }
 
   // Finish initializing the ModuleObject if needed.
-  if (stencil.isModule()) {
+  if (script.isModule()) {
     compilationInfo.module->initScriptSlots(compilationInfo.script);
     compilationInfo.module->initStatusSlot();
 
@@ -456,28 +458,28 @@ static bool InstantiateTopLevel(JSContext* cx,
 // may not have bytecode at this point.
 static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
-    auto& stencil = item.stencil;
+    auto& scriptStencil = item.script;
     auto& fun = item.function;
-    if (!stencil.wasFunctionEmitted) {
+    if (!scriptStencil.wasFunctionEmitted) {
       continue;
     }
 
-    if (stencil.functionFlags.isAsmJSNative() ||
+    if (scriptStencil.functionFlags.isAsmJSNative() ||
         fun->baseScript()->hasBytecode()) {
       // Non-lazy inner functions don't use the enclosingScope_ field.
-      MOZ_ASSERT(stencil.lazyFunctionEnclosingScopeIndex_.isNothing());
+      MOZ_ASSERT(scriptStencil.lazyFunctionEnclosingScopeIndex_.isNothing());
     } else {
       // Apply updates from FunctionEmitter::emitLazy().
       BaseScript* script = fun->baseScript();
 
-      ScopeIndex index = *stencil.lazyFunctionEnclosingScopeIndex_;
+      ScopeIndex index = *scriptStencil.lazyFunctionEnclosingScopeIndex_;
       Scope* scope = compilationInfo.scopes[index].get();
       script->setEnclosingScope(scope);
-      script->initTreatAsRunOnce(stencil.immutableFlags.hasFlag(
+      script->initTreatAsRunOnce(scriptStencil.immutableFlags.hasFlag(
           ImmutableScriptFlagsEnum::TreatAsRunOnce));
 
-      if (stencil.memberInitializers) {
-        script->setMemberInitializers(*stencil.memberInitializers);
+      if (scriptStencil.memberInitializers) {
+        script->setMemberInitializers(*scriptStencil.memberInitializers);
       }
     }
   }
@@ -487,9 +489,9 @@ static void UpdateEmittedInnerFunctions(CompilationInfo& compilationInfo) {
 // their enclosing script.
 static void LinkEnclosingLazyScript(CompilationInfo& compilationInfo) {
   for (auto item : compilationInfo.functionScriptStencils()) {
-    auto& stencil = item.stencil;
+    auto& scriptStencil = item.script;
     auto& fun = item.function;
-    if (!stencil.functionFlags.hasBaseScript()) {
+    if (!scriptStencil.functionFlags.hasBaseScript()) {
       continue;
     }
 

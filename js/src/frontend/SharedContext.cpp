@@ -385,11 +385,11 @@ ScriptStencil& FunctionBox::functionStencil() const {
   return compilationInfo_.scriptData[funcDataIndex_];
 }
 
-void SharedContext::copyScriptFields(ScriptStencil& stencil) {
+void SharedContext::copyScriptFields(ScriptStencil& script) {
   MOZ_ASSERT(!isScriptFieldCopiedToStencil);
 
-  stencil.immutableFlags = immutableFlags_;
-  stencil.extent = extent_;
+  script.immutableFlags = immutableFlags_;
+  script.extent = extent_;
 
   isScriptFieldCopiedToStencil = true;
 }
@@ -403,66 +403,66 @@ void FunctionBox::finishScriptFlags() {
                           isLikelyConstructorWrapper());
 }
 
-void FunctionBox::copyScriptFields(ScriptStencil& stencil) {
-  MOZ_ASSERT(&stencil == &functionStencil());
+void FunctionBox::copyScriptFields(ScriptStencil& script) {
+  MOZ_ASSERT(&script == &functionStencil());
   MOZ_ASSERT(!isAsmJSModule());
 
-  SharedContext::copyScriptFields(stencil);
+  SharedContext::copyScriptFields(script);
 
-  stencil.memberInitializers = memberInitializers_;
+  script.memberInitializers = memberInitializers_;
 
   isScriptFieldCopiedToStencil = true;
 }
 
-void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
-  MOZ_ASSERT(&stencil == &functionStencil());
+void FunctionBox::copyFunctionFields(ScriptStencil& script) {
+  MOZ_ASSERT(&script == &functionStencil());
   MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
 
-  stencil.functionAtom = atom_;
-  stencil.functionFlags = flags_;
-  stencil.nargs = nargs_;
-  stencil.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
-  stencil.isStandaloneFunction = isStandalone_;
-  stencil.wasFunctionEmitted = wasEmitted_;
-  stencil.isSingletonFunction = isSingleton_;
+  script.functionAtom = atom_;
+  script.functionFlags = flags_;
+  script.nargs = nargs_;
+  script.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
+  script.isStandaloneFunction = isStandalone_;
+  script.wasFunctionEmitted = wasEmitted_;
+  script.isSingletonFunction = isSingleton_;
 
   isFunctionFieldCopiedToStencil = true;
 }
 
 void FunctionBox::copyUpdatedImmutableFlags() {
-  ScriptStencil& stencil = functionStencil();
-  stencil.immutableFlags = immutableFlags_;
+  ScriptStencil& script = functionStencil();
+  script.immutableFlags = immutableFlags_;
 }
 
 void FunctionBox::copyUpdatedExtent() {
-  ScriptStencil& stencil = functionStencil();
-  stencil.extent = extent_;
+  ScriptStencil& script = functionStencil();
+  script.extent = extent_;
 }
 
 void FunctionBox::copyUpdatedMemberInitializers() {
-  ScriptStencil& stencil = functionStencil();
-  stencil.memberInitializers = memberInitializers_;
+  ScriptStencil& script = functionStencil();
+  script.memberInitializers = memberInitializers_;
 }
 
 void FunctionBox::copyUpdatedEnclosingScopeIndex() {
-  ScriptStencil& stencil = functionStencil();
-  stencil.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
+  ScriptStencil& script = functionStencil();
+  script.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
 }
 
 void FunctionBox::copyUpdatedAtomAndFlags() {
-  ScriptStencil& stencil = functionStencil();
-  stencil.functionAtom = atom_;
-  stencil.functionFlags = flags_;
+  ScriptStencil& script = functionStencil();
+  script.functionAtom = atom_;
+  script.functionFlags = flags_;
 }
 
 void FunctionBox::copyUpdatedWasEmitted() {
-  ScriptStencil& stencil = functionStencil();
-  stencil.wasFunctionEmitted = wasEmitted_;
+  ScriptStencil& script = functionStencil();
+  script.wasFunctionEmitted = wasEmitted_;
 }
 
 void FunctionBox::copyUpdatedIsSingleton() {
-  ScriptStencil& stencil = functionStencil();
-  stencil.isSingletonFunction = isSingleton_;
+  ScriptStencil& script = functionStencil();
+  script.isSingletonFunction = isSingleton_;
 }
 
 }  // namespace frontend

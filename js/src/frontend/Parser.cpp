@@ -1858,7 +1858,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
-  ScriptStencil& stencil = funbox->functionStencil();
+  ScriptStencil& script = funbox->functionStencil();
 
   if (funbox->isInterpreted()) {
     // BCE will need to generate bytecode for this.
@@ -1898,7 +1898,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   funbox->finishScriptFlags();
-  funbox->copyFunctionFields(stencil);
+  funbox->copyFunctionFields(script);
 
   return true;
 }
@@ -1916,11 +1916,11 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
-  ScriptStencil& stencil = funbox->functionStencil();
+  ScriptStencil& script = funbox->functionStencil();
 
   funbox->finishScriptFlags();
-  funbox->copyFunctionFields(stencil);
-  funbox->copyScriptFields(stencil);
+  funbox->copyFunctionFields(script);
+  funbox->copyScriptFields(script);
 
   // Elide nullptr sentinels from end of binding list. These are inserted for
   // each scope regardless of if any bindings are actually closed over.
@@ -1940,7 +1940,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     return false;
   }
 
-  ScriptThingsVector& gcthings = stencil.gcThings;
+  ScriptThingsVector& gcthings = script.gcThings;
   if (!gcthings.reserve(ngcthings.value())) {
     return false;
   }
@@ -2696,10 +2696,10 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
     return false;
   }
 
-  ScriptStencil& stencil = funbox->functionStencil();
+  ScriptStencil& script = funbox->functionStencil();
   funbox->initFromLazyFunction(fun);
-  funbox->copyFunctionFields(stencil);
-  funbox->copyScriptFields(stencil);
+  funbox->copyFunctionFields(script);
+  funbox->copyScriptFields(script);
 
   MOZ_ASSERT_IF(pc_->isFunctionBox(),
                 pc_->functionBox()->index() < funbox->index());

@@ -343,18 +343,18 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
 // Given the result of SmooshMonkey's parser, convert a list of GC things
 // used by a script into ScriptThingsVector.
 bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
-                     const SmooshScriptStencil& smooshStencil,
+                     const SmooshScriptStencil& smooshScript,
                      Vector<const ParserAtom*>& allAtoms,
-                     ScriptStencil& stencil) {
-  auto& gcThings = stencil.gcThings;
+                     ScriptStencil& script) {
+  auto& gcThings = script.gcThings;
 
-  size_t ngcthings = smooshStencil.gcthings.len;
+  size_t ngcthings = smooshScript.gcthings.len;
   if (!gcThings.reserve(ngcthings)) {
     return false;
   }
 
   for (size_t i = 0; i < ngcthings; i++) {
-    SmooshGCThing& item = smooshStencil.gcthings.data[i];
+    SmooshGCThing& item = smooshScript.gcthings.data[i];
 
     switch (item.tag) {
       case SmooshGCThing::Tag::Null: {
@@ -392,66 +392,66 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
 // The StencilScript would then be in charge of handling the lifetime and
 // (until GC things gets removed from stencil) tracing API of the GC.
 bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
-                          const SmooshScriptStencil& smooshStencil,
+                          const SmooshScriptStencil& smooshScript,
                           Vector<const ParserAtom*>& allAtoms,
                           CompilationInfo& compilationInfo,
-                          ScriptStencil& stencil) {
+                          ScriptStencil& script) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
   const JS::ReadOnlyCompileOptions& options = compilationInfo.options;
 
-  stencil.immutableFlags = smooshStencil.immutable_flags;
+  script.immutableFlags = smooshScript.immutable_flags;
 
   // FIXME: The following flags should be set in jsparagus.
-  stencil.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
-                                 options.selfHostingMode);
-  stencil.immutableFlags.setFlag(ImmutableFlags::ForceStrict,
-                                 options.forceStrictMode());
-  stencil.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                                 options.nonSyntacticScope);
+  script.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
+                                options.selfHostingMode);
+  script.immutableFlags.setFlag(ImmutableFlags::ForceStrict,
+                                options.forceStrictMode());
+  script.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
+                                options.nonSyntacticScope);
 
-  if (&smooshStencil == &result.top_level_script) {
-    stencil.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
-                                   options.isRunOnce);
-    stencil.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
-                                   options.noScriptRval);
+  if (&smooshScript == &result.top_level_script) {
+    script.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
+                                  options.isRunOnce);
+    script.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
+                                  options.noScriptRval);
   }
 
-  bool isFunction = stencil.immutableFlags.hasFlag(ImmutableFlags::IsFunction);
+  bool isFunction = script.immutableFlags.hasFlag(ImmutableFlags::IsFunction);
 
-  if (smooshStencil.immutable_script_data.IsSome()) {
-    auto index = smooshStencil.immutable_script_data.AsSome();
+  if (smooshScript.immutable_script_data.IsSome()) {
+    auto index = smooshScript.immutable_script_data.AsSome();
     auto immutableScriptData = ConvertImmutableScriptData(
         cx, result.script_data_list.data[index], isFunction);
     if (!immutableScriptData) {
       return false;
     }
-    stencil.immutableScriptData = std::move(immutableScriptData);
+    script.immutableScriptData = std::move(immutableScriptData);
   }
 
-  stencil.extent.sourceStart = smooshStencil.extent.source_start;
-  stencil.extent.sourceEnd = smooshStencil.extent.source_end;
-  stencil.extent.toStringStart = smooshStencil.extent.to_string_start;
-  stencil.extent.toStringEnd = smooshStencil.extent.to_string_end;
-  stencil.extent.lineno = smooshStencil.extent.lineno;
-  stencil.extent.column = smooshStencil.extent.column;
+  script.extent.sourceStart = smooshScript.extent.source_start;
+  script.extent.sourceEnd = smooshScript.extent.source_end;
+  script.extent.toStringStart = smooshScript.extent.to_string_start;
+  script.extent.toStringEnd = smooshScript.extent.to_string_end;
+  script.extent.lineno = smooshScript.extent.lineno;
+  script.extent.column = smooshScript.extent.column;
 
   if (isFunction) {
-    if (smooshStencil.fun_name.IsSome()) {
-      stencil.functionAtom = allAtoms[smooshStencil.fun_name.AsSome()];
+    if (smooshScript.fun_name.IsSome()) {
+      script.functionAtom = allAtoms[smooshScript.fun_name.AsSome()];
     }
-    stencil.functionFlags = FunctionFlags(smooshStencil.fun_flags);
-    stencil.nargs = smooshStencil.fun_nargs;
-    if (smooshStencil.lazy_function_enclosing_scope_index.IsSome()) {
-      stencil.lazyFunctionEnclosingScopeIndex_ = mozilla::Some(ScopeIndex(
-          smooshStencil.lazy_function_enclosing_scope_index.AsSome()));
+    script.functionFlags = FunctionFlags(smooshScript.fun_flags);
+    script.nargs = smooshScript.fun_nargs;
+    if (smooshScript.lazy_function_enclosing_scope_index.IsSome()) {
+      script.lazyFunctionEnclosingScopeIndex_ = mozilla::Some(ScopeIndex(
+          smooshScript.lazy_function_enclosing_scope_index.AsSome()));
     }
-    stencil.isStandaloneFunction = smooshStencil.is_standalone_function;
-    stencil.wasFunctionEmitted = smooshStencil.was_function_emitted;
-    stencil.isSingletonFunction = smooshStencil.is_singleton_function;
+    script.isStandaloneFunction = smooshScript.is_standalone_function;
+    script.wasFunctionEmitted = smooshScript.was_function_emitted;
+    script.isSingletonFunction = smooshScript.is_singleton_function;
   }
 
-  if (!ConvertGCThings(cx, result, smooshStencil, allAtoms, stencil)) {
+  if (!ConvertGCThings(cx, result, smooshScript, allAtoms, script)) {
     return false;
   }
 
