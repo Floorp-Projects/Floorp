@@ -344,42 +344,35 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
-// Helper function for SetInlinePropertyOn*: is aNode a simple old <b>, <font>,
-// <span style="">, etc. that we can reuse instead of creating a new one?
-bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
-                                        nsAtom* aAttribute,
-                                        const nsAString* aValue) {
+Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
+    Element& aElement, nsAtom* aProperty, nsAtom* aAttribute,
+    const nsAString* aValue) {
   // aContent can be null, in which case we'll return false in a few lines
   MOZ_ASSERT(aProperty);
   MOZ_ASSERT_IF(aAttribute, aValue);
 
-  RefPtr<dom::Element> element = Element::FromNodeOrNull(aContent);
-  if (NS_WARN_IF(!element)) {
-    return false;
-  }
-
   // First check for <b>, <i>, etc.
-  if (element->IsHTMLElement(aProperty) && !element->GetAttrCount() &&
+  if (aElement.IsHTMLElement(aProperty) && !aElement.GetAttrCount() &&
       !aAttribute) {
     return true;
   }
 
   // Special cases for various equivalencies: <strong>, <em>, <s>
-  if (!element->GetAttrCount() &&
+  if (!aElement.GetAttrCount() &&
       ((aProperty == nsGkAtoms::b &&
-        element->IsHTMLElement(nsGkAtoms::strong)) ||
-       (aProperty == nsGkAtoms::i && element->IsHTMLElement(nsGkAtoms::em)) ||
+        aElement.IsHTMLElement(nsGkAtoms::strong)) ||
+       (aProperty == nsGkAtoms::i && aElement.IsHTMLElement(nsGkAtoms::em)) ||
        (aProperty == nsGkAtoms::strike &&
-        element->IsHTMLElement(nsGkAtoms::s)))) {
+        aElement.IsHTMLElement(nsGkAtoms::s)))) {
     return true;
   }
 
   // Now look for things like <font>
   if (aAttribute) {
     nsString attrValue;
-    if (element->IsHTMLElement(aProperty) &&
-        IsOnlyAttribute(element, aAttribute) &&
-        element->GetAttr(kNameSpaceID_None, aAttribute, attrValue) &&
+    if (aElement.IsHTMLElement(aProperty) &&
+        IsOnlyAttribute(&aElement, aAttribute) &&
+        aElement.GetAttr(kNameSpaceID_None, aAttribute, attrValue) &&
         attrValue.Equals(*aValue, nsCaseInsensitiveStringComparator)) {
       // This is not quite correct, because it excludes cases like
       // <font face=000> being the same as <font face=#000000>.
@@ -391,10 +384,10 @@ bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
   // No luck so far.  Now we check for a <span> with a single style=""
   // attribute that sets only the style we're looking for, if this type of
   // style supports it
-  if (!CSSEditUtils::IsCSSEditableProperty(element, aProperty, aAttribute) ||
-      !element->IsHTMLElement(nsGkAtoms::span) ||
-      element->GetAttrCount() != 1 ||
-      !element->HasAttr(kNameSpaceID_None, nsGkAtoms::style)) {
+  if (!CSSEditUtils::IsCSSEditableProperty(&aElement, aProperty, aAttribute) ||
+      !aElement.IsHTMLElement(nsGkAtoms::span) ||
+      aElement.GetAttrCount() != 1 ||
+      !aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::style)) {
     return false;
   }
 
@@ -416,9 +409,15 @@ bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
       mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithoutTransaction(
           *styledNewSpanElement, aProperty, aAttribute, aValue);
   if (result.isErr()) {
-    return false;  // TODO: Return error if editor is destroyed.
+    // The call shouldn't return destroyed error because it must be
+    // impossible to run script with modifying the new orphan node.
+    MOZ_ASSERT_UNREACHABLE("How did you destroy this editor?");
+    if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    return false;
   }
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(element);
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
   if (!styledElement) {
     return false;
   }
@@ -491,29 +490,48 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
 
   if (aAttribute) {
     // Look for siblings that are correct type of node
-    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(textNodeForTheRange);
-    if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
-      // Previous sib is already right kind of inline node; slide this over
-      nsresult rv =
-          MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+    nsIContent* sibling = GetPriorHTMLSibling(textNodeForTheRange);
+    if (sibling && sibling->IsElement()) {
+      OwningNonNull<Element> element(*sibling->AsElement());
+      Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
+          element, &aProperty, aAttribute, &aValue);
+      if (result.isErr()) {
+        NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
+        return result.unwrapErr();
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::MoveNodeToEndWithTransaction() failed");
-      return rv;
+      if (result.inspect()) {
+        // Previous sib is already right kind of inline node; slide this over
+        nsresult rv =
+            MoveNodeToEndWithTransaction(*textNodeForTheRange, element);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "HTMLEditor::MoveNodeToEndWithTransaction() failed");
+        return rv;
+      }
     }
     sibling = GetNextHTMLSibling(textNodeForTheRange);
-    if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
-      // Following sib is already right kind of inline node; slide this over
-      nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
-                                            EditorDOMPoint(sibling, 0));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+    if (sibling && sibling->IsElement()) {
+      OwningNonNull<Element> element(*sibling->AsElement());
+      Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
+          element, &aProperty, aAttribute, &aValue);
+      if (result.isErr()) {
+        NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
+        return result.unwrapErr();
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::MoveNodeWithTransaction() failed");
-      return rv;
+      if (result.inspect()) {
+        // Following sib is already right kind of inline node; slide this over
+        nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
+                                              EditorDOMPoint(sibling, 0));
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "HTMLEditor::MoveNodeWithTransaction() failed");
+        return rv;
+      }
     }
   }
 
@@ -565,27 +583,58 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
   // First check if there's an adjacent sibling we can put our node into.
   nsCOMPtr<nsIContent> previousSibling = GetPriorHTMLSibling(&aContent);
   nsCOMPtr<nsIContent> nextSibling = GetNextHTMLSibling(&aContent);
-  if (IsSimpleModifiableNode(previousSibling, &aProperty, aAttribute,
-                             &aValue)) {
-    nsresult rv = MoveNodeToEndWithTransaction(aContent, *previousSibling);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+  if (previousSibling && previousSibling->IsElement()) {
+    OwningNonNull<Element> previousElement(*previousSibling->AsElement());
+    Result<bool, nsresult> canMoveIntoPreviousSibling =
+        ElementIsGoodContainerForTheStyle(previousElement, &aProperty,
+                                          aAttribute, &aValue);
+    if (canMoveIntoPreviousSibling.isErr()) {
+      NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
+      return canMoveIntoPreviousSibling.unwrapErr();
+    }
+    if (canMoveIntoPreviousSibling.inspect()) {
+      nsresult rv = MoveNodeToEndWithTransaction(aContent, *previousSibling);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+        return rv;
+      }
+      if (!nextSibling || !nextSibling->IsElement()) {
+        return NS_OK;
+      }
+      OwningNonNull<Element> nextElement(*nextSibling->AsElement());
+      Result<bool, nsresult> canMoveIntoNextSibling =
+          ElementIsGoodContainerForTheStyle(nextElement, &aProperty, aAttribute,
+                                            &aValue);
+      if (canMoveIntoNextSibling.isErr()) {
+        NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
+        return canMoveIntoNextSibling.unwrapErr();
+      }
+      if (!canMoveIntoNextSibling.inspect()) {
+        return NS_OK;
+      }
+      rv = JoinNodesWithTransaction(*previousSibling, *nextSibling);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "HTMLEditor::JoinNodesWithTransaction() failed");
       return rv;
     }
-    if (!IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
-      return NS_OK;
-    }
-    rv = JoinNodesWithTransaction(*previousSibling, *nextSibling);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::JoinNodesWithTransaction() failed");
-    return rv;
   }
-  if (IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
-    nsresult rv =
-        MoveNodeWithTransaction(aContent, EditorDOMPoint(nextSibling, 0));
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::MoveNodeWithTransaction() failed");
-    return rv;
+
+  if (nextSibling && nextSibling->IsElement()) {
+    OwningNonNull<Element> nextElement(*nextSibling->AsElement());
+    Result<bool, nsresult> canMoveIntoNextSibling =
+        ElementIsGoodContainerForTheStyle(nextElement, &aProperty, aAttribute,
+                                          &aValue);
+    if (canMoveIntoNextSibling.isErr()) {
+      NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
+      return canMoveIntoNextSibling.unwrapErr();
+    }
+    if (canMoveIntoNextSibling.inspect()) {
+      nsresult rv =
+          MoveNodeWithTransaction(aContent, EditorDOMPoint(nextElement, 0));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "HTMLEditor::MoveNodeWithTransaction() failed");
+      return rv;
+    }
   }
 
   // Don't need to do anything if property already set on node
