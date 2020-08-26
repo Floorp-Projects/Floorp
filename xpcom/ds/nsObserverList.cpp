@@ -32,10 +32,13 @@ void nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator) {
 void nsObserverList::FillObserverArray(nsCOMArray<nsIObserver>& aArray) {
   aArray.SetCapacity(mObservers.Length());
 
-  nsMaybeWeakPtrArray<nsIObserver> observers(mObservers);
+  // XXX This could also use RemoveElementsBy if we lifted the promise to fill
+  // aArray in reverse order. Although there shouldn't be anyone explicitly
+  // relying on the order, changing this might cause subtle problems, so we
+  // better leave it as it is.
 
-  for (int32_t i = observers.Length() - 1; i >= 0; --i) {
-    nsCOMPtr<nsIObserver> observer = observers[i].GetValue();
+  for (int32_t i = mObservers.Length() - 1; i >= 0; --i) {
+    nsCOMPtr<nsIObserver> observer = mObservers[i].GetValue();
     if (observer) {
       aArray.AppendObject(observer);
     } else {
