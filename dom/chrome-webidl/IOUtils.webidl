@@ -3,24 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
-/**
- * IOUtils is a simple, efficient interface for performing file I/O from a
- * privileged chrome-only context. All asynchronous I/O tasks are run on
- * a background thread.
- *
- * Pending I/O tasks will block shutdown at the |profileBeforeChange| phase.
- * During this shutdown phase, no additional I/O tasks will be accepted --
- * method calls to this interface will reject once shutdown has entered this
- * phase.
- *
- * IOUtils methods may reject for any number of reasons. Reasonable attempts
- * have been made to map each common operating system error to a |DOMException|.
- * Most often, a caller only needs to check if a given file wasn't found by
- * catching the rejected error and checking if |ex.name === 'NotFoundError'|.
- * In other cases, it is likely sufficient to allow the error to be caught and
- * reported elsewhere.
- */
 [ChromeOnly, Exposed=(Window, Worker)]
 namespace IOUtils {
  /**
@@ -29,21 +11,8 @@ namespace IOUtils {
    *
    * @param path      An absolute file path.
    * @param maxBytes  The max bytes to read from the file at path.
-   *
-   * @return Resolves with an array of unsigned byte values read from disk,
-   *         otherwise rejects with a DOMException.
    */
   Promise<Uint8Array> read(DOMString path, optional unsigned long maxBytes);
-  /**
-   * Reads the UTF-8 text file located at |path| and returns the decoded
-   * contents as a |DOMString|.
-   *
-   * @param path An absolute file path.
-   *
-   * @return Resolves with the file contents encoded as a string, otherwise
-   *         rejects with a DOMException.
-   */
-  Promise<DOMString> readUTF8(DOMString path);
   /**
    * Attempts to safely write |data| to a file at |path|.
    *
@@ -57,22 +26,8 @@ namespace IOUtils {
    *
    * @param path    An absolute file path.
    * @param data    Data to write to the file at path.
-   *
-   * @return Resolves with the number of bytes successfully written to the file,
-   *         otherwise rejects with a DOMException.
    */
   Promise<unsigned long long> writeAtomic(DOMString path, Uint8Array data, optional WriteAtomicOptions options = {});
-  /**
-   * Attempts to encode |string| to UTF-8, then safely write the result to a
-   * file at |path|. Works exactly like |writeAtomic|.
-   *
-   * @param path      An absolute file path.
-   * @param string    A string to encode to UTF-8 and write to the file at path.
-   *
-   * @return Resolves with the number of bytes successfully written to the file,
-   *         otherwise rejects with a DOMException.
-   */
-  Promise<unsigned long long> writeAtomicUTF8(DOMString path, DOMString string, optional WriteAtomicOptions options = {});
   /**
    * Moves the file from |sourcePath| to |destPath|, creating necessary parents.
    * If |destPath| is a directory, then the source file will be moved into the
@@ -82,9 +37,6 @@ namespace IOUtils {
    *                   to move.
    * @param destPath   An absolute file path identifying the destination
    *                   directory and/or file name.
-   *
-   * @return Resolves if the file is moved successfully, otherwise rejects with
-   *         a DOMException.
    */
   Promise<void> move(DOMString sourcePath, DOMString destPath, optional MoveOptions options = {});
   /**
@@ -92,18 +44,12 @@ namespace IOUtils {
    *
    * @param path An absolute file path identifying the file or directory to
    *             remove.
-   *
-   * @return Resolves if the file is removed successfully, otherwise rejects
-   *         with a DOMException.
    */
   Promise<void> remove(DOMString path, optional RemoveOptions options = {});
   /**
    * Creates a new directory at |path| according to |options|.
    *
    * @param path An absolute file path identifying the directory to create.
-   *
-   * @return Resolves if the directory is created successfully, otherwise
-   *         rejects with a DOMException.
    */
   Promise<void> makeDirectory(DOMString path, optional MakeDirectoryOptions options = {});
   /**
@@ -111,9 +57,6 @@ namespace IOUtils {
    *
    * @param path An absolute file path identifying the file or directory to
    *             inspect.
-   *
-   * @return Resolves with a |FileInfo| object for the file at path, otherwise
-   *         rejects with a DOMException.
    *
    * @see FileInfo
    */
@@ -125,38 +68,8 @@ namespace IOUtils {
    * @param sourcePath An absolute file path identifying the source file to be
    *                   copied.
    * @param destPath   An absolute file path identifying the location for the
-   *                   copy.
-   *
-   * @return Resolves if the file was copied successfully, otherwise rejects
-   *         with a DOMException.
    */
   Promise<void> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
-  /**
-   * Updates the |modification| time for the file at |path|.
-   *
-   * @param path         An absolute file path identifying the file to touch.
-   * @param modification An optional modification time for the file expressed in
-   *                     milliseconds since the Unix epoch
-   *                     (1970-01-01T00:00:00Z). The current system time is used
-   *                     if this parameter is not provided.
-   *
-   * @return Resolves with the updated modification time expressed in
-   *         milliseconds since the Unix epoch, otherwise rejects with a
-   *         DOMException.
-   */
-  Promise<long long> touch(DOMString path, optional long long modification);
-  /**
-   * Retrieves a (possibly empty) list of immediate children of the directory at
-   * |path|. If the file at |path| is not a directory, this method resolves with
-   * an empty list.
-   *
-   * @param path An absolute file path.
-   *
-   * @return Resolves with a sequence of absolute file paths representing the
-   *         children of the directory at |path|, otherwise rejects with a
-   *         DOMException.
-   */
-  Promise<sequence<DOMString>> getChildren(DOMString path);
 };
 
 /**

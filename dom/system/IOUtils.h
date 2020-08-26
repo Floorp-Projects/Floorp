@@ -46,10 +46,6 @@ class PR_CloseDelete {
 
 namespace dom {
 
-/**
- * Implementation for the Web IDL interface at dom/chrome-webidl/IOUtils.webidl.
- * Methods of this class must only be called from the parent process.
- */
 class IOUtils final {
  public:
   class IOError;
@@ -58,15 +54,8 @@ class IOUtils final {
                                         const nsAString& aPath,
                                         const Optional<uint32_t>& aMaxBytes);
 
-  static already_AddRefed<Promise> ReadUTF8(GlobalObject& aGlobal,
-                                            const nsAString& aPath);
-
   static already_AddRefed<Promise> WriteAtomic(
       GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
-      const WriteAtomicOptions& aOptions);
-
-  static already_AddRefed<Promise> WriteAtomicUTF8(
-      GlobalObject& aGlobal, const nsAString& aPath, const nsAString& aString,
       const WriteAtomicOptions& aOptions);
 
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
@@ -89,13 +78,6 @@ class IOUtils final {
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
                                         const CopyOptions& aOptions);
-
-  static already_AddRefed<Promise> Touch(
-      GlobalObject& aGlobal, const nsAString& aPath,
-      const Optional<int64_t>& aModification);
-
-  static already_AddRefed<Promise> GetChildren(GlobalObject& aGlobal,
-                                               const nsAString& aPath);
 
   static bool IsAbsolutePath(const nsAString& aPath);
 
@@ -177,15 +159,6 @@ class IOUtils final {
       const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes);
 
   /**
-   * Attempts to read the entire file at |aPath| as a UTF-8 string.
-   *
-   * @param aPath The location of the file as an absolute path string.
-   *
-   * @return The contents of the file re-encoded as a UTF-16 string.
-   */
-  static Result<nsString, IOError> ReadUTF8Sync(const nsAString& aPath);
-
-  /**
    * Attempts to write the entirety of |aByteArray| to the file at |aPath|.
    * This may occur by writing to an intermediate destination and performing a
    * move, depending on |aOptions|.
@@ -198,11 +171,7 @@ class IOUtils final {
    *         failed or was incomplete.
    */
   static Result<uint32_t, IOError> WriteAtomicSync(
-      const nsAString& aDestPath, const Span<const uint8_t>& aByteArray,
-      const InternalWriteAtomicOpts& aOptions);
-
-  static Result<uint32_t, IOError> WriteAtomicUTF8Sync(
-      const nsAString& aDestPath, const nsCString& aUTF8String,
+      const nsAString& aDestPath, const Buffer<uint8_t>& aByteArray,
       const InternalWriteAtomicOpts& aOptions);
 
   /**
@@ -217,7 +186,7 @@ class IOUtils final {
    */
   static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd,
                                              const nsACString& aPath,
-                                             const Span<const uint8_t>& aBytes);
+                                             const Buffer<uint8_t>& aBytes);
 
   /**
    * Attempts to move the file located at |aSource| to |aDest|.
@@ -316,29 +285,6 @@ class IOUtils final {
    */
   static Result<IOUtils::InternalFileInfo, IOError> StatSync(
       const nsAString& aPath);
-
-  /**
-   * Attempts to update the last modification time of the file at |aPath|.
-   *
-   * @param aPath       The location of the file as an absolute path string.
-   * @param aNewModTime Some value in milliseconds since Epoch. For the current
-   *                    system time, use |Nothing|.
-   *
-   * @return Timestamp of the file if the operation was successful, or an error.
-   */
-  static Result<int64_t, IOError> TouchSync(const nsAString& aPath,
-                                            const Maybe<int64_t>& aNewModTime);
-
-  /**
-   * Returns the immediate children of the file at |aPath|, if any.
-   *
-   * @param aPath The location of the file as an absolute path string.
-   *
-   * @return An array of absolute paths identifying the children of |aPath|.
-   *         If there are no children, an empty array. Otherwise, an error.
-   */
-  static Result<nsTArray<nsString>, IOError> GetChildrenSync(
-      const nsAString& aPath);
 };
 
 /**
@@ -409,20 +355,6 @@ struct IOUtils::InternalWriteAtomicOpts {
   bool mFlush;
   bool mNoOverwrite;
   Maybe<nsString> mTmpPath;
-
-  static inline InternalWriteAtomicOpts FromBinding(
-      const WriteAtomicOptions& aOptions) {
-    InternalWriteAtomicOpts opts;
-    opts.mFlush = aOptions.mFlush;
-    opts.mNoOverwrite = aOptions.mNoOverwrite;
-    if (aOptions.mBackupFile.WasPassed()) {
-      opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
-    }
-    if (aOptions.mTmpPath.WasPassed()) {
-      opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
-    }
-    return opts;
-  }
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
