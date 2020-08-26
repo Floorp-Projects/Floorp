@@ -258,57 +258,15 @@ bool DMABufSurface::FenceImportFromFd() {
   return true;
 }
 
-void DMABufSurfaceRGBA::SetWLBuffer(struct wl_buffer* aWLBuffer) {
-  MOZ_ASSERT(mWLBuffer == nullptr, "WLBuffer already assigned!");
-  mWLBuffer = aWLBuffer;
-}
-
-wl_buffer* DMABufSurfaceRGBA::GetWLBuffer() { return mWLBuffer; }
-
-static void buffer_release(void* data, wl_buffer* buffer) {
-  auto surface = reinterpret_cast<DMABufSurfaceRGBA*>(data);
-  surface->WLBufferDetach();
-}
-
-static const struct wl_buffer_listener buffer_listener = {buffer_release};
-
-static void buffer_created(void* data,
-                           struct zwp_linux_buffer_params_v1* params,
-                           struct wl_buffer* new_buffer) {
-  auto surface = static_cast<DMABufSurfaceRGBA*>(data);
-
-  surface->SetWLBuffer(new_buffer);
-
-  nsWaylandDisplay* display = WaylandDisplayGet();
-  /* When not using explicit synchronization listen to wl_buffer.release
-   * for release notifications, otherwise we are going to use
-   * zwp_linux_buffer_release_v1. */
-  if (!display->IsExplicitSyncEnabled()) {
-    wl_buffer_add_listener(new_buffer, &buffer_listener, surface);
-  }
-  zwp_linux_buffer_params_v1_destroy(params);
-}
-
-static void buffer_create_failed(void* data,
-                                 struct zwp_linux_buffer_params_v1* params) {
-  zwp_linux_buffer_params_v1_destroy(params);
-}
-
-static const struct zwp_linux_buffer_params_v1_listener params_listener = {
-    buffer_created, buffer_create_failed};
-
 DMABufSurfaceRGBA::DMABufSurfaceRGBA()
     : DMABufSurface(SURFACE_RGBA),
       mSurfaceFlags(0),
       mWidth(0),
       mHeight(0),
       mGmbFormat(nullptr),
-      mWLBuffer(nullptr),
       mEGLImage(LOCAL_EGL_NO_IMAGE),
       mTexture(0),
-      mGbmBufferFlags(0),
-      mWLBufferAttached(false),
-      mFastWLBufferCreation(true) {}
+      mGbmBufferFlags(0) {}
 
 DMABufSurfaceRGBA::~DMABufSurfaceRGBA() { ReleaseSurface(); }
 
@@ -340,9 +298,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   // Create without modifiers - use plain/linear format.
   if (!mGbmBufferObject[0]) {
     mGbmBufferFlags = (GBM_BO_USE_SCANOUT | GBM_BO_USE_LINEAR);
-    if (mSurfaceFlags & DMABUF_CREATE_WL_BUFFER) {
-      mGbmBufferFlags |= GBM_BO_USE_RENDERING;
-    } else if (mSurfaceFlags & DMABUF_TEXTURE) {
+    if (mSurfaceFlags & DMABUF_TEXTURE) {
       mGbmBufferFlags |= GBM_BO_USE_TEXTURING;
     }
 
@@ -390,10 +346,6 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
       ReleaseSurface();
       return false;
     }
-  }
-
-  if (mSurfaceFlags & DMABUF_CREATE_WL_BUFFER) {
-    return CreateWLBuffer();
   }
 
   return true;
@@ -469,38 +421,6 @@ bool DMABufSurfaceRGBA::Serialize(
       SurfaceDescriptorDMABuf(mSurfaceType, mBufferModifier, mGbmBufferFlags,
                               fds, width, height, format, strides, offsets,
                               GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
-
-  return true;
-}
-
-bool DMABufSurfaceRGBA::CreateWLBuffer() {
-  nsWaylandDisplay* display = WaylandDisplayGet();
-  if (!display->GetDmabuf()) {
-    return false;
-  }
-
-  struct zwp_linux_buffer_params_v1* params =
-      zwp_linux_dmabuf_v1_create_params(display->GetDmabuf());
-  for (int i = 0; i < mBufferPlaneCount; i++) {
-    zwp_linux_buffer_params_v1_add(params, mDmabufFds[i], i, mOffsets[i],
-                                   mStrides[i], mBufferModifier >> 32,
-                                   mBufferModifier & 0xffffffff);
-  }
-  zwp_linux_buffer_params_v1_add_listener(params, &params_listener, this);
-
-  if (mFastWLBufferCreation) {
-    mWLBuffer = zwp_linux_buffer_params_v1_create_immed(
-        params, mWidth, mHeight, mGmbFormat->mFormat, BUFFER_FLAGS);
-    /* When not using explicit synchronization listen to
-     * wl_buffer.release for release notifications, otherwise we
-     * are going to use zwp_linux_buffer_release_v1. */
-    if (!display->IsExplicitSyncEnabled()) {
-      wl_buffer_add_listener(mWLBuffer, &buffer_listener, this);
-    }
-  } else {
-    zwp_linux_buffer_params_v1_create(params, mWidth, mHeight,
-                                      mGmbFormat->mFormat, BUFFER_FLAGS);
-  }
 
   return true;
 }
@@ -593,12 +513,6 @@ void DMABufSurfaceRGBA::ReleaseSurface() {
   MOZ_ASSERT(!IsMapped(), "We can't release mapped buffer!");
 
   ReleaseTextures();
-
-  if (mWLBuffer) {
-    wl_buffer_destroy(mWLBuffer);
-    mWLBuffer = nullptr;
-  }
-
   ReleaseDMABuf();
 }
 
@@ -649,26 +563,6 @@ void DMABufSurface::Unmap(int aPlane) {
     mMappedRegionData[aPlane] = nullptr;
     mMappedRegionStride[aPlane] = 0;
   }
-}
-
-bool DMABufSurfaceRGBA::Resize(int aWidth, int aHeight) {
-  if (aWidth == mWidth && aHeight == mHeight) {
-    return true;
-  }
-
-  if (IsMapped()) {
-    NS_WARNING("We can't resize mapped surface!");
-    return false;
-  }
-
-  ReleaseSurface();
-  if (Create(aWidth, aHeight, mSurfaceFlags)) {
-    if (mSurfaceFlags & DMABUF_CREATE_WL_BUFFER) {
-      return CreateWLBuffer();
-    }
-  }
-
-  return false;
 }
 
 #if 0
