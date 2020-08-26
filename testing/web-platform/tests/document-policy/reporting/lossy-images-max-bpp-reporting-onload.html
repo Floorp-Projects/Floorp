@@ -13,7 +13,7 @@ var check_report_format = (reports, observer) => {
   let report = reports[0];
   assert_equals(report.type, "document-policy-violation");
   assert_equals(report.url, document.location.href);
-  assert_equals(report.body.featureId, "unoptimized-lossy-images");
+  assert_equals(report.body.featureId, "lossy-images-max-bpp");
   assert_equals(report.body.disposition, "enforce");
 };
 
