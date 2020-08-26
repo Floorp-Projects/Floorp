@@ -8673,7 +8673,13 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   // If we have a target to move to, do that now.
   if (!aLoadState->Target().IsEmpty()) {
     return PerformRetargeting(aLoadState);
+  } else if (aLoadState->TargetBrowsingContext().IsNull()) {
+    aLoadState->SetTargetBrowsingContext(GetBrowsingContext());
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(
+      aLoadState->TargetBrowsingContext() == GetBrowsingContext(),
+      "Load must be targeting this BrowsingContext");
 
   // If we don't have a target, we're loading into ourselves, and our load
   // delegate may want to intercept that load.
