@@ -17,6 +17,7 @@ from mozbuild.util import (
     ensureParentDir,
     lock_file,
 )
+from mozbuild.action.util import log_build_task
 
 
 def addEntriesToListFile(listFile, entries):
@@ -51,4 +52,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(log_build_task(main, sys.argv[1:]))

@@ -25,6 +25,7 @@ from mozbuild.makeutil import Makefile
 from mozpack import path as mozpath
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
+from mozbuild.action.util import log_build_task
 
 
 def process(input_dirs, inc_paths, bindings_conf, header_dir,
@@ -124,4 +125,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    log_build_task(main, sys.argv[1:])
