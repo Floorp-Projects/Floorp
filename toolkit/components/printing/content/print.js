@@ -576,6 +576,20 @@ const PrintSettingsViewProxy = {
 
       case "supportsColor":
         return this.availablePrinters[target.printerName].supportsColor;
+
+      // We allow switching colors except:
+      //
+      //  * For PDF printing, where it'd require rasterization and thus bad
+      //    quality.
+      //
+      //  * For Mac, where there's no API to print in monochrome.
+      //
+      case "supportsColorSwitch":
+        return (
+          target.printerName != PrintUtils.SAVE_TO_PDF_PRINTER &&
+          AppConstants.platform !== "macosx" &&
+          this.get(target, "supportsColor")
+        );
     }
     return target[name];
   },
@@ -744,13 +758,16 @@ class ColorModePicker extends PrintSettingSelect {
   update(settings) {
     let value = settings[this.settingName];
     let supportsColor = settings.supportsColor;
-    let forceChange;
-    if (value && !supportsColor) {
-      forceChange = true;
-      value = false;
+    let supportsColorSwitch = settings.supportsColorSwitch;
+    // If we're switching to a printer that either doesn't allow us to switch
+    // to monochrome, or doesn't support color, force a value change.
+    let forceChange = value != supportsColor && (!supportsColorSwitch || value);
+    if (forceChange) {
+      value = !value;
     }
     this.value = value ? "color" : "bw";
-    this.options.namedItem("color-option").hidden = !supportsColor;
+    this.toggleAttribute("disallowed", !supportsColorSwitch);
+    this.disabled = !supportsColorSwitch;
     if (forceChange) {
       this.dispatchEvent(new Event("change", { bubbles: true }));
     }
