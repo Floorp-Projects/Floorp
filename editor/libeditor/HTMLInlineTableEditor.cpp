@@ -422,8 +422,8 @@ nsresult HTMLEditor::RefreshInlineTableEditingUIInternal() {
   auto setInlineTableEditButtonPosition =
       [this](ManualNACPtr& aButtonElement, int32_t aNewX, int32_t aNewY)
           MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> nsresult {
-    nsCOMPtr<nsStyledElement> buttonStyledElement =
-        do_QueryInterface(aButtonElement.get());
+    RefPtr<nsStyledElement> buttonStyledElement =
+        nsStyledElement::FromNodeOrNull(aButtonElement.get());
     if (!buttonStyledElement) {
       return NS_OK;
     }

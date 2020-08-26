@@ -184,8 +184,8 @@ nsresult HTMLEditor::SetAllResizersPosition() {
   auto setHandlePosition =
       [this](ManualNACPtr& aHandleElement, int32_t aNewX, int32_t aNewY)
           MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> nsresult {
-    nsCOMPtr<nsStyledElement> handleStyledElement =
-        do_QueryInterface(aHandleElement.get());
+    RefPtr<nsStyledElement> handleStyledElement =
+        nsStyledElement::FromNodeOrNull(aHandleElement.get());
     if (!handleStyledElement) {
       return NS_OK;
     }
@@ -701,8 +701,8 @@ nsresult HTMLEditor::StartResizing(Element& aHandleElement) {
                        "Element::UnsetAttr(nsGkAtoms::_class) failed");
 
   // position it
-  if (nsCOMPtr<nsStyledElement> resizingShadowStyledElement =
-          do_QueryInterface(mResizingShadow.get())) {
+  if (RefPtr<nsStyledElement> resizingShadowStyledElement =
+          nsStyledElement::FromNodeOrNull(mResizingShadow.get())) {
     nsresult rv;
     rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
         *resizingShadowStyledElement, *nsGkAtoms::width, mResizedObjectWidth);
@@ -892,8 +892,8 @@ nsresult HTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW,
 
   // Offset info box by 20 so it's not directly under the mouse cursor.
   const int mouseCursorOffset = 20;
-  if (nsCOMPtr<nsStyledElement> resizingInfoStyledElement =
-          do_QueryInterface(mResizingInfo.get())) {
+  if (RefPtr<nsStyledElement> resizingInfoStyledElement =
+          nsStyledElement::FromNodeOrNull(mResizingInfo.get())) {
     nsresult rv;
     rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
         *resizingInfoStyledElement, *nsGkAtoms::left,
@@ -979,10 +979,12 @@ nsresult HTMLEditor::SetShadowPosition(Element& aShadowElement,
                                               ? mResizingShadow.get()
                                               : mPositioningShadow.get();
 
-  if (nsCOMPtr<nsStyledElement> styledShadowElement =
-          do_QueryInterface(&aShadowElement)) {
+  if (nsStyledElement* styledShadowElement =
+          nsStyledElement::FromNode(&aShadowElement)) {
+    // MOZ_KnownLive(*styledShadowElement): It's aShadowElement whose lifetime
+    // must be guaranteed by caller because of MOZ_CAN_RUN_SCRIPT method.
     nsresult rv = SetAnonymousElementPositionWithTransaction(
-        *styledShadowElement, aElementX, aElementY);
+        MOZ_KnownLive(*styledShadowElement), aElementX, aElementY);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::SetAnonymousElementPositionWithTransaction() failed");
@@ -1098,8 +1100,8 @@ nsresult HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent) {
     int32_t newWidth = GetNewResizingWidth(clientX, clientY);
     int32_t newHeight = GetNewResizingHeight(clientX, clientY);
 
-    if (nsCOMPtr<nsStyledElement> resizingShadowStyledElement =
-            do_QueryInterface(mResizingShadow.get())) {
+    if (RefPtr<nsStyledElement> resizingShadowStyledElement =
+            nsStyledElement::FromNodeOrNull(mResizingShadow.get())) {
       nsresult rv;
       rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
           *resizingShadowStyledElement, *nsGkAtoms::left, newX);
@@ -1188,8 +1190,8 @@ nsresult HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent) {
 
     SnapToGrid(newX, newY);
 
-    if (nsCOMPtr<nsStyledElement> positioningShadowStyledElement =
-            do_QueryInterface(mPositioningShadow.get())) {
+    if (RefPtr<nsStyledElement> positioningShadowStyledElement =
+            nsStyledElement::FromNodeOrNull(mPositioningShadow.get())) {
       nsresult rv;
       rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
           *positioningShadowStyledElement, *nsGkAtoms::left, newX);
@@ -1259,8 +1261,8 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
   AutoPlaceholderBatch treatAsOneTransaction(*this,
                                              ScrollSelectionIntoView::Yes);
   RefPtr<Element> resizedElement(mResizedObject);
-  nsCOMPtr<nsStyledElement> resizedStyleElement =
-      do_QueryInterface(mResizedObject);
+  RefPtr<nsStyledElement> resizedStyleElement =
+      nsStyledElement::FromNodeOrNull(mResizedObject);
 
   if (mResizedObjectIsAbsolutelyPositioned && resizedStyleElement) {
     if (setHeight) {

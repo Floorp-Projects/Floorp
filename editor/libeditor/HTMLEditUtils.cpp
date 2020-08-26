@@ -49,13 +49,13 @@ bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
   if (!aLeftContent.IsElement() || !aRightContent.IsElement()) {
     return false;
   }
-  nsCOMPtr<nsStyledElement> leftStyledElement =
-      do_QueryInterface(const_cast<nsIContent*>(&aLeftContent));
+  nsStyledElement* leftStyledElement =
+      nsStyledElement::FromNode(const_cast<nsIContent*>(&aLeftContent));
   if (!leftStyledElement) {
     return false;
   }
-  nsCOMPtr<nsStyledElement> rightStyledElement =
-      do_QueryInterface(const_cast<nsIContent*>(&aRightContent));
+  nsStyledElement* rightStyledElement =
+      nsStyledElement::FromNode(const_cast<nsIContent*>(&aRightContent));
   if (!rightStyledElement) {
     return false;
   }
