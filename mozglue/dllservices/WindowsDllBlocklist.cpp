@@ -598,7 +598,7 @@ static WindowsDllInterceptor Kernel32Intercept;
 static void GetNativeNtBlockSetWriter();
 
 static glue::LoaderObserver gMozglueLoaderObserver;
-static nt::LoaderAPI::InitDllBlocklistOOPFnPtr gInitDllBlocklistOOPFnPtr;
+static nt::WinLauncherFunctions gWinLauncherFunctions;
 
 MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
   if (sBlocklistInitAttempted) {
@@ -608,8 +608,8 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
 
   sInitFlags = aInitFlags;
 
-  gInitDllBlocklistOOPFnPtr =
-      glue::ModuleLoadFrame::StaticInit(&gMozglueLoaderObserver);
+  glue::ModuleLoadFrame::StaticInit(&gMozglueLoaderObserver,
+                                    &gWinLauncherFunctions);
 
 #ifdef _M_AMD64
   if (!IsWin8OrLater()) {
@@ -765,7 +765,7 @@ MFBT_API void DllBlocklist_SetFullDllServices(
   glue::AutoExclusiveLock lock(gDllServicesLock);
   if (aSvc) {
     aSvc->SetAuthenticodeImpl(GetAuthenticode());
-    aSvc->SetInitDllBlocklistOOPFnPtr(gInitDllBlocklistOOPFnPtr);
+    aSvc->SetWinLauncherFunctions(gWinLauncherFunctions);
     gMozglueLoaderObserver.Forward(aSvc);
   }
 
