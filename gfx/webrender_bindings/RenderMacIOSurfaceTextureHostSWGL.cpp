@@ -29,6 +29,10 @@ size_t RenderMacIOSurfaceTextureHostSWGL::GetPlaneCount() {
   return planeCount > 0 ? planeCount : 1;
 }
 
+gfx::YUVColorSpace RenderMacIOSurfaceTextureHostSWGL::GetYUVColorSpace() const {
+  return mSurface->GetYUVColorSpace();
+}
+
 bool RenderMacIOSurfaceTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
                                                  PlaneInfo& aPlaneInfo) {
   if (!aChannelIndex) {

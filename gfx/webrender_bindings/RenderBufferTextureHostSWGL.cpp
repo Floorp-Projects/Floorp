@@ -42,6 +42,15 @@ size_t RenderBufferTextureHostSWGL::GetPlaneCount() {
   }
 }
 
+gfx::YUVColorSpace RenderBufferTextureHostSWGL::GetYUVColorSpace() const {
+  switch (mDescriptor.type()) {
+    case layers::BufferDescriptor::TYCbCrDescriptor:
+      return mDescriptor.get_YCbCrDescriptor().yUVColorSpace();
+    default:
+      return gfx::YUVColorSpace::UNKNOWN;
+  }
+}
+
 bool RenderBufferTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
                                            PlaneInfo& aPlaneInfo) {
   switch (mDescriptor.type()) {

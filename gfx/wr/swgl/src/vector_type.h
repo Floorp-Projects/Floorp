@@ -410,6 +410,23 @@ SI VectorType<T, 8> zip2High(VectorType<T, 8> a, VectorType<T, 8> b) {
   return SHUFFLE(a, b, 4, 5, 12, 13, 6, 7, 14, 15);
 }
 
+#ifdef __clang__
+template <typename T>
+SI VectorType<T, 8> zip(VectorType<T, 4> a, VectorType<T, 4> b) {
+  return SHUFFLE(a, b, 0, 4, 1, 5, 2, 6, 3, 7);
+}
+
+template <typename T>
+SI VectorType<T, 16> zip(VectorType<T, 8> a, VectorType<T, 8> b) {
+  return SHUFFLE(a, b, 0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15);
+}
+#else
+template <typename T, int N>
+SI VectorType<T, N * 2> zip(VectorType<T, N> a, VectorType<T, N> b) {
+  return combine(zipLow(a, b), zipHigh(a, b));
+}
+#endif
+
 template <typename T>
 struct Unaligned {
   template <typename P>
