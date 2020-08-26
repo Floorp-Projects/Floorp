@@ -810,6 +810,12 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
     this.addEventListener("input", this);
   }
 
+  update(settings) {
+    this.querySelector("#system-print").hidden =
+      settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER &&
+      AppConstants.platform != "macosx";
+  }
+
   handleEvent(e) {
     if (e.target.id == "open-dialog-link") {
       this.dispatchEvent(new Event("open-system-dialog", { bubbles: true }));
