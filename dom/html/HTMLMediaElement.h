@@ -50,6 +50,7 @@ class ChannelMediaDecoder;
 class DecoderDoctorDiagnostics;
 class DOMMediaStream;
 class ErrorResult;
+class FirstFrameVideoOutput;
 class MediaResource;
 class MediaDecoder;
 class MediaInputPort;
@@ -58,6 +59,7 @@ class MediaTrackGraph;
 class MediaStreamWindowCapturer;
 struct SharedDummyTrack;
 class VideoFrameContainer;
+class VideoOutput;
 namespace dom {
 class MediaKeys;
 class TextTrack;
@@ -1350,6 +1352,15 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // key events.
   void ClearStopMediaControlTimerIfNeeded();
 
+  // Sets a secondary renderer for mSrcStream, so this media element can be
+  // rendered in Picture-in-Picture mode when playing a MediaStream. A null
+  // aContainer will unset the secondary renderer. aFirstFrameOutput allows
+  // for injecting a listener of the callers choice for rendering the first
+  // frame.
+  void SetSecondaryMediaStreamRenderer(
+      VideoFrameContainer* aContainer,
+      FirstFrameVideoOutput* aFirstFrameOutput = nullptr);
+
   // This function is used to update the status of media control when the media
   // changes its status of being used in the Picture-in-Picture mode.
   void UpdateMediaControlAfterPictureInPictureModeChanged();
@@ -1383,6 +1394,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // The MediaStreamRenderer handles rendering of our selected video track, and
   // enabled audio tracks, while mSrcStream is set.
   RefPtr<MediaStreamRenderer> mMediaStreamRenderer;
+
+  // The secondary MediaStreamRenderer handles rendering of our selected video
+  // track to a secondary VideoFrameContainer, while mSrcStream is set.
+  RefPtr<MediaStreamRenderer> mSecondaryMediaStreamRenderer;
 
   // True once PlaybackEnded() is called and we're playing a MediaStream.
   // Reset to false if we start playing mSrcStream again.
