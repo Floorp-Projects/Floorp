@@ -3,8 +3,6 @@
 
 "use strict";
 
-/* global IOUtils */
-
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
