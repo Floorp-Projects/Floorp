@@ -5,9 +5,13 @@
 
 partial interface HTMLMediaElement {
   [SecureContext] readonly attribute DOMString sinkId;
-  [SecureContext] Promise<void> setSinkId (DOMString sinkId);
+  [SecureContext] Promise<undefined> setSinkId (DOMString sinkId);
 };
 
 partial interface MediaDevices {
-  Promise<MediaDeviceInfo> selectAudioOutput();
+  Promise<MediaDeviceInfo> selectAudioOutput(optional AudioOutputOptions options = {});
+};
+
+dictionary AudioOutputOptions {
+  DOMString deviceId = "";
 };
