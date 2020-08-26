@@ -902,9 +902,15 @@ bool IonCacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallScriptedGetterResultShared(
-    TypedOrValueRegister receiver, uint32_t getterOffset, bool sameRealm,
-    TypedOrValueRegister output) {
+bool IonCacheIRCompiler::emitCallScriptedGetterResult(ValOperandId receiverId,
+                                                      uint32_t getterOffset,
+                                                      bool sameRealm) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoSaveLiveRegisters save(*this);
+  AutoOutputRegister output(*this);
+
+  ValueOperand receiver = allocator.useValueRegister(masm, receiverId);
+
   JSFunction* target = &objectStubField(getterOffset)->as<JSFunction>();
   AutoScratchRegister scratch(allocator, masm);
 
@@ -967,35 +973,14 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResultShared(
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallScriptedGetterResult(ObjOperandId objId,
-                                                      uint32_t getterOffset,
-                                                      bool sameRealm) {
+bool IonCacheIRCompiler::emitCallNativeGetterResult(ValOperandId receiverId,
+                                                    uint32_t getterOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
   AutoOutputRegister output(*this);
 
-  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand receiver = allocator.useValueRegister(masm, receiverId);
 
-  return emitCallScriptedGetterResultShared(
-      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), getterOffset,
-      sameRealm, output);
-}
-
-bool IonCacheIRCompiler::emitCallScriptedGetterByValueResult(
-    ValOperandId valId, uint32_t getterOffset, bool sameRealm) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  ValueOperand val = allocator.useValueRegister(masm, valId);
-
-  return emitCallScriptedGetterResultShared(val, getterOffset, sameRealm,
-                                            output);
-}
-
-bool IonCacheIRCompiler::emitCallNativeGetterResultShared(
-    TypedOrValueRegister receiver, uint32_t getterOffset,
-    const AutoOutputRegister& output, AutoSaveLiveRegisters& save) {
   JSFunction* target = &objectStubField(getterOffset)->as<JSFunction>();
   MOZ_ASSERT(target->isNative());
 
@@ -1062,30 +1047,6 @@ bool IonCacheIRCompiler::emitCallNativeGetterResultShared(
 
   masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
   return true;
-}
-
-bool IonCacheIRCompiler::emitCallNativeGetterResult(ObjOperandId objId,
-                                                    uint32_t getterOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  Register obj = allocator.useRegister(masm, objId);
-
-  return emitCallNativeGetterResultShared(
-      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), getterOffset,
-      output, save);
-}
-
-bool IonCacheIRCompiler::emitCallNativeGetterByValueResult(
-    ValOperandId valId, uint32_t getterOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  ValueOperand val = allocator.useValueRegister(masm, valId);
-
-  return emitCallNativeGetterResultShared(val, getterOffset, output, save);
 }
 
 bool IonCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
