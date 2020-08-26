@@ -292,8 +292,8 @@ void ScrollbarActivity::SetIsActive(bool aNewActive) {
 }
 
 static void SetOpacityOnElement(nsIContent* aContent, double aOpacity) {
-  nsCOMPtr<nsStyledElement> inlineStyleContent = do_QueryInterface(aContent);
-  if (inlineStyleContent) {
+  if (RefPtr<nsStyledElement> inlineStyleContent =
+          nsStyledElement::FromNodeOrNull(aContent)) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoCString str;
     str.AppendFloat(aOpacity);
@@ -323,8 +323,8 @@ bool ScrollbarActivity::UpdateOpacity(TimeStamp aTime) {
 }
 
 static void UnsetOpacityOnElement(nsIContent* aContent) {
-  nsCOMPtr<nsStyledElement> inlineStyleContent = do_QueryInterface(aContent);
-  if (inlineStyleContent) {
+  if (RefPtr<nsStyledElement> inlineStyleContent =
+          nsStyledElement::FromNodeOrNull(aContent)) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoString dummy;
     decl->RemoveProperty("opacity"_ns, dummy, IgnoreErrors());

@@ -315,8 +315,8 @@ nsresult HTMLEditor::RefreshGrabberInternal() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsStyledElement> grabberStyledElement =
-      do_QueryInterface(mGrabber.get());
+  RefPtr<nsStyledElement> grabberStyledElement =
+      nsStyledElement::FromNodeOrNull(mGrabber.get());
   if (!grabberStyledElement) {
     return NS_OK;
   }
@@ -446,8 +446,8 @@ nsresult HTMLEditor::StartMoving() {
       "Element::UnsetAttr(nsGkAtoms::_class) failed, but ignored");
 
   // position it
-  if (nsCOMPtr<nsStyledElement> positioningShadowStyledElement =
-          do_QueryInterface(mPositioningShadow.get())) {
+  if (RefPtr<nsStyledElement> positioningShadowStyledElement =
+          nsStyledElement::FromNode(mPositioningShadow.get())) {
     nsresult rv;
     rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
         *positioningShadowStyledElement, *nsGkAtoms::width,
@@ -561,8 +561,8 @@ nsresult HTMLEditor::SetFinalPosition(int32_t aX, int32_t aY) {
   if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
   }
-  if (nsCOMPtr<nsStyledElement> styledAbsolutelyPositionedElement =
-          do_QueryInterface(mAbsolutelyPositionedObject)) {
+  if (RefPtr<nsStyledElement> styledAbsolutelyPositionedElement =
+          nsStyledElement::FromNode(mAbsolutelyPositionedObject)) {
     nsresult rv;
     rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
         *styledAbsolutelyPositionedElement, *nsGkAtoms::top, newY);
@@ -645,10 +645,12 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "HTMLEditor::GetElementOrigin() failed, but ignored");
 
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
+  nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement);
   if (styledElement) {
+    // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+    // by the caller because of MOZ_CAN_RUN_SCRIPT method.
     nsresult rv = mCSSEditUtils->SetCSSPropertyWithTransaction(
-        *styledElement, *nsGkAtoms::position, u"absolute"_ns);
+        MOZ_KnownLive(*styledElement), *nsGkAtoms::position, u"absolute"_ns);
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
           "CSSEditUtils::SetCSSProperyWithTransaction(nsGkAtoms::Position) "
@@ -664,7 +666,10 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   AddPositioningOffset(x, y);
   SnapToGrid(x, y);
   if (styledElement) {
-    nsresult rv = SetTopAndLeftWithTransaction(*styledElement, x, y);
+    // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+    // by the caller because of MOZ_CAN_RUN_SCRIPT method.
+    nsresult rv =
+        SetTopAndLeftWithTransaction(MOZ_KnownLive(*styledElement), x, y);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::SetTopAndLeftWithTransaction() failed");
       return rv;
@@ -685,7 +690,7 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
 }
 
 nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
+  nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement);
   if (NS_WARN_IF(!styledElement)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -694,8 +699,10 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
                                              ScrollSelectionIntoView::Yes);
 
   nsresult rv;
+  // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+  // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      *styledElement, *nsGkAtoms::position, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::position, EmptyString());
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::position) "
@@ -706,8 +713,10 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
       NS_SUCCEEDED(rv),
       "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::position) "
       "failed, but ignored");
+  // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+  // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      *styledElement, *nsGkAtoms::top, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::top, EmptyString());
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::top) "
@@ -718,8 +727,10 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
       NS_SUCCEEDED(rv),
       "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::top) "
       "failed, but ignored");
+  // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+  // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      *styledElement, *nsGkAtoms::left, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::left, EmptyString());
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::left) "
@@ -730,8 +741,10 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
       NS_SUCCEEDED(rv),
       "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::left) "
       "failed, but ignored");
+  // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+  // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      *styledElement, *nsGkAtoms::z_index, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::z_index, EmptyString());
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::z_index) "
@@ -744,8 +757,10 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
       "failed, but ignored");
 
   if (!HTMLEditUtils::IsImage(styledElement)) {
+    // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+    // by the caller because of MOZ_CAN_RUN_SCRIPT method.
     rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-        *styledElement, *nsGkAtoms::width, EmptyString());
+        MOZ_KnownLive(*styledElement), *nsGkAtoms::width, EmptyString());
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
           "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::width) "
@@ -756,8 +771,10 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
         NS_SUCCEEDED(rv),
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::width) "
         "failed, but ignored");
+    // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+    // by the caller because of MOZ_CAN_RUN_SCRIPT method.
     rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-        *styledElement, *nsGkAtoms::height, EmptyString());
+        MOZ_KnownLive(*styledElement), *nsGkAtoms::height, EmptyString());
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
           "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::height) "
@@ -777,17 +794,23 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
 
   // Make sure the first fild and last child of aElement starts/ends hard
   // line(s) even after removing `aElement`.
-  rv = EnsureHardLineBeginsWithFirstChildOf(*styledElement);
+  // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+  // by the caller because of MOZ_CAN_RUN_SCRIPT method.
+  rv = EnsureHardLineBeginsWithFirstChildOf(MOZ_KnownLive(*styledElement));
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::EnsureHardLineBeginsWithFirstChildOf() failed");
     return rv;
   }
-  rv = EnsureHardLineEndsWithLastChildOf(*styledElement);
+  // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+  // by the caller because of MOZ_CAN_RUN_SCRIPT method.
+  rv = EnsureHardLineEndsWithLastChildOf(MOZ_KnownLive(*styledElement));
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::EnsureHardLineEndsWithLastChildOf() failed");
     return rv;
   }
-  rv = RemoveContainerWithTransaction(*styledElement);
+  // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
+  // by the caller because of MOZ_CAN_RUN_SCRIPT method.
+  rv = RemoveContainerWithTransaction(MOZ_KnownLive(*styledElement));
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

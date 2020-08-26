@@ -179,9 +179,8 @@ class EditorDOMPointBase final {
     return mParent->AsElement();
   }
 
-  already_AddRefed<nsStyledElement> GetContainerAsStyledElement() const {
-    nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(mParent);
-    return styledElement.forget();
+  nsStyledElement* GetContainerAsStyledElement() const {
+    return nsStyledElement::FromNodeOrNull(mParent);
   }
 
   dom::Text* GetContainerAsText() const {

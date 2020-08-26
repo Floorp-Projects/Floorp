@@ -53,6 +53,9 @@ class nsStyledElement : public nsStyledElementBase {
   nsICSSDeclaration* Style();
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_STYLED_ELEMENT_IID)
+  NS_IMPL_FROMNODE_HELPER(nsStyledElement, IsStyledElement());
+
+  bool IsStyledElement() const final { return true; }
 
  protected:
   nsICSSDeclaration* GetExistingStyle();
