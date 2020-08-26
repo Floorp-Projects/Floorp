@@ -16,6 +16,7 @@
 #  error "This header should only be included by freestanding code"
 #endif  // defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 
+#define MOZ_USE_LAUNCHER_ERROR
 #include "mozilla/NativeNt.h"
 
 namespace mozilla {

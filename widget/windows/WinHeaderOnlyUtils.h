@@ -211,17 +211,7 @@ struct LauncherError {
   bool operator!=(const WindowsError& aOther) const { return mError != aOther; }
 };
 
-#if defined(MOZILLA_INTERNAL_API)
-
-template <typename T>
-using LauncherResult = WindowsErrorResult<T>;
-
-template <typename T>
-using LauncherResultWithLineInfo = Result<T, LauncherError>;
-
-using WindowsErrorType = WindowsError;
-
-#else
+#if defined(MOZ_USE_LAUNCHER_ERROR)
 
 template <typename T>
 using LauncherResult = Result<T, LauncherError>;
@@ -231,32 +221,23 @@ using LauncherResultWithLineInfo = LauncherResult<T>;
 
 using WindowsErrorType = LauncherError;
 
-#endif  // defined(MOZILLA_INTERNAL_API)
+#else
+
+template <typename T>
+using LauncherResult = WindowsErrorResult<T>;
+
+template <typename T>
+using LauncherResultWithLineInfo = Result<T, LauncherError>;
+
+using WindowsErrorType = WindowsError;
+
+#endif  // defined(MOZ_USE_LAUNCHER_ERROR)
 
 using LauncherVoidResult = LauncherResult<Ok>;
 
 using LauncherVoidResultWithLineInfo = LauncherResultWithLineInfo<Ok>;
 
-#if defined(MOZILLA_INTERNAL_API)
-
-#  define LAUNCHER_ERROR_GENERIC() \
-    ::mozilla::Err(::mozilla::WindowsError::CreateGeneric())
-
-#  define LAUNCHER_ERROR_FROM_WIN32(err) \
-    ::mozilla::Err(::mozilla::WindowsError::FromWin32Error(err))
-
-#  define LAUNCHER_ERROR_FROM_LAST() \
-    ::mozilla::Err(::mozilla::WindowsError::FromLastError())
-
-#  define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
-    ::mozilla::Err(::mozilla::WindowsError::FromNtStatus(ntstatus))
-
-#  define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
-    ::mozilla::Err(::mozilla::WindowsError::FromHResult(hresult))
-
-#  define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) ::mozilla::Err(err)
-
-#else
+#if defined(MOZ_USE_LAUNCHER_ERROR)
 
 #  define LAUNCHER_ERROR_GENERIC()           \
     ::mozilla::Err(::mozilla::LauncherError( \
@@ -282,7 +263,26 @@ using LauncherVoidResultWithLineInfo = LauncherResultWithLineInfo<Ok>;
 #  define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) \
     ::mozilla::Err(::mozilla::LauncherError(__FILE__, __LINE__, err))
 
-#endif  // defined(MOZILLA_INTERNAL_API)
+#else
+
+#  define LAUNCHER_ERROR_GENERIC() \
+    ::mozilla::Err(::mozilla::WindowsError::CreateGeneric())
+
+#  define LAUNCHER_ERROR_FROM_WIN32(err) \
+    ::mozilla::Err(::mozilla::WindowsError::FromWin32Error(err))
+
+#  define LAUNCHER_ERROR_FROM_LAST() \
+    ::mozilla::Err(::mozilla::WindowsError::FromLastError())
+
+#  define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
+    ::mozilla::Err(::mozilla::WindowsError::FromNtStatus(ntstatus))
+
+#  define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
+    ::mozilla::Err(::mozilla::WindowsError::FromHResult(hresult))
+
+#  define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) ::mozilla::Err(err)
+
+#endif  // defined(MOZ_USE_LAUNCHER_ERROR)
 
 // How long to wait for a created process to become available for input,
 // to prevent that process's windows being forced to the background.
