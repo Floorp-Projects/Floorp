@@ -855,14 +855,10 @@ int32_t CSSEditUtils::SetCSSEquivalentToHTMLStyle(Element* aElement,
 
 // Remove from aNode the CSS inline style equivalent to
 // HTMLProperty/aAttribute/aValue for the node
-nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyle(
-    Element* aElement, nsAtom* aHTMLProperty, nsAtom* aAttribute,
+nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyleInternal(
+    nsStyledElement& aStyledElement, nsAtom* aHTMLProperty, nsAtom* aAttribute,
     const nsAString* aValue, bool aSuppressTransaction) {
-  if (NS_WARN_IF(!aElement)) {
-    return NS_OK;
-  }
-
-  if (!IsCSSEditableProperty(aElement, aHTMLProperty, aAttribute)) {
+  if (!IsCSSEditableProperty(&aStyledElement, aHTMLProperty, aAttribute)) {
     return NS_OK;
   }
 
@@ -872,22 +868,18 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyle(
   // Find the CSS equivalence to the HTML style
   nsTArray<nsStaticAtom*> cssPropertyArray;
   nsTArray<nsString> cssValueArray;
-  GenerateCSSDeclarationsFromHTMLStyle(*aElement, aHTMLProperty, aAttribute,
-                                       aValue, cssPropertyArray, cssValueArray,
-                                       true);
+  GenerateCSSDeclarationsFromHTMLStyle(aStyledElement, aHTMLProperty,
+                                       aAttribute, aValue, cssPropertyArray,
+                                       cssValueArray, true);
 
   // remove the individual CSS inline styles
   const size_t count = cssPropertyArray.Length();
   if (!count) {
     return NS_OK;
   }
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(aElement);
-  if (NS_WARN_IF(!styledElement)) {
-    return NS_ERROR_FAILURE;
-  }
   for (size_t index = 0; index < count; index++) {
     nsresult rv = RemoveCSSPropertyInternal(
-        *styledElement, MOZ_KnownLive(*cssPropertyArray[index]),
+        aStyledElement, MOZ_KnownLive(*cssPropertyArray[index]),
         cssValueArray[index], aSuppressTransaction);
     if (NS_FAILED(rv)) {
       NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithoutTransaction() failed");
