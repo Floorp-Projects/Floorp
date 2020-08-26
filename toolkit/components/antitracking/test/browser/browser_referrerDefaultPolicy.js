@@ -191,8 +191,6 @@ async function executeTests() {
   gRecording = false;
   for (let mode in gTests) {
     info(`Open a ${mode} window`);
-    let win = await openAWindow(mode == "private");
-
     while (gTests[mode].length) {
       let test = gTests[mode].shift();
       info(`Running test ${test.toSource()}`);
@@ -203,10 +201,13 @@ async function executeTests() {
           ["network.http.referer.defaultPolicy.trackers.pbmode", test.pbPref],
         ],
       });
-      await testOnWindowBody(win, test.expectedReferrer, test.rp);
-    }
 
-    await closeAWindow(win);
+      let win = await openAWindow(mode == "private");
+
+      await testOnWindowBody(win, test.expectedReferrer, test.rp);
+
+      await closeAWindow(win);
+    }
   }
 
   Services.prefs.clearUserPref(kPBPref);
