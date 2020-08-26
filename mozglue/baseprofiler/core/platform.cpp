@@ -2927,7 +2927,7 @@ static void locked_profiler_save_profile_to_file(PSLockRef aLock,
       Vector<std::string> exitProfiles = ActivePS::MoveExitProfiles(aLock);
       for (auto& exitProfile : exitProfiles) {
         if (!exitProfile.empty()) {
-          w.Splice(exitProfile.c_str());
+          w.Splice(exitProfile.c_str(), exitProfile.length());
         }
       }
       w.EndArray();

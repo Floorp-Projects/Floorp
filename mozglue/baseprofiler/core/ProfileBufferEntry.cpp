@@ -205,9 +205,8 @@ UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther) {
       mStringHashToIndexMap.putNewInfallible(iter.get().key(),
                                              iter.get().value());
     }
-    UniquePtr<char[]> stringTableJSON =
-        aOther.mStringTableWriter.ChunkedWriteFunc().CopyData();
-    mStringTableWriter.Splice(stringTableJSON.get());
+    mStringTableWriter.CopyAndSplice(
+        aOther.mStringTableWriter.ChunkedWriteFunc());
   }
 }
 
