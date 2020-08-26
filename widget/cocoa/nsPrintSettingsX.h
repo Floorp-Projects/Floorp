@@ -76,6 +76,9 @@ class nsPrintSettingsX : public nsPrintSettings {
   NS_IMETHOD GetNumCopies(int32_t* aCopies) override;
   NS_IMETHOD SetNumCopies(int32_t aCopies) override;
 
+  NS_IMETHOD GetDuplex(int32_t* aDuplex) override;
+  NS_IMETHOD SetDuplex(int32_t aDuplex) override;
+
   NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop) override;
   NS_IMETHOD SetUnwriteableMarginLeft(double aUnwriteableMarginLeft) override;
   NS_IMETHOD SetUnwriteableMarginBottom(
