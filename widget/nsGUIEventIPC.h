@@ -244,7 +244,11 @@ struct ParamTraits<mozilla::WidgetMouseEvent> {
     WriteParam(aMsg, static_cast<paramType::ReasonType>(aParam.mReason));
     WriteParam(aMsg, static_cast<paramType::ContextMenuTriggerType>(
                          aParam.mContextMenuTrigger));
-    WriteParam(aMsg, static_cast<paramType::ExitFromType>(aParam.mExitFrom));
+    WriteParam(aMsg, aParam.mExitFrom.isSome());
+    if (aParam.mExitFrom.isSome()) {
+      WriteParam(
+          aMsg, static_cast<paramType::ExitFromType>(aParam.mExitFrom.value()));
+    }
     WriteParam(aMsg, aParam.mClickCount);
   }
 
@@ -253,20 +257,24 @@ struct ParamTraits<mozilla::WidgetMouseEvent> {
     bool rv;
     paramType::ReasonType reason = 0;
     paramType::ContextMenuTriggerType contextMenuTrigger = 0;
-    paramType::ExitFromType exitFrom = 0;
+    bool hasExitFrom = false;
     rv = ReadParam(aMsg, aIter,
                    static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
          ReadParam(aMsg, aIter,
                    static_cast<mozilla::WidgetPointerHelper*>(aResult)) &&
          ReadParam(aMsg, aIter, &aResult->mIgnoreRootScrollFrame) &&
          ReadParam(aMsg, aIter, &reason) &&
-         ReadParam(aMsg, aIter, &contextMenuTrigger) &&
-         ReadParam(aMsg, aIter, &exitFrom) &&
-         ReadParam(aMsg, aIter, &aResult->mClickCount);
+         ReadParam(aMsg, aIter, &contextMenuTrigger);
     aResult->mReason = static_cast<paramType::Reason>(reason);
     aResult->mContextMenuTrigger =
         static_cast<paramType::ContextMenuTrigger>(contextMenuTrigger);
-    aResult->mExitFrom = static_cast<paramType::ExitFrom>(exitFrom);
+    rv = rv && ReadParam(aMsg, aIter, &hasExitFrom);
+    if (hasExitFrom) {
+      paramType::ExitFromType exitFrom = 0;
+      rv = rv && ReadParam(aMsg, aIter, &exitFrom);
+      aResult->mExitFrom = Some(static_cast<paramType::ExitFrom>(exitFrom));
+    }
+    rv = rv && ReadParam(aMsg, aIter, &aResult->mClickCount);
     return rv;
   }
 };
