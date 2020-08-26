@@ -414,7 +414,7 @@ promise_test(t => {
 }, "");
 ```
 
-`step_wait_func(cond, func, description, timeout=3000, interval=100)` & `step_wait_func(cond, func, description, timeout=3000, interval=100)` are useful inside `async_test`:
+`step_wait_func(cond, func, description, timeout=3000, interval=100)` and `step_wait_func_done(cond, func, description, timeout=3000, interval=100)` are useful inside `async_test`:
 
 ```js
 async_test(t => {
