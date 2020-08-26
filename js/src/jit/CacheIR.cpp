@@ -1002,16 +1002,16 @@ static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
                                          JSObject* obj, JSObject* holder,
                                          Shape* shape,
                                          ValOperandId receiverId) {
+  JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
+  bool sameRealm = cx->realm() == target->realm();
+
   switch (IsCacheableGetPropCall(obj, holder, shape)) {
     case CanAttachNativeGetter: {
-      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      writer.callNativeGetterResult(receiverId, target);
+      writer.callNativeGetterResult(receiverId, target, sameRealm);
       writer.typeMonitorResult();
       break;
     }
     case CanAttachScriptedGetter: {
-      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      bool sameRealm = cx->realm() == target->realm();
       writer.callScriptedGetterResult(receiverId, target, sameRealm);
       writer.typeMonitorResult();
       break;
@@ -1447,7 +1447,9 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
     }
   }
 
-  writer.callNativeGetterResult(receiverId, &getter->as<JSFunction>());
+  bool sameRealm = cx_->realm() == getter->as<JSFunction>().realm();
+  writer.callNativeGetterResult(receiverId, &getter->as<JSFunction>(),
+                                sameRealm);
   writer.typeMonitorResult();
 
   trackAttached("XrayGetter");

@@ -559,7 +559,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterResult(
 }
 
 bool BaselineCacheIRCompiler::emitCallNativeGetterResult(
-    ValOperandId receiverId, uint32_t getterOffset,
+    ValOperandId receiverId, uint32_t getterOffset, bool sameRealm,
     uint32_t nargsAndFlagsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

@@ -919,10 +919,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     callScriptedGetterResult_(receiver, getter, sameRealm, nargsAndFlags);
   }
 
-  void callNativeGetterResult(ValOperandId receiver, JSFunction* getter) {
+  void callNativeGetterResult(ValOperandId receiver, JSFunction* getter,
+                              bool sameRealm) {
     MOZ_ASSERT(getter->isNativeWithoutJitEntry());
     uint32_t nargsAndFlags = encodeNargsAndFlags(getter);
-    callNativeGetterResult_(receiver, getter, nargsAndFlags);
+    callNativeGetterResult_(receiver, getter, sameRealm, nargsAndFlags);
   }
 
   // These generate no code, but save the template object in a stub
