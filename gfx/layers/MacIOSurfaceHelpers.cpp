@@ -98,7 +98,7 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
                             0 /* not used */, mappedSurface.mData,
                             mappedSurface.mStride, 0, 0, size.width,
                             size.height, size.width, size.height,
-                            libyuv::kRotate0, libyuv::FOURCC_UYVY);
+                            libyuv::kRotate0, libyuv::FOURCC_YUYV);
     } else {
       /* Convert to YV16 */
       size_t cbCrWidth = (ioWidth + 1) >> 1;
