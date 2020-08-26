@@ -33,6 +33,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsStyledElement.h"
 #include "nscore.h"
 #include <algorithm>
 
@@ -621,62 +622,112 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
 }
 
 nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
+  if (NS_WARN_IF(!styledElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this,
                                              ScrollSelectionIntoView::Yes);
 
-  DebugOnly<nsresult> rvIgnored = NS_OK;
-  rvIgnored = mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::position,
-                                               EmptyString());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::position) "
-                       "failed, but ignored");
-  rvIgnored = mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::top,
-                                               EmptyString());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::top) "
-                       "failed, but ignored");
-  rvIgnored = mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::left,
-                                               EmptyString());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::left) "
-                       "failed, but ignored");
-  rvIgnored = mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::z_index,
-                                               EmptyString());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::z_index) "
-                       "failed, but ignored");
+  nsresult rv;
+  rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+      *styledElement, *nsGkAtoms::position, EmptyString());
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    NS_WARNING(
+        "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::position) "
+        "destroyed the editor");
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::position) "
+      "failed, but ignored");
+  rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+      *styledElement, *nsGkAtoms::top, EmptyString());
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    NS_WARNING(
+        "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::top) "
+        "destroyed the editor");
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::top) "
+      "failed, but ignored");
+  rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+      *styledElement, *nsGkAtoms::left, EmptyString());
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    NS_WARNING(
+        "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::left) "
+        "destroyed the editor");
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::left) "
+      "failed, but ignored");
+  rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+      *styledElement, *nsGkAtoms::z_index, EmptyString());
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    NS_WARNING(
+        "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::z_index) "
+        "destroyed the editor");
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::z_index) "
+      "failed, but ignored");
 
-  if (!HTMLEditUtils::IsImage(&aElement)) {
-    rvIgnored = mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::width,
-                                                 EmptyString());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::width) "
-                         "failed, but ignored");
-    rvIgnored = mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::height,
-                                                 EmptyString());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "CSSEditUtils::RemoveCSSProperty(nsGkAtoms::height) "
-                         "failed, but ignored");
+  if (!HTMLEditUtils::IsImage(styledElement)) {
+    rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+        *styledElement, *nsGkAtoms::width, EmptyString());
+    if (rv == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING(
+          "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::width) "
+          "destroyed the editor");
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::width) "
+        "failed, but ignored");
+    rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+        *styledElement, *nsGkAtoms::height, EmptyString());
+    if (rv == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING(
+          "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::height) "
+          "destroyed the editor");
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::height) "
+        "failed, but ignored");
   }
 
-  if (!aElement.IsHTMLElement(nsGkAtoms::div) ||
-      HTMLEditor::HasStyleOrIdOrClassAttribute(aElement)) {
+  if (!styledElement->IsHTMLElement(nsGkAtoms::div) ||
+      HTMLEditor::HasStyleOrIdOrClassAttribute(*styledElement)) {
     return NS_OK;
   }
 
   // Make sure the first fild and last child of aElement starts/ends hard
   // line(s) even after removing `aElement`.
-  nsresult rv = EnsureHardLineBeginsWithFirstChildOf(aElement);
+  rv = EnsureHardLineBeginsWithFirstChildOf(*styledElement);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::EnsureHardLineBeginsWithFirstChildOf() failed");
     return rv;
   }
-  rv = EnsureHardLineEndsWithLastChildOf(aElement);
+  rv = EnsureHardLineEndsWithLastChildOf(*styledElement);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::EnsureHardLineEndsWithLastChildOf() failed");
     return rv;
   }
-  rv = RemoveContainerWithTransaction(aElement);
+  rv = RemoveContainerWithTransaction(*styledElement);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::RemoveContainerWithTransaction() failed");
   return rv;

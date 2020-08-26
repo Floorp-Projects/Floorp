@@ -55,6 +55,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsStyledElement.h"
 #include "nsTArray.h"
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
@@ -12922,10 +12923,18 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
     return NS_OK;
   }
 
-  mCSSEditUtils->RemoveCSSProperty(aElement, MOZ_KnownLive(marginProperty),
-                                   value);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement)) {
+    nsresult rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
+        *styledElement, MOZ_KnownLive(marginProperty), value);
+    if (rv == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING(
+          "CSSEditUtils::RemoveCSSPropertyWithTransaction() destroyed the "
+          "editor");
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "CSSEditUtils::RemoveCSSPropertyWithTransaction() failed, but ignored");
   }
 
   // Remove unnecessary divs

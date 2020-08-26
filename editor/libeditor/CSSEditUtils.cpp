@@ -417,15 +417,11 @@ nsresult CSSEditUtils::SetCSSPropertyPixels(Element& aElement,
 // The lowest level above the transaction; removes the value aValue from the
 // list of values specified for the CSS property aProperty, or totally remove
 // the declaration if this property accepts only one value
-nsresult CSSEditUtils::RemoveCSSProperty(Element& aElement, nsAtom& aProperty,
-                                         const nsAString& aValue,
-                                         bool aSuppressTxn) {
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
-  if (NS_WARN_IF(!styledElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+nsresult CSSEditUtils::RemoveCSSPropertyInternal(
+    nsStyledElement& aStyledElement, nsAtom& aProperty, const nsAString& aValue,
+    bool aSuppressTxn) {
   RefPtr<ChangeStyleTransaction> transaction =
-      ChangeStyleTransaction::CreateToRemove(*styledElement, aProperty, aValue);
+      ChangeStyleTransaction::CreateToRemove(aStyledElement, aProperty, aValue);
   if (aSuppressTxn) {
     nsresult rv = transaction->DoTransaction();
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -437,6 +433,9 @@ nsresult CSSEditUtils::RemoveCSSProperty(Element& aElement, nsAtom& aProperty,
   }
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
   nsresult rv = htmlEditor->DoTransactionInternal(transaction);
+  if (NS_WARN_IF(htmlEditor->Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
   return rv;
@@ -537,22 +536,26 @@ already_AddRefed<nsComputedDOMStyle> CSSEditUtils::GetComputedStyle(
 // whole node if it is a span and if its only attribute is _moz_dirty
 nsresult CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode, nsAtom* aProperty,
                                             const nsAString& aPropertyValue) {
-  OwningNonNull<Element> element(*aNode.AsElement());
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aNode);
+  if (NS_WARN_IF(!styledElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   // remove the property from the style attribute
-  nsresult rv = RemoveCSSProperty(element, *aProperty, aPropertyValue);
+  nsresult rv = RemoveCSSPropertyWithTransaction(*styledElement, *aProperty,
+                                                 aPropertyValue);
   if (NS_FAILED(rv)) {
-    NS_WARNING("CSSEditUtils::RemoveCSSProperty() failed");
+    NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithTransaction() failed");
     return rv;
   }
 
-  if (!element->IsHTMLElement(nsGkAtoms::span) ||
-      HTMLEditor::HasAttributes(element)) {
+  if (!styledElement->IsHTMLElement(nsGkAtoms::span) ||
+      HTMLEditor::HasAttributes(styledElement)) {
     return NS_OK;
   }
 
   OwningNonNull<HTMLEditor> htmlEditor(*mHTMLEditor);
-  rv = htmlEditor->RemoveContainerWithTransaction(element);
+  rv = htmlEditor->RemoveContainerWithTransaction(*styledElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::RemoveContainerWithTransaction() failed");
   return rv;
@@ -874,13 +877,20 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyle(
                                        true);
 
   // remove the individual CSS inline styles
-  int32_t count = cssPropertyArray.Length();
-  for (int32_t index = 0; index < count; index++) {
-    nsresult rv =
-        RemoveCSSProperty(*aElement, MOZ_KnownLive(*cssPropertyArray[index]),
-                          cssValueArray[index], aSuppressTransaction);
+  const size_t count = cssPropertyArray.Length();
+  if (!count) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(aElement);
+  if (NS_WARN_IF(!styledElement)) {
+    return NS_ERROR_FAILURE;
+  }
+  for (size_t index = 0; index < count; index++) {
+    nsresult rv = RemoveCSSPropertyInternal(
+        *styledElement, MOZ_KnownLive(*cssPropertyArray[index]),
+        cssValueArray[index], aSuppressTransaction);
     if (NS_FAILED(rv)) {
-      NS_WARNING("CSSEditUtils::RemoveCSSProperty() failed");
+      NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithoutTransaction() failed");
       return rv;
     }
   }
