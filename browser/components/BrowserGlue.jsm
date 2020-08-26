@@ -3202,7 +3202,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 96;
+    const UI_VERSION = 97;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3788,6 +3788,46 @@ BrowserGlue.prototype = {
         oldPrefValue
       );
       Services.prefs.clearUserPref(oldPrefName);
+    }
+
+    if (currentUIVersion < 97) {
+      let userCustomizedWheelMax = Services.prefs.prefHasUserValue(
+        "general.smoothScroll.mouseWheel.durationMaxMS"
+      );
+      let userCustomizedWheelMin = Services.prefs.prefHasUserValue(
+        "general.smoothScroll.mouseWheel.durationMinMS"
+      );
+
+      if (!userCustomizedWheelMin && !userCustomizedWheelMax) {
+        // If the user has an existing profile but hasn't customized the wheel
+        // animation duration, indicate that they need to be migrated to the new
+        // values by setting their "migration complete" percentage to 0.
+        Services.prefs.setIntPref(
+          "general.smoothScroll.mouseWheel.migrationPercent",
+          0
+        );
+      } else if (userCustomizedWheelMin && !userCustomizedWheelMax) {
+        // If they customized just one of the two, save the old value for the
+        // other one as well, because the two values go hand-in-hand and we
+        // don't want to move just one to a new value and leave the other one
+        // at a customized value. In both of these cases, we leave the "migration
+        // complete" percentage at 100, because they have customized this and
+        // don't need any further migration.
+        Services.prefs.setIntPref(
+          "general.smoothScroll.mouseWheel.durationMaxMS",
+          400
+        );
+      } else if (!userCustomizedWheelMin && userCustomizedWheelMax) {
+        // Same as above case, but for the other pref.
+        Services.prefs.setIntPref(
+          "general.smoothScroll.mouseWheel.durationMinMS",
+          200
+        );
+      } else {
+        // The last remaining case is if they customized both values, in which
+        // case also we leave the "migration complete" percentage at 100, as no
+        // further migration is needed.
+      }
     }
 
     // Update the migration version.
