@@ -58,15 +58,21 @@ class DllServicesBase : public Authenticode {
     mAuthenticode = aAuthenticode;
   }
 
-  void SetInitDllBlocklistOOPFnPtr(
-      nt::LoaderAPI::InitDllBlocklistOOPFnPtr aPtr) {
-    mInitDllBlocklistOOPFnPtr = aPtr;
+  void SetWinLauncherFunctions(const nt::WinLauncherFunctions& aFunctions) {
+    mWinLauncherFunctions = aFunctions;
   }
 
   template <typename... Args>
   LauncherVoidResultWithLineInfo InitDllBlocklistOOP(Args&&... aArgs) {
-    MOZ_RELEASE_ASSERT(mInitDllBlocklistOOPFnPtr);
-    return mInitDllBlocklistOOPFnPtr(std::forward<Args>(aArgs)...);
+    MOZ_RELEASE_ASSERT(mWinLauncherFunctions.mInitDllBlocklistOOP);
+    return mWinLauncherFunctions.mInitDllBlocklistOOP(
+        std::forward<Args>(aArgs)...);
+  }
+
+  template <typename... Args>
+  void HandleLauncherError(Args&&... aArgs) {
+    MOZ_RELEASE_ASSERT(mWinLauncherFunctions.mHandleLauncherError);
+    mWinLauncherFunctions.mHandleLauncherError(std::forward<Args>(aArgs)...);
   }
 
   // In debug builds we override GetBinaryOrgName to add a Gecko-specific
@@ -97,8 +103,7 @@ class DllServicesBase : public Authenticode {
   DllServicesBase& operator=(DllServicesBase&&) = delete;
 
  protected:
-  DllServicesBase()
-      : mAuthenticode(nullptr), mInitDllBlocklistOOPFnPtr(nullptr) {}
+  DllServicesBase() : mAuthenticode(nullptr) {}
 
   virtual ~DllServicesBase() = default;
 
@@ -107,7 +112,7 @@ class DllServicesBase : public Authenticode {
 
  private:
   Authenticode* mAuthenticode;
-  nt::LoaderAPI::InitDllBlocklistOOPFnPtr mInitDllBlocklistOOPFnPtr;
+  nt::WinLauncherFunctions mWinLauncherFunctions;
 };
 
 }  // namespace detail

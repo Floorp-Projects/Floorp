@@ -10,6 +10,7 @@
 #include "mozilla/Types.h"
 #include "mozilla/Unused.h"
 #include "../DllBlocklistInit.h"
+#include "../ErrorHandler.h"
 
 using GlobalInitializerFn = void(__cdecl*)(void);
 
@@ -86,6 +87,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS LoaderPrivateAPIImp final
                         ModuleLoadInfo&& aModuleLoadInfo) final;
   nt::AllocatedUnicodeString GetSectionName(void* aSectionAddr) final;
   nt::LoaderAPI::InitDllBlocklistOOPFnPtr GetDllBlocklistInitFn() final;
+  nt::LoaderAPI::HandleLauncherErrorFnPtr GetHandleLauncherErrorFn() final;
 
   // LoaderPrivateAPI
   void NotifyBeginDllLoad(void** aContext,
@@ -213,6 +215,11 @@ nt::AllocatedUnicodeString LoaderPrivateAPIImp::GetSectionName(
 nt::LoaderAPI::InitDllBlocklistOOPFnPtr
 LoaderPrivateAPIImp::GetDllBlocklistInitFn() {
   return &InitializeDllBlocklistOOP;
+}
+
+nt::LoaderAPI::HandleLauncherErrorFnPtr
+LoaderPrivateAPIImp::GetHandleLauncherErrorFn() {
+  return &HandleLauncherError;
 }
 
 nt::MemorySectionNameBuf LoaderPrivateAPIImp::GetSectionNameBuffer(
