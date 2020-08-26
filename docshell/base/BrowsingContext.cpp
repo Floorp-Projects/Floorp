@@ -2046,15 +2046,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
   });
 }
 
-nsresult BrowsingContext::SetAllowContentRetargeting(
-    bool aAllowContentRetargeting) {
-  Transaction txn;
-  txn.SetAllowContentRetargeting(aAllowContentRetargeting);
-  txn.SetAllowContentRetargetingOnChildren(aAllowContentRetargeting);
-
-  return txn.Commit(this);
-}
-
 void BrowsingContext::SetCustomUserAgent(const nsAString& aUserAgent,
                                          ErrorResult& aRv) {
   Top()->SetUserAgentOverride(aUserAgent, aRv);
