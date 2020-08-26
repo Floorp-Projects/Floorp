@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
+import android.os.StrictMode
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -58,6 +59,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.media.MediaService
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
@@ -266,31 +268,33 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
     val topSiteStorage by lazy {
         val defaultTopSites = mutableListOf<Pair<String, String>>()
 
-        if (!context.settings().defaultTopSitesAdded) {
-            defaultTopSites.add(
-                Pair(
-                    context.getString(R.string.default_top_site_google),
-                    SupportUtils.GOOGLE_URL
-                )
-            )
-
-            if (LocaleManager.getSelectedLocale(context).language == "en") {
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            if (!context.settings().defaultTopSitesAdded) {
                 defaultTopSites.add(
                     Pair(
-                        context.getString(R.string.pocket_pinned_top_articles),
-                        SupportUtils.POCKET_TRENDING_URL
+                        context.getString(R.string.default_top_site_google),
+                        SupportUtils.GOOGLE_URL
                     )
                 )
-            }
 
-            defaultTopSites.add(
-                Pair(
-                    context.getString(R.string.default_top_site_wikipedia),
-                    SupportUtils.WIKIPEDIA_URL
+                if (LocaleManager.getSelectedLocale(context).language == "en") {
+                    defaultTopSites.add(
+                        Pair(
+                            context.getString(R.string.pocket_pinned_top_articles),
+                            SupportUtils.POCKET_TRENDING_URL
+                        )
+                    )
+                }
+
+                defaultTopSites.add(
+                    Pair(
+                        context.getString(R.string.default_top_site_wikipedia),
+                        SupportUtils.WIKIPEDIA_URL
+                    )
                 )
-            )
 
-            context.settings().defaultTopSitesAdded = true
+                context.settings().defaultTopSitesAdded = true
+            }
         }
 
         DefaultTopSitesStorage(
