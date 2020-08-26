@@ -466,8 +466,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     }
   }
 
-  nsresult SetAllowContentRetargeting(bool aAllowContentRetargeting);
-
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of
   // transitively reachable browsing contexts. Performs access control
