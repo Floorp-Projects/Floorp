@@ -926,6 +926,20 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     callNativeGetterResult_(receiver, getter, sameRealm, nargsAndFlags);
   }
 
+  void callScriptedSetter(ObjOperandId receiver, JSFunction* setter,
+                          ValOperandId rhs, bool sameRealm) {
+    MOZ_ASSERT(setter->hasJitEntry());
+    uint32_t nargsAndFlags = encodeNargsAndFlags(setter);
+    callScriptedSetter_(receiver, setter, rhs, sameRealm, nargsAndFlags);
+  }
+
+  void callNativeSetter(ObjOperandId receiver, JSFunction* setter,
+                        ValOperandId rhs, bool sameRealm) {
+    MOZ_ASSERT(setter->isNativeWithoutJitEntry());
+    uint32_t nargsAndFlags = encodeNargsAndFlags(setter);
+    callNativeSetter_(receiver, setter, rhs, sameRealm, nargsAndFlags);
+  }
+
   // These generate no code, but save the template object in a stub
   // field for BaselineInspector.
   void metaNativeTemplateObject(JSFunction* callee, JSObject* templateObject) {

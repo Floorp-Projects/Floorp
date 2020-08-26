@@ -1782,11 +1782,11 @@ bool BaselineCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
-                                                   uint32_t setterOffset,
-                                                   ValOperandId rhsId) {
+bool BaselineCacheIRCompiler::emitCallNativeSetter(
+    ObjOperandId receiverId, uint32_t setterOffset, ValOperandId rhsId,
+    bool sameRealm, uint32_t nargsAndFlagsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
+  Register receiver = allocator.useRegister(masm, receiverId);
   Address setterAddr(stubAddress(setterOffset));
   ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
@@ -1801,7 +1801,7 @@ bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
   masm.loadPtr(setterAddr, scratch);
 
   masm.Push(val);
-  masm.Push(obj);
+  masm.Push(receiver);
   masm.Push(scratch);
 
   using Fn = bool (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
@@ -1811,15 +1811,14 @@ bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallScriptedSetter(ObjOperandId objId,
-                                                     uint32_t setterOffset,
-                                                     ValOperandId rhsId,
-                                                     bool sameRealm) {
+bool BaselineCacheIRCompiler::emitCallScriptedSetter(
+    ObjOperandId receiverId, uint32_t setterOffset, ValOperandId rhsId,
+    bool sameRealm, uint32_t nargsAndFlagsOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
 
-  Register obj = allocator.useRegister(masm, objId);
+  Register receiver = allocator.useRegister(masm, receiverId);
   Address setterAddr(stubAddress(setterOffset));
   ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
@@ -1839,10 +1838,10 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetter(ObjOperandId objId,
   // JitStackAlignment.
   masm.alignJitStackBasedOnNArgs(1);
 
-  // Setter is called with 1 argument, and |obj| as thisv. Note that we use
+  // Setter is called with 1 argument, and |receiver| as thisv. Note that we use
   // Push, not push, so that callJit will align the stack properly on ARM.
   masm.Push(val);
-  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(receiver)));
 
   // Now that the object register is no longer needed, use it as second
   // scratch.
