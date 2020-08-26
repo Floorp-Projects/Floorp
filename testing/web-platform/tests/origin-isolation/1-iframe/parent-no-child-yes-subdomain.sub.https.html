@@ -21,6 +21,7 @@ promise_setup(async () => {
 // so the parent ends up in the site-keyed agent cluster and the child in the
 // origin-keyed one.
 testDifferentAgentClusters([self, 0]);
+
 testGetter(self, false, "parent");
 testGetter(0, true, "child");
 </script>
