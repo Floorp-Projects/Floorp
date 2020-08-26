@@ -787,6 +787,12 @@ class HTMLMediaElement::FirstFrameListener : public VideoOutput {
       if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0, 0)) {
         mInitialSizeFound = true;
 
+        mMainThread->Dispatch(NS_NewRunnableFunction(
+            "HTMLMediaElement::FirstFrameListener::FirstFrameRenderedSetter",
+            [self = RefPtr<FirstFrameListener>(this), this] {
+              mFirstFrameRendered = true;
+            }));
+
         // Pick the first frame and run it through the rendering code.
         VideoSegment segment;
         segment.AppendFrame(do_AddRef(c->mFrame.GetImage()),
@@ -798,6 +804,10 @@ class HTMLMediaElement::FirstFrameListener : public VideoOutput {
       }
     }
   }
+
+  // Main thread only.
+  Watchable<bool> mFirstFrameRendered = {
+      false, "HTMLMediaElement::FirstFrameListener::mFirstFrameRendered"};
 
  private:
   // Whether a frame with a concrete size has been received. May only be
@@ -821,7 +831,15 @@ class HTMLMediaElement::MediaStreamRenderer
                       void* aAudioOutputKey)
       : mVideoContainer(aVideoContainer),
         mAudioOutputKey(aAudioOutputKey),
-        mWatchManager(this, aMainThread) {}
+        mWatchManager(this, aMainThread),
+        mFirstFrameListener(aVideoContainer ? MakeAndAddRef<FirstFrameListener>(
+                                                  aVideoContainer, aMainThread)
+                                            : nullptr) {
+    if (mFirstFrameListener) {
+      mWatchManager.Watch(mFirstFrameListener->mFirstFrameRendered,
+                          &MediaStreamRenderer::SetFirstFrameRendered);
+    }
+  }
 
   void Shutdown() {
     for (const auto& t : mAudioTracks.Clone()) {
@@ -833,11 +851,24 @@ class HTMLMediaElement::MediaStreamRenderer
       RemoveTrack(mVideoTrack->AsVideoStreamTrack());
     }
     mWatchManager.Shutdown();
+    mFirstFrameListener = nullptr;
   }
 
   void UpdateGraphTime() {
     mGraphTime =
         mGraphTimeDummy->mTrack->Graph()->CurrentTime() - *mGraphTimeOffset;
+  }
+
+  void SetFirstFrameRendered() {
+    if (!mFirstFrameListener) {
+      return;
+    }
+    if (mVideoTrack) {
+      mVideoTrack->AsVideoStreamTrack()->RemoveVideoOutput(mFirstFrameListener);
+    }
+    mWatchManager.Unwatch(mFirstFrameListener->mFirstFrameRendered,
+                          &MediaStreamRenderer::SetFirstFrameRendered);
+    mFirstFrameListener = nullptr;
   }
 
   void SetProgressingCurrentTime(bool aProgress) {
@@ -882,6 +913,10 @@ class HTMLMediaElement::MediaStreamRenderer
     }
 
     if (mVideoTrack) {
+      if (mFirstFrameListener) {
+        mVideoTrack->AsVideoStreamTrack()->RemoveVideoOutput(
+            mFirstFrameListener);
+      }
       mVideoTrack->AsVideoStreamTrack()->AddVideoOutput(mVideoContainer);
     }
   }
@@ -905,6 +940,9 @@ class HTMLMediaElement::MediaStreamRenderer
 
     if (mVideoTrack) {
       mVideoTrack->AsVideoStreamTrack()->RemoveVideoOutput(mVideoContainer);
+      if (mFirstFrameListener) {
+        mVideoTrack->AsVideoStreamTrack()->AddVideoOutput(mFirstFrameListener);
+      }
     }
   }
 
@@ -978,6 +1016,8 @@ class HTMLMediaElement::MediaStreamRenderer
     EnsureGraphTimeDummy();
     if (mRendering) {
       aTrack->AddVideoOutput(mVideoContainer);
+    } else if (mFirstFrameListener) {
+      aTrack->AddVideoOutput(mFirstFrameListener);
     }
   }
 
@@ -995,6 +1035,8 @@ class HTMLMediaElement::MediaStreamRenderer
     }
     if (mRendering) {
       aTrack->RemoveVideoOutput(mVideoContainer);
+    } else if (mFirstFrameListener) {
+      aTrack->RemoveVideoOutput(mFirstFrameListener);
     }
     mVideoTrack = nullptr;
   }
@@ -1079,6 +1121,11 @@ class HTMLMediaElement::MediaStreamRenderer
 
   // Currently selected (and rendered) video track.
   WeakPtr<MediaStreamTrack> mVideoTrack;
+
+  // Holds a reference to the first-frame-getting track listener attached to
+  // mVideoTrack. Set by the constructor, unset when the media element tells us
+  // it has rendered the first frame.
+  RefPtr<FirstFrameListener> mFirstFrameListener;
 };
 
 class HTMLMediaElement::MediaElementTrackSource
@@ -2009,9 +2056,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
     if (tmp->mSelectedVideoStreamTrack) {
       tmp->mSelectedVideoStreamTrack->RemovePrincipalChangeObserver(tmp);
     }
-    if (tmp->mFirstFrameListener) {
-      tmp->mSelectedVideoStreamTrack->RemoveVideoOutput(
-          tmp->mFirstFrameListener);
+    if (tmp->mMediaStreamRenderer) {
+      tmp->mMediaStreamRenderer->Shutdown();
     }
     if (tmp->mMediaStreamTrackListener) {
       tmp->mSrcStream->UnregisterTrackListener(
@@ -2287,15 +2333,6 @@ void HTMLMediaElement::AbortExistingLoads() {
   }
 
   bool fireTimeUpdate = false;
-
-  // We need to remove FirstFrameListener before VideoTracks get emptied.
-  if (mFirstFrameListener) {
-    if (mSelectedVideoStreamTrack) {
-      // Unlink might have removed the selected video track.
-      mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
-    }
-    mFirstFrameListener = nullptr;
-  }
 
   if (mDecoder) {
     fireTimeUpdate = mDecoder->GetCurrentTime() != 0.0;
@@ -2716,21 +2753,6 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(dom::MediaTrack* aTrack) {
       }
       nsContentUtils::CombineResourcePrincipals(
           &mSrcStreamVideoPrincipal, mSelectedVideoStreamTrack->GetPrincipal());
-      if (VideoFrameContainer* container = GetVideoFrameContainer()) {
-        HTMLVideoElement* self = static_cast<HTMLVideoElement*>(this);
-        if (mSrcStreamIsPlaying) {
-          MaybeBeginCloningVisually();
-        } else if (self->VideoWidth() <= 1 && self->VideoHeight() <= 1) {
-          // MediaInfo uses dummy values of 1 for width and height to
-          // mark video as valid. We need a new first-frame listener
-          // if size is 0x0 or 1x1.
-          if (!mFirstFrameListener) {
-            mFirstFrameListener =
-                new FirstFrameListener(container, mAbstractMainThread);
-          }
-          mSelectedVideoStreamTrack->AddVideoOutput(mFirstFrameListener);
-        }
-      }
     }
   }
 
@@ -2779,10 +2801,6 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(dom::MediaTrack* aTrack) {
     if (mSrcStream) {
       MOZ_DIAGNOSTIC_ASSERT(mSelectedVideoStreamTrack ==
                             aTrack->AsVideoTrack()->GetVideoStreamTrack());
-      if (mFirstFrameListener) {
-        mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
-        mFirstFrameListener = nullptr;
-      }
       if (mMediaStreamRenderer) {
         mMediaStreamRenderer->RemoveTrack(mSelectedVideoStreamTrack);
       }
@@ -5262,10 +5280,6 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
       mMediaStreamRenderer->Start();
     }
 
-    if (mSelectedVideoStreamTrack && GetVideoFrameContainer()) {
-      MaybeBeginCloningVisually();
-    }
-
     SetCapturedOutputStreamsEnabled(true);  // Unmute
     // If the input is a media stream, we don't check its data and always regard
     // it as audible when it's playing.
@@ -5274,21 +5288,6 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
     if (mMediaStreamRenderer) {
       mMediaStreamRenderer->Stop();
     }
-    VideoFrameContainer* container = GetVideoFrameContainer();
-    if (mSelectedVideoStreamTrack && container) {
-      HTMLVideoElement* self = static_cast<HTMLVideoElement*>(this);
-      if (self->VideoWidth() <= 1 && self->VideoHeight() <= 1) {
-        // MediaInfo uses dummy values of 1 for width and height to
-        // mark video as valid. We need a new first-frame listener
-        // if size is 0x0 or 1x1.
-        if (!mFirstFrameListener) {
-          mFirstFrameListener =
-              new FirstFrameListener(container, mAbstractMainThread);
-        }
-        mSelectedVideoStreamTrack->AddVideoOutput(mFirstFrameListener);
-      }
-    }
-
     SetCapturedOutputStreamsEnabled(false);  // Mute
   }
 }
@@ -5314,8 +5313,7 @@ void HTMLMediaElement::UpdateSrcStreamTime() {
 }
 
 void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
-  NS_ASSERTION(!mSrcStream && !mFirstFrameListener,
-               "Should have been ended already");
+  NS_ASSERTION(!mSrcStream, "Should have been ended already");
 
   mSrcStream = aStream;
 
@@ -5366,14 +5364,7 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
   if (mSelectedVideoStreamTrack) {
     mSelectedVideoStreamTrack->RemovePrincipalChangeObserver(this);
   }
-  if (mFirstFrameListener) {
-    if (mSelectedVideoStreamTrack) {
-      // Unlink might have removed the selected video track.
-      mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
-    }
-  }
   mSelectedVideoStreamTrack = nullptr;
-  mFirstFrameListener = nullptr;
 
   if (mMediaStreamRenderer) {
     mWatchManager.Unwatch(mPaused,
@@ -6522,15 +6513,6 @@ void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize) {
 
   mMediaInfo.mVideo.mDisplay = aSize;
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
-
-  if (mFirstFrameListener) {
-    if (mSelectedVideoStreamTrack) {
-      // Unlink might have removed the selected video track.
-      mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
-    }
-    // The first-frame listener won't be needed again for this stream.
-    mFirstFrameListener = nullptr;
-  }
 }
 
 void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
