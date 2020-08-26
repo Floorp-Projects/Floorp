@@ -6,7 +6,9 @@ package mozilla.components.browser.session.ext
 
 import android.util.AtomicFile
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.BrowserStateSerializer
 import mozilla.components.browser.session.storage.SnapshotSerializer
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
@@ -33,11 +35,11 @@ fun AtomicFile.readSnapshot(
 /**
  * Saves the given [SessionManager.Snapshot] to this [AtomicFile].
  */
-fun AtomicFile.writeSnapshot(
-    snapshot: SessionManager.Snapshot,
-    serializer: SnapshotSerializer = SnapshotSerializer()
+fun AtomicFile.writeState(
+    state: BrowserState,
+    serializer: BrowserStateSerializer = BrowserStateSerializer()
 ): Boolean {
-    return writeString { serializer.toJSON(snapshot) }
+    return writeString { serializer.toJSON(state) }
 }
 
 /**

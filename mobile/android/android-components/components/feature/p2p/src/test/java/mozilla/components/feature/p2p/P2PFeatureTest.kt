@@ -4,7 +4,6 @@ import android.content.pm.PackageManager
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -44,12 +43,11 @@ class P2PFeatureTest {
     }
 
     private fun createP2PFeature(
-        browserStore: BrowserStore = mock(),
+        browserStore: BrowserStore = BrowserStore(),
         engine: Engine = mock(),
-        thunk: (() -> NearbyConnection) = { mock<NearbyConnection>() },
+        thunk: (() -> NearbyConnection) = { mock() },
         tabsUseCases: TabsUseCases = mock(),
         sessionUseCases: SessionUseCases = mock(),
-        sessionManager: SessionManager = mock(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions = onNeedToRequestPerms,
         onClose: (() -> Unit) = { }
     ): P2PFeature =
@@ -60,7 +58,6 @@ class P2PFeatureTest {
             thunk,
             tabsUseCases,
             sessionUseCases,
-            sessionManager,
             onNeedToRequestPermissions,
             onClose
         )
@@ -88,7 +85,6 @@ class P2PFeatureTest {
         )
         assertNull(p2pFeature.interactor)
         assertNull(p2pFeature.presenter)
-        assertNull(p2pFeature.extensionController)
     }
 
     @Test
@@ -102,7 +98,6 @@ class P2PFeatureTest {
             IntArray(neededPermissions.size) { PackageManager.PERMISSION_GRANTED }
         )
 
-        Mockito.verify(p2pFeature).observeSelected()
         assertNotNull(p2pFeature.interactor)
         assertNotNull(p2pFeature.presenter)
         assertNotNull(p2pFeature.extensionController)

@@ -8,8 +8,11 @@ import android.util.AtomicFile
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.BrowserStateSerializer
 import mozilla.components.browser.session.storage.SnapshotSerializer
 import mozilla.components.browser.session.storage.getFileForEngine
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -40,14 +43,11 @@ class AtomicFileKtTest {
         val file: AtomicFile = mock()
         doThrow(IOException::class.java).`when`(file).startWrite()
 
-        val snapshot = SessionManager.Snapshot(
-            sessions = listOf(
-                SessionManager.Snapshot.Item(Session("http://mozilla.org"))
-            ),
-            selectedSessionIndex = 0
+        val state = BrowserState(
+            tabs = listOf(createTab("http://mozilla.org"))
         )
 
-        file.writeSnapshot(snapshot, SnapshotSerializer())
+        file.writeState(state, BrowserStateSerializer())
 
         verify(file).failWrite(any())
     }
@@ -92,21 +92,18 @@ class AtomicFileKtTest {
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
         `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
 
-        // Engine session just for one of the sessions for simplicity.
-        val sessionsSnapshot = SessionManager.Snapshot(
-            sessions = listOf(
-                SessionManager.Snapshot.Item(session1),
-                SessionManager.Snapshot.Item(session2),
-                SessionManager.Snapshot.Item(session3)
-            ),
-            selectedSessionIndex = 0
-        )
-
         val file = AtomicFile(File.createTempFile(
             UUID.randomUUID().toString(),
             UUID.randomUUID().toString()))
 
-        file.writeSnapshot(sessionsSnapshot)
+        val state = BrowserState(tabs = listOf(
+                session1.toTabSessionState(),
+                session2.toTabSessionState(),
+                session3.toTabSessionState()
+            ),
+            selectedTabId = session1.id
+        )
+        file.writeState(state)
 
         // Read it back
         val restoredSnapshot = file.readSnapshot(engine)

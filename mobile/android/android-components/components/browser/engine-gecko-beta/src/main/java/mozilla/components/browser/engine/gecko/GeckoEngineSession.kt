@@ -232,7 +232,15 @@ class GeckoEngineSession(
             policy.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
 
         geckoSession.settings.useTrackingProtection = shouldBlockContent && enabled
-        notifyAtLeastOneObserver { onTrackerBlockingEnabledChange(enabled) }
+        notifyAtLeastOneObserver {
+            // We now register engine observers in a middleware using a dedicated
+            // store thread. Since this notification can be delayed until an observer
+            // is registered we switch to the main scope to make sure we're not notifying
+            // on the store thread.
+            MainScope().launch {
+                onTrackerBlockingEnabledChange(enabled)
+            }
+        }
     }
 
     /**

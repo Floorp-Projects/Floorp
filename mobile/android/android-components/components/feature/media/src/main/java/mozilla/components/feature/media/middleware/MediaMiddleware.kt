@@ -19,7 +19,7 @@ import mozilla.components.feature.media.middleware.sideeffects.MediaAggregateUpd
 import mozilla.components.feature.media.middleware.sideeffects.MediaFactsEmitter
 import mozilla.components.feature.media.middleware.sideeffects.MediaServiceLauncher
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareStore
+import mozilla.components.lib.state.MiddlewareContext
 
 /**
  * [Middleware] implementation for updating the [MediaState.Aggregate] and launching an
@@ -35,17 +35,17 @@ class MediaMiddleware(
     private val mediaFactsEmitter = MediaFactsEmitter()
 
     override fun invoke(
-        store: MiddlewareStore<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
-        preProcess(store, action)
+        preProcess(context, action)
         next(action)
-        postProcess(store, action)
+        postProcess(context, action)
     }
 
     private fun preProcess(
-        store: MiddlewareStore<BrowserState, BrowserAction>,
+        store: MiddlewareContext<BrowserState, BrowserAction>,
         action: BrowserAction
     ) {
         when (action) {
@@ -82,7 +82,7 @@ class MediaMiddleware(
     }
 
     private fun postProcess(
-        store: MiddlewareStore<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         action: BrowserAction
     ) {
         when (action) {
@@ -92,12 +92,12 @@ class MediaMiddleware(
             is MediaAction.UpdateMediaVolumeAction,
             is MediaAction.UpdateMediaStateAction,
             is MediaAction.UpdateMediaFullscreenAction -> {
-                mediaAggregateUpdate.process(store)
+                mediaAggregateUpdate.process(context.store)
             }
 
             is MediaAction.UpdateMediaAggregateAction -> {
-                mediaServiceLauncher.process(store.state)
-                mediaFactsEmitter.process(store.state)
+                mediaServiceLauncher.process(context.state)
+                mediaFactsEmitter.process(context.state)
             }
         }
     }

@@ -5,7 +5,6 @@
 package org.mozilla.samples.browser.integration
 
 import android.view.View
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.p2p.P2PFeature
@@ -19,13 +18,13 @@ import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 /**
  * Functionality to integrate a peer-to-peer communication toolbar in an application.
  */
+@Suppress("LongParameterList")
 class P2PIntegration(
     store: BrowserStore,
     engine: Engine,
     private val view: P2PView,
     thunk: () -> NearbyConnection,
     tabsUseCases: TabsUseCases,
-    sessionManager: SessionManager,
     sessionUseCases: SessionUseCases,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature {
@@ -36,7 +35,6 @@ class P2PIntegration(
         thunk,
         tabsUseCases,
         sessionUseCases,
-        sessionManager,
         onNeedToRequestPermissions,
         ::onClose
     )

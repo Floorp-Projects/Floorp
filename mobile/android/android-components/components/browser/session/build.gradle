@@ -21,6 +21,12 @@ android {
     }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach() {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
 dependencies {
     api project(':browser-state')
 
@@ -47,6 +53,7 @@ dependencies {
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_coroutines
 }
 
 apply from: '../../../publish.gradle'

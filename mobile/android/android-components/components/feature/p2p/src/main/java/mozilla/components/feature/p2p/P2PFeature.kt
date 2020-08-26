@@ -9,11 +9,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.feature.p2p.internal.P2PInteractor
@@ -33,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Feature implementation for peer-to-peer communication between browsers.
  */
+@Suppress("LongParameterList")
 class P2PFeature(
     private val view: P2PView,
     private val store: BrowserStore,
@@ -40,10 +40,9 @@ class P2PFeature(
     private val connectionProvider: () -> NearbyConnection,
     private val tabsUseCases: TabsUseCases,
     private val sessionUseCases: SessionUseCases,
-    private val sessionManager: SessionManager,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
     private val onClose: (() -> Unit)
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, PermissionsFeature {
+) : LifecycleAwareFeature, PermissionsFeature {
     private val logger = Logger("P2PFeature")
 
     @VisibleForTesting
@@ -53,16 +52,15 @@ class P2PFeature(
     internal var presenter: P2PPresenter? = null
 
     @VisibleForTesting
-    internal var extensionController: WebExtensionController? = null
-
-    // LifeCycleAwareFeature implementation
+    internal var extensionController: WebExtensionController =
+        WebExtensionController(P2P_EXTENSION_ID, P2P_EXTENSION_URL, P2P_MESSAGING_ID)
 
     override fun start() {
+        extensionController.install(engine)
         requestNeededPermissions()
     }
 
     override fun stop() {
-        super.stop()
         interactor?.stop()
         presenter?.stop()
     }
@@ -106,11 +104,9 @@ class P2PFeature(
     // Communication with the web extension
 
     private fun startExtension() {
-        observeSelected() // this sets actionSession
-
-        extensionController = WebExtensionController(P2P_EXTENSION_ID, P2P_EXTENSION_URL, P2P_MESSAGING_ID)
-        registerP2PContentMessageHandler()
-        extensionController?.install(engine)
+        store.state.selectedTab?.engineState?.engineSession?.let {
+            registerP2PContentMessageHandler(it)
+        }
 
         val outgoingMessages = ConcurrentHashMap<Long, Char>()
         interactor = P2PInteractor(
@@ -127,14 +123,8 @@ class P2PFeature(
     }
 
     @VisibleForTesting
-    internal fun registerP2PContentMessageHandler(session: Session? = activeSession) {
-        if (session == null) {
-            return
-        }
-
-        val engineSession = sessionManager.getOrCreateEngineSession(session)
-        val messageHandler = P2PContentMessageHandler()
-        extensionController?.registerContentMessageHandler(engineSession, messageHandler)
+    internal fun registerP2PContentMessageHandler(engineSession: EngineSession) {
+        extensionController.registerContentMessageHandler(engineSession, P2PContentMessageHandler())
     }
 
     private inner class P2PContentMessageHandler : MessageHandler {
@@ -160,11 +150,8 @@ class P2PFeature(
         }
 
         private fun sendMessage(json: JSONObject) {
-            activeSession?.let {
-                extensionController?.sendContentMessage(
-                    json,
-                    sessionManager.getOrCreateEngineSession(it)
-                )
+            store.state.selectedTab?.engineState?.engineSession?.let {
+                extensionController.sendContentMessage(json, it)
             }
         }
     }

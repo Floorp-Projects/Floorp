@@ -7,7 +7,7 @@ package mozilla.components.feature.tabs
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
@@ -153,10 +153,11 @@ class TabsUseCases(
             // If an engine session is specified then loading will have already started
             // during sessionManager.add when linking the session to its engine session.
             if (startLoading && engineSession == null) {
-                val parentEngineSession = parent?.let {
-                    store.state.findTabOrCustomTab(it.id)?.engineState?.engineSession
-                }
-                sessionManager.getOrCreateEngineSession(session, true).loadUrl(url, parentEngineSession, flags)
+                store.dispatch(EngineAction.LoadUrlAction(
+                    session.id,
+                    url,
+                    flags
+                ))
             }
 
             return session
@@ -204,10 +205,11 @@ class TabsUseCases(
             // If an engine session is specified then loading will have already started
             // during sessionManager.add when linking the session to its engine session.
             if (startLoading && engineSession == null) {
-                val parentEngineSession = parent?.let {
-                    store.state.findTabOrCustomTab(it.id)?.engineState?.engineSession
-                }
-                sessionManager.getOrCreateEngineSession(session, true).loadUrl(url, parentEngineSession, flags)
+                store.dispatch(EngineAction.LoadUrlAction(
+                    session.id,
+                    url,
+                    flags
+                ))
             }
 
             return session

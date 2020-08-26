@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.createMockMediaElement
 import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -51,6 +52,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -62,6 +64,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PAUSED, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -73,6 +76,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
         assertEquals(null, store.state.media.aggregate.activeTabId)
@@ -83,6 +87,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -117,6 +122,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -128,6 +134,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
         assertEquals(null, store.state.media.aggregate.activeTabId)
@@ -157,6 +164,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -168,6 +176,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
         assertEquals(null, store.state.media.aggregate.activeTabId)
@@ -215,6 +224,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -228,6 +238,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -240,6 +251,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -251,6 +263,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
         assertNull(store.state.media.aggregate.activeTabId)
@@ -289,6 +302,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -300,6 +314,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PAUSED, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -343,6 +358,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob?.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
         assertEquals(null, store.state.media.aggregate.activeTabId)
@@ -353,6 +369,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob?.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
         assertEquals(null, store.state.media.aggregate.activeTabId)
@@ -363,6 +380,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -397,6 +415,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob?.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -405,7 +424,9 @@ class MediaMiddlewareTest {
         store.dispatch(
                 MediaAction.UpdateMediaVolumeAction("test-tab", "test-media", Media.Volume(muted = true))
         ).joinBlocking()
+
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)
@@ -413,7 +434,7 @@ class MediaMiddlewareTest {
     }
 
     @Test
-    fun `Unumting playing media enters the playing state`() {
+    fun `Unmuting playing media enters the playing state`() {
         val middleware = MediaMiddleware(testContext, AbstractMediaService::class.java)
 
         val store = BrowserStore(
@@ -437,6 +458,7 @@ class MediaMiddlewareTest {
         ).joinBlocking()
 
         middleware.mediaAggregateUpdate.updateAggregateJob?.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
         assertEquals(null, store.state.media.aggregate.activeTabId)
@@ -445,7 +467,9 @@ class MediaMiddlewareTest {
         store.dispatch(
                 MediaAction.UpdateMediaVolumeAction("test-tab", "test-media", Media.Volume(muted = false))
         ).joinBlocking()
+
         middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
 
         assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
         assertEquals("test-tab", store.state.media.aggregate.activeTabId)

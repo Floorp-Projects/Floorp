@@ -6,7 +6,7 @@ package mozilla.components.lib.state.internal
 
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareStore
+import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Reducer
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -16,6 +16,7 @@ import mozilla.components.lib.state.Store
  * [reducer].
  */
 internal class ReducerChainBuilder<S : State, A : Action>(
+    private val storeThreadFactory: StoreThreadFactory,
     private val reducer: Reducer<S, A>,
     private val middleware: List<Middleware<S, A>>
 ) {
@@ -34,13 +35,16 @@ internal class ReducerChainBuilder<S : State, A : Action>(
     }
 
     private fun build(store: Store<S, A>): (A) -> Unit {
-        val middlewareStore: MiddlewareStore<S, A> = object : MiddlewareStore<S, A> {
+        val context = object : MiddlewareContext<S, A> {
             override val state: S
                 get() = store.state
 
             override fun dispatch(action: A) {
                 get(store).invoke(action)
             }
+
+            override val store: Store<S, A>
+                get() = store
         }
 
         var chain: (A) -> Unit = { action ->
@@ -48,9 +52,14 @@ internal class ReducerChainBuilder<S : State, A : Action>(
             store.transitionTo(state)
         }
 
-        middleware.reversed().forEach { middleware ->
+        val threadCheck: Middleware<S, A> = { _, next, action ->
+            storeThreadFactory.assertOnThread()
+            next(action)
+        }
+
+        (middleware.reversed() + threadCheck).forEach { middleware ->
             val next = chain
-            chain = { action -> middleware(middlewareStore, next, action) }
+            chain = { action -> middleware(context, next, action) }
         }
 
         return chain

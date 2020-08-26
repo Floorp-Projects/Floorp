@@ -14,6 +14,7 @@ import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.lang.IllegalStateException
 import java.util.UUID
 
 // Current version of the format used.
@@ -70,12 +71,24 @@ class SnapshotSerializer(
         val tuples: MutableList<SessionManager.Snapshot.Item> = mutableListOf()
 
         val jsonRoot = JSONObject(json)
-        val selectedSessionIndex = jsonRoot.getInt(Keys.SELECTED_SESSION_INDEX_KEY)
+
+        val version = jsonRoot.getInt(Keys.VERSION_KEY)
 
         val sessionStateTuples = jsonRoot.getJSONArray(Keys.SESSION_STATE_TUPLES_KEY)
         for (i in 0 until sessionStateTuples.length()) {
             val sessionStateTupleJson = sessionStateTuples.getJSONObject(i)
             tuples.add(itemFromJSON(engine, sessionStateTupleJson))
+        }
+
+        val selectedSessionIndex = when (version) {
+            1 -> jsonRoot.getInt(Keys.SELECTED_SESSION_INDEX_KEY)
+            2 -> {
+                val selectedTabId = jsonRoot.getString(Keys.SELECTED_TAB_ID_KEY)
+                tuples.indexOfFirst { it.session.id == selectedTabId }
+            }
+            else -> {
+                throw IllegalStateException("Unknown session store format version ($version")
+            }
         }
 
         return SessionManager.Snapshot(
@@ -141,8 +154,9 @@ internal fun deserializeSession(
     return session
 }
 
-private object Keys {
+internal object Keys {
     const val SELECTED_SESSION_INDEX_KEY = "selectedSessionIndex"
+    const val SELECTED_TAB_ID_KEY = "selectedTabId"
     const val SESSION_STATE_TUPLES_KEY = "sessionStateTuples"
 
     const val SESSION_URL_KEY = "url"

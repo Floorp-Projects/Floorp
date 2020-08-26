@@ -13,6 +13,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.internal.ReducerChainBuilder
+import mozilla.components.lib.state.internal.StoreThreadFactory
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
@@ -33,8 +34,9 @@ open class Store<S : State, A : Action>(
     reducer: Reducer<S, A>,
     middleware: List<Middleware<S, A>> = emptyList()
 ) {
-    private val reducerChainBuilder = ReducerChainBuilder(reducer, middleware)
-    private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val threadFactory = StoreThreadFactory()
+    private val dispatcher = Executors.newSingleThreadExecutor(threadFactory).asCoroutineDispatcher()
+    private val reducerChainBuilder = ReducerChainBuilder(threadFactory, reducer, middleware)
     private val scope = CoroutineScope(dispatcher)
     private val subscriptions = Collections.newSetFromMap(ConcurrentHashMap<Subscription<S, A>, Boolean>())
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->

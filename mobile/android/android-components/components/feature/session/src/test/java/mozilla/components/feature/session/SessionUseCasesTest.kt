@@ -4,229 +4,217 @@
 
 package mozilla.components.feature.session
 
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.CrashAction
+import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.createCustomTab
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
-import mozilla.components.support.test.any
-import mozilla.components.support.test.eq
+import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class SessionUseCasesTest {
 
-    private val sessionManager = mock<SessionManager>()
-    private val selectedEngineSession = mock<EngineSession>()
-    private val selectedSession = mock<Session>()
-    private val useCases = SessionUseCases(sessionManager)
+    private val sessionManager: SessionManager = mock()
+    private val selectedSessionId = "testSession"
+    private val selectedSession: Session = mock()
+    private val store: BrowserStore = mock()
+    private val useCases = SessionUseCases(store, sessionManager)
 
     @Before
     fun setup() {
+        whenever(selectedSession.id).thenReturn(selectedSessionId)
         whenever(sessionManager.selectedSessionOrThrow).thenReturn(selectedSession)
         whenever(sessionManager.selectedSession).thenReturn(selectedSession)
-        whenever(sessionManager.getOrCreateEngineSession()).thenReturn(selectedEngineSession)
     }
 
     @Test
     fun loadUrl() {
         useCases.loadUrl("http://mozilla.org")
-        verify(selectedEngineSession).loadUrl("http://mozilla.org")
+        verify(store).dispatch(EngineAction.LoadUrlAction(selectedSessionId, "http://mozilla.org"))
 
         useCases.loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
-        verify(selectedEngineSession).loadUrl("http://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(store).dispatch(EngineAction.LoadUrlAction(
+            selectedSessionId,
+            "http://www.mozilla.org",
+            LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
+        ))
 
         useCases.loadUrl("http://getpocket.com", selectedSession)
-        verify(selectedEngineSession).loadUrl("http://getpocket.com")
+        verify(store).dispatch(EngineAction.LoadUrlAction(selectedSessionId, "http://getpocket.com"))
 
-        useCases.loadUrl.invoke("http://www.getpocket.com", selectedSession,
-                LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY))
-        verify(selectedEngineSession).loadUrl("http://www.getpocket.com",
-                flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY))
+        useCases.loadUrl.invoke(
+            "http://getpocket.com",
+            selectedSession,
+            LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
+        )
+        verify(store).dispatch(EngineAction.LoadUrlAction(
+            selectedSessionId,
+            "http://getpocket.com",
+            LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
+        ))
     }
 
     @Test
     fun loadData() {
         useCases.loadData("<html><body></body></html>", "text/html")
-        verify(selectedEngineSession).loadData("<html><body></body></html>", "text/html", "UTF-8")
-
+        verify(store).dispatch(EngineAction.LoadDataAction(
+            selectedSessionId,
+            "<html><body></body></html>",
+            "text/html",
+            "UTF-8")
+        )
         useCases.loadData("Should load in WebView", "text/plain", session = selectedSession)
-        verify(selectedEngineSession).loadData("Should load in WebView", "text/plain", "UTF-8")
+        verify(store).dispatch(EngineAction.LoadDataAction(
+            selectedSessionId,
+            "Should load in WebView",
+            "text/plain",
+            "UTF-8")
+        )
 
         useCases.loadData("Should also load in WebView", "text/plain", "base64", selectedSession)
-        verify(selectedEngineSession).loadData("Should also load in WebView", "text/plain", "base64")
+        verify(store).dispatch(EngineAction.LoadDataAction(
+            selectedSessionId,
+            "Should also load in WebView",
+            "text/plain",
+            "base64")
+        )
     }
 
     @Test
     fun reload() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
-
-        useCases.reload(session)
-        verify(engineSession).reload()
-
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.reload()
-        verify(selectedEngineSession).reload()
+        verify(store).dispatch(EngineAction.ReloadAction(selectedSessionId))
+
+        whenever(sessionManager.findSessionById("testSession")).thenReturn(selectedSession)
+        useCases.reload(selectedSessionId, LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(store).dispatch(EngineAction.ReloadAction(selectedSessionId, LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)))
     }
 
     @Test
     fun reloadBypassCache() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
         val flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
-
-        useCases.reload(session, flags = flags)
-        verify(engineSession).reload(flags = flags)
-
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
-        useCases.reload(flags = flags)
-        verify(selectedEngineSession).reload(flags = flags)
+        useCases.reload(selectedSession, flags = flags)
+        verify(store).dispatch(EngineAction.ReloadAction(selectedSessionId, flags))
     }
 
     @Test
-    fun stopLoading() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+    fun stopLoading() = runBlocking {
+        val store = spy(BrowserStore())
+        val useCases = SessionUseCases(store, sessionManager)
+        val engineSession: EngineSession = mock()
+        store.dispatch(TabListAction.AddTabAction(createTab("https://wwww.mozilla.org", id = selectedSessionId))).joinBlocking()
+        store.dispatch(EngineAction.LinkEngineSessionAction(selectedSessionId, engineSession)).joinBlocking()
 
-        useCases.stopLoading(session)
+        useCases.stopLoading()
         verify(engineSession).stopLoading()
 
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
-        useCases.stopLoading()
-        verify(selectedEngineSession).stopLoading()
+        useCases.stopLoading(selectedSession)
+        verify(engineSession, times(2)).stopLoading()
     }
 
     @Test
     fun goBack() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-
         useCases.goBack(null)
-        verify(engineSession, never()).goBack()
-        verify(selectedEngineSession, never()).goBack()
+        verify(store, never()).dispatch(EngineAction.GoBackAction(selectedSessionId))
 
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        useCases.goBack(selectedSession)
+        verify(store).dispatch(EngineAction.GoBackAction(selectedSessionId))
 
-        useCases.goBack(session)
-        verify(engineSession).goBack()
-
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.goBack()
-        verify(selectedEngineSession).goBack()
+        verify(store, times(2)).dispatch(EngineAction.GoBackAction(selectedSessionId))
     }
 
     @Test
     fun goForward() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-
         useCases.goForward(null)
-        verify(engineSession, never()).goForward()
-        verify(selectedEngineSession, never()).goForward()
+        verify(store, never()).dispatch(EngineAction.GoForwardAction(selectedSessionId))
 
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        useCases.goForward(selectedSession)
+        verify(store).dispatch(EngineAction.GoForwardAction(selectedSessionId))
 
-        useCases.goForward(session)
-        verify(engineSession).goForward()
-
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.goForward()
-        verify(selectedEngineSession).goForward()
+        verify(store, times(2)).dispatch(EngineAction.GoForwardAction(selectedSessionId))
     }
 
     @Test
     fun goToHistoryIndex() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-
         useCases.goToHistoryIndex(session = null, index = 0)
-        verify(engineSession, never()).goToHistoryIndex(0)
-        verify(selectedEngineSession, never()).goToHistoryIndex(0)
+        verify(store, never()).dispatch(EngineAction.GoToHistoryIndexAction(selectedSessionId, 0))
 
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        useCases.goToHistoryIndex(session = selectedSession, index = 0)
+        verify(store).dispatch(EngineAction.GoToHistoryIndexAction(selectedSessionId, 0))
 
-        useCases.goToHistoryIndex(session = session, index = 0)
-        verify(engineSession).goToHistoryIndex(0)
-
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.goToHistoryIndex(index = 0)
-        verify(selectedEngineSession).goToHistoryIndex(0)
+        verify(store, times(2)).dispatch(EngineAction.GoToHistoryIndexAction(selectedSessionId, 0))
     }
 
     @Test
     fun requestDesktopSite() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        useCases.requestDesktopSite(true, selectedSession)
+        verify(store).dispatch(EngineAction.ToggleDesktopModeAction(selectedSessionId, true))
 
-        useCases.requestDesktopSite(true, session)
-        verify(engineSession).toggleDesktopMode(true, reload = true)
-
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
-        useCases.requestDesktopSite(true)
-        verify(selectedEngineSession).toggleDesktopMode(true, reload = true)
+        useCases.requestDesktopSite(false)
+        verify(store).dispatch(EngineAction.ToggleDesktopModeAction(selectedSessionId, false))
     }
 
     @Test
     fun exitFullscreen() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        useCases.exitFullscreen(selectedSession)
+        verify(store).dispatch(EngineAction.ExitFullScreenModeAction(selectedSessionId))
 
-        useCases.exitFullscreen(session)
-        verify(engineSession).exitFullScreenMode()
-
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.exitFullscreen()
-        verify(selectedEngineSession).exitFullScreenMode()
+        verify(store, times(2)).dispatch(EngineAction.ExitFullScreenModeAction(selectedSessionId))
     }
 
     @Test
     fun clearData() {
-        val engineSession = mock<EngineSession>()
-        val session = mock<Session>()
-        val engine = mock<Engine>()
+        val engine: Engine = mock()
         whenever(sessionManager.engine).thenReturn(engine)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
-        useCases.clearData(session)
+        useCases.clearData(selectedSession)
         verify(engine).clearData()
-        verify(engineSession).clearData()
+        verify(store).dispatch(EngineAction.ClearDataAction(selectedSessionId, BrowsingData.all()))
 
         useCases.clearData(data = BrowsingData.select(BrowsingData.COOKIES))
-        verify(engine).clearData(eq(BrowsingData.select(BrowsingData.COOKIES)), eq(null), any(), any())
+        verify(store).dispatch(EngineAction.ClearDataAction(selectedSessionId,
+            BrowsingData.select(BrowsingData.COOKIES))
+        )
 
-        useCases.clearData(session, data = BrowsingData.select(BrowsingData.COOKIES))
-        verify(engineSession).clearData(eq(BrowsingData.select(BrowsingData.COOKIES)), eq(null), any(), any())
+        useCases.clearData(selectedSession, data = BrowsingData.select(BrowsingData.IMAGE_CACHE))
+        verify(store).dispatch(EngineAction.ClearDataAction(selectedSessionId,
+            BrowsingData.select(BrowsingData.IMAGE_CACHE))
+        )
 
-        whenever(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.clearData()
-        verify(selectedEngineSession).clearData()
+        verify(store, times(2)).dispatch(EngineAction.ClearDataAction(selectedSessionId, BrowsingData.all()))
     }
 
     @Test
     fun `LoadUrlUseCase will invoke onNoSession lambda if no selected session exists`() {
         var createdSession: Session? = null
         var sessionCreatedForUrl: String? = null
-
         whenever(sessionManager.selectedSession).thenReturn(null)
-        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(mock())
 
-        val loadUseCase = SessionUseCases.DefaultLoadUrlUseCase(sessionManager) { url ->
+        val loadUseCase = SessionUseCases.DefaultLoadUrlUseCase(store, sessionManager) { url ->
             sessionCreatedForUrl = url
             Session(url).also { createdSession = it }
         }
@@ -235,91 +223,55 @@ class SessionUseCasesTest {
 
         assertEquals("https://www.example.com", sessionCreatedForUrl)
         assertNotNull(createdSession)
-        verify(sessionManager).getOrCreateEngineSession(createdSession!!)
+
+        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
+        verify(store).dispatch(actionCaptor.capture())
+        assertEquals(createdSession!!.id, actionCaptor.value.sessionId)
+        assertEquals(sessionCreatedForUrl, actionCaptor.value.url)
     }
 
     @Test
     fun `LoadDataUseCase will invoke onNoSession lambda if no selected session exists`() {
         var createdSession: Session? = null
         var sessionCreatedForUrl: String? = null
-
-        val engineSession: EngineSession = mock()
-
         whenever(sessionManager.selectedSession).thenReturn(null)
-        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
 
-        val loadUseCase = SessionUseCases.LoadDataUseCase(sessionManager) { url ->
+        val loadUseCase = SessionUseCases.LoadDataUseCase(store, sessionManager) { url ->
             sessionCreatedForUrl = url
             Session(url).also { createdSession = it }
         }
 
-        loadUseCase("Hello", mimeType = "plain/text", encoding = "UTF-8")
+        loadUseCase("Hello", mimeType = "text/plain", encoding = "UTF-8")
 
         assertEquals("about:blank", sessionCreatedForUrl)
         assertNotNull(createdSession)
-        verify(sessionManager).getOrCreateEngineSession(createdSession!!)
-        verify(engineSession).loadData("Hello", mimeType = "plain/text", encoding = "UTF-8")
+
+        val actionCaptor = argumentCaptor<EngineAction.LoadDataAction>()
+        verify(store).dispatch(actionCaptor.capture())
+        assertEquals(createdSession!!.id, actionCaptor.value.sessionId)
+        assertEquals("Hello", actionCaptor.value.data)
+        assertEquals("text/plain", actionCaptor.value.mimeType)
+        assertEquals("UTF-8", actionCaptor.value.encoding)
     }
 
     @Test
-    fun `CrashRecoveryUseCase will invoke recoverFromCrash on engine session and reset flag`() {
-        val engineSession = mock<EngineSession>()
-        doReturn(true).`when`(engineSession).recoverFromCrash()
-
-        val session = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
-
-        assertTrue(useCases.crashRecovery.invoke(session))
-
-        verify(engineSession).recoverFromCrash()
-        verify(session).crashed = false
+    fun `CrashRecoveryUseCase will restore specified session`() {
+        useCases.crashRecovery.invoke(listOf(selectedSessionId))
+        verify(store).dispatch(CrashAction.RestoreCrashedSessionAction(selectedSessionId))
     }
 
     @Test
     fun `CrashRecoveryUseCase will restore list of crashed sessions`() {
-        val engineSession1 = mock<EngineSession>()
-        doReturn(true).`when`(engineSession1).recoverFromCrash()
+        val store = spy(BrowserStore())
+        val useCases = SessionUseCases(store, sessionManager)
 
-        val engineSession2 = mock<EngineSession>()
-        doReturn(true).`when`(engineSession2).recoverFromCrash()
+        store.dispatch(TabListAction.AddTabAction(createTab("https://wwww.mozilla.org", id = "tab1"))).joinBlocking()
+        store.dispatch(CustomTabListAction.AddCustomTabAction(createCustomTab("https://wwww.mozilla.org", id = "customTab1"))).joinBlocking()
+        store.dispatch(CrashAction.SessionCrashedAction("tab1")).joinBlocking()
+        store.dispatch(CrashAction.SessionCrashedAction("customTab1")).joinBlocking()
 
-        val session1 = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session1)).thenReturn(engineSession1)
-
-        val session2 = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session2)).thenReturn(engineSession2)
-
-        assertTrue(useCases.crashRecovery.invoke(listOf(session1, session2)))
-
-        verify(engineSession1).recoverFromCrash()
-        verify(engineSession2).recoverFromCrash()
-        verify(session1).crashed = false
-        verify(session2).crashed = false
-    }
-
-    @Test
-    fun `CrashRecoveryUseCase will restore crashed sessions`() {
-        val engineSession1 = mock<EngineSession>()
-        doReturn(true).`when`(engineSession1).recoverFromCrash()
-
-        val engineSession2 = mock<EngineSession>()
-        doReturn(true).`when`(engineSession2).recoverFromCrash()
-
-        val session1 = mock<Session>()
-        whenever(sessionManager.getOrCreateEngineSession(session1)).thenReturn(engineSession1)
-        doReturn(true).`when`(session1).crashed
-
-        val session2 = mock<Session>()
-        doReturn(false).`when`(session2).crashed
-        whenever(sessionManager.getOrCreateEngineSession(session2)).thenReturn(engineSession2)
-
-        doReturn(listOf(session1, session2)).`when`(sessionManager).sessions
-
-        assertTrue(useCases.crashRecovery.invoke())
-
-        verify(engineSession1).recoverFromCrash()
-        verify(engineSession2, never()).recoverFromCrash()
-        verify(session1).crashed = false
-        verify(session2, never()).crashed = false
+        useCases.crashRecovery.invoke()
+        verify(store).dispatch(CrashAction.RestoreCrashedSessionAction("tab1"))
+        verify(store).dispatch(CrashAction.RestoreCrashedSessionAction("customTab1"))
     }
 }

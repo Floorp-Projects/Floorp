@@ -50,10 +50,16 @@ class EngineActionTest {
     @Test
     fun `UnlinkEngineSessionAction - Detaches engine session`() {
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, mock())).joinBlocking()
+        store.dispatch(EngineAction.UpdateEngineSessionStateAction(tab.id, mock())).joinBlocking()
+        store.dispatch(EngineAction.UpdateEngineSessionObserverAction(tab.id, mock())).joinBlocking()
         assertNotNull(engineState().engineSession)
+        assertNotNull(engineState().engineSessionState)
+        assertNotNull(engineState().engineObserver)
 
         store.dispatch(EngineAction.UnlinkEngineSessionAction(tab.id)).joinBlocking()
         assertNull(engineState().engineSession)
+        assertNull(engineState().engineSessionState)
+        assertNull(engineState().engineObserver)
     }
 
     @Test
@@ -64,5 +70,15 @@ class EngineActionTest {
         store.dispatch(EngineAction.UpdateEngineSessionStateAction(tab.id, engineSessionState)).joinBlocking()
         assertNotNull(engineState().engineSessionState)
         assertEquals(engineSessionState, engineState().engineSessionState)
+    }
+
+    @Test
+    fun `UpdateEngineSessionObserverAction - Updates engine session observer`() {
+        assertNull(engineState().engineObserver)
+
+        val engineObserver: EngineSession.Observer = mock()
+        store.dispatch(EngineAction.UpdateEngineSessionObserverAction(tab.id, engineObserver)).joinBlocking()
+        assertNotNull(engineState().engineObserver)
+        assertEquals(engineObserver, engineState().engineObserver)
     }
 }

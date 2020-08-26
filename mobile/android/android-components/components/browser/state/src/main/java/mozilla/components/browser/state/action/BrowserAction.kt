@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.action
 
+import android.content.ComponentCallbacks2
 import android.graphics.Bitmap
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
@@ -11,6 +12,7 @@ import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.EngineState
+import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
@@ -19,8 +21,8 @@ import mozilla.components.browser.state.state.TrackingProtectionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
-import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.SearchState
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
@@ -45,14 +47,14 @@ sealed class BrowserAction : Action
  */
 sealed class SystemAction : BrowserAction() {
     /**
-     * Optimizes the [BrowserState] by removing unneeded and optional
-     * resources if the system is in a low memory condition.
+     * Optimizes the [BrowserState] by removing unneeded and optional resources if the system is in
+     * a low memory condition.
      *
-     * @param states map of session ids to engine session states where the engine session was closed
-     * by SessionManager.
+     * @param level The context of the trim, giving a hint of the amount of trimming the application
+     * may like to perform. See constants in [ComponentCallbacks2].
      */
     data class LowMemoryAction(
-        val states: Map<String, EngineSessionState>
+        val level: Int
     ) : SystemAction()
 }
 
@@ -130,6 +132,11 @@ sealed class CustomTabListAction : BrowserAction() {
      * @property tabId the ID of the custom tab to remove.
      */
     data class RemoveCustomTabAction(val tabId: String) : CustomTabListAction()
+
+    /**
+     * Converts an existing [CustomTabSessionState] to a regular/normal [TabSessionState].
+     */
+    data class TurnCustomTabIntoNormalTabAction(val tabId: String) : CustomTabListAction()
 
     /**
      * Removes all custom tabs [TabSessionState]s.
@@ -429,11 +436,102 @@ sealed class WebExtensionAction : BrowserAction() {
  * [BrowserState].
  */
 sealed class EngineAction : BrowserAction() {
+    /**
+     * Creates an [EngineSession] for the given [tabId] if none exists yet.
+     */
+    data class CreateEngineSessionAction(
+        val tabId: String,
+        val skipLoading: Boolean = false
+    ) : EngineAction()
+
+    /**
+     * Loads the given [url] in the tab with the given [sessionId].
+     */
+    data class LoadUrlAction(
+        val sessionId: String,
+        val url: String,
+        val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
+        val additionalHeaders: Map<String, String>? = null
+    ) : EngineAction()
+
+    /**
+     * Loads [data] in the tab with the given [sessionId].
+     */
+    data class LoadDataAction(
+        val sessionId: String,
+        val data: String,
+        val mimeType: String = "text/html",
+        val encoding: String = "UTF-8"
+    ) : EngineAction()
+
+    /**
+     * Reloads the tab with the given [sessionId].
+     */
+    data class ReloadAction(
+        val sessionId: String,
+        val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+    ) : EngineAction()
+
+    /**
+     * Navigates back in the tab with the given [sessionId].
+     */
+    data class GoBackAction(
+        val sessionId: String
+    ) : EngineAction()
+
+    /**
+     * Navigates forward in the tab with the given [sessionId].
+     */
+    data class GoForwardAction(
+        val sessionId: String
+    ) : EngineAction()
+
+    /**
+     * Navigates to the specified index in the history of the tab with the given [sessionId].
+     */
+    data class GoToHistoryIndexAction(
+        val sessionId: String,
+        val index: Int
+    ) : EngineAction()
+
+    /**
+     * Enables/disables desktop mode in the tabs with the given [sessionId].
+     */
+    data class ToggleDesktopModeAction(
+        val sessionId: String,
+        val enable: Boolean
+    ) : EngineAction()
+
+    /**
+     * Exits fullscreen mode in the tabs with the given [sessionId].
+     */
+    data class ExitFullScreenModeAction(
+        val sessionId: String
+    ) : EngineAction()
+
+    /**
+     * Clears browsing data for the tab with the given [sessionId].
+     */
+    data class ClearDataAction(
+        val sessionId: String,
+        val data: Engine.BrowsingData
+    ) : EngineAction()
 
     /**
      * Attaches the provided [EngineSession] to the session with the provided [sessionId].
      */
-    data class LinkEngineSessionAction(val sessionId: String, val engineSession: EngineSession) : EngineAction()
+    data class LinkEngineSessionAction(
+        val sessionId: String,
+        val engineSession: EngineSession,
+        val skipLoading: Boolean = false
+    ) : EngineAction()
+
+    /**
+     * Suspends the [EngineSession] of the session with the provided [sessionId].
+     */
+    data class SuspendEngineSessionAction(
+        val sessionId: String
+    ) : EngineAction()
 
     /**
      * Detaches the current [EngineSession] from the session with the provided [sessionId].
@@ -447,6 +545,29 @@ sealed class EngineAction : BrowserAction() {
         val sessionId: String,
         val engineSessionState: EngineSessionState
     ) : EngineAction()
+
+    /**
+     * Updates the [EngineSession.Observer] of the session with the provided [sessionId].
+     */
+    data class UpdateEngineSessionObserverAction(
+        val sessionId: String,
+        val engineSessionObserver: EngineSession.Observer
+    ) : EngineAction()
+}
+
+/**
+ * [BrowserAction] implementations to react to crashes.
+ */
+sealed class CrashAction : BrowserAction() {
+    /**
+     * Updates the [SessionState] of the session with provided ID to mark it as crashed.
+     */
+    data class SessionCrashedAction(val tabId: String) : CrashAction()
+
+    /**
+     * Updates the [SessionState] of the session with provided ID to mark it as restored.
+     */
+    data class RestoreCrashedSessionAction(val tabId: String) : CrashAction()
 }
 
 /**

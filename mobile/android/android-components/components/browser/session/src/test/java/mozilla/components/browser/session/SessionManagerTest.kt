@@ -4,27 +4,19 @@
 
 package mozilla.components.browser.session
 
-import android.graphics.Bitmap
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.CustomTabConfig
-import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -133,46 +125,6 @@ class SessionManagerTest {
     }
 
     @Test
-    fun `selected session is marked as active for web extensions`() {
-        val engine = mock(Engine::class.java)
-        val engineSession1 = mock(EngineSession::class.java)
-        val engineSession2 = mock(EngineSession::class.java)
-        `when`(engine.name()).thenReturn("gecko")
-        `when`(engine.createSession(anyBoolean(), any())).thenReturn(engineSession1)
-
-        val session1 = Session("http://www.mozilla.org")
-        val session2 = Session("http://www.firefox.com")
-
-        val manager = SessionManager(engine)
-        manager.add(session1)
-        manager.add(session2)
-        assertEquals("http://www.mozilla.org", manager.selectedSessionOrThrow.url)
-
-        // Session1 was selected but never linked to an engine session so we have never marked it as active
-        verify(engineSession1, never()).markActiveForWebExtensions(true)
-
-        // Creating an engine session and linking to session1 should mark it as active
-        manager.getOrCreateEngineSession(session1)
-        verify(engineSession1).markActiveForWebExtensions(true)
-
-        // Selecting a new session should mark the new session as active and the previous one as inactive
-        `when`(engine.createSession(anyBoolean(), any())).thenReturn(engineSession2)
-        verify(engineSession2, never()).markActiveForWebExtensions(true)
-        manager.getOrCreateEngineSession(session2)
-        manager.select(session2)
-        assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
-        verify(engineSession1).markActiveForWebExtensions(false)
-        verify(engineSession2).markActiveForWebExtensions(true)
-
-        // Removing the selected session should mark it as inactive and the new selection as active
-        `when`(engine.createSession(anyBoolean(), any())).thenReturn(engineSession1)
-        manager.remove(session2)
-        assertEquals("http://www.mozilla.org", manager.selectedSessionOrThrow.url)
-        verify(engineSession2).markActiveForWebExtensions(false)
-        verify(engineSession1, times(2)).markActiveForWebExtensions(true)
-    }
-
-    @Test
     fun `observer does not get notified after unregistering`() {
         val session1 = Session("http://www.mozilla.org")
         val session2 = Session("http://www.firefox.com")
@@ -278,41 +230,6 @@ class SessionManagerTest {
         val manager = SessionManager(mock())
 
         assertEquals(0, manager.size)
-    }
-
-    @Test
-    fun `createSnapshot works when manager has no sessions`() {
-        val manager = SessionManager(mock())
-        assertTrue(manager.createSnapshot().isEmpty())
-    }
-
-    @Test
-    fun `createSnapshot ignores private sessions`() {
-        val manager = SessionManager(mock())
-        val session = Session("http://mozilla.org", true)
-        manager.add(session)
-
-        assertTrue(manager.createSnapshot().isEmpty())
-    }
-
-    @Test
-    fun `createSnapshot ignores CustomTab sessions`() {
-        val manager = SessionManager(mock())
-        val session = Session("http://mozilla.org")
-        session.customTabConfig = mock(CustomTabConfig::class.java)
-        manager.add(session)
-
-        assertTrue(manager.createSnapshot().isEmpty())
-    }
-
-    @Test
-    fun `createSnapshot ignores private CustomTab sessions`() {
-        val manager = SessionManager(mock())
-        val session = Session("http://mozilla.org", true)
-        session.customTabConfig = mock(CustomTabConfig::class.java)
-        manager.add(session)
-
-        assertTrue(manager.createSnapshot().isEmpty())
     }
 
     @Test
@@ -427,8 +344,6 @@ class SessionManagerTest {
         manager.restore(snapshot)
         assertEquals(3, manager.size)
         assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
-        assertEquals(engineSession, manager.selectedSessionOrThrow.engineSessionHolder.engineSession)
-        assertNull(manager.selectedSessionOrThrow.engineSessionHolder.engineSessionState)
     }
 
     @Test
@@ -473,63 +388,6 @@ class SessionManagerTest {
         verify(observer, never()).onSessionSelected(session)
         verify(observer, never()).onSessionSelected(session2)
         verify(observer, times(1)).onSessionSelected(session3)
-    }
-
-    @Test
-    fun `createSnapshot produces a correct snapshot of sessions`() {
-        val manager = SessionManager(mock())
-        val customTabSession = Session("http://mozilla.org")
-        customTabSession.customTabConfig = mock(CustomTabConfig::class.java)
-        val privateSession = Session("http://www.secret.com", true)
-        val privateCustomTabSession = Session("http://very.secret.com", true)
-        privateCustomTabSession.customTabConfig = mock(CustomTabConfig::class.java)
-
-        val regularSession = Session("http://www.firefox.com")
-        val engineSessionState: EngineSessionState = mock()
-        val engineSession = mock(EngineSession::class.java)
-        `when`(engineSession.saveState()).thenReturn(engineSessionState)
-
-        val engine = mock(Engine::class.java)
-        `when`(engine.name()).thenReturn("gecko")
-        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
-
-        manager.add(regularSession, false, engineSession)
-        manager.add(Session("http://firefox.com"), true, engineSession)
-        manager.add(Session("http://wikipedia.org"), false, engineSession)
-        manager.add(privateSession)
-        manager.add(customTabSession)
-        manager.add(privateCustomTabSession)
-
-        val snapshot = manager.createSnapshot()
-        assertEquals(3, snapshot.sessions.size)
-        assertEquals(1, snapshot.selectedSessionIndex)
-
-        val snapshotSession = snapshot.sessions[0]
-        assertEquals("http://www.firefox.com", snapshotSession.session.url)
-
-        val snapshotState = snapshotSession.engineSession!!.saveState()
-        assertEquals(engineSessionState, snapshotState)
-    }
-
-    @Test
-    fun `createSnapshot resets selection index if selected session was private`() {
-        val manager = SessionManager(mock())
-
-        val privateSession = Session("http://www.secret.com", true)
-        val regularSession1 = Session("http://www.firefox.com")
-        val regularSession2 = Session("http://www.mozilla.org")
-
-        val engine = mock(Engine::class.java)
-        `when`(engine.name()).thenReturn("gecko")
-        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
-
-        manager.add(regularSession1, false)
-        manager.add(regularSession2, false)
-        manager.add(privateSession, true)
-
-        val snapshot = manager.createSnapshot()
-        assertEquals(2, snapshot.sessions.size)
-        assertEquals(0, snapshot.selectedSessionIndex)
     }
 
     @Test
@@ -659,128 +517,6 @@ class SessionManagerTest {
     }
 
     @Test
-    fun `session manager creates and links engine session`() {
-        val engine: Engine = mock()
-
-        val actualEngineSession: EngineSession = mock()
-        doReturn(actualEngineSession).`when`(engine).createSession(false)
-        val privateEngineSession: EngineSession = mock()
-        doReturn(privateEngineSession).`when`(engine).createSession(true)
-
-        val store = BrowserStore()
-        val sessionManager = SessionManager(engine, store)
-
-        val session = Session("https://www.mozilla.org")
-        sessionManager.add(session)
-
-        assertNull(store.state.findTab(session.id)!!.engineState.engineSession)
-        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
-        assertEquals(actualEngineSession, store.state.findTab(session.id)!!.engineState.engineSession)
-        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
-        assertEquals(actualEngineSession, session.engineSessionHolder.engineSession)
-
-        val privateSession = Session("https://www.mozilla.org", true, SessionState.Source.NONE)
-        sessionManager.add(privateSession)
-        assertNull(store.state.findTab(privateSession.id)!!.engineState.engineSession)
-        assertEquals(privateEngineSession, sessionManager.getOrCreateEngineSession(privateSession))
-        assertEquals(privateEngineSession, privateSession.engineSessionHolder.engineSession)
-    }
-
-    @Test
-    fun `session manager considers parent when creating and linking engine session`() {
-        val engine: Engine = mock()
-
-        val parent = Session(id = "parent", initialUrl = "")
-        val parentEngineSession: EngineSession = mock()
-        val session = Session("https://www.mozilla.org")
-        session.parentId = parent.id
-        val engineSession: EngineSession = mock()
-
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(parent)
-        sessionManager.add(session)
-
-        doReturn(parentEngineSession, engineSession).`when`(engine).createSession(false)
-
-        assertEquals(parentEngineSession, sessionManager.getOrCreateEngineSession(parent))
-        assertEquals(parentEngineSession, parent.engineSessionHolder.engineSession)
-
-        assertEquals(engineSession, sessionManager.getOrCreateEngineSession(session))
-        assertEquals(engineSession, session.engineSessionHolder.engineSession)
-
-        verify(engineSession).loadUrl(session.url, parentEngineSession, EngineSession.LoadUrlFlags.none())
-    }
-
-    @Test
-    fun `parent is not provided when linking engine session for extension page`() {
-        val engine: Engine = mock()
-
-        val parent = Session(id = "parent", initialUrl = "")
-        val parentEngineSession: EngineSession = mock()
-        val session = Session("moz-extension://test-1234")
-        session.parentId = parent.id
-        val engineSession: EngineSession = mock()
-
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(parent)
-        sessionManager.add(session)
-
-        doReturn(parentEngineSession, engineSession).`when`(engine).createSession(false)
-
-        assertEquals(parentEngineSession, sessionManager.getOrCreateEngineSession(parent))
-        assertEquals(parentEngineSession, parent.engineSessionHolder.engineSession)
-
-        assertEquals(engineSession, sessionManager.getOrCreateEngineSession(session))
-        assertEquals(engineSession, session.engineSessionHolder.engineSession)
-
-        verify(engineSession).loadUrl(session.url, null, EngineSession.LoadUrlFlags.none())
-    }
-
-    @Test
-    fun `removing a session unlinks the engine session`() {
-        val engine: Engine = mock()
-
-        val actualEngineSession: EngineSession = mock()
-        doReturn(actualEngineSession).`when`(engine).createSession()
-
-        val sessionManager = SessionManager(engine)
-
-        val session = Session("https://www.mozilla.org")
-        sessionManager.add(session)
-
-        assertNotNull(sessionManager.getOrCreateEngineSession(session))
-        assertNotNull(session.engineSessionHolder.engineSession)
-        assertNotNull(session.engineSessionHolder.engineObserver)
-
-        sessionManager.remove(session)
-
-        assertNull(session.engineSessionHolder.engineSession)
-        assertNull(session.engineSessionHolder.engineObserver)
-    }
-
-    @Test
-    fun `add will link an engine session if provided`() {
-        val engine: Engine = mock()
-
-        val store = BrowserStore()
-        val actualEngineSession: EngineSession = mock()
-        val sessionManager = SessionManager(engine, store)
-
-        val session = Session("https://www.mozilla.org")
-        assertNull(session.engineSessionHolder.engineSession)
-        assertNull(session.engineSessionHolder.engineObserver)
-
-        sessionManager.add(session, engineSession = actualEngineSession)
-
-        assertNotNull(session.engineSessionHolder.engineSession)
-        assertNotNull(session.engineSessionHolder.engineObserver)
-
-        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
-        assertEquals(actualEngineSession, store.state.findTab(session.id)!!.engineState.engineSession)
-        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
-    }
-
-    @Test
     fun `removeSessions retains customtab sessions`() {
         val manager = SessionManager(mock())
 
@@ -811,38 +547,6 @@ class SessionManagerTest {
     fun `exception is thrown from selectedSessionOrThrow with no selection`() {
         val manager = SessionManager(mock())
         manager.selectedSessionOrThrow
-    }
-
-    @Test
-    @Suppress("Deprecation")
-    fun `thumbnails of all but selected session should be removed on low memory`() {
-        val manager = SessionManager(mock())
-
-        val emptyBitmap = spy(Bitmap::class.java)
-
-        val session1 = Session("https://www.mozilla.org")
-        session1.thumbnail = emptyBitmap
-
-        val session2 = Session("https://getPocket.com")
-        session2.thumbnail = emptyBitmap
-
-        val session3 = Session("https://www.firefox.com")
-        session3.thumbnail = emptyBitmap
-
-        manager.add(session1, true)
-        manager.add(session2, false)
-        manager.add(session3, false)
-
-        val allSessionsMustHaveAThumbnail = manager.all.all { it.thumbnail != null }
-
-        assertTrue(allSessionsMustHaveAThumbnail)
-
-        manager.onLowMemory()
-
-        val onlySelectedSessionMustHaveAThumbnail =
-                session1.thumbnail != null && session2.thumbnail == null && session3.thumbnail == null
-
-        assertTrue(onlySelectedSessionMustHaveAThumbnail)
     }
 
     @Test
