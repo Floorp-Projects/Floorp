@@ -85,8 +85,7 @@ parent:
   async LoadURI(MaybeDiscardedBrowsingContext aTargetBC,
                 nsDocShellLoadState aLoadState, bool aSetNavigating);
 
-  async InternalLoad(MaybeDiscardedBrowsingContext aTargetBC,
-                     nsDocShellLoadState aLoadState);
+  async InternalLoad(nsDocShellLoadState aLoadState);
 
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
