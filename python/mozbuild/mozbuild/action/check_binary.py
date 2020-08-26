@@ -13,6 +13,7 @@ import sys
 from distutils.version import StrictVersion as Version
 
 import buildconfig
+from mozbuild.action.util import log_build_task
 from mozbuild.util import memoize
 from mozpack.executables import (
     get_type,
@@ -317,4 +318,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(log_build_task(main, sys.argv[1:]))
