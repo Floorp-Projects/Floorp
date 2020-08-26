@@ -407,13 +407,16 @@ bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
     NS_WARNING("EditorBase::CreateHTMLContent(nsGkAtoms::span) failed");
     return false;
   }
-  mCSSEditUtils->SetCSSEquivalentToHTMLStyle(newSpanElement, aProperty,
-                                             aAttribute, aValue,
-                                             /*suppress transaction*/ true);
   nsCOMPtr<nsStyledElement> styledNewSpanElement =
       do_QueryInterface(newSpanElement);
   if (!styledNewSpanElement) {
     return false;
+  }
+  Result<int32_t, nsresult> result =
+      mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithoutTransaction(
+          *styledNewSpanElement, aProperty, aAttribute, aValue);
+  if (result.isErr()) {
+    return false;  // TODO: Return error if editor is destroyed.
   }
   nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(element);
   if (!styledElement) {
@@ -623,8 +626,24 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
     }
 
     // Add the CSS styles corresponding to the HTML style request
-    mCSSEditUtils->SetCSSEquivalentToHTMLStyle(spanElement, &aProperty,
-                                               aAttribute, &aValue, false);
+    if (nsCOMPtr<nsStyledElement> spanStyledElement =
+            do_QueryInterface(spanElement)) {
+      Result<int32_t, nsresult> result =
+          mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+              *spanStyledElement, &aProperty, aAttribute, &aValue);
+      if (result.isErr()) {
+        if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+          NS_WARNING(
+              "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction() "
+              "destroyed the editor");
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING(
+            "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction() "
+            "failed, "
+            "but ignored");
+      }
+    }
     return NS_OK;
   }
 
