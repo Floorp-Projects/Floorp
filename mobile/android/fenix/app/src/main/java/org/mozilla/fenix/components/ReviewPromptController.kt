@@ -26,7 +26,7 @@ interface ReviewSettings {
  */
 class FenixReviewSettings(
     val settings: Settings
-): ReviewSettings {
+) : ReviewSettings {
     override var numberOfAppLaunches: Int
         get() = settings.numberOfAppLaunches
         set(value) { settings.numberOfAppLaunches = value }
@@ -43,14 +43,16 @@ class FenixReviewSettings(
 class ReviewPromptController(
     private val context: Context,
     private val reviewSettings: ReviewSettings,
-    private val timeNowInMillis: () -> Long = { System.currentTimeMillis() }
+    private val timeNowInMillis: () -> Long = { System.currentTimeMillis() },
+    private val tryPromptReview: suspend (Activity) -> Unit = {
+        val manager = ReviewManagerFactory.create(context)
+        val reviewInfo = manager.requestReview()
+        manager.launchReview(it, reviewInfo)
+    }
 ) {
     suspend fun promptReview(activity: Activity) {
         if (shouldShowPrompt()) {
-            val manager = ReviewManagerFactory.create(context)
-            val reviewInfo = manager.requestReview()
-            manager.launchReview(activity, reviewInfo)
-
+            tryPromptReview(activity)
             reviewSettings.lastReviewPromptTimeInMillis = timeNowInMillis()
         }
     }
@@ -63,14 +65,18 @@ class ReviewPromptController(
     fun shouldShowPrompt(): Boolean {
         if (!reviewSettings.isDefaultBrowser) { return false }
 
-        val hasOpenedFiveTimes = reviewSettings.numberOfAppLaunches >= 5
-        val apprxFourMonthsAgo = timeNowInMillis() - (APPRX_MONTH_IN_MILLIS * 4)
-        val hasNotBeenPromptedLastFourMonths = reviewSettings.lastReviewPromptTimeInMillis <= apprxFourMonthsAgo
+        val hasOpenedFiveTimes = reviewSettings.numberOfAppLaunches >= NUMBER_OF_LAUNCHES_REQUIRED
+        val now = timeNowInMillis()
+        val apprxFourMonthsAgo = now - (APPRX_MONTH_IN_MILLIS * NUMBER_OF_MONTHS_TO_PASS)
+        val lastPrompt = reviewSettings.lastReviewPromptTimeInMillis
+        val hasNotBeenPromptedLastFourMonths = lastPrompt == 0L || lastPrompt <= apprxFourMonthsAgo
 
         return hasOpenedFiveTimes && hasNotBeenPromptedLastFourMonths
     }
 
     companion object {
         private const val APPRX_MONTH_IN_MILLIS: Long = 1000L * 60L * 60L * 24L * 30L
+        private const val NUMBER_OF_LAUNCHES_REQUIRED = 5
+        private const val NUMBER_OF_MONTHS_TO_PASS = 4
     }
 }

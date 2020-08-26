@@ -42,9 +42,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.play.core.ktx.launchReview
-import com.google.android.play.core.ktx.requestReview
-import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.android.synthetic.main.no_collections_message.view.*

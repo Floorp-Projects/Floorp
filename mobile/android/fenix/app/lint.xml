@@ -7,6 +7,8 @@
         <!-- The Sentry SDK is compiled against parts of the Java SDK that are not available in the Android SDK.
              Let's just ignore issues in the Sentry code since that is a third-party dependency anyways. -->
         <ignore path="**/sentry*.jar" />
+        <!-- Temporary until https://github.com/Kotlin/kotlinx.coroutines/issues/2004 is resolved. -->
+        <ignore path="**/kotlinx-coroutines-core-*.jar"/>
     </issue>
     <!-- Lints that don't apply to our translation process -->
     <issue id="MissingTranslation" severity="ignore" />
