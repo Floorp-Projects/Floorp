@@ -10,15 +10,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { evaluate } = ChromeUtils.import(
-  "chrome://marionette/content/evaluate.js"
-);
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+  error: "chrome://marionette/content/error.js",
+  evaluate: "chrome://marionette/content/evaluate.js",
+  Log: "chrome://marionette/content/log.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
