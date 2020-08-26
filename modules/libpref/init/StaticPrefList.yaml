@@ -7665,7 +7665,6 @@
   value: false
   mirror: always
 
-# This affects whether events will be routed through APZ or not.
 - name: mousewheel.system_scroll_override_on_root_content.enabled
   type: RelaxedAtomicBool
 #ifdef XP_WIN
