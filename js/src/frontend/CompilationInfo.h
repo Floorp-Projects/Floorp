@@ -165,6 +165,8 @@ struct MOZ_RAII CompilationInfo {
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
 
+  JS::RootedVector<JSAtom*> atoms;
+
   Directives directives;
 
   ScopeContext scopeContext;
@@ -238,6 +240,7 @@ struct MOZ_RAII CompilationInfo {
         options(options),
         keepAtoms(cx),
         parserAtoms(cx),
+        atoms(cx),
         directives(options.forceStrictMode()),
         scopeContext(cx, enclosingScope, enclosingEnv),
         script(cx),
@@ -286,10 +289,10 @@ struct MOZ_RAII CompilationInfo {
   MOZ_MUST_USE bool instantiateStencils();
 
   JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
-    return parserAtom->toJSAtom(cx).unwrapOr(nullptr);
+    return parserAtom->toJSAtom(cx, *this).unwrapOr(nullptr);
   }
   const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom) {
-    auto result = parserAtoms.internJSAtom(cx, atom);
+    auto result = parserAtoms.internJSAtom(cx, *this, atom);
     return result.unwrapOr(nullptr);
   }
 

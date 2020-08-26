@@ -58,7 +58,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     mozilla::Span<JS::GCCellPtr>& output;
 
     bool operator()(const ScriptAtom& data) {
-      auto maybeAtom = data->toJSAtom(cx);
+      auto maybeAtom = data->toJSAtom(cx, compilationInfo);
       if (maybeAtom.isErr()) {
         return false;
       }

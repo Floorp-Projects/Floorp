@@ -10,6 +10,7 @@
 
 #include "jsnum.h"
 
+#include "frontend/CompilationInfo.h"
 #include "frontend/NameCollections.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"
@@ -23,6 +24,27 @@ namespace js {
 namespace frontend {
 
 static JS::OOM PARSER_ATOMS_OOM;
+
+static JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId kind) {
+#define ASSERT_OFFSET_(idpart, id, text)       \
+  static_assert(offsetof(JSAtomState, id) ==   \
+                int32_t(WellKnownAtomId::id) * \
+                    sizeof(js::ImmutablePropertyNamePtr));
+  FOR_EACH_COMMON_PROPERTYNAME(ASSERT_OFFSET_);
+#undef ASSERT_OFFSET_
+
+#define ASSERT_OFFSET_(name, clasp)              \
+  static_assert(offsetof(JSAtomState, name) ==   \
+                int32_t(WellKnownAtomId::name) * \
+                    sizeof(js::ImmutablePropertyNamePtr));
+  JS_FOR_EACH_PROTOTYPE(ASSERT_OFFSET_);
+#undef ASSERT_OFFSET_
+
+  static_assert(int32_t(WellKnownAtomId::abort) == 0,
+                "Unexpected order of WellKnownAtom");
+
+  return (&cx->names().abort)[int32_t(kind)];
+}
 
 mozilla::GenericErrorResult<OOM&> RaiseParserAtomsOOMError(JSContext* cx) {
   js::ReportOutOfMemory(cx);
@@ -66,12 +88,6 @@ ParserAtomEntry::allocateInline(JSContext* cx,
 }
 
 bool ParserAtomEntry::equalsJSAtom(JSAtom* other) const {
-  // If this parser-atom has already been atomized, or been constructed
-  // from an existing js-atom, just compare against that.
-  if (jsatom_) {
-    return other == jsatom_;
-  }
-
   // Compare hashes and lengths first.
   if (hash_ != other->hash() || length_ != other->length()) {
     return false;
@@ -127,20 +143,30 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
          js::CheckStringIsIndex(twoByteChars(), len, indexp);
 }
 
-JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(JSContext* cx) const {
-  if (jsatom_) {
-    return jsatom_;
+JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(
+    JSContext* cx, CompilationInfo& compilationInfo) const {
+  if (atomIndex_.constructed<AtomIndex>()) {
+    return compilationInfo.atoms[atomIndex_.ref<AtomIndex>()].get();
+  }
+  if (atomIndex_.constructed<WellKnownAtomId>()) {
+    return GetWellKnownAtom(cx, atomIndex_.ref<WellKnownAtomId>());
   }
 
+  JSAtom* atom;
   if (hasLatin1Chars()) {
-    jsatom_ = AtomizeChars(cx, latin1Chars(), length());
+    atom = AtomizeChars(cx, latin1Chars(), length());
   } else {
-    jsatom_ = AtomizeChars(cx, twoByteChars(), length());
+    atom = AtomizeChars(cx, twoByteChars(), length());
   }
-  if (!jsatom_) {
+  if (!atom) {
     return RaiseParserAtomsOOMError(cx);
   }
-  return jsatom_;
+  auto index = compilationInfo.atoms.length();
+  if (!compilationInfo.atoms.append(atom)) {
+    return mozilla::Err(PARSER_ATOMS_OOM);
+  }
+  atomIndex_.construct<AtomIndex>(index);
+  return atom;
 }
 
 bool ParserAtomEntry::toNumber(JSContext* cx, double* result) const {
@@ -302,18 +328,40 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internJSAtom(
-    JSContext* cx, JSAtom* atom) {
-  JS::AutoCheckCannotGC nogc;
+    JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom) {
+  const ParserAtom* id;
+  {
+    JS::AutoCheckCannotGC nogc;
 
-  auto result =
-      atom->hasLatin1Chars()
-          ? internLatin1(cx, atom->latin1Chars(nogc), atom->length())
-          : internChar16(cx, atom->twoByteChars(nogc), atom->length());
-  if (result.isErr()) {
-    return result;
+    auto result =
+        atom->hasLatin1Chars()
+            ? internLatin1(cx, atom->latin1Chars(nogc), atom->length())
+            : internChar16(cx, atom->twoByteChars(nogc), atom->length());
+    if (result.isErr()) {
+      return result;
+    }
+    id = result.unwrap();
   }
-  const ParserAtom* id = result.unwrap();
-  id->setAtom(atom);
+
+  if (id->atomIndex_.empty()) {
+    MOZ_ASSERT(id->equalsJSAtom(atom));
+
+    auto index = AtomIndex(compilationInfo.atoms.length());
+    if (!compilationInfo.atoms.append(atom)) {
+      return mozilla::Err(PARSER_ATOMS_OOM);
+    }
+    id->setAtomIndex(index);
+  } else {
+#ifdef DEBUG
+    if (id->atomIndex_.constructed<AtomIndex>()) {
+      MOZ_ASSERT(compilationInfo.atoms[id->atomIndex_.ref<AtomIndex>()] ==
+                 atom);
+    } else {
+      MOZ_ASSERT(GetWellKnownAtom(cx, id->atomIndex_.ref<WellKnownAtomId>()) ==
+                 atom);
+    }
+#endif
+  }
   return id;
 }
 
@@ -439,7 +487,7 @@ const ParserAtom* WellKnownParserAtoms::lookupChar16Seq(
 }
 
 bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
-                                      const char* str, JSAtom* jsatom) {
+                                      const char* str, WellKnownAtomId kind) {
   MOZ_ASSERT(name != nullptr);
 
   unsigned int len = strlen(str);
@@ -476,7 +524,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
     }
     entry = maybeEntry.unwrap();
   }
-  entry->jsatom_ = jsatom;
+  entry->setWellKnownAtomId(kind);
 
   // Save name for returning after moving entry into set.
   const ParserName* nm = entry.get()->asName();
@@ -489,16 +537,16 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
 }
 
 bool WellKnownParserAtoms::init(JSContext* cx) {
-#define COMMON_NAME_INIT_(idpart, id, text)           \
-  if (!initSingle(cx, &(id), text, cx->names().id)) { \
-    return false;                                     \
+#define COMMON_NAME_INIT_(idpart, id, text)                \
+  if (!initSingle(cx, &(id), text, WellKnownAtomId::id)) { \
+    return false;                                          \
   }
   FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
 
-#define COMMON_NAME_INIT_(name, clasp)                     \
-  if (!initSingle(cx, &(name), #name, cx->names().name)) { \
-    return false;                                          \
+#define COMMON_NAME_INIT_(name, clasp)                          \
+  if (!initSingle(cx, &(name), #name, WellKnownAtomId::name)) { \
+    return false;                                               \
   }
   JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
