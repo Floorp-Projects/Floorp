@@ -96,7 +96,7 @@ class NS_NO_VTABLE LoaderAPI {
 
   using InitDllBlocklistOOPFnPtr = LauncherVoidResultWithLineInfo (*)(
       const wchar_t*, HANDLE, const IMAGE_THUNK_DATA*);
-  using HandleLauncherErrorFnPtr = void (*)(const LauncherError&);
+  using HandleLauncherErrorFnPtr = void (*)(const LauncherError&, const char*);
 
   /**
    * Return a pointer to winlauncher's function.
