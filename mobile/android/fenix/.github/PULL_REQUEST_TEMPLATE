@@ -6,9 +6,6 @@
 - [ ] **Screenshots**: This PR includes screenshots or GIFs of the changes made or an explanation of why it does not
 - [ ] **Accessibility**: The code in this PR follows [accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/master/android/accessibility_guide.md) or does not include any user facing features. In addition, it includes a screenshot of a successful [accessibility scan](https://play.google.com/store/apps/details?id=com.google.android.apps.accessibility.auditor&hl=en_US) to ensure no new defects are added to the product.
 
-### After merge
-- [ ] **Milestone**: Make sure issues finished by this pull request are added to the [milestone](https://github.com/mozilla-mobile/fenix/milestones) of the version currently in development.
-
 ### To download an APK when reviewing a PR:
 1. click on Show All Checks,
 2. click Details next to "Taskcluster (pull_request)" after it appears and then finishes with a green checkmark,
