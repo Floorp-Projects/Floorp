@@ -771,14 +771,12 @@ class HTMLMediaElement::MediaStreamRenderer
 
   MediaStreamRenderer(AbstractThread* aMainThread,
                       VideoFrameContainer* aVideoContainer,
+                      FirstFrameVideoOutput* aFirstFrameVideoOutput,
                       void* aAudioOutputKey)
       : mVideoContainer(aVideoContainer),
         mAudioOutputKey(aAudioOutputKey),
         mWatchManager(this, aMainThread),
-        mFirstFrameVideoOutput(aVideoContainer
-                                   ? MakeAndAddRef<FirstFrameVideoOutput>(
-                                         aVideoContainer, aMainThread)
-                                   : nullptr) {
+        mFirstFrameVideoOutput(aFirstFrameVideoOutput) {
     if (mFirstFrameVideoOutput) {
       mWatchManager.Watch(mFirstFrameVideoOutput->mFirstFrameRendered,
                           &MediaStreamRenderer::SetFirstFrameRendered);
@@ -5267,8 +5265,13 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
 
   mSrcStream = aStream;
 
+  VideoFrameContainer* container = GetVideoFrameContainer();
+  RefPtr<FirstFrameVideoOutput> firstFrameOutput =
+      container
+          ? MakeAndAddRef<FirstFrameVideoOutput>(container, mAbstractMainThread)
+          : nullptr;
   mMediaStreamRenderer = MakeAndAddRef<MediaStreamRenderer>(
-      mAbstractMainThread, GetVideoFrameContainer(), this);
+      mAbstractMainThread, container, firstFrameOutput, this);
   mWatchManager.Watch(mPaused,
                       &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
   mWatchManager.Watch(mReadyState,
