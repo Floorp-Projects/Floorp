@@ -40,8 +40,8 @@ interface PointerEvent : MouseEvent {
 };
 
 partial interface Element {
-  void setPointerCapture (long pointerId);
-  void releasePointerCapture (long pointerId);
+  undefined setPointerCapture (long pointerId);
+  undefined releasePointerCapture (long pointerId);
   boolean hasPointerCapture (long pointerId);
 };
 
