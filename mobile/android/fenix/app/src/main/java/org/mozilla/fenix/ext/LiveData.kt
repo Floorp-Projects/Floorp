@@ -10,11 +10,11 @@ import androidx.lifecycle.Observer
 /**
  * Observe a LiveData once and unregister from it as soon as the live data returns a value
  */
-fun <T> LiveData<T>.observeOnce(observer: (T) -> Unit) {
+fun <T> LiveData<T>.observeOnceAndRemoveObserver(callback: (T) -> Unit) {
     observeForever(object : Observer<T> {
         override fun onChanged(value: T) {
             removeObserver(this)
-            observer(value)
+            callback(value)
         }
     })
 }
