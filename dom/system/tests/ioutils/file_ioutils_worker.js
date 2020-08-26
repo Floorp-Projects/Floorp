@@ -37,7 +37,7 @@ self.onmessage = async function(msg) {
     // Write a file.
     const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_numbers.tmp");
     const bytes = Uint8Array.of(...new Array(50).keys());
-    const bytesWritten = await self.IOUtils.writeAtomic(tmpFileName, bytes);
+    const bytesWritten = await IOUtils.writeAtomic(tmpFileName, bytes);
     is(
       bytesWritten,
       50,
@@ -45,7 +45,7 @@ self.onmessage = async function(msg) {
     );
 
     // Read it back.
-    let fileContents = await self.IOUtils.read(tmpFileName);
+    let fileContents = await IOUtils.read(tmpFileName);
     ok(
       ObjectUtils.deepEqual(bytes, fileContents) &&
         bytes.length == fileContents.length,
@@ -53,7 +53,7 @@ self.onmessage = async function(msg) {
     );
 
     const tooManyBytes = bytes.length + 1;
-    fileContents = await self.IOUtils.read(tmpFileName, tooManyBytes);
+    fileContents = await IOUtils.read(tmpFileName, tooManyBytes);
     ok(
       ObjectUtils.deepEqual(bytes, fileContents) &&
         fileContents.length == bytes.length,
@@ -67,9 +67,9 @@ self.onmessage = async function(msg) {
     const src = OS.Path.join(tmpDir, "test_move_file_src.tmp");
     const dest = OS.Path.join(tmpDir, "test_move_file_dest.tmp");
     const bytes = Uint8Array.of(...new Array(50).keys());
-    await self.IOUtils.writeAtomic(src, bytes);
+    await IOUtils.writeAtomic(src, bytes);
 
-    await self.IOUtils.move(src, dest);
+    await IOUtils.move(src, dest);
     ok(
       !(await fileExists(src)) && (await fileExists(dest)),
       "IOUtils::move can move files from a worker"
@@ -83,7 +83,7 @@ self.onmessage = async function(msg) {
     const destFileName = OS.Path.join(tmpDir, "test_ioutils_copy.tmp");
     await createFile(tmpFileName, "original");
 
-    await self.IOUtils.copy(tmpFileName, destFileName);
+    await IOUtils.copy(tmpFileName, destFileName);
     ok(
       (await fileExists(tmpFileName)) &&
         (await fileHasTextContents(destFileName, "original")),
@@ -95,7 +95,7 @@ self.onmessage = async function(msg) {
 
   async function test_make_directory() {
     const dir = OS.Path.join(tmpDir, "test_make_dir.tmp.d");
-    await self.IOUtils.makeDirectory(dir);
+    await IOUtils.makeDirectory(dir);
     ok(
       OS.File.stat(dir).isDir,
       "IOUtils::makeDirectory can make a new directory from a worker"
