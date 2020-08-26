@@ -8010,6 +8010,7 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
       mTransactionTimings.domainLookupStart = mDNSPrefetch->StartTimestamp();
       mTransactionTimings.domainLookupEnd = mDNSPrefetch->EndTimestamp();
     }
+    mDNSPrefetch = nullptr;
 
     // handle auth retry...
     if (authRetry) {
@@ -9228,20 +9229,6 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
        static_cast<uint32_t>(status), !!httpSSVCRecord));
 
   if (!httpSSVCRecord) {
-    // We no longer need the dns prefetch object. Note: mDNSPrefetch could be
-    // validly null if OnStopRequest has already been called.
-    // We only need the domainLookup timestamps when not loading from cache
-    if (mDNSPrefetch && mDNSPrefetch->TimingsValid() && mTransaction) {
-      TimeStamp connectStart = mTransaction->GetConnectStart();
-      TimeStamp requestStart = mTransaction->GetRequestStart();
-      // We only set the domainLookup timestamps if we're not using a
-      // persistent connection.
-      if (requestStart.IsNull() && connectStart.IsNull()) {
-        mTransaction->SetDomainLookupStart(mDNSPrefetch->StartTimestamp());
-        mTransaction->SetDomainLookupEnd(mDNSPrefetch->EndTimestamp());
-      }
-    }
-
     // Unset DNS cache refresh if it was requested,
     if (mCaps & NS_HTTP_REFRESH_DNS) {
       mCaps &= ~NS_HTTP_REFRESH_DNS;
