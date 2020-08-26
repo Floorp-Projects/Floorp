@@ -209,22 +209,22 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   template <typename T, typename Predicate /* (T*) -> bool */>
   T* findInnermostNestableControl(Predicate predicate) const;
 
-  NameLocation lookupName(JSAtom* name);
+  NameLocation lookupName(const ParserAtom* name);
 
   // To implement Annex B and the formal parameter defaults scope semantics
   // requires accessing names that would otherwise be shadowed. This method
   // returns the access location of a name that is known to be bound in a
   // target scope.
-  mozilla::Maybe<NameLocation> locationOfNameBoundInScope(JSAtom* name,
-                                                          EmitterScope* target);
+  mozilla::Maybe<NameLocation> locationOfNameBoundInScope(
+      const ParserAtom* name, EmitterScope* target);
 
   // Get the location of a name known to be bound in the function scope,
   // starting at the source scope.
   mozilla::Maybe<NameLocation> locationOfNameBoundInFunctionScope(
-      JSAtom* name, EmitterScope* source);
+      const ParserAtom* name, EmitterScope* source);
 
   mozilla::Maybe<NameLocation> locationOfNameBoundInFunctionScope(
-      JSAtom* name) {
+      const ParserAtom* name) {
     return locationOfNameBoundInFunctionScope(name, innermostEmitterScope());
   }
 
@@ -240,8 +240,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   AbstractScopePtr innermostScope() const;
   ScopeIndex innermostScopeIndex() const;
 
-  MOZ_ALWAYS_INLINE
-  MOZ_MUST_USE bool makeAtomIndex(JSAtom* atom, GCThingIndex* indexp) {
+  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool makeAtomIndex(const ParserAtom* atom,
+                                                    GCThingIndex* indexp) {
     MOZ_ASSERT(perScriptData().atomIndices());
     AtomIndexMap::AddPtr p = perScriptData().atomIndices()->lookupForAdd(atom);
     if (p) {
@@ -456,7 +456,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitGCIndexOp(JSOp op, GCThingIndex index);
 
   MOZ_MUST_USE bool emitAtomOp(
-      JSOp op, JSAtom* atom,
+      JSOp op, const ParserAtom* atom,
       ShouldInstrument shouldInstrument = ShouldInstrument::No);
   MOZ_MUST_USE bool emitAtomOp(
       JSOp op, GCThingIndex atomIndex,
@@ -518,11 +518,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitPrivateMethodInitializers(ClassEmitter& ce,
                                                   ListNode* obj);
-  MOZ_MUST_USE bool emitPrivateMethodInitializer(ClassEmitter& ce,
-                                                 ParseNode* prop,
-                                                 ParseNode* propName,
-                                                 HandleAtom storedMethodAtom,
-                                                 AccessorType accessorType);
+  MOZ_MUST_USE bool emitPrivateMethodInitializer(
+      ClassEmitter& ce, ParseNode* prop, ParseNode* propName,
+      const ParserAtom* storedMethodAtom, AccessorType accessorType);
 
   // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
   // not used to unconditionally emit JSOp::GetLocal. Variable access should
@@ -534,23 +532,16 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitArgOp(JSOp op, uint16_t slot);
   MOZ_MUST_USE bool emitEnvCoordOp(JSOp op, EnvironmentCoordinate ec);
 
-  MOZ_MUST_USE bool emitGetNameAtLocation(Handle<JSAtom*> name,
+  MOZ_MUST_USE bool emitGetNameAtLocation(const ParserAtom* name,
                                           const NameLocation& loc);
-  MOZ_MUST_USE bool emitGetNameAtLocation(ImmutablePropertyNamePtr name,
-                                          const NameLocation& loc) {
-    return emitGetNameAtLocation(name.toHandle(), loc);
-  }
-  MOZ_MUST_USE bool emitGetName(Handle<JSAtom*> name) {
-    return emitGetNameAtLocation(name, lookupName(name));
-  }
-  MOZ_MUST_USE bool emitGetName(ImmutablePropertyNamePtr name) {
+  MOZ_MUST_USE bool emitGetName(const ParserAtom* name) {
     return emitGetNameAtLocation(name, lookupName(name));
   }
   MOZ_MUST_USE bool emitGetName(NameNode* name);
   MOZ_MUST_USE bool emitGetPrivateName(NameNode* name);
-  MOZ_MUST_USE bool emitGetPrivateName(JSAtom* name);
+  MOZ_MUST_USE bool emitGetPrivateName(const ParserAtom* name);
 
-  MOZ_MUST_USE bool emitTDZCheckIfNeeded(HandleAtom name,
+  MOZ_MUST_USE bool emitTDZCheckIfNeeded(const ParserAtom* name,
                                          const NameLocation& loc,
                                          ValueIsOnStack isOnStack);
 
@@ -560,7 +551,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitSingleDeclaration(ListNode* declList, NameNode* decl,
                                           ParseNode* initializer);
   MOZ_MUST_USE bool emitAssignmentRhs(ParseNode* rhs,
-                                      HandleAtom anonFunctionName);
+                                      const ParserAtom* anonFunctionName);
   MOZ_MUST_USE bool emitAssignmentRhs(uint8_t offset);
 
   MOZ_MUST_USE bool emitPrepareIteratorResult();
@@ -695,12 +686,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitDefault(ParseNode* defaultExpr, ParseNode* pattern);
 
   MOZ_MUST_USE bool emitAnonymousFunctionWithName(ParseNode* node,
-                                                  JS::Handle<JSAtom*> name);
+                                                  const ParserAtom* name);
 
   MOZ_MUST_USE bool emitAnonymousFunctionWithComputedName(
       ParseNode* node, FunctionPrefixKind prefixKind);
 
-  MOZ_MUST_USE bool setFunName(FunctionBox* fun, JSAtom* name);
+  MOZ_MUST_USE bool setFunName(FunctionBox* fun, const ParserAtom* name);
   MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
 
   MOZ_MUST_USE bool emitCallSiteObjectArray(ListNode* cookedOrRaw,
@@ -798,13 +789,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitInitializeForInOrOfTarget(TernaryNode* forHead);
 
-  MOZ_MUST_USE bool emitBreak(PropertyName* label);
-  MOZ_MUST_USE bool emitContinue(PropertyName* label);
+  MOZ_MUST_USE bool emitBreak(const ParserName* label);
+  MOZ_MUST_USE bool emitContinue(const ParserName* label);
 
   MOZ_MUST_USE bool emitFunctionFormalParameters(ListNode* paramsBody);
   MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
   MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
-  MOZ_MUST_USE bool emitLexicalInitialization(Handle<JSAtom*> name);
+  MOZ_MUST_USE bool emitLexicalInitialization(const ParserAtom* name);
 
   // Emit bytecode for the spread operator.
   //
@@ -829,7 +820,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitClass(
       ClassNode* classNode, ClassNameKind nameKind = ClassNameKind::BindingName,
-      JS::Handle<JSAtom*> nameForAnonymousClass = nullptr);
+      const ParserAtom* nameForAnonymousClass = nullptr);
+
   MOZ_MUST_USE bool emitSuperElemOperands(
       PropertyByValue* elem, EmitElemOption opts = EmitElemOption::Get);
   MOZ_MUST_USE bool emitSuperGetElem(PropertyByValue* elem,
