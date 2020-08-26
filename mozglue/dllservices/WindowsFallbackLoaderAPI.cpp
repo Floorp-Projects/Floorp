@@ -73,6 +73,12 @@ FallbackLoaderAPI::GetDllBlocklistInitFn() {
   return nullptr;
 }
 
+nt::LoaderAPI::HandleLauncherErrorFnPtr
+FallbackLoaderAPI::GetHandleLauncherErrorFn() {
+  MOZ_ASSERT_UNREACHABLE("This should not be called so soon!");
+  return nullptr;
+}
+
 void FallbackLoaderAPI::SetObserver(nt::LoaderObserver* aLoaderObserver) {
   mLoaderObserver = aLoaderObserver;
 }

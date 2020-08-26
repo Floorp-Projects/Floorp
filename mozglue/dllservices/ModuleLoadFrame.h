@@ -25,8 +25,8 @@ class MOZ_RAII ModuleLoadFrame final {
   ModuleLoadFrame& operator=(const ModuleLoadFrame&) = delete;
   ModuleLoadFrame& operator=(ModuleLoadFrame&&) = delete;
 
-  static nt::LoaderAPI::InitDllBlocklistOOPFnPtr StaticInit(
-      nt::LoaderObserver* aNewObserver);
+  static void StaticInit(nt::LoaderObserver* aNewObserver,
+                         nt::WinLauncherFunctions* aOutWinLauncherFunctions);
 
  private:
   bool mAlreadyLoaded;
