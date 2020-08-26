@@ -11,6 +11,14 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+const osWindowsName = "WINNT";
+const pathDelimiter = "/";
+
+const storageDirName = "storage";
+const defaultPersistenceDirName = "default";
+const cacheClientDirName = "cache";
+
 // services required be initialized in order to run CacheStorage
 var ss = Cc["@mozilla.org/storage/service;1"].createInstance(
   Ci.mozIStorageService
@@ -20,12 +28,23 @@ var sts = Cc["@mozilla.org/network/stream-transport-service;1"].getService(
 );
 var hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 
+class RequestError extends Error {
+  constructor(resultCode, resultName) {
+    super(`Request failed (code: ${resultCode}, name: ${resultName})`);
+    this.name = "RequestError";
+    this.resultCode = resultCode;
+    this.resultName = resultName;
+  }
+}
+
 function run_test() {
   runTest();
 }
 
 function runTest() {
   do_get_profile();
+
+  enableTesting();
 
   // Expose Cache and Fetch symbols on the global
   Cu.importGlobalProperties(["caches", "fetch"]);
@@ -39,6 +58,8 @@ function runTest() {
     "testSteps should be an async function"
   );
 
+  registerCleanupFunction(resetTesting);
+
   add_task(testSteps);
 
   // Since we defined run_test, we must invoke run_next_test() to start the
@@ -46,11 +67,55 @@ function runTest() {
   run_next_test();
 }
 
+function enableTesting() {
+  Services.prefs.setBoolPref("dom.quotaManager.testing", true);
+}
+
+function resetTesting() {
+  Services.prefs.clearUserPref("dom.quotaManager.testing");
+}
+
+function reset() {
+  let request = Services.qms.reset();
+
+  return request;
+}
+
+function clearOrigin(principal) {
+  let request = Services.qms.clearStoragesForPrincipal(principal, "default");
+
+  return request;
+}
+
+function initStorageAndOrigin(principal) {
+  let request = Services.qms.initStorageAndOrigin(
+    principal,
+    "default",
+    "cache"
+  );
+
+  return request;
+}
+
+async function requestFinished(request) {
+  await new Promise(function(resolve) {
+    request.callback = function() {
+      resolve();
+    };
+  });
+
+  if (request.resultCode !== Cr.NS_OK) {
+    throw new RequestError(request.resultCode, request.resultName);
+  }
+
+  return request.result;
+}
+
 // Extract a zip file into the profile
 function create_test_profile(zipFileName) {
   var directoryService = Services.dirsvc;
 
-  var profileDir = directoryService.get("ProfD", Ci.nsIFile);
+  var profileDir = directoryService.get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);
   var currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
 
   var packageFile = currentDir.clone();
@@ -68,7 +133,7 @@ function create_test_profile(zipFileName) {
     var zipentry = zipReader.getEntry(entryName);
 
     var file = profileDir.clone();
-    entryName.split("/").forEach(function(part) {
+    entryName.split(pathDelimiter).forEach(function(part) {
       file.append(part);
     });
 
@@ -98,14 +163,36 @@ function create_test_profile(zipFileName) {
 }
 
 function getCacheDir() {
-  let dirService = Services.dirsvc;
+  return getRelativeFile(
+    `${storageDirName}/${defaultPersistenceDirName}/chrome/${cacheClientDirName}`
+  );
+}
 
-  let profileDir = dirService.get("ProfD", Ci.nsIFile);
-  let cacheDir = profileDir.clone();
-  cacheDir.append("storage");
-  cacheDir.append("default");
-  cacheDir.append("chrome");
-  cacheDir.append("cache");
+function getPrincipal(url, attrs) {
+  let uri = Services.io.newURI(url);
+  if (!attrs) {
+    attrs = {};
+  }
+  return Services.scriptSecurityManager.createContentPrincipal(uri, attrs);
+}
 
-  return cacheDir;
+function getRelativeFile(relativePath) {
+  let file = Services.dirsvc
+    .get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile)
+    .clone();
+
+  if (Services.appinfo.OS === osWindowsName) {
+    let winFile = file.QueryInterface(Ci.nsILocalFileWin);
+    winFile.useDOSDevicePathSyntax = true;
+  }
+
+  relativePath.split(pathDelimiter).forEach(function(component) {
+    if (component == "..") {
+      file = file.parent;
+    } else {
+      file.append(component);
+    }
+  });
+
+  return file;
 }
