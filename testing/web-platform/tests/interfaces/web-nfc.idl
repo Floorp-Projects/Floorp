@@ -47,7 +47,7 @@ typedef (DOMString or BufferSource or NDEFMessageInit) NDEFMessageSource;
 interface NDEFWriter {
   constructor();
 
-  Promise<void> write(NDEFMessageSource message, optional NDEFWriteOptions options={});
+  Promise<undefined> write(NDEFMessageSource message, optional NDEFWriteOptions options={});
 };
 
 [SecureContext, Exposed=Window]
@@ -57,7 +57,7 @@ interface NDEFReader : EventTarget {
   attribute EventHandler onerror;
   attribute EventHandler onreading;
 
-  Promise<void> scan(optional NDEFScanOptions options={});
+  Promise<undefined> scan(optional NDEFScanOptions options={});
 };
 
 [SecureContext, Exposed=Window]
