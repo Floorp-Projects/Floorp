@@ -156,6 +156,5 @@ object Dependencies {
     const val thirdparty_jna = "net.java.dev.jna:jna:${Versions.jna}@jar"
     const val thirdparty_disklrucache = "com.jakewharton:disklrucache:${Versions.disklrucache}"
 
-    const val firebase_core = "com.google.firebase:firebase-core:${Versions.Firebase.core}"
     const val firebase_messaging = "com.google.firebase:firebase-messaging:${Versions.Firebase.messaging}"
 }
