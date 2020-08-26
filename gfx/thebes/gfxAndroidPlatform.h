@@ -38,7 +38,8 @@ class gfxAndroidPlatform final : public gfxPlatform {
   void ReadSystemFontList(
       nsTArray<mozilla::dom::SystemFontListEntry>* aFontList) override;
 
-  void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh, Script aRunScript,
+  void GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
+                              eFontPresentation aPresentation,
                               nsTArray<const char*>& aFontList) override;
 
   bool FontHintingEnabled() override;
