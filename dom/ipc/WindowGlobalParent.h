@@ -207,9 +207,7 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvLoadURI(
       const MaybeDiscarded<dom::BrowsingContext>& aTargetBC,
       nsDocShellLoadState* aLoadState, bool aSetNavigating);
-  mozilla::ipc::IPCResult RecvInternalLoad(
-      const MaybeDiscarded<dom::BrowsingContext>& aTargetBC,
-      nsDocShellLoadState* aLoadState);
+  mozilla::ipc::IPCResult RecvInternalLoad(nsDocShellLoadState* aLoadState);
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
   mozilla::ipc::IPCResult RecvUpdateDocumentPrincipal(
       nsIPrincipal* aNewDocumentPrincipal);
