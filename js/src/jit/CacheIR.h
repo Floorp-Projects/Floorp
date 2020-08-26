@@ -805,17 +805,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     guardGroup(obj, group);
   }
 
+  static uint32_t encodeNargsAndFlags(JSFunction* fun) {
+    static_assert(JSFunction::NArgsBits == 16);
+    static_assert(sizeof(decltype(fun->flags().toRaw())) == sizeof(uint16_t));
+    return (uint32_t(fun->nargs()) << 16) | fun->flags().toRaw();
+  }
+
   void guardSpecificFunction(ObjOperandId obj, JSFunction* expected) {
     // Guard object is a specific function. This implies immutable fields on
     // the JSFunction struct itself are unchanged.
     // Bake in the nargs and FunctionFlags so Warp can use them off-main thread,
     // instead of directly using the JSFunction fields.
-    static_assert(JSFunction::NArgsBits == 16);
-    static_assert(sizeof(decltype(expected->flags().toRaw())) ==
-                  sizeof(uint16_t));
-
-    uint32_t nargsAndFlags =
-        (uint32_t(expected->nargs()) << 16) | expected->flags().toRaw();
+    uint32_t nargsAndFlags = encodeNargsAndFlags(expected);
     guardSpecificFunction_(obj, expected, nargsAndFlags);
   }
 
@@ -909,6 +910,19 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     target = Simulator::RedirectNativeFunction(target, Args_General3);
 #endif
     callClassHook_(calleeId, argc, flags, target);
+  }
+
+  void callScriptedGetterResult(ValOperandId receiver, JSFunction* getter,
+                                bool sameRealm) {
+    MOZ_ASSERT(getter->hasJitEntry());
+    uint32_t nargsAndFlags = encodeNargsAndFlags(getter);
+    callScriptedGetterResult_(receiver, getter, sameRealm, nargsAndFlags);
+  }
+
+  void callNativeGetterResult(ValOperandId receiver, JSFunction* getter) {
+    MOZ_ASSERT(getter->isNativeWithoutJitEntry());
+    uint32_t nargsAndFlags = encodeNargsAndFlags(getter);
+    callNativeGetterResult_(receiver, getter, nargsAndFlags);
   }
 
   // These generate no code, but save the template object in a stub
