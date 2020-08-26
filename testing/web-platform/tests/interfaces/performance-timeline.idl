@@ -19,14 +19,14 @@ interface PerformanceEntry {
   [Default] object toJSON();
 };
 
-callback PerformanceObserverCallback = void (PerformanceObserverEntryList entries,
+callback PerformanceObserverCallback = undefined (PerformanceObserverEntryList entries,
                                              PerformanceObserver observer,
                                              optional boolean hasDroppedEntry = false);
 [Exposed=(Window,Worker)]
 interface PerformanceObserver {
   constructor(PerformanceObserverCallback callback);
-  void observe (optional PerformanceObserverInit options = {});
-  void disconnect ();
+  undefined observe (optional PerformanceObserverInit options = {});
+  undefined disconnect ();
   PerformanceEntryList takeRecords();
   [SameObject] static readonly attribute FrozenArray<DOMString> supportedEntryTypes;
 };
