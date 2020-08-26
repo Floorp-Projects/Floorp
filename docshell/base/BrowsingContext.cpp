@@ -1567,6 +1567,9 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
     return NS_OK;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(aLoadState->TargetBrowsingContext().IsNull(),
+                        "Targeting occurs in InternalLoad");
+
   if (mDocShell) {
     return mDocShell->LoadURI(aLoadState, aSetNavigating);
   }
@@ -1639,6 +1642,13 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
     return NS_OK;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(aLoadState->Target().IsEmpty(),
+                        "should already have retargeted");
+  MOZ_DIAGNOSTIC_ASSERT(!aLoadState->TargetBrowsingContext().IsNull(),
+                        "should have target bc set");
+  MOZ_DIAGNOSTIC_ASSERT(aLoadState->TargetBrowsingContext() == this,
+                        "must be targeting this BrowsingContext");
+
   const auto& sourceBC = aLoadState->SourceBrowsingContext();
   bool isActive =
       sourceBC && sourceBC->GetIsActive() && !GetIsActive() &&
@@ -1669,12 +1679,14 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
   MOZ_TRY(CheckSandboxFlags(aLoadState));
 
   if (XRE_IsParentProcess()) {
+    ContentParent* cp = Canonical()->GetContentParent();
+    if (!cp || !cp->CanSend()) {
+      return NS_ERROR_FAILURE;
+    }
+
     MOZ_ALWAYS_SUCCEEDS(
         SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier())));
-
-    if (ContentParent* cp = Canonical()->GetContentParent()) {
-      Unused << cp->SendInternalLoad(this, aLoadState, isActive);
-    }
+    Unused << cp->SendInternalLoad(aLoadState, isActive);
   } else {
     MOZ_DIAGNOSTIC_ASSERT(sourceBC);
     MOZ_DIAGNOSTIC_ASSERT(sourceBC->Group() == Group());
@@ -1683,14 +1695,16 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
       return NS_ERROR_DOM_PROP_ACCESS_DENIED;
     }
 
+    nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
+    WindowGlobalChild* wgc =
+        win->GetCurrentInnerWindow()->GetWindowGlobalChild();
+    if (!wgc || !wgc->CanSend()) {
+      return NS_ERROR_FAILURE;
+    }
+
     MOZ_ALWAYS_SUCCEEDS(
         SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier())));
-
-    nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
-    if (WindowGlobalChild* wgc =
-            win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
-      wgc->SendInternalLoad(this, aLoadState);
-    }
+    wgc->SendInternalLoad(aLoadState);
   }
 
   return NS_OK;
