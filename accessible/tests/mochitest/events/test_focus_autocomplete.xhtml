@@ -36,7 +36,7 @@
 
     // This is the hacks needed to use a searchbar without browser.js.
     var BrowserSearch = {
-      updateOpenSearchBadge: function() {}
+      updateOpenSearchBadge() {}
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -151,7 +151,7 @@
 
       this.invoke = function focusOnMouseOver_invoke()
       {
-        this.id = aIDFunc.call(null, aIDFuncArg);
+        this.id = aIDFunc(aIDFuncArg);
         this.node = getNode(this.id);
         this.window = this.node.ownerGlobal;
 
@@ -181,7 +181,7 @@
 
       this.getID = function focusOnMouseOver_getID()
       {
-        return "mouse over on " + prettyName(aIDFunc.call(null, aIDFuncArg));
+        return "mouse over on " + prettyName(aIDFunc(aIDFuncArg));
       }
 
       this.doMouseMoveFlood = function focusOnMouseOver_doMouseMoveFlood(aThis)
@@ -209,11 +209,10 @@
 
       this.invoke = function selectByClick_invoke()
       {
-        var id = aIDFunc.call(null, aIDFuncArg);
+        var id = aIDFunc(aIDFuncArg);
         var node = getNode(id);
         var targetWindow = node.ownerGlobal;
 
-        var x = 0, y = 0;
         if (node.localName == "tree") {
           var tree = getAccessible(node);
           var accessible = getAccessible(id);
@@ -221,8 +220,8 @@
             var itemX = {}, itemY = {}, treeX = {}, treeY = {};
             accessible.getBounds(itemX, itemY, {}, {});
             tree.getBounds(treeX, treeY, {}, {});
-            x = itemX.value - treeX.value;
-            y = itemY.value - treeY.value;
+            this.x = itemX.value - treeX.value;
+            this.y = itemY.value - treeY.value;
           }
         }
 
@@ -231,7 +230,7 @@
 
       this.getID = function selectByClick_getID()
       {
-        return "select by click " + prettyName(aIDFunc.call(null, aIDFuncArg));
+        return "select by click " + prettyName(aIDFunc(aIDFuncArg));
       }
     }
 
@@ -240,20 +239,19 @@
 
     function getItem(aItemObj)
     {
-      var autocomplete = aItemObj.autocomplete;
       var autocompleteNode = aItemObj.autocompleteNode;
 
       // XUL searchbar
       if (autocompleteNode.localName == "searchbar") {
-        var popupNode = autocompleteNode._popup;
+        let popupNode = autocompleteNode._popup;
         if (popupNode) {
-          var list = getAccessible(popupNode);
+          let list = getAccessible(popupNode);
           return list.getChildAt(aItemObj.index);
         }
       }
 
       // XUL autocomplete
-      var popupNode = autocompleteNode.popup;
+      let popupNode = autocompleteNode.popup;
       if (!popupNode) {
         // HTML form autocomplete
         var controller = Cc["@mozilla.org/autocomplete/controller;1"].
@@ -263,13 +261,14 @@
 
       if (popupNode) {
         if ("richlistbox" in popupNode) {
-          var list = getAccessible(popupNode.richlistbox);
+          let list = getAccessible(popupNode.richlistbox);
           return list.getChildAt(aItemObj.index);
         }
 
-        var list = getAccessible(popupNode.tree);
+        let list = getAccessible(popupNode.tree);
         return list.getChildAt(aItemObj.index + 1);
       }
+      return null;
     }
 
     function getTextEntry(aID)

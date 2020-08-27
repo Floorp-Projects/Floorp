@@ -48,7 +48,7 @@
       testSelectableSelection(select, [ ],
                               "removeItemFromSelection(1): ");
 
-      todo(select.selectAll() == false,
+      todo(!select.selectAll(),
            "No way to select all items in listbox '" + id + "'");
       testSelectableSelection(select, [ "lb1_item1" ], "selectAll: ");
 
@@ -59,11 +59,11 @@
       //////////////////////////////////////////////////////////////////////////
       // multiple selectable listbox
 
-      var id = "listbox2";
+      id = "listbox2";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for list of " + id);
 
-      var select = getAccessible(id, [nsIAccessibleSelectable]);
+      select = getAccessible(id, [nsIAccessibleSelectable]);
       testSelectableSelection(select, [ ]);
 
       select.addItemToSelection(1);

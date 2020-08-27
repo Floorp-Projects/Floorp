@@ -143,7 +143,7 @@
     var gQueue = null;
     function doTest()
     {
-      var gQueue = new eventQueue(EVENT_REORDER);
+      gQueue = new eventQueue(EVENT_REORDER);
 
       gQueue.push(new treeTester("tree"));
       gQueue.push(new tableTester("table", true, "t_col1", "t_col2"));
