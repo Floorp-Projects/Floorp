@@ -48,7 +48,7 @@ bool EmitterScope::checkEnvironmentChainLength(BytecodeEmitter* bce) {
   if (EmitterScope* emitterScope = enclosing(&bce)) {
     hops = emitterScope->environmentChainLength_;
   } else {
-    hops = bce->compilationInfo.enclosingScope->environmentChainLength();
+    hops = bce->compilationInfo.input.enclosingScope->environmentChainLength();
   }
 
   if (hops >= ENVCOORD_HOPS_LIMIT - 1) {
@@ -335,7 +335,7 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
 
     inCurrentScript = false;
     loc = Some(searchInEnclosingScope(
-        jsname, bce->compilationInfo.enclosingScope, hops));
+        jsname, bce->compilationInfo.input.enclosingScope, hops));
   }
 
   // Each script has its own frame. A free name that is accessed
@@ -374,7 +374,7 @@ bool EmitterScope::internScopeCreationData(BytecodeEmitter* bce,
   if (!createScope(bce->cx, enclosingScopeIndex(bce), &index)) {
     return false;
   }
-  ScopeStencil& scope = bce->compilationInfo.scopeData[index.index];
+  ScopeStencil& scope = bce->compilationInfo.stencil.scopeData[index.index];
   hasEnvironment_ = scope.hasEnvironment();
   return bce->perScriptData().gcThingList().append(index, &scopeIndex_);
 }

@@ -18,7 +18,7 @@ using namespace js::frontend;
 
 ScopeStencil& AbstractScopePtr::scopeData() const {
   const Deferred& data = scope_.as<Deferred>();
-  return data.compilationInfo.scopeData[data.index.index];
+  return data.compilationInfo.stencil.scopeData[data.index.index];
 }
 
 CompilationInfo& AbstractScopePtr::compilationInfo() const {
@@ -29,7 +29,7 @@ CompilationInfo& AbstractScopePtr::compilationInfo() const {
 Scope* AbstractScopePtr::existingScope() const {
   if (isScopeStencil()) {
     const Deferred& data = scope_.as<Deferred>();
-    Scope* result = data.compilationInfo.scopes[data.index.index];
+    Scope* result = data.compilationInfo.gcOutput.scopes[data.index.index];
     MOZ_ASSERT(result, "Scope must already exist to use this method");
     return result;
   }

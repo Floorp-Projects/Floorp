@@ -42,7 +42,7 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
   if (kind == Kind::FunctionBox) {
     setFlag(ImmutableFlags::IsFunction);
   } else if (kind == Kind::Module) {
-    MOZ_ASSERT(!compilationInfo.options.nonSyntacticScope);
+    MOZ_ASSERT(!compilationInfo.input.options.nonSyntacticScope);
     setFlag(ImmutableFlags::IsModule);
   } else if (kind == Kind::Eval) {
     setFlag(ImmutableFlags::IsForEval);
@@ -51,7 +51,7 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
   }
 
   // Note: This is a mix of transitive and non-transitive options.
-  const JS::ReadOnlyCompileOptions& options = compilationInfo.options;
+  const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
 
   // Initialize the transitive "input" flags. These are applied to all
   // SharedContext in this compilation and generally cannot be determined from
@@ -203,12 +203,12 @@ EvalSharedContext::EvalSharedContext(JSContext* cx,
     : SharedContext(cx, Kind::Eval, compilationInfo, directives, extent),
       bindings(nullptr) {
   // Eval inherits syntax and binding rules from enclosing environment.
-  allowNewTarget_ = compilationInfo.scopeContext.allowNewTarget;
-  allowSuperProperty_ = compilationInfo.scopeContext.allowSuperProperty;
-  allowSuperCall_ = compilationInfo.scopeContext.allowSuperCall;
-  allowArguments_ = compilationInfo.scopeContext.allowArguments;
-  thisBinding_ = compilationInfo.scopeContext.thisBinding;
-  inWith_ = compilationInfo.scopeContext.inWith;
+  allowNewTarget_ = compilationInfo.state.scopeContext.allowNewTarget;
+  allowSuperProperty_ = compilationInfo.state.scopeContext.allowSuperProperty;
+  allowSuperCall_ = compilationInfo.state.scopeContext.allowSuperCall;
+  allowArguments_ = compilationInfo.state.scopeContext.allowArguments;
+  thisBinding_ = compilationInfo.state.scopeContext.thisBinding;
+  inWith_ = compilationInfo.state.scopeContext.inWith;
 }
 
 #ifdef DEBUG
@@ -366,7 +366,7 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   flags_.setIsExtended();
   flags_.setKind(FunctionFlags::AsmJS);
 
-  return compilationInfo_.asmJS.putNew(index(), module);
+  return compilationInfo_.stencil.asmJS.putNew(index(), module);
 }
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx,
@@ -382,7 +382,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx,
 }
 
 ScriptStencil& FunctionBox::functionStencil() const {
-  return compilationInfo_.scriptData[funcDataIndex_];
+  return compilationInfo_.stencil.scriptData[funcDataIndex_];
 }
 
 void SharedContext::copyScriptFields(ScriptStencil& script) {

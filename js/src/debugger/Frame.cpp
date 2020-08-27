@@ -962,8 +962,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     }
     compilationInfo.setEnclosingScope(scope);
 
-    frontend::EvalSharedContext evalsc(cx, compilationInfo,
-                                       compilationInfo.directives, extent);
+    frontend::EvalSharedContext evalsc(
+        cx, compilationInfo, compilationInfo.state.directives, extent);
     script = frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf);
     if (!script) {
       return false;
@@ -984,7 +984,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
                scopeKind == ScopeKind::NonSyntactic);
 
     frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                           compilationInfo.directives, extent);
+                                           compilationInfo.state.directives,
+                                           extent);
     script = frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
     if (!script) {
       return false;
