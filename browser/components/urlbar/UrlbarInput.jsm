@@ -1484,6 +1484,21 @@ class UrlbarInput {
     this._afterTabSelectAndFocusChange();
   }
 
+  /**
+   * Certain actions can autofill a keyword into searchMode
+   * @param {UrlbarResult} [result] The currently selected urlbar result.
+   * @returns {boolean} Whether Search Mode was started.
+   */
+  maybePromoteKeywordToSearchMode(result = this._resultForCurrentValue) {
+    let searchMode = this._searchModeForResult(result);
+    if (searchMode && this.value.trim() == result.payload.keyword.trim()) {
+      this.setSearchMode(searchMode);
+      this.value = "";
+      return true;
+    }
+    return false;
+  }
+
   // Private methods below.
 
   _getURIFixupInfo(searchString) {
@@ -2445,13 +2460,7 @@ class UrlbarInput {
     // offer result.
     let enteredSearchMode = false;
     if (event.data == " ") {
-      let result = this.view.selectedResult;
-      let searchMode = this._searchModeForResult(result);
-      if (searchMode && this.value.trim() == result.payload.keyword.trim()) {
-        this.setSearchMode(searchMode);
-        this.value = "";
-        enteredSearchMode = true;
-      }
+      enteredSearchMode = this.maybePromoteKeywordToSearchMode();
     }
 
     let value = this.value;

@@ -461,8 +461,7 @@ add_task(async function enterAutofillsAlias_legacy() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Pressing enter on an @ alias autofill should fill it in the urlbar input
-// with a trailing space and move the caret at the end.
+// Pressing Enter on an @ alias autofill should enter search mode.
 add_task(async function enterAutofillsAlias() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.update2", true]],
@@ -479,10 +478,40 @@ add_task(async function enterAutofillsAlias() {
       0
     );
 
-    // Press Enter.
     let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeKey("KEY_Enter");
     await searchPromise;
+
+    await UrlbarTestUtils.assertSearchMode(window, {
+      engineName: testEngineItem.result.payload.engine,
+    });
+
+    gURLBar.setSearchMode({});
+  }
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
+  await SpecialPowers.popPrefEnv();
+});
+
+// Pressing Right on an @ alias autofill should enter search mode.
+add_task(async function enterAutofillsAlias() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+  for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value,
+      selectionStart: value.length,
+      selectionEnd: value.length,
+    });
+    let testEngineItem = await UrlbarTestUtils.waitForAutocompleteResultAt(
+      window,
+      0
+    );
+
+    EventUtils.synthesizeKey("KEY_ArrowRight");
 
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: testEngineItem.result.payload.engine,
