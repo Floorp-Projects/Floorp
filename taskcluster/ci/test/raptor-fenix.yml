@@ -98,6 +98,17 @@ raptor-youtube-playback-fenix:
     treeherder-symbol: Rap-fenix(ytp)
     run-on-projects: []
     max-run-time: 3600
+    test-url-param:
+        by-test-platform:
+            android-hw-g5.*:
+                "exclude=1,2,
+                3,4,5,6,7,8,9,10,19,20,21,22,25,26,29,30,33,34,35,36,37,38,39,40,49,50,51,52,
+                53,54,55,56,65,66,67,68,69,70,71,72,81,82,83,84,87,88,89,90,93,94,95,96,
+                17,18,28,32,47,48,63,64,79,80"
+            android-hw-p2.*:  # remove high resolution tests
+                "exclude=1,2,
+                17,18,28,32,47,48,63,64,79,80"
+            default: ""
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
@@ -105,20 +116,14 @@ raptor-youtube-playback-fenix:
             # - --test-url-params is dynamically added from setup_raptor transform depending
             # on platform and project
 
-raptor-youtube-playback-av1-sfr-fenix:
-    description: "Raptor YouTube Playback AV1 SFR on Fenix"
-    try-name: raptor-youtube-playback-av1-sfr-fenix
-    treeherder-symbol: Rap-fenix(ytp-av1-sfr)
-    tier: 2
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback-av1-sfr
-
 raptor-youtube-playback-h264-sfr-fenix:
     description: "Raptor YouTube Playback H264 SFR on Fenix"
     try-name: raptor-youtube-playback-h264-sfr-fenix
     treeherder-symbol: Rap-fenix(ytp-h264-sfr)
     tier: 2
+    max-run-time: 3600
+    test-url-param: "exclude=1,2,
+                    23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38"
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-sfr
@@ -128,6 +133,16 @@ raptor-youtube-playback-h264-fenix:
     try-name: raptor-youtube-playback-h264-fenix
     treeherder-symbol: Rap-fenix(ytp-h264)
     tier: 2
+    max-run-time: 3600
+    test-url-param:
+        by-test-platform:
+            android-hw-g5.*:  # remove VP9(1-34)and AV1(51-74) tests
+                "exclude=1,2,
+                3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74"
+            android-hw-p2.*:  # remove AV1(51-74) tests
+                "exclude=1,2,
+                51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74"
+            default: ""
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-std
@@ -137,6 +152,8 @@ raptor-youtube-playback-vp9-sfr-fenix:
     try-name: raptor-youtube-playback-vp9-sfr-fenix
     treeherder-symbol: Rap-fenix(ytp-vp9-sfr)
     tier: 2
+    limit-platforms:
+        - android-hw-p2.*
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-vp9-sfr
@@ -147,6 +164,12 @@ raptor-youtube-playback-widevine-hfr-fenix:
     treeherder-symbol: Rap-fenix(ytp-widevine-hfr)
     max-run-time: 3000
     tier: 2
+    test-url-param:
+        by-test-platform:
+            android-hw-g5.*:  # remove VP9(1-34) and AV1 (None) tests
+                "exclude=1,2,
+                3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34"
+            default: ""
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-hfr
@@ -155,7 +178,7 @@ raptor-youtube-playback-widevine-h264-sfr-fenix:
     description: "Raptor YouTube Playback Widevine H264 SFR on Fenix"
     try-name: raptor-youtube-playback-widevine-h264-sfr
     treeherder-symbol: Rap-fenix(ytp-widevine-h264-sfr)
-    max-run-time: 3000
+    max-run-time: 3600
     tier: 2
     mozharness:
         extra-options:
@@ -165,8 +188,10 @@ raptor-youtube-playback-widevine-vp9-sfr-fenix:
     description: "Raptor YouTube Playback Widevine VP9 SFR on Fenix"
     try-name: raptor-youtube-playback-widevine-vp9-sfr
     treeherder-symbol: Rap-fenix(ytp-widevine-vp9-sfr)
-    max-run-time: 3000
+    max-run-time: 3600
     tier: 2
+    limit-platforms:
+        - android-hw-p2.*
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-vp9-sfr

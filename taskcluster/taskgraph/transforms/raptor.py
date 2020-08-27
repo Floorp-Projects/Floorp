@@ -32,6 +32,7 @@ raptor_description_schema = Schema({
     Optional('raptor-test'): text_type,
     Optional('raptor-subtests'): optionally_keyed_by(
         'app',
+        'test-platform',
         list
     ),
     Optional('activity'): optionally_keyed_by(
@@ -78,6 +79,11 @@ raptor_description_schema = Schema({
         'raptor-test',
         'subtest',
         test_description_schema['tier']
+    ),
+    Optional('test-url-param'): optionally_keyed_by(
+        'subtest',
+        'test-platform',
+        text_type
     ),
     Optional('run-visual-metrics'): optionally_keyed_by(
         'app',
@@ -196,6 +202,7 @@ def split_raptor_subtests(config, tests):
 @transforms.add
 def handle_keyed_by(config, tests):
     fields = [
+        'test-url-param',
         'variants',
         'limit-platforms',
         'activity',
@@ -331,43 +338,12 @@ def add_extra_options(config, tests):
         if test['require-signed-extensions']:
             extra_options.append('--is-release-build')
 
+        if 'test-url-param' in test:
+            param = test.pop('test-url-param')
+            if not param == []:
+                extra_options.append("--test-url-params={}".format(param.replace(" ", "")))
+
         extra_options.append("--project={}".format(config.params.get('project')))
-
-        # Add urlparams based on platform, test names and projects
-        testurlparams_by_platform_and_project = {
-            "android-hw-g5": [
-                {
-                    "branches": [],  # For all branches
-                    "testnames": ["youtube-playback", "raptor-youtube-playback"],
-                    "urlparams": [
-                        # It excludes all VP9 tests
-                        "exclude=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,"
-                        "24,25,26,27,28,29,30,31,32,33,34"
-                    ]
-                },
-            ]
-        }
-
-        for platform, testurlparams_by_project_definitions \
-                in testurlparams_by_platform_and_project.items():
-
-            if test['test-platform'].startswith(platform):
-                # For every platform it may have several definitions
-                for testurlparams_by_project in testurlparams_by_project_definitions:
-                    # The test should contain at least one defined testname
-                    if any(
-                        testname == test['test-name']
-                        for testname in testurlparams_by_project['testnames']
-                    ):
-                        branches = testurlparams_by_project['branches']
-                        if (
-                            branches == [] or
-                            config.params.get('project') in branches or
-                            config.params.is_try() and 'try' in branches
-                        ):
-                            params_query = '&'.join(testurlparams_by_project['urlparams'])
-                            add_extra_params_option = "--test-url-params={}".format(params_query)
-                            extra_options.append(add_extra_params_option)
 
         yield test
 
