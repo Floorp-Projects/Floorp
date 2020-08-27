@@ -3467,6 +3467,7 @@ void MediaManager::OnCameraMute(bool aMute) {
 void MediaManager::OnMicrophoneMute(bool aMute) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG("OnMicrophoneMute for all windows");
+  mMicrophonesMuted = aMute;
   // This is safe since we're on main-thread, and the windowlist can only
   // be added to from the main-thread
   for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
@@ -3487,6 +3488,7 @@ void MediaManager::AddWindowID(uint64_t aWindowId,
   }
 
   aListener->MuteOrUnmuteCameras(mCamerasMuted);
+  aListener->MuteOrUnmuteMicrophones(mMicrophonesMuted);
   GetActiveWindows()->Put(aWindowId, std::move(aListener));
 }
 
