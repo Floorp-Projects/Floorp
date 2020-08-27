@@ -478,7 +478,8 @@ class ParseContext : public Nestable<ParseContext> {
 
   uint32_t scriptId() const { return scriptId_; }
 
-  bool annexBAppliesToLexicalFunctionInInnermostScope(FunctionBox* funbox);
+  bool computeAnnexBAppliesToLexicalFunctionInInnermostScope(
+      FunctionBox* funbox, bool* annexBApplies);
 
   bool tryDeclareVar(const ParserName* name, DeclarationKind kind,
                      uint32_t beginPos,
@@ -496,8 +497,9 @@ class ParseContext : public Nestable<ParseContext> {
   bool declareDotGeneratorName();
 
  private:
-  mozilla::Maybe<DeclarationKind> isVarRedeclaredInInnermostScope(
-      const ParserName* name, DeclarationKind kind);
+  MOZ_MUST_USE bool isVarRedeclaredInInnermostScope(
+      const ParserName* name, DeclarationKind kind,
+      mozilla::Maybe<DeclarationKind>* out);
 
   MOZ_MUST_USE bool isVarRedeclaredInEval(const ParserName* name,
                                           DeclarationKind kind,
