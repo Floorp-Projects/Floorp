@@ -934,7 +934,6 @@ pref("print.print_headerright", "&U");
 pref("print.print_footerleft", "&PT");
 pref("print.print_footercenter", "");
 pref("print.print_footerright", "&D");
-pref("print.show_print_progress", true);
 
 // xxxbsmedberg: more toolkit prefs
 
