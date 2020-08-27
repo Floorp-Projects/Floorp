@@ -865,9 +865,23 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
     } else if (e.type == "change" || e.type == "input") {
       let isValid = this.checkValidity();
       let section = e.target.closest(".section-block");
-      document
-        .querySelector("#sheet-count")
-        .toggleAttribute("loading", !isValid);
+      const sheetCount = document.querySelector("#sheet-count");
+      sheetCount.toggleAttribute("loading", !isValid);
+      if (isValid) {
+        // aria-describedby will usually cause the first value to be reported.
+        // Unfortunately, screen readers don't pick up description changes from
+        // dialogs, so we must use a live region. To avoid double reporting of
+        // the first value, we don't set aria-live initially. We only set it for
+        // subsequent updates.
+        // aria-live is set on the parent because sheetCount itself might be
+        // hidden and then shown, and updates are only reported for live
+        // regions that were already visible.
+        sheetCount.parentNode.setAttribute("aria-live", "polite");
+      } else {
+        // We're hiding the sheet count and aria-describedby includes the
+        // content of hidden elements, so remove aria-describedby.
+        document.body.removeAttribute("aria-describedby");
+      }
       for (let element of this.elements) {
         // If we're valid, enable all inputs.
         // Otherwise, disable the valid inputs other than the cancel button and the elements
@@ -1189,6 +1203,10 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
       sheetCount: this.numPages * this.numCopies,
     });
     this.removeAttribute("loading");
+    if (this.id) {
+      // We're showing the sheet count, so let it describe the dialog.
+      document.body.setAttribute("aria-describedby", this.id);
+    }
   }
 
   handleEvent(e) {
