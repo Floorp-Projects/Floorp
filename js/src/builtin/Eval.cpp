@@ -331,10 +331,9 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     }
 
     frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.init(cx)) {
+    if (!compilationInfo.input.initForEval(cx, enclosing)) {
       return false;
     }
-    compilationInfo.input.setEnclosingScope(enclosing);
 
     frontend::CompilationGCOutput gcOutput(cx);
     if (!frontend::CompileEvalScript(compilationInfo, srcBuf, enclosing, env,
@@ -434,10 +433,9 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     }
 
     frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.init(cx)) {
+    if (!compilationInfo.input.initForEval(cx, enclosing)) {
       return false;
     }
-    compilationInfo.input.setEnclosingScope(enclosing);
 
     frontend::CompilationGCOutput gcOutput(cx);
     if (!frontend::CompileEvalScript(compilationInfo, srcBuf, enclosing, env,

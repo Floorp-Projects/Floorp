@@ -752,10 +752,9 @@ static bool InternalParseModule(JSContext* cx,
   options.allowHTMLComments = false;
 
   CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.init(cx)) {
+  if (!compilationInfo.input.initForModule(cx)) {
     return false;
   }
-  compilationInfo.input.setEnclosingScope(&cx->global()->emptyGlobalScope());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ModuleCompiler<Unit> compiler(cx, allocScope, compilationInfo.input.options,
@@ -994,7 +993,7 @@ JSFunction* frontend::CompileStandaloneAsyncGenerator(
                                    FunctionAsyncKind::AsyncFunction);
 }
 
-bool frontend::CompilationInput::init(JSContext* cx) {
+bool frontend::CompilationInput::initScriptSource(JSContext* cx) {
   ScriptSource* ss = cx->new_<ScriptSource>();
   if (!ss) {
     return false;

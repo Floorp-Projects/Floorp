@@ -68,7 +68,7 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   CHECK_THREAD(cx);
 
   frontend::CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.init(cx)) {
+  if (!compilationInfo.input.initForGlobal(cx)) {
     return nullptr;
   }
 
@@ -166,7 +166,7 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
 
   CompileOptions options(cx);
   CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.init(cx)) {
+  if (!compilationInfo.input.initForGlobal(cx)) {
     return false;
   }
 
@@ -483,7 +483,7 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   RootedScript script(cx);
   {
     frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.init(cx)) {
+    if (!compilationInfo.input.initForGlobal(cx)) {
       return false;
     }
 
