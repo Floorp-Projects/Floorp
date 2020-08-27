@@ -955,19 +955,21 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope, options, scope,
-                                              env);
+    frontend::CompilationInfo compilationInfo(cx, options);
     if (!compilationInfo.input.init(cx)) {
       return false;
     }
     compilationInfo.input.setEnclosingScope(scope);
 
-    frontend::EvalSharedContext evalsc(
-        cx, compilationInfo, compilationInfo.state.directives, extent);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::CompilationState compilationState(cx, allocScope, options, scope,
+                                                env);
+
+    frontend::EvalSharedContext evalsc(cx, compilationInfo, compilationState,
+                                       extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf,
-                                     gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo, compilationState, evalsc,
+                                     srcBuf, gcOutput)) {
       return false;
     }
     script = gcOutput.script;
@@ -978,20 +980,22 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     // users of executeInGlobal, like the web console, may add new bindings to
     // the global scope.
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    frontend::CompilationInfo compilationInfo(cx, options);
     if (!compilationInfo.input.init(cx)) {
       return false;
     }
+
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::CompilationState compilationState(cx, allocScope, options);
+
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
                scopeKind == ScopeKind::NonSyntactic);
 
     frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                           compilationInfo.state.directives,
-                                           extent);
+                                           compilationState.directives, extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf,
-                                       gcOutput)) {
+    if (!frontend::CompileGlobalScript(compilationInfo, compilationState,
+                                       globalsc, srcBuf, gcOutput)) {
       return false;
     }
     script = gcOutput.script;

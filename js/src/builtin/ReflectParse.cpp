@@ -3765,15 +3765,18 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   options.allowHTMLComments = target == ParseGoal::Script;
   mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
+  CompilationInfo compilationInfo(cx, options);
   if (!compilationInfo.input.init(cx)) {
     return false;
   }
 
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::CompilationState compilationState(cx, allocScope, options);
+
   Parser<FullParseHandler, char16_t> parser(
       cx, options, chars.begin().get(), chars.length(),
-      /* foldConstants = */ false, compilationInfo, nullptr, nullptr);
+      /* foldConstants = */ false, compilationInfo, compilationState, nullptr,
+      nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
