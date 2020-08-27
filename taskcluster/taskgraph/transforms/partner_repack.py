@@ -13,12 +13,24 @@ from taskgraph.util.scriptworker import get_release_config
 from taskgraph.util.partners import (
     check_if_partners_enabled,
     get_partner_url_config,
+    get_repack_ids_by_platform,
     apply_partner_priority,
 )
 
 
 transforms = TransformSequence()
 transforms.add(apply_partner_priority)
+
+
+@transforms.add
+def skip_unnecessary_platforms(config, tasks):
+    for task in tasks:
+        if config.kind == "release-partner-repack":
+            platform = task['attributes']['build_platform']
+            repack_ids = get_repack_ids_by_platform(config, platform)
+            if not repack_ids:
+                continue
+        yield task
 
 
 @transforms.add
