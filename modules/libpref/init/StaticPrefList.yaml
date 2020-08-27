@@ -5685,6 +5685,12 @@
   value: false
   mirror: always
 
+# Should we look for counter ancestor scopes first?
+- name: layout.css.counter-ancestor-scope.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether we get notified of history queries for visited even if unvisited.
 - name: layout.css.notify-of-unvisited
   type: RelaxedAtomicBool
