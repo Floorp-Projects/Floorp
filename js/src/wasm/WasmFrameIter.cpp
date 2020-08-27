@@ -205,9 +205,7 @@ void WasmFrameIter::popFrame() {
     tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
   }
 
-  MOZ_ASSERT(code_ == &fp_->instance()->code());
-  MOZ_ASSERT(fp_->instance() == tls()->instance);
-
+  MOZ_ASSERT(code_ == &tls()->instance->code());
   lineOrBytecode_ = callsite->lineOrBytecode();
 
   MOZ_ASSERT(!done());
@@ -926,7 +924,7 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
          (offsetInCode - codeRange->funcCheckedCallEntry()) > SetFP;
 }
 
-TlsData* js::wasm::GetNearestEffectiveTls(Frame* fp) {
+const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
   while (true) {
     if (fp->callerIsExitOrJitEntryFP()) {
       // It is a direct call from JIT.
@@ -952,6 +950,11 @@ TlsData* js::wasm::GetNearestEffectiveTls(Frame* fp) {
 
     fp = fp->wasmCaller();
   }
+}
+
+TlsData* js::wasm::GetNearestEffectiveTls(Frame* fp) {
+  return const_cast<TlsData*>(
+      GetNearestEffectiveTls(const_cast<const Frame*>(fp)));
 }
 
 bool js::wasm::StartUnwinding(const RegisterState& registers,
@@ -1325,7 +1328,8 @@ void ProfilingFrameIterator::operator++() {
   }
 
   MOZ_ASSERT(code_ ==
-             &Frame::fromUntaggedWasmExitFP(callerFP_)->instance()->code());
+             &GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(callerFP_))
+                  ->instance->code());
 
   switch (codeRange_->kind()) {
     case CodeRange::Function:

@@ -214,6 +214,9 @@ class JitActivation : public Activation {
     return reinterpret_cast<wasm::Frame*>(
         wasm::Frame::toJitEntryCaller(packedExitFP_));
   }
+  wasm::TlsData* wasmExitTls() const {
+    return wasm::GetNearestEffectiveTls(wasmExitFP());
+  }
   void setWasmExitFP(const wasm::Frame* fp) {
     if (fp) {
       MOZ_ASSERT(!wasm::Frame::isExitOrJitEntryFP(fp));

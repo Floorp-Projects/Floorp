@@ -29,7 +29,7 @@
 #include "jit/MacroAssembler.h"
 #include "jit/Simulator.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
+#include "js/friend/StackLimits.h"    // js::CheckRecursionLimit
 #include "threading/Mutex.h"
 #include "util/Memory.h"
 #include "util/Poison.h"
@@ -302,7 +302,7 @@ static bool WasmHandleDebugTrap() {
   JitActivation* activation = CallingActivation();
   JSContext* cx = activation->cx();
   Frame* fp = activation->wasmExitFP();
-  Instance* instance = fp->instance();
+  Instance* instance = GetNearestEffectiveTls(fp)->instance;
   const Code& code = instance->code();
   MOZ_ASSERT(code.metadata().debugEnabled);
 
@@ -507,7 +507,7 @@ static void* WasmHandleTrap() {
       if (!CheckRecursionLimit(cx)) {
         return nullptr;
       }
-      if (activation->wasmExitFP()->tls()->isInterrupted()) {
+      if (activation->wasmExitTls()->isInterrupted()) {
         return CheckInterrupt(cx, activation);
       }
       return ReportError(cx, JSMSG_OVER_RECURSED);
