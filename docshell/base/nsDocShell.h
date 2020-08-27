@@ -799,7 +799,8 @@ class nsDocShell final : public nsDocLoader,
   // Sets the current document's current state object to the given SHEntry's
   // state object. The current state object is eventually given to the page
   // in the PopState event.
-  nsresult SetDocCurrentStateObj(nsISHEntry* aShEntry);
+  void SetDocCurrentStateObj(nsISHEntry* aShEntry,
+                             mozilla::dom::SessionHistoryInfo* aInfo);
 
   // Returns true if would have called FireOnLocationChange,
   // but did not because aFireOnLocationChange was false on entry.

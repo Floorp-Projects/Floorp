@@ -77,6 +77,7 @@ struct SHEntrySharedState {
   // moved to bfcache.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
   uint32_t mCacheKey = 0;
+  bool mIsFrameNavigation = false;
 
  protected:
   static uint64_t GenerateId();
@@ -127,7 +128,6 @@ class SHEntrySharedParentState : public SHEntrySharedState {
   // they're specific to a particular content viewer.
   nsWeakPtr mSHistory;
 
-  bool mIsFrameNavigation = false;
   bool mSticky = true;
   bool mDynamicallyCreated = false;
 
