@@ -5960,7 +5960,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   CompileOptions options(cx);
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationInfo compilationInfo(cx, allocScope, options);
-  if (!compilationInfo.init(cx)) {
+  if (!compilationInfo.input.init(cx)) {
     return false;
   }
 

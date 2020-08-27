@@ -333,10 +333,10 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::CompilationInfo compilationInfo(cx, allocScope, options,
                                               enclosing, env);
-    if (!compilationInfo.init(cx)) {
+    if (!compilationInfo.input.init(cx)) {
       return false;
     }
-    compilationInfo.setEnclosingScope(enclosing);
+    compilationInfo.input.setEnclosingScope(enclosing);
 
     uint32_t len = srcBuf.length();
     SourceExtent extent = SourceExtent::makeGlobalExtent(len);
@@ -442,10 +442,10 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::CompilationInfo compilationInfo(cx, allocScope, options,
                                               enclosing, env);
-    if (!compilationInfo.init(cx)) {
+    if (!compilationInfo.input.init(cx)) {
       return false;
     }
-    compilationInfo.setEnclosingScope(enclosing);
+    compilationInfo.input.setEnclosingScope(enclosing);
 
     uint32_t len = srcBuf.length();
     SourceExtent extent = SourceExtent::makeGlobalExtent(len);

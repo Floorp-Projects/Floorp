@@ -957,10 +957,10 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::CompilationInfo compilationInfo(cx, allocScope, options, scope,
                                               env);
-    if (!compilationInfo.init(cx)) {
+    if (!compilationInfo.input.init(cx)) {
       return false;
     }
-    compilationInfo.setEnclosingScope(scope);
+    compilationInfo.input.setEnclosingScope(scope);
 
     frontend::EvalSharedContext evalsc(
         cx, compilationInfo, compilationInfo.state.directives, extent);
@@ -977,7 +977,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::CompilationInfo compilationInfo(cx, allocScope, options);
-    if (!compilationInfo.init(cx)) {
+    if (!compilationInfo.input.init(cx)) {
       return false;
     }
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||

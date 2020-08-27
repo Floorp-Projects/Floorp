@@ -175,6 +175,33 @@ struct MOZ_RAII CompilationInput {
         lazy(cx),
         source_(cx),
         enclosingScope(cx) {}
+
+  bool init(JSContext* cx);
+
+  bool initForStandaloneFunction(JSContext* cx,
+                                 HandleScope functionEnclosingScope) {
+    if (!init(cx)) {
+      return false;
+    }
+    enclosingScope = functionEnclosingScope;
+    return true;
+  }
+
+  void initFromLazy(BaseScript* lazyScript) {
+    lazy = lazyScript;
+    enclosingScope = lazy->function()->enclosingScope();
+  }
+
+  void setEnclosingScope(Scope* scope) { enclosingScope = scope; }
+
+  ScriptSource* source() { return source_.get().get(); }
+  void setSource(ScriptSource* ss) { return source_.get().reset(ss); }
+
+  template <typename Unit>
+  MOZ_MUST_USE bool assignSource(JSContext* cx,
+                                 JS::SourceText<Unit>& sourceBuffer) {
+    return source()->assignSource(cx, options, sourceBuffer);
+  }
 };
 
 struct MOZ_RAII CompilationState {
@@ -303,31 +330,6 @@ struct MOZ_RAII CompilationInfo {
         state(cx, alloc, options, enclosingScope, enclosingEnv),
         stencil(cx),
         gcOutput(cx) {}
-
-  bool init(JSContext* cx);
-
-  bool initForStandaloneFunction(JSContext* cx, HandleScope enclosingScope) {
-    if (!init(cx)) {
-      return false;
-    }
-    input.enclosingScope = enclosingScope;
-    return true;
-  }
-
-  void initFromLazy(BaseScript* lazy) {
-    input.lazy = lazy;
-    input.enclosingScope = lazy->function()->enclosingScope();
-  }
-
-  void setEnclosingScope(Scope* scope) { input.enclosingScope = scope; }
-
-  ScriptSource* source() { return input.source_.get().get(); }
-  void setSource(ScriptSource* ss) { return input.source_.get().reset(ss); }
-
-  template <typename Unit>
-  MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
-    return source()->assignSource(cx, input.options, sourceBuffer);
-  }
 
   MOZ_MUST_USE bool instantiateStencils();
 
