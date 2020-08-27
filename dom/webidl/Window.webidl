@@ -261,7 +261,7 @@ typedef OfflineResourceList ApplicationCache;
   //
   // This may reuse an existing window if this window is already a print
   // preview document, or if you pass a docshell explicitly.
-  [Throws, ChromeOnly]
+  [Throws, Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled"]
   WindowProxy? printPreview(optional nsIPrintSettings? settings = null,
                             optional nsIWebProgressListener? listener = null,
                             optional nsIDocShell? docShellToPreviewInto = null);
