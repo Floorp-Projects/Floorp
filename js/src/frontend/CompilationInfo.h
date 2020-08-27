@@ -89,7 +89,8 @@ struct ScopeContext {
   static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
 
-struct CompilationInfo;
+struct CompilationStencil;
+struct CompilationGCOutput;
 
 class ScriptStencilIterable {
  public:
@@ -107,16 +108,19 @@ class ScriptStencilIterable {
 
   class Iterator {
     size_t index_ = 0;
-    CompilationInfo* compilationInfo_;
+    CompilationStencil& stencil_;
+    CompilationGCOutput& gcOutput_;
 
-    Iterator(CompilationInfo* compilationInfo, size_t index)
-        : index_(index), compilationInfo_(compilationInfo) {
+    Iterator(CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+             size_t index)
+        : index_(index), stencil_(stencil), gcOutput_(gcOutput) {
       skipNonFunctions();
     }
 
    public:
-    explicit Iterator(CompilationInfo* compilationInfo)
-        : compilationInfo_(compilationInfo) {
+    explicit Iterator(CompilationStencil& stencil,
+                      CompilationGCOutput& gcOutput)
+        : stencil_(stencil), gcOutput_(gcOutput) {
       skipNonFunctions();
     }
 
@@ -136,17 +140,20 @@ class ScriptStencilIterable {
 
     inline ScriptAndFunction operator*();
 
-    static inline Iterator end(CompilationInfo* compilationInfo);
+    static inline Iterator end(CompilationStencil& stencil,
+                               CompilationGCOutput& gcOutput);
   };
 
-  CompilationInfo* compilationInfo_;
+  CompilationStencil& stencil_;
+  CompilationGCOutput& gcOutput_;
 
-  explicit ScriptStencilIterable(CompilationInfo* compilationInfo)
-      : compilationInfo_(compilationInfo) {}
+  explicit ScriptStencilIterable(CompilationStencil& stencil,
+                                 CompilationGCOutput& gcOutput)
+      : stencil_(stencil), gcOutput_(gcOutput) {}
 
-  Iterator begin() const { return Iterator(compilationInfo_); }
+  Iterator begin() const { return Iterator(stencil_, gcOutput_); }
 
-  Iterator end() const { return Iterator::end(compilationInfo_); }
+  Iterator end() const { return Iterator::end(stencil_, gcOutput_); }
 };
 
 // Input of the compilation, including source and enclosing context.
@@ -349,7 +356,7 @@ struct MOZ_RAII CompilationInfo {
   CompilationInfo& operator=(CompilationInfo&&) = delete;
 
   ScriptStencilIterable functionScriptStencils() {
-    return ScriptStencilIterable(this);
+    return ScriptStencilIterable(stencil, gcOutput);
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -359,14 +366,14 @@ struct MOZ_RAII CompilationInfo {
 };
 
 inline void ScriptStencilIterable::Iterator::next() {
-  MOZ_ASSERT(index_ < compilationInfo_->stencil.scriptData.length());
+  MOZ_ASSERT(index_ < stencil_.scriptData.length());
   index_++;
 }
 
 inline void ScriptStencilIterable::Iterator::skipNonFunctions() {
-  size_t length = compilationInfo_->stencil.scriptData.length();
+  size_t length = stencil_.scriptData.length();
   while (index_ < length) {
-    if (compilationInfo_->stencil.scriptData[index_].isFunction()) {
+    if (stencil_.scriptData[index_].isFunction()) {
       return;
     }
 
@@ -376,18 +383,17 @@ inline void ScriptStencilIterable::Iterator::skipNonFunctions() {
 
 inline ScriptStencilIterable::ScriptAndFunction
 ScriptStencilIterable::Iterator::operator*() {
-  ScriptStencil& script = compilationInfo_->stencil.scriptData[index_];
+  ScriptStencil& script = stencil_.scriptData[index_];
 
   FunctionIndex functionIndex = FunctionIndex(index_);
-  return ScriptAndFunction(script,
-                           compilationInfo_->gcOutput.functions[functionIndex],
+  return ScriptAndFunction(script, gcOutput_.functions[functionIndex],
                            functionIndex);
 }
 
 /* static */ inline ScriptStencilIterable::Iterator
-ScriptStencilIterable::Iterator::end(CompilationInfo* compilationInfo) {
-  return Iterator(compilationInfo,
-                  compilationInfo->stencil.scriptData.length());
+ScriptStencilIterable::Iterator::end(CompilationStencil& stencil,
+                                     CompilationGCOutput& gcOutput) {
+  return Iterator(stencil, gcOutput, stencil.scriptData.length());
 }
 
 }  // namespace frontend
