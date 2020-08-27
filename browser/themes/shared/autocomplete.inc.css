@@ -23,7 +23,7 @@
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLearnMore"] {
-  padding-bottom: 3px;
+  padding-bottom: 2px;
   padding-inline-start: 21px;
 }
 
