@@ -84,9 +84,6 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
   char* prefMapHandle = nullptr;
   char* prefsLen = nullptr;
   char* prefMapSize = nullptr;
-  char* scacheHandle = nullptr;
-  char* scacheSize = nullptr;
-  bool wantsScache = true;
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> profileDir;
 #endif
@@ -130,11 +127,6 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
         return false;
       }
       prefMapHandle = aArgv[i];
-    } else if (strcmp(aArgv[i], "-scacheHandle") == 0) {
-      if (++i == aArgc) {
-        return false;
-      }
-      scacheHandle = aArgv[i];
 #endif
 
     } else if (strcmp(aArgv[i], "-prefsLen") == 0) {
@@ -147,13 +139,6 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
         return false;
       }
       prefMapSize = aArgv[i];
-    } else if (strcmp(aArgv[i], "-scacheSize") == 0) {
-      if (++i == aArgc) {
-        return false;
-      }
-      scacheSize = aArgv[i];
-    } else if (strcmp(aArgv[i], "-noScache") == 0) {
-      wantsScache = false;
     } else if (strcmp(aArgv[i], "-safeMode") == 0) {
       gSafeMode = true;
 
@@ -188,11 +173,6 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
   if (!deserializer.DeserializeFromSharedMemory(prefsHandle, prefMapHandle,
                                                 prefsLen, prefMapSize)) {
     return false;
-  }
-
-  if (wantsScache) {
-    Unused << mozilla::scache::StartupCache::InitChildSingleton(scacheHandle,
-                                                                scacheSize);
   }
 
   mContent.Init(IOThreadChild::message_loop(), ParentPid(), *parentBuildID,
