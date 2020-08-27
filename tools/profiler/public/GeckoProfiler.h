@@ -77,6 +77,7 @@
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE( \
       markerName, text, categoryPair, docShell, cause)
 
+struct ProfilerBacktrace {};
 using UniqueProfilerBacktrace = mozilla::UniquePtr<int>;
 static inline UniqueProfilerBacktrace profiler_get_backtrace() {
   return nullptr;

@@ -6,12 +6,6 @@
 #ifndef BASEPROFILEJSONWRITER_H
 #define BASEPROFILEJSONWRITER_H
 
-#include "BaseProfiler.h"
-
-#ifndef MOZ_GECKO_PROFILER
-#  error Do not #include this header when MOZ_GECKO_PROFILER is not #defined.
-#endif
-
 #include "mozilla/JSONWriter.h"
 #include "mozilla/UniquePtr.h"
 
