@@ -210,7 +210,7 @@ class SourceParseContext : public ParseContext {
   SourceParseContext(GeneralParser<ParseHandler, Unit>* prs, SharedContext* sc,
                      Directives* newDirectives)
       : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream,
-                     prs->getCompilationInfo(), newDirectives,
+                     prs->getCompilationInfo().state, newDirectives,
                      std::is_same_v<ParseHandler, FullParseHandler>) {}
 };
 
