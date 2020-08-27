@@ -92,9 +92,6 @@ graph_config_schema = Schema({
         Required('release-partner-repack'):
             optionally_keyed_by('release-product', 'release-level', 'release-type',
                                 Any(text_type, None)),
-        Optional('release-partner-attribution'):
-            optionally_keyed_by('release-product', 'release-level', 'release-type',
-                                Any(text_type, None)),
         Required('release-eme-free-repack'):
             optionally_keyed_by('release-product', 'release-level', 'release-type',
                                 Any(text_type, None)),
