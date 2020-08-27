@@ -5,12 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/IOUtils.h"
+#include "ErrorList.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
+#include "nsError.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsPrintfCString.h"
 #include "nspr/prerror.h"
 #include "nspr/prio.h"
@@ -75,13 +78,16 @@ namespace dom {
  * @see nsLocalFileUnix.cpp
  */
 static bool IsFileNotFound(nsresult aResult) {
-  switch (aResult) {
-    case NS_ERROR_FILE_NOT_FOUND:
-    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
-      return true;
-    default:
-      return false;
-  }
+  return aResult == NS_ERROR_FILE_NOT_FOUND ||
+         aResult == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+}
+/**
+ * Like |IsFileNotFound|, but checks for known results that suggest a file
+ * is not a directory.
+ */
+static bool IsNotDirectory(nsresult aResult) {
+  return aResult == NS_ERROR_FILE_DESTINATION_NOT_DIR ||
+         aResult == NS_ERROR_FILE_NOT_DIRECTORY;
 }
 
 /**
@@ -425,6 +431,20 @@ already_AddRefed<Promise> IOUtils::Touch(
   }
 
   return RunOnBackgroundThread<int64_t>(promise, &TouchSync, path, newTime);
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
+                                               const nsAString& aPath) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  NS_ENSURE_TRUE(!!promise, nullptr);
+
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsAutoString path(aPath);
+
+  return RunOnBackgroundThread<nsTArray<nsString>>(promise, &GetChildrenSync,
+                                                   path);
 }
 
 /* static */
@@ -1189,6 +1209,48 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
     return Err(err);
   }
   return now;
+}
+
+/* static */
+Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
+    const nsAString& aPath) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  RefPtr<nsLocalFile> file = new nsLocalFile();
+  MOZ_TRY(file->InitWithPath(aPath));
+
+  RefPtr<nsIDirectoryEnumerator> iter;
+  nsresult rv = file->GetDirectoryEntries(getter_AddRefs(iter));
+  if (NS_FAILED(rv)) {
+    IOError err(rv);
+    if (IsFileNotFound(rv)) {
+      return Err(err.WithMessage(
+          "Could not get children of file(%s) because it does not exist",
+          NS_ConvertUTF16toUTF8(aPath).get()));
+    }
+    if (IsNotDirectory(rv)) {
+      return Err(err.WithMessage(
+          "Could not get children of file(%s) because it is not a directory",
+          NS_ConvertUTF16toUTF8(aPath).get()));
+    }
+    return Err(err);
+  }
+  nsTArray<nsString> children;
+
+  bool hasMoreElements = false;
+  MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
+  while (hasMoreElements) {
+    nsCOMPtr<nsIFile> child;
+    MOZ_TRY(iter->GetNextFile(getter_AddRefs(child)));
+    if (child) {
+      nsString path;
+      MOZ_TRY(child->GetPath(path));
+      children.AppendElement(path);
+    }
+    MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
+  }
+
+  return children;
 }
 
 NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);
