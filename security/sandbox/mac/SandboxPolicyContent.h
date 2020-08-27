@@ -29,6 +29,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
   (define testingReadPath3 (param "TESTING_READ_PATH3"))
   (define testingReadPath4 (param "TESTING_READ_PATH4"))
   (define crashPort (param "CRASH_PORT"))
+  (define isRosettaTranslated (param "IS_ROSETTA_TRANSLATED"))
 
   (define (moz-deny feature)
     (if (string=? should-log "TRUE")
@@ -51,11 +52,14 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
     (debug deny))
 
   (if (defined? 'file-map-executable)
-    (allow file-map-executable file-read*
-      (subpath "/System")
-      (subpath "/usr/lib")
-      (subpath "/Library/GPUBundles")
-      (subpath appPath))
+    (begin
+      (if (string=? isRosettaTranslated "TRUE")
+        (allow file-map-executable (subpath "/private/var/db/oah")))
+      (allow file-map-executable file-read*
+        (subpath "/System")
+        (subpath "/usr/lib")
+        (subpath "/Library/GPUBundles")
+        (subpath appPath)))
     (allow file-read*
         (subpath "/System")
         (subpath "/usr/lib")
