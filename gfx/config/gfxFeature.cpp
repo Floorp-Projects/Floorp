@@ -221,9 +221,7 @@ void FeatureState::ForEachStatusChange(
 }
 
 void FeatureState::SetFailureId(const nsACString& aFailureId) {
-  if (mFailureId.IsEmpty()) {
-    mFailureId = aFailureId;
-  }
+  mFailureId = aFailureId;
 }
 
 const char* FeatureState::GetFailureMessage() const {
