@@ -21,6 +21,7 @@ static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
   (define hasWindowServer (param "HAS_WINDOW_SERVER"))
   (define testingReadPath1 (param "TESTING_READ_PATH1"))
   (define testingReadPath2 (param "TESTING_READ_PATH2"))
+  (define isRosettaTranslated (param "IS_ROSETTA_TRANSLATED"))
 
   (define (moz-deny feature)
     (if (string=? should-log "TRUE")
@@ -42,11 +43,14 @@ static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
   (allow process-info-pidinfo process-info-setcontrol (target self))
 
   (if (defined? 'file-map-executable)
-    (allow file-map-executable file-read*
-      (subpath "/System/Library")
-      (subpath "/usr/lib")
-      (subpath plugin-path)
-      (subpath app-path))
+    (begin
+      (if (string=? isRosettaTranslated "TRUE")
+        (allow file-map-executable (subpath "/private/var/db/oah")))
+      (allow file-map-executable file-read*
+        (subpath "/System/Library")
+        (subpath "/usr/lib")
+        (subpath plugin-path)
+        (subpath app-path)))
     (allow file-read*
       (subpath "/System/Library")
       (subpath "/usr/lib")
