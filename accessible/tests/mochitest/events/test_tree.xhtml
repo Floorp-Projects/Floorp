@@ -259,6 +259,7 @@
       this.invoke = function invalidateRow_invoke()
       {
         // Fire 'TreeInvalidated' event by InvalidateRow()
+        // eslint-disable-next-line no-unused-vars
         var colCount = gTree.columns.count;
         var column = gTree.columns.getFirstColumn();
         while (column) {

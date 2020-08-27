@@ -24,8 +24,8 @@
     
     var winLowerThanVista = navigator.platform.indexOf("Win") == 0;
     if (winLowerThanVista) {
-      var version = Components.classes["@mozilla.org/system-info;1"]
-                              .getService(Components.interfaces.nsIPropertyBag2)
+      var version =   Cc["@mozilla.org/system-info;1"]
+                              .getService(Ci.nsIPropertyBag2)
                               .getProperty("version");
       version = parseFloat(version);
       winLowerThanVista = !(version >= 6.0);
