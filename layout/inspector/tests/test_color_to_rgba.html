@@ -25,6 +25,15 @@
   testColor("hsl(170,60%,40%,0.9)", {r:41, g:163, b:143, a:0.9});
   testColor("hsla(170,60%,40%,0.9)", {r:41, g:163, b:143, a:0.9});
 
+  // NOTE: LightweightThemeConsumer is the only consumer of this API, for
+  // backwards compat reasons... But it doesn't seem like it'd really need to
+  // care about system colors, so maybe we can remove it in the future.
+  isnot(
+    InspectorUtils.colorToRGBA("ButtonText", document),
+    null,
+    "Should support system colors when given a displayed document"
+  );
+
   function testColor(color, expected) {
     let rgb = InspectorUtils.colorToRGBA(color);
 
