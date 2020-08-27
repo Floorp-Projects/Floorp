@@ -372,10 +372,12 @@ class UrlbarController {
         }
         event.preventDefault();
         break;
-      case KeyEvent.DOM_VK_LEFT:
       case KeyEvent.DOM_VK_RIGHT:
-      case KeyEvent.DOM_VK_HOME:
       case KeyEvent.DOM_VK_END:
+        this.input.maybePromoteKeywordToSearchMode();
+      // Fall through.
+      case KeyEvent.DOM_VK_LEFT:
+      case KeyEvent.DOM_VK_HOME:
         this.view.removeAccessibleFocus();
         break;
       case KeyEvent.DOM_VK_BACK_SPACE:
