@@ -149,10 +149,10 @@ ParserSharedBase::ParserSharedBase(JSContext* cx,
                                    CompilationInfo& compilationInfo, Kind kind)
     : JS::CustomAutoRooter(cx),
       cx_(cx),
-      alloc_(compilationInfo.allocScope.alloc()),
+      alloc_(compilationInfo.state.allocScope.alloc()),
       compilationInfo_(compilationInfo),
       pc_(nullptr),
-      usedNames_(compilationInfo.usedNames) {
+      usedNames_(compilationInfo.state.usedNames) {
   cx->frontendCollectionPool().addActiveCompilation();
 }
 
@@ -190,7 +190,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     CompilationInfo& compilationInfo, BaseScript* lazyOuterFunction,
     void* internalSyntaxParser)
     : ParserBase(cx, options, foldConstants, compilationInfo),
-      handler_(cx, compilationInfo.allocScope.alloc(), lazyOuterFunction),
+      handler_(cx, compilationInfo.state.allocScope.alloc(), lazyOuterFunction),
       internalSyntaxParser_(internalSyntaxParser) {}
 
 template <class ParseHandler, typename Unit>
@@ -252,11 +252,12 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     TopLevelFunction isTopLevel) {
   MOZ_ASSERT(funNode);
 
-  FunctionIndex index = FunctionIndex(compilationInfo_.scriptData.length());
+  FunctionIndex index =
+      FunctionIndex(compilationInfo_.stencil.scriptData.length());
   MOZ_ASSERT_IF(isTopLevel == TopLevelFunction::Yes,
                 index == CompilationInfo::TopLevelIndex);
 
-  if (!compilationInfo_.scriptData.emplaceBack(cx_)) {
+  if (!compilationInfo_.stencil.scriptData.emplaceBack(cx_)) {
     return nullptr;
   }
 
@@ -832,7 +833,7 @@ bool PerHandlerParser<ParseHandler>::
       // TODO-Stencil
       //   After closed-over-bindings are snapshotted in the handler,
       //   remove this.
-      auto mbNameId = compilationInfo_.parserAtoms.internJSAtom(
+      auto mbNameId = compilationInfo_.stencil.parserAtoms.internJSAtom(
           cx_, this->getCompilationInfo(), name);
       if (mbNameId.isErr()) {
         return false;
@@ -1432,7 +1433,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   }
 
   Vector<UnboundPrivateName, 8> unboundPrivateNames(cx_);
-  if (!this->getCompilationInfo().usedNames.getUnboundPrivateNames(
+  if (!this->getCompilationInfo().state.usedNames.getUnboundPrivateNames(
           unboundPrivateNames)) {
     return false;
   }
@@ -1496,7 +1497,8 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     // names, we must use the effective scope that was determined when creating
     // the scopeContext.
     if (!verifyPrivateName(
-            cx_, this, this->getCompilationInfo().scopeContext.effectiveScope,
+            cx_, this,
+            this->getCompilationInfo().state.scopeContext.effectiveScope,
             unboundName)) {
       return false;
     }
@@ -1548,12 +1550,12 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
 
 #ifdef DEBUG
   if (evalpc.superScopeNeedsHomeObject() &&
-      this->getCompilationInfo().enclosingScope) {
+      this->getCompilationInfo().input.enclosingScope) {
     // If superScopeNeedsHomeObject_ is set and we are an entry-point
     // ParseContext, then we must be emitting an eval script, and the
     // outer function must already be marked as needing a home object
     // since it contains an eval.
-    ScopeIter si(this->getCompilationInfo().enclosingScope);
+    ScopeIter si(this->getCompilationInfo().input.enclosingScope);
     for (; si; si++) {
       if (si.kind() == ScopeKind::Function) {
         JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
@@ -1705,12 +1707,14 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   }
 
   // Generate the Import/Export tables and store in CompilationInfo.
-  if (!modulesc->builder.buildTables(this->compilationInfo_.moduleMetadata)) {
+  if (!modulesc->builder.buildTables(
+          this->compilationInfo_.stencil.moduleMetadata)) {
     return null();
   }
 
   // Check exported local bindings exist and mark them as closed over.
-  StencilModuleMetadata& moduleMetadata = this->compilationInfo_.moduleMetadata;
+  StencilModuleMetadata& moduleMetadata =
+      this->compilationInfo_.stencil.moduleMetadata;
   for (auto entry : moduleMetadata.localExportEntries) {
     const ParserAtom* nameId = entry.localName;
     MOZ_ASSERT(nameId);
@@ -2104,7 +2108,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Function is not syntactically part of another script.
   funbox->setIsStandalone(true);
 
-  funbox->initStandalone(this->compilationInfo_.scopeContext, flags,
+  funbox->initStandalone(this->compilationInfo_.state.scopeContext, flags,
                          syntaxKind);
 
   SourceParseContext funpc(this, funbox, newDirectives);
@@ -2342,7 +2346,7 @@ const ParserAtom* ParserBase::prefixAccessorName(PropertyType propType,
 
   const ParserAtom* atoms[2] = {prefix, propAtom};
   auto atomsRange = mozilla::Range(atoms, 2);
-  return compilationInfo_.parserAtoms.concatAtoms(cx_, atomsRange)
+  return compilationInfo_.stencil.parserAtoms.concatAtoms(cx_, atomsRange)
       .unwrapOr(nullptr);
 }
 
@@ -2860,7 +2864,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   Directives directives(pc_);
   Directives newDirectives = directives;
 
-  Position start(this->compilationInfo_.keepAtoms, tokenStream);
+  Position start(this->compilationInfo_.state.keepAtoms, tokenStream);
   CompilationInfo::RewindToken startObj =
       this->compilationInfo_.getRewindToken();
 
@@ -2904,7 +2908,7 @@ bool Parser<FullParseHandler, Unit>::advancePastSyntaxParsedFunction(
   MOZ_ASSERT(getSyntaxParser() == syntaxParser);
 
   // Advance this parser over tokens processed by the syntax parser.
-  Position currentSyntaxPosition(this->compilationInfo_.keepAtoms,
+  Position currentSyntaxPosition(this->compilationInfo_.state.keepAtoms,
                                  syntaxParser->tokenStream);
   if (!tokenStream.fastForward(currentSyntaxPosition, syntaxParser->anyChars)) {
     return false;
@@ -2952,7 +2956,8 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     //   var x = (y = z => 2) => q;
     //   //           ^ we first seek to here to syntax-parse this function
     //   //      ^ then we seek back to here to syntax-parse the outer function
-    Position currentPosition(this->compilationInfo_.keepAtoms, tokenStream);
+    Position currentPosition(this->compilationInfo_.state.keepAtoms,
+                             tokenStream);
     if (!syntaxParser->tokenStream.seekTo(currentPosition, anyChars)) {
       return false;
     }
@@ -2987,7 +2992,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
       return false;
     }
 
-    if (!advancePastSyntaxParsedFunction(this->compilationInfo_.keepAtoms,
+    if (!advancePastSyntaxParsedFunction(this->compilationInfo_.state.keepAtoms,
                                          syntaxParser)) {
       return false;
     }
@@ -3189,8 +3194,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     return null();
   }
   funbox->initFromLazyFunction(fun);
-  funbox->initStandalone(this->getCompilationInfo().scopeContext, fun->flags(),
-                         syntaxKind);
+  funbox->initStandalone(this->getCompilationInfo().state.scopeContext,
+                         fun->flags(), syntaxKind);
   if (fun->isClassConstructor()) {
     funbox->setMemberInitializers(fun->baseScript()->getMemberInitializers());
   }
@@ -7598,7 +7603,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   // We're leaving a class definition that was not itself nested within a class
   if (!isInClass) {
     mozilla::Maybe<UnboundPrivateName> maybeUnboundName;
-    if (!this->getCompilationInfo().usedNames.hasUnboundPrivateNames(
+    if (!this->getCompilationInfo().state.usedNames.hasUnboundPrivateNames(
             cx_, maybeUnboundName)) {
       return null();
     }
@@ -8984,7 +8989,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   // Save the tokenizer state in case we find an arrow function and have to
   // rewind.
-  Position start(this->compilationInfo_.keepAtoms, tokenStream);
+  Position start(this->compilationInfo_.state.keepAtoms, tokenStream);
 
   PossibleError possibleErrorInner(*this);
   Node lhs;
@@ -10236,12 +10241,13 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     }
   }
 
-  RegExpIndex index(this->getCompilationInfo().regExpData.length());
-  if (!this->getCompilationInfo().regExpData.emplaceBack()) {
+  RegExpIndex index(this->getCompilationInfo().stencil.regExpData.length());
+  if (!this->getCompilationInfo().stencil.regExpData.emplaceBack()) {
     return nullptr;
   }
 
-  if (!this->getCompilationInfo().regExpData[index].init(cx_, range, flags)) {
+  if (!this->getCompilationInfo().stencil.regExpData[index].init(cx_, range,
+                                                                 flags)) {
     return nullptr;
   }
 
@@ -10287,12 +10293,13 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
 
-  BigIntIndex index(this->getCompilationInfo().bigIntData.length());
-  if (!this->getCompilationInfo().bigIntData.emplaceBack()) {
+  BigIntIndex index(this->getCompilationInfo().stencil.bigIntData.length());
+  if (!this->getCompilationInfo().stencil.bigIntData.emplaceBack()) {
     return null();
   }
 
-  if (!this->getCompilationInfo().bigIntData[index].init(this->cx_, chars)) {
+  if (!this->getCompilationInfo().stencil.bigIntData[index].init(this->cx_,
+                                                                 chars)) {
     return null();
   }
 
@@ -11478,18 +11485,19 @@ template class Parser<FullParseHandler, char16_t>;
 template class Parser<SyntaxParseHandler, char16_t>;
 
 CompilationInfo::RewindToken CompilationInfo::getRewindToken() {
-  MOZ_ASSERT(functions.empty());
-  return RewindToken{scriptData.length(), asmJS.count()};
+  MOZ_ASSERT(gcOutput.functions.empty());
+  return RewindToken{stencil.scriptData.length(), stencil.asmJS.count()};
 }
 
 void CompilationInfo::rewind(const CompilationInfo::RewindToken& pos) {
-  if (asmJS.count() != pos.asmJSCount) {
-    for (size_t i = pos.scriptDataLength; i < scriptData.length(); i++) {
-      asmJS.remove(FunctionIndex(i));
+  if (stencil.asmJS.count() != pos.asmJSCount) {
+    for (size_t i = pos.scriptDataLength; i < stencil.scriptData.length();
+         i++) {
+      stencil.asmJS.remove(FunctionIndex(i));
     }
-    MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
+    MOZ_ASSERT(stencil.asmJS.count() == pos.asmJSCount);
   }
-  scriptData.shrinkTo(pos.scriptDataLength);
+  stencil.scriptData.shrinkTo(pos.scriptDataLength);
 }
 
 }  // namespace js::frontend

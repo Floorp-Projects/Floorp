@@ -5223,7 +5223,7 @@ static bool FrontendTest(JSContext* cx,
           return false;
         }
 
-        builder.finishFunctionDecls(compilationInfo.moduleMetadata);
+        builder.finishFunctionDecls(compilationInfo.stencil.moduleMetadata);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
         compilationInfo.dumpStencil();

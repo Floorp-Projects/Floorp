@@ -162,7 +162,7 @@ const frontend::ParserAtom* StringBuffer::finishParserAtom(
   }
 
   if (isLatin1()) {
-    auto result = compilationInfo.parserAtoms.internLatin1(
+    auto result = compilationInfo.stencil.parserAtoms.internLatin1(
         cx_, latin1Chars().begin(), len);
     if (result.isErr()) {
       return nullptr;
@@ -171,7 +171,7 @@ const frontend::ParserAtom* StringBuffer::finishParserAtom(
     return result.unwrap();
   }
 
-  auto result = compilationInfo.parserAtoms.internChar16(
+  auto result = compilationInfo.stencil.parserAtoms.internChar16(
       cx_, twoByteChars().begin(), len);
   if (result.isErr()) {
     return nullptr;

@@ -97,7 +97,7 @@ const frontend::ParserAtom* RealmInstrumentation::getInstrumentationKindName(
     frontend::CompilationInfo& compilationInfo, InstrumentationKind kind) {
   for (size_t i = 0; i < mozilla::ArrayLength(instrumentationNames); i++) {
     if (kind == (InstrumentationKind)(1 << i)) {
-      return compilationInfo.parserAtoms
+      return compilationInfo.stencil.parserAtoms
           .internAscii(compilationInfo.cx, instrumentationNames[i],
                        strlen(instrumentationNames[i]))
           .unwrapOr(nullptr);

@@ -1241,7 +1241,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
 
       // Construct the concatenated atom.
       const ParserAtom* combination =
-          info.compilationInfo.parserAtoms
+          info.compilationInfo.stencil.parserAtoms
               .concatAtoms(info.cx(),
                            mozilla::Range(accum.begin(), accum.length()))
               .unwrapOr(nullptr);

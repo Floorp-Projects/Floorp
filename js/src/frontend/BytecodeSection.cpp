@@ -30,7 +30,7 @@ bool GCThingList::append(FunctionBox* funbox, GCThingIndex* index) {
 AbstractScopePtr GCThingList::getScope(size_t index) const {
   const ScriptThingVariant& elem = vector[index];
   if (elem.is<EmptyGlobalScopeType>()) {
-    MOZ_ASSERT(compilationInfo.enclosingScope == nullptr);
+    MOZ_ASSERT(compilationInfo.input.enclosingScope == nullptr);
     return AbstractScopePtr(&compilationInfo.cx->global()->emptyGlobalScope());
   }
   return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
@@ -73,7 +73,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const BigIntIndex& index) {
-      BigIntStencil& data = compilationInfo.bigIntData[index];
+      BigIntStencil& data = compilationInfo.stencil.bigIntData[index];
       BigInt* bi = data.createBigInt(cx);
       if (!bi) {
         return false;
@@ -83,7 +83,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const RegExpIndex& rindex) {
-      RegExpStencil& data = compilationInfo.regExpData[rindex];
+      RegExpStencil& data = compilationInfo.stencil.regExpData[rindex];
       RegExpObject* regexp = data.createRegExp(cx);
       if (!regexp) {
         return false;
@@ -93,7 +93,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const ObjLiteralIndex& index) {
-      ObjLiteralStencil& data = compilationInfo.objLiteralData[index];
+      ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData[index];
       JSObject* obj = data.create(cx, compilationInfo);
       if (!obj) {
         return false;
@@ -103,12 +103,12 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const ScopeIndex& index) {
-      output[i] = JS::GCCellPtr(compilationInfo.scopes[index].get());
+      output[i] = JS::GCCellPtr(compilationInfo.gcOutput.scopes[index].get());
       return true;
     }
 
     bool operator()(const FunctionIndex& index) {
-      output[i] = JS::GCCellPtr(compilationInfo.functions[index]);
+      output[i] = JS::GCCellPtr(compilationInfo.gcOutput.functions[index]);
       return true;
     }
 

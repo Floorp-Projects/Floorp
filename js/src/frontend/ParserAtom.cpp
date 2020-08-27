@@ -146,7 +146,7 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
 JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(
     JSContext* cx, CompilationInfo& compilationInfo) const {
   if (atomIndex_.constructed<AtomIndex>()) {
-    return compilationInfo.atoms[atomIndex_.ref<AtomIndex>()].get();
+    return compilationInfo.input.atoms[atomIndex_.ref<AtomIndex>()].get();
   }
   if (atomIndex_.constructed<WellKnownAtomId>()) {
     return GetWellKnownAtom(cx, atomIndex_.ref<WellKnownAtomId>());
@@ -161,8 +161,8 @@ JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(
   if (!atom) {
     return RaiseParserAtomsOOMError(cx);
   }
-  auto index = compilationInfo.atoms.length();
-  if (!compilationInfo.atoms.append(atom)) {
+  auto index = compilationInfo.input.atoms.length();
+  if (!compilationInfo.input.atoms.append(atom)) {
     return mozilla::Err(PARSER_ATOMS_OOM);
   }
   atomIndex_.construct<AtomIndex>(index);
@@ -346,15 +346,15 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internJSAtom(
   if (id->atomIndex_.empty()) {
     MOZ_ASSERT(id->equalsJSAtom(atom));
 
-    auto index = AtomIndex(compilationInfo.atoms.length());
-    if (!compilationInfo.atoms.append(atom)) {
+    auto index = AtomIndex(compilationInfo.input.atoms.length());
+    if (!compilationInfo.input.atoms.append(atom)) {
       return mozilla::Err(PARSER_ATOMS_OOM);
     }
     id->setAtomIndex(index);
   } else {
 #ifdef DEBUG
     if (id->atomIndex_.constructed<AtomIndex>()) {
-      MOZ_ASSERT(compilationInfo.atoms[id->atomIndex_.ref<AtomIndex>()] ==
+      MOZ_ASSERT(compilationInfo.input.atoms[id->atomIndex_.ref<AtomIndex>()] ==
                  atom);
     } else {
       MOZ_ASSERT(GetWellKnownAtom(cx, id->atomIndex_.ref<WellKnownAtomId>()) ==
