@@ -1495,11 +1495,16 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return false;
   };
 
-  RootedScope enclosingScope(cx_, this->getCompilationInfo().enclosingScope);
   // It's important that the unbound private names are sorted, as we
   // want our errors to always be issued to the first textually.
   for (UnboundPrivateName unboundName : unboundPrivateNames) {
-    if (!verifyPrivateName(cx_, this, enclosingScope, unboundName)) {
+    // If the enclosingScope is non-syntactic, then we are in a
+    // Debugger.Frame.prototype.eval call. In order to find the declared private
+    // names, we must use the effective scope that was determined when creating
+    // the scopeContext.
+    if (!verifyPrivateName(
+            cx_, this, this->getCompilationInfo().scopeContext.effectiveScope,
+            unboundName)) {
       return false;
     }
   }

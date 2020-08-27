@@ -98,40 +98,9 @@ void ScopeContext::computeAllowSyntax(Scope* scope) {
   }
 }
 
-void ScopeContext::computeThisBinding(Scope* scope, JSObject* environment) {
-  // If the scope-chain is non-syntactic, we may still determine a more precise
-  // effective-scope to use instead.
-  Scope* effectiveScope = scope;
-
-  // If this eval is in response to Debugger.Frame.eval, we may have been
-  // passed an incomplete scope chain. In order to better determine the 'this'
-  // binding type, we traverse the environment chain, looking for a CallObject
-  // and recompute the binding type based on its body scope.
-  //
-  // NOTE: A non-debug eval in a non-syntactic environment will also trigger
-  // this code. In that case, we should still compute the same binding type.
-  if (environment && scope->hasOnChain(ScopeKind::NonSyntactic)) {
-    JSObject* env = environment;
-    while (env) {
-      // Look at target of any DebugEnvironmentProxy, but be sure to use
-      // enclosingEnvironment() of the proxy itself.
-      JSObject* unwrapped = env;
-      if (env->is<DebugEnvironmentProxy>()) {
-        unwrapped = &env->as<DebugEnvironmentProxy>().environment();
-      }
-
-      if (unwrapped->is<CallObject>()) {
-        JSFunction* callee = &unwrapped->as<CallObject>().callee();
-        effectiveScope = callee->nonLazyScript()->bodyScope();
-        break;
-      }
-
-      env = env->enclosingEnvironment();
-    }
-  }
-
+void ScopeContext::computeThisBinding(Scope* scope) {
   // Inspect the scope-chain.
-  for (ScopeIter si(effectiveScope); si; si++) {
+  for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::Module) {
       thisBinding = ThisBinding::Module;
       return;
@@ -199,6 +168,33 @@ void ScopeContext::computeExternalInitializers(Scope* scope) {
       break;
     }
   }
+}
+
+/* static */
+Scope* ScopeContext::determineEffectiveScope(Scope* scope,
+                                             JSObject* environment) {
+  // If the scope-chain is non-syntactic, we may still determine a more precise
+  // effective-scope to use instead.
+  if (environment && scope->hasOnChain(ScopeKind::NonSyntactic)) {
+    JSObject* env = environment;
+    while (env) {
+      // Look at target of any DebugEnvironmentProxy, but be sure to use
+      // enclosingEnvironment() of the proxy itself.
+      JSObject* unwrapped = env;
+      if (env->is<DebugEnvironmentProxy>()) {
+        unwrapped = &env->as<DebugEnvironmentProxy>().environment();
+      }
+
+      if (unwrapped->is<CallObject>()) {
+        JSFunction* callee = &unwrapped->as<CallObject>().callee();
+        return callee->nonLazyScript()->bodyScope();
+      }
+
+      env = env->enclosingEnvironment();
+    }
+  }
+
+  return scope;
 }
 
 EvalSharedContext::EvalSharedContext(JSContext* cx,
