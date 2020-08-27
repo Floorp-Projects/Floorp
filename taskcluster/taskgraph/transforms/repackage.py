@@ -192,7 +192,7 @@ def make_repackage_description(config, jobs):
 def make_job_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
-        dependencies = {dep_job.attributes.get('kind'): dep_job.label}
+        dependencies = {dep_job.kind: dep_job.label}
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['repackage_type'] = 'repackage'
@@ -300,6 +300,7 @@ def make_job_description(config, jobs):
             'description': description,
             'worker-type': worker_type,
             'dependencies': dependencies,
+            'if-dependencies': [dep_job.kind],
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'optimization': dep_job.optimization,

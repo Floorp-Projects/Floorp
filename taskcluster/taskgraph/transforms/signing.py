@@ -176,6 +176,8 @@ def make_task_description(config, jobs):
             'shipping-product': job.get('shipping-product'),
             'shipping-phase': job.get('shipping-phase'),
         }
+        if dep_job.kind in task['dependencies']:
+            task['if-dependencies'] = [dep_job.kind]
 
         if 'macosx' in build_platform:
             shippable = "false"
