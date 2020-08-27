@@ -88,6 +88,7 @@ job_description_schema = Schema({
             Required('artifact'): text_type,
             Optional('dest'): text_type,
             Optional('extract'): bool,
+            Optional('verify-hash'): bool,
         }],
     },
 
@@ -298,10 +299,12 @@ def use_fetches(config, jobs):
                         path = artifact
                         dest = None
                         extract = True
+                        verify_hash = False
                     else:
                         path = artifact['artifact']
                         dest = artifact.get('dest')
                         extract = artifact.get('extract', True)
+                        verify_hash = artifact.get('verify-hash', False)
 
                     fetch = {
                         'artifact': '{prefix}/{path}'.format(prefix=prefix, path=path)
@@ -311,6 +314,8 @@ def use_fetches(config, jobs):
                     }
                     if dest is not None:
                         fetch['dest'] = dest
+                    if verify_hash:
+                        fetch['verify-hash'] = verify_hash
                     job_fetches.append(fetch)
 
         if job.get('use-sccache') and not has_sccache:
