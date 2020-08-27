@@ -175,15 +175,14 @@ namespace widget {
 
 using WindowPtr = jni::NativeWeakPtr<GeckoViewSupport>;
 
-class nsWindow::MediaSessionSupport final
+class MediaSessionSupport final
     : public mozilla::java::MediaSession::Controller::Natives<
           MediaSessionSupport> {
-  using LockedWindowPtr = WindowPtr<MediaSessionSupport>::Locked;
   using MediaKeysArray = nsTArray<MediaControlKey>;
 
   typedef RefPtr<mozilla::dom::MediaController> ControllerPtr;
 
-  WindowPtr<MediaSessionSupport> mWindow;
+  WindowPtr mWindow;
   mozilla::java::MediaSession::Controller::WeakRef mJavaController;
   ControllerPtr mMediaController;
   MediaEventListener mMetadataChangedListener;
@@ -196,18 +195,30 @@ class nsWindow::MediaSessionSupport final
   using Base::DisposeNative;
 
   MediaSessionSupport(
-      NativePtr<MediaSessionSupport>* aPtr, nsWindow* aWindow,
+      WindowPtr aWindow,
       const java::MediaSession::Controller::LocalRef& aController)
-      : mWindow(aPtr, aWindow),
+      : mWindow(aWindow),
         mJavaController(aController),
         mMediaController(nullptr) {
-    MOZ_ASSERT(mWindow);
+#if defined(DEBUG)
+    auto win(mWindow.Access());
+    MOZ_ASSERT(!!win);
+#endif  // defined(DEBUG)
   }
 
   bool Dispatch(const char16_t aType[],
                 java::GeckoBundle::Param aBundle = nullptr) {
-    widget::EventDispatcher* dispatcher = mWindow->GetEventDispatcher();
+    auto win = mWindow.Access();
+    if (!win) {
+      return false;
+    }
 
+    nsWindow* gkWindow = win->GetNsWindow();
+    if (!gkWindow) {
+      return false;
+    }
+
+    widget::EventDispatcher* dispatcher = gkWindow->GetEventDispatcher();
     if (!dispatcher) {
       return false;
     }
@@ -335,7 +346,7 @@ class nsWindow::MediaSessionSupport final
     }
   }
 
-  void OnDetach(already_AddRefed<Runnable> aDisposer) {
+  void OnWeakNonIntrusiveDetach(already_AddRefed<Runnable> aDisposer) {
     MOZ_ASSERT(NS_IsMainThread());
 
     RefPtr<Runnable> disposer = aDisposer;
@@ -512,10 +523,6 @@ class nsWindow::MediaSessionSupport final
     Unused << bc->SetMuted(aMute);
   }
 };
-
-template <>
-const char nsWindow::NativePtr<nsWindow::MediaSessionSupport>::sName[] =
-    "MediaSessionSupport";
 
 /**
  * PanZoomController handles its native calls on the UI thread, so make
@@ -1557,11 +1564,6 @@ GeckoViewSupport::~GeckoViewSupport() {
   if (mWindow) {
     mWindow->DetachNatives();
   }
-
-  if (window.mMediaSessionSupport) {
-    window.mMediaSessionSupport.Detach(
-        window.mMediaSessionSupport->GetJavaController());
-  }
 }
 
 /* static */
@@ -1763,6 +1765,36 @@ void GeckoViewSupport::OnReady(jni::Object::Param aQueue) {
   mIsReady = true;
 }
 
+void GeckoViewSupport::AttachMediaSessionController(
+    const GeckoSession::Window::LocalRef& inst, jni::Object::Param aController,
+    const int64_t aId) {
+  auto controller = java::MediaSession::Controller::LocalRef(
+      jni::GetGeckoThreadEnv(),
+      java::MediaSession::Controller::Ref::From(aController));
+  mWindow->mMediaSessionSupport =
+      jni::NativeWeakPtrHolder<MediaSessionSupport>::Attach(
+          controller, mWindow->mGeckoViewSupport, controller);
+
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aId);
+  RefPtr<dom::MediaController> nativeController =
+      bc->Canonical()->GetMediaController();
+  MOZ_ASSERT(nativeController);
+
+  if (auto acc = mWindow->mMediaSessionSupport.Access()) {
+    acc->SetNativeController(nativeController);
+  }
+
+  DispatchToUiThread("GeckoViewSupport::AttachMediaSessionController",
+                     [controller = java::MediaSession::Controller::GlobalRef(
+                          controller)] { controller->OnAttached(); });
+}
+
+void GeckoViewSupport::DetachMediaSessionController(
+    const GeckoSession::Window::LocalRef& inst,
+    jni::Object::Param aController) {
+  mWindow->mMediaSessionSupport.Detach();
+}
+
 }  // namespace widget
 }  // namespace mozilla
 
@@ -1770,8 +1802,8 @@ void nsWindow::InitNatives() {
   jni::InitConversionStatics();
   mozilla::widget::GeckoViewSupport::Base::Init();
   mozilla::widget::LayerViewSupport::Init();
+  mozilla::widget::MediaSessionSupport::Init();
   mozilla::widget::NPZCSupport::Init();
-  nsWindow::MediaSessionSupport::Init();
 
   mozilla::widget::GeckoEditableSupport::Init();
   a11y::SessionAccessibility::Init();
@@ -1783,6 +1815,7 @@ void nsWindow::DetachNatives() {
   mNPZCSupport.Detach();
   mLayerViewSupport.Detach();
   mSessionAccessibility.Detach();
+  mMediaSessionSupport.Detach();
 }
 
 /* static */
