@@ -190,8 +190,8 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
     eControlClick
   };
 
-  typedef bool ExitFromType;
-  enum ExitFrom : ExitFromType { eChild, eTopLevel };
+  typedef uint8_t ExitFromType;
+  enum ExitFrom : ExitFromType { eChild, eTopLevel, ePuppet };
 
  protected:
   WidgetMouseEvent()
@@ -267,8 +267,8 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   ContextMenuTrigger mContextMenuTrigger;
 
   // mExitFrom contains a value only when mMessage is eMouseExitFromWidget.
-  // This indicates if the mouse cursor exits from a top level widget or
-  // a child widget.
+  // This indicates if the mouse cursor exits from a top level platform widget,
+  // a child widget or a puppet widget.
   Maybe<ExitFrom> mExitFrom;
 
   // Whether the event should ignore scroll frame bounds during dispatch.
