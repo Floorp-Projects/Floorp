@@ -10216,9 +10216,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enablePropertyErrorMessageFix =
       !op.getBoolOption("disable-property-error-message-fix");
   enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
-  enablePrivateClassFields = op.getBoolOption("enable-private-fields");
-  enablePrivateClassMethods =
-      enablePrivateClassFields && op.getBoolOption("enable-private-methods");
+  enablePrivateClassFields = op.getBoolOption("enable-private-fields") ||
+                             op.getBoolOption("enable-private-methods");
+  enablePrivateClassMethods = op.getBoolOption("enable-private-methods");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
