@@ -2903,7 +2903,7 @@ class nsLayoutUtils {
       nsIFrame* aForFrame, nsIFrame* aScrollFrame, nsIContent* aContent,
       const nsIFrame* aReferenceFrame,
       mozilla::layers::LayerManager* aLayerManager, ViewID aScrollParentId,
-      const nsRect& aViewport, const mozilla::Maybe<nsRect>& aClipRect,
+      const nsSize& aScrollPortSize, const mozilla::Maybe<nsRect>& aClipRect,
       bool aIsRoot,
       const mozilla::Maybe<ContainerLayerParameters>& aContainerParameters);
 

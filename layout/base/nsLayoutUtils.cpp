@@ -9209,7 +9209,7 @@ bool nsLayoutUtils::CanScrollOriginClobberApz(ScrollOrigin aScrollOrigin) {
 ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     nsIFrame* aForFrame, nsIFrame* aScrollFrame, nsIContent* aContent,
     const nsIFrame* aReferenceFrame, LayerManager* aLayerManager,
-    ViewID aScrollParentId, const nsRect& aViewport,
+    ViewID aScrollParentId, const nsSize& aScrollPortSize,
     const Maybe<nsRect>& aClipRect, bool aIsRootContent,
     const Maybe<ContainerLayerParameters>& aContainerParameters) {
   nsPresContext* presContext = aForFrame->PresContext();
@@ -9218,7 +9218,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   PresShell* presShell = presContext->GetPresShell();
   ScrollMetadata metadata;
   FrameMetrics& metrics = metadata.GetMetrics();
-  metrics.SetLayoutViewport(CSSRect::FromAppUnits(aViewport));
+  metrics.SetLayoutViewport(
+      CSSRect(CSSPoint(), CSSSize::FromAppUnits(aScrollPortSize)));
 
   nsIDocShell* docShell = presContext->GetDocShell();
   BrowsingContext* bc = docShell ? docShell->GetBrowsingContext() : nullptr;
@@ -9640,16 +9641,16 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
   if (addMetrics || ensureMetricsForRootId) {
     bool isRootContent = presContext->IsRootContentDocumentCrossProcess();
 
-    nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
+    nsSize scrollPortSize = frame->GetSize();
     if (isRootContent && rootScrollFrame) {
       nsIScrollableFrame* scrollableFrame =
           rootScrollFrame->GetScrollTargetFrame();
-      viewport.SizeTo(scrollableFrame->GetScrollPortRect().Size());
+      scrollPortSize = scrollableFrame->GetScrollPortRect().Size();
     }
     return Some(nsLayoutUtils::ComputeScrollMetadata(
         frame, rootScrollFrame, content, aBuilder->FindReferenceFrameFor(frame),
-        aLayerManager, ScrollableLayerGuid::NULL_SCROLL_ID, viewport, Nothing(),
-        isRootContent, Some(aContainerParameters)));
+        aLayerManager, ScrollableLayerGuid::NULL_SCROLL_ID, scrollPortSize,
+        Nothing(), isRootContent, Some(aContainerParameters)));
   }
 
   return Nothing();
