@@ -579,6 +579,9 @@ uint32_t CanonicalBrowsingContext::CountSiteOrigins(
 
 void CanonicalBrowsingContext::UpdateMediaControlAction(
     const MediaControlAction& aAction) {
+  if (IsDiscarded()) {
+    return;
+  }
   ContentMediaControlKeyHandler::HandleMediaControlAction(this, aAction);
   Group()->EachParent([&](ContentParent* aParent) {
     Unused << aParent->SendUpdateMediaControlAction(this, aAction);
