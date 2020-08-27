@@ -151,8 +151,10 @@ Partner repack
 * upstreams: ``build-signing`` ``l10n-signing``
 
 There is one task per platform in this step, calling out to `scripts/desktop_partner_repacks.py
-<https://hg.mozilla.org/releases/mozilla-release/file/default/testing/mozharness/scripts
+<https://hg.mozilla.org/mozilla-central/file/default/testing/mozharness/scripts
 /desktop_partner_repacks.py>`_ in mozharness to prepare an environment and then perform the repacks.
+The actual repacking is done by `python/mozrelease/mozrelease/partner_repack.py
+<https://hg.mozilla.org/mozilla-central/file/default/python/mozrelease/mozrelease/partner_repack.py>`_.
 
 It takes as input the build-signing and l10n-signing artifacts, which are all zip/tar.gz/tar.bz2
 archives, simplifying the repack process by avoiding dmg and exe. Windows produces ``target.zip``
