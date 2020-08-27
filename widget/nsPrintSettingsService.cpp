@@ -903,14 +903,7 @@ nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
 NS_IMETHODIMP
 nsPrintSettingsService::GetGlobalPrintSettings(
     nsIPrintSettings** aGlobalPrintSettings) {
-  nsresult rv;
-
-  rv = _CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*aGlobalPrintSettings = mGlobalPrintSettings.get());
-
-  return rv;
+  return GetNewPrintSettings(aGlobalPrintSettings);
 }
 
 NS_IMETHODIMP
