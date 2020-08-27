@@ -287,6 +287,40 @@ TEST(QuotaCommon_TryVar, ParenDecl)
   EXPECT_EQ(y, true);
 }
 
+TEST(QuotaCommon_Fail, ReturnValue)
+{
+  bool flag = false;
+
+  nsresult rv = [&]() -> nsresult {
+    QM_FAIL(NS_ERROR_FAILURE);
+
+    flag = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+  EXPECT_FALSE(flag);
+}
+
+TEST(QuotaCommon_Fail, ReturnValue_WithCleanup)
+{
+  bool flag = false;
+  bool flag2 = false;
+
+  nsresult rv = [&]() -> nsresult {
+    QM_FAIL(NS_ERROR_FAILURE, [&flag2]() { flag2 = true; });
+
+    flag = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+  EXPECT_FALSE(flag);
+  EXPECT_TRUE(flag2);
+}
+
 TEST(QuotaCommon_OkIf, True)
 {
   auto res = OkIf(true);

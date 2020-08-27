@@ -193,6 +193,9 @@
 #define LS_TRY_VAR(...) \
   QM_TRY_VAR_META(mozilla::dom::localstorage, ##__VA_ARGS__)
 
+// LocalStorage equivalent of QM_FAIL.
+#define LS_FAIL(...) QM_FAIL_META(mozilla::dom::localstorage, ##__VA_ARGS__)
+
 namespace mozilla {
 
 class LogModule;
