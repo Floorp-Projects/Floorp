@@ -4,11 +4,12 @@
 from __future__ import absolute_import
 
 import json
+import logging
 import os
 
 import pytest
 from mach.logging import LoggingManager
-from responses import RequestsMock
+from responses import RequestsMock, logger as rsps_logger
 
 from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import parameters_loader
@@ -20,6 +21,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 @pytest.fixture(scope="session")
 def responses():
+    rsps_logger.setLevel(logging.WARNING)
     with RequestsMock(assert_all_requests_are_fired=False) as rsps:
         yield rsps
 
