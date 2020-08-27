@@ -35,7 +35,7 @@ def add_notifications(config, jobs):
     for job in jobs:
         label = '{}-{}'.format(config.kind, job['name'])
 
-        notifications = job.pop('notifications')
+        notifications = job.pop('notifications', None)
         if notifications:
             resolve_keyed_by(notifications, 'emails', label, project=config.params['project'])
             emails = notifications['emails']

@@ -24,8 +24,18 @@ javascript:
         command: >-
             taskcluster/scripts/misc/generate-codeql-db-javascript.sh
     run-on-projects: []
+    shipping-phase: ship
+    shipping-product: firefox
     fetches:
         fetch:
             - codeql-2.0.3
         toolchain:
             - linux64-node
+    notifications:
+        subject: '{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} linux64 codeql-javascript status'
+        message: '{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} linux64 codeql-javascript status'
+        emails:
+            by-project:
+                mozilla-release: ["tom@mozilla.com", "freddy@mozilla.com"]
+                try: ["{config[params][owner]}"]
+                default: []

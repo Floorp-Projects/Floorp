@@ -190,6 +190,8 @@ linux64/codeql-cpp:
         symbol: linux64-cpp
         tier: 2
         kind: other
+    shipping-phase: ship
+    shipping-product: firefox
     worker-type: b-linux-xlarge
     expires-after: 4 days
     worker:
@@ -232,6 +234,14 @@ linux64/codeql-cpp:
             # the build step. Once bug 1614626 moves them to the xpcshell task,
             # this dependency can be removed.
             - linux64-fix-stacks
+    notifications:
+        subject: '{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} linux64 codeql-cpp status'
+        message: '{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} linux64 codeql-cpp status'
+        emails:
+            by-project:
+                mozilla-release: ["tom@mozilla.com", "freddy@mozilla.com"]
+                try: ["{config[params][owner]}"]
+                default: []
 
 
 linux64-plain/debug:
