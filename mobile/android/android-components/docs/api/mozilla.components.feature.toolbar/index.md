@@ -6,6 +6,8 @@
 
 | Name | Summary |
 |---|---|
+| [ContainerToolbarAction](-container-toolbar-action/index.md) | `class ContainerToolbarAction : `[`Action`](../mozilla.components.concept.toolbar/-toolbar/-action/index.md)<br>An action button that represents a container to be added to the toolbar. |
+| [ContainerToolbarFeature](-container-toolbar-feature/index.md) | `class ContainerToolbarFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)<br>Container toolbar implementation that updates the toolbar with the container page action whenever the selected tab changes. |
 | [ToolbarAutocompleteFeature](-toolbar-autocomplete-feature/index.md) | `class ToolbarAutocompleteFeature`<br>Feature implementation for connecting a toolbar with a list of autocomplete providers. |
 | [ToolbarFeature](-toolbar-feature/index.md) | `class ToolbarFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`UserInteractionHandler`](../mozilla.components.support.base.feature/-user-interaction-handler/index.md)<br>Feature implementation for connecting a toolbar implementation with the session module. |
 | [ToolbarInteractor](-toolbar-interactor/index.md) | `class ToolbarInteractor`<br>Connects a toolbar instance to the browser engine via use cases |

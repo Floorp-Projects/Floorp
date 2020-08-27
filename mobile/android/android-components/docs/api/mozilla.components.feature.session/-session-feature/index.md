@@ -2,7 +2,7 @@
 
 # SessionFeature
 
-`class SessionFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`UserInteractionHandler`](../../mozilla.components.support.base.feature/-user-interaction-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionFeature.kt#L18)
+`class SessionFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`UserInteractionHandler`](../../mozilla.components.support.base.feature/-user-interaction-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionFeature.kt#L17)
 
 Feature implementation for connecting the engine module with the session module.
 
@@ -10,7 +10,7 @@ Feature implementation for connecting the engine module with the session module.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SessionFeature(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, goBackUseCase: `[`GoBackUseCase`](../-session-use-cases/-go-back-use-case/index.md)`, engineSessionUseCases: `[`EngineSessionUseCases`](../../mozilla.components.browser.session.usecases/-engine-session-use-cases/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Feature implementation for connecting the engine module with the session module. |
+| [&lt;init&gt;](-init-.md) | `SessionFeature(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, goBackUseCase: `[`GoBackUseCase`](../-session-use-cases/-go-back-use-case/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Feature implementation for connecting the engine module with the session module. |
 
 ### Functions
 

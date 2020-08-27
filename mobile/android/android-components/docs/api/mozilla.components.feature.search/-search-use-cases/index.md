@@ -2,7 +2,7 @@
 
 # SearchUseCases
 
-`class SearchUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L21)
+`class SearchUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L23)
 
 Contains use cases related to the search feature.
 
@@ -24,7 +24,7 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SearchUseCases(context: <ERROR CLASS>, searchEngineManager: `[`SearchEngineManager`](../../mozilla.components.browser.search/-search-engine-manager/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, onNoSession: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Session`](../../mozilla.components.browser.session/-session/index.md)` = { url ->
+| [&lt;init&gt;](-init-.md) | `SearchUseCases(context: <ERROR CLASS>, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, searchEngineManager: `[`SearchEngineManager`](../../mozilla.components.browser.search/-search-engine-manager/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, onNoSession: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Session`](../../mozilla.components.browser.session/-session/index.md)` = { url ->
         Session(url).apply { sessionManager.add(this) }
     })`<br>Contains use cases related to the search feature. |
 

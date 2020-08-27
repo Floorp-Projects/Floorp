@@ -2,13 +2,13 @@
 
 # Storage
 
-`interface Storage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/AutoSave.kt#L32)
+`interface Storage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/AutoSave.kt#L39)
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [save](save.md) | `abstract fun save(snapshot: `[`Snapshot`](../../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [save](save.md) | `abstract fun save(state: `[`BrowserState`](../../../mozilla.components.browser.state.state/-browser-state/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Saves the provided [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md). |
 
 ### Inheritors
 

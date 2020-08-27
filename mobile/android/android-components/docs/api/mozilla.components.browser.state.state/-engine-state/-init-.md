@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`EngineState(engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`? = null, engineSessionState: `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md)`? = null)`
+`EngineState(engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`? = null, engineSessionState: `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md)`? = null, engineObserver: `[`Observer`](../../mozilla.components.concept.engine/-engine-session/-observer/index.md)`? = null)`
 
 Value type that holds the browser engine state of a session.
 

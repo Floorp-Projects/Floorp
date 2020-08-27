@@ -2,7 +2,7 @@
 
 # source
 
-`val source: `[`Source`](../-session-state/-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/TabSessionState.kt#L35)
+`val source: `[`Source`](../-session-state/-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/TabSessionState.kt#L32)
 
 Overrides [SessionState.source](../-session-state/source.md)
 

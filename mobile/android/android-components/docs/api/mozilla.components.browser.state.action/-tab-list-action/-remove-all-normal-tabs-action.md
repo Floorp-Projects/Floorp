@@ -2,7 +2,7 @@
 
 # RemoveAllNormalTabsAction
 
-`object RemoveAllNormalTabsAction : `[`TabListAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L113)
+`object RemoveAllNormalTabsAction : `[`TabListAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L115)
 
 Removes all non-private [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md)s.
 

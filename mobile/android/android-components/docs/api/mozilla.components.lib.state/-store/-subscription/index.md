@@ -2,7 +2,7 @@
 
 # Subscription
 
-`class Subscription<S : `[`State`](../../-state.md)`, A : `[`Action`](../../-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L112)
+`class Subscription<S : `[`State`](../../-state.md)`, A : `[`Action`](../../-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L114)
 
 A [Subscription](./index.md) is returned whenever an observer is registered via the [observeManually](../observe-manually.md) method. Calling
 [unsubscribe](unsubscribe.md) on the [Subscription](./index.md) will unregister the observer.

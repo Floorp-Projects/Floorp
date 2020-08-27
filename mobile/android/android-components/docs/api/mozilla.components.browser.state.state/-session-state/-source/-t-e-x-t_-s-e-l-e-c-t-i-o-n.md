@@ -2,7 +2,7 @@
 
 # TEXT_SELECTION
 
-`TEXT_SELECTION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L90)
+`TEXT_SELECTION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L97)
 
 Default value and for testing purposes
 

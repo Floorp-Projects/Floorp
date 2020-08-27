@@ -2,7 +2,7 @@
 
 # MENU
 
-`MENU` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L75)
+`MENU` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L82)
 
 User interacted with a menu
 

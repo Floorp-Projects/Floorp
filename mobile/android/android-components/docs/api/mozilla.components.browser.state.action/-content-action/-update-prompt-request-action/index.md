@@ -2,7 +2,7 @@
 
 # UpdatePromptRequestAction
 
-`data class UpdatePromptRequestAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L218)
+`data class UpdatePromptRequestAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L225)
 
 Updates the [PromptRequest](../../../mozilla.components.concept.engine.prompt/-prompt-request/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 

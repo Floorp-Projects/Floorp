@@ -2,7 +2,7 @@
 
 # AddFindResultAction
 
-`data class AddFindResultAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L228)
+`data class AddFindResultAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L235)
 
 Adds a [FindResultState](../../../mozilla.components.browser.state.state.content/-find-result-state/index.md) to the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 

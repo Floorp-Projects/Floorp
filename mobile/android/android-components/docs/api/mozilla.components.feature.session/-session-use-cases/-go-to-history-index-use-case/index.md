@@ -2,7 +2,7 @@
 
 # GoToHistoryIndexUseCase
 
-`class GoToHistoryIndexUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L189)
+`class GoToHistoryIndexUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L229)
 
 Use case to jump to an arbitrary history index in a session's backstack.
 

@@ -2,7 +2,7 @@
 
 # NEVER
 
-`NEVER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L267)
+`NEVER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L274)
 
 Never prompt the user. Always submit crash reports immediately.
 

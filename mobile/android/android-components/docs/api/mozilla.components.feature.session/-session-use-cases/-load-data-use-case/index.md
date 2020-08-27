@@ -2,7 +2,7 @@
 
 # LoadDataUseCase
 
-`class LoadDataUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L85)
+`class LoadDataUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L96)
 
 ### Functions
 

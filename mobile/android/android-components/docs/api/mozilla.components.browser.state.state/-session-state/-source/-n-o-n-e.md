@@ -2,7 +2,7 @@
 
 # NONE
 
-`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L85)
+`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L92)
 
 Default value and for testing purposes
 

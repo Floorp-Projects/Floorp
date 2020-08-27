@@ -2,7 +2,7 @@
 
 # SystemAction
 
-`sealed class SystemAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L46)
+`sealed class SystemAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L48)
 
 [BrowserAction](../-browser-action.md) implementations to react to system events.
 

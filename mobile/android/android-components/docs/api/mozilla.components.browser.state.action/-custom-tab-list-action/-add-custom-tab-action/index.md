@@ -2,7 +2,7 @@
 
 # AddCustomTabAction
 
-`data class AddCustomTabAction : `[`CustomTabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L125)
+`data class AddCustomTabAction : `[`CustomTabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L127)
 
 Adds a new [CustomTabSessionState](../../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md) to [BrowserState.customTabs](../../../mozilla.components.browser.state.state/-browser-state/custom-tabs.md).
 

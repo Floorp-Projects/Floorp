@@ -2,7 +2,7 @@
 
 # TabListAction
 
-`sealed class TabListAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L62)
+`sealed class TabListAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L64)
 
 [BrowserAction](../-browser-action.md) implementations related to updating the list of [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) inside [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md).
 

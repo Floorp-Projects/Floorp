@@ -2,7 +2,7 @@
 
 # state
 
-`val state: `[`S`](index.md#S) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L57)
+`val state: `[`S`](index.md#S) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L59)
 
 The current [State](../-state.md).
 

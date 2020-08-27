@@ -26,4 +26,3 @@ Also see [ComponentCallbacks2](#).
 | Name | Summary |
 |---|---|
 | [BrowserIcons](../../mozilla.components.browser.icons/-browser-icons/index.md) | `class BrowserIcons : `[`MemoryConsumer`](./index.md)<br>Entry point for loading icons for websites. |
-| [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md) | `class SessionManager : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.browser.session/-session-manager/-observer/index.md)`>, `[`MemoryConsumer`](./index.md)<br>This class provides access to a centralized registry of all active sessions. |

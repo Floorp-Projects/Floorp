@@ -2,7 +2,7 @@
 
 # ClearReaderActiveUrlAction
 
-`data class ClearReaderActiveUrlAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L490)
+`data class ClearReaderActiveUrlAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L611)
 
 Clears the [ReaderState.activeUrl](../../../mozilla.components.browser.state.state/-reader-state/active-url.md).
 

@@ -2,7 +2,7 @@
 
 # ReaderAction
 
-`sealed class ReaderAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L456)
+`sealed class ReaderAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L577)
 
 [BrowserAction](../-browser-action.md) implementations related to updating the [ReaderState](../../mozilla.components.browser.state.state/-reader-state/index.md) of a single [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) inside
 [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md).

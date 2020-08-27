@@ -2,4 +2,4 @@
 
 # loadData
 
-`val loadData: `[`LoadDataUseCase`](-load-data-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L292)
+`val loadData: `[`LoadDataUseCase`](-load-data-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L354)

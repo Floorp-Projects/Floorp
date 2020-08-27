@@ -2,7 +2,7 @@
 
 # SearchUseCase
 
-`interface SearchUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L29)
+`interface SearchUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L32)
 
 ### Functions
 

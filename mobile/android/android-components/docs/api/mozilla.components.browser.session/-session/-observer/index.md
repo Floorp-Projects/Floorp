@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L77)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L65)
 
 Interface to be implemented by classes that want to observe a session.
 
@@ -12,7 +12,6 @@ Interface to be implemented by classes that want to observe a session.
 |---|---|
 | [onAppPermissionRequested](on-app-permission-requested.md) | `open fun onAppPermissionRequested(session: `[`Session`](../index.md)`, permissionRequest: `[`PermissionRequest`](../../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [onContentPermissionRequested](on-content-permission-requested.md) | `open fun onContentPermissionRequested(session: `[`Session`](../index.md)`, permissionRequest: `[`PermissionRequest`](../../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [onCrashStateChanged](on-crash-state-changed.md) | `open fun onCrashStateChanged(session: `[`Session`](../index.md)`, crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onCustomTabConfigChanged](on-custom-tab-config-changed.md) | `open fun onCustomTabConfigChanged(session: `[`Session`](../index.md)`, customTabConfig: `[`CustomTabConfig`](../../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onDesktopModeChanged](on-desktop-mode-changed.md) | `open fun onDesktopModeChanged(session: `[`Session`](../index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLaunchIntentRequest](on-launch-intent-request.md) | `open fun onLaunchIntentRequest(session: `[`Session`](../index.md)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, appIntent: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
@@ -23,7 +22,6 @@ Interface to be implemented by classes that want to observe a session.
 | [onRecordingDevicesChanged](on-recording-devices-changed.md) | `open fun onRecordingDevicesChanged(session: `[`Session`](../index.md)`, devices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`RecordingDevice`](../../../mozilla.components.concept.engine.media/-recording-device/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onSearch](on-search.md) | `open fun onSearch(session: `[`Session`](../index.md)`, searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onSecurityChanged](on-security-changed.md) | `open fun onSecurityChanged(session: `[`Session`](../index.md)`, securityInfo: `[`SecurityInfo`](../-security-info/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onThumbnailChanged](on-thumbnail-changed.md) | `open fun onThumbnailChanged(session: `[`Session`](../index.md)`, bitmap: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onTitleChanged](on-title-changed.md) | `open fun onTitleChanged(session: `[`Session`](../index.md)`, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onTrackerBlocked](on-tracker-blocked.md) | `open fun onTrackerBlocked(session: `[`Session`](../index.md)`, tracker: `[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`, all: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onTrackerBlockingEnabledChanged](on-tracker-blocking-enabled-changed.md) | `open fun onTrackerBlockingEnabledChanged(session: `[`Session`](../index.md)`, blockingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

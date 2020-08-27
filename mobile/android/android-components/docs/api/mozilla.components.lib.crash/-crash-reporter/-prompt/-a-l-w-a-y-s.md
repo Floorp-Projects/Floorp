@@ -2,7 +2,7 @@
 
 # ALWAYS
 
-`ALWAYS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L277)
+`ALWAYS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L284)
 
 Always prompt the user for confirmation before sending crash reports.
 

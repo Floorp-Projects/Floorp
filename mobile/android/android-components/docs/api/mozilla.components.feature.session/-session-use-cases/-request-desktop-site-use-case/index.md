@@ -2,7 +2,7 @@
 
 # RequestDesktopSiteUseCase
 
-`class RequestDesktopSiteUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L206)
+`class RequestDesktopSiteUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L252)
 
 ### Functions
 

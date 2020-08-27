@@ -2,7 +2,7 @@
 
 # loginValidationDelegate
 
-`val loginValidationDelegate: `[`LoginValidationDelegate`](../../mozilla.components.concept.storage/-login-validation-delegate/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/PromptFeature.kt#L125)
+`val loginValidationDelegate: `[`LoginValidationDelegate`](../../mozilla.components.concept.storage/-login-validation-delegate/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/PromptFeature.kt#L120)
 
 Validates whether or not a given Login may be stored.
 

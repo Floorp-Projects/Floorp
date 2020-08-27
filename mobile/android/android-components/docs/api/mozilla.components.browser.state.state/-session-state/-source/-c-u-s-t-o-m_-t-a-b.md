@@ -2,7 +2,7 @@
 
 # CUSTOM_TAB
 
-`CUSTOM_TAB` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L65)
+`CUSTOM_TAB` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L72)
 
 Created to handle a CustomTabs intent
 

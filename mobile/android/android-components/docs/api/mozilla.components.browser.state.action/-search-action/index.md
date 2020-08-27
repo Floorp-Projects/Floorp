@@ -2,7 +2,7 @@
 
 # SearchAction
 
-`sealed class SearchAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L623)
+`sealed class SearchAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L744)
 
 [BrowserAction](../-browser-action.md) implementations related to updating search engines in [SearchState](../../mozilla.components.browser.state.state/-search-state/index.md).
 

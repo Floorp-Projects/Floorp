@@ -2,7 +2,7 @@
 
 # P2PFeatureSender
 
-`inner class P2PFeatureSender` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/p2p/src/main/java/mozilla/components/feature/p2p/P2PFeature.kt#L154)
+`inner class P2PFeatureSender` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/p2p/src/main/java/mozilla/components/feature/p2p/P2PFeature.kt#L144)
 
 A class able to request an encoding of the current web page.
 
