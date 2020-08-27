@@ -32,7 +32,13 @@ namespace mozilla {
 
 webgl::NotLostData::NotLostData(ClientWebGLContext& _context)
     : context(_context) {}
-webgl::NotLostData::~NotLostData() = default;
+
+webgl::NotLostData::~NotLostData() {
+  if (outOfProcess) {
+    const auto& pwebgl = outOfProcess->mWebGLChild;
+    Unused << WebGLChild::Send__delete__(pwebgl.get());
+  }
+}
 
 // -
 
