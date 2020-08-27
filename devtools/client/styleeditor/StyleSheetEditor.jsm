@@ -116,7 +116,7 @@ function StyleSheetEditor(
 
   this.onPropertyChange = this.onPropertyChange.bind(this);
   this._onError = this._onError.bind(this);
-  this._onMediaRulesChanged = this._onMediaRulesChanged.bind(this);
+  this.onMediaRulesChanged = this.onMediaRulesChanged.bind(this);
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
   this.markLinkedFileBroken = this.markLinkedFileBroken.bind(this);
   this.saveToFile = this.saveToFile.bind(this);
@@ -124,23 +124,18 @@ function StyleSheetEditor(
   this._updateStyleSheet = this._updateStyleSheet.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
 
+  this._focusOnSourceEditorReady = false;
+  this.styleSheet.on("error", this._onError);
+  this.savedFile = this.styleSheet.file;
+  this.linkCSSFile();
+
   this.emitMediaRulesChanged = throttle(
     this.emitMediaRulesChanged,
     EMIT_MEDIA_RULES_THROTTLING,
     this
   );
 
-  this._focusOnSourceEditorReady = false;
-  this.styleSheet.on("error", this._onError);
   this.mediaRules = [];
-  if (this.cssSheet.getMediaRules) {
-    this.cssSheet
-      .getMediaRules()
-      .then(this._onMediaRulesChanged, console.error);
-  }
-  this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
-  this.savedFile = this.styleSheet.file;
-  this.linkCSSFile();
 }
 
 StyleSheetEditor.prototype = {
@@ -416,7 +411,7 @@ StyleSheetEditor.prototype = {
    * @param  {array} rules
    *         Array of MediaRuleFronts for new media rules of sheet.
    */
-  _onMediaRulesChanged: function(rules) {
+  onMediaRulesChanged: function(rules) {
     if (!rules.length && !this.mediaRules.length) {
       return;
     }
@@ -867,7 +862,6 @@ StyleSheetEditor.prototype = {
       }
       this._sourceEditor.destroy();
     }
-    this.cssSheet.off("media-rules-changed", this._onMediaRulesChanged);
     this.styleSheet.off("error", this._onError);
     this._isDestroyed = true;
   },

@@ -359,6 +359,7 @@ StyleEditorUI.prototype = {
             original.relatedStyleSheet = resource;
             original.relatedEditorName = parentEditorName;
             original.resourceId = resource.resourceId;
+            original.mediaRules = resource.mediaRules;
             await this._addStyleSheetEditor(original);
           }
         }
@@ -420,6 +421,10 @@ StyleEditorUI.prototype = {
     editor.on("linked-css-file", this._summaryChange.bind(this, editor));
     editor.on("linked-css-file-error", this._summaryChange.bind(this, editor));
     editor.on("error", this._onError);
+
+    // onMediaRulesChanged fires media-rules-changed, so call the function after
+    // registering the listener in order to ensure to get media-rules-changed event.
+    editor.onMediaRulesChanged(resource.mediaRules);
 
     this.editors.push(editor);
 
@@ -1244,6 +1249,11 @@ StyleEditorUI.prototype = {
           )) {
             editor.onPropertyChange(property, value);
           }
+          break;
+        }
+        case "media-rules-changed": {
+          const { mediaRules } = update.resourceUpdates;
+          editor.onMediaRulesChanged(mediaRules);
           break;
         }
       }

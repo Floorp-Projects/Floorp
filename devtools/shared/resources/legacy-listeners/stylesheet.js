@@ -13,7 +13,8 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
     return;
   }
 
-  const onStyleSheetAdded = (styleSheet, isNew, fileName) => {
+  const onStyleSheetAdded = async (styleSheet, isNew, fileName) => {
+    const onMediaRules = styleSheet.getMediaRules();
     const resource = toResource(styleSheet, isNew, fileName);
 
     styleSheet.on("style-applied", () => {
@@ -37,6 +38,25 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
       ]);
     });
 
+    styleSheet.on("media-rules-changed", mediaRules => {
+      onUpdated([
+        {
+          resourceType: resource.resourceType,
+          resourceId: resource.resourceId,
+          updateType: "media-rules-changed",
+          resourceUpdates: { mediaRules },
+        },
+      ]);
+    });
+
+    try {
+      resource.mediaRules = await onMediaRules;
+    } catch (e) {
+      // There are cases that the stylesheet front was destroyed already when/while calling
+      // methods of stylesheet.
+      console.warn("fetching media rules failed", e);
+    }
+
     return resource;
   };
 
@@ -44,12 +64,19 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
   try {
     const styleSheets = await styleSheetsFront.getStyleSheets();
     onAvailable(
-      styleSheets.map(styleSheet => onStyleSheetAdded(styleSheet, false, null))
+      await Promise.all(
+        styleSheets.map(styleSheet =>
+          onStyleSheetAdded(styleSheet, false, null)
+        )
+      )
     );
 
-    styleSheetsFront.on("stylesheet-added", (styleSheet, isNew, fileName) => {
-      onAvailable([onStyleSheetAdded(styleSheet, isNew, fileName)]);
-    });
+    styleSheetsFront.on(
+      "stylesheet-added",
+      async (styleSheet, isNew, fileName) => {
+        onAvailable([await onStyleSheetAdded(styleSheet, isNew, fileName)]);
+      }
+    );
   } catch (e) {
     // There are cases that the stylesheet front was destroyed already when/while calling
     // methods of stylesheet.
