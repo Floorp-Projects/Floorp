@@ -1982,10 +1982,12 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   if (mPaused || !mReceivedDisplayList) {
     ResetPreviousSampleTime();
     mCompositionOpportunityId = mCompositionOpportunityId.Next();
+#ifdef MOZ_GECKO_PRFOILER
     TimeStamp now = TimeStamp::Now();
     PROFILER_ADD_TEXT_MARKER("SkippedComposite",
                              mPaused ? "Paused"_ns : "No display list"_ns,
                              JS::ProfilingCategoryPair::GRAPHICS, now, now);
+#endif  // MOZ_GECKO_PRFOILER
     return;
   }
 
@@ -2004,9 +2006,11 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
       }
     }
 
+#ifdef MOZ_GECKO_PROFILER
     TimeStamp now = TimeStamp::Now();
     PROFILER_ADD_TEXT_MARKER("SkippedComposite", "Too many pending frames"_ns,
                              JS::ProfilingCategoryPair::GRAPHICS, now, now);
+#endif  // MOZ_GECKO_PROFILER
     return;
   }
 
