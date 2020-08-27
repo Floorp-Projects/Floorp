@@ -86,6 +86,14 @@ class GeckoViewSupport final
                      bool aHasUserGesture, bool aIsTopLevel) const
       -> java::GeckoResult::LocalRef;
 
+  void AttachMediaSessionController(
+      const java::GeckoSession::Window::LocalRef& inst,
+      jni::Object::Param aController, const int64_t aId);
+
+  void DetachMediaSessionController(
+      const java::GeckoSession::Window::LocalRef& inst,
+      jni::Object::Param aController);
+
   void OnWeakNonIntrusiveDetach(already_AddRefed<Runnable> aDisposer) {
     RefPtr<Runnable> disposer(aDisposer);
     disposer->Run();
