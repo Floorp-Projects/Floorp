@@ -121,7 +121,6 @@ toolkit.jar:
 #endif
   skin/classic/global/plugins/plugin.svg                    (../../shared/plugins/plugin.svg)
   skin/classic/global/plugins/plugin-blocked.svg            (../../shared/plugins/plugin-blocked.svg)
-  skin/classic/global/plugins/pluginGeneric.svg             (../../shared/extensions/category-plugins.svg)
   skin/classic/global/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
   skin/classic/global/plugins/contentPluginBlocked.png      (../../shared/plugins/contentPluginBlocked.png)
   skin/classic/global/plugins/contentPluginCrashed.png      (../../shared/plugins/contentPluginCrashed.png)

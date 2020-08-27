@@ -98,7 +98,7 @@ body {
   background-image: url("chrome://mozapps/skin/extensions/category-themes.svg");
 }
 .category[name="plugin"] {
-  background-image: url("chrome://mozapps/skin/extensions/category-plugins.svg");
+  background-image: url("chrome://global/skin/plugins/plugin.svg");
 }
 .category[name="dictionary"] {
   background-image: url("chrome://mozapps/skin/extensions/category-dictionaries.svg");
