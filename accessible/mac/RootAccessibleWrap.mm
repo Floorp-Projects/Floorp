@@ -9,6 +9,7 @@
 
 #include "mozRootAccessible.h"
 
+#include "gfxPlatform.h"
 #include "nsCOMPtr.h"
 #include "nsObjCExceptions.h"
 #include "nsIFrame.h"
@@ -40,8 +41,8 @@ void RootAccessibleWrap::GetNativeWidget(void** aOutView) {
       nsIWidget* widget = view->GetWidget();
       if (widget) {
         *aOutView = (void**)widget->GetNativeData(NS_NATIVE_WIDGET);
-        NS_ASSERTION(
-            *aOutView,
+        MOZ_ASSERT(
+            *aOutView || gfxPlatform::IsHeadless(),
             "Couldn't get the native NSView parent we need to connect the "
             "accessibility hierarchy!");
       }
