@@ -70,3 +70,66 @@ add_task(async function testCancelButton() {
     helper.assertDialogHidden();
   });
 });
+
+add_task(async function testTabOrder() {
+  await PrintHelper.withTestPage(async helper => {
+    helper.assertDialogHidden();
+    await helper.startPrint();
+    helper.assertDialogVisible();
+
+    const printerPicker = helper.doc.getElementById("printer-picker");
+    is(
+      helper.doc.activeElement,
+      printerPicker,
+      "Initial focus on printer picker"
+    );
+
+    // Due to bug 1327274, if we shift+tab before print preview is initialized,
+    // focus will get trapped. Therefore, wait for initialization first.
+    await helper.win.PrintEventHandler._previewUpdatingPromise;
+    const previewBrowser = document.querySelector(".printPreviewBrowser");
+    ok(previewBrowser, "Got the print preview browser");
+    let focused = BrowserTestUtils.waitForEvent(previewBrowser, "focus");
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+    await focused;
+    ok(true, "Print preview focused after shift+tab");
+
+    focused = BrowserTestUtils.waitForEvent(gNavToolbox, "focus", true);
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+    await focused;
+    ok(true, "Toolbox focused after shift+tab");
+
+    focused = BrowserTestUtils.waitForEvent(previewBrowser, "focus");
+    EventUtils.synthesizeKey("KEY_Tab");
+    await focused;
+    ok(true, "Print preview focused after tab");
+
+    focused = BrowserTestUtils.waitForEvent(printerPicker, "focus");
+    EventUtils.synthesizeKey("KEY_Tab");
+    await focused;
+    ok(true, "Printer picker focused after tab");
+
+    const cancelButton = helper.doc.querySelector("button[name=cancel]");
+    ok(cancelButton, "Got the cancel button");
+    focused = BrowserTestUtils.waitForEvent(cancelButton, "focus");
+    cancelButton.focus();
+    await focused;
+    ok(true, "Cancel button focused");
+
+    focused = BrowserTestUtils.waitForEvent(gNavToolbox, "focus", true);
+    EventUtils.synthesizeKey("KEY_Tab");
+    await focused;
+    ok(true, "Toolbox focused after tab");
+
+    focused = BrowserTestUtils.waitForEvent(cancelButton, "focus");
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+    await focused;
+    ok(true, "Cancel button focused after shift+tab");
+
+    await helper.withClosingFn(() => {
+      EventUtils.synthesizeKey("VK_ESCAPE", {});
+    });
+
+    helper.assertDialogHidden();
+  });
+});
