@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/FunctionRef.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/dom/ClonedErrorHolder.h"
 #include "mozilla/dom/ClonedErrorHolderBinding.h"
 #include "mozilla/dom/DOMException.h"
@@ -21,7 +20,6 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "js/Promise.h"
 #include "xpcprivate.h"
-#include "nsASCIIMask.h"
 #include "nsICrashReporter.h"
 
 namespace mozilla {
@@ -149,18 +147,6 @@ bool JSActor::AllowMessage(const JSActorMessageMeta& aMetadata,
   if (aDataLength < kMaxMessageSize) {
     return true;
   }
-
-  nsAutoString messageName(NS_ConvertUTF8toUTF16(aMetadata.actorName()));
-  messageName.AppendLiteral("::");
-  messageName.Append(aMetadata.messageName());
-
-  // Remove digits to avoid spamming telemetry if anybody is dynamically
-  // generating message names with numbers in them.
-  messageName.StripTaggedASCII(ASCIIMask::Mask0to9());
-
-  Telemetry::ScalarAdd(
-      Telemetry::ScalarID::DOM_IPC_REJECTED_WINDOW_ACTOR_MESSAGE, messageName,
-      1);
 
   return false;
 }
