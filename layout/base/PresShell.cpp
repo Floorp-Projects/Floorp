@@ -7610,7 +7610,8 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayMouseEvent(
              (aGUIEvent->mMessage == eMouseUp ||
               // contextmenu is triggered after right mouseup on Windows and
               // right mousedown on other platforms.
-              aGUIEvent->mMessage == eContextMenu)) {
+              aGUIEvent->mMessage == eContextMenu ||
+              aGUIEvent->mMessage == eMouseExitFromWidget)) {
     UniquePtr<DelayedMouseEvent> delayedMouseEvent =
         MakeUnique<DelayedMouseEvent>(aGUIEvent->AsMouseEvent());
     PushDelayedEventIntoQueue(std::move(delayedMouseEvent));
