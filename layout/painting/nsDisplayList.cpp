@@ -804,8 +804,14 @@ void nsDisplayListBuilder::SetIsRelativeToLayoutViewport() {
 
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   Document* document = mReferenceFrame->PresContext()->Document();
+  // On desktop, we want to disable zooming in fullscreen mode (bug 1650488).
+  // On mobile (and RDM), we need zooming even in fullscreen mode to respect
+  // mobile viewport sizing (bug 1659761).
+  bool disableZoomingForFullscreen =
+      document->Fullscreen() &&
+      !document->GetPresShell()->UsesMobileViewportSizing();
   mBuildAsyncZoomContainer = !mIsRelativeToLayoutViewport &&
-                             !document->Fullscreen() &&
+                             !disableZoomingForFullscreen &&
                              nsLayoutUtils::AllowZoomingForDocument(document);
 }
 
