@@ -1994,15 +1994,15 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
+    bool isExternal = true;
     if (forceExternal) {
       dest = JSExternalString::new_(cx, buf.get(), len,
                                     &TestExternalStringCallbacks);
     } else {
-      bool isExternal;
       dest = NewMaybeExternalString(
           cx, buf.get(), len, &TestExternalStringCallbacks, &isExternal, heap);
     }
-    if (dest) {
+    if (dest && isExternal) {
       mozilla::Unused << buf.release();  // Ownership was transferred.
     }
   } else {
