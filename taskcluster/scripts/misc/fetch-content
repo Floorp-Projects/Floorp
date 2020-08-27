@@ -241,6 +241,27 @@ def download_to_path(url, path, sha256=None, size=None):
     raise Exception("Download failed, no more retries!")
 
 
+def download_to_memory(url, sha256=None, size=None):
+    """Download a URL to memory, possibly with verification."""
+
+    data = b""
+    for _ in retrier(attempts=5, sleeptime=60):
+        try:
+            log('Downloading %s' % (url))
+
+            for chunk in stream_download(url, sha256=sha256, size=size):
+                data += chunk
+
+            return data
+        except IntegrityError:
+            raise
+        except Exception as e:
+            log("Download failed: {}".format(e))
+            continue
+
+    raise Exception("Download failed, no more retries!")
+
+
 def gpg_verify_path(path: pathlib.Path, public_key_data: bytes,
                     signature_data: bytes):
     """Verify that a filesystem path verifies using GPG.
@@ -604,6 +625,14 @@ def api(root_url, service, version, path):
             root_url=root_url, service=service, version=version, path=path)
 
 
+def get_hash(fetch, root_url):
+    path = 'task/{task}/artifacts/{artifact}'.format(
+        task=fetch['task'], artifact='public/chain-of-trust.json')
+    url = api(root_url, 'queue', 'v1', path)
+    cot = json.loads(download_to_memory(url))
+    return cot['artifacts'][fetch['artifact']]['sha256']
+
+
 def command_task_artifacts(args):
     start = time.monotonic()
     fetches = json.loads(os.environ['MOZ_FETCHES'])
@@ -615,6 +644,9 @@ def command_task_artifacts(args):
             extdir = pathlib.Path(os.path.normpath(str(extdir.joinpath(fetch['dest']))))
         extdir.mkdir(parents=True, exist_ok=True)
         root_url = os.environ['TASKCLUSTER_ROOT_URL']
+        sha256 = None
+        if fetch.get('verify-hash'):
+            sha256 = get_hash(fetch, root_url)
         if fetch['artifact'].startswith('public/'):
             path = 'task/{task}/artifacts/{artifact}'.format(
                     task=fetch['task'], artifact=fetch['artifact'])
@@ -624,7 +656,7 @@ def command_task_artifacts(args):
                     proxy_url=os.environ['TASKCLUSTER_PROXY_URL'],
                     task=fetch['task'],
                     artifact=fetch['artifact'])
-        downloads.append((url, extdir, fetch['extract']))
+        downloads.append((url, extdir, fetch['extract'], sha256))
 
     fetch_urls(downloads)
     end = time.monotonic()
