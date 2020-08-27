@@ -62,6 +62,10 @@ add_task(async function() {
     }
     await testCopy(testCase.copyVal, testCase.copyExpected);
     gURLBar.blur();
+
+    if (testCase.cleanup) {
+      await testCase.cleanup();
+    }
   }
 });
 
@@ -255,11 +259,15 @@ var tests = [
     copyVal: "<data:text/html,(%C3%A9 %25P>)",
     copyExpected: "data:text/html,(%C3%A9 %25P",
   },
+
   {
     async setup() {
       await SpecialPowers.pushPrefEnv({
         set: [["browser.urlbar.decodeURLsOnCopy", true]],
       });
+    },
+    async cleanup() {
+      await SpecialPowers.popPrefEnv();
     },
     loadURL:
       "http://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
@@ -270,8 +278,12 @@ var tests = [
     copyVal: "<example.com/би>ография",
     copyExpected: "http://example.com/би",
   },
+
   {
-    setup() {
+    async setup() {
+      await SpecialPowers.pushPrefEnv({
+        set: [["browser.urlbar.decodeURLsOnCopy", true]],
+      });
       // Setup a valid intranet url that resolves but is not yet known.
       const proxyService = Cc[
         "@mozilla.org/network/protocol-proxy-service;1"
@@ -286,22 +298,46 @@ var tests = [
         4096,
         null
       );
-      const proxyFilter = {
+      this._proxyFilter = {
         applyFilter(channel, defaultProxyInfo, callback) {
           callback.onProxyFilterResult(
             channel.URI.host === "mytest" ? proxyInfo : defaultProxyInfo
           );
         },
       };
-      proxyService.registerChannelFilter(proxyFilter, 0);
+      proxyService.registerChannelFilter(this._proxyFilter, 0);
       registerCleanupFunction(() => {
-        proxyService.unregisterChannelFilter(proxyFilter);
+        if (this._proxyFilter) {
+          proxyService.unregisterChannelFilter(this._proxyFilter);
+        }
       });
+    },
+    async cleanup() {
+      await SpecialPowers.popPrefEnv();
+      const proxyService = Cc[
+        "@mozilla.org/network/protocol-proxy-service;1"
+      ].getService(Ci.nsIProtocolProxyService);
+      proxyService.unregisterChannelFilter(this._proxyFilter);
+      this._proxyFilter = null;
     },
     loadURL: "http://mytest/",
     expectedURL: "mytest",
     expectedValueOnFocus: "http://mytest/",
     copyExpected: "http://mytest/",
+  },
+
+  {
+    async setup() {
+      await SpecialPowers.pushPrefEnv({
+        set: [["browser.urlbar.decodeURLsOnCopy", true]],
+      });
+    },
+    async cleanup() {
+      await SpecialPowers.popPrefEnv();
+    },
+    loadURL: "https://example.com/",
+    expectedURL: "https://example.com",
+    copyExpected: "https://example.com",
   },
 ];
 
