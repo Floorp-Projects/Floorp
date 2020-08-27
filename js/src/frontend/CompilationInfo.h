@@ -158,7 +158,8 @@ struct MOZ_RAII CompilationState {
 
   CompilationState(JSContext* cx, LifoAllocScope& alloc,
                    const JS::ReadOnlyCompileOptions& options,
-                   Scope* enclosingScope, JSObject* enclosingEnv)
+                   Scope* enclosingScope = nullptr,
+                   JSObject* enclosingEnv = nullptr)
       : keepAtoms(cx),
         directives(options.forceStrictMode()),
         scopeContext(cx, enclosingScope, enclosingEnv),
@@ -320,16 +321,13 @@ class ScriptStencilIterable {
   Iterator end() const { return Iterator::end(stencil_, gcOutput_); }
 };
 
-// CompilationInfo owns a number of pieces of information about script
-// compilation as well as controls the lifetime of parse nodes and other data by
-// controling the mark and reset of the LifoAlloc.
+// Input and output of compilation to stencil.
 struct MOZ_RAII CompilationInfo {
   static constexpr FunctionIndex TopLevelIndex = FunctionIndex(0);
 
   JSContext* cx;
 
   CompilationInput input;
-  CompilationState state;
   CompilationStencil stencil;
 
   // Track the state of key allocations and roll them back as parts of parsing
@@ -344,14 +342,8 @@ struct MOZ_RAII CompilationInfo {
   void rewind(const RewindToken& pos);
 
   // Construct a CompilationInfo
-  CompilationInfo(JSContext* cx, LifoAllocScope& alloc,
-                  const JS::ReadOnlyCompileOptions& options,
-                  Scope* enclosingScope = nullptr,
-                  JSObject* enclosingEnv = nullptr)
-      : cx(cx),
-        input(cx, options),
-        state(cx, alloc, options, enclosingScope, enclosingEnv),
-        stencil(cx) {}
+  CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
+      : cx(cx), input(cx, options), stencil(cx) {}
 
   MOZ_MUST_USE bool instantiateStencils(CompilationGCOutput& gcOutput);
 

@@ -606,19 +606,21 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+  frontend::CompilationInfo compilationInfo(cx, options);
   if (!compilationInfo.input.init(cx)) {
     return;
   }
 
+  frontend::CompilationState compilationState(cx, allocScope, options);
+
   uint32_t len = data.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  frontend::GlobalSharedContext globalsc(
-      cx, scopeKind, compilationInfo, compilationInfo.state.directives, extent);
+  frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
+                                         compilationState.directives, extent);
   frontend::CompilationGCOutput gcOutput(cx);
-  bool result =
-      frontend::CompileGlobalScript(compilationInfo, globalsc, data, gcOutput);
+  bool result = frontend::CompileGlobalScript(compilationInfo, compilationState,
+                                              globalsc, data, gcOutput);
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid

@@ -67,19 +67,21 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+  frontend::CompilationInfo compilationInfo(cx, options);
   if (!compilationInfo.input.init(cx)) {
     return nullptr;
   }
 
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::CompilationState compilationState(cx, allocScope, options);
+
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       srcBuf.length(), options.lineno, options.column);
-  frontend::GlobalSharedContext globalsc(
-      cx, scopeKind, compilationInfo, compilationInfo.state.directives, extent);
+  frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
+                                         compilationState.directives, extent);
   frontend::CompilationGCOutput gcOutput(cx);
-  if (!frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf,
-                                     gcOutput)) {
+  if (!frontend::CompileGlobalScript(compilationInfo, compilationState,
+                                     globalsc, srcBuf, gcOutput)) {
     return nullptr;
   }
 
@@ -170,16 +172,19 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   using frontend::Parser;
 
   CompileOptions options(cx);
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
+  CompilationInfo compilationInfo(cx, options);
   if (!compilationInfo.input.init(cx)) {
     return false;
   }
 
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::CompilationState compilationState(cx, allocScope, options);
+
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(cx, options, chars.get(), length,
                                             /* foldConstants = */ true,
-                                            compilationInfo, nullptr, nullptr);
+                                            compilationInfo, compilationState,
+                                            nullptr, nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of source, we
     // return false so our caller knows to try to collect more buffered
@@ -484,20 +489,21 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
 
   RootedScript script(cx);
   {
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    frontend::CompilationInfo compilationInfo(cx, options);
     if (!compilationInfo.input.init(cx)) {
       return false;
     }
 
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::CompilationState compilationState(cx, allocScope, options);
+
     SourceExtent extent = SourceExtent::makeGlobalExtent(
         srcBuf.length(), options.lineno, options.column);
     frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                           compilationInfo.state.directives,
-                                           extent);
+                                           compilationState.directives, extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf,
-                                       gcOutput)) {
+    if (!frontend::CompileGlobalScript(compilationInfo, compilationState,
+                                       globalsc, srcBuf, gcOutput)) {
       return false;
     }
     script = gcOutput.script;
