@@ -66,6 +66,7 @@ class GestureEventListener final {
    * as a long tap. This allows tests to disable long tap gesture detection.
    */
   static void SetLongTapEnabled(bool aLongTapEnabled);
+  static bool IsLongTapEnabled();
 
  private:
   // Private destructor, to discourage deletion outside of Release():
