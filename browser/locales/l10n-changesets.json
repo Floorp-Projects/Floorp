@@ -1695,7 +1695,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "9a8e6c6da97abeedef05afbb65bd94af464321e1"
+        "revision": "d68541a70f80fd1aa1be90679c9884687b88f556"
     },
     "zh-TW": {
         "pin": false,
