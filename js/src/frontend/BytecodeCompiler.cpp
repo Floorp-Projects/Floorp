@@ -521,7 +521,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   JSContext* cx = compilationInfo.cx;
 
   ModuleBuilder builder(cx, parser.ptr());
-  StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata.get();
+  StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata;
 
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent = SourceExtent::makeGlobalExtent(
@@ -622,7 +622,7 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     // we want the SourceExtent used in the final standalone script to
     // start from the beginning of the buffer, and use the provided
     // line and column.
-    compilationInfo.topLevel.get().extent =
+    compilationInfo.topLevel.extent =
         SourceExtent{/* sourceStart = */ 0,
                      sourceBuffer_.length(),
                      funbox->extent().toStringStart,
@@ -634,7 +634,7 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     // allocate the JSFunction that wraps it.
     MOZ_ASSERT(funbox->isAsmJSModule());
     MOZ_ASSERT(compilationInfo.asmJS.has(funbox->index()));
-    MOZ_ASSERT(compilationInfo.topLevel.get().functionFlags.isAsmJSNative());
+    MOZ_ASSERT(compilationInfo.topLevel.functionFlags.isAsmJSNative());
   }
 
   if (!compilationInfo.instantiateStencils()) {
