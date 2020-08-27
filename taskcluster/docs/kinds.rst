@@ -451,6 +451,10 @@ release-partner-repack
 ----------------------
 Generates customized versions of releases for partners.
 
+release-partner-attribution
+---------------------------
+Generates attributed versions of releases for partners.
+
 release-partner-repack-chunking-dummy
 -------------------------------------
 Chunks the partner repacks by locale.
