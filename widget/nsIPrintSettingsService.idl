@@ -40,6 +40,11 @@ interface nsIPrintSettingsService : nsISupports
   readonly attribute nsIPrintSettings globalPrintSettings;
 
   /**
+   * Returns the default print settings as used for printing.
+   */
+  [noscript] readonly attribute nsIPrintSettings defaultPrintSettingsForPrinting;
+
+  /**
    * Returns a new, unique PrintSettings object each time.
    *
    * For example, if each browser was to have its own unique
