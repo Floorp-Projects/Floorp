@@ -1770,7 +1770,9 @@ class UrlbarInput {
 
     if (
       !selectedVal.startsWith(BrowserUtils.trimURLProtocol) &&
-      displaySpec != this._trimValue(displaySpec)
+      // Note _trimValue may also trim a trailing slash, thus we can't just do
+      // a straight string compare to tell if the protocol was trimmed.
+      !displaySpec.startsWith(this._trimValue(displaySpec))
     ) {
       selectedVal = BrowserUtils.trimURLProtocol + selectedVal;
     }
