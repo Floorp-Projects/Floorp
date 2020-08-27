@@ -795,7 +795,7 @@ void MacroAssembler::popReturnAddress() {
 // ABI function calls.
 
 void MacroAssembler::setupUnalignedABICall(Register scratch) {
-  setupABICall();
+  setupNativeABICall();
   dynamicAlignment_ = true;
 
   int64_t alignment = ~(int64_t(ABIStackAlignment) - 1);
