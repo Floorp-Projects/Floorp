@@ -3622,12 +3622,6 @@ GeckoDriver.prototype.setupReftest = async function(cmd) {
     );
   }
 
-  if (this.context !== Context.Chrome) {
-    throw new error.UnsupportedOperationError(
-      "Must set chrome context before running reftests"
-    );
-  }
-
   let {
     urlCount = {},
     screenshot = "unexpected",

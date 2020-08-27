@@ -152,6 +152,7 @@ reftest.Runner = class {
     await this.driver.setWindowHandle(found, true);
 
     this.lastURL = this.driver.currentURL.href;
+    logger.debug(`loaded initial URL: ${this.lastURL}`);
 
     let browserRect = reftestWin.gBrowser.getBoundingClientRect();
     logger.debug(`new: ${browserRect.width}x${browserRect.height}`);
