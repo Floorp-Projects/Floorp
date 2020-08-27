@@ -5374,8 +5374,14 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   }
 
   js::frontend::CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.init(cx)) {
-    return false;
+  if (goal == frontend::ParseGoal::Script) {
+    if (!compilationInfo.input.initForGlobal(cx)) {
+      return false;
+    }
+  } else {
+    if (!compilationInfo.input.initForModule(cx)) {
+      return false;
+    }
   }
 
 #ifdef JS_ENABLE_SMOOSH
@@ -5474,7 +5480,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   size_t length = scriptContents->length();
 
   js::frontend::CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.init(cx)) {
+  if (!compilationInfo.input.initForGlobal(cx)) {
     return false;
   }
 

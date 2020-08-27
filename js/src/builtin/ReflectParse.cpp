@@ -3766,8 +3766,14 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
 
   CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.init(cx)) {
-    return false;
+  if (target == ParseGoal::Script) {
+    if (!compilationInfo.input.initForGlobal(cx)) {
+      return false;
+    }
+  } else {
+    if (!compilationInfo.input.initForModule(cx)) {
+      return false;
+    }
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
@@ -3790,8 +3796,6 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
   } else {
-    compilationInfo.input.setEnclosingScope(&cx->global()->emptyGlobalScope());
-
     if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
       return false;
     }
