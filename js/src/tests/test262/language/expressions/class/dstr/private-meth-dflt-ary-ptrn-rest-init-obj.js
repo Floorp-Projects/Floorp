@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-methods-private is not supported
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-init-obj.case
 // - src/dstr-binding/default/cls-expr-private-meth-dflt.template

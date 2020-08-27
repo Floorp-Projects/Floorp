@@ -1,4 +1,4 @@
-// |reftest| skip -- class-methods-private is not supported
+// |reftest| shell-option(--enable-private-fields) shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-private-method.case
 // - src/class-elements/productions/cls-expr-same-line-generator.template
