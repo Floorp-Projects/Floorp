@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Introduce a Top Sites Feature
-permalink: /rfc/0006-top-sites-feature
+permalink: /rfc/0004-top-sites-feature
 ---
 
 * Start date: 2020-07-30
