@@ -1,0 +1,5 @@
+[android-components](../../../index.md) / [mozilla.components.browser.state.action](../../index.md) / [EngineAction](../index.md) / [CreateEngineSessionAction](index.md) / [skipLoading](./skip-loading.md)
+
+# skipLoading
+
+`val skipLoading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L444)

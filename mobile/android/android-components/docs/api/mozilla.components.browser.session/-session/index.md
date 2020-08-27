@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L50)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L44)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -28,7 +28,6 @@ Value type that represents the state of a browser session. Changes can be observ
 | [canGoForward](can-go-forward.md) | `var canGoForward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Navigation state, true if there's an history item to go forward to, otherwise false. |
 | [contentPermissionRequest](content-permission-request.md) | `var contentPermissionRequest: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`PermissionRequest`](../../mozilla.components.concept.engine.permission/-permission-request/index.md)`>`<br>[Consumable](../../mozilla.components.support.base.observer/-consumable/index.md) permission request from web content. A [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md) must be consumed i.e. either [PermissionRequest.grant](../../mozilla.components.concept.engine.permission/-permission-request/grant.md) or [PermissionRequest.reject](../../mozilla.components.concept.engine.permission/-permission-request/reject.md) must be called. A content permission request can also be cancelled, which will result in a new empty [Consumable](../../mozilla.components.support.base.observer/-consumable/index.md). |
 | [contextId](context-id.md) | `val contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
-| [crashed](crashed.md) | `var crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether this [Session](./index.md) has crashed. |
 | [customTabConfig](custom-tab-config.md) | `var customTabConfig: `[`CustomTabConfig`](../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?`<br>Configuration data in case this session is used for a Custom Tab. |
 | [desktopMode](desktop-mode.md) | `var desktopMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Desktop Mode state, true if the desktop mode is requested, otherwise false. |
 | [hasParentSession](has-parent-session.md) | `val hasParentSession: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this [Session](./index.md) has a parent [Session](./index.md). |
@@ -43,7 +42,6 @@ Value type that represents the state of a browser session. Changes can be observ
 | [searchTerms](search-terms.md) | `var searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The currently / last used search terms (or an empty string). |
 | [securityInfo](security-info.md) | `var securityInfo: `[`SecurityInfo`](-security-info/index.md)<br>Security information indicating whether or not the current session is for a secure URL, as well as the host and SSL certificate authority, if applicable. |
 | [source](source.md) | `val source: `[`Source`](../../mozilla.components.browser.state.state/-session-state/-source/index.md) |
-| [thumbnail](thumbnail.md) | `var thumbnail: <ERROR CLASS>?`<br>The target of the latest thumbnail. |
 | [title](title.md) | `var title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The title of the currently displayed website changed. |
 | [trackerBlockingEnabled](tracker-blocking-enabled.md) | `var trackerBlockingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Tracker blocking state, true if blocking trackers is enabled, otherwise false. |
 | [trackersBlocked](trackers-blocked.md) | `var trackersBlocked: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tracker`](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`>`<br>List of [Tracker](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)s that have been blocked in this session. |

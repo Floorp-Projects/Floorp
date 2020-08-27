@@ -2,7 +2,7 @@
 
 # pause
 
-`@Synchronized fun pause(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L136)
+`@Synchronized fun pause(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L138)
 
 Pauses the [Subscription](index.md). The [Observer](../../-observer.md) will not get notified when the state changes
 until [resume](resume.md) is called.

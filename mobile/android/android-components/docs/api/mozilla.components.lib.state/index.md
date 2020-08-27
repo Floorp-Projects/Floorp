@@ -7,7 +7,7 @@
 | Name | Summary |
 |---|---|
 | [Action](-action.md) | `interface Action`<br>Generic interface for actions to be dispatched on a [Store](-store/index.md). |
-| [MiddlewareStore](-middleware-store/index.md) | `interface MiddlewareStore<S, A>`<br>A simplified [Store](-store/index.md) interface for the purpose of passing it to a [Middleware](-middleware.md). |
+| [MiddlewareContext](-middleware-context/index.md) | `interface MiddlewareContext<S : `[`State`](-state.md)`, A : `[`Action`](-action.md)`>`<br>The context a Middleware is running in. Allows access to privileged [Store](-store/index.md) functionality. It is passed to a [Middleware](-middleware.md) with every [Action](-action.md). |
 | [State](-state.md) | `interface State`<br>Generic interface for a [State](-state.md) maintained by a [Store](-store/index.md). |
 | [Store](-store/index.md) | `open class Store<S : `[`State`](-state.md)`, A : `[`Action`](-action.md)`>`<br>A generic store holding an immutable [State](-state.md). |
 
@@ -21,6 +21,6 @@
 
 | Name | Summary |
 |---|---|
-| [Middleware](-middleware.md) | `typealias Middleware<S, A> = (store: `[`MiddlewareStore`](-middleware-store/index.md)`<`[`S`](-middleware.md#S)`, `[`A`](-middleware.md#A)`>, next: (`[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, action: `[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A [Middleware](-middleware.md) sits between the store and the reducer. It provides an extension point between dispatching an action, and the moment it reaches the reducer. |
+| [Middleware](-middleware.md) | `typealias Middleware<S, A> = (context: `[`MiddlewareContext`](-middleware-context/index.md)`<`[`S`](-middleware.md#S)`, `[`A`](-middleware.md#A)`>, next: (`[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, action: `[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A [Middleware](-middleware.md) sits between the store and the reducer. It provides an extension point between dispatching an action, and the moment it reaches the reducer. |
 | [Observer](-observer.md) | `typealias Observer<S> = (`[`S`](-observer.md#S)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Listener called when the state changes in the [Store](-store/index.md). |
 | [Reducer](-reducer.md) | `typealias Reducer<S, A> = (`[`S`](-reducer.md#S)`, `[`A`](-reducer.md#A)`) -> `[`S`](-reducer.md#S)<br>Reducers specify how the application's [State](-state.md) changes in response to [Action](-action.md)s sent to the [Store](-store/index.md). |

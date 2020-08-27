@@ -2,7 +2,7 @@
 
 # loadRequestMetadata
 
-`var loadRequestMetadata: `[`LoadRequestMetadata`](../../mozilla.components.browser.session.engine.request/-load-request-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L178)
+`var loadRequestMetadata: `[`LoadRequestMetadata`](../../mozilla.components.browser.session.engine.request/-load-request-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L164)
 
 Set when a load request is received, indicating if the request came from web content, or via a redirect.
 

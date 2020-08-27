@@ -2,7 +2,7 @@
 
 # UpdateMediaVolumeAction
 
-`data class UpdateMediaVolumeAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L546)
+`data class UpdateMediaVolumeAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L667)
 
 Updates the [Media.Volume](../../../mozilla.components.concept.engine.media/-media/-volume/index.md) for the [MediaState.Element](../../../mozilla.components.browser.state.state/-media-state/-element/index.md) with id [mediaId](media-id.md) owned by the tab
 with id [tabId](tab-id.md).

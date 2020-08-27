@@ -2,12 +2,12 @@
 
 # &lt;init&gt;
 
-`LowMemoryAction(states: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`EngineSessionState`](../../../mozilla.components.concept.engine/-engine-session-state/index.md)`>)`
+`LowMemoryAction(level: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`)`
 
-Optimizes the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional
-resources if the system is in a low memory condition.
+Optimizes the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional resources if the system is in
+a low memory condition.
 
 ### Parameters
 
-`states` - map of session ids to engine session states where the engine session was closed
-by SessionManager.
+`level` - The context of the trim, giving a hint of the amount of trimming the application
+may like to perform. See constants in [ComponentCallbacks2](#).

@@ -2,7 +2,7 @@
 
 # toJson
 
-`fun toJson(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L118)
+`fun toJson(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L114)
 
 Converts Breadcrumb into a JSON object
 

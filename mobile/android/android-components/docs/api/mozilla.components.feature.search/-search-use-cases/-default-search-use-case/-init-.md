@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`DefaultSearchUseCase(context: <ERROR CLASS>, searchEngineManager: `[`SearchEngineManager`](../../../mozilla.components.browser.search/-search-engine-manager/index.md)`, sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`, onNoSession: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Session`](../../../mozilla.components.browser.session/-session/index.md)`)`
+`DefaultSearchUseCase(context: <ERROR CLASS>, store: `[`BrowserStore`](../../../mozilla.components.browser.state.store/-browser-store/index.md)`, searchEngineManager: `[`SearchEngineManager`](../../../mozilla.components.browser.search/-search-engine-manager/index.md)`, sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`, onNoSession: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Session`](../../../mozilla.components.browser.session/-session/index.md)`)`

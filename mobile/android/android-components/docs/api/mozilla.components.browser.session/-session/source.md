@@ -2,4 +2,4 @@
 
 # source
 
-`val source: `[`Source`](../../mozilla.components.browser.state.state/-session-state/-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L53)
+`val source: `[`Source`](../../mozilla.components.browser.state.state/-session-state/-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L47)

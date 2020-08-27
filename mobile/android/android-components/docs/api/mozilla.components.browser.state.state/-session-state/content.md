@@ -2,7 +2,7 @@
 
 # content
 
-`abstract val content: `[`ContentState`](../-content-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L23)
+`abstract val content: `[`ContentState`](../-content-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L28)
 
 the [ContentState](../-content-state/index.md) of this session.
 

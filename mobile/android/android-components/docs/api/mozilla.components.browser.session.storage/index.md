@@ -7,5 +7,6 @@
 | Name | Summary |
 |---|---|
 | [AutoSave](-auto-save/index.md) | `class AutoSave` |
+| [BrowserStateSerializer](-browser-state-serializer/index.md) | `class BrowserStateSerializer`<br>Helper to transform [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md) instances to JSON and. |
 | [SessionStorage](-session-storage/index.md) | `class SessionStorage : `[`Storage`](-auto-save/-storage/index.md)<br>Session storage for persisting the state of a [SessionManager](../mozilla.components.browser.session/-session-manager/index.md) to disk (browser and engine session states). |
 | [SnapshotSerializer](-snapshot-serializer/index.md) | `class SnapshotSerializer`<br>Helper to transform [SessionManager.Snapshot](../mozilla.components.browser.session/-session-manager/-snapshot/index.md) instances to JSON and back. |

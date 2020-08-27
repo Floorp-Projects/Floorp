@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`LinkEngineSessionAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, engineSession: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`)`
+`LinkEngineSessionAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, engineSession: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`, skipLoading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`
 
 Attaches the provided [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) to the session with the provided [sessionId](session-id.md).
 

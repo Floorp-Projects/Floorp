@@ -2,7 +2,7 @@
 
 # customTabConfig
 
-`var customTabConfig: `[`CustomTabConfig`](../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L214)
+`var customTabConfig: `[`CustomTabConfig`](../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L200)
 
 Configuration data in case this session is used for a Custom Tab.
 

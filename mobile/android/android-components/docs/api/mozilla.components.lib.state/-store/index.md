@@ -2,7 +2,7 @@
 
 # Store
 
-`open class Store<S : `[`State`](../-state.md)`, A : `[`Action`](../-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L31)
+`open class Store<S : `[`State`](../-state.md)`, A : `[`Action`](../-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L32)
 
 A generic store holding an immutable [State](../-state.md).
 

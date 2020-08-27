@@ -2,7 +2,7 @@
 
 # UninstallWebExtensionAction
 
-`data class UninstallWebExtensionAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L356)
+`data class UninstallWebExtensionAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L363)
 
 Removes all state of the uninstalled extension from [BrowserState.extensions](../../../mozilla.components.browser.state.state/-browser-state/extensions.md)
 and [TabSessionState.extensionState](../../../mozilla.components.browser.state.state/-tab-session-state/extension-state.md).

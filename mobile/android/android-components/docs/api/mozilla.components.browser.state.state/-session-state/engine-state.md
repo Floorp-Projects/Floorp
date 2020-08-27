@@ -2,7 +2,7 @@
 
 # engineState
 
-`abstract val engineState: `[`EngineState`](../-engine-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L25)
+`abstract val engineState: `[`EngineState`](../-engine-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L30)
 
 the [EngineState](../-engine-state/index.md) of this session.
 

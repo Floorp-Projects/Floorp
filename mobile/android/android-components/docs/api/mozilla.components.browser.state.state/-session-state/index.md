@@ -2,7 +2,7 @@
 
 # SessionState
 
-`interface SessionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L21)
+`interface SessionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L26)
 
 Interface for states that contain a [ContentState](../-content-state/index.md) and can be accessed via an [id](id.md).
 
@@ -18,6 +18,7 @@ Interface for states that contain a [ContentState](../-content-state/index.md) a
 |---|---|
 | [content](content.md) | `abstract val content: `[`ContentState`](../-content-state/index.md)<br>the [ContentState](../-content-state/index.md) of this session. |
 | [contextId](context-id.md) | `abstract val contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>the session context ID of the session. The session context ID specifies the contextual identity to use for the session's cookie store. https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Work_with_contextual_identities |
+| [crashed](crashed.md) | `abstract val crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether this session has crashed. In conjunction with a `concept-engine` implementation that uses a multi-process architecture, single sessions can crash without crashing the whole app. A crashed session may still be operational (since the underlying engine implementation has recovered its content process), but further action may be needed to restore the last state before the session has crashed (if desired). |
 | [engineState](engine-state.md) | `abstract val engineState: `[`EngineState`](../-engine-state/index.md)<br>the [EngineState](../-engine-state/index.md) of this session. |
 | [extensionState](extension-state.md) | `abstract val extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`>`<br>a map of extension id and web extension states specific to this [SessionState](./index.md). |
 | [id](id.md) | `abstract val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the unique id of the session. |
@@ -28,7 +29,7 @@ Interface for states that contain a [ContentState](../-content-state/index.md) a
 
 | Name | Summary |
 |---|---|
-| [createCopy](create-copy.md) | `abstract fun createCopy(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = this.id, content: `[`ContentState`](../-content-state/index.md)` = this.content, trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)` = this.trackingProtection, engineState: `[`EngineState`](../-engine-state/index.md)` = this.engineState, extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`> = this.extensionState, contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = this.contextId): `[`SessionState`](./index.md)<br>Copy the class and override some parameters. |
+| [createCopy](create-copy.md) | `abstract fun createCopy(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = this.id, content: `[`ContentState`](../-content-state/index.md)` = this.content, trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)` = this.trackingProtection, engineState: `[`EngineState`](../-engine-state/index.md)` = this.engineState, extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`> = this.extensionState, contextId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = this.contextId, crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = this.crashed): `[`SessionState`](./index.md)<br>Copy the class and override some parameters. |
 
 ### Extension Functions
 

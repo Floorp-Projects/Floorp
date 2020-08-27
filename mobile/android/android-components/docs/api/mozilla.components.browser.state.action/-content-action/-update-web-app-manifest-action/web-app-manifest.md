@@ -2,4 +2,4 @@
 
 # webAppManifest
 
-`val webAppManifest: `[`WebAppManifest`](../../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L294)
+`val webAppManifest: `[`WebAppManifest`](../../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L301)

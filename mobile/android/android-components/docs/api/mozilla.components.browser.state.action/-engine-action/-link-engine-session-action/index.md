@@ -2,7 +2,7 @@
 
 # LinkEngineSessionAction
 
-`data class LinkEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L436)
+`data class LinkEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L523)
 
 Attaches the provided [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) to the session with the provided [sessionId](session-id.md).
 
@@ -10,7 +10,7 @@ Attaches the provided [EngineSession](../../../mozilla.components.concept.engine
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `LinkEngineSessionAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, engineSession: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`)`<br>Attaches the provided [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) to the session with the provided [sessionId](session-id.md). |
+| [&lt;init&gt;](-init-.md) | `LinkEngineSessionAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, engineSession: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`, skipLoading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Attaches the provided [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) to the session with the provided [sessionId](session-id.md). |
 
 ### Properties
 
@@ -18,3 +18,4 @@ Attaches the provided [EngineSession](../../../mozilla.components.concept.engine
 |---|---|
 | [engineSession](engine-session.md) | `val engineSession: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md) |
 | [sessionId](session-id.md) | `val sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [skipLoading](skip-loading.md) | `val skipLoading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |

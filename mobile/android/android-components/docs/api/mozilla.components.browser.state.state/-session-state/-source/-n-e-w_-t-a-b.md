@@ -2,7 +2,7 @@
 
 # NEW_TAB
 
-`NEW_TAB` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L80)
+`NEW_TAB` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L87)
 
 User opened a new tab
 

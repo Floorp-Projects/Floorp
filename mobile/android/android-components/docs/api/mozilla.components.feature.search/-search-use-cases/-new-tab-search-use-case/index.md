@@ -2,13 +2,13 @@
 
 # NewTabSearchUseCase
 
-`class NewTabSearchUseCase : `[`SearchUseCase`](../-search-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L82)
+`class NewTabSearchUseCase : `[`SearchUseCase`](../-search-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L89)
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `NewTabSearchUseCase(context: <ERROR CLASS>, searchEngineManager: `[`SearchEngineManager`](../../../mozilla.components.browser.search/-search-engine-manager/index.md)`, sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`, isPrivate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)` |
+| [&lt;init&gt;](-init-.md) | `NewTabSearchUseCase(context: <ERROR CLASS>, store: `[`BrowserStore`](../../../mozilla.components.browser.state.store/-browser-store/index.md)`, searchEngineManager: `[`SearchEngineManager`](../../../mozilla.components.browser.search/-search-engine-manager/index.md)`, sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`, isPrivate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)` |
 
 ### Functions
 

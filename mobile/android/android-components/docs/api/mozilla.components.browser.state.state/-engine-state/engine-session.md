@@ -2,7 +2,7 @@
 
 # engineSession
 
-`val engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/EngineState.kt#L18)
+`val engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/EngineState.kt#L22)
 
 the engine's representation of this session.
 

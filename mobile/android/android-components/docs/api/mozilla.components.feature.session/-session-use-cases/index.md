@@ -2,7 +2,7 @@
 
 # SessionUseCases
 
-`class SessionUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L20)
+`class SessionUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L24)
 
 Contains use cases related to the session feature.
 
@@ -35,7 +35,7 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SessionUseCases(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, onNoSession: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Session`](../../mozilla.components.browser.session/-session/index.md)` = { url ->
+| [&lt;init&gt;](-init-.md) | `SessionUseCases(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, onNoSession: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Session`](../../mozilla.components.browser.session/-session/index.md)` = { url ->
         Session(url).apply { sessionManager.add(this) }
     })`<br>Contains use cases related to the session feature. |
 

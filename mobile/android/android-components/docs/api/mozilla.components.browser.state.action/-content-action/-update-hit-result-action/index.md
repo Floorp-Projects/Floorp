@@ -2,7 +2,7 @@
 
 # UpdateHitResultAction
 
-`data class UpdateHitResultAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L208)
+`data class UpdateHitResultAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L215)
 
 Updates the [HitResult](../../../mozilla.components.concept.engine/-hit-result/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 

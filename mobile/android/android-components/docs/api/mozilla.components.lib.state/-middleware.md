@@ -2,7 +2,7 @@
 
 # Middleware
 
-`typealias Middleware<S, A> = (store: `[`MiddlewareStore`](-middleware-store/index.md)`<`[`S`](-middleware.md#S)`, `[`A`](-middleware.md#A)`>, next: (`[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, action: `[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Middleware.kt#L18)
+`typealias Middleware<S, A> = (context: `[`MiddlewareContext`](-middleware-context/index.md)`<`[`S`](-middleware.md#S)`, `[`A`](-middleware.md#A)`>, next: (`[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, action: `[`A`](-middleware.md#A)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Middleware.kt#L18)
 
 A [Middleware](./-middleware.md) sits between the store and the reducer. It provides an extension point between
 dispatching an action, and the moment it reaches the reducer.

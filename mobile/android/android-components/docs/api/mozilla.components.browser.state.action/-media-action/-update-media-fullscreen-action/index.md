@@ -2,7 +2,7 @@
 
 # UpdateMediaFullscreenAction
 
-`data class UpdateMediaFullscreenAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L556)
+`data class UpdateMediaFullscreenAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L677)
 
 Updates the [Media.fullscreen](../../../mozilla.components.concept.engine.media/-media/fullscreen.md) for the [MediaState.Element](../../../mozilla.components.browser.state.state/-media-state/-element/index.md) with id [mediaId](media-id.md) owned by the tab
 with id [tabId](tab-id.md).

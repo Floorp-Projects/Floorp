@@ -2,7 +2,7 @@
 
 # createSessionSnapshot
 
-`fun createSessionSnapshot(session: `[`Session`](../-session/index.md)`): `[`Item`](-snapshot/-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L139)
+`fun createSessionSnapshot(session: `[`Session`](../-session/index.md)`): `[`Item`](-snapshot/-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L41)
 
 Produces a [Snapshot.Item](-snapshot/-item/index.md) of a single [Session](../-session/index.md), suitable for restoring via [SessionManager.restore](restore.md).
 

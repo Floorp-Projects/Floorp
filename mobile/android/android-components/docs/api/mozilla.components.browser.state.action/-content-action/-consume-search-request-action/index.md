@@ -2,7 +2,7 @@
 
 # ConsumeSearchRequestAction
 
-`data class ConsumeSearchRequestAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L253)
+`data class ConsumeSearchRequestAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L260)
 
 Removes the [SearchRequest](../../../mozilla.components.concept.engine.search/-search-request/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 

@@ -2,7 +2,7 @@
 
 # UpdateTabPageAction
 
-`data class UpdateTabPageAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L420)
+`data class UpdateTabPageAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L427)
 
 Updates a page action that belongs to the given [sessionId](session-id.md) and [extensionId](extension-id.md) on the
 [TabSessionState.extensionState](../../../mozilla.components.browser.state.state/-tab-session-state/extension-state.md).

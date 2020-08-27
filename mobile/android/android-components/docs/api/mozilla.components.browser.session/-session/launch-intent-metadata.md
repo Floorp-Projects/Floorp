@@ -2,7 +2,7 @@
 
 # launchIntentMetadata
 
-`var launchIntentMetadata: `[`LaunchIntentMetadata`](../../mozilla.components.browser.session.engine.request/-launch-intent-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L192)
+`var launchIntentMetadata: `[`LaunchIntentMetadata`](../../mozilla.components.browser.session.engine.request/-launch-intent-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L178)
 
 Set when a launch intent is received.
 

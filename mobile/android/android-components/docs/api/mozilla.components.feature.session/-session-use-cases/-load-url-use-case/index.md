@@ -2,7 +2,7 @@
 
 # LoadUrlUseCase
 
-`interface LoadUrlUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L30)
+`interface LoadUrlUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L35)
 
 Contract for use cases that load a provided URL.
 

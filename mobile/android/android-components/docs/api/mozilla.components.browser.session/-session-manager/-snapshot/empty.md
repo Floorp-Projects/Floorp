@@ -2,4 +2,4 @@
 
 # empty
 
-`fun empty(): `[`Snapshot`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L467)
+`fun empty(): `[`Snapshot`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L309)
