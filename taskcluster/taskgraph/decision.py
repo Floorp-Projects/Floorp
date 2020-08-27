@@ -336,7 +336,8 @@ def get_decision_parameters(graph_config, options):
     parameters['phabricator_diff'] = None
     parameters['release_type'] = ''
     parameters['release_eta'] = ''
-    parameters['release_enable_partners'] = False
+    parameters['release_enable_partner_repack'] = False
+    parameters['release_enable_partner_attribution'] = False
     parameters['release_partners'] = []
     parameters['release_partner_config'] = {}
     parameters['release_partner_build_number'] = 1

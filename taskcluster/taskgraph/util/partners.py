@@ -304,11 +304,14 @@ def get_partner_config_by_url(manifest_url, kind, token, partner_subset=None):
 
 def check_if_partners_enabled(config, tasks):
     if (
-        config.params['release_enable_partners'] and
+        config.params['release_enable_partner_repack'] and
         config.kind.startswith('release-partner-repack')
     ) or (
+        config.params['release_enable_partner_attribution'] and
+        config.kind.startswith('release-partner-attribution')
+    ) or (
         config.params['release_enable_emefree'] and
-        config.kind.startswith('release-eme-free-repack')
+        config.kind.startswith('release-eme-free-')
     ):
         for task in tasks:
             yield task
