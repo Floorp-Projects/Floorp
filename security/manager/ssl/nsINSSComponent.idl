@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIRunnable.idl"
 #include "nsISupports.idl"
 
 %{C++
@@ -112,10 +111,4 @@ interface nsINSSComponent : nsISupports {
    * For clearing both SSL internal and external session cache from JS.
    */
   void clearSSLExternalAndInternalSessionCache();
-
-  /**
-   * Dispatches a task to the component's serial background queue, if NSS
-   * hasn't already been shut down.
-   */
-  [noscript] void dispatchTaskToSerialBackgroundQueue(in nsIRunnable task);
 };
