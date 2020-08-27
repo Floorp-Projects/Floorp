@@ -11,6 +11,7 @@ const TEST_CASES = [
       { text: "pageUsername", style: "possible-username" },
       { text: "savedUsername", style: "login" },
     ],
+    isLoggedIn: true,
   },
   {
     description: "duplicate page values should be deduped",
@@ -20,18 +21,21 @@ const TEST_CASES = [
       { text: "pageUsername", style: "possible-username" },
       { text: "pageUsername2", style: "possible-username" },
     ],
+    isLoggedIn: true,
   },
   {
     description: "page values should dedupe and win over saved values",
     savedLogins: [{ username: "username", password: "savedPassword" }],
     possibleUsernames: ["username"],
     expectedSuggestions: [{ text: "username", style: "possible-username" }],
+    isLoggedIn: true,
   },
   {
     description: "empty usernames should be filtered out",
     savedLogins: [{ username: "", password: "savedPassword" }],
     possibleUsernames: [""],
     expectedSuggestions: [],
+    isLoggedIn: true,
   },
   {
     description: "auth logins should be displayed alongside normal ones",
@@ -44,6 +48,7 @@ const TEST_CASES = [
       { text: "normalUsername", style: "login" },
       { text: "authUsername", style: "login" },
     ],
+    isLoggedIn: true,
   },
   {
     description: "saved logins from subdomains should be displayed",
@@ -56,6 +61,7 @@ const TEST_CASES = [
     ],
     possibleUsernames: [],
     expectedSuggestions: [{ text: "savedUsername", style: "login" }],
+    isLoggedIn: true,
   },
   {
     description: "usernames from different subdomains should be deduped",
@@ -73,6 +79,20 @@ const TEST_CASES = [
     ],
     possibleUsernames: [],
     expectedSuggestions: [{ text: "savedUsername", style: "login" }],
+    isLoggedIn: true,
+  },
+  {
+    description: "No results with saved login when Primary Password is locked",
+    savedLogins: [
+      {
+        username: "savedUsername",
+        password: "savedPassword",
+        origin: "https://example.com",
+      },
+    ],
+    possibleUsernames: [],
+    expectedSuggestions: [],
+    isLoggedIn: false,
   },
 ];
 
@@ -141,6 +161,11 @@ async function _test(testCase) {
   info(`Storing saved logins: ${JSON.stringify(testCase.savedLogins)}`);
   _saveLogins(testCase.savedLogins);
 
+  if (!testCase.isLoggedIn) {
+    // Primary Password should be enabled and locked
+    LoginTestUtils.masterPassword.enable();
+  }
+
   info("Computing results");
   let result = await LoginManagerPrompter._getUsernameSuggestions(
     LOGIN,
@@ -150,6 +175,9 @@ async function _test(testCase) {
   _compare(testCase.expectedSuggestions, result);
 
   info("Cleaning up state");
+  if (!testCase.isLoggedIn) {
+    LoginTestUtils.masterPassword.disable();
+  }
   LoginTestUtils.clearData();
 }
 
