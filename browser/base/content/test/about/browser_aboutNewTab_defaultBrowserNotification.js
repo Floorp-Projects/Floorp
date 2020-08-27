@@ -48,36 +48,52 @@ add_task(async function notification_shown_on_first_newtab_when_not_default() {
   });
 });
 
-add_task(async function clicking_dismiss_disables_default_browser_checking() {
+add_task(async function notification_should_be_shown_on_loaded_abouthome() {
+  // Open about:home before calling DefaultBrowserNotificationOnNewTabPage.init()
+  let homeTab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: "about:home",
+    waitForLoad: false,
+  });
+  ok(
+    homeTab.linkedBrowser &&
+      gBrowser.getNotificationBox(homeTab.linkedBrowser) &&
+      !gBrowser.getNotificationBox(homeTab.linkedBrowser).currentNotification,
+    "A notification should not be shown before the shell service is setup"
+  );
   await test_with_mock_shellservice({ isDefault: false }, async function() {
-    let firstTab = await BrowserTestUtils.openNewForegroundTab({
-      gBrowser,
-      opening: "about:newtab",
-      waitForLoad: false,
-    });
     let notification = await TestUtils.waitForCondition(
       () =>
-        firstTab.linkedBrowser &&
-        gBrowser.getNotificationBox(firstTab.linkedBrowser) &&
-        gBrowser.getNotificationBox(firstTab.linkedBrowser).currentNotification,
-      "waiting for notification"
+        homeTab.linkedBrowser &&
+        gBrowser.getNotificationBox(homeTab.linkedBrowser) &&
+        gBrowser.getNotificationBox(homeTab.linkedBrowser).currentNotification,
+      "waiting for notification on about:home"
     );
-    ok(notification, "A notification should be shown on the new tab page");
+    ok(notification, "A notification should be shown on about:home");
     is(
       notification.getAttribute("value"),
       "default-browser",
       "Notification should be default browser"
     );
 
-    let closeButton = notification.querySelector(".close-icon");
-    closeButton.click();
+    let newTab = await BrowserTestUtils.openNewForegroundTab({
+      gBrowser,
+      opening: "about:newtab",
+      waitForLoad: false,
+    });
     ok(
-      !Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
-      "checkDefaultBrowser bar pref should be false after dismissing notification"
+      newTab.linkedBrowser &&
+        gBrowser.getNotificationBox(newTab.linkedBrowser) &&
+        !gBrowser.getNotificationBox(newTab.linkedBrowser).currentNotification,
+      "A notification should not be shown on about:newtab since it was just shown on about:home"
     );
-
-    gBrowser.removeTab(firstTab);
+    window.removeEventListener(
+      "TabSelect",
+      window.DefaultBrowserNotificationOnNewTabPage
+    );
+    gBrowser.removeTab(newTab);
   });
+  gBrowser.removeTab(homeTab);
 });
 
 add_task(async function notification_bar_removes_itself_on_navigation() {
@@ -154,6 +170,38 @@ add_task(async function clicking_button_on_notification_calls_setAsDefault() {
     ok(
       shellService.isDefaultBrowser(),
       "should be default after clicking button"
+    );
+
+    gBrowser.removeTab(firstTab);
+  });
+});
+
+add_task(async function clicking_dismiss_disables_default_browser_checking() {
+  await test_with_mock_shellservice({ isDefault: false }, async function() {
+    let firstTab = await BrowserTestUtils.openNewForegroundTab({
+      gBrowser,
+      opening: "about:newtab",
+      waitForLoad: false,
+    });
+    let notification = await TestUtils.waitForCondition(
+      () =>
+        firstTab.linkedBrowser &&
+        gBrowser.getNotificationBox(firstTab.linkedBrowser) &&
+        gBrowser.getNotificationBox(firstTab.linkedBrowser).currentNotification,
+      "waiting for notification"
+    );
+    ok(notification, "A notification should be shown on the new tab page");
+    is(
+      notification.getAttribute("value"),
+      "default-browser",
+      "Notification should be default browser"
+    );
+
+    let closeButton = notification.querySelector(".close-icon");
+    closeButton.click();
+    ok(
+      !Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
+      "checkDefaultBrowser bar pref should be false after dismissing notification"
     );
 
     gBrowser.removeTab(firstTab);
