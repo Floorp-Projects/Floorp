@@ -824,7 +824,7 @@ add_task(async function testOnlyTypeIsShown() {
 });
 
 add_task(async function testPluginIcons() {
-  const pluginIconUrl = "chrome://global/skin/plugins/pluginGeneric.svg";
+  const pluginIconUrl = "chrome://global/skin/plugins/plugin.svg";
 
   let win = await loadInitialView("plugin");
   let doc = win.document;
