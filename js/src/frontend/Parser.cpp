@@ -10305,7 +10305,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
 
   // Should the operations below fail, the buffer held by data will
   // be cleaned up by the CompilationInfo destructor.
-  return handler_.newBigInt(index, this->getCompilationInfo(), pos());
+  return handler_.newBigInt(index, this->getCompilationInfo().stencil, pos());
 }
 
 template <typename Unit>

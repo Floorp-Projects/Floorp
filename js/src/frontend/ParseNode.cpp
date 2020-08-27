@@ -387,12 +387,10 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
 #endif
 
 BigInt* BigIntLiteral::create(JSContext* cx) {
-  return compilationInfo_.stencil.bigIntData[index_].createBigInt(cx);
+  return stencil_.bigIntData[index_].createBigInt(cx);
 }
 
-bool BigIntLiteral::isZero() {
-  return compilationInfo_.stencil.bigIntData[index_].isZero();
-}
+bool BigIntLiteral::isZero() { return stencil_.bigIntData[index_].isZero(); }
 
 const ParserAtom* NumericLiteral::toAtom(
     CompilationInfo& compilationInfo) const {
