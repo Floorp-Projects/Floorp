@@ -89,15 +89,15 @@ body {
   --newtab-button-primary-color: #0060DF;
   --newtab-button-secondary-color: #0060DF;
   --newtab-card-background-color: #FFF;
-  --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
+  --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.4);
   --tiles-theme-section-border-width: 1px;
   --welcome-header-text-color: #2B2156;
   --welcome-header-text-color-1: #20133A;
   --welcome-card-button-background-color: rgba(12, 12, 13, 0.1);
   --welcome-card-button-background-hover-color: rgba(12, 12, 13, 0.2);
   --welcome-card-button-background-active-color: rgba(12, 12, 13, 0.3);
-  --welcome-button-box-shadow-color: rgba(10, 132, 255, 0.3);
-  --welcome-button-box-shadow-inset-color: #0A84FF;
+  --welcome-button-box-shadow-color: #0A84FF;
+  --welcome-button-box-shadow-inset-color: rgba(10, 132, 255, 0.3);
   --welcome-button-text-color: #FFF;
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
@@ -118,13 +118,13 @@ body {
     --newtab-button-primary-color: #0060DF;
     --newtab-button-secondary-color: #FFF;
     --newtab-card-background-color: #38383D;
-    --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2);
+    --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.4);
     --welcome-header-text-color: rgba(255, 255, 255, 0.6);
     --welcome-header-text-color-1: #7542E5;
     --welcome-card-button-background-color: rgba(12, 12, 13, 0.3);
     --welcome-card-button-background-hover-color: rgba(12, 12, 13, 0.5);
     --welcome-card-button-background-active-color: rgba(12, 12, 13, 0.7);
-    --welcome-button-box-shadow-color: rgba(249, 249, 250, 0.2);
+    --welcome-button-box-shadow-color: #0A84FF;
     --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #1D1133, #1D1133); }
 
 .welcomeCardGrid {
@@ -361,7 +361,7 @@ body {
       height: 145px;
       color: #000;
       background-color: #FFF;
-      box-shadow: 0 1px 4px rgba(12, 12, 13, 0.1);
+      box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.4);
       border-radius: 4px;
       cursor: pointer; }
       .multistageContainer .tiles-theme-section .theme .icon {
@@ -466,7 +466,8 @@ body {
   .multistageContainer button {
     font-family: inherit;
     cursor: pointer;
-    border: 0; }
+    border: 0;
+    border-radius: 4px; }
     .multistageContainer button.primary {
       font-size: 16px;
       margin-inline-start: 12px;
@@ -475,12 +476,12 @@ body {
       white-space: nowrap;
       background-color: var(--newtab-button-primary-color);
       color: var(--welcome-button-text-color);
-      border-radius: 4px;
+      fill: currentColor;
       position: relative;
       z-index: 1; }
       .multistageContainer button.primary:focus {
         background: var(--welcome-button-background-hover-color);
-        box-shadow: 0 0 0 1px var(--welcome-button-box-shadow-inset-color) inset, 0 0 0 1px var(--welcome-button-box-shadow-inset-color), 0 0 0 4px var(--welcome-button-box-shadow-color); }
+        box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color); }
       .multistageContainer button.primary:hover {
         background: var(--welcome-button-background-hover-color); }
       .multistageContainer button.primary:active {
@@ -494,7 +495,8 @@ body {
       color: var(--newtab-button-secondary-color);
       margin-top: 14px; }
       .multistageContainer button.secondary:hover, .multistageContainer button.secondary:focus, .multistageContainer button.secondary:active {
-        background-color: initial; }
+        background-color: initial;
+        box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color); }
   .multistageContainer .secondary-cta {
     display: flex;
     flex-direction: row;
