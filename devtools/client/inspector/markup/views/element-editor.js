@@ -1035,9 +1035,11 @@ ElementEditor.prototype = {
 
       const markupContainer = this.markup.getContainer(element);
 
-      markupContainer.editor.setOverflowHighlight(
-        this.highlightingOverflowCausingElements
-      );
+      if (markupContainer) {
+        markupContainer.editor.setOverflowHighlight(
+          this.highlightingOverflowCausingElements
+        );
+      }
     }
   },
 
