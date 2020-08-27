@@ -410,6 +410,19 @@ def get_partner_url_config(parameters, graph_config):
     return partner_url_config
 
 
+def get_repack_ids_by_platform(config, build_platform):
+    partner_config = get_partner_config_by_kind(config, config.kind)
+    combinations = []
+    for partner, subconfigs in partner_config.items():
+        for sub_config_name, sub_config in subconfigs.items():
+            if build_platform not in sub_config.get("platforms", []):
+                continue
+            locales = locales_per_build_platform(build_platform, sub_config.get('locales', []))
+            for locale in locales:
+                combinations.append("{}/{}/{}".format(partner, sub_config_name, locale))
+    return sorted(combinations)
+
+
 def get_partners_to_be_published(config):
     # hardcoded kind because release-bouncer-aliases doesn't match otherwise
     partner_config = get_partner_config_by_kind(config, 'release-partner-repack')
