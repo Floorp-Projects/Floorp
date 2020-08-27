@@ -266,6 +266,10 @@ const WebRTCIndicator = {
         this.onClick(event);
         break;
       }
+      case "change": {
+        this.onChange(event);
+        break;
+      }
       case "MozUpdateWindowPos": {
         if (!this.updatingIndicatorState) {
           // The window moved while not updating the indicator state,
@@ -289,6 +293,7 @@ const WebRTCIndicator = {
     this.updateIndicatorState();
 
     window.addEventListener("click", this);
+    window.addEventListener("change", this);
     window.addEventListener("sizemodechange", this);
     window.windowRoot.addEventListener("MozUpdateWindowPos", this);
 
@@ -305,6 +310,10 @@ const WebRTCIndicator = {
   },
 
   onUnload() {
+    Services.ppmm.sharedData.set("WebRTC:GlobalCameraMute", false);
+    Services.ppmm.sharedData.set("WebRTC:GlobalMicrophoneMute", false);
+    Services.ppmm.sharedData.flush();
+
     if (this.macOSIndicator) {
       this.macOSIndicator.close();
       this.macOSIndicator = null;
@@ -353,18 +362,6 @@ const WebRTCIndicator = {
         );
         break;
       }
-      case "microphone-button":
-      // Intentional fall-through
-      case "camera-button": {
-        // Revoking the microphone also revokes the camera and vice-versa.
-        let activeStreams = webrtcUI.getActiveStreams(
-          true /* camera */,
-          true /* microphone */,
-          false /* screen */
-        );
-        this.showSharingDoorhanger(activeStreams);
-        break;
-      }
       case "minimize": {
         window.minimize();
         break;
@@ -372,21 +369,53 @@ const WebRTCIndicator = {
     }
   },
 
-  /**
-   * Find the most recent share in the set of active streams passed,
-   * and opens up the Permissions Panel for the associated tab to
-   * let the user revoke the streaming permission.
-   *
-   * @param activeStreams (Array<Object>)
-   *   An array of streams obtained via webrtcUI.getActiveStreams.
-   */
-  showSharingDoorhanger(activeStreams) {
-    if (!activeStreams.length) {
-      return;
+  onChange(event) {
+    switch (event.target.id) {
+      case "microphone-mute-toggle": {
+        this.toggleMicrophoneMute(event.target);
+        break;
+      }
+      case "camera-mute-toggle": {
+        this.toggleCameraMute(event.target);
+        break;
+      }
     }
+  },
 
-    let index = activeStreams.length - 1;
-    webrtcUI.showSharingDoorhanger(activeStreams[index]);
+  /**
+   * Mutes or unmutes the microphone globally based on the checked
+   * state of toggleEl. Also updates the tooltip of toggleEl once
+   * the state change is done.
+   *
+   * @param toggleEl (Element)
+   *   The input[type="checkbox"] for toggling the microphone mute
+   *   state.
+   */
+  toggleMicrophoneMute(toggleEl) {
+    Services.ppmm.sharedData.set(
+      "WebRTC:GlobalMicrophoneMute",
+      toggleEl.checked
+    );
+    Services.ppmm.sharedData.flush();
+    let l10nId =
+      "webrtc-microphone-" + (toggleEl.checked ? "muted" : "unmuted");
+    document.l10n.setAttributes(toggleEl, l10nId);
+  },
+
+  /**
+   * Mutes or unmutes the camera globally based on the checked
+   * state of toggleEl. Also updates the tooltip of toggleEl once
+   * the state change is done.
+   *
+   * @param toggleEl (Element)
+   *   The input[type="checkbox"] for toggling the camera mute
+   *   state.
+   */
+  toggleCameraMute(toggleEl) {
+    Services.ppmm.sharedData.set("WebRTC:GlobalCameraMute", toggleEl.checked);
+    Services.ppmm.sharedData.flush();
+    let l10nId = "webrtc-camera-" + (toggleEl.checked ? "muted" : "unmuted");
+    document.l10n.setAttributes(toggleEl, l10nId);
   },
 
   /**
