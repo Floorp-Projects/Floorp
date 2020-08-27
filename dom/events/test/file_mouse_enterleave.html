@@ -15,7 +15,7 @@
 <div id="reflow"></div>
 <script>
 function listener(e) {
-  parent.postMessage({ eventType: e.type, targetName: e.target.localName }, "*");
+  parent.postMessage(e.type, "*");
 }
 
 window.addEventListener("message", function(aEvent) {
@@ -31,10 +31,6 @@ window.addEventListener("message", function(aEvent) {
 let target = document.getElementById("target");
 target.addEventListener("mouseenter", listener);
 target.addEventListener("mouseleave", listener);
-
-let root = document.documentElement;
-root.addEventListener("mouseenter", listener);
-root.addEventListener("mouseleave", listener);
 </script>
 </body>
 </html>
