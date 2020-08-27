@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-static-methods-private is not supported
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/generators/yield-as-label-identifier-escaped.case
 // - src/generators/syntax/class-decl-static-private-method.template

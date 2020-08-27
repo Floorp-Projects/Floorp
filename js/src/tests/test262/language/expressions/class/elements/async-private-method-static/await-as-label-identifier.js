@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-static-methods-private is not supported
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/async-functions/await-as-label-identifier.case
 // - src/async-functions/syntax/async-class-expr-static-private-method.template

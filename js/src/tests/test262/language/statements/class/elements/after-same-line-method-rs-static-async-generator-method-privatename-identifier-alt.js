@@ -1,4 +1,4 @@
-// |reftest| skip async -- class-static-methods-private is not supported
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) async -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-static-async-generator-method-privatename-identifier-alt.case
 // - src/class-elements/productions/cls-decl-after-same-line-method.template

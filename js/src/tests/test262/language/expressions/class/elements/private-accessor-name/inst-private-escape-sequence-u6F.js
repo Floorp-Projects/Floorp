@@ -1,4 +1,4 @@
-// |reftest| skip -- class-methods-private is not supported
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/accessor-names/private-escape-sequence-u6F.case
 // - src/accessor-names/private/cls-private-expr-inst.template

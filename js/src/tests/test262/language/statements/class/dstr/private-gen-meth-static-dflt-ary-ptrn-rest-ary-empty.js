@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-methods-private is not supported
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-ary-empty.case
 // - src/dstr-binding/default/cls-decl-private-gen-meth-static-dflt.template
