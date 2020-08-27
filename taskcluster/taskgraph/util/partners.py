@@ -360,10 +360,16 @@ def get_partner_config_by_kind(config, kind):
         return {}
     # if we're only interested in a subset of partners we remove the rest
     if partner_subset:
-        # TODO - should be fatal to have an unknown partner in partner_subset
-        for partner in [p for p in kind_config.keys() if p not in partner_subset]:
-            del(kind_config[partner])
-
+        if kind.startswith('release-partner-repack'):
+            # TODO - should be fatal to have an unknown partner in partner_subset
+            for partner in [p for p in kind_config.keys() if p not in partner_subset]:
+                del(kind_config[partner])
+        elif kind.startswith('release-partner-attribution'):
+            all_configs = deepcopy(kind_config["configs"])
+            kind_config["configs"] = []
+            for this_config in all_configs:
+                if this_config["campaign"] in partner_subset:
+                    kind_config["configs"].append(this_config)
     return kind_config
 
 
@@ -479,10 +485,26 @@ def apply_partner_priority(config, jobs):
     # medium is the same as mozilla-central, see taskcluster/ci/config.yml. ie higher than
     # integration branches because we don't want to wait a lot for the graph to be done, but
     # for multiple releases the partner tasks always wait for non-partner.
-    if (config.kind.startswith('release-partner-repack') and
+    if (config.kind.startswith(('release-partner-repack', 'release-partner-attribution')) and
             config.params.release_level() == "production"):
         priority = 'medium'
     for job in jobs:
         if priority:
             job['priority'] = priority
         yield job
+
+
+def generate_attribution_code(defaults, partner):
+    params = {
+        "medium": defaults["medium"],
+        "source": defaults["source"],
+        "campaign": partner["campaign"],
+        "content": partner["content"],
+    }
+    if partner.get("variation"):
+        params["variation"] = partner["variation"]
+    if partner.get("experiment"):
+        params["experiment"] = partner["experiment"]
+
+    code = six.moves.urllib.parse.urlencode(params)
+    return code
