@@ -58,7 +58,6 @@ class RegExpObject;
 namespace frontend {
 
 class ParseContext;
-struct CompilationInfo;
 struct CompilationStencil;
 class ParserSharedBase;
 class FullParseHandler;
@@ -1871,7 +1870,7 @@ class RegExpLiteral : public ParseNode {
       : ParseNode(ParseNodeKind::RegExpExpr, pos), index_(dataIndex) {}
 
   // Create a RegExp object of this RegExp literal.
-  RegExpObject* create(JSContext* cx, CompilationInfo& compilationInfo) const;
+  RegExpObject* create(JSContext* cx, CompilationStencil& stencil) const;
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);
