@@ -206,4 +206,5 @@
     <string name="pref_key_login_exceptions" translatable="false">pref_key_login_exceptions</string>
 
     <string name="pref_key_show_collections_placeholder_home" translatable="false">pref_key_show_collections_home</string>
+    <string name="pref_key_temp_review_prompt">pref_key_temp_review_prompt</string>
 </resources>

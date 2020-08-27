@@ -5,8 +5,14 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import com.google.android.play.core.ktx.launchReview
+import com.google.android.play.core.ktx.requestReview
+import com.google.android.play.core.review.ReviewManagerFactory
+import kotlinx.coroutines.launch
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
@@ -41,6 +47,17 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isVisible = FeatureFlags.syncedTabsInTabsTray
             isChecked = context.settings().syncedTabsInTabsTray
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<Preference>(R.string.pref_key_temp_review_prompt).apply {
+            setOnPreferenceClickListener {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val manager = ReviewManagerFactory.create(requireContext())
+                    val reviewInfo = manager.requestReview()
+                    manager.launchReview(requireActivity(), reviewInfo)
+                }
+                true
+            }
         }
     }
 }
