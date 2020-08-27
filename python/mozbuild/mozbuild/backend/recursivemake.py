@@ -1473,7 +1473,8 @@ class RecursiveMakeBackend(MakeBackend):
 
             for f in files:
                 assert not isinstance(f, RenamedSourcePath)
-                dest = mozpath.join(reltarget, path, f.target_basename)
+                dest_dir = mozpath.join(reltarget, path)
+                dest_file = mozpath.join(dest_dir, f.target_basename)
                 if not isinstance(f, ObjDirPath):
                     if '*' in f:
                         if f.startswith('/') or isinstance(f, AbsolutePath):
@@ -1482,20 +1483,20 @@ class RecursiveMakeBackend(MakeBackend):
                                 raise Exception("Wildcards are only supported in the filename part"
                                                 " of srcdir-relative or absolute paths.")
 
-                            install_manifest.add_pattern_link(basepath, wild, path)
+                            install_manifest.add_pattern_link(basepath, wild, dest_dir)
                         else:
-                            install_manifest.add_pattern_link(f.srcdir, f, path)
+                            install_manifest.add_pattern_link(f.srcdir, f, dest_dir)
                     elif isinstance(f, AbsolutePath):
                         if not f.full_path.lower().endswith(('.dll', '.pdb', '.so')):
                             raise Exception("Absolute paths installed to FINAL_TARGET_FILES must"
                                             " only be shared libraries or associated debug"
                                             " information.")
-                        install_manifest.add_optional_exists(dest)
+                        install_manifest.add_optional_exists(dest_file)
                         absolute_files.append(f.full_path)
                     else:
-                        install_manifest.add_link(f.full_path, dest)
+                        install_manifest.add_link(f.full_path, dest_file)
                 else:
-                    install_manifest.add_optional_exists(dest)
+                    install_manifest.add_optional_exists(dest_file)
                     objdir_files.append(self._pretty_path(f, backend_file))
             install_location = '$(DEPTH)/%s' % mozpath.join(target, path)
             if objdir_files:

@@ -5,13 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.themes['alpenglow'] += [
-    'background-gradient-dark.svg',
-    'background-gradient.svg',
-    'background-noodles-left-dark.svg',
-    'background-noodles-left.svg',
-    'background-noodles-right-dark.svg',
-    'background-noodles-right.svg',
-    'icon.svg',
+    '*.svg',
     'manifest.json',
 ]
 
