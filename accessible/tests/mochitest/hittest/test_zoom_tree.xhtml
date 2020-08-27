@@ -57,7 +57,7 @@
       hitTest(tree, treecols, treecol1);
 
       // tree rows and cells
-      var [x, y] = CSSToDevicePixels(tabWindow, cssX, cssY);
+      [x, y] = CSSToDevicePixels(tabWindow, cssX, cssY);
       testChildAtPoint(treeAcc, x, y, rowAcc, cellAcc);
       testChildAtPoint(rowAcc, x, y, cellAcc, cellAcc);
 
