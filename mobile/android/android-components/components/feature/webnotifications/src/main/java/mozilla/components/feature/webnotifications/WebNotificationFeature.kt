@@ -72,7 +72,7 @@ class WebNotificationFeature(
 
     override fun onShowNotification(webNotification: WebNotification) {
         CoroutineScope(coroutineContext).launch {
-            val origin = webNotification.sourceUrl.tryGetHostFromUrl()
+            val origin = webNotification.sourceUrl?.tryGetHostFromUrl() ?: return@launch
             val permissions = sitePermissionsStorage.findSitePermissionsBy(origin) ?: return@launch
 
             if (!permissions.notification.isAllowed()) {

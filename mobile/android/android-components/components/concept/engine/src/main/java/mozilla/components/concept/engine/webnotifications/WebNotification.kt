@@ -22,7 +22,7 @@ data class WebNotification(
     val title: String?,
     val tag: String,
     val body: String?,
-    val sourceUrl: String,
+    val sourceUrl: String?,
     val iconUrl: String?,
     val direction: String?,
     val lang: String?,

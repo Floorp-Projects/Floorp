@@ -58,11 +58,14 @@ internal class NativeNotificationBridge(
             }
 
             builder.setSmallIcon(smallIcon)
-                .setSubText(sourceUrl.tryGetHostFromUrl())
                 .setContentTitle(title)
                 .setShowWhen(true)
                 .setWhen(timestamp)
                 .setAutoCancel(true)
+
+            sourceUrl?.let {
+                builder.setSubText(it.tryGetHostFromUrl())
+            }
 
             body?.let {
                 builder.setContentText(body)
