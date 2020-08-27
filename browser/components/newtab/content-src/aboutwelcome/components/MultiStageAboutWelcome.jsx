@@ -269,19 +269,26 @@ export class WelcomeScreen extends React.PureComponent {
                   <legend className="sr-only" />
                 </Localized>
                 {this.props.content.tiles.data.map(
-                  ({ theme, label, tooltip }) => (
+                  ({ theme, label, tooltip, description }) => (
                     <Localized
                       key={theme + label}
                       text={typeof tooltip === "object" ? tooltip : {}}
                     >
                       <label className="theme" title={theme + label}>
-                        <input
-                          type="radio"
-                          value={theme}
-                          name="theme"
-                          className="sr-only input"
-                          onClick={this.handleAction}
-                        />
+                        <Localized
+                          text={
+                            typeof description === "object" ? description : {}
+                          }
+                        >
+                          <input
+                            type="radio"
+                            value={theme}
+                            name="theme"
+                            className="sr-only input"
+                            onClick={this.handleAction}
+                            data-l10n-attrs="aria-description"
+                          />
+                        </Localized>
                         <div className={`icon ${theme}`} />
                         {label && (
                           <Localized text={label}>
@@ -386,6 +393,9 @@ export class WelcomeScreen extends React.PureComponent {
           data-l10n-args={`{"current": ${parseInt(this.props.order, 10) +
             1}, "total": ${this.props.totalNumberOfScreens}}`}
         >
+          {/* These empty elements are here to help trigger the nav for screen readers. */}
+          <br />
+          <p />
           {this.renderStepsIndicator()}
         </nav>
         {this.renderDisclaimer()}

@@ -142,21 +142,31 @@ export const DEFAULT_WELCOME_CONTENT = {
                 string_id: "onboarding-multistage-theme-label-automatic",
               },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-automatic",
+                string_id: "onboarding-multistage-theme-tooltip-automatic-2",
+              },
+              description: {
+                string_id:
+                  "onboarding-multistage-theme-description-automatic-2",
               },
             },
             {
               theme: "light",
               label: { string_id: "onboarding-multistage-theme-label-light" },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-light",
+                string_id: "onboarding-multistage-theme-tooltip-light-2",
+              },
+              description: {
+                string_id: "onboarding-multistage-theme-description-light",
               },
             },
             {
               theme: "dark",
               label: { string_id: "onboarding-multistage-theme-label-dark" },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-dark",
+                string_id: "onboarding-multistage-theme-tooltip-dark-2",
+              },
+              description: {
+                string_id: "onboarding-multistage-theme-description-dark",
               },
             },
             {
@@ -165,7 +175,10 @@ export const DEFAULT_WELCOME_CONTENT = {
                 string_id: "onboarding-multistage-theme-label-alpenglow",
               },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-alpenglow",
+                string_id: "onboarding-multistage-theme-tooltip-alpenglow-2",
+              },
+              description: {
+                string_id: "onboarding-multistage-theme-description-alpenglow",
               },
             },
           ],
