@@ -19,6 +19,12 @@ var DefaultBrowserNotificationOnNewTabPage = {
     if (!willPrompt) {
       return;
     }
+
+    if (this.browserOnNewTabPage(gBrowser.selectedBrowser)) {
+      DefaultBrowserNotificationOnNewTabPage.prompt(gBrowser.selectedBrowser);
+      return;
+    }
+
     if (!this._eventListenerAdded) {
       window.addEventListener("TabSelect", this);
       this._eventListenerAdded = true;
@@ -34,12 +40,21 @@ var DefaultBrowserNotificationOnNewTabPage = {
   handleEvent(event) {
     if (
       event.type == "TabSelect" &&
-      event.target?.linkedBrowser?.currentURI?.spec == AboutNewTab.newTabURL
+      this.browserOnNewTabPage(event.target?.linkedBrowser)
     ) {
       DefaultBrowserNotificationOnNewTabPage.prompt(event.target.linkedBrowser);
       window.removeEventListener("TabSelect", this);
       this._eventListenerAdded = false;
     }
+  },
+
+  browserOnNewTabPage(browser) {
+    let { spec } = browser?.currentURI;
+    return (
+      spec == AboutNewTab.newTabURL ||
+      spec == Services.prefs.getCharPref("browser.startup.homepage") ||
+      spec == "about:welcome"
+    );
   },
 
   prompt(browser) {
