@@ -207,7 +207,6 @@ internal object FennecLoginsMigration {
     }
 
     @Suppress("LongMethod")
-    @VisibleForTesting
     internal fun getLogins(
         crashReporter: CrashReporting,
         masterPassword: String,
