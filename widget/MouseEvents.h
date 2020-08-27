@@ -197,7 +197,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   WidgetMouseEvent()
       : mReason(eReal),
         mContextMenuTrigger(eNormal),
-        mExitFrom(eChild),
         mIgnoreRootScrollFrame(false),
         mClickCount(0),
         mUseLegacyNonPrimaryDispatch(false) {}
@@ -207,7 +206,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
       : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID),
         mReason(aReason),
         mContextMenuTrigger(eNormal),
-        mExitFrom(eChild),
         mIgnoreRootScrollFrame(false),
         mClickCount(0),
         mUseLegacyNonPrimaryDispatch(false) {}
@@ -221,7 +219,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
       : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass),
         mReason(aReason),
         mContextMenuTrigger(aContextMenuTrigger),
-        mExitFrom(eChild),
         mIgnoreRootScrollFrame(false),
         mClickCount(0),
         mUseLegacyNonPrimaryDispatch(false) {
@@ -269,10 +266,10 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   // other reasons (typically, a click of right mouse button).
   ContextMenuTrigger mContextMenuTrigger;
 
-  // mExitFrom is valid only when mMessage is eMouseExitFromWidget.
+  // mExitFrom contains a value only when mMessage is eMouseExitFromWidget.
   // This indicates if the mouse cursor exits from a top level widget or
   // a child widget.
-  ExitFrom mExitFrom;
+  Maybe<ExitFrom> mExitFrom;
 
   // Whether the event should ignore scroll frame bounds during dispatch.
   bool mIgnoreRootScrollFrame;
