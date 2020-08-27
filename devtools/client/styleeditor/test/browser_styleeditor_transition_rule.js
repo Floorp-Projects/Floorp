@@ -16,7 +16,7 @@ add_task(async function() {
   await openEditor(editor);
 
   // Set text twice in a row
-  const styleChanges = listenForStyleChange(editor.styleSheet);
+  const styleChanges = listenForStyleChange(editor);
 
   editor.sourceEditor.setText(NEW_RULE);
   editor.sourceEditor.setText(NEW_RULE + " ");
@@ -46,8 +46,6 @@ function openEditor(editor) {
   return editor.getSourceEditor();
 }
 
-function listenForStyleChange(sheet) {
-  return new Promise(resolve => {
-    sheet.on("style-applied", resolve);
-  });
+function listenForStyleChange(editor) {
+  return editor.once("style-applied");
 }

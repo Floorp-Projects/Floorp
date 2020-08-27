@@ -337,34 +337,62 @@ class ResourceWatcher {
    * - target actors RDP events
    * Called everytime a resource is updated in the remote target.
    *
-   * See _onResourceAvailable for the argument description.
+   * @param {Object} source
+   *        Please see _onResourceAvailable for this parameter.
+   * @param {Array<Object>} updates
+   *        Depending on the listener.
+   *
+   *        Among the element in the array, the following attributes are given special handling.
+   *          - resourceType {String}:
+   *            The type of resource to be updated.
+   *          - resourceId {String}:
+   *            The id of resource to be updated.
+   *          - resourceUpdates {Object}:
+   *            If resourceUpdates is in the element, a cached resource specified by resourceType
+   *            and resourceId is updated by Object.assign(cachedResource, resourceUpdates).
+   *
+   *        And also, the element is passed to the listener as it is as “update” object.
+   *        So if we don't want to update a cached resource but have information want to
+   *        pass on to the listener, can pass it on using attributes other than the ones
+   *        listed above.
+   *        For example, if the element consists of like
+   *        "{ resourceType:… resourceId:…, testValue: “test”, }”,
+   *        the listener can receive the value as follows.
+   *
+   *        onResourceUpdate({ update }) {
+   *          console.log(update.testValue); // “test” should be displayed
+   *        }
    */
-  async _onResourceUpdated({ targetFront, watcherFront }, resources) {
-    for (const resource of resources) {
-      const { resourceType, resourceId } = resource;
+  async _onResourceUpdated({ targetFront, watcherFront }, updates) {
+    for (const update of updates) {
+      const { resourceType, resourceId, resourceUpdates } = update;
+
+      const existingResource = this._cache.find(
+        cachedResource =>
+          cachedResource.resourceType === resourceType &&
+          cachedResource.resourceId === resourceId
+      );
+
+      if (!existingResource) {
+        continue;
+      }
 
       if (watcherFront) {
-        targetFront = await this._getTargetForWatcherResource(resource);
+        targetFront = await this._getTargetForWatcherResource(existingResource);
         if (!targetFront) {
           continue;
         }
       }
 
-      if (resourceId) {
-        const index = this._cache.findIndex(
-          cachedResource =>
-            cachedResource.resourceType == resourceType &&
-            cachedResource.resourceId == resourceId
-        );
-        if (index != -1) {
-          this._cache.splice(index, 1, resource);
-        }
+      if (resourceUpdates) {
+        Object.assign(existingResource, resourceUpdates);
       }
 
       this._updatedListeners.emit(resourceType, {
         resourceType,
         targetFront,
-        resource,
+        resource: existingResource,
+        update,
       });
     }
   }

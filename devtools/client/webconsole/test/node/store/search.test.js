@@ -106,7 +106,7 @@ function prepareBaseStore() {
     "console.log('myregex', /a.b.c/)",
     "console.log('mymap')",
     "console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});",
-    "GET request",
+    "GET request update",
   ]);
 
   return store;

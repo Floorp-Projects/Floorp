@@ -30,7 +30,6 @@ rawPackets.set(`GET request`, {
   "request": {
     "url": "http://example.com/inexistent.html",
     "method": "GET",
-    "headersSize": 385
   },
   "isXHR": false,
   "cause": {
@@ -46,18 +45,6 @@ rawPackets.set(`GET request`, {
     "stacktraceAvailable": true
   },
   "response": {
-    "httpVersion": "HTTP/1.1",
-    "status": "404",
-    "statusText": "Not Found",
-    "headersSize": 160,
-    "remoteAddress": "127.0.0.1",
-    "remotePort": 8888,
-    "content": {
-      "mimeType": "text/html; charset=utf-8"
-    },
-    "waitingTime": 1,
-    "bodySize": 418,
-    "transferredSize": 578
   },
   "timings": {},
   "private": false,
@@ -65,14 +52,6 @@ rawPackets.set(`GET request`, {
   "referrerPolicy": "no-referrer-when-downgrade",
   "channelId": 265845590720515,
   "updates": [
-    "eventTimings",
-    "requestCookies",
-    "requestHeaders",
-    "responseContent",
-    "responseCookies",
-    "responseHeaders",
-    "responseStart",
-    "securityInfo"
   ]
 });
 
@@ -149,7 +128,6 @@ rawPackets.set(`XHR GET request`, {
   "request": {
     "url": "http://example.com/inexistent.html",
     "method": "GET",
-    "headersSize": 385
   },
   "isXHR": true,
   "cause": {
@@ -165,18 +143,6 @@ rawPackets.set(`XHR GET request`, {
     "stacktraceAvailable": true
   },
   "response": {
-    "httpVersion": "HTTP/1.1",
-    "status": "404",
-    "statusText": "Not Found",
-    "headersSize": 160,
-    "remoteAddress": "127.0.0.1",
-    "remotePort": 8888,
-    "content": {
-      "mimeType": "text/html; charset=utf-8"
-    },
-    "waitingTime": 2,
-    "bodySize": 418,
-    "transferredSize": 578
   },
   "timings": {},
   "private": false,
@@ -184,14 +150,6 @@ rawPackets.set(`XHR GET request`, {
   "referrerPolicy": "no-referrer-when-downgrade",
   "channelId": 202499118071812,
   "updates": [
-    "eventTimings",
-    "requestCookies",
-    "requestHeaders",
-    "responseContent",
-    "responseCookies",
-    "responseHeaders",
-    "responseStart",
-    "securityInfo"
   ]
 });
 
@@ -266,7 +224,6 @@ rawPackets.set(`XHR POST request`, {
   "request": {
     "url": "http://example.com/inexistent.html",
     "method": "POST",
-    "headersSize": 385
   },
   "isXHR": true,
   "cause": {
@@ -282,18 +239,6 @@ rawPackets.set(`XHR POST request`, {
     "stacktraceAvailable": true
   },
   "response": {
-    "httpVersion": "HTTP/1.1",
-    "status": "404",
-    "statusText": "Not Found",
-    "headersSize": 160,
-    "remoteAddress": "127.0.0.1",
-    "remotePort": 8888,
-    "content": {
-      "mimeType": "text/html; charset=utf-8"
-    },
-    "waitingTime": 2,
-    "bodySize": 418,
-    "transferredSize": 578
   },
   "timings": {},
   "private": false,
@@ -301,14 +246,6 @@ rawPackets.set(`XHR POST request`, {
   "referrerPolicy": "no-referrer-when-downgrade",
   "channelId": 265845590720517,
   "updates": [
-    "eventTimings",
-    "requestCookies",
-    "requestHeaders",
-    "responseContent",
-    "responseCookies",
-    "responseHeaders",
-    "responseStart",
-    "securityInfo"
   ]
 });
 

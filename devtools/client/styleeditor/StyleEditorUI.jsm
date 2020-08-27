@@ -101,6 +101,7 @@ function StyleEditorUI(toolbox, panelDoc, cssProperties) {
   this._copyUrl = this._copyUrl.bind(this);
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
+  this._onResourceUpdated = this._onResourceUpdated.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.styleeditor.");
   this._prefObserver.on(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
@@ -150,7 +151,10 @@ StyleEditorUI.prototype = {
     this._startLoadingStyleSheets();
     await this._toolbox.resourceWatcher.watchResources(
       [this._toolbox.resourceWatcher.TYPES.STYLESHEET],
-      { onAvailable: this._onResourceAvailable }
+      {
+        onAvailable: this._onResourceAvailable,
+        onUpdated: this._onResourceUpdated,
+      }
     );
     await this._waitForLoadingStyleSheets();
   },
@@ -1229,6 +1233,21 @@ StyleEditorUI.prototype = {
     }
   },
 
+  async _onResourceUpdated({ update }) {
+    if (
+      update.resourceType === this._toolbox.resourceWatcher.TYPES.STYLESHEET
+    ) {
+      const editor = this.editors.find(e => e.resourceId === update.resourceId);
+
+      switch (update.updateType) {
+        case "style-applied": {
+          editor.onStyleApplied();
+          break;
+        }
+      }
+    }
+  },
+
   async _onTargetAvailable({ targetFront }) {
     if (targetFront.isTopLevel) {
       await this.initializeHighlighter(targetFront);
@@ -1246,7 +1265,10 @@ StyleEditorUI.prototype = {
         this._toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT,
         this._toolbox.resourceWatcher.TYPES.STYLESHEET,
       ],
-      { onAvailable: this._onResourceAvailable }
+      {
+        onAvailable: this._onResourceAvailable,
+        onUpdated: this._onResourceUpdated,
+      }
     );
 
     this._clearStyleSheetEditors();

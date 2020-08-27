@@ -82,6 +82,7 @@ function StyleSheetEditor(
 ) {
   EventEmitter.decorate(this);
 
+  this.resourceId = resource.resourceId;
   this.styleSheet = resource.styleSheet;
   this._inputElement = null;
   this.sourceEditor = null;
@@ -117,7 +118,6 @@ function StyleSheetEditor(
   this._onPropertyChange = this._onPropertyChange.bind(this);
   this._onError = this._onError.bind(this);
   this._onMediaRulesChanged = this._onMediaRulesChanged.bind(this);
-  this._onStyleApplied = this._onStyleApplied.bind(this);
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
   this.markLinkedFileBroken = this.markLinkedFileBroken.bind(this);
   this.saveToFile = this.saveToFile.bind(this);
@@ -141,7 +141,6 @@ function StyleSheetEditor(
       .then(this._onMediaRulesChanged, console.error);
   }
   this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
-  this.cssSheet.on("style-applied", this._onStyleApplied);
   this.savedFile = this.styleSheet.file;
   this.linkCSSFile();
 }
@@ -385,7 +384,7 @@ StyleSheetEditor.prototype = {
   /**
    * Called when the stylesheet text changes.
    */
-  _onStyleApplied: function() {
+  onStyleApplied: function() {
     if (this._isUpdating) {
       // We just applied an edit in the editor, so we can drop this
       // notification.
@@ -864,7 +863,6 @@ StyleSheetEditor.prototype = {
     }
     this.cssSheet.off("property-change", this._onPropertyChange);
     this.cssSheet.off("media-rules-changed", this._onMediaRulesChanged);
-    this.cssSheet.off("style-applied", this._onStyleApplied);
     this.styleSheet.off("error", this._onError);
     this._isDestroyed = true;
   },
