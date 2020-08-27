@@ -1005,13 +1005,10 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
 }
 
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
-  GdkWindow* gdkShellWindow;
-  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT &&
-      (gdkShellWindow = gtk_widget_get_window(GTK_WIDGET(mShell)))) {
-    *aWidth +=
-        gdk_window_get_width(gdkShellWindow) - gdk_window_get_width(mGdkWindow);
-    *aHeight += gdk_window_get_height(gdkShellWindow) -
-                gdk_window_get_height(mGdkWindow);
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT && mDrawInTitlebar) {
+    GtkBorder decorationSize = GetCSDDecorationSize(!mIsTopLevel);
+    *aWidth += decorationSize.left + decorationSize.right;
+    *aHeight += decorationSize.top + decorationSize.bottom;
   }
 }
 
@@ -1031,11 +1028,15 @@ void nsWindow::ApplySizeConstraints(void) {
     if (mSizeConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
       AddCSDDecorationSize(&geometry.min_width, &geometry.min_height);
       hints |= GDK_HINT_MIN_SIZE;
+      LOG(("nsWindow::ApplySizeConstraints [%p] min size %d %d\n", (void*)this,
+           geometry.min_width, geometry.min_height));
     }
     if (mSizeConstraints.mMaxSize !=
         LayoutDeviceIntSize(NS_MAXSIZE, NS_MAXSIZE)) {
       AddCSDDecorationSize(&geometry.max_width, &geometry.max_height);
       hints |= GDK_HINT_MAX_SIZE;
+      LOG(("nsWindow::ApplySizeConstraints [%p] max size %d %d\n", (void*)this,
+           geometry.max_width, geometry.max_height));
     }
 
     if (mAspectRatio != 0.0f) {
