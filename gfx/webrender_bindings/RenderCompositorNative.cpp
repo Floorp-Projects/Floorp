@@ -165,7 +165,7 @@ uint32_t RenderCompositorNative::GetMaxUpdateRects() {
 
 void RenderCompositorNative::CompositorBeginFrame() {
   mAddedLayers.Clear();
-  mAddedPixelCount = 0;
+  mAddedTilePixelCount = 0;
   mAddedClippedPixelCount = 0;
   mBeginFrameTimeStamp = TimeStamp::NowUnfuzzed();
   mSurfacePoolHandle->OnBeginFrame();
@@ -187,10 +187,10 @@ void RenderCompositorNative::CompositorEndFrame() {
                         int(mDrawnPixelCount * 100 / windowPixelCount),
                         int(mAddedClippedPixelCount * 100 / windowPixelCount),
                         int(mAddedLayers.Length()),
-                        int(mAddedPixelCount * 100 / windowPixelCount),
+                        int(mAddedTilePixelCount * 100 / windowPixelCount),
                         int(nativeLayerCount - mAddedLayers.Length()),
-                        int((mTotalPixelCount - mAddedPixelCount) * 100 /
-                            windowPixelCount)),
+                        int((mTotalTilePixelCount - mAddedTilePixelCount) *
+                            100 / windowPixelCount)),
         JS::ProfilingCategoryPair::GRAPHICS, mBeginFrameTimeStamp,
         TimeStamp::NowUnfuzzed());
   }
@@ -270,8 +270,10 @@ void RenderCompositorNative::DestroySurface(NativeSurfaceId aId) {
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
 
   Surface& surface = surfaceCursor->second;
-  for (const auto& iter : surface.mNativeLayers) {
-    mTotalPixelCount -= gfx::IntRect({}, iter.second->GetSize()).Area();
+  if (!surface.mIsExternal) {
+    for (const auto& iter : surface.mNativeLayers) {
+      mTotalTilePixelCount -= gfx::IntRect({}, iter.second->GetSize()).Area();
+    }
   }
 
   mSurfaces.erase(surfaceCursor);
@@ -287,7 +289,7 @@ void RenderCompositorNative::CreateTile(wr::NativeSurfaceId aId, int aX,
   RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer(
       surface.TileSize(), surface.mIsOpaque, mSurfacePoolHandle);
   surface.mNativeLayers.insert({TileKey(aX, aY), layer});
-  mTotalPixelCount += gfx::IntRect({}, layer->GetSize()).Area();
+  mTotalTilePixelCount += gfx::IntRect({}, layer->GetSize()).Area();
 }
 
 void RenderCompositorNative::DestroyTile(wr::NativeSurfaceId aId, int aX,
@@ -301,7 +303,7 @@ void RenderCompositorNative::DestroyTile(wr::NativeSurfaceId aId, int aX,
   MOZ_RELEASE_ASSERT(layerCursor != surface.mNativeLayers.end());
   RefPtr<layers::NativeLayer> layer = std::move(layerCursor->second);
   surface.mNativeLayers.erase(layerCursor);
-  mTotalPixelCount -= gfx::IntRect({}, layer->GetSize()).Area();
+  mTotalTilePixelCount -= gfx::IntRect({}, layer->GetSize()).Area();
 
   // If the layer is currently present in mNativeLayerRoot, it will be destroyed
   // once CompositorEndFrame() replaces mNativeLayerRoot's layers and drops that
@@ -350,9 +352,13 @@ void RenderCompositorNative::AddSurface(
     layer->SetSamplingFilter(ToSamplingFilter(aImageRendering));
     mAddedLayers.AppendElement(layer);
 
-    mAddedPixelCount += layerSize.width * layerSize.height;
+    if (!surface.mIsExternal) {
+      mAddedTilePixelCount += layerSize.width * layerSize.height;
+    }
+    gfx::Rect r = transform.TransformBounds(
+        gfx::Rect(layer->CurrentSurfaceDisplayRect()));
     gfx::IntRect visibleRect =
-        clipRect.Intersect(layer->CurrentSurfaceDisplayRect() + layerPosition);
+        clipRect.Intersect(RoundedToInt(r) + layerPosition);
     mAddedClippedPixelCount += visibleRect.Area();
   }
 }
