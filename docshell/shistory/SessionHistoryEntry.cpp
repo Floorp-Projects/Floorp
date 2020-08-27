@@ -119,6 +119,30 @@ void SessionHistoryInfo::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
   mSharedState.Get()->mLayoutHistoryState = aState;
 }
 
+nsIPrincipal* SessionHistoryInfo::GetTriggeringPrincipal() const {
+  return mSharedState.Get()->mTriggeringPrincipal;
+}
+
+nsIPrincipal* SessionHistoryInfo::GetPrincipalToInherit() const {
+  return mSharedState.Get()->mPrincipalToInherit;
+}
+
+nsIPrincipal* SessionHistoryInfo::GetPartitionedPrincipalToInherit() const {
+  return mSharedState.Get()->mPartitionedPrincipalToInherit;
+}
+
+nsIContentSecurityPolicy* SessionHistoryInfo::GetCsp() const {
+  return mSharedState.Get()->mCsp;
+}
+
+uint32_t SessionHistoryInfo::GetCacheKey() const {
+  return mSharedState.Get()->mCacheKey;
+}
+
+bool SessionHistoryInfo::IsSubFrame() const {
+  return mSharedState.Get()->mIsFrameNavigation;
+}
+
 void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
   aLoadState.SetOriginalURI(mOriginalURI);
   aLoadState.SetMaybeResultPrincipalURI(Some(mResultPrincipalURI));
@@ -1178,6 +1202,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mContentType);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mLayoutHistoryState);
   WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mCacheKey);
+  WriteIPDLParam(aMsg, aActor, aParam.mSharedState.Get()->mIsFrameNavigation);
 }
 
 bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
@@ -1267,7 +1292,9 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
   if (!ReadIPDLParam(aMsg, aIter, aActor,
                      &aResult->mSharedState.Get()->mLayoutHistoryState) ||
       !ReadIPDLParam(aMsg, aIter, aActor,
-                     &aResult->mSharedState.Get()->mCacheKey)) {
+                     &aResult->mSharedState.Get()->mCacheKey) ||
+      !ReadIPDLParam(aMsg, aIter, aActor,
+                     &aResult->mSharedState.Get()->mIsFrameNavigation)) {
     aActor->FatalError("Error reading fields for SessionHistoryInfo");
     return false;
   }
