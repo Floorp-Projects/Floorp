@@ -104,7 +104,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                           CompilationInfo& compilationInfo);
 
   void assertSourceAndParserCreated(CompilationInfo& compilationInfo) const {
-    MOZ_ASSERT(compilationInfo.source() != nullptr);
+    MOZ_ASSERT(compilationInfo.input.source() != nullptr);
     MOZ_ASSERT(parser.isSome());
   }
 
@@ -211,7 +211,7 @@ JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
     auto script =
         Smoosh::compileGlobalScript(compilationInfo, srcBuf, &unimplemented);
     if (!unimplemented) {
-      if (!compilationInfo.assignSource(srcBuf)) {
+      if (!compilationInfo.input.assignSource(cx, srcBuf)) {
         return nullptr;
       }
 
@@ -384,7 +384,7 @@ static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
     LifoAllocScope& allocScope, CompilationInfo& compilationInfo) {
-  if (!compilationInfo.assignSource(sourceBuffer_)) {
+  if (!compilationInfo.input.assignSource(compilationInfo.cx, sourceBuffer_)) {
     return false;
   }
 
@@ -402,7 +402,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
                  sourceBuffer_.units(), sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationInfo,
                  syntaxParser.ptrOr(nullptr), nullptr);
-  parser->ss = compilationInfo.source();
+  parser->ss = compilationInfo.input.source();
   return parser->checkOptions();
 }
 
@@ -511,7 +511,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!compilationInfo.cx->isHelperThreadContext()) {
-    if (!compilationInfo.source()->tryCompressOffThread(cx)) {
+    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
       return nullptr;
     }
   }
@@ -572,7 +572,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!cx->isHelperThreadContext()) {
-    if (!compilationInfo.source()->tryCompressOffThread(cx)) {
+    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
       return nullptr;
     }
   }
@@ -668,7 +668,8 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!compilationInfo.cx->isHelperThreadContext()) {
-    if (!compilationInfo.source()->tryCompressOffThread(compilationInfo.cx)) {
+    if (!compilationInfo.input.source()->tryCompressOffThread(
+            compilationInfo.cx)) {
       return nullptr;
     }
   }
@@ -693,10 +694,10 @@ static ModuleObject* InternalParseModule(
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationInfo compilationInfo(cx, allocScope, options);
-  if (!compilationInfo.init(cx)) {
+  if (!compilationInfo.input.init(cx)) {
     return nullptr;
   }
-  compilationInfo.setEnclosingScope(&cx->global()->emptyGlobalScope());
+  compilationInfo.input.setEnclosingScope(&cx->global()->emptyGlobalScope());
 
   ModuleCompiler<Unit> compiler(srcBuf);
   Rooted<ModuleObject*> module(cx, compiler.compile(compilationInfo));
@@ -793,7 +794,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationInfo compilationInfo(cx, allocScope, options,
                                   fun->enclosingScope());
-  compilationInfo.initFromLazy(lazy);
+  compilationInfo.input.initFromLazy(lazy);
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
                                         /* foldConstants = */ true,
@@ -863,7 +864,7 @@ static JSFunction* CompileStandaloneFunction(
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationInfo compilationInfo(cx, allocScope, options, enclosingScope);
-  if (!compilationInfo.initForStandaloneFunction(cx, scope)) {
+  if (!compilationInfo.input.initForStandaloneFunction(cx, scope)) {
     return nullptr;
   }
 
@@ -888,7 +889,7 @@ static JSFunction* CompileStandaloneFunction(
   // interpreted script.
   if (compilationInfo.gcOutput.script) {
     if (parameterListEnd) {
-      compilationInfo.source()->setParameterListEnd(*parameterListEnd);
+      compilationInfo.input.source()->setParameterListEnd(*parameterListEnd);
     }
     tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
                                     compilationInfo.gcOutput.script);
@@ -935,12 +936,12 @@ JSFunction* frontend::CompileStandaloneAsyncGenerator(
                                    FunctionAsyncKind::AsyncFunction);
 }
 
-bool frontend::CompilationInfo::init(JSContext* cx) {
+bool frontend::CompilationInput::init(JSContext* cx) {
   ScriptSource* ss = cx->new_<ScriptSource>();
   if (!ss) {
     return false;
   }
   setSource(ss);
 
-  return ss->initFromOptions(cx, input.options);
+  return ss->initFromOptions(cx, options);
 }

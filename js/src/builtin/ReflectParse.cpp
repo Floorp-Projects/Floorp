@@ -3767,7 +3767,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationInfo compilationInfo(cx, allocScope, options);
-  if (!compilationInfo.init(cx)) {
+  if (!compilationInfo.input.init(cx)) {
     return false;
   }
 
@@ -3787,7 +3787,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
   } else {
-    compilationInfo.setEnclosingScope(&cx->global()->emptyGlobalScope());
+    compilationInfo.input.setEnclosingScope(&cx->global()->emptyGlobalScope());
 
     if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
       return false;
