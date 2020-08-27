@@ -21,6 +21,10 @@ const JS::HandleId JSID_VOIDHANDLE =
 const JS::HandleId JSID_EMPTYHANDLE =
     JS::HandleId::fromMarkedLocation(&emptyIdValue);
 
+bool JS::PropertyKey::isPrivateName() const {
+  return isSymbol() && toSymbol()->isPrivateName();
+}
+
 bool JS::PropertyKey::isWellKnownSymbol(JS::SymbolCode code) const {
   MOZ_ASSERT(uint32_t(code) < WellKnownSymbolLimit);
   if (!isSymbol()) {

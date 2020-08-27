@@ -101,6 +101,8 @@ struct PropertyKey {
     return JS::GCCellPtr(thing, JS::TraceKind::Symbol);
   }
 
+  bool isPrivateName() const;
+
   bool isWellKnownSymbol(JS::SymbolCode code) const;
 
   // This API can be used by embedders to convert pinned (aka interned) strings,
@@ -302,6 +304,8 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   int32_t toInt() const { return id().toInt(); }
   JSString* toString() const { return id().toString(); }
   JS::Symbol* toSymbol() const { return id().toSymbol(); }
+
+  bool isPrivateName() const { return id().isPrivateName(); }
 
   bool isWellKnownSymbol(JS::SymbolCode code) const {
     return id().isWellKnownSymbol(code);
