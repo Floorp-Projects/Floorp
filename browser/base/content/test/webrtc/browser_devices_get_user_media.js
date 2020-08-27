@@ -717,6 +717,12 @@ var gTests = [
   {
     desc: "test showControlCenter",
     run: async function checkShowControlCenter() {
+      if (!USING_LEGACY_INDICATOR) {
+        // The indicator only links to the control center for the
+        // legacy indicator.
+        return;
+      }
+
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true);
@@ -744,7 +750,7 @@ var gTests = [
       await checkSharingUI({ video: true });
 
       ok(identityPopupHidden(), "control center should be hidden");
-      if (USING_LEGACY_INDICATOR && IS_MAC) {
+      if (IS_MAC) {
         let activeStreams = webrtcUI.getActiveStreams(true, false, false);
         webrtcUI.showSharingDoorhanger(activeStreams[0]);
       } else {
@@ -752,15 +758,10 @@ var gTests = [
           "Browser:WebRTCGlobalIndicator"
         );
 
-        // The legacy indicator uses a different button ID when sharing
-        // your camera.
-        let buttonID = USING_LEGACY_INDICATOR
-          ? "audioVideoButton"
-          : "camera-button";
-
-        let elt = win.document.getElementById(buttonID);
+        let elt = win.document.getElementById("audioVideoButton");
         EventUtils.synthesizeMouseAtCenter(elt, {}, win);
       }
+
       await TestUtils.waitForCondition(
         () => !identityPopupHidden(),
         "wait for control center to open"
