@@ -34,6 +34,9 @@ permalink: /changelog/
 * **feature-prompts**
   * Replaced generic icon in `LoginDialogFragment` with site icon (keep the generic one as fallback)
 
+* **ui-widgets**
+  * 🆕 New VerticalSwipeRefreshLayout that comes to resolve many of the issues of the platform SwipeRefreshLayout and filters out other gestures than swipe down/up.
+
 # 56.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v55.0.0...v56.0.0)
