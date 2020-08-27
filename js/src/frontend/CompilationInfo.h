@@ -209,6 +209,11 @@ struct MOZ_RAII CompilationStencil {
         moduleMetadata(cx),
         asmJS(cx),
         parserAtoms(cx) {}
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();
+  void dump(js::JSONPrinter& json);
+#endif
 };
 
 // The output of GC allocation from stencil.
@@ -365,11 +370,6 @@ struct MOZ_RAII CompilationInfo {
   ScriptStencilIterable functionScriptStencils(CompilationGCOutput& gcOutput) {
     return ScriptStencilIterable(stencil, gcOutput);
   }
-
-#if defined(DEBUG) || defined(JS_JITSPEW)
-  void dumpStencil();
-  void dumpStencil(js::JSONPrinter& json);
-#endif
 };
 
 }  // namespace frontend
