@@ -389,6 +389,9 @@ GeckoDriver.prototype.getActor = function() {
  * Get the selected BrowsingContext for the current context.
  *
  * @param {Object} options
+ * @param {Context=} options.context
+ *     Context (content or chrome) for which to retrieve the browsing context.
+ *     Defaults to the current one.
  * @param {boolean=} options.top
  *     If set to true use the window's top-level browsing context,
  *     otherwise the one from the currently selected frame. Defaults to false.
@@ -397,10 +400,10 @@ GeckoDriver.prototype.getActor = function() {
  *     The browsing context.
  */
 GeckoDriver.prototype.getBrowsingContext = function(options = {}) {
-  const { top = false } = options;
+  const { context = this.context, top = false } = options;
 
   let browsingContext = null;
-  if (this.context === Context.Chrome) {
+  if (context === Context.Chrome) {
     browsingContext = this.chromeBrowsingContext;
   } else {
     browsingContext = this.contentBrowsingContext;
