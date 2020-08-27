@@ -487,6 +487,10 @@ release-partner-repack-beetmover
 --------------------------------
 Moves the partner repacks to S3 buckets.
 
+release-partner-attribution-beetmover
+-------------------------------------
+Moves the partner attributions to S3 buckets.
+
 release-partner-repack-bouncer-sub
 ----------------------------------
 Sets up bouncer products for partners.
