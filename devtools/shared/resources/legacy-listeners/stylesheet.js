@@ -16,10 +16,12 @@ module.exports = async function({ targetFront, onAvailable }) {
   const styleSheetsFront = await targetFront.getFront("stylesheets");
   try {
     const styleSheets = await styleSheetsFront.getStyleSheets();
-    onAvailable(styleSheets.map(styleSheet => toResource(styleSheet, false)));
+    onAvailable(
+      styleSheets.map(styleSheet => toResource(styleSheet, false, null))
+    );
 
-    styleSheetsFront.on("stylesheet-added", (styleSheet, isNew) => {
-      onAvailable([toResource(styleSheet, isNew)]);
+    styleSheetsFront.on("stylesheet-added", (styleSheet, isNew, fileName) => {
+      onAvailable([toResource(styleSheet, isNew, fileName)]);
     });
   } catch (e) {
     // There are cases that the stylesheet front was destroyed already when/while calling
@@ -30,10 +32,9 @@ module.exports = async function({ targetFront, onAvailable }) {
   }
 };
 
-function toResource(styleSheet, isNew) {
+function toResource(styleSheet, isNew, fileName) {
   return {
     resourceType: ResourceWatcher.TYPES.STYLESHEET,
-    styleSheet,
-    isNew,
+    styleSheet: Object.assign(styleSheet, { isNew, fileName }),
   };
 }

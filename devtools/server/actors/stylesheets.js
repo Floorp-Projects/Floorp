@@ -617,10 +617,6 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     return this.window.document;
   },
 
-  form: function() {
-    return { actor: this.actorID };
-  },
-
   initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, targetActor.conn);
 
@@ -639,11 +635,15 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       this._onApplicableStateChanged,
       true
     );
+  },
 
-    // This is used when creating a new style sheet, so that we can
-    // pass the correct flag when emitting our stylesheet-added event.
-    // See addStyleSheet and _onNewStyleSheetActor for more details.
-    this._nextStyleSheetIsNew = false;
+  getTraits() {
+    return {
+      traits: {
+        // FF81+ addStyleSheet supports file name parameter.
+        isFileNameSupported: true,
+      },
+    };
   },
 
   destroy: function() {
@@ -682,9 +682,16 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *        The new style sheet actor.
    */
   _onNewStyleSheetActor: function(actor) {
+    const info = this._addingStyleSheetInfo?.get(actor.rawSheet);
+    this._addingStyleSheetInfo?.delete(actor.rawSheet);
+
     // Forward it to the client side.
-    this.emit("stylesheet-added", actor, this._nextStyleSheetIsNew);
-    this._nextStyleSheetIsNew = false;
+    this.emit(
+      "stylesheet-added",
+      actor,
+      info ? info.isNew : false,
+      info ? info.fileName : null
+    );
   },
 
   /**
@@ -860,17 +867,12 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *
    * @param  {object} request
    *         Debugging protocol request object, with 'text property'
+   * @param  {string} fileName
+   *         If the stylesheet adding is from file, `fileName` indicates the path.
    * @return {object}
    *         Object with 'styelSheet' property for form on new actor.
    */
-  addStyleSheet: function(text) {
-    // This is a bit convoluted.  The style sheet actor may be created
-    // by a notification from platform.  In this case, we can't easily
-    // pass the "new" flag through to createStyleSheetActor, so we set
-    // a flag locally and check it before sending an event to the
-    // client.  See |_onNewStyleSheetActor|.
-    this._nextStyleSheetIsNew = true;
-
+  addStyleSheet: function(text, fileName = null) {
     const parent = this.document.documentElement;
     const style = this.document.createElementNS(
       "http://www.w3.org/1999/xhtml",
@@ -882,6 +884,16 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       style.appendChild(this.document.createTextNode(text));
     }
     parent.appendChild(style);
+
+    // This is a bit convoluted.  The style sheet actor may be created
+    // by a notification from platform.  In this case, we can't easily
+    // pass the "new" flag through to createStyleSheetActor, so we set
+    // a flag locally and check it before sending an event to the
+    // client.  See |_onNewStyleSheetActor|.
+    if (!this._addingStyleSheetInfo) {
+      this._addingStyleSheetInfo = new WeakMap();
+    }
+    this._addingStyleSheetInfo.set(style.sheet, { isNew: true, fileName });
 
     const actor = this.parentActor.createStyleSheetActor(style.sheet);
     return actor;
