@@ -160,6 +160,20 @@ class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "styleSheetsActor";
   }
+
+  async initialize() {
+    try {
+      // FF81+ getTraits() is supported.
+      const { traits } = await super.getTraits();
+      this._traits = traits;
+    } catch (e) {
+      this._traits = {};
+    }
+  }
+
+  get traits() {
+    return this._traits;
+  }
 }
 
 exports.StyleSheetsFront = StyleSheetsFront;

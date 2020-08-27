@@ -145,7 +145,7 @@ function findMatchingExpectedResource(resource) {
 }
 
 async function assertResource(resource, expected) {
-  const { resourceType, styleSheet, isNew } = resource;
+  const { resourceType, styleSheet } = resource;
   is(
     resourceType,
     ResourceWatcher.TYPES.STYLESHEET,
@@ -156,5 +156,5 @@ async function assertResource(resource, expected) {
   is(styleText, expected.styleText, "Style text is correct");
   is(styleSheet.href, expected.href, "href is correct");
   is(styleSheet.nodeHref, expected.nodeHref, "nodeHref is correct");
-  is(isNew, expected.isNew, "Flag isNew is correct");
+  is(styleSheet.isNew, expected.isNew, "Flag isNew is correct");
 }
