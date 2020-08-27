@@ -131,7 +131,7 @@ static inline bool Enumerate(JSContext* cx, HandleObject pobj, jsid id,
     if (!(flags & JSITER_SYMBOLS)) {
       return true;
     }
-    if (!(flags & JSITER_PRIVATE) && JSID_TO_SYMBOL(id)->isPrivateName()) {
+    if (!(flags & JSITER_PRIVATE) && id.isPrivateName()) {
       return true;
     }
   } else {
