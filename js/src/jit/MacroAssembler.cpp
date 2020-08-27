@@ -2994,8 +2994,8 @@ void MacroAssembler::freeStack(Register amount) { addToStackPtr(amount); }
 
 // ===============================================================
 // ABI function calls.
-
-void MacroAssembler::setupABICall() {
+template <class ABIArgGeneratorT>
+void MacroAssembler::setupABICallHelper() {
 #ifdef DEBUG
   MOZ_ASSERT(!inCall_);
   inCall_ = true;
@@ -3006,7 +3006,7 @@ void MacroAssembler::setupABICall() {
 #endif
 
   // Reinitialize the ABIArg generator.
-  abiArgs_ = ABIArgGenerator();
+  abiArgs_ = ABIArgGeneratorT();
 
 #if defined(JS_CODEGEN_ARM)
   // On ARM, we need to know what ABI we are using, either in the
@@ -3029,9 +3029,13 @@ void MacroAssembler::setupABICall() {
 #endif
 }
 
+void MacroAssembler::setupNativeABICall() {
+  setupABICallHelper<ABIArgGenerator>();
+}
+
 void MacroAssembler::setupWasmABICall() {
   MOZ_ASSERT(IsCompilingWasm(), "non-wasm should use setupAlignedABICall");
-  setupABICall();
+  setupABICallHelper<WasmABIArgGenerator>();
 
 #if defined(JS_CODEGEN_ARM)
   // The builtin thunk does the FP -> GPR moving on soft-FP, so
@@ -3043,7 +3047,7 @@ void MacroAssembler::setupWasmABICall() {
 
 void MacroAssembler::setupAlignedABICall() {
   MOZ_ASSERT(!IsCompilingWasm(), "wasm should use setupWasmABICall");
-  setupABICall();
+  setupNativeABICall();
   dynamicAlignment_ = false;
 
 #if defined(JS_CODEGEN_ARM64)

@@ -4354,7 +4354,7 @@ void MacroAssembler::popReturnAddress() { pop(lr); }
 // ABI function calls.
 
 void MacroAssembler::setupUnalignedABICall(Register scratch) {
-  setupABICall();
+  setupNativeABICall();
   dynamicAlignment_ = true;
 
   ma_mov(sp, scratch);
