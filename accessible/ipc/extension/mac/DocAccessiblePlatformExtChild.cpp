@@ -131,6 +131,19 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvBoundsForRange(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLengthForRange(
+    const uint64_t& aID, const int32_t& aStartOffset,
+    const uint64_t& aEndContainer, const int32_t& aEndOffset,
+    int32_t* aLength) {
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvOffsetAtIndex(
+    const uint64_t& aID, const int32_t& aIndex, uint64_t* aContainer,
+    int32_t* aOffset) {
+  return IPC_OK();
+}
+
 HyperTextAccessibleWrap*
 DocAccessiblePlatformExtChild::IdToHyperTextAccessibleWrap(
     const uint64_t& aID) const {

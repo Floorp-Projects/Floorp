@@ -36,6 +36,13 @@ child:
 
   nested(inside_sync) sync BoundsForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
       returns(nsIntRect aRetVal);
+
+  nested(inside_sync) sync LengthForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(int32_t aLength);
+
+  nested(inside_sync) sync OffsetAtIndex(uint64_t aID, int32_t aIndex)
+      returns(uint64_t aContainer, int32_t aOffset);
+
 };
 
 }  // namespace a11y
