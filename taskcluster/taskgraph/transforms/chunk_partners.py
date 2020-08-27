@@ -12,8 +12,7 @@ import copy
 from mozbuild.chunkify import chunkify
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.partners import (
-    get_partner_config_by_kind,
-    locales_per_build_platform,
+    get_repack_ids_by_platform,
     apply_partner_priority,
 )
 
@@ -21,22 +20,8 @@ transforms = TransformSequence()
 transforms.add(apply_partner_priority)
 
 
-def _get_repack_ids_by_platform(partner_configs, build_platform):
-    combinations = []
-    for partner, partner_config in partner_configs.items():
-        for sub_partner, cfg in partner_config.items():
-            if build_platform not in cfg.get("platforms", []):
-                continue
-            locales = locales_per_build_platform(build_platform, cfg.get('locales', []))
-            for locale in locales:
-                combinations.append("{}/{}/{}".format(partner, sub_partner, locale))
-    return sorted(combinations)
-
-
 @transforms.add
 def chunk_partners(config, jobs):
-    partner_configs = get_partner_config_by_kind(config, config.kind)
-
     for job in jobs:
         dep_job = job['primary-dependency']
         build_platform = dep_job.attributes["build_platform"]
@@ -52,7 +37,7 @@ def chunk_partners(config, jobs):
             yield job
         # first downstream of the repack task, no chunking or fanout has been done yet
         elif not any([repack_id, repack_ids]):
-            platform_repack_ids = _get_repack_ids_by_platform(partner_configs, build_platform)
+            platform_repack_ids = get_repack_ids_by_platform(config, build_platform)
             # we chunk mac signing
             if config.kind in ("release-partner-repack-signing",
                                "release-eme-free-repack-signing",
