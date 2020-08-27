@@ -63,7 +63,7 @@ menuitem[appHandlerIcon="save"] {
 
 richlistitem[appHandlerIcon="plugin"],
 menuitem[appHandlerIcon="plugin"] {
-  list-style-image: url("chrome://global/skin/plugins/pluginGeneric.svg");
+  list-style-image: url("chrome://global/skin/plugins/plugin.svg");
 }
 
 /* Repeat what menu.css does for .menuitem-iconic */
