@@ -224,10 +224,10 @@ static JSFunction* CreateFunction(JSContext* cx,
 
 static bool InstantiateScriptSourceObject(JSContext* cx,
                                           CompilationInfo& compilationInfo) {
-  MOZ_ASSERT(compilationInfo.source());
+  MOZ_ASSERT(compilationInfo.input.source());
 
   compilationInfo.gcOutput.sourceObject =
-      ScriptSourceObject::create(cx, compilationInfo.source());
+      ScriptSourceObject::create(cx, compilationInfo.input.source());
   if (!compilationInfo.gcOutput.sourceObject) {
     return false;
   }
