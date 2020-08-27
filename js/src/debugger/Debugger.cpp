@@ -5959,7 +5959,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
 
   CompileOptions options(cx);
   frontend::CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.init(cx)) {
+  if (!compilationInfo.input.initForGlobal(cx)) {
     return false;
   }
 

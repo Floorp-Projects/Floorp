@@ -953,10 +953,9 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     }
 
     frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.init(cx)) {
+    if (!compilationInfo.input.initForEval(cx, scope)) {
       return false;
     }
-    compilationInfo.input.setEnclosingScope(scope);
 
     frontend::CompilationGCOutput gcOutput(cx);
     if (!frontend::CompileEvalScript(compilationInfo, srcBuf, scope, env,
@@ -972,7 +971,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     // the global scope.
 
     frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.init(cx)) {
+    if (!compilationInfo.input.initForGlobal(cx)) {
       return false;
     }
 

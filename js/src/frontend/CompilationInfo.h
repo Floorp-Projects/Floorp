@@ -24,6 +24,7 @@
 #include "js/SourceText.h"
 #include "js/Vector.h"
 #include "js/WasmModule.h"
+#include "vm/GlobalObject.h"  // GlobalObject
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"  // JSFunction
 #include "vm/JSScript.h"    // SourceExtent
@@ -116,14 +117,34 @@ struct MOZ_RAII CompilationInput {
         source_(cx),
         enclosingScope(cx) {}
 
-  bool init(JSContext* cx);
+ private:
+  bool initScriptSource(JSContext* cx);
+
+ public:
+  bool initForGlobal(JSContext* cx) { return initScriptSource(cx); }
 
   bool initForStandaloneFunction(JSContext* cx,
                                  HandleScope functionEnclosingScope) {
-    if (!init(cx)) {
+    if (!initScriptSource(cx)) {
       return false;
     }
     enclosingScope = functionEnclosingScope;
+    return true;
+  }
+
+  bool initForEval(JSContext* cx, HandleScope evalEnclosingScope) {
+    if (!initScriptSource(cx)) {
+      return false;
+    }
+    enclosingScope = evalEnclosingScope;
+    return true;
+  }
+
+  bool initForModule(JSContext* cx) {
+    if (!initScriptSource(cx)) {
+      return false;
+    }
+    enclosingScope = &cx->global()->emptyGlobalScope();
     return true;
   }
 
@@ -131,8 +152,6 @@ struct MOZ_RAII CompilationInput {
     lazy = lazyScript;
     enclosingScope = lazy->function()->enclosingScope();
   }
-
-  void setEnclosingScope(Scope* scope) { enclosingScope = scope; }
 
   ScriptSource* source() { return source_.get().get(); }
   void setSource(ScriptSource* ss) { return source_.get().reset(ss); }
