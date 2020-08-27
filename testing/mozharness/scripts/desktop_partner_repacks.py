@@ -106,7 +106,6 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
         dirs = {}
         dirs['abs_repo_dir'] = os.path.join(abs_dirs['abs_work_dir'], '.repo')
         dirs['abs_partners_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'partners')
-        dirs['abs_scripts_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'scripts')
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
@@ -117,7 +116,6 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
     def _repo_cleanup(self):
         self.rmtree(self.query_abs_dirs()['abs_repo_dir'])
         self.rmtree(self.query_abs_dirs()['abs_partners_dir'])
-        self.rmtree(self.query_abs_dirs()['abs_scripts_dir'])
 
     def _repo_init(self, repo):
         partial_env = {
@@ -151,7 +149,8 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
 
     def repack(self):
         """creates the repacks"""
-        repack_cmd = [sys.executable, "tc-partner-repacks.py",
+        repack_cmd = ["./mach", "python",
+                      "python/mozrelease/mozrelease/partner_repack.py",
                       "-v", self.config['version'],
                       "-n", str(self.config['build_number'])]
         if self.config.get('platform'):
@@ -166,7 +165,7 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
                 repack_cmd.extend(["--limit-locale", locale])
 
         self.run_command(repack_cmd,
-                         cwd=self.query_abs_dirs()['abs_scripts_dir'],
+                         cwd=os.environ["GECKO_PATH"],
                          halt_on_failure=True)
 
 
