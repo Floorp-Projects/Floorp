@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 from taskgraph.util.attributes import release_level
 from taskgraph.util.schema import resolve_keyed_by
 import six
+import yaml
 
 # Suppress chatty requests logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -39,7 +40,7 @@ LOGIN_QUERY = """query {
 # Returns the contents of default.xml from a manifest repository
 MANIFEST_QUERY = """query {
   repository(owner:"%(owner)s", name:"%(repo)s") {
-    object(expression: "master:default.xml") {
+    object(expression: "master:%(file)s") {
       ... on Blob {
         text
       }
@@ -198,9 +199,9 @@ def get_partners(manifestRepo, token):
     """ Given the url to a manifest repository, retrieve the default.xml and parse it into a
     list of partner repos.
     """
-    log.debug("Querying for manifest in %s", manifestRepo)
+    log.debug("Querying for manifest default.xml in %s", manifestRepo)
     owner, repo = get_repo_params(manifestRepo)
-    query = MANIFEST_QUERY % {'owner': owner, 'repo': repo}
+    query = MANIFEST_QUERY % {'owner': owner, 'repo': repo, 'file': 'default.xml'}
     raw_manifest = query_api(query, token)
     log.debug("Raw manifest: %s", raw_manifest)
     if not raw_manifest['data']['repository']:
@@ -277,6 +278,24 @@ def get_repack_configs(repackRepo, token):
     return configs
 
 
+def get_attribution_config(manifestRepo, token):
+    log.debug("Querying for manifest attribution_config.yml in %s", manifestRepo)
+    owner, repo = get_repo_params(manifestRepo)
+    query = MANIFEST_QUERY % {'owner': owner, 'repo': repo, 'file': 'attribution_config.yml'}
+    raw_manifest = query_api(query, token)
+    if not raw_manifest['data']['repository']:
+        raise RuntimeError(
+            "Couldn't load partner manifest at %s, insufficient permissions ?" %
+            manifestRepo
+        )
+    # no file has been set up, gracefully continue
+    if raw_manifest['data']['repository']['object'] is None:
+        log.debug('No attribution_config.yml file found')
+        return {}
+
+    return yaml.safe_load(raw_manifest['data']['repository']['object']['text'])
+
+
 def get_partner_config_by_url(manifest_url, kind, token, partner_subset=None):
     """ Retrieve partner data starting from the manifest url, which points to a repository
     containing a default.xml that is intended to be drive the Google tool 'repo'. It
@@ -292,13 +311,17 @@ def get_partner_config_by_url(manifest_url, kind, token, partner_subset=None):
     if kind not in partner_configs:
         log.info('Looking up data for %s from %s', kind, manifest_url)
         check_login(token)
-        partners = get_partners(manifest_url, token)
+        if kind == 'release-partner-attribution':
+            partner_configs[kind] = get_attribution_config(manifest_url, token)
+        else:
+            partners = get_partners(manifest_url, token)
 
-        partner_configs[kind] = {}
-        for partner, partner_url in partners.items():
-            if partner_subset and partner not in partner_subset:
-                continue
-            partner_configs[kind][partner] = get_repack_configs(partner_url, token)
+            partner_configs[kind] = {}
+            for partner, partner_url in partners.items():
+                if partner_subset and partner not in partner_subset:
+                    continue
+                partner_configs[kind][partner] = get_repack_configs(partner_url, token)
+
     return partner_configs[kind]
 
 
@@ -361,14 +384,23 @@ def fix_partner_config(orig_config):
     if 'en-US' not in all_locales:
         all_locales.append('en-US')
     for kind, kind_config in six.iteritems(orig_config):
-        for partner, partner_config in six.iteritems(kind_config):
-            for subpartner, subpartner_config in six.iteritems(partner_config):
-                # get rid of empty subpartner configs
-                if not subpartner_config:
-                    continue
-                # Make sure our locale list is a subset of all_locales
-                pc.setdefault(kind, {}).setdefault(partner, {})[subpartner] = \
-                    _fix_subpartner_locales(subpartner_config, all_locales)
+        if kind == 'release-partner-attribution':
+            pc[kind] = {}
+            if kind_config:
+                pc[kind] = {"defaults": kind_config["defaults"]}
+                for config in kind_config["configs"]:
+                    # Make sure our locale list is a subset of all_locales
+                    pc[kind].setdefault("configs", []).append(
+                        _fix_subpartner_locales(config, all_locales))
+        else:
+            for partner, partner_config in six.iteritems(kind_config):
+                for subpartner, subpartner_config in six.iteritems(partner_config):
+                    # get rid of empty subpartner configs
+                    if not subpartner_config:
+                        continue
+                    # Make sure our locale list is a subset of all_locales
+                    pc.setdefault(kind, {}).setdefault(partner, {})[subpartner] = \
+                        _fix_subpartner_locales(subpartner_config, all_locales)
     return pc
 
 
@@ -409,6 +441,8 @@ def get_partner_url_config(parameters, graph_config):
     resolve_keyed_by(partner_url_config, 'release-eme-free-repack', 'eme-free manifest_url',
                      **substitutions)
     resolve_keyed_by(partner_url_config, 'release-partner-repack', 'partner manifest url',
+                     **substitutions)
+    resolve_keyed_by(partner_url_config, 'release-partner-attribution', 'partner attribution url',
                      **substitutions)
     return partner_url_config
 
