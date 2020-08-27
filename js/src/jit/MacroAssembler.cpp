@@ -667,7 +667,7 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
   // with the nursery's end will always fail in such cases.
   CompileZone* zone = GetJitContext()->realm()->zone();
   size_t thingSize = gc::Arena::thingSize(allocKind);
-  size_t totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
+  size_t totalSize = thingSize + ObjectSlots::allocSize(nDynamicSlots);
   MOZ_ASSERT(totalSize < INT32_MAX);
   MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
@@ -676,7 +676,10 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
       zone->addressOfNurseryCurrentEnd(), JS::TraceKind::Object, totalSize);
 
   if (nDynamicSlots) {
-    computeEffectiveAddress(Address(result, thingSize), temp);
+    store32(Imm32(nDynamicSlots),
+            Address(result, thingSize + ObjectSlots::offsetOfCapacity()));
+    computeEffectiveAddress(
+        Address(result, thingSize + ObjectSlots::offsetOfSlots()), temp);
     storePtr(temp, Address(result, NativeObject::offsetOfSlots()));
   }
 }
