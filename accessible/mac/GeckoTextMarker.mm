@@ -68,6 +68,27 @@ GeckoTextMarker::GeckoTextMarker(AccessibleOrProxy aDoc,
   }
 }
 
+GeckoTextMarker GeckoTextMarker::MarkerFromIndex(const AccessibleOrProxy& aRoot,
+                                                 int32_t aIndex) {
+  if (aRoot.IsProxy()) {
+    int32_t offset = 0;
+    uint64_t containerID = 0;
+    DocAccessibleParent* ipcDoc = aRoot.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendOffsetAtIndex(
+        aRoot.AsProxy()->ID(), aIndex, &containerID, &offset);
+    ProxyAccessible* container = ipcDoc->GetAccessible(containerID);
+    return GeckoTextMarker(container, offset);
+  } else if (auto htWrap = static_cast<HyperTextAccessibleWrap*>(
+                 aRoot.AsAccessible()->AsHyperText())) {
+    int32_t offset = 0;
+    HyperTextAccessible* container = nullptr;
+    htWrap->OffsetAtIndex(aIndex, &container, &offset);
+    return GeckoTextMarker(container, offset);
+  }
+
+  return GeckoTextMarker();
+}
+
 id GeckoTextMarker::CreateAXTextMarker() {
   uintptr_t identifier =
       mContainer.IsProxy()
@@ -281,6 +302,21 @@ NSString* GeckoTextMarkerRange::Text() const {
                          mEnd.mOffset);
   }
   return nsCocoaUtils::ToNSString(text);
+}
+
+int32_t GeckoTextMarkerRange::Length() const {
+  int32_t length = 0;
+  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendLengthForRange(
+        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
+        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &length);
+  } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
+    length = htWrap->LengthForRange(
+        mStart.mOffset, mEnd.ContainerAsHyperTextWrap(), mEnd.mOffset);
+  }
+
+  return length;
 }
 
 NSValue* GeckoTextMarkerRange::Bounds() const {
