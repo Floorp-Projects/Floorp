@@ -157,6 +157,7 @@ var PrintEventHandler = {
     });
     printPreviewBrowser.classList.add("printPreviewBrowser");
     printPreviewBrowser.setAttribute("flex", "1");
+    printPreviewBrowser.setAttribute("printpreview", "true");
 
     // Create the stack for the loading indicator.
     let ourBrowser = window.docShell.chromeEventHandler;
