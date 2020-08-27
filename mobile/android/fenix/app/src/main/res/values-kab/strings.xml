@@ -748,10 +748,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="collections_header">Tigrummiwin</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Umuɣ n tegrumma</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Sdukkel-d akk tiɣawsiwin i yesεan azal ɣur-k/m</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Segrew akk akken inadiyen, ismal d waccaren yemṣadan akken ad yishil unekcum ɣer-sen mbeεd.</string>
+    <string name="no_collections_description2">Lqeḍ tiɣawsiwin i yesεan aẓal ɣur-k·m.\n Semlilil akk inadiyen ittcabin, ismal, d iccaren i unekcum arurad ticki.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Fren iccaren</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1000,8 +998,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_whats_new_description">Tesεiḍ asteqsi ɣef %s ittwasinflen? Tebɣiḍ ad tezreḍ acu ibeddlen?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Awi-d tiririyen da</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Faṛes tagnit seg %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Bdu amtawi n ticraḍ, awalen uffiren, akked waṭas-nniḍen s umiḍan n Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Issin ugar</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1509,4 +1507,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">IH, awi-t-id</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Kkes</string>
+</resources>

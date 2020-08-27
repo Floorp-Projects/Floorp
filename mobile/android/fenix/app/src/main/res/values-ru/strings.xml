@@ -755,10 +755,8 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Меню коллекции</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Собирайте то, что важно для вас</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Объединяйте похожие запросы, сайты и вкладки, для быстрого доступа к ним в дальнейшем.</string>
+    <string name="no_collections_description2">Собирайте то, что важно для вас.\nОбъединяйте похожие запросы, сайты и вкладки для быстрого доступа в будущем.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Выберите вкладки</string>
 
@@ -1023,8 +1021,8 @@
     <string name="onboarding_whats_new_description">Есть вопросы о переработанном %s? Хотите узнать, что изменилось?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Получите ответы здесь</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Получите максимум от %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Начните синхронизировать закладки, пароли и многое другое с вашим Аккаунтом Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Узнать больше</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1525,4 +1523,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, понятно</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Убрать</string>
+</resources>

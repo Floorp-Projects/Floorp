@@ -740,10 +740,8 @@
     <string name="collections_header">Հավաքածուներ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Հավաքածուի ցանկ</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Հավաքեք ձեզ համար կարևոր բաները</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Խմբավորեք համանման որոնումները, կայքերը և ներդիրները՝ հետո արագ մատչելու համար:</string>
+    <string name="no_collections_description2">Հավաքեք ձեզ համար կարևոր բաները:\nԽմբավորեք համանման որոնումները, կայքերը և ներդիրները՝ ավելի ուշ արագ մատչելու համար:</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Ընտրեք ներդիրները</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -992,8 +990,8 @@
 
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Ստացեք պատասխանները այստեղ</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Օգտագործեք առավելագույնը %s-ից:</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Համաժամեցրեք էջանիշերը, գաղտնաբառերը և ավելին՝ ձեր Firefox հաշվով:</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Իմանալ ավելին</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1497,4 +1495,6 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Հասկանալի է</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Հեռացնել</string>
+</resources>
