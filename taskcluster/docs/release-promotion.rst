@@ -50,4 +50,3 @@ In-depth relpro guide
     partials
     signing
     partner-repacks
-    partner-attribution

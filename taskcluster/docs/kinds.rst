@@ -451,10 +451,6 @@ release-partner-repack
 ----------------------
 Generates customized versions of releases for partners.
 
-release-partner-attribution
----------------------------
-Generates attributed versions of releases for partners.
-
 release-partner-repack-chunking-dummy
 -------------------------------------
 Chunks the partner repacks by locale.
@@ -486,10 +482,6 @@ External signing of partner repacks.
 release-partner-repack-beetmover
 --------------------------------
 Moves the partner repacks to S3 buckets.
-
-release-partner-attribution-beetmover
--------------------------------------
-Moves the partner attributions to S3 buckets.
 
 release-partner-repack-bouncer-sub
 ----------------------------------
