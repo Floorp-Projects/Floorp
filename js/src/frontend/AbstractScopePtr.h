@@ -26,6 +26,7 @@ class GCMarker;
 
 namespace frontend {
 struct CompilationInfo;
+struct CompilationGCOutput;
 class ScopeStencil;
 }  // namespace frontend
 
@@ -89,7 +90,7 @@ class AbstractScopePtr {
 
   // Concrete GC scope. If a deferred scope, the target must already have been
   // converted to a GC scope.
-  Scope* existingScope() const;
+  Scope* existingScope(frontend::CompilationGCOutput& gcOutput) const;
 
   // This allows us to check whether or not this provider wraps
   // or otherwise would reify to a particular scope type.

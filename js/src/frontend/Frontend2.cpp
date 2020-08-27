@@ -580,36 +580,37 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
 }
 
 /* static */
-JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
-                                      JS::SourceText<Utf8Unit>& srcBuf,
-                                      bool* unimplemented) {
+bool Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
+                                 JS::SourceText<Utf8Unit>& srcBuf,
+                                 CompilationGCOutput& gcOutput,
+                                 bool* unimplemented) {
   if (!compileGlobalScriptToStencil(compilationInfo, srcBuf, unimplemented)) {
-    return nullptr;
+    return false;
   }
 
-  if (!compilationInfo.instantiateStencils()) {
-    return nullptr;
+  if (!compilationInfo.instantiateStencils(gcOutput)) {
+    return false;
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   JSContext* cx = compilationInfo.cx;
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
-    return nullptr;
+    return false;
   }
-  if (!Disassemble(cx, compilationInfo.gcOutput.script, true, &sprinter,
+  if (!Disassemble(cx, gcOutput.script, true, &sprinter,
                    DisassembleSkeptically::Yes)) {
-    return nullptr;
+    return false;
   }
   printf("%s\n", sprinter.string());
-  if (!Disassemble(cx, compilationInfo.gcOutput.script, true, &sprinter,
+  if (!Disassemble(cx, gcOutput.script, true, &sprinter,
                    DisassembleSkeptically::No)) {
-    return nullptr;
+    return false;
   }
   // (don't bother printing it)
 #endif
 
-  return compilationInfo.gcOutput.script;
+  return true;
 }
 
 bool SmooshParseScript(JSContext* cx, const uint8_t* bytes, size_t length) {

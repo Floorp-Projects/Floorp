@@ -11485,7 +11485,6 @@ template class Parser<FullParseHandler, char16_t>;
 template class Parser<SyntaxParseHandler, char16_t>;
 
 CompilationInfo::RewindToken CompilationInfo::getRewindToken() {
-  MOZ_ASSERT(gcOutput.functions.empty());
   return RewindToken{stencil.scriptData.length(), stencil.asmJS.count()};
 }
 

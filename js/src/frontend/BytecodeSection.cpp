@@ -46,6 +46,7 @@ mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
 
 bool js::frontend::EmitScriptThingsVector(JSContext* cx,
                                           CompilationInfo& compilationInfo,
+                                          CompilationGCOutput& gcOutput,
                                           const ScriptThingsVector& objects,
                                           mozilla::Span<JS::GCCellPtr> output) {
   MOZ_ASSERT(objects.length() <= INDEX_LIMIT);
@@ -54,6 +55,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
   struct Matcher {
     JSContext* cx;
     CompilationInfo& compilationInfo;
+    CompilationGCOutput& gcOutput;
     uint32_t i;
     mozilla::Span<JS::GCCellPtr>& output;
 
@@ -103,12 +105,12 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const ScopeIndex& index) {
-      output[i] = JS::GCCellPtr(compilationInfo.gcOutput.scopes[index].get());
+      output[i] = JS::GCCellPtr(gcOutput.scopes[index].get());
       return true;
     }
 
     bool operator()(const FunctionIndex& index) {
-      output[i] = JS::GCCellPtr(compilationInfo.gcOutput.functions[index]);
+      output[i] = JS::GCCellPtr(gcOutput.functions[index]);
       return true;
     }
 
@@ -120,7 +122,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
   };
 
   for (uint32_t i = 0; i < objects.length(); i++) {
-    Matcher m{cx, compilationInfo, i, output};
+    Matcher m{cx, compilationInfo, gcOutput, i, output};
     if (!objects[i].match(m)) {
       return false;
     }
