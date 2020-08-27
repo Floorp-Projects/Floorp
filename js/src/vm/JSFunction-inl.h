@@ -98,8 +98,8 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   MOZ_ASSERT(clasp->isJSFunction());
 
   static constexpr size_t NumDynamicSlots = 0;
-  MOZ_ASSERT(dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(),
-                               clasp) == NumDynamicSlots);
+  MOZ_ASSERT(calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(),
+                                   clasp) == NumDynamicSlots);
 
   JSObject* obj = js::AllocateObject(cx, kind, NumDynamicSlots, heap, clasp);
   if (!obj) {

@@ -39,10 +39,16 @@ static inline gc::AllocKind NewObjectGCKind(const JSClass* clasp) {
 }  // namespace js
 
 MOZ_ALWAYS_INLINE uint32_t js::NativeObject::numDynamicSlots() const {
-  return dynamicSlotsCount(numFixedSlots(), slotSpan(), getClass());
+  uint32_t slots = hasDynamicSlots() ? getSlotsHeader()->capacity() : 0;
+  MOZ_ASSERT(slots == calculateDynamicSlots());
+  return slots;
 }
 
-/* static */ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::dynamicSlotsCount(
+MOZ_ALWAYS_INLINE uint32_t js::NativeObject::calculateDynamicSlots() const {
+  return calculateDynamicSlots(numFixedSlots(), slotSpan(), getClass());
+}
+
+/* static */ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::calculateDynamicSlots(
     uint32_t nfixed, uint32_t span, const JSClass* clasp) {
   if (span <= nfixed) {
     return 0;
@@ -66,9 +72,9 @@ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::numDynamicSlots() const {
 }
 
 /* static */ MOZ_ALWAYS_INLINE uint32_t
-js::NativeObject::dynamicSlotsCount(Shape* shape) {
-  return dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(),
-                           shape->getObjectClass());
+js::NativeObject::calculateDynamicSlots(Shape* shape) {
+  return calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(),
+                               shape->getObjectClass());
 }
 
 inline void JSObject::finalize(JSFreeOp* fop) {

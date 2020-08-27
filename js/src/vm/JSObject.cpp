@@ -1498,7 +1498,7 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   }
 
   if (size_t ndynamic =
-          dynamicSlotsCount(nfixed, values.length(), obj->getClass())) {
+          calculateDynamicSlots(nfixed, values.length(), obj->getClass())) {
     HeapSlot* allocation =
         cx->pod_malloc<HeapSlot>(ObjectSlots::allocCount(ndynamic));
     if (!allocation) {
