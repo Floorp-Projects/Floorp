@@ -217,23 +217,15 @@ release-promotion:
             product: firefox
             target-tasks-method: promote_desktop
             partial-updates: true
-        promote_firefox_partner_repack:
+        promote_firefox_partners:
             product: firefox
             rebuild-kinds:
                 - release-partner-repack
+                - release-partner-beetmover
                 - release-partner-repack-chunking-dummy
-                - release-partner-repack-signing
-                - release-partner-repack-notarization-part-1
-                - release-partner-repack-notarization-poller
-                - release-partner-repack-repackage
-                - release-partner-repack-repackage-signing
-                - release-partner-repack-beetmover
-            target-tasks-method: promote_desktop
-        promote_firefox_partner_attribution:
-            product: firefox
-            rebuild-kinds:
-                - release-partner-attribution
-                - release-partner-attribution-beetmover
+                - release-partner-repackage-signing
+                - release-partner-repackage
+                - release-partner-signing
             target-tasks-method: promote_desktop
         promote_firefox_rc:
             product: firefox
@@ -413,16 +405,6 @@ partner-urls:
                         by-release-level:
                             production: 'git@github.com:mozilla-partners/esr-repack-manifests.git'
                             staging: 'git@github.com:moz-releng-automation-stage/esr-repack-manifests.git'
-    release-partner-attribution:
-        by-release-product:
-            default: null
-            firefox:
-                by-release-type:
-                    default: null
-                    beta|release.*:
-                        by-release-level:
-                            production: 'git@github.com:mozilla-partners/repack-manifests.git'
-                            staging: 'git@github.com:moz-releng-automation-stage/repack-manifests.git'
     release-eme-free-repack:
         by-release-product:
             default: null
