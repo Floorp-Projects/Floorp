@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.302';
-const pdfjsBuild = '0f4fc12c';
+const pdfjsVersion = '2.6.318';
+const pdfjsBuild = 'a6f66891';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.302';
+    const workerVersion = '2.6.318';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -482,11 +482,12 @@ class WorkerMessageHandler {
         });
       });
     });
-    handler.on("GetPageIndex", function wphSetupGetPageIndex(data) {
-      var ref = _primitives.Ref.get(data.ref.num, data.ref.gen);
+    handler.on("GetPageIndex", function wphSetupGetPageIndex({
+      ref
+    }) {
+      const pageRef = _primitives.Ref.get(ref.num, ref.gen);
 
-      var catalog = pdfManager.pdfDocument.catalog;
-      return catalog.getPageIndex(ref);
+      return pdfManager.ensureCatalog("getPageIndex", [pageRef]);
     });
     handler.on("GetDestinations", function wphSetupGetDestinations(data) {
       return pdfManager.ensureCatalog("destinations");
@@ -534,7 +535,7 @@ class WorkerMessageHandler {
       });
     });
     handler.on("GetStats", function wphSetupGetStats(data) {
-      return pdfManager.pdfDocument.xref.stats;
+      return pdfManager.ensureXRef("stats");
     });
     handler.on("GetAnnotations", function ({
       pageIndex,
@@ -3334,6 +3335,7 @@ class PDFDocument {
     this.stream = stream;
     this.xref = new _obj.XRef(stream, pdfManager);
     this._pagePromises = [];
+    this._version = null;
     const idCounters = {
       font: 0
     };
@@ -3354,45 +3356,11 @@ class PDFDocument {
   }
 
   parse(recoveryMode) {
-    this.setup(recoveryMode);
-    const version = this.catalog.catDict.get("Version");
+    this.xref.parse(recoveryMode);
+    this.catalog = new _obj.Catalog(this.pdfManager, this.xref);
 
-    if ((0, _primitives.isName)(version)) {
-      this.pdfFormatVersion = version.name;
-    }
-
-    try {
-      this.acroForm = this.catalog.catDict.get("AcroForm");
-
-      if (this.acroForm) {
-        this.xfa = this.acroForm.get("XFA");
-        const fields = this.acroForm.get("Fields");
-
-        if ((!Array.isArray(fields) || fields.length === 0) && !this.xfa) {
-          this.acroForm = null;
-        }
-      }
-    } catch (ex) {
-      if (ex instanceof _core_utils.MissingDataException) {
-        throw ex;
-      }
-
-      (0, _util.info)("Cannot fetch AcroForm entry; assuming no AcroForms are present");
-      this.acroForm = null;
-    }
-
-    try {
-      const collection = this.catalog.catDict.get("Collection");
-
-      if ((0, _primitives.isDict)(collection) && collection.size > 0) {
-        this.collection = collection;
-      }
-    } catch (ex) {
-      if (ex instanceof _core_utils.MissingDataException) {
-        throw ex;
-      }
-
-      (0, _util.info)("Cannot fetch Collection dictionary.");
+    if (this.catalog.version) {
+      this._version = this.catalog.version;
     }
   }
 
@@ -3486,8 +3454,8 @@ class PDFDocument {
       version += String.fromCharCode(ch);
     }
 
-    if (!this.pdfFormatVersion) {
-      this.pdfFormatVersion = version.substring(5);
+    if (!this._version) {
+      this._version = version.substring(5);
     }
   }
 
@@ -3495,15 +3463,64 @@ class PDFDocument {
     this.xref.setStartXRef(this.startXRef);
   }
 
-  setup(recoveryMode) {
-    this.xref.parse(recoveryMode);
-    this.catalog = new _obj.Catalog(this.pdfManager, this.xref);
-  }
-
   get numPages() {
     const linearization = this.linearization;
     const num = linearization ? linearization.numPages : this.catalog.numPages;
     return (0, _util.shadow)(this, "numPages", num);
+  }
+
+  _hasOnlyDocumentSignatures(fields, recursionDepth = 0) {
+    const RECURSION_LIMIT = 10;
+    return fields.every(field => {
+      field = this.xref.fetchIfRef(field);
+
+      if (field.has("Kids")) {
+        if (++recursionDepth > RECURSION_LIMIT) {
+          (0, _util.warn)("_hasOnlyDocumentSignatures: maximum recursion depth reached");
+          return false;
+        }
+
+        return this._hasOnlyDocumentSignatures(field.get("Kids"), recursionDepth);
+      }
+
+      const isSignature = (0, _primitives.isName)(field.get("FT"), "Sig");
+      const rectangle = field.get("Rect");
+      const isInvisible = Array.isArray(rectangle) && rectangle.every(value => value === 0);
+      return isSignature && isInvisible;
+    });
+  }
+
+  get formInfo() {
+    const formInfo = {
+      hasAcroForm: false,
+      hasXfa: false
+    };
+    const acroForm = this.catalog.acroForm;
+
+    if (!acroForm) {
+      return (0, _util.shadow)(this, "formInfo", formInfo);
+    }
+
+    try {
+      const xfa = acroForm.get("XFA");
+      const hasXfa = Array.isArray(xfa) && xfa.length > 0 || (0, _primitives.isStream)(xfa) && !xfa.isEmpty;
+      formInfo.hasXfa = hasXfa;
+      const fields = acroForm.get("Fields");
+      const hasFields = Array.isArray(fields) && fields.length > 0;
+      const sigFlags = acroForm.get("SigFlags");
+
+      const hasOnlyDocumentSignatures = !!(sigFlags & 0x1) && this._hasOnlyDocumentSignatures(fields);
+
+      formInfo.hasAcroForm = hasFields && !hasOnlyDocumentSignatures;
+    } catch (ex) {
+      if (ex instanceof _core_utils.MissingDataException) {
+        throw ex;
+      }
+
+      (0, _util.info)("Cannot fetch form information.");
+    }
+
+    return (0, _util.shadow)(this, "formInfo", formInfo);
   }
 
   get documentInfo() {
@@ -3518,7 +3535,7 @@ class PDFDocument {
       ModDate: _util.isString,
       Trapped: _primitives.isName
     };
-    let version = this.pdfFormatVersion;
+    let version = this._version;
 
     if (typeof version !== "string" || !PDF_HEADER_VERSION_REGEXP.test(version)) {
       (0, _util.warn)(`Invalid PDF header version number: ${version}`);
@@ -3528,9 +3545,9 @@ class PDFDocument {
     const docInfo = {
       PDFFormatVersion: version,
       IsLinearized: !!this.linearization,
-      IsAcroFormPresent: !!this.acroForm,
-      IsXFAPresent: !!this.xfa,
-      IsCollectionPresent: !!this.collection
+      IsAcroFormPresent: this.formInfo.hasAcroForm,
+      IsXFAPresent: this.formInfo.hasXfa,
+      IsCollectionPresent: !!this.catalog.collection
     };
     let infoDict;
 
@@ -3703,9 +3720,9 @@ class Catalog {
   constructor(pdfManager, xref) {
     this.pdfManager = pdfManager;
     this.xref = xref;
-    this.catDict = xref.getCatalogObj();
+    this._catDict = xref.getCatalogObj();
 
-    if (!(0, _primitives.isDict)(this.catDict)) {
+    if (!(0, _primitives.isDict)(this._catDict)) {
       throw new _util.FormatError("Catalog object is not a dictionary.");
     }
 
@@ -3715,8 +3732,58 @@ class Catalog {
     this.pageKidsCountCache = new _primitives.RefSetCache();
   }
 
+  get version() {
+    const version = this._catDict.get("Version");
+
+    if (!(0, _primitives.isName)(version)) {
+      return (0, _util.shadow)(this, "version", null);
+    }
+
+    return (0, _util.shadow)(this, "version", version.name);
+  }
+
+  get collection() {
+    let collection = null;
+
+    try {
+      const obj = this._catDict.get("Collection");
+
+      if ((0, _primitives.isDict)(obj) && obj.size > 0) {
+        collection = obj;
+      }
+    } catch (ex) {
+      if (ex instanceof _core_utils.MissingDataException) {
+        throw ex;
+      }
+
+      (0, _util.info)("Cannot fetch Collection entry; assuming no collection is present.");
+    }
+
+    return (0, _util.shadow)(this, "collection", collection);
+  }
+
+  get acroForm() {
+    let acroForm = null;
+
+    try {
+      const obj = this._catDict.get("AcroForm");
+
+      if ((0, _primitives.isDict)(obj) && obj.size > 0) {
+        acroForm = obj;
+      }
+    } catch (ex) {
+      if (ex instanceof _core_utils.MissingDataException) {
+        throw ex;
+      }
+
+      (0, _util.info)("Cannot fetch AcroForm entry; assuming no forms are present.");
+    }
+
+    return (0, _util.shadow)(this, "acroForm", acroForm);
+  }
+
   get metadata() {
-    const streamRef = this.catDict.getRaw("Metadata");
+    const streamRef = this._catDict.getRaw("Metadata");
 
     if (!(0, _primitives.isRef)(streamRef)) {
       return (0, _util.shadow)(this, "metadata", null);
@@ -3747,7 +3814,7 @@ class Catalog {
   }
 
   get toplevelPagesDict() {
-    const pagesObj = this.catDict.get("Pages");
+    const pagesObj = this._catDict.get("Pages");
 
     if (!(0, _primitives.isDict)(pagesObj)) {
       throw new _util.FormatError("Invalid top-level pages dictionary.");
@@ -3773,7 +3840,7 @@ class Catalog {
   }
 
   _readDocumentOutline() {
-    let obj = this.catDict.get("Outlines");
+    let obj = this._catDict.get("Outlines");
 
     if (!(0, _primitives.isDict)(obj)) {
       return null;
@@ -3912,7 +3979,7 @@ class Catalog {
     let config = null;
 
     try {
-      const properties = this.catDict.get("OCProperties");
+      const properties = this._catDict.get("OCProperties");
 
       if (!properties) {
         return (0, _util.shadow)(this, "optionalContentConfig", null);
@@ -4030,12 +4097,12 @@ class Catalog {
   }
 
   _readDests() {
-    const obj = this.catDict.get("Names");
+    const obj = this._catDict.get("Names");
 
     if (obj && obj.has("Dests")) {
       return new NameTree(obj.getRaw("Dests"), this.xref);
-    } else if (this.catDict.has("Dests")) {
-      return this.catDict.get("Dests");
+    } else if (this._catDict.has("Dests")) {
+      return this._catDict.get("Dests");
     }
 
     return undefined;
@@ -4058,7 +4125,7 @@ class Catalog {
   }
 
   _readPageLabels() {
-    const obj = this.catDict.getRaw("PageLabels");
+    const obj = this._catDict.getRaw("PageLabels");
 
     if (!obj) {
       return null;
@@ -4164,7 +4231,8 @@ class Catalog {
   }
 
   get pageLayout() {
-    const obj = this.catDict.get("PageLayout");
+    const obj = this._catDict.get("PageLayout");
+
     let pageLayout = "";
 
     if ((0, _primitives.isName)(obj)) {
@@ -4183,7 +4251,8 @@ class Catalog {
   }
 
   get pageMode() {
-    const obj = this.catDict.get("PageMode");
+    const obj = this._catDict.get("PageMode");
+
     let pageMode = "UseNone";
 
     if ((0, _primitives.isName)(obj)) {
@@ -4221,7 +4290,9 @@ class Catalog {
       PrintPageRange: Array.isArray,
       NumCopies: Number.isInteger
     };
-    const obj = this.catDict.get("ViewerPreferences");
+
+    const obj = this._catDict.get("ViewerPreferences");
+
     let prefs = null;
 
     if ((0, _primitives.isDict)(obj)) {
@@ -4362,7 +4433,8 @@ class Catalog {
   }
 
   get openAction() {
-    const obj = this.catDict.get("OpenAction");
+    const obj = this._catDict.get("OpenAction");
+
     let openAction = null;
 
     if ((0, _primitives.isDict)(obj)) {
@@ -4403,7 +4475,8 @@ class Catalog {
   }
 
   get attachments() {
-    const obj = this.catDict.get("Names");
+    const obj = this._catDict.get("Names");
+
     let attachments = null;
 
     if (obj && obj.has("EmbeddedFiles")) {
@@ -4425,7 +4498,8 @@ class Catalog {
   }
 
   get javaScript() {
-    const obj = this.catDict.get("Names");
+    const obj = this._catDict.get("Names");
+
     let javaScript = null;
 
     function appendIfJavaScriptDict(jsDict) {
@@ -4463,7 +4537,7 @@ class Catalog {
       }
     }
 
-    const openAction = this.catDict.get("OpenAction");
+    const openAction = this._catDict.get("OpenAction");
 
     if ((0, _primitives.isDict)(openAction) && (0, _primitives.isName)(openAction.get("S"), "JavaScript")) {
       appendIfJavaScriptDict(openAction);
@@ -4509,7 +4583,7 @@ class Catalog {
 
   getPageDict(pageIndex) {
     const capability = (0, _util.createPromiseCapability)();
-    const nodesToVisit = [this.catDict.getRaw("Pages")];
+    const nodesToVisit = [this._catDict.getRaw("Pages")];
     const visitedNodes = new _primitives.RefSet();
     const xref = this.xref,
           pageKidsCountCache = this.pageKidsCountCache;
@@ -18833,7 +18907,7 @@ var _writer = __w_pdfjs_require__(27);
 
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory) {
-    return pdfManager.ensureDoc("acroForm").then(acroForm => {
+    return pdfManager.ensureCatalog("acroForm").then(acroForm => {
       return pdfManager.ensure(this, "_create", [xref, ref, pdfManager, idFactory, acroForm]);
     });
   }
@@ -39550,7 +39624,9 @@ var Type1CharString = function Type1CharStringClosure() {
 
             case (12 << 8) + 6:
               if (seacAnalysisEnabled) {
+                const asb = this.stack[this.stack.length - 5];
                 this.seac = this.stack.splice(-4, 4);
+                this.seac[0] += this.lsb - asb;
                 error = this.executeCommand(0, COMMAND_MAP.endchar);
               } else {
                 error = this.executeCommand(4, COMMAND_MAP.endchar);

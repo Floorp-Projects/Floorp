@@ -955,7 +955,7 @@ const PDFViewerApplication = {
 
   download({
     sourceEventType = "download"
-  }) {
+  } = {}) {
     function downloadByUrl() {
       downloadManager.downloadUrl(url, filename);
     }
@@ -983,7 +983,7 @@ const PDFViewerApplication = {
 
   save({
     sourceEventType = "download"
-  }) {
+  } = {}) {
     if (this._saveInProgress) {
       return;
     }
@@ -1051,7 +1051,9 @@ const PDFViewerApplication = {
         return;
       }
 
-      PDFViewerApplication.download();
+      PDFViewerApplication.download({
+        sourceEventType: "download"
+      });
     });
   },
 
@@ -1358,12 +1360,12 @@ const PDFViewerApplication = {
       this.setTitle(contentDispositionFilename);
     }
 
-    if (info.IsXFAPresent) {
+    if (info.IsXFAPresent && !info.IsAcroFormPresent) {
       console.warn("Warning: XFA is not supported");
 
       this._delayedFallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
-    } else if (info.IsAcroFormPresent && !this.pdfViewer.renderInteractiveForms) {
-      console.warn("Warning: AcroForm support is not enabled");
+    } else if ((info.IsAcroFormPresent || info.IsXFAPresent) && !this.pdfViewer.renderInteractiveForms) {
+      console.warn("Warning: Interactive form support is not enabled");
 
       this._delayedFallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
     }
@@ -1390,8 +1392,10 @@ const PDFViewerApplication = {
 
     let formType = null;
 
-    if (info.IsAcroFormPresent) {
-      formType = info.IsXFAPresent ? "xfa" : "acroform";
+    if (info.IsXFAPresent) {
+      formType = "xfa";
+    } else if (info.IsAcroFormPresent) {
+      formType = "acroform";
     }
 
     this.externalServices.reportTelemetry({
@@ -4866,7 +4870,13 @@ class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
       viewerUrl = blobUrl + "#filename=" + encodeURIComponent(filename);
 
       try {
-        window.open(viewerUrl);
+        const a = document.createElement("a");
+        a.hidden = true;
+        a.href = viewerUrl;
+        a.target = "_blank";
+        (document.body || document.documentElement).appendChild(a);
+        a.click();
+        a.remove();
       } catch (ex) {
         console.error(`_bindPdfLink: ${ex}`);
         URL.revokeObjectURL(blobUrl);
