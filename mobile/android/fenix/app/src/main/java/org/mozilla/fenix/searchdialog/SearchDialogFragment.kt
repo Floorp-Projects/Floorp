@@ -117,6 +117,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         val args by navArgs<SearchDialogFragmentArgs>()
         val view = inflater.inflate(R.layout.fragment_search_dialog, container, false)
         val activity = requireActivity() as HomeActivity
+        val isPrivate = activity.browsingModeManager.mode.isPrivate
 
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
 
@@ -149,7 +150,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             requireContext(),
             interactor,
             null,
-            false,
+            isPrivate,
             view.toolbar,
             requireComponents.core.engine
         ).also(::addSearchButton)
@@ -174,7 +175,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
         urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
 
-        val isPrivate = (requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate
         requireComponents.core.engine.speculativeCreateSession(isPrivate)
 
         return view
