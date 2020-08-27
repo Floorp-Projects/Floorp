@@ -3561,7 +3561,8 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
                       "Failed to allocate slots while tenuring.");
     }
 
-    ObjectSlots* slotsHeader = new (allocation) ObjectSlots(count);
+    ObjectSlots* slotsHeader = new (allocation)
+        ObjectSlots(count, src->getSlotsHeader()->dictionarySlotSpan());
     dst->slots_ = slotsHeader->slots();
   }
 
@@ -3569,6 +3570,7 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
 
   PodCopy(dst->slots_, src->slots_, count);
   nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);
+
   return count * sizeof(HeapSlot);
 }
 

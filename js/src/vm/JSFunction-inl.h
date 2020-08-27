@@ -110,7 +110,7 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   nobj->initGroup(group);
   nobj->initShape(shape);
 
-  nobj->initSlots(nullptr);
+  nobj->initEmptyDynamicSlots();
   nobj->setEmptyElements();
 
   MOZ_ASSERT(!clasp->hasPrivate());

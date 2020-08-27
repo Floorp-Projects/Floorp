@@ -452,7 +452,7 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
       // do not visit unallocated things in the nursery.
       return nullptr;
     }
-    slotsHeader = new (allocation) ObjectSlots(nDynamicSlots);
+    slotsHeader = new (allocation) ObjectSlots(nDynamicSlots, 0);
   }
 
   // Store slots pointer directly in new object. If no dynamic slots were

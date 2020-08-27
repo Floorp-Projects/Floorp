@@ -72,6 +72,38 @@ static constexpr EmptyObjectElements emptyElementsHeaderShared(
 HeapSlot* const js::emptyObjectElementsShared = reinterpret_cast<HeapSlot*>(
     uintptr_t(&emptyElementsHeaderShared) + sizeof(ObjectElements));
 
+struct EmptyObjectSlots : public ObjectSlots {
+  explicit constexpr EmptyObjectSlots(size_t dictionarySlotSpan)
+      : ObjectSlots(0, dictionarySlotSpan) {}
+};
+
+static constexpr EmptyObjectSlots emptyObjectSlotsHeaders[17] = {
+    EmptyObjectSlots(0),  EmptyObjectSlots(1),  EmptyObjectSlots(2),
+    EmptyObjectSlots(3),  EmptyObjectSlots(4),  EmptyObjectSlots(5),
+    EmptyObjectSlots(6),  EmptyObjectSlots(7),  EmptyObjectSlots(8),
+    EmptyObjectSlots(9),  EmptyObjectSlots(10), EmptyObjectSlots(11),
+    EmptyObjectSlots(12), EmptyObjectSlots(13), EmptyObjectSlots(14),
+    EmptyObjectSlots(15), EmptyObjectSlots(16)};
+
+static_assert(ArrayLength(emptyObjectSlotsHeaders) ==
+              NativeObject::MAX_FIXED_SLOTS + 1);
+
+HeapSlot* const js::emptyObjectSlotsForDictionaryObject[17] = {
+    emptyObjectSlotsHeaders[0].slots(),  emptyObjectSlotsHeaders[1].slots(),
+    emptyObjectSlotsHeaders[2].slots(),  emptyObjectSlotsHeaders[3].slots(),
+    emptyObjectSlotsHeaders[4].slots(),  emptyObjectSlotsHeaders[5].slots(),
+    emptyObjectSlotsHeaders[6].slots(),  emptyObjectSlotsHeaders[7].slots(),
+    emptyObjectSlotsHeaders[8].slots(),  emptyObjectSlotsHeaders[9].slots(),
+    emptyObjectSlotsHeaders[10].slots(), emptyObjectSlotsHeaders[11].slots(),
+    emptyObjectSlotsHeaders[12].slots(), emptyObjectSlotsHeaders[13].slots(),
+    emptyObjectSlotsHeaders[14].slots(), emptyObjectSlotsHeaders[15].slots(),
+    emptyObjectSlotsHeaders[16].slots()};
+
+static_assert(ArrayLength(emptyObjectSlotsForDictionaryObject) ==
+              NativeObject::MAX_FIXED_SLOTS + 1);
+
+HeapSlot* const js::emptyObjectSlots = emptyObjectSlotsForDictionaryObject[0];
+
 #ifdef DEBUG
 
 bool NativeObject::canHaveNonEmptyElements() {
@@ -289,11 +321,13 @@ void js::NativeObject::initSlotRange(uint32_t start, const Value* vector,
   HeapSlot* slotsStart;
   HeapSlot* slotsEnd;
   getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+
+  uint32_t offset = start;
   for (HeapSlot* sp = fixedStart; sp < fixedEnd; sp++) {
-    sp->init(this, HeapSlot::Slot, start++, *vector++);
+    sp->init(this, HeapSlot::Slot, offset++, *vector++);
   }
   for (HeapSlot* sp = slotsStart; sp < slotsEnd; sp++) {
-    sp->init(this, HeapSlot::Slot, start++, *vector++);
+    sp->init(this, HeapSlot::Slot, offset++, *vector++);
   }
 }
 
@@ -354,10 +388,11 @@ void NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape) {
   setShape(shape);
 }
 
-bool NativeObject::setSlotSpan(JSContext* cx, uint32_t span) {
+bool NativeObject::ensureSlotsForDictionaryObject(JSContext* cx,
+                                                  uint32_t span) {
   MOZ_ASSERT(inDictionaryMode());
 
-  size_t oldSpan = lastProperty()->base()->slotSpan();
+  size_t oldSpan = dictionaryModeSlotSpan();
   if (oldSpan == span) {
     return true;
   }
@@ -367,6 +402,7 @@ bool NativeObject::setSlotSpan(JSContext* cx, uint32_t span) {
   }
 
   lastProperty()->base()->setSlotSpan(span);
+  setDictionaryModeSlotSpan(span);
   return true;
 }
 
@@ -383,26 +419,13 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
   NativeObject::slotsSizeMustNotOverflow();
   MOZ_ASSERT(newCapacity <= MAX_SLOTS_COUNT);
 
+  if (!hasDynamicSlots()) {
+    return allocateSlots(cx, newCapacity);
+  }
+
   uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
 
-  if (!oldCapacity) {
-    MOZ_ASSERT(!slots_);
-    HeapSlot* allocation =
-        AllocateObjectBuffer<HeapSlot>(cx, this, newAllocated);
-    if (!allocation) {
-      return false;
-    }
-
-    auto* newHeaderSlots = new (allocation) ObjectSlots(newCapacity);
-    slots_ = newHeaderSlots->slots();
-
-    Debug_SetSlotRangeToCrashOnTouch(slots_, newCapacity);
-
-    AddCellMemory(this, ObjectSlots::allocSize(newCapacity),
-                  MemoryUse::ObjectSlots);
-
-    return true;
-  }
+  uint32_t dictionarySpan = getSlotsHeader()->dictionarySlotSpan();
 
   uint32_t oldAllocated = ObjectSlots::allocCount(oldCapacity);
 
@@ -416,7 +439,8 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
     return false; /* Leave slots at its old size. */
   }
 
-  auto* newHeaderSlots = new (allocation) ObjectSlots(newCapacity);
+  auto* newHeaderSlots =
+      new (allocation) ObjectSlots(newCapacity, dictionarySpan);
   slots_ = newHeaderSlots->slots();
 
   Debug_SetSlotRangeToCrashOnTouch(slots_ + oldCapacity,
@@ -427,6 +451,32 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
   AddCellMemory(this, ObjectSlots::allocSize(newCapacity),
                 MemoryUse::ObjectSlots);
 
+  MOZ_ASSERT(hasDynamicSlots());
+  return true;
+}
+
+bool NativeObject::allocateSlots(JSContext* cx, uint32_t newCapacity) {
+  MOZ_ASSERT(!hasDynamicSlots());
+
+  uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
+
+  uint32_t dictionarySpan = getSlotsHeader()->dictionarySlotSpan();
+
+  HeapSlot* allocation = AllocateObjectBuffer<HeapSlot>(cx, this, newAllocated);
+  if (!allocation) {
+    return false;
+  }
+
+  auto* newHeaderSlots =
+      new (allocation) ObjectSlots(newCapacity, dictionarySpan);
+  slots_ = newHeaderSlots->slots();
+
+  Debug_SetSlotRangeToCrashOnTouch(slots_, newCapacity);
+
+  AddCellMemory(this, ObjectSlots::allocSize(newCapacity),
+                MemoryUse::ObjectSlots);
+
+  MOZ_ASSERT(hasDynamicSlots());
   return true;
 }
 
@@ -440,6 +490,7 @@ bool NativeObject::growSlotsPure(JSContext* cx, NativeObject* obj,
     cx->recoverFromOutOfMemory();
     return false;
   }
+
   return true;
 }
 
@@ -484,7 +535,9 @@ static inline void FreeSlots(JSContext* cx, NativeObject* obj,
 void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
                                uint32_t newCapacity) {
   MOZ_ASSERT(newCapacity < oldCapacity);
-  MOZ_ASSERT(oldCapacity == numDynamicSlots());
+  MOZ_ASSERT(oldCapacity == getSlotsHeader()->capacity());
+
+  uint32_t dictionarySpan = getSlotsHeader()->dictionarySlotSpan();
 
   ObjectSlots* oldHeaderSlots = ObjectSlots::fromSlots(slots_);
   MOZ_ASSERT(oldHeaderSlots->capacity() == oldCapacity);
@@ -495,7 +548,7 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
     size_t nbytes = ObjectSlots::allocSize(oldCapacity);
     RemoveCellMemory(this, nbytes, MemoryUse::ObjectSlots);
     FreeSlots(cx, this, oldHeaderSlots, nbytes);
-    slots_ = nullptr;
+    setEmptyDynamicSlots(dictionarySpan);
     return;
   }
 
@@ -520,7 +573,8 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
   AddCellMemory(this, ObjectSlots::allocSize(newCapacity),
                 MemoryUse::ObjectSlots);
 
-  auto* newHeaderSlots = new (allocation) ObjectSlots(newCapacity);
+  auto* newHeaderSlots =
+      new (allocation) ObjectSlots(newCapacity, dictionarySpan);
   slots_ = newHeaderSlots->slots();
 }
 
@@ -1190,7 +1244,7 @@ bool NativeObject::allocDictionarySlot(JSContext* cx, HandleNativeObject obj,
 
   *slotp = slot;
 
-  return obj->setSlotSpan(cx, slot + 1);
+  return obj->ensureSlotsForDictionaryObject(cx, slot + 1);
 }
 
 void NativeObject::freeSlot(JSContext* cx, uint32_t slot) {
