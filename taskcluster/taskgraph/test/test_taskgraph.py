@@ -44,6 +44,7 @@ class TestTaskGraph(unittest.TestCase):
                 'task': {'taskdef': True},
                 'dependencies': {'edgelabel': 'b'},
                 'soft_dependencies': [],
+                'if_dependencies': [],
                 'optimization': None,
             },
             'b': {
@@ -54,6 +55,7 @@ class TestTaskGraph(unittest.TestCase):
                 'task': {'task': 'def'},
                 'dependencies': {},
                 'soft_dependencies': [],
+                'if_dependencies': [],
                 'optimization': {'skip-unless-has-relevant-tests': None},
             }
         })

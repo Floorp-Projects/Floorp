@@ -40,10 +40,17 @@ def make_task(
     task_def=None,
     optimized=None,
     task_id=None,
-    dependencies=None
+    dependencies=None,
+    if_dependencies=None,
 ):
     task_def = task_def or {'sample': 'task-def'}
-    task = Task(kind='test', label=label, attributes={}, task=task_def)
+    task = Task(
+        kind='test',
+        label=label,
+        attributes={},
+        task=task_def,
+        if_dependencies=if_dependencies or [],
+    )
     task.optimization = optimization
     task.task_id = task_id
     if dependencies is not None:
@@ -163,6 +170,94 @@ def make_triangle(deps=True, **opts):
             {"t3"},
             id="do_not_optimize",
         ),
+
+        # Tasks with 'if_dependencies' are removed when deps are not run
+        pytest.param(
+            make_graph(
+                make_task('t1', {'remove': None}),
+                make_task('t2', {'remove': None}),
+                make_task('t3', {'never': None}, if_dependencies=["t1", "t2"]),
+                make_task('t4', {'never': None}, if_dependencies=["t1"]),
+                ('t3', 't2', 'dep'),
+                ('t3', 't1', 'dep2'),
+                ('t2', 't1', 'dep'),
+                ('t4', 't1', 'dep3'),
+            ),
+            {"requested_tasks": {"t3", "t4"}},
+            # expectations
+            {"t1", "t2", "t3", "t4"},
+            id="if_deps_removed",
+        ),
+
+        # Parents of tasks with 'if_dependencies' are also removed even if requested
+        pytest.param(
+            make_graph(
+                make_task('t1', {'remove': None}),
+                make_task('t2', {'remove': None}),
+                make_task('t3', {'never': None}, if_dependencies=["t1", "t2"]),
+                make_task('t4', {'never': None}, if_dependencies=["t1"]),
+                ('t3', 't2', 'dep'),
+                ('t3', 't1', 'dep2'),
+                ('t2', 't1', 'dep'),
+                ('t4', 't1', 'dep3'),
+            ),
+            {},
+            # expectations
+            {"t1", "t2", "t3", "t4"},
+            id="if_deps_parents_removed",
+        ),
+
+        # Tasks with 'if_dependencies' are kept if at least one of said dependencies are kept
+        pytest.param(
+            make_graph(
+                make_task('t1', {'never': None}),
+                make_task('t2', {'remove': None}),
+                make_task('t3', {'never': None}, if_dependencies=["t1", "t2"]),
+                make_task('t4', {'never': None}, if_dependencies=["t1"]),
+                ('t3', 't2', 'dep'),
+                ('t3', 't1', 'dep2'),
+                ('t2', 't1', 'dep'),
+                ('t4', 't1', 'dep3'),
+            ),
+            {},
+            # expectations
+            set(),
+            id="if_deps_kept",
+        ),
+
+        # Ancestor of task with 'if_dependencies' does not cause it to be kept
+        pytest.param(
+            make_graph(
+                make_task('t1', {'never': None}),
+                make_task('t2', {'remove': None}),
+                make_task('t3', {'never': None}, if_dependencies=["t2"]),
+                ('t3', 't2', 'dep'),
+                ('t2', 't1', 'dep2'),
+            ),
+            {},
+            # expectations
+            {"t2", "t3"},
+            id="if_deps_ancestor_does_not_keep",
+        ),
+
+        # Unhandled edge case where 't1' and 't2' are kept even though they
+        # don't have any dependents and are not in 'requested_tasks'
+        pytest.param(
+            make_graph(
+                make_task('t1', {'never': None}),
+                make_task('t2', {'never': None}, if_dependencies=["t1"]),
+                make_task('t3', {'remove': None}),
+                make_task('t4', {'never': None}, if_dependencies=["t3"]),
+                ('t2', 't1', 'e1'),
+                ('t4', 't2', 'e2'),
+                ('t4', 't3', 'e3'),
+            ),
+            {"requested_tasks": {"t3", "t4"}},
+            # expectations
+            {"t1", "t2", "t3", "t4"},
+            id="if_deps_edge_case_1",
+            marks=pytest.mark.xfail,
+        )
     )
 )
 def test_remove_tasks(monkeypatch, graph, kwargs, exp_removed):
@@ -229,6 +324,7 @@ def test_remove_tasks(monkeypatch, graph, kwargs, exp_removed):
         pytest.param(
             make_triangle(),
             {},
+            # expectations
             set(),
             set(),
             {},
