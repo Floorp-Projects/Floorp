@@ -7,10 +7,10 @@
 package mozilla.components.feature.addons.amo
 
 import android.content.Context
-import android.util.AtomicFile
-import androidx.annotation.VisibleForTesting
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.AtomicFile
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
@@ -21,11 +21,14 @@ import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
-import java.util.Date
+import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
+import java.util.Date
+import java.util.Locale
 
 internal const val API_VERSION = "api/v4"
 internal const val DEFAULT_SERVER_URL = "https://addons.mozilla.org"
@@ -35,7 +38,7 @@ internal const val MINUTE_IN_MS = 60 * 1000
 internal const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 20L
 
 /**
- * Provide access to the collections AMO API.
+ * Provide access to the AMO collections API.
  * https://addons-server.readthedocs.io/en/latest/topics/api/collections.html
  *
  * @property serverURL The url of the endpoint to interact with e.g production, staging
@@ -43,7 +46,8 @@ internal const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 20L
  * @property collectionName The name of the collection to access, defaults
  * to [DEFAULT_COLLECTION_NAME].
  * @property maxCacheAgeInMinutes maximum time (in minutes) the collection cache
- * should remain valid. Defaults to -1, meaning no cache is being used by default.
+ * should remain valid before a refresh is attempted. Defaults to -1, meaning no
+ * cache is being used by default.
  * @property client A reference of [Client] for interacting with the AMO HTTP api.
  */
 class AddonCollectionProvider(
@@ -60,11 +64,13 @@ class AddonCollectionProvider(
 
     /**
      * Interacts with the collections endpoint to provide a list of available
-     * add-ons. May return a cached response, if available, not expired (see
-     * [maxCacheAgeInMinutes]) and allowed (see [allowCache]).
+     * add-ons. May return a cached response, if [allowCache] is true, and the
+     * cache is not expired (see [maxCacheAgeInMinutes]) or fetching from
+     * AMO failed.
      *
      * @param allowCache whether or not the result may be provided
-     * from a previously cached response, defaults to true.
+     * from a previously cached response, defaults to true. Note that
+     * [maxCacheAgeInMinutes] must be set for the cache to be active.
      * @param readTimeoutInSeconds optional timeout in seconds to use when fetching
      * available add-ons from a remote endpoint. If not specified [DEFAULT_READ_TIMEOUT_IN_SECONDS]
      * will be used.
@@ -72,33 +78,63 @@ class AddonCollectionProvider(
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
+    @Suppress("NestedBlockDepth")
     override suspend fun getAvailableAddons(allowCache: Boolean, readTimeoutInSeconds: Long?): List<Addon> {
-        val cachedAddons = if (allowCache && !cacheExpired(context)) {
+        val cachedAvailableAddons = if (allowCache && !cacheExpired(context)) {
             readFromDiskCache()
         } else {
             null
         }
 
-        return cachedAddons ?: client.fetch(
-                Request(
-                    url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons",
-                    readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-                )
+        if (cachedAvailableAddons != null) {
+            return cachedAvailableAddons
+        }
+
+        return try {
+            fetchAvailableAddons(readTimeoutInSeconds)
+        } catch (e: IOException) {
+            logger.error("Failed to fetch available add-ons", e)
+            if (allowCache) {
+                val cacheLastUpdated = getCacheLastUpdated(context)
+                if (cacheLastUpdated > -1) {
+                    val cache = readFromDiskCache()
+                    cache?.let {
+                        logger.info("Falling back to available add-ons cache from ${
+                            SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US).format(cacheLastUpdated)
+                        }")
+                        return it
+                    }
+                }
+            }
+            throw e
+        }
+    }
+
+    private fun fetchAvailableAddons(readTimeoutInSeconds: Long?): List<Addon> {
+        client.fetch(
+            Request(
+                url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons",
+                readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
             )
-            .use { response ->
-                if (response.isSuccess) {
-                    val responseBody = response.body.string(Charsets.UTF_8)
+        )
+        .use { response ->
+            if (response.isSuccess) {
+                val responseBody = response.body.string(Charsets.UTF_8)
+                return try {
                     JSONObject(responseBody).getAddons().also {
                         if (maxCacheAgeInMinutes > 0) {
                             writeToDiskCache(responseBody)
                         }
                     }
-                } else {
-                    val errorMessage = "Failed to fetch addon collection. Status code: ${response.status}"
-                    logger.error(errorMessage)
-                    throw IOException(errorMessage)
+                } catch (e: JSONException) {
+                    throw IOException(e)
                 }
+            } else {
+                val errorMessage = "Failed to fetch add-on collection. Status code: ${response.status}"
+                logger.error(errorMessage)
+                throw IOException(errorMessage)
             }
+        }
     }
 
     /**

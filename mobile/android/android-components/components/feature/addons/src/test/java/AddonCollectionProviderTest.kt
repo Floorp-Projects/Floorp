@@ -19,7 +19,9 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -185,7 +187,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - returns cached result only if allowed and not expired`() {
+    fun `getAvailableAddons - returns cached result if allowed and not expired`() {
         val jsonResponse = loadResourceAsString("/collection.json")
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
@@ -208,6 +210,48 @@ class AddonCollectionProviderTest {
             whenever(provider.cacheExpired(testContext)).thenReturn(false)
             provider.getAvailableAddons(true)
             verify(provider).readFromDiskCache()
+        }
+    }
+
+    @Test
+    fun `getAvailableAddons - returns cached result if allowed and fetch failed`() {
+        val mockedClient: Client = mock()
+        val exception = IOException("test")
+        val cachedAddons: List<Addon> = emptyList()
+        whenever(mockedClient.fetch(any())).thenThrow(exception)
+
+        val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
+
+        runBlocking {
+            try {
+                // allowCache = false
+                provider.getAvailableAddons(allowCache = false)
+                fail("Expected IOException")
+            } catch (e: IOException) {
+                assertSame(exception, e)
+            }
+
+            try {
+                // allowCache = true, but no cache present
+                provider.getAvailableAddons(allowCache = true)
+                fail("Expected IOException")
+            } catch (e: IOException) {
+                assertSame(exception, e)
+            }
+
+            try {
+                // allowCache = true, cache present, but we fail to read
+                whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time)
+                provider.getAvailableAddons(allowCache = true)
+                fail("Expected IOException")
+            } catch (e: IOException) {
+                assertSame(exception, e)
+            }
+
+            // allowCache = true, cache present, and reading successfully
+            whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time)
+            whenever(provider.readFromDiskCache()).thenReturn(cachedAddons)
+            assertSame(cachedAddons, provider.getAvailableAddons(allowCache = true))
         }
     }
 
