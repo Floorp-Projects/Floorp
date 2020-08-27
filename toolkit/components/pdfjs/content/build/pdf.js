@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.6.302';
-const pdfjsBuild = '0f4fc12c';
+const pdfjsVersion = '2.6.318';
+const pdfjsBuild = 'a6f66891';
 ;
 
 /***/ }),
@@ -1912,7 +1912,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.302',
+    apiVersion: '2.6.318',
     source: {
       data: source.data,
       url: source.url,
@@ -3837,9 +3837,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.302';
+const version = '2.6.318';
 exports.version = version;
-const build = '0f4fc12c';
+const build = 'a6f66891';
 exports.build = build;
 
 /***/ }),
@@ -5770,8 +5770,8 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
             this.paintChar(character, scaledX, scaledY, patternTransform);
 
             if (accent) {
-              scaledAccentX = scaledX + accent.offset.x / fontSizeScale;
-              scaledAccentY = scaledY - accent.offset.y / fontSizeScale;
+              scaledAccentX = scaledX + fontSize * accent.offset.x / fontSizeScale;
+              scaledAccentY = scaledY - fontSize * accent.offset.y / fontSizeScale;
               this.paintChar(accent.fontChar, scaledAccentX, scaledAccentY, patternTransform);
             }
           }
