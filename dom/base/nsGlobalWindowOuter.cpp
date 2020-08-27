@@ -5233,9 +5233,30 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     }
   }
 
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  if (!printSettingsService) {
+    // we currently return here in headless mode - should we?
+    aError.ThrowNotSupportedError("No print settings service");
+    return;
+  }
+
+  nsCOMPtr<nsIPrintSettings> settings;
+  aError = printSettingsService->GetDefaultPrintSettingsForPrinting(
+      getter_AddRefs(settings));
+  if (aError.Failed()) {
+    return;
+  }
+
   const bool isPreview = StaticPrefs::print_tab_modal_enabled() &&
                          !StaticPrefs::print_always_print_silent();
-  Print(nullptr, nullptr, nullptr, isPreview, aError);
+  if (isPreview) {
+    // When printing with the new UI, we don't want to show the print progress
+    // dialog no matter what.
+    settings->SetShowPrintProgress(false);
+  }
+
+  Print(settings, nullptr, nullptr, isPreview, aError);
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
