@@ -525,20 +525,24 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
         })), this.props.content.tiles.data.map(({
           theme,
           label,
-          tooltip
+          tooltip,
+          description
         }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           key: theme + label,
           text: typeof tooltip === "object" ? tooltip : {}
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
           className: "theme",
           title: theme + label
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+          text: typeof description === "object" ? description : {}
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
           type: "radio",
           value: theme,
           name: "theme",
           className: "sr-only input",
-          onClick: this.handleAction
-        }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          onClick: this.handleAction,
+          "data-l10n-attrs": "aria-description"
+        })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: `icon ${theme}`
         }), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           text: label
@@ -617,7 +621,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       className: content.tiles && content.tiles.type === "topsites" && topSites && topSites.showImportable ? "steps has-disclaimer" : "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": `{"current": ${parseInt(this.props.order, 10) + 1}, "total": ${this.props.totalNumberOfScreens}}`
-    }, this.renderStepsIndicator()), this.renderDisclaimer());
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null), this.renderStepsIndicator()), this.renderDisclaimer());
   }
 
 }
@@ -930,7 +934,10 @@ const DEFAULT_WELCOME_CONTENT = {
             string_id: "onboarding-multistage-theme-label-automatic"
           },
           tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-automatic"
+            string_id: "onboarding-multistage-theme-tooltip-automatic-2"
+          },
+          description: {
+            string_id: "onboarding-multistage-theme-description-automatic-2"
           }
         }, {
           theme: "light",
@@ -938,7 +945,10 @@ const DEFAULT_WELCOME_CONTENT = {
             string_id: "onboarding-multistage-theme-label-light"
           },
           tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-light"
+            string_id: "onboarding-multistage-theme-tooltip-light-2"
+          },
+          description: {
+            string_id: "onboarding-multistage-theme-description-light"
           }
         }, {
           theme: "dark",
@@ -946,7 +956,10 @@ const DEFAULT_WELCOME_CONTENT = {
             string_id: "onboarding-multistage-theme-label-dark"
           },
           tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-dark"
+            string_id: "onboarding-multistage-theme-tooltip-dark-2"
+          },
+          description: {
+            string_id: "onboarding-multistage-theme-description-dark"
           }
         }, {
           theme: "alpenglow",
@@ -954,7 +967,10 @@ const DEFAULT_WELCOME_CONTENT = {
             string_id: "onboarding-multistage-theme-label-alpenglow"
           },
           tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-alpenglow"
+            string_id: "onboarding-multistage-theme-tooltip-alpenglow-2"
+          },
+          description: {
+            string_id: "onboarding-multistage-theme-description-alpenglow"
           }
         }]
       },
