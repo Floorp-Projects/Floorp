@@ -37,7 +37,7 @@ class ExceptionHandler(
                 context,
                 Crash.UncaughtExceptionCrash(
                     throwable = throwable,
-                    breadcrumbs = crashReporter.crashBreadcrumbs
+                    breadcrumbs = crashReporter.crashBreadcrumbsCopy()
                 )
             )
 
