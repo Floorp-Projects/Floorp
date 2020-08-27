@@ -39,7 +39,6 @@ args:
       long: slow-subpixel
       help: Disable dual source blending
   - headless:
-      short: h
       long: headless
       help: Enable headless rendering
   - angle:
