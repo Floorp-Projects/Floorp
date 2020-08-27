@@ -9871,6 +9871,12 @@ bool nsIFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
   }
   bool isFocusable = false;
 
+  // cannot focus content in print preview mode. Only the root can be focused,
+  // but that's handled elsewhere.
+  if (PresContext()->Type() == nsPresContext::eContext_PrintPreview) {
+    return false;
+  }
+
   if (mContent && mContent->IsElement() && IsVisibleConsideringAncestors() &&
       Style()->GetPseudoType() != PseudoStyleType::anonymousFlexItem &&
       Style()->GetPseudoType() != PseudoStyleType::anonymousGridItem &&
