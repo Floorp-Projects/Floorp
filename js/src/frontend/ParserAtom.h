@@ -12,11 +12,10 @@
 #include "mozilla/Range.h"          // mozilla::Range
 #include "mozilla/Variant.h"        // mozilla::Variant
 
-#include "ds/LifoAlloc.h"    // LifoAlloc
-#include "js/GCPolicyAPI.h"  // JS::GCPolicy, JS::IgnoreGCPolicy
-#include "js/HashTable.h"    // HashSet
-#include "js/UniquePtr.h"    // js::UniquePtr
-#include "js/Vector.h"       // Vector
+#include "ds/LifoAlloc.h"  // LifoAlloc
+#include "js/HashTable.h"  // HashSet
+#include "js/UniquePtr.h"  // js::UniquePtr
+#include "js/Vector.h"     // Vector
 #include "vm/CommonPropertyNames.h"
 #include "vm/StringType.h"  // CompareChars, StringEqualsAscii
 
@@ -514,12 +513,5 @@ inline bool ParserAtomEntry::equalsSeq(
 
 } /* namespace frontend */
 } /* namespace js */
-
-namespace JS {
-// Dummy trace policy until tracing is removed.
-template <>
-struct GCPolicy<const js::frontend::ParserAtom*>
-    : IgnoreGCPolicy<const js::frontend::ParserAtom*> {};
-}  // namespace JS
 
 #endif  // frontend_ParserAtom_h

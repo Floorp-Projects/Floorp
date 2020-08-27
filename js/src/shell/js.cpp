@@ -5223,9 +5223,7 @@ static bool FrontendTest(JSContext* cx,
           return false;
         }
 
-        StencilModuleMetadata& moduleMetadata =
-            compilationInfo.moduleMetadata.get();
-        builder.finishFunctionDecls(moduleMetadata);
+        builder.finishFunctionDecls(compilationInfo.moduleMetadata);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
         compilationInfo.dumpStencil();

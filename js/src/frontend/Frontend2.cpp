@@ -344,8 +344,8 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
 bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
                      const SmooshScriptStencil& smooshStencil,
                      Vector<const ParserAtom*>& allAtoms,
-                     MutableHandle<ScriptStencil> stencil) {
-  auto& gcThings = stencil.get().gcThings;
+                     ScriptStencil& stencil) {
+  auto& gcThings = stencil.gcThings;
 
   size_t ngcthings = smooshStencil.gcthings.len;
   if (!gcThings.reserve(ngcthings)) {
@@ -394,30 +394,29 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           const SmooshScriptStencil& smooshStencil,
                           Vector<const ParserAtom*>& allAtoms,
                           CompilationInfo& compilationInfo,
-                          MutableHandle<ScriptStencil> stencil) {
+                          ScriptStencil& stencil) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
   const JS::ReadOnlyCompileOptions& options = compilationInfo.options;
 
-  stencil.get().immutableFlags = smooshStencil.immutable_flags;
+  stencil.immutableFlags = smooshStencil.immutable_flags;
 
   // FIXME: The following flags should be set in jsparagus.
-  stencil.get().immutableFlags.setFlag(ImmutableFlags::SelfHosted,
-                                       options.selfHostingMode);
-  stencil.get().immutableFlags.setFlag(ImmutableFlags::ForceStrict,
-                                       options.forceStrictMode());
-  stencil.get().immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                                       options.nonSyntacticScope);
+  stencil.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
+                                 options.selfHostingMode);
+  stencil.immutableFlags.setFlag(ImmutableFlags::ForceStrict,
+                                 options.forceStrictMode());
+  stencil.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
+                                 options.nonSyntacticScope);
 
   if (&smooshStencil == &result.top_level_script) {
-    stencil.get().immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
-                                         options.isRunOnce);
-    stencil.get().immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
-                                         options.noScriptRval);
+    stencil.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
+                                   options.isRunOnce);
+    stencil.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
+                                   options.noScriptRval);
   }
 
-  bool isFunction =
-      stencil.get().immutableFlags.hasFlag(ImmutableFlags::IsFunction);
+  bool isFunction = stencil.immutableFlags.hasFlag(ImmutableFlags::IsFunction);
 
   if (smooshStencil.immutable_script_data.IsSome()) {
     auto index = smooshStencil.immutable_script_data.AsSome();
@@ -426,29 +425,29 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     if (!immutableScriptData) {
       return false;
     }
-    stencil.get().immutableScriptData = std::move(immutableScriptData);
+    stencil.immutableScriptData = std::move(immutableScriptData);
   }
 
-  stencil.get().extent.sourceStart = smooshStencil.extent.source_start;
-  stencil.get().extent.sourceEnd = smooshStencil.extent.source_end;
-  stencil.get().extent.toStringStart = smooshStencil.extent.to_string_start;
-  stencil.get().extent.toStringEnd = smooshStencil.extent.to_string_end;
-  stencil.get().extent.lineno = smooshStencil.extent.lineno;
-  stencil.get().extent.column = smooshStencil.extent.column;
+  stencil.extent.sourceStart = smooshStencil.extent.source_start;
+  stencil.extent.sourceEnd = smooshStencil.extent.source_end;
+  stencil.extent.toStringStart = smooshStencil.extent.to_string_start;
+  stencil.extent.toStringEnd = smooshStencil.extent.to_string_end;
+  stencil.extent.lineno = smooshStencil.extent.lineno;
+  stencil.extent.column = smooshStencil.extent.column;
 
   if (isFunction) {
     if (smooshStencil.fun_name.IsSome()) {
-      stencil.get().functionAtom = allAtoms[smooshStencil.fun_name.AsSome()];
+      stencil.functionAtom = allAtoms[smooshStencil.fun_name.AsSome()];
     }
-    stencil.get().functionFlags = FunctionFlags(smooshStencil.fun_flags);
-    stencil.get().nargs = smooshStencil.fun_nargs;
+    stencil.functionFlags = FunctionFlags(smooshStencil.fun_flags);
+    stencil.nargs = smooshStencil.fun_nargs;
     if (smooshStencil.lazy_function_enclosing_scope_index.IsSome()) {
-      stencil.get().lazyFunctionEnclosingScopeIndex_ = mozilla::Some(ScopeIndex(
+      stencil.lazyFunctionEnclosingScopeIndex_ = mozilla::Some(ScopeIndex(
           smooshStencil.lazy_function_enclosing_scope_index.AsSome()));
     }
-    stencil.get().isStandaloneFunction = smooshStencil.is_standalone_function;
-    stencil.get().wasFunctionEmitted = smooshStencil.was_function_emitted;
-    stencil.get().isSingletonFunction = smooshStencil.is_singleton_function;
+    stencil.isStandaloneFunction = smooshStencil.is_standalone_function;
+    stencil.wasFunctionEmitted = smooshStencil.was_function_emitted;
+    stencil.isSingletonFunction = smooshStencil.is_singleton_function;
   }
 
   if (!ConvertGCThings(cx, result, smooshStencil, allAtoms, stencil)) {
@@ -553,7 +552,7 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
   }
 
   if (!ConvertScriptStencil(cx, result, result.top_level_script, allAtoms,
-                            compilationInfo, &compilationInfo.topLevel)) {
+                            compilationInfo, compilationInfo.topLevel)) {
     return false;
   }
 

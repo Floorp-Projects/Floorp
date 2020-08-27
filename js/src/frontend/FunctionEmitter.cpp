@@ -699,7 +699,7 @@ bool FunctionScriptEmitter::emitEndBody() {
 bool FunctionScriptEmitter::intoStencil() {
   MOZ_ASSERT(state_ == State::EndBody);
 
-  if (!bce_->intoScriptStencil(&funbox_->functionStencil().get())) {
+  if (!bce_->intoScriptStencil(&funbox_->functionStencil())) {
     return false;
   }
 

@@ -215,14 +215,13 @@ EvalSharedContext::EvalSharedContext(JSContext* cx,
 bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 #endif
 
-FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
-                         SourceExtent extent, CompilationInfo& compilationInfo,
+FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
+                         CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, const ParserAtom* atom,
                          FunctionFlags flags, FunctionIndex index,
                          TopLevelFunction isTopLevel)
     : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives, extent),
-      traceLink_(traceListHead),
       atom_(atom),
       funcDataIndex_(index),
       flags_(flags),
@@ -370,15 +369,6 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   return compilationInfo_.asmJS.putNew(index(), module);
 }
 
-/* static */
-void FunctionBox::TraceList(JSTracer* trc, FunctionBox* listHead) {
-  for (FunctionBox* node = listHead; node; node = node->traceLink_) {
-    node->trace(trc);
-  }
-}
-
-void FunctionBox::trace(JSTracer* trc) {}
-
 ModuleSharedContext::ModuleSharedContext(JSContext* cx,
                                          CompilationInfo& compilationInfo,
                                          ModuleBuilder& builder,
@@ -391,9 +381,9 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx,
   setFlag(ImmutableFlags::HasModuleGoal);
 }
 
-MutableHandle<ScriptStencil> FunctionBox::functionStencil() const {
+ScriptStencil& FunctionBox::functionStencil() const {
   if (isTopLevel_ == TopLevelFunction::Yes) {
-    return &compilationInfo_.topLevel;
+    return compilationInfo_.topLevel;
   }
   return compilationInfo_.funcData[funcDataIndex_];
 }
@@ -417,7 +407,7 @@ void FunctionBox::finishScriptFlags() {
 }
 
 void FunctionBox::copyScriptFields(ScriptStencil& stencil) {
-  MOZ_ASSERT(&stencil == &functionStencil().get());
+  MOZ_ASSERT(&stencil == &functionStencil());
   MOZ_ASSERT(!isAsmJSModule());
 
   SharedContext::copyScriptFields(stencil);
@@ -428,7 +418,7 @@ void FunctionBox::copyScriptFields(ScriptStencil& stencil) {
 }
 
 void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
-  MOZ_ASSERT(&stencil == &functionStencil().get());
+  MOZ_ASSERT(&stencil == &functionStencil());
   MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
 
   stencil.functionAtom = atom_;
@@ -443,38 +433,38 @@ void FunctionBox::copyFunctionFields(ScriptStencil& stencil) {
 }
 
 void FunctionBox::copyUpdatedImmutableFlags() {
-  ScriptStencil& stencil = functionStencil().get();
+  ScriptStencil& stencil = functionStencil();
   stencil.immutableFlags = immutableFlags_;
 }
 
 void FunctionBox::copyUpdatedExtent() {
-  ScriptStencil& stencil = functionStencil().get();
+  ScriptStencil& stencil = functionStencil();
   stencil.extent = extent_;
 }
 
 void FunctionBox::copyUpdatedMemberInitializers() {
-  ScriptStencil& stencil = functionStencil().get();
+  ScriptStencil& stencil = functionStencil();
   stencil.memberInitializers = memberInitializers_;
 }
 
 void FunctionBox::copyUpdatedEnclosingScopeIndex() {
-  ScriptStencil& stencil = functionStencil().get();
+  ScriptStencil& stencil = functionStencil();
   stencil.lazyFunctionEnclosingScopeIndex_ = enclosingScopeIndex_;
 }
 
 void FunctionBox::copyUpdatedAtomAndFlags() {
-  ScriptStencil& stencil = functionStencil().get();
+  ScriptStencil& stencil = functionStencil();
   stencil.functionAtom = atom_;
   stencil.functionFlags = flags_;
 }
 
 void FunctionBox::copyUpdatedWasEmitted() {
-  ScriptStencil& stencil = functionStencil().get();
+  ScriptStencil& stencil = functionStencil();
   stencil.wasFunctionEmitted = wasEmitted_;
 }
 
 void FunctionBox::copyUpdatedIsSingleton() {
-  ScriptStencil& stencil = functionStencil().get();
+  ScriptStencil& stencil = functionStencil();
   stencil.isSingletonFunction = isSingleton_;
 }
 

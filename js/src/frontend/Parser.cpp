@@ -274,22 +274,16 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, compilationInfo_.traceListHead, extent, compilationInfo_,
-      inheritedDirectives, generatorKind, asyncKind, explicitName, flags, index,
-      isTopLevel);
+      cx_, extent, compilationInfo_, inheritedDirectives, generatorKind,
+      asyncKind, explicitName, flags, index, isTopLevel);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
   }
 
-  compilationInfo_.traceListHead = funbox;
   handler_.setFunctionBox(funNode, funbox);
 
   return funbox;
-}
-
-void CompilationInfo::trace(JSTracer* trc) {
-  FunctionBox::TraceList(trc, traceListHead);
 }
 
 bool ParserBase::setSourceMapInfo() {
@@ -1712,14 +1706,12 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   }
 
   // Generate the Import/Export tables and store in CompilationInfo.
-  if (!modulesc->builder.buildTables(
-          this->compilationInfo_.moduleMetadata.get())) {
+  if (!modulesc->builder.buildTables(this->compilationInfo_.moduleMetadata)) {
     return null();
   }
 
   // Check exported local bindings exist and mark them as closed over.
-  StencilModuleMetadata& moduleMetadata =
-      this->compilationInfo_.moduleMetadata.get();
+  StencilModuleMetadata& moduleMetadata = this->compilationInfo_.moduleMetadata;
   for (auto entry : moduleMetadata.localExportEntries) {
     const ParserAtom* nameId = entry.localName;
     MOZ_ASSERT(nameId);
@@ -1867,7 +1859,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
-  ScriptStencil& stencil = funbox->functionStencil().get();
+  ScriptStencil& stencil = funbox->functionStencil();
 
   if (funbox->isInterpreted()) {
     // BCE will need to generate bytecode for this.
@@ -1925,7 +1917,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
-  ScriptStencil& stencil = funbox->functionStencil().get();
+  ScriptStencil& stencil = funbox->functionStencil();
 
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(stencil);
@@ -2705,7 +2697,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
     return false;
   }
 
-  ScriptStencil& stencil = funbox->functionStencil().get();
+  ScriptStencil& stencil = funbox->functionStencil();
   funbox->initFromLazyFunction(fun);
   funbox->copyFunctionFields(stencil);
   funbox->copyScriptFields(stencil);
@@ -11488,7 +11480,7 @@ template class Parser<SyntaxParseHandler, char16_t>;
 
 CompilationInfo::RewindToken CompilationInfo::getRewindToken() {
   MOZ_ASSERT(functions.empty());
-  return RewindToken{traceListHead, funcData.length(), asmJS.count()};
+  return RewindToken{funcData.length(), asmJS.count()};
 }
 
 void CompilationInfo::rewind(const CompilationInfo::RewindToken& pos) {
@@ -11498,8 +11490,7 @@ void CompilationInfo::rewind(const CompilationInfo::RewindToken& pos) {
     }
     MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
   }
-  traceListHead = pos.funbox;
-  funcData.get().shrinkTo(pos.funcDataLength);
+  funcData.shrinkTo(pos.funcDataLength);
 }
 
 }  // namespace js::frontend
