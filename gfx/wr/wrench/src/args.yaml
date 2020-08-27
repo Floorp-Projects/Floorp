@@ -28,10 +28,6 @@ args:
       short: r
       long: rebuild
       help: Rebuild display list from scratch every frame
-  - save:
-      long: save
-      help: 'Save frames, one of: yaml, json, ron, or binary'
-      takes_value: true
   - no_subpixel_aa:
       short: a
       long: no-subpixel-aa
@@ -61,11 +57,6 @@ args:
       short: s
       long: size
       help: Window size, specified as widthxheight (e.g. 1024x768), in pixels
-      takes_value: true
-  - time:
-      short: t
-      long: time
-      help: Time limit (in seconds)
       takes_value: true
   - vsync:
       long: vsync
@@ -115,11 +106,6 @@ subcommands:
         about: show frame(s) described by YAML, binary recording, or capture
         aliases: ['load', 'replay']
         args:
-          - queue:
-              short: q
-              long: queue
-              help: How many frames to submit to WR ahead of time (default 1) (YAML only)
-              takes_value: true
           - include:
               long: include
               help: Include the given element type. Can be specified multiple times. (rect/image/text/glyphs/border) (YAML only)
@@ -132,15 +118,6 @@ subcommands:
               short: w
               long: watch
               help: Watch the given file, reloading whenever it changes (YAML only)
-          - api:
-              long: api
-              help: Reissue Api messages for each frame (binary recording only)
-          - skip-uploads:
-              long: skip-uploads
-              help: Skip re-uploads while reissuing Api messages (BROKEN)
-          - play:
-              long: play
-              help: Play entire recording through, then quit (useful with --save) (binary recording only)
           - keyframes:
               short: k
               long: keyframes
