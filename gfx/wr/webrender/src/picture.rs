@@ -4748,16 +4748,20 @@ impl PicturePrimitive {
         }
     }
 
-    /// Gets the raster space to use when rendering the picture.
-    /// Usually this would be the requested raster space. However, if the
-    /// picture's spatial node or one of its ancestors is being pinch zoomed
+    /// Gets the raster space to use when rendering a primitive in this picture.
+    /// Usually this would be the picture's requested raster space. However, if
+    /// the primitive's spatial node or one of its ancestors is being pinch zoomed
     /// then we round it. This prevents us rasterizing glyphs for every minor
     /// change in zoom level, as that would be too expensive.
-    pub fn get_raster_space(&self, spatial_tree: &SpatialTree) -> RasterSpace {
-        let spatial_node = &spatial_tree.spatial_nodes[self.spatial_node_index.0 as usize];
-        if spatial_node.is_ancestor_or_self_zooming() {
+    pub fn get_raster_space_for_prim(
+        &self,
+        prim_spatial_node_index: SpatialNodeIndex,
+        spatial_tree: &SpatialTree,
+    ) -> RasterSpace {
+        let prim_spatial_node = &spatial_tree.spatial_nodes[prim_spatial_node_index.0 as usize];
+        if prim_spatial_node.is_ancestor_or_self_zooming() {
             let scale_factors = spatial_tree
-                .get_relative_transform(self.spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
+                .get_relative_transform(prim_spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
                 .scale_factors();
 
             // Round the scale up to the nearest power of 2, but don't exceed 8.
