@@ -92,6 +92,9 @@ task_description_schema = Schema({
     # Soft dependencies of this task, as a list of tasks labels
     Optional('soft-dependencies'): [text_type],
 
+    # Dependencies that must be scheduled in order for this task to run.
+    Optional('if-dependencies'): [text_type],
+
     Optional('requires'): Any('all-completed', 'all-resolved'),
 
     # expiration and deadline times, relative to task creation, with units
@@ -1843,11 +1846,24 @@ def build_task(config, tasks):
                 env = payload.setdefault('env', {})
                 env['MOZ_AUTOMATION'] = '1'
 
+        dependencies = task.get('dependencies', {})
+        if_dependencies = task.get('if-dependencies', [])
+        if if_dependencies:
+            for i, dep in enumerate(if_dependencies):
+                if dep in dependencies:
+                    if_dependencies[i] = dependencies[dep]
+                    continue
+
+                raise Exception("{label} specifies '{dep}' in if-dependencies, "
+                                "but {dep} is not a dependency!".format(
+                                    label=task['label'], dep=dep))
+
         yield {
             'label': task['label'],
             'description': task['description'],
             'task': task_def,
-            'dependencies': task.get('dependencies', {}),
+            'dependencies': dependencies,
+            'if-dependencies': if_dependencies,
             'soft-dependencies': task.get('soft-dependencies', []),
             'attributes': attributes,
             'optimization': task.get('optimization', None),
