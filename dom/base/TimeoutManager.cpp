@@ -249,7 +249,11 @@ TimeDuration TimeoutManager::MinSchedulingDelay() const {
     double factor = 1.0 / GetRegenerationFactor(mWindow.IsBackgroundInternal());
     return TimeDuration::Max(unthrottled, -mExecutionBudget.MultDouble(factor));
   }
-  //
+  if (!mThrottleTimeouts && isBackground) {
+    return TimeDuration::FromMilliseconds(
+        StaticPrefs::dom_min_background_timeout_value_before_throttling());
+  }
+
   return unthrottled;
 }
 
