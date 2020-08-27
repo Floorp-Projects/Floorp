@@ -447,6 +447,46 @@ static_assert(ObjectElements::VALUES_PER_HEADER * sizeof(HeapSlot) ==
               "ObjectElements doesn't fit in the given number of slots");
 
 /*
+ * Slots header used for native objects. The header stores the capacity and the
+ * slot data follows in memory.
+ */
+class alignas(HeapSlot) ObjectSlots {
+  uint32_t capacity_;
+
+ public:
+  static constexpr size_t VALUES_PER_HEADER = 1;
+
+  static inline size_t allocCount(size_t slotCount) {
+    static_assert(sizeof(ObjectSlots) ==
+                  ObjectSlots::VALUES_PER_HEADER * sizeof(HeapSlot));
+    return slotCount + VALUES_PER_HEADER;
+  }
+
+  static inline size_t allocSize(size_t slotCount) {
+    return allocCount(slotCount) * sizeof(HeapSlot);
+  }
+
+  static ObjectSlots* fromSlots(HeapSlot* slots) {
+    MOZ_ASSERT(slots);
+    return reinterpret_cast<ObjectSlots*>(uintptr_t(slots) -
+                                          sizeof(ObjectSlots));
+  }
+
+  static constexpr size_t offsetOfCapacity() {
+    return offsetof(ObjectSlots, capacity_);
+  }
+  static constexpr size_t offsetOfSlots() { return sizeof(ObjectSlots); }
+
+  explicit ObjectSlots(uint32_t capacity) : capacity_(capacity) {}
+
+  uint32_t capacity() const { return capacity_; }
+
+  HeapSlot* slots() {
+    return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(ObjectSlots));
+  }
+};
+
+/*
  * Shared singletons for objects with no elements.
  * emptyObjectElementsShared is used only for TypedArrays, when the TA
  * maps shared memory.
@@ -719,7 +759,7 @@ class NativeObject : public JSObject {
    * ArrayObjects don't use this limit and can have a lower slot capacity,
    * since they normally don't have a lot of slots.
    */
-  static const uint32_t SLOT_CAPACITY_MIN = 8;
+  static const uint32_t SLOT_CAPACITY_MIN = 8 - ObjectSlots::VALUES_PER_HEADER;
 
   HeapSlot* fixedSlots() const {
     return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(NativeObject));
@@ -837,15 +877,15 @@ class NativeObject : public JSObject {
    * The number of allocated slots is not stored explicitly, and changes to
    * the slots must track changes in the slot span.
    */
-  bool growSlots(JSContext* cx, uint32_t oldCount, uint32_t newCount);
-  void shrinkSlots(JSContext* cx, uint32_t oldCount, uint32_t newCount);
+  bool growSlots(JSContext* cx, uint32_t oldCapacity, uint32_t newCapacity);
+  void shrinkSlots(JSContext* cx, uint32_t oldCapacity, uint32_t newCapacity);
 
   /*
    * This method is static because it's called from JIT code. On OOM, returns
    * false without leaving a pending exception on the context.
    */
   static bool growSlotsPure(JSContext* cx, NativeObject* obj,
-                            uint32_t newCount);
+                            uint32_t newCapacity);
 
   /*
    * Like growSlotsPure but for dense elements. This will return
@@ -1164,6 +1204,8 @@ class NativeObject : public JSObject {
                                                       uint32_t span,
                                                       const JSClass* clasp);
   static MOZ_ALWAYS_INLINE uint32_t dynamicSlotsCount(Shape* shape);
+
+  ObjectSlots* getSlotsHeader() const { return ObjectSlots::fromSlots(slots_); }
 
   /* Elements accessors. */
 

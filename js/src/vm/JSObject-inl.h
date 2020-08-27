@@ -47,17 +47,21 @@ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::numDynamicSlots() const {
   if (span <= nfixed) {
     return 0;
   }
-  span -= nfixed;
+
+  uint32_t ndynamic = span - nfixed;
 
   // Increase the slots to SLOT_CAPACITY_MIN to decrease the likelihood
   // the dynamic slots need to get increased again. ArrayObjects ignore
   // this because slots are uncommon in that case.
-  if (clasp != &ArrayObject::class_ && span <= SLOT_CAPACITY_MIN) {
+  if (clasp != &ArrayObject::class_ && ndynamic <= SLOT_CAPACITY_MIN) {
     return SLOT_CAPACITY_MIN;
   }
 
-  uint32_t slots = mozilla::RoundUpPow2(span);
-  MOZ_ASSERT(slots >= span);
+  uint32_t count =
+      mozilla::RoundUpPow2(ndynamic + ObjectSlots::VALUES_PER_HEADER);
+
+  uint32_t slots = count - ObjectSlots::VALUES_PER_HEADER;
+  MOZ_ASSERT(slots >= ndynamic);
   return slots;
 }
 
@@ -92,8 +96,9 @@ inline void JSObject::finalize(JSFreeOp* fop) {
   }
 
   if (nobj->hasDynamicSlots()) {
-    size_t size = nobj->numDynamicSlots() * sizeof(js::HeapSlot);
-    fop->free_(this, nobj->slots_, size, js::MemoryUse::ObjectSlots);
+    js::ObjectSlots* slotsHeader = nobj->getSlotsHeader();
+    size_t size = js::ObjectSlots::allocSize(slotsHeader->capacity());
+    fop->free_(this, slotsHeader, size, js::MemoryUse::ObjectSlots);
   }
 
   if (nobj->hasDynamicElements()) {

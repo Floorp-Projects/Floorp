@@ -442,23 +442,24 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   }
 
   // If we want external slots, add them.
-  HeapSlot* slots = nullptr;
+  ObjectSlots* slotsHeader = nullptr;
   if (nDynamicSlots) {
     MOZ_ASSERT(clasp->isNative());
-    slots = static_cast<HeapSlot*>(
-        allocateBuffer(cx->zone(), nDynamicSlots * sizeof(HeapSlot)));
-    if (!slots) {
+    void* allocation =
+        allocateBuffer(cx->zone(), ObjectSlots::allocSize(nDynamicSlots));
+    if (!allocation) {
       // It is safe to leave the allocated object uninitialized, since we
       // do not visit unallocated things in the nursery.
       return nullptr;
     }
+    slotsHeader = new (allocation) ObjectSlots(nDynamicSlots);
   }
 
   // Store slots pointer directly in new object. If no dynamic slots were
   // requested, caller must initialize slots_ field itself as needed. We
   // don't know if the caller was a native object or not.
   if (nDynamicSlots) {
-    static_cast<NativeObject*>(obj)->initSlots(slots);
+    static_cast<NativeObject*>(obj)->initSlots(slotsHeader->slots());
   }
 
   gcprobes::NurseryAlloc(obj, size);
