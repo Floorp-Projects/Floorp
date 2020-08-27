@@ -35,6 +35,7 @@ import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -52,10 +53,7 @@ class BookmarksRobot {
     fun verifyBookmarkedURL(url: String) = assertBookmarkURL(url)
 
     fun verifyFolderTitle(title: String) {
-        mDevice.waitNotNull(
-            Until.findObject(text(title)),
-            TestAssetHelper.waitingTime
-        )
+        mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTime)
         assertFolderTitle(title)
     }
 
