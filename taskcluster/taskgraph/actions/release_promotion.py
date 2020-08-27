@@ -187,9 +187,13 @@ def get_flavors(graph_config, param):
                 'type': 'string',
                 'default': '',
             },
-            'release_enable_partners': {
+            'release_enable_partner_repack': {
                 'type': 'boolean',
                 'description': 'Toggle for creating partner repacks',
+            },
+            'release_enable_partner_attribution': {
+                'type': 'boolean',
+                'description': 'Toggle for creating partner attribution',
             },
             'release_partner_build_number': {
                 'type': 'integer',
@@ -316,24 +320,36 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     # previous graphs.
     parameters['optimize_target_tasks'] = True
 
-    # Partner/EMEfree are enabled by default when get_partner_url_config() returns a non-null url
-    # The action input may override by sending False. It's an error to send True with no url found
-    partner_url_config = get_partner_url_config(parameters, graph_config)
-    release_enable_partners = partner_url_config['release-partner-repack'] is not None
-    release_enable_emefree = partner_url_config['release-eme-free-repack'] is not None
-    if input.get('release_enable_partners') is False:
-        release_enable_partners = False
-    elif input.get('release_enable_partners') is True and not release_enable_partners:
-        raise Exception("Can't enable partner repacks when no config url found")
-    if input.get('release_enable_emefree') is False:
+    if release_promotion_flavor == 'promote_firefox_partner_repack':
+        release_enable_partner_repack = True
+        release_enable_partner_attribution = False
         release_enable_emefree = False
-    elif input.get('release_enable_emefree') is True and not release_enable_emefree:
-        raise Exception("Can't enable EMEfree when no config url found")
-    parameters['release_enable_partners'] = release_enable_partners
+    elif release_promotion_flavor == 'promote_firefox_partner_attribution':
+        release_enable_partner_repack = False
+        release_enable_partner_attribution = True
+        release_enable_emefree = False
+    else:
+        # for promotion or ship phases, we use the action input to turn the repacks/attribution off
+        release_enable_partner_repack = input.get('release_enable_partner_repack', True)
+        release_enable_partner_attribution = input.get('release_enable_partner_attribution', True)
+        release_enable_emefree = input.get('release_enable_emefree', True)
+
+    partner_url_config = get_partner_url_config(parameters, graph_config)
+    if release_enable_partner_repack and not partner_url_config['release-partner-repack']:
+        raise Exception("Can't enable partner repacks when no config url found")
+    if release_enable_partner_attribution and \
+            not partner_url_config['release-partner-attribution']:
+        raise Exception("Can't enable partner attribution when no config url found")
+    if release_enable_emefree and not partner_url_config['release-eme-free-repack']:
+        raise Exception("Can't enable EMEfree repacks when no config url found")
+    parameters['release_enable_partner_repack'] = release_enable_partner_repack
+    parameters['release_enable_partner_attribution'] = release_enable_partner_attribution
     parameters['release_enable_emefree'] = release_enable_emefree
 
     partner_config = input.get('release_partner_config')
-    if not partner_config and (release_enable_emefree or release_enable_partners):
+    if not partner_config and any([release_enable_partner_repack,
+                                   release_enable_partner_attribution,
+                                   release_enable_emefree]):
         github_token = get_token(parameters)
         partner_config = get_partner_config(partner_url_config, github_token)
     if partner_config:
