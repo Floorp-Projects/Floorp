@@ -33,6 +33,8 @@ class HyperTextIterator {
 
   bool Next();
 
+  int32_t SegmentLength();
+
   // If offset is set to a child hyperlink, adjust it so it set on the first
   // offset in the deepest link. Or, if the offset to the last character, set it
   // to the outermost end offset in an ancestor. Returns true if iterator was
@@ -146,6 +148,14 @@ bool HyperTextIterator::NormalizeBackward() {
   return false;
 }
 
+int32_t HyperTextIterator::SegmentLength() {
+  int32_t endOffset = mCurrentEndOffset < 0
+                          ? mCurrentContainer->CharacterCount()
+                          : mCurrentEndOffset;
+
+  return endOffset - mCurrentStartOffset;
+}
+
 int32_t HyperTextIterator::NextLinkOffset() {
   int32_t linkCount = mCurrentContainer->LinkCount();
   for (int32_t i = 0; i < linkCount; i++) {
@@ -207,6 +217,34 @@ nsIntRect HyperTextAccessibleWrap::BoundsForRange(
   }
 
   return rect;
+}
+
+int32_t HyperTextAccessibleWrap::LengthForRange(
+    int32_t aStartOffset, HyperTextAccessible* aEndContainer,
+    int32_t aEndOffset) {
+  int32_t length = 0;
+  HyperTextIterator iter(this, aStartOffset, aEndContainer, aEndOffset, true);
+  while (iter.Next()) {
+    length += iter.SegmentLength();
+  }
+
+  return length;
+}
+
+void HyperTextAccessibleWrap::OffsetAtIndex(int32_t aIndex,
+                                            HyperTextAccessible** aContainer,
+                                            int32_t* aOffset) {
+  int32_t index = aIndex;
+  HyperTextIterator iter(this, 0, this, CharacterCount(), true);
+  while (iter.Next()) {
+    int32_t segmentLength = iter.SegmentLength();
+    if (index <= segmentLength) {
+      *aContainer = iter.mCurrentContainer;
+      *aOffset = iter.mCurrentStartOffset + index;
+      break;
+    }
+    index -= segmentLength;
+  }
 }
 
 void HyperTextAccessibleWrap::LeftWordAt(int32_t aOffset,

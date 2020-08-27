@@ -25,6 +25,13 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
                            HyperTextAccessible* aEndContainer,
                            int32_t aEndOffset);
 
+  int32_t LengthForRange(int32_t aStartOffset,
+                         HyperTextAccessible* aEndContainer,
+                         int32_t aEndOffset);
+
+  void OffsetAtIndex(int32_t aIndex, HyperTextAccessible** aContainer,
+                     int32_t* aOffset);
+
   void LeftWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
                   int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
                   int32_t* aEndOffset);

@@ -135,12 +135,34 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLengthForRange(
     const uint64_t& aID, const int32_t& aStartOffset,
     const uint64_t& aEndContainer, const int32_t& aEndOffset,
     int32_t* aLength) {
+  HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
+  HyperTextAccessibleWrap* endContainer =
+      IdToHyperTextAccessibleWrap(aEndContainer);
+  if (!acc || !endContainer) {
+    return IPC_OK();
+  }
+
+  *aLength = acc->LengthForRange(aStartOffset, endContainer, aEndOffset);
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvOffsetAtIndex(
     const uint64_t& aID, const int32_t& aIndex, uint64_t* aContainer,
     int32_t* aOffset) {
+  HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
+  if (!acc) {
+    return IPC_OK();
+  }
+
+  HyperTextAccessible* container = nullptr;
+
+  acc->OffsetAtIndex(aIndex, &container, aOffset);
+
+  MOZ_ASSERT(!container || container->Document() == acc->Document());
+
+  *aContainer = UNIQUE_ID(container);
+
   return IPC_OK();
 }
 

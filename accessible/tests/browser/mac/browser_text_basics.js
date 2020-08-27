@@ -237,7 +237,9 @@ addAccessibleTask(`<p>hello <input> world</p>`, (browser, accDoc) => {
 
 // Tests consistency in text markers between:
 // 1. "Linked list" forward navagation
-// 2. "Linked list" reverse navagation
+// 2. Getting markers by index
+// 3. "Linked list" reverse navagation
+// For each iteration method check that the returned index is consistent
 function testMarkerIntegrity(accDoc) {
   let macDoc = accDoc.nativeInterface.QueryInterface(
     Ci.nsIAccessibleMacInterface
@@ -248,6 +250,16 @@ function testMarkerIntegrity(accDoc) {
   // Iterate forward with "AXNextTextMarkerForTextMarker"
   let marker = macDoc.getAttributeValue("AXStartTextMarker");
   while (marker) {
+    let index = macDoc.getParameterizedAttributeValue(
+      "AXIndexForTextMarker",
+      marker
+    );
+    is(
+      index,
+      count,
+      `Correct index in "AXNextTextMarkerForTextMarker": ${count}`
+    );
+
     marker = macDoc.getParameterizedAttributeValue(
       "AXNextTextMarkerForTextMarker",
       marker
@@ -255,12 +267,29 @@ function testMarkerIntegrity(accDoc) {
     count++;
   }
 
-  ok(count != 0, "Iterated forward through text markers");
+  // Use "AXTextMarkerForIndex" to retrieve all text markers
+  for (let i = 0; i < count; i++) {
+    marker = macDoc.getParameterizedAttributeValue("AXTextMarkerForIndex", i);
+    let index = macDoc.getParameterizedAttributeValue(
+      "AXIndexForTextMarker",
+      marker
+    );
+    is(index, i, `Correct index in "AXPreviousTextMarkerForTextMarker": ${i}`);
+  }
 
   // Iterate backward with "AXPreviousTextMarkerForTextMarker"
   marker = macDoc.getAttributeValue("AXEndTextMarker");
   while (marker) {
     count--;
+    let index = macDoc.getParameterizedAttributeValue(
+      "AXIndexForTextMarker",
+      marker
+    );
+    is(
+      index,
+      count,
+      `Correct index in "AXPreviousTextMarkerForTextMarker": ${count}`
+    );
     marker = macDoc.getParameterizedAttributeValue(
       "AXPreviousTextMarkerForTextMarker",
       marker
