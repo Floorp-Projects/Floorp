@@ -7,7 +7,15 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/MediaSession.h"
+#include "mozilla/dom/MediaControlUtils.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/EnumeratedArrayCycleCollection.h"
+
+// avoid redefined macro in unified build
+#undef LOG
+#define LOG(msg, ...)                        \
+  MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
+          ("MediaSession=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -164,6 +172,22 @@ void MediaSession::DispatchNotifyHandler(
 bool MediaSession::IsSupportedAction(MediaSessionAction aAction) const {
   MOZ_ASSERT(size_t(aAction) < ArrayLength(mActionHandlers));
   return mActionHandlers[aAction] != nullptr;
+}
+
+bool MediaSession::IsActive() const {
+  RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
+  MOZ_ASSERT(currentBC);
+  RefPtr<WindowContext> wc = currentBC->GetTopWindowContext();
+  if (!wc) {
+    return false;
+  }
+  Maybe<uint64_t> activeSessionContextId = wc->GetActiveMediaSessionContextId();
+  if (!activeSessionContextId) {
+    return false;
+  }
+  LOG("session context Id=%" PRIu64 ", active session context Id=%" PRIu64,
+      currentBC->Id(), *activeSessionContextId);
+  return *activeSessionContextId == currentBC->Id();
 }
 
 void MediaSession::Shutdown() {

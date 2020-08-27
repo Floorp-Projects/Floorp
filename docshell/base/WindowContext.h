@@ -64,6 +64,9 @@ class BrowsingContextGroup;
   FIELD(DocTreeHadAudibleMedia, bool)                                  \
   FIELD(AutoplayPermission, uint32_t)                                  \
   FIELD(ShortcutsPermission, uint32_t)                                 \
+  /* Store the Id of the browsing context where active media session   \
+   * exists on the top level window context */                         \
+  FIELD(ActiveMediaSessionContextId, Maybe<uint64_t>)                  \
   /* ALLOW_ACTION if it is allowed to open popups for the sub-tree     \
    * starting and including the current WindowContext */               \
   FIELD(PopupPermission, uint32_t)                                     \
@@ -213,6 +216,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_ShortcutsPermission>, const uint32_t& aValue,
               ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_ActiveMediaSessionContextId>,
+              const Maybe<uint64_t>& aValue, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_PopupPermission>, const uint32_t&,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_SHEntryHasUserInteraction>,

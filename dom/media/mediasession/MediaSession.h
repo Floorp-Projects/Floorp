@@ -69,6 +69,14 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
 
   void Shutdown();
 
+  // `MediaStatusManager` would determine which media session is an active media
+  // session and update it from the chrome process. This active session is not
+  // 100% equal to the active media session in the spec, which is a globally
+  // active media session *among all tabs*. The active session here is *among
+  // different windows but in same tab*, so each tab can have at most one
+  // active media session.
+  bool IsActive() const;
+
  private:
   // Propagate media context status to the media session controller in the
   // chrome process when we create or destroy the media session.

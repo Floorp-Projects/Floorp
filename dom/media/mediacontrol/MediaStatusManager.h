@@ -228,6 +228,8 @@ class MediaStatusManager : public IMediaInfoUpdater {
   // media event.
   CopyableTArray<MediaSessionAction> GetSupportedActions() const;
 
+  void StoreMediaSessionContextIdOnWindowContext();
+
   // When the amount of playing media changes, we would use this function to
   // update the guessed playback state.
   void SetGuessedPlayState(MediaSessionPlaybackState aState);

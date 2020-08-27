@@ -200,6 +200,12 @@ bool WindowContext::CanSet(FieldIndex<IDX_ShortcutsPermission>,
   return IsTop() && CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_ActiveMediaSessionContextId>,
+                           const Maybe<uint64_t>& aValue,
+                           ContentParent* aSource) {
+  return IsTop();
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_PopupPermission>, const uint32_t&,
                            ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);

@@ -141,6 +141,7 @@ void MediaStatusManager::SetActiveMediaSessionContextId(
     return;
   }
   mActiveMediaSessionContextId = Some(aBrowsingContextId);
+  StoreMediaSessionContextIdOnWindowContext();
   LOG("context %" PRIu64 " becomes active session context",
       *mActiveMediaSessionContextId);
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
@@ -153,8 +154,18 @@ void MediaStatusManager::ClearActiveMediaSessionContextIdIfNeeded() {
   }
   LOG("Clear active session context");
   mActiveMediaSessionContextId.reset();
+  StoreMediaSessionContextIdOnWindowContext();
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
   mSupportedActionsChangedEvent.Notify(GetSupportedActions());
+}
+
+void MediaStatusManager::StoreMediaSessionContextIdOnWindowContext() {
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(mTopLevelBrowsingContextId);
+  if (bc && bc->GetTopWindowContext()) {
+    Unused << bc->GetTopWindowContext()->SetActiveMediaSessionContextId(
+        mActiveMediaSessionContextId);
+  }
 }
 
 bool MediaStatusManager::IsSessionOwningAudioFocus(
