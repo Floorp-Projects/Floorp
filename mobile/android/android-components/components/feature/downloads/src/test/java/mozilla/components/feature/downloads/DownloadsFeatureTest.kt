@@ -45,7 +45,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
@@ -153,9 +152,9 @@ class DownloadsFeatureTest {
         )
 
         feature.start()
-        feature.tryAgain(0)
+        feature.tryAgain("0")
 
-        verify(downloadManager).tryAgain(0)
+        verify(downloadManager).tryAgain("0")
     }
 
     @Test
@@ -608,7 +607,7 @@ class DownloadsFeatureTest {
         dialog.onAppSelected(ourApp)
 
         verify(feature).startDownload(any())
-        verify(consumeDownloadUseCase).invoke(anyString(), anyLong())
+        verify(consumeDownloadUseCase).invoke(anyString(), anyString())
         verify(spyContext, times(0)).startActivity(any())
     }
 
@@ -641,7 +640,7 @@ class DownloadsFeatureTest {
         dialog.onAppSelected(ourApp)
 
         verify(feature, times(0)).startDownload(any())
-        verify(consumeDownloadUseCase).invoke(anyString(), anyLong())
+        verify(consumeDownloadUseCase).invoke(anyString(), anyString())
         verify(spyContext).startActivity(any())
     }
 
@@ -675,7 +674,7 @@ class DownloadsFeatureTest {
         dialog.onAppSelected(ourApp)
 
         verify(feature, times(0)).startDownload(any())
-        verify(consumeDownloadUseCase).invoke(anyString(), anyLong())
+        verify(consumeDownloadUseCase).invoke(anyString(), anyString())
         verify(spyContext).startActivity(any())
     }
 
@@ -707,7 +706,7 @@ class DownloadsFeatureTest {
         feature.showAppDownloaderDialog(tab, download, apps)
         dialog.onDismiss()
 
-        verify(consumeDownloadUseCase).invoke(anyString(), anyLong())
+        verify(consumeDownloadUseCase).invoke(anyString(), anyString())
     }
 
     @Test

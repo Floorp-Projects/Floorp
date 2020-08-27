@@ -7,7 +7,7 @@ package mozilla.components.browser.state.state.content
 import android.os.Environment
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
-import kotlin.random.Random
+import java.util.UUID
 
 /**
  * Value type that represents a download request.
@@ -24,7 +24,7 @@ import kotlin.random.Random
  * @property referrerUrl The site that linked to this download.
  * @property skipConfirmation Whether or not the confirmation dialog should be shown before the download begins.
  * @property id The unique identifier of this download.
- * @property sessionId Identifier of the session that spawned the download.
+ * @property createdTime A timestamp when the download was created.
  * @
  */
 @Suppress("Deprecation")
@@ -40,8 +40,9 @@ data class DownloadState(
     val destinationDirectory: String = Environment.DIRECTORY_DOWNLOADS,
     val referrerUrl: String? = null,
     val skipConfirmation: Boolean = false,
-    val id: Long = Random.nextLong(),
-    val sessionId: String? = null
+    val id: String = UUID.randomUUID().toString(),
+    val sessionId: String? = null,
+    val createdTime: Long = System.currentTimeMillis()
 ) : Parcelable {
     val filePath: String get() =
         Environment.getExternalStoragePublicDirectory(destinationDirectory).path + "/" + fileName
@@ -49,31 +50,32 @@ data class DownloadState(
     /**
      * Status that represents every state that a download can be in.
      */
-    enum class Status {
+    @Suppress("MagicNumber")
+    enum class Status(val id: Int) {
         /**
          * Indicates that the download is in the first state after creation but not yet [DOWNLOADING].
          */
-        INITIATED,
+        INITIATED(1),
         /**
          * Indicates that an [INITIATED] download is now actively being downloaded.
          */
-        DOWNLOADING,
+        DOWNLOADING(2),
         /**
          * Indicates that the download that has been [DOWNLOADING] has been paused.
          */
-        PAUSED,
+        PAUSED(3),
         /**
          * Indicates that the download that has been [DOWNLOADING] has been cancelled.
          */
-        CANCELLED,
+        CANCELLED(4),
         /**
          * Indicates that the download that has been [DOWNLOADING] has moved to failed because
          * something unexpected has happened.
          */
-        FAILED,
+        FAILED(5),
         /**
          * Indicates that the [DOWNLOADING] download has been completed.
          */
-        COMPLETED
+        COMPLETED(6)
     }
 }

@@ -9,7 +9,7 @@ import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
-typealias onDownloadStopped = (DownloadState, Long, Status) -> Unit
+typealias onDownloadStopped = (DownloadState, String, Status) -> Unit
 
 interface DownloadManager {
 
@@ -26,14 +26,14 @@ interface DownloadManager {
     fun download(
         download: DownloadState,
         cookie: String = ""
-    ): Long?
+    ): String?
 
     /**
      * Schedules another attempt at downloading the given download.
      * @param downloadId the id of the previously attempted download
      */
     fun tryAgain(
-        downloadId: Long
+        downloadId: String
     )
 
     fun unregisterListeners() = Unit

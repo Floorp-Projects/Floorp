@@ -58,7 +58,7 @@ class SampleApplication : Application() {
         GlobalScope.launch(Dispatchers.IO) {
             components.webAppManifestStorage.warmUpScopes(System.currentTimeMillis())
         }
-
+        components.downloadsUseCases.restoreDownloads()
         try {
             GlobalAddonDependencyProvider.initialize(
                 components.addonManager,

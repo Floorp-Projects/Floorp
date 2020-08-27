@@ -349,7 +349,7 @@ class ContentActionTest {
     @Test
     fun `ConsumeDownloadAction removes download`() {
         val download = DownloadState(
-            id = 1337L,
+            id = "1337",
             url = "https://www.mozilla.org", sessionId = tab.id
         )
 
@@ -360,7 +360,7 @@ class ContentActionTest {
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id, downloadId = 1337)
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "1337")
         ).joinBlocking()
 
         assertNull(tab.content.download)
@@ -369,7 +369,7 @@ class ContentActionTest {
     @Test
     fun `ConsumeDownloadAction does not remove download with different id`() {
         val download = DownloadState(
-            id = 1337L,
+            id = "1337",
             url = "https://www.mozilla.org", sessionId = tab.id
         )
 
@@ -380,7 +380,7 @@ class ContentActionTest {
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id, downloadId = 4223)
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "4223")
         ).joinBlocking()
 
         assertNotNull(tab.content.download)

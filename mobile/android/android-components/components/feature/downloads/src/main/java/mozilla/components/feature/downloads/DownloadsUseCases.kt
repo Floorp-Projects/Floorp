@@ -5,6 +5,7 @@
 package mozilla.components.feature.downloads
 
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.store.BrowserStore
 
 /**
@@ -22,12 +23,25 @@ class DownloadsUseCases(
          * Consumes the download with the given [downloadId] from the session with the given
          * [tabId].
          */
-        operator fun invoke(tabId: String, downloadId: Long) {
+        operator fun invoke(tabId: String, downloadId: String) {
             store.dispatch(ContentAction.ConsumeDownloadAction(
                 tabId, downloadId
             ))
         }
     }
 
+    /**
+     * Use case that allows to restore downloads from the storage.
+     */
+    class RestoreDownloadsUseCase(private val store: BrowserStore) {
+        /**
+         * Restores downloads from the storage.
+         */
+        operator fun invoke() {
+            store.dispatch(DownloadAction.RestoreDownloadsStateAction)
+        }
+    }
+
     val consumeDownload = ConsumeDownloadUseCase(store)
+    val restoreDownloads = RestoreDownloadsUseCase(store)
 }
