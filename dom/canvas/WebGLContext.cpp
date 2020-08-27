@@ -1625,17 +1625,24 @@ Maybe<std::string> WebGLContext::GetString(const GLenum pname) const {
   const WebGLContext::FuncScope funcScope(*this, "getParameter");
   if (IsContextLost()) return {};
 
+  const auto FromRaw = [](const char* const raw) -> Maybe<std::string> {
+    if (!raw) return {};
+    return Some(std::string(raw));
+  };
+
   switch (pname) {
     case LOCAL_GL_EXTENSIONS: {
       if (!gl->IsCoreProfile()) {
         const auto rawExt = (const char*)gl->fGetString(LOCAL_GL_EXTENSIONS);
-        return Some(std::string(rawExt));
+        return FromRaw(rawExt);
       }
       std::string ret;
       const auto& numExts = gl->GetIntAs<GLuint>(LOCAL_GL_NUM_EXTENSIONS);
       for (GLuint i = 0; i < numExts; i++) {
         const auto rawExt =
             (const char*)gl->fGetStringi(LOCAL_GL_EXTENSIONS, i);
+        if (!rawExt) continue;
+
         if (i > 0) {
           ret += " ";
         }
@@ -1648,7 +1655,7 @@ Maybe<std::string> WebGLContext::GetString(const GLenum pname) const {
     case LOCAL_GL_VENDOR:
     case LOCAL_GL_VERSION: {
       const auto raw = (const char*)gl->fGetString(pname);
-      return Some(std::string(raw));
+      return FromRaw(raw);
     }
 
     case dom::MOZ_debug_Binding::WSI_INFO: {
