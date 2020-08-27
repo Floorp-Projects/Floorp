@@ -197,18 +197,32 @@ Scope* ScopeContext::determineEffectiveScope(Scope* scope,
   return scope;
 }
 
+GlobalSharedContext::GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
+                                         CompilationInfo& compilationInfo,
+                                         Directives directives,
+                                         SourceExtent extent)
+    : SharedContext(cx, Kind::Global, compilationInfo, directives, extent),
+      scopeKind_(scopeKind),
+      bindings(nullptr) {
+  MOZ_ASSERT(scopeKind == ScopeKind::Global ||
+             scopeKind == ScopeKind::NonSyntactic);
+  MOZ_ASSERT(thisBinding_ == ThisBinding::Global);
+}
+
 EvalSharedContext::EvalSharedContext(JSContext* cx,
                                      CompilationInfo& compilationInfo,
-                                     Directives directives, SourceExtent extent)
-    : SharedContext(cx, Kind::Eval, compilationInfo, directives, extent),
+                                     CompilationState& compilationState,
+                                     SourceExtent extent)
+    : SharedContext(cx, Kind::Eval, compilationInfo,
+                    compilationState.directives, extent),
       bindings(nullptr) {
   // Eval inherits syntax and binding rules from enclosing environment.
-  allowNewTarget_ = compilationInfo.state.scopeContext.allowNewTarget;
-  allowSuperProperty_ = compilationInfo.state.scopeContext.allowSuperProperty;
-  allowSuperCall_ = compilationInfo.state.scopeContext.allowSuperCall;
-  allowArguments_ = compilationInfo.state.scopeContext.allowArguments;
-  thisBinding_ = compilationInfo.state.scopeContext.thisBinding;
-  inWith_ = compilationInfo.state.scopeContext.inWith;
+  allowNewTarget_ = compilationState.scopeContext.allowNewTarget;
+  allowSuperProperty_ = compilationState.scopeContext.allowSuperProperty;
+  allowSuperCall_ = compilationState.scopeContext.allowSuperCall;
+  allowArguments_ = compilationState.scopeContext.allowArguments;
+  thisBinding_ = compilationState.scopeContext.thisBinding;
+  inWith_ = compilationState.scopeContext.inWith;
 }
 
 #ifdef DEBUG
@@ -217,6 +231,7 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 
 FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
                          CompilationInfo& compilationInfo,
+                         CompilationState& compilationState,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, const ParserAtom* atom,
                          FunctionFlags flags, FunctionIndex index,

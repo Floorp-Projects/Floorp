@@ -330,21 +330,23 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
       return false;
     }
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope, options,
-                                              enclosing, env);
+    frontend::CompilationInfo compilationInfo(cx, options);
     if (!compilationInfo.input.init(cx)) {
       return false;
     }
     compilationInfo.input.setEnclosingScope(enclosing);
 
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::CompilationState compilationState(cx, allocScope, options,
+                                                enclosing, env);
+
     uint32_t len = srcBuf.length();
     SourceExtent extent = SourceExtent::makeGlobalExtent(len);
-    frontend::EvalSharedContext evalsc(
-        cx, compilationInfo, compilationInfo.state.directives, extent);
+    frontend::EvalSharedContext evalsc(cx, compilationInfo, compilationState,
+                                       extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf,
-                                     gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo, compilationState, evalsc,
+                                     srcBuf, gcOutput)) {
       return false;
     }
 
@@ -439,21 +441,23 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
       return false;
     }
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope, options,
-                                              enclosing, env);
+    frontend::CompilationInfo compilationInfo(cx, options);
     if (!compilationInfo.input.init(cx)) {
       return false;
     }
     compilationInfo.input.setEnclosingScope(enclosing);
 
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::CompilationState compilationState(cx, allocScope, options,
+                                                enclosing, env);
+
     uint32_t len = srcBuf.length();
     SourceExtent extent = SourceExtent::makeGlobalExtent(len);
-    frontend::EvalSharedContext evalsc(
-        cx, compilationInfo, compilationInfo.state.directives, extent);
+    frontend::EvalSharedContext evalsc(cx, compilationInfo, compilationState,
+                                       extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf,
-                                     gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo, compilationState, evalsc,
+                                     srcBuf, gcOutput)) {
       return false;
     }
 

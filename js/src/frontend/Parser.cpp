@@ -146,13 +146,16 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
 }
 
 ParserSharedBase::ParserSharedBase(JSContext* cx,
-                                   CompilationInfo& compilationInfo, Kind kind)
+                                   CompilationInfo& compilationInfo,
+                                   CompilationState& compilationState,
+                                   Kind kind)
     : JS::CustomAutoRooter(cx),
       cx_(cx),
-      alloc_(compilationInfo.state.allocScope.alloc()),
+      alloc_(compilationState.allocScope.alloc()),
       compilationInfo_(compilationInfo),
+      compilationState_(compilationState),
       pc_(nullptr),
-      usedNames_(compilationInfo.state.usedNames) {
+      usedNames_(compilationState.usedNames) {
   cx->frontendCollectionPool().addActiveCompilation();
 }
 
@@ -161,8 +164,10 @@ ParserSharedBase::~ParserSharedBase() {
 }
 
 ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       bool foldConstants, CompilationInfo& compilationInfo)
-    : ParserSharedBase(cx, compilationInfo, ParserSharedBase::Kind::Parser),
+                       bool foldConstants, CompilationInfo& compilationInfo,
+                       CompilationState& compilationState)
+    : ParserSharedBase(cx, compilationInfo, compilationState,
+                       ParserSharedBase::Kind::Parser),
       anyChars(cx, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
@@ -187,19 +192,20 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
-    CompilationInfo& compilationInfo, BaseScript* lazyOuterFunction,
-    void* internalSyntaxParser)
-    : ParserBase(cx, options, foldConstants, compilationInfo),
-      handler_(cx, compilationInfo.state.allocScope.alloc(), lazyOuterFunction),
+    CompilationInfo& compilationInfo, CompilationState& compilationState,
+    BaseScript* lazyOuterFunction, void* internalSyntaxParser)
+    : ParserBase(cx, options, foldConstants, compilationInfo, compilationState),
+      handler_(cx, compilationState.allocScope.alloc(), lazyOuterFunction),
       internalSyntaxParser_(internalSyntaxParser) {}
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, const Unit* units,
     size_t length, bool foldConstants, CompilationInfo& compilationInfo,
-    SyntaxParser* syntaxParser, BaseScript* lazyOuterFunction)
-    : Base(cx, options, foldConstants, compilationInfo, syntaxParser,
-           lazyOuterFunction),
+    CompilationState& compilationState, SyntaxParser* syntaxParser,
+    BaseScript* lazyOuterFunction)
+    : Base(cx, options, foldConstants, compilationInfo, compilationState,
+           syntaxParser, lazyOuterFunction),
       tokenStream(cx, &compilationInfo, options, units, length) {}
 
 template <typename Unit>
@@ -273,8 +279,8 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, extent, compilationInfo_, inheritedDirectives, generatorKind,
-      asyncKind, explicitName, flags, index, isTopLevel);
+      cx_, extent, compilationInfo_, compilationState_, inheritedDirectives,
+      generatorKind, asyncKind, explicitName, flags, index, isTopLevel);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -1433,7 +1439,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   }
 
   Vector<UnboundPrivateName, 8> unboundPrivateNames(cx_);
-  if (!this->getCompilationInfo().state.usedNames.getUnboundPrivateNames(
+  if (!this->compilationState_.usedNames.getUnboundPrivateNames(
           unboundPrivateNames)) {
     return false;
   }
@@ -1496,10 +1502,9 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     // Debugger.Frame.prototype.eval call. In order to find the declared private
     // names, we must use the effective scope that was determined when creating
     // the scopeContext.
-    if (!verifyPrivateName(
-            cx_, this,
-            this->getCompilationInfo().state.scopeContext.effectiveScope,
-            unboundName)) {
+    if (!verifyPrivateName(cx_, this,
+                           compilationState_.scopeContext.effectiveScope,
+                           unboundName)) {
       return false;
     }
   }
@@ -2108,7 +2113,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Function is not syntactically part of another script.
   funbox->setIsStandalone(true);
 
-  funbox->initStandalone(this->compilationInfo_.state.scopeContext, flags,
+  funbox->initStandalone(this->compilationState_.scopeContext, flags,
                          syntaxKind);
 
   SourceParseContext funpc(this, funbox, newDirectives);
@@ -2864,7 +2869,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   Directives directives(pc_);
   Directives newDirectives = directives;
 
-  Position start(this->compilationInfo_.state.keepAtoms, tokenStream);
+  Position start(this->compilationState_.keepAtoms, tokenStream);
   CompilationInfo::RewindToken startObj =
       this->compilationInfo_.getRewindToken();
 
@@ -2908,7 +2913,7 @@ bool Parser<FullParseHandler, Unit>::advancePastSyntaxParsedFunction(
   MOZ_ASSERT(getSyntaxParser() == syntaxParser);
 
   // Advance this parser over tokens processed by the syntax parser.
-  Position currentSyntaxPosition(this->compilationInfo_.state.keepAtoms,
+  Position currentSyntaxPosition(this->compilationState_.keepAtoms,
                                  syntaxParser->tokenStream);
   if (!tokenStream.fastForward(currentSyntaxPosition, syntaxParser->anyChars)) {
     return false;
@@ -2956,8 +2961,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     //   var x = (y = z => 2) => q;
     //   //           ^ we first seek to here to syntax-parse this function
     //   //      ^ then we seek back to here to syntax-parse the outer function
-    Position currentPosition(this->compilationInfo_.state.keepAtoms,
-                             tokenStream);
+    Position currentPosition(this->compilationState_.keepAtoms, tokenStream);
     if (!syntaxParser->tokenStream.seekTo(currentPosition, anyChars)) {
       return false;
     }
@@ -2992,7 +2996,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
       return false;
     }
 
-    if (!advancePastSyntaxParsedFunction(this->compilationInfo_.state.keepAtoms,
+    if (!advancePastSyntaxParsedFunction(this->compilationState_.keepAtoms,
                                          syntaxParser)) {
       return false;
     }
@@ -3194,8 +3198,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     return null();
   }
   funbox->initFromLazyFunction(fun);
-  funbox->initStandalone(this->getCompilationInfo().state.scopeContext,
-                         fun->flags(), syntaxKind);
+  funbox->initStandalone(this->compilationState_.scopeContext, fun->flags(),
+                         syntaxKind);
   if (fun->isClassConstructor()) {
     funbox->setMemberInitializers(fun->baseScript()->getMemberInitializers());
   }
@@ -7603,7 +7607,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   // We're leaving a class definition that was not itself nested within a class
   if (!isInClass) {
     mozilla::Maybe<UnboundPrivateName> maybeUnboundName;
-    if (!this->getCompilationInfo().state.usedNames.hasUnboundPrivateNames(
+    if (!this->compilationState_.usedNames.hasUnboundPrivateNames(
             cx_, maybeUnboundName)) {
       return null();
     }
@@ -8989,7 +8993,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   // Save the tokenizer state in case we find an arrow function and have to
   // rewind.
-  Position start(this->compilationInfo_.state.keepAtoms, tokenStream);
+  Position start(this->compilationState_.keepAtoms, tokenStream);
 
   PossibleError possibleErrorInner(*this);
   Node lhs;

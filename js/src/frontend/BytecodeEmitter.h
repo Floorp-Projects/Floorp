@@ -106,6 +106,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   BCEParserHandle* parser = nullptr;
 
   CompilationInfo& compilationInfo;
+  CompilationState& compilationState;
 
   uint32_t maxFixedSlots = 0; /* maximum number of fixed frame slots so far */
 
@@ -170,7 +171,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
  private:
   // Internal constructor, for delegation use only.
   BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
-                  CompilationInfo& compilationInfo, EmitterMode emitterMode);
+                  CompilationInfo& compilationInfo,
+                  CompilationState& compilationState, EmitterMode emitterMode);
 
   void initFromBodyPosition(TokenPos bodyPosition);
 
@@ -186,19 +188,22 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
  public:
   BytecodeEmitter(BytecodeEmitter* parent, BCEParserHandle* handle,
                   SharedContext* sc, CompilationInfo& compilationInfo,
+                  CompilationState& compilationState,
                   EmitterMode emitterMode = Normal);
 
   BytecodeEmitter(BytecodeEmitter* parent, const EitherParser& parser,
                   SharedContext* sc, CompilationInfo& compilationInfo,
+                  CompilationState& compilationState,
                   EmitterMode emitterMode = Normal);
 
   template <typename Unit>
   BytecodeEmitter(BytecodeEmitter* parent,
                   Parser<FullParseHandler, Unit>* parser, SharedContext* sc,
                   CompilationInfo& compilationInfo,
+                  CompilationState& compilationState,
                   EmitterMode emitterMode = Normal)
       : BytecodeEmitter(parent, EitherParser(parser), sc, compilationInfo,
-                        emitterMode) {}
+                        compilationState, emitterMode) {}
 
   MOZ_MUST_USE bool init();
   MOZ_MUST_USE bool init(TokenPos bodyPosition);

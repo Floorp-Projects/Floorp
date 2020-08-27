@@ -118,6 +118,7 @@ static bool NeedsMethodInitializer(ParseNode* member, bool isStatic) {
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
                                  CompilationInfo& compilationInfo,
+                                 CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
       cx(sc->cx_),
@@ -125,6 +126,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       bytecodeSection_(cx, sc->extent().lineno),
       perScriptData_(cx, compilationInfo),
       compilationInfo(compilationInfo),
+      compilationState(compilationState),
       emitterMode(emitterMode) {
   if (IsTypeInferenceEnabled() && sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
@@ -135,8 +137,10 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
                                  CompilationInfo& compilationInfo,
+                                 CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, compilationInfo, emitterMode) {
+    : BytecodeEmitter(parent, sc, compilationInfo, compilationState,
+                      emitterMode) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
 }
@@ -144,8 +148,10 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  const EitherParser& parser, SharedContext* sc,
                                  CompilationInfo& compilationInfo,
+                                 CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, compilationInfo, emitterMode) {
+    : BytecodeEmitter(parent, sc, compilationInfo, compilationState,
+                      emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
   instrumentationKinds = this->parser->options().instrumentationKinds;
@@ -5758,7 +5764,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, compilationInfo, emitterMode);
+    BytecodeEmitter bce2(this, parser, funbox, compilationInfo,
+                         compilationState, emitterMode);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -9314,7 +9321,8 @@ bool BytecodeEmitter::emitPrivateMethodInitializer(
     return false;
   }
 
-  BytecodeEmitter bce2(this, parser, funbox, compilationInfo, emitterMode);
+  BytecodeEmitter bce2(this, parser, funbox, compilationInfo, compilationState,
+                       emitterMode);
   if (!bce2.init(funNode->pn_pos)) {
     return false;
   }
@@ -9433,8 +9441,8 @@ const MemberInitializers& BytecodeEmitter::findMemberInitializersForCall() {
     }
   }
 
-  MOZ_RELEASE_ASSERT(compilationInfo.state.scopeContext.memberInitializers);
-  return *compilationInfo.state.scopeContext.memberInitializers;
+  MOZ_RELEASE_ASSERT(compilationState.scopeContext.memberInitializers);
+  return *compilationState.scopeContext.memberInitializers;
 }
 
 bool BytecodeEmitter::emitInitializeInstanceMembers() {

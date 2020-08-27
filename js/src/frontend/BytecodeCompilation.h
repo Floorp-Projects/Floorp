@@ -17,7 +17,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "frontend/CompilationInfo.h"
+#include "frontend/CompilationInfo.h"  // CompilationInfo, CompilationState, CompilationGCOutput
 #include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
@@ -46,16 +46,19 @@ template <typename Unit>
 class StandaloneFunctionCompiler;
 
 extern bool CompileGlobalScript(CompilationInfo& compilationInfo,
+                                CompilationState& compilationState,
                                 GlobalSharedContext& globalsc,
                                 JS::SourceText<char16_t>& srcBuf,
                                 CompilationGCOutput& gcOutput);
 
 extern bool CompileGlobalScript(CompilationInfo& compilationInfo,
+                                CompilationState& compilationState,
                                 GlobalSharedContext& globalsc,
                                 JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                 CompilationGCOutput& gcOutput);
 
 extern bool CompileEvalScript(CompilationInfo& compilationInfo,
+                              CompilationState& compilationState,
                               EvalSharedContext& evalsc,
                               JS::SourceText<char16_t>& srcBuf,
                               CompilationGCOutput& gcOutput);

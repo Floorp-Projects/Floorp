@@ -28,6 +28,8 @@
 namespace js {
 namespace frontend {
 
+struct CompilationInfo;
+struct CompilationState;
 class ParseContext;
 class ScriptStencil;
 struct ScopeContext;
@@ -289,14 +291,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
 
   GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
                       CompilationInfo& compilationInfo, Directives directives,
-                      SourceExtent extent)
-      : SharedContext(cx, Kind::Global, compilationInfo, directives, extent),
-        scopeKind_(scopeKind),
-        bindings(nullptr) {
-    MOZ_ASSERT(scopeKind == ScopeKind::Global ||
-               scopeKind == ScopeKind::NonSyntactic);
-    MOZ_ASSERT(thisBinding_ == ThisBinding::Global);
-  }
+                      SourceExtent extent);
 
   ScopeKind scopeKind() const { return scopeKind_; }
 };
@@ -311,7 +306,7 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
   ParserEvalScopeData* bindings;
 
   EvalSharedContext(JSContext* cx, CompilationInfo& compilationInfo,
-                    Directives directives, SourceExtent extent);
+                    CompilationState& compilationState, SourceExtent extent);
 };
 
 inline EvalSharedContext* SharedContext::asEvalContext() {
@@ -428,7 +423,8 @@ class FunctionBox : public SharedContext {
   // End of fields.
 
   FunctionBox(JSContext* cx, SourceExtent extent,
-              CompilationInfo& compilationInfo, Directives directives,
+              CompilationInfo& compilationInfo,
+              CompilationState& compilationState, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               const ParserAtom* atom, FunctionFlags flags, FunctionIndex index,
               TopLevelFunction isTopLevel);

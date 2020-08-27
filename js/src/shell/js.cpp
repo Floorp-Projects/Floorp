@@ -5131,21 +5131,23 @@ static bool FrontendTest(JSContext* cx,
                          const JS::ReadOnlyCompileOptions& options,
                          const Unit* units, size_t length,
                          js::frontend::CompilationInfo& compilationInfo,
+                         js::frontend::CompilationState& compilationState,
                          js::frontend::ParseGoal goal, DumpType dumpType) {
   using namespace js::frontend;
 
   bool foldConstants = dumpType == DumpType::Stencil;
 
-  Parser<SyntaxParseHandler, Unit> syntaxParser(cx, options, units, length,
-                                                foldConstants, compilationInfo,
-                                                nullptr, nullptr);
+  Parser<SyntaxParseHandler, Unit> syntaxParser(
+      cx, options, units, length, foldConstants, compilationInfo,
+      compilationState, nullptr, nullptr);
   if (!syntaxParser.checkOptions()) {
     return false;
   }
 
   Parser<FullParseHandler, Unit> parser(
       cx, options, units, length, foldConstants, compilationInfo,
-      dumpType == DumpType::Stencil ? &syntaxParser : nullptr, nullptr);
+      compilationState, dumpType == DumpType::Stencil ? &syntaxParser : nullptr,
+      nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -5177,7 +5179,7 @@ static bool FrontendTest(JSContext* cx,
         }
 
         BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc,
-                            compilationInfo);
+                            compilationInfo, compilationState);
         if (!bce.init()) {
           return false;
         }
@@ -5215,7 +5217,7 @@ static bool FrontendTest(JSContext* cx,
       }
       case DumpType::Stencil: {
         BytecodeEmitter bce(/* parent = */ nullptr, &parser, &modulesc,
-                            compilationInfo);
+                            compilationInfo, compilationState);
         if (!bce.init()) {
           return false;
         }
@@ -5371,11 +5373,13 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     options.allowHTMLComments = false;
   }
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  js::frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+  js::frontend::CompilationInfo compilationInfo(cx, options);
   if (!compilationInfo.input.init(cx)) {
     return false;
   }
+
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::CompilationState compilationState(cx, allocScope, options);
 
 #ifdef JS_ENABLE_SMOOSH
   if (dumpType == DumpType::Stencil) {
@@ -5390,8 +5394,8 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
           bool unimplemented;
-          if (!Smoosh::compileGlobalScriptToStencil(compilationInfo, srcBuf,
-                                                    &unimplemented)) {
+          if (!Smoosh::compileGlobalScriptToStencil(
+                  compilationInfo, compilationState, srcBuf, &unimplemented)) {
             return false;
           }
 
@@ -5417,14 +5421,15 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
     auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
     if (!FrontendTest<mozilla::Utf8Unit>(cx, options, utf8, length,
-                                         compilationInfo, goal, dumpType)) {
+                                         compilationInfo, compilationState,
+                                         goal, dumpType)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
     if (!FrontendTest<char16_t>(cx, options, chars, length, compilationInfo,
-                                goal, dumpType)) {
+                                compilationState, goal, dumpType)) {
       return false;
     }
   }
@@ -5468,14 +5473,17 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   const char16_t* chars = stableChars.twoByteRange().begin().get();
   size_t length = scriptContents->length();
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  js::frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+  js::frontend::CompilationInfo compilationInfo(cx, options);
   if (!compilationInfo.input.init(cx)) {
     return false;
   }
 
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::CompilationState compilationState(cx, allocScope, options);
+
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
-      cx, options, chars, length, false, compilationInfo, nullptr, nullptr);
+      cx, options, chars, length, false, compilationInfo, compilationState,
+      nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
