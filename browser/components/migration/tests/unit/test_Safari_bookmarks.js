@@ -90,8 +90,10 @@ add_task(async function() {
       if (!snapshot || !snapshot.safari) {
         return false;
       }
-      info(`Expected ${bookmarkRoots}, got ${snapshot.safari.sum}`);
-      return snapshot.safari.sum == bookmarkRoots;
+      let sum = arr => Object.values(arr).reduce((a, b) => a + b, 0);
+      let sumOfValues = sum(snapshot.safari.values);
+      info(`Expected ${bookmarkRoots}, got ${sumOfValues}`);
+      return sumOfValues == bookmarkRoots;
     },
     "Wait until telemetry is updated"
   );
