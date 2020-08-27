@@ -537,6 +537,11 @@ function messages(
     case constants.NETWORK_MESSAGE_UPDATE:
       const updatedState = {
         ...state,
+        // Update messagesById since the nested object of message might be changed.
+        messagesById: new Map(messagesById).set(
+          action.message.id,
+          action.message
+        ),
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
           [action.message.id]: action.message,
