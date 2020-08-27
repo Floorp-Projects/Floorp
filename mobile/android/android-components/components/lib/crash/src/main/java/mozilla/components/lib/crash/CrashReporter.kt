@@ -97,6 +97,14 @@ class CrashReporter(
     }
 
     /**
+     * Get a copy of the crashBreadCrumbs
+     */
+    internal fun crashBreadcrumbsCopy(): ArrayList<Breadcrumb> {
+        @Suppress("UNCHECKED_CAST")
+        return crashBreadcrumbs.clone() as ArrayList<Breadcrumb>
+    }
+
+    /**
      * Submit a crash report to all registered services.
      */
     fun submitReport(crash: Crash, then: () -> Unit = {}): Job {
@@ -158,7 +166,7 @@ class CrashReporter(
         logger.info("Caught Exception report submitted to ${services.size} services")
         return scope.launch {
             services.forEach {
-                it.report(reportThrowable, crashBreadcrumbs)
+                it.report(reportThrowable, crashBreadcrumbsCopy())
             }
         }
     }
