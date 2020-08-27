@@ -50,6 +50,7 @@ STATIC_ATOMS = [
     Atom("mozsignature", "moz-signature"),  # Used by MailNews.
     Atom("_moz_is_glyph", "-moz-is-glyph"),
     Atom("_moz_original_size", "_moz_original_size"),
+    Atom("_moz_print_preview", "-moz-print-preview"),
     Atom("menuactive", "_moz-menuactive"),
     Atom("_poundDefault", "#default"),
     Atom("_asterisk", "*"),
