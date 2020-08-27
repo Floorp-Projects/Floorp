@@ -714,8 +714,6 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   const JSClass* clasp() const { return headerPtr(); }
 
   uint32_t flags;     /* Vector of above flags. */
-  uint32_t slotSpan_; /* Object slot span for BaseShapes at
-                       * dictionary last properties. */
 
   /* For owned BaseShapes, the canonical unowned BaseShape. */
   GCPtrUnownedBaseShape unowned_;
@@ -797,15 +795,6 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   }
 
   void maybePurgeCache(JSFreeOp* fop) { cache_.maybePurgeCache(fop, this); }
-
-  uint32_t slotSpan() const {
-    MOZ_ASSERT(isOwned());
-    return slotSpan_;
-  }
-  void setSlotSpan(uint32_t slotSpan) {
-    MOZ_ASSERT(isOwned());
-    slotSpan_ = slotSpan;
-  }
 
   /*
    * Lookup base shapes from the zone's baseShapes table, adding if not

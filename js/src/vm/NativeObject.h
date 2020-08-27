@@ -854,9 +854,7 @@ class NativeObject : public JSObject {
 
   uint32_t dictionaryModeSlotSpan() const {
     MOZ_ASSERT(inDictionaryMode());
-    uint32_t span = getSlotsHeader()->dictionarySlotSpan();
-    MOZ_ASSERT(span == lastProperty()->base()->slotSpan());
-    return span;
+    return getSlotsHeader()->dictionarySlotSpan();
   }
 
   /* Whether a slot is at a fixed offset from this object. */

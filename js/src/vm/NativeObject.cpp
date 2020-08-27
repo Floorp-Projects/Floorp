@@ -401,7 +401,6 @@ bool NativeObject::ensureSlotsForDictionaryObject(JSContext* cx,
     return false;
   }
 
-  lastProperty()->base()->setSlotSpan(span);
   setDictionaryModeSlotSpan(span);
   return true;
 }

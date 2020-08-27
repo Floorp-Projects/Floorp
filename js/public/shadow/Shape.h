@@ -27,7 +27,6 @@ namespace shadow {
 
 struct BaseShape {
   const JSClass* clasp_;
-  JSObject* parent;
 };
 
 class Shape {
