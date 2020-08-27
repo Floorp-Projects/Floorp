@@ -216,15 +216,23 @@ release-promotion:
             product: firefox
             target-tasks-method: promote_desktop
             partial-updates: true
-        promote_firefox_partners:
+        promote_firefox_partner_repack:
             product: firefox
             rebuild-kinds:
                 - release-partner-repack
-                - release-partner-beetmover
                 - release-partner-repack-chunking-dummy
-                - release-partner-repackage-signing
-                - release-partner-repackage
-                - release-partner-signing
+                - release-partner-repack-signing
+                - release-partner-repack-notarization-part-1
+                - release-partner-repack-notarization-poller
+                - release-partner-repack-repackage
+                - release-partner-repack-repackage-signing
+                - release-partner-repack-beetmover
+            target-tasks-method: promote_desktop
+        promote_firefox_partner_attribution:
+            product: firefox
+            rebuild-kinds:
+                - release-partner-attribution
+                - release-partner-attribution-beetmover
             target-tasks-method: promote_desktop
         promote_firefox_rc:
             product: firefox
