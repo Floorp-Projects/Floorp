@@ -41,9 +41,6 @@
         android:id="@+id/action_global_turn_on_sync"
         app:destination="@id/turnOnSyncFragment" />
     <action
-        android:id="@+id/action_global_settings_addonsManagementFragment"
-        app:destination="@id/addons_management_graph" />
-    <action
         android:id="@+id/action_global_searchEngineFragment"
         app:destination="@id/search_engine_graph" />
     <action

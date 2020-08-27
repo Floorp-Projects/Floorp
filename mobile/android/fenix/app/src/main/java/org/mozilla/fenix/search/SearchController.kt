@@ -61,6 +61,10 @@ class DefaultSearchController(
                 // and open the crash list activity instead.
                 activity.startActivity(Intent(activity, CrashListActivity::class.java))
             }
+            "about:addons" -> {
+                val directions = SearchFragmentDirections.actionGlobalAddonsManagementFragment()
+                navController.navigateSafe(R.id.searchFragment, directions)
+            }
             "moz://a" -> openSearchOrUrl(SupportUtils.getMozillaPageUrl(MANIFESTO))
             else -> if (url.isNotBlank()) {
                 openSearchOrUrl(url)

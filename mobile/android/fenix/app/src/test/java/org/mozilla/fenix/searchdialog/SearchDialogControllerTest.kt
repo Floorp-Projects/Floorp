@@ -29,7 +29,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.search.SearchFragmentAction
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
@@ -56,6 +55,9 @@ class SearchDialogControllerTest {
         every { store.state.tabId } returns "test-tab-id"
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
         every { sessionManager.select(any()) } just Runs
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
         every { MetricsUtils.createSearchEvent(searchEngine, activity, any()) } returns null
 
         controller = SearchDialogController(
@@ -118,6 +120,16 @@ class SearchDialogControllerTest {
         verify {
             activity.startActivity(any())
         }
+    }
+
+    @Test
+    fun handleAddonsUrlCommitted() {
+        val url = "about:addons"
+        val directions = SearchDialogFragmentDirections.actionGlobalAddonsManagementFragment()
+
+        controller.handleUrlCommitted(url)
+
+        verify { navController.navigate(directions) }
     }
 
     @Test
@@ -266,7 +278,7 @@ class SearchDialogControllerTest {
 
         controller.handleClickSearchEngineSettings()
 
-        verify { navController.navigateSafe(R.id.searchEngineFragment, directions) }
+        verify { navController.navigate(directions) }
     }
 
     @Test

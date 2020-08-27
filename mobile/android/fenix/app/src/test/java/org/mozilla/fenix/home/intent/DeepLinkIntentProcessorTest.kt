@@ -157,7 +157,7 @@ class DeepLinkIntentProcessorTest {
     fun `process settings_addon_manager deep link`() {
         assertTrue(processor.process(testIntent("settings_addon_manager"), navController, out))
 
-        verify { navController.navigate(NavGraphDirections.actionGlobalSettingsAddonsManagementFragment()) }
+        verify { navController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
         verify { out wasNot Called }
     }
 
