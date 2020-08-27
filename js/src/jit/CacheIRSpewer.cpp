@@ -339,9 +339,9 @@ bool CacheIRSpewer::init(const char* filename) {
   if (!output_.init(name)) {
     return false;
   }
-  output_.put("[");
 
   json_.emplace(output_);
+  json_->beginList();
   return true;
 }
 
