@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-methods-private,class-methods-private is not supported
+// |reftest| shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/static-private-method-and-instance-method-brand-check.case
 // - src/class-elements/default/cls-decl.template
