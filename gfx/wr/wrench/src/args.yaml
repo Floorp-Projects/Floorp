@@ -137,13 +137,6 @@ subcommands:
               help: The input YAML, binary recording, or capture directory
               required: true
               index: 1
-    - replay:
-        about: replay binary recording
-        args:
-          - INPUT:
-              help: The input binary file or directory
-              required: true
-              index: 1
     - reftest:
         about: run reftests
         args:
