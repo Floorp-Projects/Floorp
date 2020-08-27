@@ -517,6 +517,7 @@ class TouchBlockState : public CancelableBlockState {
   void DispatchEvent(const InputData& aEvent) const override;
   bool MustStayActive() override;
   const char* Type() override;
+  TimeDuration GetTimeSinceBlockStart() const;
 
  private:
   nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
@@ -527,6 +528,7 @@ class TouchBlockState : public CancelableBlockState {
   ScreenIntPoint mSlopOrigin;
   // A reference to the InputQueue's touch counter
   TouchCounter& mTouchCounter;
+  TimeStamp mStartTime;
 };
 
 /**
