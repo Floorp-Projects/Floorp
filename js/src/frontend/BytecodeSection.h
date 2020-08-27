@@ -19,7 +19,7 @@
 
 #include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/BytecodeOffset.h"    // BytecodeOffset
-#include "frontend/CompilationInfo.h"   // CompilationInfo
+#include "frontend/CompilationInfo.h"   // CompilationInfo, CompilationGCOutput
 #include "frontend/JumpList.h"          // JumpTarget
 #include "frontend/NameCollections.h"   // AtomIndexMap, PooledMapPtr
 #include "frontend/ObjLiteral.h"        // ObjLiteralStencil
@@ -115,6 +115,7 @@ struct MOZ_STACK_CLASS GCThingList {
 
 MOZ_MUST_USE bool EmitScriptThingsVector(JSContext* cx,
                                          CompilationInfo& compilationInfo,
+                                         CompilationGCOutput& gcOutput,
                                          const ScriptThingsVector& objects,
                                          mozilla::Span<JS::GCCellPtr> output);
 

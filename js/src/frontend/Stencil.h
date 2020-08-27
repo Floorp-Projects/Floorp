@@ -41,6 +41,7 @@ class JSONPrinter;
 namespace frontend {
 
 struct CompilationInfo;
+struct CompilationGCOutput;
 class ScriptStencil;
 class RegExpStencil;
 class BigIntStencil;
@@ -243,7 +244,8 @@ class ScopeStencil {
 
   bool isArrow() const { return isArrow_; }
 
-  Scope* createScope(JSContext* cx, CompilationInfo& compilationInfo);
+  Scope* createScope(JSContext* cx, CompilationInfo& compilationInfo,
+                     CompilationGCOutput& gcOutput);
 
   uint32_t nextFrameSlot() const;
 
@@ -268,7 +270,8 @@ class ScopeStencil {
   // Transfer ownership into a new UniquePtr.
   template <typename SpecificScopeType>
   UniquePtr<typename SpecificScopeType::Data> createSpecificScopeData(
-      JSContext* cx, CompilationInfo& compilationInfo);
+      JSContext* cx, CompilationInfo& compilationInfo,
+      CompilationGCOutput& gcOutput);
 
   template <typename SpecificScopeType>
   uint32_t nextFrameSlot() const {
@@ -283,7 +286,8 @@ class ScopeStencil {
                                         MutableHandleShape shape);
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
-  Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo);
+  Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo,
+                             CompilationGCOutput& gcOutput);
 };
 
 // As an alternative to a ScopeIndex (which references a ScopeStencil), we may

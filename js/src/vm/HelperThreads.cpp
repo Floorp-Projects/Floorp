@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include "frontend/BytecodeCompilation.h"
+#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo, frontend::CompilationGCOutput
 #include "jit/IonCompileTask.h"
 #include "js/ContextOptions.h"      // JS::ContextOptions
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
@@ -615,19 +616,24 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
   frontend::GlobalSharedContext globalsc(
       cx, scopeKind, compilationInfo, compilationInfo.state.directives, extent);
-  JSScript* script =
-      frontend::CompileGlobalScript(compilationInfo, globalsc, data);
+  frontend::CompilationGCOutput gcOutput(cx);
+  bool result =
+      frontend::CompileGlobalScript(compilationInfo, globalsc, data, gcOutput);
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid
   // inner scripts observable by the debugger which reference the partially-
   // initialized SSO.
-  if (compilationInfo.gcOutput.sourceObject) {
-    sourceObjects.infallibleAppend(compilationInfo.gcOutput.sourceObject);
+  if (gcOutput.sourceObject) {
+    sourceObjects.infallibleAppend(gcOutput.sourceObject);
   }
 
-  if (script) {
-    scripts.infallibleAppend(script);
+  if (!result) {
+    return;
+  }
+
+  if (gcOutput.script) {
+    scripts.infallibleAppend(gcOutput.script);
   }
 }
 
@@ -652,17 +658,23 @@ template <typename Unit>
 void ModuleParseTask<Unit>::parse(JSContext* cx) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
-  Rooted<ScriptSourceObject*> sourceObject(cx);
+  frontend::CompilationGCOutput gcOutput(cx);
+  bool result = frontend::ParseModule(cx, options, data, gcOutput);
 
-  ModuleObject* module =
-      frontend::ParseModule(cx, options, data, &sourceObject.get());
-
-  if (sourceObject) {
-    sourceObjects.infallibleAppend(sourceObject);
+  // Whatever happens to the top-level script compilation (even if it fails),
+  // we must finish initializing the SSO.  This is because there may be valid
+  // inner scripts observable by the debugger which reference the partially-
+  // initialized SSO.
+  if (gcOutput.sourceObject) {
+    sourceObjects.infallibleAppend(gcOutput.sourceObject);
   }
 
-  if (module) {
-    scripts.infallibleAppend(module->script());
+  if (!result) {
+    return;
+  }
+
+  if (gcOutput.module) {
+    scripts.infallibleAppend(gcOutput.module->script());
   }
 }
 

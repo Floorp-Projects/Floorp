@@ -342,13 +342,13 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     SourceExtent extent = SourceExtent::makeGlobalExtent(len);
     frontend::EvalSharedContext evalsc(
         cx, compilationInfo, compilationInfo.state.directives, extent);
-    RootedScript compiled(
-        cx, frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf));
-    if (!compiled) {
+    frontend::CompilationGCOutput gcOutput(cx);
+    if (!frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf,
+                                     gcOutput)) {
       return false;
     }
 
-    esg.setNewScript(compiled);
+    esg.setNewScript(gcOutput.script);
   }
 
   // If this is a direct eval we need to use the caller's newTarget.
@@ -451,13 +451,13 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     SourceExtent extent = SourceExtent::makeGlobalExtent(len);
     frontend::EvalSharedContext evalsc(
         cx, compilationInfo, compilationInfo.state.directives, extent);
-    JSScript* compiled =
-        frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf);
-    if (!compiled) {
+    frontend::CompilationGCOutput gcOutput(cx);
+    if (!frontend::CompileEvalScript(compilationInfo, evalsc, srcBuf,
+                                     gcOutput)) {
       return false;
     }
 
-    esg.setNewScript(compiled);
+    esg.setNewScript(gcOutput.script);
   }
 
   return ExecuteKernel(cx, esg.script(), env, newTargetValue,

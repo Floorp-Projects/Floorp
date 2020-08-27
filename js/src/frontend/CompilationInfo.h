@@ -331,7 +331,6 @@ struct MOZ_RAII CompilationInfo {
   CompilationInput input;
   CompilationState state;
   CompilationStencil stencil;
-  CompilationGCOutput gcOutput;
 
   // Track the state of key allocations and roll them back as parts of parsing
   // get retried. This ensures iteration during stencil instantiation does not
@@ -352,10 +351,9 @@ struct MOZ_RAII CompilationInfo {
       : cx(cx),
         input(cx, options),
         state(cx, alloc, options, enclosingScope, enclosingEnv),
-        stencil(cx),
-        gcOutput(cx) {}
+        stencil(cx) {}
 
-  MOZ_MUST_USE bool instantiateStencils();
+  MOZ_MUST_USE bool instantiateStencils(CompilationGCOutput& gcOutput);
 
   JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx, *this).unwrapOr(nullptr);
@@ -372,7 +370,7 @@ struct MOZ_RAII CompilationInfo {
   CompilationInfo& operator=(const CompilationInfo&) = delete;
   CompilationInfo& operator=(CompilationInfo&&) = delete;
 
-  ScriptStencilIterable functionScriptStencils() {
+  ScriptStencilIterable functionScriptStencils(CompilationGCOutput& gcOutput) {
     return ScriptStencilIterable(stencil, gcOutput);
   }
 

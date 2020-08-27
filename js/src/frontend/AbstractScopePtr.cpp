@@ -26,10 +26,10 @@ CompilationInfo& AbstractScopePtr::compilationInfo() const {
   return data.compilationInfo;
 }
 
-Scope* AbstractScopePtr::existingScope() const {
+Scope* AbstractScopePtr::existingScope(CompilationGCOutput& gcOutput) const {
   if (isScopeStencil()) {
     const Deferred& data = scope_.as<Deferred>();
-    Scope* result = data.compilationInfo.gcOutput.scopes[data.index.index];
+    Scope* result = gcOutput.scopes[data.index.index];
     MOZ_ASSERT(result, "Scope must already exist to use this method");
     return result;
   }
