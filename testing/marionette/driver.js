@@ -409,7 +409,11 @@ GeckoDriver.prototype.getBrowsingContext = function(options = {}) {
     browsingContext = this.contentBrowsingContext;
   }
 
-  return top ? browsingContext.top : browsingContext;
+  if (browsingContext && top) {
+    browsingContext = browsingContext.top;
+  }
+
+  return browsingContext;
 };
 
 /**
