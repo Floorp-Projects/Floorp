@@ -404,8 +404,8 @@ RegExpObject* RegExpStencil::createRegExp(JSContext* cx) const {
 }
 
 RegExpObject* RegExpLiteral::create(JSContext* cx,
-                                    CompilationInfo& compilationInfo) const {
-  return compilationInfo.stencil.regExpData[index_].createRegExp(cx);
+                                    CompilationStencil& stencil) const {
+  return stencil.regExpData[index_].createRegExp(cx);
 }
 
 bool js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn) {
