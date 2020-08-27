@@ -779,3 +779,107 @@ TEST_F(APZCGestureDetectorTester, TapTimeoutInterruptedByWheel) {
   while (mcc->RunThroughDelayedTasks())
     ;
 }
+
+TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay) {
+  // In this test, we ensure that any time spent waiting in the input queue for
+  // the content response is subtracted from the long-press timeout in the
+  // GestureEventListener. In this test the content response timeout is longer
+  // than the long-press timeout.
+  SCOPED_GFX_PREF_INT("apz.content_response_timeout", 60);
+  SCOPED_GFX_PREF_INT("ui.click_hold_context_menus.delay", 30);
+
+  // Turn off touch-action to avoid having to send allowed touch actions to the
+  // input block.
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
+  MakeApzcWaitForMainThread();
+
+  MockFunction<void(std::string checkPointName)> check;
+
+  {
+    InSequence s;
+    EXPECT_CALL(check, Call("pre long-tap dispatch"));
+    EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10), 0,
+                                apzc->GetGuid(), _))
+        .Times(1);
+    EXPECT_CALL(check, Call("post long-tap dispatch"));
+  }
+
+  // Touch down
+  APZEventResult result = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  uint64_t touchBlockId = result.mInputBlockId;
+  // Simulate content response after 10ms
+  mcc->AdvanceByMillis(10);
+  apzc->ContentReceivedInputBlock(touchBlockId, false);
+  apzc->ConfirmTarget(touchBlockId);
+  // Ensure long-tap event happens within 20ms after that
+  check.Call("pre long-tap dispatch");
+  mcc->AdvanceByMillis(20);
+  check.Call("post long-tap dispatch");
+}
+
+TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay2) {
+  // Similar to the previous test, except this time we don't simulate the
+  // content response at all, and still expect the long-press to happen on
+  // schedule.
+  SCOPED_GFX_PREF_INT("apz.content_response_timeout", 60);
+  SCOPED_GFX_PREF_INT("ui.click_hold_context_menus.delay", 30);
+
+  // Turn off touch-action to avoid having to send allowed touch actions to the
+  // input block.
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
+  MakeApzcWaitForMainThread();
+
+  MockFunction<void(std::string checkPointName)> check;
+
+  {
+    InSequence s;
+    EXPECT_CALL(check, Call("pre long-tap dispatch"));
+    EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10), 0,
+                                apzc->GetGuid(), _))
+        .Times(1);
+    EXPECT_CALL(check, Call("post long-tap dispatch"));
+  }
+
+  // Touch down
+  TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  // Ensure the long-tap happens within 30ms even though there's no content
+  // response.
+  check.Call("pre long-tap dispatch");
+  mcc->AdvanceByMillis(30);
+  check.Call("post long-tap dispatch");
+}
+
+TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay3) {
+  // Similar to the previous test, except now we have the long-press delay
+  // being longer than the content response timeout.
+  SCOPED_GFX_PREF_INT("apz.content_response_timeout", 30);
+  SCOPED_GFX_PREF_INT("ui.click_hold_context_menus.delay", 60);
+
+  // Turn off touch-action to avoid having to send allowed touch actions to the
+  // input block.
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
+  MakeApzcWaitForMainThread();
+
+  MockFunction<void(std::string checkPointName)> check;
+
+  {
+    InSequence s;
+    EXPECT_CALL(check, Call("pre long-tap dispatch"));
+    EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10), 0,
+                                apzc->GetGuid(), _))
+        .Times(1);
+    EXPECT_CALL(check, Call("post long-tap dispatch"));
+  }
+
+  // Touch down
+  TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  // Ensure the long-tap happens at the 60ms mark even though the input event
+  // waits in the input queue for the full content response timeout of 30ms
+  mcc->AdvanceByMillis(59);
+  check.Call("pre long-tap dispatch");
+  mcc->AdvanceByMillis(1);
+  check.Call("post long-tap dispatch");
+}
