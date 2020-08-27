@@ -60,9 +60,20 @@ struct ScopeContext {
   // We may be an combination of arrow and eval context within the constructor.
   mozilla::Maybe<MemberInitializers> memberInitializers = {};
 
-  explicit ScopeContext(Scope* scope, JSObject* enclosingEnv = nullptr) {
+  // If this eval is in response to Debugger.Frame.eval, we may have an
+  // incomplete scope chain. In order to determine a better 'this' binding, as
+  // well as to ensure we can provide better static error semantics for private
+  // names, we use the environment chain to attempt to find a more effective
+  // scope than the enclosing scope.
+  // If there is no more effective scope, this will just be the scope given in
+  // the constructor.
+  JS::Rooted<Scope*> effectiveScope;
+
+  explicit ScopeContext(JSContext* cx, Scope* scope,
+                        JSObject* enclosingEnv = nullptr)
+      : effectiveScope(cx, determineEffectiveScope(scope, enclosingEnv)) {
     computeAllowSyntax(scope);
-    computeThisBinding(scope, enclosingEnv);
+    computeThisBinding(effectiveScope);
     computeInWith(scope);
     computeExternalInitializers(scope);
     computeInClass(scope);
@@ -70,10 +81,12 @@ struct ScopeContext {
 
  private:
   void computeAllowSyntax(Scope* scope);
-  void computeThisBinding(Scope* scope, JSObject* environment = nullptr);
+  void computeThisBinding(Scope* scope);
   void computeInWith(Scope* scope);
   void computeExternalInitializers(Scope* scope);
   void computeInClass(Scope* scope);
+
+  static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
 
 struct CompilationInfo;
@@ -241,7 +254,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         keepAtoms(cx),
         parserAtoms(cx),
         directives(options.forceStrictMode()),
-        scopeContext(enclosingScope, enclosingEnv),
+        scopeContext(cx, enclosingScope, enclosingEnv),
         script(cx),
         lazy(cx),
         module(cx),
