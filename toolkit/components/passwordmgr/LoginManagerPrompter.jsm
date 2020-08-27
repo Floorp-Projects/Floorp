@@ -1061,6 +1061,12 @@ class LoginManagerPrompter {
       return [];
     }
 
+    // Don't reprompt for Primary Password, as we already prompted at least once
+    // to show the doorhanger if it is locked
+    if (!Services.logins.isLoggedIn) {
+      return [];
+    }
+
     let baseDomainLogins = await Services.logins.searchLoginsAsync({
       origin: login.origin,
       schemeUpgrades: LoginHelper.schemeUpgrades,
