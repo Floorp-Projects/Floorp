@@ -370,6 +370,14 @@ nsINode* FocusManager::FocusedDOMNode() const {
   nsIContent* focusedElm = DOMFocusManager->GetFocusedElement();
 
   if (focusedElm) {
+    // Print preview documents don't get DocAccessibles, but we still want a11y
+    // focus to go somewhere useful. Therefore, we allow a11y focus to land on
+    // the OuterDocAccessible in this case.
+    // Note that this code only handles remote print preview documents.
+    if (EventStateManager::IsTopLevelRemoteTarget(focusedElm) &&
+        focusedElm->AsElement()->HasAttribute(u"printpreview"_ns)) {
+      return focusedElm;
+    }
     // No focus on remote target elements like xul:browser having DOM focus and
     // residing in chrome process because it means an element in content process
     // keeps the focus. Similarly, suppress focus on OOP iframes because an
