@@ -18,7 +18,7 @@ from taskgraph.util.schema import (
     resolve_keyed_by,
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
-from taskgraph.util.partners import check_if_partners_enabled, get_partner_config_by_kind
+from taskgraph.util.partners import get_partner_config_by_kind
 from taskgraph.util.platforms import archive_format, executable_extension
 from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.task import task_description_schema
@@ -71,7 +71,6 @@ packaging_description_schema = schema.extend({
 })
 
 transforms = TransformSequence()
-transforms.add(check_if_partners_enabled)
 transforms.add_validate(packaging_description_schema)
 
 
