@@ -177,9 +177,10 @@ class InputQueue {
                                    CancelAnimationFlags aExtraFlags = Default);
 
   /**
-   * If we need to wait for a content response, schedule that now.
+   * If we need to wait for a content response, schedule that now. Returns true
+   * if the timeout was scheduled, false otherwise.
    */
-  void MaybeRequestContentResponse(
+  bool MaybeRequestContentResponse(
       const RefPtr<AsyncPanZoomController>& aTarget,
       CancelableBlockState* aBlock);
 
@@ -222,6 +223,7 @@ class InputQueue {
   void ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTarget,
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(uint64_t aInputBlockId);
+  void MaybeLongTapTimeout(uint64_t aInputBlockId);
   void ProcessQueue();
   bool CanDiscardBlock(InputBlockState* aBlock);
   void UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive);

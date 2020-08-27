@@ -500,6 +500,7 @@ class TouchBlockState : public CancelableBlockState {
    */
   bool UpdateSlopState(const MultiTouchInput& aInput,
                        bool aApzcCanConsumeEvents);
+  bool IsInSlop() const;
 
   /**
    * Based on the slop origin and the given input event, return a best guess

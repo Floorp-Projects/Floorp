@@ -155,6 +155,9 @@ void GestureEventListener::SetLongTapEnabled(bool aLongTapEnabled) {
   sLongTapEnabled = aLongTapEnabled;
 }
 
+/* static */
+bool GestureEventListener::IsLongTapEnabled() { return sLongTapEnabled; }
+
 void GestureEventListener::EnterFirstSingleTouchDown() {
   SetState(GESTURE_FIRST_SINGLE_TOUCH_DOWN);
   mTouchStartPosition = mLastTouchInput.mTouches[0].mScreenPoint;
