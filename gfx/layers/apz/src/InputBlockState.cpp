@@ -632,7 +632,7 @@ TouchBlockState::TouchBlockState(
       mSingleTapOccurred(false),
       mInSlop(false),
       mTouchCounter(aCounter),
-      mStartTime(TimeStamp::Now()) {
+      mStartTime(GetTargetApzc()->GetFrameTime().Time()) {
   TBS_LOG("Creating %p\n", this);
   if (!StaticPrefs::layout_css_touch_action_enabled()) {
     mAllowedTouchBehaviorSet = true;
@@ -719,7 +719,7 @@ bool TouchBlockState::MustStayActive() { return true; }
 const char* TouchBlockState::Type() { return "touch"; }
 
 TimeDuration TouchBlockState::GetTimeSinceBlockStart() const {
-  return TimeStamp::Now() - mStartTime;
+  return GetTargetApzc()->GetFrameTime().Time() - mStartTime;
 }
 
 void TouchBlockState::DispatchEvent(const InputData& aEvent) const {
