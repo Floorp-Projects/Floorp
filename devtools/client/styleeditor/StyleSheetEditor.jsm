@@ -60,14 +60,10 @@ const EMIT_MEDIA_RULES_THROTTLING = 500;
  *   'source-editor-load': The source editor for this editor has been loaded
  *   'error': An error has occured
  *
- * @param {StyleSheet|OriginalSource}  styleSheet
- *        Stylesheet or original source to show
+ * @param  {Resource} resource
+ *         The STYLESHEET resource which is received from resource watcher.
  * @param {DOMWindow}  win
  *        panel window for style editor
- * @param {nsIFile}  file
- *        Optional file that the sheet was imported from
- * @param {boolean} isNew
- *        Optional whether the sheet was created by the user
  * @param {Walker} walker
  *        Optional walker used for selectors autocompletion
  * @param {CustomHighlighterFront} highlighter
@@ -78,21 +74,19 @@ const EMIT_MEDIA_RULES_THROTTLING = 500;
  *        among all stylesheets of its type (inline or user-created)
  */
 function StyleSheetEditor(
-  styleSheet,
+  resource,
   win,
-  file,
-  isNew,
   walker,
   highlighter,
   styleSheetFriendlyIndex
 ) {
   EventEmitter.decorate(this);
 
-  this.styleSheet = styleSheet;
+  this.styleSheet = resource.styleSheet;
   this._inputElement = null;
   this.sourceEditor = null;
   this._window = win;
-  this._isNew = isNew;
+  this._isNew = this.styleSheet.isNew;
   this.walker = walker;
   this.highlighter = highlighter;
   this.styleSheetFriendlyIndex = styleSheetFriendlyIndex;
@@ -114,7 +108,7 @@ function StyleSheetEditor(
 
   this._styleSheetFilePath = null;
   if (
-    styleSheet.href &&
+    this.styleSheet.href &&
     Services.io.extractScheme(this.styleSheet.href) == "file"
   ) {
     this._styleSheetFilePath = this.styleSheet.href;
@@ -148,7 +142,7 @@ function StyleSheetEditor(
   }
   this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
   this.cssSheet.on("style-applied", this._onStyleApplied);
-  this.savedFile = file;
+  this.savedFile = this.styleSheet.file;
   this.linkCSSFile();
 }
 

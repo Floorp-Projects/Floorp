@@ -79,16 +79,24 @@ const styleSheetsSpec = generateActorSpec({
       type: "stylesheetAdded",
       sheet: Arg(0, "stylesheet"),
       isNew: Arg(1, "boolean"),
+      fileName: Arg(2, "nullable:string"),
     },
   },
 
   methods: {
+    getTraits: {
+      request: {},
+      response: { traits: RetVal("json") },
+    },
     getStyleSheets: {
       request: {},
       response: { styleSheets: RetVal("array:stylesheet") },
     },
     addStyleSheet: {
-      request: { text: Arg(0, "string") },
+      request: {
+        text: Arg(0, "string"),
+        fileName: Arg(1, "nullable:string"),
+      },
       response: { styleSheet: RetVal("stylesheet") },
     },
   },
