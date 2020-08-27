@@ -39,8 +39,10 @@ static inline gc::AllocKind NewObjectGCKind(const JSClass* clasp) {
 }  // namespace js
 
 MOZ_ALWAYS_INLINE uint32_t js::NativeObject::numDynamicSlots() const {
-  uint32_t slots = hasDynamicSlots() ? getSlotsHeader()->capacity() : 0;
+  uint32_t slots = getSlotsHeader()->capacity();
   MOZ_ASSERT(slots == calculateDynamicSlots());
+  MOZ_ASSERT_IF(hasDynamicSlots(), slots != 0);
+
   return slots;
 }
 

@@ -452,6 +452,7 @@ static_assert(ObjectElements::VALUES_PER_HEADER * sizeof(HeapSlot) ==
  */
 class alignas(HeapSlot) ObjectSlots {
   uint32_t capacity_;
+  uint32_t dictionarySlotSpan_;
 
  public:
   static constexpr size_t VALUES_PER_HEADER = 1;
@@ -475,13 +476,23 @@ class alignas(HeapSlot) ObjectSlots {
   static constexpr size_t offsetOfCapacity() {
     return offsetof(ObjectSlots, capacity_);
   }
+  static constexpr size_t offsetOfDictionarySlotSpan() {
+    return offsetof(ObjectSlots, dictionarySlotSpan_);
+  }
   static constexpr size_t offsetOfSlots() { return sizeof(ObjectSlots); }
+  static constexpr int32_t offsetOfDictionarySlotSpanFromSlots() {
+    return int32_t(offsetOfDictionarySlotSpan()) - int32_t(offsetOfSlots());
+  }
 
-  explicit ObjectSlots(uint32_t capacity) : capacity_(capacity) {}
+  constexpr explicit ObjectSlots(uint32_t capacity, uint32_t dictionarySlotSpan)
+      : capacity_(capacity), dictionarySlotSpan_(dictionarySlotSpan) {}
 
   uint32_t capacity() const { return capacity_; }
+  uint32_t dictionarySlotSpan() const { return dictionarySlotSpan_; }
 
-  HeapSlot* slots() {
+  void setDictionarySlotSpan(uint32_t span) { dictionarySlotSpan_ = span; }
+
+  HeapSlot* slots() const {
     return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(ObjectSlots));
   }
 };
@@ -493,6 +504,12 @@ class alignas(HeapSlot) ObjectSlots {
  */
 extern HeapSlot* const emptyObjectElements;
 extern HeapSlot* const emptyObjectElementsShared;
+
+/*
+ * Shared singletons for objects with no dynamic slots.
+ */
+extern HeapSlot* const emptyObjectSlots;
+extern HeapSlot* const emptyObjectSlotsForDictionaryObject[];
 
 class AutoCheckShapeConsistency;
 class GCMarker;
@@ -663,12 +680,16 @@ class NativeObject : public JSObject {
    * Update the slot span directly for a dictionary object, and allocate
    * slots to cover the new span if necessary.
    */
-  bool setSlotSpan(JSContext* cx, uint32_t span);
+  bool ensureSlotsForDictionaryObject(JSContext* cx, uint32_t span);
 
   static MOZ_MUST_USE bool toDictionaryMode(JSContext* cx,
                                             HandleNativeObject obj);
 
  private:
+  inline void setEmptyDynamicSlots(uint32_t dictonarySlotSpan);
+
+  inline void setDictionaryModeSlotSpan(uint32_t span);
+
   friend class TenuringTracer;
 
   /*
@@ -767,7 +788,11 @@ class NativeObject : public JSObject {
 
  public:
   /* Object allocation may directly initialize slots so this is public. */
-  void initSlots(HeapSlot* slots) { slots_ = slots; }
+  void initSlots(HeapSlot* slots) {
+    MOZ_ASSERT(slots);
+    slots_ = slots;
+  }
+  inline void initEmptyDynamicSlots();
 
   static MOZ_MUST_USE bool generateOwnShape(JSContext* cx,
                                             HandleNativeObject obj,
@@ -818,11 +843,20 @@ class NativeObject : public JSObject {
 
   uint32_t slotSpan() const {
     if (inDictionaryMode()) {
-      return lastProperty()->base()->slotSpan();
+      return dictionaryModeSlotSpan();
+    } else {
+      MOZ_ASSERT(getSlotsHeader()->dictionarySlotSpan() == 0);
+      // Get the class from the object group rather than the base shape to avoid
+      // a race between Shape::ensureOwnBaseShape and background sweeping.
+      return lastProperty()->slotSpan(getClass());
     }
-    // Get the class from the object group rather than the base shape to avoid a
-    // race between Shape::ensureOwnBaseShape and background sweeping.
-    return lastProperty()->slotSpan(getClass());
+  }
+
+  uint32_t dictionaryModeSlotSpan() const {
+    MOZ_ASSERT(inDictionaryMode());
+    uint32_t span = getSlotsHeader()->dictionarySlotSpan();
+    MOZ_ASSERT(span == lastProperty()->base()->slotSpan());
+    return span;
   }
 
   /* Whether a slot is at a fixed offset from this object. */
@@ -880,6 +914,8 @@ class NativeObject : public JSObject {
   bool growSlots(JSContext* cx, uint32_t oldCapacity, uint32_t newCapacity);
   void shrinkSlots(JSContext* cx, uint32_t oldCapacity, uint32_t newCapacity);
 
+  bool allocateSlots(JSContext* cx, uint32_t newCapacity);
+
   /*
    * This method is static because it's called from JIT code. On OOM, returns
    * false without leaving a pending exception on the context.
@@ -894,7 +930,7 @@ class NativeObject : public JSObject {
    */
   static bool addDenseElementPure(JSContext* cx, NativeObject* obj);
 
-  bool hasDynamicSlots() const { return !!slots_; }
+  bool hasDynamicSlots() const { return getSlotsHeader()->capacity(); }
 
   /* Compute the number of dynamic slots required for this object. */
   MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots() const;

@@ -1471,8 +1471,6 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(obj->slotSpan() == values.length());
   MOZ_ASSERT(!IsInsideNursery(obj));
 
-  size_t oldSlotCount = obj->numDynamicSlots();
-
   // Make sure the shape's numFixedSlots() is correct.
   size_t nfixed =
       gc::GetGCKindSlots(obj->asTenured().getAllocKind(), obj->getClass());
@@ -1490,29 +1488,26 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   }
 
   Zone* zone = obj->zone();
-  if (obj->slots_) {
-    size_t size = ObjectSlots::allocSize(oldSlotCount);
+  if (obj->hasDynamicSlots()) {
+    ObjectSlots* slotsHeader = obj->getSlotsHeader();
+    uint32_t oldDictionarySlotSpan = slotsHeader->dictionarySlotSpan();
+    size_t size = ObjectSlots::allocSize(slotsHeader->capacity());
     zone->removeCellMemory(old, size, MemoryUse::ObjectSlots);
-    js_free(obj->getSlotsHeader());
-    obj->slots_ = nullptr;
+    js_free(slotsHeader);
+    obj->setEmptyDynamicSlots(oldDictionarySlotSpan);
   }
 
-  if (size_t ndynamic =
-          calculateDynamicSlots(nfixed, values.length(), obj->getClass())) {
-    HeapSlot* allocation =
-        cx->pod_malloc<HeapSlot>(ObjectSlots::allocCount(ndynamic));
-    if (!allocation) {
+  size_t ndynamic =
+      calculateDynamicSlots(nfixed, values.length(), obj->getClass());
+  MOZ_ASSERT(ndynamic >= obj->numDynamicSlots());
+  if (ndynamic > obj->numDynamicSlots()) {
+    if (!obj->growSlots(cx, obj->numDynamicSlots(), ndynamic)) {
       return false;
     }
-
-    auto* slotsHeader = new (allocation) ObjectSlots(ndynamic);
-    obj->slots_ = slotsHeader->slots();
-    zone->addCellMemory(obj, ObjectSlots::allocSize(ndynamic),
-                        MemoryUse::ObjectSlots);
-    Debug_SetSlotRangeToCrashOnTouch(obj->slots_, ndynamic);
   }
 
   obj->initSlotRange(0, values.begin(), values.length());
+
   return true;
 }
 

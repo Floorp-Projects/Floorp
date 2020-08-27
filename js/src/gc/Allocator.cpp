@@ -138,7 +138,7 @@ JSObject* GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind,
       return nullptr;
     }
 
-    slotsHeader = new (allocation) ObjectSlots(nDynamicSlots);
+    slotsHeader = new (allocation) ObjectSlots(nDynamicSlots, 0);
     Debug_SetSlotRangeToCrashOnTouch(slotsHeader->slots(), nDynamicSlots);
   }
 
