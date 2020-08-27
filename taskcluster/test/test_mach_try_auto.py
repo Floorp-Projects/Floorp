@@ -86,7 +86,6 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
         pytest.param(
             lambda t: t.kind == "build" and "fuzzing" in t.attributes["build_platform"],
             id="no fuzzing builds",
-            marks=pytest.mark.xfail,
         ),
         pytest.param(
             lambda t: t.kind == "build-signing",
