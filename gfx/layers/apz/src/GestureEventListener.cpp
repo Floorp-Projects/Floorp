@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GestureEventListener.h"
+#include <algorithm>                 // for max
 #include <math.h>                    // for fabsf
 #include <stddef.h>                  // for size_t
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
@@ -614,8 +615,16 @@ void GestureEventListener::CreateLongTapTimeoutTask() {
       &GestureEventListener::HandleInputTimeoutLongTap);
 
   mLongTapTimeoutTask = task;
-  mAsyncPanZoomController->PostDelayedTask(
-      task.forget(), StaticPrefs::ui_click_hold_context_menus_delay());
+
+  TouchBlockState* block =
+      mAsyncPanZoomController->GetInputQueue()->GetCurrentTouchBlock();
+  MOZ_ASSERT(block);
+  long alreadyElapsed =
+      static_cast<long>(block->GetTimeSinceBlockStart().ToMilliseconds());
+  long remainingDelay =
+      StaticPrefs::ui_click_hold_context_menus_delay() - alreadyElapsed;
+  mAsyncPanZoomController->PostDelayedTask(task.forget(),
+                                           std::max(0L, remainingDelay));
 }
 
 void GestureEventListener::CancelMaxTapTimeoutTask() {
@@ -642,8 +651,12 @@ void GestureEventListener::CreateMaxTapTimeoutTask() {
       block->IsDuringFastFling());
 
   mMaxTapTimeoutTask = task;
+
+  long alreadyElapsed =
+      static_cast<long>(block->GetTimeSinceBlockStart().ToMilliseconds());
+  long remainingDelay = StaticPrefs::apz_max_tap_time() - alreadyElapsed;
   mAsyncPanZoomController->PostDelayedTask(task.forget(),
-                                           StaticPrefs::apz_max_tap_time());
+                                           std::max(0L, remainingDelay));
 }
 
 }  // namespace layers

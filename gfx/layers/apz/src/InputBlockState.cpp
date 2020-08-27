@@ -631,7 +631,8 @@ TouchBlockState::TouchBlockState(
       mDuringFastFling(false),
       mSingleTapOccurred(false),
       mInSlop(false),
-      mTouchCounter(aCounter) {
+      mTouchCounter(aCounter),
+      mStartTime(TimeStamp::Now()) {
   TBS_LOG("Creating %p\n", this);
   if (!StaticPrefs::layout_css_touch_action_enabled()) {
     mAllowedTouchBehaviorSet = true;
@@ -716,6 +717,10 @@ bool TouchBlockState::SingleTapOccurred() const { return mSingleTapOccurred; }
 bool TouchBlockState::MustStayActive() { return true; }
 
 const char* TouchBlockState::Type() { return "touch"; }
+
+TimeDuration TouchBlockState::GetTimeSinceBlockStart() const {
+  return TimeStamp::Now() - mStartTime;
+}
 
 void TouchBlockState::DispatchEvent(const InputData& aEvent) const {
   MOZ_ASSERT(aEvent.mInputType == MULTITOUCH_INPUT);
