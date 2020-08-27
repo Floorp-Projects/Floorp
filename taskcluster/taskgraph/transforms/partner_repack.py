@@ -12,6 +12,7 @@ from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
 from taskgraph.util.partners import (
     check_if_partners_enabled,
+    get_partner_config_by_kind,
     get_partner_url_config,
     get_repack_ids_by_platform,
     apply_partner_priority,
@@ -19,6 +20,7 @@ from taskgraph.util.partners import (
 
 
 transforms = TransformSequence()
+transforms.add(check_if_partners_enabled)
 transforms.add(apply_partner_priority)
 
 
@@ -73,11 +75,14 @@ def make_label(config, tasks):
 @transforms.add
 def add_command_arguments(config, tasks):
     release_config = get_release_config(config)
+
+    # staging releases - pass reduced set of locales to the repacking script
     all_locales = set()
-    for partner_class in config.params['release_partner_config'].values():
-        for partner in partner_class.values():
-            for sub_partner in partner.values():
-                all_locales.update(sub_partner.get('locales', []))
+    partner_config = get_partner_config_by_kind(config, config.kind)
+    for partner in partner_config.values():
+        for sub_partner in partner.values():
+            all_locales.update(sub_partner.get('locales', []))
+
     for task in tasks:
         # add the MOZHARNESS_OPTIONS, eg version=61.0, build-number=1, platform=win64
         if not task['attributes']['build_platform'].endswith('-shippable'):
@@ -110,8 +115,3 @@ def add_command_arguments(config, tasks):
         task['worker']['env']['RELEASE_TYPE'] = config.params['release_type']
 
         yield task
-
-
-# This needs to be run at the *end*, because the generators are called in
-# reverse order, when each downstream transform references `tasks`.
-transforms.add(check_if_partners_enabled)
