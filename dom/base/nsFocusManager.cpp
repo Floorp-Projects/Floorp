@@ -1939,14 +1939,6 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
     return aElement;
   }
 
-  // cannot focus content in print preview mode. Only the root can be focused.
-  nsPresContext* presContext = presShell->GetPresContext();
-  if (presContext &&
-      presContext->Type() == nsPresContext::eContext_PrintPreview) {
-    LOGCONTENT("Cannot focus %s while in print preview", aElement)
-    return nullptr;
-  }
-
   nsIFrame* frame = aElement->GetPrimaryFrame();
   if (!frame) {
     LOGCONTENT("Cannot focus %s as it has no frame", aElement)
