@@ -1013,19 +1013,13 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
   // reflowing the doc for printing.
   aDoNotify = false;
 
-  // Assume we can't do progress and then see if we can
-  bool showProgresssDialog = false;
-
-  // if it is already being shown then don't bother to find out if it should be
-  // so skip this and leave mShowProgressDialog set to FALSE
-  if (!mProgressDialogIsShown) {
-    showProgresssDialog = Preferences::GetBool("print.show_print_progress");
-  }
-
   // Guarantee that mPrt and the objects it owns won't be deleted.  If this
   // method shows a progress dialog and spins the event loop.  So, mPrt may be
   // cleared or recreated.
   RefPtr<nsPrintData> printData = mPrt;
+
+  bool showProgresssDialog =
+      !mProgressDialogIsShown && StaticPrefs::print_show_print_progress();
 
   // Turning off the showing of Print Progress in Prefs overrides
   // whether the calling PS desire to have it on or off, so only check PS if
