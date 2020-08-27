@@ -2159,6 +2159,12 @@
   value: 1000
   mirror: always
 
+# Timeout clamp in ms for background windows before throttling has started.
+- name: dom.min_background_timeout_value_before_throttling
+  type: int32_t
+  value: 1000
+  mirror: always
+
 # Are missing-property use counters for certain DOM attributes enabled?
 - name: dom.missing_prop_counters.enabled
   type: bool
