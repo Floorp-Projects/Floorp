@@ -19,6 +19,9 @@ private const val INTENT_EXCEPTION = "exception"
 // Breadcrumbs intent extras
 private const val INTENT_BREADCRUMBS = "breadcrumbs"
 
+// Crash timestamp intent extras
+private const val INTENT_CRASH_TIMESTAMP = "crashTimestamp"
+
 // Native code crash intent extras (Mirroring GeckoView values)
 private const val INTENT_UUID = "uuid"
 private const val INTENT_MINIDUMP_PATH = "minidumpPath"
@@ -38,10 +41,12 @@ sealed class Crash {
     /**
      * A crash caused by an uncaught exception.
      *
+     * @property timestamp Time of when the crash happened.
      * @property throwable The [Throwable] that caused the crash.
      * @property breadcrumbs List of breadcrumbs to send with the crash report.
      */
     data class UncaughtExceptionCrash(
+        val timestamp: Long,
         val throwable: Throwable,
         val breadcrumbs: ArrayList<Breadcrumb>,
         override val uuid: String = UUID.randomUUID().toString()
@@ -49,6 +54,7 @@ sealed class Crash {
         override fun toBundle() = Bundle().apply {
             putString(INTENT_UUID, uuid)
             putSerializable(INTENT_EXCEPTION, throwable as Serializable)
+            putLong(INTENT_CRASH_TIMESTAMP, timestamp)
             putParcelableArrayList(INTENT_BREADCRUMBS, breadcrumbs)
         }
 
@@ -56,7 +62,8 @@ sealed class Crash {
             internal fun fromBundle(bundle: Bundle) = UncaughtExceptionCrash(
                 uuid = bundle.getString(INTENT_UUID) as String,
                 throwable = bundle.getSerializable(INTENT_EXCEPTION) as Throwable,
-                breadcrumbs = bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf()
+                breadcrumbs = bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf(),
+                timestamp = bundle.getLong(INTENT_CRASH_TIMESTAMP, System.currentTimeMillis())
             )
         }
     }
@@ -64,6 +71,7 @@ sealed class Crash {
     /**
      * A crash that happened in native code.
      *
+     * @property timestamp Time of when the crash happened.
      * @property minidumpPath Path to a Breakpad minidump file containing information about the crash.
      * @property minidumpSuccess Indicating whether or not the crash dump was successfully retrieved. If this is false,
      *                           the dump file may be corrupted or incomplete.
@@ -76,6 +84,7 @@ sealed class Crash {
      * @property breadcrumbs List of breadcrumbs to send with the crash report.
      */
     data class NativeCodeCrash(
+        val timestamp: Long,
         val minidumpPath: String?,
         val minidumpSuccess: Boolean,
         val extrasPath: String?,
@@ -89,6 +98,7 @@ sealed class Crash {
             putBoolean(INTENT_MINIDUMP_SUCCESS, minidumpSuccess)
             putString(INTENT_EXTRAS_PATH, extrasPath)
             putBoolean(INTENT_FATAL, isFatal)
+            putLong(INTENT_CRASH_TIMESTAMP, timestamp)
             putParcelableArrayList(INTENT_BREADCRUMBS, breadcrumbs)
         }
 
@@ -99,7 +109,8 @@ sealed class Crash {
                 minidumpSuccess = bundle.getBoolean(INTENT_MINIDUMP_SUCCESS, false),
                 extrasPath = bundle.getString(INTENT_EXTRAS_PATH, null),
                 isFatal = bundle.getBoolean(INTENT_FATAL, false),
-                breadcrumbs = bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf()
+                breadcrumbs = bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf(),
+                timestamp = bundle.getLong(INTENT_CRASH_TIMESTAMP, System.currentTimeMillis())
             )
         }
     }

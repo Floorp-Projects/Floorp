@@ -112,6 +112,7 @@ class MozillaSocorroService(
 
     override fun report(crash: Crash.UncaughtExceptionCrash): String? {
         return sendReport(
+            crash.timestamp,
             crash.throwable,
             miniDumpFilePath = null,
             extrasFilePath = null,
@@ -123,6 +124,7 @@ class MozillaSocorroService(
 
     override fun report(crash: Crash.NativeCodeCrash): String? {
         return sendReport(
+            crash.timestamp,
             throwable = null,
             miniDumpFilePath = crash.minidumpPath,
             extrasFilePath = crash.extrasPath,
@@ -140,6 +142,7 @@ class MozillaSocorroService(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     @Suppress("LongParameterList")
     internal fun sendReport(
+        timestamp: Long,
         throwable: Throwable?,
         miniDumpFilePath: String?,
         extrasFilePath: String?,
@@ -163,7 +166,7 @@ class MozillaSocorroService(
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
             conn.setRequestProperty("Content-Encoding", "gzip")
 
-            sendCrashData(conn.outputStream, boundary, throwable, miniDumpFilePath, extrasFilePath,
+            sendCrashData(conn.outputStream, boundary, timestamp, throwable, miniDumpFilePath, extrasFilePath,
                     isNativeCodeCrash, isFatalCrash, breadcrumbsJson.toString())
 
             BufferedReader(InputStreamReader(conn.inputStream)).use { reader ->
@@ -211,6 +214,7 @@ class MozillaSocorroService(
     private fun sendCrashData(
         os: OutputStream,
         boundary: String,
+        timestamp: Long,
         throwable: Throwable?,
         miniDumpFilePath: String?,
         extrasFilePath: String?,
@@ -268,7 +272,7 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "StartupTime",
                 TimeUnit.MILLISECONDS.toSeconds(startTime).toString(), nameSet)
         sendPart(gzipOs, boundary, "CrashTime",
-                TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()).toString(), nameSet)
+                TimeUnit.MILLISECONDS.toSeconds(timestamp).toString(), nameSet)
         sendPart(gzipOs, boundary, "Android_PackageName", applicationContext.packageName, nameSet)
         sendPart(gzipOs, boundary, "Android_Manufacturer", Build.MANUFACTURER, nameSet)
         sendPart(gzipOs, boundary, "Android_Model", Build.MODEL, nameSet)

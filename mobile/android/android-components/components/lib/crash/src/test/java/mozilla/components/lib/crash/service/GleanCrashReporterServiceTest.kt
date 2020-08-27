@@ -45,7 +45,7 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.NativeCodeCrash("", true, "", true, arrayListOf())
+            val crash = Crash.NativeCodeCrash(0, "", true, "", true, arrayListOf())
             service.record(crash)
 
             verify(service).record(crash)
@@ -84,7 +84,7 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+            val crash = Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
             service.record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())
@@ -121,7 +121,7 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
+            val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Test"), arrayListOf())
             service.record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())
@@ -203,9 +203,9 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
-            val fatalNativeCodeCrash = Crash.NativeCodeCrash("", true, "", true, arrayListOf())
-            val nonfatalNativeCodeCrash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+            val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(0, RuntimeException("Test"), arrayListOf())
+            val fatalNativeCodeCrash = Crash.NativeCodeCrash(0, "", true, "", true, arrayListOf())
+            val nonfatalNativeCodeCrash = Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
 
             // Record some crashes
             service.record(uncaughtExceptionCrash)
@@ -255,7 +255,7 @@ class GleanCrashReporterServiceTest {
 
         assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
+        val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Test"), arrayListOf())
         service.record(crash)
 
         assertTrue("Persistence file must exist", service.file.exists())
@@ -279,7 +279,7 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.NativeCodeCrash("", true, "", true, arrayListOf())
+            val crash = Crash.NativeCodeCrash(0, "", true, "", true, arrayListOf())
             service.record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())

@@ -18,6 +18,7 @@ import io.sentry.event.EventBuilder
 import io.sentry.event.interfaces.ExceptionInterface
 import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
+import java.util.Date
 import mozilla.components.support.base.crash.Breadcrumb as CrashBreadcrumb
 
 /**
@@ -83,6 +84,7 @@ class SentryService(
         }
 
         val eventBuilder = EventBuilder().withMessage(createMessage(crash))
+                .withTimestamp(Date(crash.timestamp))
                 .withLevel(Event.Level.FATAL)
                 .withSentryInterface(ExceptionInterface(crash.throwable))
 
@@ -104,6 +106,7 @@ class SentryService(
             }
 
             val eventBuilder = EventBuilder()
+                .withTimestamp(Date(crash.timestamp))
                 .withMessage(createMessage(crash))
                 .withLevel(level)
 

@@ -49,6 +49,7 @@ class NativeCodeCrashTest {
     @Test
     fun `to and from bundle`() {
         val crash = Crash.NativeCodeCrash(
+            0,
             "minidumpPath",
             true,
             "extrasPath",
