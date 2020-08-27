@@ -510,7 +510,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   MOZ_ASSERT(!clasp->isJSFunction(), "should use JSFunction::create");
 
   size_t nDynamicSlots =
-      dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
+      calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(), clasp);
 
   JSObject* obj = js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp);
   if (!obj) {
@@ -550,8 +550,8 @@ MOZ_ALWAYS_INLINE bool NativeObject::updateSlotsForSpan(JSContext* cx,
                                                         size_t newSpan) {
   MOZ_ASSERT(oldSpan != newSpan);
 
-  size_t oldCount = dynamicSlotsCount(numFixedSlots(), oldSpan, getClass());
-  size_t newCount = dynamicSlotsCount(numFixedSlots(), newSpan, getClass());
+  size_t oldCount = numDynamicSlots();
+  size_t newCount = calculateDynamicSlots(numFixedSlots(), newSpan, getClass());
 
   if (oldSpan < newSpan) {
     if (oldCount < newCount && !growSlots(cx, oldCount, newCount)) {

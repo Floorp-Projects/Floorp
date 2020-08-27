@@ -896,7 +896,9 @@ class NativeObject : public JSObject {
 
   bool hasDynamicSlots() const { return !!slots_; }
 
-  /* Compute dynamicSlotsCount() for this object. */
+  /* Compute the number of dynamic slots required for this object. */
+  MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots() const;
+
   MOZ_ALWAYS_INLINE uint32_t numDynamicSlots() const;
 
   bool empty() const { return lastProperty()->isEmptyShape(); }
@@ -1195,15 +1197,13 @@ class NativeObject : public JSObject {
   }
 
   /*
-   * Get the number of dynamic slots to allocate to cover the properties in
-   * an object with the given number of fixed slots and slot span. The slot
-   * capacity is not stored explicitly, and the allocated size of the slot
-   * array is kept in sync with this count.
+   * Calculate the number of dynamic slots to allocate to cover the properties
+   * in an object with the given number of fixed slots and slot span.
    */
-  static MOZ_ALWAYS_INLINE uint32_t dynamicSlotsCount(uint32_t nfixed,
-                                                      uint32_t span,
-                                                      const JSClass* clasp);
-  static MOZ_ALWAYS_INLINE uint32_t dynamicSlotsCount(Shape* shape);
+  static MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots(uint32_t nfixed,
+                                                          uint32_t span,
+                                                          const JSClass* clasp);
+  static MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots(Shape* shape);
 
   ObjectSlots* getSlotsHeader() const { return ObjectSlots::fromSlots(slots_); }
 

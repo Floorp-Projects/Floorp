@@ -4688,8 +4688,8 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
     trackAttached("AddSlot");
   } else {
     size_t offset = holder->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
-    uint32_t numOldSlots = NativeObject::dynamicSlotsCount(oldShape);
-    uint32_t numNewSlots = NativeObject::dynamicSlotsCount(propShape);
+    uint32_t numOldSlots = NativeObject::calculateDynamicSlots(oldShape);
+    uint32_t numNewSlots = holder->numDynamicSlots();
     if (numOldSlots == numNewSlots) {
       writer.addAndStoreDynamicSlot(objId, offset, rhsValId, changeGroup,
                                     newGroup, propShape);
