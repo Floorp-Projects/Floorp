@@ -197,6 +197,7 @@ namespace mozilla {
 namespace mscom {
 
 void InitProfilerMarkers() {
+#ifdef MOZ_GECKO_PROFILER
   if (!XRE_IsParentProcess()) {
     return;
   }
@@ -224,6 +225,7 @@ void InitProfilerMarkers() {
 
   nsCOMPtr<nsIObserver> obs(new ProfilerStartupObserver());
   obsServ->AddObserver(obs, "profiler-started", false);
+#endif  // MOZ_GECKO_PROFILER
 }
 
 }  // namespace mscom
