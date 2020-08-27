@@ -216,4 +216,26 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   return range.Bounds();
 }
 
+- (NSNumber*)moxIndexForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
+  GeckoTextMarkerRange range(GeckoTextMarker(mGeckoDocAccessible, 0),
+                             geckoTextMarker);
+
+  return @(range.Length());
+}
+
+- (id)moxTextMarkerForIndex:(NSNumber*)index {
+  GeckoTextMarker geckoTextMarker = GeckoTextMarker::MarkerFromIndex(
+      mGeckoDocAccessible, [index integerValue]);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
+  return geckoTextMarker.CreateAXTextMarker();
+}
+
 @end
