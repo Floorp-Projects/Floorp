@@ -622,9 +622,13 @@ class PerftestOutput(object):
                         "turning on subtest alerting for measurement type: %s" % name
                     )
                     _subtests[name]["shouldAlert"] = True
-
+        failed_tests = []
         for pagecycle in data:
             for _sub, _value in pagecycle[0].iteritems():
+                if _value["decodedFrames"] == 0:
+                    failed_tests.append("%s test Failed. decodedFrames %s droppedFrames %s." %
+                                        (_sub, _value["decodedFrames"], _value["droppedFrames"]))
+
                 try:
                     percent_dropped = (
                         float(_value["droppedFrames"]) / _value["decodedFrames"] * 100.0
@@ -651,6 +655,12 @@ class PerftestOutput(object):
                     "{}_%_dropped_frames".format(_sub), percent_dropped
                 )
 
+        # Check if any youtube test failed and generate exception
+        if len(failed_tests) > 0:
+            [LOG.warning("Youtube sub-test FAILED: %s" % test) for test in failed_tests]
+            # TODO: Change this to raise Exception after we figure out the failing tests
+            LOG.warning("Youtube playback sub-tests failed!!! "
+                        "Not submitting results to perfherder!")
         vals = []
         subtests = []
         names = _subtests.keys()
