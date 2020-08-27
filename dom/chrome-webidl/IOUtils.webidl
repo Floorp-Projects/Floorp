@@ -145,6 +145,18 @@ namespace IOUtils {
    *         DOMException.
    */
   Promise<long long> touch(DOMString path, optional long long modification);
+  /**
+   * Retrieves a (possibly empty) list of immediate children of the directory at
+   * |path|. If the file at |path| is not a directory, this method resolves with
+   * an empty list.
+   *
+   * @param path An absolute file path.
+   *
+   * @return Resolves with a sequence of absolute file paths representing the
+   *         children of the directory at |path|, otherwise rejects with a
+   *         DOMException.
+   */
+  Promise<sequence<DOMString>> getChildren(DOMString path);
 };
 
 /**
