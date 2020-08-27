@@ -345,8 +345,11 @@ void NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape) {
   MOZ_ASSERT(newFixed < oldFixed);
   MOZ_ASSERT(shape->slotSpan() <= oldFixed);
   MOZ_ASSERT(shape->slotSpan() <= newFixed);
-  MOZ_ASSERT(dynamicSlotsCount(oldFixed, shape->slotSpan(), getClass()) == 0);
-  MOZ_ASSERT(dynamicSlotsCount(newFixed, shape->slotSpan(), getClass()) == 0);
+  MOZ_ASSERT(numDynamicSlots() == 0);
+  MOZ_ASSERT(calculateDynamicSlots(oldFixed, shape->slotSpan(), getClass()) ==
+             0);
+  MOZ_ASSERT(calculateDynamicSlots(newFixed, shape->slotSpan(), getClass()) ==
+             0);
 
   setShape(shape);
 }
@@ -504,8 +507,12 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
       cx, this, reinterpret_cast<HeapSlot*>(oldHeaderSlots), oldAllocated,
       newAllocated);
   if (!allocation) {
+    // It's possible for realloc to fail when shrinking an allocation. In this
+    // case we continue using the original allocation but still update the
+    // capacity to the new requested capacity, which is smaller than the actual
+    // capacity.
     cx->recoverFromOutOfMemory();
-    return;  // Leave slots at its old size.
+    allocation = reinterpret_cast<HeapSlot*>(getSlotsHeader());
   }
 
   RemoveCellMemory(this, ObjectSlots::allocSize(oldCapacity),
