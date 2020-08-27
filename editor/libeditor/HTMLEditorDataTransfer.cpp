@@ -277,7 +277,7 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
 class MOZ_STACK_CLASS
     HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator final {
  public:
-  nsresult Run(Document* aDocument, const nsAString& aInputString,
+  nsresult Run(const Document* aDocument, const nsAString& aInputString,
                const nsAString& aContextStr, const nsAString& aInfoStr,
                nsCOMPtr<nsINode>* aOutFragNode,
                nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
@@ -285,7 +285,7 @@ class MOZ_STACK_CLASS
 
  private:
   nsresult CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
-      Document* aDocument, const nsAString& aInputString,
+      const Document* aDocument, const nsAString& aInputString,
       const nsAString& aContextStr, bool aTrustedInput,
       nsCOMPtr<nsINode>& aParentNodeOfPastedHTMLInContext,
       RefPtr<DocumentFragment>& aDocumentFragmentToInsert) const;
@@ -3147,7 +3147,7 @@ bool HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter::FragmentParser
     final {
  public:
-  FragmentParser(Document& aDocument, bool aTrustedInput);
+  FragmentParser(const Document& aDocument, bool aTrustedInput);
 
   [[nodiscard]] nsresult ParseContext(const nsAString& aContextString,
                                       DocumentFragment** aFragment);
@@ -3158,16 +3158,17 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter::FragmentParser
 
  private:
   static nsresult ParseFragment(const nsAString& aStr,
-                                nsAtom* aContextLocalName, Document* aTargetDoc,
+                                nsAtom* aContextLocalName,
+                                const Document* aTargetDoc,
                                 dom::DocumentFragment** aFragment,
                                 bool aTrustedInput);
 
-  Document& mDocument;
+  const Document& mDocument;
   const bool mTrustedInput;
 };
 
 HTMLEditor::HTMLWithContextInserter::FragmentParser::FragmentParser(
-    Document& aDocument, bool aTrustedInput)
+    const Document& aDocument, bool aTrustedInput)
     : mDocument{aDocument}, mTrustedInput{aTrustedInput} {}
 
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentParser::ParseContext(
@@ -3301,11 +3302,11 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
-        Document* aDocument, const nsAString& aInputString,
+        const Document* aDocument, const nsAString& aInputString,
         const nsAString& aContextStr, bool aTrustedInput,
         nsCOMPtr<nsINode>& aParentNodeOfPastedHTMLInContext,
         RefPtr<DocumentFragment>& aDocumentFragmentToInsert) const {
-  RefPtr<Document> document = aDocument;
+  RefPtr<const Document> document = aDocument;
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_FAILURE;
   }
@@ -3398,7 +3399,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 }
 
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
-    Document* aDocument, const nsAString& aInputString,
+    const Document* aDocument, const nsAString& aInputString,
     const nsAString& aContextStr, const nsAString& aInfoStr,
     nsCOMPtr<nsINode>* aOutFragNode, nsCOMPtr<nsINode>* aOutStartNode,
     nsCOMPtr<nsINode>* aOutEndNode, bool aTrustedInput) const {
@@ -3484,7 +3485,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 // static
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentParser::ParseFragment(
     const nsAString& aFragStr, nsAtom* aContextLocalName,
-    Document* aTargetDocument, DocumentFragment** aFragment,
+    const Document* aTargetDocument, DocumentFragment** aFragment,
     bool aTrustedInput) {
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
