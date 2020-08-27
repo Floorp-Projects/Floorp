@@ -120,7 +120,7 @@ describe("Filtering", () => {
     });
 
     it("filters network messages", () => {
-      const message = stubPreparedMessages.get("GET request");
+      const message = stubPreparedMessages.get("GET request update");
       store.dispatch(messagesAdd([message]));
 
       let messages = getVisibleMessages(store.getState());
@@ -325,7 +325,7 @@ function prepareBaseStore() {
     "console.table(['red', 'green', 'blue']);",
     "console.assert(false, {message: 'foobar'})",
     // This is a 404 request, it's displayed as an error
-    "GET request",
+    "GET request update",
   ]);
 
   // Console Command - never filtered

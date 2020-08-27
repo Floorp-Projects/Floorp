@@ -8,20 +8,36 @@ const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
-module.exports = async function({ targetFront, onAvailable }) {
+module.exports = async function({ targetFront, onAvailable, onUpdated }) {
   if (!targetFront.hasActor("styleSheets")) {
     return;
   }
+
+  const onStyleSheetAdded = (styleSheet, isNew, fileName) => {
+    const resource = toResource(styleSheet, isNew, fileName);
+
+    styleSheet.on("style-applied", () => {
+      onUpdated([
+        {
+          resourceType: resource.resourceType,
+          resourceId: resource.resourceId,
+          updateType: "style-applied",
+        },
+      ]);
+    });
+
+    return resource;
+  };
 
   const styleSheetsFront = await targetFront.getFront("stylesheets");
   try {
     const styleSheets = await styleSheetsFront.getStyleSheets();
     onAvailable(
-      styleSheets.map(styleSheet => toResource(styleSheet, false, null))
+      styleSheets.map(styleSheet => onStyleSheetAdded(styleSheet, false, null))
     );
 
     styleSheetsFront.on("stylesheet-added", (styleSheet, isNew, fileName) => {
-      onAvailable([toResource(styleSheet, isNew, fileName)]);
+      onAvailable([onStyleSheetAdded(styleSheet, isNew, fileName)]);
     });
   } catch (e) {
     // There are cases that the stylesheet front was destroyed already when/while calling
@@ -34,6 +50,7 @@ module.exports = async function({ targetFront, onAvailable }) {
 
 function toResource(styleSheet, isNew, fileName) {
   return {
+    resourceId: styleSheet.actorID,
     resourceType: ResourceWatcher.TYPES.STYLESHEET,
     styleSheet: Object.assign(styleSheet, { isNew, fileName }),
   };

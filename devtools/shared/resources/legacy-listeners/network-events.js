@@ -75,50 +75,70 @@ module.exports = async function({
       return;
     }
 
-    resource.updates.push(packet.updateType);
-    resource.updateType = packet.updateType;
+    const updateType = packet.updateType;
+    const resourceUpdates = {};
+    resourceUpdates.updates = [...resource.updates, updateType];
+    resourceUpdates.updateType = updateType;
 
-    switch (packet.updateType) {
+    switch (updateType) {
       case "requestHeaders":
-        resource.request.headersSize = packet.headersSize;
+        resourceUpdates.request = Object.assign({}, resource.request, {
+          headersSize: packet.headersSize,
+        });
         break;
       case "requestPostData":
-        resource.discardRequestBody = packet.discardRequestBody;
-        resource.request.bodySize = packet.dataSize;
+        resourceUpdates.discardRequestBody = packet.discardRequestBody;
+        resourceUpdates.request = Object.assign({}, resource.request, {
+          bodySize: packet.dataSize,
+        });
         break;
       case "responseStart":
-        resource.response.httpVersion = packet.response.httpVersion;
-        resource.response.status = packet.response.status;
-        resource.response.statusText = packet.response.statusText;
-        resource.response.headersSize = packet.response.headersSize;
-        resource.response.remoteAddress = packet.response.remoteAddress;
-        resource.response.remotePort = packet.response.remotePort;
-        resource.discardResponseBody = packet.response.discardResponseBody;
-        resource.response.content = {
-          mimeType: packet.response.mimeType,
-        };
-        resource.response.waitingTime = packet.response.waitingTime;
+        resourceUpdates.response = Object.assign({}, resource.response, {
+          httpVersion: packet.response.httpVersion,
+          status: packet.response.status,
+          statusText: packet.response.statusText,
+          headersSize: packet.response.headersSize,
+          remoteAddress: packet.response.remoteAddress,
+          remotePort: packet.response.remotePort,
+          content: {
+            mimeType: packet.response.mimeType,
+          },
+          waitingTime: packet.response.waitingTime,
+        });
+        resourceUpdates.discardResponseBody =
+          packet.response.discardResponseBody;
         break;
       case "responseContent":
-        resource.response.content = {
-          mimeType: packet.mimeType,
-        };
-        resource.response.bodySize = packet.contentSize;
-        resource.response.transferredSize = packet.transferredSize;
-        resource.discardResponseBody = packet.discardResponseBody;
+        resourceUpdates.discardResponseBody = packet.discardResponseBody;
+        resourceUpdates.response = Object.assign({}, resource.response, {
+          bodySize: packet.contentSize,
+          transferredSize: packet.transferredSize,
+          content: { mimeType: packet.mimeType },
+        });
         break;
       case "eventTimings":
-        resource.totalTime = packet.totalTime;
+        resourceUpdates.totalTime = packet.totalTime;
         break;
       case "securityInfo":
-        resource.securityState = packet.state;
+        resourceUpdates.securityState = packet.state;
         break;
       case "responseCache":
-        resource.response.responseCache = packet.responseCache;
+        resourceUpdates.response = Object.assign({}, resource.response, {
+          responseCache: packet.responseCache,
+        });
         break;
     }
 
-    onUpdated([resource]);
+    // Update local resource.
+    Object.assign(resource, resourceUpdates);
+
+    onUpdated([
+      {
+        resourceType: resource.resourceType,
+        resourceId: resource.resourceId,
+        resourceUpdates,
+      },
+    ]);
 
     if (resource.blockedReason) {
       // Blocked requests
