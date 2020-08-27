@@ -213,7 +213,12 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
     Maybe<DeclarationKind> redeclaredKind;
     uint32_t unused;
     for (FunctionBox* funbox : *possibleAnnexBFunctionBoxes_) {
-      if (pc->annexBAppliesToLexicalFunctionInInnermostScope(funbox)) {
+      bool annexBApplies;
+      if (!pc->computeAnnexBAppliesToLexicalFunctionInInnermostScope(
+              funbox, &annexBApplies)) {
+        return false;
+      }
+      if (annexBApplies) {
         const ParserName* name = funbox->explicitName()->asName();
         if (!pc->tryDeclareVar(
                 name, DeclarationKind::VarForAnnexBLexicalFunction,
@@ -229,7 +234,12 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
     // Inner scope case: propagate still applicable function boxes to the
     // enclosing scope.
     for (FunctionBox* funbox : *possibleAnnexBFunctionBoxes_) {
-      if (pc->annexBAppliesToLexicalFunctionInInnermostScope(funbox)) {
+      bool annexBApplies;
+      if (!pc->computeAnnexBAppliesToLexicalFunctionInInnermostScope(
+              funbox, &annexBApplies)) {
+        return false;
+      }
+      if (annexBApplies) {
         if (!enclosing()->addPossibleAnnexBFunctionBox(pc, funbox)) {
           return false;
         }
@@ -358,13 +368,17 @@ bool ParseContext::init() {
   return true;
 }
 
-bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
-    FunctionBox* funbox) {
+bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
+    FunctionBox* funbox, bool* annexBApplies) {
   MOZ_ASSERT(!sc()->strict());
 
   const ParserName* name = funbox->explicitName()->asName();
-  Maybe<DeclarationKind> redeclaredKind = isVarRedeclaredInInnermostScope(
-      name, DeclarationKind::VarForAnnexBLexicalFunction);
+  Maybe<DeclarationKind> redeclaredKind;
+  if (!isVarRedeclaredInInnermostScope(
+          name, DeclarationKind::VarForAnnexBLexicalFunction,
+          &redeclaredKind)) {
+    return false;
+  }
 
   if (!redeclaredKind && isFunctionBox()) {
     Scope& funScope = functionScope();
@@ -387,16 +401,16 @@ bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
 
   // If an early error would have occurred already, this function should not
   // exhibit Annex B.3.3 semantics.
-  return !redeclaredKind;
+  *annexBApplies = !redeclaredKind;
+  return true;
 }
 
-Maybe<DeclarationKind> ParseContext::isVarRedeclaredInInnermostScope(
-    const ParserName* name, DeclarationKind kind) {
-  Maybe<DeclarationKind> redeclaredKind;
+bool ParseContext::isVarRedeclaredInInnermostScope(
+    const ParserName* name, DeclarationKind kind,
+    mozilla::Maybe<DeclarationKind>* out) {
   uint32_t unused;
-  MOZ_ALWAYS_TRUE(tryDeclareVarHelper<DryRunInnermostScopeOnly>(
-      name, kind, DeclaredNameInfo::npos, &redeclaredKind, &unused));
-  return redeclaredKind;
+  return tryDeclareVarHelper<DryRunInnermostScopeOnly>(
+      name, kind, DeclaredNameInfo::npos, out, &unused);
 }
 
 bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
