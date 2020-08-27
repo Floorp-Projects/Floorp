@@ -68,7 +68,10 @@
 #endif
 
 /**
- * There are multiple ways to handle unrecoverable conditions:
+ * There are multiple ways to handle unrecoverable conditions (note that the
+ * patterns are put in chronological order and only the last pattern
+ * QM_TRY/QM_TRY_VAR/QM_FAIL should be used in new code):
+ *
  * 1. Using NS_ENSURE_* macros
  *
  * Mainly:
@@ -85,6 +88,8 @@
  *   NS_ENSURE_SUCCESS(rv, rv);
  *   NS_ENSURE_TRUE(exists, NS_ERROR_FAILURE);
  *
+ *   // The file exists, and data could be read from it here.
+ *
  *   return NS_OK;
  * }
  *
@@ -94,6 +99,8 @@
  *   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
  *   NS_ENSURE_TRUE(exists, NS_ERROR_UNEXPECTED);
  *
+ *   // The file exists, and data could be read from it here.
+ *
  *   return NS_OK;
  * }
  *
@@ -102,15 +109,37 @@
  *   nsresult rv = aFile.Exists(&exists);
  *   NS_ENSURE_SUCCESS_VOID(rv);
  *   NS_ENSURE_TRUE_VOID(exists);
+ *
+ *   // The file exists, and data could be read from it here.
  * }
  *
  * nsresult MyFunc4(nsIFile& aFile) {
- *   // NS_ENSURE_SUCCESS can't run an additional cleanup function
+ *   // NS_ENSURE_SUCCESS/NS_ENSURE_TRUE can't run an additional cleanup
+ *   // function
  *
  *   return NS_OK;
  * }
  *
- * 2. Using NS_WARN_IF macro with own control flow handling
+ * nsresult MyFunc5(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS(rv, rv);
+ *   if (exists) {
+ *     // The file exists, and data could be read from it here.
+ *   } else {
+ *     NS_ENSURE_TRUE(false, NS_ERROR_FAILURE);
+ *   }
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc6(nsIFile& aFile) {
+ *   // NS_ENSURE_TRUE can't run an additional cleanup function
+ *
+ *   return NS_OK;
+ * }
+ *
+ * 2. Using NS_WARN_IF and NS_WARNING macro with own control flow handling
  *
  * Typical use cases:
  *
@@ -124,6 +153,8 @@
  *     return NS_ERROR_FAILURE;
  *   }
  *
+ *   // The file exists, and data could be read from it here.
+ *
  *   return NS_OK;
  * }
  *
@@ -137,6 +168,8 @@
  *     return NS_ERROR_UNEXPECTED;
  *   }
  *
+ *   // The file exists, and data could be read from it here.
+ *
  *   return NS_OK;
  * }
  *
@@ -149,6 +182,8 @@
  *   if (NS_WARN_IF(!exists) {
  *     return;
  *   }
+ *
+ *   // The file exists, and data could be read from it here.
  * }
  *
  * nsresult MyFunc4(nsIFile& aFile) {
@@ -163,6 +198,39 @@
  *     return NS_ERROR_FAILURE;
  *   }
  *
+ *   // The file exists, and data could be read from it here.
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc5(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   if (NS_WARN_IF(NS_FAILED(rv)) {
+ *     return rv;
+ *   }
+ *   if (exists) {
+ *     // The file exists, and data could be read from it here.
+ *   } else {
+ *     return NS_ERROR_FAILURE;
+ *   }
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc6(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   if (NS_WARN_IF(NS_FAILED(rv)) {
+ *     return rv;
+ *   }
+ *   if (exists) {
+ *     // The file exists, and data could be read from it here.
+ *   } else {
+ *     NS_WARNING("The file doesn't exist!");
+ *     return NS_ERROR_FAILURE;
+ *   }
+ *
  *   return NS_OK;
  * }
  *
@@ -171,11 +239,7 @@
  * Typical use cases:
  *
  * nsresult MyFunc1(nsIFile& aFile) {
- *   bool exists;
- *   MOZ_TRY(aFile.Exists(&exists));
- *   // Note, exists can't be checked directly using MOZ_TRY without the Result
- *   // extension defined in quota manager
- *   MOZ_TRY(OkIf(exists), NS_ERROR_FAILURE);
+ *   // MOZ_TRY can't return a custom return value
  *
  *   return NS_OK;
  * }
@@ -187,11 +251,25 @@
  * }
  *
  * void MyFunc3(nsIFile& aFile) {
- *   // MOZ_TRY can't return void
+ *   // MOZ_TRY can't return a custom return value, "void" in this case
  * }
  *
  * nsresult MyFunc4(nsIFile& aFile) {
- *   // MOZ_TRY can't run an additional cleanup function
+ *   // MOZ_TRY can't return a custom return value and run an additional
+ *   // cleanup function
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc5(nsIFile& aFile) {
+ *   // There's no MOZ_FAIL, MOZ_TRY can't return a custom return value
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc6(nsIFile& aFile) {
+ *   // There's no MOZ_FAIL, MOZ_TRY can't return a custom return value and run
+ *   // an additional cleanup function
  *
  *   return NS_OK;
  * }
@@ -205,6 +283,8 @@
  *   QM_TRY(aFile.Exists(&exists));
  *   QM_TRY(OkIf(exists), NS_ERROR_FAILURE);
  *
+ *   // The file exists, and data could be read from it here.
+ *
  *   return NS_OK;
  * }
  *
@@ -213,6 +293,8 @@
  *   QM_TRY(aFile.Exists(&exists), NS_ERROR_UNEXPECTED);
  *   QM_TRY(OkIf(exists), NS_ERROR_UNEXPECTED);
  *
+ *   // The file exists, and data could be read from it here.
+ *
  *   return NS_OK;
  * }
  *
@@ -220,6 +302,8 @@
  *   bool exists;
  *   QM_TRY(aFile.Exists(&exists), QM_VOID);
  *   QM_TRY(OkIf(exists), QM_VOID);
+ *
+ *   // The file exists, and data could be read from it here.
  * }
  *
  * nsresult MyFunc4(nsIFile& aFile) {
@@ -228,6 +312,33 @@
  *          []() { NS_WARNING("The Exists call failed!"); });
  *   QM_TRY(OkIf(exists), NS_ERROR_FAILURE,
  *          []() { NS_WARNING("The file doesn't exist!"); });
+ *
+ *   // The file exists, and data could be read from it here.
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc5(nsIFile& aFile) {
+ *   bool exists;
+ *   QM_TRY(aFile.Exists(&exists));
+ *   if (exists) {
+ *     // The file exists, and data could be read from it here.
+ *   } else {
+ *     QM_FAIL(NS_ERROR_FAILURE);
+ *   }
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc6(nsIFile& aFile) {
+ *   bool exists;
+ *   QM_TRY(aFile.Exists(&exists));
+ *   if (exists) {
+ *     // The file exists, and data could be read from it here.
+ *   } else {
+ *     QM_FAIL(NS_ERROR_FAILURE,
+ *             []() { NS_WARNING("The file doesn't exist!"); });
+ *   }
  *
  *   return NS_OK;
  * }
@@ -252,14 +363,19 @@
  *
  * 4. WARNING: Error: 'aFile.Exists(&exists)', file XYZ, line N
  *
- * It's highly recommended to use QM_TRY/QM_TRY_VAR in new code for quota
- * manager and quota clients. Existing code should be incrementally converted
- * as needed.
+ * QM_FAIL is a supplementary macro for cases when an error needs to be
+ * returned without evaluating an expression. It's possible to write
+ * QM_TRY(OkIf(false), NS_ERROR_FAILURE), but QM_FAIL(NS_ERROR_FAILURE) looks
+ * more straightforward.
  *
- * QM_TRY_VOID/QM_TRY_VAR_VOID is not defined on purpose since it's possible to
- * use QM_TRY/QM_TRY_VAR even in void functions. However, QM_TRY(Task(), )
- * would look odd so it's recommended to use a dummy define QM_VOID that
- * evaluates to nothing instead: QM_TRY(Task(), QM_VOID)
+ * It's highly recommended to use QM_TRY/QM_TRY_VAR/QM_FAIL in new code for
+ * quota manager and quota clients. Existing code should be incrementally
+ * converted as needed.
+ *
+ * QM_TRY_VOID/QM_TRY_VAR_VOID/QM_FAIL_VOID is not defined on purpose since
+ * it's possible to use QM_TRY/QM_TRY_VAR/QM_FAIL even in void functions.
+ * However, QM_TRY(Task(), ) would look odd so it's recommended to use a dummy
+ * define QM_VOID that evaluates to nothing instead: QM_TRY(Task(), QM_VOID)
  */
 
 #define QM_VOID
@@ -380,6 +496,35 @@
  * lvalue.
  */
 #define QM_TRY_VAR(...) QM_TRY_VAR_META(mozilla::dom::quota, ##__VA_ARGS__)
+
+// QM_FAIL_RET_VAL and QM_FAIL_RET_VAL_WITH_CLEANUP macros are implementation
+// details of QM_FAIL and shouldn't be used directly.
+
+// Handles the two arguments case when just an error is returned
+#define QM_FAIL_RET_VAL(ns, retVal)                                        \
+  ns::HandleError(nsLiteralCString("Failure"), nsLiteralCString(__FILE__), \
+                  __LINE__);                                               \
+  return retVal;
+
+// Handles the three arguments case when a cleanup function needs to be called
+// before a return value is returned
+#define QM_FAIL_RET_VAL_WITH_CLEANUP(ns, retVal, cleanup)                  \
+  ns::HandleError(nsLiteralCString("Failure"), nsLiteralCString(__FILE__), \
+                  __LINE__);                                               \
+  cleanup();                                                               \
+  return retVal;
+
+// Chooses the final implementation macro for given argument count.
+// It can be used by other modules to define module specific error handling.
+#define QM_FAIL_META(...)                                               \
+  MOZ_ARG_5(, ##__VA_ARGS__, QM_FAIL_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
+            QM_FAIL_RET_VAL(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
+
+/**
+ * QM_FAIL(retVal[, cleanup]) calls HandleError and an additional cleanup
+ * function (if the second argument was passed) and returns a return value.
+ */
+#define QM_FAIL(...) QM_FAIL_META(mozilla::dom::quota, ##__VA_ARGS__)
 
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
