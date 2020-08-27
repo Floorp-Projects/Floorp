@@ -21,6 +21,8 @@ class Task(object):
       {'build': 'build-linux64/opt', 'docker-image': 'build-docker-image-desktop-test'}
     - soft_dependencies: tasks this one may depend on if they are available post
       optimisation. They are set as a list of tasks label.
+    - if_dependencies: only run this task if at least one of these dependencies
+      are present.
 
     And later, as the task-graph processing proceeds:
 
@@ -39,6 +41,7 @@ class Task(object):
     optimization = attr.ib(default=None)
     dependencies = attr.ib(factory=dict)
     soft_dependencies = attr.ib(factory=list)
+    if_dependencies = attr.ib(factory=list)
     release_artifacts = attr.ib(
         converter=attr.converters.optional(frozenset),
         default=None,
@@ -64,6 +67,7 @@ class Task(object):
             'attributes': self.attributes,
             'dependencies': self.dependencies,
             'soft_dependencies': sorted(self.soft_dependencies),
+            'if_dependencies': self.if_dependencies,
             'optimization': self.optimization,
             'task': self.task,
         }
@@ -89,6 +93,7 @@ class Task(object):
             optimization=task_dict['optimization'],
             dependencies=task_dict.get('dependencies'),
             soft_dependencies=task_dict.get('soft_dependencies'),
+            if_dependencies=task_dict.get('if_dependencies'),
             release_artifacts=task_dict.get('release-artifacts'),
         )
         if 'task_id' in task_dict:

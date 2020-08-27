@@ -70,12 +70,29 @@ creation of binary artifacts, are completed before that task runs. But
 dependencies can also be used to schedule follow-up work such as summarizing
 test results. In the latter case, the summarization task will "pull in" all of
 the tasks it depends on, even if those tasks might otherwise be optimized away.
-The fix for this situation is "soft dependencies".
-To add a task depending only on tasks remaining after the optimization process
-completed, you can use `soft-dependencies`, as a list of optimized tasks labels.
-This is useful for tasks that should not pull other tasks into the graph, but do
-need to run after them, if they are in the graph (signing task after an optional
-build or reporting on tasks outputs).
+There are two ways to work around this problem.
+
+If Dependencies
+...............
+
+The ``if-dependencies`` key (list) can be used to denote a task that should
+only run if at least one of these specified dependencies are also run.
+Dependencies specified by this key will not be "pulled in". This makes it
+suitable for things like signing builds or uploading symbols.
+
+This key is specified as a list of dependency names (e.g, ``build`` rather than
+the label of the build).
+
+Soft Dependencies
+.................
+
+To add a task depending on arbitrary tasks remaining after the optimization
+process completed, you can use ``soft-dependencies``, as a list of optimized
+tasks labels.  This is useful for tasks that need to perform some action on N
+other tasks and it is not known how many. Unlike ``if-dependencies``, tasks
+that specify ``soft-dependencies`` will still be scheduled, even if none of the
+candidate dependencies are.
+
 
 Decision Task
 -------------
