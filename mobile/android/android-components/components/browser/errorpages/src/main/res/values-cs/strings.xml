@@ -166,9 +166,9 @@ kdo se snaží vydávat za server.</li>
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
       <p>URL adresa neodpovídá známému serveru a nelze ji načíst.</p>
       <ul>
-        <li>Zkontrolujte prosím, že jste adresu napsali správně (např. že neobsahuje
-          <strong>ww</strong>.example.com místo <strong>www</strong>.example.com</li>
-        <li>Pokud nemůžete načíst žádnou stránku, zkontrolujte svá mobilní data nebo Wi-Fi připojení.</li>
+        <li>Zkontrolujte, že je adresa napsaná správně a neobsahuje chyby jako
+            <strong>ww</strong>.example.com místo <strong>www</strong>.example.com.</li>
+        <li>Pokud se vám nezobrazují ani ostatní stránky, zkontrolujte své připojení přes mobilní data nebo Wi-Fi.</li>
       </ul>
     ]]></string>
 
