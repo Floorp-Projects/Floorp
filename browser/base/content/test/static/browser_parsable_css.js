@@ -24,7 +24,7 @@ let whitelist = [
   },
   // UA-only media features.
   {
-    sourceName: /\b(autocomplete-item|svg)\.css$/,
+    sourceName: /\b(autocomplete-item|svg|ua)\.css$/,
     errorMessage: /Expected media feature name but found \u2018-moz.*/i,
     isFromDevTools: false,
   },
