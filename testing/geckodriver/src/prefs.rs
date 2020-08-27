@@ -91,10 +91,6 @@ lazy_static! {
         // Disable intalling any distribution extensions or add-ons
         ("extensions.installDistroAddons", Pref::new(false)),
 
-        // Disable extensions compatibility dialogue.
-        // TODO: Remove once minimum supported Firefox release is 61.
-        ("extensions.showMismatchUI", Pref::new(false)),
-
         // Turn off extension updates so they do not bother tests
         ("extensions.update.enabled", Pref::new(false)),
         ("extensions.update.notifyUser", Pref::new(false)),
