@@ -67,7 +67,9 @@
 
     <header class="header-container">
       <h2 data-l10n-id="printui-title"></h2>
-      <p id="sheet-count" is="page-count" data-l10n-id="printui-sheets-count" data-l10n-args='{ "sheetCount": 0 }' loading></p>
+      <div aria-live="off">
+        <p id="sheet-count" is="page-count" data-l10n-id="printui-sheets-count" data-l10n-args='{ "sheetCount": 0 }' loading></p>
+      </div>
     </header>
 
     <form id="print" is="print-form" aria-labelledby="page-header">
