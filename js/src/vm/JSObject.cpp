@@ -1491,20 +1491,24 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
 
   Zone* zone = obj->zone();
   if (obj->slots_) {
-    size_t size = oldSlotCount * sizeof(HeapSlot);
+    size_t size = ObjectSlots::allocSize(oldSlotCount);
     zone->removeCellMemory(old, size, MemoryUse::ObjectSlots);
-    js_free(obj->slots_);
+    js_free(obj->getSlotsHeader());
     obj->slots_ = nullptr;
   }
 
   if (size_t ndynamic =
           dynamicSlotsCount(nfixed, values.length(), obj->getClass())) {
-    obj->slots_ = cx->pod_malloc<HeapSlot>(ndynamic);
-    if (!obj->slots_) {
+    HeapSlot* allocation =
+        cx->pod_malloc<HeapSlot>(ObjectSlots::allocCount(ndynamic));
+    if (!allocation) {
       return false;
     }
-    size_t size = ndynamic * sizeof(HeapSlot);
-    zone->addCellMemory(obj, size, MemoryUse::ObjectSlots);
+
+    auto* slotsHeader = new (allocation) ObjectSlots(ndynamic);
+    obj->slots_ = slotsHeader->slots();
+    zone->addCellMemory(obj, ObjectSlots::allocSize(ndynamic),
+                        MemoryUse::ObjectSlots);
     Debug_SetSlotRangeToCrashOnTouch(obj->slots_, ndynamic);
   }
 
@@ -3870,7 +3874,8 @@ js::gc::AllocKind JSObject::allocKindForTenure(
 void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       JS::ClassInfo* info) {
   if (is<NativeObject>() && as<NativeObject>().hasDynamicSlots()) {
-    info->objectsMallocHeapSlots += mallocSizeOf(as<NativeObject>().slots_);
+    info->objectsMallocHeapSlots +=
+        mallocSizeOf(as<NativeObject>().getSlotsHeader());
   }
 
   if (is<NativeObject>() && as<NativeObject>().hasDynamicElements()) {

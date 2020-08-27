@@ -3547,21 +3547,25 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
   size_t count = src->numDynamicSlots();
 
   if (!nursery().isInside(src->slots_)) {
-    AddCellMemory(dst, count * sizeof(HeapSlot), MemoryUse::ObjectSlots);
-    nursery().removeMallocedBufferDuringMinorGC(src->slots_);
+    AddCellMemory(dst, ObjectSlots::allocSize(count), MemoryUse::ObjectSlots);
+    nursery().removeMallocedBufferDuringMinorGC(src->getSlotsHeader());
     return 0;
   }
 
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    dst->slots_ = zone->pod_malloc<HeapSlot>(count);
-    if (!dst->slots_) {
-      oomUnsafe.crash(sizeof(HeapSlot) * count,
+    HeapSlot* allocation =
+        zone->pod_malloc<HeapSlot>(ObjectSlots::allocCount(count));
+    if (!allocation) {
+      oomUnsafe.crash(ObjectSlots::allocSize(count),
                       "Failed to allocate slots while tenuring.");
     }
+
+    ObjectSlots* slotsHeader = new (allocation) ObjectSlots(count);
+    dst->slots_ = slotsHeader->slots();
   }
 
-  AddCellMemory(dst, count * sizeof(HeapSlot), MemoryUse::ObjectSlots);
+  AddCellMemory(dst, ObjectSlots::allocSize(count), MemoryUse::ObjectSlots);
 
   PodCopy(dst->slots_, src->slots_, count);
   nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);

@@ -367,10 +367,10 @@ bool NativeObject::setSlotSpan(JSContext* cx, uint32_t span) {
   return true;
 }
 
-bool NativeObject::growSlots(JSContext* cx, uint32_t oldCount,
-                             uint32_t newCount) {
-  MOZ_ASSERT(newCount > oldCount);
-  MOZ_ASSERT_IF(!is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
+bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
+                             uint32_t newCapacity) {
+  MOZ_ASSERT(newCapacity > oldCapacity);
+  MOZ_ASSERT_IF(!is<ArrayObject>(), newCapacity >= SLOT_CAPACITY_MIN);
 
   /*
    * Slot capacities are determined by the span of allocated objects. Due to
@@ -378,44 +378,62 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCount,
    * throttled well before the slot capacity can overflow.
    */
   NativeObject::slotsSizeMustNotOverflow();
-  MOZ_ASSERT(newCount <= MAX_SLOTS_COUNT);
+  MOZ_ASSERT(newCapacity <= MAX_SLOTS_COUNT);
 
-  if (!oldCount) {
+  uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
+
+  if (!oldCapacity) {
     MOZ_ASSERT(!slots_);
-    slots_ = AllocateObjectBuffer<HeapSlot>(cx, this, newCount);
-    if (!slots_) {
+    HeapSlot* allocation =
+        AllocateObjectBuffer<HeapSlot>(cx, this, newAllocated);
+    if (!allocation) {
       return false;
     }
-    Debug_SetSlotRangeToCrashOnTouch(slots_, newCount);
 
-    AddCellMemory(this, newCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
+    auto* newHeaderSlots = new (allocation) ObjectSlots(newCapacity);
+    slots_ = newHeaderSlots->slots();
+
+    Debug_SetSlotRangeToCrashOnTouch(slots_, newCapacity);
+
+    AddCellMemory(this, ObjectSlots::allocSize(newCapacity),
+                  MemoryUse::ObjectSlots);
 
     return true;
   }
 
-  HeapSlot* newslots =
-      ReallocateObjectBuffer<HeapSlot>(cx, this, slots_, oldCount, newCount);
-  if (!newslots) {
+  uint32_t oldAllocated = ObjectSlots::allocCount(oldCapacity);
+
+  ObjectSlots* oldHeaderSlots = ObjectSlots::fromSlots(slots_);
+  MOZ_ASSERT(oldHeaderSlots->capacity() == oldCapacity);
+
+  HeapSlot* allocation = ReallocateObjectBuffer<HeapSlot>(
+      cx, this, reinterpret_cast<HeapSlot*>(oldHeaderSlots), oldAllocated,
+      newAllocated);
+  if (!allocation) {
     return false; /* Leave slots at its old size. */
   }
 
-  RemoveCellMemory(this, oldCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
-  AddCellMemory(this, newCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
+  auto* newHeaderSlots = new (allocation) ObjectSlots(newCapacity);
+  slots_ = newHeaderSlots->slots();
 
-  slots_ = newslots;
+  Debug_SetSlotRangeToCrashOnTouch(slots_ + oldCapacity,
+                                   newCapacity - oldCapacity);
 
-  Debug_SetSlotRangeToCrashOnTouch(slots_ + oldCount, newCount - oldCount);
+  RemoveCellMemory(this, ObjectSlots::allocSize(oldCapacity),
+                   MemoryUse::ObjectSlots);
+  AddCellMemory(this, ObjectSlots::allocSize(newCapacity),
+                MemoryUse::ObjectSlots);
 
   return true;
 }
 
 /* static */
 bool NativeObject::growSlotsPure(JSContext* cx, NativeObject* obj,
-                                 uint32_t newCount) {
+                                 uint32_t newCapacity) {
   // IC code calls this directly.
   AutoUnsafeCallWithABI unsafe;
 
-  if (!obj->growSlots(cx, obj->numDynamicSlots(), newCount)) {
+  if (!obj->growSlots(cx, obj->numDynamicSlots(), newCapacity)) {
     cx->recoverFromOutOfMemory();
     return false;
   }
@@ -448,8 +466,8 @@ bool NativeObject::addDenseElementPure(JSContext* cx, NativeObject* obj) {
   return true;
 }
 
-static inline void FreeSlots(JSContext* cx, NativeObject* obj, HeapSlot* slots,
-                             size_t nbytes) {
+static inline void FreeSlots(JSContext* cx, NativeObject* obj,
+                             ObjectSlots* slots, size_t nbytes) {
   if (cx->isHelperThreadContext()) {
     js_free(slots);
   } else if (obj->isTenured()) {
@@ -460,33 +478,43 @@ static inline void FreeSlots(JSContext* cx, NativeObject* obj, HeapSlot* slots,
   }
 }
 
-void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCount,
-                               uint32_t newCount) {
-  MOZ_ASSERT(newCount < oldCount);
+void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
+                               uint32_t newCapacity) {
+  MOZ_ASSERT(newCapacity < oldCapacity);
+  MOZ_ASSERT(oldCapacity == numDynamicSlots());
 
-  if (newCount == 0) {
-    size_t nbytes = numDynamicSlots() * sizeof(HeapSlot);
+  ObjectSlots* oldHeaderSlots = ObjectSlots::fromSlots(slots_);
+  MOZ_ASSERT(oldHeaderSlots->capacity() == oldCapacity);
+
+  uint32_t oldAllocated = ObjectSlots::allocCount(oldCapacity);
+
+  if (newCapacity == 0) {
+    size_t nbytes = ObjectSlots::allocSize(oldCapacity);
     RemoveCellMemory(this, nbytes, MemoryUse::ObjectSlots);
-    FreeSlots(cx, this, slots_, nbytes);
+    FreeSlots(cx, this, oldHeaderSlots, nbytes);
     slots_ = nullptr;
     return;
   }
 
-  MOZ_ASSERT_IF(!is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
+  MOZ_ASSERT_IF(!is<ArrayObject>(), newCapacity >= SLOT_CAPACITY_MIN);
 
-  // Update the memory tracking whether or not the reallocation succeeds,
-  // because we have no way to tell the buffer size if it fails.
-  RemoveCellMemory(this, oldCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
-  AddCellMemory(this, newCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
+  uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
 
-  HeapSlot* newslots =
-      ReallocateObjectBuffer<HeapSlot>(cx, this, slots_, oldCount, newCount);
-  if (!newslots) {
+  HeapSlot* allocation = ReallocateObjectBuffer<HeapSlot>(
+      cx, this, reinterpret_cast<HeapSlot*>(oldHeaderSlots), oldAllocated,
+      newAllocated);
+  if (!allocation) {
     cx->recoverFromOutOfMemory();
     return;  // Leave slots at its old size.
   }
 
-  slots_ = newslots;
+  RemoveCellMemory(this, ObjectSlots::allocSize(oldCapacity),
+                   MemoryUse::ObjectSlots);
+  AddCellMemory(this, ObjectSlots::allocSize(newCapacity),
+                MemoryUse::ObjectSlots);
+
+  auto* newHeaderSlots = new (allocation) ObjectSlots(newCapacity);
+  slots_ = newHeaderSlots->slots();
 }
 
 bool NativeObject::willBeSparseElements(uint32_t requiredCapacity,
