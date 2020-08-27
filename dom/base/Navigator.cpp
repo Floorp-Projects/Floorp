@@ -1417,6 +1417,18 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
       return nullptr;
     }
     url = result.unwrap();
+    // Check that we only share loadable URLs (e.g., http/https).
+    // we also exclude blobs, as it doesn't make sense to share those outside
+    // the context of the browser.
+    auto principal = doc->NodePrincipal();
+    if (principal) {
+      if (NS_FAILED(principal->CheckMayLoad(url, false)) ||
+          url->SchemeIs("blob")) {
+        aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>("Share",
+                                                   url->GetSpecOrDefault());
+        return nullptr;
+      }
+    }
   }
 
   // Process the title member...
