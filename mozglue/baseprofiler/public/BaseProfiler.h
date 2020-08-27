@@ -25,6 +25,8 @@
 
 #ifndef MOZ_GECKO_PROFILER
 
+#  include "mozilla/UniquePtr.h"
+
 // This file can be #included unconditionally. However, everything within this
 // file must be guarded by a #ifdef MOZ_GECKO_PROFILER, *except* for the
 // following macros, which encapsulate the most common operations and thus
@@ -60,19 +62,22 @@
 
 #  define AUTO_PROFILER_STATS(name)
 
-using UniqueProfilerBacktrace =
-    UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
+namespace mozilla {
+class ProfileChunkedBuffer;
+
+namespace baseprofiler {
+struct ProfilerBacktrace {};
+using UniqueProfilerBacktrace = UniquePtr<ProfilerBacktrace>;
 static inline UniqueProfilerBacktrace profiler_get_backtrace() {
   return nullptr;
 }
 
-namespace mozilla {
-class ProfileChunkedBuffer;
-}  // namespace mozilla
 static inline bool profiler_capture_backtrace(
     ProfileChunkedBuffer& aChunkedBuffer) {
   return false;
 }
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #else  // !MOZ_GECKO_PROFILER
 

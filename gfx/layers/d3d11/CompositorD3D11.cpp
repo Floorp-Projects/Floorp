@@ -1246,9 +1246,11 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 void CompositorD3D11::NormalDrawingDone() { mDiagnostics->End(); }
 
 void CompositorD3D11::EndFrame() {
+#ifdef MOZ_GECKO_PROFILER
   if (!profiler_feature_active(ProfilerFeature::Screenshots) && mWindowRTCopy) {
     mWindowRTCopy = nullptr;
   }
+#endif  // MOZ_GECKO_PROFILER
 
   if (!mDefaultRT) {
     Compositor::EndFrame();
