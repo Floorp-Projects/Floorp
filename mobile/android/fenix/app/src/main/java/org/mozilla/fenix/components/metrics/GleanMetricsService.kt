@@ -106,7 +106,7 @@ private val Event.wrapper: EventWrapper<*>?
             { Events.appReceivedIntent.record(it) },
             { Events.appReceivedIntentKeys.valueOf(it) }
         )
-        is Event.AppOpenedAllSourceStartup -> EventWrapper(
+        is Event.AppAllStartup -> EventWrapper(
             { Events.appOpenedAllStartup.record(it) },
             { Events.appOpenedAllStartupKeys.valueOf(it) }
         )

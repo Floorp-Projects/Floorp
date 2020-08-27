@@ -157,6 +157,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         // }
 
         initVisualCompletenessQueueAndQueueTasks()
+
+        components.appStartupTelemetry.onFenixApplicationOnCreate()
     }
 
     private fun initVisualCompletenessQueueAndQueueTasks() {

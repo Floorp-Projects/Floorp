@@ -316,11 +316,28 @@ sealed class Event {
             get() = hashMapOf(Events.appOpenedAllStartupKeys.source to source.name)
     }
 
-    data class AppOpenedAllSourceStartup(val source: Source) : Event() {
+    data class AppAllStartup(
+        val source: Source,
+        val type: Type,
+        val hasSavedInstanceState: Boolean? = null
+    ) : Event() {
         enum class Source { APP_ICON, LINK, CUSTOM_TAB, UNKNOWN }
+        enum class Type { COLD, WARM, HOT, ERROR }
 
         override val extras: Map<Events.appOpenedAllStartupKeys, String>?
-            get() = hashMapOf(Events.appOpenedAllStartupKeys.source to source.name)
+            get() {
+                val extrasMap = hashMapOf(
+                    Events.appOpenedAllStartupKeys.source to source.toString(),
+                    Events.appOpenedAllStartupKeys.type to type.toString()
+                )
+                // we are only sending hasSavedInstanceState whenever we get data from
+                // activity's oncreate() method.
+                if (hasSavedInstanceState != null) {
+                    extrasMap[Events.appOpenedAllStartupKeys.hasSavedInstanceState] =
+                        hasSavedInstanceState.toString()
+                }
+                return extrasMap
+            }
     }
 
     data class CollectionSaveButtonPressed(val fromScreen: String) : Event() {

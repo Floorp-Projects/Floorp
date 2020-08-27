@@ -18,23 +18,44 @@ events:
       startups, not just cold startup. Note: There is a short gap
       between the time application goes into background and the time
       android reports the application going into the background.
-      Note: This metric does not cover the following cases:
-      Case # 1 -> a). open a link(for example, gmail) with in-app
-      Browser (metric report custom_tab startup) b). press home button
-      c). open gmail again (which brings us back to in app browser).
-      Step c will not report startup metric. Case # 2 -> a). open fenix
-      b). press home button c). launch fenix through app switcher/recent
-      apps. step c will not report startup type.
+      Note: This metric does not record souce when app opened from
+      task switcher: open application -> press home button -> open
+      recent tasks -> choose fenix. In this case will report
+      [source = unknown, type = hot, has_saved_instance_state = false].
     extra_keys:
+      type:
+        description: |
+          the startup type for opening fenix. the application and HomeActivity
+          either needs to be created or started again. possible values are
+          `cold`, `warm`, `hot` or `error`. Error is for impossible cases.
+          Please file a bug if you see the error case.
+          app created AND HomeActivity created = cold
+          app started AND HomeActivity created = warm
+          app started AND HomeActivity started = hot
+          app created AND HomeActivity started = error
       source:
         description: |
           The method used to open Fenix. Possible values are `app_icon`,
-          `custom_tab`, `link` or `unknown`
+          `custom_tab`, `link` or `unknown`. unknown is for startup sources
+          where we can't pinpoint the cause. One UNKNOWN case is the app
+          switcher where we don't know what variables to check to ensure this
+          startup wasn't caused by something else.
+      has_saved_instance_state:
+        description: |
+          boolean value whether or not startup type has a savedInstance.
+          using savedInstance, HomeActivity's previous state can be restored.
+          This is an optional key since it is not applicable to all the cases.
+          for example, when we are doing a hot start up, we cant have a
+          savedInstanceState therefore we report only [APP_ICON, HOT] instead
+          of [APP_ICON, HOT, false].
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11830
+      - https://github.com/mozilla-mobile/fenix/issues/12573
+      - https://github.com/mozilla-mobile/fenix/pull/13494
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12114#pullrequestreview-445245341
       - https://github.com/mozilla-mobile/fenix/pull/13958#issuecomment-676857877
+      - https://github.com/mozilla-mobile/fenix/pull/13494#pullrequestreview-474050499
     data_sensitivity:
       - interaction
     notification_emails:

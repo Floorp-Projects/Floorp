@@ -230,13 +230,19 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         captureSnapshotTelemetryMetrics()
 
-        setAppAllStartTelemetry(intent.toSafeIntent())
+        startupTelemetryOnCreateCalled(intent.toSafeIntent(), savedInstanceState != null)
 
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }
 
-    protected open fun setAppAllStartTelemetry(safeIntent: SafeIntent) {
-        components.appAllSourceStartTelemetry.receivedIntentInHomeActivity(safeIntent)
+    protected open fun startupTelemetryOnCreateCalled(safeIntent: SafeIntent, hasSavedInstanceState: Boolean) {
+        components.appStartupTelemetry.onHomeActivityOnCreate(safeIntent, hasSavedInstanceState)
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+
+        components.appStartupTelemetry.onHomeActivityOnRestart()
     }
 
     @CallSuper
@@ -248,6 +254,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         breadcrumb(
             message = "onResume()"
         )
+
+        components.appStartupTelemetry.onHomeActivityOnResume()
 
         components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
             lifecycleScope.launch {
@@ -398,7 +406,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             .let(::getIntentAllSource)
             ?.also { components.analytics.metrics.track(Event.AppReceivedIntent(it)) }
 
-        setAppAllStartTelemetry(intent.toSafeIntent())
+        components.appStartupTelemetry.onHomeActivityOnNewIntent(intent.toSafeIntent())
     }
 
     /**
