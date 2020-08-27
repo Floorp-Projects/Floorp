@@ -11,6 +11,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/WritingModes.h"
 #include "nsBulletFrame.h"  // legacy location for list style type to text code
 #include "nsContentUtils.h"
@@ -128,6 +129,33 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
     return;
   }
 
+  // If there exist an explicit RESET scope created by an ancestor or
+  // the element itself, then we use that scope.
+  // Otherwise, fall through to consider scopes created by siblings (and
+  // their descendants) in reverse document order.
+  if (aNode->mType != nsCounterNode::USE &&
+      StaticPrefs::layout_css_counter_ancestor_scope_enabled()) {
+    nsIContent* const counterNode = aNode->mPseudoFrame->GetContent();
+    nsCounterNode* lastPrev = nullptr;
+    for (nsCounterNode* prev = Prev(aNode); prev; prev = prev->mScopePrev) {
+      if (prev->mType == nsCounterNode::RESET) {
+        if (aNode->mPseudoFrame == prev->mPseudoFrame) {
+          break;
+        }
+        // FIXME(bug 1477524): should use flattened tree here:
+        nsIContent* resetNode = prev->mPseudoFrame->GetContent();
+        if (counterNode->IsInclusiveDescendantOf(resetNode)) {
+          aNode->mScopeStart = prev;
+          aNode->mScopePrev = lastPrev ? lastPrev : prev;
+          return;
+        }
+        lastPrev = prev->mScopePrev;
+      } else if (!lastPrev) {
+        lastPrev = prev;
+      }
+    }
+  }
+
   // Get the content node for aNode's rendering object's *parent*,
   // since scope includes siblings, so we want a descendant check on
   // parents.
@@ -157,6 +185,7 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
           nodeContent == startContent) &&
         // everything is inside the root (except the case above,
         // a second reset on the root)
+        // FIXME(bug 1477524): should use flattened tree here:
         (!startContent || nodeContent->IsInclusiveDescendantOf(startContent))) {
       aNode->mScopeStart = start;
       aNode->mScopePrev = prev;
