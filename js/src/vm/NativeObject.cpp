@@ -1860,8 +1860,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
   if (!prop) {
     // Note: We are sharing the property definition machinery with private
     //       fields. Private fields may be added to non-extensible objects.
-    bool isPrivate = JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName();
-    if (!obj->isExtensible() && !isPrivate) {
+    if (!obj->isExtensible() && !id.isPrivateName()) {
       return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
     }
 

@@ -4538,9 +4538,7 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
 
   // Object must be extensible, or we must be initializing a private
   // elem.
-  bool canAddNewProperty =
-      obj->nonProxyIsExtensible() ||
-      (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName());
+  bool canAddNewProperty = obj->nonProxyIsExtensible() || id.isPrivateName();
   if (!canAddNewProperty) {
     return false;
   }
