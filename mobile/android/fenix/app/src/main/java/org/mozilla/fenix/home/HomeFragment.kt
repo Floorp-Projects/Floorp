@@ -400,7 +400,8 @@ class HomeFragment : Fragment() {
         // We call this onLayout so that the bottom bar width is correctly set for us to center
         // the CFR in.
         view.toolbar_wrapper.doOnLayout {
-            if (!browsingModeManager.mode.isPrivate) {
+            val willNavigateToSearch = !bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) && FeatureFlags.newSearchExperience
+            if (!browsingModeManager.mode.isPrivate && !willNavigateToSearch) {
                 SearchWidgetCFR(
                     context = view.context,
                     settings = view.context.settings(),
