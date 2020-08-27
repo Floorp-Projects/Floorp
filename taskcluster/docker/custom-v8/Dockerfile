@@ -13,6 +13,7 @@ RUN apt-get update && \
       curl \
       libbz2-dev \
       libglib2.0-dev \
+      libtinfo5 \
       pkg-config \
       tar \
       unzip \
