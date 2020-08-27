@@ -25,7 +25,6 @@ function message(m) {
 
 var gStreams = [];
 var gVideoEvents = [];
-var gAudioEvents = [];
 
 async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
   const opts = {video: aVideo, audio: aAudio};
@@ -53,18 +52,10 @@ async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(opts)
     gStreams.push(stream);
-
-    const videoTrack = stream.getVideoTracks()[0];
-    if (videoTrack) {
+    const track = stream.getVideoTracks()[0];
+    if (track) {
       for (const name of ["mute", "unmute", "ended"]) {
-        videoTrack.addEventListener(name, () => gVideoEvents.push(name));
-      }
-    }
-
-    const audioTrack = stream.getAudioTracks()[0];
-    if (audioTrack) {
-      for (const name of ["mute", "unmute", "ended"]) {
-        audioTrack.addEventListener(name, () => gAudioEvents.push(name));
+        track.addEventListener(name, () => gVideoEvents.push(name));
       }
     }
     message("ok");
@@ -83,7 +74,6 @@ function closeStream() {
   }
   gStreams = [];
   gVideoEvents = [];
-  gAudioEvents = [];
   message("closed");
 }
 </script>

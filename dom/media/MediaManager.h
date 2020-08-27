@@ -255,7 +255,6 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
 
   void OnNavigation(uint64_t aWindowID);
   void OnCameraMute(bool aMute);
-  void OnMicrophoneMute(bool aMute);
   bool IsActivelyCapturingOrHasAPermission(uint64_t aWindowId);
 
   MediaEventSource<void>& DeviceListChangeEvent() {
@@ -344,7 +343,6 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
   bool mCamerasMuted = false;
-  bool mMicrophonesMuted = false;
 
   // Always exists
   const RefPtr<TaskQueue> mMediaThread;
