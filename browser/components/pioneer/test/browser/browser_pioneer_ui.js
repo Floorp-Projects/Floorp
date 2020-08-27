@@ -10,6 +10,14 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/ajv-4.1.1.js"
 );
 
+const { TelemetryArchive } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryArchive.jsm"
+);
+
+const { TelemetryStorage } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryStorage.jsm"
+);
+
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
 const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
@@ -214,7 +222,10 @@ add_task(async function testAboutPage() {
       [PREF_TEST_CACHED_CONTENT, cachedContent],
       [PREF_TEST_ADDONS, "[]"],
     ],
-    clear: [[PREF_PIONEER_ID, ""]],
+    clear: [
+      [PREF_PIONEER_ID, ""],
+      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+    ],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -322,24 +333,34 @@ add_task(async function testAboutPage() {
           continue;
         }
 
-        await waitForAnimationFrame();
-
         ok(
           !joinButton.disabled,
           "Before study enrollment, join button is enabled."
         );
 
+        const studyCancelButton = content.document.getElementById(
+          "join-study-cancel-dialog-button"
+        );
+
+        const joinDialogOpen = new Promise(resolve => {
+          content.document
+            .getElementById("join-study-consent-dialog")
+            .addEventListener("open", () => {
+              resolve();
+            });
+        });
+
+        await waitForAnimationFrame();
+
         joinButton.click();
         await waitForAnimationFrame();
+
+        await joinDialogOpen;
 
         ok(
           content.document.getElementById("join-study-consent").textContent ==
             cachedAddon.joinStudyConsent,
           "Join consent text matches remote settings data."
-        );
-
-        const studyCancelButton = content.document.getElementById(
-          "join-study-cancel-dialog-button"
         );
 
         studyCancelButton.click();
@@ -349,9 +370,6 @@ add_task(async function testAboutPage() {
           "After canceling study enrollment, join button is enabled."
         );
 
-        // Similar to the getBoundingClientRect call we did for
-        // enrollmentButton, we are forcing a frame flush here.
-        joinButton.getBoundingClientRect();
         joinButton.click();
         await waitForAnimationFrame();
 
@@ -372,21 +390,31 @@ add_task(async function testAboutPage() {
           "After study enrollment, leave button is enabled."
         );
 
-        joinButton.click();
-        await waitForAnimationFrame();
-
         const leaveStudyCancelButton = content.document.getElementById(
           "leave-study-cancel-dialog-button"
         );
 
-        leaveStudyCancelButton.click();
+        const leaveDialogOpen = new Promise(resolve => {
+          content.document
+            .getElementById("leave-study-consent-dialog")
+            .addEventListener("open", () => {
+              resolve();
+            });
+        });
+
+        joinButton.click();
+
         await waitForAnimationFrame();
+        await leaveDialogOpen;
 
         ok(
           content.document.getElementById("leave-study-consent").textContent ==
             cachedAddon.leaveStudyConsent,
           "Leave consent text matches remote settings data."
         );
+
+        leaveStudyCancelButton.click();
+        await waitForAnimationFrame();
 
         ok(
           !joinButton.disabled,
@@ -438,12 +466,29 @@ add_task(async function testAboutPage() {
       const acceptUnenrollmentDialogButton = content.document.getElementById(
         "leave-pioneer-accept-dialog-button"
       );
+
       acceptUnenrollmentDialogButton.click();
 
-      const pioneerUnenrolled = Services.prefs.getStringPref(
-        PREF_PIONEER_ID,
-        null
-      );
+      // Wait for deletion ping, uninstalls, and UI updates...
+      const pioneerUnenrolled = await new Promise((resolve, reject) => {
+        Services.prefs.addObserver(PREF_PIONEER_ID, function observer(
+          subject,
+          topic,
+          data
+        ) {
+          try {
+            const prefValue = Services.prefs.getStringPref(
+              PREF_PIONEER_ID,
+              null
+            );
+            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
+            resolve(prefValue);
+          } catch (ex) {
+            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
+            reject(ex);
+          }
+        });
+      });
 
       ok(
         !pioneerUnenrolled,
@@ -456,23 +501,45 @@ add_task(async function testAboutPage() {
         "after unenrollment, Pioneer toolbar button is hidden."
       );
 
+      await TelemetryStorage.testClearPendingPings();
+      let pings = await TelemetryArchive.promiseArchivedPingList();
+
+      let pingDetails = [];
+      for (const ping of pings) {
+        ok(
+          ping.type == "pioneer-study",
+          "ping is of expected type pioneer-study"
+        );
+        const details = await TelemetryArchive.promiseArchivedPingById(ping.id);
+        pingDetails.push(details.payload.studyName);
+      }
+
       Services.prefs.setStringPref(PREF_TEST_ADDONS, "[]");
+
       for (const cachedAddon of CACHED_ADDONS) {
         const addonId = cachedAddon.addon_id;
+
+        ok(
+          pingDetails.includes(addonId),
+          "each test add-on has sent a deletion ping"
+        );
+
         const joinButton = content.document.getElementById(
           `${addonId}-join-button`
         );
 
+        await waitForAnimationFrame();
+
         if (cachedAddon.isDefault) {
           ok(!joinButton, "There is no join button for default study.");
         } else {
+          if (!joinButton.disabled) {
+            Services.tm.spinEventLoopUntil(() => {});
+          }
           ok(
             joinButton.disabled,
             "After unenrollment, join button is disabled."
           );
-
-          joinButton.click();
-          await waitForAnimationFrame();
         }
       }
     }
@@ -513,6 +580,8 @@ add_task(async function testPioneerBadge() {
 
   toolbarButton.click();
 
+  await pioneerTab;
+
   ok(
     !toolbarBadge.classList.contains("feature-callout"),
     "When about:pioneer toolbar button is pressed, call-out is removed."
@@ -533,7 +602,7 @@ add_task(async function testPioneerBadge() {
   await BrowserTestUtils.removeTab(blankTab);
 });
 
-add_task(async function testAboutPage() {
+add_task(async function testContentReplacement() {
   const cachedContent = JSON.stringify(CACHED_CONTENT);
 
   await SpecialPowers.pushPrefEnv({
