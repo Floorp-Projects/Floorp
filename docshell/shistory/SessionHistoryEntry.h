@@ -78,6 +78,7 @@ class SessionHistoryInfo {
     mScrollRestorationIsManual = aIsManual;
   }
 
+  nsStructuredCloneContainer* GetStateData() const { return mStateData; }
   void SetStateData(nsStructuredCloneContainer* aStateData) {
     mStateData = aStateData;
   }
@@ -93,6 +94,18 @@ class SessionHistoryInfo {
 
   nsILayoutHistoryState* GetLayoutHistoryState();
   void SetLayoutHistoryState(nsILayoutHistoryState* aState);
+
+  nsIPrincipal* GetTriggeringPrincipal() const;
+
+  nsIPrincipal* GetPrincipalToInherit() const;
+
+  nsIPrincipal* GetPartitionedPrincipalToInherit() const;
+
+  nsIContentSecurityPolicy* GetCsp() const;
+
+  uint32_t GetCacheKey() const;
+
+  bool IsSubFrame() const;
 
   bool SharesDocumentWith(const SessionHistoryInfo& aOther) const {
     return SharedId() == aOther.SharedId();
