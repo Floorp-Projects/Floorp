@@ -4100,7 +4100,8 @@ JSObject* GetElementCallback(JSContext* cx, JS::HandleValue value) {
     return nullptr;
   }
 
-  RootedObject infoObject(cx, privateValue.toObjectOrNull());
+  RootedObject infoObject(cx,
+                          CheckedUnwrapStatic(privateValue.toObjectOrNull()));
   AutoRealm ar(cx, infoObject);
 
   RootedValue elementValue(cx);
