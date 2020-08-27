@@ -5378,9 +5378,6 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     return false;
   }
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options);
-
 #ifdef JS_ENABLE_SMOOSH
   if (dumpType == DumpType::Stencil) {
     if (smoosh) {
@@ -5394,8 +5391,8 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
           bool unimplemented;
-          if (!Smoosh::compileGlobalScriptToStencil(
-                  compilationInfo, compilationState, srcBuf, &unimplemented)) {
+          if (!Smoosh::compileGlobalScriptToStencil(compilationInfo, srcBuf,
+                                                    &unimplemented)) {
             return false;
           }
 
@@ -5416,6 +5413,9 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     }
   }
 #endif  // JS_ENABLE_SMOOSH
+
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::CompilationState compilationState(cx, allocScope, options);
 
   if (isAscii) {
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();

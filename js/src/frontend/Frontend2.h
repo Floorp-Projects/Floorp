@@ -35,13 +35,12 @@ struct CompilationState;
 class Smoosh {
  public:
   static bool compileGlobalScript(CompilationInfo& compilationInfo,
-                                  CompilationState& compilationState,
                                   JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                   CompilationGCOutput& gcOutput,
                                   bool* unimplemented);
 
   static bool compileGlobalScriptToStencil(
-      CompilationInfo& compilationInfo, CompilationState& compilationState,
+      CompilationInfo& compilationInfo,
       JS::SourceText<mozilla::Utf8Unit>& srcBuf, bool* unimplemented);
 };
 
