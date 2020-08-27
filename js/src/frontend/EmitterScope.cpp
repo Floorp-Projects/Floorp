@@ -374,8 +374,8 @@ bool EmitterScope::internScopeCreationData(BytecodeEmitter* bce,
   if (!createScope(bce->cx, enclosingScopeIndex(bce), &index)) {
     return false;
   }
-  auto scope = bce->compilationInfo.scopeData[index.index];
-  hasEnvironment_ = scope.get().hasEnvironment();
+  ScopeStencil& scope = bce->compilationInfo.scopeData[index.index];
+  hasEnvironment_ = scope.hasEnvironment();
   return bce->perScriptData().gcThingList().append(index, &scopeIndex_);
 }
 

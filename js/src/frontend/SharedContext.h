@@ -427,13 +427,13 @@ class FunctionBox : public SharedContext {
 
   // End of fields.
 
-  FunctionBox(JSContext* cx, FunctionBox* traceListHead, SourceExtent extent,
+  FunctionBox(JSContext* cx, SourceExtent extent,
               CompilationInfo& compilationInfo, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              const ParserAtom* explicitName, FunctionFlags flags,
-              FunctionIndex index, TopLevelFunction isTopLevel);
+              const ParserAtom* atom, FunctionFlags flags, FunctionIndex index,
+              TopLevelFunction isTopLevel);
 
-  MutableHandle<ScriptStencil> functionStencil() const;
+  ScriptStencil& functionStencil() const;
 
 #ifdef DEBUG
   bool atomsAreKept();
@@ -706,10 +706,6 @@ class FunctionBox : public SharedContext {
   }
 
   FunctionIndex index() { return funcDataIndex_; }
-
-  void trace(JSTracer* trc);
-
-  static void TraceList(JSTracer* trc, FunctionBox* listHead);
 
   FunctionBox* traceLink() { return traceLink_; }
 

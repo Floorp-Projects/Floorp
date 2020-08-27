@@ -58,25 +58,21 @@ class MOZ_STACK_CLASS ModuleBuilder {
   void finishFunctionDecls(frontend::StencilModuleMetadata& metadata);
 
  private:
-  using RequestedModuleVector = JS::GCVector<frontend::StencilModuleEntry>;
-  using AtomSet = JS::GCHashSet<const frontend::ParserAtom*>;
-  using ExportEntryVector = GCVector<frontend::StencilModuleEntry>;
+  using RequestedModuleVector = Vector<frontend::StencilModuleEntry>;
+  using AtomSet = HashSet<const frontend::ParserAtom*>;
+  using ExportEntryVector = Vector<frontend::StencilModuleEntry>;
   using ImportEntryMap =
-      JS::GCHashMap<const frontend::ParserAtom*, frontend::StencilModuleEntry>;
-  using RootedExportEntryVector = JS::Rooted<ExportEntryVector>;
-  using RootedRequestedModuleVector = JS::Rooted<RequestedModuleVector>;
-  using RootedAtomSet = JS::Rooted<AtomSet>;
-  using RootedImportEntryMap = JS::Rooted<ImportEntryMap>;
+      HashMap<const frontend::ParserAtom*, frontend::StencilModuleEntry>;
 
   JSContext* cx_;
   frontend::EitherParser eitherParser_;
 
   // These are populated while parsing.
-  RootedAtomSet requestedModuleSpecifiers_;
-  RootedRequestedModuleVector requestedModules_;
-  RootedImportEntryMap importEntries_;
-  RootedExportEntryVector exportEntries_;
-  RootedAtomSet exportNames_;
+  AtomSet requestedModuleSpecifiers_;
+  RequestedModuleVector requestedModules_;
+  ImportEntryMap importEntries_;
+  ExportEntryVector exportEntries_;
+  AtomSet exportNames_;
 
   // These are populated while emitting bytecode.
   frontend::FunctionDeclarationVector functionDecls_;

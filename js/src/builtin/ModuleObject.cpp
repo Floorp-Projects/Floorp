@@ -1198,11 +1198,11 @@ ModuleBuilder::ModuleBuilder(JSContext* cx,
                              const frontend::EitherParser& eitherParser)
     : cx_(cx),
       eitherParser_(eitherParser),
-      requestedModuleSpecifiers_(cx, AtomSet(cx)),
-      requestedModules_(cx, RequestedModuleVector(cx)),
-      importEntries_(cx, ImportEntryMap(cx)),
-      exportEntries_(cx, ExportEntryVector(cx)),
-      exportNames_(cx, AtomSet(cx)),
+      requestedModuleSpecifiers_(cx),
+      requestedModules_(cx),
+      importEntries_(cx),
+      exportEntries_(cx),
+      exportNames_(cx),
       functionDecls_(cx) {}
 
 bool ModuleBuilder::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
@@ -1214,7 +1214,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
   // 15.2.1.17.1 ParseModule, Steps 4-11.
 
   // Step 4.
-  metadata.requestedModules = std::move(requestedModules_.get());
+  metadata.requestedModules = std::move(requestedModules_);
 
   // Step 5.
   if (!metadata.importEntries.reserve(importEntries_.count())) {

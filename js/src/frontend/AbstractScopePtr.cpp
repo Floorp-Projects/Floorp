@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::frontend;
 
-MutableHandle<ScopeStencil> AbstractScopePtr::scopeData() const {
+ScopeStencil& AbstractScopePtr::scopeData() const {
   const Deferred& data = scope_.as<Deferred>();
   return data.compilationInfo.scopeData[data.index.index];
 }
@@ -39,7 +39,7 @@ Scope* AbstractScopePtr::existingScope() const {
 ScopeKind AbstractScopePtr::kind() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeStencil()) {
-    return scopeData().get().kind();
+    return scopeData().kind();
   }
   return scope()->kind();
 }
@@ -47,7 +47,7 @@ ScopeKind AbstractScopePtr::kind() const {
 AbstractScopePtr AbstractScopePtr::enclosing() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeStencil()) {
-    return scopeData().get().enclosing(compilationInfo());
+    return scopeData().enclosing(compilationInfo());
   }
   return AbstractScopePtr(scope()->enclosing());
 }
@@ -55,7 +55,7 @@ AbstractScopePtr AbstractScopePtr::enclosing() const {
 bool AbstractScopePtr::hasEnvironment() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeStencil()) {
-    return scopeData().get().hasEnvironment();
+    return scopeData().hasEnvironment();
   }
   return scope()->hasEnvironment();
 }
@@ -65,7 +65,7 @@ bool AbstractScopePtr::isArrow() const {
   // !isNullptr()
   MOZ_ASSERT(is<FunctionScope>());
   if (isScopeStencil()) {
-    return scopeData().get().isArrow();
+    return scopeData().isArrow();
   }
   MOZ_ASSERT(scope()->as<FunctionScope>().canonicalFunction());
   return scope()->as<FunctionScope>().canonicalFunction()->isArrow();
@@ -73,7 +73,7 @@ bool AbstractScopePtr::isArrow() const {
 
 uint32_t AbstractScopePtr::nextFrameSlot() const {
   if (isScopeStencil()) {
-    return scopeData().get().nextFrameSlot();
+    return scopeData().nextFrameSlot();
   }
 
   switch (kind()) {

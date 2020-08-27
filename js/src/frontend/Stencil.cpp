@@ -15,19 +15,18 @@
 #include "gc/AllocKind.h"   // gc::AllocKind
 #include "js/CallArgs.h"    // JSNative
 #include "js/RootingAPI.h"  // Rooted
-#include "js/TracingAPI.h"  // TraceEdge
 #include "js/Value.h"       // ObjectValue
 #include "js/WasmModule.h"  // JS::WasmModule
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/JSContext.h"              // JSContext
 #include "vm/JSFunction.h"  // JSFunction, GetFunctionPrototype, NewFunctionWithProto
-#include "vm/JSObject.h"     // JSObject
-#include "vm/JSONPrinter.h"  // js::JSONPrinter
-#include "vm/JSScript.h"     // BaseScript, JSScript
-#include "vm/ObjectGroup.h"  // TenuredObject
-#include "vm/Printer.h"      // js::Fprinter
-#include "vm/Scope.h"  // Scope, CreateEnvironmentShape, EmptyEnvironmentShape, ScopeKindString
+#include "vm/JSObject.h"      // JSObject
+#include "vm/JSONPrinter.h"   // js::JSONPrinter
+#include "vm/JSScript.h"      // BaseScript, JSScript
+#include "vm/ObjectGroup.h"   // TenuredObject
+#include "vm/Printer.h"       // js::Fprinter
+#include "vm/Scope.h"         // Scope, ScopeKindString
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
 #include "wasm/AsmJS.h"       // InstantiateAsmJS
@@ -35,18 +34,6 @@
 
 using namespace js;
 using namespace js::frontend;
-
-bool frontend::RegExpStencil::init(JSContext* cx, JSAtom* pattern,
-                                   JS::RegExpFlags flags) {
-  length_ = pattern->length();
-  buf_ = cx->make_pod_array<char16_t>(length_);
-  if (!buf_) {
-    return false;
-  }
-  js::CopyChars(buf_.get(), *pattern);
-  flags_ = flags;
-  return true;
-}
 
 AbstractScopePtr ScopeStencil::enclosing(CompilationInfo& compilationInfo) {
   if (enclosing_) {
@@ -119,11 +106,6 @@ Scope* ScopeStencil::createScope(JSContext* cx,
   return scope;
 }
 
-void ScopeStencil::trace(JSTracer* trc) {
-  // NOTE: Scope::Data fields such as `canonicalFunction` are always nullptr
-  //       while owned by a ScopeStencil so no additional tracing is needed.
-}
-
 uint32_t ScopeStencil::nextFrameSlot() const {
   switch (kind()) {
     case ScopeKind::Function:
@@ -158,18 +140,6 @@ uint32_t ScopeStencil::nextFrameSlot() const {
   }
   MOZ_CRASH("Not an enclosing intra-frame scope");
 }
-
-void StencilModuleEntry::trace(JSTracer* trc) {}
-
-void StencilModuleMetadata::trace(JSTracer* trc) {
-  requestedModules.trace(trc);
-  importEntries.trace(trc);
-  localExportEntries.trace(trc);
-  indirectExportEntries.trace(trc);
-  starExportEntries.trace(trc);
-}
-
-void ScriptStencil::trace(JSTracer* trc) {}
 
 static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                              ScriptStencil& stencil, HandleFunction function) {
@@ -284,14 +254,14 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
 // Instantiate ModuleObject if this is a module compile.
 static bool MaybeInstantiateModule(JSContext* cx,
                                    CompilationInfo& compilationInfo) {
-  if (compilationInfo.topLevel.get().isModule()) {
+  if (compilationInfo.topLevel.isModule()) {
     compilationInfo.module = ModuleObject::create(cx);
     if (!compilationInfo.module) {
       return false;
     }
 
-    if (!compilationInfo.moduleMetadata.get().initModule(
-            cx, compilationInfo, compilationInfo.module)) {
+    if (!compilationInfo.moduleMetadata.initModule(cx, compilationInfo,
+                                                   compilationInfo.module)) {
       return false;
     }
   }
@@ -441,7 +411,7 @@ static bool InstantiateScriptStencils(JSContext* cx,
 // includes standalone functions and functions being delazified.
 static bool InstantiateTopLevel(JSContext* cx,
                                 CompilationInfo& compilationInfo) {
-  ScriptStencil& stencil = compilationInfo.topLevel.get();
+  ScriptStencil& stencil = compilationInfo.topLevel;
   RootedFunction fun(cx);
   if (stencil.isFunction()) {
     fun = compilationInfo.functions[CompilationInfo::TopLevelFunctionIndex];
@@ -1227,14 +1197,14 @@ void CompilationInfo::dumpStencil(js::JSONPrinter& json) {
   json.beginObject();
 
   json.beginObjectProperty("topLevel");
-  topLevel.get().dumpFields(json);
+  topLevel.dumpFields(json);
   json.endObject();
 
   // FIXME: dump asmJS
 
   json.beginListProperty("funcData");
   for (size_t i = 0; i < funcData.length(); i++) {
-    funcData[i].get().dump(json);
+    funcData[i].dump(json);
   }
   json.endList();
 
@@ -1262,9 +1232,9 @@ void CompilationInfo::dumpStencil(js::JSONPrinter& json) {
   }
   json.endList();
 
-  if (topLevel.get().isModule()) {
+  if (topLevel.isModule()) {
     json.beginObjectProperty("moduleMetadata");
-    moduleMetadata.get().dumpFields(json);
+    moduleMetadata.dumpFields(json);
     json.endObject();
   }
 
