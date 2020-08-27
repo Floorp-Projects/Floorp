@@ -89,73 +89,6 @@ struct ScopeContext {
   static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
 
-struct CompilationStencil;
-struct CompilationGCOutput;
-
-class ScriptStencilIterable {
- public:
-  class ScriptAndFunction {
-   public:
-    ScriptStencil& script;
-    HandleFunction function;
-    FunctionIndex functionIndex;
-
-    ScriptAndFunction() = delete;
-    ScriptAndFunction(ScriptStencil& script, HandleFunction function,
-                      FunctionIndex functionIndex)
-        : script(script), function(function), functionIndex(functionIndex) {}
-  };
-
-  class Iterator {
-    size_t index_ = 0;
-    CompilationStencil& stencil_;
-    CompilationGCOutput& gcOutput_;
-
-    Iterator(CompilationStencil& stencil, CompilationGCOutput& gcOutput,
-             size_t index)
-        : index_(index), stencil_(stencil), gcOutput_(gcOutput) {
-      skipNonFunctions();
-    }
-
-   public:
-    explicit Iterator(CompilationStencil& stencil,
-                      CompilationGCOutput& gcOutput)
-        : stencil_(stencil), gcOutput_(gcOutput) {
-      skipNonFunctions();
-    }
-
-    Iterator operator++() {
-      next();
-      skipNonFunctions();
-      return *this;
-    }
-
-    inline void next();
-
-    inline void skipNonFunctions();
-
-    bool operator!=(const Iterator& other) const {
-      return index_ != other.index_;
-    }
-
-    inline ScriptAndFunction operator*();
-
-    static inline Iterator end(CompilationStencil& stencil,
-                               CompilationGCOutput& gcOutput);
-  };
-
-  CompilationStencil& stencil_;
-  CompilationGCOutput& gcOutput_;
-
-  explicit ScriptStencilIterable(CompilationStencil& stencil,
-                                 CompilationGCOutput& gcOutput)
-      : stencil_(stencil), gcOutput_(gcOutput) {}
-
-  Iterator begin() const { return Iterator(stencil_, gcOutput_); }
-
-  Iterator end() const { return Iterator::end(stencil_, gcOutput_); }
-};
-
 // Input of the compilation, including source and enclosing context.
 struct MOZ_RAII CompilationInput {
   const JS::ReadOnlyCompileOptions& options;
@@ -303,6 +236,90 @@ struct MOZ_RAII CompilationGCOutput {
       : script(cx), module(cx), functions(cx), scopes(cx), sourceObject(cx) {}
 };
 
+class ScriptStencilIterable {
+ public:
+  class ScriptAndFunction {
+   public:
+    ScriptStencil& script;
+    HandleFunction function;
+    FunctionIndex functionIndex;
+
+    ScriptAndFunction() = delete;
+    ScriptAndFunction(ScriptStencil& script, HandleFunction function,
+                      FunctionIndex functionIndex)
+        : script(script), function(function), functionIndex(functionIndex) {}
+  };
+
+  class Iterator {
+    size_t index_ = 0;
+    CompilationStencil& stencil_;
+    CompilationGCOutput& gcOutput_;
+
+    Iterator(CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+             size_t index)
+        : index_(index), stencil_(stencil), gcOutput_(gcOutput) {
+      skipNonFunctions();
+    }
+
+   public:
+    explicit Iterator(CompilationStencil& stencil,
+                      CompilationGCOutput& gcOutput)
+        : stencil_(stencil), gcOutput_(gcOutput) {
+      skipNonFunctions();
+    }
+
+    Iterator operator++() {
+      next();
+      skipNonFunctions();
+      return *this;
+    }
+
+    void next() {
+      MOZ_ASSERT(index_ < stencil_.scriptData.length());
+      index_++;
+    }
+
+    void skipNonFunctions() {
+      size_t length = stencil_.scriptData.length();
+      while (index_ < length) {
+        if (stencil_.scriptData[index_].isFunction()) {
+          return;
+        }
+
+        index_++;
+      }
+    }
+
+    bool operator!=(const Iterator& other) const {
+      return index_ != other.index_;
+    }
+
+    ScriptAndFunction operator*() {
+      ScriptStencil& script = stencil_.scriptData[index_];
+
+      FunctionIndex functionIndex = FunctionIndex(index_);
+      return ScriptAndFunction(script, gcOutput_.functions[functionIndex],
+                               functionIndex);
+    }
+
+    static Iterator end(CompilationStencil& stencil,
+                        CompilationGCOutput& gcOutput) {
+      return Iterator(stencil, gcOutput, stencil.scriptData.length());
+    }
+  };
+
+  CompilationStencil& stencil_;
+  CompilationGCOutput& gcOutput_;
+
+  explicit ScriptStencilIterable(CompilationStencil& stencil,
+                                 CompilationGCOutput& gcOutput)
+      : stencil_(stencil), gcOutput_(gcOutput) {}
+
+  Iterator begin() const { return Iterator(stencil_, gcOutput_); }
+
+  Iterator end() const { return Iterator::end(stencil_, gcOutput_); }
+};
+
 // CompilationInfo owns a number of pieces of information about script
 // compilation as well as controls the lifetime of parse nodes and other data by
 // controling the mark and reset of the LifoAlloc.
@@ -364,37 +381,6 @@ struct MOZ_RAII CompilationInfo {
   void dumpStencil(js::JSONPrinter& json);
 #endif
 };
-
-inline void ScriptStencilIterable::Iterator::next() {
-  MOZ_ASSERT(index_ < stencil_.scriptData.length());
-  index_++;
-}
-
-inline void ScriptStencilIterable::Iterator::skipNonFunctions() {
-  size_t length = stencil_.scriptData.length();
-  while (index_ < length) {
-    if (stencil_.scriptData[index_].isFunction()) {
-      return;
-    }
-
-    index_++;
-  }
-}
-
-inline ScriptStencilIterable::ScriptAndFunction
-ScriptStencilIterable::Iterator::operator*() {
-  ScriptStencil& script = stencil_.scriptData[index_];
-
-  FunctionIndex functionIndex = FunctionIndex(index_);
-  return ScriptAndFunction(script, gcOutput_.functions[functionIndex],
-                           functionIndex);
-}
-
-/* static */ inline ScriptStencilIterable::Iterator
-ScriptStencilIterable::Iterator::end(CompilationStencil& stencil,
-                                     CompilationGCOutput& gcOutput) {
-  return Iterator(stencil, gcOutput, stencil.scriptData.length());
-}
 
 }  // namespace frontend
 }  // namespace js
