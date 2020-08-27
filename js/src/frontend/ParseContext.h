@@ -330,7 +330,7 @@ class ParseContext : public Nestable<ParseContext> {
 
  public:
   ParseContext(JSContext* cx, ParseContext*& parent, SharedContext* sc,
-               ErrorReporter& errorReporter, CompilationInfo& compilationInfo,
+               ErrorReporter& errorReporter, CompilationState& compilationState,
                Directives* newDirectives, bool isFull);
 
   MOZ_MUST_USE bool init();
