@@ -409,6 +409,7 @@ class PrintingChild extends ActorChild {
     cv.QueryInterface(Ci.nsIWebBrowserPrint);
     this.mm.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
       numPages: cv.printPreviewNumPages,
+      totalPages: cv.rawNumPages,
     });
   }
 
