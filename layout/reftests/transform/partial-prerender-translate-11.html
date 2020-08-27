@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+<!--
+  A test case that the nearest oveflow:hidden scroll frame is the clip frame
+  for the partial pre-render transform animation.
+  -->
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+}
+#target {
+  width: 30000px;
+  height: 100px;
+  transform: translateX(-2500px);
+  /*
+   * 1s delay so that we can avoid undesired composition, i.e. the first
+   * composition on the composition would be the final transition value.
+   */
+  transition: transform 100s step-start 1s;
+}
+</style>
+<div style="width: 50%; overflow: hidden">
+  <div id="target">
+    <!--
+      Put an SVG element so that the transform display item has a blob on
+      WebRender which means this test properly fails without the proper fix.
+      -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30000 100">
+      <rect fill="green" x="2500" width="400" height="100"></rect>
+      <rect fill="blue" x="2900" width="100" height="100"></rect>
+    </svg>
+  </div>
+</div>
+<script>
+document.addEventListener("MozReftestInvalidate", () => {
+  target.style.transform = "translateX(-2600px)";
+  target.addEventListener("transitionstart", () => {
+    // Wait a second to make sure the transition has been composited on the
+    // compositor.
+    setTimeout(() => {
+      document.documentElement.classList.remove("reftest-wait");
+    }, 1000);
+  });
+}, { once: true });
+</script>
+</html>
