@@ -45,17 +45,20 @@ class ModuleCompiler;
 template <typename Unit>
 class StandaloneFunctionCompiler;
 
-extern JSScript* CompileGlobalScript(CompilationInfo& compilationInfo,
-                                     GlobalSharedContext& globalsc,
-                                     JS::SourceText<char16_t>& srcBuf);
+extern bool CompileGlobalScript(CompilationInfo& compilationInfo,
+                                GlobalSharedContext& globalsc,
+                                JS::SourceText<char16_t>& srcBuf,
+                                CompilationGCOutput& gcOutput);
 
-extern JSScript* CompileGlobalScript(CompilationInfo& compilationInfo,
-                                     GlobalSharedContext& globalsc,
-                                     JS::SourceText<mozilla::Utf8Unit>& srcBuf);
+extern bool CompileGlobalScript(CompilationInfo& compilationInfo,
+                                GlobalSharedContext& globalsc,
+                                JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+                                CompilationGCOutput& gcOutput);
 
-extern JSScript* CompileEvalScript(CompilationInfo& compilationInfo,
-                                   EvalSharedContext& evalsc,
-                                   JS::SourceText<char16_t>& srcBuf);
+extern bool CompileEvalScript(CompilationInfo& compilationInfo,
+                              EvalSharedContext& evalsc,
+                              JS::SourceText<char16_t>& srcBuf,
+                              CompilationGCOutput& gcOutput);
 
 extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
                                              JS::Handle<BaseScript*> lazy,

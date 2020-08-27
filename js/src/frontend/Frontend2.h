@@ -32,9 +32,10 @@ class GlobalScriptInfo;
 // declarations in the simple way.
 class Smoosh {
  public:
-  static JSScript* compileGlobalScript(
-      CompilationInfo& compilationInfo,
-      JS::SourceText<mozilla::Utf8Unit>& srcBuf, bool* unimplemented);
+  static bool compileGlobalScript(CompilationInfo& compilationInfo,
+                                  JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+                                  CompilationGCOutput& gcOutput,
+                                  bool* unimplemented);
 
   static bool compileGlobalScriptToStencil(
       CompilationInfo& compilationInfo,

@@ -18,10 +18,10 @@
 #include "jstypes.h"      // JS_PUBLIC_API
 
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
-#include "frontend/CompilationInfo.h"      // for frontened::CompilationInfo
-#include "frontend/FullParseHandler.h"     // frontend::FullParseHandler
-#include "frontend/ParseContext.h"         // frontend::UsedNameTracker
-#include "frontend/Parser.h"       // frontend::Parser, frontend::ParseGoal
+#include "frontend/CompilationInfo.h"  // for frontened::CompilationInfo, frontened::CompilationGCOutput
+#include "frontend/FullParseHandler.h"  // frontend::FullParseHandler
+#include "frontend/ParseContext.h"      // frontend::UsedNameTracker
+#include "frontend/Parser.h"            // frontend::Parser, frontend::ParseGoal
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
 #include "js/RootingAPI.h"         // JS::Rooted
 #include "js/SourceText.h"         // JS::SourceText
@@ -77,7 +77,13 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
       srcBuf.length(), options.lineno, options.column);
   frontend::GlobalSharedContext globalsc(
       cx, scopeKind, compilationInfo, compilationInfo.state.directives, extent);
-  return frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
+  frontend::CompilationGCOutput gcOutput(cx);
+  if (!frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf,
+                                     gcOutput)) {
+    return nullptr;
+  }
+
+  return gcOutput.script;
 }
 
 JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -489,10 +495,12 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
     frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
                                            compilationInfo.state.directives,
                                            extent);
-    script = frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
-    if (!script) {
+    frontend::CompilationGCOutput gcOutput(cx);
+    if (!frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf,
+                                       gcOutput)) {
       return false;
     }
+    script = gcOutput.script;
   }
 
   return Execute(cx, script, env, rval);

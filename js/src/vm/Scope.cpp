@@ -2169,7 +2169,8 @@ bool ScopeStencil::createForWithScope(
 
 template <typename SpecificScopeT>
 UniquePtr<typename SpecificScopeT::Data> ScopeStencil::createSpecificScopeData(
-    JSContext* cx, CompilationInfo& compilationInfo) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) {
   return LiftParserScopeData<SpecificScopeT>(cx, compilationInfo,
                                              &data<SpecificScopeT>());
 }
@@ -2177,7 +2178,8 @@ UniquePtr<typename SpecificScopeT::Data> ScopeStencil::createSpecificScopeData(
 template <>
 UniquePtr<FunctionScope::Data>
 ScopeStencil::createSpecificScopeData<FunctionScope>(
-    JSContext* cx, CompilationInfo& compilationInfo) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) {
   // Allocate a new vm function-scope.
   UniquePtr<FunctionScope::Data> data = LiftParserScopeData<FunctionScope>(
       cx, compilationInfo, &this->data<FunctionScope>());
@@ -2186,14 +2188,15 @@ ScopeStencil::createSpecificScopeData<FunctionScope>(
   }
 
   // Initialize the GCPtrs in the FunctionScope::Data.
-  data->canonicalFunction = compilationInfo.gcOutput.functions[*functionIndex_];
+  data->canonicalFunction = gcOutput.functions[*functionIndex_];
 
   return data;
 }
 
 template <>
 UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
-    JSContext* cx, CompilationInfo& compilationInfo) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) {
   // Allocate a new vm module-scope.
   UniquePtr<ModuleScope::Data> data = LiftParserScopeData<ModuleScope>(
       cx, compilationInfo, &this->data<ModuleScope>());
@@ -2202,7 +2205,7 @@ UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
   }
 
   // Initialize the GCPtrs in the ModuleScope::Data.
-  data->module = compilationInfo.gcOutput.module;
+  data->module = gcOutput.module;
 
   return data;
 }
@@ -2210,17 +2213,20 @@ UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
 // WithScope does not use binding data.
 template <>
 Scope* ScopeStencil::createSpecificScope<WithScope, std::nullptr_t>(
-    JSContext* cx, CompilationInfo& compilationInfo) {
-  RootedScope enclosingScope(cx, enclosing(compilationInfo).existingScope());
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) {
+  RootedScope enclosingScope(
+      cx, enclosing(compilationInfo).existingScope(gcOutput));
   return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
 }
 
 // GlobalScope has bindings but no environment shape.
 template <>
 Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
-    JSContext* cx, CompilationInfo& compilationInfo) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) {
   Rooted<UniquePtr<GlobalScope::Data>> rootedData(
-      cx, createSpecificScopeData<GlobalScope>(cx, compilationInfo));
+      cx, createSpecificScopeData<GlobalScope>(cx, compilationInfo, gcOutput));
   if (!rootedData) {
     return nullptr;
   }
@@ -2233,9 +2239,11 @@ Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
 
 template <typename SpecificScopeT, typename SpecificEnvironmentT>
 Scope* ScopeStencil::createSpecificScope(JSContext* cx,
-                                         CompilationInfo& compilationInfo) {
+                                         CompilationInfo& compilationInfo,
+                                         CompilationGCOutput& gcOutput) {
   Rooted<UniquePtr<typename SpecificScopeT::Data>> rootedData(
-      cx, createSpecificScopeData<SpecificScopeT>(cx, compilationInfo));
+      cx,
+      createSpecificScopeData<SpecificScopeT>(cx, compilationInfo, gcOutput));
   if (!rootedData) {
     return nullptr;
   }
@@ -2246,7 +2254,8 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
     return nullptr;
   }
 
-  RootedScope enclosingScope(cx, enclosing(compilationInfo).existingScope());
+  RootedScope enclosingScope(
+      cx, enclosing(compilationInfo).existingScope(gcOutput));
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<SpecificScopeT>(cx, kind(), enclosingScope, shape,
@@ -2254,16 +2263,21 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
 }
 
 template Scope* ScopeStencil::createSpecificScope<FunctionScope, CallObject>(
-    JSContext* cx, CompilationInfo& compilationInfo);
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput);
 template Scope*
 ScopeStencil::createSpecificScope<LexicalScope, LexicalEnvironmentObject>(
-    JSContext* cx, CompilationInfo& compilationInfo);
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput);
 template Scope*
 ScopeStencil::createSpecificScope<EvalScope, VarEnvironmentObject>(
-    JSContext* cx, CompilationInfo& compilationInfo);
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput);
 template Scope*
 ScopeStencil::createSpecificScope<VarScope, VarEnvironmentObject>(
-    JSContext* cx, CompilationInfo& compilationInfo);
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput);
 template Scope*
 ScopeStencil::createSpecificScope<ModuleScope, ModuleEnvironmentObject>(
-    JSContext* cx, CompilationInfo& compilationInfo);
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput);

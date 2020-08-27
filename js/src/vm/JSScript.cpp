@@ -3518,6 +3518,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 bool PrivateScriptData::InitFromStencil(
     JSContext* cx, js::HandleScript script,
     js::frontend::CompilationInfo& compilationInfo,
+    js::frontend::CompilationGCOutput& gcOutput,
     const frontend::ScriptStencil& scriptStencil) {
   uint32_t ngcthings = scriptStencil.gcThings.length();
 
@@ -3530,8 +3531,8 @@ bool PrivateScriptData::InitFromStencil(
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
-    if (!EmitScriptThingsVector(cx, compilationInfo, scriptStencil.gcThings,
-                                data->gcthings())) {
+    if (!EmitScriptThingsVector(cx, compilationInfo, gcOutput,
+                                scriptStencil.gcThings, data->gcthings())) {
       return false;
     }
   }
@@ -3612,6 +3613,7 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 /* static */
 bool JSScript::fullyInitFromStencil(JSContext* cx,
                                     frontend::CompilationInfo& compilationInfo,
+                                    js::frontend::CompilationGCOutput& gcOutput,
                                     HandleScript script,
                                     frontend::ScriptStencil& scriptStencil,
                                     HandleFunction fun) {
@@ -3675,7 +3677,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
   script->resetArgsUsageAnalysis();
 
   // Create and initialize PrivateScriptData
-  if (!PrivateScriptData::InitFromStencil(cx, script, compilationInfo,
+  if (!PrivateScriptData::InitFromStencil(cx, script, compilationInfo, gcOutput,
                                           scriptStencil)) {
     return false;
   }
@@ -3725,6 +3727,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
 
 JSScript* JSScript::fromStencil(JSContext* cx,
                                 frontend::CompilationInfo& compilationInfo,
+                                js::frontend::CompilationGCOutput& gcOutput,
                                 frontend::ScriptStencil& scriptStencil,
                                 HandleFunction fun) {
   MOZ_ASSERT(scriptStencil.immutableScriptData,
@@ -3736,13 +3739,14 @@ JSScript* JSScript::fromStencil(JSContext* cx,
   }
 
   RootedScript script(
-      cx, Create(cx, functionOrGlobal, compilationInfo.gcOutput.sourceObject,
+      cx, Create(cx, functionOrGlobal, gcOutput.sourceObject,
                  scriptStencil.extent, scriptStencil.immutableFlags));
   if (!script) {
     return nullptr;
   }
 
-  if (!fullyInitFromStencil(cx, compilationInfo, script, scriptStencil, fun)) {
+  if (!fullyInitFromStencil(cx, compilationInfo, gcOutput, script,
+                            scriptStencil, fun)) {
     return nullptr;
   }
 
