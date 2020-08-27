@@ -21,8 +21,6 @@ from operator import itemgetter
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set([
     "tail-call-optimization",
-    "class-methods-private",
-    "class-static-methods-private",
     "regexp-match-indices",
     "Intl.DateTimeFormat-quarter",
     "Intl.Segmenter",
@@ -43,6 +41,8 @@ RELEASE_OR_BETA = set([
 SHELL_OPTIONS = {
     "class-fields-private": "--enable-private-fields",
     "class-static-fields-private": "--enable-private-fields",
+    "class-methods-private": "--enable-private-methods",
+    "class-static-methods-private": "--enable-private-methods",
 }
 
 
