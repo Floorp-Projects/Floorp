@@ -184,6 +184,7 @@ bool DOMSVGPoint::AttrIsAnimating() const {
 
 void DOMSVGPoint::DidChangeTranslate() {
   nsCOMPtr<SVGSVGElement> svg = do_QueryInterface(mOwner);
+  MOZ_ASSERT(svg);
   nsContentUtils::AddScriptRunner(
       NewRunnableMethod("dom::SVGSVGElement::DidChangeTranslate", svg,
                         &SVGSVGElement::DidChangeTranslate));
