@@ -508,7 +508,6 @@ android-hw-arm7-raptor:
     - raptor-speedometer-fenix
     - raptor-speedometer-fennec68
     - raptor-youtube-playback-fenix
-    - raptor-youtube-playback-av1-sfr-fenix
     - raptor-youtube-playback-h264-sfr-fenix
     - raptor-youtube-playback-h264-fenix
     - raptor-youtube-playback-vp9-sfr-fenix
@@ -516,7 +515,6 @@ android-hw-arm7-raptor:
     - raptor-youtube-playback-widevine-h264-sfr-fenix
     - raptor-youtube-playback-widevine-vp9-sfr-fenix
     - raptor-youtube-playback-geckoview
-    - raptor-youtube-playback-av1-sfr-geckoview
     - raptor-youtube-playback-h264-sfr-geckoview
     - raptor-youtube-playback-h264-geckoview
     - raptor-youtube-playback-vp9-sfr-geckoview
@@ -524,7 +522,6 @@ android-hw-arm7-raptor:
     - raptor-youtube-playback-widevine-h264-sfr-geckoview
     - raptor-youtube-playback-widevine-vp9-sfr-geckoview
     - raptor-youtube-playback-fennec68
-    - raptor-youtube-playback-av1-sfr-fennec68
     - raptor-youtube-playback-h264-sfr-fennec68
     - raptor-youtube-playback-h264-fennec68
     - raptor-youtube-playback-vp9-sfr-fennec68
@@ -538,7 +535,6 @@ android-hw-aarch64-raptor:
     - raptor-speedometer-fenix
     - raptor-speedometer-fennec68
     - raptor-youtube-playback-fenix
-    - raptor-youtube-playback-av1-sfr-fenix
     - raptor-youtube-playback-h264-sfr-fenix
     - raptor-youtube-playback-h264-fenix
     - raptor-youtube-playback-vp9-sfr-fenix
@@ -546,7 +542,6 @@ android-hw-aarch64-raptor:
     - raptor-youtube-playback-widevine-h264-sfr-fenix
     - raptor-youtube-playback-widevine-vp9-sfr-fenix
     - raptor-youtube-playback-geckoview
-    - raptor-youtube-playback-av1-sfr-geckoview
     - raptor-youtube-playback-h264-sfr-geckoview
     - raptor-youtube-playback-h264-geckoview
     - raptor-youtube-playback-vp9-sfr-geckoview
@@ -554,7 +549,6 @@ android-hw-aarch64-raptor:
     - raptor-youtube-playback-widevine-h264-sfr-geckoview
     - raptor-youtube-playback-widevine-vp9-sfr-geckoview
     - raptor-youtube-playback-fennec68
-    - raptor-youtube-playback-av1-sfr-fennec68
     - raptor-youtube-playback-h264-sfr-fennec68
     - raptor-youtube-playback-h264-fennec68
     - raptor-youtube-playback-vp9-sfr-fennec68

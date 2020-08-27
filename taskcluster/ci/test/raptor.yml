@@ -685,6 +685,8 @@ raptor-youtube-playback-vp9-sfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 1800
+    limit-platforms:
+        - android-hw-p2.*
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-vp9-sfr
@@ -739,6 +741,8 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 2700
+    limit-platforms:
+        - android-hw-p2.*
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-vp9-sfr
