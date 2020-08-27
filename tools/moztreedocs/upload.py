@@ -96,7 +96,13 @@ def s3_set_redirects(redirects):
 
 
 def s3_delete_missing(files, key_prefix=None):
+    """Delete files in the S3 bucket.
 
+    Delete files on the S3 bucket that doesn't match the files
+    given as the param. If the key_prefix is not specified, missing
+    files that has main/ as a prefix will be removed. Otherwise, it
+    will remove files with the same prefix as key_prefix.
+    """
     s3, bucket = create_aws_session()
     files_on_server = get_s3_keys(s3, bucket)
     if key_prefix:
