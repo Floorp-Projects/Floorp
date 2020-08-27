@@ -926,9 +926,6 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     options.setForceStrictMode();
   }
 
-  SourceExtent extent = SourceExtent::makeGlobalExtent(
-      chars.length(), options.lineno, options.column);
-
   SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
                    SourceOwnership::Borrowed)) {
@@ -961,15 +958,9 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     }
     compilationInfo.input.setEnclosingScope(scope);
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationState compilationState(cx, allocScope, options, scope,
-                                                env);
-
-    frontend::EvalSharedContext evalsc(cx, compilationInfo, compilationState,
-                                       extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, compilationState, evalsc,
-                                     srcBuf, gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo, srcBuf, scope, env,
+                                     gcOutput)) {
       return false;
     }
     script = gcOutput.script;
@@ -985,17 +976,12 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationState compilationState(cx, allocScope, options);
-
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
                scopeKind == ScopeKind::NonSyntactic);
 
-    frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                           compilationState.directives, extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileGlobalScript(compilationInfo, compilationState,
-                                       globalsc, srcBuf, gcOutput)) {
+    if (!frontend::CompileGlobalScript(compilationInfo, srcBuf, scopeKind,
+                                       gcOutput)) {
       return false;
     }
     script = gcOutput.script;

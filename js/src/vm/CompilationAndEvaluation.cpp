@@ -72,16 +72,9 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
     return nullptr;
   }
 
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options);
-
-  SourceExtent extent = SourceExtent::makeGlobalExtent(
-      srcBuf.length(), options.lineno, options.column);
-  frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                         compilationState.directives, extent);
   frontend::CompilationGCOutput gcOutput(cx);
-  if (!frontend::CompileGlobalScript(compilationInfo, compilationState,
-                                     globalsc, srcBuf, gcOutput)) {
+  if (!frontend::CompileGlobalScript(compilationInfo, srcBuf, scopeKind,
+                                     gcOutput)) {
     return nullptr;
   }
 
@@ -494,16 +487,9 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
       return false;
     }
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationState compilationState(cx, allocScope, options);
-
-    SourceExtent extent = SourceExtent::makeGlobalExtent(
-        srcBuf.length(), options.lineno, options.column);
-    frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                           compilationState.directives, extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileGlobalScript(compilationInfo, compilationState,
-                                       globalsc, srcBuf, gcOutput)) {
+    if (!frontend::CompileGlobalScript(compilationInfo, srcBuf, scopeKind,
+                                       gcOutput)) {
       return false;
     }
     script = gcOutput.script;

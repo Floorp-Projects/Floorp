@@ -336,17 +336,9 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     }
     compilationInfo.input.setEnclosingScope(enclosing);
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationState compilationState(cx, allocScope, options,
-                                                enclosing, env);
-
-    uint32_t len = srcBuf.length();
-    SourceExtent extent = SourceExtent::makeGlobalExtent(len);
-    frontend::EvalSharedContext evalsc(cx, compilationInfo, compilationState,
-                                       extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, compilationState, evalsc,
-                                     srcBuf, gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo, srcBuf, enclosing, env,
+                                     gcOutput)) {
       return false;
     }
 
@@ -447,17 +439,9 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     }
     compilationInfo.input.setEnclosingScope(enclosing);
 
-    LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationState compilationState(cx, allocScope, options,
-                                                enclosing, env);
-
-    uint32_t len = srcBuf.length();
-    SourceExtent extent = SourceExtent::makeGlobalExtent(len);
-    frontend::EvalSharedContext evalsc(cx, compilationInfo, compilationState,
-                                       extent);
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, compilationState, evalsc,
-                                     srcBuf, gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo, srcBuf, enclosing, env,
+                                     gcOutput)) {
       return false;
     }
 
