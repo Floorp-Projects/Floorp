@@ -176,6 +176,9 @@ class MediaController final : public DOMEventTargetHelper,
   void ForceToBecomeMainControllerIfNeeded();
   bool ShouldRequestForMainController() const;
 
+  bool ShouldPropagateActionToAllContexts(
+      const MediaControlAction& aAction) const;
+
   bool mIsActive = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;

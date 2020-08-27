@@ -39,7 +39,8 @@ void ContentPlaybackController::NotifyContentMediaControlKeyReceiver(
     MediaControlKey aKey) {
   if (RefPtr<ContentMediaControlKeyReceiver> receiver =
           ContentMediaControlKeyReceiver::Get(mBC)) {
-    LOG("Handle '%s' in default behavior", ToMediaControlKeyStr(aKey));
+    LOG("Handle '%s' in default behavior for BC %" PRIu64,
+        ToMediaControlKeyStr(aKey), mBC->Id());
     receiver->HandleMediaKey(aKey);
   }
 }
@@ -53,8 +54,8 @@ void ContentPlaybackController::NotifyMediaSession(MediaSessionAction aAction) {
 void ContentPlaybackController::NotifyMediaSession(
     const MediaSessionActionDetails& aDetails) {
   if (RefPtr<MediaSession> session = GetMediaSession()) {
-    LOG("Handle '%s' in media session behavior",
-        ToMediaSessionActionStr(aDetails.mAction));
+    LOG("Handle '%s' in media session behavior for BC %" PRIu64,
+        ToMediaSessionActionStr(aDetails.mAction), mBC->Id());
     MOZ_ASSERT(session->IsActive(), "Notify inactive media session!");
     session->NotifyHandler(aDetails);
   }
@@ -143,6 +144,11 @@ void ContentPlaybackController::SeekTo(double aSeekTime, bool aFastSeek) {
 
 void ContentMediaControlKeyHandler::HandleMediaControlAction(
     BrowsingContext* aContext, const MediaControlAction& aAction) {
+  MOZ_ASSERT(aContext);
+  // The web content doesn't exist in this browsing context.
+  if (!aContext->GetDocShell()) {
+    return;
+  }
   ContentPlaybackController controller(aContext);
   switch (aAction.mKey) {
     case MediaControlKey::Focus:
@@ -178,7 +184,7 @@ void ContentMediaControlKeyHandler::HandleMediaControlAction(
       return;
     }
     default:
-      MOZ_ASSERT_UNREACHABLE("Invalid event.");
+      MOZ_ASSERT_UNREACHABLE("Invalid media control key.");
   };
 }
 
