@@ -1203,51 +1203,51 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json) {
   }
 }
 
-void CompilationInfo::dumpStencil() {
+void CompilationStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
-  dumpStencil(json);
+  dump(json);
   out.put("\n");
 }
 
-void CompilationInfo::dumpStencil(js::JSONPrinter& json) {
+void CompilationStencil::dump(js::JSONPrinter& json) {
   json.beginObject();
 
   // FIXME: dump asmJS
 
   json.beginListProperty("scriptData");
-  for (auto& data : stencil.scriptData) {
+  for (auto& data : scriptData) {
     data.dump(json);
   }
   json.endList();
 
   json.beginListProperty("regExpData");
-  for (auto& data : stencil.regExpData) {
+  for (auto& data : regExpData) {
     data.dump(json);
   }
   json.endList();
 
   json.beginListProperty("bigIntData");
-  for (auto& data : stencil.bigIntData) {
+  for (auto& data : bigIntData) {
     data.dump(json);
   }
   json.endList();
 
   json.beginListProperty("objLiteralData");
-  for (auto& data : stencil.objLiteralData) {
+  for (auto& data : objLiteralData) {
     data.dump(json);
   }
   json.endList();
 
   json.beginListProperty("scopeData");
-  for (auto& data : stencil.scopeData) {
+  for (auto& data : scopeData) {
     data.dump(json);
   }
   json.endList();
 
-  if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
+  if (scriptData[CompilationInfo::TopLevelIndex].isModule()) {
     json.beginObjectProperty("moduleMetadata");
-    stencil.moduleMetadata.dumpFields(json);
+    moduleMetadata.dumpFields(json);
     json.endObject();
   }
 

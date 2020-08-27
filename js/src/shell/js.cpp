@@ -5188,7 +5188,7 @@ static bool FrontendTest(JSContext* cx,
         }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-        compilationInfo.dumpStencil();
+        compilationInfo.stencil.dump();
 #endif
         break;
       }
@@ -5228,7 +5228,7 @@ static bool FrontendTest(JSContext* cx,
         builder.finishFunctionDecls(compilationInfo.stencil.moduleMetadata);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-        compilationInfo.dumpStencil();
+        compilationInfo.stencil.dump();
 #endif
         break;
       }
@@ -5400,7 +5400,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
 #  ifdef DEBUG
-          compilationInfo.dumpStencil();
+          compilationInfo.stencil.dump();
 #  endif
         } else {
           JS_ReportErrorASCII(cx,
