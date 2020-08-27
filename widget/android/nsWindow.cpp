@@ -88,7 +88,9 @@ using mozilla::gfx::SurfaceFormat;
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
 #include "AndroidUiThread.h"
+#include "AndroidView.h"
 #include "GeckoEditableSupport.h"
+#include "GeckoViewSupport.h"
 #include "KeyEvent.h"
 #include "MotionEvent.h"
 #include "mozilla/java/EventDispatcherWrappers.h"
@@ -141,50 +143,6 @@ static const int32_t INPUT_RESULT_HANDLED =
     java::PanZoomController::INPUT_RESULT_HANDLED;
 static const int32_t INPUT_RESULT_HANDLED_CONTENT =
     java::PanZoomController::INPUT_RESULT_HANDLED_CONTENT;
-
-template <typename Lambda, bool IsStatic, typename InstanceType, class Impl>
-class nsWindow::WindowEvent : public Runnable {
-  bool IsStaleCall() {
-    if (IsStatic) {
-      // Static calls are never stale.
-      return false;
-    }
-
-    JNIEnv* const env = mozilla::jni::GetEnvForThread();
-
-    const auto natives = reinterpret_cast<mozilla::WeakPtr<Impl>*>(
-        jni::GetNativeHandle(env, mInstance.Get()));
-    MOZ_CATCH_JNI_EXCEPTION(env);
-
-    // The call is stale if the nsWindow has been destroyed on the
-    // Gecko side, but the Java object is still attached to it through
-    // a weak pointer. Stale calls should be discarded. Note that it's
-    // an error if natives is nullptr here; we return false but the
-    // native call will throw an error.
-    return natives && !natives->get();
-  }
-
-  Lambda mLambda;
-  const InstanceType mInstance;
-
- public:
-  WindowEvent(Lambda&& aLambda, InstanceType&& aInstance)
-      : Runnable("nsWindowEvent"),
-        mLambda(std::move(aLambda)),
-        mInstance(std::forward<InstanceType>(aInstance)) {}
-
-  explicit WindowEvent(Lambda&& aLambda)
-      : Runnable("nsWindowEvent"),
-        mLambda(std::move(aLambda)),
-        mInstance(mLambda.GetThisArg()) {}
-
-  NS_IMETHOD Run() override {
-    if (!IsStaleCall()) {
-      mLambda();
-    }
-    return NS_OK;
-  }
-};
 
 namespace {
 template <class Instance, class Impl>
