@@ -1386,8 +1386,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
 
     auto AddMathFunction = [this](const char* name,
                                   AsmJSMathBuiltinFunction func) {
-      auto mbAtom =
-          compilationInfo_.parserAtoms.internAscii(cx_, name, strlen(name));
+      auto mbAtom = compilationInfo_.stencil.parserAtoms.internAscii(
+          cx_, name, strlen(name));
       if (mbAtom.isErr()) {
         return false;
       }
@@ -1417,8 +1417,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
     };
 
     auto AddMathConstant = [this](const char* name, double cst) {
-      auto mbAtom =
-          compilationInfo_.parserAtoms.internAscii(cx_, name, strlen(name));
+      auto mbAtom = compilationInfo_.stencil.parserAtoms.internAscii(
+          cx_, name, strlen(name));
       if (mbAtom.isErr()) {
         return false;
       }

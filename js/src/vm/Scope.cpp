@@ -1950,8 +1950,8 @@ bool ScopeStencil::createForFunctionScope(
     }
   }
 
-  *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(
+  *index = compilationInfo.stencil.scopeData.length();
+  return compilationInfo.stencil.scopeData.emplaceBack(
       ScopeKind::Function, enclosing, firstFrameSlot, envShape,
       ownedData.release(), mozilla::Some(functionIndex), isArrow);
 }
@@ -1984,9 +1984,9 @@ bool ScopeStencil::createForLexicalScope(
     }
   }
 
-  *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                               envShape, ownedData.release());
+  *index = compilationInfo.stencil.scopeData.length();
+  return compilationInfo.stencil.scopeData.emplaceBack(
+      kind, enclosing, firstFrameSlot, envShape, ownedData.release());
 }
 
 bool ScopeStencil::createForVarScope(
@@ -2016,9 +2016,9 @@ bool ScopeStencil::createForVarScope(
     }
   }
 
-  *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                               envShape, ownedData.release());
+  *index = compilationInfo.stencil.scopeData.length();
+  return compilationInfo.stencil.scopeData.emplaceBack(
+      kind, enclosing, firstFrameSlot, envShape, ownedData.release());
 }
 
 /* static */
@@ -2051,9 +2051,9 @@ bool ScopeStencil::createForGlobalScope(
     }
   }
 
-  *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                               envShape, ownedData.release());
+  *index = compilationInfo.stencil.scopeData.length();
+  return compilationInfo.stencil.scopeData.emplaceBack(
+      kind, enclosing, firstFrameSlot, envShape, ownedData.release());
 }
 
 /* static */
@@ -2085,9 +2085,9 @@ bool ScopeStencil::createForEvalScope(
     }
   }
 
-  *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                               envShape, ownedData.release());
+  *index = compilationInfo.stencil.scopeData.length();
+  return compilationInfo.stencil.scopeData.emplaceBack(
+      kind, enclosing, firstFrameSlot, envShape, ownedData.release());
 }
 
 /* static */
@@ -2127,10 +2127,10 @@ bool ScopeStencil::createForModuleScope(
     }
   }
 
-  *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(ScopeKind::Module, enclosing,
-                                               firstFrameSlot, envShape,
-                                               ownedData.release());
+  *index = compilationInfo.stencil.scopeData.length();
+  return compilationInfo.stencil.scopeData.emplaceBack(
+      ScopeKind::Module, enclosing, firstFrameSlot, envShape,
+      ownedData.release());
 }
 
 template <typename SpecificEnvironmentT>
@@ -2162,9 +2162,9 @@ bool ScopeStencil::createForWithScope(
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
 
-  *index = compilationInfo.scopeData.length();
-  return compilationInfo.scopeData.emplaceBack(ScopeKind::With, enclosing,
-                                               firstFrameSlot, envShape);
+  *index = compilationInfo.stencil.scopeData.length();
+  return compilationInfo.stencil.scopeData.emplaceBack(
+      ScopeKind::With, enclosing, firstFrameSlot, envShape);
 }
 
 template <typename SpecificScopeT>
@@ -2186,7 +2186,7 @@ ScopeStencil::createSpecificScopeData<FunctionScope>(
   }
 
   // Initialize the GCPtrs in the FunctionScope::Data.
-  data->canonicalFunction = compilationInfo.functions[*functionIndex_];
+  data->canonicalFunction = compilationInfo.gcOutput.functions[*functionIndex_];
 
   return data;
 }
@@ -2202,7 +2202,7 @@ UniquePtr<ModuleScope::Data> ScopeStencil::createSpecificScopeData<ModuleScope>(
   }
 
   // Initialize the GCPtrs in the ModuleScope::Data.
-  data->module = compilationInfo.module;
+  data->module = compilationInfo.gcOutput.module;
 
   return data;
 }

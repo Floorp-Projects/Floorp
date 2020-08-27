@@ -1541,7 +1541,7 @@ class TokenStreamCharsShared {
 
   const ParserAtom* drainCharBufferIntoAtom() {
     // Add to parser atoms table.
-    auto maybeId = this->compilationInfo->parserAtoms.internChar16(
+    auto maybeId = this->compilationInfo->stencil.parserAtoms.internChar16(
         this->compilationInfo->cx, charBuffer.begin(), charBuffer.length());
     if (maybeId.isErr()) {
       return nullptr;
@@ -1699,7 +1699,7 @@ template <>
 MOZ_ALWAYS_INLINE const ParserAtom*
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(
     mozilla::Span<const char16_t> units) {
-  return this->compilationInfo->parserAtoms
+  return this->compilationInfo->stencil.parserAtoms
       .internChar16(this->compilationInfo->cx, units.data(), units.size())
       .unwrapOr(nullptr);
 }
@@ -1708,7 +1708,7 @@ template <>
 /* static */ MOZ_ALWAYS_INLINE const ParserAtom*
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
     mozilla::Span<const mozilla::Utf8Unit> units) {
-  return this->compilationInfo->parserAtoms
+  return this->compilationInfo->stencil.parserAtoms
       .internUtf8(this->compilationInfo->cx, units.data(), units.size())
       .unwrapOr(nullptr);
 }

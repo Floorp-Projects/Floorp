@@ -187,11 +187,11 @@ static JSScript* CreateGlobalScript(CompilationInfo& compilationInfo,
   }
 
   tellDebuggerAboutCompiledScript(
-      compilationInfo.cx, compilationInfo.options.hideScriptFromDebugger,
-      compilationInfo.script);
+      compilationInfo.cx, compilationInfo.input.options.hideScriptFromDebugger,
+      compilationInfo.gcOutput.script);
 
   assertException.reset();
-  return compilationInfo.script;
+  return compilationInfo.gcOutput.script;
 }
 
 JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
@@ -248,11 +248,11 @@ static JSScript* CreateEvalScript(CompilationInfo& compilationInfo,
   }
 
   tellDebuggerAboutCompiledScript(
-      compilationInfo.cx, compilationInfo.options.hideScriptFromDebugger,
-      compilationInfo.script);
+      compilationInfo.cx, compilationInfo.input.options.hideScriptFromDebugger,
+      compilationInfo.gcOutput.script);
 
   assertException.reset();
-  return compilationInfo.script;
+  return compilationInfo.gcOutput.script;
 }
 
 JSScript* frontend::CompileEvalScript(CompilationInfo& compilationInfo,
@@ -376,9 +376,9 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 #endif
 
 static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
-  return !compilationInfo.options.discardSource &&
-         !compilationInfo.options.sourceIsLazy &&
-         !compilationInfo.options.forceFullParse();
+  return !compilationInfo.input.options.discardSource &&
+         !compilationInfo.input.options.sourceIsLazy &&
+         !compilationInfo.input.options.forceFullParse();
 }
 
 template <typename Unit>
@@ -389,7 +389,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
   }
 
   if (CanLazilyParse(compilationInfo)) {
-    syntaxParser.emplace(compilationInfo.cx, compilationInfo.options,
+    syntaxParser.emplace(compilationInfo.cx, compilationInfo.input.options,
                          sourceBuffer_.units(), sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationInfo, nullptr,
                          nullptr);
@@ -398,7 +398,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
     }
   }
 
-  parser.emplace(compilationInfo.cx, compilationInfo.options,
+  parser.emplace(compilationInfo.cx, compilationInfo.input.options,
                  sourceBuffer_.units(), sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationInfo,
                  syntaxParser.ptrOr(nullptr), nullptr);
@@ -428,7 +428,7 @@ bool frontend::SourceAwareCompiler<Unit>::canHandleParseFailure(
   //   are present. We reparse in this case to display the error at the correct
   //   source location. See |Parser::hasValidSimpleStrictParameterNames()|.
   return !parser->anyChars.hadError() &&
-         compilationInfo.directives != newDirectives;
+         compilationInfo.state.directives != newDirectives;
 }
 
 template <typename Unit>
@@ -443,9 +443,11 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
   compilationInfo.rewind(startObj);
 
   // Assignment must be monotonic to prevent reparsing iloops
-  MOZ_ASSERT_IF(compilationInfo.directives.strict(), newDirectives.strict());
-  MOZ_ASSERT_IF(compilationInfo.directives.asmJS(), newDirectives.asmJS());
-  compilationInfo.directives = newDirectives;
+  MOZ_ASSERT_IF(compilationInfo.state.directives.strict(),
+                newDirectives.strict());
+  MOZ_ASSERT_IF(compilationInfo.state.directives.asmJS(),
+                newDirectives.asmJS());
+  compilationInfo.state.directives = newDirectives;
 }
 
 template <typename Unit>
@@ -453,15 +455,15 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     CompilationInfo& compilationInfo, SharedContext* sc) {
   assertSourceParserAndScriptCreated(compilationInfo);
 
-  TokenStreamPosition startPosition(compilationInfo.keepAtoms,
+  TokenStreamPosition startPosition(compilationInfo.state.keepAtoms,
                                     parser->tokenStream);
 
   JSContext* cx = compilationInfo.cx;
 
   // Emplace the topLevel stencil
-  MOZ_ASSERT(compilationInfo.scriptData.length() ==
+  MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
              CompilationInfo::TopLevelIndex);
-  if (!compilationInfo.scriptData.emplaceBack(cx)) {
+  if (!compilationInfo.stencil.scriptData.emplaceBack(cx)) {
     return nullptr;
   }
 
@@ -481,8 +483,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     // encountered:
     // - "use strict" doesn't require any special error reporting for scripts.
     // - "use asm" directives don't have an effect in global/eval contexts.
-    MOZ_ASSERT(
-        !canHandleParseFailure(compilationInfo, compilationInfo.directives));
+    MOZ_ASSERT(!canHandleParseFailure(compilationInfo,
+                                      compilationInfo.state.directives));
     return nullptr;
   }
 
@@ -504,7 +506,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       return nullptr;
     }
 
-    MOZ_ASSERT(compilationInfo.script);
+    MOZ_ASSERT(compilationInfo.gcOutput.script);
   }
 
   // Enqueue an off-thread source compression task after finishing parsing.
@@ -516,30 +518,33 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
 
-  return compilationInfo.script;
+  return compilationInfo.gcOutput.script;
 }
 
 template <typename Unit>
 ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     CompilationInfo& compilationInfo) {
-  if (!createSourceAndParser(compilationInfo.allocScope, compilationInfo)) {
+  if (!createSourceAndParser(compilationInfo.state.allocScope,
+                             compilationInfo)) {
     return nullptr;
   }
   JSContext* cx = compilationInfo.cx;
 
   // Emplace the topLevel stencil
-  MOZ_ASSERT(compilationInfo.scriptData.length() ==
+  MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
              CompilationInfo::TopLevelIndex);
-  if (!compilationInfo.scriptData.emplaceBack(cx)) {
+  if (!compilationInfo.stencil.scriptData.emplaceBack(cx)) {
     return nullptr;
   }
 
   ModuleBuilder builder(cx, parser.ptr());
-  StencilModuleMetadata& moduleMetadata = compilationInfo.moduleMetadata;
+  StencilModuleMetadata& moduleMetadata =
+      compilationInfo.stencil.moduleMetadata;
 
   uint32_t len = this->sourceBuffer_.length();
-  SourceExtent extent = SourceExtent::makeGlobalExtent(
-      len, compilationInfo.options.lineno, compilationInfo.options.column);
+  SourceExtent extent =
+      SourceExtent::makeGlobalExtent(len, compilationInfo.input.options.lineno,
+                                     compilationInfo.input.options.column);
   ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
@@ -562,8 +567,8 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  MOZ_ASSERT(compilationInfo.script);
-  MOZ_ASSERT(compilationInfo.module);
+  MOZ_ASSERT(compilationInfo.gcOutput.script);
+  MOZ_ASSERT(compilationInfo.gcOutput.module);
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!cx->isHelperThreadContext()) {
@@ -573,7 +578,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
-  return compilationInfo.module;
+  return compilationInfo.gcOutput.module;
 }
 
 // Parse a standalone JS function, which might appear as the value of an
@@ -586,7 +591,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
     const Maybe<uint32_t>& parameterListEnd) {
   assertSourceAndParserCreated(compilationInfo);
 
-  TokenStreamPosition startPosition(compilationInfo.keepAtoms,
+  TokenStreamPosition startPosition(compilationInfo.state.keepAtoms,
                                     parser->tokenStream);
   CompilationInfo::RewindToken startObj = compilationInfo.getRewindToken();
 
@@ -597,9 +602,9 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 
   FunctionNode* fn;
   for (;;) {
-    Directives newDirectives = compilationInfo.directives;
+    Directives newDirectives = compilationInfo.state.directives;
     fn = parser->standaloneFunction(parameterListEnd, syntaxKind, generatorKind,
-                                    asyncKind, compilationInfo.directives,
+                                    asyncKind, compilationInfo.state.directives,
                                     &newDirectives);
     if (fn) {
       break;
@@ -636,27 +641,29 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     // we want the SourceExtent used in the final standalone script to
     // start from the beginning of the buffer, and use the provided
     // line and column.
-    compilationInfo.scriptData[CompilationInfo::TopLevelIndex].extent =
+    compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex].extent =
         SourceExtent{/* sourceStart = */ 0,
                      sourceBuffer_.length(),
                      funbox->extent().toStringStart,
                      funbox->extent().toStringEnd,
-                     compilationInfo.options.lineno,
-                     compilationInfo.options.column};
+                     compilationInfo.input.options.lineno,
+                     compilationInfo.input.options.column};
   } else {
     // The asm.js module was created by parser. Instantiation below will
     // allocate the JSFunction that wraps it.
     MOZ_ASSERT(funbox->isAsmJSModule());
-    MOZ_ASSERT(compilationInfo.asmJS.has(funbox->index()));
-    MOZ_ASSERT(compilationInfo.scriptData[CompilationInfo::TopLevelIndex]
-                   .functionFlags.isAsmJSNative());
+    MOZ_ASSERT(compilationInfo.stencil.asmJS.has(funbox->index()));
+    MOZ_ASSERT(
+        compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex]
+            .functionFlags.isAsmJSNative());
   }
 
   if (!compilationInfo.instantiateStencils()) {
     return nullptr;
   }
 
-  JSFunction* fun = compilationInfo.functions[CompilationInfo::TopLevelIndex];
+  JSFunction* fun =
+      compilationInfo.gcOutput.functions[CompilationInfo::TopLevelIndex];
   MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
 
   // Enqueue an off-thread source compression task after finishing parsing.
@@ -697,7 +704,7 @@ static ModuleObject* InternalParseModule(
   // Even if compile fails, we may have generated some of the scripts so expose
   // the ScriptSourceObject to the caller.
   if (sourceObjectOut) {
-    *sourceObjectOut = compilationInfo.sourceObject;
+    *sourceObjectOut = compilationInfo.gcOutput.sourceObject;
   }
 
   if (!module) {
@@ -705,7 +712,7 @@ static ModuleObject* InternalParseModule(
   }
 
   tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
-                                  compilationInfo.script);
+                                  compilationInfo.gcOutput.script);
 
   assertException.reset();
   return module;
@@ -822,10 +829,10 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
-  MOZ_ASSERT(lazyFlags == compilationInfo.script->immutableFlags());
-  MOZ_ASSERT(compilationInfo.script->outermostScope()->hasOnChain(
+  MOZ_ASSERT(lazyFlags == compilationInfo.gcOutput.script->immutableFlags());
+  MOZ_ASSERT(compilationInfo.gcOutput.script->outermostScope()->hasOnChain(
                  ScopeKind::NonSyntactic) ==
-             compilationInfo.script->immutableFlags().hasFlag(
+             compilationInfo.gcOutput.script->immutableFlags().hasFlag(
                  JSScript::ImmutableFlags::HasNonSyntacticScope));
 
   assertException.reset();
@@ -879,12 +886,12 @@ static JSFunction* CompileStandaloneFunction(
   // Note: If AsmJS successfully compiles, the into.script will still be
   // nullptr. In this case we have compiled to a native function instead of an
   // interpreted script.
-  if (compilationInfo.script) {
+  if (compilationInfo.gcOutput.script) {
     if (parameterListEnd) {
       compilationInfo.source()->setParameterListEnd(*parameterListEnd);
     }
     tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
-                                    compilationInfo.script);
+                                    compilationInfo.gcOutput.script);
   }
 
   assertException.reset();
@@ -935,5 +942,5 @@ bool frontend::CompilationInfo::init(JSContext* cx) {
   }
   setSource(ss);
 
-  return ss->initFromOptions(cx, options);
+  return ss->initFromOptions(cx, input.options);
 }

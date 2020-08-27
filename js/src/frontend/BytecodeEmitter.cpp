@@ -1649,11 +1649,11 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
   // with |NewObject|.
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
-  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
-  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
 
   data.writer().beginObject(flags);
 
@@ -2479,7 +2479,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
 
   // Create a Stencil and convert it into a JSScript.
   return intoScriptStencil(
-      &compilationInfo.scriptData[CompilationInfo::TopLevelIndex]);
+      &compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex]);
 }
 
 js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
@@ -4614,11 +4614,11 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
     MOZ_ASSERT(cookedOrRaw->isKind(ParseNodeKind::ArrayExpr));
   }
 
-  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
-  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   data.writer().beginObject(flags);
@@ -8825,11 +8825,11 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  ObjLiteralFlags flags) {
-  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
-  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
 
   data.writer().beginObject(flags);
   bool noValues = flags.contains(ObjLiteralFlag::NoValues);
@@ -8893,11 +8893,11 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   // with |NewObject|.
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
-  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
-  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
 
   data.writer().beginObject(flags);
 
@@ -8945,11 +8945,11 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 }
 
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
-  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
-  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   if (isCow) {
@@ -9433,8 +9433,8 @@ const MemberInitializers& BytecodeEmitter::findMemberInitializersForCall() {
     }
   }
 
-  MOZ_RELEASE_ASSERT(compilationInfo.scopeContext.memberInitializers);
-  return *compilationInfo.scopeContext.memberInitializers;
+  MOZ_RELEASE_ASSERT(compilationInfo.state.scopeContext.memberInitializers);
+  return *compilationInfo.state.scopeContext.memberInitializers;
 }
 
 bool BytecodeEmitter::emitInitializeInstanceMembers() {

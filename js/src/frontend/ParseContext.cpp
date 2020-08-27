@@ -305,13 +305,13 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       newDirectives(newDirectives),
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
-      scriptId_(compilationInfo.usedNames.nextScriptId()),
+      scriptId_(compilationInfo.state.usedNames.nextScriptId()),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
     if (functionBox()->isNamedLambda()) {
-      namedLambdaScope_.emplace(cx, parent, compilationInfo.usedNames);
+      namedLambdaScope_.emplace(cx, parent, compilationInfo.state.usedNames);
     }
-    functionScope_.emplace(cx, parent, compilationInfo.usedNames);
+    functionScope_.emplace(cx, parent, compilationInfo.state.usedNames);
   }
 }
 
@@ -415,7 +415,7 @@ bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
 
   // In the case of eval, we also need to check enclosing VM scopes to see
   // if the var declaration is allowed in the context.
-  js::Scope* enclosingScope = sc()->compilationInfo().enclosingScope;
+  js::Scope* enclosingScope = sc()->compilationInfo().input.enclosingScope;
   js::Scope* varScope = EvalScope::nearestVarScopeForDirectEval(enclosingScope);
   MOZ_ASSERT(varScope);
   for (ScopeIter si(enclosingScope); si; si++) {

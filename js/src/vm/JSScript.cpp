@@ -3736,7 +3736,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
   }
 
   RootedScript script(
-      cx, Create(cx, functionOrGlobal, compilationInfo.sourceObject,
+      cx, Create(cx, functionOrGlobal, compilationInfo.gcOutput.sourceObject,
                  scriptStencil.extent, scriptStencil.immutableFlags));
   if (!script) {
     return nullptr;

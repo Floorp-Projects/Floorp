@@ -859,7 +859,7 @@ const frontend::ParserAtom* js::Int32ToParserAtom(
     indexValue.emplace(si);
   }
 
-  return compilationInfo.parserAtoms
+  return compilationInfo.stencil.parserAtoms
       .internAscii(compilationInfo.cx, start, length)
       .unwrapOr(nullptr);
 }
@@ -1667,7 +1667,7 @@ const frontend::ParserAtom* js::NumberToParserAtom(
              numStr < cbuf.sbuf + cbuf.sbufSize);
 
   size_t length = strlen(numStr);
-  return compilationInfo.parserAtoms
+  return compilationInfo.stencil.parserAtoms
       .internAscii(compilationInfo.cx, numStr, length)
       .unwrapOr(nullptr);
 }

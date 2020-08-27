@@ -613,8 +613,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   uint32_t len = data.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  frontend::GlobalSharedContext globalsc(cx, scopeKind, compilationInfo,
-                                         compilationInfo.directives, extent);
+  frontend::GlobalSharedContext globalsc(
+      cx, scopeKind, compilationInfo, compilationInfo.state.directives, extent);
   JSScript* script =
       frontend::CompileGlobalScript(compilationInfo, globalsc, data);
 
@@ -622,8 +622,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   // we must finish initializing the SSO.  This is because there may be valid
   // inner scripts observable by the debugger which reference the partially-
   // initialized SSO.
-  if (compilationInfo.sourceObject) {
-    sourceObjects.infallibleAppend(compilationInfo.sourceObject);
+  if (compilationInfo.gcOutput.sourceObject) {
+    sourceObjects.infallibleAppend(compilationInfo.gcOutput.sourceObject);
   }
 
   if (script) {

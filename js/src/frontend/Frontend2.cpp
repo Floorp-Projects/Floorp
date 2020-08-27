@@ -66,7 +66,8 @@ bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
         smoosh_get_atom_at(result, i));
     auto len = smoosh_get_atom_len_at(result, i);
     const ParserAtom* atom =
-        compilationInfo.parserAtoms.internUtf8(cx, s, len).unwrapOr(nullptr);
+        compilationInfo.stencil.parserAtoms.internUtf8(cx, s, len)
+            .unwrapOr(nullptr);
     if (!atom) {
       return false;
     }
@@ -115,7 +116,7 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
 bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
                          Vector<const ParserAtom*>& allAtoms,
                          CompilationInfo& compilationInfo) {
-  auto& alloc = compilationInfo.allocScope.alloc();
+  auto& alloc = compilationInfo.state.allocScope.alloc();
 
   for (size_t i = 0; i < result.scopes.len; i++) {
     SmooshScopeData& scopeData = result.scopes.data[i];
@@ -287,7 +288,8 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
     mozilla::Range<const char16_t> range(pattern.get(), length);
 
-    TokenStreamAnyChars ts(cx, compilationInfo.options, /* smg = */ nullptr);
+    TokenStreamAnyChars ts(cx, compilationInfo.input.options,
+                           /* smg = */ nullptr);
 
     // See Parser<FullParseHandler, Unit>::newRegExp.
 
@@ -296,13 +298,13 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
       return false;
     }
 
-    RegExpIndex index(compilationInfo.regExpData.length());
-    if (!compilationInfo.regExpData.emplaceBack()) {
+    RegExpIndex index(compilationInfo.stencil.regExpData.length());
+    if (!compilationInfo.stencil.regExpData.emplaceBack()) {
       return false;
     }
 
-    if (!compilationInfo.regExpData[index].init(cx, range,
-                                                JS::RegExpFlags(flags))) {
+    if (!compilationInfo.stencil.regExpData[index].init(
+            cx, range, JS::RegExpFlags(flags))) {
       return false;
     }
 
@@ -398,7 +400,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           ScriptStencil& script) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
-  const JS::ReadOnlyCompileOptions& options = compilationInfo.options;
+  const JS::ReadOnlyCompileOptions& options = compilationInfo.input.options;
 
   script.immutableFlags = smooshScript.immutable_flags;
 
@@ -512,7 +514,7 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
 
   JSContext* cx = compilationInfo.cx;
 
-  const auto& options = compilationInfo.options;
+  const auto& options = compilationInfo.input.options;
   SmooshCompileOptions compileOptions;
   compileOptions.no_script_rval = options.noScriptRval;
 
@@ -552,24 +554,24 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
     return false;
   }
 
-  if (!compilationInfo.scriptData.reserve(result.functions.len + 1)) {
+  if (!compilationInfo.stencil.scriptData.reserve(result.functions.len + 1)) {
     return false;
   }
 
-  compilationInfo.scriptData.infallibleEmplaceBack(cx);
+  compilationInfo.stencil.scriptData.infallibleEmplaceBack(cx);
 
   if (!ConvertScriptStencil(
           cx, result, result.top_level_script, allAtoms, compilationInfo,
-          compilationInfo.scriptData[CompilationInfo::TopLevelIndex])) {
+          compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex])) {
     return false;
   }
 
   for (size_t i = 0; i < result.functions.len; i++) {
-    compilationInfo.scriptData.infallibleEmplaceBack(cx);
+    compilationInfo.stencil.scriptData.infallibleEmplaceBack(cx);
 
     if (!ConvertScriptStencil(cx, result, result.functions.data[i], allAtoms,
                               compilationInfo,
-                              compilationInfo.scriptData[i + 1])) {
+                              compilationInfo.stencil.scriptData[i + 1])) {
       return false;
     }
   }
@@ -595,19 +597,19 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   if (!sprinter.init()) {
     return nullptr;
   }
-  if (!Disassemble(cx, compilationInfo.script, true, &sprinter,
+  if (!Disassemble(cx, compilationInfo.gcOutput.script, true, &sprinter,
                    DisassembleSkeptically::Yes)) {
     return nullptr;
   }
   printf("%s\n", sprinter.string());
-  if (!Disassemble(cx, compilationInfo.script, true, &sprinter,
+  if (!Disassemble(cx, compilationInfo.gcOutput.script, true, &sprinter,
                    DisassembleSkeptically::No)) {
     return nullptr;
   }
   // (don't bother printing it)
 #endif
 
-  return compilationInfo.script;
+  return compilationInfo.gcOutput.script;
 }
 
 bool SmooshParseScript(JSContext* cx, const uint8_t* bytes, size_t length) {
