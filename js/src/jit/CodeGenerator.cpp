@@ -11751,10 +11751,10 @@ void CodeGenerator::visitAddAndStoreSlot(LAddAndStoreSlot* ins) {
   const ValueOperand value = ToValue(ins, LAddAndStoreSlot::Value);
   const Register maybeTemp = ToTempRegisterOrInvalid(ins->getTemp(0));
 
-  masm.storeObjShape(ins->mir()->shape(), obj,
-                     [](MacroAssembler& masm, const Address& addr) {
-                       EmitPreBarrier(masm, addr, MIRType::Shape);
-                     });
+  Shape* shape = ins->mir()->shape();
+  masm.storeObjShape(shape, obj, [](MacroAssembler& masm, const Address& addr) {
+    EmitPreBarrier(masm, addr, MIRType::Shape);
+  });
 
   // Perform the store. No pre-barrier required since this is a new
   // initialization.

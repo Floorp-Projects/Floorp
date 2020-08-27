@@ -425,7 +425,7 @@ Shape* Shape::replaceLastProperty(JSContext* cx, StackBaseShape& base,
       return nullptr;
     }
     if (child.slot() >= obj->lastProperty()->base()->slotSpan()) {
-      if (!obj->setSlotSpan(cx, child.slot() + 1)) {
+      if (!obj->ensureSlotsForDictionaryObject(cx, child.slot() + 1)) {
         new (shape) Shape(obj->lastProperty()->base()->unowned(), 0);
         return nullptr;
       }
@@ -540,6 +540,7 @@ bool js::NativeObject::toDictionaryMode(JSContext* cx, HandleNativeObject obj) {
   obj->setShape(root);
 
   MOZ_ASSERT(obj->inDictionaryMode());
+  obj->setDictionaryModeSlotSpan(span);
   root->base()->setSlotSpan(span);
 
   return true;
@@ -867,7 +868,7 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
       return nullptr;
     }
     if (slot >= obj->lastProperty()->base()->slotSpan()) {
-      if (MOZ_UNLIKELY(!obj->setSlotSpan(cx, slot + 1))) {
+      if (MOZ_UNLIKELY(!obj->ensureSlotsForDictionaryObject(cx, slot + 1))) {
         new (shape) Shape(obj->lastProperty()->base()->unowned(), 0);
         return nullptr;
       }
