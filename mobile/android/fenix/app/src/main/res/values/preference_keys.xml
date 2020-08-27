@@ -122,6 +122,9 @@
     <string name="pref_key_auto_battery_theme" translatable="false">pref_key_auto_battery_theme</string>
     <string name="pref_key_follow_device_theme" translatable="false">pref_key_follow_device_theme</string>
 
+    <!-- Customization Settings -->
+    <string name="pref_home_category" translatable="false">pref_home_category</string>
+
     <!-- Tracking Protection Settings -->
     <string name="pref_key_etp_learn_more" translatable="false">pref_key_etp_learn_more</string>
     <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>

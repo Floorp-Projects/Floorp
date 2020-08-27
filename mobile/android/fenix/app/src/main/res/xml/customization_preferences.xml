@@ -5,10 +5,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_theme"
-        app:iconSpaceReserved="false"
         app:allowDividerBelow="false"
-        android:layout="@layout/preference_cat_style">
+        app:iconSpaceReserved="false">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:defaultValue="@bool/underAPI28"
             android:key="@string/pref_key_light_theme"
@@ -33,15 +33,27 @@
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_toolbar"
-        app:iconSpaceReserved="false"
         app:allowDividerAbove="false"
-        android:layout="@layout/preference_cat_style">
+        app:iconSpaceReserved="false">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:key="@string/pref_key_toolbar_top"
             android:title="@string/preference_top_toolbar" />
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:key="@string/pref_key_toolbar_bottom"
             android:title="@string/preference_bottom_toolbar" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:key="@string/pref_home_category"
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_home"
+        app:allowDividerAbove="false"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false">
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_enable_top_frecent_sites"
+            android:title="@string/top_sites_toggle_top_frecent_sites" />
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>
