@@ -13,7 +13,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #include <CoreFoundation/CoreFoundation.h>
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -129,6 +132,25 @@ bool GetRealPath(std::string& aOutputPath, const char* aInputPath) {
   free(resolvedPath);
 
   return !aOutputPath.empty();
+}
+
+/*
+ * Returns true if the process is running under Rosetta translation. Returns
+ * false if running natively or if an error was encountered. To be called
+ * before enabling the sandbox therefore not requiring the sysctl be allowed
+ * by the sandbox policy. We use the `sysctl.proc_translated` sysctl which is
+ * documented by Apple to be used for this purpose.
+ */
+bool ProcessIsRosettaTranslated() {
+  int ret = 0;
+  size_t size = sizeof(ret);
+  if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
+    if (errno != ENOENT) {
+      fprintf(stderr, "Failed to check for translation environment\n");
+    }
+    return false;
+  }
+  return (ret == 1);
 }
 
 void MacSandboxInfo::AppendAsParams(std::vector<std::string>& aParams) const {
@@ -250,6 +272,9 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
   OSXVersion::Get(major, minor);
   MOZ_ASSERT(minor >= 0 && minor < 100);
   std::string combinedVersion = std::to_string((major * 100) + minor);
+
+  params.push_back("IS_ROSETTA_TRANSLATED");
+  params.push_back(ProcessIsRosettaTranslated() ? "TRUE" : "FALSE");
 
   // Used for the Flash sandbox. Declared here so that they
   // stay in scope until sandbox_init_with_parameters is called.
