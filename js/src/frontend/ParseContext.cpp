@@ -288,7 +288,7 @@ void ParseContext::Scope::removeCatchParameters(ParseContext* pc,
 
 ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
                            SharedContext* sc, ErrorReporter& errorReporter,
-                           CompilationInfo& compilationInfo,
+                           CompilationState& compilationState,
                            Directives* newDirectives, bool isFull)
     : Nestable<ParseContext>(&parent),
       traceLog_(sc->cx_,
@@ -305,13 +305,13 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       newDirectives(newDirectives),
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
-      scriptId_(compilationInfo.state.usedNames.nextScriptId()),
+      scriptId_(compilationState.usedNames.nextScriptId()),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
     if (functionBox()->isNamedLambda()) {
-      namedLambdaScope_.emplace(cx, parent, compilationInfo.state.usedNames);
+      namedLambdaScope_.emplace(cx, parent, compilationState.usedNames);
     }
-    functionScope_.emplace(cx, parent, compilationInfo.state.usedNames);
+    functionScope_.emplace(cx, parent, compilationState.usedNames);
   }
 }
 
