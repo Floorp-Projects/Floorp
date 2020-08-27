@@ -342,8 +342,9 @@ LightweightThemeConsumer.prototype = {
     if (properties.colors) {
       for (const property in properties.colors) {
         const cssVariable = experiment.colors[property];
-        const value = _rgbaToString(
-          _cssColorToRGBA(root.ownerDocument, properties.colors[property])
+        const value = _sanitizeCSSColor(
+          root.ownerDocument,
+          properties.colors[property]
         );
         usedVariables.push([cssVariable, value]);
       }
@@ -389,7 +390,7 @@ function _getContentProperties(doc, active, data) {
   let properties = {};
   for (let property in data) {
     if (ThemeContentPropertyList.includes(property)) {
-      properties[property] = _cssColorToRGBA(doc, data[property]);
+      properties[property] = _parseRGBA(_sanitizeCSSColor(doc, data[property]));
     }
   }
   return properties;
@@ -416,6 +417,7 @@ function _setProperty(elem, active, variableName, value) {
 }
 
 function _setProperties(root, active, themeData) {
+  let properties = [];
   let propertyOverrides = new Map();
 
   for (let map of [toolkitVariableMap, ThemeVariableMap]) {
@@ -432,41 +434,65 @@ function _setProperties(root, active, themeData) {
         : root;
       let val = propertyOverrides.get(lwtProperty) || themeData[lwtProperty];
       if (isColor) {
-        val = _cssColorToRGBA(root.ownerDocument, val);
+        val = _sanitizeCSSColor(root.ownerDocument, val);
         if (!val && fallbackProperty) {
-          val = _cssColorToRGBA(
+          val = _sanitizeCSSColor(
             root.ownerDocument,
             themeData[fallbackProperty]
           );
         }
         if (processColor) {
-          val = processColor(val, elem, propertyOverrides);
-        } else {
-          val = _rgbaToString(val);
+          val = processColor(_parseRGBA(val), elem, propertyOverrides);
         }
       }
-      _setProperty(elem, active, cssVarName, val);
+      properties.push([elem, cssVarName, val]);
     }
+  }
+
+  // Set all the properties together, since _sanitizeCSSColor flushes.
+  for (const [elem, cssVarName, val] of properties) {
+    _setProperty(elem, active, cssVarName, val);
   }
 }
 
-const kInvalidColor = { r: 0, g: 0, b: 0, a: 1 };
-
-function _cssColorToRGBA(doc, cssColor) {
+function _sanitizeCSSColor(doc, cssColor) {
   if (!cssColor) {
     return null;
   }
-  return (
-    doc.defaultView.InspectorUtils.colorToRGBA(cssColor, doc) || kInvalidColor
-  );
+  const HTML_NS = "http://www.w3.org/1999/xhtml";
+  // style.color normalizes color values and makes invalid ones black, so a
+  // simple round trip gets us a sanitized color value.
+  // Use !important so that the theme's stylesheets cannot override us.
+  let div = doc.createElementNS(HTML_NS, "div");
+  div.style.setProperty("color", "black", "important");
+  div.style.setProperty("display", "none", "important");
+  let span = doc.createElementNS(HTML_NS, "span");
+  span.style.setProperty("color", cssColor, "important");
+
+  // CSS variables are not allowed and should compute to black.
+  if (span.style.color.includes("var(")) {
+    span.style.color = "";
+  }
+
+  div.appendChild(span);
+  doc.documentElement.appendChild(div);
+  cssColor = doc.defaultView.getComputedStyle(span).color;
+  div.remove();
+  return cssColor;
 }
 
-function _rgbaToString(parsedColor) {
-  if (!parsedColor) {
+function _parseRGBA(aColorString) {
+  if (!aColorString) {
     return null;
   }
-  let { r, g, b, a } = parsedColor;
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
+  var rgba = aColorString.replace(/(rgba?\()|(\)$)/g, "").split(",");
+  rgba = rgba.map(x => parseFloat(x));
+  return {
+    r: rgba[0],
+    g: rgba[1],
+    b: rgba[2],
+    a: 3 in rgba ? rgba[3] : 1,
+  };
 }
 
 function _isColorDark(r, g, b) {

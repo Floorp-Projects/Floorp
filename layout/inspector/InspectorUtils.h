@@ -133,8 +133,7 @@ class InspectorUtils {
   //
   // NOTE: Converting a color to RGBA may be lossy when converting from some
   // formats e.g. CMYK.
-  static void ColorToRGBA(GlobalObject&, const nsACString& aColorString,
-                          const Document*,
+  static void ColorToRGBA(GlobalObject& aGlobal, const nsACString& aColorString,
                           Nullable<InspectorRGBATuple>& aResult);
 
   // Check whether a given color is a valid CSS color.

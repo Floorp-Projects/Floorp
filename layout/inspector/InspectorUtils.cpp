@@ -483,19 +483,12 @@ void InspectorUtils::RgbToColorName(GlobalObject& aGlobalObject, uint8_t aR,
 }
 
 /* static */
-void InspectorUtils::ColorToRGBA(GlobalObject&, const nsACString& aColorString,
-                                 const Document* aDoc,
+void InspectorUtils::ColorToRGBA(GlobalObject& aGlobalObject,
+                                 const nsACString& aColorString,
                                  Nullable<InspectorRGBATuple>& aResult) {
   nscolor color = NS_RGB(0, 0, 0);
 
-  ServoStyleSet* styleSet = nullptr;
-  if (aDoc) {
-    if (PresShell* ps = aDoc->GetPresShell()) {
-      styleSet = ps->StyleSet();
-    }
-  }
-
-  if (!ServoCSSParser::ComputeColor(styleSet, NS_RGB(0, 0, 0), aColorString,
+  if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aColorString,
                                     &color)) {
     aResult.SetNull();
     return;
