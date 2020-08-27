@@ -508,6 +508,11 @@ add_task(async function sendToDevice_syncNotReady_configured() {
             label: "Send to All Devices",
           },
         });
+        expectedItems.push(null, {
+          attrs: {
+            label: "Manage Devices...",
+          },
+        });
         checkSendToDeviceItems(expectedItems);
       } else {
         ok(false, "This should never happen");
@@ -737,6 +742,11 @@ add_task(async function sendToDevice_devices() {
       {
         attrs: {
           label: "Send to All Devices",
+        },
+      },
+      {
+        attrs: {
+          label: "Manage Devices...",
         },
       },
     ];
@@ -1012,6 +1022,11 @@ add_task(async function sendToDevice_inUrlbar() {
       {
         attrs: {
           label: "Send to All Devices",
+        },
+      },
+      {
+        attrs: {
+          label: "Manage Devices...",
         },
       },
     ];

@@ -47,6 +47,7 @@ add_task(async function test_page_contextmenu() {
     { label: "Foo" },
     "----",
     { label: "Send to All Devices" },
+    { label: "Manage Devices..." },
   ]);
   await hideContentContextMenu();
 
