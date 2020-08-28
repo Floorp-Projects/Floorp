@@ -1720,14 +1720,14 @@ StartupCache = {
 
   async _saveNow() {
     let data = new Uint8Array(aomStartup.encodeBlob(this._data));
-    await OS.File.writeAtomic(this.file, data, { tmpPath: `${this.file}.tmp` });
+    await IOUtils.writeAtomic(this.file, data, { tmpPath: `${this.file}.tmp` });
   },
 
   async save() {
     if (!this._saveTask) {
-      OS.File.makeDir(OS.Path.dirname(this.file), {
+      await IOUtils.makeDirectory(OS.Path.dirname(this.file), {
         ignoreExisting: true,
-        from: OS.Constants.Path.localProfileDir,
+        createAncestors: true,
       });
 
       this._saveTask = new DeferredTask(() => this._saveNow(), 5000);
@@ -1747,7 +1747,7 @@ StartupCache = {
   async _readData() {
     let result = new Map();
     try {
-      let { buffer } = await OS.File.read(this.file);
+      let { buffer } = await IOUtils.read(this.file);
 
       result = aomStartup.decodeBlob(buffer);
     } catch (e) {
