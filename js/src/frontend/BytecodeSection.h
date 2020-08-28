@@ -46,6 +46,7 @@ namespace frontend {
 class FunctionBox;
 
 struct MOZ_STACK_CLASS GCThingList {
+  JSContext* cx;
   CompilationInfo& compilationInfo;
   ScriptThingsVector vector;
 
@@ -53,15 +54,20 @@ struct MOZ_STACK_CLASS GCThingList {
   mozilla::Maybe<GCThingIndex> firstScopeIndex;
 
   explicit GCThingList(JSContext* cx, CompilationInfo& compilationInfo)
-      : compilationInfo(compilationInfo), vector(cx) {}
+      : cx(cx), compilationInfo(compilationInfo) {}
 
   MOZ_MUST_USE bool append(const ParserAtom* atom, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    return vector.append(mozilla::AsVariant(std::move(atom)));
+    if (!vector.append(mozilla::AsVariant(std::move(atom)))) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
   }
   MOZ_MUST_USE bool append(ScopeIndex scope, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     if (!vector.append(mozilla::AsVariant(scope))) {
+      js::ReportOutOfMemory(cx);
       return false;
     }
     if (!firstScopeIndex) {
@@ -71,15 +77,27 @@ struct MOZ_STACK_CLASS GCThingList {
   }
   MOZ_MUST_USE bool append(BigIntLiteral* literal, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    return vector.append(mozilla::AsVariant(literal->index()));
+    if (!vector.append(mozilla::AsVariant(literal->index()))) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
   }
   MOZ_MUST_USE bool append(RegExpLiteral* literal, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    return vector.append(mozilla::AsVariant(literal->index()));
+    if (!vector.append(mozilla::AsVariant(literal->index()))) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
   }
   MOZ_MUST_USE bool append(ObjLiteralIndex objlit, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    return vector.append(mozilla::AsVariant(objlit));
+    if (!vector.append(mozilla::AsVariant(objlit))) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
   }
   MOZ_MUST_USE bool append(FunctionBox* funbox, GCThingIndex* index);
 
@@ -87,6 +105,7 @@ struct MOZ_STACK_CLASS GCThingList {
     *index = GCThingIndex(vector.length());
     EmptyGlobalScopeType emptyGlobalScope;
     if (!vector.append(mozilla::AsVariant(emptyGlobalScope))) {
+      js::ReportOutOfMemory(cx);
       return false;
     }
     if (!firstScopeIndex) {
