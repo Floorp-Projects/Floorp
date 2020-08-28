@@ -264,6 +264,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
                 index == CompilationInfo::TopLevelIndex);
 
   if (!compilationInfo_.stencil.scriptData.emplaceBack(cx_)) {
+    js::ReportOutOfMemory(cx_);
     return nullptr;
   }
 

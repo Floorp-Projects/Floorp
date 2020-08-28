@@ -198,7 +198,7 @@ struct CompilationStencil {
   // Stencil for all function and non-function scripts. The TopLevelIndex is
   // reserved for the top-level script. This top-level may or may not be a
   // function.
-  Vector<ScriptStencil> scriptData;
+  Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
 
   // A rooted list of scopes created during this parse.
   //
@@ -221,11 +221,7 @@ struct CompilationStencil {
   ParserAtomsTable parserAtoms;
 
   explicit CompilationStencil(JSContext* cx)
-      : scriptData(cx),
-        scopeData(cx),
-        moduleMetadata(cx),
-        asmJS(cx),
-        parserAtoms(cx) {}
+      : scopeData(cx), moduleMetadata(cx), asmJS(cx), parserAtoms(cx) {}
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();

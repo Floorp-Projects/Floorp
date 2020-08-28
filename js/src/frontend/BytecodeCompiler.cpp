@@ -523,6 +523,7 @@ bool frontend::ScriptCompiler<Unit>::compileScript(
   MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
              CompilationInfo::TopLevelIndex);
   if (!compilationInfo.stencil.scriptData.emplaceBack(cx)) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
@@ -591,6 +592,7 @@ bool frontend::ModuleCompiler<Unit>::compile(CompilationInfo& compilationInfo,
   MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
              CompilationInfo::TopLevelIndex);
   if (!compilationInfo.stencil.scriptData.emplaceBack(cx)) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
