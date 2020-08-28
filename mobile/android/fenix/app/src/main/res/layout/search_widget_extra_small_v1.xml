@@ -8,7 +8,7 @@
     android:id="@id/button_search_widget_new_tab"
     android:layout_width="match_parent"
     android:layout_height="50dp"
-    android:background="@drawable/rounded_white_corners"
+    android:background="@drawable/rounded_search_widget_background"
     android:layout_gravity="center">
 
     <ImageView

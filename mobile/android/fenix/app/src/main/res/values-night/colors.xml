@@ -87,6 +87,11 @@
     <color name="collection_icon_color_green">@color/collection_icon_color_green_dark_theme</color>
     <color name="collection_icon_color_yellow">@color/collection_icon_color_yellow_dark_theme</color>
 
+    <!-- Search Widget -->
+    <color name="search_widget_background">@color/inset_dark_theme</color>
+    <color name="search_widget_mic_fill_color">@color/primary_text_dark_theme</color>
+    <color name="search_widget_text">@color/primary_text_dark_theme</color>
+
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/primary_text_dark_theme</color>
 

@@ -6,7 +6,7 @@
     android:layout_width="100dp"
     android:layout_height="50dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@drawable/rounded_white_corners"
+    android:background="@drawable/rounded_search_widget_background"
     android:orientation="horizontal">
 
     <ImageView
