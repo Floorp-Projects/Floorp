@@ -58,7 +58,8 @@ class MOZ_STACK_CLASS ModuleBuilder {
   void finishFunctionDecls(frontend::StencilModuleMetadata& metadata);
 
  private:
-  using RequestedModuleVector = Vector<frontend::StencilModuleEntry>;
+  using RequestedModuleVector =
+      Vector<frontend::StencilModuleEntry, 0, js::SystemAllocPolicy>;
   using AtomSet = HashSet<const frontend::ParserAtom*>;
   using ExportEntryVector = Vector<frontend::StencilModuleEntry>;
   using ImportEntryMap =
