@@ -491,3 +491,121 @@ TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Err)
   EXPECT_TRUE(res.isErr());
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
 }
+
+// BEGIN COPY FROM mfbt/tests/TestResult.cpp
+struct Failed {
+  int x;
+};
+
+static GenericErrorResult<Failed&> Fail() {
+  static Failed failed;
+  return Err<Failed&>(failed);
+}
+
+static Result<Ok, Failed&> Task1(bool pass) {
+  if (!pass) {
+    return Fail();  // implicit conversion from GenericErrorResult to Result
+  }
+  return Ok();
+}
+// END COPY FROM mfbt/tests/TestResult.cpp
+
+static Result<bool, Failed&> Condition(bool aNoError, bool aResult) {
+  return Task1(aNoError).map([aResult](auto) { return aResult; });
+}
+
+TEST(QuotaCommon_CollectWhileTest, NoFailures)
+{
+  const size_t loopCount = 5;
+  size_t conditionExecutions = 0;
+  size_t bodyExecutions = 0;
+  auto result = CollectWhile(
+      [&conditionExecutions] {
+        ++conditionExecutions;
+        return Condition(true, conditionExecutions <= loopCount);
+      },
+      [&bodyExecutions] {
+        ++bodyExecutions;
+        return Task1(true);
+      });
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  MOZ_RELEASE_ASSERT(result.isOk());
+  MOZ_RELEASE_ASSERT(loopCount == bodyExecutions);
+  MOZ_RELEASE_ASSERT(1 + loopCount == conditionExecutions);
+}
+
+TEST(QuotaCommon_CollectWhileTest, BodyFailsImmediately)
+{
+  size_t conditionExecutions = 0;
+  size_t bodyExecutions = 0;
+  auto result = CollectWhile(
+      [&conditionExecutions] {
+        ++conditionExecutions;
+        return Condition(true, true);
+      },
+      [&bodyExecutions] {
+        ++bodyExecutions;
+        return Task1(false);
+      });
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  MOZ_RELEASE_ASSERT(result.isErr());
+  MOZ_RELEASE_ASSERT(1 == bodyExecutions);
+  MOZ_RELEASE_ASSERT(1 == conditionExecutions);
+}
+
+TEST(QuotaCommon_CollectWhileTest, BodyFailsOnSecondExecution)
+{
+  size_t conditionExecutions = 0;
+  size_t bodyExecutions = 0;
+  auto result = CollectWhile(
+      [&conditionExecutions] {
+        ++conditionExecutions;
+        return Condition(true, true);
+      },
+      [&bodyExecutions] {
+        ++bodyExecutions;
+        return Task1(bodyExecutions < 2);
+      });
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  MOZ_RELEASE_ASSERT(result.isErr());
+  MOZ_RELEASE_ASSERT(2 == bodyExecutions);
+  MOZ_RELEASE_ASSERT(2 == conditionExecutions);
+}
+
+TEST(QuotaCommon_CollectWhileTest, ConditionFailsImmediately)
+{
+  size_t conditionExecutions = 0;
+  size_t bodyExecutions = 0;
+  auto result = CollectWhile(
+      [&conditionExecutions] {
+        ++conditionExecutions;
+        return Condition(false, true);
+      },
+      [&bodyExecutions] {
+        ++bodyExecutions;
+        return Task1(true);
+      });
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  MOZ_RELEASE_ASSERT(result.isErr());
+  MOZ_RELEASE_ASSERT(0 == bodyExecutions);
+  MOZ_RELEASE_ASSERT(1 == conditionExecutions);
+}
+
+TEST(QuotaCommon_CollectWhileTest, ConditionFailsOnSecondExecution)
+{
+  size_t conditionExecutions = 0;
+  size_t bodyExecutions = 0;
+  auto result = CollectWhile(
+      [&conditionExecutions] {
+        ++conditionExecutions;
+        return Condition(conditionExecutions < 2, true);
+      },
+      [&bodyExecutions] {
+        ++bodyExecutions;
+        return Task1(true);
+      });
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  MOZ_RELEASE_ASSERT(result.isErr());
+  MOZ_RELEASE_ASSERT(1 == bodyExecutions);
+  MOZ_RELEASE_ASSERT(2 == conditionExecutions);
+}
