@@ -10247,6 +10247,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
 
   RegExpIndex index(this->getCompilationInfo().stencil.regExpData.length());
   if (!this->getCompilationInfo().stencil.regExpData.emplaceBack()) {
+    js::ReportOutOfMemory(cx_);
     return nullptr;
   }
 

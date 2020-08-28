@@ -298,6 +298,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
     RegExpIndex index(compilationInfo.stencil.regExpData.length());
     if (!compilationInfo.stencil.regExpData.emplaceBack()) {
+      js::ReportOutOfMemory(cx);
       return false;
     }
 
