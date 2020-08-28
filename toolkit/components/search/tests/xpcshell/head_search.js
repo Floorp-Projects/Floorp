@@ -7,7 +7,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -155,33 +154,18 @@ function promiseAfterCache() {
   );
 }
 
-function parseJsonFromStream(aInputStream) {
-  let bytes = NetUtil.readInputStream(aInputStream, aInputStream.available());
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
-
 /**
  * Read a JSON file and return the JS object
  *
- * @param {nsIFile} aFile
+ * @param {nsIFile} file
  *   The file to read.
- * @returns {object|false}
+ * @returns {object}
  *   Returns the JSON object if the file was successfully read,
  *   false otherwise.
  */
-function readJSONFile(aFile) {
-  let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
-    Ci.nsIFileInputStream
-  );
-  try {
-    stream.init(aFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-    return parseJsonFromStream(stream, stream.available());
-  } catch (ex) {
-    dump("search test: readJSONFile: Error reading JSON file: " + ex + "\n");
-  } finally {
-    stream.close();
-  }
-  return false;
+async function readJSONFile(file) {
+  let bytes = await OS.File.read(file.path);
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 /**
