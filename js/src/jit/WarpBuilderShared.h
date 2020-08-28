@@ -36,6 +36,8 @@ class WarpBuilderShared {
 
   MCall* makeCall(CallInfo& callInfo, bool needsThisCheck,
                   WrappedFunction* target = nullptr);
+  MInstruction* makeSpreadCall(CallInfo& callInfo, bool isSameRealm = false,
+                               WrappedFunction* target = nullptr);
 
  public:
   MBasicBlock* currentBlock() const { return current; }
