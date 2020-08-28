@@ -7206,14 +7206,17 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   const ParserAtom* funName = nullptr;
   switch (propType) {
     case PropertyType::Getter:
-    case PropertyType::Setter:
-      if (!anyChars.isCurrentTokenType(TokenKind::RightBracket)) {
+    case PropertyType::Setter: {
+      bool hasStaticName =
+          !anyChars.isCurrentTokenType(TokenKind::RightBracket) && propAtom;
+      if (hasStaticName) {
         funName = prefixAccessorName(propType, propAtom);
         if (!funName) {
           return false;
         }
       }
       break;
+    }
     case PropertyType::Constructor:
     case PropertyType::DerivedConstructor:
       funName = className;
@@ -10330,31 +10333,6 @@ GeneralParser<ParseHandler, Unit>::newBigInt() {
   return asFinalParser()->newBigInt();
 }
 
-template <class ParseHandler, typename Unit>
-const ParserAtom* GeneralParser<ParseHandler, Unit>::bigIntAtom() {
-  // TODO-Stencil: In progress on Bug 1659595.
-  //
-  // This implementation needs to be changed to do either a direct translation
-  // of the atom, or the parser in general fixed to not require normalized
-  // bigint atoms, and this code changed to return the raw character data as
-  // an atom (or more appropriately: this method removed and its user
-  // changed to just create a regular string atom).
-
-  // See newBigInt() for a description about |chars'| contents.
-  const auto& chars = tokenStream.getCharBuffer();
-  mozilla::Range<const char16_t> source(chars.begin(), chars.length());
-
-  RootedBigInt bi(cx_, js::ParseBigIntLiteral(cx_, source));
-  if (!bi) {
-    return nullptr;
-  }
-  RootedAtom atom(cx_, BigIntToAtom<CanGC>(cx_, bi));
-  if (!atom) {
-    return nullptr;
-  }
-  return this->compilationInfo_.lowerJSAtomToParserAtom(atom.get());
-}
-
 // |exprPossibleError| is the PossibleError state within |expr|,
 // |possibleError| is the surrounding PossibleError state.
 template <class ParseHandler, typename Unit>
@@ -10626,13 +10604,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       return newNumber(anyChars.currentToken());
     }
 
-    case TokenKind::BigInt:
-      *propAtomOut = bigIntAtom();
-      if (!*propAtomOut) {
+    case TokenKind::BigInt: {
+      Node biNode = newBigInt();
+      if (!biNode) {
         return null();
       }
-      return newBigInt();
-
+      return handler_.newSyntheticComputedName(biNode, pos().begin, pos().end);
+    }
     case TokenKind::String: {
       *propAtomOut = anyChars.currentToken().atom();
       uint32_t index;
@@ -11064,7 +11042,9 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
         }
       } else {
         const ParserAtom* funName = nullptr;
-        if (!anyChars.isCurrentTokenType(TokenKind::RightBracket)) {
+        bool hasStaticName =
+            !anyChars.isCurrentTokenType(TokenKind::RightBracket) && propAtom;
+        if (hasStaticName) {
           funName = propAtom;
 
           if (propType == PropertyType::Getter ||

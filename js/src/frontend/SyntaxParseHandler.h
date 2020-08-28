@@ -212,6 +212,11 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
+  UnaryNodeType newSyntheticComputedName(Node expr, uint32_t start,
+                                         uint32_t end) {
+    return NodeGeneric;
+  }
+
   NameNodeType newObjectLiteralPropertyName(const ParserAtom* atom,
                                             const TokenPos& pos) {
     return NodeName;
