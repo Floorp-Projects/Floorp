@@ -615,6 +615,54 @@ Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
   return res;
 }
 
+// Like Rust's collect with a step function, not a generic iterator/range.
+//
+// Cond must be a function type with a return type to Result<V, E>, where
+// V is convertible to bool
+// - success converts to true indicates that collection shall continue
+// - success converts to false indicates that collection is completed
+// - error indicates that collection shall stop, propagating the error
+//
+// Body must a function type accepting a V xvalue with a return type convertible
+// to Result<empty, E>.
+template <typename Step, typename Body>
+auto CollectEach(const Step& aStep, const Body& aBody)
+    -> Result<mozilla::Ok, typename std::result_of_t<Step()>::err_type> {
+  using StepResultType = typename std::result_of_t<Step()>::ok_type;
+
+  static_assert(std::is_empty_v<
+                typename std::result_of_t<Body(StepResultType &&)>::ok_type>);
+
+  while (true) {
+    StepResultType element;
+    MOZ_TRY_VAR(element, aStep());
+
+    if (!static_cast<bool>(element)) {
+      break;
+    }
+
+    MOZ_TRY(aBody(std::move(element)));
+  }
+
+  return mozilla::Ok{};
+}
+
+// Like Rust's collect with a while loop, not a generic iterator/range.
+//
+// Cond must be a function type accepting no parameters with a return type
+// convertible to Result<bool, E>, where
+// - success true indicates that collection shall continue
+// - success false indicates that collection is completed
+// - error indicates that collection shall stop, propagating the error
+//
+// Body must a function type accepting no parameters with a return type
+// convertible to Result<empty, E>.
+template <typename Cond, typename Body>
+auto CollectWhile(const Cond& aCond, const Body& aBody)
+    -> Result<mozilla::Ok, typename std::result_of_t<Cond()>::err_type> {
+  return CollectEach(aCond, [&aBody](bool) { return aBody(); });
+}
+
 namespace dom {
 namespace quota {
 
