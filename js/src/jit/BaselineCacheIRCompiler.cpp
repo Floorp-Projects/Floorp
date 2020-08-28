@@ -2635,16 +2635,6 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
       // fun_call has no extra guards, and argc will be corrected in
       // pushFunCallArguments.
       return true;
-    case CallFlags::FunApplyArray: {
-      // GuardFunApply array already guarded argc while checking for
-      // holes in the array, so we don't need to guard again here. We
-      // do still need to update argc.
-      BaselineFrameSlot slot(0);
-      masm.unboxObject(allocator.addressOf(masm, slot), argcReg);
-      masm.loadPtr(Address(argcReg, NativeObject::offsetOfElements()), argcReg);
-      masm.load32(Address(argcReg, ObjectElements::offsetOfLength()), argcReg);
-      return true;
-    }
     default:
       break;
   }
@@ -2657,7 +2647,8 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
 
   // Load callee argc into scratch.
   switch (flags.getArgFormat()) {
-    case CallFlags::Spread: {
+    case CallFlags::Spread:
+    case CallFlags::FunApplyArray: {
       // Load the length of the elements.
       BaselineFrameSlot slot(flags.isConstructing());
       masm.unboxObject(allocator.addressOf(masm, slot), scratch);
@@ -2680,66 +2671,6 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
 
   // We're past the final guard. Update argc with the new value.
   masm.move32(scratch, argcReg);
-
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitGuardFunApplyArray() {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Stack layout is (bottom to top):
-  //   Callee (fun_apply)
-  //   ThisValue (target)
-  //   Arg0 (new this)
-  //   Arg1 (argument array)
-
-  // Ensure that args is an array object.
-  Address argsAddr = allocator.addressOf(masm, BaselineFrameSlot(0));
-  masm.fallibleUnboxObject(argsAddr, scratch, failure->label());
-  const JSClass* clasp = &ArrayObject::class_;
-  masm.branchTestObjClass(Assembler::NotEqual, scratch, clasp, scratch2,
-                          scratch, failure->label());
-
-  // Get the array elements and length
-  Register elementsReg = scratch;
-  masm.loadPtr(Address(scratch, NativeObject::offsetOfElements()), elementsReg);
-  Register calleeArgcReg = scratch2;
-  masm.load32(Address(elementsReg, ObjectElements::offsetOfLength()),
-              calleeArgcReg);
-
-  // Ensure that callee argc does not exceed the limit.  Note that
-  // we do this earlier for FunApplyArray than for FunApplyArgs,
-  // because we don't want to loop over every element of the array
-  // looking for holes if we already know it is too long.
-  masm.branch32(Assembler::Above, calleeArgcReg, Imm32(JIT_ARGS_LENGTH_MAX),
-                failure->label());
-
-  // Ensure that length == initializedLength
-  Address initLenAddr(elementsReg, ObjectElements::offsetOfInitializedLength());
-  masm.branch32(Assembler::NotEqual, initLenAddr, calleeArgcReg,
-                failure->label());
-
-  // Ensure no holes. Loop through array and verify no elements are magic.
-  Register start = elementsReg;
-  Register end = scratch2;
-  BaseValueIndex endAddr(elementsReg, calleeArgcReg);
-  masm.computeEffectiveAddress(endAddr, end);
-
-  Label loop;
-  Label endLoop;
-  masm.bind(&loop);
-  masm.branchPtr(Assembler::AboveOrEqual, start, end, &endLoop);
-  masm.branchTestMagic(Assembler::Equal, Address(start, 0), failure->label());
-  masm.addPtr(Imm32(sizeof(Value)), start);
-  masm.jump(&loop);
-  masm.bind(&endLoop);
 
   return true;
 }

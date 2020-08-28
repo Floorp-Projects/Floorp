@@ -3666,6 +3666,20 @@ bool CacheIRCompiler::emitGuardNotClassConstructor(ObjOperandId funId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardArrayIsPacked(ObjOperandId arrayId) {
+  Register array = allocator.useRegister(masm, arrayId);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchArrayIsNotPacked(array, scratch, scratch2, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadDenseElementHoleResult(ObjOperandId objId,
                                                      Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
