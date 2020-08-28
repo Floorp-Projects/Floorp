@@ -51,10 +51,17 @@ def make_task(
     return task
 
 
-def make_graph(*tasks_and_edges):
+def make_graph(*tasks_and_edges, **kwargs):
     tasks = {t.label: t for t in tasks_and_edges if isinstance(t, Task)}
     edges = {e for e in tasks_and_edges if not isinstance(e, Task)}
-    return TaskGraph(tasks, graph.Graph(set(tasks), edges))
+    tg = TaskGraph(tasks, graph.Graph(set(tasks), edges))
+
+    if kwargs.get("deps", True):
+        # set dependencies based on edges
+        for l, r, name in tg.graph.edges:
+            tg.tasks[l].dependencies[name] = r
+
+    return tg
 
 
 def make_opt_graph(*tasks_and_edges):
@@ -63,7 +70,7 @@ def make_opt_graph(*tasks_and_edges):
     return TaskGraph(tasks, graph.Graph(set(tasks), edges))
 
 
-def make_triangle(**opts):
+def make_triangle(deps=True, **opts):
     """
     Make a "triangle" graph like this:
 
@@ -77,6 +84,7 @@ def make_triangle(**opts):
         ('t3', 't2', 'dep'),
         ('t3', 't1', 'dep2'),
         ('t2', 't1', 'dep'),
+        deps=deps
     )
 
 
@@ -296,7 +304,7 @@ def test_replace_tasks(
     (
         # Test get_subgraph returns a similarly-shaped subgraph when nothing is removed
         pytest.param(
-            make_triangle(),
+            make_triangle(deps=False),
             {},
             make_opt_graph(
                 make_task('t1', task_id='tid1', dependencies={}),
@@ -312,7 +320,7 @@ def test_replace_tasks(
 
         # Test get_subgraph returns a smaller subgraph when tasks are removed
         pytest.param(
-            make_triangle(),
+            make_triangle(deps=False),
             {
                 "removed_tasks": {"t2", "t3"},
             },
@@ -326,7 +334,7 @@ def test_replace_tasks(
 
         # Test get_subgraph returns a smaller subgraph when tasks are replaced
         pytest.param(
-            make_triangle(),
+            make_triangle(deps=False),
             {
                 "replaced_tasks": {"t1", "t2"},
                 "label_to_taskid": {"t1": "e1", "t2": "e2"},
