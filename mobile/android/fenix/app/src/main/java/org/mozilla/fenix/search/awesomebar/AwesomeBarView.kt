@@ -93,9 +93,6 @@ class AwesomeBarView(
         val components = context.components
         val primaryTextColor = context.getColorFromAttr(R.attr.primaryText)
 
-        val draw = getDrawable(context, R.drawable.ic_link)!!
-        draw.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
-
         val engineForSpeculativeConnects =
             if (!isBrowsingModePrivate()) components.core.engine else null
         sessionProvider =
