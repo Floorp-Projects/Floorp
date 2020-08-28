@@ -456,6 +456,9 @@ browser.Context = class {
    *      A boolean value which determins whether to focus
    *      the window. Defaults to true.
    *
+   * @return {Tab}
+   *     The selected tab.
+   *
    * @throws UnsupportedOperationError
    *     If tab handling for the current application isn't supported.
    */
@@ -468,7 +471,7 @@ browser.Context = class {
     }
 
     if (!this.tabBrowser) {
-      return;
+      return null;
     }
 
     if (typeof index == "undefined") {
@@ -486,6 +489,8 @@ browser.Context = class {
     // TODO(ato): Currently tied to curBrowser, but should be moved to
     // WebElement when introduced by https://bugzil.la/1400256.
     this.eventObserver = new WebElementEventTarget(this.messageManager);
+
+    return this.tab;
   }
 
   /**
