@@ -54,6 +54,14 @@ function nextTest_() {
   }
 }
 
+async function case3WaitForBlank() {
+  let loaded = SimpleTest.promiseWaitForCondition(() => {
+    return testWindow.location.href == "about:blank";
+  });
+  await loaded;
+  SpecialPowers.wrap(testWindow).history.back();
+}
+
 function nextTest() {
   setTimeout(nextTest_, 0);
 }
