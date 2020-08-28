@@ -44,28 +44,40 @@ def get_components_changed(files_changed):
 
 cached_deps = {}
 
-# Gradle is expensive to run. Cache the results for each component.
-@memoize
-def get_upstream_deps_for_component(component):
+def get_upstream_deps_for_components(components):
     """Return the full list of local upstream dependencies of a component."""
     deps = set()
+    cmd = ["./gradlew"]
+    for c in sorted(components):
+        cmd.extend(["%s:dependencies" % c, "--configuration", "implementation"])
     # Parsing output like this is not ideal but bhearsum couldn't find a way
     # to get the dependencies printed in a better format. If we could convince
     # gradle to spit out JSON that would be much better.
     # This is filed as https://github.com/mozilla-mobile/android-components/issues/7814
-    for line in subprocess.check_output(['./gradlew', '%s:dependencies' % component, '--configuration', 'implementation']).splitlines():
+    current_component = None
+    for line in subprocess.check_output(cmd).splitlines():
+        # If we find the start of a new component section, update our tracking variable
+        if line.startswith("Project"):
+            if deps:
+                logger.info("Found direct upstream dependencies for component '%s': %s" % (current_component, sorted(deps)))
+            else:
+                logger.info("No direct upstream dependencies found for component '%s'" % current_component)
+            yield current_component, deps
+            deps = set()
+            current_component = line.split(":")[1]
+
+        # If we find a new local dependency, add it.
         if line.startswith("+--- project"):
             deps.add(line.split(" ")[2])
 
     if deps:
-        logger.info("Found upstream dependencies for '%s': %s" % (component, " ".join(sorted(deps))))
+        logger.info("Found direct upstream dependencies for component '%s': %s" % (current_component, sorted(deps)))
     else:
-        logger.info("No upstream dependencies found for '%s'" % component)
-    cached_deps[component] = deps
+        logger.info("No direct upstream dependencies found for component '%s'" % current_component)
+    yield current_component, deps
 
-    return deps
 
-def get_affected_components(files_changed, files_affecting_components, component_dependencies, reverse_component_dependencies):
+def get_affected_components(files_changed, files_affecting_components, upstream_component_dependencies, downstream_component_dependencies):
     affected_components = set()
 
     # First, find the list of changed components
@@ -85,12 +97,12 @@ def get_affected_components(files_changed, files_affecting_components, component
     # Finally, go through all of the affected components and recursively
     # find their upstream and downstream dependencies.
     for c in affected_components.copy():
-        if component_dependencies[c]:
-            logger.info("Adding upstream dependencies for '%s': %s" % (c, " ".join(sorted(component_dependencies[c]))))
-            affected_components.update(component_dependencies[c])
-        if component_dependencies[c]:
-            logger.info("Adding downstream dependencies for '%s': %s" % (c, " ".join(sorted(reverse_component_dependencies[c]))))
-            affected_components.update(reverse_component_dependencies[c])
+        if upstream_component_dependencies[c]:
+            logger.info("Adding direct upstream dependencies for '%s': %s" % (c, " ".join(sorted(upstream_component_dependencies[c]))))
+            affected_components.update(upstream_component_dependencies[c])
+        if downstream_component_dependencies[c]:
+            logger.info("Adding direct downstream dependencies for '%s': %s" % (c, " ".join(sorted(downstream_component_dependencies[c]))))
+            affected_components.update(downstream_component_dependencies[c])
 
     return affected_components
 
@@ -99,26 +111,25 @@ def loader(kind, path, config, params, loaded_tasks):
     # Build everything unless we have an optimization strategy (defined below).
     files_changed = []
     affected_components = ALL_COMPONENTS
-    component_dependencies = defaultdict(set)
-    reverse_component_dependencies = defaultdict(set)
+    upstream_component_dependencies = defaultdict(set)
+    downstream_component_dependencies = defaultdict(set)
 
-    for component in sorted(get_components()):
-        name = component["name"]
-        for dep_component in get_upstream_deps_for_component(name):
-            component_dependencies[name].add(dep_component)
-            reverse_component_dependencies[dep_component].add(name)
+    for component, deps in get_upstream_deps_for_components([c["name"] for c in get_components()]):
+        upstream_component_dependencies[component] = deps
+        for d in deps:
+            downstream_component_dependencies[d].add(component)
 
     if params["tasks_for"] == "github-pull-request":
         logger.info("Processing pull request %s" % params["pull_request_number"])
         files_changed = get_files_changed_pr(params["base_repository"], params["pull_request_number"])
-        affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), component_dependencies, reverse_component_dependencies)
+        affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), upstream_component_dependencies, downstream_component_dependencies)
     elif params["tasks_for"] == "github-push":
         if params["base_rev"] in _GIT_ZERO_HASHES:
             logger.warn("base_rev is a zero hash, meaning there is no previous push. Building every component...")
         else:
             logger.info("Processing push for commit range %s -> %s" % (params["base_rev"], params["head_rev"]))
             files_changed = get_files_changed_push(params["base_repository"], params["base_rev"], params["head_rev"])
-            affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), component_dependencies, reverse_component_dependencies)
+            affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), upstream_component_dependencies, downstream_component_dependencies)
 
     logger.info("Files changed: %s" % " ".join(files_changed))
     if affected_components is ALL_COMPONENTS:
