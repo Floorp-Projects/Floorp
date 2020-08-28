@@ -299,18 +299,16 @@ BackgroundRequestChild* IDBTransaction::StartRequest(
   return actor;
 }
 
-void IDBTransaction::OpenCursor(
-    PBackgroundIDBCursorChild* const aBackgroundActor,
-    const OpenCursorParams& aParams) {
+void IDBTransaction::OpenCursor(PBackgroundIDBCursorChild& aBackgroundActor,
+                                const OpenCursorParams& aParams) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  DoWithTransactionChild([aBackgroundActor, &aParams](auto& actor) {
-    actor.SendPBackgroundIDBCursorConstructor(aBackgroundActor, aParams);
+  DoWithTransactionChild([&aBackgroundActor, &aParams](auto& actor) {
+    actor.SendPBackgroundIDBCursorConstructor(&aBackgroundActor, aParams);
   });
 
-  MOZ_ASSERT(aBackgroundActor->GetActorEventTarget(),
+  MOZ_ASSERT(aBackgroundActor.GetActorEventTarget(),
              "The event target shall be inherited from its manager actor.");
 
   // Balanced in BackgroundCursorChild::RecvResponse().
