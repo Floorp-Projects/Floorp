@@ -447,9 +447,9 @@ customElements.define(
 
     receiveMessage(message) {
       if (message.name == "Printing:Preview:UpdatePageCount") {
-        let numPages = message.data.numPages;
-        this.mTotalPages.value = numPages;
-        this.mPageTextBox.max = numPages;
+        let totalPages = message.data.totalPages;
+        this.mTotalPages.value = totalPages;
+        this.mPageTextBox.max = totalPages;
       }
     }
   },
