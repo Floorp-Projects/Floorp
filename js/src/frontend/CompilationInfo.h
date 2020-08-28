@@ -344,6 +344,9 @@ class ScriptStencilIterable {
 struct CompilationInfo {
   static constexpr FunctionIndex TopLevelIndex = FunctionIndex(0);
 
+  // This field is used as temporary storage for accessing current context.
+  // WARNING: Replace this when passing between threads.
+  // FIXME: Remove this field.
   JSContext* cx;
 
   CompilationInput input;
