@@ -2665,26 +2665,23 @@ bool WarpBuilder::build_FunWithProto(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
-  MDefinition* argArr = current->pop();
-  MDefinition* argThis = current->pop();
-  MDefinition* argFunc = current->pop();
+  bool constructing = false;
+  CallInfo callInfo(alloc(), loc.toRawBytecode(), constructing,
+                    loc.resultIsPopped());
+  callInfo.initForSpreadCall(current);
 
-  // Load dense elements of the argument array. Note that the bytecode ensures
-  // this is an array.
-  MElements* elements = MElements::New(alloc(), argArr);
-  current->add(elements);
-
-  WrappedFunction* wrappedTarget = nullptr;
-  auto* apply =
-      MApplyArray::New(alloc(), wrappedTarget, argFunc, elements, argThis);
-  current->add(apply);
-  current->push(apply);
-
-  if (loc.resultIsPopped()) {
-    apply->setIgnoresReturnValue();
+  if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, callInfo);
   }
 
-  return resumeAfter(apply, loc);
+  MInstruction* call = makeSpreadCall(callInfo);
+  if (!call) {
+    return false;
+  }
+
+  current->add(call);
+  current->push(call);
+  return resumeAfter(call, loc);
 }
 
 bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {

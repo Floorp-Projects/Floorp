@@ -556,6 +556,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::FunCall:
       case JSOp::FunApply:
       case JSOp::New:
+      case JSOp::SpreadCall:
       case JSOp::ToNumeric:
       case JSOp::Pos:
       case JSOp::Inc:
@@ -716,7 +717,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::CheckIsObj:
       case JSOp::CheckObjCoercible:
       case JSOp::FunWithProto:
-      case JSOp::SpreadCall:
       case JSOp::SpreadNew:
       case JSOp::SpreadSuperCall:
       case JSOp::OptimizeSpreadCall:
