@@ -6519,11 +6519,11 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
         } else if (storageVersion == MakeStorageVersion(2, 2)) {
           QM_TRY(UpgradeStorageFrom2_2To2_3(connection));
         } else {
-          // TODO: This should use QM_TRY too.
-          NS_WARNING(
-              "Unable to initialize storage, no upgrade path is "
-              "available!");
-          return NS_ERROR_FAILURE;
+          QM_FAIL(NS_ERROR_FAILURE, []() {
+            NS_WARNING(
+                "Unable to initialize storage, no upgrade path is "
+                "available!");
+          });
         }
 
         QM_TRY_VAR(storageVersion,
@@ -6576,11 +6576,11 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
             QM_TRY(UpgradeLocalStorageArchiveFrom4To5(connection));
           } */
           else {
-            // TODO: This should use QM_TRY too.
-            QM_WARNING(
-                "Unable to initialize LocalStorage archive, no upgrade path is "
-                "available!");
-            return NS_ERROR_FAILURE;
+            QM_FAIL(NS_ERROR_FAILURE, []() {
+              QM_WARNING(
+                  "Unable to initialize LocalStorage archive, no upgrade path "
+                  "is available!");
+            });
           }
 
           QM_TRY_VAR(version, LoadLocalStorageArchiveVersion(*connection));
@@ -6651,10 +6651,10 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           QM_TRY(UpgradeCacheFrom1To2(connection));
         } else */
         {
-          // TODO: This should use QM_TRY too.
-          QM_WARNING(
-              "Unable to initialize cache, no upgrade path is available!");
-          return NS_ERROR_FAILURE;
+          QM_FAIL(NS_ERROR_FAILURE, []() {
+            QM_WARNING(
+                "Unable to initialize cache, no upgrade path is available!");
+          });
         }
 
         QM_TRY_VAR(cacheVersion, LoadCacheVersion(*connection));
