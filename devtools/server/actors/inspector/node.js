@@ -43,7 +43,6 @@ loader.lazyRequireGetter(
     "getNodeDisplayName",
     "imageToImageData",
     "isNodeDead",
-    "scrollbarTreeWalkerFilter",
   ],
   "devtools/server/actors/inspector/utils",
   true
@@ -70,12 +69,6 @@ loader.lazyRequireGetter(
   this,
   "EventCollector",
   "devtools/server/actors/inspector/event-collector",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "DocumentWalker",
-  "devtools/server/actors/inspector/document-walker",
   true
 );
 loader.lazyRequireGetter(
@@ -356,27 +349,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Check whether the node currently has scrollbars and is scrollable.
    */
   get isScrollable() {
-    // Check first if the element has an overflow area, bail out if not.
-    if (
-      this.rawNode.clientHeight === this.rawNode.scrollHeight &&
-      this.rawNode.clientWidth === this.rawNode.scrollWidth
-    ) {
-      return false;
-    }
-
-    // If it does, then check it also has scrollbars.
-    try {
-      const walker = new DocumentWalker(
-        this.rawNode,
-        this.rawNode.ownerGlobal,
-        { filter: scrollbarTreeWalkerFilter }
-      );
-      return !!walker.firstChild();
-    } catch (e) {
-      // We have no access to a DOM object. This is probably due to a CORS
-      // violation. Using try / catch is the only way to avoid this error.
-      return false;
-    }
+    return (
+      this.rawNode.nodeType === Node.ELEMENT_NODE &&
+      this.rawNode.hasVisibleScrollbars
+    );
   },
 
   /**
