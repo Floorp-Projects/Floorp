@@ -319,9 +319,21 @@ auto ToResult(Result<V, E>&& aValue)
  * `nullptr` to indicate errors.
  * What screwups? See <https://bugzilla.mozilla.org/show_bug.cgi?id=912928> for
  * a partial list.
+ *
+ * Result<const V, E> or Result<V, const E> are not meaningful. The success or
+ * error values in a Result instance are non-modifiable in-place anyway. This
+ * guarantee must also be maintained when evolving Result. They can be
+ * unwrap()ped, but this loses const qualification. However, Result<const V, E>
+ * or Result<V, const E> may be misleading and prevent movability. Just use
+ * Result<V, E>. (Result<const V*, E> may make sense though, just Result<const
+ * V* const, E> is not possible.)
  */
 template <typename V, typename E>
 class MOZ_MUST_USE_TYPE Result final {
+  // See class comment on Result<const V, E> and Result<V, const E>.
+  static_assert(!std::is_const_v<V>);
+  static_assert(!std::is_const_v<E>);
+
   using Impl = typename detail::SelectResultImpl<V, E>::Type;
 
   Impl mImpl;

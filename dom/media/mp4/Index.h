@@ -45,7 +45,7 @@ class SampleIterator {
   //
   // Returns: Ok(CryptoScheme) if a crypto scheme, including None, can be
   // determined, or Err(nsCString) if there is an issue determining the scheme.
-  Result<CryptoScheme, const nsCString> GetEncryptionScheme();
+  Result<CryptoScheme, nsCString> GetEncryptionScheme();
 
   void Next();
   RefPtr<Index> mIndex;
