@@ -1465,7 +1465,10 @@ class IDLParser(object):
         t.lexer.lineno += len(t.value)
 
     def t_nativeid_NATIVEID(self, t):
-        r'[^()\n]+(?=\))'
+        # Matches non-parenthesis characters, or a single open and closing
+        # parenthesis with at least one non-parenthesis character before,
+        # between and after them (for compatibility with std::function).
+        r'[^()\n]+(?:\([^()\n]+\)[^()\n]+)?(?=\))'
         t.lexer.begin('INITIAL')
         return t
 
