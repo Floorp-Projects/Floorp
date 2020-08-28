@@ -9399,9 +9399,8 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
 // CreateMarkerFile and RemoveMarkerFile are a pair of functions to indicate
 // whether having removed all the files successfully. The marker file should
 // be checked before executing the next operation or initialization.
-nsresult CreateMarkerFile(nsIFile& aBaseDirectory,
-                          const nsAString& aDatabaseNameBase,
-                          nsCOMPtr<nsIFile>* aMarkerFileOut) {
+Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
+    nsIFile& aBaseDirectory, const nsAString& aDatabaseNameBase) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!aDatabaseNameBase.IsEmpty());
 
@@ -9416,8 +9415,7 @@ nsresult CreateMarkerFile(nsIFile& aBaseDirectory,
           .orElse(
               ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, mozilla::Ok>));
 
-  *aMarkerFileOut = std::move(markerFile);
-  return NS_OK;
+  return markerFile;
 }
 
 nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
@@ -9454,17 +9452,13 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
 
   AUTO_PROFILER_LABEL("RemoveDatabaseFilesAndDirectory", DOM);
 
-  nsCOMPtr<nsIFile> markerFile;
-  nsresult rv =
-      CreateMarkerFile(aBaseDirectory, aDatabaseFilenameBase, &markerFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(auto markerFile,
+              CreateMarkerFile(aBaseDirectory, aDatabaseFilenameBase));
 
   // The database file counts towards quota.
-  rv = DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteSuffix,
-                  aQuotaManager, aPersistenceType, aGroup, aOrigin,
-                  Idempotency::Yes);
+  nsresult rv = DeleteFile(aBaseDirectory,
+                           aDatabaseFilenameBase + kSQLiteSuffix, aQuotaManager,
+                           aPersistenceType, aGroup, aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
