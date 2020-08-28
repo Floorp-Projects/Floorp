@@ -50,6 +50,7 @@ void WarpBuilderShared::pushConstant(const Value& v) {
 
 MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
                                    WrappedFunction* target) {
+  MOZ_ASSERT(callInfo.argFormat() == CallInfo::ArgFormat::Standard);
   MOZ_ASSERT_IF(needsThisCheck, !target);
 
   // TODO: Investigate DOM calls.
