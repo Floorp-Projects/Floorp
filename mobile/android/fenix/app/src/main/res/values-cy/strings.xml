@@ -79,6 +79,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Nid nawr</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Gallwch osod Firefox i agor dolenni mewn apiau’n awtomatig.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Mynd i gosodiadau</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Cau</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Mae angen mynediad i’r camera. Ewch i osodiadau Android, tapiwch Permissions, a thapio Allow.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Mynd i’r gosodiadau</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Cau</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Gosodwch dabiau agored sydd heb eu darllen yn ystod y diwrnod, yr wythnos neu’r mis diwethaf i gau’n awtomatig.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Gweld y dewisiadau</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Cau</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Tab newydd</string>
@@ -308,6 +330,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Ychwanegion</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Hysbysiadau</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Cydweddu nawr</string>
@@ -531,6 +556,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Tynnu</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Dileu o’r hanes</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Modd Preifat)</string>
 
@@ -574,6 +601,13 @@
     <string name="history_older">Hŷn</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Dim hanes yma</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Dim llwythi yma</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d wedi’u dewis</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -730,10 +764,8 @@
     <string name="collections_header">Casgliadau</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Dewislen casgliadau</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Casglwch y pethau sy’n bwysig i chi</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Grwpiwch chwiliadau, gwefannau a thabiau tebyg ar gyfer mynediad cyflym yn y dyfodol.</string>
+    <string name="no_collections_description2">Casglwch y pethau sydd o bwys i chi.\nCrynhowch ynghyd chwiliadau, gwefannau a thabiau tebyg i gael mynediad cyflym yn hwyrach.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Dewis Tabiau</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -980,9 +1012,10 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_whats_new_description">Oes gennych gwestiynau am y %s wedi’u hailgynllunio? Eisiau gwybod beth sydd wedi newid?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Cewch atebion yma</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Cael y gorau o %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Cychwynnwch gydweddu nodau tudalen, cyfrineiriau, a rhagor gyda’ch cyfrif Firefox.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Dysgu rhagor</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1472,6 +1505,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Mewngofnodi i gydweddu</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Dim tabiau agored</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Wedi cyrraedd terfyn nifer eich hoff wefannau</string>
@@ -1480,4 +1516,15 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iawn, Wedi deall!</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Tynnu</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Cael y gorau o %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Casglwch y pethau sy’n bwysig i chi</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Grwpiwch chwiliadau, gwefannau a thabiau tebyg ar gyfer mynediad cyflym yn y dyfodol.</string>
+</resources>

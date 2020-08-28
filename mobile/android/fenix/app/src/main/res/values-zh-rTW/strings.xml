@@ -80,6 +80,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">現在不要</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">您可以設定使用 Firefox 自動開啟各應用程式當中的鏈結。</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">開啟設定</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">知道了！</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">需要相機使用權限。請到 Android 系統設定點擊「權限」，然後點擊「允許」。</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">開啟設定</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">知道了！</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">設定自動關閉超過幾天、幾週或幾個月都沒有閱讀過的開啟分頁。</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">檢視選項</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">知道了！</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">開新分頁</string>
@@ -544,6 +566,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">移除</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">從瀏覽紀錄刪除</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s（隱私瀏覽模式）</string>
 
@@ -1521,4 +1545,13 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">移除</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">發揮 %s 的最大威力。</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">收集對您而言重要的東西</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">將類似的搜尋、網站、分頁放在一起，方便之後快速使用。</string>
 </resources>

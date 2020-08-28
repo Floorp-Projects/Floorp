@@ -78,6 +78,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Ikke nu</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Du kan sætte Firefox til automatisk at åbne links i apps.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Gå til indstillinger</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Afvis</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Adgang til kamera er nødvendig. Gå til Indstillinger i Android, tryk på Tilladelser, og tryk så på Tillad.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Gå til indstillinger</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Afvis</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Luk automatisk åbne faneblade, hvis de ikke har været vist den seneste dag, uge eller måned.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Vis indstillinger</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Afvis</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nyt faneblad</string>
@@ -298,9 +320,14 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoindstillinger</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">Åbn links i app</string>
+    <string name="preferences_open_links_in_apps">Åbn links i apps</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Ekstern håndtering af filhentning</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Tilføjelser</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Meddelelser</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -341,7 +368,7 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Modtagne faneblade</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">Notifikationer for faneblade modtaget fra andre Firefox-enheder.</string>
+    <string name="fxa_received_tab_channel_description">Meddelelser for faneblade modtaget fra andre Firefox-enheder.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Modtaget faneblad</string>
     <!-- When multiple tabs have been received -->
@@ -524,6 +551,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fjern</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Slet fra historik</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Privat tilstand)</string>
 
@@ -567,6 +596,13 @@
     <string name="history_older">Ældre</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ingen historik</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Ingen filhentninger her</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d valgt</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -686,7 +722,7 @@
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Position</string>
     <!-- Preference for altering the notification access for all websites -->
-    <string name="preference_phone_feature_notification">Notifikation</string>
+    <string name="preference_phone_feature_notification">Meddelelser</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Spørg om tilladelse</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -721,10 +757,8 @@
     <string name="collections_header">Samlinger</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Samlings-menu</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Saml de ting, der betyder noget for dig</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Saml relaterede søgninger, websteder og faneblade i grupper. Så kan du hurtigt finde dem igen.</string>
+    <string name="no_collections_description2">Saml de ting, der betyder noget for dig.\nSaml relaterede søgninger, websteder og faneblade i grupper. Så kan du hurtigt finde dem igen.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Vælg faneblade</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -878,7 +912,7 @@
     <string name="preference_accessibility_auto_size_summary">Skriftstørrelsen vil være den samme som i dine Android-indstillinger. Deaktiver for selv at indstille skriftstørrelse her.</string>
 
     <!-- Title for the Delete browsing data preference -->
-    <string name="preferences_delete_browsing_data">Slet browser-data</string>
+    <string name="preferences_delete_browsing_data">Slet browserdata</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Åbne faneblade</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -971,9 +1005,10 @@
     <string name="onboarding_whats_new_description">Har du spørgsmål om den nye version af %s? Vil du vide, hvad der er ændret?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Få svar her</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Få det meste ud af %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Begynd at synkronisere bogmærker, adgangskoder m.m. med din Firefox-konto.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Læs mere</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1458,6 +1493,9 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Log ind på Sync</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Ingen åbne faneblade</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Grænsen for Mest besøgte websider er nået</string>
@@ -1466,4 +1504,15 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, forstået</string>
 
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Fjern</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Få det meste ud af %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Saml de ting, der betyder noget for dig</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Saml relaterede søgninger, websteder og faneblade i grupper. Så kan du hurtigt finde dem igen.</string>
     </resources>

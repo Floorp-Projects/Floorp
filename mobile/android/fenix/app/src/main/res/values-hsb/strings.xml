@@ -80,6 +80,21 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Nic nětko</string>
 
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">K nastajenjam</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Zaćisnyć</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">K nastajenjam</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Zaćisnyć</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Nastajenja pokazać</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Zaćisnyć</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nowy rajtark</string>
@@ -536,6 +551,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Wotstronić</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Z historije zhašeć</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (priwatny modus)</string>
 
@@ -1497,4 +1514,13 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Wotstronić</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Wućehńće najlěpše z %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Zběrajće wěcy, kotrež su wam wažne</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Zeskupće podobne pytanja, sydła a rajtarki za pozdźiši spěšny přistup.</string>
 </resources>

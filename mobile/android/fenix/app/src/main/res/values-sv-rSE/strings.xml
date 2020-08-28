@@ -79,6 +79,23 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Inte nu</string>
 
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Gå till Inställningar</string>
+
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Ignorera</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Gå till Inställningar</string>
+
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Ignorera</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Visa alternativ</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Ignorera</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Ny flik</string>
@@ -542,6 +559,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Ta bort</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Ta bort från historik</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Privat läge)</string>
 
@@ -1510,4 +1529,9 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Ta bort</string>
-</resources>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Få ut det mesta av %s.</string>
+
+    </resources>
