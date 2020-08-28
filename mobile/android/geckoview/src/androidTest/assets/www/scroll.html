@@ -5,13 +5,7 @@
     <style type="text/css">
 body {
    margin: 0;
-   /* background contains one extra transparent.gif because we want trick the
-      contentful paint detection; We want to make sure the background is loaded
-      before the test starts so we always wait for the contentful paint timestamp
-      to exist, however, gradient isn't considered as contentful per spec, so Gecko
-      wouldn't generate a timestamp for it. Hence, we added a transparent gif
-      to the image list to trick the detection. */
-   background: url('/assets/www/transparent.gif'), linear-gradient(135deg, red, white);
+   background: linear-gradient(135deg, red, white);
 }
 
 #one {
