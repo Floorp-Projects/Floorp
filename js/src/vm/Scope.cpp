@@ -6,7 +6,7 @@
 
 #include "vm/Scope.h"
 
-#include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/ScopeExit.h"
 
 #include <memory>
@@ -1951,9 +1951,13 @@ bool ScopeStencil::createForFunctionScope(
   }
 
   *index = stencil.scopeData.length();
-  return stencil.scopeData.emplaceBack(
-      ScopeKind::Function, enclosing, firstFrameSlot, envShape,
-      ownedData.release(), mozilla::Some(functionIndex), isArrow);
+  if (!stencil.scopeData.emplaceBack(
+          ScopeKind::Function, enclosing, firstFrameSlot, envShape,
+          ownedData.release(), mozilla::Some(functionIndex), isArrow)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 /* static */
@@ -1985,8 +1989,12 @@ bool ScopeStencil::createForLexicalScope(
   }
 
   *index = stencil.scopeData.length();
-  return stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                       envShape, ownedData.release());
+  if (!stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot, envShape,
+                                     ownedData.release())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 bool ScopeStencil::createForVarScope(
@@ -2017,8 +2025,12 @@ bool ScopeStencil::createForVarScope(
   }
 
   *index = stencil.scopeData.length();
-  return stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                       envShape, ownedData.release());
+  if (!stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot, envShape,
+                                     ownedData.release())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 /* static */
@@ -2054,8 +2066,12 @@ bool ScopeStencil::createForGlobalScope(JSContext* cx,
   }
 
   *index = stencil.scopeData.length();
-  return stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                       envShape, ownedData.release());
+  if (!stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot, envShape,
+                                     ownedData.release())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 /* static */
@@ -2089,8 +2105,12 @@ bool ScopeStencil::createForEvalScope(JSContext* cx,
   }
 
   *index = stencil.scopeData.length();
-  return stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot,
-                                       envShape, ownedData.release());
+  if (!stencil.scopeData.emplaceBack(kind, enclosing, firstFrameSlot, envShape,
+                                     ownedData.release())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 /* static */
@@ -2132,9 +2152,13 @@ bool ScopeStencil::createForModuleScope(JSContext* cx,
   }
 
   *index = stencil.scopeData.length();
-  return stencil.scopeData.emplaceBack(ScopeKind::Module, enclosing,
-                                       firstFrameSlot, envShape,
-                                       ownedData.release());
+  if (!stencil.scopeData.emplaceBack(ScopeKind::Module, enclosing,
+                                     firstFrameSlot, envShape,
+                                     ownedData.release())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 template <typename SpecificEnvironmentT>
@@ -2168,8 +2192,12 @@ bool ScopeStencil::createForWithScope(JSContext* cx,
   mozilla::Maybe<uint32_t> envShape;
 
   *index = stencil.scopeData.length();
-  return stencil.scopeData.emplaceBack(ScopeKind::With, enclosing,
-                                       firstFrameSlot, envShape);
+  if (!stencil.scopeData.emplaceBack(ScopeKind::With, enclosing, firstFrameSlot,
+                                     envShape)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 template <typename SpecificScopeT>

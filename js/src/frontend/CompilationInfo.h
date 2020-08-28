@@ -209,7 +209,7 @@ struct CompilationStencil {
   //
   // References to scopes are controlled via AbstractScopePtr, which holds onto
   // an index (and CompilationInfo reference).
-  Vector<ScopeStencil> scopeData;
+  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
 
   // Module metadata if this is a module compile.
   StencilModuleMetadata moduleMetadata;
@@ -221,7 +221,7 @@ struct CompilationStencil {
   ParserAtomsTable parserAtoms;
 
   explicit CompilationStencil(JSContext* cx)
-      : scopeData(cx), moduleMetadata(cx), asmJS(cx), parserAtoms(cx) {}
+      : moduleMetadata(cx), asmJS(cx), parserAtoms(cx) {}
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
