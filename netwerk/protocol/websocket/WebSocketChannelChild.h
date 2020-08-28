@@ -57,8 +57,10 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
                                       const bool& aSecure,
                                       const uint64_t& aHttpChannelId);
   mozilla::ipc::IPCResult RecvOnStop(const nsresult& aStatusCode);
-  mozilla::ipc::IPCResult RecvOnMessageAvailable(const nsCString& aMsg);
-  mozilla::ipc::IPCResult RecvOnBinaryMessageAvailable(const nsCString& aMsg);
+  mozilla::ipc::IPCResult RecvOnMessageAvailable(
+      const nsDependentCSubstring& aMsg, const bool& aMoreData);
+  mozilla::ipc::IPCResult RecvOnBinaryMessageAvailable(
+      const nsDependentCSubstring& aMsg, const bool& aMoreData);
   mozilla::ipc::IPCResult RecvOnAcknowledge(const uint32_t& aSize);
   mozilla::ipc::IPCResult RecvOnServerClose(const uint16_t& aCode,
                                             const nsCString& aReason);
@@ -80,8 +82,12 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   // This function tries to get a labeled event target for |mNeckoTarget|.
   void SetupNeckoTarget();
 
+  void RecvOnMessageAvailableInternal(const nsDependentCSubstring& aMsg,
+                                      bool aMoreData, bool aBinary);
+
   RefPtr<ChannelEventQueue> mEventQ;
   nsString mEffectiveURL;
+  nsCString mReceivedMsgBuffer;
 
   // This variable is protected by mutex.
   enum { Opened, Closing, Closed } mIPCState;
