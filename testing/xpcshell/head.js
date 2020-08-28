@@ -1464,6 +1464,18 @@ function do_send_remote_message(name, data) {
 }
 
 /**
+ * Schedules and awaits a precise GC, and forces CC, `maxCount` number of times.
+ * @param maxCount
+ *        How many times GC and CC should be scheduled.
+ */
+async function schedulePreciseGCAndForceCC(maxCount) {
+  for (let count = 0; count < maxCount; count++) {
+    await new Promise(resolve => Cu.schedulePreciseGC(resolve));
+    Cu.forceCC();
+  }
+}
+
+/**
  * Add a test function to the list of tests that are to be run asynchronously.
  *
  * @param funcOrProperties
