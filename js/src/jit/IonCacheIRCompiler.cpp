@@ -1610,7 +1610,7 @@ bool IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty(
 
   emitStoreTypedObjectReferenceProp(val, type, dest, scratch2);
 
-  if (needsPostBarrier() && type != ReferenceType::TYPE_STRING) {
+  if (needsPostBarrier()) {
     emitPostBarrierSlot(obj, val, scratch1);
   }
   return true;
