@@ -7632,8 +7632,7 @@ AttachDecision CallIRGenerator::tryAttachObjectIs(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
-  MOZ_ASSERT(callee->isNativeWithoutJitEntry());
-  if (callee->native() != fun_call) {
+  if (!callee->isNativeWithoutJitEntry() || callee->native() != fun_call) {
     return AttachDecision::NoAction;
   }
 
@@ -8312,8 +8311,8 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayConstructor(
 }
 
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
-  MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
-  if (calleeFunc->native() != fun_apply) {
+  if (!calleeFunc->isNativeWithoutJitEntry() ||
+      calleeFunc->native() != fun_apply) {
     return AttachDecision::NoAction;
   }
 
@@ -9126,7 +9125,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 }
 
 AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
-  if (op_ == JSOp::FunApply) {
+  if (op_ == JSOp::FunCall || op_ == JSOp::FunApply) {
     return AttachDecision::NoAction;
   }
 
@@ -9205,6 +9204,13 @@ AttachDecision CallIRGenerator::tryAttachStub() {
 
   HandleFunction calleeFunc = calleeObj.as<JSFunction>();
 
+  if (op_ == JSOp::FunCall) {
+    return tryAttachFunCall(calleeFunc);
+  }
+  if (op_ == JSOp::FunApply) {
+    return tryAttachFunApply(calleeFunc);
+  }
+
   // Check for scripted optimizations.
   if (calleeFunc->hasJitEntry()) {
     return tryAttachCallScripted(calleeFunc);
@@ -9213,12 +9219,6 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   // Check for native-function optimizations.
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
 
-  if (op_ == JSOp::FunCall) {
-    return tryAttachFunCall(calleeFunc);
-  }
-  if (op_ == JSOp::FunApply) {
-    return tryAttachFunApply(calleeFunc);
-  }
   return tryAttachCallNative(calleeFunc);
 }
 
