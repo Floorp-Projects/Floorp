@@ -113,8 +113,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             searchController
         )
 
-        awesomeBarView = AwesomeBarView(requireContext(), searchInteractor,
-            view.findViewById(R.id.awesomeBar))
+        awesomeBarView = AwesomeBarView(
+            activity,
+            searchInteractor,
+            view.findViewById(R.id.awesomeBar)
+        )
         setShortcutsChangedListener(CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES)
         setShortcutsChangedListener(FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES)
 

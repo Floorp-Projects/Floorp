@@ -118,8 +118,8 @@ class SitePermissionsExceptionsFragment :
         }
     }
 
-    override fun onClick(view: View?) {
-        val sitePermissions = view?.tag as SitePermissions
+    override fun onClick(view: View) {
+        val sitePermissions = view.tag as SitePermissions
         val directions = SitePermissionsExceptionsFragmentDirections
             .actionSitePermissionsToExceptionsToSitePermissionsDetails(sitePermissions)
         nav(R.id.sitePermissionsExceptionsFragment, directions)

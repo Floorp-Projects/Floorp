@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.search.awesomebar
 
-import android.content.Context
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
@@ -25,7 +24,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.asActivity
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
@@ -34,7 +33,7 @@ import org.mozilla.fenix.search.SearchFragmentState
  * View that contains and configures the BrowserAwesomeBar
  */
 class AwesomeBarView(
-    private val context: Context,
+    private val activity: HomeActivity,
     val interactor: AwesomeBarInteractor,
     val view: BrowserAwesomeBar
 ) {
@@ -90,18 +89,20 @@ class AwesomeBarView(
     init {
         view.itemAnimator = null
 
-        val components = context.components
-        val primaryTextColor = context.getColorFromAttr(R.attr.primaryText)
+        val components = activity.components
+        val primaryTextColor = activity.getColorFromAttr(R.attr.primaryText)
 
-        val engineForSpeculativeConnects =
-            if (!isBrowsingModePrivate()) components.core.engine else null
+        val engineForSpeculativeConnects = when (activity.browsingModeManager.mode) {
+            BrowsingMode.Normal -> components.core.engine
+            BrowsingMode.Private -> null
+        }
         sessionProvider =
             SessionSuggestionProvider(
-                context.resources,
+                activity.resources,
                 components.core.store,
                 selectTabUseCase,
                 components.core.icons,
-                getDrawable(context, R.drawable.ic_search_results_tab),
+                getDrawable(activity, R.drawable.ic_search_results_tab),
                 excludeSelectedSession = true
             )
 
@@ -118,17 +119,17 @@ class AwesomeBarView(
                 bookmarksStorage = components.core.bookmarksStorage,
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
-                indicatorIcon = getDrawable(context, R.drawable.ic_search_results_bookmarks),
+                indicatorIcon = getDrawable(activity, R.drawable.ic_search_results_bookmarks),
                 engine = engineForSpeculativeConnects
             )
 
-        val searchBitmap = getDrawable(context, R.drawable.ic_search)!!.apply {
+        val searchBitmap = getDrawable(activity, R.drawable.ic_search)!!.apply {
             colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
         }.toBitmap()
 
         defaultSearchSuggestionProvider =
             SearchSuggestionProvider(
-                context = context,
+                context = activity,
                 searchEngineManager = components.search.searchEngineManager,
                 searchUseCase = searchUseCase,
                 fetchClient = components.core.client,
@@ -143,7 +144,7 @@ class AwesomeBarView(
         defaultSearchActionProvider =
             SearchActionProvider(
                 searchEngineGetter = suspend {
-                    components.search.searchEngineManager.getDefaultSearchEngineAsync(context)
+                    components.search.searchEngineManager.getDefaultSearchEngineAsync(activity)
                 },
                 searchUseCase = searchUseCase,
                 icon = searchBitmap,
@@ -153,7 +154,7 @@ class AwesomeBarView(
         shortcutsEnginePickerProvider =
             ShortcutsSuggestionProvider(
                 searchEngineProvider = components.search.provider,
-                context = context,
+                context = activity,
                 selectShortcutEngine = interactor::onSearchShortcutEngineSelected,
                 selectShortcutEngineSettings = interactor::onClickSearchEngineSettings
             )
@@ -218,7 +219,7 @@ class AwesomeBarView(
             providersToAdd.addAll(getSelectedSearchSuggestionProvider(state))
         }
 
-        if (!isBrowsingModePrivate()) {
+        if (activity.browsingModeManager.mode == BrowsingMode.Normal) {
             providersToAdd.add(sessionProvider)
         }
 
@@ -242,16 +243,11 @@ class AwesomeBarView(
             providersToRemove.addAll(getSelectedSearchSuggestionProvider(state))
         }
 
-        if (isBrowsingModePrivate()) {
+        if (activity.browsingModeManager.mode == BrowsingMode.Private) {
             providersToRemove.add(sessionProvider)
         }
 
         return providersToRemove
-    }
-
-    private fun isBrowsingModePrivate(): Boolean {
-        return (context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate
-            ?: false
     }
 
     private fun getSelectedSearchSuggestionProvider(state: SearchFragmentState): List<AwesomeBar.SuggestionProvider> {
@@ -275,18 +271,20 @@ class AwesomeBarView(
 
     private fun getSuggestionProviderForEngine(engine: SearchEngine): List<AwesomeBar.SuggestionProvider> {
         return searchSuggestionProviderMap.getOrPut(engine) {
-            val components = context.components
-            val primaryTextColor = context.getColorFromAttr(R.attr.primaryText)
+            val components = activity.components
+            val primaryTextColor = activity.getColorFromAttr(R.attr.primaryText)
 
-            val searchBitmap = getDrawable(context, R.drawable.ic_search)?.apply {
+            val searchBitmap = getDrawable(activity, R.drawable.ic_search)!!.apply {
                 colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
-            }?.toBitmap()
+            }.toBitmap()
 
-            val engineForSpeculativeConnects =
-                if (!isBrowsingModePrivate()) components.core.engine else null
+            val engineForSpeculativeConnects = when (activity.browsingModeManager.mode) {
+                BrowsingMode.Normal -> components.core.engine
+                BrowsingMode.Private -> null
+            }
             val searchEngine =
-                components.search.provider.installedSearchEngines(context).list.find { it.name == engine.name }
-                    ?: components.search.provider.getDefaultEngine(context)
+                components.search.provider.installedSearchEngines(activity).list.find { it.name == engine.name }
+                    ?: components.search.provider.getDefaultEngine(activity)
 
             listOf(
                 SearchActionProvider(

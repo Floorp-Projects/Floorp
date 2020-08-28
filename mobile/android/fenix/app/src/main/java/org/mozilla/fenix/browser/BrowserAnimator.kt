@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.EngineView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.Settings
 import java.lang.ref.WeakReference
 
 /**
@@ -29,6 +30,7 @@ class BrowserAnimator(
     private val engineView: WeakReference<EngineView>,
     private val swipeRefresh: WeakReference<View>,
     private val viewLifecycleScope: WeakReference<LifecycleCoroutineScope>,
+    private val settings: Settings,
     private val firstContentfulHappened: () -> Boolean
 ) {
 
@@ -39,7 +41,7 @@ class BrowserAnimator(
         get() = swipeRefresh.get()
 
     fun beginAnimateInIfNecessary() {
-        if (unwrappedSwipeRefresh?.context?.settings()?.waitToShowPageUntilFirstPaint == true) {
+        if (settings.waitToShowPageUntilFirstPaint) {
             if (firstContentfulHappened()) {
                 viewLifecycleScope.get()?.launch {
                     delay(ANIMATION_DELAY)

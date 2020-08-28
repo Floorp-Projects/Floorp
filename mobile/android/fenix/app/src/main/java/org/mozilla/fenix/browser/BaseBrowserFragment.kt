@@ -65,7 +65,6 @@ import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.session.behavior.EngineViewBottomBehavior
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
-import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.service.sync.logins.DefaultLoginValidationDelegate
 import mozilla.components.support.base.feature.PermissionsFeature
@@ -82,6 +81,7 @@ import org.mozilla.fenix.OnBackLongPressedListener
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
@@ -123,8 +123,10 @@ import java.lang.ref.WeakReference
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer,
     OnBackLongPressedListener, AccessibilityManager.AccessibilityStateChangeListener {
+
     private lateinit var browserFragmentStore: BrowserFragmentStore
     private lateinit var browserAnimator: BrowserAnimator
+    private lateinit var components: Components
 
     private var _browserInteractor: BrowserToolbarViewInteractor? = null
     protected val browserInteractor: BrowserToolbarViewInteractor
@@ -170,8 +172,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        require(arguments != null)
-        customTabSessionId = arguments?.getString(EXTRA_SESSION_ID)
+        customTabSessionId = requireArguments().getString(EXTRA_SESSION_ID)
 
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
@@ -192,6 +193,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 BrowserFragmentState()
             )
         }
+
+        components = requireComponents
 
         return view
     }
@@ -216,6 +219,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
             viewLifecycleScope = WeakReference(viewLifecycleOwner.lifecycleScope),
+            settings = context.components.settings,
             firstContentfulHappened = ::didFirstContentfulHappen
         ).apply {
             beginAnimateInIfNecessary()
@@ -587,9 +591,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             context.settings().setSitePermissionSettingListener(viewLifecycleOwner) {
                 // If the user connects to WIFI while on the BrowserFragment, this will update the
                 // SitePermissionsRules (specifically autoplay) accordingly
-                assignSitePermissionsRules(context)
+                assignSitePermissionsRules()
             }
-            assignSitePermissionsRules(context)
+            assignSitePermissionsRules()
 
             fullScreenFeature.set(
                 feature = FullScreenFeature(
@@ -941,15 +945,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
      * Returns the layout [android.view.Gravity] for the quick settings and ETP dialog.
      */
     protected fun getAppropriateLayoutGravity(): Int =
-        context?.settings()?.toolbarPosition?.androidGravity ?: Gravity.BOTTOM
+        components.settings.toolbarPosition.androidGravity
 
     /**
      * Updates the site permissions rules based on user settings.
      */
-    private fun assignSitePermissionsRules(context: Context) {
-        val settings = context.settings()
-
-        val rules: SitePermissionsRules = settings.getSitePermissionsCustomSettingsRules()
+    private fun assignSitePermissionsRules() {
+        val rules = components.settings.getSitePermissionsCustomSettingsRules()
 
         sitePermissionsFeature.withFeature {
             it.sitePermissionsRules = rules
@@ -995,7 +997,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
      * Returns the current session.
      */
     protected fun getSessionById(): Session? {
-        val sessionManager = context?.components?.core?.sessionManager ?: return null
+        val sessionManager = components.core.sessionManager
         val localCustomTabId = customTabSessionId
         return if (localCustomTabId != null) {
             sessionManager.findSessionById(localCustomTabId)
@@ -1106,10 +1108,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     }
 
     private fun didFirstContentfulHappen() =
-        if (!requireContext().settings().waitToShowPageUntilFirstPaint) true else
-            context?.components?.core?.store?.state?.findTabOrCustomTabOrSelectedTab(
-                customTabSessionId
-            )?.content?.firstContentfulPaint ?: false
+        if (components.settings.waitToShowPageUntilFirstPaint) {
+            val tab = components.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)
+            tab?.content?.firstContentfulPaint ?: false
+        } else {
+            true
+        }
 
     /*
      * Dereference these views when the fragment view is destroyed to prevent memory leaks

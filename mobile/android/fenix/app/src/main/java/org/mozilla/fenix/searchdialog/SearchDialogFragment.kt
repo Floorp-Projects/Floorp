@@ -99,12 +99,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     ): View? {
         val args by navArgs<SearchDialogFragmentArgs>()
         val view = inflater.inflate(R.layout.fragment_search_dialog, container, false)
+        val activity = requireActivity() as HomeActivity
 
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
 
         store = SearchDialogFragmentStore(
             createInitialSearchFragmentState(
-                activity as HomeActivity,
+                activity,
                 requireComponents,
                 tabId = args.sessionId,
                 pastedText = args.pastedText,
@@ -114,7 +115,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         interactor = SearchDialogInteractor(
             SearchDialogController(
-                activity = requireActivity() as HomeActivity,
+                activity = activity,
                 sessionManager = requireComponents.core.sessionManager,
                 store = store,
                 navController = findNavController(),
@@ -137,7 +138,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         ).also(::addSearchButton)
 
         awesomeBarView = AwesomeBarView(
-            requireContext(),
+            activity,
             interactor,
             view.awesome_bar
         )
