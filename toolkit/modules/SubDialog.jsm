@@ -754,9 +754,13 @@ SubDialog.prototype = {
     this._untrapFocus();
   },
 
-  _trapFocus() {
+  focus() {
     let fm = Services.focus;
     fm.moveFocus(this._frame.contentWindow, null, fm.MOVEFOCUS_FIRST, 0);
+  },
+
+  _trapFocus() {
+    this.focus();
     this._box.addEventListener("keydown", this, true);
     this._closeButton?.addEventListener("keydown", this);
 
@@ -909,6 +913,10 @@ class SubDialogManager {
       return false;
     }
     return this._dialogs.some(dialog => !dialog._isClosing);
+  }
+
+  focusTopDialog() {
+    this._topDialog?.focus();
   }
 
   handleEvent(aEvent) {
