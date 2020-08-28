@@ -176,7 +176,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   static void Init();
   static LogModule* GetLog();
-  static void CleanupContexts(uint64_t aProcessId);
 
   // Look up a BrowsingContext in the current process by ID.
   static already_AddRefed<BrowsingContext> Get(uint64_t aId);
@@ -226,6 +225,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // process? This may be true with a null mDocShell after the Window has been
   // closed.
   bool IsInProcess() const { return mIsInProcess; }
+
+  bool IsOwnedByProcess() const;
 
   bool CanHaveRemoteOuterProxies() const {
     return !mIsInProcess || mDanglingRemoteOuterProxies;
