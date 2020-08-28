@@ -72,8 +72,8 @@ module.exports = Object.assign(
     "devtools-modules/src/menu/menu-item":
       "devtools/client/framework/menu-item",
     "devtools-services": "Services",
-    "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
-    "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
+    "wasmparser/dist/cjs/WasmParser": "devtools/client/shared/vendor/WasmParser",
+    "wasmparser/dist/cjs/WasmDis": "devtools/client/shared/vendor/WasmDis",
     "whatwg-url": `var ${whatwgUrl}`,
   },
   EXCLUDED_FILES

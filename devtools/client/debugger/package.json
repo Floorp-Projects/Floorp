@@ -74,7 +74,7 @@
     "redux": "4.0.5",
     "reselect": "^4.0.0",
     "svg-inline-react": "^3.0.0",
-    "wasmparser": "^0.10.0",
+    "wasmparser": "^3.1.1",
     "whatwg-url": "^7.0.0"
   },
   "private": true,
