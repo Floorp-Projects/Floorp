@@ -1172,6 +1172,12 @@ class Element : public FragmentOrElement {
    */
   void GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements);
 
+  /**
+   * Provide a direct way to determine if this Element has visible
+   * scrollbars. Flushes layout.
+   */
+  MOZ_CAN_RUN_SCRIPT bool HasVisibleScrollbars();
+
  private:
   /**
    * Implement the algorithm specified at
