@@ -48,7 +48,8 @@ inline LauncherResult<_bstr_t> UrlmonValidateUri(const wchar_t* aUri) {
       Uri_CREATE_CRACK_UNKNOWN_SCHEMES | Uri_CREATE_PRE_PROCESS_HTML_URI |
       Uri_CREATE_IE_SETTINGS;
   RefPtr<IUri> uri;
-  HRESULT hr = CreateUri(aUri, flags, 0, getter_AddRefs(uri));
+  HRESULT hr;
+  SAFECALL_URLMON_FUNC(CreateUri, aUri, flags, 0, getter_AddRefs(uri));
   if (FAILED(hr)) {
     return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }

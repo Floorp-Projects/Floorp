@@ -302,9 +302,9 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   if (widget::WinUtils::PreparePathForTelemetry(strSanitizedPath, flags)) {
     DWORD cchDecodedUrl = INTERNET_MAX_URL_LENGTH;
     WCHAR szOut[INTERNET_MAX_URL_LENGTH];
-    HRESULT hr =
-        ::CoInternetParseUrl(fileName.get(), PARSE_SCHEMA, 0, szOut,
-                             INTERNET_MAX_URL_LENGTH, &cchDecodedUrl, 0);
+    HRESULT hr;
+    SAFECALL_URLMON_FUNC(CoInternetParseUrl, fileName.get(), PARSE_SCHEMA, 0,
+                         szOut, INTERNET_MAX_URL_LENGTH, &cchDecodedUrl, 0);
     if (hr == S_OK && cchDecodedUrl) {
       nsAutoString sanitizedPathAndScheme;
       sanitizedPathAndScheme.Append(szOut);
