@@ -67,7 +67,7 @@ class MercurialNativeRevisionFinder(BaseFinder):
 
         self._repo = repo
         self._rev = rev
-        self._root = mozpath.normpath(path)
+        self._root = mozpath.normpath(path).rstrip('/')
         self._recognize_repo_paths = recognize_repo_paths
 
     def _find(self, pattern):
@@ -77,6 +77,7 @@ class MercurialNativeRevisionFinder(BaseFinder):
         return self._find_helper(pattern, self._repo[self._rev], self._get)
 
     def get(self, path):
+        path = mozpath.normpath(path)
         if self._recognize_repo_paths:
             if not path.startswith(self._root):
                 raise ValueError('lookups in recognize_repo_paths mode must be '
