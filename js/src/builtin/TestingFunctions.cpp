@@ -3225,12 +3225,6 @@ static bool GetJitCompilerOptions(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool IsWarpEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(jit::JitOptions.warpBuilder);
-  return true;
-}
-
 static bool SetIonCheckGraphCoherency(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   jit::JitOptions.checkGraphConsistency = ToBoolean(args.get(0));
@@ -6462,10 +6456,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("getJitCompilerOptions", GetJitCompilerOptions, 0, 0,
 "getJitCompilerOptions()",
 "  Return an object describing some of the JIT compiler options.\n"),
-
-JS_FN_HELP("isWarpEnabled", IsWarpEnabled, 0, 0,
-"isWarpEnabled()",
-"  Return true if the Warp compiler is enabled.\n"),
 
     JS_FN_HELP("isAsmJSModule", IsAsmJSModule, 1, 0,
 "isAsmJSModule(fn)",
