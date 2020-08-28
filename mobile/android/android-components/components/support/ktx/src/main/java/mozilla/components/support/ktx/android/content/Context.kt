@@ -80,7 +80,7 @@ fun Context.hasCamera(): Boolean {
     return try {
         val cameraManager: CameraManager? = getSystemService()
         cameraManager?.cameraIdList?.isNotEmpty() ?: false
-    } catch (e: Exception) {
+    } catch (_: Throwable) {
         false
     }
 }
