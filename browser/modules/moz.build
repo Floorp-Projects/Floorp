@@ -131,7 +131,6 @@ EXTRA_JS_MODULES += [
     'BrowserUsageTelemetry.jsm',
     'BrowserWindowTracker.jsm',
     'ContentCrashHandlers.jsm',
-    'ContentObservers.js',
     'Discovery.jsm',
     'EveryWindow.jsm',
     'ExtensionsUI.jsm',

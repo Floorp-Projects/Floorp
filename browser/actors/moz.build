@@ -55,6 +55,8 @@ FINAL_TARGET_FILES.actors += [
     'ContentSearchParent.jsm',
     'ContextMenuChild.jsm',
     'ContextMenuParent.jsm',
+    'DecoderDoctorChild.jsm',
+    'DecoderDoctorParent.jsm',
     'DOMFullscreenChild.jsm',
     'DOMFullscreenParent.jsm',
     'EncryptedMediaChild.jsm',
