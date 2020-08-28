@@ -34,6 +34,9 @@ permalink: /changelog/
 * **feature-prompts**
   * Replaced generic icon in `LoginDialogFragment` with site icon (keep the generic one as fallback)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * 🚒 Bug fixed [issue #8240](https://github.com/mozilla-mobile/android-components/issues/8240) Crash when dismissing Share dialog.
+
 * **feature-downloads**
   * ⚠️ **This is a breaking change**: `AndroidDownloadManager.download` returns a `Strings`, `AndroidDownloadManager.tryAgain` requires a `Strings` `id` parameter.
   * ⚠️ **This is a breaking change**: `ConsumeDownloadAction` requires a `Strings` `id` parameter.
