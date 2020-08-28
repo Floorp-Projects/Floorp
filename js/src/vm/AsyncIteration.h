@@ -15,6 +15,270 @@
 #include "vm/List.h"
 #include "vm/PromiseObject.h"
 
+// [SMDOC] Async generators
+//
+// # Start
+//
+// When an async generator is called, it synchronously runs until the
+// JSOp::InitialYield and then suspends, just like a sync generator, and returns
+// an async generator object (js::AsyncGeneratorObject).
+//
+//
+// # Request queue
+//
+// When next/return/throw is called on the async generator object,
+// js::AsyncGeneratorEnqueue performs the following:
+//   * Create a new AsyncGeneratorRequest and enqueue it in the generator
+//     object's request queue.
+//   * Resume the generator with the oldest request, if the generator is
+//     suspended (see "Resume" section below)
+//   * Return the promise for the request
+//
+// This is done in js::AsyncGeneratorEnqueue, which corresponds to
+// AsyncGeneratorEnqueue in the spec,
+// and js::AsyncGeneratorResumeNext corresponds to the following:
+//   * AsyncGeneratorResolve
+//   * AsyncGeneratorReject
+//   * AsyncGeneratorResumeNext
+//
+// The returned promise is resolved when the resumption for the request
+// completes with yield/throw/return, in js::AsyncGeneratorResolve and
+// js::AsyncGeneratorReject.
+// They correspond to AsyncGeneratorResolve and AsyncGeneratorReject in the
+// spec.
+//
+//
+// # Await
+//
+// Async generator's `await` is implemented differently than async function's
+// `await`.
+//
+// The bytecode is the following:
+// (ignoring TrySkipAwait; see the comment in AsyncFunction.h for more details)
+//
+// ```
+//   (operand here)                  # VALUE
+//   GetAliasedVar ".generator"      # VALUE .generator
+//   Await 0                         # RVAL GENERATOR RESUMEKIND
+//
+//   AfterYield                      # RVAL GENERATOR RESUMEKIND
+//   CheckResumeKind                 # RVAL
+// ```
+//
+// Async generators don't use JSOp::AsyncAwait, and that part is handled
+// in js::AsyncGeneratorResume, and js::AsyncGeneratorAwait called there.
+//
+// Both JSOp::Await and JSOp::Yield behave in the exactly same way,
+// and js::AsyncGeneratorResume checks the last opcode and branches for
+// await/yield/return cases.
+//
+//
+// # Reaction jobs and resume after await
+//
+// This is almost same as for async functions (see AsyncFunction.h).
+//
+// The reaction record for the job is marked as "this is for async generator"
+// (see js::AsyncGeneratorAwait), and handled specially in
+// js::PromiseReactionJob, which calls js::AsyncGeneratorPromiseReactionJob.
+//
+//
+// # Yield
+//
+// `yield` is implemented with the following bytecode sequence:
+// (Ignoring TrySkipAwait for simplicity)
+//
+// ```
+//   (operand here)                  # VALUE
+//   GetAliasedVar ".generator"      # VALUE .generator
+//   Await 1                         # RVAL GENERATOR RESUMEKIND
+//   AfterYield                      # RVAL GENERATOR RESUMEKIND
+//   CheckResumeKind                 # RVAL
+//
+//   GetAliasedVar ".generator"      # RVAL .generator
+//   Yield 2                         # RVAL2 GENERATOR RESUMEKIND
+//
+//   AfterYield                      # RVAL2 GENERATOR RESUMEKIND
+//   CheckResumeKind                 # RVAL2
+// ```
+//
+// The 1st part (JSOp::Await + JSOp::CheckResumeKind) performs an implicit
+// `await`, as specified in AsyncGeneratorYield step 5.
+//
+// AsyncGeneratorYield ( value )
+// https://tc39.es/ecma262/#sec-asyncgeneratoryield
+//
+//   5. Set value to ? Await(value).
+//
+// The 2nd part (JSOp::Yield) suspends execution and yields the result of
+// `await`, as specified in AsyncGeneratorYield steps 1-4, 6-7, 9-10.
+//
+// AsyncGeneratorYield ( value )
+// https://tc39.es/ecma262/#sec-asyncgeneratoryield
+//
+//   1. Let genContext be the running execution context.
+//   2. Assert: genContext is the execution context of a generator.
+//   3. Let generator be the value of the Generator component of genContext.
+//   4. Assert: GetGeneratorKind() is async.
+//   ..
+//   6. Set generator.[[AsyncGeneratorState]] to suspendedYield.
+//   7. Remove genContext from the execution context stack and restore the
+//      execution context that is at the top of the execution context stack as
+//      the running execution context.
+//   8. ...
+//   9. Return ! AsyncGeneratorResolve(generator, value, false).
+//   10. NOTE: This returns to the evaluation of the operation that had most
+//       previously resumed evaluation of genContext.
+//
+// The last part (JSOp::CheckResumeKind) checks the resumption type and
+// resumes/throws/returns the execution, as specified in AsyncGeneratorYield
+// step 8.
+//
+//   8. Set the code evaluation state of genContext such that when evaluation is
+//      resumed with a Completion resumptionValue the following steps will be
+//      performed:
+//     a. If resumptionValue.[[Type]] is not return, return
+//        Completion(resumptionValue).
+//     b. Let awaited be Await(resumptionValue.[[Value]]).
+//     c. If awaited.[[Type]] is throw, return Completion(awaited).
+//     d. Assert: awaited.[[Type]] is normal.
+//     e. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]],
+//        [[Target]]: empty }.
+//     f. NOTE: When one of the above steps returns, it returns to the
+//        evaluation of the YieldExpression production that originally called
+//        this abstract operation.
+//
+// Resumption with `AsyncGenerator.prototype.return` is handled differently.
+// See "Resumption with return" section below.
+//
+//
+// # Return
+//
+// `return` with operand is implemented with the following bytecode sequence:
+// (Ignoring TrySkipAwait for simplicity)
+//
+// ```
+//   (operand here)                  # VALUE
+//   GetAliasedVar ".generator"      # VALUE .generator
+//   Await 0                         # RVAL GENERATOR RESUMEKIND
+//   AfterYield                      # RVAL GENERATOR RESUMEKIND
+//   CheckResumeKind                 # RVAL
+//
+//   SetRval                         #
+//   GetAliasedVar ".generator"      # .generator
+//   FinalYieldRval                  #
+// ```
+//
+// The 1st part (JSOp::Await + JSOp::CheckResumeKind) performs implicit
+// `await`, as specified in ReturnStatement's Evaluation step 3.
+//
+// ReturnStatement: return Expression;
+// https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation
+//
+//   3. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
+//
+// And the 2nd part corresponds to AsyncGeneratorStart steps 5.a-e, 5.g.
+//
+// AsyncGeneratorStart ( generator, generatorBody )
+// https://tc39.es/ecma262/#sec-asyncgeneratorstart
+//
+//   5. Set the code evaluation state of genContext such that when evaluation
+//      is resumed for that execution context the following steps will be
+//      performed:
+//     a. Let result be the result of evaluating generatorBody.
+//     b. Assert: If we return here, the async generator either threw an
+//        exception or performed either an implicit or explicit return.
+//     c. Remove genContext from the execution context stack and restore the
+//        execution context that is at the top of the execution context stack
+//        as the running execution context.
+//     d. Set generator.[[AsyncGeneratorState]] to completed.
+//     e. If result is a normal completion, let resultValue be undefined.
+//     ...
+//     g. Return ! AsyncGeneratorResolve(generator, resultValue, true).
+//
+// `return` without operand or implicit return is implicit with the following
+// bytecode sequence:
+//
+// ```
+//   Undefined                       # undefined
+//   SetRval                         #
+//   GetAliasedVar ".generator"      # .generator
+//   FinalYieldRval                  #
+// ```
+//
+// This is also AsyncGeneratorStart steps 5.a-e, 5.g.
+//
+//
+// # Throw
+//
+// Unlike async function, async generator doesn't use implicit try-catch,
+// but the throw completion is handled by js::AsyncGeneratorResume,
+// and js::AsyncGeneratorThrown is called there.
+//
+//   5. ...
+//     f. Else,
+//       i. Let resultValue be result.[[Value]].
+//       ii. If result.[[Type]] is not return, then
+//         1. Return ! AsyncGeneratorReject(generator, resultValue).
+//
+//
+// # Resumption with return
+//
+// Resumption with return completion is handled in js::AsyncGeneratorResumeNext.
+//
+// If the generator is suspended, it doesn't immediately resume the generator
+// script itself, but handles implicit `await` it in
+// js::AsyncGeneratorResumeNext.
+// (See PromiseHandlerAsyncGeneratorYieldReturnAwaitedFulfilled and
+// PromiseHandlerAsyncGeneratorYieldReturnAwaitedRejected), and resumes the
+// generator with the result of await.
+// And the return completion is finally handled in JSOp::CheckResumeKind
+// after JSOp::Yield.
+//
+// This corresponds to AsyncGeneratorYield step 8.
+//
+// AsyncGeneratorYield ( value )
+// https://tc39.es/ecma262/#sec-asyncgeneratoryield
+//
+//   8. Set the code evaluation state of genContext such that when evaluation
+//      is resumed with a Completion resumptionValue the following steps will
+//      be performed:
+//     ..
+//     b. Let awaited be Await(resumptionValue.[[Value]]).
+//     c. If awaited.[[Type]] is throw, return Completion(awaited).
+//     d. Assert: awaited.[[Type]] is normal.
+//     e. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]],
+//        [[Target]]: empty }.
+//
+// If the generator is already completed, it awaits on the return value,
+// (See PromiseHandlerAsyncGeneratorResumeNextReturnFulfilled and
+//  PromiseHandlerAsyncGeneratorResumeNextReturnRejected), and resolves the
+// request's promise with the value.
+//
+// It corresponds to AsyncGeneratorResumeNext step 10.b.i.
+//
+// AsyncGeneratorResumeNext ( generator )
+// https://tc39.es/ecma262/#sec-asyncgeneratorresumenext
+//
+//   10. If completion is an abrupt completion, then
+//     ..
+//     b. If state is completed, then
+//       i. If completion.[[Type]] is return, then
+//         1. Set generator.[[AsyncGeneratorState]] to awaiting-return.
+//         2. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
+//         3. Let stepsFulfilled be the algorithm steps defined in
+//            AsyncGeneratorResumeNext Return Processor Fulfilled Functions.
+//         4. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, «
+//            [[Generator]] »).
+//         5. Set onFulfilled.[[Generator]] to generator.
+//         6. Let stepsRejected be the algorithm steps defined in
+//            AsyncGeneratorResumeNext Return Processor Rejected Functions.
+//         7. Let onRejected be ! CreateBuiltinFunction(stepsRejected, «
+//            [[Generator]] »).
+//         8. Set onRejected.[[Generator]] to generator.
+//         9. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
+//         10. Return undefined.
+//
+
 namespace js {
 
 class AsyncGeneratorObject;
