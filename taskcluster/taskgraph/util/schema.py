@@ -50,15 +50,21 @@ def optionally_keyed_by(*arguments):
     schema = arguments[-1]
     fields = arguments[:-1]
 
-    # build the nestable schema by generating schema = Any(schema,
-    # by-fld1, by-fld2, by-fld3) once for each field.  So we don't allow
-    # infinite nesting, but one level of nesting for each field.
-    for _ in arguments:
-        options = [schema]
-        for field in fields:
-            options.append({'by-' + field: {text_type: schema}})
-        schema = voluptuous.Any(*options)
-    return schema
+    def validator(obj):
+        if isinstance(obj, dict) and len(obj) == 1:
+            k, v = list(obj.items())[0]
+            if k.startswith('by-') and k[len('by-'):] in fields:
+                res = {}
+                for kk, vv in v.items():
+                    try:
+                        res[kk] = validator(vv)
+                    except voluptuous.Invalid as e:
+                        e.prepend([k, kk])
+                        raise
+                return res
+        return Schema(schema)(obj)
+
+    return validator
 
 
 def resolve_keyed_by(item, field, item_name, defer=None, **extra_values):
