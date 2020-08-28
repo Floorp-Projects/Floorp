@@ -604,6 +604,14 @@ auto ErrToOkOrErr(nsresult aValue) -> Result<V, nsresult> {
   return Err(aValue);
 }
 
+template <nsresult ErrorValue, typename V>
+auto ErrToDefaultOkOrErr(nsresult aValue) -> Result<V, nsresult> {
+  if (aValue == ErrorValue) {
+    return V{};
+  }
+  return Err(aValue);
+}
+
 // TODO: Maybe move this to mfbt/ResultExtensions.h
 template <typename R, typename Func, typename... Args>
 Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {

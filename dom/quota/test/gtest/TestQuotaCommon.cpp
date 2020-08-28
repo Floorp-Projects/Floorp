@@ -414,6 +414,35 @@ TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr_Err)
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
 
+TEST(QuotaCommon_ErrToDefaultOkOrErr, Ok)
+{
+  auto res = ErrToDefaultOkOrErr<NS_ERROR_FAILURE, Ok>(NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+}
+
+TEST(QuotaCommon_ErrToDefaultOkOrErr, Ok_Err)
+{
+  auto res = ErrToDefaultOkOrErr<NS_ERROR_FAILURE, Ok>(NS_ERROR_UNEXPECTED);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
+}
+
+TEST(QuotaCommon_ErrToDefaultOkOrErr, NsresultToNsCOMPtr)
+{
+  auto res = ErrToDefaultOkOrErr<NS_ERROR_FAILURE, nsCOMPtr<nsISupports>>(
+      NS_ERROR_FAILURE);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), nullptr);
+}
+
+TEST(QuotaCommon_ErrToDefaultOkOrErr, NsresultToNsCOMPtr_Err)
+{
+  auto res = ErrToDefaultOkOrErr<NS_ERROR_FAILURE, nsCOMPtr<nsISupports>>(
+      NS_ERROR_UNEXPECTED);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
+}
+
 class StringPairParameterized
     : public ::testing::TestWithParam<std::pair<const char*, const char*>> {};
 
