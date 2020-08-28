@@ -2,7 +2,12 @@
 
 # CANCELLED
 
-`CANCELLED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L68)
+`CANCELLED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L70)
 
 Indicates that the download that has been [DOWNLOADING](-d-o-w-n-l-o-a-d-i-n-g.md) has been cancelled.
 
+### Inherited Properties
+
+| Name | Summary |
+|---|---|
+| [id](id.md) | `val id: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

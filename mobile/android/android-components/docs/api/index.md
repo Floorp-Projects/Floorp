@@ -267,6 +267,7 @@
 | [mozilla.components.support.ktx.android.widget](mozilla.components.support.ktx.android.widget/index.md) |  |
 | [mozilla.components.support.ktx.java.io](mozilla.components.support.ktx.java.io/index.md) |  |
 | [mozilla.components.support.ktx.kotlin](mozilla.components.support.ktx.kotlin/index.md) |  |
+| [mozilla.components.support.ktx.kotlinx.coroutines](mozilla.components.support.ktx.kotlinx.coroutines/index.md) |  |
 | [mozilla.components.support.ktx.kotlinx.coroutines.flow](mozilla.components.support.ktx.kotlinx.coroutines.flow/index.md) |  |
 | [mozilla.components.support.ktx.util](mozilla.components.support.ktx.util/index.md) |  |
 | [mozilla.components.support.locale](mozilla.components.support.locale/index.md) |  |

@@ -2,7 +2,7 @@
 
 # submitCrashTelemetry
 
-`fun submitCrashTelemetry(crash: `[`Crash`](../-crash/index.md)`, then: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L129)
+`fun submitCrashTelemetry(crash: `[`Crash`](../-crash/index.md)`, then: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L137)
 
 Submit a crash report to all registered telemetry services.
 

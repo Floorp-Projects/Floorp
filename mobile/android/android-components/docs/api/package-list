@@ -351,6 +351,7 @@ mozilla.components.support.ktx.android.view
 mozilla.components.support.ktx.android.widget
 mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
+mozilla.components.support.ktx.kotlinx.coroutines
 mozilla.components.support.ktx.kotlinx.coroutines.flow
 mozilla.components.support.ktx.util
 mozilla.components.support.locale

@@ -2,7 +2,12 @@
 
 # INITIATED
 
-`INITIATED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L56)
+`INITIATED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L58)
 
 Indicates that the download is in the first state after creation but not yet [DOWNLOADING](-d-o-w-n-l-o-a-d-i-n-g.md).
 
+### Inherited Properties
+
+| Name | Summary |
+|---|---|
+| [id](id.md) | `val id: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
