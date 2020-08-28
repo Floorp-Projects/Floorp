@@ -914,6 +914,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     const actor = this._getStyleSheetActor(resourceId);
     return actor.getText();
   },
+
+  update(resourceId, text, transition) {
+    const actor = this._getStyleSheetActor(resourceId);
+    return actor.update(text, transition);
+  },
 });
 
 exports.StyleSheetsActor = StyleSheetsActor;

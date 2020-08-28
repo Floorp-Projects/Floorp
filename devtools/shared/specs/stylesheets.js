@@ -62,6 +62,7 @@ const styleSheetSpec = generateActorSpec({
         mediaRules: RetVal("nullable:array:mediarule"),
       },
     },
+    // Backward-compatibility: remove when FF81 hits release.
     update: {
       request: {
         text: Arg(0, "string"),
@@ -108,6 +109,14 @@ const styleSheetsSpec = generateActorSpec({
     getText: {
       request: { resourceId: Arg(0, "string") },
       response: { text: RetVal("longstring") },
+    },
+    update: {
+      request: {
+        resourceId: Arg(0, "string"),
+        text: Arg(1, "string"),
+        transition: Arg(2, "boolean"),
+      },
+      response: {},
     },
   },
 });
