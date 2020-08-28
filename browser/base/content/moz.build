@@ -139,9 +139,6 @@ with Files("browser-fullZoom.js"):
 with Files("browser-gestureSupport.js"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
-with Files("browser-media.js"):
-    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
-
 with Files("browser-pageActions.js"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
