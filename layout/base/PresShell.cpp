@@ -6646,8 +6646,12 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
           mPresContext, aEvent->mWidget, aEvent->mRefPoint, rootView);
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     } else {
+      RelativeTo relativeTo{rootFrame};
+      if (rootFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
+        relativeTo.mViewportType = ViewportType::Visual;
+      }
       mMouseLocation = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-          aEvent, RelativeTo{rootFrame, ViewportType::Visual});
+          aEvent, relativeTo);
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     }
     mMouseLocationWasSetBySynthesizedMouseEventForTests =
