@@ -89,7 +89,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceTiming.h"
-#include "mozilla/dom/PerformancePaintTiming.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "MobileViewportManager.h"
 #include "mozilla/dom/ImageTracker.h"
@@ -190,7 +189,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mInflationDisabledForShrinkWrap(false),
       mInteractionTimeEnabled(true),
       mHasPendingInterrupt(false),
-      mHasEverBuiltInvisibleText(false),
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),
       mSendAfterPaintToContent(false),
@@ -2369,8 +2367,7 @@ void nsPresContext::NotifyNonBlankPaint() {
   }
 }
 
-void nsPresContext::NotifyContentfulPaint(
-    const mozilla::TimeStamp& aTimeStamp) {
+void nsPresContext::NotifyContentfulPaint() {
   if (!mHadContentfulPaint) {
 #if defined(MOZ_WIDGET_ANDROID)
     (new AsyncEventDispatcher(mDocument, u"MozFirstContentfulPaint"_ns,
@@ -2378,18 +2375,10 @@ void nsPresContext::NotifyContentfulPaint(
         ->PostDOMEvent();
 #endif
     mHadContentfulPaint = true;
-    if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
-      mFirstContentfulPaintTransactionId =
-          Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
-      nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow();
-      if (innerWindow) {
-        mozilla::dom::Performance* perf = innerWindow->GetPerformance();
-        if (perf) {
-          RefPtr<PerformancePaintTiming> paintTiming =
-              new PerformancePaintTiming(perf, u"first-contentful-paint"_ns,
-                                         aTimeStamp);
-          perf->SetFCPTimingEntry(paintTiming);
-        }
+    if (IsRootContentDocument()) {
+      if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
+        mFirstContentfulPaintTransactionId =
+            Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
       }
     }
   }
