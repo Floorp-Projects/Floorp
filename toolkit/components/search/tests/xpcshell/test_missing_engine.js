@@ -63,7 +63,11 @@ add_task(async function setup() {
 });
 
 add_task(async function test_startup_with_missing() {
-  configurationStub = await useTestEngines("data", null, BAD_CONFIG);
+  configurationStub = await SearchTestUtils.useTestEngines(
+    "data",
+    null,
+    BAD_CONFIG
+  );
 
   const result = await Services.search.init();
   Assert.ok(

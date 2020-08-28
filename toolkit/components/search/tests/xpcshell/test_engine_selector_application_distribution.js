@@ -67,7 +67,7 @@ const CONFIG = [
 
 const engineSelector = new SearchEngineSelector();
 add_task(async function setup() {
-  await useTestEngines("data", null, CONFIG);
+  await SearchTestUtils.useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
 });
 

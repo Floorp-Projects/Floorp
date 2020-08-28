@@ -64,7 +64,7 @@ add_task(async function setup() {
   );
 
   SearchTestUtils.useMockIdleService();
-  await useTestEngines("data", null, CONFIG);
+  await SearchTestUtils.useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
 });
 
