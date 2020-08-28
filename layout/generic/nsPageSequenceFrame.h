@@ -40,6 +40,11 @@ class nsSharedPageData {
   // that it's reflowed the final page):
   int32_t mRawNumPages = 0;
 
+  // Page range info (only relevant if mDoingPageRange is true):
+  int32_t mFromPageNum = 0;
+  int32_t mToPageNum = 0;
+  nsTArray<int32_t> mPageRanges;
+
   // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX
   // and 0 elsewhere; I think it has to do with some inconsistency in page size
   // computations
@@ -51,6 +56,9 @@ class nsSharedPageData {
   // the minimum "ComputedWidth / OverflowWidth" ratio of all page content
   // frames that overflowed.  It's 1.0 if none overflowed horizontally.
   float mShrinkToFitRatio = 1.0f;
+
+  // True if the current print operation uses one or more print ranges:
+  bool mDoingPageRange = false;
 };
 
 // Page sequence frame class. Manages a series of pages, in paginated mode.
@@ -89,7 +97,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   void ResetPrintCanvasList();
   int32_t GetCurrentPageNum() const { return mPageNum; }
   int32_t GetRawNumPages() const { return mPageData->mRawNumPages; }
-  bool IsDoingPrintRange() const { return mDoingPageRange; }
+  bool IsDoingPrintRange() const { return mPageData->mDoingPageRange; }
   void GetPrintRange(int32_t* aFromPage, int32_t* aToPage) const;
   nsresult DoPageEnd();
 
@@ -152,15 +160,11 @@ class nsPageSequenceFrame final : public nsContainerFrame {
 
   // Async Printing
   int32_t mPageNum;
-  int32_t mFromPageNum;
-  int32_t mToPageNum;
 
-  nsTArray<int32_t> mPageRanges;
   nsTArray<RefPtr<mozilla::dom::HTMLCanvasElement> > mCurrentCanvasList;
 
   // Asynch Printing
   bool mPrintThisPage;
-  bool mDoingPageRange;
 
   bool mCalledBeginPage;
 
