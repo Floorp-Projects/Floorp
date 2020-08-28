@@ -2553,3 +2553,6 @@ ysod:
       - vchin@mozilla.com
     objects:
       - "ysod"
+    extra_keys:
+      error_code: Code of the XML Error (See `XML_Error` enum in expat.h for the list of errors where XML_ERROR_NONE is 0).
+      location: Location as Row:Column of where the error happened.
