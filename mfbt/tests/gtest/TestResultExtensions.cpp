@@ -71,6 +71,20 @@ class RefCountedTestClass {
  private:
   ~RefCountedTestClass() = default;
 };
+
+// Check that DerefedType deduces the types as expected
+static_assert(std::is_same_v<mozilla::detail::DerefedType<RefCountedTestClass&>,
+                             RefCountedTestClass>);
+static_assert(std::is_same_v<mozilla::detail::DerefedType<RefCountedTestClass*>,
+                             RefCountedTestClass>);
+static_assert(
+    std::is_same_v<mozilla::detail::DerefedType<RefPtr<RefCountedTestClass>>,
+                   RefCountedTestClass>);
+
+static_assert(std::is_same_v<mozilla::detail::DerefedType<nsIFile&>, nsIFile>);
+static_assert(std::is_same_v<mozilla::detail::DerefedType<nsIFile*>, nsIFile>);
+static_assert(
+    std::is_same_v<mozilla::detail::DerefedType<nsCOMPtr<nsIFile>>, nsIFile>);
 }  // namespace
 
 TEST(ResultExtensions_ToResultInvoke, Lambda)
@@ -413,8 +427,42 @@ TEST(ResultExtensions_ToResultInvoke, RefPtr_MemberFunction_NoInput_Macro)
   }
 }
 
+TEST(ResultExtensions_ToResultInvoke, RawPtr_MemberFunction_NoInput_Macro)
+{
+  auto foo = MakeRefPtr<RefCountedTestClass>();
+  auto* fooPtr = foo.get();
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(fooPtr, NonOverloadedNoInput);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ(TestClass::kTestValue, valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE(fooPtr, NonOverloadedNoInputFails);
+    static_assert(std::is_same_v<decltype(valOrErr), Result<int, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
 TEST(ResultExtensions_ToResultInvoke, nsCOMPtr_NS_IMETHOD_bool_Result)
 {
   nsCOMPtr<nsIFile> file = MakeAndAddRef<nsLocalFile>();
   ASSERT_TRUE(ToResultInvoke(file, &nsIFile::Equals, file).isOk());
+}
+
+TEST(ResultExtensions_ToResultInvoke,
+     RawPtr_AbstractClass_MemberFunction_NoInput_Macro)
+{
+  nsCOMPtr<nsIFile> file = MakeAndAddRef<nsLocalFile>();
+  auto* filePtr = file.get();
+
+  auto valOrErr = MOZ_TO_RESULT_INVOKE(filePtr, Equals, file);
+  static_assert(std::is_same_v<decltype(valOrErr), Result<bool, nsresult>>);
+  ASSERT_TRUE(valOrErr.isOk());
+  ASSERT_EQ(true, valOrErr.unwrap());
 }
