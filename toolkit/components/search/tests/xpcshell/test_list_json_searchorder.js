@@ -13,7 +13,7 @@ add_task(async function setup() {
     true
   );
 
-  await useTestEngines();
+  await SearchTestUtils.useTestEngines();
   await Services.search.init();
 });
 

@@ -10,7 +10,7 @@
 add_task(async function setup() {
   Region._setHomeRegion("an", false);
   await AddonTestUtils.promiseStartupManager();
-  await useTestEngines("test-extensions");
+  await SearchTestUtils.useTestEngines("test-extensions");
 });
 
 function promiseDefaultNotification() {
