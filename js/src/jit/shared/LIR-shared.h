@@ -8001,6 +8001,26 @@ class LIsPackedArray : public LInstructionHelper<1, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LGuardArrayIsPacked : public LInstructionHelper<0, 1, 2> {
+ public:
+  LIR_HEADER(GuardArrayIsPacked)
+
+  explicit LGuardArrayIsPacked(const LAllocation& array,
+                               const LDefinition& temp1,
+                               const LDefinition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, array);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LAllocation* array() { return getOperand(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+
+  MGuardArrayIsPacked* mir() { return mir_->toGuardArrayIsPacked(); }
+};
+
 class LGetPrototypeOf : public LInstructionHelper<BOX_PIECES, 1, 0> {
  public:
   LIR_HEADER(GetPrototypeOf)

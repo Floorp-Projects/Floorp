@@ -14701,6 +14701,16 @@ void CodeGenerator::visitIsPackedArray(LIsPackedArray* lir) {
   masm.setIsPackedArray(obj, output, temp);
 }
 
+void CodeGenerator::visitGuardArrayIsPacked(LGuardArrayIsPacked* lir) {
+  Register array = ToRegister(lir->array());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+
+  Label bail;
+  masm.branchArrayIsNotPacked(array, temp1, temp2, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir) {
   Register target = ToRegister(lir->target());
   ValueOperand out = ToOutValue(lir);
