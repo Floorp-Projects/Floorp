@@ -46,13 +46,15 @@ const OPEN_WINDOW_FUNCS = [
   function openNewTab() {
     return new Promise(resolve => {
       var win = window.open("about:blank");
-      resolve(win);
+      win.addEventListener("load", () => {
+        resolve(win);
+      }, { once: true });
     });
   },
   function openNewWindow() {
     return new Promise(resolve => {
       var win = window.open("about:blank", "", "width=300,height=200");
-      win.addEventListener("MozAfterPaint", () => {
+      win.addEventListener("load", () => {
         resolve(win);
       }, { once: true });
     });

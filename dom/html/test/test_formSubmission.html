@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 </head>
-<body>
+<body onload="bodyLoaded()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=523771">Mozilla Bug 523771</a>
 <p id="display"></p>
 <iframe name="target_iframe" id="target_iframe"></iframe>
@@ -404,10 +404,13 @@ const placeholder_myFile2 = {};
 const placeholder_emptyFile = {};
 
 var myFile1, myFile2, emptyFile;
-let openerURL = SimpleTest.getTestFileURL("formSubmission_chrome.js");
-let opener = SpecialPowers.loadChromeScript(openerURL);
+let openerURL, opener;
+var gen;
 
-{
+function bodyLoaded() {
+  openerURL = SimpleTest.getTestFileURL("formSubmission_chrome.js");
+  opener = SpecialPowers.loadChromeScript(openerURL);
+
   let xhr = new XMLHttpRequest;
   xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
   xhr.send();
@@ -418,7 +421,17 @@ let opener = SpecialPowers.loadChromeScript(openerURL);
     basePath + "file_formSubmission_text.txt",
     basePath + "file_formSubmission_img.jpg",
   ]);
+
+  /*
+  * The below test function uses callbacks that invoke gen.next() rather than
+  * creating and resolving Promises.  I'm trying to minimize churn since these
+  * changes want to be uplifted.  Some kind soul might want to clean this all up
+  * at some point.
+  */
+
+  $("target_iframe").onload = function() { gen.next(); };
 }
+
 
 function onFilesOpened(files) {
   let [textFile, imageFile] = files;
@@ -678,14 +691,6 @@ function setDisabled(list, state) {
   });
 }
 
-/*
- * The below test function uses callbacks that invoke gen.next() rather than
- * creating and resolving Promises.  I'm trying to minimize churn since these
- * changes want to be uplifted.  Some kind soul might want to clean this all up
- * at some point.
- */
-var gen;
-$("target_iframe").onload = function() { gen.next(); };
 // Run the suite of tests for this variant, returning a Promise that will be
 // resolved when the batch completes.  Then and only then runTestVariant may
 // be invoked to run a different variation.

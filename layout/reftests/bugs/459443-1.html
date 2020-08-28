@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <body>
+  <body onload="loaded()">
     <iframe id="foo"></iframe> 
     <script type="text/javascript">
-        var n = document.getElementById('foo');
+    function loaded() {
+      var n = document.getElementById('foo');
         var f = n.contentWindow;
         f.document.open();
         f.document.write('');
@@ -17,6 +18,7 @@
           }, 0);
         };
         f.document.close();
+    }
     </script>
   </body>
 </html>
