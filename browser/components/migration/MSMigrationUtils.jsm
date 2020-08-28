@@ -415,8 +415,6 @@ Bookmarks.prototype = {
   migrate: function B_migrate(aCallback) {
     return (async () => {
       // Import to the bookmarks menu.
-      this._histogramBookmarkRoots |=
-        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
       let folderGuid = PlacesUtils.bookmarks.menuGuid;
       await this._migrateFolder(this._favoritesFolder, folderGuid);
       Services.telemetry
@@ -441,6 +439,15 @@ Bookmarks.prototype = {
     if (!bookmarks.length) {
       return;
     }
+
+    if (aDestFolderGuid == PlacesUtils.bookmarks.menuGuid) {
+      this._histogramBookmarkRoots |=
+        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
+    } else if (aDestFolderGuid == PlacesUtils.bookmarks.toolbarGuid) {
+      this._histogramBookmarkRoots |=
+        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
+    }
+
     if (
       !MigrationUtils.isStartupMigration &&
       PlacesUtils.getChildCountForFolder(aDestFolderGuid) >
@@ -474,8 +481,6 @@ Bookmarks.prototype = {
             entry.parent.equals(this._favoritesFolder);
           if (isBookmarksFolder && entry.isReadable()) {
             // Import to the bookmarks toolbar.
-            this._histogramBookmarkRoots |=
-              MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
             let folderGuid = PlacesUtils.bookmarks.toolbarGuid;
             await this._migrateFolder(entry, folderGuid);
             PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
