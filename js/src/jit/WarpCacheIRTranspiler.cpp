@@ -3122,6 +3122,14 @@ bool WarpCacheIRTranspiler::updateCallInfo(MDefinition* callee,
         callInfo_->setArgFormat(CallInfo::ArgFormat::FunApplyArgs);
       }
       break;
+    case CallFlags::FunApplyArray: {
+      MDefinition* argFunc = callInfo_->thisArg();
+      MDefinition* argThis = callInfo_->getArg(0);
+      callInfo_->setCallee(argFunc);
+      callInfo_->setThis(argThis);
+      callInfo_->setArgFormat(CallInfo::ArgFormat::Array);
+      break;
+    }
     default:
       MOZ_CRASH("Unsupported arg format");
   }
@@ -3193,6 +3201,17 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
         call->setNotCrossRealm();
       }
 
+      addEffectful(call);
+      pushResult(call);
+
+      return resumeAfter(call);
+    }
+    case CallInfo::ArgFormat::Array: {
+      MInstruction* call =
+          makeSpreadCall(*callInfo_, flags.isSameRealm(), wrappedTarget);
+      if (!call) {
+        return false;
+      }
       addEffectful(call);
       pushResult(call);
 
