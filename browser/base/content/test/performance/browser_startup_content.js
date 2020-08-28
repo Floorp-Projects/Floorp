@@ -67,7 +67,6 @@ const known_scripts = {
   ]),
   processScripts: new Set([
     "chrome://global/content/process-content.js",
-    "resource:///modules/ContentObservers.js",
     "resource://gre/modules/extensionProcessScriptLoader.js",
   ]),
 };

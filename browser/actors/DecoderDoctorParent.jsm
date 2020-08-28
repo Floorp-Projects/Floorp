@@ -1,42 +1,59 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- mode: js; indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
-const TELEMETRY_DDSTAT_SHOWN = 0;
-const TELEMETRY_DDSTAT_SHOWN_FIRST = 1;
-const TELEMETRY_DDSTAT_CLICKED = 2;
-const TELEMETRY_DDSTAT_CLICKED_FIRST = 3;
-const TELEMETRY_DDSTAT_SOLVED = 4;
+var EXPORTED_SYMBOLS = ["DecoderDoctorParent"];
 
-let gDecoderDoctorHandler = {
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
+  return Services.strings.createBundle(
+    "chrome://browser/locale/browser.properties"
+  );
+});
+
+class DecoderDoctorParent extends JSWindowActorParent {
   getLabelForNotificationBox(type) {
     if (type == "platform-decoder-not-found") {
       if (AppConstants.platform == "win") {
-        return gNavigatorBundle.getString("decoder.noHWAcceleration.message");
+        return gNavigatorBundle.GetStringFromName(
+          "decoder.noHWAcceleration.message"
+        );
       }
       if (AppConstants.platform == "linux") {
-        return gNavigatorBundle.getString("decoder.noCodecsLinux.message");
+        return gNavigatorBundle.GetStringFromName(
+          "decoder.noCodecsLinux.message"
+        );
       }
     }
     if (type == "cannot-initialize-pulseaudio") {
-      return gNavigatorBundle.getString("decoder.noPulseAudio.message");
+      return gNavigatorBundle.GetStringFromName("decoder.noPulseAudio.message");
     }
     if (type == "unsupported-libavcodec" && AppConstants.platform == "linux") {
-      return gNavigatorBundle.getString(
+      return gNavigatorBundle.GetStringFromName(
         "decoder.unsupportedLibavcodec.message"
       );
     }
     if (type == "decode-error") {
-      return gNavigatorBundle.getString("decoder.decodeError.message");
+      return gNavigatorBundle.GetStringFromName("decoder.decodeError.message");
     }
     if (type == "decode-warning") {
-      return gNavigatorBundle.getString("decoder.decodeWarning.message");
+      return gNavigatorBundle.GetStringFromName(
+        "decoder.decodeWarning.message"
+      );
     }
     return "";
-  },
+  }
 
   getSumoForLearnHowButton(type) {
     if (
@@ -49,7 +66,7 @@ let gDecoderDoctorHandler = {
       return "fix-common-audio-and-video-issues";
     }
     return "";
-  },
+  }
 
   getEndpointForReportIssueButton(type) {
     if (type == "decode-error" || type == "decode-warning") {
@@ -59,20 +76,33 @@ let gDecoderDoctorHandler = {
       );
     }
     return "";
-  },
+  }
 
-  receiveMessage({ target: browser, data: data }) {
-    let box = gBrowser.getNotificationBox(browser);
+  receiveMessage(aMessage) {
+    // The top level browsing context's embedding element should be a xul browser element.
+    let browser = this.browsingContext.top.embedderElement;
+    // The xul browser is owned by a window.
+    let window = browser?.ownerGlobal;
+
+    if (!browser || !window) {
+      // We don't have a browser or window so bail!
+      return;
+    }
+
+    let box = browser.getTabBrowser().getNotificationBox(browser);
     let notificationId = "decoder-doctor-notification";
     if (box.getNotificationWithValue(notificationId)) {
+      // We already have a notification showing, bail.
       return;
     }
 
     let parsedData;
     try {
-      parsedData = JSON.parse(data);
+      parsedData = JSON.parse(aMessage.data);
     } catch (ex) {
-      Cu.reportError("Malformed Decoder Doctor message with data: " + data);
+      Cu.reportError(
+        "Malformed Decoder Doctor message with data: " + aMessage.data
+      );
       return;
     }
     // parsedData (the result of parsing the incoming 'data' json string)
@@ -104,7 +134,7 @@ let gDecoderDoctorHandler = {
     if (!/^\w+$/im.test(decoderDoctorReportId)) {
       return;
     }
-    let title = gDecoderDoctorHandler.getLabelForNotificationBox(type);
+    let title = this.getLabelForNotificationBox(type);
     if (!title) {
       return;
     }
@@ -146,11 +176,13 @@ let gDecoderDoctorHandler = {
       }
 
       let buttons = [];
-      let sumo = gDecoderDoctorHandler.getSumoForLearnHowButton(type);
+      let sumo = this.getSumoForLearnHowButton(type);
       if (sumo) {
         buttons.push({
-          label: gNavigatorBundle.getString("decoder.noCodecs.button"),
-          accessKey: gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
+          label: gNavigatorBundle.GetStringFromName("decoder.noCodecs.button"),
+          accessKey: gNavigatorBundle.GetStringFromName(
+            "decoder.noCodecs.accesskey"
+          ),
           callback() {
             let clickedInPref = Services.prefs.getBoolPref(
               buttonClickedPref,
@@ -163,17 +195,17 @@ let gDecoderDoctorHandler = {
             let baseURL = Services.urlFormatter.formatURLPref(
               "app.support.baseURL"
             );
-            openTrustedLinkIn(baseURL + sumo, "tab");
+            window.openTrustedLinkIn(baseURL + sumo, "tab");
           },
         });
       }
-      let endpoint = gDecoderDoctorHandler.getEndpointForReportIssueButton(
-        type
-      );
+      let endpoint = this.getEndpointForReportIssueButton(type);
       if (endpoint) {
         buttons.push({
-          label: gNavigatorBundle.getString("decoder.decodeError.button"),
-          accessKey: gNavigatorBundle.getString(
+          label: gNavigatorBundle.GetStringFromName(
+            "decoder.decodeError.button"
+          ),
+          accessKey: gNavigatorBundle.GetStringFromName(
             "decoder.decodeError.accesskey"
           ),
           callback() {
@@ -197,7 +229,7 @@ let gDecoderDoctorHandler = {
             }
 
             params.append("details", JSON.stringify(details));
-            openTrustedLinkIn(endpoint + "?" + params.toString(), "tab");
+            window.openTrustedLinkIn(endpoint + "?" + params.toString(), "tab");
           },
         });
       }
@@ -215,14 +247,5 @@ let gDecoderDoctorHandler = {
       Services.prefs.clearUserPref(formatsPref);
       Services.prefs.clearUserPref(buttonClickedPref);
     }
-  },
-};
-
-window
-  .getGroupMessageManager("browsers")
-  .addMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
-window.addEventListener("unload", function() {
-  window
-    .getGroupMessageManager("browsers")
-    .removeMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
-});
+  }
+}

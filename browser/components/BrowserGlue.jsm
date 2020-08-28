@@ -377,6 +377,20 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  DecoderDoctor: {
+    parent: {
+      moduleURI: "resource:///actors/DecoderDoctorParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource:///actors/DecoderDoctorChild.jsm",
+      observers: ["decoder-doctor-notification"],
+    },
+
+    messageManagerGroups: ["browsers"],
+    allFrames: true,
+  },
+
   DOMFullscreen: {
     parent: {
       moduleURI: "resource:///actors/DOMFullscreenParent.jsm",

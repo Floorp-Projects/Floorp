@@ -35,10 +35,6 @@ MainProcessSingleton.prototype = {
           "chrome://global/content/process-content.js",
           true
         );
-        Services.ppmm.loadProcessScript(
-          "resource:///modules/ContentObservers.js",
-          true
-        );
         break;
       }
 
