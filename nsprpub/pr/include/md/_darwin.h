@@ -40,11 +40,7 @@
 
 #undef  HAVE_STACK_GROWING_UP
 #define HAVE_DLL
-#if defined(__x86_64__) || TARGET_OS_IPHONE
 #define USE_DLFCN
-#else
-#define USE_MACH_DYLD
-#endif
 #define _PR_HAVE_SOCKADDR_LEN
 #define _PR_STAT_HAS_ST_ATIMESPEC
 #define _PR_HAVE_LARGE_OFF_T
@@ -124,7 +120,16 @@ extern PRInt32 _PR_Darwin_x86_64_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD(ptr, val)    _PR_Darwin_x86_64_AtomicAdd(ptr, val)
 #endif /* __x86_64__ */
 
-#if defined(__arm__) || defined(__aarch64__)
+#ifdef __aarch64__
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_INCREMENT(val)   __sync_add_and_fetch(val, 1)
+#define _MD_ATOMIC_DECREMENT(val)   __sync_sub_and_fetch(val, 1)
+#define _MD_ATOMIC_SET(val, newval) __sync_lock_test_and_set(val, newval)
+#define _MD_ATOMIC_ADD(ptr, val)    __sync_add_and_fetch(ptr, val)
+#endif /* __aarch64__ */
+
+#if defined(__arm__)
 #define _PR_HAVE_ATOMIC_OPS
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(val)   OSAtomicIncrement32(val)
@@ -138,7 +143,7 @@ static inline PRInt32 _MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
     return oldval;
 }
 #define _MD_ATOMIC_ADD(ptr, val)    OSAtomicAdd32(val, ptr)
-#endif /* __arm__ || __aarch64__ */
+#endif /* __arm__ */
 
 #define USE_SETJMP
 

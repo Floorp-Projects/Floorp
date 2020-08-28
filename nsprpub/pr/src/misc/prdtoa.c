@@ -304,17 +304,6 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 
 #else /* ifndef Bad_float_h */
 #include "float.h"
-/*
- * MacOS 10.2 defines the macro FLT_ROUNDS to an internal function
- * which does not exist on 10.1.  We can safely #define it to 1 here
- * to allow 10.2 builds to run on 10.1, since we can't use fesetround()
- * (which does not exist on 10.1 either).
- */
-#if defined(XP_MACOSX) && (!defined(MAC_OS_X_VERSION_10_2) || \
-    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_2)
-#undef FLT_ROUNDS
-#define FLT_ROUNDS 1
-#endif /* DT < 10.2 */
 #endif /* Bad_float_h */
 
 #ifndef __MATH_H__
