@@ -7,8 +7,6 @@ package org.mozilla.fenix.components
 import android.app.Activity
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import com.google.android.play.core.ktx.launchReview
-import com.google.android.play.core.ktx.requestReview
 import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.withContext
@@ -46,12 +44,16 @@ class ReviewPromptController(
     private val context: Context,
     private val reviewSettings: ReviewSettings,
     private val timeNowInMillis: () -> Long = { System.currentTimeMillis() },
-    private val tryPromptReview: suspend (Activity) -> Unit = {
+    private val tryPromptReview: suspend (Activity) -> Unit = { activity ->
         val manager = ReviewManagerFactory.create(context)
-        val reviewInfo = manager.requestReview()
+        val flow = manager.requestReviewFlow()
 
         withContext(Main) {
-            manager.launchReview(it, reviewInfo)
+            flow.addOnCompleteListener {
+                if (it.isSuccessful) {
+                    manager.launchReviewFlow(activity, it.result)
+                }
+            }
         }
     }
 ) {
