@@ -10582,10 +10582,7 @@ nsresult FileManager::AsyncDeleteFile(int64_t aFileId) {
 
   QuotaClient* quotaClient = QuotaClient::GetInstance();
   if (quotaClient) {
-    nsresult rv = quotaClient->AsyncDeleteFile(this, aFileId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(quotaClient->AsyncDeleteFile(this, aFileId));
   }
 
   return NS_OK;
