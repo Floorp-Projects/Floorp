@@ -44,10 +44,6 @@ bool CacheObserver::sHashStatsReported = kDefaultHashStatsReported;
 Atomic<PRIntervalTime> CacheObserver::sShutdownDemandedTime(
     PR_INTERVAL_NO_TIMEOUT);
 
-static uint32_t const kDefaultCacheAmountWritten = 0;
-Atomic<uint32_t, Relaxed> CacheObserver::sCacheAmountWritten(
-    kDefaultCacheAmountWritten);
-
 NS_IMPL_ISUPPORTS(CacheObserver, nsIObserver, nsISupportsWeakReference)
 
 // static
@@ -97,10 +93,6 @@ void CacheObserver::AttachToPreferences() {
       0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
                                    "browser.cache.frecency_half_life_hours",
                                    kDefaultHalfLifeHours)));
-
-  mozilla::Preferences::AddAtomicUintVarCache(
-      &sCacheAmountWritten, "browser.cache.disk.amount_written",
-      kDefaultCacheAmountWritten);
 }
 
 // static
@@ -192,29 +184,6 @@ void CacheObserver::SetHashStatsReported() {
 void CacheObserver::StoreHashStatsReported() {
   mozilla::Preferences::SetInt("browser.cache.disk.hashstats_reported",
                                sHashStatsReported);
-}
-
-// static
-void CacheObserver::SetCacheAmountWritten(uint32_t aCacheAmountWritten) {
-  sCacheAmountWritten = aCacheAmountWritten;
-
-  if (!sSelf) {
-    return;
-  }
-
-  if (NS_IsMainThread()) {
-    sSelf->StoreCacheAmountWritten();
-  } else {
-    nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("net::CacheObserver::StoreCacheAmountWritten",
-                          sSelf.get(), &CacheObserver::StoreCacheAmountWritten);
-    NS_DispatchToMainThread(event);
-  }
-}
-
-void CacheObserver::StoreCacheAmountWritten() {
-  mozilla::Preferences::SetInt("browser.cache.disk.amount_written",
-                               sCacheAmountWritten);
 }
 
 // static
