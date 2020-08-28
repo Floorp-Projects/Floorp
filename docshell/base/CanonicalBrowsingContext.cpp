@@ -285,6 +285,20 @@ SessionHistoryEntry* CanonicalBrowsingContext::GetActiveSessionHistoryEntry() {
   return mActiveEntry;
 }
 
+bool CanonicalBrowsingContext::HasHistoryEntry(nsISHEntry* aEntry) {
+  // XXX Should we check also loading entries?
+  return aEntry && mActiveEntry == aEntry;
+}
+
+void CanonicalBrowsingContext::SwapHistoryEntries(nsISHEntry* aOldEntry,
+                                                  nsISHEntry* aNewEntry) {
+  // XXX Should we check also loading entries?
+  if (mActiveEntry == aOldEntry) {
+    nsCOMPtr<SessionHistoryEntry> newEntry = do_QueryInterface(aNewEntry);
+    mActiveEntry = newEntry;
+  }
+}
+
 UniquePtr<LoadingSessionHistoryInfo>
 CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
@@ -295,6 +309,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     entry = SessionHistoryEntry::GetByLoadId(existingLoadingInfo->mLoadId);
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
+    entry->SetDocshellID(GetHistoryID());
   }
   MOZ_DIAGNOSTIC_ASSERT(entry);
 
@@ -322,15 +337,22 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         return;
       }
 
-      RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry.forget();
-      mActiveEntry = mLoadingEntries[i].mEntry;
+      RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry;
+      RefPtr<SessionHistoryEntry> newActiveEntry = mLoadingEntries[i].mEntry;
+
+      bool loadFromSessionHistory = false;
+      nsCOMPtr<nsISHistory> existingHistory = newActiveEntry->GetShistory();
+      loadFromSessionHistory = (existingHistory == shistory);
+      if (!loadFromSessionHistory) {
+        newActiveEntry->SetShistory(shistory);
+      }
 
       SessionHistoryEntry::RemoveLoadId(aLoadId);
       mLoadingEntries.RemoveElementAt(i);
       if (IsTop()) {
-        nsCOMPtr<nsISHistory> existingSHistory = mActiveEntry->GetShistory();
-        if (existingSHistory) {
-          MOZ_ASSERT(existingSHistory == shistory);
+        mActiveEntry = newActiveEntry;
+        if (loadFromSessionHistory) {
+          // XXX Synchronize browsing context tree and session history tree?
           shistory->UpdateIndex();
         } else {
           shistory->AddEntry(mActiveEntry,
@@ -341,16 +363,24 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         // FIXME The old implementations adds it to the parent's mLSHE if there
         //       is one, need to figure out if that makes sense here (peterv
         //       doesn't think it would).
-        // FIXME if the loading entry is already in the session history, we
-        // shouldn't add a new entry.
-        if (oldActiveEntry) {
+        if (loadFromSessionHistory) {
+          oldActiveEntry->SyncTreesForSubframeNavigation(newActiveEntry, Top(),
+                                                         this);
+          mActiveEntry = newActiveEntry;
+          shistory->UpdateIndex();
+        } else if (oldActiveEntry) {
+          // AddChildSHEntryHelper does update the index of the session history!
           // FIXME Need to figure out the right value for aCloneChildren.
-          shistory->AddChildSHEntryHelper(oldActiveEntry, mActiveEntry, Top(),
+          shistory->AddChildSHEntryHelper(oldActiveEntry, newActiveEntry, Top(),
                                           true);
+          mActiveEntry = newActiveEntry;
         } else {
           SessionHistoryEntry* parentEntry =
               static_cast<CanonicalBrowsingContext*>(GetParent())->mActiveEntry;
+          // XXX What should happen if parent doesn't have mActiveEntry?
+          //     Or can that even happen ever?
           if (parentEntry) {
+            mActiveEntry = newActiveEntry;
             // FIXME The docshell code sometime uses -1 for aChildOffset!
             // FIXME Using IsInProcess for aUseRemoteSubframes isn't quite
             //       right, but aUseRemoteSubframes should be going away.
