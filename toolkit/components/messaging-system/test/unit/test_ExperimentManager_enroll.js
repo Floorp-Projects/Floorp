@@ -108,13 +108,11 @@ add_task(async function test_failure_group_conflict() {
   // These should not be allowed to exist simultaneously.
   const existingBranch = {
     slug: "treatment",
-    groups: ["red", "pink"],
-    value: { title: "hello" },
+    feature: { featureId: "pink", enabled: true },
   };
   const newBranch = {
     slug: "treatment",
-    groups: ["pink"],
-    value: { title: "hi" },
+    feature: { featureId: "pink", enabled: true },
   };
 
   // simulate adding an experiment with a conflicting group "pink"
@@ -128,18 +126,18 @@ add_task(async function test_failure_group_conflict() {
   sandbox.stub(manager, "chooseBranch").returns(newBranch);
   await Assert.rejects(
     manager.enroll(ExperimentFakes.recipe("bar", { branches: [newBranch] })),
-    /An experiment with a conflicting group already exists/,
-    "should throw if there is a group conflict"
+    /An experiment with a conflicting feature already exists/,
+    "should throw if there is a feature conflict"
   );
 
   Assert.equal(
     manager.sendFailureTelemetry.calledWith(
       "enrollFailed",
       "bar",
-      "group-conflict"
+      "feature-conflict"
     ),
     true,
-    "should send failure telemetry if a group conflict exists"
+    "should send failure telemetry if a feature conflict exists"
   );
 });
 

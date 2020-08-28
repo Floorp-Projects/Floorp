@@ -189,8 +189,15 @@ add_task(async function test_onFinalize_unenroll() {
 
   // Simulate adding some other recipes
   await manager.onStartup();
-  await manager.onRecipe(ExperimentFakes.recipe("bar"), "test");
-  await manager.onRecipe(ExperimentFakes.recipe("baz"), "test");
+  const recipe1 = ExperimentFakes.recipe("bar");
+  // Unique features to prevent overlap
+  recipe1.branches[0].feature.featureId = "red";
+  recipe1.branches[1].feature.featureId = "red";
+  await manager.onRecipe(recipe1, "test");
+  const recipe2 = ExperimentFakes.recipe("baz");
+  recipe2.branches[0].feature.featureId = "green";
+  recipe2.branches[1].feature.featureId = "green";
+  await manager.onRecipe(recipe2, "test");
 
   // Finalize
   manager.onFinalize("test");
