@@ -37,14 +37,9 @@ nsILoadContext* BrowserBridgeHost::GetLoadContext() const {
   return mBridge->GetLoadContext();
 }
 
-void BrowserBridgeHost::LoadURL(nsIURI* aURI,
-                                nsIPrincipal* aTriggeringPrincipal) {
-  MOZ_ASSERT(aURI);
-  MOZ_ASSERT(aTriggeringPrincipal);
-
-  nsAutoCString spec;
-  aURI->GetSpec(spec);
-  Unused << mBridge->SendLoadURL(spec, aTriggeringPrincipal);
+void BrowserBridgeHost::LoadURL(nsDocShellLoadState* aLoadState) {
+  MOZ_ASSERT(aLoadState);
+  Unused << mBridge->SendLoadURL(aLoadState);
 }
 
 void BrowserBridgeHost::ResumeLoad(uint64_t aPendingSwitchId) {
