@@ -1004,9 +1004,7 @@ struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
     aNewTab->mCreatingWindow = true;
   }
 
-  ~AutoUseNewTab() {
-    mNewTab->mCreatingWindow = false;
-  }
+  ~AutoUseNewTab() { mNewTab->mCreatingWindow = false; }
 
  private:
   RefPtr<BrowserParent> mNewTab;
