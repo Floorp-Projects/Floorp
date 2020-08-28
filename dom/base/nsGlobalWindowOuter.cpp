@@ -5272,11 +5272,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   }
 
   RefPtr<Document> docToPrint = mDoc;
-  MOZ_DIAGNOSTIC_ASSERT(docToPrint,
-                        "This gets forwarded from the inner when "
-                        "we have an active window, so there should "
-                        "be a document");
-  if (!docToPrint) {
+  if (NS_WARN_IF(!docToPrint)) {
     aError.ThrowNotSupportedError("Document is gone");
     return nullptr;
   }
