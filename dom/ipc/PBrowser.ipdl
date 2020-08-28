@@ -98,6 +98,7 @@ using struct CollectedInputDataValue from "mozilla/dom/SessionStoreMessageUtils.
 using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
 using CallerType from "mozilla/dom/BindingDeclarations.h";
 using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
+using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 
 namespace mozilla {
 namespace dom {
@@ -698,9 +699,7 @@ child:
 
     async CompositorOptionsChanged(CompositorOptions newOptions);
 
-    async LoadURL(nsCString uri,
-                  nsIPrincipal triggeringPrincipal,
-                  ParentShowInfo info);
+    async LoadURL(nsDocShellLoadState loadState, ParentShowInfo info);
 
     async ResumeLoad(uint64_t pendingSwitchID, ParentShowInfo info);
 
