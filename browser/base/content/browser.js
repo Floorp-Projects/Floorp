@@ -8960,6 +8960,10 @@ class TabDialogBox {
     if (event.type !== "TabClose") {
       return;
     }
+    this.abortAllDialogs();
+  }
+
+  abortAllDialogs() {
     this._dialogManager.abortAll();
   }
 
@@ -8974,7 +8978,7 @@ class TabDialogBox {
     ) {
       return;
     }
-    this._dialogManager.abortAll();
+    this.abortAllDialogs();
   }
 
   get tab() {
