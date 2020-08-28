@@ -166,7 +166,7 @@ add_task(async function testHTTPSSVC() {
     "got correct answer"
   );
   Assert.equal(answer[1].priority, 2);
-  Assert.equal(answer[1].name, "");
+  Assert.equal(answer[1].name, "test.httpssvc.com");
   Assert.equal(answer[1].values.length, 4);
   Assert.equal(
     answer[1].values[0].QueryInterface(Ci.nsISVCParamAlpn).alpn,
@@ -591,4 +591,67 @@ add_task(async function test_aliasform() {
   [inRequest, inRecord, inStatus2] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should succeed`);
+
+  // alias-mode with . targetName
+  await trrServer.registerDoHAnswers("no-alias.com", "HTTPS", [
+    {
+      name: "no-alias.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 0,
+        name: ".",
+        values: [],
+      },
+    },
+  ]);
+
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "no-alias.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
+
+  // service-mode with . targetName
+  await trrServer.registerDoHAnswers("service.com", "HTTPS", [
+    {
+      name: "service.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: ".",
+        values: [{ key: "alpn", value: "h2,h3" }],
+      },
+    },
+  ]);
+
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "service.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should work`);
+  let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
+  Assert.equal(answer[0].priority, 1);
+  Assert.equal(answer[0].name, "service.com");
 });
