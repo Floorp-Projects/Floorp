@@ -194,7 +194,7 @@ inline NSString* ToNSString(id aValue) {
         textAcc->SelectionBoundsAt(0, &start, &end);
       } else {
         start = textAcc->CaretOffset();
-        start = start != -1 ? start : 0;
+        end = start != -1 ? start : 0;
       }
     }
   } else {
@@ -204,7 +204,7 @@ inline NSString* ToNSString(id aValue) {
       proxy->SelectionBoundsAt(0, data, &start, &end);
     } else {
       start = proxy->CaretOffset();
-      start = start != -1 ? start : 0;
+      end = start != -1 ? start : 0;
     }
   }
 
