@@ -5,7 +5,7 @@ setJitCompilerOption("ion.warmup.trigger", 20);
 setJitCompilerOption("ion.full.warmup.trigger", 20);
 var i;
 
-var warp = isWarpEnabled();
+var warp = getJitCompilerOptions()["warp.enable"];
 
 // Prevent GC from cancelling/discarding Ion compilations.
 gczeal(0);
