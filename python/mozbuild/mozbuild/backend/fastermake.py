@@ -106,7 +106,6 @@ class FasterMakeBackend(MakeBackend, PartialBackend):
                             target = path
                         else:
                             target = mozpath.join(path, f.target_basename)
-                        mozpath.join(path, f.target_basename)
                         self._install_manifests[obj.install_target] \
                             .add_pattern_link(
                                 prefix,
