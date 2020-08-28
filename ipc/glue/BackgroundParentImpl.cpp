@@ -523,7 +523,15 @@ IPCResult BackgroundParentImpl::RecvPRemoteWorkerServiceConstructor(
     PRemoteWorkerServiceParent* aActor) {
   mozilla::dom::RemoteWorkerServiceParent* actor =
       static_cast<mozilla::dom::RemoteWorkerServiceParent*>(aActor);
-  actor->Initialize();
+
+  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
+  // If the ContentParent is null we are dealing with a same-process actor.
+  if (!parent) {
+    actor->Initialize(NOT_REMOTE_TYPE);
+  } else {
+    actor->Initialize(parent->GetRemoteType());
+    NS_ReleaseOnMainThread("ContentParent release", parent.forget());
+  }
   return IPC_OK();
 }
 
