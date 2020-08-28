@@ -231,6 +231,13 @@ addAccessibleTask(
   }
 );
 
+addAccessibleTask(
+  `<p style="width: 1rem">Lorem ipsum</p>`,
+  (browser, accDoc) => {
+    testMarkerIntegrity(accDoc);
+  }
+);
+
 addAccessibleTask(`<p>hello <input> world</p>`, (browser, accDoc) => {
   testMarkerIntegrity(accDoc);
 });
@@ -274,7 +281,7 @@ function testMarkerIntegrity(accDoc) {
       "AXIndexForTextMarker",
       marker
     );
-    is(index, i, `Correct index in "AXPreviousTextMarkerForTextMarker": ${i}`);
+    is(index, i, `Correct index in "AXTextMarkerForIndex": ${i}`);
   }
 
   // Iterate backward with "AXPreviousTextMarkerForTextMarker"
