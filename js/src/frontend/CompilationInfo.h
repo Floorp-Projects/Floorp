@@ -193,7 +193,7 @@ struct CompilationStencil {
   // allocated during parse to ensure correct destruction.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
-  Vector<ObjLiteralStencil> objLiteralData;
+  Vector<ObjLiteralStencil, 0, js::SystemAllocPolicy> objLiteralData;
 
   // Stencil for all function and non-function scripts. The TopLevelIndex is
   // reserved for the top-level script. This top-level may or may not be a
@@ -221,8 +221,7 @@ struct CompilationStencil {
   ParserAtomsTable parserAtoms;
 
   explicit CompilationStencil(JSContext* cx)
-      : objLiteralData(cx),
-        scriptData(cx),
+      : scriptData(cx),
         scopeData(cx),
         moduleMetadata(cx),
         asmJS(cx),
