@@ -30,7 +30,7 @@ class PrivateNotificationService : AbstractPrivateNotificationService() {
     override val store: BrowserStore by lazy { components.core.store }
 
     override fun NotificationCompat.Builder.buildNotification() {
-        setSmallIcon(R.drawable.ic_pbm_notification)
+        setSmallIcon(R.drawable.ic_private_browsing)
         setContentTitle(getString(R.string.app_name_private_4, getString(R.string.app_name)))
         setContentText(getString(R.string.notification_pbm_delete_text_2))
         color = ContextCompat.getColor(this@PrivateNotificationService, R.color.pbm_notification_color)

@@ -30,7 +30,7 @@ class WebAppSiteControlsBuilder(
 
         if (!isPrivateSession) { return }
 
-        builder.setSmallIcon(R.drawable.ic_pbm_notification)
+        builder.setSmallIcon(R.drawable.ic_private_browsing)
         builder.setContentTitle(context.getString(R.string.pwa_site_controls_title_private, manifest.name))
     }
 

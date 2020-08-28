@@ -149,10 +149,11 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/open_tabs_menu"
             android:visibility="visible"
+            app:tint="@color/accent_normal_theme"
             app:layout_constraintBottom_toBottomOf="@id/tab_layout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/tab_layout"
-            app:srcCompat="@drawable/ic_menu_tab_tray" />
+            app:srcCompat="@drawable/ic_menu" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
