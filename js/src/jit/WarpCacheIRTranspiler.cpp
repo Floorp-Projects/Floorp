@@ -2982,8 +2982,7 @@ bool WarpCacheIRTranspiler::emitLoadValueTruthyResult(ValOperandId inputId) {
 
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
-  // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
-  MOZ_ASSERT(!loc_.isSpreadOp());
+  // Reverse of GetIndexOfArgument.
 
   // Layout:
   // NewTarget | Args.. (reversed)      | ThisValue | Callee
@@ -3084,6 +3083,9 @@ bool WarpCacheIRTranspiler::updateCallInfo(MDefinition* callee,
   switch (flags.getArgFormat()) {
     case CallFlags::Standard:
       MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
+      break;
+    case CallFlags::Spread:
+      MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Array);
       break;
     case CallFlags::FunCall:
       // Note: setCallee above already changed the callee to the target
