@@ -24,14 +24,16 @@
 [ChromeOnly, Exposed=(Window, Worker)]
 namespace IOUtils {
  /**
-   * Reads up to |maxBytes| of the file at |path| according to |opts|.
+   * Reads up to |maxBytes| of the file at |path|. If |maxBytes| is unspecified,
+   * the entire file is read.
    *
-   * @param path An absolute file path.
+   * @param path      An absolute file path.
+   * @param maxBytes  The max bytes to read from the file at path.
    *
    * @return Resolves with an array of unsigned byte values read from disk,
    *         otherwise rejects with a DOMException.
    */
-  Promise<Uint8Array> read(DOMString path, optional ReadOptions opts = {});
+  Promise<Uint8Array> read(DOMString path, optional unsigned long maxBytes);
   /**
    * Reads the UTF-8 text file located at |path| and returns the decoded
    * contents as a |DOMString|.
@@ -41,7 +43,7 @@ namespace IOUtils {
    * @return Resolves with the file contents encoded as a string, otherwise
    *         rejects with a DOMException.
    */
-  Promise<DOMString> readUTF8(DOMString path, optional ReadUTF8Options opts = {});
+  Promise<DOMString> readUTF8(DOMString path);
   /**
    * Attempts to safely write |data| to a file at |path|.
    *
@@ -143,46 +145,10 @@ namespace IOUtils {
    *         DOMException.
    */
   Promise<long long> touch(DOMString path, optional long long modification);
-  /**
-   * Retrieves a (possibly empty) list of immediate children of the directory at
-   * |path|. If the file at |path| is not a directory, this method resolves with
-   * an empty list.
-   *
-   * @param path An absolute file path.
-   *
-   * @return Resolves with a sequence of absolute file paths representing the
-   *         children of the directory at |path|, otherwise rejects with a
-   *         DOMException.
-   */
-  Promise<sequence<DOMString>> getChildren(DOMString path);
 };
 
 /**
- * Options to be passed to the |IOUtils.readUTF8| method.
- */
-dictionary ReadUTF8Options {
-  /**
-   * If true, this option indicates that the file to be read is compressed with
-   * LZ4-encoding, and should be decompressed before the data is returned to
-   * the caller.
-   */
-  boolean decompress = false;
-};
-
-/**
- * Options to be passed to the |IOUtils.read| method.
- */
-dictionary ReadOptions : ReadUTF8Options {
-  /**
-   * The max bytes to read from the file at path. If unspecified, the entire
-   * file will be read. This option is incompatible with |decompress|.
-   */
-  unsigned long? maxBytes = null;
-};
-
-/**
- * Options to be passed to the |IOUtils.writeAtomic| and |writeAtomicUTF8|
- * methods.
+ * Options to be passed to the |IOUtils.writeAtomic| method.
  */
 dictionary WriteAtomicOptions {
   /**
@@ -207,10 +173,6 @@ dictionary WriteAtomicOptions {
    * disconnection before the buffers are flushed.
    */
   boolean flush = false;
-  /**
-   * If true, compress the data with LZ4-encoding before writing to the file.
-   */
-  boolean compress = false;
 };
 
 /**

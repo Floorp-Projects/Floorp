@@ -4,22 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <cstdint>
-
 #include "mozilla/dom/IOUtils.h"
-#include "ErrorList.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/Compression.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
-#include "nsError.h"
-#include "nsIDirectoryEnumerator.h"
 #include "nsPrintfCString.h"
-#include "nsTArray.h"
 #include "nspr/prerror.h"
 #include "nspr/prio.h"
 #include "nspr/private/pprio.h"
@@ -83,16 +75,13 @@ namespace dom {
  * @see nsLocalFileUnix.cpp
  */
 static bool IsFileNotFound(nsresult aResult) {
-  return aResult == NS_ERROR_FILE_NOT_FOUND ||
-         aResult == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
-}
-/**
- * Like |IsFileNotFound|, but checks for known results that suggest a file
- * is not a directory.
- */
-static bool IsNotDirectory(nsresult aResult) {
-  return aResult == NS_ERROR_FILE_DESTINATION_NOT_DIR ||
-         aResult == NS_ERROR_FILE_NOT_DIRECTORY;
+  switch (aResult) {
+    case NS_ERROR_FILE_NOT_FOUND:
+    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -245,7 +234,7 @@ already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
 /* static */
 already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
-                                        const ReadOptions& aOptions) {
+                                        const Optional<uint32_t>& aMaxBytes) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
@@ -255,24 +244,23 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   REJECT_IF_RELATIVE_PATH(aPath, promise);
   nsAutoString path(aPath);
   Maybe<uint32_t> toRead = Nothing();
-  if (!aOptions.mMaxBytes.IsNull()) {
-    if (aOptions.mMaxBytes.Value() == 0) {
+  if (aMaxBytes.WasPassed()) {
+    if (aMaxBytes.Value() == 0) {
       // Resolve with an empty buffer.
       nsTArray<uint8_t> arr(0);
       promise->MaybeResolve(TypedArrayCreator<Uint8Array>(arr));
       return promise.forget();
     }
-    toRead.emplace(aOptions.mMaxBytes.Value());
+    toRead.emplace(aMaxBytes.Value());
   }
 
   return RunOnBackgroundThread<nsTArray<uint8_t>>(promise, &ReadSync, path,
-                                                  toRead, aOptions.mDecompress);
+                                                  toRead);
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
-                                            const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions) {
+                                            const nsAString& aPath) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
@@ -281,8 +269,7 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
   REJECT_IF_RELATIVE_PATH(aPath, promise);
   nsAutoString path(aPath);
 
-  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, path,
-                                         aOptions.mDecompress);
+  return RunOnBackgroundThread<nsString>(promise, &ReadUTF8Sync, path);
 }
 
 /* static */
@@ -441,20 +428,6 @@ already_AddRefed<Promise> IOUtils::Touch(
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
-                                               const nsAString& aPath) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
-
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
-
-  return RunOnBackgroundThread<nsTArray<nsString>>(promise, &GetChildrenSync,
-                                                   path);
-}
-
-/* static */
 already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
   if (sShutdownStarted) {
     return nullptr;
@@ -599,9 +572,8 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
 
   PRFileDesc* fd;
   rv = file->OpenNSPRFileDesc(aFlags, /* mode */ 0, &fd);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
   return UniquePtr<PRFileDesc, PR_CloseDelete>(fd);
 }
 
@@ -625,16 +597,8 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
 
 /* static */
 Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
-    const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes,
-    const bool aDecompress) {
+    const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes) {
   MOZ_ASSERT(!NS_IsMainThread());
-
-  if (aMaxBytes.isSome() && aDecompress) {
-    return Err(
-        IOError(NS_ERROR_ILLEGAL_INPUT)
-            .WithMessage(
-                "The `maxBytes` and `decompress` options are not compatible"));
-  }
 
   UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(aPath, PR_RDONLY);
   if (!fd) {
@@ -668,9 +632,7 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
 
   nsTArray<uint8_t> buffer;
   if (!buffer.SetCapacity(bufSize, fallible)) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
-                   .WithMessage("Could not allocate buffer to read file(%s)",
-                                NS_ConvertUTF16toUTF8(aPath).get()));
+    return Err(IOError(NS_ERROR_OUT_OF_MEMORY));
   }
 
   // If possible, advise the operating system that we will be reading the file
@@ -681,7 +643,6 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
                 POSIX_FADV_SEQUENTIAL);
 #endif
 
-  // Read the file from disk.
   uint32_t totalRead = 0;
   while (totalRead != bufSize) {
     int32_t nRead =
@@ -703,20 +664,15 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
     DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
     MOZ_ASSERT(success);
   }
-
-  // Decompress the file contents, if required.
-  if (aDecompress) {
-    return MozLZ4::Decompress(Span(buffer));
-  }
   return std::move(buffer);
 }
 
 /* static */
 Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
-    const nsAString& aPath, const bool aDecompress) {
+    const nsAString& aPath) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  return ReadSync(aPath, Nothing(), aDecompress)
+  return ReadSync(aPath, Nothing())
       .andThen([&aPath](const nsTArray<uint8_t>& bytes)
                    -> Result<nsString, IOError> {
         auto utf8Span = Span(reinterpret_cast<const char*>(bytes.Elements()),
@@ -797,21 +753,6 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
   // continuing.
   uint32_t result = 0;
   {
-    // Compress the byte array if required.
-    nsTArray<uint8_t> compressed;
-    Span<const uint8_t> bytes;
-    if (aOptions.mCompress) {
-      auto rv = MozLZ4::Compress(aByteArray);
-      if (rv.isErr()) {
-        return rv.propagateErr();
-      }
-      compressed = rv.unwrap();
-      bytes = Span(compressed);
-    } else {
-      bytes = aByteArray;
-    }
-
-    // Then open the file and perform the write.
     UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(tmpPath, flags);
     if (!fd) {
       fd = CreateFileSync(tmpPath, flags);
@@ -821,7 +762,8 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
                      .WithMessage("Could not open the file at %s for writing",
                                   NS_ConvertUTF16toUTF8(tmpPath).get()));
     }
-    auto rv = WriteSync(fd.get(), NS_ConvertUTF16toUTF8(tmpPath), bytes);
+
+    auto rv = WriteSync(fd.get(), NS_ConvertUTF16toUTF8(tmpPath), aByteArray);
     if (rv.isErr()) {
       return rv.propagateErr();
     }
@@ -1247,134 +1189,6 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
     return Err(err);
   }
   return now;
-}
-
-/* static */
-Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
-    const nsAString& aPath) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  RefPtr<nsLocalFile> file = new nsLocalFile();
-  MOZ_TRY(file->InitWithPath(aPath));
-
-  RefPtr<nsIDirectoryEnumerator> iter;
-  nsresult rv = file->GetDirectoryEntries(getter_AddRefs(iter));
-  if (NS_FAILED(rv)) {
-    IOError err(rv);
-    if (IsFileNotFound(rv)) {
-      return Err(err.WithMessage(
-          "Could not get children of file(%s) because it does not exist",
-          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    if (IsNotDirectory(rv)) {
-      return Err(err.WithMessage(
-          "Could not get children of file(%s) because it is not a directory",
-          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    return Err(err);
-  }
-  nsTArray<nsString> children;
-
-  bool hasMoreElements = false;
-  MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
-  while (hasMoreElements) {
-    nsCOMPtr<nsIFile> child;
-    MOZ_TRY(iter->GetNextFile(getter_AddRefs(child)));
-    if (child) {
-      nsString path;
-      MOZ_TRY(child->GetPath(path));
-      children.AppendElement(path);
-    }
-    MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
-  }
-
-  return children;
-}
-
-/* static */
-Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
-    Span<const uint8_t> aUncompressed) {
-  nsTArray<uint8_t> result;
-  size_t worstCaseSize =
-      Compression::LZ4::maxCompressedSize(aUncompressed.Length()) + HEADER_SIZE;
-  if (!result.SetCapacity(worstCaseSize, fallible)) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
-                   .WithMessage("Could not allocate buffer to compress data"));
-  }
-  result.AppendElements(Span(MAGIC_NUMBER.data(), MAGIC_NUMBER.size()));
-  std::array<uint8_t, sizeof(uint32_t)> contentSizeBytes{};
-  LittleEndian::writeUint32(contentSizeBytes.data(), aUncompressed.Length());
-  result.AppendElements(Span(contentSizeBytes.data(), contentSizeBytes.size()));
-
-  if (aUncompressed.Length() == 0) {
-    // Don't try to compress an empty buffer.
-    // Just return the correctly formed header.
-    result.SetLength(HEADER_SIZE);
-    return result;
-  }
-
-  size_t compressed = Compression::LZ4::compress(
-      reinterpret_cast<const char*>(aUncompressed.Elements()),
-      aUncompressed.Length(),
-      reinterpret_cast<char*>(result.Elements()) + HEADER_SIZE);
-  if (!compressed) {
-    return Err(
-        IOError(NS_ERROR_UNEXPECTED).WithMessage("Could not compress data"));
-  }
-  result.SetLength(HEADER_SIZE + compressed);
-  return result;
-}
-
-/* static */
-Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
-    Span<const uint8_t> aFileContents) {
-  if (aFileContents.LengthBytes() < HEADER_SIZE) {
-    return Err(
-        IOError(NS_ERROR_FILE_CORRUPTED)
-            .WithMessage(
-                "Could not decompress file because the buffer is too short"));
-  }
-  auto header = aFileContents.To(HEADER_SIZE);
-  if (!std::equal(std::begin(MAGIC_NUMBER), std::end(MAGIC_NUMBER),
-                  std::begin(header))) {
-    nsCString magicStr;
-    uint32_t i = 0;
-    for (; i < header.Length() - 1; ++i) {
-      magicStr.AppendPrintf("%02X ", header.at(i));
-    }
-    magicStr.AppendPrintf("%02X", header.at(i));
-
-    return Err(IOError(NS_ERROR_FILE_CORRUPTED)
-                   .WithMessage("Could not decompress file because it has an "
-                                "invalid LZ4 header (wrong magic number: '%s')",
-                                magicStr.get()));
-  }
-  size_t numBytes = sizeof(uint32_t);
-  Span<const uint8_t> sizeBytes = header.Last(numBytes);
-  uint32_t expectedDecompressedSize =
-      LittleEndian::readUint32(sizeBytes.data());
-  if (expectedDecompressedSize == 0) {
-    return nsTArray<uint8_t>(0);
-  }
-  auto contents = aFileContents.From(HEADER_SIZE);
-  nsTArray<uint8_t> decompressed;
-  if (!decompressed.SetCapacity(expectedDecompressedSize, fallible)) {
-    return Err(
-        IOError(NS_ERROR_OUT_OF_MEMORY)
-            .WithMessage("Could not allocate buffer to decompress data"));
-  }
-  size_t actualSize = 0;
-  if (!Compression::LZ4::decompress(
-          reinterpret_cast<const char*>(contents.Elements()), contents.Length(),
-          reinterpret_cast<char*>(decompressed.Elements()),
-          expectedDecompressedSize, &actualSize)) {
-    return Err(
-        IOError(NS_ERROR_FILE_CORRUPTED)
-            .WithMessage(
-                "Could not decompress file contents, the file may be corrupt"));
-  }
-  decompressed.SetLength(actualSize);
-  return decompressed;
 }
 
 NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);

@@ -53,7 +53,7 @@ self.onmessage = async function(msg) {
     );
 
     const tooManyBytes = bytes.length + 1;
-    fileContents = await IOUtils.read(tmpFileName, { maxBytes: tooManyBytes });
+    fileContents = await IOUtils.read(tmpFileName, tooManyBytes);
     ok(
       ObjectUtils.deepEqual(bytes, fileContents) &&
         fileContents.length == bytes.length,
