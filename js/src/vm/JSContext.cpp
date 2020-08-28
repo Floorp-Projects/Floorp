@@ -880,7 +880,7 @@ mozilla::GenericErrorResult<JS::Error&> JSContext::alreadyReportedError() {
 
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     : runtime_(runtime),
-      kind_(ContextKind::Uninitialized),
+      kind_(ContextKind::HelperThread),
       nurserySuppressions_(this),
       options_(this, options),
       freeLists_(this, nullptr),
@@ -967,7 +967,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 JSContext::~JSContext() {
   // Clear the ContextKind first, so that ProtectedData checks will allow us to
   // destroy this context even if the runtime is already gone.
-  kind_ = ContextKind::Uninitialized;
+  kind_ = ContextKind::HelperThread;
 
   /* Free the stuff hanging off of cx. */
   MOZ_ASSERT(!resolvingList);
@@ -997,20 +997,13 @@ JSContext::~JSContext() {
   TlsContext.set(nullptr);
 }
 
-void JSContext::setHelperThread(const AutoLockHelperThreadState& locked) {
-  MOZ_ASSERT(isHelperThreadContext());
+void JSContext::setHelperThread(AutoLockHelperThreadState& locked) {
   MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !TlsContext.get());
-  MOZ_ASSERT(currentThread_ == ThreadId());
-
   TlsContext.set(this);
   currentThread_ = ThreadId::ThisThreadId();
 }
 
-void JSContext::clearHelperThread(const AutoLockHelperThreadState& locked) {
-  MOZ_ASSERT(isHelperThreadContext());
-  MOZ_ASSERT(TlsContext.get() == this);
-  MOZ_ASSERT(currentThread_ == ThreadId::ThisThreadId());
-
+void JSContext::clearHelperThread(AutoLockHelperThreadState& locked) {
   currentThread_ = ThreadId();
   TlsContext.set(nullptr);
 }

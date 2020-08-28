@@ -101,7 +101,7 @@ class MOZ_RAII AutoRunParallelWork {
                       const SliceBudget& budget,
                       AutoLockHelperThreadState& lock)
       : gc(gc), phaseKind(phaseKind), lock(lock), tasksStarted(0) {
-    size_t workerCount = gc->parallelWorkerCount();
+    size_t workerCount = ParallelWorkerCount();
     MOZ_ASSERT(workerCount <= MaxParallelWorkers);
     MOZ_ASSERT_IF(workerCount == 0, work.done());
 

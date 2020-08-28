@@ -129,8 +129,6 @@ void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
 extern MOZ_THREAD_LOCAL(JSContext*) TlsContext;
 
 enum class ContextKind {
-  Uninitialized,
-
   // Context for the main thread of a JSRuntime.
   MainThread,
 
@@ -202,8 +200,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // currently operating on.
   void setRuntime(JSRuntime* rt);
 
-  void setHelperThread(const js::AutoLockHelperThreadState& locked);
-  void clearHelperThread(const js::AutoLockHelperThreadState& locked);
+  void setHelperThread(js::AutoLockHelperThreadState& locked);
+  void clearHelperThread(js::AutoLockHelperThreadState& locked);
 
   bool contextAvailable(js::AutoLockHelperThreadState& locked) {
     MOZ_ASSERT(kind_ == js::ContextKind::HelperThread);
@@ -220,12 +218,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   void setIsMeasuringExecutionTime(bool value) {
     measuringExecutionTime_ = value;
   }
-
-#ifdef DEBUG
-  bool isInitialized() const {
-    return kind_ != js::ContextKind::Uninitialized;
-  }
-#endif
 
   bool isMainThreadContext() const {
     return kind_ == js::ContextKind::MainThread;
