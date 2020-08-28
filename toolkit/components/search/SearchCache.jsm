@@ -334,7 +334,6 @@ class SearchCache {
       case SearchUtils.TOPIC_SEARCH_SERVICE:
         switch (verb) {
           case "init-complete":
-          case "reinit-complete":
           case "engines-reloaded":
             this._delayedWrite();
             break;

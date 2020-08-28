@@ -231,11 +231,6 @@ interface nsISearchService : nsISupports
   Promise init();
 
   /**
-   * Exposed for testing.
-   */
-  void reInit();
-
-  /**
    * Determine whether initialization has been completed.
    *
    * Clients of the service can use this attribute to quickly determine whether
