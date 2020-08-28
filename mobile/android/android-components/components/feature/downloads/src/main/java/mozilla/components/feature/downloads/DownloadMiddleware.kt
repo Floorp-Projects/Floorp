@@ -21,7 +21,6 @@ import mozilla.components.browser.state.state.content.DownloadState.Status.CANCE
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
-import mozilla.components.lib.state.Store
 import mozilla.components.support.base.log.logger.Logger
 import kotlin.coroutines.CoroutineContext
 
@@ -49,10 +48,10 @@ class DownloadMiddleware(
         action: BrowserAction
     ) {
         when (action) {
-            is DownloadAction.RemoveDownloadAction -> removeDownload(action.downloadId, context.store)
+            is DownloadAction.RemoveDownloadAction -> removeDownload(action.downloadId, context)
             is DownloadAction.RemoveAllDownloadsAction -> removeDownloads()
-            is DownloadAction.UpdateDownloadAction -> updateDownload(action.download, context.store)
-            is DownloadAction.RestoreDownloadsStateAction -> restoreDownloads(context.store)
+            is DownloadAction.UpdateDownloadAction -> updateDownload(action.download, context)
+            is DownloadAction.RestoreDownloadsStateAction -> restoreDownloads(context)
         }
 
         next(action)
@@ -71,8 +70,11 @@ class DownloadMiddleware(
         }
     }
 
-    private fun removeDownload(downloadId: String, store: Store<BrowserState, BrowserAction>) = scope.launch {
-        store.state.downloads[downloadId]?.let {
+    private fun removeDownload(
+        downloadId: String,
+        context: MiddlewareContext<BrowserState, BrowserAction>
+    ) = scope.launch {
+        context.state.downloads[downloadId]?.let {
             downloadStorage.remove(it)
             logger.debug("Removed download ${it.fileName} from the storage")
         }
@@ -82,8 +84,8 @@ class DownloadMiddleware(
         downloadStorage.removeAllDownloads()
     }
 
-    private fun updateDownload(updated: DownloadState, store: Store<BrowserState, BrowserAction>) {
-        store.state.downloads[updated.id]?.let { old ->
+    private fun updateDownload(updated: DownloadState, context: MiddlewareContext<BrowserState, BrowserAction>) {
+        context.state.downloads[updated.id]?.let { old ->
             // To not overwhelm the storage, we only send updates that are relevant,
             // we only care about properties, that we are stored on the storage.
             if (!DownloadStorage.isSameDownload(old, updated)) {
@@ -95,11 +97,11 @@ class DownloadMiddleware(
         }
     }
 
-    private fun restoreDownloads(store: Store<BrowserState, BrowserAction>) = scope.launch {
+    private fun restoreDownloads(context: MiddlewareContext<BrowserState, BrowserAction>) = scope.launch {
         downloadStorage.getDownloads().collect { downloads ->
             downloads.forEach { download ->
-                if (!store.state.downloads.containsKey(download.id)) {
-                    store.dispatch(DownloadAction.RestoreDownloadStateAction(download))
+                if (!context.state.downloads.containsKey(download.id)) {
+                    context.dispatch(DownloadAction.RestoreDownloadStateAction(download))
                     logger.debug("Download restarted from the storage ${download.fileName}")
                 }
             }
