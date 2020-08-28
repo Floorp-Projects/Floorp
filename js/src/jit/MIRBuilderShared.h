@@ -123,6 +123,18 @@ class MOZ_STACK_CLASS CallInfo {
   bool apply_;
 
  public:
+  // For some argument formats (normal calls, FunCall, FunApplyArgs in an
+  // inlined function) we can shuffle around definitions in the CallInfo
+  // and use a normal MCall. For others, we need to use a specialized call.
+  enum class ArgFormat {
+    Standard,
+    FunApplyArgs,
+  };
+
+ private:
+  ArgFormat argFormat_ = ArgFormat::Standard;
+
+ public:
   CallInfo(TempAllocator& alloc, jsbytecode* pc, bool constructing,
            bool ignoresReturnValue)
       : args_(alloc),
@@ -324,6 +336,9 @@ class MOZ_STACK_CLASS CallInfo {
     auto setFlag = [](MDefinition* def) { def->setImplicitlyUsedUnchecked(); };
     forEachCallOperand(setFlag);
   }
+
+  ArgFormat argFormat() const { return argFormat_; }
+  void setArgFormat(ArgFormat argFormat) { argFormat_ = argFormat; }
 };
 
 class AutoAccumulateReturns {
