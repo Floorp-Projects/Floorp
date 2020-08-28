@@ -69,24 +69,18 @@
 
 /**
  * There are multiple ways to handle unrecoverable conditions (note that the
- * patterns are put in chronological order and only the last pattern
+ * patterns are put in reverse chronological order and only the first pattern
  * QM_TRY/QM_TRY_VAR/QM_FAIL should be used in new code):
  *
- * 1. Using NS_ENSURE_* macros
- *
- * Mainly:
- * - NS_ENSURE_SUCCESS
- * - NS_ENSURE_SUCCESS_VOID
- * - NS_ENSURE_TRUE
- * - NS_ENSURE_TRUE_VOID
+ * 1. Using QM_TRY/QM_TRY_VAR/QM_FAIL macros (Quota manager specific, defined
+ *    below)
  *
  * Typical use cases:
  *
  * nsresult MyFunc1(nsIFile& aFile) {
  *   bool exists;
- *   nsresult rv = aFile.Exists(&exists);
- *   NS_ENSURE_SUCCESS(rv, rv);
- *   NS_ENSURE_TRUE(exists, NS_ERROR_FAILURE);
+ *   QM_TRY(aFile.Exists(&exists));
+ *   QM_TRY(OkIf(exists), NS_ERROR_FAILURE);
  *
  *   // The file exists, and data could be read from it here.
  *
@@ -95,9 +89,8 @@
  *
  * nsresult MyFunc2(nsIFile& aFile) {
  *   bool exists;
- *   nsresult rv = aFile.Exists(&exists);
- *   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
- *   NS_ENSURE_TRUE(exists, NS_ERROR_UNEXPECTED);
+ *   QM_TRY(aFile.Exists(&exists), NS_ERROR_UNEXPECTED);
+ *   QM_TRY(OkIf(exists), NS_ERROR_UNEXPECTED);
  *
  *   // The file exists, and data could be read from it here.
  *
@@ -106,40 +99,90 @@
  *
  * void MyFunc3(nsIFile& aFile) {
  *   bool exists;
- *   nsresult rv = aFile.Exists(&exists);
- *   NS_ENSURE_SUCCESS_VOID(rv);
- *   NS_ENSURE_TRUE_VOID(exists);
+ *   QM_TRY(aFile.Exists(&exists), QM_VOID);
+ *   QM_TRY(OkIf(exists), QM_VOID);
  *
  *   // The file exists, and data could be read from it here.
  * }
  *
  * nsresult MyFunc4(nsIFile& aFile) {
- *   // NS_ENSURE_SUCCESS/NS_ENSURE_TRUE can't run an additional cleanup
- *   // function
+ *   bool exists;
+ *   QM_TRY(storageFile->Exists(&exists), QM_PROPAGATE,
+ *          []() { NS_WARNING("The Exists call failed!"); });
+ *   QM_TRY(OkIf(exists), NS_ERROR_FAILURE,
+ *          []() { NS_WARNING("The file doesn't exist!"); });
+ *
+ *   // The file exists, and data could be read from it here.
  *
  *   return NS_OK;
  * }
  *
  * nsresult MyFunc5(nsIFile& aFile) {
  *   bool exists;
- *   nsresult rv = aFile.Exists(&exists);
- *   NS_ENSURE_SUCCESS(rv, rv);
+ *   QM_TRY(aFile.Exists(&exists));
  *   if (exists) {
  *     // The file exists, and data could be read from it here.
  *   } else {
- *     NS_ENSURE_TRUE(false, NS_ERROR_FAILURE);
+ *     QM_FAIL(NS_ERROR_FAILURE);
  *   }
  *
  *   return NS_OK;
  * }
  *
  * nsresult MyFunc6(nsIFile& aFile) {
- *   // NS_ENSURE_TRUE can't run an additional cleanup function
+ *   bool exists;
+ *   QM_TRY(aFile.Exists(&exists));
+ *   if (exists) {
+ *     // The file exists, and data could be read from it here.
+ *   } else {
+ *     QM_FAIL(NS_ERROR_FAILURE,
+ *             []() { NS_WARNING("The file doesn't exist!"); });
+ *   }
  *
  *   return NS_OK;
  * }
  *
- * 2. Using NS_WARN_IF and NS_WARNING macro with own control flow handling
+ * 2. Using MOZ_TRY/MOZ_TRY_VAR macros
+ *
+ * Typical use cases:
+ *
+ * nsresult MyFunc1(nsIFile& aFile) {
+ *   // MOZ_TRY can't return a custom return value
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc2(nsIFile& aFile) {
+ *   // MOZ_TRY can't return a custom return value
+ *
+ *   return NS_OK;
+ * }
+ *
+ * void MyFunc3(nsIFile& aFile) {
+ *   // MOZ_TRY can't return a custom return value, "void" in this case
+ * }
+ *
+ * nsresult MyFunc4(nsIFile& aFile) {
+ *   // MOZ_TRY can't return a custom return value and run an additional
+ *   // cleanup function
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc5(nsIFile& aFile) {
+ *   // There's no MOZ_FAIL, MOZ_TRY can't return a custom return value
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc6(nsIFile& aFile) {
+ *   // There's no MOZ_FAIL, MOZ_TRY can't return a custom return value and run
+ *   // an additional cleanup function
+ *
+ *   return NS_OK;
+ * }
+ *
+ * 3. Using NS_WARN_IF and NS_WARNING macro with own control flow handling
  *
  * Typical use cases:
  *
@@ -234,54 +277,21 @@
  *   return NS_OK;
  * }
  *
- * 3. Using MOZ_TRY/MOZ_TRY_VAR macros
+ * 4. Using NS_ENSURE_* macros
  *
- * Typical use cases:
- *
- * nsresult MyFunc1(nsIFile& aFile) {
- *   // MOZ_TRY can't return a custom return value
- *
- *   return NS_OK;
- * }
- *
- * nsresult MyFunc2(nsIFile& aFile) {
- *   // MOZ_TRY can't return a custom return value
- *
- *   return NS_OK;
- * }
- *
- * void MyFunc3(nsIFile& aFile) {
- *   // MOZ_TRY can't return a custom return value, "void" in this case
- * }
- *
- * nsresult MyFunc4(nsIFile& aFile) {
- *   // MOZ_TRY can't return a custom return value and run an additional
- *   // cleanup function
- *
- *   return NS_OK;
- * }
- *
- * nsresult MyFunc5(nsIFile& aFile) {
- *   // There's no MOZ_FAIL, MOZ_TRY can't return a custom return value
- *
- *   return NS_OK;
- * }
- *
- * nsresult MyFunc6(nsIFile& aFile) {
- *   // There's no MOZ_FAIL, MOZ_TRY can't return a custom return value and run
- *   // an additional cleanup function
- *
- *   return NS_OK;
- * }
- *
- * 4. Using QM_TRY/QM_TRY_VAR macros (Quota manager specific, defined below)
+ * Mainly:
+ * - NS_ENSURE_SUCCESS
+ * - NS_ENSURE_SUCCESS_VOID
+ * - NS_ENSURE_TRUE
+ * - NS_ENSURE_TRUE_VOID
  *
  * Typical use cases:
  *
  * nsresult MyFunc1(nsIFile& aFile) {
  *   bool exists;
- *   QM_TRY(aFile.Exists(&exists));
- *   QM_TRY(OkIf(exists), NS_ERROR_FAILURE);
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS(rv, rv);
+ *   NS_ENSURE_TRUE(exists, NS_ERROR_FAILURE);
  *
  *   // The file exists, and data could be read from it here.
  *
@@ -290,8 +300,9 @@
  *
  * nsresult MyFunc2(nsIFile& aFile) {
  *   bool exists;
- *   QM_TRY(aFile.Exists(&exists), NS_ERROR_UNEXPECTED);
- *   QM_TRY(OkIf(exists), NS_ERROR_UNEXPECTED);
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+ *   NS_ENSURE_TRUE(exists, NS_ERROR_UNEXPECTED);
  *
  *   // The file exists, and data could be read from it here.
  *
@@ -300,45 +311,35 @@
  *
  * void MyFunc3(nsIFile& aFile) {
  *   bool exists;
- *   QM_TRY(aFile.Exists(&exists), QM_VOID);
- *   QM_TRY(OkIf(exists), QM_VOID);
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS_VOID(rv);
+ *   NS_ENSURE_TRUE_VOID(exists);
  *
  *   // The file exists, and data could be read from it here.
  * }
  *
  * nsresult MyFunc4(nsIFile& aFile) {
- *   bool exists;
- *   QM_TRY(storageFile->Exists(&exists), QM_PROPAGATE,
- *          []() { NS_WARNING("The Exists call failed!"); });
- *   QM_TRY(OkIf(exists), NS_ERROR_FAILURE,
- *          []() { NS_WARNING("The file doesn't exist!"); });
- *
- *   // The file exists, and data could be read from it here.
+ *   // NS_ENSURE_SUCCESS/NS_ENSURE_TRUE can't run an additional cleanup
+ *   // function
  *
  *   return NS_OK;
  * }
  *
  * nsresult MyFunc5(nsIFile& aFile) {
  *   bool exists;
- *   QM_TRY(aFile.Exists(&exists));
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS(rv, rv);
  *   if (exists) {
  *     // The file exists, and data could be read from it here.
  *   } else {
- *     QM_FAIL(NS_ERROR_FAILURE);
+ *     NS_ENSURE_TRUE(false, NS_ERROR_FAILURE);
  *   }
  *
  *   return NS_OK;
  * }
  *
  * nsresult MyFunc6(nsIFile& aFile) {
- *   bool exists;
- *   QM_TRY(aFile.Exists(&exists));
- *   if (exists) {
- *     // The file exists, and data could be read from it here.
- *   } else {
- *     QM_FAIL(NS_ERROR_FAILURE,
- *             []() { NS_WARNING("The file doesn't exist!"); });
- *   }
+ *   // NS_ENSURE_TRUE can't run an additional cleanup function
  *
  *   return NS_OK;
  * }
