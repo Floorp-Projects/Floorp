@@ -391,7 +391,7 @@ class StencilModuleMetadata {
   EntryVector starExportEntries;
   FunctionDeclarationVector functionDecls;
 
-  explicit StencilModuleMetadata(JSContext* cx) {}
+  StencilModuleMetadata() = default;
 
   bool initModule(JSContext* cx, CompilationInfo& compilationInfo,
                   JS::Handle<ModuleObject*> module);
