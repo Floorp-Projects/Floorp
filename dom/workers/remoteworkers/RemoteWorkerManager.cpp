@@ -15,6 +15,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundParent.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "nsCOMPtr.h"
 #include "nsIXULRuntime.h"
 #include "nsTArray.h"
@@ -152,6 +153,17 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
 }
 
 // static
+bool RemoteWorkerManager::HasExtensionPrincipal(const RemoteWorkerData& aData) {
+  auto principalInfo = aData.principalInfo();
+  return principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
+         // This helper method is also called from the background thread and so
+         // we can't check if the principal does have an addonPolicy object
+         // associated and we have to resort to check the url scheme instead.
+         StringBeginsWith(principalInfo.get_ContentPrincipalInfo().spec(),
+                          "moz-extension://"_ns);
+}
+
+// static
 bool RemoteWorkerManager::IsRemoteTypeAllowed(const RemoteWorkerData& aData) {
   AssertIsOnMainThread();
 
@@ -168,8 +180,12 @@ bool RemoteWorkerManager::IsRemoteTypeAllowed(const RemoteWorkerData& aData) {
   auto* contentChild = ContentChild::GetSingleton();
   if (!contentChild) {
     // If e10s isn't disabled, only workers related to the system principal
-    // should be allowed to run in the parent process.
-    return principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo;
+    // should be allowed to run in the parent process, and extension principals
+    // if extensions.webextensions.remote is false.
+    return principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo ||
+           (!StaticPrefs::extensions_webextensions_remote() &&
+            aData.remoteType().Equals(NOT_REMOTE_TYPE) &&
+            HasExtensionPrincipal(aData));
   }
 
   auto principalOrErr = PrincipalInfoToPrincipal(principalInfo);
@@ -507,6 +523,16 @@ RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActor(
 
   // System principal workers should run on the parent process.
   if (aData.principalInfo().type() == PrincipalInfo::TSystemPrincipalInfo) {
+    MOZ_ASSERT(mParentActor);
+    return mParentActor;
+  }
+
+  // Extension principal workers are allowed to run on the parent process
+  // when "extension.webextensions.remote" pref is false.
+  if (aProcessId == base::GetCurrentProcId() &&
+      aData.remoteType().Equals(NOT_REMOTE_TYPE) &&
+      !StaticPrefs::extensions_webextensions_remote() &&
+      HasExtensionPrincipal(aData)) {
     MOZ_ASSERT(mParentActor);
     return mParentActor;
   }
