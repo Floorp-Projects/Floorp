@@ -5,7 +5,8 @@
 "use strict";
 
 /**
- * @typedef {import("../@types/ExperimentManager").Enrollment} Enrollment
+ * @typedef {import("./@types/ExperimentManager").Enrollment} Enrollment
+ * @typedef {import("./@types/ExperimentManager").FeatureConfig} FeatureConfig
  */
 
 const EXPORTED_SYMBOLS = ["ExperimentStore"];
@@ -22,39 +23,47 @@ class ExperimentStore extends SharedDataMap {
   }
 
   /**
-   * Given a group identifier, find an active experiment that matches that group identifier.
-   * For example, getExperimentForGroup("B") would return an experiment with groups ["A", "B", "C"]
-   * This assumes, for now, that there is only one active experiment per group per browser.
+   * Given a feature identifier, find an active experiment that matches that feature identifier.
+   * This assumes, for now, that there is only one active experiment per feature per browser.
    *
-   * @param {string} group
+   * @param {string} featureId
    * @returns {Enrollment|undefined} An active experiment if it exists
    * @memberof ExperimentStore
    */
-  getExperimentForGroup(group) {
-    for (const experiment of this.getAll()) {
-      if (experiment.active && experiment.branch.groups?.includes(group)) {
-        return experiment;
-      }
-    }
-    return undefined;
+  getExperimentForFeature(featureId) {
+    return this.getAllActive().find(
+      experiment => experiment.branch.feature?.featureId === featureId
+    );
   }
 
   /**
-   * Check if an active experiment already exists for a set of groups
+   * Return FeatureConfig from first active experiment where it can be found
+   * @param {string} featureId Feature to lookup
+   * @returns {FeatureConfig | null}
+   */
+  getFeature(featureId) {
+    for (let { branch } of this.getAllActive()) {
+      if (branch.feature?.featureId === featureId) {
+        return branch.feature;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if an active experiment already exists for a feature
    *
-   * @param {Array<string>} groups
-   * @returns {boolean} Does an active experiment exist for that group?
+   * @param {string} featureId
+   * @returns {boolean} Does an active experiment exist for that feature?
    * @memberof ExperimentStore
    */
-  hasExperimentForGroups(groups) {
-    if (!groups || !groups.length) {
+  hasExperimentForFeature(featureId) {
+    if (!featureId) {
       return false;
     }
-    for (const experiment of this.getAll()) {
-      if (
-        experiment.active &&
-        experiment.branch.groups?.filter(g => groups.includes(g)).length
-      ) {
+    for (const { branch } of this.getAllActive()) {
+      if (branch.feature?.featureId === featureId) {
         return true;
       }
     }

@@ -224,9 +224,9 @@ async function mount() {
     slug,
     branch
   } = await window.AWGetStartupData();
-  let settings = branch && branch.value ? branch.value : {};
+  let settings = branch && branch.feature ? branch.feature.value : {};
 
-  if (!(branch && branch.value)) {
+  if (!(branch && branch.feature)) {
     // Check for override content in pref browser.aboutwelcome.overrideContent
     settings = await window.AWGetMultiStageScreens();
   }

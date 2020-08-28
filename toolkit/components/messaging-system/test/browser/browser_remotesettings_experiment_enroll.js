@@ -23,12 +23,12 @@ const TEST_EXPERIMENT = {
       {
         slug: "treatment",
         ratio: 1,
-        value: null,
+        feature: { featureId: "treatment", enabled: true, value: null },
       },
       {
         slug: "control",
         ratio: 1,
-        value: null,
+        feature: { featureId: "control", enabled: true, value: null },
       },
     ],
     bucketConfig: {

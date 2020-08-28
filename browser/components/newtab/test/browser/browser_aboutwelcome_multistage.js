@@ -1,5 +1,9 @@
 "use strict";
 
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+);
+
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
   "browser.aboutwelcome.overrideContent";
@@ -172,6 +176,101 @@ async function onButtonClick(browser, elementId) {
     }
   );
 }
+
+/**
+ * Test the multistage welcome UI using ExperimentAPI
+ */
+add_task(async function test_multistage_aboutwelcome_experimentAPI() {
+  await setAboutWelcomePref(true);
+  await setAboutWelcomeMultiStage({});
+  let updatePromise = new Promise(resolve =>
+    ExperimentAPI._store.on("update:mochitest-aboutwelcome", resolve)
+  );
+  ExperimentAPI._store.addExperiment({
+    slug: "mochitest-aboutwelcome",
+    branch: {
+      slug: "mochitest-aboutwelcome",
+      feature: {
+        featureId: "aboutwelcome",
+        value: TEST_MULTISTAGE_CONTENT,
+      },
+    },
+    active: true,
+  });
+
+  await updatePromise;
+  ExperimentAPI._store._syncToChildren({ flush: true });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:welcome",
+    true
+  );
+  registerCleanupFunction(() => {
+    BrowserTestUtils.removeTab(tab);
+  });
+
+  const browser = tab.linkedBrowser;
+
+  await test_screen_content(
+    browser,
+    "multistage step 1",
+    // Expected selectors:
+    [
+      "div.multistageContainer",
+      "main.AW_STEP1",
+      "h1.welcomeZap",
+      "div.secondary-cta.top",
+      "button.secondary",
+      "label.theme",
+      "input[type='radio']",
+      "div.indicator.current",
+    ],
+    // Unexpected selectors:
+    ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
+  );
+
+  await onButtonClick(browser, "button.primary");
+  await test_screen_content(
+    browser,
+    "multistage step 2",
+    // Expected selectors:
+    [
+      "div.multistageContainer",
+      "main.AW_STEP2",
+      "button.secondary",
+      "div.tiles-container.info",
+    ],
+    // Unexpected selectors:
+    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "h1.welcomeZap"]
+  );
+  await onButtonClick(browser, "button.primary");
+  await test_screen_content(
+    browser,
+    "multistage step 3",
+    // Expected selectors:
+    [
+      "div.multistageContainer",
+      "main.AW_STEP3",
+      "div.brand-logo",
+      "div.welcome-text",
+    ],
+    // Unexpected selectors:
+    ["main.AW_STEP1", "main.AW_STEP2"]
+  );
+  await onButtonClick(browser, "button.primary");
+  await test_screen_content(
+    browser,
+    "home",
+    // Expected selectors:
+    ["body.activity-stream"],
+    // Unexpected selectors:
+    ["div.multistageContainer"]
+  );
+
+  ExperimentAPI._store._deleteForTests("mochitest-aboutwelcome");
+  Assert.equal(ExperimentAPI._store.getAll().length, 0, "Cleanup done");
+});
 
 /**
  * Test the multistage welcome UI rendered using TEST_MULTISTAGE_JSON

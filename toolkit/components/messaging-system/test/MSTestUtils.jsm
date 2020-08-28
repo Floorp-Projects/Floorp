@@ -57,7 +57,15 @@ const ExperimentFakes = {
       slug,
       active: true,
       enrollmentId: NormandyUtils.generateUuid(),
-      branch: { slug: "treatment", value: { title: "hello" } },
+      branch: {
+        slug: "treatment",
+        feature: {
+          featureId: "aboutwelcome",
+          enabled: true,
+          value: { title: "hello" },
+        },
+        ...props,
+      },
       source: "test",
       isEnrollmentPaused: true,
       ...props,
@@ -67,8 +75,18 @@ const ExperimentFakes = {
     return {
       slug,
       branches: [
-        { slug: "control", value: null },
-        { slug: "treatment", value: { title: "hello" } },
+        {
+          slug: "control",
+          feature: { featureId: "aboutwelcome", enabled: true, value: null },
+        },
+        {
+          slug: "treatment",
+          feature: {
+            featureId: "aboutwelcome",
+            enabled: true,
+            value: { title: "hello" },
+          },
+        },
       ],
       bucketConfig: {
         namespace: "mstest-utils",

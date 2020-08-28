@@ -208,9 +208,22 @@ describe("ASRouter", () => {
         }
       },
       ExperimentAPI: {
-        getExperiment: sandbox.stub().returns({ branch: { value: [] } }),
-        getAllBranches: sandbox.stub().returns([{ branch: { value: [] } }]),
+        getExperiment: sandbox.stub().returns({
+          branch: {
+            slug: "unit-slug",
+            feature: { featureId: "foo", value: { id: "test-message" } },
+          },
+        }),
+        getAllBranches: sandbox.stub().returns([
+          {
+            branch: {
+              slug: "unit-slug",
+              feature: { featureId: "bar", value: { id: "test-message" } },
+            },
+          },
+        ]),
         ready: sandbox.stub().resolves(),
+        getFeatureValue: sandbox.stub().returns(null),
       },
       SpecialMessageActions: {
         handleAction: sandbox.stub(),
@@ -4069,7 +4082,7 @@ describe("ASRouter", () => {
 
       assert.calledOnce(global.ExperimentAPI.getExperiment);
       assert.calledWithExactly(global.ExperimentAPI.getExperiment, {
-        group: "asrouter",
+        featureId: "asrouter",
       });
     });
     it("should handle the case of no experiments in the ExperimentAPI", async () => {
@@ -4106,7 +4119,10 @@ describe("ASRouter", () => {
       global.ExperimentAPI.getExperiment.returns({
         branch: {
           slug: "branch01",
-          value: { id: "id01", trigger: { id: "openURL" } },
+          feature: {
+            featureId: "asrouter",
+            value: { id: "id01", trigger: { id: "openURL" } },
+          },
         },
       });
 
@@ -4136,22 +4152,31 @@ describe("ASRouter", () => {
         slug: "exp01",
         branch: {
           slug: "branch01",
-          value: { id: "id01", trigger: { id: "openURL" } },
+          feature: {
+            featureId: "cfr",
+            value: { id: "id01", trigger: { id: "openURL" } },
+          },
         },
       });
       global.ExperimentAPI.getAllBranches.returns([
         {
           slug: "branch01",
-          value: { id: "id01", trigger: { id: "openURL" } },
+          feature: {
+            featureId: "cfr",
+            value: { id: "id01", trigger: { id: "openURL" } },
+          },
         },
         {
           slug: "branch02",
-          value: { id: "id02", trigger: { id: "openURL" } },
+          feature: {
+            featureId: "cfr",
+            value: { id: "id02", trigger: { id: "openURL" } },
+          },
         },
         {
           // This branch should not be loaded as it doesn't have the trigger
           slug: "branch03",
-          value: { id: "id03" },
+          feature: { featureId: "cfr", value: { id: "id03" } },
         },
       ]);
 
@@ -4160,7 +4185,6 @@ describe("ASRouter", () => {
       assert.equal(result.messages.length, 2);
       assert.equal(result.messages[0].id, "id01");
       assert.equal(result.messages[1].id, "id02");
-      assert.equal(result.messages[1].group, "cfr");
       assert.equal(result.messages[1].experimentSlug, "exp01");
       assert.equal(result.messages[1].branchSlug, "branch02");
       assert.deepEqual(result.messages[1].forReachEvent, { sent: false });

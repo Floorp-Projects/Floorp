@@ -200,12 +200,19 @@ class _ExperimentManager {
     const enrollmentId = NormandyUtils.generateUuid();
     const branch = await this.chooseBranch(slug, branches);
 
-    if (branch.groups && this.store.hasExperimentForGroups(branch.groups)) {
+    if (
+      this.store.hasExperimentForFeature(
+        // Extract out only the feature names from the branch
+        branch.feature?.featureId
+      )
+    ) {
       log.debug(
-        `Skipping enrollment for "${slug}" because there is an existing experiment for one of its groups.`
+        `Skipping enrollment for "${slug}" because there is an existing experiment for its feature.`
       );
-      this.sendFailureTelemetry("enrollFailed", slug, "group-conflict");
-      throw new Error(`An experiment with a conflicting group already exists.`);
+      this.sendFailureTelemetry("enrollFailed", slug, "feature-conflict");
+      throw new Error(
+        `An experiment with a conflicting feature already exists.`
+      );
     }
 
     /** @type {Enrollment} */
