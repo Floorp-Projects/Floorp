@@ -293,7 +293,6 @@ class ProgressDelegateTest : BaseSessionTest() {
         waitForScroll(offset, timeout, "pageTop")
     }
 
-    @Ignore // Bug 1547849
     @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreState() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
