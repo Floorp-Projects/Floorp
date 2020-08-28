@@ -110,7 +110,8 @@ bool nsPrinterCUPS::SupportsDuplex() const {
 }
 
 bool nsPrinterCUPS::SupportsColor() const {
-  return Supports(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_COLOR);
+  return Supports(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_COLOR) ||
+         Supports(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO);
 }
 
 bool nsPrinterCUPS::SupportsCollation() const {
