@@ -16647,56 +16647,51 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
-  bool exists;
-  nsresult rv = aDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
 
   if (!exists) {
     return FileUsageType{};
   }
 
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(const auto entries,
+              ToResultInvoke<nsCOMPtr<nsIDirectoryEnumerator>>(
+                  std::mem_fn(&nsIFile::GetDirectoryEntries), aDirectory));
 
   FileUsageType usage;
 
   nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
-         file) {
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+  MOZ_TRY(CollectEach(
+      [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+        IDB_TRY_VAR(
+            auto file,
+            ToResultInvoke<nsCOMPtr<nsIFile>>(
+                std::mem_fn(&nsIDirectoryEnumerator::GetNextFile), entries));
+        return file;
+      },
+      [&usage](const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(
+            const auto leafName,
+            ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName), file));
 
-    if (leafName.Equals(kJournalDirectoryName)) {
-      continue;
-    }
+        if (leafName.Equals(kJournalDirectoryName)) {
+          return mozilla::Ok{};
+        }
 
-    leafName.ToInteger64(&rv);
-    if (NS_SUCCEEDED(rv)) {
-      int64_t fileSize;
-      rv = file->GetFileSize(&fileSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+        nsresult rv;
+        leafName.ToInteger64(&rv);
+        if (NS_SUCCEEDED(rv)) {
+          IDB_TRY_VAR(const int64_t fileSize,
+                      MOZ_TO_RESULT_INVOKE(file, GetFileSize));
 
-      usage += FileUsageType(Some(uint64_t(fileSize)));
+          usage += FileUsageType(Some(uint64_t(fileSize)));
 
-      continue;
-    }
+          return mozilla::Ok{};
+        }
 
-    UNKNOWN_FILE_WARNING(leafName);
-  }
+        UNKNOWN_FILE_WARNING(leafName);
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+        return mozilla::Ok{};
+      }));
 
   return usage;
 }
