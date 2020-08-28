@@ -3414,6 +3414,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
     const nsAString& aContextStr, const nsAString& aInfoStr,
     nsCOMPtr<nsINode>* aOutFragNode, nsCOMPtr<nsINode>* aOutStartNode,
     nsCOMPtr<nsINode>* aOutEndNode, bool aTrustedInput) const {
+  MOZ_ASSERT((aInfoStr.IsEmpty() || aInfoStr.EqualsLiteral(u"0,0")) ||
+             !aContextStr.IsEmpty());
   MOZ_ASSERT(aOutFragNode);
   MOZ_ASSERT(aOutStartNode);
   MOZ_ASSERT(aOutEndNode);
