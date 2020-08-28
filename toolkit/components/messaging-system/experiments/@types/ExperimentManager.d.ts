@@ -1,8 +1,13 @@
+export interface FeatureConfig {
+  featureId: "cfr" | "aboutwelcome";
+  enabled: boolean;
+  value: { [key: string]: any } | null;
+}
+
 export interface Branch {
   slug: string;
   ratio: number;
-  groups: string[];
-  value: any;
+  feature: FeatureConfig;
 }
 
 interface BucketConfig {

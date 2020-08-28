@@ -356,19 +356,23 @@ const MessageLoaderUtils = {
     }
 
     let experiments = [];
-    for (const group of provider.messageGroups) {
+    for (const featureId of provider.messageGroups) {
       let experimentData;
       try {
-        experimentData = ExperimentAPI.getExperiment({ group });
+        experimentData = ExperimentAPI.getExperiment({ featureId });
       } catch (e) {
         MessageLoaderUtils.reportError(e);
         continue;
       }
 
-      if (experimentData && experimentData.branch) {
-        experiments.push(experimentData.branch.value);
+      if (
+        experimentData &&
+        experimentData.branch &&
+        experimentData.branch.feature
+      ) {
+        experiments.push(experimentData.branch.feature.value);
 
-        if (!REACH_EVENT_GROUPS.includes(group)) {
+        if (!REACH_EVENT_GROUPS.includes(featureId)) {
           continue;
         }
         // Check other sibling branches for triggers, add them to the return
@@ -378,16 +382,16 @@ const MessageLoaderUtils = {
         const branches =
           (await ExperimentAPI.getAllBranches(experimentData.slug)) || [];
         for (const branch of branches) {
+          let branchValue = branch.feature.value;
           if (
             branch.slug !== experimentData.branch.slug &&
-            branch.value.trigger
+            branchValue.trigger
           ) {
             experiments.push({
-              group,
               forReachEvent: { sent: false },
               experimentSlug: experimentData.slug,
               branchSlug: branch.slug,
-              ...branch.value,
+              ...branchValue,
             });
           }
         }

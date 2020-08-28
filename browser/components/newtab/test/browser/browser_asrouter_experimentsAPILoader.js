@@ -26,97 +26,100 @@ const EXPERIMENT_PAYLOAD = {
       {
         slug: "control",
         ratio: 1,
-        value: {
-          id: "xman_test_message",
-          content: {
-            text: "This is a test CFR",
-            addon: {
-              id: "954390",
-              icon:
-                "resource://activity-stream/data/content/assets/cfr_fb_container.png",
-              title: "Facebook Container",
-              users: 1455872,
-              author: "Mozilla",
-              rating: 4.5,
-              amo_url:
-                "https://addons.mozilla.org/firefox/addon/facebook-container/",
-            },
-            buttons: {
-              primary: {
-                label: {
-                  string_id: "cfr-doorhanger-extension-ok-button",
-                },
-                action: {
-                  data: {
-                    url: null,
-                  },
-                  type: "INSTALL_ADDON_FROM_URL",
-                },
+        feature: {
+          featureId: "cfr",
+          enabled: true,
+          value: {
+            id: "xman_test_message",
+            content: {
+              text: "This is a test CFR",
+              addon: {
+                id: "954390",
+                icon:
+                  "resource://activity-stream/data/content/assets/cfr_fb_container.png",
+                title: "Facebook Container",
+                users: 1455872,
+                author: "Mozilla",
+                rating: 4.5,
+                amo_url:
+                  "https://addons.mozilla.org/firefox/addon/facebook-container/",
               },
-              secondary: [
-                {
+              buttons: {
+                primary: {
                   label: {
-                    string_id: "cfr-doorhanger-extension-cancel-button",
-                  },
-                  action: {
-                    type: "CANCEL",
-                  },
-                },
-                {
-                  label: {
-                    string_id:
-                      "cfr-doorhanger-extension-never-show-recommendation",
-                  },
-                },
-                {
-                  label: {
-                    string_id:
-                      "cfr-doorhanger-extension-manage-settings-button",
+                    string_id: "cfr-doorhanger-extension-ok-button",
                   },
                   action: {
                     data: {
-                      origin: "CFR",
-                      category: "general-cfraddons",
+                      url: null,
                     },
-                    type: "OPEN_PREFERENCES_PAGE",
+                    type: "INSTALL_ADDON_FROM_URL",
                   },
                 },
+                secondary: [
+                  {
+                    label: {
+                      string_id: "cfr-doorhanger-extension-cancel-button",
+                    },
+                    action: {
+                      type: "CANCEL",
+                    },
+                  },
+                  {
+                    label: {
+                      string_id:
+                        "cfr-doorhanger-extension-never-show-recommendation",
+                    },
+                  },
+                  {
+                    label: {
+                      string_id:
+                        "cfr-doorhanger-extension-manage-settings-button",
+                    },
+                    action: {
+                      data: {
+                        origin: "CFR",
+                        category: "general-cfraddons",
+                      },
+                      type: "OPEN_PREFERENCES_PAGE",
+                    },
+                  },
+                ],
+              },
+              category: "cfrAddons",
+              bucket_id: "CFR_M1",
+              info_icon: {
+                label: {
+                  string_id: "cfr-doorhanger-extension-sumo-link",
+                },
+                sumo_path: "extensionrecommendations",
+              },
+              heading_text: "Welcome to the experiment",
+              notification_text: {
+                string_id: "cfr-doorhanger-extension-notification2",
+              },
+            },
+            trigger: {
+              id: "openURL",
+              params: [
+                "www.facebook.com",
+                "facebook.com",
+                "www.instagram.com",
+                "instagram.com",
+                "www.whatsapp.com",
+                "whatsapp.com",
+                "web.whatsapp.com",
+                "www.messenger.com",
+                "messenger.com",
               ],
             },
-            category: "cfrAddons",
-            bucket_id: "CFR_M1",
-            info_icon: {
-              label: {
-                string_id: "cfr-doorhanger-extension-sumo-link",
-              },
-              sumo_path: "extensionrecommendations",
+            template: "cfr_doorhanger",
+            frequency: {
+              lifetime: 3,
             },
-            heading_text: "Welcome to the experiment",
-            notification_text: {
-              string_id: "cfr-doorhanger-extension-notification2",
-            },
+            targeting: "true",
           },
-          trigger: {
-            id: "openURL",
-            params: [
-              "www.facebook.com",
-              "facebook.com",
-              "www.instagram.com",
-              "instagram.com",
-              "www.whatsapp.com",
-              "whatsapp.com",
-              "web.whatsapp.com",
-              "www.messenger.com",
-              "messenger.com",
-            ],
-          },
-          template: "cfr_doorhanger",
-          frequency: {
-            lifetime: 3,
-          },
-          targeting: "true",
         },
-        groups: ["cfr"],
       },
     ],
     isHighVolume: "false,",
@@ -154,7 +157,7 @@ add_task(async function test_loading_experimentsAPI() {
   // Fetch the new recipe from RS
   await RemoteSettingsExperimentLoader.updateRecipes();
   await BrowserTestUtils.waitForCondition(
-    () => ExperimentAPI.getExperiment({ group: "cfr" }),
+    () => ExperimentAPI.getExperiment({ featureId: "cfr" }),
     "ExperimentAPI should return an experiment"
   );
 

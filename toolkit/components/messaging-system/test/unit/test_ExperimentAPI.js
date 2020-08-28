@@ -42,11 +42,15 @@ add_task(async function test_getExperiment_slug() {
   sandbox.restore();
 });
 
-add_task(async function test_getExperiment_group() {
+add_task(async function test_getExperiment_feature() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
   const expected = ExperimentFakes.experiment("foo", {
-    branch: { slug: "treatment", value: { title: "hi" }, groups: ["blue"] },
+    branch: {
+      slug: "treatment",
+      value: { title: "hi" },
+      feature: { featureId: "cfr", enabled: true },
+    },
   });
 
   await manager.onStartup();
@@ -57,12 +61,12 @@ add_task(async function test_getExperiment_group() {
 
   // Wait to sync to child
   await TestUtils.waitForCondition(
-    () => ExperimentAPI.getExperiment({ group: "blue" }),
+    () => ExperimentAPI.getExperiment({ featureId: "cfr" }),
     "Wait for child to sync"
   );
 
   Assert.deepEqual(
-    ExperimentAPI.getExperiment({ group: "blue" }),
+    ExperimentAPI.getExperiment({ featureId: "cfr" }),
     expected,
     "should return an experiment by slug"
   );
@@ -76,9 +80,13 @@ add_task(async function test_getExperiment_group() {
 add_task(async function test_getValue() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
-  const value = { title: "hi" };
+  const feature = {
+    featureId: "aboutwelcome",
+    enabled: true,
+    value: { title: "hi" },
+  };
   const expected = ExperimentFakes.experiment("foo", {
-    branch: { slug: "treatment", value },
+    branch: { slug: "treatment", feature },
   });
 
   await manager.onStartup();
@@ -93,13 +101,13 @@ add_task(async function test_getValue() {
   );
 
   Assert.deepEqual(
-    ExperimentAPI.getValue({ slug: "foo" }),
-    value,
+    ExperimentAPI.getFeatureValue("aboutwelcome"),
+    feature.value,
     "should return an experiment value by slug"
   );
 
   Assert.equal(
-    ExperimentAPI.getValue({ slug: "doesnotexist" }),
+    ExperimentAPI.getFeatureValue("doesnotexist"),
     undefined,
     "should return undefined if the experiment is not found"
   );

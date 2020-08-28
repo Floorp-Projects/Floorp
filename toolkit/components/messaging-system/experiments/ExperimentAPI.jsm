@@ -4,6 +4,11 @@
 
 "use strict";
 
+/**
+ * @typedef {import("./@types/ExperimentManager").Enrollment} Enrollment
+ * @typedef {import("./@types/ExperimentManager").FeatureConfig} FeatureConfig
+ */
+
 const EXPORTED_SYMBOLS = ["ExperimentAPI"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -35,28 +40,35 @@ const ExperimentAPI = {
   /**
    * Returns an experiment, including all its metadata
    *
-   * @param {{slug?: string, group?: string}} options slug = An experiment identifier
-   * or group = a stable identifier for a group of experiments
+   * @param {{slug?: string, featureId?: string}} options slug = An experiment identifier
+   * or feature = a stable identifier for a type of experiment
    * @returns {Enrollment|undefined} A matching experiment if one is found.
    */
-  getExperiment({ slug, group } = {}) {
+  getExperiment({ slug, featureId } = {}) {
     if (slug) {
       return this._store.get(slug);
-    } else if (group) {
-      return this._store.getExperimentForGroup(group);
+    } else if (featureId) {
+      return this._store.getExperimentForFeature(featureId);
     }
-    throw new Error("getExperiment(options) must include a slug or a group.");
+    throw new Error("getExperiment(options) must include a slug or a feature.");
   },
 
   /**
-   * Returns the value of the selected branch for a given experiment
-   *
-   * @param {{slug?: string, group?: string}} options slug = An experiment identifier
-   * or group = a stable identifier for a group of experiments
-   * @returns {any} The selected value of the active branch of the experiment
+   * Lookup feature in active experiments and return status.
+   * @param {string} featureId Feature to lookup
+   * @returns {boolean}
    */
-  getValue(options) {
-    return this.getExperiment(options)?.branch.value;
+  isFeatureEnabled(featureId) {
+    return this._store.getFeature(featureId)?.enabled;
+  },
+
+  /**
+   * Lookup feature in active experiments and return value.
+   * @param {string} featureId Feature name to lookup
+   * @returns {FeatureConfig.value}
+   */
+  getFeatureValue(featureId) {
+    return this._store.getFeature(featureId)?.value;
   },
 
   /**
