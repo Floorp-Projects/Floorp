@@ -186,14 +186,18 @@ auto ToResultInvokeMemberFunction(T& aObj, const Func& aFunc, Args&&... aArgs) {
 
 // For use in MOZ_TO_RESULT_INVOKE.
 template <typename T>
-auto DerefHelper(const T&) -> T;
+auto DerefHelper(const T&) -> T&;
+
+template <typename T>
+auto DerefHelper(T*) -> T&;
 
 template <template <class> class SmartPtr, typename T,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
-auto DerefHelper(const SmartPtr<T>&) -> T;
+auto DerefHelper(const SmartPtr<T>&) -> T&;
 
 template <typename T>
-using DerefedType = decltype(DerefHelper(std::declval<T>()));
+using DerefedType =
+    std::remove_reference_t<decltype(DerefHelper(std::declval<const T&>()))>;
 }  // namespace detail
 
 template <typename T, typename U, typename... XArgs, typename... Args,
