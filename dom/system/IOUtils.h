@@ -8,6 +8,7 @@
 #define mozilla_dom_IOUtils__
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -16,6 +17,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/Result.h"
 #include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "nspr/prio.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
@@ -56,10 +58,11 @@ class IOUtils final {
 
   static already_AddRefed<Promise> Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
-                                        const Optional<uint32_t>& aMaxBytes);
+                                        const ReadOptions& aOptions);
 
   static already_AddRefed<Promise> ReadUTF8(GlobalObject& aGlobal,
-                                            const nsAString& aPath);
+                                            const nsAString& aPath,
+                                            const ReadUTF8Options& aOptions);
 
   static already_AddRefed<Promise> WriteAtomic(
       GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
@@ -105,6 +108,7 @@ class IOUtils final {
   friend class IOUtilsShutdownBlocker;
   struct InternalFileInfo;
   struct InternalWriteAtomicOpts;
+  class MozLZ4;
 
   static StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
       sBackgroundEventTarget;
@@ -167,23 +171,31 @@ class IOUtils final {
   /**
    * Attempts to read the entire file at |aPath| into a buffer.
    *
-   * @param aPath     The location of the file as an absolute path string.
-   * @param aMaxBytes If |Some|, then only read up this this number of bytes,
-   *                  otherwise attempt to read the whole file.
+   * @param aPath       The location of the file as an absolute path string.
+   * @param aMaxBytes   If |Some|, then only read up this this number of bytes,
+   *                    otherwise attempt to read the whole file.
+   * @param aDecompress If true, decompress the bytes read from disk before
+   *                    returning the result to the caller.
    *
-   * @return A byte array of the entire file contents, or an error.
+   * @return A byte array of the entire (decompressed) file contents, or an
+   *         error.
    */
   static Result<nsTArray<uint8_t>, IOError> ReadSync(
-      const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes);
+      const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes,
+      const bool aDecompress);
 
   /**
    * Attempts to read the entire file at |aPath| as a UTF-8 string.
    *
-   * @param aPath The location of the file as an absolute path string.
+   * @param aPath       The location of the file as an absolute path string.
+   * @param aDecompress If true, decompress the bytes read from disk before
+   *                    returning the result to the caller.
    *
-   * @return The contents of the file re-encoded as a UTF-16 string.
+   * @return The (decompressed) contents of the file re-encoded as a UTF-16
+   *         string.
    */
-  static Result<nsString, IOError> ReadUTF8Sync(const nsAString& aPath);
+  static Result<nsString, IOError> ReadUTF8Sync(const nsAString& aPath,
+                                                const bool aDecompress);
 
   /**
    * Attempts to write the entirety of |aByteArray| to the file at |aPath|.
@@ -409,6 +421,7 @@ struct IOUtils::InternalWriteAtomicOpts {
   bool mFlush;
   bool mNoOverwrite;
   Maybe<nsString> mTmpPath;
+  bool mCompress;
 
   static inline InternalWriteAtomicOpts FromBinding(
       const WriteAtomicOptions& aOptions) {
@@ -421,8 +434,43 @@ struct IOUtils::InternalWriteAtomicOpts {
     if (aOptions.mTmpPath.WasPassed()) {
       opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
     }
+    opts.mCompress = aOptions.mCompress;
     return opts;
   }
+};
+
+/**
+ * Re-implements the file compression and decompression utilities found
+ * in toolkit/components/lz4/lz4.js
+ *
+ * This implementation uses the non-standard data layout:
+ *
+ *  - MAGIC_NUMBER (8 bytes)
+ *  - content size (uint32_t, little endian)
+ *  - content, as obtained from mozilla::Compression::LZ4::compress
+ *
+ * See bug 1209390 for more info.
+ */
+class IOUtils::MozLZ4 {
+ public:
+  static constexpr std::array<uint8_t, 8> MAGIC_NUMBER{
+      {'m', 'o', 'z', 'L', 'z', '4', '0', '\0'}};
+
+  static const uint32_t HEADER_SIZE = 8 + sizeof(uint32_t);
+
+  /**
+   * Compresses |aUncompressed| byte array, and returns a byte array with the
+   * correct format whose contents may be written to disk.
+   */
+  static Result<nsTArray<uint8_t>, IOError> Compress(
+      Span<const uint8_t> aUncompressed);
+
+  /**
+   * Checks |aFileContents| for the correct file header, and returns the
+   * decompressed content.
+   */
+  static Result<nsTArray<uint8_t>, IOError> Decompress(
+      Span<const uint8_t> aFileContents);
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {

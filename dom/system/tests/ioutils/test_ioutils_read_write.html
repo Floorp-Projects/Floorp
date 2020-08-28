@@ -175,7 +175,7 @@
 
       // Read just the first 10 bytes.
       const first10 = bytes.slice(0, 10);
-      const bytes10 = await IOUtils.read(tmpFileName, 10);
+      const bytes10 = await IOUtils.read(tmpFileName, { maxBytes: 10 });
       ok(
         ObjectUtils.deepEqual(bytes10, first10),
         "IOUtils::read can read part of a file, up to specified max bytes"
@@ -183,7 +183,7 @@
 
       // Trying to explicitly read nothing isn't useful, but it should still
       // succeed.
-      const bytes0 = await IOUtils.read(tmpFileName, 0);
+      const bytes0 = await IOUtils.read(tmpFileName, { maxBytes: 0 });
       is(bytes0.length, 0, "IOUtils::read can read 0 bytes");
 
       await cleanup(tmpFileName);
@@ -202,7 +202,7 @@
 
       // Trying to explicitly read nothing isn't useful, but it should still
       // succeed.
-      const bytes0 = await IOUtils.read(tmpFileName, 0);
+      const bytes0 = await IOUtils.read(tmpFileName, { maxBytes: 0 });
       is(bytes0.length, 0, "IOUtils::read can read 0 bytes");
 
       // Implicitly try to read nothing.
@@ -234,7 +234,7 @@
       );
 
       const tooManyBytes = bytes.length + 1;
-      fileContents = await IOUtils.read(tmpFileName, tooManyBytes);
+      fileContents = await IOUtils.read(tmpFileName, { maxBytes: tooManyBytes });
       ok(
         ObjectUtils.deepEqual(bytes, fileContents) &&
         fileContents.length == bytes.length,
@@ -266,6 +266,123 @@
         /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
         "IOUtils::writeAtomic only works with absolute paths"
       );
+    });
+
+    add_task(async function test_lz4() {
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_lz4.tmp");
+
+      info("Test writing lz4 encoded data");
+      const varyingBytes = Uint8Array.of(...new Array(50).keys());
+      let bytesWritten = await IOUtils.writeAtomic(tmpFileName, varyingBytes, { compress: true });
+      is(bytesWritten, 64, "Expected to write 64 bytes");
+
+      info("Test reading lz4 encoded data");
+      let readData = await IOUtils.read(tmpFileName, { decompress: true });
+      ok(readData.equals(varyingBytes), "IOUtils can write and read back LZ4 encoded data");
+
+      info("Test writing lz4 compressed data");
+      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
+      bytesWritten = await IOUtils.writeAtomic(tmpFileName, repeatedBytes, { compress: true });
+      is(bytesWritten, 23, "Expected 50 bytes to compress to 23 bytes");
+
+      info("Test reading lz4 encoded data");
+      readData = await IOUtils.read(tmpFileName, { decompress: true });
+      ok(readData.equals(repeatedBytes), "IOUtils can write and read back LZ4 compressed data");
+
+      info("Test writing empty lz4 compressed data")
+      const empty = new Uint8Array();
+      bytesWritten = await IOUtils.writeAtomic(tmpFileName, empty, { compress: true });
+      is(bytesWritten, 12, "Expected to write just the LZ4 header, with a content length of 0");
+
+
+      info("Test reading empty lz4 compressed data")
+      const readEmpty = await IOUtils.read(tmpFileName, { decompress: true });
+      ok(readEmpty.equals(empty), "IOUtils can write and read back empty buffers with LZ4");
+      const readEmptyRaw = await IOUtils.read(tmpFileName, { decompress: false });
+      is(readEmptyRaw.length, 12, "Expected to read back just the LZ4 header");
+      const expectedHeader = Uint8Array.of(109, 111, 122, 76, 122, 52, 48, 0, 0, 0, 0, 0); // "mozLz40\0\0\0\0"
+      ok(readEmptyRaw.equals(expectedHeader), "Expected to read header with content length of 0");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_lz4_osfile_compat() {
+      const osfileTmpFile = OS.Path.join(tmpDir, "test_ioutils_lz4_compat_osfile.tmp");
+      const ioutilsTmpFile = OS.Path.join(tmpDir, "test_ioutils_lz4_compat_ioutils.tmp");
+
+      info("Test OS.File and IOUtils write the same file with LZ4 compression enabled")
+      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
+      let expectedBytes = 23;
+      let ioutilsBytes = await IOUtils.writeAtomic(ioutilsTmpFile, repeatedBytes, { compress: true });
+      let osfileBytes = await OS.File.writeAtomic(osfileTmpFile, repeatedBytes, { compression: "lz4" });
+      is(ioutilsBytes, expectedBytes, "IOUtils writes the expected number of bytes for compression");
+      is(osfileBytes, ioutilsBytes, "OS.File and IOUtils write the same number of bytes for LZ4 compression");
+
+      info("Test OS.File can read a file compressed by IOUtils");
+      const osfileReadBytes = await OS.File.read(ioutilsTmpFile, { compression: "lz4" });
+      ok(osfileReadBytes.every(byte => byte === 1), "OS.File can read a file compressed by IOUtils");
+      is(osfileReadBytes.length, 50, "OS.File reads the right number of bytes from a file compressed by IOUtils")
+
+      info("Test IOUtils can read a file compressed by OS.File");
+      const ioutilsReadBytes = await IOUtils.read(osfileTmpFile, { decompress: true });
+      ok(ioutilsReadBytes.every(byte => byte === 1), "IOUtils can read a file compressed by OS.File");
+      is(ioutilsReadBytes.length, 50, "IOUtils reads the right number of bytes from a file compressed by OS.File")
+
+      await cleanup(osfileTmpFile, ioutilsTmpFile);
+    });
+
+    add_task(async function test_lz4_bad_call() {
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_lz4_bad_call.tmp");
+
+      info("Test decompression with invalid options");
+      const varyingBytes = Uint8Array.of(...new Array(50).keys());
+      let bytesWritten = await IOUtils.writeAtomic(tmpFileName, varyingBytes, { compress: true });
+      is(bytesWritten, 64, "Expected to write 64 bytes");
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { maxBytes: 4, decompress: true }),
+        /The `maxBytes` and `decompress` options are not compatible/,
+        "IOUtils::read rejects when maxBytes and decompress options are both used"
+      );
+
+      await cleanup(tmpFileName)
+    });
+
+    add_task(async function test_lz4_failure() {
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_lz4_fail.tmp");
+
+      info("Test decompression of non-lz4 data");
+      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
+      await IOUtils.writeAtomic(tmpFileName, repeatedBytes, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { decompress: true }),
+        /Could not decompress file because it has an invalid LZ4 header \(wrong magic number: .*\)/,
+        "IOUtils::read fails to decompress LZ4 data with a bad header"
+      );
+
+      info("Test decompression of short byte buffer");
+      const elevenBytes = Uint8Array.of(...new Array(11).fill(1));
+      await IOUtils.writeAtomic(tmpFileName, elevenBytes, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { decompress: true }),
+        /Could not decompress file because the buffer is too short/,
+        "IOUtils::read fails to decompress LZ4 data with missing header"
+      );
+
+      info("Test decompression of valid header, but corrupt contents");
+      const headerFor10bytes = [109, 111, 122, 76, 122, 52, 48, 0, 10, 0, 0, 0] // "mozlz40\0" + 4 byte length
+      const badContents = new Array(11).fill(255); // Bad leading byte, followed by uncompressed stream.
+      const goodHeaderBadContents = Uint8Array.of(...headerFor10bytes, ...badContents);
+      await IOUtils.writeAtomic(tmpFileName, goodHeaderBadContents, { compress: false });
+
+      await Assert.rejects(
+        IOUtils.read(tmpFileName, { decompress: true }),
+        /Could not decompress file contents, the file may be corrupt/,
+        "IOUtils::read fails to read corrupt LZ4 contents with a correct header"
+      );
+
+      await cleanup(tmpFileName);
     });
   </script>
 </head>
