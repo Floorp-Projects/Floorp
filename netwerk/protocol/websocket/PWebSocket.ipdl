@@ -53,8 +53,8 @@ child:
                 nsString aEffectiveURL, bool aEncrypted,
                 uint64_t aHttpChannelId);
   async OnStop(nsresult aStatusCode);
-  async OnMessageAvailable(nsCString aMsg);
-  async OnBinaryMessageAvailable(nsCString aMsg);
+  async OnMessageAvailable(nsDependentCSubstring aMsg, bool aMoreData);
+  async OnBinaryMessageAvailable(nsDependentCSubstring aMsg, bool aMoreData);
   async OnAcknowledge(uint32_t aSize);
   async OnServerClose(uint16_t code, nsCString aReason);
 

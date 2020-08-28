@@ -217,13 +217,53 @@ WebSocketChannelParent::OnStop(nsISupports* aContext, nsresult aStatusCode) {
   return NS_OK;
 }
 
+static bool SendOnMessageAvailableHelper(
+    const nsACString& aMsg,
+    const std::function<bool(const nsDependentCSubstring&, bool)>& aSendFunc) {
+  // To avoid the crash caused by too large IPC message, we have to split the
+  // data in small chunks and send them to child process. Note that the chunk
+  // size used here is the same as what we used for PHttpChannel.
+  static uint32_t const kCopyChunkSize = 128 * 1024;
+  uint32_t count = aMsg.Length();
+  if (count <= kCopyChunkSize) {
+    return aSendFunc(nsDependentCSubstring(aMsg), false);
+  }
+
+  uint32_t start = 0;
+  uint32_t toRead = std::min<uint32_t>(count, kCopyChunkSize);
+  while (count) {
+    nsDependentCSubstring data(Substring(aMsg, start, toRead));
+
+    if (!aSendFunc(data, count > kCopyChunkSize)) {
+      return false;
+    }
+
+    start += toRead;
+    count -= toRead;
+    toRead = std::min<uint32_t>(count, kCopyChunkSize);
+  }
+
+  return true;
+}
+
 NS_IMETHODIMP
 WebSocketChannelParent::OnMessageAvailable(nsISupports* aContext,
                                            const nsACString& aMsg) {
   LOG(("WebSocketChannelParent::OnMessageAvailable() %p\n", this));
-  if (!CanRecv() || !SendOnMessageAvailable(nsCString(aMsg))) {
+
+  if (!CanRecv()) {
     return NS_ERROR_FAILURE;
   }
+
+  auto sendFunc = [self = UnsafePtr<WebSocketChannelParent>(this)](
+                      const nsDependentCSubstring& aMsg, bool aMoreData) {
+    return self->SendOnMessageAvailable(aMsg, aMoreData);
+  };
+
+  if (!SendOnMessageAvailableHelper(aMsg, sendFunc)) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -231,9 +271,20 @@ NS_IMETHODIMP
 WebSocketChannelParent::OnBinaryMessageAvailable(nsISupports* aContext,
                                                  const nsACString& aMsg) {
   LOG(("WebSocketChannelParent::OnBinaryMessageAvailable() %p\n", this));
-  if (!CanRecv() || !SendOnBinaryMessageAvailable(nsCString(aMsg))) {
+
+  if (!CanRecv()) {
     return NS_ERROR_FAILURE;
   }
+
+  auto sendFunc = [self = UnsafePtr<WebSocketChannelParent>(this)](
+                      const nsDependentCSubstring& aMsg, bool aMoreData) {
+    return self->SendOnBinaryMessageAvailable(aMsg, aMoreData);
+  };
+
+  if (!SendOnMessageAvailableHelper(aMsg, sendFunc)) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 

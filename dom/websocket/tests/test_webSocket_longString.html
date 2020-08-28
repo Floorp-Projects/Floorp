@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test - big blob on content side</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+var ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_basic", "test");
+is(ws.readyState, 0, "Initial readyState is 0");
+
+const longString = new Array(1024*1024).join('123456789ABCDEF');
+
+ws.onopen = function(e) {
+  is(this, ws, "[onopen()] 'this' should point to the WebSocket.");
+  ws.send(longString);
+};
+
+ws.onclose = function(e) {
+  is(this, ws, "[onclose()] 'this' should point to the WebSocket.");
+  ok(e.wasClean, "Connection closed cleanly");
+
+  SimpleTest.executeSoon(SimpleTest.finish);
+};
+
+ws.onerror = function(e) {
+  is(this, ws, "[onerror()] 'this' should point to the WebSocket.");
+  ok(false, "onerror()] should not have been called!");
+  SimpleTest.executeSoon(SimpleTest.finish);
+};
+
+ws.onmessage = function(e) {
+  is(this, ws, "[onmessage()] 'this' should point to the WebSocket.");
+  // Do not use |is(e.data, longString, "...");| that results in a _very_ long line.
+  is(e.data.length, longString.length, "Length of received message");
+  ok(e.data === longString, "Content of received message");
+  this.close();
+};
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
