@@ -498,6 +498,8 @@ GeckoDriver.prototype.addBrowser = function(win) {
 GeckoDriver.prototype.startBrowser = function(window, isNewSession = false) {
   this.mainFrame = window;
   this.chromeBrowsingContext = this.mainFrame.browsingContext;
+  this.contentBrowsingContext = null;
+
   this.addBrowser(window);
   this.whenBrowserStarted(window, isNewSession);
 };
@@ -626,7 +628,7 @@ GeckoDriver.prototype.listeningPromise = function() {
     let cb = msg => {
       if (msg.json.frameId === this.curBrowser.curFrameId) {
         this.mm.removeMessageListener(li, cb);
-        resolve();
+        resolve(msg.json.frameId);
       }
     };
     this.mm.addMessageListener(li, cb);
@@ -1648,12 +1650,12 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
  */
 GeckoDriver.prototype.findWindow = function(winIterable, filter) {
   for (const win of winIterable) {
-    const bc = win.docShell.browsingContext;
+    const browsingContext = win.docShell.browsingContext;
     const tabBrowser = browser.getTabBrowser(win);
 
     // In case the wanted window is a chrome window, we are done.
-    if (filter(win, bc.id)) {
-      return { win, id: bc.id, hasTabBrowser: !!tabBrowser };
+    if (filter(win, browsingContext.id)) {
+      return { win, id: browsingContext.id, hasTabBrowser: !!tabBrowser };
 
       // Otherwise check if the chrome window has a tab browser, and that it
       // contains a tab with the wanted window handle.
@@ -1665,7 +1667,7 @@ GeckoDriver.prototype.findWindow = function(winIterable, filter) {
         if (filter(win, contentWindowId)) {
           return {
             win,
-            id: bc.id,
+            id: browsingContext.id,
             hasTabBrowser: true,
             tabIndex: i,
           };
@@ -1698,7 +1700,6 @@ GeckoDriver.prototype.setWindowHandle = async function(
     // Initialise Marionette if the current chrome window has not been seen
     // before. Also register the initial tab, if one exists.
     let registerBrowsers, browserListening;
-
     if (winProperties.hasTabBrowser) {
       registerBrowsers = this.registerPromise();
       browserListening = this.listeningPromise();
@@ -1708,22 +1709,27 @@ GeckoDriver.prototype.setWindowHandle = async function(
 
     if (registerBrowsers && browserListening) {
       await registerBrowsers;
-      await browserListening;
+      const id = await browserListening;
+      this.contentBrowsingContext = BrowsingContext.get(id);
     }
   } else {
     // Otherwise switch to the known chrome window
     this.curBrowser = this.browsers[winProperties.id];
     this.mainFrame = this.curBrowser.window;
+
     this.chromeBrowsingContext = this.mainFrame.browsingContext;
 
-    // .. and activate the tab if it's a content browser.
-    if ("tabIndex" in winProperties) {
-      await this.curBrowser.switchToTab(
+    // Activate the tab if it's a content window.
+    let tab = null;
+    if (winProperties.hasTabBrowser) {
+      tab = await this.curBrowser.switchToTab(
         winProperties.tabIndex,
         winProperties.win,
         focus
       );
     }
+
+    this.contentBrowsingContext = tab?.linkedBrowser.browsingContext;
   }
 
   if (focus) {
@@ -1746,12 +1752,7 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
 
   if (MarionettePrefs.useActors) {
     const { browsingContext } = await this.getActor().switchToParentFrame();
-
-    if (this.context == Context.Chrome) {
-      this.chromeBrowsingContext = browsingContext;
-    } else {
-      this.contentBrowsingContext = browsingContext;
-    }
+    this.contentBrowsingContext = browsingContext;
 
     return;
   }
@@ -1798,12 +1799,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
       byFrame || id
     );
 
-    if (this.context == Context.Chrome) {
-      this.chromeBrowsingContext = browsingContext;
-    } else {
-      this.contentBrowsingContext = browsingContext;
-    }
-
+    this.contentBrowsingContext = browsingContext;
     return;
   }
 
@@ -1850,7 +1846,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
       browsingContext = context;
     }
 
-    this.chromeBrowsingContext = browsingContext;
+    this.contentBrowsingContext = browsingContext;
 
     const frameWindow = browsingContext.window;
     await checkLoad(frameWindow);
@@ -2893,6 +2889,8 @@ GeckoDriver.prototype.close = async function() {
   }
 
   await this.curBrowser.closeTab();
+  this.contentBrowsingContext = null;
+
   return this.windowHandles.map(String);
 };
 
