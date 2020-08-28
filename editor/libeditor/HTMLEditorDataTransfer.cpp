@@ -296,6 +296,8 @@ class MOZ_STACK_CLASS
   static bool FindTargetNodeOfContextForPastedHTMLAndRemoveInsertionCookie(
       nsINode& aStart, nsCOMPtr<nsINode>& aResult);
 
+  static bool IsInsertionCookie(const nsIContent& aContent);
+
   /**
    * @param aDocumentFragmentForContext contains the merged result.
    */
@@ -3095,6 +3097,20 @@ void HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   }
 }
 
+// static
+bool HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
+    IsInsertionCookie(const nsIContent& aContent) {
+  // Is this child the magical cookie?
+  if (const auto* comment = Comment::FromNode(&aContent)) {
+    nsAutoString data;
+    comment->GetData(data);
+
+    return data.EqualsLiteral(kInsertCookie);
+  }
+
+  return false;
+}
+
 /**
  * This function finds the target node that we will be pasting into. aStart is
  * the context that we're given and aResult will be the target. Initially,
@@ -3119,20 +3135,14 @@ bool HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 
   for (nsCOMPtr<nsIContent> child = firstChild; child;
        child = child->GetNextSibling()) {
-    // Is this child the magical cookie?
-    if (auto* comment = Comment::FromNode(child)) {
-      nsAutoString data;
-      comment->GetData(data);
+    if (FragmentFromPasteCreator::IsInsertionCookie(*child)) {
+      // Yes it is! Return an error so we bubble out and short-circuit the
+      // search.
+      aResult = &aStart;
 
-      if (data.EqualsLiteral(kInsertCookie)) {
-        // Yes it is! Return an error so we bubble out and short-circuit the
-        // search.
-        aResult = &aStart;
+      child->Remove();
 
-        child->Remove();
-
-        return true;
-      }
+      return true;
     }
 
     if (FindTargetNodeOfContextForPastedHTMLAndRemoveInsertionCookie(*child,
@@ -3343,6 +3353,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     FragmentFromPasteCreator::
         FindTargetNodeOfContextForPastedHTMLAndRemoveInsertionCookie(
             *documentFragmentForContext, aParentNodeOfPastedHTMLInContext);
+    MOZ_ASSERT(aParentNodeOfPastedHTMLInContext);
   }
 
   nsCOMPtr<nsIContent> parentContentOfPastedHTMLInContext =
