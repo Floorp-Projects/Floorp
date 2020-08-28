@@ -926,6 +926,7 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     this._scaleError = this.querySelector("#error-invalid-scale");
 
     this._percentScale.addEventListener("input", this);
+    this._percentScale.addEventListener("keypress", this);
     this.addEventListener("input", this);
   }
 
@@ -948,6 +949,19 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
+    if (e.type == "keypress") {
+      let char = String.fromCharCode(e.charCode);
+      if (
+        !char.match(/^[0-9]$/) &&
+        !char.match("\x00") &&
+        !e.ctrlKey &&
+        !e.metaKey
+      ) {
+        e.preventDefault();
+      }
+      return;
+    }
+
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
       if (!this._percentScale.checkValidity()) {
         this._percentScale.value = 100;
