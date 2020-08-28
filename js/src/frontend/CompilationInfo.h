@@ -110,7 +110,7 @@ struct CompilationInput {
   // Null otherwise.
   Scope* enclosingScope = nullptr;
 
-  CompilationInput(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
+  explicit CompilationInput(const JS::ReadOnlyCompileOptions& options)
       : options(options) {}
 
  private:
@@ -368,7 +368,7 @@ struct CompilationInfo {
 
   // Construct a CompilationInfo
   CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : cx(cx), input(cx, options), stencil(cx) {}
+      : cx(cx), input(options), stencil(cx) {}
 
   MOZ_MUST_USE bool instantiateStencils(CompilationGCOutput& gcOutput);
 
