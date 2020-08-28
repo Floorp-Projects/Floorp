@@ -2111,26 +2111,13 @@ var gPrivacyPane = {
   /**
    * Enables/disables dependent controls related to password saving
    * When password saving is not enabled, we need to also disable the password generation checkbox
-   * The Exceptions button is used to configure sites where
-   * passwords are never saved. When browser is set to start in Private
-   * Browsing mode, the "Remember passwords" UI is useless, so we disable it.
+   * The Exceptions button is used to configure sites where passwords are never saved.
    */
   readSavePasswords() {
-    var pref = Preferences.get("signon.rememberSignons");
-    var excepts = document.getElementById("passwordExceptions");
-    var generatePasswords = document.getElementById("generatePasswords");
-    var autofillCheckbox = document.getElementById("passwordAutofillCheckbox");
-
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      document.getElementById("savePasswords").disabled = true;
-      excepts.disabled = true;
-      generatePasswords.disabled = true;
-      autofillCheckbox.disabled = true;
-      return false;
-    }
-    excepts.disabled = !pref.value;
-    generatePasswords.disabled = !pref.value;
-    autofillCheckbox.disabled = !pref.value;
+    var prefValue = Preferences.get("signon.rememberSignons").value;
+    document.getElementById("passwordExceptions").disabled = !prefValue;
+    document.getElementById("generatePasswords").disabled = !prefValue;
+    document.getElementById("passwordAutofillCheckbox").disabled = !prefValue;
 
     // don't override pref value in UI
     return undefined;
