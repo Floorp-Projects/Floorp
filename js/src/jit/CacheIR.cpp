@@ -8338,13 +8338,16 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
       writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
   ObjOperandId thisObjId = writer.guardToObject(thisValId);
 
+  ValOperandId argValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
   if (format == CallFlags::FunApplyArgs) {
-    ValOperandId arg1 = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-    writer.guardMagicValue(arg1, JS_OPTIMIZED_ARGUMENTS);
+    writer.guardMagicValue(argValId, JS_OPTIMIZED_ARGUMENTS);
     writer.guardFrameHasNoArgumentsObject();
   } else {
     MOZ_ASSERT(format == CallFlags::FunApplyArray);
-    writer.guardFunApplyArray();
+    ObjOperandId argObjId = writer.guardToObject(argValId);
+    writer.guardClass(argObjId, GuardClassKind::Array);
+    writer.guardArrayIsPacked(argObjId);
   }
 
   CallFlags targetFlags(format);
