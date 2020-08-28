@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "EventDispatcher.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/java/GeckoSessionNatives.h"
+#include "mozilla/java/GeckoBundleWrappers.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
@@ -33,12 +33,7 @@ class UiCompositorControllerChild;
 }  // namespace layers
 
 namespace widget {
-class AndroidView;
 class GeckoEditableSupport;
-class GeckoViewSupport;
-class LayerViewSupport;
-class MediaSessionSupport;
-class NPZCSupport;
 }  // namespace widget
 
 namespace ipc {
@@ -47,7 +42,7 @@ class Shmem;
 
 namespace a11y {
 class SessionAccessibility;
-}  // namespace a11y
+}
 }  // namespace mozilla
 
 class nsWindow final : public nsBaseWidget {
@@ -72,36 +67,140 @@ class nsWindow final : public nsBaseWidget {
  private:
   uint32_t mScreenId;
 
+  // An Event subclass that guards against stale events.
+  template <typename Lambda, bool IsStatic = Lambda::isStatic,
+            typename InstanceType = typename Lambda::ThisArgType,
+            class Impl = typename Lambda::TargetClass>
+  class WindowEvent;
+
+ public:
+  // Smart pointer for holding a pointer back to the nsWindow inside a native
+  // object class. The nsWindow pointer is automatically cleared when the
+  // nsWindow is destroyed, and a WindowPtr<Impl>::Locked class is provided
+  // for thread-safe access to the nsWindow pointer off of the Gecko thread.
+  template <class Impl>
+  class WindowPtr;
+
+  // Smart pointer for holding a pointer to a native object class. The
+  // pointer is automatically cleared when the object is destroyed.
+  template <class Impl>
+  class NativePtr final {
+    friend WindowPtr<Impl>;
+    friend nsWindow;
+
+    static const char sName[];
+
+    WindowPtr<Impl>* mPtr;
+    Impl* mImpl;
+    mozilla::Mutex mImplLock;
+
+    NativePtr() : mPtr(nullptr), mImpl(nullptr), mImplLock(sName) {}
+    ~NativePtr() { MOZ_ASSERT(!mPtr); }
+
+   public:
+    class Locked;
+
+    operator Impl*() const {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mImpl;
+    }
+
+    Impl* operator->() const { return operator Impl*(); }
+
+    template <class Cls, typename... Args>
+    void Attach(const mozilla::jni::LocalRef<Cls>& aInstance, nsWindow* aWindow,
+                Args&&... aArgs);
+    template <class Cls, typename T>
+    void Detach(const mozilla::jni::Ref<Cls, T>& aInstance);
+  };
+
+  template <class Impl>
+  class WindowPtr final {
+    friend NativePtr<Impl>;
+
+    NativePtr<Impl>* mPtr;
+    nsWindow* mWindow;
+    mozilla::Mutex mWindowLock;
+
+   public:
+    class Locked final : private mozilla::MutexAutoLock {
+      nsWindow* const mWindow;
+
+     public:
+      explicit Locked(WindowPtr<Impl>& aPtr)
+          : mozilla::MutexAutoLock(aPtr.mWindowLock), mWindow(aPtr.mWindow) {}
+
+      operator nsWindow*() const { return mWindow; }
+      nsWindow* operator->() const { return mWindow; }
+    };
+
+    WindowPtr(NativePtr<Impl>* aPtr, nsWindow* aWindow);
+
+    ~WindowPtr() {
+      MOZ_ASSERT(NS_IsMainThread());
+      if (!mPtr) {
+        return;
+      }
+      mPtr->mPtr = nullptr;
+      mPtr->mImpl = nullptr;
+    }
+
+    operator nsWindow*() const {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mWindow;
+    }
+
+    nsWindow* operator->() const { return operator nsWindow*(); }
+  };
+
  private:
-  RefPtr<mozilla::widget::AndroidView> mAndroidView;
+  class AndroidView final : public nsIAndroidView {
+    virtual ~AndroidView() {}
 
+   public:
+    const RefPtr<mozilla::widget::EventDispatcher> mEventDispatcher{
+        new mozilla::widget::EventDispatcher()};
+
+    AndroidView() {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIANDROIDVIEW
+
+    NS_FORWARD_NSIANDROIDEVENTDISPATCHER(mEventDispatcher->)
+
+    mozilla::java::GeckoBundle::GlobalRef mInitData;
+  };
+
+  RefPtr<AndroidView> mAndroidView;
+
+  class LayerViewSupport;
   // Object that implements native LayerView calls.
-  // Owned by the Java Compositor instance.
-  mozilla::jni::NativeWeakPtr<mozilla::widget::LayerViewSupport>
-      mLayerViewSupport;
+  // Owned by the Java LayerView instance.
+  NativePtr<LayerViewSupport> mLayerViewSupport;
 
+  class NPZCSupport;
   // Object that implements native NativePanZoomController calls.
   // Owned by the Java NativePanZoomController instance.
-  mozilla::jni::NativeWeakPtr<mozilla::widget::NPZCSupport> mNPZCSupport;
+  NativePtr<NPZCSupport> mNPZCSupport;
 
   // Object that implements native GeckoEditable calls.
   // Strong referenced by the Java instance.
-  mozilla::jni::NativeWeakPtr<mozilla::widget::GeckoEditableSupport>
-      mEditableSupport;
+  NativePtr<mozilla::widget::GeckoEditableSupport> mEditableSupport;
   mozilla::jni::Object::GlobalRef mEditableParent;
 
   // Object that implements native SessionAccessibility calls.
   // Strong referenced by the Java instance.
-  mozilla::jni::NativeWeakPtr<mozilla::a11y::SessionAccessibility>
-      mSessionAccessibility;
+  NativePtr<mozilla::a11y::SessionAccessibility> mSessionAccessibility;
 
-  mozilla::jni::NativeWeakPtr<mozilla::widget::MediaSessionSupport>
-      mMediaSessionSupport;
+  class MediaSessionSupport;
+  NativePtr<MediaSessionSupport> mMediaSessionSupport;
 
+  class GeckoViewSupport;
   // Object that implements native GeckoView calls and associated states.
   // nullptr for nsWindows that were not opened from GeckoView.
-  mozilla::jni::NativeWeakPtr<mozilla::widget::GeckoViewSupport>
-      mGeckoViewSupport;
+  // Because other objects get destroyed in the mGeckOViewSupport destructor,
+  // keep it last in the list, so its destructor is called first.
+  mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
 
   mozilla::Atomic<bool, mozilla::ReleaseAcquire> mContentDocumentDisplayed;
 
@@ -122,11 +221,14 @@ class nsWindow final : public nsBaseWidget {
   void UpdateOverscrollVelocity(const float aX, const float aY);
   void UpdateOverscrollOffset(const float aX, const float aY);
 
-  mozilla::widget::EventDispatcher* GetEventDispatcher() const;
+  mozilla::widget::EventDispatcher* GetEventDispatcher() const {
+    if (mAndroidView) {
+      return mAndroidView->mEventDispatcher;
+    }
+    return nullptr;
+  }
 
   void NotifyDisablingWebRender();
-
-  void DetachNatives();
 
   //
   // nsIWidget
@@ -219,7 +321,9 @@ class nsWindow final : public nsBaseWidget {
 
   mozilla::jni::Object::Ref& GetEditableParent() { return mEditableParent; }
 
-  RefPtr<mozilla::a11y::SessionAccessibility> GetSessionAccessibility();
+  mozilla::a11y::SessionAccessibility* GetSessionAccessibility() {
+    return mSessionAccessibility;
+  }
 
   void RecvToolbarAnimatorMessageFromCompositor(int32_t aMessage) override;
   void UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset,
@@ -271,10 +375,25 @@ class nsWindow final : public nsBaseWidget {
   mozilla::layers::LayersId GetRootLayerId() const;
   RefPtr<mozilla::layers::UiCompositorControllerChild>
   GetUiCompositorControllerChild();
-
-  friend class mozilla::widget::GeckoViewSupport;
-  friend class mozilla::widget::LayerViewSupport;
-  friend class mozilla::widget::NPZCSupport;
 };
+
+// Explicit template declarations to make clang be quiet.
+template <>
+const char nsWindow::NativePtr<nsWindow::LayerViewSupport>::sName[];
+template <>
+const char nsWindow::NativePtr<mozilla::widget::GeckoEditableSupport>::sName[];
+template <>
+const char nsWindow::NativePtr<mozilla::a11y::SessionAccessibility>::sName[];
+template <>
+const char nsWindow::NativePtr<nsWindow::NPZCSupport>::sName[];
+
+template <class Impl>
+nsWindow::WindowPtr<Impl>::WindowPtr(NativePtr<Impl>* aPtr, nsWindow* aWindow)
+    : mPtr(aPtr), mWindow(aWindow), mWindowLock(NativePtr<Impl>::sName) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mPtr) {
+    mPtr->mPtr = this;
+  }
+}
 
 #endif /* NSWINDOW_H_ */
