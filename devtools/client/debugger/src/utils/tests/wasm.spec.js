@@ -23,12 +23,11 @@ describe("wasm", () => {
       "\n\x89\x80\x80\x80\x00\x01\x83\x80\x80\x80\x00\x00\x01\v",
   };
   const SIMPLE_WASM_TEXT = `(module
-  (type $type0 (func))
   (func $func0
     nop
   )
 )`;
-  const SIMPLE_WASM_NOP_TEXT_LINE = 3;
+  const SIMPLE_WASM_NOP_TEXT_LINE = 2;
   const SIMPLE_WASM_NOP_OFFSET = 46;
 
   describe("isWasm", () => {
