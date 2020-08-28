@@ -658,6 +658,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 }
             }
 
+            view.swipeRefresh.isEnabled = FeatureFlags.pullToRefreshEnabled
             @Suppress("ConstantConditionIf")
             if (FeatureFlags.pullToRefreshEnabled) {
                 val primaryTextColor =
@@ -673,9 +674,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     owner = this,
                     view = view
                 )
-            } else {
-                // Disable pull to refresh
-                view.swipeRefresh.setOnChildScrollUpCallback { _, _ -> true }
             }
 
             webchannelIntegration.set(

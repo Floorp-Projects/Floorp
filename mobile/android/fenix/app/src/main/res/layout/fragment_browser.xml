@@ -22,7 +22,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:context="browser.BrowserFragment">
 
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            <mozilla.components.ui.widgets.VerticalSwipeRefreshLayout
                 android:id="@+id/swipeRefresh"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -34,7 +34,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:visibility="gone" />
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            </mozilla.components.ui.widgets.VerticalSwipeRefreshLayout>
 
             <ViewStub
                 android:id="@+id/stubFindInPage"
