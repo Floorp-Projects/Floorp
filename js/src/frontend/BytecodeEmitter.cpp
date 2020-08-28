@@ -8467,6 +8467,11 @@ void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
       keysOK = false;
       break;
     }
+
+    // BigIntExprs should have been lowered to computed names at parse
+    // time, and so should be excluded above.
+    MOZ_ASSERT(!key->isKind(ParseNodeKind::BigIntExpr));
+
     // Numeric keys OK as long as they are integers and in range.
     if (key->isKind(ParseNodeKind::NumberExpr)) {
       double numValue = key->as<NumericLiteral>().value();
@@ -8479,11 +8484,6 @@ void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
         keysOK = false;
         break;
       }
-    }
-    // BigInt keys aren't yet supported.
-    if (key->isKind(ParseNodeKind::BigIntExpr)) {
-      keysOK = false;
-      break;
     }
 
     MOZ_ASSERT(key->isKind(ParseNodeKind::ObjectPropertyName) ||

@@ -1385,8 +1385,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   inline BigIntLiteralType newBigInt();
 
-  const ParserAtom* bigIntAtom();
-
   enum class OptionalKind {
     NonOptional = 0,
     Optional,
