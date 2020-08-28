@@ -1,0 +1,77 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.example.com",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "cache",
+                     "dir": true,
+                     "entries": [{ "name": ".padding", "dir": false }]
+                  }
+                ]
+              },
+              { "name": "http+++www.example.com.", "dir": true  },
+              {
+                "name": "http+++www.example.org",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "cache",
+                     "dir": true,
+                     "entries": [{ "name": ".padding", "dir": false }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterInitTemporaryStorage",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              { "name": "http+++www.example.com.",
+                "dir": true,
+                "entries": [{ "name": ".metadata-v2", "dir": false }]
+              },
+              {
+                "name": "http+++www.example.org.",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "cache",
+                     "dir": true,
+                     "entries": [{ "name": ".padding", "dir": false }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]
