@@ -5153,6 +5153,23 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
   nsresult statusKeeper = NS_OK;
 #endif
 
+  struct RenameAndInitInfo {
+    RenameAndInitInfo(nsIFile* aOriginDirectory, const nsACString& aGroup,
+                      const nsACString& aOrigin, int64_t aTimestamp,
+                      bool aPersisted)
+        : mOriginDirectory(aOriginDirectory),
+          mGroup(aGroup),
+          mOrigin(aOrigin),
+          mTimestamp(aTimestamp),
+          mPersisted(aPersisted) {}
+    nsCOMPtr<nsIFile> mOriginDirectory;
+    nsCString mGroup;
+    nsCString mOrigin;
+    int64_t mTimestamp;
+    bool mPersisted;
+  };
+  nsTArray<RenameAndInitInfo> renameAndInitInfos;
+
   nsCOMPtr<nsIFile> childDirectory;
   while (NS_SUCCEEDED(
              (rv = entries->GetNextFile(getter_AddRefs(childDirectory)))) &&
@@ -5169,15 +5186,15 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
 
-    if (!isDirectory) {
-      nsString leafName;
-      rv = childDirectory->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_GetLeafName);
-        RECORD_IN_NIGHTLY(statusKeeper, rv);
-        CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
-      }
+    nsAutoString leafName;
+    rv = childDirectory->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_GetLeafName);
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
 
+    if (!isDirectory) {
       if (IsOSMetadata(leafName) || IsDotFile(leafName)) {
         continue;
       }
@@ -5203,6 +5220,32 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
 
+    // FIXME(tt): The check for origin name consistency can be removed once we
+    // have an upgrade to traverse origin directories and check through the
+    // directory metadata files.
+    nsAutoCString originSanitized(origin);
+    SanitizeOriginString(originSanitized);
+
+    NS_ConvertUTF16toUTF8 utf8LeafName(leafName);
+    if (!originSanitized.Equals(utf8LeafName)) {
+      QM_WARNING(
+          "The name of the origin directory (%s) doesn't match the sanitized "
+          "origin string (%s) in the metadata file!",
+          utf8LeafName.get(), originSanitized.get());
+
+      // If it's the known case, we try to restore the origin directory name if
+      // it's possible.
+      if (originSanitized.Equals(utf8LeafName + "."_ns)) {
+        renameAndInitInfos.EmplaceBack(childDirectory, group, origin, timestamp,
+                                       persisted);
+        continue;
+      }
+
+      // XXXtt: Try to restore the unknown cases base on the content for their
+      // metadata files. Note that if the restore fails, QM should maintain a
+      // list and ensure they won't be accessed after initialization.
+    }
+
     rv = InitializeOrigin(aPersistenceType, group, origin, timestamp, persisted,
                           childDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5217,6 +5260,56 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
 #ifndef NIGHTLY_BUILD
     return rv;
 #endif
+  }
+
+  for (auto& info : renameAndInitInfos) {
+    // Check if targetDirectory exist.
+    nsCOMPtr<nsIFile> targetDirectory;
+    rv = directory->Clone(getter_AddRefs(targetDirectory));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
+
+    nsAutoCString originSanitized(info.mOrigin);
+    SanitizeOriginString(originSanitized);
+    NS_ConvertUTF8toUTF16 originDirName(originSanitized);
+
+    rv = targetDirectory->Append(originDirName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
+
+    bool exists;
+    rv = targetDirectory->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
+
+    if (exists) {
+      rv = info.mOriginDirectory->Remove(true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        RECORD_IN_NIGHTLY(statusKeeper, rv);
+        CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+      }
+
+      continue;
+    }
+
+    rv = info.mOriginDirectory->RenameTo(nullptr, originDirName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
+
+    rv = InitializeOrigin(aPersistenceType, info.mGroup, info.mOrigin,
+                          info.mTimestamp, info.mPersisted, targetDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
   }
 
 #ifdef NIGHTLY_BUILD
