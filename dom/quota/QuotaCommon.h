@@ -383,32 +383,42 @@
 
 #define QM_PROPAGATE MOZ_UNIQUE_VAR(tryResult).propagateErr()
 
+// QM_MISSING_ARGS and QM_HANDLE_ERROR macros are implementation details of
+// QM_TRY/QM_TRY_VAR/QM_FAIL and shouldn't be used directly.
+
 #define QM_MISSING_ARGS(...)                           \
   do {                                                 \
     static_assert(false, "Did you forget arguments?"); \
   } while (0)
+
+#ifdef DEBUG
+#  define QM_HANDLE_ERROR(expr) \
+    HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), __LINE__)
+#else
+#  define QM_HANDLE_ERROR(expr)                                              \
+    HandleError(nsLiteralCString("Unavailable"), nsLiteralCString(__FILE__), \
+                __LINE__)
+#endif
 
 // QM_TRY_PROPAGATE_ERR, QM_TRY_CUSTOM_RET_VAL and
 // QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP macros are implementation details of
 // QM_TRY and shouldn't be used directly.
 
 // Handles the two arguments case when the eror is propagated.
-#define QM_TRY_PROPAGATE_ERR(ns, expr)                                   \
-  auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr);            \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                 \
-    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
-                    __LINE__);                                           \
-    return QM_PROPAGATE;                                                 \
+#define QM_TRY_PROPAGATE_ERR(ns, expr)                        \
+  auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr); \
+  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {      \
+    ns::QM_HANDLE_ERROR(expr);                                \
+    return QM_PROPAGATE;                                      \
   }
 
 // Handles the three arguments case when a custom return value needs to be
 // returned
-#define QM_TRY_CUSTOM_RET_VAL(ns, expr, customRetVal)                    \
-  auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr);            \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                 \
-    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
-                    __LINE__);                                           \
-    return customRetVal;                                                 \
+#define QM_TRY_CUSTOM_RET_VAL(ns, expr, customRetVal)         \
+  auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr); \
+  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {      \
+    ns::QM_HANDLE_ERROR(expr);                                \
+    return customRetVal;                                      \
   }
 
 // Handles the four arguments case when a cleanup function needs to be called
@@ -416,8 +426,7 @@
 #define QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(ns, expr, customRetVal, cleanup) \
   auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr);               \
   if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                    \
-    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__),    \
-                    __LINE__);                                              \
+    ns::QM_HANDLE_ERROR(expr);                                              \
     cleanup();                                                              \
     return customRetVal;                                                    \
   }
@@ -445,24 +454,22 @@
 // QM_TRY_VAR and shouldn't be used directly.
 
 // Handles the three arguments case when the eror is propagated.
-#define QM_TRY_VAR_PROPAGATE_ERR(ns, target, expr)                       \
-  auto MOZ_UNIQUE_VAR(tryResult) = (expr);                               \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                 \
-    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
-                    __LINE__);                                           \
-    return QM_PROPAGATE;                                                 \
-  }                                                                      \
+#define QM_TRY_VAR_PROPAGATE_ERR(ns, target, expr)       \
+  auto MOZ_UNIQUE_VAR(tryResult) = (expr);               \
+  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) { \
+    ns::QM_HANDLE_ERROR(expr);                           \
+    return QM_PROPAGATE;                                 \
+  }                                                      \
   MOZ_REMOVE_PAREN(target) = MOZ_UNIQUE_VAR(tryResult).unwrap();
 
 // Handles the four arguments case when a custom return value needs to be
 // returned
-#define QM_TRY_VAR_CUSTOM_RET_VAL(ns, target, expr, customRetVal)        \
-  auto MOZ_UNIQUE_VAR(tryResult) = (expr);                               \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                 \
-    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
-                    __LINE__);                                           \
-    return customRetVal;                                                 \
-  }                                                                      \
+#define QM_TRY_VAR_CUSTOM_RET_VAL(ns, target, expr, customRetVal) \
+  auto MOZ_UNIQUE_VAR(tryResult) = (expr);                        \
+  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {          \
+    ns::QM_HANDLE_ERROR(expr);                                    \
+    return customRetVal;                                          \
+  }                                                               \
   MOZ_REMOVE_PAREN(target) = MOZ_UNIQUE_VAR(tryResult).unwrap();
 
 // Handles the five arguments case when a cleanup function needs to be called
@@ -471,8 +478,7 @@
                                                cleanup)                        \
   auto MOZ_UNIQUE_VAR(tryResult) = (expr);                                     \
   if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                       \
-    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__),       \
-                    __LINE__);                                                 \
+    ns::QM_HANDLE_ERROR(expr);                                                 \
     cleanup();                                                                 \
     return customRetVal;                                                       \
   }                                                                            \
@@ -502,17 +508,15 @@
 // details of QM_FAIL and shouldn't be used directly.
 
 // Handles the two arguments case when just an error is returned
-#define QM_FAIL_RET_VAL(ns, retVal)                                        \
-  ns::HandleError(nsLiteralCString("Failure"), nsLiteralCString(__FILE__), \
-                  __LINE__);                                               \
+#define QM_FAIL_RET_VAL(ns, retVal) \
+  ns::QM_HANDLE_ERROR(Failure);     \
   return retVal;
 
 // Handles the three arguments case when a cleanup function needs to be called
 // before a return value is returned
-#define QM_FAIL_RET_VAL_WITH_CLEANUP(ns, retVal, cleanup)                  \
-  ns::HandleError(nsLiteralCString("Failure"), nsLiteralCString(__FILE__), \
-                  __LINE__);                                               \
-  cleanup();                                                               \
+#define QM_FAIL_RET_VAL_WITH_CLEANUP(ns, retVal, cleanup) \
+  ns::QM_HANDLE_ERROR(Failure);                           \
+  cleanup();                                              \
   return retVal;
 
 // Chooses the final implementation macro for given argument count.
