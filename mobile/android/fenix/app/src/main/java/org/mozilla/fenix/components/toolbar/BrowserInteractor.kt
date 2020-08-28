@@ -5,7 +5,8 @@
 package org.mozilla.fenix.components.toolbar
 
 open class BrowserInteractor(
-    private val browserToolbarController: BrowserToolbarController
+    private val browserToolbarController: BrowserToolbarController,
+    private val menuController: BrowserToolbarMenuController
 ) : BrowserToolbarViewInteractor {
 
     override fun onTabCounterClicked() {
@@ -29,7 +30,7 @@ open class BrowserInteractor(
     }
 
     override fun onBrowserToolbarMenuItemTapped(item: ToolbarMenu.Item) {
-        browserToolbarController.handleToolbarItemInteraction(item)
+        menuController.handleToolbarItemInteraction(item)
     }
 
     override fun onScrolled(offset: Int) {

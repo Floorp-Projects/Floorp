@@ -1,5 +1,7 @@
 package org.mozilla.fenix.components.toolbar
 
+import io.mockk.MockKAnnotations
+import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Before
@@ -7,14 +9,16 @@ import org.junit.Test
 
 class BrowserInteractorTest {
 
-    lateinit var browserToolbarController: BrowserToolbarController
+    @RelaxedMockK lateinit var browserToolbarController: BrowserToolbarController
+    @RelaxedMockK lateinit var browserToolbarMenuController: BrowserToolbarMenuController
     lateinit var interactor: BrowserInteractor
 
     @Before
     fun setup() {
-        browserToolbarController = mockk(relaxed = true)
+        MockKAnnotations.init(this)
         interactor = BrowserInteractor(
-            browserToolbarController
+            browserToolbarController,
+            browserToolbarMenuController
         )
     }
 
@@ -60,6 +64,6 @@ class BrowserInteractorTest {
 
         interactor.onBrowserToolbarMenuItemTapped(item)
 
-        verify { browserToolbarController.handleToolbarItemInteraction(item) }
+        verify { browserToolbarMenuController.handleToolbarItemInteraction(item) }
     }
 }

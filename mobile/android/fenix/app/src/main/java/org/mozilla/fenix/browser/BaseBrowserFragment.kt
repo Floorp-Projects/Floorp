@@ -92,6 +92,7 @@ import org.mozilla.fenix.components.toolbar.BrowserInteractor
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
+import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarMenuController
 import org.mozilla.fenix.components.toolbar.SwipeRefreshScrollingViewBehavior
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -206,6 +207,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         val context = requireContext()
         val sessionManager = context.components.core.sessionManager
         val store = context.components.core.store
+        val activity = requireActivity() as HomeActivity
 
         val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
@@ -225,25 +227,20 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 putExtra(HomeActivity.OPEN_TO_BROWSER, true)
             }
 
+            val readerMenuController = DefaultReaderModeController(
+                readerViewFeature,
+                view.readerViewControlsBar,
+                isPrivate = activity.browsingModeManager.mode.isPrivate
+            )
             val browserToolbarController = DefaultBrowserToolbarController(
-                activity = requireActivity() as HomeActivity,
+                activity = activity,
                 navController = findNavController(),
-                readerModeController = DefaultReaderModeController(
-                    readerViewFeature,
-                    view.readerViewControlsBar,
-                    isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
-                ),
+                metrics = requireComponents.analytics.metrics,
+                readerModeController = readerMenuController,
                 sessionManager = requireComponents.core.sessionManager,
-                sessionFeature = sessionFeature,
-                findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
                 engineView = engineView,
-                swipeRefresh = swipeRefresh,
                 browserAnimator = browserAnimator,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
-                openInFenixIntent = openInFenixIntent,
-                bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
-                scope = viewLifecycleOwner.lifecycleScope,
-                tabCollectionStorage = requireComponents.core.tabCollectionStorage,
                 onTabCounterClicked = {
                     thumbnailsFeature.get()?.requestScreenshot()
                     findNavController().nav(
@@ -278,9 +275,27 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     )
                 }
             )
+            val browserToolbarMenuController = DefaultBrowserToolbarMenuController(
+                activity = activity,
+                navController = findNavController(),
+                metrics = requireComponents.analytics.metrics,
+                settings = context.settings(),
+                readerModeController = readerMenuController,
+                sessionManager = requireComponents.core.sessionManager,
+                sessionFeature = sessionFeature,
+                findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
+                swipeRefresh = swipeRefresh,
+                browserAnimator = browserAnimator,
+                customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
+                openInFenixIntent = openInFenixIntent,
+                bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
+                scope = viewLifecycleOwner.lifecycleScope,
+                tabCollectionStorage = requireComponents.core.tabCollectionStorage
+            )
 
             _browserInteractor = BrowserInteractor(
-                browserToolbarController = browserToolbarController
+                browserToolbarController,
+                browserToolbarMenuController
             )
 
             _browserToolbarView = BrowserToolbarView(
