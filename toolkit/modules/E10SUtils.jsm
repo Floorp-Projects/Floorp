@@ -318,7 +318,7 @@ var E10SUtils = {
     if (!this._log) {
       this._log = console.createInstance({
         prefix: "ProcessSwitch",
-        maxLogLevel: "Error", // Change to debug the process switching code
+        maxLogLevel: "Error", // Change to "Debug" the process switching code
       });
 
       this._log.debug("Setup logger");
@@ -581,10 +581,15 @@ var E10SUtils = {
       return NOT_REMOTE;
     }
 
-    // We want to use the original URI for "about:" and "chrome://" scheme,
-    // so that we can properly determine the remote type.
-    let useOriginalURI =
-      aOriginalURI.scheme == "about" || aOriginalURI.scheme == "chrome";
+    // We want to use the original URI for "about:" (except for "about:srcdoc")
+    // and "chrome://" scheme, so that we can properly determine
+    // the remote type.
+    let useOriginalURI;
+    if (aOriginalURI.scheme == "about") {
+      useOriginalURI = !["srcdoc"].includes(aOriginalURI.spec);
+    } else {
+      useOriginalURI = aOriginalURI.scheme == "chrome";
+    }
 
     if (!useOriginalURI) {
       // We can't pick a process based on a system principal or expanded

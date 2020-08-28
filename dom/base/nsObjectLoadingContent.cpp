@@ -2415,8 +2415,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
     loadInfo->SetCSPToInherit(cspToInherit);
   }
 
-  if (DocumentChannel::CanUseDocumentChannel(
-          mURI, nsIWebNavigation::LOAD_FLAGS_NONE)) {
+  if (DocumentChannel::CanUseDocumentChannel(mURI)) {
     // --- Create LoadState
     RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(mURI);
     loadState->SetPrincipalToInherit(thisContent->NodePrincipal());
