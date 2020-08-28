@@ -130,7 +130,8 @@ notification[type="critical"] > hbox > .messageImage {
   border: 1px solid transparent;
   border-radius: 2px;
   background-color: var(--notification-button-background);
-  color: var(--notification-button-text);
+  /* Override button.css hover & active styles */
+  color: var(--notification-button-text) !important;
   padding: 0 8px;
   margin: 4px 8px;
   height: 32px;
@@ -150,7 +151,8 @@ notification[type="critical"] > hbox > .messageImage {
 
 .notification-button.primary {
   background-color: var(--notification-primary-button-background);
-  color: var(--notification-primary-button-text);
+  /* Override button.css hover & active styles */
+  color: var(--notification-primary-button-text) !important;
 }
 
 .notification-button.primary:not([disabled]):hover {
