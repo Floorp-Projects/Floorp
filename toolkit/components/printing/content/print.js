@@ -340,7 +340,7 @@ var PrintEventHandler = {
       }
 
       function onUpdatePageCount(msg) {
-        numPages = msg.data.numPages;
+        numPages = msg.data.totalPages;
       }
 
       function cleanup() {
