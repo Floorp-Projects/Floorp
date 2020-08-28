@@ -123,8 +123,8 @@ add_task(async function tipsAreEnglishOnly() {
   await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 
   // We will need to fetch new engines when we switch locales.
-  let searchReinit = SearchTestUtils.promiseSearchNotification(
-    "reinit-complete"
+  let enginesReloaded = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
   );
 
   const originalAvailable = Services.locale.availableLocales;
@@ -133,18 +133,18 @@ add_task(async function tipsAreEnglishOnly() {
   Services.locale.requestedLocales = ["de"];
 
   registerCleanupFunction(async () => {
-    let searchReinit2 = SearchTestUtils.promiseSearchNotification(
-      "reinit-complete"
+    let enginesReloaded2 = SearchTestUtils.promiseSearchNotification(
+      "engines-reloaded"
     );
     Services.locale.requestedLocales = originalRequested;
     Services.locale.availableLocales = originalAvailable;
-    await searchReinit2;
+    await enginesReloaded2;
   });
 
   let appLocales = Services.locale.appLocalesAsBCP47;
   Assert.equal(appLocales[0], "de");
 
-  await searchReinit;
+  await enginesReloaded;
 
   // Interventions should no longer work in the new locale.
   await awaitNoTip(SEARCH_STRINGS.CLEAR, window);

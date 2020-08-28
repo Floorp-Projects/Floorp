@@ -79,7 +79,7 @@ add_task(async function complex_multilocale_test() {
 });
 add_task(async function test_manifest_selection() {
   Region._setHomeRegion("an", false);
-  let promise = SearchTestUtils.promiseSearchNotification("reinit-complete");
+  let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
   Services.locale.availableLocales = ["af"];
   Services.locale.requestedLocales = ["af"];
   await promise;
