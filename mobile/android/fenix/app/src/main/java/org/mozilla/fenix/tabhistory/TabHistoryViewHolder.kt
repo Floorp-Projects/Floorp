@@ -4,40 +4,38 @@
 
 package org.mozilla.fenix.tabhistory
 
-import android.view.View
-import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.tab_history_list_item.*
+import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.R
-import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.utils.view.ViewHolder
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.loadIntoView
 
 class TabHistoryViewHolder(
-    view: View,
-    private val interactor: TabHistoryViewInteractor
-) : ViewHolder(view) {
+    private val view: WidgetSiteItemView,
+    private val interactor: TabHistoryViewInteractor,
+    private val icons: BrowserIcons = view.context.components.core.icons
+) : RecyclerView.ViewHolder(view) {
 
     private lateinit var item: TabHistoryItem
 
     init {
-        history_layout.setOnClickListener { interactor.goToHistoryItem(item) }
+        view.setOnClickListener { interactor.goToHistoryItem(item) }
     }
 
     fun bind(item: TabHistoryItem) {
         this.item = item
 
-        history_layout.displayAs(LibrarySiteItemView.ItemType.SITE)
-        history_layout.overflowView.isVisible = false
-        history_layout.titleView.text = item.title
-        history_layout.urlView.text = item.url
-        history_layout.loadFavicon(item.url)
+        view.setText(label = item.title, caption = item.url)
+        icons.loadIntoView(view.iconView, item.url)
 
         if (item.isSelected) {
-            history_layout.setBackgroundColor(
-                history_layout.context.getColorFromAttr(R.attr.tabHistoryItemSelectedBackground)
+            view.setBackgroundColor(
+                view.context.getColorFromAttr(R.attr.tabHistoryItemSelectedBackground)
             )
         } else {
-            history_layout.background = null
+            view.background = null
         }
     }
 }

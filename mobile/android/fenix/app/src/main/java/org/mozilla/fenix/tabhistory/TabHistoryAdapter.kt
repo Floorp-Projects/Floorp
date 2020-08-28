@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.R
 
 data class TabHistoryItem(
@@ -23,7 +24,7 @@ class TabHistoryAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabHistoryViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.tab_history_list_item, parent, false)
+            .inflate(R.layout.site_list_item, parent, false) as WidgetSiteItemView
         return TabHistoryViewHolder(view, interactor)
     }
 

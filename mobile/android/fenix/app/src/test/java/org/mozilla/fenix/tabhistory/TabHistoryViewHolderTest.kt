@@ -10,28 +10,42 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
+import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.R
-import org.mozilla.fenix.library.LibrarySiteItemView
 
 class TabHistoryViewHolderTest {
 
-    @MockK private lateinit var view: View
+    @MockK(relaxed = true) private lateinit var view: WidgetSiteItemView
     @MockK private lateinit var interactor: TabHistoryViewInteractor
-    @MockK(relaxed = true) private lateinit var siteItemView: LibrarySiteItemView
+    @MockK private lateinit var icons: BrowserIcons
     private lateinit var holder: TabHistoryViewHolder
     private lateinit var onClick: CapturingSlot<View.OnClickListener>
+
+    private val selectedItem = TabHistoryItem(
+        title = "Mozilla",
+        url = "https://mozilla.org",
+        index = 0,
+        isSelected = true
+    )
+    private val unselectedItem = TabHistoryItem(
+        title = "Firefox",
+        url = "https://firefox.com",
+        index = 1,
+        isSelected = false
+    )
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
         onClick = slot()
 
-        every { siteItemView.setOnClickListener(capture(onClick)) } just Runs
-        every { view.findViewById<LibrarySiteItemView>(R.id.history_layout) } returns siteItemView
+        every { view.setOnClickListener(capture(onClick)) } just Runs
+        every { icons.loadIntoView(view.iconView, any()) } returns mockk()
 
-        holder = TabHistoryViewHolder(view, interactor)
+        holder = TabHistoryViewHolder(view, interactor, icons)
     }
 
     @Test
@@ -46,17 +60,18 @@ class TabHistoryViewHolderTest {
 
     @Test
     fun `binds title and url`() {
-        val item = TabHistoryItem(
-            title = "Firefox",
-            url = "https://firefox.com",
-            index = 1,
-            isSelected = false
-        )
-        holder.bind(item)
+        holder.bind(unselectedItem)
 
-        verify { siteItemView.displayAs(LibrarySiteItemView.ItemType.SITE) }
-        verify { siteItemView.titleView.text = "Firefox" }
-        verify { siteItemView.urlView.text = "https://firefox.com" }
-        verify { siteItemView.loadFavicon("https://firefox.com") }
+        verify { view.setText(label = "Firefox", caption = "https://firefox.com") }
+        verify { icons.loadIntoView(view.iconView, IconRequest("https://firefox.com")) }
+    }
+
+    @Test
+    fun `binds background`() {
+        holder.bind(selectedItem)
+        verify { view.setBackgroundColor(any()) }
+
+        holder.bind(unselectedItem)
+        verify { view.background = null }
     }
 }

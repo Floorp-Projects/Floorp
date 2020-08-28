@@ -5,15 +5,13 @@
 package org.mozilla.fenix.tabhistory
 
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
-import kotlinx.android.synthetic.main.history_list_item.*
-import mozilla.components.support.ktx.android.content.getColorFromAttr
+import io.mockk.spyk
+import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -56,18 +54,13 @@ class TabHistoryAdapterTest {
     fun `creates and binds view holder`() {
         adapter.submitList(listOf(selectedItem, unselectedItem))
 
-        val holder = adapter.createViewHolder(parent, 0)
+        val holder = spyk(adapter.createViewHolder(parent, 0))
 
         adapter.bindViewHolder(holder, 0)
-        assertEquals("Mozilla", holder.history_layout.titleView.text)
-        assertEquals(
-            context.getColorFromAttr(R.attr.tabHistoryItemSelectedBackground),
-            (holder.history_layout.background as ColorDrawable).color
-        )
+        verify { holder.bind(selectedItem) }
 
         adapter.bindViewHolder(holder, 1)
-        assertEquals("Firefox", holder.history_layout.titleView.text)
-        assertEquals(null, holder.history_layout.background)
+        verify { holder.bind(unselectedItem) }
     }
 
     @Test
