@@ -7,7 +7,7 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::io::{self, Cursor, Error, ErrorKind, Read};
 use std::mem;
-pub use crossbeam_channel::{Sender, Receiver};
+pub use crossbeam_channel::{select, Sender, Receiver};
 
 #[derive(Clone)]
 pub struct Payload {
