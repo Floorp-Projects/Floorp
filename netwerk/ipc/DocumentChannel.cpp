@@ -150,7 +150,7 @@ nsDocShell* DocumentChannel::GetDocShell() {
 // Changes here should also be made in
 // E10SUtils.documentChannelPermittedForURI().
 static bool URIUsesDocChannel(nsIURI* aURI) {
-  if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
+  if (SchemeIsJavascript(aURI)) {
     return false;
   }
 
