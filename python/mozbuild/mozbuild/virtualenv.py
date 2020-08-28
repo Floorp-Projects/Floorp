@@ -417,13 +417,13 @@ class VirtualenvManager(object):
                 for_win = not package[0].startswith('!')
                 is_win = sys.platform == 'win32'
                 if is_win == for_win:
-                    handle_package(package[1:])
+                    return handle_package(package[1:])
                 return True
 
             if package[0] in ('python2', 'python3'):
                 for_python3 = package[0].endswith('3')
                 if PY3 == for_python3:
-                    handle_package(package[1:])
+                    return handle_package(package[1:])
                 return True
 
             raise Exception('Unknown action: %s' % package[0])
