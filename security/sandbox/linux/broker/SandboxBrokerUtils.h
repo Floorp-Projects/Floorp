@@ -19,10 +19,12 @@
 typedef struct stat64 statstruct;
 #  define statsyscall stat64
 #  define lstatsyscall lstat64
+#  define fstatsyscall fstat64
 #elif defined(__NR_stat)
 typedef struct stat statstruct;
 #  define statsyscall stat
 #  define lstatsyscall lstat
+#  define fstatsyscall fstat
 #else
 #  error Missing stat syscall include.
 #endif
