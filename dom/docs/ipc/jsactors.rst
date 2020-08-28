@@ -110,7 +110,7 @@ Other notable differences between JSWindowActor's and Message Manager / framescr
 
    This is a natural consequence of splitting frames to run out-of-process.
 
-#. ``JSWindowActorChild``'s live as long as the ``BrowsingContext`` they're associated with.
+#. ``JSWindowActorChild``'s live as long as the ``WindowGlobalChild`` they're associated with.
 
   If in the previously mentioned DOM hierarchy, one of the ``<iframe>``'s unload, any associated JSWindowActor pairs will be torn down.
 
