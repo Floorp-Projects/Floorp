@@ -11,7 +11,8 @@
             <menu id="file-menu" data-l10n-id="menu-file">
               <menupopup id="menu_FilePopup"
                          onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');
-                                         updateImportCommandEnabledState();">
+                                         updateImportCommandEnabledState();
+                                         PrintUtils.updatePrintPreviewMenuHiddenState();">
                 <menuitem id="menu_newNavigatorTab"
                           command="cmd_newNavigatorTab"
                           key="key_newNavigatorTab" data-l10n-id="menu-file-new-tab"/>
@@ -58,11 +59,11 @@
                 <menuseparator/>
 #if !defined(MOZ_WIDGET_GTK)
                 <menuitem id="menu_printSetup"
-                          command="cmd_pageSetup" data-l10n-id="menu-file-print-setup"/>
+                          command="cmd_pageSetup" data-l10n-id="menu-file-print-setup" hidden="true"/>
 #endif
 #ifndef XP_MACOSX
                 <menuitem id="menu_printPreview"
-                          command="cmd_printPreview" data-l10n-id="menu-file-print-preview"/>
+                          command="cmd_printPreview" data-l10n-id="menu-file-print-preview" hidden="true"/>
 #endif
                 <menuitem id="menu_print"
                           key="printKb"

@@ -134,6 +134,22 @@ var PrintUtils = {
   },
 
   /**
+   * Updates the hidden state of the "Print preview" and "Page Setup"
+   * menu items in the file menu depending on the print tab modal pref.
+   * The print preview menu item is not available on mac.
+   */
+  updatePrintPreviewMenuHiddenState() {
+    let printPreviewMenuItem = document.getElementById("menu_printPreview");
+    if (printPreviewMenuItem) {
+      printPreviewMenuItem.hidden = PRINT_TAB_MODAL;
+    }
+    let pageSetupMenuItem = document.getElementById("menu_printSetup");
+    if (pageSetupMenuItem) {
+      pageSetupMenuItem.hidden = PRINT_TAB_MODAL;
+    }
+  },
+
+  /**
    * Opens the tab modal version of the print UI for the current tab.
    *
    * @param aBrowsingContext
