@@ -6,6 +6,7 @@ package org.mozilla.fenix.customtabs
 
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
+import kotlinx.android.synthetic.main.activity_home.*
 import mozilla.components.browser.session.runWithSession
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.feature.intent.ext.getSessionId
@@ -36,7 +37,12 @@ open class ExternalAppBrowserActivity : HomeActivity() {
     final override fun getIntentSessionId(intent: SafeIntent) = intent.getSessionId()
 
     override fun startupTelemetryOnCreateCalled(safeIntent: SafeIntent, hasSavedInstanceState: Boolean) {
-        components.appStartupTelemetry.onExternalAppBrowserOnCreate(safeIntent, hasSavedInstanceState)
+        components.appStartupTelemetry.onExternalAppBrowserOnCreate(
+            safeIntent,
+            hasSavedInstanceState,
+            homeActivityInitTimeStampNanoSeconds,
+            rootContainer
+        )
     }
 
     override fun getNavDirections(

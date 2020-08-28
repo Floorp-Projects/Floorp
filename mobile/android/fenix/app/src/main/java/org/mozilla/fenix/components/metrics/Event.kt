@@ -337,7 +337,8 @@ sealed class Event {
     data class AppAllStartup(
         val source: Source,
         val type: Type,
-        val hasSavedInstanceState: Boolean? = null
+        val hasSavedInstanceState: Boolean? = null,
+        var launchTime: Long? = null
     ) : Event() {
         enum class Source { APP_ICON, LINK, CUSTOM_TAB, UNKNOWN }
         enum class Type { COLD, WARM, HOT, ERROR }
@@ -353,6 +354,10 @@ sealed class Event {
                 if (hasSavedInstanceState != null) {
                     extrasMap[Events.appOpenedAllStartupKeys.hasSavedInstanceState] =
                         hasSavedInstanceState.toString()
+                }
+                if (launchTime != null) {
+                    extrasMap[Events.appOpenedAllStartupKeys.launchTimeNanoSeconds] =
+                        launchTime.toString()
                 }
                 return extrasMap
             }

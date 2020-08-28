@@ -5,11 +5,15 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Intent
-import io.mockk.MockKAnnotations
-import io.mockk.clearMocks
-import io.mockk.every
+import android.os.SystemClock
+import android.view.View
 import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.verify
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.clearMocks
 import mozilla.components.support.utils.toSafeIntent
 import org.junit.Before
 import org.junit.Test
@@ -18,6 +22,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.hasSavedInstanceState
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.source
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.type
+import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.launchTimeNanoSeconds
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Source
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Source.APP_ICON
@@ -32,17 +37,26 @@ import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.ERROR
 class AppStartupTelemetryTest {
 
     @MockK
-    private lateinit var metricController: MetricController
+    private lateinit var metricControllerMock: MetricController
     @MockK
-    private lateinit var intent: Intent
+    private lateinit var intentMock: Intent
+    @RelaxedMockK
+    private lateinit var appLaunchTimeMeasurementMock: AppLaunchTimeMeasurement
+    @RelaxedMockK
+    private lateinit var rootContainerMock: View
 
     private lateinit var appStartupTelemetry: AppStartupTelemetry
+
+    private val homeActivityInitTime = SystemClock.elapsedRealtimeNanos()
+    private val onPreDrawTime = SystemClock.elapsedRealtimeNanos() + 1
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        appStartupTelemetry = AppStartupTelemetry(metricController)
-        every { metricController.track(any()) } returns Unit
+        appStartupTelemetry = AppStartupTelemetry(metricControllerMock, appLaunchTimeMeasurementMock)
+
+        coEvery { appLaunchTimeMeasurementMock.getApplicationLaunchTime(any()) } returns onPreDrawTime.minus(homeActivityInitTime)
+        every { metricControllerMock.track(any()) } returns Unit
     }
 
     @Test
@@ -50,11 +64,12 @@ class AppStartupTelemetryTest {
         setupIntentMock(APP_ICON)
 
         appStartupTelemetry.onFenixApplicationOnCreate()
-        appStartupTelemetry.onHomeActivityOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(APP_ICON, COLD, false)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(APP_ICON, COLD, false, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -62,11 +77,12 @@ class AppStartupTelemetryTest {
         setupIntentMock(LINK)
 
         appStartupTelemetry.onFenixApplicationOnCreate()
-        appStartupTelemetry.onHomeActivityOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(LINK, COLD, false)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(LINK, COLD, false, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -74,11 +90,12 @@ class AppStartupTelemetryTest {
         setupIntentMock(CUSTOM_TAB)
 
         appStartupTelemetry.onFenixApplicationOnCreate()
-        appStartupTelemetry.onExternalAppBrowserOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onExternalAppBrowserOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(CUSTOM_TAB, COLD, false)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(CUSTOM_TAB, COLD, false, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -86,11 +103,12 @@ class AppStartupTelemetryTest {
         setupIntentMock(APP_ICON)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(APP_ICON, WARM, false)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(APP_ICON, WARM, false, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -98,11 +116,12 @@ class AppStartupTelemetryTest {
         setupIntentMock(LINK)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(LINK, WARM, false)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(LINK, WARM, false, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -110,11 +129,12 @@ class AppStartupTelemetryTest {
         setupIntentMock(CUSTOM_TAB)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onExternalAppBrowserOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onExternalAppBrowserOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(CUSTOM_TAB, WARM, false)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(CUSTOM_TAB, WARM, false, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -122,12 +142,13 @@ class AppStartupTelemetryTest {
         setupIntentMock(APP_ICON)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnRestart()
-        appStartupTelemetry.onHomeActivityOnNewIntent(intent.toSafeIntent())
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnRestart(rootContainerMock)
+        appStartupTelemetry.onHomeActivityOnNewIntent(intentMock.toSafeIntent())
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(APP_ICON, HOT)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(APP_ICON, HOT, launchTime = onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -135,23 +156,25 @@ class AppStartupTelemetryTest {
         setupIntentMock(LINK)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnRestart()
-        appStartupTelemetry.onHomeActivityOnNewIntent(intent.toSafeIntent())
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnRestart(rootContainerMock)
+        appStartupTelemetry.onHomeActivityOnNewIntent(intentMock.toSafeIntent())
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(LINK, HOT)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(LINK, HOT, launchTime = onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
-    fun `WHEN application is launched and onResume() is called twice THEN metric is reported only once`() {
+    fun `WHEN application is launched and onStop() is called twice THEN metric is reported only once`() {
         setupIntentMock(LINK)
-        appStartupTelemetry.onExternalAppBrowserOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onExternalAppBrowserOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onStop()
 
-        verify(exactly = 1) { metricController.track(any()) }
+        verify(exactly = 1) { metricControllerMock.track(any()) }
     }
 
     @Test
@@ -159,11 +182,12 @@ class AppStartupTelemetryTest {
         setupIntentMock(UNKNOWN)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(UNKNOWN, WARM, false)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(UNKNOWN, WARM, false, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -171,20 +195,23 @@ class AppStartupTelemetryTest {
         setupIntentMock(APP_ICON)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnCreate(intent.toSafeIntent(), true)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), true, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(APP_ICON, WARM, true)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(APP_ICON, WARM, true, onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     private fun launchApplicationAndPutApplicationInBackground() {
         appStartupTelemetry.onFenixApplicationOnCreate()
-        appStartupTelemetry.onHomeActivityOnCreate(intent.toSafeIntent(), false)
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
+        appStartupTelemetry.appLaunchTimeMeasurement = appLaunchTimeMeasurementMock
 
         // have to clear the mock function calls so it doesnt interfere with tests
-        clearMocks(metricController, answers = false)
+        clearMocks(metricControllerMock, answers = false)
 
         appStartupTelemetry.onApplicationOnStop()
     }
@@ -194,10 +221,11 @@ class AppStartupTelemetryTest {
         setupIntentMock(UNKNOWN)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(UNKNOWN, ERROR)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(UNKNOWN, ERROR, launchTime = onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -205,11 +233,25 @@ class AppStartupTelemetryTest {
         setupIntentMock(APP_ICON)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnRestart()
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnRestart(rootContainerMock)
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(UNKNOWN, HOT)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(UNKNOWN, HOT, launchTime = onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
+    }
+
+    @Test
+    fun `WHEN application is launched and onStop is called before onPreDraw THEN records the correct values`() {
+        setupIntentMock(APP_ICON)
+        coEvery { appLaunchTimeMeasurementMock.getApplicationLaunchTime(any()) } returns null
+
+        appStartupTelemetry.onFenixApplicationOnCreate()
+        appStartupTelemetry.onHomeActivityOnCreate(intentMock.toSafeIntent(), false, homeActivityInitTime, rootContainerMock)
+        appStartupTelemetry.onStop()
+
+        val validMetric = AppAllStartup(APP_ICON, COLD, false)
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
@@ -217,20 +259,22 @@ class AppStartupTelemetryTest {
         setupIntentMock(APP_ICON)
         launchApplicationAndPutApplicationInBackground()
 
-        appStartupTelemetry.onHomeActivityOnNewIntent(intent.toSafeIntent())
-        appStartupTelemetry.onHomeActivityOnResume()
+        appStartupTelemetry.onHomeActivityOnNewIntent(intentMock.toSafeIntent())
+        appStartupTelemetry.onPreDraw()
+        appStartupTelemetry.onStop()
 
-        val validMetric = AppAllStartup(APP_ICON, ERROR)
-        verify(exactly = 1) { metricController.track(validMetric) }
+        val validMetric = AppAllStartup(APP_ICON, ERROR, launchTime = onPreDrawTime.minus(homeActivityInitTime))
+        verify(exactly = 1) { metricControllerMock.track(validMetric) }
     }
 
     @Test
     fun `WHEN AppAllStartup does not have savedInstanceState THEN do not return savedInstanceState`() {
         val expectedExtra: Map<Events.appOpenedAllStartupKeys, String>? = hashMapOf(
             source to APP_ICON.toString(),
-            type to HOT.toString())
+            type to HOT.toString(),
+            launchTimeNanoSeconds to onPreDrawTime.minus(homeActivityInitTime).toString())
 
-        val appAllStartup = AppAllStartup(APP_ICON, HOT)
+        val appAllStartup = AppAllStartup(APP_ICON, HOT, launchTime = onPreDrawTime.minus(homeActivityInitTime))
 
         assertTrue(appAllStartup.extras!! == expectedExtra)
     }
@@ -240,9 +284,10 @@ class AppStartupTelemetryTest {
         val expectedExtra: Map<Events.appOpenedAllStartupKeys, String>? = hashMapOf(
             source to APP_ICON.toString(),
             type to COLD.toString(),
-            hasSavedInstanceState to true.toString())
+            hasSavedInstanceState to true.toString(),
+            launchTimeNanoSeconds to onPreDrawTime.minus(homeActivityInitTime).toString())
 
-        val appAllStartup = AppAllStartup(APP_ICON, COLD, true)
+        val appAllStartup = AppAllStartup(APP_ICON, COLD, true, onPreDrawTime.minus(homeActivityInitTime))
 
         assertTrue(appAllStartup.extras!! == expectedExtra)
     }
@@ -250,16 +295,16 @@ class AppStartupTelemetryTest {
     private fun setupIntentMock(source: Source) {
         when (source) {
             APP_ICON -> {
-                every { intent.action } returns Intent.ACTION_MAIN
-                every { intent.categories } returns setOf(Intent.CATEGORY_LAUNCHER)
+                every { intentMock.action } returns Intent.ACTION_MAIN
+                every { intentMock.categories } returns setOf(Intent.CATEGORY_LAUNCHER)
             }
             LINK, CUSTOM_TAB -> {
-                every { intent.action } returns Intent.ACTION_VIEW
-                every { intent.categories } returns emptySet()
+                every { intentMock.action } returns Intent.ACTION_VIEW
+                every { intentMock.categories } returns emptySet()
             }
             UNKNOWN -> {
-                every { intent.action } returns Intent.ACTION_MAIN
-                every { intent.categories } returns emptySet()
+                every { intentMock.action } returns Intent.ACTION_MAIN
+                every { intentMock.categories } returns emptySet()
             }
         }
     }

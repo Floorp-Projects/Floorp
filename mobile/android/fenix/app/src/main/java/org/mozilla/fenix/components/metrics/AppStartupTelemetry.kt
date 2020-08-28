@@ -5,11 +5,14 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Intent
+import android.view.View
 import androidx.annotation.VisibleForTesting
+import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import kotlinx.coroutines.runBlocking
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Source
@@ -22,15 +25,21 @@ import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.ERROR
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.HOT
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.COLD
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.WARM
+import java.lang.reflect.Modifier.PRIVATE
 
 /**
- * Tracks application startup source, type, and whether or not activity has savedInstance to restore
- * the activity from. Sample metric = [source = COLD, type = APP_ICON, hasSavedInstance = false]
+ * Tracks application startup source, type, launch time, and whether or not activity has
+ * savedInstance to restore the activity from.
+ * Sample = [source = COLD, type = APP_ICON, hasSavedInstanceState = false,launchTimeNanoSeconds = 1824000000]
  * The basic idea is to collect these metrics from different phases of startup through
  * [AppAllStartup] and finally report them on Activity's onResume() function.
  */
 @Suppress("TooManyFunctions")
-class AppStartupTelemetry(private val metrics: MetricController) : LifecycleObserver {
+class AppStartupTelemetry(
+    private val metrics: MetricController,
+    @VisibleForTesting(otherwise = PRIVATE)
+    var appLaunchTimeMeasurement: AppLaunchTimeMeasurement = AppLaunchTimeMeasurement()
+) : LifecycleObserver {
 
     init {
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -47,18 +56,42 @@ class AppStartupTelemetry(private val metrics: MetricController) : LifecycleObse
         wasAppCreateCalledBeforeActivityCreate = true
     }
 
-    fun onHomeActivityOnCreate(safeIntent: SafeIntent, hasSavedInstanceState: Boolean) {
-        setOnCreateData(safeIntent, hasSavedInstanceState, false)
+    fun onHomeActivityOnCreate(
+        safeIntent: SafeIntent,
+        hasSavedInstanceState: Boolean,
+        homeActivityInitTimeStampNanoSeconds: Long,
+        rootContainer: View
+    ) {
+        setOnCreateData(safeIntent, hasSavedInstanceState, homeActivityInitTimeStampNanoSeconds, false)
+        rootContainer.doOnPreDraw {
+            onPreDraw()
+        }
     }
 
-    fun onExternalAppBrowserOnCreate(safeIntent: SafeIntent, hasSavedInstanceState: Boolean) {
-        setOnCreateData(safeIntent, hasSavedInstanceState, true)
+    fun onExternalAppBrowserOnCreate(
+        safeIntent: SafeIntent,
+        hasSavedInstanceState: Boolean,
+        homeActivityInitTimeStampNanoSeconds: Long,
+        rootContainer: View
+    ) {
+        setOnCreateData(safeIntent, hasSavedInstanceState, homeActivityInitTimeStampNanoSeconds, true)
+        rootContainer.doOnPreDraw {
+            onPreDraw()
+        }
     }
 
-    fun onHomeActivityOnRestart() {
+    fun onHomeActivityOnRestart(rootContainer: View) {
+        // DO NOT MOVE ANYTHING ABOVE THIS..
+        // we are measuring startup time for hot startup type
+        appLaunchTimeMeasurement.onHomeActivityOnRestart()
+
         // we are not setting [Source] in this method since source is derived from an intent.
         // therefore source gets set in onNewIntent().
         onRestartData = Pair(HOT, null)
+
+        rootContainer.doOnPreDraw {
+            onPreDraw()
+        }
     }
 
     fun onHomeActivityOnNewIntent(safeIntent: SafeIntent) {
@@ -70,6 +103,7 @@ class AppStartupTelemetry(private val metrics: MetricController) : LifecycleObse
     private fun setOnCreateData(
         safeIntent: SafeIntent,
         hasSavedInstanceState: Boolean,
+        homeActivityInitTimeStampNanoSeconds: Long,
         isExternalAppBrowserActivity: Boolean
     ) {
         onCreateData = AppAllStartup(
@@ -77,6 +111,7 @@ class AppStartupTelemetry(private val metrics: MetricController) : LifecycleObse
             getAppStartupType(),
             hasSavedInstanceState
         )
+        appLaunchTimeMeasurement.onHomeActivityOnCreate(homeActivityInitTimeStampNanoSeconds)
         wasAppCreateCalledBeforeActivityCreate = false
     }
 
@@ -101,23 +136,14 @@ class AppStartupTelemetry(private val metrics: MetricController) : LifecycleObse
         }
     }
 
-    /**
-     * The reason we record metric on resume is because we need to wait for onNewIntent(), and
-     * we are not guaranteed that onNewIntent() will be called before or after onStart() / onRestart().
-     * However we are guaranteed onResume() will be called after onNewIntent() and  onStart(). Source:
-     * https://developer.android.com/reference/android/app/Activity#onNewIntent(android.content.Intent)
-     */
-    fun onHomeActivityOnResume() {
-        recordMetric()
-    }
-
-    private fun recordMetric() {
+    private suspend fun recordMetric() {
         if (!isMetricRecordedSinceAppWasForegrounded) {
             val appAllStartup: AppAllStartup = if (onCreateData != null) {
                 onCreateData!!
             } else {
                 mergeOnRestartAndOnNewIntentIntoStartup()
             }
+            appAllStartup.launchTime = appLaunchTimeMeasurement.getApplicationLaunchTime(appAllStartup.type)
             metrics.track(appAllStartup)
             isMetricRecordedSinceAppWasForegrounded = true
         }
@@ -125,6 +151,7 @@ class AppStartupTelemetry(private val metrics: MetricController) : LifecycleObse
         onCreateData = null
         onNewIntentData = null
         onRestartData = null
+        appLaunchTimeMeasurement = AppLaunchTimeMeasurement()
     }
 
     private fun mergeOnRestartAndOnNewIntentIntoStartup(): AppAllStartup {
@@ -142,5 +169,25 @@ class AppStartupTelemetry(private val metrics: MetricController) : LifecycleObse
         // application was to come to foreground again.
         // Therefore we set the isMetricRecorded flag to false.
         isMetricRecordedSinceAppWasForegrounded = false
+    }
+
+    /**
+     *record the timestamp for the first frame drawn
+     */
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun onPreDraw() {
+        // DO NOT MOVE ANYTHING ABOVE THIS..
+        // we are measuring startup time here.
+        appLaunchTimeMeasurement.onFirstFramePreDraw()
+    }
+
+    /**
+     * record the metrics, blocking the main thread to make sure we get our metrics recorded before
+     * the application potentially closes.
+     */
+    fun onStop() {
+        runBlocking {
+            recordMetric()
+        }
     }
 }

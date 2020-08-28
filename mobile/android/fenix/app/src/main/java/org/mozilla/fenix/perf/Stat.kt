@@ -64,6 +64,10 @@ open class Stat {
         return getStatText(pid).split(' ')[FIELD_POS_STARTTIME].toLong()
     }
 
+    fun getProcessStartTimeStampNano(pid: Int): Long {
+        return convertTicksToNanos(getProcessStartTimeTicks(pid)).toLong()
+    }
+
     fun convertTicksToNanos(ticks: Long): Double = ticks * nanosPerClockTick
     fun convertNanosToTicks(nanos: Long): Double = nanos / nanosPerClockTick
 }

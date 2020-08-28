@@ -33,6 +33,10 @@ events:
           app started AND HomeActivity created = warm
           app started AND HomeActivity started = hot
           app created AND HomeActivity started = error
+          Some applications such as gmail launches the default browser in the
+          background. So when we eventually click a link, browser is already
+          started in the background. This means that custom_tab will mostly
+          report `warm` startup type.
       source:
         description: |
           The method used to open Fenix. Possible values are `app_icon`,
@@ -48,6 +52,13 @@ events:
           for example, when we are doing a hot start up, we cant have a
           savedInstanceState therefore we report only [APP_ICON, HOT] instead
           of [APP_ICON, HOT, false].
+      launch_time_nano_seconds:
+        description: |
+          the number of nano seconds application took to launch. This is the
+          time difference between application launch(user pressing app_icon,
+          launching a link) and until the first view is about to be drawn
+          on the screen. If the time is not captured, this extra key will
+          not be reported.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11830
       - https://github.com/mozilla-mobile/fenix/issues/12573
