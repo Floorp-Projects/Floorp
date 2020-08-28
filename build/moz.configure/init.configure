@@ -824,7 +824,15 @@ def real_host(value, shell):
     if not value:
         config_guess = os.path.join(os.path.dirname(__file__), '..',
                                     'autoconf', 'config.guess')
-        host = check_cmd_output(shell, config_guess).strip()
+
+        # Ensure that config.guess is determining the host triplet, not the target
+        # triplet
+        env = os.environ.copy()
+        env.pop('CC_FOR_BUILD', None)
+        env.pop('HOST_CC', None)
+        env.pop('CC')
+
+        host = check_cmd_output(shell, config_guess, env=env).strip()
         try:
             return split_triplet(host)
         except ValueError:
