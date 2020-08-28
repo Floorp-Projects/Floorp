@@ -387,7 +387,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // this special codepath once we are ready to make the top level target to
     // be destroyed on navigations. See bug 1602748 for more context.
     if (!targetActor && this.manager.browsingContext.browserId == browserId) {
-      targetActor = TargetActorRegistry.getTargetActor(browserId);
+      // Ensure retrieving the one target actor related to this connection.
+      // This allows to distinguish actors created for various toolboxes.
+      // For ex, regular toolbox versus browser console versus browser toolbox
+      const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
+      targetActor = TargetActorRegistry.getTargetActor(
+        browserId,
+        connectionPrefix
+      );
     }
     return targetActor;
   }

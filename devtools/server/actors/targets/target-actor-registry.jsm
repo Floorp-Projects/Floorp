@@ -29,26 +29,31 @@ var TargetActorRegistry = {
    *
    * @param {Integer} browserId: The browserId to retrieve targets for. Pass null to
    *                             retrieve the parent process targets.
+   * @param {String} connectionPrefix: Optional prefix, in order to select only actor
+   *                                   related to the same connection. i.e. the same client.
    * @returns {TargetActor|null}
    */
-  getTargetActor(browserId) {
-    return this.getTargetActors(browserId)[0] || null;
+  getTargetActor(browserId, connectionPrefix) {
+    return this.getTargetActors(browserId, connectionPrefix)[0] || null;
   },
 
   /**
    * Return the target actors matching the passed browser element id.
-   * In some scenarios, the registstry can have multiple target actors for a given
+   * In some scenarios, the registry can have multiple target actors for a given
    * browserId (e.g. the regular DevTools content toolbox + DevTools WebExtensions targets).
    *
    * @param {Integer} browserId: The browserId to retrieve targets for. Pass null to
    *                             retrieve the parent process targets.
+   * @param {String} connectionPrefix: Optional prefix, in order to select only actor
+   *                                   related to the same connection. i.e. the same client.
    * @returns {Array<TargetActor>}
    */
-  getTargetActors(browserId) {
+  getTargetActors(browserId, connectionPrefix) {
     const actors = [];
     for (const actor of browsingContextTargetActors) {
       if (
-        actor.browserId == browserId ||
+        ((!connectionPrefix || actor.actorID.startsWith(connectionPrefix)) &&
+          actor.browserId == browserId) ||
         (browserId === null && actor.typeName === "parentProcessTarget")
       ) {
         actors.push(actor);
