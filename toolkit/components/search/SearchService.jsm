@@ -207,22 +207,6 @@ SearchService.prototype = {
     );
   },
 
-  /**
-   * Resets the locally stored data to the original empty values in preparation
-   * for a reset.
-   */
-  _resetLocalData() {
-    this._engines.clear();
-    this.__sortedEngines = null;
-    this._currentEngine = null;
-    this._currentPrivateEngine = null;
-    this._searchDefault = null;
-    this._searchPrivateDefault = null;
-    this._searchOrder = [];
-    this._metaData = {};
-    this._maybeReloadDebounce = false;
-  },
-
   // If initialization has not been completed yet, perform synchronous
   // initialization.
   // Throws in case of initialization error.
@@ -658,9 +642,9 @@ SearchService.prototype = {
     }
     this._startupExtensions.clear();
 
-    this._loadEnginesFromCache(cache);
+    this._loadEnginesFromCache(cache.engines);
 
-    this._loadEnginesMetadataFromCache(cache);
+    this._loadEnginesMetadataFromCache(cache.engines);
 
     logConsole.debug("_loadEngines: done");
   },
@@ -962,14 +946,21 @@ SearchService.prototype = {
   },
 
   /**
-   * Reset SearchService data.
+   * Test only - reset SearchService data. Ideally this should be replaced
    */
   reset() {
     gInitialized = false;
-    this._resetLocalData();
     this._initObservers = PromiseUtils.defer();
     this._initStarted = null;
     this._startupExtensions = new Set();
+    this._engines.clear();
+    this.__sortedEngines = null;
+    this._currentEngine = null;
+    this._currentPrivateEngine = null;
+    this._searchDefault = null;
+    this._searchPrivateDefault = null;
+    this._searchOrder = [];
+    this._maybeReloadDebounce = false;
   },
 
   _addEngineToStore(engine, skipDuplicateCheck = false) {
@@ -1041,12 +1032,12 @@ SearchService.prototype = {
     }
   },
 
-  _loadEnginesMetadataFromCache(cache) {
-    if (!cache.engines) {
+  _loadEnginesMetadataFromCache(cacheEngines) {
+    if (!cacheEngines) {
       return;
     }
 
-    for (let engine of cache.engines) {
+    for (let engine of cacheEngines) {
       let name = engine._name;
       if (this._engines.has(name)) {
         logConsole.debug(
@@ -1065,19 +1056,19 @@ SearchService.prototype = {
     }
   },
 
-  _loadEnginesFromCache(cache) {
-    if (!cache.engines) {
+  _loadEnginesFromCache(cacheEngines) {
+    if (!cacheEngines) {
       return;
     }
 
     logConsole.debug(
       "_loadEnginesFromCache: Loading",
-      cache.engines.length,
+      cacheEngines.length,
       "engines from cache"
     );
 
     let skippedEngines = 0;
-    for (let engine of cache.engines) {
+    for (let engine of cacheEngines) {
       // We renamed isBuiltin to isAppProvided in 1631898,
       // keep checking isBuiltin for older caches.
       if (engine._isAppProvided || engine._isBuiltin) {
@@ -2026,8 +2017,7 @@ SearchService.prototype = {
       if (
         engine &&
         (engine.isAppProvided ||
-          this._cache.getAttribute(this._cache.getHashName(attributeName)) ==
-            SearchUtils.getVerificationHash(name))
+          this._cache.getVerifiedAttribute(attributeName))
       ) {
         // If the current engine is a default one, we can relax the
         // verification hash check to reduce the annoyance for users who
