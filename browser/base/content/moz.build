@@ -88,6 +88,9 @@ with Files("test/statuspanel/**"):
 with Files("test/sync/**"):
     BUG_COMPONENT = ("Firefox", "Sync")
 
+with Files("test/tabdialogs/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
 with Files("test/tabPrompts/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
