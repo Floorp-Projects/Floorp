@@ -2455,6 +2455,10 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
     return nsIBrowserDOMWindow::OPEN_NEWTAB;
   }
 
+  if (containerPref != nsIBrowserDOMWindow::OPEN_NEWTAB) {
+    containerPref = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
+  }
+
   bool isDisabledOpenNewWindow =
       aParent->GetFullScreen() &&
       Preferences::GetBool(
@@ -2465,8 +2469,7 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
     containerPref = nsIBrowserDOMWindow::OPEN_NEWTAB;
   }
 
-  if (containerPref != nsIBrowserDOMWindow::OPEN_NEWTAB &&
-      containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+  if (containerPref == nsIBrowserDOMWindow::OPEN_NEWWINDOW) {
     // Just open a window normally
     return nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   }
