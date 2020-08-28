@@ -30,6 +30,8 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
+import org.mozilla.fenix.components.settings.counterPreference
+import org.mozilla.fenix.components.settings.featureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -50,14 +52,9 @@ private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
 class Settings(private val appContext: Context) : PreferencesHolder {
 
     companion object {
-        const val showLoginsSecureWarningSyncMaxCount = 1
-        const val showLoginsSecureWarningMaxCount = 1
-        const val trackingProtectionOnboardingMaximumCount = 1
-        const val pwaVisitsToShowPromptMaxCount = 3
         const val topSitesMaxCount = 16
         const val FENIX_PREFERENCES = "fenix_preferences"
 
-        private const val showSearchWidgetCFRMaxCount = 3
         private const val BLOCKED_INT = 0
         private const val ASK_TO_ALLOW_INT = 1
         private const val ALLOWED_INT = 2
@@ -177,38 +174,26 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                     true
                 )
 
-    private val activeSearchCount by intPreference(
-        appContext.getPreferenceKey(R.string.pref_key_search_count),
-        default = 0
+    private val activeSearchCount = counterPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_count)
     )
 
-    fun incrementActiveSearchCount() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_search_count),
-            activeSearchCount + 1
-        ).apply()
-    }
+    fun incrementActiveSearchCount() = activeSearchCount.increment()
 
     private val isActiveSearcher: Boolean
-        get() = activeSearchCount > 2
+        get() = activeSearchCount.value > 2
 
     fun shouldDisplaySearchWidgetCFR(): Boolean =
         isActiveSearcher &&
-                searchWidgetCFRDismissCount < showSearchWidgetCFRMaxCount &&
+                searchWidgetCFRDismissCount.underMaxCount() &&
                 !searchWidgetInstalled &&
                 !searchWidgetCFRManuallyDismissed
 
-    private val searchWidgetCFRDisplayCount by intPreference(
-        appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_display_count),
-        default = 0
+    private val searchWidgetCFRDisplayCount = counterPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_display_count)
     )
 
-    fun incrementSearchWidgetCFRDisplayed() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_display_count),
-            searchWidgetCFRDisplayCount + 1
-        ).apply()
-    }
+    fun incrementSearchWidgetCFRDisplayed() = searchWidgetCFRDisplayCount.increment()
 
     private val searchWidgetCFRManuallyDismissed by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_manually_dismissed),
@@ -222,17 +207,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         ).apply()
     }
 
-    private val searchWidgetCFRDismissCount by intPreference(
+    private val searchWidgetCFRDismissCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_dismiss_count),
-        default = 0
+        maxCount = 3
     )
 
-    fun incrementSearchWidgetCFRDismissed() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_dismiss_count),
-            searchWidgetCFRDismissCount + 1
-        ).apply()
-    }
+    fun incrementSearchWidgetCFRDismissed() = searchWidgetCFRDismissCount.increment()
 
     val isInSearchWidgetExperiment by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_is_in_search_widget_experiment),
@@ -298,17 +278,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val shouldShowTrackingProtectionOnboarding: Boolean
         get() = !isOverrideTPPopupsForPerformanceTest &&
-                (trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
+                (trackingProtectionOnboardingCount.underMaxCount() &&
                         !trackingProtectionOnboardingShownThisSession)
 
     var showSecretDebugMenuThisSession = false
-    var showNotificationsSetting = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
     val shouldShowSecurityPinWarningSync: Boolean
-        get() = loginsSecureWarningSyncCount < showLoginsSecureWarningSyncMaxCount
+        get() = loginsSecureWarningSyncCount.underMaxCount()
 
     val shouldShowSecurityPinWarning: Boolean
-        get() = loginsSecureWarningCount < showLoginsSecureWarningMaxCount
+        get() = loginsSecureWarningCount.underMaxCount()
 
     var shouldUseLightTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_light_theme),
@@ -544,12 +523,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             return touchExplorationIsEnabled || switchServiceIsEnabled
         }
 
-    val toolbarSettingString: String
-        get() = when {
-            shouldUseBottomToolbar -> appContext.getString(R.string.preference_bottom_toolbar)
-            else -> appContext.getString(R.string.preference_top_toolbar)
-        }
-
     fun getDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType): Boolean =
         preferences.getBoolean(type.getPreferenceKey(appContext), false)
 
@@ -571,30 +544,20 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     ).apply()
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val loginsSecureWarningSyncCount by intPreference(
+    internal val loginsSecureWarningSyncCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_logins_secure_warning_sync),
-        default = 0
+        maxCount = 1
     )
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val loginsSecureWarningCount by intPreference(
+    internal val loginsSecureWarningCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_logins_secure_warning),
-        default = 0
+        maxCount = 1
     )
 
-    fun incrementShowLoginsSecureWarningCount() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_logins_secure_warning),
-            loginsSecureWarningCount + 1
-        ).apply()
-    }
+    fun incrementShowLoginsSecureWarningCount() = loginsSecureWarningCount.increment()
 
-    fun incrementShowLoginsSecureWarningSyncCount() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_logins_secure_warning_sync),
-            loginsSecureWarningSyncCount + 1
-        ).apply()
-    }
+    fun incrementShowLoginsSecureWarningSyncCount() = loginsSecureWarningSyncCount.increment()
 
     val shouldShowSearchSuggestions by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions),
@@ -616,21 +579,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    fun incrementVisitedInstallableCount() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_install_pwa_visits),
-            pwaInstallableVisitCount + 1
-        ).apply()
-    }
+    fun incrementVisitedInstallableCount() = pwaInstallableVisitCount.increment()
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val pwaInstallableVisitCount by intPreference(
+    internal val pwaInstallableVisitCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_install_pwa_visits),
-        default = 0
+        maxCount = 3
     )
 
     private val userNeedsToVisitInstallableSites: Boolean
-        get() = pwaInstallableVisitCount < pwaVisitsToShowPromptMaxCount
+        get() = pwaInstallableVisitCount.underMaxCount()
 
     val shouldShowPwaOnboarding: Boolean
         get() {
@@ -639,9 +597,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
             // ShortcutManager::pinnedShortcuts is only available on Oreo+
             if (!userKnowsAboutPwas && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val alreadyHavePwaInstalled =
-                    appContext.getSystemService(ShortcutManager::class.java)
-                        .pinnedShortcuts.size > 0
+                val manager = appContext.getSystemService(ShortcutManager::class.java)
+                val alreadyHavePwaInstalled = manager != null && manager.pinnedShortcuts.size > 0
 
                 // Users know about PWAs onboarding if they already have PWAs installed.
                 userKnowsAboutPwas = alreadyHavePwaInstalled
@@ -656,17 +613,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val trackingProtectionOnboardingCount by intPreference(
+    internal val trackingProtectionOnboardingCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
-        0
+        maxCount = 1
     )
 
     fun incrementTrackingProtectionOnboardingCount() {
         trackingProtectionOnboardingShownThisSession = true
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
-            trackingProtectionOnboardingCount + 1
-        ).apply()
+        trackingProtectionOnboardingCount.increment()
     }
 
     fun getSitePermissionsPhoneFeatureAction(
@@ -703,7 +657,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default: Int
     ) = preferences.getInt(AUTOPLAY_USER_SETTING, default)
 
-    fun getSitePermissionsPhoneFeatureAutoplayAction(
+    private fun getSitePermissionsPhoneFeatureAutoplayAction(
         feature: PhoneFeature,
         default: AutoplayAction = AutoplayAction.BLOCKED
     ) = preferences.getInt(feature.getPreferenceKey(appContext), default.toInt()).toAutoplayAction()
@@ -785,23 +739,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             0
         )
 
-    fun incrementNumTimesPrivateModeOpened() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_private_mode_opened),
-            numTimesPrivateModeOpened + 1
-        ).apply()
-    }
+    fun incrementNumTimesPrivateModeOpened() = numTimesPrivateModeOpened.increment()
 
     private var showedPrivateModeContextualFeatureRecommender by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_showed_private_mode_cfr),
         default = false
     )
 
-    private val numTimesPrivateModeOpened: Int
-        get() = preferences.getInt(
-            appContext.getPreferenceKey(R.string.pref_key_private_mode_opened),
-            0
-        )
+    private val numTimesPrivateModeOpened = counterPreference(
+        appContext.getPreferenceKey(R.string.pref_key_private_mode_opened)
+    )
 
     val showPrivateModeContextualFeatureRecommender: Boolean
         get() {
@@ -809,9 +756,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                 .getInstalledMozillaProducts(appContext as Application)
                 .contains(MozillaProductDetector.MozillaProducts.FOCUS.productName)
 
-            val showCondition =
-                (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_INSTALLED && focusInstalled) ||
-                        (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED && !focusInstalled)
+            val showCondition = if (focusInstalled) {
+                numTimesPrivateModeOpened.value == CFR_COUNT_CONDITION_FOCUS_INSTALLED
+            } else {
+                numTimesPrivateModeOpened.value == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED
+            }
 
             if (showCondition && !showedPrivateModeContextualFeatureRecommender) {
                 showedPrivateModeContextualFeatureRecommender = true

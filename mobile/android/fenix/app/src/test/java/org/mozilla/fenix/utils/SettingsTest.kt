@@ -128,13 +128,13 @@ class SettingsTest {
     fun showLoginsDialogWarningSync() {
         // When just created
         // Then
-        assertEquals(0, settings.loginsSecureWarningSyncCount)
+        assertEquals(0, settings.loginsSecureWarningSyncCount.value)
 
         // When
         settings.incrementShowLoginsSecureWarningSyncCount()
 
         // Then
-        assertEquals(1, settings.loginsSecureWarningSyncCount)
+        assertEquals(1, settings.loginsSecureWarningSyncCount.value)
     }
 
     @Test
@@ -154,13 +154,13 @@ class SettingsTest {
     fun showLoginsDialogWarning() {
         // When just created
         // Then
-        assertEquals(0, settings.loginsSecureWarningCount)
+        assertEquals(0, settings.loginsSecureWarningCount.value)
 
         // When
         settings.incrementShowLoginsSecureWarningCount()
 
         // Then
-        assertEquals(1, settings.loginsSecureWarningCount)
+        assertEquals(1, settings.loginsSecureWarningCount.value)
     }
 
     @Test
