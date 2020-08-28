@@ -917,6 +917,9 @@ NS_IMETHODIMP_(void)
 nsSHEntry::SyncTreesForSubframeNavigation(
     nsISHEntry* aEntry, mozilla::dom::BrowsingContext* aTopBC,
     mozilla::dom::BrowsingContext* aIgnoreBC) {
+  // XXX Keep this in sync with
+  // SessionHistoryEntry::SyncTreesForSubframeNavigation
+  //
   // We need to sync up the browsing context and session history trees for
   // subframe navigation.  If the load was in a subframe, we forward up to
   // the top browsing context, which will then recursively sync up all browsing
