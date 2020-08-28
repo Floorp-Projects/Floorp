@@ -2,7 +2,7 @@
 
 # Status
 
-`enum class Status` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L52)
+`enum class Status` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/content/DownloadState.kt#L54)
 
 Status that represents every state that a download can be in.
 
@@ -16,3 +16,9 @@ Status that represents every state that a download can be in.
 | [CANCELLED](-c-a-n-c-e-l-l-e-d.md) | Indicates that the download that has been [DOWNLOADING](-d-o-w-n-l-o-a-d-i-n-g.md) has been cancelled. |
 | [FAILED](-f-a-i-l-e-d.md) | Indicates that the download that has been [DOWNLOADING](-d-o-w-n-l-o-a-d-i-n-g.md) has moved to failed because something unexpected has happened. |
 | [COMPLETED](-c-o-m-p-l-e-t-e-d.md) | Indicates that the [DOWNLOADING](-d-o-w-n-l-o-a-d-i-n-g.md) download has been completed. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [id](id.md) | `val id: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

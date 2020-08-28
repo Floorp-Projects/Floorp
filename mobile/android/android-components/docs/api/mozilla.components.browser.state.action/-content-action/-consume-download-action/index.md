@@ -10,11 +10,11 @@ Removes the [DownloadState](../../../mozilla.components.browser.state.state.cont
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ConsumeDownloadAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, downloadId: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`)`<br>Removes the [DownloadState](../../../mozilla.components.browser.state.state.content/-download-state/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md). |
+| [&lt;init&gt;](-init-.md) | `ConsumeDownloadAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, downloadId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Removes the [DownloadState](../../../mozilla.components.browser.state.state.content/-download-state/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md). |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [downloadId](download-id.md) | `val downloadId: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
+| [downloadId](download-id.md) | `val downloadId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [sessionId](session-id.md) | `val sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

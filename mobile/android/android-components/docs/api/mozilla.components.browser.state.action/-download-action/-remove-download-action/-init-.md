@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`RemoveDownloadAction(downloadId: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`)`
+`RemoveDownloadAction(downloadId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
 
 Updates the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) to remove the download with the provided [downloadId](download-id.md).
 

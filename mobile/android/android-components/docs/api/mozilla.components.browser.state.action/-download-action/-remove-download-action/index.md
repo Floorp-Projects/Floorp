@@ -10,10 +10,10 @@ Updates the [BrowserState](../../../mozilla.components.browser.state.state/-brow
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `RemoveDownloadAction(downloadId: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`)`<br>Updates the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) to remove the download with the provided [downloadId](download-id.md). |
+| [&lt;init&gt;](-init-.md) | `RemoveDownloadAction(downloadId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Updates the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) to remove the download with the provided [downloadId](download-id.md). |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [downloadId](download-id.md) | `val downloadId: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
+| [downloadId](download-id.md) | `val downloadId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

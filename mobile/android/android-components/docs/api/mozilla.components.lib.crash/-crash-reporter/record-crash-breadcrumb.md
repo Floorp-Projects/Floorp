@@ -2,7 +2,7 @@
 
 # recordCrashBreadcrumb
 
-`fun recordCrashBreadcrumb(breadcrumb: `[`Breadcrumb`](../../mozilla.components.support.base.crash/-breadcrumb/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L175)
+`fun recordCrashBreadcrumb(breadcrumb: `[`Breadcrumb`](../../mozilla.components.support.base.crash/-breadcrumb/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L183)
 
 Overrides [CrashReporting.recordCrashBreadcrumb](../../mozilla.components.support.base.crash/-crash-reporting/record-crash-breadcrumb.md)
 

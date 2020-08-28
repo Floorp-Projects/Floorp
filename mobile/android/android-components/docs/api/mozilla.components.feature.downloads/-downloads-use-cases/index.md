@@ -2,7 +2,7 @@
 
 # DownloadsUseCases
 
-`class DownloadsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsUseCases.kt#L15)
+`class DownloadsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsUseCases.kt#L16)
 
 Contains use cases related to the downloads feature.
 
@@ -15,6 +15,7 @@ Contains use cases related to the downloads feature.
 | Name | Summary |
 |---|---|
 | [ConsumeDownloadUseCase](-consume-download-use-case/index.md) | `class ConsumeDownloadUseCase` |
+| [RestoreDownloadsUseCase](-restore-downloads-use-case/index.md) | `class RestoreDownloadsUseCase`<br>Use case that allows to restore downloads from the storage. |
 
 ### Constructors
 
@@ -27,6 +28,7 @@ Contains use cases related to the downloads feature.
 | Name | Summary |
 |---|---|
 | [consumeDownload](consume-download.md) | `val consumeDownload: `[`ConsumeDownloadUseCase`](-consume-download-use-case/index.md) |
+| [restoreDownloads](restore-downloads.md) | `val restoreDownloads: `[`RestoreDownloadsUseCase`](-restore-downloads-use-case/index.md) |
 
 ### Extension Functions
 

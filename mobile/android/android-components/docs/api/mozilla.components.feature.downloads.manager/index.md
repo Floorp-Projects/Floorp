@@ -16,7 +16,7 @@
 |---|---|
 | [SystemDownloadManager](-system-download-manager.md) | `typealias SystemDownloadManager = <ERROR CLASS>` |
 | [SystemRequest](-system-request.md) | `typealias SystemRequest = <ERROR CLASS>` |
-| [onDownloadStopped](on-download-stopped.md) | `typealias onDownloadStopped = (`[`DownloadState`](../mozilla.components.browser.state.state.content/-download-state/index.md)`, `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`Status`](../mozilla.components.browser.state.state.content/-download-state/-status/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onDownloadStopped](on-download-stopped.md) | `typealias onDownloadStopped = (`[`DownloadState`](../mozilla.components.browser.state.state.content/-download-state/index.md)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`Status`](../mozilla.components.browser.state.state.content/-download-state/-status/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Functions
 
