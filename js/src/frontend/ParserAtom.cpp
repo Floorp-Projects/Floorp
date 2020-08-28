@@ -184,8 +184,8 @@ void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
 }
 #endif
 
-ParserAtomsTable::ParserAtomsTable(JSContext* cx)
-    : wellKnownTable_(*cx->runtime()->commonParserNames) {}
+ParserAtomsTable::ParserAtomsTable(JSRuntime* rt)
+    : wellKnownTable_(*rt->commonParserNames) {}
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
     JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry) {

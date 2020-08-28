@@ -412,7 +412,7 @@ class ParserAtomsTable {
   const WellKnownParserAtoms& wellKnownTable_;
 
  public:
-  explicit ParserAtomsTable(JSContext* cx);
+  explicit ParserAtomsTable(JSRuntime* rt);
 
  private:
   // Custom AddPtr for the ParserAtomsTable.
