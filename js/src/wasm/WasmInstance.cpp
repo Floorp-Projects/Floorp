@@ -1957,24 +1957,24 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   return true;
 }
 
-static bool GetInterpEntry(Instance& instance, uint32_t funcIndex,
-                           CallArgs args, void** interpEntry,
-                           const FuncType** funcType) {
+static bool GetInterpEntry(JSContext* cx, Instance& instance,
+                           uint32_t funcIndex, CallArgs args,
+                           void** interpEntry, const FuncType** funcType) {
   const FuncExport* funcExport;
   if (!EnsureEntryStubs(instance, funcIndex, &funcExport, interpEntry)) {
     return false;
   }
 
+#ifdef DEBUG
   // EnsureEntryStubs() has ensured jit-entry stubs have been created and
-  // installed in funcIndex's JumpTable entry, so we can now set the
-  // JSFunction's jit-entry. See WasmInstanceObject::getExportedFunction().
+  // installed in funcIndex's JumpTable entry.
   if (!funcExport->hasEagerStubs() && funcExport->canHaveJitEntry()) {
     JSFunction& callee = args.callee().as<JSFunction>();
-    MOZ_ASSERT(!callee.isAsmJSNative(), "asm.js only has eager stubs");
-    if (!callee.isWasmWithJitEntry()) {
-      callee.setWasmJitEntry(instance.code().getAddressOfJitEntry(funcIndex));
-    }
+    void* interpStub = cx->runtime()->jitRuntime()->interpreterStub().value;
+    MOZ_ASSERT(callee.isWasmWithJitEntry());
+    MOZ_ASSERT(*callee.wasmJitEntry() != interpStub);
   }
+#endif
 
   *funcType = &funcExport->funcType();
   return true;
@@ -2121,7 +2121,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
 
   void* interpEntry;
   const FuncType* funcType;
-  if (!GetInterpEntry(*this, funcIndex, args, &interpEntry, &funcType)) {
+  if (!GetInterpEntry(cx, *this, funcIndex, args, &interpEntry, &funcType)) {
     return false;
   }
 

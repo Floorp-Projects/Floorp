@@ -1893,8 +1893,13 @@ bool WasmInstanceObject::getExportedFunction(
     // Some applications eagerly access all table elements which currently
     // triggers worst-case behavior for lazy stubs, since each will allocate a
     // separate 4kb code page. Most eagerly-accessed functions are not called,
-    // so instead wait until Instance::callExport() to create the entry stubs.
-    if (funcExport.hasEagerStubs() && funcExport.canHaveJitEntry()) {
+    // so use the JIT's interpreter-trampoline (a call into the VM) as JitEntry
+    // and wait until Instance::callExport() to create the entry stubs.
+    if (funcExport.canHaveJitEntry()) {
+      if (!funcExport.hasEagerStubs()) {
+        void* interpStub = cx->runtime()->jitRuntime()->interpreterStub().value;
+        instance.code().setJitEntry(funcIndex, interpStub);
+      }
       fun->setWasmJitEntry(instance.code().getAddressOfJitEntry(funcIndex));
     } else {
       fun->setWasmFuncIndex(funcIndex);
