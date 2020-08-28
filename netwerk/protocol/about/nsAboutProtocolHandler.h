@@ -70,15 +70,21 @@ class nsNestedAboutURI final : public nsSimpleNestedURI {
   virtual nsSimpleURI* StartClone(RefHandlingEnum aRefHandlingMode,
                                   const nsACString& newRef) override;
   NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
+  NS_IMETHOD_(void) Serialize(ipc::URIParams& aParams) override;
 
+  // nsISerializable
   NS_IMETHOD Read(nsIObjectInputStream* aStream) override;
   NS_IMETHOD Write(nsIObjectOutputStream* aStream) override;
+
+  // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
+  // nsISerializable impl works right.
   NS_IMETHOD GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) override;
 
   nsIURI* GetBaseURI() const { return mBaseURI; }
 
  protected:
   nsCOMPtr<nsIURI> mBaseURI;
+  bool Deserialize(const mozilla::ipc::URIParams&);
   nsresult ReadPrivate(nsIObjectInputStream* stream);
 
  public:
