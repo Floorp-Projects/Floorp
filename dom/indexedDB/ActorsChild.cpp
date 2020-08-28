@@ -1040,18 +1040,18 @@ template <typename T>
 class DelayedActionRunnable final : public CancelableRunnable {
   using ActionFunc = void (T::*)();
 
-  T* mActor;
+  SafeRefPtr<T> mActor;
   RefPtr<IDBRequest> mRequest;
   ActionFunc mActionFunc;
 
  public:
-  explicit DelayedActionRunnable(T* aActor, ActionFunc aActionFunc)
+  explicit DelayedActionRunnable(SafeRefPtr<T> aActor, ActionFunc aActionFunc)
       : CancelableRunnable("indexedDB::DelayedActionRunnable"),
-        mActor(aActor),
-        mRequest(aActor->GetRequest()),
+        mActor(std::move(aActor)),
+        mRequest(mActor->GetRequest()),
         mActionFunc(aActionFunc) {
-    MOZ_ASSERT(aActor);
-    aActor->AssertIsOnOwningThread();
+    MOZ_ASSERT(mActor);
+    mActor->AssertIsOnOwningThread();
     MOZ_ASSERT(mRequest);
     MOZ_ASSERT(mActionFunc);
   }
@@ -2925,6 +2925,13 @@ BackgroundCursorChild<CursorType>::~BackgroundCursorChild() {
 }
 
 template <IDBCursorType CursorType>
+SafeRefPtr<BackgroundCursorChild<CursorType>>
+BackgroundCursorChild<CursorType>::SafeRefPtrFromThis() {
+  return BackgroundCursorChildBase::SafeRefPtrFromThis()
+      .template downcast<BackgroundCursorChild>();
+}
+
+template <IDBCursorType CursorType>
 void BackgroundCursorChild<CursorType>::SendContinueInternal(
     const CursorRequestParams& aParams,
     const CursorData<CursorType>& aCurrentData) {
@@ -3101,7 +3108,8 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
     // 1580499.
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(
         MakeAndAddRef<DelayedActionRunnable<BackgroundCursorChild<CursorType>>>(
-            this, &BackgroundCursorChild::CompleteContinueRequestFromCache)));
+            SafeRefPtrFromThis(),
+            &BackgroundCursorChild::CompleteContinueRequestFromCache)));
 
     // TODO: Could we preload further entries in the background when the size of
     // mCachedResponses falls under some threshold? Or does the response
@@ -3253,7 +3261,7 @@ void BackgroundCursorChild<CursorType>::HandleResponse(
   if (!mCursor) {
     MOZ_ALWAYS_SUCCEEDS(this->GetActorEventTarget()->Dispatch(
         MakeAndAddRef<DelayedActionRunnable<BackgroundCursorChild<CursorType>>>(
-            this, &BackgroundCursorChild::SendDeleteMeInternal),
+            SafeRefPtrFromThis(), &BackgroundCursorChild::SendDeleteMeInternal),
         NS_DISPATCH_NORMAL));
   }
 }
@@ -3508,7 +3516,7 @@ NS_IMETHODIMP DelayedActionRunnable<T>::Run() {
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mActionFunc);
 
-  (mActor->*mActionFunc)();
+  ((*mActor).*mActionFunc)();
 
   mActor = nullptr;
   mRequest = nullptr;
