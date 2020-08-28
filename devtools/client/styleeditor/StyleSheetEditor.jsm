@@ -64,8 +64,6 @@ const EMIT_MEDIA_RULES_THROTTLING = 500;
  *         The STYLESHEET resource which is received from resource watcher.
  * @param {DOMWindow}  win
  *        panel window for style editor
- * @param {TargetList}  targetList
- *        TargetList the toolbox has.
  * @param {Walker} walker
  *        Optional walker used for selectors autocompletion
  * @param {CustomHighlighterFront} highlighter
@@ -78,7 +76,6 @@ const EMIT_MEDIA_RULES_THROTTLING = 500;
 function StyleSheetEditor(
   resource,
   win,
-  targetList,
   walker,
   highlighter,
   styleSheetFriendlyIndex
@@ -86,7 +83,6 @@ function StyleSheetEditor(
   EventEmitter.decorate(this);
 
   this._resource = resource;
-  this._targetList = targetList;
   this._inputElement = null;
   this.sourceEditor = null;
   this._window = win;
@@ -280,26 +276,34 @@ StyleSheetEditor.prototype = {
    *
    * @return {Promise} a promise that resolves to the new text
    */
-  _getSourceTextAndPrettify: function() {
-    return this.styleSheet
-      .getText()
-      .then(longStr => {
-        return longStr.string();
-      })
-      .then(source => {
-        const ruleCount = this.styleSheet.ruleCount;
-        if (!this.styleSheet.isOriginalSource) {
-          const { result, mappings } = prettifyCSS(source, ruleCount);
-          source = result;
-          // Store the list of objects with mappings between CSS token positions from the
-          // original source to the prettified source. These will be used when requested to
-          // jump to a specific position within the editor.
-          this._mappings = mappings;
-        }
+  async _getSourceTextAndPrettify() {
+    const styleSheetsFront = await this._getStyleSheetsFront();
 
-        this._state.text = source;
-        return source;
-      });
+    let longStr = null;
+    if (this.styleSheet.isOriginalSource) {
+      // If the stylesheet is OriginalSource, we should get the texts from SourceMapService.
+      // So, for now, we use OriginalSource.getText() as it is.
+      longStr = await this.styleSheet.getText();
+    } else if (!styleSheetsFront.traits.supportResourceRequests) {
+      // Backward compat, can be removed when FF 81 hits release.
+      longStr = await this.styleSheet.getText();
+    } else {
+      longStr = await styleSheetsFront.getText(this.resourceId);
+    }
+
+    let source = await longStr.string();
+    const ruleCount = this.styleSheet.ruleCount;
+    if (!this.styleSheet.isOriginalSource) {
+      const { result, mappings } = prettifyCSS(source, ruleCount);
+      source = result;
+      // Store the list of objects with mappings between CSS token positions from the
+      // original source to the prettified source. These will be used when requested to
+      // jump to a specific position within the editor.
+      this._mappings = mappings;
+    }
+
+    this._state.text = source;
+    return source;
   },
 
   /**
@@ -851,7 +855,7 @@ StyleSheetEditor.prototype = {
   },
 
   _getStyleSheetsFront() {
-    return this._targetList.targetFront.getFront("stylesheets");
+    return this._resource.targetFront.getFront("stylesheets");
   },
 
   /**

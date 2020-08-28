@@ -901,11 +901,18 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     return actor;
   },
 
+  _getStyleSheetActor(resourceId) {
+    return this.parentActor._targetScopedActorPool.getActorByID(resourceId);
+  },
+
   toggleDisabled(resourceId) {
-    const actor = this.parentActor._targetScopedActorPool.getActorByID(
-      resourceId
-    );
+    const actor = this._getStyleSheetActor(resourceId);
     return actor.toggleDisabled();
+  },
+
+  getText(resourceId) {
+    const actor = this._getStyleSheetActor(resourceId);
+    return actor.getText();
   },
 });
 

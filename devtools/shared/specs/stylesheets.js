@@ -50,6 +50,7 @@ const styleSheetSpec = generateActorSpec({
     toggleDisabled: {
       response: { disabled: RetVal("boolean") },
     },
+    // Backward-compatibility: remove when FF81 hits release.
     getText: {
       response: {
         text: RetVal("longstring"),
@@ -103,6 +104,10 @@ const styleSheetsSpec = generateActorSpec({
     toggleDisabled: {
       request: { resourceId: Arg(0, "string") },
       response: { disabled: RetVal("boolean") },
+    },
+    getText: {
+      request: { resourceId: Arg(0, "string") },
+      response: { text: RetVal("longstring") },
     },
   },
 });
