@@ -163,8 +163,7 @@ JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(
   }
   auto index = compilationInfo.input.atoms.length();
   if (!compilationInfo.input.atoms.append(atom)) {
-    js::ReportOutOfMemory(cx);
-    return mozilla::Err(PARSER_ATOMS_OOM);
+    return RaiseParserAtomsOOMError(cx);
   }
   atomIndex_.construct<AtomIndex>(index);
   return atom;
@@ -186,7 +185,7 @@ void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
 #endif
 
 ParserAtomsTable::ParserAtomsTable(JSContext* cx)
-    : entrySet_(cx), wellKnownTable_(*cx->runtime()->commonParserNames) {}
+    : wellKnownTable_(*cx->runtime()->commonParserNames) {}
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
     JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry) {
@@ -349,8 +348,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internJSAtom(
 
     auto index = AtomIndex(compilationInfo.input.atoms.length());
     if (!compilationInfo.input.atoms.append(atom)) {
-      js::ReportOutOfMemory(cx);
-      return mozilla::Err(PARSER_ATOMS_OOM);
+      return RaiseParserAtomsOOMError(cx);
     }
     id->setAtomIndex(index);
   } else {
@@ -531,6 +529,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
   // Save name for returning after moving entry into set.
   const ParserName* nm = entry.get()->asName();
   if (!entrySet_.putNew(lookup, std::move(entry))) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
 
