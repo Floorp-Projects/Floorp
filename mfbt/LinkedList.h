@@ -434,10 +434,15 @@ class LinkedList {
   }
 
   ~LinkedList() {
-    MOZ_ASSERT(isEmpty(),
-               "failing this assertion means this LinkedList's creator is "
-               "buggy: it should have removed all this list's elements before "
-               "the list's destruction");
+#  ifdef DEBUG
+    if (!isEmpty()) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "%s has a buggy user: "
+          "it should have removed all this list's elements before "
+          "the list's destruction",
+          __PRETTY_FUNCTION__);
+    }
+#  endif
   }
 
   /*
