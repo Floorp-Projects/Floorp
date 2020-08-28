@@ -501,7 +501,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "48021e80e81e1fa5d3c4acbc6c21170a0afc5870"
+        "revision": "2cfae510d8d5e917424d4d0bc21678eaa1f91dd2"
     },
     "eu": {
         "pin": false,
@@ -609,7 +609,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "211dea4b7397beeb37bfca3bcf0be0bf58ac216d"
+        "revision": "02341ae5dbdfbb73f7311438a8c14738fae9a1c6"
     },
     "ga-IE": {
         "pin": false,
