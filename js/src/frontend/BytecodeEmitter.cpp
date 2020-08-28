@@ -1657,6 +1657,7 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
   if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
   ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
@@ -4622,6 +4623,7 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
   if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
   ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
@@ -8834,6 +8836,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  ObjLiteralFlags flags) {
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
   if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
   ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
@@ -8902,6 +8905,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
   if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
   ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
@@ -8954,6 +8958,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
   if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
   ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
