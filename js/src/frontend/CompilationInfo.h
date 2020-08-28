@@ -191,7 +191,7 @@ struct MOZ_RAII CompilationState {
 struct CompilationStencil {
   // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
   // allocated during parse to ensure correct destruction.
-  Vector<RegExpStencil> regExpData;
+  Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<BigIntStencil> bigIntData;
   Vector<ObjLiteralStencil> objLiteralData;
 
@@ -221,8 +221,7 @@ struct CompilationStencil {
   ParserAtomsTable parserAtoms;
 
   explicit CompilationStencil(JSContext* cx)
-      : regExpData(cx),
-        bigIntData(cx),
+      : bigIntData(cx),
         objLiteralData(cx),
         scriptData(cx),
         scopeData(cx),
