@@ -211,8 +211,6 @@ ifndef DEVELOPER_OPTIONS
 $(TARGET_RECIPES) $(HOST_RECIPES): RUSTFLAGS += -C codegen-units=1
 endif
 
-cargo_env = $(subst -,_,$(subst a,A,$(subst b,B,$(subst c,C,$(subst d,D,$(subst e,E,$(subst f,F,$(subst g,G,$(subst h,H,$(subst i,I,$(subst j,J,$(subst k,K,$(subst l,L,$(subst m,M,$(subst n,N,$(subst o,O,$(subst p,P,$(subst q,Q,$(subst r,R,$(subst s,S,$(subst t,T,$(subst u,U,$(subst v,V,$(subst w,W,$(subst x,X,$(subst y,Y,$(subst z,Z,$1)))))))))))))))))))))))))))
-
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
@@ -235,8 +233,8 @@ define CARGO_CHECK
 $(call RUN_CARGO,check)
 endef
 
-cargo_host_linker_env_var := CARGO_TARGET_$(call cargo_env,$(RUST_HOST_TARGET))_LINKER
-cargo_linker_env_var := CARGO_TARGET_$(call cargo_env,$(RUST_TARGET))_LINKER
+cargo_host_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_HOST_TARGET))_LINKER
+cargo_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_TARGET))_LINKER
 
 # Cargo needs the same linker flags as the C/C++ compiler,
 # but not the final libraries. Filter those out because they

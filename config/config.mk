@@ -11,6 +11,8 @@
 # of the generic macros.
 #
 
+varize = $(subst -,_,$(subst a,A,$(subst b,B,$(subst c,C,$(subst d,D,$(subst e,E,$(subst f,F,$(subst g,G,$(subst h,H,$(subst i,I,$(subst j,J,$(subst k,K,$(subst l,L,$(subst m,M,$(subst n,N,$(subst o,O,$(subst p,P,$(subst q,Q,$(subst r,R,$(subst s,S,$(subst t,T,$(subst u,U,$(subst v,V,$(subst w,W,$(subst x,X,$(subst y,Y,$(subst z,Z,$1)))))))))))))))))))))))))))
+
 # Define an include-at-most-once flag
 ifdef INCLUDED_CONFIG_MK
 $(error Do not include config.mk twice!)
@@ -39,6 +41,10 @@ ifndef EXTERNALLY_MANAGED_MAKE_FILE
 ifndef STANDALONE_MAKEFILE
 GLOBAL_DEPS += backend.mk
 include backend.mk
+
+# Add e.g. `export:: $(EXPORT_TARGETS)` rules. The *_TARGETS variables are defined
+# in backend.mk.
+$(foreach tier,$(RUNNABLE_TIERS),$(eval $(tier):: $($(call varize,$(tier))_TARGETS)))
 endif
 
 endif
