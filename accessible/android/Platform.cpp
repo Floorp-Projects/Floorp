@@ -53,7 +53,7 @@ void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
 }
 
 void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
-  RefPtr<SessionAccessibility> sessionAcc =
+  SessionAccessibility* sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
   if (!sessionAcc) {
     return;
@@ -68,7 +68,7 @@ void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
 
 void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
                                  bool aEnabled) {
-  RefPtr<SessionAccessibility> sessionAcc =
+  SessionAccessibility* sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (!sessionAcc) {
@@ -100,7 +100,7 @@ void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
 
 void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
                                bool aIsSelectionCollapsed) {
-  RefPtr<SessionAccessibility> sessionAcc =
+  SessionAccessibility* sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
@@ -111,7 +111,7 @@ void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
 void a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
                                 int32_t aStart, uint32_t aLen, bool aIsInsert,
                                 bool aFromUser) {
-  RefPtr<SessionAccessibility> sessionAcc =
+  SessionAccessibility* sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
@@ -163,7 +163,7 @@ void a11y::ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
                                uint32_t aScrollX, uint32_t aScrollY,
                                uint32_t aMaxScrollX, uint32_t aMaxScrollY) {
   if (aEventType == nsIAccessibleEvent::EVENT_SCROLLING) {
-    RefPtr<SessionAccessibility> sessionAcc =
+    SessionAccessibility* sessionAcc =
         SessionAccessibility::GetInstanceFor(aTarget);
 
     if (sessionAcc) {
@@ -176,7 +176,7 @@ void a11y::ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
 void a11y::ProxyAnnouncementEvent(ProxyAccessible* aTarget,
                                   const nsString& aAnnouncement,
                                   uint16_t aPriority) {
-  RefPtr<SessionAccessibility> sessionAcc =
+  SessionAccessibility* sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
@@ -188,7 +188,7 @@ void a11y::ProxyAnnouncementEvent(ProxyAccessible* aTarget,
 void a11y::ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
                       const nsTArray<ProxyAccessible*>& aAccessibles,
                       const nsTArray<BatchData>& aData) {
-  RefPtr<SessionAccessibility> sessionAcc =
+  SessionAccessibility* sessionAcc =
       SessionAccessibility::GetInstanceFor(aDocument);
   if (!sessionAcc) {
     return;
