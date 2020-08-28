@@ -15,7 +15,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=28
+MOD_MINOR_VERSION=29
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -398,7 +398,7 @@ AC_ARG_WITH(macos-sdk,
 AC_ARG_ENABLE(macos-target,
              [  --enable-macos-target=VER
                           Set the minimum MacOS version needed at runtime
-                          [10.2 for ppc, 10.4 for x86]],
+                          [10.3 for ppc, 10.4 for x86]],
              [_MACOSX_DEPLOYMENT_TARGET=$enableval])
 
 dnl ========================================================
@@ -1327,12 +1327,22 @@ case "$target" in
                 CPU_ARCH=i386
             fi
             ;;
+        aarch64)
+            CPU_ARCH=aarch64
+            ;;
         *)
             CPU_ARCH=ppc
             ;;
     esac
     if test "`echo $CC | grep -c '\-arch '`" = "0"; then
-        CC="$CC -arch $CPU_ARCH"
+        case "$CPU_ARCH" in
+        aarch64)
+            CC="$CC -arch arm64"
+            ;;
+        *)
+            CC="$CC -arch $CPU_ARCH"
+            ;;
+        esac
     fi
     AC_CHECK_HEADER(crt_externs.h, AC_DEFINE(HAVE_CRT_EXTERNS_H))
     DSO_CFLAGS=-fPIC
@@ -1346,116 +1356,110 @@ case "$target" in
     PR_MD_CSRCS=darwin.c
     PR_MD_ASFILES=os_Darwin.s
 
-    # Add Mac OS X support for loading CFM & CFBundle plugins
-    if test -f "${MACOS_SDK_DIR}/System/Library/Frameworks/Carbon.framework/Carbon"; then
-        AC_DEFINE(XP_MACOSX)
-        OS_TARGET=MacOSX
+    if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
+        dnl Use the specified value
+        export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
+    elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
+        dnl No value specified on the command line or in the environment,
+        dnl use the lesser of the library's minimum or the architecture's
+        dnl minimum.
+        case "${target_cpu}" in
+            powerpc*)
+                dnl Architecture minimum 10.3
+                export MACOSX_DEPLOYMENT_TARGET=10.3
+                ;;
+            i*86*)
+                dnl Architecture minimum 10.4
+                export MACOSX_DEPLOYMENT_TARGET=10.4
+                ;;
+        esac
+    fi
 
-        if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
-            dnl Use the specified value
-            export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
-        elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
-            dnl No value specified on the command line or in the environment,
-            dnl use the lesser of the library's minimum or the architecture's
-            dnl minimum.
-            case "${target_cpu}" in
-                powerpc*)
-                    dnl Architecture minimum 10.2
-                    export MACOSX_DEPLOYMENT_TARGET=10.2
-                    ;;
-                i*86*)
-                    dnl Architecture minimum 10.4
-                    export MACOSX_DEPLOYMENT_TARGET=10.4
-                    ;;
-            esac
-        fi
+    dnl MACOS_SDK_DIR will be set to the SDK location whenever one is
+    dnl in use.  NEXT_ROOT will be set and exported if it's needed for
+    dnl ld.
 
-        dnl MACOS_SDK_DIR will be set to the SDK location whenever one is
-        dnl in use.  NEXT_ROOT will be set and exported if it's needed for
-        dnl ld.
+    if test "$MACOS_SDK_DIR"; then
+        dnl Sync this section with the one in Mozilla's top level.
 
-        if test "$MACOS_SDK_DIR"; then
-            dnl Sync this section with the one in Mozilla's top level.
-
-            if test ! -d "$MACOS_SDK_DIR"; then
-                AC_MSG_ERROR([SDK not found.  When using --with-macos-sdk, you must
+        if test ! -d "$MACOS_SDK_DIR"; then
+            AC_MSG_ERROR([SDK not found.  When using --with-macos-sdk, you must
 specify a valid SDK.  SDKs are installed when the optional cross-development
 tools are selected during the Xcode/Developer Tools installation.])
+        fi
+
+        changequote(,)
+        CC_VERSION=`$CC -v 2>&1 | grep 'gcc version'`
+        GCC_VERSION_FULL=`echo $CC_VERSION | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
+        GCC_VERSION=`echo $GCC_VERSION_FULL | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
+        changequote([,])
+        GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
+        if test "$GCC_VERSION_MAJOR" -lt "4" ; then
+            SDK_C_FRAMEWORK="-F${MACOS_SDK_DIR}/System/Library/Frameworks"
+            if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
+                SDK_C_FRAMEWORK="$SDK_C_FRAMEWORK -F${MACOS_SDK_DIR}/Library/Frameworks"
             fi
 
+            SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include ${SDK_C_FRAMEWORK}"
+
+            CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
+
+            dnl CPP needs to be set for AC_CHECK_HEADER.
+            CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
+
             changequote(,)
-            CC_VERSION=`$CC -v 2>&1 | grep 'gcc version'`
-            GCC_VERSION_FULL=`echo $CC_VERSION | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
-            GCC_VERSION=`echo $GCC_VERSION_FULL | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
+            HOST_DARWIN_MAJOR=`echo "$build_os" | sed -E -e 's/^darwin([0-9]+).*$/\1/'`
             changequote([,])
-            GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
-            if test "$GCC_VERSION_MAJOR" -lt "4" ; then
-                SDK_C_FRAMEWORK="-F${MACOS_SDK_DIR}/System/Library/Frameworks"
-                if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
-                    SDK_C_FRAMEWORK="$SDK_C_FRAMEWORK -F${MACOS_SDK_DIR}/Library/Frameworks"
-                fi
-
-                SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include ${SDK_C_FRAMEWORK}"
-
-                CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
-
-                dnl CPP needs to be set for AC_CHECK_HEADER.
-                CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
-
-                changequote(,)
-                HOST_DARWIN_MAJOR=`echo "$build_os" | sed -E -e 's/^darwin([0-9]+).*$/\1/'`
-                changequote([,])
-                if test "$HOST_DARWIN_MAJOR" -lt 9 ; then
-                    dnl The build host is running Tiger (10.4) or earlier.
-                    dnl ld support for -syslibroot is compiler-agnostic, but
-                    dnl only available on Tiger and later.  On Tiger and
-                    dnl earlier build hosts, just rely on NEXT_ROOT, because
-                    dnl it's not been shown to cause any problems.
-                    MACOS_SDK_LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib ${SDK_C_FRAMEWORK}"
-                else
-                    dnl The build host is running Leopard (10.5) or later.
-                    dnl With NEXT_ROOT set, the linker will still not apply
-                    dnl it when resolving dependencies.  This causes problems
-                    dnl on Leopard, where an SDK depends on frameworks which
-                    dnl were present in earlier OS releases (and the associated
-                    dnl SDK) but not in Leopard.  -syslibroot does not have
-                    dnl this problem, but it results in harmless warnings when
-                    dnl NEXT_ROOT is set.  NEXT_ROOT needs to remain set even
-                    dnl on Leopard because the compiler uses it too.
-                    MACOS_SDK_LIBS="-Wl,-syslibroot,${MACOS_SDK_DIR}"
-                fi
-
-                LDFLAGS="${MACOS_SDK_LIBS} $LDFLAGS"
-                export NEXT_ROOT=$MACOS_SDK_DIR
-
-                if test -n "$CROSS_COMPILE" ; then
-                    dnl NEXT_ROOT will be in the environment, but it
-                    dnl shouldn't be set for the build host.  HOST_CXX is
-                    dnl presently unused.
-                    HOST_CC="NEXT_ROOT= $HOST_CC"
-                    HOST_CXX="NEXT_ROOT= $HOST_CXX"
-                fi
+            if test "$HOST_DARWIN_MAJOR" -lt 9 ; then
+                dnl The build host is running Tiger (10.4) or earlier.
+                dnl ld support for -syslibroot is compiler-agnostic, but
+                dnl only available on Tiger and later.  On Tiger and
+                dnl earlier build hosts, just rely on NEXT_ROOT, because
+                dnl it's not been shown to cause any problems.
+                MACOS_SDK_LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib ${SDK_C_FRAMEWORK}"
             else
-                dnl gcc >= 4.0 uses different paths than above, but knows
-                dnl how to find them itself.
-                CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
+                dnl The build host is running Leopard (10.5) or later.
+                dnl With NEXT_ROOT set, the linker will still not apply
+                dnl it when resolving dependencies.  This causes problems
+                dnl on Leopard, where an SDK depends on frameworks which
+                dnl were present in earlier OS releases (and the associated
+                dnl SDK) but not in Leopard.  -syslibroot does not have
+                dnl this problem, but it results in harmless warnings when
+                dnl NEXT_ROOT is set.  NEXT_ROOT needs to remain set even
+                dnl on Leopard because the compiler uses it too.
+                MACOS_SDK_LIBS="-Wl,-syslibroot,${MACOS_SDK_DIR}"
+            fi
 
-                dnl CPP needs to be set for AC_CHECK_HEADER.
-                CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
+            LDFLAGS="${MACOS_SDK_LIBS} $LDFLAGS"
+            export NEXT_ROOT=$MACOS_SDK_DIR
 
-                dnl If gcc >= 4.0.0, we're guaranteed to be on Tiger, which
-                dnl has an ld that supports -syslibroot.  Don't set
-                dnl NEXT_ROOT because it will be ignored and cause
-                dnl warnings when -syslibroot is specified.
-                if test "$GCC_VERSION_FULL" != "4.0.0" ; then
-                    dnl gcc > 4.0.0 will pass -syslibroot to ld automatically
-                    dnl based on the -isysroot it receives.
-                    LDFLAGS="$LDFLAGS -isysroot ${MACOS_SDK_DIR}"
-                else
-                    dnl gcc 4.0.0 doesn't pass -syslibroot to ld, it needs
-                    dnl to be explicit.
-                    LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
-                fi
+            if test -n "$CROSS_COMPILE" ; then
+                dnl NEXT_ROOT will be in the environment, but it
+                dnl shouldn't be set for the build host.  HOST_CXX is
+                dnl presently unused.
+                HOST_CC="NEXT_ROOT= $HOST_CC"
+                HOST_CXX="NEXT_ROOT= $HOST_CXX"
+            fi
+        else
+            dnl gcc >= 4.0 uses different paths than above, but knows
+            dnl how to find them itself.
+            CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
+
+            dnl CPP needs to be set for AC_CHECK_HEADER.
+            CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
+
+            dnl If gcc >= 4.0.0, we're guaranteed to be on Tiger, which
+            dnl has an ld that supports -syslibroot.  Don't set
+            dnl NEXT_ROOT because it will be ignored and cause
+            dnl warnings when -syslibroot is specified.
+            if test "$GCC_VERSION_FULL" != "4.0.0" ; then
+                dnl gcc > 4.0.0 will pass -syslibroot to ld automatically
+                dnl based on the -isysroot it receives.
+                LDFLAGS="$LDFLAGS -isysroot ${MACOS_SDK_DIR}"
+            else
+                dnl gcc 4.0.0 doesn't pass -syslibroot to ld, it needs
+                dnl to be explicit.
+                LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
             fi
         fi
     fi

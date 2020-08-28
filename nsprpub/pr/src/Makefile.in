@@ -159,10 +159,6 @@ ifeq ($(OS_TARGET),Android)
 OS_LIBS		+= -llog
 endif
 
-ifeq ($(OS_TARGET),MacOSX)
-OS_LIBS		= -framework CoreServices -framework CoreFoundation
-endif
-
 EXTRA_LIBS += $(OS_LIBS)
 
 #

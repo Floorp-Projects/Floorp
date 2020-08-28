@@ -7,11 +7,6 @@
 
 #include <string.h>
 
-#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
-#include <Carbon/Carbon.h>
-#include <CoreFoundation/CoreFoundation.h>
-#endif
-
 #ifdef XP_UNIX
 #ifdef USE_DLFCN
 #include <dlfcn.h>
@@ -36,8 +31,6 @@
 #endif
 #elif defined(USE_HPSHL)
 #include <dl.h>
-#elif defined(USE_MACH_DYLD)
-#include <mach-o/dyld.h>
 #endif
 #endif /* XP_UNIX */
 
@@ -46,8 +39,7 @@
 /*
  * On these platforms, symbols have a leading '_'.
  */
-#if (defined(DARWIN) && defined(USE_MACH_DYLD)) \
-    || defined(XP_OS2) \
+#if defined(XP_OS2) \
     || ((defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__))
 #define NEED_LEADING_UNDERSCORE
 #endif
@@ -70,19 +62,9 @@ struct PRLibrary {
 #endif
 #endif
 
-#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
-    CFragConnectionID           connection;
-    CFBundleRef                 bundle;
-    Ptr                         main;
-    CFMutableDictionaryRef      wrappers;
-    const struct mach_header*   image;
-#endif
-
 #ifdef XP_UNIX
 #if defined(USE_HPSHL)
     shl_t                       dlh;
-#elif defined(USE_MACH_DYLD)
-    NSModule                    dlh;
 #else
     void*                       dlh;
 #endif
@@ -170,7 +152,7 @@ void _PR_InitLinker(void)
 #elif defined(USE_HPSHL)
     h = NULL;
     /* don't abort with this NULL */
-#elif defined(USE_MACH_DYLD) || defined(NO_DLOPEN_NULL)
+#elif defined(NO_DLOPEN_NULL)
     h = NULL; /* XXXX  toshok */ /* XXXX  vlad */
 #else
 #error no dll strategy
@@ -270,7 +252,7 @@ PR_GetLibraryPath(void)
 #endif
 
 #if defined(XP_UNIX)
-#if defined(USE_DLFCN) || defined(USE_MACH_DYLD)
+#if defined(USE_DLFCN)
     {
         char *p=NULL;
         int len;
@@ -428,203 +410,6 @@ PR_LoadLibrary(const char *name)
     return PR_LoadLibraryWithFlags(libSpec, 0);
 }
 
-#if defined(USE_MACH_DYLD)
-static NSModule
-pr_LoadMachDyldModule(const char *name)
-{
-    NSObjectFileImage ofi;
-    NSModule h = NULL;
-    if (NSCreateObjectFileImageFromFile(name, &ofi)
-        == NSObjectFileImageSuccess) {
-        h = NSLinkModule(ofi, name, NSLINKMODULE_OPTION_PRIVATE
-                         | NSLINKMODULE_OPTION_RETURN_ON_ERROR);
-        if (h == NULL) {
-            NSLinkEditErrors linkEditError;
-            int errorNum;
-            const char *fileName;
-            const char *errorString;
-            NSLinkEditError(&linkEditError, &errorNum, &fileName, &errorString);
-            PR_LOG(_pr_linker_lm, PR_LOG_MIN,
-                   ("LoadMachDyldModule error %d:%d for file %s:\n%s",
-                    linkEditError, errorNum, fileName, errorString));
-        }
-        if (NSDestroyObjectFileImage(ofi) == FALSE) {
-            if (h) {
-                (void)NSUnLinkModule(h, NSUNLINKMODULE_OPTION_NONE);
-                h = NULL;
-            }
-        }
-    }
-    return h;
-}
-#endif
-
-#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
-
-/*
-** macLibraryLoadProc is a function definition for a Mac shared library
-** loading method. The "name" param is the same full or partial pathname
-** that was passed to pr_LoadLibraryByPathName. The function must fill
-** in the fields of "lm" which apply to its library type. Returns
-** PR_SUCCESS if successful.
-*/
-
-typedef PRStatus (*macLibraryLoadProc)(const char *name, PRLibrary *lm);
-
-#ifdef __ppc__
-
-/*
-** CFM and its TVectors only exist on PowerPC.  Other OS X architectures
-** only use Mach-O as a native binary format.
-*/
-
-static void* TV2FP(CFMutableDictionaryRef dict, const char* name, void *tvp)
-{
-    static uint32 glue[6] = { 0x3D800000, 0x618C0000, 0x800C0000, 0x804C0004, 0x7C0903A6, 0x4E800420 };
-    uint32* newGlue = NULL;
-
-    if (tvp != NULL) {
-        CFStringRef nameRef = CFStringCreateWithCString(NULL, name, kCFStringEncodingASCII);
-        if (nameRef) {
-            CFMutableDataRef glueData = (CFMutableDataRef) CFDictionaryGetValue(dict, nameRef);
-            if (glueData == NULL) {
-                glueData = CFDataCreateMutable(NULL, sizeof(glue));
-                if (glueData != NULL) {
-                    newGlue = (uint32*) CFDataGetMutableBytePtr(glueData);
-                    memcpy(newGlue, glue, sizeof(glue));
-                    newGlue[0] |= ((UInt32)tvp >> 16);
-                    newGlue[1] |= ((UInt32)tvp & 0xFFFF);
-                    MakeDataExecutable(newGlue, sizeof(glue));
-                    CFDictionaryAddValue(dict, nameRef, glueData);
-                    CFRelease(glueData);
-
-                    PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("TV2FP: created wrapper for CFM function %s().", name));
-                }
-            } else {
-                PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("TV2FP: found wrapper for CFM function %s().", name));
-
-                newGlue = (uint32*) CFDataGetMutableBytePtr(glueData);
-            }
-            CFRelease(nameRef);
-        }
-    }
-
-    return newGlue;
-}
-
-static PRStatus
-pr_LoadViaCFM(const char *name, PRLibrary *lm)
-{
-    OSErr err;
-    Str255 errName;
-    FSRef ref;
-    FSSpec fileSpec;
-    Boolean tempUnusedBool;
-
-    /*
-     * Make an FSSpec from the path name and call GetDiskFragment.
-     */
-
-    /* Use direct conversion of POSIX path to FSRef to FSSpec. */
-    err = FSPathMakeRef((const UInt8*)name, &ref, NULL);
-    if (err != noErr) {
-        return PR_FAILURE;
-    }
-    err = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL,
-                           &fileSpec, NULL);
-    if (err != noErr) {
-        return PR_FAILURE;
-    }
-
-    /* Resolve an alias if this was one */
-    err = ResolveAliasFile(&fileSpec, true, &tempUnusedBool,
-                           &tempUnusedBool);
-    if (err != noErr) {
-        return PR_FAILURE;
-    }
-
-    /* Finally, try to load the library */
-    err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name,
-                          kLoadCFrag, &lm->connection, &lm->main, errName);
-
-    if (err == noErr && lm->connection) {
-        /*
-         * if we're a mach-o binary, need to wrap all CFM function
-         * pointers. need a hash-table of already seen function
-         * pointers, etc.
-         */
-        lm->wrappers = CFDictionaryCreateMutable(NULL, 16,
-                       &kCFTypeDictionaryKeyCallBacks,
-                       &kCFTypeDictionaryValueCallBacks);
-        if (lm->wrappers) {
-            lm->main = TV2FP(lm->wrappers, "main", lm->main);
-        } else {
-            err = memFullErr;
-        }
-    }
-    return (err == noErr) ? PR_SUCCESS : PR_FAILURE;
-}
-#endif /* __ppc__ */
-
-/*
-** Creates a CFBundleRef if the pathname refers to a Mac OS X bundle
-** directory. The caller is responsible for calling CFRelease() to
-** deallocate.
-*/
-
-static PRStatus
-pr_LoadCFBundle(const char *name, PRLibrary *lm)
-{
-    CFURLRef bundleURL;
-    CFBundleRef bundle = NULL;
-    char pathBuf[PATH_MAX];
-    const char *resolvedPath;
-    CFStringRef pathRef;
-
-    /* Takes care of relative paths and symlinks */
-    resolvedPath = realpath(name, pathBuf);
-    if (!resolvedPath) {
-        return PR_FAILURE;
-    }
-
-    pathRef = CFStringCreateWithCString(NULL, pathBuf, kCFStringEncodingUTF8);
-    if (pathRef) {
-        bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef,
-                    kCFURLPOSIXPathStyle, true);
-        if (bundleURL) {
-            bundle = CFBundleCreate(NULL, bundleURL);
-            CFRelease(bundleURL);
-        }
-        CFRelease(pathRef);
-    }
-
-    lm->bundle = bundle;
-    return (bundle != NULL) ? PR_SUCCESS : PR_FAILURE;
-}
-
-static PRStatus
-pr_LoadViaDyld(const char *name, PRLibrary *lm)
-{
-    lm->dlh = pr_LoadMachDyldModule(name);
-    if (lm->dlh == NULL) {
-        lm->image = NSAddImage(name, NSADDIMAGE_OPTION_RETURN_ON_ERROR
-                               | NSADDIMAGE_OPTION_WITH_SEARCHING);
-        if (lm->image == NULL) {
-            NSLinkEditErrors linkEditError;
-            int errorNum;
-            const char *fileName;
-            const char *errorString;
-            NSLinkEditError(&linkEditError, &errorNum, &fileName, &errorString);
-            PR_LOG(_pr_linker_lm, PR_LOG_MIN,
-                   ("LoadMachDyldModule error %d:%d for file %s:\n%s",
-                    linkEditError, errorNum, fileName, errorString));
-        }
-    }
-    return (lm->dlh != NULL || lm->image != NULL) ? PR_SUCCESS : PR_FAILURE;
-}
-
-#endif /* XP_MACOSX && USE_MACH_DYLD */
-
 /*
 ** Dynamically load a library. Only load libraries once, so scan the load
 ** map first.
@@ -733,36 +518,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif /* WIN32 */
 
-#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
-    {
-        int     i;
-        PRStatus status;
-
-        static const macLibraryLoadProc loadProcs[] = {
-#ifdef __ppc__
-            pr_LoadViaDyld, pr_LoadCFBundle, pr_LoadViaCFM
-#else  /* __ppc__ */
-            pr_LoadViaDyld, pr_LoadCFBundle
-#endif /* __ppc__ */
-        };
-
-        for (i = 0; i < sizeof(loadProcs) / sizeof(loadProcs[0]); i++) {
-            if ((status = loadProcs[i](name, lm)) == PR_SUCCESS) {
-                break;
-            }
-        }
-        if (status != PR_SUCCESS) {
-            oserr = cfragNoLibraryErr;
-            PR_DELETE(lm);
-            goto unlock;
-        }
-        lm->name = strdup(name);
-        lm->next = pr_loadmap;
-        pr_loadmap = lm;
-    }
-#endif
-
-#if defined(XP_UNIX) && !(defined(XP_MACOSX) && defined(USE_MACH_DYLD))
+#if defined(XP_UNIX)
 #ifdef HAVE_DLL
     {
 #if defined(USE_DLFCN)
@@ -847,8 +603,6 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         }
         /* No equivalent of PR_LD_GLOBAL and PR_LD_LOCAL. */
         h = shl_load(name, shl_flags, 0L);
-#elif defined(USE_MACH_DYLD)
-        NSModule h = pr_LoadMachDyldModule(name);
 #else
 #error Configuration error
 #endif
@@ -863,7 +617,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         pr_loadmap = lm;
     }
 #endif /* HAVE_DLL */
-#endif /* XP_UNIX && !(XP_MACOSX && USE_MACH_DYLD) */
+#endif /* XP_UNIX */
 
     lm->refCount = 1;
 
@@ -922,10 +676,6 @@ PR_UnloadLibrary(PRLibrary *lib)
     result = dlclose(lib->dlh);
 #elif defined(USE_HPSHL)
     result = shl_unload(lib->dlh);
-#elif defined(USE_MACH_DYLD)
-    if (lib->dlh) {
-        result = NSUnLinkModule(lib->dlh, NSUNLINKMODULE_OPTION_NONE) ? 0 : -1;
-    }
 #else
 #error Configuration error
 #endif
@@ -937,20 +687,6 @@ PR_UnloadLibrary(PRLibrary *lib)
         lib->dlh = (HINSTANCE)NULL;
     }
 #endif  /* XP_PC */
-
-#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
-    /* Close the connection */
-    if (lib->connection) {
-        CloseConnection(&(lib->connection));
-    }
-    if (lib->bundle) {
-        CFRelease(lib->bundle);
-    }
-    if (lib->wrappers) {
-        CFRelease(lib->wrappers);
-    }
-    /* No way to unload an image (lib->image) */
-#endif
 
     /* unlink from library search list */
     if (pr_loadmap == lib) {
@@ -1041,53 +777,6 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
     f = GetProcAddress(lm->dlh, name);
 #endif  /* WIN32 */
 
-#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
-    /* add this offset to skip the leading underscore in name */
-#define SYM_OFFSET 1
-    if (lm->bundle) {
-        CFStringRef nameRef = CFStringCreateWithCString(NULL, name + SYM_OFFSET, kCFStringEncodingASCII);
-        if (nameRef) {
-            f = CFBundleGetFunctionPointerForName(lm->bundle, nameRef);
-            CFRelease(nameRef);
-        }
-    }
-    if (lm->connection) {
-        Ptr                 symAddr;
-        CFragSymbolClass    symClass;
-        Str255              pName;
-
-        PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Looking up symbol: %s", name + SYM_OFFSET));
-
-        c2pstrcpy(pName, name + SYM_OFFSET);
-
-        f = (FindSymbol(lm->connection, pName, &symAddr, &symClass) == noErr) ? symAddr : NULL;
-
-#ifdef __ppc__
-        /* callers expect mach-o function pointers, so must wrap tvectors with glue. */
-        if (f && symClass == kTVectorCFragSymbol) {
-            f = TV2FP(lm->wrappers, name + SYM_OFFSET, f);
-        }
-#endif /* __ppc__ */
-
-        if (f == NULL && strcmp(name + SYM_OFFSET, "main") == 0) {
-            f = lm->main;
-        }
-    }
-    if (lm->image) {
-        NSSymbol symbol;
-        symbol = NSLookupSymbolInImage(lm->image, name,
-                                       NSLOOKUPSYMBOLINIMAGE_OPTION_BIND
-                                       | NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
-        if (symbol != NULL) {
-            f = NSAddressOfSymbol(symbol);
-        }
-        else {
-            f = NULL;
-        }
-    }
-#undef SYM_OFFSET
-#endif /* XP_MACOSX && USE_MACH_DYLD */
-
 #ifdef XP_UNIX
 #ifdef HAVE_DLL
 #ifdef USE_DLFCN
@@ -1095,17 +784,6 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 #elif defined(USE_HPSHL)
     if (shl_findsym(&lm->dlh, name, TYPE_PROCEDURE, &f) == -1) {
         f = NULL;
-    }
-#elif defined(USE_MACH_DYLD)
-    if (lm->dlh) {
-        NSSymbol symbol;
-        symbol = NSLookupSymbolInModule(lm->dlh, name);
-        if (symbol != NULL) {
-            f = NSAddressOfSymbol(symbol);
-        }
-        else {
-            f = NULL;
-        }
     }
 #endif
 #endif /* HAVE_DLL */
@@ -1289,23 +967,6 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
         strcpy(result, dli.dli_fname);
     }
     return result;
-#elif defined(USE_MACH_DYLD)
-    char *result;
-    const char *image_name;
-    int i, count = _dyld_image_count();
-
-    for (i = 0; i < count; i++) {
-        image_name = _dyld_get_image_name(i);
-        if (strstr(image_name, name) != NULL) {
-            result = PR_Malloc(strlen(image_name)+1);
-            if (result != NULL) {
-                strcpy(result, image_name);
-            }
-            return result;
-        }
-    }
-    PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, 0);
-    return NULL;
 #elif defined(AIX)
     char *result;
 #define LD_INFO_INCREMENT 64

@@ -71,4 +71,4 @@ _PR_x86_64_AtomicAdd:
     .size _PR_x86_64_AtomicAdd, .-_PR_x86_64_AtomicAdd
 
 // Magic indicating no need for an executable stack
-.section .note.GNU-stack, "", @progbits ; .previous
+.section .note.GNU-stack, "", @progbits

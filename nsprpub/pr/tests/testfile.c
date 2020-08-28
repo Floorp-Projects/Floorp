@@ -17,6 +17,10 @@
 #include <pthread.h>
 #endif
 
+#if defined(XP_UNIX)
+#include <unistd.h>
+#endif
+
 #if defined(XP_OS2)
 #define INCL_DOSFILEMGR
 #include <os2.h>
