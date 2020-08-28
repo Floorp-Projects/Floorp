@@ -163,6 +163,7 @@ JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(
   }
   auto index = compilationInfo.input.atoms.length();
   if (!compilationInfo.input.atoms.append(atom)) {
+    js::ReportOutOfMemory(cx);
     return mozilla::Err(PARSER_ATOMS_OOM);
   }
   atomIndex_.construct<AtomIndex>(index);
@@ -348,6 +349,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internJSAtom(
 
     auto index = AtomIndex(compilationInfo.input.atoms.length());
     if (!compilationInfo.input.atoms.append(atom)) {
+      js::ReportOutOfMemory(cx);
       return mozilla::Err(PARSER_ATOMS_OOM);
     }
     id->setAtomIndex(index);
