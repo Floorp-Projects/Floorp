@@ -1,6 +1,16 @@
-========
-JSActors
-========
+=======
+Fission
+=======
+
+Fission is a cross-functional project for revamping and strengthening the architecture of the Firefox browser.
+
+The work is tracked under this bug (https://bugzilla.mozilla.org/show_bug.cgi?id=fission). See this Wiki page for more details (https://wiki.mozilla.org/Project_Fission).
+
+We don't have an all-encompassing design document at this time. This may change in the future.
+
+
+Actors
+======
 
 In the Fission world, the preferred method of communication between between things-that-may-live-in-a-different-process are JSActors.
 
@@ -110,7 +120,7 @@ Other notable differences between JSWindowActor's and Message Manager / framescr
 
    This is a natural consequence of splitting frames to run out-of-process.
 
-#. ``JSWindowActorChild``'s live as long as the ``WindowGlobalChild`` they're associated with.
+#. ``JSWindowActorChild``'s live as long as the ``BrowsingContext`` they're associated with.
 
   If in the previously mentioned DOM hierarchy, one of the ``<iframe>``'s unload, any associated JSWindowActor pairs will be torn down.
 
@@ -562,6 +572,7 @@ Get a JSProcessActor
 And more
 ===========
 
+.. image:: Fission-IPC-Diagram.svg
 
 .. _Electrolysis Project: https://wiki.mozilla.org/Electrolysis
 .. _IPC Actors: https://developer.mozilla.org/en-US/docs/Mozilla/IPDL/Tutorial
