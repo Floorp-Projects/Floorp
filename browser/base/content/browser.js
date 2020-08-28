@@ -8934,6 +8934,10 @@ class TabDialogBox {
     this._dialogManager.abortAll();
   }
 
+  focus() {
+    this._dialogManager.focusTopDialog();
+  }
+
   /**
    * If the user navigates away or refreshes the page, close all dialogs for
    * the current browser.
