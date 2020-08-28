@@ -299,7 +299,8 @@ class EmptyGlobalScopeType {};
 
 // See JSOp::Lambda for interepretation of this index.
 using FunctionDeclaration = GCThingIndex;
-using FunctionDeclarationVector = Vector<FunctionDeclaration>;
+using FunctionDeclarationVector =
+    Vector<FunctionDeclaration, 0, js::SystemAllocPolicy>;
 
 // Common type for ImportEntry / ExportEntry / ModuleRequest within frontend. We
 // use a shared stencil class type to simplify serialization.
@@ -390,7 +391,7 @@ class StencilModuleMetadata {
   EntryVector starExportEntries;
   FunctionDeclarationVector functionDecls;
 
-  explicit StencilModuleMetadata(JSContext* cx) : functionDecls(cx) {}
+  explicit StencilModuleMetadata(JSContext* cx) {}
 
   bool initModule(JSContext* cx, CompilationInfo& compilationInfo,
                   JS::Handle<ModuleObject*> module);
