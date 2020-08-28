@@ -5382,13 +5382,14 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     options.allowHTMLComments = false;
   }
 
-  js::frontend::CompilationInfo compilationInfo(cx, options);
+  js::Rooted<frontend::CompilationInfo> compilationInfo(
+      cx, js::frontend::CompilationInfo(cx, options));
   if (goal == frontend::ParseGoal::Script) {
-    if (!compilationInfo.input.initForGlobal(cx)) {
+    if (!compilationInfo.get().input.initForGlobal(cx)) {
       return false;
     }
   } else {
-    if (!compilationInfo.input.initForModule(cx)) {
+    if (!compilationInfo.get().input.initForModule(cx)) {
       return false;
     }
   }
@@ -5406,13 +5407,13 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
           bool unimplemented;
-          if (!Smoosh::compileGlobalScriptToStencil(compilationInfo, srcBuf,
-                                                    &unimplemented)) {
+          if (!Smoosh::compileGlobalScriptToStencil(compilationInfo.get(),
+                                                    srcBuf, &unimplemented)) {
             return false;
           }
 
 #  ifdef DEBUG
-          compilationInfo.stencil.dump();
+          compilationInfo.get().stencil.dump();
 #  endif
         } else {
           JS_ReportErrorASCII(cx,
@@ -5436,15 +5437,16 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
     auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
     if (!FrontendTest<mozilla::Utf8Unit>(cx, options, utf8, length,
-                                         compilationInfo, compilationState,
-                                         goal, dumpType)) {
+                                         compilationInfo.get(),
+                                         compilationState, goal, dumpType)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    if (!FrontendTest<char16_t>(cx, options, chars, length, compilationInfo,
-                                compilationState, goal, dumpType)) {
+    if (!FrontendTest<char16_t>(cx, options, chars, length,
+                                compilationInfo.get(), compilationState, goal,
+                                dumpType)) {
       return false;
     }
   }
@@ -5488,8 +5490,9 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   const char16_t* chars = stableChars.twoByteRange().begin().get();
   size_t length = scriptContents->length();
 
-  js::frontend::CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.initForGlobal(cx)) {
+  js::Rooted<frontend::CompilationInfo> compilationInfo(
+      cx, js::frontend::CompilationInfo(cx, options));
+  if (!compilationInfo.get().input.initForGlobal(cx)) {
     return false;
   }
 
@@ -5497,8 +5500,8 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   frontend::CompilationState compilationState(cx, allocScope, options);
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
-      cx, options, chars, length, false, compilationInfo, compilationState,
-      nullptr, nullptr);
+      cx, options, chars, length, false, compilationInfo.get(),
+      compilationState, nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
