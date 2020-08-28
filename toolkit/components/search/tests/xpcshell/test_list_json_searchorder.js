@@ -18,9 +18,6 @@ add_task(async function setup() {
 });
 
 async function checkOrder(expectedOrder) {
-  await asyncReInit();
-  Assert.ok(Services.search.isInitialized, "search initialized");
-
   const sortedEngines = await Services.search.getEngines();
   Assert.deepEqual(
     sortedEngines.map(s => s.name),
