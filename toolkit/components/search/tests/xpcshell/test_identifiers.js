@@ -10,7 +10,7 @@
 const SEARCH_APP_DIR = 1;
 
 add_task(async function setup() {
-  await useTestEngines("simple-engines");
+  await SearchTestUtils.useTestEngines("simple-engines");
   await AddonTestUtils.promiseStartupManager();
 
   const result = await Services.search.init();
