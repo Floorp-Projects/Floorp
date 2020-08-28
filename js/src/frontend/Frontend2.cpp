@@ -351,6 +351,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
 
   size_t ngcthings = smooshScript.gcthings.len;
   if (!gcThings.reserve(ngcthings)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
 
@@ -560,7 +561,7 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
     return false;
   }
 
-  compilationInfo.stencil.scriptData.infallibleEmplaceBack(cx);
+  compilationInfo.stencil.scriptData.infallibleEmplaceBack();
 
   if (!ConvertScriptStencil(
           cx, result, result.top_level_script, allAtoms, compilationInfo,
@@ -569,7 +570,7 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
   }
 
   for (size_t i = 0; i < result.functions.len; i++) {
-    compilationInfo.stencil.scriptData.infallibleEmplaceBack(cx);
+    compilationInfo.stencil.scriptData.infallibleEmplaceBack();
 
     if (!ConvertScriptStencil(cx, result, result.functions.data[i], allAtoms,
                               compilationInfo,

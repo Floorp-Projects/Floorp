@@ -24,7 +24,11 @@ bool GCThingList::append(FunctionBox* funbox, GCThingIndex* index) {
   // Append the function to the vector and return the index in *index.
   *index = GCThingIndex(vector.length());
 
-  return vector.append(mozilla::AsVariant(funbox->index()));
+  if (!vector.append(mozilla::AsVariant(funbox->index()))) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 AbstractScopePtr GCThingList::getScope(size_t index) const {
