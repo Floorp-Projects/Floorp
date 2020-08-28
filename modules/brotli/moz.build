@@ -15,7 +15,10 @@ EXPORTS.brotli += [
 ]
 
 UNIFIED_SOURCES += [
+    'common/constants.c',
+    'common/context.c',
     'common/dictionary.c',
+    'common/platform.c',
     'common/transform.c',
     'dec/bit_reader.c',
     'dec/decode.c',
@@ -41,12 +44,14 @@ HOST_SOURCES += [
     'enc/block_splitter.c',
     'enc/brotli_bit_stream.c',
     'enc/cluster.c',
+    'enc/command.c',
     'enc/compress_fragment.c',
     'enc/compress_fragment_two_pass.c',
     'enc/dictionary_hash.c',
     'enc/encode.c',
     'enc/encoder_dict.c',
     'enc/entropy_encode.c',
+    'enc/fast_log.c',
     'enc/histogram.c',
     'enc/literal_cost.c',
     'enc/memory.c',
