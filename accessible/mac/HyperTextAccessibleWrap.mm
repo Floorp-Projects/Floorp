@@ -410,9 +410,16 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(
   }
 
   nsIFrame* frameAtOffset = childFrame;
-  int32_t unusedOffsetInFrame = 0;
-  childFrame->GetChildFrameContainingOffset(
-      innerContentOffset, true, &unusedOffsetInFrame, &frameAtOffset);
+  int32_t offsetInFrame = 0;
+  childFrame->GetChildFrameContainingOffset(innerContentOffset, true,
+                                            &offsetInFrame, &frameAtOffset);
+  if (aDirection == eDirPrevious && offsetInFrame == 0) {
+    // If we are searching backwards, and we are at the start of a frame,
+    // get the previous continuation frame.
+    if (nsIFrame* prevInContinuation = frameAtOffset->GetPrevContinuation()) {
+      frameAtOffset = prevInContinuation;
+    }
+  }
 
   const bool kIsJumpLinesOk = true;       // okay to jump lines
   const bool kIsScrollViewAStop = false;  // do not stop at scroll views
