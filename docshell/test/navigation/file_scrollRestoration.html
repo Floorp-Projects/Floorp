@@ -39,7 +39,7 @@
             opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration as before reload.");
             document.getElementById("bottom").scrollIntoView();
             window.onunload = null; // Should get bfcache behavior.
-            opener.setTimeout("SpecialPowers.wrap(testWindow).history.back();", 250);
+            window.opener.case3WaitForBlank();
             window.location.href = "about:blank";
             break;
           }
