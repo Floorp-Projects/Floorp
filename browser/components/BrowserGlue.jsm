@@ -407,6 +407,7 @@ let JSWINDOWACTORS = {
       observers: ["mediakeys-request"],
     },
 
+    messageManagerGroups: ["browsers"],
     allFrames: true,
   },
 
