@@ -153,6 +153,9 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::ObjectStaticProto:
     case MDefinition::Opcode::GuardNoDenseElements:
     case MDefinition::Opcode::GuardElementNotHole:
+    case MDefinition::Opcode::GuardArrayIsPacked:
+    case MDefinition::Opcode::GuardFunctionFlags:
+    case MDefinition::Opcode::GuardFunctionKind:
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:

@@ -675,6 +675,16 @@ bool WarpCacheIRTranspiler::emitGuardNotClassConstructor(ObjOperandId funId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardArrayIsPacked(ObjOperandId arrayId) {
+  MDefinition* array = getOperand(arrayId);
+
+  auto* ins = MGuardArrayIsPacked::New(alloc(), array);
+  add(ins);
+
+  setOperand(arrayId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadFrameCalleeResult() {
   if (const CallInfo* callInfo = builder_->inlineCallInfo()) {
     pushResult(callInfo->callee());

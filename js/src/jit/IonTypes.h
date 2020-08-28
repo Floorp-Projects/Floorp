@@ -209,6 +209,9 @@ enum class BailoutKind : uint8_t {
   // Bailout triggered by MGuardFunctionKind.
   FunctionKindGuard,
 
+  // Bailout triggered by MGuardArrayIsPacked
+  PackedArrayGuard,
+
   // When we're trying to use an uninitialized lexical.
   UninitializedLexical,
 
@@ -315,6 +318,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "BailoutKind::FunctionFlagsGuard";
     case BailoutKind::FunctionKindGuard:
       return "BailoutKind::FunctionKindGuard";
+    case BailoutKind::PackedArrayGuard:
+      return "BailoutKind::PackedArrayGuard";
     case BailoutKind::UninitializedLexical:
       return "BailoutKind::UninitializedLexical";
     case BailoutKind::IonExceptionDebugMode:
