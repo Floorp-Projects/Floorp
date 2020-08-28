@@ -1647,19 +1647,21 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
         IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aDirection));
   }
 
-  BackgroundCursorChildBase* const actor =
-      aKeysOnly ? static_cast<BackgroundCursorChildBase*>(
-                      new BackgroundCursorChild<IDBCursorType::ObjectStoreKey>(
-                          request, this, aDirection))
-                : new BackgroundCursorChild<IDBCursorType::ObjectStore>(
-                      request, this, aDirection);
+  const auto actor =
+      aKeysOnly
+          ? static_cast<SafeRefPtr<BackgroundCursorChildBase>>(
+                MakeSafeRefPtr<
+                    BackgroundCursorChild<IDBCursorType::ObjectStoreKey>>(
+                    request, this, aDirection))
+          : MakeSafeRefPtr<BackgroundCursorChild<IDBCursorType::ObjectStore>>(
+                request, this, aDirection);
 
   // TODO: This is necessary to preserve request ordering only. Proper
   // sequencing of requests should be done in a more sophisticated manner that
   // doesn't require invalidating cursor caches (Bug 1580499).
   mTransaction->InvalidateCursorCaches();
 
-  mTransaction->OpenCursor(actor, params);
+  mTransaction->OpenCursor(*actor, params);
 
   return request;
 }
