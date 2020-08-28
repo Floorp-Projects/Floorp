@@ -471,7 +471,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress) {
     if (aGeneration == mScrollGeneration) {
-      mLastScrollOrigin = ScrollOrigin::NotSpecified;
+      mLastScrollOrigin = ScrollOrigin::None;
       mLastSmoothScrollOrigin = ScrollOrigin::None;
     }
     // We can reset this regardless of scroll generation, as this is only set
