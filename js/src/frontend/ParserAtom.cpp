@@ -567,7 +567,7 @@ bool JSRuntime::initializeParserAtoms(JSContext* cx) {
   }
 
   UniquePtr<js::frontend::WellKnownParserAtoms> names(
-      js_new<js::frontend::WellKnownParserAtoms>(cx));
+      js_new<js::frontend::WellKnownParserAtoms>());
   if (!names || !names->init(cx)) {
     return false;
   }
