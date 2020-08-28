@@ -209,6 +209,23 @@ void nsPrintSettingsWin::InitWithInitializer(
     SetPrintInColor(mDevMode->dmColor == DMCOLOR_COLOR);
   }
 
+  if (mDevMode->dmFields & DM_DUPLEX) {
+    switch (mDevMode->dmDuplex) {
+      default:
+        MOZ_ASSERT_UNREACHABLE("bad value for dmDuplex field");
+        [[fallthrough]];
+      case DMDUP_SIMPLEX:
+        SetDuplex(kSimplex);
+        break;
+      case DMDUP_HORIZONTAL:
+        SetDuplex(kDuplexHorizontal);
+        break;
+      case DMDUP_VERTICAL:
+        SetDuplex(kDuplexVertical);
+        break;
+    }
+  }
+
   // Set the paper sizes to match the unit.
   double pointsToSizeUnit =
       mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0;
