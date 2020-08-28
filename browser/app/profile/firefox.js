@@ -1604,7 +1604,7 @@ pref("toolkit.telemetry.updatePing.enabled", true);
 // Enables sending 'bhr' pings when the browser hangs.
 pref("toolkit.telemetry.bhrPing.enabled", true);
 // Whether to enable Ecosystem Telemetry, requires a restart.
-pref("toolkit.telemetry.ecosystemtelemetry.enabled", true);
+pref("toolkit.telemetry.ecosystemtelemetry.enabled", false);
 
 // Ping Centre Telemetry settings.
 pref("browser.ping-centre.telemetry", true);
