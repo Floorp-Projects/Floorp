@@ -4805,6 +4805,8 @@ var _base_tree_viewer = __webpack_require__(13);
 
 var _viewer_compatibility = __webpack_require__(4);
 
+const PdfFileRegExp = /\.pdf$/i;
+
 class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
   constructor(options) {
     super(options);
@@ -4870,13 +4872,7 @@ class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
       viewerUrl = blobUrl + "#filename=" + encodeURIComponent(filename);
 
       try {
-        const a = document.createElement("a");
-        a.hidden = true;
-        a.href = viewerUrl;
-        a.target = "_blank";
-        (document.body || document.documentElement).appendChild(a);
-        a.click();
-        a.remove();
+        window.open(viewerUrl);
       } catch (ex) {
         console.error(`_bindPdfLink: ${ex}`);
         URL.revokeObjectURL(blobUrl);
@@ -4893,7 +4889,8 @@ class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
     filename
   }) {
     element.onclick = () => {
-      this.downloadManager.downloadData(content, filename, "");
+      const contentType = PdfFileRegExp.test(filename) ? "application/pdf" : "";
+      this.downloadManager.downloadData(content, filename, contentType);
       return false;
     };
   }
@@ -4927,17 +4924,10 @@ class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
       div.className = "treeItem";
       const element = document.createElement("a");
 
-      if (/\.pdf$/i.test(filename) && !_viewer_compatibility.viewerCompatibilityParams.disableCreateObjectURL) {
-        this._bindPdfLink(element, {
-          content: item.content,
-          filename
-        });
-      } else {
-        this._bindLink(element, {
-          content: item.content,
-          filename
-        });
-      }
+      this._bindLink(element, {
+        content: item.content,
+        filename
+      });
 
       element.textContent = this._normalizeTextContent(filename);
       div.appendChild(element);
