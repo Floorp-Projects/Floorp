@@ -212,6 +212,9 @@ static const JSFunctionSpec reflect_methods[] = {
     JS_FN("setPrototypeOf", Reflect_setPrototypeOf, 2, 0),
     JS_FS_END};
 
+static const JSPropertySpec reflect_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "Reflect", JSPROP_READONLY), JS_PS_END};
+
 /*** Setup ******************************************************************/
 
 static JSObject* CreateReflectObject(JSContext* cx, JSProtoKey key) {
@@ -224,7 +227,7 @@ static JSObject* CreateReflectObject(JSContext* cx, JSProtoKey key) {
 }
 
 static const ClassSpec ReflectClassSpec = {CreateReflectObject, nullptr,
-                                           reflect_methods, nullptr};
+                                           reflect_methods, reflect_properties};
 
 const JSClass js::ReflectClass = {"Reflect", 0, JS_NULL_CLASS_OPS,
                                   &ReflectClassSpec};
