@@ -4687,6 +4687,15 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Similarly, don't allow enabling or disabling Warp at runtime. Bytecode and
+  // VM data structures depend on whether TI is enabled/disabled.
+  if (opt == JSJITCOMPILER_WARP_ENABLE &&
+      bool(number) != jit::JitOptions.warpBuilder) {
+    JS_ReportErrorASCII(
+        cx, "Enabling or disabling Warp at runtime is not supported.");
+    return false;
+  }
+
   // Throw if disabling the JITs and there's JIT code on the stack, to avoid
   // assertion failures.
   if ((opt == JSJITCOMPILER_BASELINE_ENABLE ||
