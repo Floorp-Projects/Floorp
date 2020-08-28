@@ -6,6 +6,6 @@ These linked pages contain design documents for the DOM implementation in Gecko.
 .. toctree::
    :maxdepth: 1
 
-   ipc/index
+   Fission
    navigation/index
    workersAndStorage/index
