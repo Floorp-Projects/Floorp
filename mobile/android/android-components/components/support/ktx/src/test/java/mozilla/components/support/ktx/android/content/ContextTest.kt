@@ -31,6 +31,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowApplication
 import org.robolectric.shadows.ShadowCameraCharacteristics
 import org.robolectric.shadows.ShadowProcess
+import java.lang.AssertionError
 import java.lang.IllegalStateException
 
 @RunWith(AndroidJUnit4::class)
@@ -157,7 +158,18 @@ class ContextTest {
         val context = spy(testContext)
         val cameraManager: CameraManager = mock()
         whenever(context.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+
         whenever(cameraManager.cameraIdList).thenThrow(IllegalStateException("Test"))
+        assertFalse(context.hasCamera())
+    }
+
+    @Test
+    fun `hasCamera returns false if assertion is thrown`() {
+        val context = spy(testContext)
+        val cameraManager: CameraManager = mock()
+        whenever(context.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+
+        whenever(cameraManager.cameraIdList).thenThrow(AssertionError("Test"))
         assertFalse(context.hasCamera())
     }
 }
