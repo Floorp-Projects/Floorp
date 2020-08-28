@@ -16469,185 +16469,143 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
                                     uint32_t aTelemetryId) {
   AssertIsOnIOThread();
 
-  bool exists;
-  nsresult rv = aDirectory.Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {
+    IDB_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
+
+    if (!exists) {
+      return NS_OK;
+    }
+
+    IDB_TRY_VAR(const bool isDirectory,
+                MOZ_TO_RESULT_INVOKE(aDirectory, IsDirectory));
+    IDB_TRY(OkIf(isDirectory), NS_ERROR_FAILURE);
   }
 
-  if (!exists) {
-    return NS_OK;
-  }
+  IDB_TRY_VAR(const auto journalDirectory,
+              ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
+                                                aDirectory));
 
-  bool isDirectory;
-  rv = aDirectory.IsDirectory(&isDirectory);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(journalDirectory->Append(kJournalDirectoryName));
 
-  if (NS_WARN_IF(!isDirectory)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIFile> journalDirectory;
-  rv = aDirectory.Clone(getter_AddRefs(journalDirectory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = journalDirectory->Append(kJournalDirectoryName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = journalDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const bool exists,
+              MOZ_TO_RESULT_INVOKE(journalDirectory, Exists));
 
   if (exists) {
-    rv = journalDirectory->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_VAR(const bool isDirectory,
+                MOZ_TO_RESULT_INVOKE(journalDirectory, IsDirectory));
+    IDB_TRY(OkIf(isDirectory), NS_ERROR_FAILURE);
 
-    if (NS_WARN_IF(!isDirectory)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIDirectoryEnumerator> entries;
-    rv = journalDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_VAR(
+        const auto entries,
+        ToResultInvoke<nsCOMPtr<nsIDirectoryEnumerator>>(
+            std::mem_fn(&nsIFile::GetDirectoryEntries), journalDirectory));
 
     bool hasJournals = false;
 
-    nsCOMPtr<nsIFile> file;
-    while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
-           file) {
-      nsString leafName;
-      rv = file->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    MOZ_TRY(CollectEach(
+        [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+          IDB_TRY_VAR(
+              auto file,
+              ToResultInvoke<nsCOMPtr<nsIFile>>(
+                  std::mem_fn(&nsIDirectoryEnumerator::GetNextFile), entries));
+          return file;
+        },
+        [&hasJournals](
+            const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
+          IDB_TRY_VAR(const auto leafName,
+                      ToResultInvoke<nsString>(
+                          std::mem_fn(&nsIFile::GetLeafName), file));
 
-      leafName.ToInteger64(&rv);
-      if (NS_SUCCEEDED(rv)) {
-        hasJournals = true;
+          nsresult rv;
+          leafName.ToInteger64(&rv);
+          if (NS_SUCCEEDED(rv)) {
+            hasJournals = true;
+          } else {
+            UNKNOWN_FILE_WARNING(leafName);
+          }
 
-        continue;
-      }
-
-      UNKNOWN_FILE_WARNING(leafName);
-    }
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+          return mozilla::Ok{};
+        }));
 
     if (hasJournals) {
-      auto connectionOrErr = CreateStorageConnection(
-          aDatabaseFile, aDirectory, VoidString(), aOrigin,
-          /* aDirectoryLockId */ -1, aTelemetryId);
-      if (NS_WARN_IF(connectionOrErr.isErr())) {
-        return connectionOrErr.unwrapErr();
-      }
+      // XXX Maybe we could add special handling for MovingNotNull to
+      // automatically unwrap in IDB_TRY_VAR?
+      IDB_TRY_VAR(mozilla::MovingNotNull<nsCOMPtr<mozIStorageConnection>>
+                      connectionMoving,
+                  CreateStorageConnection(
+                      aDatabaseFile, aDirectory, VoidString(), aOrigin,
+                      /* aDirectoryLockId */ -1, aTelemetryId));
 
-      auto connection = connectionOrErr.unwrap().unwrap();
+      const auto connection = std::move(connectionMoving).unwrap();
 
       mozStorageTransaction transaction(connection.get(), false);
 
-      rv = connection->ExecuteSimpleSQL(
-          "CREATE VIRTUAL TABLE fs USING filesystem;"_ns);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(connection->ExecuteSimpleSQL(
+          "CREATE VIRTUAL TABLE fs USING filesystem;"_ns));
 
-      nsCOMPtr<mozIStorageStatement> stmt;
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      rv = connection->CreateStatement(
-          nsLiteralCString("SELECT name, (name IN (SELECT id FROM file)) "
-                           "FROM fs "
-                           "WHERE path = :path"),
-          getter_AddRefs(stmt));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY_VAR(
+          auto stmt,
+          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
+              "SELECT name, (name IN (SELECT id FROM file)) FROM fs WHERE path = :path"_ns));
 
-      nsString path;
-      rv = journalDirectory->GetPath(path);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY_VAR(const auto path,
+                  ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetPath),
+                                           journalDirectory));
 
-      rv = stmt->BindStringByIndex(0, path);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(stmt->BindStringByIndex(0, path));
 
-      bool hasResult;
-      while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-        nsString name;
-        rv = stmt->GetString(0, name);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      // XXX gcc doesn't like multiple IDB_TRY_VAR within a macro, so can't use
+      // MOZ_TRY directly here.
+      auto res = CollectWhile(
+          [&stmt]() -> Result<bool, nsresult> {
+            IDB_TRY_VAR(auto hasResult,
+                        MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+            return hasResult;
+          },
+          [&stmt, &aDirectory,
+           &journalDirectory]() -> Result<mozilla::Ok, nsresult> {
+            nsString name;
+            IDB_TRY(stmt->GetString(0, name));
 
-        name.ToInteger64(&rv);
-        if (NS_FAILED(rv)) {
-          continue;
-        }
+            nsresult rv;
+            name.ToInteger64(&rv);
+            if (NS_FAILED(rv)) {
+              return mozilla::Ok{};
+            }
 
-        int32_t flag = stmt->AsInt32(1);
+            int32_t flag = stmt->AsInt32(1);
 
-        if (!flag) {
-          nsCOMPtr<nsIFile> file;
-          rv = aDirectory.Clone(getter_AddRefs(file));
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+            if (!flag) {
+              IDB_TRY_VAR(const auto file,
+                          ToResultInvoke<nsCOMPtr<nsIFile>>(
+                              std::mem_fn(&nsIFile::Clone), aDirectory));
 
-          rv = file->Append(name);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+              IDB_TRY(file->Append(name));
 
-          if (NS_FAILED(file->Remove(false))) {
-            NS_WARNING("Failed to remove orphaned file!");
-          }
-        }
+              if (NS_FAILED(file->Remove(false))) {
+                NS_WARNING("Failed to remove orphaned file!");
+              }
+            }
 
-        nsCOMPtr<nsIFile> journalFile;
-        rv = journalDirectory->Clone(getter_AddRefs(journalFile));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+            IDB_TRY_VAR(const auto journalFile,
+                        ToResultInvoke<nsCOMPtr<nsIFile>>(
+                            std::mem_fn(&nsIFile::Clone), journalDirectory));
 
-        rv = journalFile->Append(name);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+            IDB_TRY(journalFile->Append(name));
 
-        if (NS_FAILED(journalFile->Remove(false))) {
-          NS_WARNING("Failed to remove journal file!");
-        }
-      }
+            if (NS_FAILED(journalFile->Remove(false))) {
+              NS_WARNING("Failed to remove journal file!");
+            }
 
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+            return mozilla::Ok{};
+          });
+      MOZ_TRY(std::move(res));
 
-      rv = connection->ExecuteSimpleSQL("DROP TABLE fs;"_ns);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = transaction.Commit();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(connection->ExecuteSimpleSQL("DROP TABLE fs;"_ns));
+      IDB_TRY(transaction.Commit());
     }
   }
 
