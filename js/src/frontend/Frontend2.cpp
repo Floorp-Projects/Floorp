@@ -556,6 +556,7 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
   }
 
   if (!compilationInfo.stencil.scriptData.reserve(result.functions.len + 1)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
 
