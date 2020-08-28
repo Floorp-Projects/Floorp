@@ -14,16 +14,9 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS_INHERITED(nsPagePrintTimer, mozilla::Runnable,
                             nsITimerCallback)
 
-nsPagePrintTimer::~nsPagePrintTimer() { Disconnect(); }
-
-void nsPagePrintTimer::Disconnect() {
-  mPrintJob = nullptr;
-  mPrintObj = nullptr;
-  if (mDocViewerPrint) {
-    // This matches the IncrementDestroyBlockedCount call in the constructor.
-    mDocViewerPrint->DecrementDestroyBlockedCount();
-    mDocViewerPrint = nullptr;
-  }
+nsPagePrintTimer::~nsPagePrintTimer() {
+  // This matches the IncrementDestroyBlockedCount call in the constructor.
+  mDocViewerPrint->DecrementDestroyBlockedCount();
 }
 
 nsresult nsPagePrintTimer::StartTimer(bool aUseDelay) {
