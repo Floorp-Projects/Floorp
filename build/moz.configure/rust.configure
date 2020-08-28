@@ -226,203 +226,205 @@ def rust_supported_targets(rustc):
     return data
 
 
-@template
-def rust_triple_alias(host_or_target, host_or_target_c_compiler):
-    """Template defining the alias used for rustc's --target flag.
-    `host_or_target` is either `host` or `target` (the @depends functions
-    from init.configure).
-    """
-    assert host_or_target in {host, target}
+def detect_rustc_target(host_or_target, compiler_info, arm_target, rust_supported_targets):
+    # Rust's --target options are similar to, but not exactly the same
+    # as, the autoconf-derived targets we use.  An example would be that
+    # Rust uses distinct target triples for targetting the GNU C++ ABI
+    # and the MSVC C++ ABI on Win32, whereas autoconf has a single
+    # triple and relies on the user to ensure that everything is
+    # compiled for the appropriate ABI.  We need to perform appropriate
+    # munging to get the correct option to rustc.
+    # We correlate the autoconf-derived targets with the list of targets
+    # rustc gives us with --print target-list.
+    candidates = rust_supported_targets.get(
+        (host_or_target.cpu, host_or_target.endianness, host_or_target.os), [])
 
-    host_or_target_str = {host: 'host', target: 'target'}[host_or_target]
-
-    @depends(rustc, host_or_target, host_or_target_c_compiler,
-             rust_supported_targets, arm_target, when=rust_compiler)
-    @checking('for rust %s triplet' % host_or_target_str)
-    @imports('os')
-    @imports(_from='mozbuild.configure.util', _import='LineIO')
-    @imports(_from='mozbuild.shellutil', _import='quote')
-    @imports(_from='six', _import='ensure_binary')
-    @imports(_from='tempfile', _import='mkstemp')
-    @imports(_from='textwrap', _import='dedent')
-    def rust_target(rustc, host_or_target, compiler_info,
-                    rust_supported_targets, arm_target):
-        # Rust's --target options are similar to, but not exactly the same
-        # as, the autoconf-derived targets we use.  An example would be that
-        # Rust uses distinct target triples for targetting the GNU C++ ABI
-        # and the MSVC C++ ABI on Win32, whereas autoconf has a single
-        # triple and relies on the user to ensure that everything is
-        # compiled for the appropriate ABI.  We need to perform appropriate
-        # munging to get the correct option to rustc.
-        # We correlate the autoconf-derived targets with the list of targets
-        # rustc gives us with --print target-list.
-        candidates = rust_supported_targets.get(
-            (host_or_target.cpu, host_or_target.endianness, host_or_target.os), [])
-
-        def find_candidate(candidates):
-            if len(candidates) == 1:
-                return candidates[0].rust_target
-            elif not candidates:
-                return None
-
-            # We have multiple candidates. There are two cases where we can try to
-            # narrow further down using extra information from the build system.
-            # - For windows targets, correlate with the C compiler type
-            if host_or_target.kernel == 'WINNT':
-                if compiler_info.type in ('gcc', 'clang'):
-                    suffix = 'windows-gnu'
-                else:
-                    suffix = 'windows-msvc'
-                narrowed = [c for c in candidates if c.rust_target.endswith('-{}'.format(suffix))]
-                if len(narrowed) == 1:
-                    return narrowed[0].rust_target
-                elif narrowed:
-                    candidates = narrowed
-
-                vendor_aliases = {'pc': ('w64', 'windows')}
-                narrowed = [c for c in candidates
-                            if host_or_target.vendor in vendor_aliases.get(c.target.vendor, ())]
-
-                if len(narrowed) == 1:
-                    return narrowed[0].rust_target
-
-            # - For arm targets, correlate with arm_target
-            #   we could be more thorough with the supported rust targets, but they
-            #   don't support OSes that are supported to build Gecko anyways.
-            #   Also, sadly, the only interface to check the rust target cpu features
-            #   is --print target-spec-json, and it's unstable, so we have to rely on
-            #   our own knowledge of what each arm target means.
-            if host_or_target.cpu == 'arm' and host_or_target.endianness == 'little':
-                prefixes = []
-                if arm_target.arm_arch >= 7:
-                    if arm_target.thumb2 and arm_target.fpu == 'neon':
-                        prefixes.append('thumbv7neon')
-                    if arm_target.thumb2:
-                        prefixes.append('thumbv7a')
-                    prefixes.append('armv7')
-                if arm_target.arm_arch >= 6:
-                    prefixes.append('armv6')
-                    if host_or_target.os != 'Android':
-                        # arm-* rust targets are armv6... except arm-linux-androideabi
-                        prefixes.append('arm')
-                if arm_target.arm_arch >= 5:
-                    prefixes.append('armv5te')
-                    if host_or_target.os == 'Android':
-                        # arm-* rust targets are armv6... except arm-linux-androideabi
-                        prefixes.append('arm')
-                if arm_target.arm_arch >= 4:
-                    prefixes.append('armv4t')
-                # rust freebsd targets are the only ones that don't have a 'hf' suffix
-                # for hard-float. Technically, that means if the float abi ever is not
-                # hard-float, this will pick a wrong target, but since rust only
-                # supports hard-float, let's assume that means freebsd only support
-                # hard-float.
-                if arm_target.float_abi == 'hard' and host_or_target.os != 'FreeBSD':
-                    suffix = 'hf'
-                else:
-                    suffix = ''
-                for p in prefixes:
-                    for c in candidates:
-                        if c.rust_target.startswith('{}-'.format(p)) and \
-                                c.rust_target.endswith(suffix):
-                            return c.rust_target
-
-            # See if we can narrow down on the exact alias
-            narrowed = [c for c in candidates if c.target.alias == host_or_target.alias]
-            if len(narrowed) == 1:
-                return narrowed[0].rust_target
-            elif narrowed:
-                candidates = narrowed
-
-            # See if we can narrow down with the raw OS
-            narrowed = [c for c in candidates if c.target.raw_os == host_or_target.raw_os]
-            if len(narrowed) == 1:
-                return narrowed[0].rust_target
-            elif narrowed:
-                candidates = narrowed
-
-            # See if we can narrow down with the raw OS and raw CPU
-            narrowed = [
-                c for c in candidates
-                if c.target.raw_os == host_or_target.raw_os and
-                   c.target.raw_cpu == host_or_target.raw_cpu
-            ]
-            if len(narrowed) == 1:
-                return narrowed[0].rust_target
-
-            # Finally, see if the vendor can be used to disambiguate.
-            narrowed = [
-                c for c in candidates
-                if c.target.vendor == host_or_target.vendor
-            ]
-            if len(narrowed) == 1:
-                return narrowed[0].rust_target
-
+    def find_candidate(candidates):
+        if len(candidates) == 1:
+            return candidates[0].rust_target
+        elif not candidates:
             return None
 
-        rustc_target = find_candidate(candidates)
+        # We have multiple candidates. There are two cases where we can try to
+        # narrow further down using extra information from the build system.
+        # - For windows targets, correlate with the C compiler type
+        if host_or_target.kernel == 'WINNT':
+            if compiler_info.type in ('gcc', 'clang'):
+                suffix = 'windows-gnu'
+            else:
+                suffix = 'windows-msvc'
+            narrowed = [c for c in candidates if c.rust_target.endswith('-{}'.format(suffix))]
+            if len(narrowed) == 1:
+                return narrowed[0].rust_target
+            elif narrowed:
+                candidates = narrowed
 
-        if rustc_target is None:
-            die("Don't know how to translate {} for rustc".format(
-                host_or_target.alias))
+            vendor_aliases = {'pc': ('w64', 'windows')}
+            narrowed = [c for c in candidates
+                        if host_or_target.vendor in vendor_aliases.get(c.target.vendor, ())]
 
-        # Check to see whether our rustc has a reasonably functional stdlib
-        # for our chosen target.
-        target_arg = '--target=' + rustc_target
-        in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs', text=True)
-        out_fd, out_path = mkstemp(prefix='conftest', suffix='.rlib')
-        os.close(out_fd)
-        try:
-            source = 'pub extern fn hello() { println!("Hello world"); }'
-            log.debug('Creating `%s` with content:', in_path)
-            with LineIO(lambda l: log.debug('| %s', l)) as out:
-                out.write(source)
+            if len(narrowed) == 1:
+                return narrowed[0].rust_target
 
-            os.write(in_fd, ensure_binary(source))
-            os.close(in_fd)
+        # - For arm targets, correlate with arm_target
+        #   we could be more thorough with the supported rust targets, but they
+        #   don't support OSes that are supported to build Gecko anyways.
+        #   Also, sadly, the only interface to check the rust target cpu features
+        #   is --print target-spec-json, and it's unstable, so we have to rely on
+        #   our own knowledge of what each arm target means.
+        if host_or_target.cpu == 'arm' and host_or_target.endianness == 'little':
+            prefixes = []
+            if arm_target.arm_arch >= 7:
+                if arm_target.thumb2 and arm_target.fpu == 'neon':
+                    prefixes.append('thumbv7neon')
+                if arm_target.thumb2:
+                    prefixes.append('thumbv7a')
+                prefixes.append('armv7')
+            if arm_target.arm_arch >= 6:
+                prefixes.append('armv6')
+                if host_or_target.os != 'Android':
+                    # arm-* rust targets are armv6... except arm-linux-androideabi
+                    prefixes.append('arm')
+            if arm_target.arm_arch >= 5:
+                prefixes.append('armv5te')
+                if host_or_target.os == 'Android':
+                    # arm-* rust targets are armv6... except arm-linux-androideabi
+                    prefixes.append('arm')
+            if arm_target.arm_arch >= 4:
+                prefixes.append('armv4t')
+            # rust freebsd targets are the only ones that don't have a 'hf' suffix
+            # for hard-float. Technically, that means if the float abi ever is not
+            # hard-float, this will pick a wrong target, but since rust only
+            # supports hard-float, let's assume that means freebsd only support
+            # hard-float.
+            if arm_target.float_abi == 'hard' and host_or_target.os != 'FreeBSD':
+                suffix = 'hf'
+            else:
+                suffix = ''
+            for p in prefixes:
+                for c in candidates:
+                    if c.rust_target.startswith('{}-'.format(p)) and \
+                            c.rust_target.endswith(suffix):
+                        return c.rust_target
 
-            cmd = [
-                rustc,
-                '--crate-type', 'staticlib',
-                target_arg,
-                '-o', out_path,
-                in_path,
-            ]
+        # See if we can narrow down on the exact alias
+        narrowed = [c for c in candidates if c.target.alias == host_or_target.alias]
+        if len(narrowed) == 1:
+            return narrowed[0].rust_target
+        elif narrowed:
+            candidates = narrowed
 
-            def failed():
-                die(dedent('''\
-                Cannot compile for {} with {}
-                The target may be unsupported, or you may not have
-                a rust std library for that target installed. Try:
+        # See if we can narrow down with the raw OS
+        narrowed = [c for c in candidates if c.target.raw_os == host_or_target.raw_os]
+        if len(narrowed) == 1:
+            return narrowed[0].rust_target
+        elif narrowed:
+            candidates = narrowed
 
-                  rustup target add {}
-                '''.format(host_or_target.alias, rustc, rustc_target)))
-            check_cmd_output(*cmd, onerror=failed)
-            if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
-                failed()
-        finally:
-            os.remove(in_path)
-            os.remove(out_path)
+        # See if we can narrow down with the raw OS and raw CPU
+        narrowed = [
+            c for c in candidates
+            if c.target.raw_os == host_or_target.raw_os and
+               c.target.raw_cpu == host_or_target.raw_cpu
+        ]
+        if len(narrowed) == 1:
+            return narrowed[0].rust_target
 
-        # This target is usable.
-        return rustc_target
+        # Finally, see if the vendor can be used to disambiguate.
+        narrowed = [
+            c for c in candidates
+            if c.target.vendor == host_or_target.vendor
+        ]
+        if len(narrowed) == 1:
+            return narrowed[0].rust_target
 
-    return rust_target
+        return None
+
+    rustc_target = find_candidate(candidates)
+
+    if rustc_target is None:
+        die("Don't know how to translate {} for rustc".format(
+            host_or_target.alias))
+
+    return rustc_target
 
 
-rust_target_triple = rust_triple_alias(target, c_compiler)
-rust_host_triple = rust_triple_alias(host, host_c_compiler)
+@imports('os')
+@imports(_from='six', _import='ensure_binary')
+@imports(_from='tempfile', _import='mkstemp')
+@imports(_from='textwrap', _import='dedent')
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+def assert_rust_compile(host_or_target, rustc_target, rustc):
+    # Check to see whether our rustc has a reasonably functional stdlib
+    # for our chosen target.
+    target_arg = '--target=' + rustc_target
+    in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs', text=True)
+    out_fd, out_path = mkstemp(prefix='conftest', suffix='.rlib')
+    os.close(out_fd)
+    try:
+        source = 'pub extern fn hello() { println!("Hello world"); }'
+        log.debug('Creating `%s` with content:', in_path)
+        with LineIO(lambda l: log.debug('| %s', l)) as out:
+            out.write(source)
+
+        os.write(in_fd, ensure_binary(source))
+        os.close(in_fd)
+
+        cmd = [
+            rustc,
+            '--crate-type', 'staticlib',
+            target_arg,
+            '-o', out_path,
+            in_path,
+        ]
+
+        def failed():
+            die(dedent('''\
+            Cannot compile for {} with {}
+            The target may be unsupported, or you may not have
+            a rust std library for that target installed. Try:
+
+              rustup target add {}
+            '''.format(host_or_target.alias, rustc, rustc_target)))
+        check_cmd_output(*cmd, onerror=failed)
+        if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
+            failed()
+    finally:
+        os.remove(in_path)
+        os.remove(out_path)
 
 
-@depends(host, rust_host_triple, rustc_info.host)
-def validate_rust_host_triple(host, rust_host, rustc_host):
-    if rust_host != rustc_host:
-        if host.alias == rust_host:
+@depends(rustc, host, host_c_compiler, rustc_info.host, rust_supported_targets,
+         arm_target, when=rust_compiler)
+@checking('for rust host triplet')
+@imports(_from='textwrap', _import='dedent')
+def rust_host_triple(rustc, host, compiler_info, rustc_host, rust_supported_targets,
+                     arm_target):
+    rustc_target = detect_rustc_target(host, compiler_info, arm_target,
+                                       rust_supported_targets)
+    if rustc_target != rustc_host:
+        if host.alias == rustc_target:
             configure_host = host.alias
         else:
-            configure_host = '{}/{}'.format(host.alias, rust_host)
-        die("The rust compiler host ({}) is not suitable for the configure host ({})."
-            .format(rustc_host, configure_host))
+            configure_host = '{}/{}'.format(host.alias, rustc_target)
+        die(dedent('''\
+        The rust compiler host ({rustc}) is not suitable for the configure host ({configure}).
+
+        You can solve this by:
+        * Set your configure host to match the rust compiler host by editing your
+        mozconfig and adding "ac_add_options --host={rustc}".
+        * Or, install the rust toolchain for {configure}, if supported, by running
+        "rustup default stable-{rustc_target}"
+        '''.format(rustc=rustc_host, configure=configure_host, rustc_target=rustc_target)))
+    assert_rust_compile(host, rustc_target, rustc)
+    return rustc_target
+
+@depends(rustc, target, c_compiler, rust_supported_targets, arm_target, when=rust_compiler)
+@checking('for rust target triplet')
+def rust_target_triple(rustc, target, compiler_info, rust_supported_targets, arm_target):
+    rustc_target = detect_rustc_target(target, compiler_info, arm_target, rust_supported_targets)
+    assert_rust_compile(target, rustc_target, rustc)
+    return rustc_target
 
 
 set_config('RUST_TARGET', rust_target_triple)
