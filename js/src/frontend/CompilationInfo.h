@@ -99,7 +99,7 @@ struct CompilationInput {
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
   // etc), and having 2 vectors in both input/output is error prone.
-  JS::GCVector<JSAtom*> atoms;
+  JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy> atoms;
 
   BaseScript* lazy = nullptr;
 
@@ -111,7 +111,7 @@ struct CompilationInput {
   Scope* enclosingScope = nullptr;
 
   CompilationInput(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : options(options), atoms(cx) {}
+      : options(options) {}
 
  private:
   bool initScriptSource(JSContext* cx);
