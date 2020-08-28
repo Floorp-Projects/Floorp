@@ -33,6 +33,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 var EXPORTED_SYMBOLS = ["GeckoViewContentChild"];
 
 class GeckoViewContentChild extends GeckoViewActorChild {
+  actorCreated() {
+    this.pageShow = new Promise(resolve => {
+      this.receivedPageShow = resolve;
+    });
+  }
+
   toPixels(aLength, aType) {
     const { contentWindow } = this;
     if (aType === SCREEN_LENGTH_TYPE_PIXEL) {
@@ -179,99 +185,17 @@ class GeckoViewContentChild extends GeckoViewActorChild {
         }, 500);
         break;
       }
-      case "GeckoView:RestoreState": {
-        const { contentWindow, docShell } = this;
-        const { history, formdata, scrolldata, loadOptions } = message.data;
-
+      case "RestoreSessionState": {
+        this.restoreSessionState(message);
+        break;
+      }
+      case "RestoreHistoryAndNavigate": {
+        const { history, loadOptions } = message.data;
         if (history) {
-          const restoredHistory = SessionHistory.restore(docShell, history);
-
-          contentWindow.addEventListener(
-            "load",
-            _ => {
-              if (formdata) {
-                Utils.restoreFrameTreeData(
-                  contentWindow,
-                  formdata,
-                  (frame, data) => {
-                    // restore() will return false, and thus abort restoration for the
-                    // current |frame| and its descendants, if |data.url| is given but
-                    // doesn't match the loaded document's URL.
-                    return SessionStoreUtils.restoreFormData(
-                      frame.document,
-                      data
-                    );
-                  }
-                );
-              }
-            },
-            { capture: true, mozSystemGroup: true, once: true }
+          const restoredHistory = SessionHistory.restore(
+            this.docShell,
+            history
           );
-
-          const scrollRestore = _ => {
-            if (contentWindow.location != "about:blank") {
-              if (scrolldata) {
-                Utils.restoreFrameTreeData(
-                  contentWindow,
-                  scrolldata,
-                  (frame, data) => {
-                    if (data.scroll) {
-                      SessionStoreUtils.restoreScrollPosition(frame, data);
-                    }
-                  }
-                );
-              }
-              contentWindow.removeEventListener("pageshow", scrollRestore, {
-                capture: true,
-                mozSystemGroup: true,
-              });
-            }
-          };
-
-          contentWindow.addEventListener("pageshow", scrollRestore, {
-            capture: true,
-            mozSystemGroup: true,
-          });
-
-          const progressFilter = Cc[
-            "@mozilla.org/appshell/component/browser-status-filter;1"
-          ].createInstance(Ci.nsIWebProgress);
-          const flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
-
-          const progressListener = {
-            QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
-
-            onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-              debug`onLocationChange`;
-
-              if (
-                scrolldata &&
-                scrolldata.zoom &&
-                scrolldata.zoom.displaySize
-              ) {
-                const utils = contentWindow.windowUtils;
-                // Restore zoom level.
-                utils.setRestoreResolution(
-                  scrolldata.zoom.resolution,
-                  scrolldata.zoom.displaySize.width,
-                  scrolldata.zoom.displaySize.height
-                );
-              }
-
-              progressFilter.removeProgressListener(this);
-              const webProgress = docShell
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIWebProgress);
-              webProgress.removeProgressListener(progressFilter);
-            },
-          };
-
-          progressFilter.addProgressListener(progressListener, flags);
-          const webProgress = docShell
-            .QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIWebProgress);
-          webProgress.addProgressListener(progressFilter, flags);
-
           this.loadEntry(loadOptions, restoredHistory);
         }
         break;
@@ -329,6 +253,41 @@ class GeckoViewContentChild extends GeckoViewActorChild {
     return null;
   }
 
+  async restoreSessionState(message) {
+    // Make sure we showed something before restoring scrolling and form data
+    await this.pageShow;
+
+    const { contentWindow } = this;
+    const { formdata, scrolldata } = message.data;
+
+    if (formdata) {
+      Utils.restoreFrameTreeData(contentWindow, formdata, (frame, data) => {
+        // restore() will return false, and thus abort restoration for the
+        // current |frame| and its descendants, if |data.url| is given but
+        // doesn't match the loaded document's URL.
+        return SessionStoreUtils.restoreFormData(frame.document, data);
+      });
+    }
+
+    if (scrolldata) {
+      Utils.restoreFrameTreeData(contentWindow, scrolldata, (frame, data) => {
+        if (data.scroll) {
+          SessionStoreUtils.restoreScrollPosition(frame, data);
+        }
+      });
+    }
+
+    if (scrolldata && scrolldata.zoom && scrolldata.zoom.displaySize) {
+      const utils = contentWindow.windowUtils;
+      // Restore zoom level.
+      utils.setRestoreResolution(
+        scrolldata.zoom.resolution,
+        scrolldata.zoom.displaySize.width,
+        scrolldata.zoom.displaySize.height
+      );
+    }
+  }
+
   // eslint-disable-next-line complexity
   handleEvent(aEvent) {
     debug`handleEvent: ${aEvent.type}`;
@@ -338,6 +297,11 @@ class GeckoViewContentChild extends GeckoViewActorChild {
     }
 
     switch (aEvent.type) {
+      case "pageshow": {
+        this.receivedPageShow();
+        break;
+      }
+
       case "mozcaretstatechanged":
         if (
           aEvent.reason === "presscaret" ||
