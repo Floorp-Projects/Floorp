@@ -7,6 +7,7 @@
 #include "mozilla/layers/APZPublicUtils.h"
 
 #include "AsyncPanZoomController.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/StaticPrefs_general.h"
 
 namespace mozilla {
@@ -23,6 +24,22 @@ namespace apz {
     const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity) {
   return AsyncPanZoomController::CalculatePendingDisplayPort(aFrameMetrics,
                                                              aVelocity);
+}
+
+static int32_t GetNormalizedAppVersion() {
+  static int32_t sAppVersion = 0;
+  if (sAppVersion == 0) {
+    const char* kVersion = MOZ_STRINGIFY(MOZ_APP_VERSION);
+    long version = strtol(kVersion, nullptr, 10);
+    if (version < 81 || version > 86) {
+      // If the version is garbage or unreasonable, set it to a value that will
+      // complete the migration. This also clamps legitimate values > 86 down to
+      // 86.
+      version = 86;
+    }
+    sAppVersion = static_cast<int32_t>(version);
+  }
+  return sAppVersion;
 }
 
 /*static*/ std::pair<int32_t, int32_t> GetMouseWheelAnimationDurations() {
@@ -44,7 +61,13 @@ namespace apz {
 
   int32_t migration =
       StaticPrefs::general_smoothScroll_mouseWheel_migrationPercent();
-  migration = clamped(migration, 0, 100);
+
+  // Increase migration by 25% for each version, starting in version 83.
+  int32_t version = GetNormalizedAppVersion();
+  int32_t minMigrationPercentage = std::max(0, (version - 82) * 25);
+  MOZ_ASSERT(minMigrationPercentage >= 0 && minMigrationPercentage <= 100);
+
+  migration = clamped(migration, minMigrationPercentage, 100);
 
   minMS = ((oldMin * (100 - migration)) + (minMS * migration)) / 100;
   maxMS = ((oldMax * (100 - migration)) + (maxMS * migration)) / 100;
