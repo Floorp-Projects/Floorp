@@ -13,6 +13,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DevToolsNameGenerator = exports.NameSectionReader = exports.WasmDisassembler = exports.LabelMode = exports.NumericNameResolver = exports.DevToolsNameResolver = exports.DefaultNameResolver = void 0;
 /* Copyright 2016 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,66 +34,76 @@ var INVALID_NAME_SYMBOLS_REGEX = /[^0-9A-Za-z!#$%&'*+.:<=>?@^_`|~\/\-]/;
 var INVALID_NAME_SYMBOLS_REGEX_GLOBAL = new RegExp(INVALID_NAME_SYMBOLS_REGEX.source, "g");
 function typeToString(type) {
     switch (type) {
-        case -1 /* i32 */: return 'i32';
-        case -2 /* i64 */: return 'i64';
-        case -3 /* f32 */: return 'f32';
-        case -4 /* f64 */: return 'f64';
-        case -5 /* v128 */: return 'v128';
-        case -16 /* anyfunc */: return 'anyfunc';
-        case -17 /* anyref */: return 'anyref';
-        default: throw new Error("Unexpected type " + type);
+        case -1 /* i32 */:
+            return "i32";
+        case -2 /* i64 */:
+            return "i64";
+        case -3 /* f32 */:
+            return "f32";
+        case -4 /* f64 */:
+            return "f64";
+        case -5 /* v128 */:
+            return "v128";
+        case -16 /* anyfunc */:
+            return "anyfunc";
+        case -17 /* anyref */:
+            return "anyref";
+        default:
+            throw new Error("Unexpected type " + type);
     }
 }
 function formatFloat32(n) {
     if (n === 0)
-        return (1 / n) < 0 ? '-0.0' : '0.0';
+        return 1 / n < 0 ? "-0.0" : "0.0";
     if (isFinite(n))
         return n.toString();
     if (!isNaN(n))
-        return n < 0 ? '-inf' : 'inf';
+        return n < 0 ? "-inf" : "inf";
     var view = new DataView(new ArrayBuffer(8));
     view.setFloat32(0, n, true);
     var data = view.getInt32(0, true);
-    var payload = data & 0x7FFFFF;
+    var payload = data & 0x7fffff;
     var canonicalBits = 4194304; // 0x800..0
     if (data > 0 && payload === canonicalBits)
-        return 'nan'; // canonical NaN;
+        return "nan";
+    // canonical NaN;
     else if (payload === canonicalBits)
-        return '-nan';
-    return (data < 0 ? '-' : '+') + 'nan:0x' + payload.toString(16);
+        return "-nan";
+    return (data < 0 ? "-" : "+") + "nan:0x" + payload.toString(16);
 }
 function formatFloat64(n) {
     if (n === 0)
-        return (1 / n) < 0 ? '-0.0' : '0.0';
+        return 1 / n < 0 ? "-0.0" : "0.0";
     if (isFinite(n))
         return n.toString();
     if (!isNaN(n))
-        return n < 0 ? '-inf' : 'inf';
+        return n < 0 ? "-inf" : "inf";
     var view = new DataView(new ArrayBuffer(8));
     view.setFloat64(0, n, true);
     var data1 = view.getUint32(0, true);
     var data2 = view.getInt32(4, true);
-    var payload = data1 + (data2 & 0xFFFFF) * 4294967296;
+    var payload = data1 + (data2 & 0xfffff) * 4294967296;
     var canonicalBits = 524288 * 4294967296; // 0x800..0
     if (data2 > 0 && payload === canonicalBits)
-        return 'nan'; // canonical NaN;
+        return "nan";
+    // canonical NaN;
     else if (payload === canonicalBits)
-        return '-nan';
-    return (data2 < 0 ? '-' : '+') + 'nan:0x' + payload.toString(16);
+        return "-nan";
+    return (data2 < 0 ? "-" : "+") + "nan:0x" + payload.toString(16);
 }
 function formatI32Array(bytes, count) {
     var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     var result = [];
     for (var i = 0; i < count; i++)
         result.push("0x" + formatHex(dv.getInt32(i << 2, true), 8));
-    return result.join(' ');
+    return result.join(" ");
 }
 function formatI8Array(bytes, count) {
     var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     var result = [];
     for (var i = 0; i < count; i++)
         result.push("" + dv.getInt8(i));
-    return result.join(' ');
+    return result.join(" ");
 }
 function memoryAddressToString(address, code) {
     var defaultAlignFlags;
@@ -131,19 +142,19 @@ function memoryAddressToString(address, code) {
         case 65047 /* i32_atomic_store */:
         case 65053 /* i64_atomic_store32 */:
         case 65054 /* i32_atomic_rmw_add */:
-        case 65060 /* i64_atomic_rmw32_u_add */:
+        case 65060 /* i64_atomic_rmw32_add_u */:
         case 65061 /* i32_atomic_rmw_sub */:
-        case 65067 /* i64_atomic_rmw32_u_sub */:
+        case 65067 /* i64_atomic_rmw32_sub_u */:
         case 65068 /* i32_atomic_rmw_and */:
-        case 65074 /* i64_atomic_rmw32_u_and */:
+        case 65074 /* i64_atomic_rmw32_and_u */:
         case 65075 /* i32_atomic_rmw_or */:
-        case 65081 /* i64_atomic_rmw32_u_or */:
+        case 65081 /* i64_atomic_rmw32_or_u */:
         case 65082 /* i32_atomic_rmw_xor */:
-        case 65088 /* i64_atomic_rmw32_u_xor */:
+        case 65088 /* i64_atomic_rmw32_xor_u */:
         case 65089 /* i32_atomic_rmw_xchg */:
-        case 65095 /* i64_atomic_rmw32_u_xchg */:
+        case 65095 /* i64_atomic_rmw32_xchg_u */:
         case 65096 /* i32_atomic_rmw_cmpxchg */:
-        case 65102 /* i64_atomic_rmw32_u_cmpxchg */:
+        case 65102 /* i64_atomic_rmw32_cmpxchg_u */:
             defaultAlignFlags = 2;
             break;
         case 46 /* i32_load16_s */:
@@ -156,20 +167,20 @@ function memoryAddressToString(address, code) {
         case 65045 /* i64_atomic_load16_u */:
         case 65050 /* i32_atomic_store16 */:
         case 65052 /* i64_atomic_store16 */:
-        case 65057 /* i32_atomic_rmw16_u_add */:
-        case 65059 /* i64_atomic_rmw16_u_add */:
-        case 65064 /* i32_atomic_rmw16_u_sub */:
-        case 65066 /* i64_atomic_rmw16_u_sub */:
-        case 65071 /* i32_atomic_rmw16_u_and */:
-        case 65073 /* i64_atomic_rmw16_u_and */:
-        case 65078 /* i32_atomic_rmw16_u_or */:
-        case 65080 /* i64_atomic_rmw16_u_or */:
-        case 65085 /* i32_atomic_rmw16_u_xor */:
-        case 65087 /* i64_atomic_rmw16_u_xor */:
-        case 65092 /* i32_atomic_rmw16_u_xchg */:
-        case 65094 /* i64_atomic_rmw16_u_xchg */:
-        case 65099 /* i32_atomic_rmw16_u_cmpxchg */:
-        case 65101 /* i64_atomic_rmw16_u_cmpxchg */:
+        case 65057 /* i32_atomic_rmw16_add_u */:
+        case 65059 /* i64_atomic_rmw16_add_u */:
+        case 65064 /* i32_atomic_rmw16_sub_u */:
+        case 65066 /* i64_atomic_rmw16_sub_u */:
+        case 65071 /* i32_atomic_rmw16_and_u */:
+        case 65073 /* i64_atomic_rmw16_and_u */:
+        case 65078 /* i32_atomic_rmw16_or_u */:
+        case 65080 /* i64_atomic_rmw16_or_u */:
+        case 65085 /* i32_atomic_rmw16_xor_u */:
+        case 65087 /* i64_atomic_rmw16_xor_u */:
+        case 65092 /* i32_atomic_rmw16_xchg_u */:
+        case 65094 /* i64_atomic_rmw16_xchg_u */:
+        case 65099 /* i32_atomic_rmw16_cmpxchg_u */:
+        case 65101 /* i64_atomic_rmw16_cmpxchg_u */:
             defaultAlignFlags = 1;
             break;
         case 44 /* i32_load8_s */:
@@ -182,61 +193,49 @@ function memoryAddressToString(address, code) {
         case 65044 /* i64_atomic_load8_u */:
         case 65049 /* i32_atomic_store8 */:
         case 65051 /* i64_atomic_store8 */:
-        case 65056 /* i32_atomic_rmw8_u_add */:
-        case 65058 /* i64_atomic_rmw8_u_add */:
-        case 65063 /* i32_atomic_rmw8_u_sub */:
-        case 65065 /* i64_atomic_rmw8_u_sub */:
-        case 65070 /* i32_atomic_rmw8_u_and */:
-        case 65072 /* i64_atomic_rmw8_u_and */:
-        case 65077 /* i32_atomic_rmw8_u_or */:
-        case 65079 /* i64_atomic_rmw8_u_or */:
-        case 65084 /* i32_atomic_rmw8_u_xor */:
-        case 65086 /* i64_atomic_rmw8_u_xor */:
-        case 65091 /* i32_atomic_rmw8_u_xchg */:
-        case 65093 /* i64_atomic_rmw8_u_xchg */:
-        case 65098 /* i32_atomic_rmw8_u_cmpxchg */:
-        case 65100 /* i64_atomic_rmw8_u_cmpxchg */:
+        case 65056 /* i32_atomic_rmw8_add_u */:
+        case 65058 /* i64_atomic_rmw8_add_u */:
+        case 65063 /* i32_atomic_rmw8_sub_u */:
+        case 65065 /* i64_atomic_rmw8_sub_u */:
+        case 65070 /* i32_atomic_rmw8_and_u */:
+        case 65072 /* i64_atomic_rmw8_and_u */:
+        case 65077 /* i32_atomic_rmw8_or_u */:
+        case 65079 /* i64_atomic_rmw8_or_u */:
+        case 65084 /* i32_atomic_rmw8_xor_u */:
+        case 65086 /* i64_atomic_rmw8_xor_u */:
+        case 65091 /* i32_atomic_rmw8_xchg_u */:
+        case 65093 /* i64_atomic_rmw8_xchg_u */:
+        case 65098 /* i32_atomic_rmw8_cmpxchg_u */:
+        case 65100 /* i64_atomic_rmw8_cmpxchg_u */:
             defaultAlignFlags = 0;
             break;
     }
-    if (address.flags == defaultAlignFlags) // hide default flags
+    if (address.flags == defaultAlignFlags)
+        // hide default flags
         return !address.offset ? null : "offset=" + address.offset;
-    if (!address.offset) // hide default offset
+    if (!address.offset)
+        // hide default offset
         return "align=" + (1 << address.flags);
     return "offset=" + (address.offset | 0) + " align=" + (1 << address.flags);
 }
 function globalTypeToString(type) {
-    if (!type.mutability)
-        return typeToString(type.contentType);
-    return "(mut " + typeToString(type.contentType) + ")";
+    var typeStr = typeToString(type.contentType);
+    return type.mutability ? "(mut " + typeStr + ")" : typeStr;
 }
 function limitsToString(limits) {
-    return limits.initial + (limits.maximum !== undefined ? ' ' + limits.maximum : '');
+    return (limits.initial + (limits.maximum !== undefined ? " " + limits.maximum : ""));
 }
-var paddingCache = ['0', '00', '000'];
+var paddingCache = ["0", "00", "000"];
 function formatHex(n, width) {
     var s = (n >>> 0).toString(16).toUpperCase();
     if (width === undefined || s.length >= width)
         return s;
     var paddingIndex = width - s.length - 1;
     while (paddingIndex >= paddingCache.length)
-        paddingCache.push(paddingCache[paddingCache.length - 1] + '0');
+        paddingCache.push(paddingCache[paddingCache.length - 1] + "0");
     return paddingCache[paddingIndex] + s;
 }
-var IndentIncrement = '  ';
-var operatorCodeNamesCache = null;
-function getOperatorName(code) {
-    if (!operatorCodeNamesCache) {
-        operatorCodeNamesCache = Object.create(null);
-        Object.keys(WasmParser_js_1.OperatorCodeNames).forEach(function (key) {
-            var value = WasmParser_js_1.OperatorCodeNames[key];
-            if (typeof value !== 'string')
-                return;
-            operatorCodeNamesCache[key] = value.replace(/^([if](32|64))_/, "$1.").replace(/_([if](32|64))$/, "\/$1");
-        });
-    }
-    return operatorCodeNamesCache[code];
-}
+var IndentIncrement = "  ";
 function isValidName(name) {
     return !INVALID_NAME_SYMBOLS_REGEX.test(name);
 }
@@ -244,29 +243,55 @@ var DefaultNameResolver = /** @class */ (function () {
     function DefaultNameResolver() {
     }
     DefaultNameResolver.prototype.getTypeName = function (index, isRef) {
-        return '$type' + index;
+        return "$type" + index;
     };
     DefaultNameResolver.prototype.getTableName = function (index, isRef) {
-        return '$table' + index;
+        return "$table" + index;
     };
     DefaultNameResolver.prototype.getMemoryName = function (index, isRef) {
-        return '$memory' + index;
+        return "$memory" + index;
     };
     DefaultNameResolver.prototype.getGlobalName = function (index, isRef) {
-        return '$global' + index;
+        return "$global" + index;
     };
     DefaultNameResolver.prototype.getFunctionName = function (index, isImport, isRef) {
-        return (isImport ? '$import' : '$func') + index;
+        return (isImport ? "$import" : "$func") + index;
     };
     DefaultNameResolver.prototype.getVariableName = function (funcIndex, index, isRef) {
-        return '$var' + index;
+        return "$var" + index;
     };
     DefaultNameResolver.prototype.getLabel = function (index) {
-        return '$label' + index;
+        return "$label" + index;
     };
     return DefaultNameResolver;
 }());
 exports.DefaultNameResolver = DefaultNameResolver;
+var EMPTY_STRING_ARRAY = [];
+var DevToolsExportMetadata = /** @class */ (function () {
+    function DevToolsExportMetadata(functionExportNames, globalExportNames, memoryExportNames, tableExportNames) {
+        this._functionExportNames = functionExportNames;
+        this._globalExportNames = globalExportNames;
+        this._memoryExportNames = memoryExportNames;
+        this._tableExportNames = tableExportNames;
+    }
+    DevToolsExportMetadata.prototype.getFunctionExportNames = function (index) {
+        var _a;
+        return (_a = this._functionExportNames[index]) !== null && _a !== void 0 ? _a : EMPTY_STRING_ARRAY;
+    };
+    DevToolsExportMetadata.prototype.getGlobalExportNames = function (index) {
+        var _a;
+        return (_a = this._globalExportNames[index]) !== null && _a !== void 0 ? _a : EMPTY_STRING_ARRAY;
+    };
+    DevToolsExportMetadata.prototype.getMemoryExportNames = function (index) {
+        var _a;
+        return (_a = this._memoryExportNames[index]) !== null && _a !== void 0 ? _a : EMPTY_STRING_ARRAY;
+    };
+    DevToolsExportMetadata.prototype.getTableExportNames = function (index) {
+        var _a;
+        return (_a = this._tableExportNames[index]) !== null && _a !== void 0 ? _a : EMPTY_STRING_ARRAY;
+    };
+    return DevToolsExportMetadata;
+}());
 var DevToolsNameResolver = /** @class */ (function (_super) {
     __extends(DevToolsNameResolver, _super);
     function DevToolsNameResolver(functionNames, localNames, memoryNames, tableNames, globalNames) {
@@ -315,22 +340,22 @@ var NumericNameResolver = /** @class */ (function () {
     function NumericNameResolver() {
     }
     NumericNameResolver.prototype.getTypeName = function (index, isRef) {
-        return isRef ? '' + index : "(;" + index + ";)";
+        return isRef ? "" + index : "(;" + index + ";)";
     };
     NumericNameResolver.prototype.getTableName = function (index, isRef) {
-        return isRef ? '' + index : "(;" + index + ";)";
+        return isRef ? "" + index : "(;" + index + ";)";
     };
     NumericNameResolver.prototype.getMemoryName = function (index, isRef) {
-        return isRef ? '' + index : "(;" + index + ";)";
+        return isRef ? "" + index : "(;" + index + ";)";
     };
     NumericNameResolver.prototype.getGlobalName = function (index, isRef) {
-        return isRef ? '' + index : "(;" + index + ";)";
+        return isRef ? "" + index : "(;" + index + ";)";
     };
     NumericNameResolver.prototype.getFunctionName = function (index, isImport, isRef) {
-        return isRef ? '' + index : "(;" + index + ";)";
+        return isRef ? "" + index : "(;" + index + ";)";
     };
     NumericNameResolver.prototype.getVariableName = function (funcIndex, index, isRef) {
-        return isRef ? '' + index : "(;" + index + ";)";
+        return isRef ? "" + index : "(;" + index + ";)";
     };
     NumericNameResolver.prototype.getLabel = function (index) {
         return null;
@@ -346,9 +371,11 @@ var LabelMode;
 })(LabelMode = exports.LabelMode || (exports.LabelMode = {}));
 var WasmDisassembler = /** @class */ (function () {
     function WasmDisassembler() {
+        this._skipTypes = true;
+        this._exportMetadata = null;
         this._lines = [];
         this._offsets = [];
-        this._buffer = '';
+        this._buffer = "";
         this._indent = null;
         this._indentLevel = 0;
         this._addOffsets = false;
@@ -372,7 +399,6 @@ var WasmDisassembler = /** @class */ (function () {
         this._initExpression = [];
         this._backrefLabels = null;
         this._labelIndex = 0;
-        this._maxLines = 0;
     };
     Object.defineProperty(WasmDisassembler.prototype, "addOffsets", {
         get: function () {
@@ -380,10 +406,22 @@ var WasmDisassembler = /** @class */ (function () {
         },
         set: function (value) {
             if (this._currentPosition)
-                throw new Error('Cannot switch addOffsets during processing.');
+                throw new Error("Cannot switch addOffsets during processing.");
             this._addOffsets = value;
         },
-        enumerable: true,
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(WasmDisassembler.prototype, "skipTypes", {
+        get: function () {
+            return this._skipTypes;
+        },
+        set: function (skipTypes) {
+            if (this._currentPosition)
+                throw new Error("Cannot switch skipTypes during processing.");
+            this._skipTypes = skipTypes;
+        },
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(WasmDisassembler.prototype, "labelMode", {
@@ -392,10 +430,22 @@ var WasmDisassembler = /** @class */ (function () {
         },
         set: function (value) {
             if (this._currentPosition)
-                throw new Error('Cannot switch labelMode during processing.');
+                throw new Error("Cannot switch labelMode during processing.");
             this._labelMode = value;
         },
-        enumerable: true,
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(WasmDisassembler.prototype, "exportMetadata", {
+        get: function () {
+            return this._exportMetadata;
+        },
+        set: function (exportMetadata) {
+            if (this._currentPosition)
+                throw new Error("Cannot switch exportMetadata during processing.");
+            this._exportMetadata = exportMetadata;
+        },
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(WasmDisassembler.prototype, "nameResolver", {
@@ -404,17 +454,10 @@ var WasmDisassembler = /** @class */ (function () {
         },
         set: function (resolver) {
             if (this._currentPosition)
-                throw new Error('Cannot switch nameResolver during processing.');
+                throw new Error("Cannot switch nameResolver during processing.");
             this._nameResolver = resolver;
         },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(WasmDisassembler.prototype, "maxLines", {
-        set: function (value) {
-            this._maxLines = value;
-        },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     WasmDisassembler.prototype.appendBuffer = function (s) {
@@ -424,7 +467,7 @@ var WasmDisassembler = /** @class */ (function () {
         if (this.addOffsets)
             this._offsets.push(this._currentPosition);
         this._lines.push(this._buffer);
-        this._buffer = '';
+        this._buffer = "";
     };
     WasmDisassembler.prototype.logStartOfFunctionBodyOffset = function () {
         if (this.addOffsets) {
@@ -443,22 +486,22 @@ var WasmDisassembler = /** @class */ (function () {
     WasmDisassembler.prototype.printFuncType = function (typeIndex) {
         var type = this._types[typeIndex];
         if (type.form !== -32 /* func */)
-            throw new Error('NYI other function form');
+            throw new Error("NYI other function form");
         if (type.params.length > 0) {
-            this.appendBuffer(' (param');
+            this.appendBuffer(" (param");
             for (var i = 0; i < type.params.length; i++) {
-                this.appendBuffer(' ');
+                this.appendBuffer(" ");
                 this.appendBuffer(typeToString(type.params[i]));
             }
-            this.appendBuffer(')');
+            this.appendBuffer(")");
         }
         if (type.returns.length > 0) {
-            this.appendBuffer(' (result');
+            this.appendBuffer(" (result");
             for (var i = 0; i < type.returns.length; i++) {
-                this.appendBuffer(' ');
+                this.appendBuffer(" ");
                 this.appendBuffer(typeToString(type.returns[i]));
             }
-            this.appendBuffer(')');
+            this.appendBuffer(")");
         }
     };
     WasmDisassembler.prototype.printBlockType = function (type) {
@@ -468,46 +511,51 @@ var WasmDisassembler = /** @class */ (function () {
         if (WasmParser_js_1.isTypeIndex(type)) {
             return this.printFuncType(type);
         }
-        this.appendBuffer(' (result ');
+        this.appendBuffer(" (result ");
         this.appendBuffer(typeToString(type));
-        this.appendBuffer(')');
+        this.appendBuffer(")");
     };
     WasmDisassembler.prototype.printString = function (b) {
-        this.appendBuffer('\"');
+        this.appendBuffer('"');
         for (var i = 0; i < b.length; i++) {
             var byte = b[i];
-            if (byte < 0x20 || byte >= 0x7F ||
-                byte == /* " */ 0x22 || byte == /* \ */ 0x5c) {
-                this.appendBuffer('\\' + (byte >> 4).toString(16) + (byte & 15).toString(16));
+            if (byte < 0x20 ||
+                byte >= 0x7f ||
+                byte == /* " */ 0x22 ||
+                byte == /* \ */ 0x5c) {
+                this.appendBuffer("\\" + (byte >> 4).toString(16) + (byte & 15).toString(16));
             }
             else {
                 this.appendBuffer(String.fromCharCode(byte));
             }
         }
-        this.appendBuffer('\"');
+        this.appendBuffer('"');
     };
     WasmDisassembler.prototype.useLabel = function (depth) {
         if (!this._backrefLabels) {
-            return '' + depth;
+            return "" + depth;
         }
         var i = this._backrefLabels.length - depth - 1;
         if (i < 0) {
-            return '' + depth;
+            return "" + depth;
         }
         var backrefLabel = this._backrefLabels[i];
         if (!backrefLabel.useLabel) {
             backrefLabel.useLabel = true;
             backrefLabel.label = this._nameResolver.getLabel(this._labelIndex);
             var line = this._lines[backrefLabel.line];
-            this._lines[backrefLabel.line] = line.substring(0, backrefLabel.position) +
-                ' ' + backrefLabel.label + line.substring(backrefLabel.position);
+            this._lines[backrefLabel.line] =
+                line.substring(0, backrefLabel.position) +
+                    " " +
+                    backrefLabel.label +
+                    line.substring(backrefLabel.position);
             this._labelIndex++;
         }
-        return backrefLabel.label || '' + depth;
+        return backrefLabel.label || "" + depth;
     };
     WasmDisassembler.prototype.printOperator = function (operator) {
         var code = operator.code;
-        this.appendBuffer(getOperatorName(code));
+        this.appendBuffer(WasmParser_js_1.OperatorCodeNames[code]);
         switch (code) {
             case 2 /* block */:
             case 3 /* loop */:
@@ -523,7 +571,7 @@ var WasmDisassembler = /** @class */ (function () {
                         backrefLabel_1.useLabel = true;
                         backrefLabel_1.label = this._nameResolver.getLabel(this._labelIndex++);
                         if (backrefLabel_1.label) {
-                            this.appendBuffer(' ');
+                            this.appendBuffer(" ");
                             this.appendBuffer(backrefLabel_1.label);
                         }
                     }
@@ -537,18 +585,18 @@ var WasmDisassembler = /** @class */ (function () {
                 }
                 var backrefLabel = this._backrefLabels.pop();
                 if (backrefLabel.label) {
-                    this.appendBuffer(' ');
+                    this.appendBuffer(" ");
                     this.appendBuffer(backrefLabel.label);
                 }
                 break;
             case 12 /* br */:
             case 13 /* br_if */:
-                this.appendBuffer(' ');
+                this.appendBuffer(" ");
                 this.appendBuffer(this.useLabel(operator.brDepth));
                 break;
             case 14 /* br_table */:
                 for (var i = 0; i < operator.brTable.length; i++) {
-                    this.appendBuffer(' ');
+                    this.appendBuffer(" ");
                     this.appendBuffer(this.useLabel(operator.brTable[i]));
                 }
                 break;
@@ -559,8 +607,7 @@ var WasmDisassembler = /** @class */ (function () {
                 break;
             case 17 /* call_indirect */:
             case 19 /* return_call_indirect */:
-                var typeName = this._nameResolver.getTypeName(operator.typeIndex, true);
-                this.appendBuffer(" (type " + typeName + ")");
+                this.printFuncType(operator.typeIndex);
                 break;
             case 32 /* local_get */:
             case 33 /* local_set */:
@@ -615,58 +662,58 @@ var WasmDisassembler = /** @class */ (function () {
             case 65053 /* i64_atomic_store32 */:
             case 65054 /* i32_atomic_rmw_add */:
             case 65055 /* i64_atomic_rmw_add */:
-            case 65056 /* i32_atomic_rmw8_u_add */:
-            case 65057 /* i32_atomic_rmw16_u_add */:
-            case 65058 /* i64_atomic_rmw8_u_add */:
-            case 65059 /* i64_atomic_rmw16_u_add */:
-            case 65060 /* i64_atomic_rmw32_u_add */:
+            case 65056 /* i32_atomic_rmw8_add_u */:
+            case 65057 /* i32_atomic_rmw16_add_u */:
+            case 65058 /* i64_atomic_rmw8_add_u */:
+            case 65059 /* i64_atomic_rmw16_add_u */:
+            case 65060 /* i64_atomic_rmw32_add_u */:
             case 65061 /* i32_atomic_rmw_sub */:
             case 65062 /* i64_atomic_rmw_sub */:
-            case 65063 /* i32_atomic_rmw8_u_sub */:
-            case 65064 /* i32_atomic_rmw16_u_sub */:
-            case 65065 /* i64_atomic_rmw8_u_sub */:
-            case 65066 /* i64_atomic_rmw16_u_sub */:
-            case 65067 /* i64_atomic_rmw32_u_sub */:
+            case 65063 /* i32_atomic_rmw8_sub_u */:
+            case 65064 /* i32_atomic_rmw16_sub_u */:
+            case 65065 /* i64_atomic_rmw8_sub_u */:
+            case 65066 /* i64_atomic_rmw16_sub_u */:
+            case 65067 /* i64_atomic_rmw32_sub_u */:
             case 65068 /* i32_atomic_rmw_and */:
             case 65069 /* i64_atomic_rmw_and */:
-            case 65070 /* i32_atomic_rmw8_u_and */:
-            case 65071 /* i32_atomic_rmw16_u_and */:
-            case 65072 /* i64_atomic_rmw8_u_and */:
-            case 65073 /* i64_atomic_rmw16_u_and */:
-            case 65074 /* i64_atomic_rmw32_u_and */:
+            case 65070 /* i32_atomic_rmw8_and_u */:
+            case 65071 /* i32_atomic_rmw16_and_u */:
+            case 65072 /* i64_atomic_rmw8_and_u */:
+            case 65073 /* i64_atomic_rmw16_and_u */:
+            case 65074 /* i64_atomic_rmw32_and_u */:
             case 65075 /* i32_atomic_rmw_or */:
             case 65076 /* i64_atomic_rmw_or */:
-            case 65077 /* i32_atomic_rmw8_u_or */:
-            case 65078 /* i32_atomic_rmw16_u_or */:
-            case 65079 /* i64_atomic_rmw8_u_or */:
-            case 65080 /* i64_atomic_rmw16_u_or */:
-            case 65081 /* i64_atomic_rmw32_u_or */:
+            case 65077 /* i32_atomic_rmw8_or_u */:
+            case 65078 /* i32_atomic_rmw16_or_u */:
+            case 65079 /* i64_atomic_rmw8_or_u */:
+            case 65080 /* i64_atomic_rmw16_or_u */:
+            case 65081 /* i64_atomic_rmw32_or_u */:
             case 65082 /* i32_atomic_rmw_xor */:
             case 65083 /* i64_atomic_rmw_xor */:
-            case 65084 /* i32_atomic_rmw8_u_xor */:
-            case 65085 /* i32_atomic_rmw16_u_xor */:
-            case 65086 /* i64_atomic_rmw8_u_xor */:
-            case 65087 /* i64_atomic_rmw16_u_xor */:
-            case 65088 /* i64_atomic_rmw32_u_xor */:
+            case 65084 /* i32_atomic_rmw8_xor_u */:
+            case 65085 /* i32_atomic_rmw16_xor_u */:
+            case 65086 /* i64_atomic_rmw8_xor_u */:
+            case 65087 /* i64_atomic_rmw16_xor_u */:
+            case 65088 /* i64_atomic_rmw32_xor_u */:
             case 65089 /* i32_atomic_rmw_xchg */:
             case 65090 /* i64_atomic_rmw_xchg */:
-            case 65091 /* i32_atomic_rmw8_u_xchg */:
-            case 65092 /* i32_atomic_rmw16_u_xchg */:
-            case 65093 /* i64_atomic_rmw8_u_xchg */:
-            case 65094 /* i64_atomic_rmw16_u_xchg */:
-            case 65095 /* i64_atomic_rmw32_u_xchg */:
+            case 65091 /* i32_atomic_rmw8_xchg_u */:
+            case 65092 /* i32_atomic_rmw16_xchg_u */:
+            case 65093 /* i64_atomic_rmw8_xchg_u */:
+            case 65094 /* i64_atomic_rmw16_xchg_u */:
+            case 65095 /* i64_atomic_rmw32_xchg_u */:
             case 65096 /* i32_atomic_rmw_cmpxchg */:
             case 65097 /* i64_atomic_rmw_cmpxchg */:
-            case 65098 /* i32_atomic_rmw8_u_cmpxchg */:
-            case 65099 /* i32_atomic_rmw16_u_cmpxchg */:
-            case 65100 /* i64_atomic_rmw8_u_cmpxchg */:
-            case 65101 /* i64_atomic_rmw16_u_cmpxchg */:
-            case 65102 /* i64_atomic_rmw32_u_cmpxchg */:
+            case 65098 /* i32_atomic_rmw8_cmpxchg_u */:
+            case 65099 /* i32_atomic_rmw16_cmpxchg_u */:
+            case 65100 /* i64_atomic_rmw8_cmpxchg_u */:
+            case 65101 /* i64_atomic_rmw16_cmpxchg_u */:
+            case 65102 /* i64_atomic_rmw32_cmpxchg_u */:
             case 64768 /* v128_load */:
             case 64779 /* v128_store */:
                 var memoryAddress = memoryAddressToString(operator.memoryAddress, operator.code);
                 if (memoryAddress !== null) {
-                    this.appendBuffer(' ');
+                    this.appendBuffer(" ");
                     this.appendBuffer(memoryAddress);
                 }
                 break;
@@ -714,30 +761,35 @@ var WasmDisassembler = /** @class */ (function () {
                 break;
             case 38 /* table_set */:
             case 37 /* table_get */:
-            case 64529 /* table_fill */:
-                {
-                    var tableName = this._nameResolver.getTableName(operator.tableIndex, true);
-                    this.appendBuffer(" " + tableName);
+            case 64529 /* table_fill */: {
+                var tableName = this._nameResolver.getTableName(operator.tableIndex, true);
+                this.appendBuffer(" " + tableName);
+                break;
+            }
+            case 64526 /* table_copy */: {
+                // Table index might be omitted and defaults to 0.
+                if (operator.tableIndex === 0 && operator.destinationIndex === 0)
+                    break;
+                var tableName = this._nameResolver.getTableName(operator.tableIndex, true);
+                var destinationName = this._nameResolver.getTableName(operator.destinationIndex, true);
+                this.appendBuffer(" " + destinationName + " " + tableName);
+                break;
+            }
+            case 64524 /* table_init */: {
+                // Table index might be omitted and defaults to 0.
+                if (operator.tableIndex === 0) {
+                    this.appendBuffer(" " + operator.segmentIndex);
                     break;
                 }
-            case 64526 /* table_copy */:
-                {
-                    var tableName = this._nameResolver.getTableName(operator.tableIndex, true);
-                    var destinationName = this._nameResolver.getTableName(operator.destinationIndex, true);
-                    this.appendBuffer(" " + destinationName + " " + tableName);
-                    break;
-                }
-            case 64524 /* table_init */:
-                {
-                    var tableName = this._nameResolver.getTableName(operator.tableIndex, true);
-                    this.appendBuffer(" " + operator.segmentIndex + " " + tableName);
-                    break;
-                }
+                var tableName = this._nameResolver.getTableName(operator.tableIndex, true);
+                this.appendBuffer(" " + operator.segmentIndex + " " + tableName);
+                break;
+            }
         }
     };
     WasmDisassembler.prototype.printImportSource = function (info) {
         this.printString(info.module);
-        this.appendBuffer(' ');
+        this.appendBuffer(" ");
         this.printString(info.field);
     };
     WasmDisassembler.prototype.increaseIndent = function () {
@@ -757,11 +809,11 @@ var WasmDisassembler = /** @class */ (function () {
         if (this._addOffsets) {
             lines = lines.map(function (line, index) {
                 var position = formatHex(_this._offsets[index], 4);
-                return line + ' ;; @' + position;
+                return line + " ;; @" + position;
             });
         }
-        lines.push(''); // we need '\n' after last line
-        var result = lines.join('\n');
+        lines.push(""); // we need '\n' after last line
+        var result = lines.join("\n");
         this._lines.length = 0;
         this._offsets.length = 0;
         this._functionBodyOffsets.length = 0;
@@ -790,7 +842,9 @@ var WasmDisassembler = /** @class */ (function () {
                 lines: this._lines,
                 offsets: this._addOffsets ? this._offsets : undefined,
                 done: this._done,
-                functionBodyOffsets: this._addOffsets ? this._functionBodyOffsets : undefined,
+                functionBodyOffsets: this._addOffsets
+                    ? this._functionBodyOffsets
+                    : undefined,
             };
             this._lines = [];
             if (this._addOffsets) {
@@ -801,9 +855,13 @@ var WasmDisassembler = /** @class */ (function () {
         }
         var result = {
             lines: this._lines.splice(0, linesReady),
-            offsets: this._addOffsets ? this._offsets.splice(0, linesReady) : undefined,
+            offsets: this._addOffsets
+                ? this._offsets.splice(0, linesReady)
+                : undefined,
             done: false,
-            functionBodyOffsets: this._addOffsets ? this._functionBodyOffsets : undefined,
+            functionBodyOffsets: this._addOffsets
+                ? this._functionBodyOffsets
+                : undefined,
         };
         if (this._backrefLabels) {
             this._backrefLabels.forEach(function (backrefLabel) {
@@ -816,19 +874,14 @@ var WasmDisassembler = /** @class */ (function () {
         var _this = this;
         if (offsetInModule === void 0) { offsetInModule = 0; }
         if (this._done)
-            throw new Error('Invalid state: disassembly process was already finished.');
+            throw new Error("Invalid state: disassembly process was already finished.");
         var _loop_1 = function () {
-            if (this_1._maxLines && this_1._lines.length >= this_1._maxLines) {
-                this_1.appendBuffer(';; -- text is truncated due to size --');
-                this_1.newLine();
-                return { value: true };
-            }
             this_1._currentPosition = reader.position + offsetInModule;
             if (!reader.read())
                 return { value: false };
             switch (reader.state) {
                 case 2 /* END_WASM */:
-                    this_1.appendBuffer(')');
+                    this_1.appendBuffer(")");
                     this_1.newLine();
                     this_1._reset();
                     if (!reader.hasMoreBytes()) {
@@ -839,7 +892,7 @@ var WasmDisassembler = /** @class */ (function () {
                 case -1 /* ERROR */:
                     throw reader.error;
                 case 1 /* BEGIN_WASM */:
-                    this_1.appendBuffer('(module');
+                    this_1.appendBuffer("(module");
                     this_1.newLine();
                     break;
                 case 4 /* END_SECTION */:
@@ -866,97 +919,148 @@ var WasmDisassembler = /** @class */ (function () {
                     break;
                 case 15 /* MEMORY_SECTION_ENTRY */:
                     memoryInfo = reader.result;
-                    memoryName = this_1._nameResolver.getMemoryName(this_1._memoryCount++, false);
-                    this_1.appendBuffer("  (memory " + memoryName + " ");
+                    memoryIndex = this_1._memoryCount++;
+                    memoryName = this_1._nameResolver.getMemoryName(memoryIndex, false);
+                    this_1.appendBuffer("  (memory " + memoryName);
+                    if (this_1._exportMetadata !== null) {
+                        for (var _i = 0, _a = this_1._exportMetadata.getMemoryExportNames(memoryIndex); _i < _a.length; _i++) {
+                            var exportName = _a[_i];
+                            this_1.appendBuffer(" (export \"" + exportName + "\")");
+                        }
+                    }
+                    this_1.appendBuffer(" " + limitsToString(memoryInfo.limits));
                     if (memoryInfo.shared) {
-                        this_1.appendBuffer("(shared " + limitsToString(memoryInfo.limits) + ")");
+                        this_1.appendBuffer(" shared");
                     }
-                    else {
-                        this_1.appendBuffer(limitsToString(memoryInfo.limits));
-                    }
-                    this_1.appendBuffer(')');
+                    this_1.appendBuffer(")");
                     this_1.newLine();
                     break;
                 case 14 /* TABLE_SECTION_ENTRY */:
                     tableInfo = reader.result;
-                    tableName = this_1._nameResolver.getTableName(this_1._tableCount++, false);
-                    this_1.appendBuffer("  (table " + tableName + " " + limitsToString(tableInfo.limits) + " " + typeToString(tableInfo.elementType) + ")");
+                    tableIndex = this_1._tableCount++;
+                    tableName = this_1._nameResolver.getTableName(tableIndex, false);
+                    this_1.appendBuffer("  (table " + tableName);
+                    if (this_1._exportMetadata !== null) {
+                        for (var _b = 0, _c = this_1._exportMetadata.getTableExportNames(tableIndex); _b < _c.length; _b++) {
+                            var exportName = _c[_b];
+                            this_1.appendBuffer(" (export \"" + exportName + "\")");
+                        }
+                    }
+                    this_1.appendBuffer(" " + limitsToString(tableInfo.limits) + " " + typeToString(tableInfo.elementType) + ")");
                     this_1.newLine();
                     break;
                 case 17 /* EXPORT_SECTION_ENTRY */:
-                    exportInfo = reader.result;
-                    this_1.appendBuffer('  (export ');
-                    this_1.printString(exportInfo.field);
-                    this_1.appendBuffer(' ');
-                    switch (exportInfo.kind) {
-                        case 0 /* Function */:
-                            funcName = this_1._nameResolver.getFunctionName(exportInfo.index, exportInfo.index < this_1._importCount, true);
-                            this_1.appendBuffer("(func " + funcName + ")");
-                            break;
-                        case 1 /* Table */:
-                            tableName = this_1._nameResolver.getTableName(exportInfo.index, true);
-                            this_1.appendBuffer("(table " + tableName + ")");
-                            break;
-                        case 2 /* Memory */:
-                            memoryName = this_1._nameResolver.getMemoryName(exportInfo.index, true);
-                            this_1.appendBuffer("(memory " + memoryName + ")");
-                            break;
-                        case 3 /* Global */:
-                            globalName = this_1._nameResolver.getGlobalName(exportInfo.index, true);
-                            this_1.appendBuffer("(global " + globalName + ")");
-                            break;
-                        default:
-                            throw new Error("Unsupported export " + exportInfo.kind);
+                    // Skip printing exports here when we have export metadata
+                    // which we can use to print export information inline.
+                    if (this_1._exportMetadata === null) {
+                        exportInfo = reader.result;
+                        this_1.appendBuffer("  (export ");
+                        this_1.printString(exportInfo.field);
+                        this_1.appendBuffer(" ");
+                        switch (exportInfo.kind) {
+                            case 0 /* Function */:
+                                funcName = this_1._nameResolver.getFunctionName(exportInfo.index, exportInfo.index < this_1._importCount, true);
+                                this_1.appendBuffer("(func " + funcName + ")");
+                                break;
+                            case 1 /* Table */:
+                                tableName = this_1._nameResolver.getTableName(exportInfo.index, true);
+                                this_1.appendBuffer("(table " + tableName + ")");
+                                break;
+                            case 2 /* Memory */:
+                                memoryName = this_1._nameResolver.getMemoryName(exportInfo.index, true);
+                                this_1.appendBuffer("(memory " + memoryName + ")");
+                                break;
+                            case 3 /* Global */:
+                                globalName = this_1._nameResolver.getGlobalName(exportInfo.index, true);
+                                this_1.appendBuffer("(global " + globalName + ")");
+                                break;
+                            default:
+                                throw new Error("Unsupported export " + exportInfo.kind);
+                        }
+                        this_1.appendBuffer(")");
+                        this_1.newLine();
                     }
-                    this_1.appendBuffer(')');
-                    this_1.newLine();
                     break;
                 case 12 /* IMPORT_SECTION_ENTRY */:
                     importInfo = reader.result;
-                    this_1.appendBuffer('  (import ');
-                    this_1.printImportSource(importInfo);
                     switch (importInfo.kind) {
                         case 0 /* Function */:
                             this_1._importCount++;
-                            funcName = this_1._nameResolver.getFunctionName(this_1._funcIndex++, true, false);
-                            this_1.appendBuffer(" (func " + funcName);
+                            funcIndex = this_1._funcIndex++;
+                            funcName = this_1._nameResolver.getFunctionName(funcIndex, true, false);
+                            this_1.appendBuffer("  (func " + funcName);
+                            if (this_1._exportMetadata !== null) {
+                                for (var _d = 0, _e = this_1._exportMetadata.getFunctionExportNames(funcIndex); _d < _e.length; _d++) {
+                                    var exportName = _e[_d];
+                                    this_1.appendBuffer(" (export \"" + exportName + "\")");
+                                }
+                            }
+                            this_1.appendBuffer(" (import ");
+                            this_1.printImportSource(importInfo);
+                            this_1.appendBuffer(")");
                             this_1.printFuncType(importInfo.funcTypeIndex);
-                            this_1.appendBuffer(')');
-                            break;
-                        case 1 /* Table */:
-                            tableImportInfo = importInfo.type;
-                            tableName = this_1._nameResolver.getTableName(this_1._tableCount++, false);
-                            this_1.appendBuffer(" (table " + tableName + " " + limitsToString(tableImportInfo.limits) + " " + typeToString(tableImportInfo.elementType) + ")");
-                            break;
-                        case 2 /* Memory */:
-                            memoryImportInfo = importInfo.type;
-                            memoryName = this_1._nameResolver.getMemoryName(this_1._memoryCount++, false);
-                            this_1.appendBuffer(" (memory " + memoryName + " ");
-                            if (memoryImportInfo.shared) {
-                                this_1.appendBuffer("(shared " + limitsToString(memoryImportInfo.limits) + ")");
-                            }
-                            else {
-                                this_1.appendBuffer(limitsToString(memoryImportInfo.limits));
-                            }
-                            this_1.appendBuffer(')');
+                            this_1.appendBuffer(")");
                             break;
                         case 3 /* Global */:
                             globalImportInfo = importInfo.type;
-                            globalName = this_1._nameResolver.getGlobalName(this_1._globalCount++, false);
-                            this_1.appendBuffer(" (global " + globalName + " " + globalTypeToString(globalImportInfo) + ")");
+                            globalIndex = this_1._globalCount++;
+                            globalName = this_1._nameResolver.getGlobalName(globalIndex, false);
+                            this_1.appendBuffer("  (global " + globalName);
+                            if (this_1._exportMetadata !== null) {
+                                for (var _f = 0, _g = this_1._exportMetadata.getGlobalExportNames(globalIndex); _f < _g.length; _f++) {
+                                    var exportName = _g[_f];
+                                    this_1.appendBuffer(" (export \"" + exportName + "\")");
+                                }
+                            }
+                            this_1.appendBuffer(" (import ");
+                            this_1.printImportSource(importInfo);
+                            this_1.appendBuffer(") " + globalTypeToString(globalImportInfo) + ")");
+                            break;
+                        case 2 /* Memory */:
+                            memoryImportInfo = importInfo.type;
+                            memoryIndex = this_1._memoryCount++;
+                            memoryName = this_1._nameResolver.getMemoryName(memoryIndex, false);
+                            this_1.appendBuffer("  (memory " + memoryName);
+                            if (this_1._exportMetadata !== null) {
+                                for (var _h = 0, _j = this_1._exportMetadata.getMemoryExportNames(memoryIndex); _h < _j.length; _h++) {
+                                    var exportName = _j[_h];
+                                    this_1.appendBuffer(" (export \"" + exportName + "\")");
+                                }
+                            }
+                            this_1.appendBuffer(" (import ");
+                            this_1.printImportSource(importInfo);
+                            this_1.appendBuffer(") " + limitsToString(memoryImportInfo.limits));
+                            if (memoryImportInfo.shared) {
+                                this_1.appendBuffer(" shared");
+                            }
+                            this_1.appendBuffer(")");
+                            break;
+                        case 1 /* Table */:
+                            tableImportInfo = importInfo.type;
+                            tableIndex = this_1._tableCount++;
+                            tableName = this_1._nameResolver.getTableName(tableIndex, false);
+                            this_1.appendBuffer("  (table " + tableName);
+                            if (this_1._exportMetadata !== null) {
+                                for (var _k = 0, _l = this_1._exportMetadata.getTableExportNames(tableIndex); _k < _l.length; _k++) {
+                                    var exportName = _l[_k];
+                                    this_1.appendBuffer(" (export \"" + exportName + "\")");
+                                }
+                            }
+                            this_1.appendBuffer(" (import ");
+                            this_1.printImportSource(importInfo);
+                            this_1.appendBuffer(") " + limitsToString(tableImportInfo.limits) + " " + typeToString(tableImportInfo.elementType) + ")");
                             break;
                         default:
                             throw new Error("NYI other import types: " + importInfo.kind);
                     }
-                    this_1.appendBuffer(')');
                     this_1.newLine();
                     break;
                 case 33 /* BEGIN_ELEMENT_SECTION_ENTRY */:
                     elementSegmentInfo = reader.result;
-                    this_1.appendBuffer('  (elem ');
+                    this_1.appendBuffer("  (elem ");
                     break;
                 case 35 /* END_ELEMENT_SECTION_ENTRY */:
-                    this_1.appendBuffer(')');
+                    this_1.appendBuffer(")");
                     this_1.newLine();
                     break;
                 case 34 /* ELEMENT_SECTION_ENTRY_BODY */:
@@ -968,7 +1072,7 @@ var WasmDisassembler = /** @class */ (function () {
                     elementSegmentBody_1.elements.forEach(function (funcIndex) {
                         if (elementSegmentBody_1.asElements) {
                             if (funcIndex == WasmParser_js_1.NULL_FUNCTION_INDEX) {
-                                _this.appendBuffer(' (ref.null)');
+                                _this.appendBuffer(" (ref.null)");
                             }
                             else {
                                 var funcName_1 = _this._nameResolver.getFunctionName(funcIndex, funcIndex < _this._importCount, true);
@@ -983,22 +1087,32 @@ var WasmDisassembler = /** @class */ (function () {
                     break;
                 case 39 /* BEGIN_GLOBAL_SECTION_ENTRY */:
                     globalInfo = reader.result;
-                    globalName = this_1._nameResolver.getGlobalName(this_1._globalCount++, false);
-                    this_1.appendBuffer("  (global " + globalName + " " + globalTypeToString(globalInfo.type) + " ");
+                    globalIndex = this_1._globalCount++;
+                    globalName = this_1._nameResolver.getGlobalName(globalIndex, false);
+                    this_1.appendBuffer("  (global " + globalName);
+                    if (this_1._exportMetadata !== null) {
+                        for (var _m = 0, _o = this_1._exportMetadata.getGlobalExportNames(globalIndex); _m < _o.length; _m++) {
+                            var exportName = _o[_m];
+                            this_1.appendBuffer(" (export \"" + exportName + "\")");
+                        }
+                    }
+                    this_1.appendBuffer(" " + globalTypeToString(globalInfo.type) + " ");
                     break;
                 case 40 /* END_GLOBAL_SECTION_ENTRY */:
-                    this_1.appendBuffer(')');
+                    this_1.appendBuffer(")");
                     this_1.newLine();
                     break;
                 case 11 /* TYPE_SECTION_ENTRY */:
                     funcType = reader.result;
                     typeIndex = this_1._types.length;
                     this_1._types.push(funcType);
-                    typeName = this_1._nameResolver.getTypeName(typeIndex, false);
-                    this_1.appendBuffer("  (type " + typeName + " (func");
-                    this_1.printFuncType(typeIndex);
-                    this_1.appendBuffer('))');
-                    this_1.newLine();
+                    if (!this_1._skipTypes) {
+                        typeName = this_1._nameResolver.getTypeName(typeIndex, false);
+                        this_1.appendBuffer("  (type " + typeName + " (func");
+                        this_1.printFuncType(typeIndex);
+                        this_1.appendBuffer("))");
+                        this_1.newLine();
+                    }
                     break;
                 case 22 /* START_SECTION_ENTRY */:
                     startEntry = reader.result;
@@ -1007,17 +1121,15 @@ var WasmDisassembler = /** @class */ (function () {
                     this_1.newLine();
                     break;
                 case 36 /* BEGIN_DATA_SECTION_ENTRY */:
-                    this_1.appendBuffer('  (data ');
+                    this_1.appendBuffer("  (data ");
                     break;
                 case 37 /* DATA_SECTION_ENTRY_BODY */:
                     body = reader.result;
-                    this_1.newLine();
-                    this_1.appendBuffer('    ');
+                    this_1.appendBuffer(" ");
                     this_1.printString(body.data);
-                    this_1.newLine();
                     break;
                 case 38 /* END_DATA_SECTION_ENTRY */:
-                    this_1.appendBuffer('  )');
+                    this_1.appendBuffer(")");
                     this_1.newLine();
                     break;
                 case 25 /* BEGIN_INIT_EXPRESSION_BODY */:
@@ -1026,18 +1138,18 @@ var WasmDisassembler = /** @class */ (function () {
                     this_1._initExpression.push(reader.result);
                     break;
                 case 27 /* END_INIT_EXPRESSION_BODY */:
-                    this_1.appendBuffer('(');
+                    this_1.appendBuffer("(");
                     // TODO fix printing when more that one operator is used.
                     this_1._initExpression.forEach(function (op, index) {
                         if (op.code === 11 /* end */) {
                             return; // do not print end
                         }
                         if (index > 0) {
-                            _this.appendBuffer(' ');
+                            _this.appendBuffer(" ");
                         }
                         _this.printOperator(op);
                     });
-                    this_1.appendBuffer(')');
+                    this_1.appendBuffer(")");
                     this_1._initExpression.length = 0;
                     break;
                 case 13 /* FUNCTION_SECTION_ENTRY */:
@@ -1046,8 +1158,14 @@ var WasmDisassembler = /** @class */ (function () {
                 case 28 /* BEGIN_FUNCTION_BODY */:
                     func = reader.result;
                     type = this_1._types[this_1._funcTypes[this_1._funcIndex - this_1._importCount]];
-                    this_1.appendBuffer('  (func ');
+                    this_1.appendBuffer("  (func ");
                     this_1.appendBuffer(this_1._nameResolver.getFunctionName(this_1._funcIndex, false, false));
+                    if (this_1._exportMetadata !== null) {
+                        for (var _p = 0, _q = this_1._exportMetadata.getFunctionExportNames(this_1._funcIndex); _p < _q.length; _p++) {
+                            var exportName = _q[_p];
+                            this_1.appendBuffer(" (export \"" + exportName + "\")");
+                        }
+                    }
                     for (var i = 0; i < type.params.length; i++) {
                         paramName = this_1._nameResolver.getVariableName(this_1._funcIndex, i, false);
                         this_1.appendBuffer(" (param " + paramName + " " + typeToString(type.params[i]) + ")");
@@ -1058,9 +1176,9 @@ var WasmDisassembler = /** @class */ (function () {
                     this_1.newLine();
                     localIndex = type.params.length;
                     if (func.locals.length > 0) {
-                        this_1.appendBuffer('   ');
-                        for (var _i = 0, _a = func.locals; _i < _a.length; _i++) {
-                            var l = _a[_i];
+                        this_1.appendBuffer("   ");
+                        for (var _r = 0, _s = func.locals; _r < _s.length; _r++) {
+                            var l = _s[_r];
                             for (var i = 0; i < l.count; i++) {
                                 paramName = this_1._nameResolver.getVariableName(this_1._funcIndex, localIndex++, false);
                                 this_1.appendBuffer(" (local " + paramName + " " + typeToString(l.type) + ")");
@@ -1068,7 +1186,7 @@ var WasmDisassembler = /** @class */ (function () {
                         }
                         this_1.newLine();
                     }
-                    this_1._indent = '    ';
+                    this_1._indent = "    ";
                     this_1._indentLevel = 0;
                     this_1._labelIndex = 0;
                     this_1._backrefLabels = this_1._labelMode === LabelMode.Depth ? null : [];
@@ -1114,7 +1232,7 @@ var WasmDisassembler = /** @class */ (function () {
                     throw new Error("Expectected state: " + reader.state);
             }
         };
-        var this_1 = this, sectionInfo, memoryInfo, memoryName, tableInfo, tableName, exportInfo, funcName, tableName, memoryName, globalName, importInfo, funcName, tableImportInfo, tableName, memoryImportInfo, memoryName, globalImportInfo, globalName, elementSegmentInfo, globalInfo, globalName, funcType, typeIndex, typeName, startEntry, funcName, body, func, type, paramName, localIndex, paramName, operator;
+        var this_1 = this, sectionInfo, memoryInfo, memoryIndex, memoryName, tableInfo, tableIndex, tableName, exportInfo, funcName, tableName, memoryName, globalName, importInfo, funcIndex, funcName, globalImportInfo, globalIndex, globalName, memoryImportInfo, memoryIndex, memoryName, tableImportInfo, tableIndex, tableName, elementSegmentInfo, globalInfo, globalIndex, globalName, funcType, typeIndex, typeName, startEntry, funcName, body, func, type, paramName, localIndex, paramName, operator;
         while (true) {
             var state_1 = _loop_1();
             if (typeof state_1 === "object")
@@ -1159,7 +1277,7 @@ var NameSectionReader = /** @class */ (function () {
     NameSectionReader.prototype.read = function (reader) {
         var _this = this;
         if (this._done)
-            throw new Error('Invalid state: disassembly process was already finished.');
+            throw new Error("Invalid state: disassembly process was already finished.");
         while (true) {
             if (!reader.read())
                 return false;
@@ -1271,24 +1389,36 @@ var DevToolsNameGenerator = /** @class */ (function () {
         this._memoryNames = null;
         this._tableNames = null;
         this._globalNames = null;
+        this._functionExportNames = null;
+        this._globalExportNames = null;
+        this._memoryExportNames = null;
+        this._tableExportNames = null;
     }
-    DevToolsNameGenerator.prototype._generateExportName = function (field) {
-        return WasmParser_js_1.bytesToString(field).replace(INVALID_NAME_SYMBOLS_REGEX_GLOBAL, '_');
-    };
-    DevToolsNameGenerator.prototype._generateImportName = function (moduleName, field) {
-        var name = WasmParser_js_1.bytesToString(moduleName) + '.' + WasmParser_js_1.bytesToString(field);
-        return name.replace(INVALID_NAME_SYMBOLS_REGEX_GLOBAL, '_');
+    DevToolsNameGenerator.prototype._addExportName = function (exportNames, index, name) {
+        var names = exportNames[index];
+        if (names) {
+            names.push(name);
+        }
+        else {
+            exportNames[index] = [name];
+        }
     };
     DevToolsNameGenerator.prototype._setName = function (names, index, name, isNameSectionName) {
-        if (!isValidName(name))
+        if (!name)
             return;
-        if (isNameSectionName || !names[index])
+        if (isNameSectionName) {
+            if (!isValidName(name))
+                return;
             names[index] = name;
+        }
+        else if (!names[index]) {
+            names[index] = name.replace(INVALID_NAME_SYMBOLS_REGEX_GLOBAL, "_");
+        }
     };
     DevToolsNameGenerator.prototype.read = function (reader) {
         var _this = this;
         if (this._done)
-            throw new Error('Invalid state: disassembly process was already finished.');
+            throw new Error("Invalid state: disassembly process was already finished.");
         while (true) {
             if (!reader.read())
                 return false;
@@ -1311,6 +1441,10 @@ var DevToolsNameGenerator = /** @class */ (function () {
                     this._memoryNames = [];
                     this._tableNames = [];
                     this._globalNames = [];
+                    this._functionExportNames = [];
+                    this._globalExportNames = [];
+                    this._memoryExportNames = [];
+                    this._tableExportNames = [];
                     break;
                 case 4 /* END_SECTION */:
                     break;
@@ -1331,9 +1465,7 @@ var DevToolsNameGenerator = /** @class */ (function () {
                     break;
                 case 12 /* IMPORT_SECTION_ENTRY */:
                     var importInfo = reader.result;
-                    var importName = this._generateImportName(importInfo.module, importInfo.field);
-                    if (!importName)
-                        continue;
+                    var importName = WasmParser_js_1.bytesToString(importInfo.module) + "." + WasmParser_js_1.bytesToString(importInfo.field);
                     switch (importInfo.kind) {
                         case 0 /* Function */:
                             this._setName(this._functionNames, this._functionImportsCount++, importName, false);
@@ -1371,21 +1503,23 @@ var DevToolsNameGenerator = /** @class */ (function () {
                     break;
                 case 17 /* EXPORT_SECTION_ENTRY */:
                     var exportInfo = reader.result;
-                    var exportName = this._generateExportName(exportInfo.field);
-                    if (!exportName)
-                        continue;
+                    var exportName = WasmParser_js_1.bytesToString(exportInfo.field);
                     switch (exportInfo.kind) {
                         case 0 /* Function */:
+                            this._addExportName(this._functionExportNames, exportInfo.index, exportName);
                             this._setName(this._functionNames, exportInfo.index, exportName, false);
                             break;
-                        case 1 /* Table */:
-                            this._setName(this._tableNames, exportInfo.index, exportName, false);
+                        case 3 /* Global */:
+                            this._addExportName(this._globalExportNames, exportInfo.index, exportName);
+                            this._setName(this._globalNames, exportInfo.index, exportName, false);
                             break;
                         case 2 /* Memory */:
+                            this._addExportName(this._memoryExportNames, exportInfo.index, exportName);
                             this._setName(this._memoryNames, exportInfo.index, exportName, false);
                             break;
-                        case 3 /* Global */:
-                            this._setName(this._globalNames, exportInfo.index, exportName, false);
+                        case 1 /* Table */:
+                            this._addExportName(this._tableExportNames, exportInfo.index, exportName);
+                            this._setName(this._tableNames, exportInfo.index, exportName, false);
                             break;
                         default:
                             throw new Error("Unsupported export " + exportInfo.kind);
@@ -1395,6 +1529,9 @@ var DevToolsNameGenerator = /** @class */ (function () {
                     throw new Error("Expectected state: " + reader.state);
             }
         }
+    };
+    DevToolsNameGenerator.prototype.getExportMetadata = function () {
+        return new DevToolsExportMetadata(this._functionExportNames, this._globalExportNames, this._memoryExportNames, this._tableExportNames);
     };
     DevToolsNameGenerator.prototype.getNameResolver = function () {
         return new DevToolsNameResolver(this._functionNames, this._functionLocalNames, this._memoryNames, this._tableNames, this._globalNames);

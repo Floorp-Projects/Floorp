@@ -4,8 +4,11 @@
 
 /* @flow */
 
-import { BinaryReader } from "wasmparser/dist/WasmParser";
-import { WasmDisassembler, NameSectionReader } from "wasmparser/dist/WasmDis";
+import { BinaryReader } from "wasmparser/dist/cjs/WasmParser";
+import {
+  WasmDisassembler,
+  NameSectionReader,
+} from "wasmparser/dist/cjs/WasmDis";
 
 import type { SourceId, WasmSourceContent } from "../types";
 type WasmState = {

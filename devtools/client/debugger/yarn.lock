@@ -1199,10 +1199,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.0.18.tgz#5111b2285659442f9f95697386a2b42b875bd7e9"
   integrity sha512-0Z3nS5acM0cIV4JPzrj9g/GH0Et5vmADWtip3YOXOp1NpOLU8V3KoZDc8ny9c1pe/YSYYzQkAWob6dyV/EWg4g==
 
-"@types/node@^12.12.21":
-  version "12.12.48"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.48.tgz#4135f064eeed9fcfb4756deea5ba2caa11603391"
-  integrity sha512-m3Nmo/YaDUfYzdCQlxjF5pIy7TNyDTAJhIa//xtHcF0dlgYIBKULKnmloCPtByDxtZXrWV8Pge1AKT6/lRvVWg==
+"@types/node@^14.0.13":
+  version "14.6.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.6.0.tgz#7d4411bf5157339337d7cff864d9ff45f177b499"
+  integrity sha512-mikldZQitV94akrc4sCcSjtJfsTKt4p+e/s0AGscVA6XArQ9kFclP+ZiYUMnq987rc6QlYxXv/EivqlfSLxpKA==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
@@ -14283,12 +14283,12 @@ warning@^4.0.3:
   dependencies:
     loose-envify "^1.0.0"
 
-wasmparser@^0.10.0:
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/wasmparser/-/wasmparser-0.10.0.tgz#246d14762a636d6d4166394dbc980617f2c75dbd"
-  integrity sha512-p/zfClkMLRrhNJjtkRJ9QjnI+9J+rpWqQfUYWt/AF/8yOhG524eWndASZ48cmCaYKqzzsjHf1k0fH+ji5vKZyQ==
+wasmparser@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/wasmparser/-/wasmparser-3.1.1.tgz#79646d9701860776fbd7f96f05a3c27977143072"
+  integrity sha512-5abseW1tsr2UDDjRt1DIJQH8fJi9sJCTkq41CxXM8c2/InhttD3jkZ/orqsFLqTj+KCRYonhzlrgRz5zRpvSow==
   dependencies:
-    "@types/node" "^12.12.21"
+    "@types/node" "^14.0.13"
 
 watch@~0.18.0:
   version "0.18.0"

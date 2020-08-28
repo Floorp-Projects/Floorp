@@ -26,23 +26,23 @@ declare module 'wasmparser/disassemble-wasm' {
   declare module.exports: any;
 }
 
-declare module 'wasmparser/dist/index' {
+declare module 'wasmparser/dist/cjs/index' {
   declare module.exports: any;
 }
 
-declare module 'wasmparser/dist/WasmDis' {
+declare module 'wasmparser/dist/cjs/WasmDis' {
   declare module.exports: any;
 }
 
-declare module 'wasmparser/dist/WasmEmitter' {
+declare module 'wasmparser/dist/cjs/WasmEmitter' {
   declare module.exports: any;
 }
 
-declare module 'wasmparser/dist/WasmParser' {
+declare module 'wasmparser/dist/cjs/WasmParser' {
   declare module.exports: any;
 }
 
-declare module 'wasmparser/dist/WasmParserTransform' {
+declare module 'wasmparser/dist/cjs/WasmParserTransform' {
   declare module.exports: any;
 }
 
@@ -70,20 +70,20 @@ declare module 'wasmparser/test' {
 declare module 'wasmparser/disassemble-wasm.js' {
   declare module.exports: $Exports<'wasmparser/disassemble-wasm'>;
 }
-declare module 'wasmparser/dist/index.js' {
-  declare module.exports: $Exports<'wasmparser/dist/index'>;
+declare module 'wasmparser/dist/cjs/index.js' {
+  declare module.exports: $Exports<'wasmparser/dist/cjs/index'>;
 }
-declare module 'wasmparser/dist/WasmDis.js' {
-  declare module.exports: $Exports<'wasmparser/dist/WasmDis'>;
+declare module 'wasmparser/dist/cjs/WasmDis.js' {
+  declare module.exports: $Exports<'wasmparser/dist/cjs/WasmDis'>;
 }
-declare module 'wasmparser/dist/WasmEmitter.js' {
-  declare module.exports: $Exports<'wasmparser/dist/WasmEmitter'>;
+declare module 'wasmparser/dist/cjs/WasmEmitter.js' {
+  declare module.exports: $Exports<'wasmparser/dist/cjs/WasmEmitter'>;
 }
-declare module 'wasmparser/dist/WasmParser.js' {
-  declare module.exports: $Exports<'wasmparser/dist/WasmParser'>;
+declare module 'wasmparser/dist/cjs/WasmParser.js' {
+  declare module.exports: $Exports<'wasmparser/dist/cjs/WasmParser'>;
 }
-declare module 'wasmparser/dist/WasmParserTransform.js' {
-  declare module.exports: $Exports<'wasmparser/dist/WasmParserTransform'>;
+declare module 'wasmparser/dist/cjs/WasmParserTransform.js' {
+  declare module.exports: $Exports<'wasmparser/dist/cjs/WasmParserTransform'>;
 }
 declare module 'wasmparser/examples/disassemble-wasm-1.js' {
   declare module.exports: $Exports<'wasmparser/examples/disassemble-wasm-1'>;
