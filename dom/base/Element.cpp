@@ -1503,6 +1503,11 @@ void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
   }
 }
 
+bool Element::HasVisibleScrollbars() {
+  nsIScrollableFrame* scrollFrame = GetScrollFrame();
+  return scrollFrame && scrollFrame->GetScrollbarVisibility();
+}
+
 nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   MOZ_ASSERT(aParent.IsContent() || aParent.IsDocument(),
              "Must have content or document parent!");

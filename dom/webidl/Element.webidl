@@ -351,6 +351,13 @@ partial interface Element {
   void setAttributeDevtools(DOMString name, DOMString value);
   [ChromeOnly, CEReactions, Throws]
   void setAttributeDevtoolsNS(DOMString? namespace, DOMString name, DOMString value);
+  
+  /**
+   * Provide a direct way to determine if this Element has visible
+   * scrollbars. Flushes layout.
+   */
+  [ChromeOnly]
+  readonly attribute boolean hasVisibleScrollbars;
 };
 
 // These variables are used in vtt.js, they are used for positioning vtt cues.
