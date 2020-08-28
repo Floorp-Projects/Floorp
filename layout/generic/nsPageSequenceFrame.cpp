@@ -236,6 +236,16 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
 
     mPageData->mEdgePaperMargin =
         nsPresContext::CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);
+
+    // Get the custom page-range state:
+    mPageData->mPrintSettings->GetStartPageRange(&mPageData->mFromPageNum);
+    mPageData->mPrintSettings->GetEndPageRange(&mPageData->mToPageNum);
+    mPageData->mPrintSettings->GetPageRanges(mPageData->mPageRanges);
+
+    int16_t printType;
+    mPageData->mPrintSettings->GetPrintRange(&printType);
+    mPageData->mDoingPageRange =
+        nsIPrintSettings::kRangeSpecifiedPageRange == printType;
   }
 
   // We use the CSS "margin" property on the -moz-printed-sheet pseudoelement
@@ -394,15 +404,6 @@ nsresult nsPageSequenceFrame::StartPrint(nsPresContext* aPresContext,
   if (!aDocURL.IsEmpty()) {
     mPageData->mDocURL = aDocURL;
   }
-
-  aPrintSettings->GetStartPageRange(&mPageData->mFromPageNum);
-  aPrintSettings->GetEndPageRange(&mPageData->mToPageNum);
-  aPrintSettings->GetPageRanges(mPageData->mPageRanges);
-
-  int16_t printType;
-  aPrintSettings->GetPrintRange(&printType);
-  mPageData->mDoingPageRange =
-      nsIPrintSettings::kRangeSpecifiedPageRange == printType;
 
   // If printing a range of pages make sure at least the starting page
   // number is valid
