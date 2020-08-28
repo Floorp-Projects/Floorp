@@ -92,21 +92,19 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
                       &pageReflowInput, wm, pagePos, physPageSize,
                       ReflowChildFlags::Default);
 
+    // Since we don't support incremental reflow in printed documents (see the
+    // early-return in nsPageSequenceFrame::Reflow), we can assume that this
+    // was the first time that pageFrame has been reflowed, and so there's no
+    // way that it could already have a next-in-flow. If it *did* have a
+    // next-in-flow, we would need to handle it in the 'status' logic below.
+    NS_ASSERTION(!pageFrame->GetNextInFlow(), "bad child flow list");
+
     // Did this page complete the document, or do we need to generate
     // another page frame?
-    nsIFrame* pageNextInFlow = pageFrame->GetNextInFlow();
     if (status.IsFullyComplete()) {
       // The page we just reflowed is the final page! Record its page number
       // as the number of pages:
       mPD->mRawNumPages = pageFrame->GetPageNum();
-
-      // Normally, we (the parent frame) would be responsible for deleting the
-      // next-in-flow of our fully-complete children. But since we don't
-      // support dynamic changes / incremental reflow for printing (and since
-      // the reflow operation is single-pass at this level of granularity), our
-      // child *shouldn't have had any opportunities* to end up with a
-      // next-in-flow that would need cleaning up here.
-      NS_ASSERTION(!pageNextInFlow, "bad child flow list");
     } else {
       // Our page frame child needs a continuation. For now, that makes us need
       // one as well. (This will change in bug 1631452 when we support more
@@ -114,17 +112,14 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
       // we max out the number of pages that are allowed on our sheet.)
       aStatus.SetIncomplete();
 
-      if (!pageNextInFlow) {
-        // We need to create a continuation for our page frame. We add the
-        // continuation to our child list, and then push it to our overflow
-        // list so that our own (perhaps yet-to-be-created) continuation can
-        // pull it forward.
-        nsIFrame* continuingPage =
-            PresShell()->FrameConstructor()->CreateContinuingFrame(pageFrame,
-                                                                   this);
-        mFrames.InsertFrame(nullptr, pageFrame, continuingPage);
-        PushChildrenToOverflow(continuingPage, pageFrame);
-      }
+      // Create a continuation for our page frame. We add the continuation to
+      // our child list, and then push it to our overflow list since it really
+      // belongs on the next sheet.
+      nsIFrame* continuingPage =
+          PresShell()->FrameConstructor()->CreateContinuingFrame(pageFrame,
+                                                                 this);
+      mFrames.InsertFrame(nullptr, pageFrame, continuingPage);
+      PushChildrenToOverflow(continuingPage, pageFrame);
     }
   }
 
