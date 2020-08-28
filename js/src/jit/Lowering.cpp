@@ -5343,6 +5343,16 @@ void LIRGenerator::visitIsPackedArray(MIsPackedArray* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitGuardArrayIsPacked(MGuardArrayIsPacked* ins) {
+  MOZ_ASSERT(ins->array()->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LGuardArrayIsPacked(useRegister(ins->array()), temp(), temp());
+  assignSnapshot(lir, BailoutKind::PackedArrayGuard);
+  add(lir, ins);
+  redefine(ins, ins->array());
+}
+
 void LIRGenerator::visitGetPrototypeOf(MGetPrototypeOf* ins) {
   MOZ_ASSERT(ins->target()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Value);
