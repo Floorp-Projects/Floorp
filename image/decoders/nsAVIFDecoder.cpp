@@ -101,6 +101,9 @@ void nsAVIFDecoder::FreeDav1dData(const uint8_t* buf, void* cookie) {
 
 bool nsAVIFDecoder::DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
                                     layers::PlanarYCbCrData& aDecodedData) {
+  MOZ_LOG(sAVIFLog, LogLevel::Verbose,
+          ("[this=%p] Beginning DecodeWithDav1d", this));
+
   Dav1dSettings settings;
   dav1d_default_settings(&settings);
   // TODO: tune settings a la DAV1DDecoder for AV1
@@ -118,18 +121,20 @@ bool nsAVIFDecoder::DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
   res = dav1d_data_wrap(&dav1dData, aPrimaryItem.data, aPrimaryItem.length,
                         nsAVIFDecoder::FreeDav1dData, this);
 
+  MOZ_LOG(sAVIFLog, res == 0 ? LogLevel::Verbose : LogLevel::Error,
+          ("[this=%p] dav1d_data_wrap(%p, %zu) -> %d", this, dav1dData.data,
+           dav1dData.sz, res));
+
   if (res != 0) {
-    MOZ_LOG(sAVIFLog, LogLevel::Error,
-            ("[this=%p] dav1d_data_wrap(%p, %zu) -> %d", this, dav1dData.data,
-             dav1dData.sz, res));
     return false;
   }
 
   res = dav1d_send_data(ctx, &dav1dData);
 
+  MOZ_LOG(sAVIFLog, res == 0 ? LogLevel::Debug : LogLevel::Error,
+          ("[this=%p] dav1d_send_data -> %d", this, res));
+
   if (res != 0) {
-    MOZ_LOG(sAVIFLog, LogLevel::Error,
-            ("[this=%p] dav1d_send_data -> %d", this, res));
     return false;
   }
 
@@ -137,9 +142,10 @@ bool nsAVIFDecoder::DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
   mDav1dPicture.emplace();
   res = dav1d_get_picture(ctx, mDav1dPicture.ptr());
 
+  MOZ_LOG(sAVIFLog, res == 0 ? LogLevel::Debug : LogLevel::Error,
+          ("[this=%p] dav1d_get_picture -> %d", this, res));
+
   if (res != 0) {
-    MOZ_LOG(sAVIFLog, LogLevel::Error,
-            ("[this=%p] dav1d_get_picture -> %d", this, res));
     return false;
   }
 
@@ -231,18 +237,24 @@ bool nsAVIFDecoder::DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
                                  ? gfx::ColorRange::FULL
                                  : gfx::ColorRange::LIMITED;
 
+  MOZ_LOG(sAVIFLog, LogLevel::Verbose,
+          ("[this=%p] Returning successfully from DecodeWithDav1d", this));
+
   return true;
 }
 
 bool nsAVIFDecoder::DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
                                   layers::PlanarYCbCrData& aDecodedData) {
+  MOZ_LOG(sAVIFLog, LogLevel::Verbose,
+          ("[this=%p] Beginning DecodeWithAOM", this));
+
   aom_codec_iface_t* iface = aom_codec_av1_dx();
   aom_codec_ctx_t ctx;
   aom_codec_err_t res =
       aom_codec_dec_init(&ctx, iface, /* cfg = */ nullptr, /* flags = */ 0);
 
   MOZ_LOG(
-      sAVIFLog, LogLevel::Error,
+      sAVIFLog, res == AOM_CODEC_OK ? LogLevel::Verbose : LogLevel::Error,
       ("[this=%p] aom_codec_dec_init -> %d, name = %s", this, res, ctx.name));
 
   if (res == AOM_CODEC_OK) {
@@ -254,22 +266,21 @@ bool nsAVIFDecoder::DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
   res = aom_codec_decode(&mCodecContext->as<aom_codec_ctx_t>(),
                          aPrimaryItem.data, aPrimaryItem.length, nullptr);
 
+  MOZ_LOG(sAVIFLog, res == AOM_CODEC_OK ? LogLevel::Verbose : LogLevel::Error,
+          ("[this=%p] aom_codec_decode -> %d", this, res));
+
   if (res != AOM_CODEC_OK) {
-    MOZ_LOG(sAVIFLog, LogLevel::Error,
-            ("[this=%p] aom_codec_decode -> %d", this, res));
     return false;
   }
-
-  MOZ_LOG(sAVIFLog, LogLevel::Debug,
-          ("[this=%p] aom_codec_decode -> %d", this, res));
 
   aom_codec_iter_t iter = nullptr;
   const aom_image_t* img =
       aom_codec_get_frame(&mCodecContext->as<aom_codec_ctx_t>(), &iter);
 
+  MOZ_LOG(sAVIFLog, img == nullptr ? LogLevel::Error : LogLevel::Verbose,
+          ("[this=%p] aom_codec_get_frame -> %p", this, img));
+
   if (img == nullptr) {
-    MOZ_LOG(sAVIFLog, LogLevel::Error,
-            ("[this=%p] aom_codec_get_frame -> %p", this, img));
     return false;
   }
 
@@ -374,6 +385,9 @@ bool nsAVIFDecoder::DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
     default:
       MOZ_ASSERT_UNREACHABLE("unknown color range");
   }
+
+  MOZ_LOG(sAVIFLog, LogLevel::Verbose,
+          ("[this=%p] Returning successfully from DecodeWithAOM", this));
 
   return true;
 }
