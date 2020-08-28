@@ -614,12 +614,11 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
   // Keep track of when we're in whitespace:
   // (only matters when we're matching)
   bool inWhitespace = false;
-  // Keep track of whether the previous char was a word-breaking one.
-  bool wordBreakPrev = false;
 
   // Place to save the range start point in case we find a match:
   Text* matchAnchorNode = nullptr;
   int32_t matchAnchorOffset = 0;
+  char32_t matchAnchorChar = 0;
 
   // Get the end point, so we know when to end searches:
   nsINode* endNode = aEndPoint->GetEndContainer();
@@ -627,18 +626,19 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
 
   char32_t c = 0;
   char32_t patc = 0;
-  char32_t prevChar = 0;
   char32_t prevCharInMatch = 0;
 
   State state(mFindBackward, *root, *aStartPoint);
   Text* current = nullptr;
 
-  auto EndPartialMatch = [&] {
+  auto EndPartialMatch = [&]() -> bool {
+    bool hadAnchorNode = !!matchAnchorNode;
     // If we didn't match, go back to the beginning of patStr, and set findex
     // back to the next char after we started the current match.
     if (matchAnchorNode) {  // we're ending a partial match
       findex = matchAnchorOffset;
       state.mIterOffset = matchAnchorOffset;
+      c = matchAnchorChar;
       // +incr will be added to findex when we continue
 
       // Are we going back to a previous node?
@@ -653,10 +653,13 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     }
     matchAnchorNode = nullptr;
     matchAnchorOffset = 0;
+    matchAnchorChar = 0;
     inWhitespace = false;
+    prevCharInMatch = 0;
     pindex = mFindBackward ? patLen : 0;
     DEBUG_FIND_PRINTF("Setting findex back to %d, pindex to %d\n", findex,
                       pindex);
+    return hadAnchorNode;
   };
 
   while (true) {
@@ -667,8 +670,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       current = state.GetNextNode(!!matchAnchorNode);
       if (!current) {
         DEBUG_FIND_PRINTF("Reached the end, matching: %d\n", !!matchAnchorNode);
-        if (matchAnchorNode) {
-          EndPartialMatch();
+        if (EndPartialMatch()) {
           continue;
         }
         return NS_OK;
@@ -678,14 +680,12 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       // <br>, different blocks or what not.
       if (state.ForcedBreak()) {
         DEBUG_FIND_PRINTF("Forced break!\n");
-        // End any pending match:
-        matchAnchorNode = nullptr;
-        matchAnchorOffset = 0;
+        if (EndPartialMatch()) {
+          continue;
+        }
+        // This ensures word breaking thinks it has a new word, which is
+        // effectively what we want.
         c = 0;
-        prevChar = 0;
-        prevCharInMatch = 0;
-        pindex = (mFindBackward ? patLen : 0);
-        inWhitespace = false;
       }
 
       frag = &current->TextFragment();
@@ -759,7 +759,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     }
 
     // Save the previous character for word boundary detection
-    prevChar = c;
+    char32_t prevChar = c;
     // The two characters we'll be comparing are c and patc. If not matching
     // diacritics, don't leave c set to a combining diacritical mark. (patc is
     // already guaranteed to not be a combining diacritical mark.)
@@ -844,9 +844,12 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       }
     }
 
-    wordBreakPrev = false;
+    // Figure whether the previous char is a word-breaking one.
+    bool wordBreakPrev = false;
     if (mWordBreaker) {
-      if (prevChar == NBSP_CHARCODE) prevChar = CHAR_TO_UNICHAR(' ');
+      if (prevChar == NBSP_CHARCODE) {
+        prevChar = CHAR_TO_UNICHAR(' ');
+      }
       wordBreakPrev = BreakInBetween(prevChar, c);
     }
 
@@ -870,7 +873,10 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       if (!matchAnchorNode) {
         matchAnchorNode = state.GetCurrentNode();
         matchAnchorOffset = findex;
-        if (!IS_IN_BMP(c)) matchAnchorOffset -= incr;
+        if (!IS_IN_BMP(c)) {
+          matchAnchorOffset -= incr;
+        }
+        matchAnchorChar = c;
       }
 
       // Are we done?
@@ -895,7 +901,9 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
             nextChar = PeekNextChar(state, !!matchAnchorNode);
           }
 
-          if (nextChar == NBSP_CHARCODE) nextChar = CHAR_TO_UNICHAR(' ');
+          if (nextChar == NBSP_CHARCODE) {
+            nextChar = CHAR_TO_UNICHAR(' ');
+          }
 
           // If a word break isn't there when it needs to be, reset search.
           if (!BreakInBetween(c, nextChar)) {
