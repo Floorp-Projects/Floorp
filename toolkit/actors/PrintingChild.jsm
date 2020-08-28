@@ -410,10 +410,11 @@ class PrintingChild extends ActorChild {
   }
 
   updatePageCount() {
-    let numPages = this.docShell.initOrReusePrintPreviewViewer()
-      .printPreviewNumPages;
+    let webBrowserPrint = this.docShell.initOrReusePrintPreviewViewer();
+    webBrowserPrint.QueryInterface(Ci.nsIWebBrowserPrint);
     this.mm.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
-      numPages,
+      numPages: webBrowserPrint.printPreviewNumPages,
+      totalPages: webBrowserPrint.rawNumPages,
     });
   }
 
