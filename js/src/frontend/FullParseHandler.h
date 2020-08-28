@@ -153,6 +153,17 @@ class FullParseHandler {
     return new_<UnaryNode>(ParseNodeKind::ComputedName, pos, expr);
   }
 
+  UnaryNodeType newSyntheticComputedName(Node expr, uint32_t begin,
+                                         uint32_t end) {
+    TokenPos pos(begin, end);
+    UnaryNode* node = new_<UnaryNode>(ParseNodeKind::ComputedName, pos, expr);
+    if (!node) {
+      return nullptr;
+    }
+    node->setSyntheticComputedName();
+    return node;
+  }
+
   NameNodeType newObjectLiteralPropertyName(const ParserAtom* atom,
                                             const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::ObjectPropertyName, atom, pos);
