@@ -109,7 +109,7 @@ dnl ========================================================
 dnl = Automatically remove dead symbols
 dnl ========================================================
 
-if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS" -a -z "$MOZ_PROFILE_GENERATE"; then
+if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS"; then
     if test -n "$MOZ_DEBUG_FLAGS"; then
         dnl See bug 670659
         AC_CACHE_CHECK([whether removing dead symbols breaks debugging],
