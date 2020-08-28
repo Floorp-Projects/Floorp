@@ -17,6 +17,7 @@
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
+#include "IndexedDBCommon.h"
 #include "js/StructuredClone.h"
 #include "js/Value.h"
 #include "jsapi.h"
@@ -9404,21 +9405,16 @@ nsresult CreateMarkerFile(nsIFile& aBaseDirectory,
   AssertIsOnIOThread();
   MOZ_ASSERT(!aDatabaseNameBase.IsEmpty());
 
-  nsCOMPtr<nsIFile> markerFile;
-  nsresult rv = aBaseDirectory.Clone(getter_AddRefs(markerFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(auto markerFile,
+              ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
+                                                aBaseDirectory));
 
-  rv = markerFile->Append(kIdbDeletionMarkerFilePrefix + aDatabaseNameBase);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(markerFile->Append(kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
 
-  rv = markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      MOZ_TO_RESULT_INVOKE(markerFile, Create, nsIFile::NORMAL_FILE_TYPE, 0644)
+          .orElse(
+              ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, mozilla::Ok>));
 
   *aMarkerFileOut = std::move(markerFile);
   return NS_OK;
@@ -9432,10 +9428,7 @@ nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
   MOZ_ASSERT(NS_SUCCEEDED(aMarkerFile->Exists(&exists)));
   MOZ_ASSERT(exists);
 
-  nsresult rv = aMarkerFile->Remove(false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(aMarkerFile->Remove(false));
 
   return NS_OK;
 }
