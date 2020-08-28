@@ -14,6 +14,7 @@ import os
 from six import text_type
 import six
 import sys
+import time
 import traceback
 import re
 
@@ -203,7 +204,26 @@ class MachCommands(MachCommandBase):
         import taskgraph.decision
         try:
             self.setup_logging()
-            return taskgraph.decision.taskgraph_decision(options)
+            start = time.monotonic()
+            ret = taskgraph.decision.taskgraph_decision(options)
+            end = time.monotonic()
+            if os.environ.get('MOZ_AUTOMATION') == '1':
+                perfherder_data = {
+                    'framework': {'name': 'build_metrics'},
+                    'suites': [
+                        {
+                            'name': 'decision',
+                            'value': end - start,
+                            'lowerIsBetter': True,
+                            'shouldAlert': True,
+                            'subtests': [],
+                        }
+                    ],
+                }
+                print(
+                    'PERFHERDER_DATA: {}'.format(json.dumps(perfherder_data)), file=sys.stderr
+                )
+            return ret
         except Exception:
             traceback.print_exc()
             sys.exit(1)
