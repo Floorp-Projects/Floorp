@@ -9403,6 +9403,22 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   return NS_OK;
 }
 
+// Returns true if a given nsIFile exists and is a directory. Returns false if
+// it doesn't exist. Returns an error if it exists, but is not a directory, or
+// any other error occurs.
+Result<bool, nsresult> ExistsAsDirectory(nsIFile& aDirectory) {
+  IDB_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
+
+  if (exists) {
+    IDB_TRY_VAR(const bool isDirectory,
+                MOZ_TO_RESULT_INVOKE(aDirectory, IsDirectory));
+
+    IDB_TRY(OkIf(isDirectory), Err(NS_ERROR_FAILURE));
+  }
+
+  return exists;
+}
+
 // CreateMarkerFile and RemoveMarkerFile are a pair of functions to indicate
 // whether having removed all the files successfully. The marker file should
 // be checked before executing the next operation or initialization.
@@ -16314,110 +16330,66 @@ nsresult FileManager::Init(nsIFile* aDirectory,
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
-  bool exists;
-  nsresult rv = aDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {
+    IDB_TRY_VAR(const bool existsAsDirectory, ExistsAsDirectory(*aDirectory));
 
-  if (exists) {
-    bool isDirectory;
-    rv = aDirectory->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (!existsAsDirectory) {
+      IDB_TRY(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755));
     }
 
-    if (NS_WARN_IF(!isDirectory)) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    // XXX It would be nice if MOZ_TO_RESULT_INVOKE worked with a string:
+    // IDB_TRY_VAR(nsString path,
+    //            MOZ_TO_RESULT_INVOKE(aDirectory, GetPath));
+    IDB_TRY_VAR(auto path, ToResultInvoke<nsString>(
+                               std::mem_fn(&nsIFile::GetPath), aDirectory));
+
+    mDirectoryPath.init(std::move(path));
   }
+
+  IDB_TRY_VAR(auto journalDirectory,
+              ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
+                                                aDirectory));
+
+  IDB_TRY(journalDirectory->Append(kJournalDirectoryName));
+
+  // We don't care if it doesn't exist at all.
+  IDB_TRY(ExistsAsDirectory(*journalDirectory));
 
   {
-    nsString directoryPath;
-    rv = aDirectory->GetPath(directoryPath);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    mDirectoryPath.init(std::move(directoryPath));
+    IDB_TRY_VAR(auto path,
+                ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetPath),
+                                         journalDirectory));
+
+    mJournalDirectoryPath.init(std::move(path));
   }
 
-  nsCOMPtr<nsIFile> journalDirectory;
-  rv = aDirectory->Clone(getter_AddRefs(journalDirectory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const auto stmt,
+              ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+                  std::mem_fn(&mozIStorageConnection::CreateStatement),
+                  aConnection, "SELECT id, refcount FROM file"_ns));
 
-  rv = journalDirectory->Append(kJournalDirectoryName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_TRY(CollectWhile(
+      [&stmt]() -> Result<bool, nsresult> {
+        IDB_TRY_VAR(auto hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+        return hasResult;
+      },
+      [&stmt, this]() -> Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(const int64_t id, MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+        IDB_TRY_VAR(const int32_t dbRefCnt,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 1));
 
-  rv = journalDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        // We put a raw pointer into the hash table, so the memory refcount will
+        // be 0, but the dbRefCnt is non-zero, which will keep the FileInfo
+        // object alive.
+        MOZ_ASSERT(dbRefCnt > 0);
+        mFileInfos.Put(
+            id, new FileInfo(FileManagerGuard{}, SafeRefPtrFromThis(), id,
+                             static_cast<nsrefcnt>(dbRefCnt)));
 
-  if (exists) {
-    bool isDirectory;
-    rv = journalDirectory->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        mLastFileId = std::max(id, mLastFileId);
 
-    if (NS_WARN_IF(!isDirectory)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  {
-    nsString journalDirectoryPath;
-    rv = journalDirectory->GetPath(journalDirectoryPath);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    mJournalDirectoryPath.init(std::move(journalDirectoryPath));
-  }
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = aConnection.CreateStatement(nsLiteralCString("SELECT id, refcount "
-                                                    "FROM file"),
-                                   getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasResult;
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    int64_t id;
-    rv = stmt->GetInt64(0, &id);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    int32_t dbRefCnt;
-    rv = stmt->GetInt32(1, &dbRefCnt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // We put a raw pointer into the hash table, so the memory refcount will be
-    // 0, but the dbRefCnt is non-zero, which will keep the FileInfo object
-    // alive.
-    MOZ_ASSERT(dbRefCnt > 0);
-    mFileInfos.Put(id, new FileInfo(FileManagerGuard{}, SafeRefPtrFromThis(),
-                                    id, static_cast<nsrefcnt>(dbRefCnt)));
-
-    mLastFileId = std::max(id, mLastFileId);
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   return NS_OK;
 }
