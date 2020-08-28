@@ -6028,18 +6028,23 @@ nsBrowserAccess.prototype = {
     }
 
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      let pref;
       if (
         isExternal &&
         Services.prefs.prefHasUserValue(
           "browser.link.open_newwindow.override.external"
         )
       ) {
-        aWhere = Services.prefs.getIntPref(
+        pref = Services.prefs.getIntPref(
           "browser.link.open_newwindow.override.external"
         );
       } else {
-        aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
+        pref = Services.prefs.getIntPref("browser.link.open_newwindow");
       }
+      aWhere =
+        pref == 3
+          ? Ci.nsIBrowserDOMWindow.OPEN_NEWTAB
+          : Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW;
     }
 
     let referrerInfo;

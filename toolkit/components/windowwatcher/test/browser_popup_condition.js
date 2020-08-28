@@ -291,13 +291,6 @@ add_task(async function test_popup_conditions() {
   await test_patterns({ nonPopup: "tab" });
   await SpecialPowers.popPrefEnv();
 
-  // Non-popup is opened in a current tab.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.link.open_newwindow", 1]],
-  });
-  await test_patterns({ nonPopup: "current" });
-  await SpecialPowers.popPrefEnv();
-
   // Non-popup is opened in a new window.
   await SpecialPowers.pushPrefEnv({
     set: [["browser.link.open_newwindow", 2]],
