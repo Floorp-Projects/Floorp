@@ -30,7 +30,7 @@ class nsPagePrintTimer final : public mozilla::Runnable,
                    mozilla::dom::Document* aDocument, uint32_t aDelay)
       : Runnable("nsPagePrintTimer"),
         mPrintJob(aPrintJob),
-        mDocViewerPrint(aDocViewerPrint),
+        mDocViewerPrint(*aDocViewerPrint),
         mDocument(aDocument),
         mDelay(aDelay),
         mFiringCount(0),
@@ -52,7 +52,10 @@ class nsPagePrintTimer final : public mozilla::Runnable,
   void WaitForRemotePrint();
   void RemotePrintFinished();
 
-  void Disconnect();
+  void Disconnect() {
+    mPrintJob = nullptr;
+    mPrintObj = nullptr;
+  }
 
  private:
   ~nsPagePrintTimer();
@@ -63,7 +66,7 @@ class nsPagePrintTimer final : public mozilla::Runnable,
   void Fail();
 
   nsPrintJob* mPrintJob;
-  nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
+  const mozilla::OwningNonNull<nsIDocumentViewerPrint> mDocViewerPrint;
   RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimer> mWatchDogTimer;

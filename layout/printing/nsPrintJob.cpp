@@ -2556,8 +2556,9 @@ nsresult nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO) {
     nsCOMPtr<Document> doc = cv->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-    mPagePrintTimer =
+    RefPtr<nsPagePrintTimer> timer =
         new nsPagePrintTimer(this, mDocViewerPrint, doc, printPageDelay);
+    timer.forget(&mPagePrintTimer);
 
     nsCOMPtr<nsIPrintSession> printSession;
     nsresult rv =
