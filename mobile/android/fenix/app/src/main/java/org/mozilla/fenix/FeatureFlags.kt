@@ -45,9 +45,4 @@ object FeatureFlags {
      * Enables viewing downloads in browser.
      */
     val viewDownloads = Config.channel.isNightlyOrDebug
-
-    /**
-     * Enables selecting from multiple logins.
-     */
-    val loginSelect = Config.channel.isNightlyOrDebug
 }

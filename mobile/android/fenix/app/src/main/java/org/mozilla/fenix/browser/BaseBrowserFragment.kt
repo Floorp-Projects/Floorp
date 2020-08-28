@@ -507,7 +507,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
                     },
-                    loginPickerView = if (FeatureFlags.loginSelect) loginSelectBar else null,
+                    loginPickerView = loginSelectBar,
                     onManageLogins = {
                         browserAnimator.captureEngineViewAndDrawStatically {
                             val directions =
