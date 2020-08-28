@@ -46,10 +46,6 @@ void CheckThreadLocal::check() const {
 }
 
 void CheckContextLocal::check() const {
-  if (!cx_->isInitialized()) {
-    return;
-  }
-
   JSContext* cx = TlsContext.get();
   MOZ_ASSERT(cx);
   MOZ_ASSERT_IF(cx->isMainThreadContext(),
