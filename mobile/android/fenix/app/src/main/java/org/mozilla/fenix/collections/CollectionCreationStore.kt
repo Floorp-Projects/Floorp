@@ -67,6 +67,8 @@ private fun collectionCreationReducer(
     is CollectionCreationAction.RemoveAllTabs -> prevState.copy(selectedTabs = emptySet())
     is CollectionCreationAction.TabAdded -> prevState.copy(selectedTabs = prevState.selectedTabs + action.tab)
     is CollectionCreationAction.TabRemoved -> prevState.copy(selectedTabs = prevState.selectedTabs - action.tab)
-    is CollectionCreationAction.StepChanged -> prevState.copy(saveCollectionStep = action.saveCollectionStep,
-        defaultCollectionNumber = action.defaultCollectionNumber)
+    is CollectionCreationAction.StepChanged -> prevState.copy(
+        saveCollectionStep = action.saveCollectionStep,
+        defaultCollectionNumber = action.defaultCollectionNumber
+    )
 }

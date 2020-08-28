@@ -28,11 +28,18 @@ class CollectionCreationTabListAdapterTest {
 
     private lateinit var interactor: CollectionCreationInteractor
     private lateinit var adapter: CollectionCreationTabListAdapter
+    private lateinit var mozillaTab: Tab
 
     @Before
     fun setup() {
         interactor = mockk()
         adapter = CollectionCreationTabListAdapter(interactor)
+        mozillaTab = mockk {
+            every { sessionId } returns "abc"
+            every { title } returns "Mozilla"
+            every { hostname } returns "mozilla.org"
+            every { url } returns "https://mozilla.org"
+        }
 
         every { interactor.selectCollection(any(), any()) } just Runs
     }
@@ -52,15 +59,10 @@ class CollectionCreationTabListAdapterTest {
 
     @Test
     fun `creates and binds viewholder`() {
-        val tab = mockk<Tab> {
-            every { sessionId } returns "abc"
-            every { title } returns "Mozilla"
-            every { hostname } returns "mozilla.org"
-            every { url } returns "https://mozilla.org"
-        }
         adapter.updateData(
-            tabs = listOf(tab),
-            selectedTabs = emptySet()
+            tabs = listOf(mozillaTab),
+            selectedTabs = emptySet(),
+            hideCheckboxes = false
         )
 
         val holder = adapter.createViewHolder(FrameLayout(testContext), 0)
@@ -70,6 +72,35 @@ class CollectionCreationTabListAdapterTest {
         assertEquals("mozilla.org", holder.hostname.text)
         assertFalse(holder.tab_selected_checkbox.isInvisible)
         assertTrue(holder.itemView.isClickable)
+
+        every { interactor.addTabToSelection(mozillaTab) } just Runs
+        every { interactor.removeTabFromSelection(mozillaTab) } just Runs
+        assertFalse(holder.tab_selected_checkbox.isChecked)
+
+        holder.tab_selected_checkbox.isChecked = true
+        verify { interactor.addTabToSelection(mozillaTab) }
+
+        holder.tab_selected_checkbox.isChecked = false
+        verify { interactor.removeTabFromSelection(mozillaTab) }
+    }
+
+    @Test
+    fun `creates and binds viewholder for selected tab`() {
+        every { interactor.addTabToSelection(mozillaTab) } just Runs
+
+        adapter.updateData(
+            tabs = listOf(mozillaTab),
+            selectedTabs = setOf(mozillaTab),
+            hideCheckboxes = true
+        )
+
+        val holder = adapter.createViewHolder(FrameLayout(testContext), 0)
+        adapter.bindViewHolder(holder, 0)
+
+        assertEquals("Mozilla", holder.tab_title.text)
+        assertEquals("mozilla.org", holder.hostname.text)
+        assertTrue(holder.tab_selected_checkbox.isInvisible)
+        assertFalse(holder.itemView.isClickable)
     }
 
     @Test
