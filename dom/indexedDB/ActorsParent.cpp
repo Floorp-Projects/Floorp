@@ -16434,16 +16434,12 @@ nsCOMPtr<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId) {
   nsAutoString id;
   id.AppendInt(aId);
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  IDB_TRY_VAR(auto file,
+              ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
+                                                aDirectory),
+              nullptr);
 
-  rv = file->Append(id);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  IDB_TRY(file->Append(id), nullptr);
 
   return file;
 }
