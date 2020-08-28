@@ -420,7 +420,10 @@ var BrowserTestUtils = {
     // inserted into the document.
     let tabbrowser = browser.ownerGlobal.gBrowser;
     if (tabbrowser && tabbrowser.getTabForBrowser) {
-      tabbrowser._insertBrowser(tabbrowser.getTabForBrowser(browser));
+      let tab = tabbrowser.getTabForBrowser(browser);
+      if (tab) {
+        tabbrowser._insertBrowser(tab);
+      }
     }
 
     function isWanted(url) {

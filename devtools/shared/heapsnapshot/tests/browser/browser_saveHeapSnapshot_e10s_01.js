@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child process.
+ * Bug 1201597 - Test to verify that we can take a heap snapshot in an e10s child process.
  */
 
 "use strict";
@@ -12,6 +12,7 @@ add_task(async function() {
   const browser = document.createXULElement("browser");
   browser.setAttribute("type", "content");
   document.body.appendChild(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
   info("Save heap snapshot");
   const result = await SpecialPowers.spawn(browser, [], () => {
