@@ -186,11 +186,10 @@ DocGroup::~DocGroup() {
   MOZ_RELEASE_ASSERT(!mBrowsingContextGroup);
 
   if (!NS_IsMainThread()) {
-    nsIEventTarget* target = EventTargetFor(TaskCategory::Other);
-    NS_ProxyRelease("DocGroup::mReactionsStack", target,
-                    mReactionsStack.forget());
+    NS_ReleaseOnMainThread("DocGroup::mReactionsStack",
+                           mReactionsStack.forget());
 
-    NS_ProxyRelease("DocGroup::mArena", target, mArena.forget());
+    NS_ReleaseOnMainThread("DocGroup::mArena", mArena.forget());
   }
 
   if (mIframePostMessageQueue) {
