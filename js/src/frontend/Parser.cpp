@@ -10300,6 +10300,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
 
   BigIntIndex index(this->getCompilationInfo().stencil.bigIntData.length());
   if (!this->getCompilationInfo().stencil.bigIntData.emplaceBack()) {
+    js::ReportOutOfMemory(cx_);
     return null();
   }
 
