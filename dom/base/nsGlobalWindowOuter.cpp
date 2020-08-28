@@ -2432,7 +2432,10 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   // Update the current window for our BrowsingContext.
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  MOZ_ALWAYS_SUCCEEDS(bc->SetCurrentInnerWindowId(mInnerWindow->WindowID()));
+
+  if (bc->IsOwnedByProcess()) {
+    MOZ_ALWAYS_SUCCEEDS(bc->SetCurrentInnerWindowId(mInnerWindow->WindowID()));
+  }
 
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.

@@ -409,6 +409,7 @@ class nsDocShell final : public nsDocLoader,
   void MaybeClearStorageAccessFlag();
 
   void SetWillChangeProcess() { mWillChangeProcess = true; }
+  bool WillChangeProcess() { return mWillChangeProcess; }
 
   // Create a content viewer within this nsDocShell for the given
   // `WindowGlobalChild` actor.
