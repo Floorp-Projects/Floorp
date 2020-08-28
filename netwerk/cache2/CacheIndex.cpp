@@ -24,7 +24,7 @@
 #define kMinUnwrittenChanges 300
 #define kMinDumpInterval 20000  // in milliseconds
 #define kMaxBufSize 16384
-#define kIndexVersion 0x00000009
+#define kIndexVersion 0x0000000A
 #define kUpdateIndexStartDelay 50000  // in milliseconds
 #define kTelemetryReportBytesLimit (2U * 1024U * 1024U * 1024U)  // 2GB
 
@@ -305,9 +305,6 @@ nsresult CacheIndex::InitInternal(nsIFile* aCacheDirectory) {
 
   mStartTime = TimeStamp::NowLoRes();
 
-  mTotalBytesWritten = CacheObserver::CacheAmountWritten();
-  mTotalBytesWritten <<= 10;
-
   ReadIndexFromDisk();
 
   return NS_OK;
@@ -424,8 +421,6 @@ nsresult CacheIndex::Shutdown() {
   }
 
   bool sanitize = CacheObserver::ClearCacheOnShutdown();
-
-  CacheObserver::SetCacheAmountWritten(index->mTotalBytesWritten >> 10);
 
   LOG(
       ("CacheIndex::Shutdown() - [state=%d, indexOnDiskIsValid=%d, "
@@ -1718,6 +1713,10 @@ void CacheIndex::WriteIndexToDisk() {
   // dirty flag
   NetworkEndian::writeUint32(mRWBuf + mRWBufPos, 1);
   mRWBufPos += sizeof(uint32_t);
+  // amount of data written to the cache
+  NetworkEndian::writeUint32(mRWBuf + mRWBufPos,
+                             static_cast<uint32_t>(mTotalBytesWritten >> 10));
+  mRWBufPos += sizeof(uint32_t);
 
   mSkipEntries = 0;
 }
@@ -2199,6 +2198,11 @@ void CacheIndex::ParseRecords() {
       }
     }
     pos += sizeof(uint32_t);
+
+    uint64_t dataWritten = NetworkEndian::readUint32(mRWBuf + pos);
+    pos += sizeof(uint32_t);
+    dataWritten <<= 10;
+    mTotalBytesWritten += dataWritten;
   }
 
   uint32_t hashOffset = pos;
@@ -3888,16 +3892,8 @@ void CacheIndex::UpdateTotalBytesWritten(uint32_t aBytesWritten) {
       index->mState == READY && !index->mIndexNeedsUpdate &&
       !index->mShuttingDown) {
     index->DoTelemetryReport();
-
     index->mTotalBytesWritten = 0;
-    CacheObserver::SetCacheAmountWritten(0);
     return;
-  }
-
-  uint64_t writtenKB = index->mTotalBytesWritten >> 10;
-  // Store number of written kilobytes to prefs after writing at least 10MB.
-  if ((writtenKB - CacheObserver::CacheAmountWritten()) > (10 * 1024)) {
-    CacheObserver::SetCacheAmountWritten(writtenKB);
   }
 }
 
