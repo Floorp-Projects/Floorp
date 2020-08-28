@@ -7,7 +7,7 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body>
+<body onload="bodyLoaded()">
 <p id="display"></p>
 <div id="scrollable" style="font-family:monospace; font-size: 18px; line-height: 1; overflow: auto; width: 200px; height: 200px;">
   <div id="scrolled" style="font-size: 64px; width: 5000px; height: 5000px;">
@@ -45,11 +45,15 @@
 <pre id="test">
 <script type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTests, window);
+var gScrollableElement;
+var gScrolledElement;
 
-var gScrollableElement = document.getElementById("scrollable");
-var gScrolledElement = document.getElementById("scrolled");
+SimpleTest.waitForExplicitFinish();
+function bodyLoaded() {
+  gScrollableElement = document.getElementById("scrollable");
+  gScrolledElement = document.getElementById("scrolled");
+  runTests();
+}
 
 var gLineHeight = 0;
 var gHorizontalLine = 0;
