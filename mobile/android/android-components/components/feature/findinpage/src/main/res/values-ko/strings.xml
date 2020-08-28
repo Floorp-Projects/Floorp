@@ -19,6 +19,6 @@
     <string name="mozac_feature_findindpage_previous_result">이전 결과 찾기</string>
 
     <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
-    <string name="mozac_feature_findindpage_dismiss">페이지에서 찾기 해제</string>
+    <string name="mozac_feature_findindpage_dismiss">페이지에서 찾기 닫기</string>
 
 </resources>
