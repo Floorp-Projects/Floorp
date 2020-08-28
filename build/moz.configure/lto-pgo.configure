@@ -25,6 +25,9 @@ set_config('MOZ_PROFILE_GENERATE',
 set_define('MOZ_PROFILE_GENERATE',
            depends_if('--enable-profile-generate')(lambda _: True))
 
+add_old_configure_assignment('MOZ_PROFILE_GENERATE', 1,
+                             when='--enable-profile-generate')
+
 js_option('--enable-profile-use',
           env='MOZ_PROFILE_USE',
           nargs='?',
