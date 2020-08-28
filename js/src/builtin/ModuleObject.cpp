@@ -1199,7 +1199,6 @@ ModuleBuilder::ModuleBuilder(JSContext* cx,
     : cx_(cx),
       eitherParser_(eitherParser),
       requestedModuleSpecifiers_(cx),
-      requestedModules_(cx),
       importEntries_(cx),
       exportEntries_(cx),
       exportNames_(cx),
@@ -1218,6 +1217,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
 
   // Step 5.
   if (!metadata.importEntries.reserve(importEntries_.count())) {
+    js::ReportOutOfMemory(cx_);
     return false;
   }
   for (auto r = importEntries_.all(); !r.empty(); r.popFront()) {
@@ -1231,11 +1231,13 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
       frontend::StencilModuleEntry* importEntry = importEntryFor(exp.localName);
       if (!importEntry) {
         if (!metadata.localExportEntries.append(exp)) {
+          js::ReportOutOfMemory(cx_);
           return false;
         }
       } else {
         if (importEntry->importName == cx_->parserNames().star) {
           if (!metadata.localExportEntries.append(exp)) {
+            js::ReportOutOfMemory(cx_);
             return false;
           }
         } else {
@@ -1243,16 +1245,19 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
               importEntry->specifier, importEntry->importName, exp.exportName,
               exp.lineno, exp.column);
           if (!metadata.indirectExportEntries.append(entry)) {
+            js::ReportOutOfMemory(cx_);
             return false;
           }
         }
       }
     } else if (exp.importName == cx_->parserNames().star && !exp.exportName) {
       if (!metadata.starExportEntries.append(exp)) {
+        js::ReportOutOfMemory(cx_);
         return false;
       }
     } else {
       if (!metadata.indirectExportEntries.append(exp)) {
+        js::ReportOutOfMemory(cx_);
         return false;
       }
     }
@@ -1732,6 +1737,7 @@ bool ModuleBuilder::maybeAppendRequestedModule(
   auto entry =
       frontend::StencilModuleEntry::moduleRequest(specifier, line, column);
   if (!requestedModules_.append(entry)) {
+    js::ReportOutOfMemory(cx_);
     return false;
   }
 
