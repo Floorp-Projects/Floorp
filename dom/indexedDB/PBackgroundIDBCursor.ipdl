@@ -84,7 +84,7 @@ union CursorResponse
   IndexKeyCursorResponse[];
 };
 
-refcounted protocol PBackgroundIDBCursor
+protocol PBackgroundIDBCursor
 {
   manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
 

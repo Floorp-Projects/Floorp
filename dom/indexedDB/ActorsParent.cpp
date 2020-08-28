@@ -6374,8 +6374,8 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
 
   bool DeallocRequest(PBackgroundIDBRequestParent* aActor);
 
-  already_AddRefed<PBackgroundIDBCursorParent> AllocCursor(
-      const OpenCursorParams& aParams, bool aTrustParams);
+  PBackgroundIDBCursorParent* AllocCursor(const OpenCursorParams& aParams,
+                                          bool aTrustParams);
 
   bool StartCursor(PBackgroundIDBCursorParent* aActor,
                    const OpenCursorParams& aParams);
@@ -6471,12 +6471,15 @@ class NormalTransaction final : public TransactionBase,
   bool DeallocPBackgroundIDBRequestParent(
       PBackgroundIDBRequestParent* aActor) override;
 
-  already_AddRefed<PBackgroundIDBCursorParent> AllocPBackgroundIDBCursorParent(
+  PBackgroundIDBCursorParent* AllocPBackgroundIDBCursorParent(
       const OpenCursorParams& aParams) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBCursorConstructor(
       PBackgroundIDBCursorParent* aActor,
       const OpenCursorParams& aParams) override;
+
+  bool DeallocPBackgroundIDBCursorParent(
+      PBackgroundIDBCursorParent* aActor) override;
 
  public:
   // This constructor is only called by Database.
@@ -6562,12 +6565,15 @@ class VersionChangeTransaction final
   bool DeallocPBackgroundIDBRequestParent(
       PBackgroundIDBRequestParent* aActor) override;
 
-  already_AddRefed<PBackgroundIDBCursorParent> AllocPBackgroundIDBCursorParent(
+  PBackgroundIDBCursorParent* AllocPBackgroundIDBCursorParent(
       const OpenCursorParams& aParams) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBCursorConstructor(
       PBackgroundIDBCursorParent* aActor,
       const OpenCursorParams& aParams) override;
+
+  bool DeallocPBackgroundIDBCursorParent(
+      PBackgroundIDBCursorParent* aActor) override;
 };
 
 class MutableFile : public BackgroundMutableFileParentBase {
@@ -7912,8 +7918,7 @@ class CursorBase : public PBackgroundIDBCursorParent {
   struct ConstructFromTransactionBase {};
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::CursorBase,
-                                        final)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::CursorBase)
 
   CursorBase(SafeRefPtr<TransactionBase> aTransaction,
              RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
@@ -15090,7 +15095,7 @@ bool TransactionBase::DeallocRequest(
   return true;
 }
 
-already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
+PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
     const OpenCursorParams& aParams, bool aTrustParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
@@ -15142,23 +15147,27 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
     case OpenCursorParams::TObjectStoreOpenCursorParams:
       MOZ_ASSERT(!indexMetadata);
       return MakeAndAddRef<Cursor<IDBCursorType::ObjectStore>>(
-          SafeRefPtrFromThis(), std::move(objectStoreMetadata), direction,
-          CursorBase::ConstructFromTransactionBase{});
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 direction, CursorBase::ConstructFromTransactionBase{})
+          .take();
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams:
       MOZ_ASSERT(!indexMetadata);
       return MakeAndAddRef<Cursor<IDBCursorType::ObjectStoreKey>>(
-          SafeRefPtrFromThis(), std::move(objectStoreMetadata), direction,
-          CursorBase::ConstructFromTransactionBase{});
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 direction, CursorBase::ConstructFromTransactionBase{})
+          .take();
     case OpenCursorParams::TIndexOpenCursorParams:
       return MakeAndAddRef<Cursor<IDBCursorType::Index>>(
-          SafeRefPtrFromThis(), std::move(objectStoreMetadata),
-          std::move(indexMetadata), direction,
-          CursorBase::ConstructFromTransactionBase{});
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 std::move(indexMetadata), direction,
+                 CursorBase::ConstructFromTransactionBase{})
+          .take();
     case OpenCursorParams::TIndexOpenKeyCursorParams:
       return MakeAndAddRef<Cursor<IDBCursorType::IndexKey>>(
-          SafeRefPtrFromThis(), std::move(objectStoreMetadata),
-          std::move(indexMetadata), direction,
-          CursorBase::ConstructFromTransactionBase{});
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 std::move(indexMetadata), direction,
+                 CursorBase::ConstructFromTransactionBase{})
+          .take();
     default:
       MOZ_CRASH("Cannot get here.");
   }
@@ -15297,8 +15306,7 @@ bool NormalTransaction::DeallocPBackgroundIDBRequestParent(
   return DeallocRequest(aActor);
 }
 
-already_AddRefed<PBackgroundIDBCursorParent>
-NormalTransaction::AllocPBackgroundIDBCursorParent(
+PBackgroundIDBCursorParent* NormalTransaction::AllocPBackgroundIDBCursorParent(
     const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
 
@@ -15315,6 +15323,14 @@ mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBCursorConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
+}
+
+bool NormalTransaction::DeallocPBackgroundIDBCursorParent(
+    PBackgroundIDBCursorParent* const aActor) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return DeallocCursor(aActor);
 }
 
 /*******************************************************************************
@@ -15921,7 +15937,7 @@ bool VersionChangeTransaction::DeallocPBackgroundIDBRequestParent(
   return DeallocRequest(aActor);
 }
 
-already_AddRefed<PBackgroundIDBCursorParent>
+PBackgroundIDBCursorParent*
 VersionChangeTransaction::AllocPBackgroundIDBCursorParent(
     const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
@@ -15940,6 +15956,14 @@ VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
+}
+
+bool VersionChangeTransaction::DeallocPBackgroundIDBCursorParent(
+    PBackgroundIDBCursorParent* aActor) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return DeallocCursor(aActor);
 }
 
 /*******************************************************************************
