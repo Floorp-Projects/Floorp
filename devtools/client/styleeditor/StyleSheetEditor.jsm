@@ -490,7 +490,7 @@ StyleSheetEditor.prototype = {
     return sourceEditor.appendTo(inputElement).then(() => {
       sourceEditor.on("saveRequested", this.saveToFile);
 
-      if (this.styleSheet.update) {
+      if (!this.styleSheet.isOriginalSource) {
         sourceEditor.on("change", this.updateStyleSheet);
       }
 
@@ -598,7 +598,7 @@ StyleSheetEditor.prototype = {
   /**
    * Update live style sheet according to modifications.
    */
-  _updateStyleSheet: function() {
+  async _updateStyleSheet() {
     if (this.styleSheet.disabled) {
       // TODO: do we want to do this?
       return;
@@ -620,14 +620,24 @@ StyleSheetEditor.prototype = {
     }
 
     this._isUpdating = true;
-    this.styleSheet
-      .update(this._state.text, this.transitionsEnabled)
-      .then(() => {
-        // Clear any existing mappings from automatic CSS prettification
-        // because they were likely invalided by manually editing the stylesheet.
-        this._mappings = null;
-      })
-      .catch(console.error);
+
+    try {
+      const styleSheetsFront = await this._getStyleSheetsFront();
+      if (styleSheetsFront.traits.supportResourceRequests) {
+        await styleSheetsFront.update(
+          this.resourceId,
+          this._state.text,
+          this.transitionsEnabled
+        );
+      } else {
+        await this.styleSheet.update(this._state.text, this.transitionsEnabled);
+      }
+      // Clear any existing mappings from automatic CSS prettification
+      // because they were likely invalided by manually editing the stylesheet.
+      this._mappings = null;
+    } catch (e) {
+      console.error(e);
+    }
   },
 
   /**
@@ -819,15 +829,25 @@ StyleSheetEditor.prototype = {
    * file from disk and live update the stylesheet object with the contents.
    */
   updateLinkedStyleSheet: function() {
-    OS.File.read(this.linkedCSSFile).then(array => {
+    OS.File.read(this.linkedCSSFile).then(async array => {
       const decoder = new TextDecoder();
       const text = decoder.decode(array);
 
       // Ensure we don't re-fetch the text from the original source
       // actor when we're notified that the style sheet changed.
       this._isUpdating = true;
-      const relatedSheet = this.styleSheet.relatedStyleSheet;
-      relatedSheet.update(text, this.transitionsEnabled);
+
+      const styleSheetsFront = await this._getStyleSheetsFront();
+      if (styleSheetsFront.traits.supportResourceRequests) {
+        await styleSheetsFront.update(
+          this.resourceId,
+          text,
+          this.transitionsEnabled
+        );
+      } else {
+        const relatedSheet = this.styleSheet.relatedStyleSheet;
+        await relatedSheet.update(text, this.transitionsEnabled);
+      }
     }, this.markLinkedFileBroken);
   },
 
