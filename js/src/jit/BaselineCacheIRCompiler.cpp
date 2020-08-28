@@ -1197,19 +1197,30 @@ bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   return true;
 }
 
-static void EmitAssertExtensibleAndWritableArrayLength(MacroAssembler& masm,
-                                                       Register elementsReg) {
+static void EmitAssertExtensibleElements(MacroAssembler& masm,
+                                         Register elementsReg) {
 #ifdef DEBUG
-  // Preceding shape guards ensure the object is extensible and the array length
-  // is writable.
+  // Preceding shape guards ensure the object elements are extensible.
   Address elementsFlags(elementsReg, ObjectElements::offsetOfFlags());
   Label ok;
   masm.branchTest32(Assembler::Zero, elementsFlags,
-                    Imm32(ObjectElements::Flags::NOT_EXTENSIBLE |
-                          ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH),
+                    Imm32(ObjectElements::Flags::NOT_EXTENSIBLE),
                     &ok);
-  masm.assumeUnreachable(
-      "Unexpected non-extensible object or non-writable array length");
+  masm.assumeUnreachable("Unexpected non-extensible elements");
+  masm.bind(&ok);
+#endif
+}
+
+static void EmitAssertWritableArrayLengthElements(MacroAssembler& masm,
+                                                  Register elementsReg) {
+#ifdef DEBUG
+  // Preceding shape guards ensure the array length is writable.
+  Address elementsFlags(elementsReg, ObjectElements::offsetOfFlags());
+  Label ok;
+  masm.branchTest32(Assembler::Zero, elementsFlags,
+                    Imm32(ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH),
+                    &ok);
+  masm.assumeUnreachable("Unexpected non-writable array length elements");
   masm.bind(&ok);
 #endif
 }
@@ -1236,7 +1247,10 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   // Load obj->elements in scratch.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
-  EmitAssertExtensibleAndWritableArrayLength(masm, scratch);
+  EmitAssertExtensibleElements(masm, scratch);
+  if (handleAdd) {
+    EmitAssertWritableArrayLengthElements(masm, scratch);
+  }
 
   BaseObjectElementIndex element(scratch, index);
   Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
@@ -1381,7 +1395,8 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   // Load obj->elements in scratch.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
-  EmitAssertExtensibleAndWritableArrayLength(masm, scratch);
+  EmitAssertExtensibleElements(masm, scratch);
+  EmitAssertWritableArrayLengthElements(masm, scratch);
 
   Address elementsInitLength(scratch,
                              ObjectElements::offsetOfInitializedLength());
