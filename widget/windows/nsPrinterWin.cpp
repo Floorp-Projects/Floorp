@@ -29,11 +29,12 @@ already_AddRefed<nsPrinterWin> nsPrinterWin::Create(const nsAString& aName) {
 }
 
 PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
-  nsAutoPrinter autoPrinter(nsHPRINTER(nullptr));
-  BOOL status = ::OpenPrinterW(mName.get(), &autoPrinter.get(), nullptr);
+  nsHPRINTER hPrinter = nullptr;
+  BOOL status = ::OpenPrinterW(mName.get(), &hPrinter, nullptr);
   if (NS_WARN_IF(!status)) {
     return PrintSettingsInitializer();
   }
+  nsAutoPrinter autoPrinter(hPrinter);
 
   // Allocate devmode storage of the correct size.
   LONG bytesNeeded = ::DocumentPropertiesW(nullptr, autoPrinter.get(),
