@@ -74,10 +74,11 @@ void nsPrintSettings::InitWithInitializer(
 
   if (aSettings.mPaperInfo.mUnwriteableMargin) {
     const auto& margin = aSettings.mPaperInfo.mUnwriteableMargin.value();
-    SetUnwriteableMarginTop(NS_POINTS_TO_TWIPS(margin.top));
-    SetUnwriteableMarginRight(NS_POINTS_TO_TWIPS(margin.right));
-    SetUnwriteableMarginBottom(NS_POINTS_TO_TWIPS(margin.bottom));
-    SetUnwriteableMarginLeft(NS_POINTS_TO_TWIPS(margin.left));
+    // Margins are stored internally in TWIPS, but the setters expect inches.
+    SetUnwriteableMarginTop(margin.top * kInchesPerPoint);
+    SetUnwriteableMarginRight(margin.right * kInchesPerPoint);
+    SetUnwriteableMarginBottom(margin.bottom * kInchesPerPoint);
+    SetUnwriteableMarginLeft(margin.left * kInchesPerPoint);
   }
 
   // Set this last because other setters may overwrite its value.
