@@ -171,9 +171,7 @@ var ModuleManager = {
     // to collect it and restore it in the other process when switching.
     // TODO: This should go away when we migrate the history to the main
     // process Bug 1507287.
-    const { history } = await this.getActor("GeckoViewContent").sendQuery(
-      "CollectSessionState"
-    );
+    const { history } = await this.getActor("GeckoViewContent").collectState();
     // Ignore scroll and form data since we're navigating away from this page
     // anyway
     const sessionState = { history };
@@ -236,11 +234,7 @@ var ModuleManager = {
       module.enabled = true;
     });
 
-    this.getActor("GeckoViewContent").sendAsyncMessage(
-      "GeckoView:RestoreState",
-      sessionState
-    );
-
+    this.getActor("GeckoViewContent").restoreState(sessionState);
     this.browser.focus();
     return true;
   },
@@ -543,10 +537,14 @@ function startup() {
         resource: "resource://gre/modules/GeckoViewContent.jsm",
         actors: {
           GeckoViewContent: {
+            parent: {
+              moduleURI: "resource:///actors/GeckoViewContentParent.jsm",
+            },
             child: {
               moduleURI: "resource:///actors/GeckoViewContentChild.jsm",
               events: {
                 mozcaretstatechanged: { capture: true, mozSystemGroup: true },
+                pageshow: { mozSystemGroup: true },
               },
             },
             allFrames: true,
