@@ -263,7 +263,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   MOZ_ASSERT_IF(isTopLevel == TopLevelFunction::Yes,
                 index == CompilationInfo::TopLevelIndex);
 
-  if (!compilationInfo_.stencil.scriptData.emplaceBack(cx_)) {
+  if (!compilationInfo_.stencil.scriptData.emplaceBack()) {
     js::ReportOutOfMemory(cx_);
     return nullptr;
   }
@@ -1952,6 +1952,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   ScriptThingsVector& gcthings = script.gcThings;
   if (!gcthings.reserve(ngcthings.value())) {
+    js::ReportOutOfMemory(cx_);
     return false;
   }
 
