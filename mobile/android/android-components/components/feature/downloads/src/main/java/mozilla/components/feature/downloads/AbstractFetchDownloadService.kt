@@ -165,7 +165,7 @@ abstract class AbstractFetchDownloadService : Service() {
                         setDownloadJobStatus(currentDownloadJobState, PAUSED)
                         currentDownloadJobState.job?.cancel()
                         emitNotificationPauseFact()
-                        logger.debug("ACTION_PAUSE for ${currentDownloadJobState.state.url}")
+                        logger.debug("ACTION_PAUSE for ${currentDownloadJobState.state.id}")
                     }
 
                     ACTION_RESUME -> {
@@ -176,7 +176,7 @@ abstract class AbstractFetchDownloadService : Service() {
                         }
 
                         emitNotificationResumeFact()
-                        logger.debug("ACTION_RESUME for ${currentDownloadJobState.state.url}")
+                        logger.debug("ACTION_RESUME for ${currentDownloadJobState.state.id}")
                     }
 
                     ACTION_CANCEL -> {
@@ -192,7 +192,7 @@ abstract class AbstractFetchDownloadService : Service() {
 
                         removeDownloadJob(currentDownloadJobState)
                         emitNotificationCancelFact()
-                        logger.debug("ACTION_CANCEL for ${currentDownloadJobState.state.url}")
+                        logger.debug("ACTION_CANCEL for ${currentDownloadJobState.state.id}")
                     }
 
                     ACTION_TRY_AGAIN -> {
@@ -205,12 +205,12 @@ abstract class AbstractFetchDownloadService : Service() {
                         }
 
                         emitNotificationTryAgainFact()
-                        logger.debug("ACTION_TRY_AGAIN for ${currentDownloadJobState.state.url}")
+                        logger.debug("ACTION_TRY_AGAIN for ${currentDownloadJobState.state.id}")
                     }
 
                     ACTION_DISMISS -> {
                         removeDownloadJob(currentDownloadJobState)
-                        logger.debug("ACTION_DISMISS for ${currentDownloadJobState.state.url}")
+                        logger.debug("ACTION_DISMISS for ${currentDownloadJobState.state.id}")
                     }
 
                     ACTION_OPEN -> {
@@ -228,11 +228,11 @@ abstract class AbstractFetchDownloadService : Service() {
                             )
 
                             Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
-                            logger.debug("ACTION_OPEN errorMessage for ${currentDownloadJobState.state.url} ")
+                            logger.debug("ACTION_OPEN errorMessage for ${currentDownloadJobState.state.id} ")
                         }
 
                         emitNotificationOpenFact()
-                        logger.debug("ACTION_OPEN for ${currentDownloadJobState.state.url}")
+                        logger.debug("ACTION_OPEN for ${currentDownloadJobState.state.id}")
                     }
                 }
             }
@@ -373,11 +373,11 @@ abstract class AbstractFetchDownloadService : Service() {
 
     @Suppress("TooGenericExceptionCaught")
     internal fun startDownloadJob(currentDownloadJobState: DownloadJobState) {
-        logger.debug("Starting download for ${currentDownloadJobState.state.url} ")
+        logger.debug("Starting download for ${currentDownloadJobState.state.id} ")
         try {
             performDownload(currentDownloadJobState)
         } catch (e: Exception) {
-            logger.error("Unable to complete download for ${currentDownloadJobState.state.url} marked as FAILED", e)
+            logger.error("Unable to complete download for ${currentDownloadJobState.state.id} marked as FAILED", e)
             setDownloadJobStatus(currentDownloadJobState, FAILED)
         }
     }
@@ -576,7 +576,7 @@ abstract class AbstractFetchDownloadService : Service() {
 
         val request = Request(download.url.sanitizeURL(), headers = headers)
         val response = httpClient.fetch(request)
-        logger.debug("Fetching download for ${currentDownloadJobState.state.url} ")
+        logger.debug("Fetching download for ${currentDownloadJobState.state.id} ")
 
         // If we are resuming a download and the response does not contain a CONTENT_RANGE
         // we cannot be sure that the request will properly be handled
@@ -586,7 +586,7 @@ abstract class AbstractFetchDownloadService : Service() {
             currentDownloadJobState.currentBytesCopied = 0
             currentDownloadJobState.state = currentDownloadJobState.state.copy(currentBytesCopied = 0)
             setDownloadJobStatus(currentDownloadJobState, FAILED)
-            logger.debug("Unable to fetching Download for ${currentDownloadJobState.state.url} status FAILED")
+            logger.debug("Unable to fetching Download for ${currentDownloadJobState.state.id} status FAILED")
             return
         }
 
@@ -610,7 +610,7 @@ abstract class AbstractFetchDownloadService : Service() {
             download.currentBytesCopied < download.state.contentLength ?: 0
         ) {
             setDownloadJobStatus(download, FAILED)
-            logger.error("verifyDownload for ${download.state.url} FAILED")
+            logger.error("verifyDownload for ${download.state.id} FAILED")
         } else if (getDownloadJobStatus(download) == DOWNLOADING) {
             setDownloadJobStatus(download, COMPLETED)
             /**
@@ -622,14 +622,14 @@ abstract class AbstractFetchDownloadService : Service() {
                 val newState = download.state.copy(contentLength = download.currentBytesCopied)
                 updateDownloadState(newState)
             }
-            logger.debug("verifyDownload for ${download.state.url} ${download.status}")
+            logger.debug("verifyDownload for ${download.state.id} ${download.status}")
         }
     }
 
     @VisibleForTesting
     internal fun copyInChunks(downloadJobState: DownloadJobState, inStream: InputStream, outStream: OutputStream) {
         val data = ByteArray(CHUNK_SIZE)
-        logger.debug("starting copyInChunks ${downloadJobState.state.url}" +
+        logger.debug("starting copyInChunks ${downloadJobState.state.id}" +
                 " currentBytesCopied ${downloadJobState.state.currentBytesCopied}")
 
         val throttleUpdateDownload = throttleLatest<Long>(
@@ -653,7 +653,7 @@ abstract class AbstractFetchDownloadService : Service() {
             outStream.write(data, 0, bytesRead)
         }
         logger.debug(
-            "Finishing copyInChunks ${downloadJobState.state.url} " +
+            "Finishing copyInChunks ${downloadJobState.state.id} " +
                 "currentBytesCopied ${downloadJobState.currentBytesCopied}"
         )
     }
