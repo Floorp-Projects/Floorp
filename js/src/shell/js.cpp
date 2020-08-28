@@ -10517,9 +10517,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     MOZ_ASSERT(!jit::JitOptions.warpBuilder,
                "WarpBuilder is disabled by default");
   } else if (op.getBoolOption("warp")) {
-    // WarpBuilder requires TI to be disabled.
-    jit::JitOptions.typeInference = false;
-    jit::JitOptions.warpBuilder = true;
+    jit::JitOptions.setWarpEnabled(true);
   }
 #endif
 

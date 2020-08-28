@@ -5321,10 +5321,7 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       jit::JitOptions.spectreJitToCxxCalls = !!value;
       break;
     case JSJITCOMPILER_WARP_ENABLE:
-#ifdef NIGHTLY_BUILD
-      jit::JitOptions.warpBuilder = !!value;
-      jit::JitOptions.typeInference = !value;
-#endif
+      jit::JitOptions.setWarpEnabled(!!value);
       break;
     case JSJITCOMPILER_WASM_FOLD_OFFSETS:
       jit::JitOptions.wasmFoldOffsets = !!value;

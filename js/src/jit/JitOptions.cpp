@@ -338,6 +338,15 @@ void DefaultJitOptions::setFastWarmUp() {
   smallFunctionMaxBytecodeLength = INT32_MAX;
 }
 
+void DefaultJitOptions::setWarpEnabled(bool enable) {
+#ifdef NIGHTLY_BUILD
+  // WarpBuilder requires TI to be disabled and doesn't use optimization levels.
+  typeInference = !enable;
+  warpBuilder = enable;
+  disableOptimizationLevels = enable;
+#endif
+}
+
 void DefaultJitOptions::setNormalIonWarmUpThreshold(uint32_t warmUpThreshold) {
   normalIonWarmUpThreshold = warmUpThreshold;
 
