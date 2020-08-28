@@ -188,9 +188,6 @@ auto ToResultInvokeMemberFunction(T& aObj, const Func& aFunc, Args&&... aArgs) {
 template <typename T>
 auto DerefHelper(const T&) -> T;
 
-template <typename T>
-auto DerefHelper(T*) -> T;
-
 template <template <class> class SmartPtr, typename T,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
 auto DerefHelper(const SmartPtr<T>&) -> T;
