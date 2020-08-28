@@ -6,11 +6,24 @@
 
 GeckoSharedLibrary('AccessibleMarshal', linkage=None)
 
+# Missing here, is the notion that changes to the idl files included by
+# ISimpleDOM.idl (e.g. ISimpleDOMNode.idl) should rebuild the outputs.
+GeneratedFile('ISimpleDOM.h', 'ISimpleDOM_p.c', 'ISimpleDOM_i.c',
+              'ISimpleDOM_dlldata.c', 'ISimpleDOM.tlb',
+              inputs=['ISimpleDOM.idl'],
+              script='/build/midl.py', entry_point='midl',
+              flags=['-I', SRCDIR, '-robust', '-dlldata', OBJDIR + '/ISimpleDOM_dlldata.c'])
+
 SOURCES += [
-    '!dlldata.c',
+    '!ISimpleDOM_dlldata.c',
     '!ISimpleDOM_i.c',
     '!ISimpleDOM_p.c',
     'AccessibleMarshalThunk.c',
+]
+
+EXPORTS += [
+    '!ISimpleDOM.h',
+    '!ISimpleDOM_i.c',
 ]
 
 DEFINES['REGISTER_PROXY_DLL'] = True
@@ -24,14 +37,6 @@ OS_LIBS += [
     'kernel32',
     'rpcrt4',
     'oleaut32',
-]
-
-GENERATED_FILES += [
-    'dlldata.c',
-    'ISimpleDOM.h',
-    'ISimpleDOM.tlb',
-    'ISimpleDOM_i.c',
-    'ISimpleDOM_p.c',
 ]
 
 RCINCLUDE = 'AccessibleMarshal.rc'
