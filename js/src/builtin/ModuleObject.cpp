@@ -755,7 +755,7 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
                    MemoryUse::ModuleBindingMap);
 
   frontend::FunctionDeclarationVector* funDecls =
-      cx->new_<frontend::FunctionDeclarationVector>(cx);
+      cx->new_<frontend::FunctionDeclarationVector>();
   if (!funDecls) {
     return nullptr;
   }
@@ -1201,11 +1201,14 @@ ModuleBuilder::ModuleBuilder(JSContext* cx,
       requestedModuleSpecifiers_(cx),
       importEntries_(cx),
       exportEntries_(cx),
-      exportNames_(cx),
-      functionDecls_(cx) {}
+      exportNames_(cx) {}
 
 bool ModuleBuilder::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
-  return functionDecls_.emplaceBack(funIndex);
+  if (!functionDecls_.emplaceBack(funIndex)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
