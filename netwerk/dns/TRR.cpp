@@ -1038,6 +1038,19 @@ nsresult TRR::DohDecode(nsCString& aHost) {
             return rv;
           }
 
+          if (parsed.mSvcDomainName.IsEmpty()) {
+            if (parsed.mSvcFieldPriority == 0) {
+              // For AliasMode SVCB RRs, a TargetName of "." indicates that the
+              // service is not available or does not exist.
+              continue;
+            }
+
+            // For ServiceMode SVCB RRs, if TargetName has the value ".",
+            // then the owner name of this record MUST be used as
+            // the effective TargetName.
+            parsed.mSvcDomainName = qname;
+          }
+
           available -= (svcbIndex - index);
           if (!available.isValid()) {
             return NS_ERROR_UNEXPECTED;
