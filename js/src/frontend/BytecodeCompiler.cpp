@@ -751,15 +751,15 @@ static bool InternalParseModule(JSContext* cx,
   options.setIsRunOnce(true);
   options.allowHTMLComments = false;
 
-  CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.initForModule(cx)) {
+  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  if (!compilationInfo.get().input.initForModule(cx)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, allocScope, compilationInfo.input.options,
-                                srcBuf);
-  if (!compiler.compile(compilationInfo, gcOutput)) {
+  ModuleCompiler<Unit> compiler(cx, allocScope,
+                                compilationInfo.get().input.options, srcBuf);
+  if (!compiler.compile(compilationInfo.get(), gcOutput)) {
     return false;
   }
 
@@ -842,8 +842,8 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
       .setNoScriptRval(false)
       .setSelfHostingMode(false);
 
-  CompilationInfo compilationInfo(cx, options);
-  compilationInfo.input.initFromLazy(lazy);
+  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  compilationInfo.get().input.initFromLazy(lazy);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
@@ -851,7 +851,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
                                         /* foldConstants = */ true,
-                                        compilationInfo, compilationState,
+                                        compilationInfo.get(), compilationState,
                                         nullptr, lazy);
   if (!parser.checkOptions()) {
     return false;
@@ -871,7 +871,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
       static_cast<uint32_t>(lazy->immutableFlags());
 
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(),
-                      compilationInfo, compilationState,
+                      compilationInfo.get(), compilationState,
                       BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
@@ -882,7 +882,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   }
 
   CompilationGCOutput gcOutput(cx);
-  if (!compilationInfo.instantiateStencils(gcOutput)) {
+  if (!compilationInfo.get().instantiateStencils(gcOutput)) {
     return false;
   }
 
@@ -918,26 +918,28 @@ static JSFunction* CompileStandaloneFunction(
     scope = &cx->global()->emptyGlobalScope();
   }
 
-  CompilationInfo compilationInfo(cx, options);
-  if (!compilationInfo.input.initForStandaloneFunction(cx, scope)) {
+  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  if (!compilationInfo.get().input.initForStandaloneFunction(cx, scope)) {
     return nullptr;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   StandaloneFunctionCompiler<char16_t> compiler(
-      cx, allocScope, compilationInfo.input.options, srcBuf, enclosingScope);
-  if (!compiler.createSourceAndParser(compilationInfo)) {
+      cx, allocScope, compilationInfo.get().input.options, srcBuf,
+      enclosingScope);
+  if (!compiler.createSourceAndParser(compilationInfo.get())) {
     return nullptr;
   }
 
-  FunctionNode* parsedFunction = compiler.parse(
-      compilationInfo, syntaxKind, generatorKind, asyncKind, parameterListEnd);
+  FunctionNode* parsedFunction =
+      compiler.parse(compilationInfo.get(), syntaxKind, generatorKind,
+                     asyncKind, parameterListEnd);
   if (!parsedFunction) {
     return nullptr;
   }
 
   CompilationGCOutput gcOutput(cx);
-  if (!compiler.compile(compilationInfo, parsedFunction, gcOutput)) {
+  if (!compiler.compile(compilationInfo.get(), parsedFunction, gcOutput)) {
     return nullptr;
   }
 
@@ -946,7 +948,8 @@ static JSFunction* CompileStandaloneFunction(
   // interpreted script.
   if (gcOutput.script) {
     if (parameterListEnd) {
-      compilationInfo.input.source()->setParameterListEnd(*parameterListEnd);
+      compilationInfo.get().input.source()->setParameterListEnd(
+          *parameterListEnd);
     }
     tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
                                     gcOutput.script);
@@ -1002,3 +1005,12 @@ bool frontend::CompilationInput::initScriptSource(JSContext* cx) {
 
   return ss->initFromOptions(cx, options);
 }
+
+void CompilationInput::trace(JSTracer* trc) {
+  atoms.trace(trc);
+  TraceNullableRoot(trc, &lazy, "compilation-input-lazy");
+  source_.trace(trc);
+  TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
+}
+
+void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }

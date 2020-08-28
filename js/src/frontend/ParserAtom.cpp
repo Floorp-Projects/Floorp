@@ -146,7 +146,7 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
 JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(
     JSContext* cx, CompilationInfo& compilationInfo) const {
   if (atomIndex_.constructed<AtomIndex>()) {
-    return compilationInfo.input.atoms[atomIndex_.ref<AtomIndex>()].get();
+    return compilationInfo.input.atoms[atomIndex_.ref<AtomIndex>()];
   }
   if (atomIndex_.constructed<WellKnownAtomId>()) {
     return GetWellKnownAtom(cx, atomIndex_.ref<WellKnownAtomId>());

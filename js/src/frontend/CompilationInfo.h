@@ -91,7 +91,7 @@ struct ScopeContext {
 };
 
 // Input of the compilation, including source and enclosing context.
-struct MOZ_RAII CompilationInput {
+struct CompilationInput {
   const JS::ReadOnlyCompileOptions& options;
 
   // Atoms lowered into or converted from CompilationStencil.parserAtoms.
@@ -99,23 +99,19 @@ struct MOZ_RAII CompilationInput {
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
   // etc), and having 2 vectors in both input/output is error prone.
-  JS::RootedVector<JSAtom*> atoms;
+  JS::GCVector<JSAtom*> atoms;
 
-  JS::Rooted<BaseScript*> lazy;
+  BaseScript* lazy = nullptr;
 
-  JS::Rooted<ScriptSourceHolder> source_;
+  ScriptSourceHolder source_;
 
   // The enclosing scope of the function if we're compiling standalone function.
   // The enclosing scope of the `eval` if we're compiling eval.
   // Null otherwise.
-  JS::Rooted<Scope*> enclosingScope;
+  Scope* enclosingScope = nullptr;
 
   CompilationInput(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : options(options),
-        atoms(cx),
-        lazy(cx),
-        source_(cx),
-        enclosingScope(cx) {}
+      : options(options), atoms(cx) {}
 
  private:
   bool initScriptSource(JSContext* cx);
@@ -153,10 +149,10 @@ struct MOZ_RAII CompilationInput {
     enclosingScope = lazy->function()->enclosingScope();
   }
 
-  ScriptSource* source() { return source_.get().get(); }
+  ScriptSource* source() { return source_.get(); }
 
  private:
-  void setSource(ScriptSource* ss) { return source_.get().reset(ss); }
+  void setSource(ScriptSource* ss) { return source_.reset(ss); }
 
  public:
   template <typename Unit>
@@ -164,7 +160,9 @@ struct MOZ_RAII CompilationInput {
                                  JS::SourceText<Unit>& sourceBuffer) {
     return source()->assignSource(cx, options, sourceBuffer);
   }
-};
+
+  void trace(JSTracer* trc);
+} JS_HAZ_GC_POINTER;
 
 struct MOZ_RAII CompilationState {
   // Until we have dealt with Atoms in the front end, we need to hold
@@ -190,7 +188,7 @@ struct MOZ_RAII CompilationState {
 };
 
 // The top level struct of stencil.
-struct MOZ_RAII CompilationStencil {
+struct CompilationStencil {
   // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
   // allocated during parse to ensure correct destruction.
   Vector<RegExpStencil> regExpData;
@@ -349,7 +347,7 @@ class ScriptStencilIterable {
 };
 
 // Input and output of compilation to stencil.
-struct MOZ_RAII CompilationInfo {
+struct CompilationInfo {
   static constexpr FunctionIndex TopLevelIndex = FunctionIndex(0);
 
   JSContext* cx;
@@ -382,16 +380,19 @@ struct MOZ_RAII CompilationInfo {
     return result.unwrapOr(nullptr);
   }
 
-  // To avoid any misuses, make sure this is neither copyable,
-  // movable or assignable.
+  // Move constructor is necessary to use Rooted.
+  CompilationInfo(CompilationInfo&&) = default;
+
+  // To avoid any misuses, make sure this is neither copyable or assignable.
   CompilationInfo(const CompilationInfo&) = delete;
-  CompilationInfo(CompilationInfo&&) = delete;
   CompilationInfo& operator=(const CompilationInfo&) = delete;
   CompilationInfo& operator=(CompilationInfo&&) = delete;
 
   ScriptStencilIterable functionScriptStencils(CompilationGCOutput& gcOutput) {
     return ScriptStencilIterable(stencil, gcOutput);
   }
+
+  void trace(JSTracer* trc);
 };
 
 }  // namespace frontend

@@ -952,13 +952,14 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.initForEval(cx, scope)) {
+    Rooted<frontend::CompilationInfo> compilationInfo(
+        cx, frontend::CompilationInfo(cx, options));
+    if (!compilationInfo.get().input.initForEval(cx, scope)) {
       return false;
     }
 
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, srcBuf, scope, env,
+    if (!frontend::CompileEvalScript(compilationInfo.get(), srcBuf, scope, env,
                                      gcOutput)) {
       return false;
     }
@@ -970,8 +971,9 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     // users of executeInGlobal, like the web console, may add new bindings to
     // the global scope.
 
-    frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.initForGlobal(cx)) {
+    Rooted<frontend::CompilationInfo> compilationInfo(
+        cx, frontend::CompilationInfo(cx, options));
+    if (!compilationInfo.get().input.initForGlobal(cx)) {
       return false;
     }
 
@@ -979,7 +981,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
                scopeKind == ScopeKind::NonSyntactic);
 
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileGlobalScript(compilationInfo, srcBuf, scopeKind,
+    if (!frontend::CompileGlobalScript(compilationInfo.get(), srcBuf, scopeKind,
                                        gcOutput)) {
       return false;
     }

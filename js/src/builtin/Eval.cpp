@@ -330,14 +330,15 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
       return false;
     }
 
-    frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.initForEval(cx, enclosing)) {
+    Rooted<frontend::CompilationInfo> compilationInfo(
+        cx, frontend::CompilationInfo(cx, options));
+    if (!compilationInfo.get().input.initForEval(cx, enclosing)) {
       return false;
     }
 
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, srcBuf, enclosing, env,
-                                     gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo.get(), srcBuf, enclosing,
+                                     env, gcOutput)) {
       return false;
     }
 
@@ -432,14 +433,15 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
       return false;
     }
 
-    frontend::CompilationInfo compilationInfo(cx, options);
-    if (!compilationInfo.input.initForEval(cx, enclosing)) {
+    Rooted<frontend::CompilationInfo> compilationInfo(
+        cx, frontend::CompilationInfo(cx, options));
+    if (!compilationInfo.get().input.initForEval(cx, enclosing)) {
       return false;
     }
 
     frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo, srcBuf, enclosing, env,
-                                     gcOutput)) {
+    if (!frontend::CompileEvalScript(compilationInfo.get(), srcBuf, enclosing,
+                                     env, gcOutput)) {
       return false;
     }
 
