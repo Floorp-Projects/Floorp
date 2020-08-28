@@ -818,6 +818,9 @@ void MDefinition::justReplaceAllUsesWith(MDefinition* dom) {
   if (isUseRemoved()) {
     dom->setUseRemovedUnchecked();
   }
+  if (isImplicitlyUsed()) {
+    dom->setImplicitlyUsedUnchecked();
+  }
 
   for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ++i) {
     i->setProducerUnchecked(dom);
