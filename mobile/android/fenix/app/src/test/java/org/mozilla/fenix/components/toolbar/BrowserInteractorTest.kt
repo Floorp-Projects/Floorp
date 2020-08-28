@@ -30,7 +30,7 @@ class BrowserInteractorTest {
 
     @Test
     fun onTabCounterMenuItemTapped() {
-        val item: TabCounterMenuItem = mockk()
+        val item: TabCounterMenu.Item = mockk()
 
         interactor.onTabCounterMenuItemTapped(item)
         verify { browserToolbarController.handleTabCounterItemInteraction(item) }

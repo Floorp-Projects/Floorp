@@ -132,14 +132,17 @@ class DefaultToolbarIntegration(
             )
         }
 
-        val onTabCounterMenuItemTapped = { item: TabCounterMenuItem ->
-            interactor.onTabCounterMenuItemTapped(item)
-        }
-        val tabsAction =
-            TabCounterToolbarButton(lifecycleOwner, isPrivate, onTabCounterMenuItemTapped) {
+        val tabsAction = TabCounterToolbarButton(
+            lifecycleOwner,
+            isPrivate,
+            onItemTapped = {
+                interactor.onTabCounterMenuItemTapped(it)
+            },
+            showTabs = {
                 toolbar.hideKeyboard()
                 interactor.onTabCounterClicked()
             }
+        )
         toolbar.addBrowserAction(tabsAction)
 
         val engineForSpeculativeConnects = if (!isPrivate) engine else null

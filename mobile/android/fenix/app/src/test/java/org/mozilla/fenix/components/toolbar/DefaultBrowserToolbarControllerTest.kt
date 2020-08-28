@@ -180,7 +180,7 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarCloseTabPressWithLastPrivateSession() {
         val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Private)
-        val item = TabCounterMenuItem.CloseTab
+        val item = TabCounterMenu.Item.CloseTab
         val sessions = listOf(
             mockk<Session> {
                 every { private } returns true
@@ -201,7 +201,7 @@ class DefaultBrowserToolbarControllerTest {
     fun handleToolbarCloseTabPress() {
         val tabsUseCases: TabsUseCases = mockk(relaxed = true)
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mockk(relaxed = true)
-        val item = TabCounterMenuItem.CloseTab
+        val item = TabCounterMenu.Item.CloseTab
 
         every { sessionManager.sessions } returns emptyList()
         every { activity.components.useCases.tabsUseCases } returns tabsUseCases
@@ -215,7 +215,7 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarNewTabPress() {
         val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Private)
-        val item = TabCounterMenuItem.NewTab(false)
+        val item = TabCounterMenu.Item.NewTab(BrowsingMode.Normal)
 
         every { activity.browsingModeManager } returns browsingModeManager
         every { navController.popBackStack(R.id.homeFragment, any()) } returns true
@@ -229,7 +229,7 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarNewPrivateTabPress() {
         val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Normal)
-        val item = TabCounterMenuItem.NewTab(true)
+        val item = TabCounterMenu.Item.NewTab(BrowsingMode.Private)
 
         every { activity.browsingModeManager } returns browsingModeManager
         every { navController.popBackStack(R.id.homeFragment, any()) } returns true

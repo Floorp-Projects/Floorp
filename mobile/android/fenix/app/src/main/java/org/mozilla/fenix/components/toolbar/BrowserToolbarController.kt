@@ -32,7 +32,7 @@ interface BrowserToolbarController {
     fun handleToolbarPasteAndGo(text: String)
     fun handleToolbarClick()
     fun handleTabCounterClick()
-    fun handleTabCounterItemInteraction(item: TabCounterMenuItem)
+    fun handleTabCounterItemInteraction(item: TabCounterMenu.Item)
     fun handleReaderModePressed(enabled: Boolean)
 }
 
@@ -129,9 +129,9 @@ class DefaultBrowserToolbarController(
         }
     }
 
-    override fun handleTabCounterItemInteraction(item: TabCounterMenuItem) {
+    override fun handleTabCounterItemInteraction(item: TabCounterMenu.Item) {
         when (item) {
-            is TabCounterMenuItem.CloseTab -> {
+            is TabCounterMenu.Item.CloseTab -> {
                 sessionManager.selectedSession?.let {
                     // When closing the last tab we must show the undo snackbar in the home fragment
                     if (sessionManager.sessionsOfType(it.private).count() == 1) {
@@ -148,8 +148,8 @@ class DefaultBrowserToolbarController(
                     }
                 }
             }
-            is TabCounterMenuItem.NewTab -> {
-                activity.browsingModeManager.mode = BrowsingMode.fromBoolean(item.isPrivate)
+            is TabCounterMenu.Item.NewTab -> {
+                activity.browsingModeManager.mode = item.mode
                 navController.popBackStack(R.id.homeFragment, false)
             }
         }

@@ -13,7 +13,7 @@ open class BrowserInteractor(
         browserToolbarController.handleTabCounterClick()
     }
 
-    override fun onTabCounterMenuItemTapped(item: TabCounterMenuItem) {
+    override fun onTabCounterMenuItemTapped(item: TabCounterMenu.Item) {
         browserToolbarController.handleTabCounterItemInteraction(item)
     }
 

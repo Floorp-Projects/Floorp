@@ -52,9 +52,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.menu.BrowserMenu
-import mozilla.components.browser.menu.BrowserMenuBuilder
-import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -86,6 +83,7 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
 import org.mozilla.fenix.components.tips.providers.MigrationTipProvider
+import org.mozilla.fenix.components.toolbar.TabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
@@ -311,7 +309,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    @SuppressWarnings("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -348,8 +346,21 @@ class HomeFragment : Fragment() {
         }
 
         createHomeMenu(requireContext(), WeakReference(view.menuButton))
+        val tabCounterMenu = TabCounterMenu(
+            view.context,
+            metrics = view.context.components.analytics.metrics
+        ) {
+            if (it is TabCounterMenu.Item.NewTab) {
+                (activity as HomeActivity).browsingModeManager.mode = it.mode
+            }
+        }
+        val inverseBrowsingMode = when ((activity as HomeActivity).browsingModeManager.mode) {
+            BrowsingMode.Normal -> BrowsingMode.Private
+            BrowsingMode.Private -> BrowsingMode.Normal
+        }
+        tabCounterMenu.updateMenu(showOnly = inverseBrowsingMode)
         view.tab_button.setOnLongClickListener {
-            createTabCounterMenu(requireContext()).show(view.tab_button)
+            tabCounterMenu.menuController.show(anchor = it)
             true
         }
 
@@ -708,50 +719,6 @@ class HomeFragment : Fragment() {
         }
 
         nav(R.id.homeFragment, directions, getToolbarNavOptions(requireContext()))
-    }
-
-    private fun openInNormalTab(url: String) {
-        (activity as HomeActivity).openToBrowserAndLoad(
-            searchTermOrURL = url,
-            newTab = true,
-            from = BrowserDirection.FromHome
-        )
-    }
-
-    private fun createTabCounterMenu(context: Context): BrowserMenu {
-        val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context)
-        val isPrivate = (activity as HomeActivity).browsingModeManager.mode == BrowsingMode.Private
-        val menuItems = listOf(
-            BrowserMenuImageText(
-                label = context.getString(
-                    if (isPrivate) {
-                        R.string.browser_menu_new_tab
-                    } else {
-                        R.string.home_screen_shortcut_open_new_private_tab_2
-                    }
-                ),
-                imageResource = if (isPrivate) {
-                    R.drawable.ic_new
-                } else {
-                    R.drawable.ic_private_browsing
-                },
-                iconTintColorResource = primaryTextColor,
-                textColorResource = primaryTextColor
-            ) {
-                requireComponents.analytics.metrics.track(
-                    Event.TabCounterMenuItemTapped(
-                        if (isPrivate) {
-                            Event.TabCounterMenuItemTapped.Item.NEW_TAB
-                        } else {
-                            Event.TabCounterMenuItemTapped.Item.NEW_PRIVATE_TAB
-                        }
-                    )
-                )
-                (activity as HomeActivity).browsingModeManager.mode =
-                    BrowsingMode.fromBoolean(!isPrivate)
-            }
-        )
-        return BrowserMenuBuilder(menuItems).build(context)
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")
