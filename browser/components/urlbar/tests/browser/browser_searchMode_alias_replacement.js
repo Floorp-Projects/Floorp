@@ -85,7 +85,7 @@ add_task(async function replaced_on_space() {
     engineName: aliasEngine.name,
   });
   Assert.ok(!gURLBar.value, "The Urlbar value should be cleared.");
-  gURLBar.setSearchMode({});
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
