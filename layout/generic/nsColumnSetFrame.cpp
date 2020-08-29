@@ -847,9 +847,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       kidNextInFlow->MarkSubtreeDirty();
       // Move any of our leftover columns to our overflow list. Our
       // next-in-flow will eventually pick them up.
-      const nsFrameList& continuationColumns = mFrames.RemoveFramesAfter(child);
+      nsFrameList continuationColumns = mFrames.RemoveFramesAfter(child);
       if (continuationColumns.NotEmpty()) {
-        SetOverflowFrames(continuationColumns);
+        SetOverflowFrames(std::move(continuationColumns));
       }
       child = nullptr;
 

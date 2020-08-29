@@ -925,7 +925,7 @@ void nsFieldSetFrame::EnsureChildContinuation(nsIFrame* aChild,
       if (nsFrameList* oc = GetOverflowFrames()) {
         oc->AppendFrames(nullptr, nifs);
       } else {
-        SetOverflowFrames(nifs);
+        SetOverflowFrames(std::move(nifs));
       }
     }
   }

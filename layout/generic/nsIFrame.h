@@ -5734,6 +5734,7 @@ template <bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 template <bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 /* static */ void nsIFrame::SortFrameList(nsFrameList& aFrameList) {
   nsIFrame* head = MergeSort<IsLessThanOrEqual>(aFrameList.FirstChild());
+  aFrameList.Clear();
   aFrameList = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
   MOZ_ASSERT(IsFrameListSorted<IsLessThanOrEqual>(aFrameList),
              "After we sort a frame list, it should be in sorted order...");
