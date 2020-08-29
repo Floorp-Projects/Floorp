@@ -4110,10 +4110,19 @@ class nsIFrame : public nsQueryFrame {
     return mProperties.Has(aProperty);
   }
 
-  // Add a property, or update an existing property for the given descriptor.
+  /**
+   * Add a property, or update an existing property for the given descriptor.
+   *
+   * Note: This function asserts if updating an existing nsFrameList property.
+   */
   template <typename T>
   void SetProperty(FrameProperties::Descriptor<T> aProperty,
                    FrameProperties::PropertyType<T> aValue) {
+    if constexpr (std::is_same_v<T, nsFrameList>) {
+      MOZ_ASSERT(aValue, "Shouldn't set nullptr to a nsFrameList property!");
+      MOZ_ASSERT(!HasProperty(aProperty),
+                 "Shouldn't update an existing nsFrameList property!");
+    }
     mProperties.Set(aProperty, aValue, this);
   }
 

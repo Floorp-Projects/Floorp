@@ -1589,18 +1589,6 @@ nsFrameList* nsContainerFrame::RemovePropTableFrames(
   return TakeProperty(aProperty);
 }
 
-void nsContainerFrame::SetPropTableFrames(
-    nsFrameList* aFrameList, FrameListPropertyDescriptor aProperty) {
-  MOZ_ASSERT(aProperty && aFrameList, "null ptr");
-  MOZ_ASSERT(
-      (aProperty != nsContainerFrame::OverflowContainersProperty() &&
-       aProperty != nsContainerFrame::ExcessOverflowContainersProperty()) ||
-          IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
-      "this type of frame can't have overflow containers");
-  MOZ_ASSERT(!GetPropTableFrames(aProperty));
-  SetProperty(aProperty, aFrameList);
-}
-
 void nsContainerFrame::PushChildrenToOverflow(nsIFrame* aFromChild,
                                               nsIFrame* aPrevSibling) {
   MOZ_ASSERT(aFromChild, "null pointer");

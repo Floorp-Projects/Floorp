@@ -5450,8 +5450,8 @@ void nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
                  "prop value mismatch");
     *aPropValue = aList;
   } else {
-    SetPropTableFrames(new (PresShell()) nsFrameList(aList),
-                       OverflowOutOfFlowsProperty());
+    SetProperty(OverflowOutOfFlowsProperty(),
+                new (PresShell()) nsFrameList(aList));
     AddStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 }
