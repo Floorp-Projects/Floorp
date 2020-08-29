@@ -873,9 +873,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         [self](nsresult aResult) { self->PageDone(aResult); });
   }
 
-  if (mIsCreatingPrintPreview) {
-    // override any UI that wants to PrintPreview any selection or page range
-    // we want to view every page in PrintPreview each time
+  if (!mozilla::StaticPrefs::print_tab_modal_enabled() &&
+      mIsCreatingPrintPreview) {
+    // In legacy print-preview mode, override any UI that wants to PrintPreview
+    // any selection or page range.  The legacy print-preview intends to view
+    // every page in PrintPreview each time.
     printData->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
   }
 

@@ -6,8 +6,9 @@
 
 /* Rendering object for a printed or print-previewed sheet of paper */
 
-#include "PrintedSheetFrame.h"
+#include "mozilla/PrintedSheetFrame.h"
 
+#include "mozilla/StaticPrefs_print.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsPageFrame.h"
 #include "nsPageSequenceFrame.h"
@@ -38,8 +39,35 @@ void PrintedSheetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   // Let each of our children (pages) draw itself:
   for (auto* frame : mFrames) {
-    BuildDisplayListForChild(aBuilder, frame, aLists);
+    if (!frame->HasAnyStateBits(NS_PAGE_SKIPPED_BY_CUSTOM_RANGE)) {
+      BuildDisplayListForChild(aBuilder, frame, aLists);
+    }
   }
+}
+
+// If the given page is included in the user's page range, this function
+// returns false. Otherwise, it tags the page with the
+// NS_PAGE_SKIPPED_BY_CUSTOM_RANGE state bit and returns true.
+static bool TagIfSkippedByCustomRange(nsPageFrame* aPageFrame, int32_t aPageNum,
+                                      nsSharedPageData* aPD) {
+  // Only do page-skipping here if we're using the new tab-modal UI, and only
+  // do it for print-preview.  We have separate legacy code that skips pages
+  // for actual printing (for now).
+  if (!StaticPrefs::print_tab_modal_enabled() ||
+      !aPageFrame->PresContext()->IsScreen()) {
+    return false;
+  }
+
+  if (!aPD->mDoingPageRange ||
+      (aPD->mFromPageNum <= aPageNum && aPD->mToPageNum >= aPageNum)) {
+    MOZ_ASSERT(!aPageFrame->HasAnyStateBits(NS_PAGE_SKIPPED_BY_CUSTOM_RANGE),
+               "page frames in print range shouldn't be tagged with the"
+               "NS_PAGE_SKIPPED_BY_CUSTOM_RANGE state bit");
+    return false;
+  }
+
+  aPageFrame->AddStateBits(NS_PAGE_SKIPPED_BY_CUSTOM_RANGE);
+  return true;
 }
 
 void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
@@ -60,12 +88,22 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   const nsSize physPageSize = aPresContext->GetPageSize();
   const LogicalSize pageSize(wm, physPageSize);
 
-  // Until bug 1631452, we should only have one child (which we might've just
-  // pulled from our prev-in-flow's overflow list). That means the loop below
-  // is trivial & will will run exactly once, for now.
-  MOZ_ASSERT(mFrames.GetLength() == 1,
-             "how did we get more than one page per sheet");
-  for (auto* childFrame : mFrames) {
+  // Count the number of pages that are displayed on this sheet (i.e. how many
+  // child frames we end up laying out, excluding any pages that are skipped
+  // due to not being in the user's page-range selection).
+  // (Until bug 1631452, this will always end up at 1, per assertion near
+  // the end of this function.)
+  uint32_t numPagesOnThisSheet = 0;
+
+  // Target for numPagesOnThisSheet. (bug 1631452 will make this a
+  // configurable value instead of a constant.)
+  static const uint32_t kDesiredPagesPerSheet = 1;
+
+  // NOTE: I'm intentionally *not* using a range-based 'for' looop here, since
+  // we potentially mutate the frame list (appending to the end) during the
+  // list, which is not generally safe with range-based 'for' loops.
+  for (auto* childFrame = mFrames.FirstChild(); childFrame;
+       childFrame = childFrame->GetNextSibling()) {
     MOZ_ASSERT(childFrame->IsPageFrame(),
                "we're only expecting page frames as children");
     auto* pageFrame = static_cast<nsPageFrame*>(childFrame);
@@ -74,6 +112,10 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
     // page number:
     pageFrame->SetSharedPageData(mPD);
     pageFrame->DeterminePageNum();
+
+    if (!TagIfSkippedByCustomRange(pageFrame, pageFrame->GetPageNum(), mPD)) {
+      numPagesOnThisSheet++;  // Page isn't skipped, so we increment count.
+    }
 
     ReflowInput pageReflowInput(aPresContext, aReflowInput, pageFrame,
                                 pageSize);
@@ -106,22 +148,41 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
       // as the number of pages:
       mPD->mRawNumPages = pageFrame->GetPageNum();
     } else {
-      // Our page frame child needs a continuation. For now, that makes us need
-      // one as well. (This will change in bug 1631452 when we support more
-      // than 1 page per sheet; at that point, we'll only want to do this when
-      // we max out the number of pages that are allowed on our sheet.)
-      aStatus.SetIncomplete();
-
       // Create a continuation for our page frame. We add the continuation to
-      // our child list, and then push it to our overflow list since it really
-      // belongs on the next sheet.
+      // our child list, and then potentially push it to our overflow list, if
+      // it really belongs on the next sheet.
       nsIFrame* continuingPage =
           PresShell()->FrameConstructor()->CreateContinuingFrame(pageFrame,
                                                                  this);
       mFrames.InsertFrame(nullptr, pageFrame, continuingPage);
-      PushChildrenToOverflow(continuingPage, pageFrame);
+      const bool isContinuingPageSkipped =
+          TagIfSkippedByCustomRange(static_cast<nsPageFrame*>(continuingPage),
+                                    pageFrame->GetPageNum() + 1, mPD);
+
+      // If we've already reached the target number of pages for this sheet,
+      // and this continuation page that we just created is meant to be
+      // dispayed (i.e. it's in the chosen page range), then we need to push it
+      // to our overflow list so that it'll go onto a subsequent sheet.
+      // Otherwise we leave it on this sheet. This ensures we *only* generate
+      // another sheet IFF there's a displayable page that will end up on it.
+      if (numPagesOnThisSheet == kDesiredPagesPerSheet &&
+          !isContinuingPageSkipped) {
+        PushChildrenToOverflow(continuingPage, pageFrame);
+        aStatus.SetIncomplete();
+      }
     }
   }
+
+  // This should hold for the first sheet, because our UI should prevent the
+  // user from creating a 0-length page range; and it should hold for
+  // subsequent sheets because we should only create an additional sheet when
+  // we discover a displayable (i.e. non-skipped) page that we need to push
+  // to that new sheet.
+  MOZ_ASSERT(numPagesOnThisSheet > 0 &&
+             "Shouldn't create a sheet with no displayable pages on it");
+  MOZ_ASSERT(numPagesOnThisSheet <= kDesiredPagesPerSheet,
+             "Shouldn't have more than desired number of displayable pages "
+             "on this sheet");
 
   // Populate our ReflowOutput outparam -- just use up all the
   // available space, for both our desired size & overflow areas.
