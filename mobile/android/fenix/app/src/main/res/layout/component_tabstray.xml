@@ -159,7 +159,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/open_tabs_menu"
             android:visibility="visible"
-            app:tint="@color/accent_normal_theme"
+            app:tint="@color/tab_tray_heading_icon_menu_normal_theme"
             app:layout_constraintBottom_toBottomOf="@id/tab_layout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/tab_layout"
