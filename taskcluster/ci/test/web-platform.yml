@@ -51,6 +51,10 @@ web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests
     treeherder-symbol: W(wpt)
+    virtualization:
+        by-test-platform:
+            windows10-64(?:-pgo|-shippable)?-qr/.*: hardware
+            default: virtual
     chunks:
         by-test-platform:
             android.*: 16
