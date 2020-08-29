@@ -1623,7 +1623,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "497d14be63a0371f87d79b5a98c3f794fffc9b4e"
+        "revision": "ecb56f042cb4ea3f1a34f34b66ac1f8fbc27bc39"
     },
     "uz": {
         "pin": false,
