@@ -309,7 +309,7 @@ const nsFrameList& nsContainerFrame::GetChildList(ChildListID aListID) const {
       return list ? *list : nsFrameList::EmptyList();
     }
     case kBackdropList: {
-      nsFrameList* list = GetPropTableFrames(BackdropProperty());
+      nsFrameList* list = GetProperty(BackdropProperty());
       return list ? *list : nsFrameList::EmptyList();
     }
     default:
@@ -1577,16 +1577,6 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
   aNextInFlow->Destroy();
 
   MOZ_ASSERT(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
-}
-
-nsFrameList* nsContainerFrame::GetPropTableFrames(
-    FrameListPropertyDescriptor aProperty) const {
-  return GetProperty(aProperty);
-}
-
-nsFrameList* nsContainerFrame::RemovePropTableFrames(
-    FrameListPropertyDescriptor aProperty) {
-  return TakeProperty(aProperty);
 }
 
 void nsContainerFrame::PushChildrenToOverflow(nsIFrame* aFromChild,
