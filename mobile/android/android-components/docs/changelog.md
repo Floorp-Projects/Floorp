@@ -28,8 +28,10 @@ permalink: /changelog/
   * Removed non-essential dependency on `com.google.firebase:firebase-core`.
 
 * **feature-toolbar**
-  * Added `ContainerToolbarFeature` to update the toolbar with the container page action whenever
-    the selected tab changes.
+  * Added `ContainerToolbarFeature` to update the toolbar with the container page action whenever the selected tab changes.
+
+* **browser-state**
+  * Added `LastAccessMiddleware` to dispatch `TabSessionAction.UpdateLastAccessAction` when a tab is selected.
 
 * **feature-prompts**
   * Replaced generic icon in `LoginDialogFragment` with site icon (keep the generic one as fallback)

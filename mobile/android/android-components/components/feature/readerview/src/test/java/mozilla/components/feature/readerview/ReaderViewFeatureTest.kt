@@ -231,36 +231,31 @@ class ReaderViewFeatureTest {
         readerViewFeature.start()
         assertTrue(readerViewStatusChanges.isEmpty())
 
-        /* SelectTabAction triggers a ReaderViewStatusChange because we are updating lastAccess
-           timestamp of the selected tab
-         */
         store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
-        assertEquals(1, readerViewStatusChanges.size)
-
         store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true)).joinBlocking()
         testDispatcher.advanceUntilIdle()
-        assertEquals(2, readerViewStatusChanges.size)
-        assertEquals(Pair(true, false), readerViewStatusChanges[1])
+        assertEquals(1, readerViewStatusChanges.size)
+        assertEquals(Pair(true, false), readerViewStatusChanges[0])
 
         store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, true)).joinBlocking()
         testDispatcher.advanceUntilIdle()
-        assertEquals(3, readerViewStatusChanges.size)
-        assertEquals(Pair(true, true), readerViewStatusChanges[2])
+        assertEquals(2, readerViewStatusChanges.size)
+        assertEquals(Pair(true, true), readerViewStatusChanges[1])
 
         store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true)).joinBlocking()
         testDispatcher.advanceUntilIdle()
         // No change -> No notification should have been sent
-        assertEquals(3, readerViewStatusChanges.size)
+        assertEquals(2, readerViewStatusChanges.size)
 
         store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, false)).joinBlocking()
         testDispatcher.advanceUntilIdle()
-        assertEquals(4, readerViewStatusChanges.size)
-        assertEquals(Pair(true, false), readerViewStatusChanges[3])
+        assertEquals(3, readerViewStatusChanges.size)
+        assertEquals(Pair(true, false), readerViewStatusChanges[2])
 
         store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, false)).joinBlocking()
         testDispatcher.advanceUntilIdle()
-        assertEquals(5, readerViewStatusChanges.size)
-        assertEquals(Pair(false, false), readerViewStatusChanges[4])
+        assertEquals(4, readerViewStatusChanges.size)
+        assertEquals(Pair(false, false), readerViewStatusChanges[3])
     }
 
     @Test

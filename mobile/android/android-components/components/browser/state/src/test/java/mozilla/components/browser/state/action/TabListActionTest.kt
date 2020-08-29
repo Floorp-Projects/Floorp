@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.state.action
 
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
@@ -147,15 +146,12 @@ class TabListActionTest {
             )
         )
         val store = BrowserStore(state)
-        val tabAccessTimeStamp = 123L
 
         assertNull(store.state.selectedTabId)
 
-        store.dispatch(TabListAction.SelectTabAction("a", tabAccessTimeStamp))
+        store.dispatch(TabListAction.SelectTabAction("a"))
             .joinBlocking()
 
-        // check if we update timestamp correctly upon selecting a tab
-        assertEquals(tabAccessTimeStamp, store.state.findTab("a")?.lastAccess)
         assertEquals("a", store.state.selectedTabId)
     }
 

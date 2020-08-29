@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.EngineAction.LinkEngineSessionAct
 import mozilla.components.browser.state.action.EngineAction.UpdateEngineSessionStateAction
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.store.BrowserStore
@@ -225,6 +226,10 @@ class SessionManager(
                     store?.syncDispatch(ReaderAction.UpdateReaderActiveUrlAction(item.session.id, activeUrl))
                 }
             }
+
+            if (item.lastAccess != 0L) {
+                store?.syncDispatch(LastAccessAction.UpdateLastAccessAction(item.session.id, item.lastAccess))
+            }
         }
     }
 
@@ -302,7 +307,8 @@ class SessionManager(
             val session: Session,
             val engineSession: EngineSession? = null,
             val engineSessionState: EngineSessionState? = null,
-            val readerState: ReaderState? = null
+            val readerState: ReaderState? = null,
+            val lastAccess: Long = 0
         )
 
         companion object {
