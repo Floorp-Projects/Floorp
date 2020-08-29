@@ -2,4 +2,4 @@
 
 # singleItem
 
-`fun singleItem(item: `[`Item`](-item/index.md)`): `[`Snapshot`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L310)
+`fun singleItem(item: `[`Item`](-item/index.md)`): `[`Snapshot`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L316)

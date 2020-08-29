@@ -2,7 +2,7 @@
 
 # RestoreDownloadsStateAction
 
-`object RestoreDownloadsStateAction : `[`DownloadAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L718)
+`object RestoreDownloadsStateAction : `[`DownloadAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L734)
 
 Restores the [BrowserState.downloads](../../mozilla.components.browser.state.state/-browser-state/downloads.md) state from the storage.
 

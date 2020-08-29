@@ -2,7 +2,7 @@
 
 # ToggleDesktopModeAction
 
-`data class ToggleDesktopModeAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L500)
+`data class ToggleDesktopModeAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L516)
 
 Enables/disables desktop mode in the tabs with the given [sessionId](session-id.md).
 

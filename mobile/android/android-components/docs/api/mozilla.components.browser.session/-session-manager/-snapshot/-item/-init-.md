@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`Item(session: `[`Session`](../../../-session/index.md)`, engineSession: `[`EngineSession`](../../../../mozilla.components.concept.engine/-engine-session/index.md)`? = null, engineSessionState: `[`EngineSessionState`](../../../../mozilla.components.concept.engine/-engine-session-state/index.md)`? = null, readerState: `[`ReaderState`](../../../../mozilla.components.browser.state.state/-reader-state/index.md)`? = null)`
+`Item(session: `[`Session`](../../../-session/index.md)`, engineSession: `[`EngineSession`](../../../../mozilla.components.concept.engine/-engine-session/index.md)`? = null, engineSessionState: `[`EngineSessionState`](../../../../mozilla.components.concept.engine/-engine-session-state/index.md)`? = null, readerState: `[`ReaderState`](../../../../mozilla.components.browser.state.state/-reader-state/index.md)`? = null, lastAccess: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = 0)`

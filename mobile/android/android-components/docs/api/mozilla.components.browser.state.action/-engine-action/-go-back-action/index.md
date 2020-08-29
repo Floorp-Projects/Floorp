@@ -2,7 +2,7 @@
 
 # GoBackAction
 
-`data class GoBackAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L478)
+`data class GoBackAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L494)
 
 Navigates back in the tab with the given [sessionId](session-id.md).
 

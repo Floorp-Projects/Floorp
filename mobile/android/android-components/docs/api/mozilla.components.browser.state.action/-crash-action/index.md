@@ -2,7 +2,7 @@
 
 # CrashAction
 
-`sealed class CrashAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L561)
+`sealed class CrashAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L577)
 
 [BrowserAction](../-browser-action.md) implementations to react to crashes.
 

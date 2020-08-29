@@ -2,7 +2,7 @@
 
 # LoadUrlAction
 
-`data class LoadUrlAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L450)
+`data class LoadUrlAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L466)
 
 Loads the given [url](url.md) in the tab with the given [sessionId](session-id.md).
 

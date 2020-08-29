@@ -2,4 +2,4 @@
 
 # state
 
-`val state: `[`State`](../../../mozilla.components.concept.engine.media/-media/-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L640)
+`val state: `[`State`](../../../mozilla.components.concept.engine.media/-media/-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L656)

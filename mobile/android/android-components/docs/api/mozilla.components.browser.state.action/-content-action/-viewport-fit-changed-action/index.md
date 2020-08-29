@@ -2,7 +2,7 @@
 
 # ViewportFitChangedAction
 
-`data class ViewportFitChangedAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L278)
+`data class ViewportFitChangedAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L294)
 
 Updates the [layoutInDisplayCutoutMode](layout-in-display-cutout-mode.md) with the given [sessionId](session-id.md).
 

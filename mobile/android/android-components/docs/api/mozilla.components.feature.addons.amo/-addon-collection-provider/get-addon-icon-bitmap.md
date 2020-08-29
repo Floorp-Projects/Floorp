@@ -2,7 +2,7 @@
 
 # getAddonIconBitmap
 
-`suspend fun getAddonIconBitmap(addon: `[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/amo/AddonCollectionProvider.kt#L110)
+`suspend fun getAddonIconBitmap(addon: `[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/amo/AddonCollectionProvider.kt#L146)
 
 Fetches given Addon icon from the url and returns a decoded Bitmap
 

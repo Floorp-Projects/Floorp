@@ -2,7 +2,7 @@
 
 # UpdateWebAppManifestAction
 
-`data class UpdateWebAppManifestAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L301)
+`data class UpdateWebAppManifestAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L317)
 
 Updates the [WebAppManifest](../../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 

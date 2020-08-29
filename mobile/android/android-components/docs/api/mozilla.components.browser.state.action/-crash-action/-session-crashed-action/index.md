@@ -2,7 +2,7 @@
 
 # SessionCrashedAction
 
-`data class SessionCrashedAction : `[`CrashAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L565)
+`data class SessionCrashedAction : `[`CrashAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L581)
 
 Updates the [SessionState](../../../mozilla.components.browser.state.state/-session-state/index.md) of the session with provided ID to mark it as crashed.
 

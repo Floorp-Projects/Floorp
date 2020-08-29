@@ -2,7 +2,7 @@
 
 # MediaAction
 
-`sealed class MediaAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L617)
+`sealed class MediaAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L633)
 
 [BrowserAction](../-browser-action.md) implementations related to updating the [MediaState](../../mozilla.components.browser.state.state/-media-state/index.md).
 

@@ -2,7 +2,7 @@
 
 # ClearDataAction
 
-`data class ClearDataAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L515)
+`data class ClearDataAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L531)
 
 Clears browsing data for the tab with the given [sessionId](session-id.md).
 

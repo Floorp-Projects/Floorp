@@ -2,7 +2,7 @@
 
 # SuspendEngineSessionAction
 
-`data class SuspendEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L532)
+`data class SuspendEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L548)
 
 Suspends the [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) of the session with the provided [sessionId](session-id.md).
 

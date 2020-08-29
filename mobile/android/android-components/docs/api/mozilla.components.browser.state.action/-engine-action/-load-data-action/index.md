@@ -2,7 +2,7 @@
 
 # LoadDataAction
 
-`data class LoadDataAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L460)
+`data class LoadDataAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L476)
 
 Loads [data](data.md) in the tab with the given [sessionId](session-id.md).
 

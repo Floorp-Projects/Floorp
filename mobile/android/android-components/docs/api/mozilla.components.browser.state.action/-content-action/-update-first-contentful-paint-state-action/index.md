@@ -2,7 +2,7 @@
 
 # UpdateFirstContentfulPaintStateAction
 
-`data class UpdateFirstContentfulPaintStateAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L288)
+`data class UpdateFirstContentfulPaintStateAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L304)
 
 Updates the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) of the given [sessionId](session-id.md) to indicate whether the first contentful paint has happened.
 

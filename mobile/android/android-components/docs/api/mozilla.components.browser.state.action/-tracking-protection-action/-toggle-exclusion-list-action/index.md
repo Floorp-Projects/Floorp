@@ -2,7 +2,7 @@
 
 # ToggleExclusionListAction
 
-`data class ToggleExclusionListAction : `[`TrackingProtectionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L331)
+`data class ToggleExclusionListAction : `[`TrackingProtectionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L347)
 
 Updates the [TrackingProtectionState.ignoredOnTrackingProtection](../../../mozilla.components.browser.state.state/-tracking-protection-state/ignored-on-tracking-protection.md) flag.
 

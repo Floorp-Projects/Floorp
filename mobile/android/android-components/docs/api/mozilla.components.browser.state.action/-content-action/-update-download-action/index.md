@@ -2,7 +2,7 @@
 
 # UpdateDownloadAction
 
-`data class UpdateDownloadAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L205)
+`data class UpdateDownloadAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L221)
 
 Updates the [DownloadState](../../../mozilla.components.browser.state.state.content/-download-state/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 

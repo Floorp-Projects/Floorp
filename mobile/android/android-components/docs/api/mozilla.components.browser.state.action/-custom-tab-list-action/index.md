@@ -2,7 +2,7 @@
 
 # CustomTabListAction
 
-`sealed class CustomTabListAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L121)
+`sealed class CustomTabListAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L137)
 
 [BrowserAction](../-browser-action.md) implementations related to updating [BrowserState.customTabs](../../mozilla.components.browser.state.state/-browser-state/custom-tabs.md).
 
