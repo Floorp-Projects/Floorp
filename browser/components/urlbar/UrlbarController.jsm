@@ -727,6 +727,7 @@ class TelemetryEvent {
       return;
     }
     const validEvents = [
+      "click",
       "command",
       "drop",
       "input",
