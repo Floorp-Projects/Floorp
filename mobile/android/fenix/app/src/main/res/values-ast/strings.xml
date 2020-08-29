@@ -433,6 +433,22 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zarrar</string>
 
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d llingüetes</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d llingüeta</string>
+
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">A mano</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Dempués d\'un día</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Dempués d\'una selmana</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Dempués d\'un mes</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Llingüetes abiertes</string>
@@ -449,6 +465,8 @@
     <string name="tab_tray_menu_item_save">Guardar nuna coleición</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Compartir toles llingüetes</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Llingüetes zarraes apocayá</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Zarrar toles llingüetes</string>
     <!-- Shortcut action to open new tab -->
@@ -657,10 +675,6 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Coleiciones</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Coleiciona les coses que t\'importen</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupa guetes, sitios y llingüetes similares p\'acceder aína a ellos dempués.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Esbilla de llingüetes</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -907,8 +921,6 @@
     <string name="onboarding_whats_new_description">¿Tienes entrugues tocante al rediseñu de %s?¿Quies saber qué camudó?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Consigui rempuestes equí</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Aprovecha %s al máximu.</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Aniciando sesión…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
@@ -1386,4 +1398,12 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Val, entendílo</string>
 
-</resources>
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Aprovecha %s al máximu.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Coleiciona les coses que t\'importen</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupa guetes, sitios y llingüetes similares p\'acceder aína a ellos dempués.</string>
+    </resources>

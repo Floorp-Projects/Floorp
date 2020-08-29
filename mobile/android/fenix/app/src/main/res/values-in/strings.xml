@@ -81,6 +81,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Jangan sekarang</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Anda dapat mengatur Firefox untuk membuka tautan secara otomatis dalam aplikasi.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Buka pengaturan</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Tutup</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Akses kamera diperlukan. Buka pengaturan Android, ketuk izin, dan ketuk izinkan.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Buka pengaturan</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Tutup</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Setel tab yang terbuka untuk menutup secara otomatis yang belum pernah dilihat pada beberapa hari, minggu, atau bulan terakhir.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Lihat pengaturan</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Tutup</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Tab baru</string>
@@ -271,6 +293,8 @@
     <string name="preferences_toolbar">Bilah alat</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Beranda</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Ubahsuai</string>
     <!-- Preference description for banner about signing in -->
@@ -548,6 +572,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hapus</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Hapus dari riwayat</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Mode Privat)</string>
 
@@ -756,10 +782,8 @@
     <string name="collections_header">Koleksi</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu koleksi</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Kumpulkan hal-hal yang penting bagi Anda</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Kelompokkan pencarian, situs, dan tab yang serupa agar dapat diakses cepat nanti.</string>
+    <string name="no_collections_description2">Kumpulkan hal-hal yang penting bagi Anda.\nKelompokkan pencarian, situs, dan tab serupa untuk akses cepat nanti.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Pilih Tab</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1012,8 +1036,8 @@
     <string name="onboarding_whats_new_description">Punya pertanyaan mengenai desain ulang %s? Ingin tahu apa saja yang berubah?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Dapatkan jawabannya di sini</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Dapatkan hasil maksimal dari %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Mulai sinkronkan markah, kata sandi, dan lainnya dengan akun Firefox Anda.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Pelajari lebih lanjut</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1513,4 +1537,18 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oke, Paham!</string>
 
-</resources>
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Tampilkan situs yang paling sering dikunjungi</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Hapus</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Dapatkan hasil maksimal dari %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Kumpulkan hal-hal yang penting bagi Anda</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Kelompokkan pencarian, situs, dan tab yang serupa agar dapat diakses cepat nanti.</string>
+    </resources>

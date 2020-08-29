@@ -80,16 +80,23 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Nic nětko</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Móžeće Firefox tak nastajić, zo bychu so wotkazy awtomatisce w nałoženjach wočinili.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">K nastajenjam</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Zaćisnyć</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Přistup ke kamerje trěbny. Wočińće nastajenja Android, podótkńće so zapiska Prawa a podótkńće so zapiska Dowolić.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">K nastajenjam</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Zaćisnyć</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Nastajće te wočinjene rajtarki takle, zo bychu so awtomatisce začinili, kotrež njejsu sej posledni dźeń, posledni tydźeń abo posledni měsac wobhladali.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Nastajenja pokazać</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -279,6 +286,8 @@
     <string name="preferences_toolbar">Symbolowa lajsta</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Drasta</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Startowa strona</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Přiměrić</string>
     <!-- Preference description for banner about signing in -->
@@ -485,6 +494,32 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Začinić</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Runje začinjene rajtarki</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Wšu historiju pokazać</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">Rajtarki: %d</string>
+
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">Rajtarki: %d</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Tu žane runje začinjene rajtarki njejsu</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Rajtarki začinić</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Manuelnje</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Po jednym dnju</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Po jednym tydźenju</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Po jednym měsacu</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Wočinjene rajtarki</string>
@@ -504,6 +539,10 @@
     <string name="tab_tray_menu_item_save">Do zběrki składować</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Wšě rajtarki dźělić</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Runje začinjene rajtarki</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Nastajenja rajtarkow</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Wšě rajtarki začinić</string>
     <!-- Shortcut action to open new tab -->
@@ -1511,6 +1550,9 @@
     <string name="top_sites_max_limit_content">Zo byšće nowe wažne sydło přidał, wotstrońće jedne z nich. Tłóčće dołho na sydło a wubjerće „Wotstronić“.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">W porjadku, sym zrozumił</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Najhusćišo wopytowane sydła pokazać</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Wotstronić</string>

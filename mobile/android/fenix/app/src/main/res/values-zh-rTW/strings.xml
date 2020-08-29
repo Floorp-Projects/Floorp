@@ -290,6 +290,8 @@
     <string name="preferences_toolbar">工具列</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">佈景主題</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">主畫面</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">自訂</string>
     <!-- Preference description for banner about signing in -->
@@ -1542,6 +1544,9 @@
     <string name="top_sites_max_limit_content">請先移除現有的熱門網站才能再新增。請按住網站，然後選擇移除。</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">好，知道了！</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">顯示最常造訪的網站</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">移除</string>

@@ -290,6 +290,8 @@
     <string name="preferences_toolbar">Työkalupalkki</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Teema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Koti</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Mukauta</string>
     <!-- Preference description for banner about signing in -->
@@ -1531,6 +1533,9 @@
     <string name="top_sites_max_limit_content">Lisätäksesi uuden ykkössivuston, poista yksi olemassa oleva. Paina pitkään sivustoa ja valitse poista.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Selvä</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Näytä vierailluimmat sivustot</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Poista</string>

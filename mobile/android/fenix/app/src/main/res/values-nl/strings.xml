@@ -84,6 +84,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Niet nu</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">U kunt Firefox instellen om koppelingen automatisch in apps te openen.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Naar instellingen</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Sluiten</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Cameratoegang vereist. Ga naar uw Android-instellingen, tik op machtigingen en tik op toestaan.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Naar instellingen</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Sluiten</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Stel open tabbladen in om automatisch te sluiten als ze niet in de afgelopen dag, week of maand zijn bekeken.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Beeldopties</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Sluiten</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nieuw tabblad</string>
@@ -543,6 +565,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Verwijderen</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Verwijderen uit geschiedenis</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (privémodus)</string>
 
@@ -1506,4 +1530,13 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Verwijderen</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Haal het meeste uit %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Verzamel de dingen die belangrijk voor u zijn</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Groepeer vergelijkbare zoekopdrachten, websites en tabbladen voor snelle toegang later.</string>
 </resources>

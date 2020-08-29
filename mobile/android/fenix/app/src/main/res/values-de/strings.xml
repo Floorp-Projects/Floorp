@@ -291,6 +291,8 @@
     <string name="preferences_toolbar">Symbolleiste</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Theme</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Startseite</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Anpassen</string>
     <!-- Preference description for banner about signing in -->
@@ -1548,6 +1550,9 @@
     <string name="top_sites_max_limit_content">Entfernen Sie eine der wichtigen Seiten, um eine neue hinzuzufügen. Tippen Sie lange auf die Seite und wählen Sie „Entfernen“.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, verstanden</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Meistbesuchte Seiten anzeigen</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Entfernen</string>

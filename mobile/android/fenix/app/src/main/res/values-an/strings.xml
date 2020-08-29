@@ -78,6 +78,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Agora no</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Puetz configurar Firefox pa que ubra automaticament los vinclos en as aplicacions.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Ir ta los achustes</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Descartar</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">La camara precisa acceso. Ves ta los achustes d\'Android, toca &quot;permisos&quot; y toca &quot;permitir&quot;.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Ir ta los achustes</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Descartar</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Configura las pestanyas ubiertas pa que se zarren automaticament si no s\'han mirau en os zaguers días, semanas u meses.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Veyer las opcions</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Descartar</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nueva pestanya</string>
@@ -258,6 +280,8 @@
     <string name="preferences_toolbar">Barra de ferramientas</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Inicio</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizar</string>
     <!-- Preference description for banner about signing in -->
@@ -523,6 +547,8 @@
     <string name="collection_open_tabs">Ubrir pestanyas</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Borrar</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Borrar de l\'historial</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (modo privau)</string>
 
@@ -727,10 +753,8 @@
     <string name="collections_header">Coleccions</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menú d’a colección</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Colecciona las cosetas que t’importan</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupa busquedas, puestos y pestanyas semellants pa un acceso rapido mas tarde.</string>
+    <string name="no_collections_description2">Replega lo que t\'importa.\nAlza chuntas las busquedas similars, puestos y pestanyas pa acceder mas rapidament dimpués.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Triar pestanyas</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -974,8 +998,8 @@
     <string name="onboarding_whats_new_description">Tiens preguntas sobre lo redisenyo de %s? Quiers saber qué ha cambiau?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obtiene respuestas aquí</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Quita-le lo millor provecho a %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Encomienza la sincronización d\'as adrezas d\'interés, las contrasenyas y muito mas con a tuya cuenta d\'o Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Saber-ne mas</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1466,5 +1490,18 @@
     <string name="top_sites_max_limit_content">Pa anyadir un nuevo puesto principal, has de borrar-ne belatro. Mantiene pretau lo puesto y selecciona borrar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Vale, entendiu</string>
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Amostrar los puestos mas visitaus</string>
 
-</resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Eliminar</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Quita-le lo millor provecho a %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Colecciona las cosetas que t’importan</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupa busquedas, puestos y pestanyas semellants pa un acceso rapido mas tarde.</string>
+    </resources>

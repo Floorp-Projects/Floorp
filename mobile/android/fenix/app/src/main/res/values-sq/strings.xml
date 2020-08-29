@@ -23,6 +23,29 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s skeda të hapura. Prekeni që të ndërroni skeda.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d të përzgjedhura</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Shtoni koleksion të ri</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Emër</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Përzgjidhni koleksion</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Dil nga mënyra përzgjedhje e shumëfishtë</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Ruaji te koleksioni skedat e përzgjedhura </string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">U përzgjodh %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">U shpërzgjodh %1$s</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">U dol nga mënyra përzgjedhje e shumëfishtë</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">U hy në mënyrën përzgjedhje e shumëfishtë, përzgjidhni skeda që të ruhen te një koleksion</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">E përzgjedhur</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s prodhohet nga Mozilla.</string>
 
@@ -53,6 +76,28 @@
     <string name="search_widget_cfr_pos_button_text">Shtoni &lt;em&gt;widget&lt;/em&gt;</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Jo tani</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Mund ta ujdisni Firefox-in të hapë automatikisht lidhje në aplikacione.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Shko te rregullimet</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Hidhe tej</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Lypset hyrje në kamera. Kaloni te rregullimet e Android-it, prekni Leje, dhe prekni Lejoje.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Shko te rregullimet</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Hidhe tej</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Caktoni mbyllje automatike skedash të hapura që nuk janë parë ditën, javën ose muajin e shkuar.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Shihni mundësitë</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Hidhe tej</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -146,8 +191,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skanoje</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Motor Kërkimesh</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Motor kërkimesh</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Rregullime motorësh kërkimesh</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -278,8 +323,13 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Hapi lidhjet në aplikacione</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Përgjegjës i jashtëm shkarkimesh</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Shtesa</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Njoftime</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -505,8 +555,13 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hiqe</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Fshije prej historiku</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Mënyrë Private)</string>
+
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Ruaje</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -545,6 +600,13 @@
     <string name="history_older">Më i vjetër</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">S’ka historik këtu</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">S’ka shkarkime këtu</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d të përzgjedhura</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -700,10 +762,8 @@
     <string name="collections_header">Koleksione</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu koleksionesh</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Koleksiononi gjërat që kanë rëndësi për ju</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Gruponi tok kërkime, sajte dhe skeda të ngjashme, për përdorim të shpejtë më pas.</string>
+    <string name="no_collections_description2">Koleksiononi gjërat që kanë rëndësi për ju.\nGruponi tok kërkime të ngjashme, sajte, dhe skeda, për përdorim më të shpejtë më pas.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Përzgjidhni Skeda</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -952,9 +1012,10 @@
     <string name="onboarding_whats_new_description">Keni pyetje rreth %s-it të rikonceptuar? Doni të dini se ç’është ndryshuar?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Merrni përgjigje këtu</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Përfitoni maksimumin nga %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Filloni të njëkohësoni faqerojtës, fjalëkalime, etj, me llogarinë tuaj Firefox.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Mësoni më tepër</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1434,9 +1495,7 @@
     <string name="saved_login_duplicate">Ka tashmë një palë kredenciale me këtë emër përdoruesi</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Lidhuni me Llogaritë Firefox.</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Lidhni pajisje tjetër.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ju lutemi, ribëni mirëfilltësimin.</string>
@@ -1449,6 +1508,9 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Bëni hyrjen që të sjëkohësoni</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">S’ka skeda të hapura</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">U mbërrit te kufi sajtesh</string>
@@ -1457,13 +1519,15 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, e mora vesh</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Shkurtore</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Kërkoni me</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Këtë herë kërko me:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Shfaqni shkurtore kërkimi</string>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Hiqe</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Përfitoni maksimumin nga %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Koleksiononi gjërat që kanë rëndësi për ju</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Gruponi tok kërkime, sajte dhe skeda të ngjashme, për përdorim të shpejtë më pas.</string>
     </resources>
