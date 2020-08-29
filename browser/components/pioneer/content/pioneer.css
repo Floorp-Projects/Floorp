@@ -28,6 +28,11 @@ header {
   }
 }
 
+#locale-notification {
+  display: none;
+  text-align: center;
+}
+
 #summary, #details, #data {
   margin-block-end: 24px;
 }

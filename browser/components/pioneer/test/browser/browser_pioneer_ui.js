@@ -18,6 +18,9 @@ const { TelemetryStorage } = ChromeUtils.import(
   "resource://gre/modules/TelemetryStorage.jsm"
 );
 
+const ORIG_AVAILABLE_LOCALES = Services.locale.availableLocales;
+const ORIG_REQUESTED_LOCALES = Services.locale.requestedLocales;
+
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
 const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
@@ -185,6 +188,16 @@ const waitForAnimationFrame = () =>
   new Promise(resolve => {
     content.window.requestAnimationFrame(resolve);
   });
+
+const setupLocale = async locale => {
+  Services.locale.availableLocales = [locale];
+  Services.locale.requestedLocales = [locale];
+};
+
+const clearLocale = async () => {
+  Services.locale.availableLocales = ORIG_AVAILABLE_LOCALES;
+  Services.locale.requestedLocales = ORIG_REQUESTED_LOCALES;
+};
 
 add_task(async function testMockSchema() {
   for (const [schemaName, values] of [
@@ -624,6 +637,79 @@ add_task(async function testContentReplacement() {
         content.document.getElementById("title").textContent ==
           "test titletest title line 2",
         "Title was replaced correctly."
+      );
+    }
+  );
+});
+
+add_task(async function testLocaleGating() {
+  const cachedContent = JSON.stringify(CACHED_CONTENT);
+  const cachedAddons = JSON.stringify(CACHED_ADDONS);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_TEST_CACHED_ADDONS, cachedAddons],
+      [PREF_TEST_CACHED_CONTENT, cachedContent],
+      [PREF_TEST_ADDONS, "[]"],
+    ],
+    clear: [
+      [PREF_PIONEER_ID, ""],
+      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+    ],
+  });
+
+  await setupLocale("de");
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:pioneer",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      await waitForAnimationFrame();
+
+      const localeNotificationBar = content.document.getElementById(
+        "locale-notification"
+      );
+
+      is(
+        Services.locale.requestedLocales[0],
+        "de",
+        "The requestedLocales has been set to German ('de')."
+      );
+
+      is(
+        getComputedStyle(localeNotificationBar).display,
+        "block",
+        "Because the page locale is German, the notification bar is not hidden."
+      );
+    }
+  );
+
+  await clearLocale();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:pioneer",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      await waitForAnimationFrame();
+
+      const localeNotificationBar = content.document.getElementById(
+        "locale-notification"
+      );
+
+      is(
+        Services.locale.requestedLocales[0],
+        "en-US",
+        "The requestedLocales has been set to English ('en-US')."
+      );
+
+      is(
+        getComputedStyle(localeNotificationBar).display,
+        "none",
+        "Because the page locale is en-US, the notification bar is hidden."
       );
     }
   );
