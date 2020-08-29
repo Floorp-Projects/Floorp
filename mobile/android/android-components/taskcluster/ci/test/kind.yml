@@ -133,3 +133,13 @@ jobs:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'support-ktx', 'arm', '1']
         treeherder:
             symbol: 'unit-feature-downloads'
+
+overriden-jobs:
+    # names too long to fit in 25 chars
+    android-feature-recentlyclosed:
+        description: 'Run unit tests on device for feature recentlyclosed'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-recentlyclosed', 'arm', '1']
+        treeherder:
+            symbol: 'unit-feature-recentlyclosed'

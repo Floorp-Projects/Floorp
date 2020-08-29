@@ -11,6 +11,8 @@ import mozilla.components.lib.state.State
  * Value type that represents the complete state of the browser/engine.
  *
  * @property tabs the list of open tabs, defaults to an empty list.
+ * @property closedTabs the list of recently closed tabs if a [RecentlyClosedMiddleware] is added,
+ * defaults to an empty list.
  * @property selectedTabId the ID of the currently selected (active) tab.
  * @property customTabs the list of custom tabs, defaults to an empty list.
  * @property containers A map of [SessionState.contextId] and their respective container [ContainerState].
@@ -23,6 +25,7 @@ import mozilla.components.lib.state.State
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
+    val closedTabs: List<ClosedTabSessionState> = emptyList(),
     val selectedTabId: String? = null,
     val customTabs: List<CustomTabSessionState> = emptyList(),
     val containers: Map<String, ContainerState> = emptyMap(),

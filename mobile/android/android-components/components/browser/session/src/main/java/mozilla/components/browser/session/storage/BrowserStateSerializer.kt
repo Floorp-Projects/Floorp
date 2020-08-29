@@ -37,6 +37,12 @@ class BrowserStateSerializer {
         return json.toString()
     }
 
+    /**
+     * Serializes the provided [TabSessionState] to JSON.
+     *
+     * @param tab the [TabSessionState] to serialize.
+     * @return the serialized state.
+     */
     private fun tabToJSON(tab: TabSessionState): JSONObject {
         val itemJson = JSONObject()
 
