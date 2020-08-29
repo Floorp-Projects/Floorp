@@ -191,7 +191,12 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   };
 
   typedef uint8_t ExitFromType;
-  enum ExitFrom : ExitFromType { eChild, eTopLevel, ePuppet };
+  enum ExitFrom : ExitFromType {
+    eChild,
+    eTopLevel,
+    ePuppet,
+    ePuppetParentToPuppetChild
+  };
 
  protected:
   WidgetMouseEvent()
