@@ -325,7 +325,7 @@ add_task(async function clickAndFillAlias() {
     engineName: testEngineItem.result.payload.engine,
   });
 
-  gURLBar.setSearchMode({});
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
@@ -419,7 +419,7 @@ add_task(async function enterAndFillAlias() {
     engineName: details.searchParams.engine,
   });
 
-  gURLBar.setSearchMode({});
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
@@ -488,7 +488,7 @@ add_task(async function enterAutofillsAlias() {
       engineName: testEngineItem.result.payload.engine,
     });
 
-    gURLBar.setSearchMode({});
+    await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   }
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
