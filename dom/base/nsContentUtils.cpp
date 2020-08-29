@@ -2541,6 +2541,17 @@ nsINode* nsContentUtils::GetCommonAncestorUnderInteractiveContent(
 }
 
 /* static */
+BrowserParent* nsContentUtils::GetCommonBrowserParentAncestor(
+    BrowserParent* aBrowserParent1, BrowserParent* aBrowserParent2) {
+  return GetCommonAncestorInternal(
+      aBrowserParent1, aBrowserParent2, [](BrowserParent* aBrowserParent) {
+        return aBrowserParent->GetBrowserBridgeParent()
+                   ? aBrowserParent->GetBrowserBridgeParent()->Manager()
+                   : nullptr;
+      });
+}
+
+/* static */
 template <typename FPT, typename FRT, typename SPT, typename SRT>
 Maybe<int32_t> nsContentUtils::ComparePoints(
     const RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
