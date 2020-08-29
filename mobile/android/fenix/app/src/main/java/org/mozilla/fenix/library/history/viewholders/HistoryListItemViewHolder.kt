@@ -5,10 +5,12 @@
 package org.mozilla.fenix.library.history.viewholders
 
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.history_list_item.view.*
 import kotlinx.android.synthetic.main.library_site_item.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.SelectionHolder
@@ -38,6 +40,10 @@ class HistoryListItemViewHolder(
                 historyInteractor.onDeleteSome(selected)
             }
         }
+
+        itemView.recently_closed.setOnClickListener {
+            historyInteractor.onRecentlyClosedClicked()
+        }
     }
 
     fun bind(
@@ -56,7 +62,7 @@ class HistoryListItemViewHolder(
         itemView.history_layout.titleView.text = item.title
         itemView.history_layout.urlView.text = item.url
 
-        toggleDeleteButton(showDeleteButton, mode === HistoryFragmentState.Mode.Normal)
+        toggleTopContent(showDeleteButton, mode === HistoryFragmentState.Mode.Normal)
 
         val headerText = timeGroup?.humanReadable(itemView.context)
         toggleHeader(headerText)
@@ -86,11 +92,11 @@ class HistoryListItemViewHolder(
         }
     }
 
-    private fun toggleDeleteButton(
-        showDeleteButton: Boolean,
+    private fun toggleTopContent(
+        showTopContent: Boolean,
         isNormalMode: Boolean
     ) {
-        if (showDeleteButton) {
+        if (showTopContent) {
             itemView.delete_button.run {
                 visibility = View.VISIBLE
 
@@ -102,7 +108,16 @@ class HistoryListItemViewHolder(
                     alpha = DELETE_BUTTON_DISABLED_ALPHA
                 }
             }
+            val numRecentTabs = itemView.context.components.core.store.state.closedTabs.size
+            itemView.recently_closed_tabs_description.text = String.format(
+                itemView.context.getString(
+                    if (numRecentTabs == 1)
+                        R.string.recently_closed_tab else R.string.recently_closed_tabs
+                ), numRecentTabs
+            )
+            itemView.recently_closed.isVisible = true
         } else {
+            itemView.recently_closed.visibility = View.GONE
             itemView.delete_button.visibility = View.GONE
         }
     }

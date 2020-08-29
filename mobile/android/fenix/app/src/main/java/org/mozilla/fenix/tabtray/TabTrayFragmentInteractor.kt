@@ -73,6 +73,11 @@ interface TabTrayInteractor {
      * Called when multiselect mode should be entered with no tabs selected.
      */
     fun onEnterMultiselect()
+
+    /**
+     * Called when user clicks the recently closed tabs menu button.
+     */
+    fun onOpenRecentlyClosedClicked()
 }
 
 /**
@@ -90,6 +95,10 @@ class TabTrayFragmentInteractor(private val controller: TabTrayController) : Tab
 
     override fun onTabSettingsClicked() {
         controller.handleTabSettingsClicked()
+    }
+
+    override fun onOpenRecentlyClosedClicked() {
+        controller.handleRecentlyClosedClicked()
     }
 
     override fun onShareTabsClicked(private: Boolean) {

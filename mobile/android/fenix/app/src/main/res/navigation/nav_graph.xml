@@ -32,6 +32,10 @@
         app:destination="@id/searchDialogFragment" />
 
     <action
+        android:id="@+id/action_global_recently_closed"
+        app:destination="@id/recentlyClosedFragment" />
+
+    <action
         android:id="@+id/action_global_shareFragment"
         app:destination="@id/shareFragment" />
     <action
@@ -176,6 +180,11 @@
             android:defaultValue="NONE"
             app:argType="org.mozilla.fenix.components.metrics.Event$PerformedSearch$SearchAccessPoint" />
     </fragment>
+
+    <fragment
+        android:id="@+id/recentlyClosedFragment"
+        android:name="org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragment"
+        android:label="@string/library_recently_closed_tabs" />
 
     <fragment
         android:id="@+id/SitePermissionsManagePhoneFeature"

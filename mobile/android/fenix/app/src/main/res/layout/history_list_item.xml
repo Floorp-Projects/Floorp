@@ -2,12 +2,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent" xmlns:tools="http://schemas.android.com/tools"
-        android:orientation="vertical">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/delete_button"
@@ -16,18 +16,76 @@
         android:text="@string/history_delete_all"
         android:visibility="gone" />
 
-    <TextView
-            android:id="@+id/header_title"
-            android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:visibility="gone"
+        android:id="@+id/recently_closed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:minHeight="@dimen/library_item_height">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/history_favicon_width_height"
+            android:layout_height="@dimen/history_favicon_width_height"
+            android:layout_marginStart="20dp"
+            android:importantForAccessibility="no"
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_multiple_tabs" />
+
+        <TextView
+            android:id="@+id/recently_closed_tabs_header"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
+            android:layout_marginStart="12dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:text="@string/library_recently_closed_tabs"
+            android:textAlignment="viewStart"
             android:textColor="?primaryText"
-            android:fontFamily="@font/metropolis_semibold"
-            android:paddingStart="20dp"
-            android:paddingEnd="0dp"
-            android:layout_marginBottom="8dp"
-            tools:text="Header"
-            android:visibility="gone" />
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@+id/recently_closed_tabs_description"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_goneMarginEnd="@dimen/library_item_icon_margin_horizontal" />
+
+        <TextView
+            android:id="@+id/recently_closed_tabs_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAlignment="viewStart"
+            android:textColor="?secondaryText"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/icon"
+            app:layout_constraintTop_toBottomOf="@id/recently_closed_tabs_header"
+            app:layout_goneMarginEnd="@dimen/library_item_icon_margin_horizontal"
+            tools:text="2 tabs" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/header_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="@font/metropolis_semibold"
+        android:paddingStart="20dp"
+        android:paddingEnd="0dp"
+        android:textColor="?primaryText"
+        android:textSize="14sp"
+        android:visibility="gone"
+        tools:text="Header" />
 
     <org.mozilla.fenix.library.LibrarySiteItemView
         android:id="@+id/history_layout"
@@ -35,4 +93,3 @@
         android:layout_height="wrap_content"
         android:minHeight="@dimen/library_item_height" />
 </LinearLayout>
-

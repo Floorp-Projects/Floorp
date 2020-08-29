@@ -385,6 +385,7 @@ dependencies {
     implementation Deps.mozilla_feature_site_permissions
     implementation Deps.mozilla_feature_readerview
     implementation Deps.mozilla_feature_tab_collections
+    implementation Deps.mozilla_feature_recentlyclosed
     implementation Deps.mozilla_feature_top_sites
     implementation Deps.mozilla_feature_share
     implementation Deps.mozilla_feature_accounts_push

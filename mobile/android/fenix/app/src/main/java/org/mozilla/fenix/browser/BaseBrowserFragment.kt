@@ -915,14 +915,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
      */
     protected open fun removeSessionIfNeeded(): Boolean {
         getSessionById()?.let { session ->
-            val sessionManager = requireComponents.core.sessionManager
             return if (session.source == SessionState.Source.ACTION_VIEW) {
                 activity?.finish()
-                sessionManager.remove(session)
+                requireComponents.useCases.tabsUseCases.removeTab(session)
                 true
             } else {
                 if (session.hasParentSession) {
-                    sessionManager.remove(session, true)
+                    requireComponents.useCases.tabsUseCases.removeTab(session)
                 }
                 // We want to return to home if this session didn't have a parent session to select.
                 val goToOverview = !session.hasParentSession

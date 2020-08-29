@@ -477,7 +477,7 @@ class HomeFragment : Fragment() {
             .let { SessionManager.Snapshot(it, selectedIndex) }
 
         tabs.forEach {
-            sessionManager.remove(it)
+            requireComponents.useCases.tabsUseCases.removeTab(it)
         }
 
         val snackbarMessage = if (sessionCode == ALL_PRIVATE_TABS) {
@@ -505,7 +505,7 @@ class HomeFragment : Fragment() {
             val isSelected =
                 session.id == requireComponents.core.store.state.selectedTabId ?: false
 
-            sessionManager.remove(session)
+            requireComponents.useCases.tabsUseCases.removeTab(sessionId)
 
             val snackbarMessage = if (snapshot.session.private) {
                 requireContext().getString(R.string.snackbar_private_tab_closed)

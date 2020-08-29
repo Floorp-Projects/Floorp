@@ -83,6 +83,7 @@ import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
+import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchFragmentDirections
@@ -703,6 +704,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             LoginDetailFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromTabTray ->
             TabTrayDialogFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromRecentlyClosed ->
+            RecentlyClosedFragmentDirections.actionGlobalBrowser(customTabSessionId)
     }
 
     /**

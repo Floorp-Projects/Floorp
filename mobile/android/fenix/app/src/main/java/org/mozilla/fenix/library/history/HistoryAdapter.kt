@@ -27,9 +27,9 @@ enum class HistoryItemTimeGroup {
     }
 }
 
-class HistoryAdapter(
-    private val historyInteractor: HistoryInteractor
-) : PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback), SelectionHolder<HistoryItem> {
+class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
+    PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback),
+    SelectionHolder<HistoryItem> {
 
     private var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
     override val selectedItems get() = mode.selectedItems

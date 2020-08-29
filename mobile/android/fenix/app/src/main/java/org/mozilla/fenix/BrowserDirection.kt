@@ -32,5 +32,6 @@ enum class BrowserDirection(@IdRes val fragmentId: Int) {
     FromAddonDetailsFragment(R.id.addonDetailsFragment),
     FromAddonPermissionsDetailsFragment(R.id.addonPermissionsDetailFragment),
     FromLoginDetailFragment(R.id.loginDetailFragment),
-    FromTabTray(R.id.tabTrayDialogFragment)
+    FromTabTray(R.id.tabTrayDialogFragment),
+    FromRecentlyClosed(R.id.recentlyClosedFragment)
 }

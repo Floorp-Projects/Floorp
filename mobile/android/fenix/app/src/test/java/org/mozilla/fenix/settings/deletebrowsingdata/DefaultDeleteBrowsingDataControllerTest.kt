@@ -13,6 +13,8 @@ import kotlinx.coroutines.GlobalScope.coroutineContext
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.state.action.RecentlyClosedAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.tabs.TabsUseCases
@@ -31,6 +33,7 @@ class DefaultDeleteBrowsingDataControllerTest {
     private var removeAllTabs: TabsUseCases.RemoveAllTabsUseCase = mockk(relaxed = true)
     private var historyStorage: HistoryStorage = mockk(relaxed = true)
     private var permissionStorage: PermissionStorage = mockk(relaxed = true)
+    private var store: BrowserStore = mockk(relaxed = true)
     private var iconsStorage: BrowserIcons = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private lateinit var controller: DefaultDeleteBrowsingDataController
@@ -40,6 +43,7 @@ class DefaultDeleteBrowsingDataControllerTest {
         controller = DefaultDeleteBrowsingDataController(
             removeAllTabs = removeAllTabs,
             historyStorage = historyStorage,
+            store = store,
             permissionStorage = permissionStorage,
             iconsStorage = iconsStorage,
             engine = engine,
@@ -65,6 +69,7 @@ class DefaultDeleteBrowsingDataControllerTest {
         coVerify {
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
             historyStorage.deleteEverything()
+            store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
             iconsStorage.clear()
         }
     }
