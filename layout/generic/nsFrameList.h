@@ -80,7 +80,27 @@ class nsFrameList {
     VerifyList();
   }
 
+  // XXX: Ideally, copy constructor should be removed because a frame should be
+  // owned by one list.
   nsFrameList(const nsFrameList& aOther) = default;
+
+  // XXX: ideally, copy assignment should be removed because we should use move
+  // assignment to transfer the ownership.
+  nsFrameList& operator=(const nsFrameList& aOther) = default;
+
+  /**
+   * Move the frames in aOther to this list. aOther becomes empty after this
+   * operation.
+   */
+  nsFrameList(nsFrameList&& aOther)
+      : mFirstChild(aOther.mFirstChild), mLastChild(aOther.mLastChild) {
+    aOther.Clear();
+    VerifyList();
+  }
+  nsFrameList& operator=(nsFrameList&& aOther) {
+    SetFrames(aOther);
+    return *this;
+  }
 
   /**
    * Infallibly allocate a nsFrameList from the shell arena.
