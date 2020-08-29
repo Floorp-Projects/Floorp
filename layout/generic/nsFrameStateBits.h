@@ -723,6 +723,13 @@ FRAME_STATE_GROUP(Table, nsTableFrame)
 
 FRAME_STATE_BIT(Table, 28, NS_TABLE_PART_HAS_FIXED_BACKGROUND)
 
+// == Frame state bits that apply to page frames ==============================
+FRAME_STATE_GROUP(Page, nsPageFrame)
+
+// If set, this bit indicates that the given nsPageFrame has been skipped
+// via the user's custom-page-range choice, and should not be rendered.
+FRAME_STATE_BIT(Page, 20, NS_PAGE_SKIPPED_BY_CUSTOM_RANGE)
+
 #undef FRAME_STATE_GROUP
 
 #ifdef DEFINED_FRAME_STATE_GROUP_NAME
