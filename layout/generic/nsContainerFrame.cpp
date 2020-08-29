@@ -301,7 +301,7 @@ const nsFrameList& nsContainerFrame::GetChildList(ChildListID aListID) const {
       return list ? *list : nsFrameList::EmptyList();
     }
     case kOverflowContainersList: {
-      nsFrameList* list = GetPropTableFrames(OverflowContainersProperty());
+      nsFrameList* list = GetOverflowContainers();
       return list ? *list : nsFrameList::EmptyList();
     }
     case kExcessOverflowContainersList: {
@@ -1397,7 +1397,7 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
 
 void nsContainerFrame::DisplayOverflowContainers(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  nsFrameList* overflowconts = GetPropTableFrames(OverflowContainersProperty());
+  nsFrameList* overflowconts = GetOverflowContainers();
   if (overflowconts) {
     for (nsIFrame* frame : *overflowconts) {
       BuildDisplayListForChild(aBuilder, frame, aLists);
@@ -1439,7 +1439,7 @@ nsresult nsContainerFrame::StealFrame(nsIFrame* aChild) {
   if (!mFrames.ContainsFrame(aChild)) {
     nsFrameList* list = GetOverflowFrames();
     if (!list || !list->ContainsFrame(aChild)) {
-      list = GetProperty(OverflowContainersProperty());
+      list = GetOverflowContainers();
       if (!list || !list->ContainsFrame(aChild)) {
         list = GetProperty(ExcessOverflowContainersProperty());
         MOZ_ASSERT(list && list->ContainsFrame(aChild),
@@ -1752,8 +1752,7 @@ bool nsContainerFrame::PushIncompleteChildren(
     // overflowIncompleteList into that list. Otherwise, merge it into our
     // excess overflow containers list, to be drained by our next-in-flow.
     auto* nif = static_cast<nsContainerFrame*>(GetNextInFlow());
-    nsFrameList* oc =
-        nif ? nif->GetPropTableFrames(OverflowContainersProperty()) : nullptr;
+    nsFrameList* oc = nif ? nif->GetOverflowContainers() : nullptr;
     if (oc) {
       ReparentFrames(overflowIncompleteList, this, nif);
       MergeSortedFrameLists(*oc, overflowIncompleteList, GetContent());
@@ -1839,8 +1838,7 @@ void nsContainerFrame::NormalizeChildLists() {
           f = next;
         }
         if (overflowContainers->IsEmpty()) {
-          (void)TakeProperty(OverflowContainersProperty());
-          overflowContainers->Delete(PresShell());
+          DestroyOverflowContainers();
         }
         MergeSortedExcessOverflowContainers(moveToEOC);
       }
@@ -2246,8 +2244,7 @@ bool nsContainerFrame::DrainAndMergeSelfOverflowList() {
 
 nsFrameList* nsContainerFrame::DrainExcessOverflowContainersList(
     ChildFrameMerger aMergeFunc) {
-  nsFrameList* overflowContainers =
-      GetPropTableFrames(OverflowContainersProperty());
+  nsFrameList* overflowContainers = GetOverflowContainers();
 
   NS_ASSERTION(!(overflowContainers && GetPrevInFlow() &&
                  static_cast<nsContainerFrame*>(GetPrevInFlow())
@@ -2936,8 +2933,7 @@ void nsOverflowContinuationTracker::SetupOverflowContList() {
   nsContainerFrame* nif =
       static_cast<nsContainerFrame*>(mParent->GetNextInFlow());
   if (nif) {
-    mOverflowContList =
-        nif->GetPropTableFrames(nsContainerFrame::OverflowContainersProperty());
+    mOverflowContList = nif->GetOverflowContainers();
     if (mOverflowContList) {
       mParent = nif;
       SetUpListWalker();
@@ -3144,8 +3140,7 @@ void nsOverflowContinuationTracker::EndFinish(nsIFrame* aChild) {
   nsFrameList* eoc = mParent->GetProperty(
       nsContainerFrame::ExcessOverflowContainersProperty());
   if (eoc != mOverflowContList) {
-    nsFrameList* oc = static_cast<nsFrameList*>(
-        mParent->GetProperty(nsContainerFrame::OverflowContainersProperty()));
+    nsFrameList* oc = mParent->GetOverflowContainers();
     if (oc != mOverflowContList) {
       // mOverflowContList was deleted
       mPrevOverflowCont = nullptr;
@@ -3204,7 +3199,7 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
   // should be one of our children or be null.
   const auto* pif = static_cast<nsContainerFrame*>(GetPrevInFlow());
   if (pif) {
-    const nsFrameList* oc = GetPropTableFrames(OverflowContainersProperty());
+    const nsFrameList* oc = GetOverflowContainers();
     const nsFrameList* eoc =
         GetPropTableFrames(ExcessOverflowContainersProperty());
     const nsFrameList* pifEOC =

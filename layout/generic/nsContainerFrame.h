@@ -541,9 +541,15 @@ class nsContainerFrame : public nsSplittableFrame {
    * still owned by this frame.  A non-null return value indicates that the
    * list is nonempty.
    */
-  nsFrameList* GetOverflowFrames() const {
+  [[nodiscard]] nsFrameList* GetOverflowFrames() const {
     nsFrameList* list = GetProperty(OverflowProperty());
     NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
+    return list;
+  }
+  [[nodiscard]] nsFrameList* GetOverflowContainers() const {
+    nsFrameList* list = GetProperty(OverflowContainersProperty());
+    NS_ASSERTION(!list || !list->IsEmpty(),
+                 "Unexpected empty overflow containers list");
     return list;
   }
 
@@ -560,6 +566,11 @@ class nsContainerFrame : public nsSplittableFrame {
     NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
     return list;
   }
+  [[nodiscard]] nsFrameList* StealOverflowContainers() {
+    nsFrameList* list = TakeProperty(OverflowContainersProperty());
+    NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
+    return list;
+  }
 
   /**
    * Set the overflow list.  aOverflowFrames must not be an empty list.
@@ -569,12 +580,26 @@ class nsContainerFrame : public nsSplittableFrame {
     SetProperty(OverflowProperty(),
                 new (PresShell()) nsFrameList(std::move(aOverflowFrames)));
   }
+  void SetOverflowContainers(nsFrameList&& aOverflowContainers) {
+    MOZ_ASSERT(aOverflowContainers.NotEmpty(), "Shouldn't set an empty list!");
+    MOZ_ASSERT(!GetProperty(OverflowContainersProperty()),
+               "Shouldn't override existing list!");
+    MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
+               "This type of frame can't have overflow containers!");
+    SetProperty(OverflowContainersProperty(),
+                new (PresShell()) nsFrameList(std::move(aOverflowContainers)));
+  }
 
   /**
    * Destroy the overflow list, which must be empty.
    */
   void DestroyOverflowList() {
     nsFrameList* list = RemovePropTableFrames(OverflowProperty());
+    MOZ_ASSERT(list && list->IsEmpty());
+    list->Delete(PresShell());
+  }
+  void DestroyOverflowContainers() {
+    nsFrameList* list = TakeProperty(OverflowContainersProperty());
     MOZ_ASSERT(list && list->IsEmpty());
     list->Delete(PresShell());
   }
