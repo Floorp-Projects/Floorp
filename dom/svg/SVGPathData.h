@@ -187,7 +187,7 @@ class SVGPathData {
   // can take care of keeping DOM wrappers in sync.
 
  protected:
-  typedef float* iterator;
+  using iterator = float*;
 
   /**
    * This may fail on OOM if the internal capacity needs to be increased, in

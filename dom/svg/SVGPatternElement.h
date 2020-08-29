@@ -40,9 +40,6 @@ class SVGPatternElement final : public SVGPatternElementBase {
                              JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  typedef mozilla::SVGAnimatedPreserveAspectRatio
-      SVGAnimatedPreserveAspectRatio;
-
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 

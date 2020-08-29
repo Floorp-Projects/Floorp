@@ -37,8 +37,8 @@ class SVGAttrTearoffTable {
   void RemoveTearoff(SimpleType* aSimple);
 
  private:
-  typedef nsPtrHashKey<SimpleType> SimpleTypePtrKey;
-  typedef nsDataHashtable<SimpleTypePtrKey, TearoffType*> TearoffTable;
+  using SimpleTypePtrKey = nsPtrHashKey<SimpleType>;
+  using TearoffTable = nsDataHashtable<SimpleTypePtrKey, TearoffType*>;
 
   TearoffTable* mTable;
 };

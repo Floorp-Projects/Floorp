@@ -24,7 +24,7 @@ class SVGElementFactory {
   static void Shutdown();
 };
 
-typedef nsresult (*SVGContentCreatorFunction)(
+using SVGContentCreatorFunction = nsresult (*)(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser);
 

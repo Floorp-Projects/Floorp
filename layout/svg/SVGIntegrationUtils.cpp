@@ -433,7 +433,7 @@ class RegularFramePaintCallback : public SVGFilterPaintCallback {
   gfxPoint mUserSpaceToFrameSpaceOffset;
 };
 
-typedef SVGIntegrationUtils::PaintFramesParams PaintFramesParams;
+using PaintFramesParams = SVGIntegrationUtils::PaintFramesParams;
 
 /**
  * Paint css-positioned-mask onto a given target(aMaskDT).

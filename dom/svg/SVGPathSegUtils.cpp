@@ -374,7 +374,7 @@ static void TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState) {
   aState.pos = to;
 }
 
-typedef void (*TraverseFunc)(const float*, SVGPathTraversalState&);
+using TraverseFunc = void (*)(const float*, SVGPathTraversalState&);
 
 static TraverseFunc gTraverseFuncTable[NS_SVG_PATH_SEG_TYPE_COUNT] = {
     nullptr,  //  0 == PATHSEG_UNKNOWN

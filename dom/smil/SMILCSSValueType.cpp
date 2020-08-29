@@ -33,8 +33,8 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-typedef CopyableAutoTArray<RefPtr<RawServoAnimationValue>, 1>
-    ServoAnimationValues;
+using ServoAnimationValues =
+    CopyableAutoTArray<RefPtr<RawServoAnimationValue>, 1>;
 
 /*static*/
 SMILCSSValueType SMILCSSValueType::sSingleton;
