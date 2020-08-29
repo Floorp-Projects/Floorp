@@ -305,8 +305,7 @@ const nsFrameList& nsContainerFrame::GetChildList(ChildListID aListID) const {
       return list ? *list : nsFrameList::EmptyList();
     }
     case kExcessOverflowContainersList: {
-      nsFrameList* list =
-          GetPropTableFrames(ExcessOverflowContainersProperty());
+      nsFrameList* list = GetExcessOverflowContainers();
       return list ? *list : nsFrameList::EmptyList();
     }
     case kBackdropList: {
@@ -1441,7 +1440,7 @@ nsresult nsContainerFrame::StealFrame(nsIFrame* aChild) {
     if (!list || !list->ContainsFrame(aChild)) {
       list = GetOverflowContainers();
       if (!list || !list->ContainsFrame(aChild)) {
-        list = GetProperty(ExcessOverflowContainersProperty());
+        list = GetExcessOverflowContainers();
         MOZ_ASSERT(list && list->ContainsFrame(aChild),
                    "aChild isn't our child"
                    " or on a frame list not supported by StealFrame");
@@ -2053,12 +2052,10 @@ void nsContainerFrame::MergeSortedExcessOverflowContainers(nsFrameList& aList) {
       aList.FirstChild()->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
       "this is the wrong list to put this child frame");
   MOZ_ASSERT(aList.FirstChild()->GetParent() == this);
-  nsFrameList* eoc = GetPropTableFrames(ExcessOverflowContainersProperty());
-  if (eoc) {
+  if (nsFrameList* eoc = GetExcessOverflowContainers()) {
     MergeSortedFrameLists(*eoc, aList, GetContent());
   } else {
-    SetPropTableFrames(new (PresShell()) nsFrameList(aList),
-                       ExcessOverflowContainersProperty());
+    SetExcessOverflowContainers(std::move(aList));
   }
 }
 
@@ -2248,7 +2245,7 @@ nsFrameList* nsContainerFrame::DrainExcessOverflowContainersList(
 
   NS_ASSERTION(!(overflowContainers && GetPrevInFlow() &&
                  static_cast<nsContainerFrame*>(GetPrevInFlow())
-                     ->GetPropTableFrames(ExcessOverflowContainersProperty())),
+                     ->GetExcessOverflowContainers()),
                "conflicting overflow containers lists");
 
   if (!overflowContainers) {
@@ -2940,8 +2937,7 @@ void nsOverflowContinuationTracker::SetupOverflowContList() {
     }
   }
   if (!mOverflowContList) {
-    mOverflowContList = mParent->GetPropTableFrames(
-        nsContainerFrame::ExcessOverflowContainersProperty());
+    mOverflowContList = mParent->GetExcessOverflowContainers();
     if (mOverflowContList) {
       SetUpListWalker();
     }
@@ -3044,10 +3040,14 @@ nsresult nsOverflowContinuationTracker::Insert(nsIFrame* aOverflowCont,
       aOverflowCont->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
     }
     if (!mOverflowContList) {
+      // Note: We don't use SetExcessOverflowContainers() since it requires
+      // setting a non-empty list. It's OK to manually set an empty list to
+      // ExcessOverflowContainersProperty() because we are going to insert
+      // aOverflowCont to mOverflowContList below, which guarantees an nonempty
+      // list in ExcessOverflowContainersProperty().
       mOverflowContList = new (presContext->PresShell()) nsFrameList();
-      mParent->SetPropTableFrames(
-          mOverflowContList,
-          nsContainerFrame::ExcessOverflowContainersProperty());
+      mParent->SetProperty(nsContainerFrame::ExcessOverflowContainersProperty(),
+                           mOverflowContList);
       SetUpListWalker();
     }
     if (aOverflowCont->GetParent() != mParent) {
@@ -3137,8 +3137,7 @@ void nsOverflowContinuationTracker::EndFinish(nsIFrame* aChild) {
     return;
   }
   // Forget mOverflowContList if it was deleted.
-  nsFrameList* eoc = mParent->GetProperty(
-      nsContainerFrame::ExcessOverflowContainersProperty());
+  nsFrameList* eoc = mParent->GetExcessOverflowContainers();
   if (eoc != mOverflowContList) {
     nsFrameList* oc = mParent->GetOverflowContainers();
     if (oc != mOverflowContList) {
@@ -3200,10 +3199,8 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
   const auto* pif = static_cast<nsContainerFrame*>(GetPrevInFlow());
   if (pif) {
     const nsFrameList* oc = GetOverflowContainers();
-    const nsFrameList* eoc =
-        GetPropTableFrames(ExcessOverflowContainersProperty());
-    const nsFrameList* pifEOC =
-        pif->GetPropTableFrames(ExcessOverflowContainersProperty());
+    const nsFrameList* eoc = GetExcessOverflowContainers();
+    const nsFrameList* pifEOC = pif->GetExcessOverflowContainers();
     for (const nsIFrame* child : pif->GetChildList(kPrincipalList)) {
       const nsIFrame* childNIF = child->GetNextInFlow();
       MOZ_ASSERT(!childNIF || mFrames.ContainsFrame(childNIF) ||

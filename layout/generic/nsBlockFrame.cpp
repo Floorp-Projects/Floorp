@@ -5169,8 +5169,7 @@ bool nsBlockFrame::DrainOverflowLines() {
       // prev-in-flow. We'll append these to mFrames to ensure the continuations
       // are ordered.
       auto HasOverflowContainers = [this]() -> bool {
-        return GetOverflowContainers() ||
-               GetPropTableFrames(ExcessOverflowContainersProperty());
+        return GetOverflowContainers() || GetExcessOverflowContainers();
       };
       nsFrameList ocContinuations;
       if (HasOverflowContainers()) {
