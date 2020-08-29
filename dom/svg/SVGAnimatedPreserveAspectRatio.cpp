@@ -199,8 +199,8 @@ UniquePtr<SMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
 }
 
 // typedef for inner class, to make function signatures shorter below:
-typedef SVGAnimatedPreserveAspectRatio::SMILPreserveAspectRatio
-    SMILPreserveAspectRatio;
+using SMILPreserveAspectRatio =
+    SVGAnimatedPreserveAspectRatio::SMILPreserveAspectRatio;
 
 nsresult SMILPreserveAspectRatio::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,

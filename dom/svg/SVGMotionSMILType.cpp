@@ -145,7 +145,7 @@ struct MotionSegment {
   } mU;
 };
 
-typedef FallibleTArray<MotionSegment> MotionSegmentArray;
+using MotionSegmentArray = FallibleTArray<MotionSegment>;
 
 // Helper methods to cast SMILValue.mU.mPtr to the right pointer-type
 static MotionSegmentArray& ExtractMotionSegmentArray(SMILValue& aValue) {

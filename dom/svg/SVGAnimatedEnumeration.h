@@ -25,7 +25,7 @@ namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
 
-typedef uint8_t SVGEnumValue;
+using SVGEnumValue = uint8_t;
 
 struct SVGEnumMapping {
   nsStaticAtom* const mKey;
