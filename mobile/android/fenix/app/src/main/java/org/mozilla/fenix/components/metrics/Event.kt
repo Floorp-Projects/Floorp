@@ -186,6 +186,9 @@ sealed class Event {
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
     object ProgressiveWebAppInstallAsShortcut : Event()
 
+    object MasterPasswordMigrationSuccess : Event()
+    object MasterPasswordMigrationDisplayed : Event()
+
     // Interaction events with extras
 
     data class ProgressiveWebAppForeground(val timeForegrounded: Long) : Event() {

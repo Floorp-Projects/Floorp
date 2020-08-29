@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.components.tips
 
+import android.graphics.drawable.Drawable
+
 sealed class TipType {
     data class Button(val text: String, val action: () -> Unit) : TipType()
 }
@@ -13,7 +15,8 @@ open class Tip(
     val identifier: String,
     val title: String,
     val description: String,
-    val learnMoreURL: String?
+    val learnMoreURL: String?,
+    val titleDrawable: Drawable? = null
 )
 
 interface TipProvider {

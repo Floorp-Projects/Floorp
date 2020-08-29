@@ -3946,3 +3946,31 @@ progressive_web_app:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
     expires: "2021-03-01"
+
+master_password:
+  displayed:
+    type: event
+    description: |
+      The master password migration dialog was displayed
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-03-01"
+  migration:
+    type: event
+    description: |
+      Logins were successfully migrated using a master password.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-03-01"

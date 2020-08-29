@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout
+        android:id="@+id/password_text_input_layout"
+        style="@style/MozTextInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        app:errorEnabled="true"
+        app:errorIconDrawable="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:passwordToggleDrawable="@drawable/mozac_ic_password_reveal_two_state"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="?primaryText">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/mozac_feature_prompt_password_hint"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColor="?primaryText"
+            android:textSize="16sp" />
+    </mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/migration_continue"
+        style="@style/PositiveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="24dp"
+        android:text="@string/mp_dialog_positive_transfer_saved_logins"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/password_text_input_layout" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/migration_cancel"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0"
+        android:padding="10dp"
+        android:text="@string/mp_dialog_negative_transfer_saved_logins"
+        android:textAllCaps="false"
+        android:textColor="?primaryText"
+        android:textStyle="bold"
+        app:fontFamily="@font/metropolis_semibold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/migration_continue" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        app:layout_constraintTop_toBottomOf="@id/migration_cancel" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -27,6 +27,7 @@ import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.Logins
+import org.mozilla.fenix.GleanMetrics.MasterPassword
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
@@ -682,6 +683,13 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ProgressiveWebAppBackground -> EventWrapper(
             { ProgressiveWebApp.background.record(it) },
             { ProgressiveWebApp.backgroundKeys.valueOf(it) }
+        )
+
+        Event.MasterPasswordMigrationDisplayed -> EventWrapper<NoExtraKeys>(
+            { MasterPassword.displayed.record(it) }
+        )
+        Event.MasterPasswordMigrationSuccess -> EventWrapper<NoExtraKeys>(
+            { MasterPassword.migration.record(it) }
         )
 
         // Don't record other events in Glean:

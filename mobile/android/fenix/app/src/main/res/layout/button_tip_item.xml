@@ -2,56 +2,57 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tip_card"
-    android:background="@drawable/cfr_background_gradient"
     style="@style/OnboardingCardLight"
-    android:padding="0dp"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@drawable/cfr_background_gradient"
+    android:padding="0dp">
 
     <TextView
         android:id="@+id/tip_header_text"
         android:layout_width="0dp"
-        android:maxLines="2"
-        android:lineSpacingExtra="2dp"
         android:layout_height="wrap_content"
-        android:textColor="@color/primary_text_dark_theme"
-        android:textAppearance="@style/HeaderTextStyle"
-        android:gravity="center_vertical"
-        tools:text="Header text"
         android:layout_margin="16dp"
+        android:drawablePadding="12dp"
+        android:gravity="center_vertical"
+        android:lineSpacingExtra="2dp"
+        android:maxLines="2"
+        android:textAppearance="@style/HeaderTextStyle"
+        android:textColor="@color/primary_text_dark_theme"
+        app:drawableTint="@color/primary_text_dark_theme"
+        app:layout_constraintEnd_toStartOf="@id/tip_close"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tip_close" />
+        tools:text="Header text" />
 
     <ImageButton
         android:id="@+id/tip_close"
-        android:tint="@color/primary_text_dark_theme"
-        app:srcCompat="@drawable/ic_close"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?selectableItemBackgroundBorderless"
         android:contentDescription="@string/create_collection_close"
-        android:layout_width="48dp"
-        android:layout_height="48dp" />
+        android:tint="@color/primary_text_dark_theme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_close" />
 
     <TextView
         android:id="@+id/tip_description_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
         android:lineSpacingExtra="2dp"
         android:textAppearance="@style/Body14TextStyle"
         android:textColor="@color/primary_text_dark_theme"
-        tools:text="Tip description"
-        android:layout_marginTop="8dp"
-        android:layout_marginHorizontal="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tip_header_text"
+        app:layout_constraintEnd_toStartOf="@id/tip_close"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tip_close"/>
+        app:layout_constraintTop_toBottomOf="@id/tip_header_text"
+        tools:text="Tip description" />
 
     <TextView
         android:id="@+id/tip_learn_more"
@@ -63,19 +64,20 @@
         app:layout_constraintEnd_toEndOf="@id/tip_description_text"
         app:layout_constraintStart_toStartOf="@id/tip_description_text"
         app:layout_constraintTop_toBottomOf="@id/tip_description_text"
-        tools:textColor="@color/accent_high_contrast_private_theme"/>
+        tools:textColor="@color/accent_high_contrast_private_theme" />
 
     <Button
-        style="@style/NeutralButton"
         android:id="@+id/tip_button"
-        android:layout_marginTop="16dp"
-        tools:text="Call to action"
+        style="@style/NeutralButton"
         android:layout_height="36dp"
         android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tip_learn_more"
-        app:layout_constraintStart_toStartOf="parent"
+        app:backgroundTint="@color/foundation_light_theme"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tip_learn_more"
+        tools:text="Call to action" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

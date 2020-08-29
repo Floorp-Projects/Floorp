@@ -124,7 +124,6 @@ open class SavedLoginsStorageController(
 
     fun findPotentialDuplicates(loginId: String) {
         var deferredLogin: Deferred<List<Login>>? = null
-        // What scope should be used here?
         val fetchLoginJob = viewLifecycleScope.launch(ioDispatcher) {
             deferredLogin = async {
                 val login = getLogin(loginId)

@@ -185,6 +185,7 @@
     <string name="pref_key_migrating_from_fenix_nightly_tip" translatable="false">pref_key_migrating_from_fenix_nightly_tip</string>
     <string name="pref_key_migrating_from_firefox_nightly_tip" translatable="false">pref_key_migrating_from_firefox_nightly_tip</string>
     <string name="pref_key_migrating_from_fenix_tip" translatable="false">pref_key_migrating_from_fenix_tip</string>
+    <string name="pref_key_master_password_tip" translatable="false">pref_key_master_password_tip</string>
 
     <string name="pref_key_wait_first_paint" translatable="false">pref_key_wait_first_paint</string>
 

@@ -44,4 +44,20 @@
 
     <!-- Name of the application for about page -->
     <string name="daylight_app_name" translatable="false">Firefox Daylight</string>
+
+    <!-- MP Migration -->
+    <string name="mp_homescreen_tip_title">Looking for your logins?</string>
+    <string name="mp_homescreen_tip_message">If you had a master password before Firefox updated, you’ll need to enter it to transfer your saved logins.</string>
+    <string name="mp_homescreen_button">Enter master password</string>
+    <string name="mp_dialog_title_recovery_transfer_saved_logins">Transfer saved logins</string>
+    <string name="mp_dialog_message_recovery_transfer_saved_logins">Enter your previous master password.</string>
+    <string name="mp_dialog_positive_transfer_saved_logins">Continue and transfer</string>
+    <string name="mp_dialog_negative_transfer_saved_logins">Cancel</string>
+    <string name="mp_dialog_error_transfer_saved_logins">Invalid password</string>
+    <string name="mp_dialog_title_transfer_success">Transfer successful</string>
+    <string name="mp_dialog_message_transfer_success">Your saved logins have been transferred to Firefox.</string>
+    <string name="mp_dialog_positive_transfer_success">View saved logins</string>
+    <string name="mp_dialog_close_transfer">Close</string>
+    <string name="mp_dialog_title_transfer_failure">Transfer failed</string>
+    <string name="mp_dialog_message_transfer_failure">An unknown error occurred and logins could not be transferred.</string>
 </resources>

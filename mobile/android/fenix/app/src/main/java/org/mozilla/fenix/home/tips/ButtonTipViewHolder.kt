@@ -37,6 +37,9 @@ class ButtonTipViewHolder(
         metrics.track(Event.TipDisplayed(tip.identifier))
 
         tip_header_text.text = tip.title
+        tip.titleDrawable?.let {
+            tip_header_text.setCompoundDrawablesWithIntrinsicBounds(it, null, null, null)
+        }
         tip_description_text.text = tip.description
         tip_button.text = tip.type.text
 

@@ -82,6 +82,8 @@ import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
+import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.components.tips.providers.MasterPasswordTipProvider
 import org.mozilla.fenix.components.tips.providers.MigrationTipProvider
 import org.mozilla.fenix.components.toolbar.TabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -174,6 +176,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -197,7 +200,18 @@ class HomeFragment : Fragment() {
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
                     topSites = components.core.topSiteStorage.cachedTopSites,
-                    tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip(),
+                    tip = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+                        FenixTipManager(
+                            listOf(
+                                MasterPasswordTipProvider(
+                                    requireContext(),
+                                    ::navToSavedLogins,
+                                    ::dismissTip
+                                ),
+                                MigrationTipProvider(requireContext())
+                            )
+                        ).getTip()
+                    },
                     showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome
                 )
             )
@@ -232,6 +246,7 @@ class HomeFragment : Fragment() {
                 handleSwipedItemDeletionCancel = ::handleSwipedItemDeletionCancel
             )
         )
+
         updateLayout(view)
         sessionControlView = SessionControlView(
             view.sessionControlRecyclerView,
@@ -244,6 +259,10 @@ class HomeFragment : Fragment() {
 
         activity.themeManager.applyStatusBarTheme(activity)
         return view
+    }
+
+    private fun dismissTip(tip: Tip) {
+        sessionControlInteractor.onCloseTip(tip)
     }
 
     /**
@@ -411,7 +430,8 @@ class HomeFragment : Fragment() {
         // We call this onLayout so that the bottom bar width is correctly set for us to center
         // the CFR in.
         view.toolbar_wrapper.doOnLayout {
-            val willNavigateToSearch = !bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) && FeatureFlags.newSearchExperience
+            val willNavigateToSearch =
+                !bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) && FeatureFlags.newSearchExperience
             if (!browsingModeManager.mode.isPrivate && !willNavigateToSearch) {
                 SearchWidgetCFR(
                     context = view.context,
@@ -540,7 +560,18 @@ class HomeFragment : Fragment() {
                 collections = components.core.tabCollectionStorage.cachedTabCollections,
                 mode = currentMode.getCurrentMode(),
                 topSites = components.core.topSiteStorage.cachedTopSites,
-                tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip(),
+                tip = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+                    FenixTipManager(
+                        listOf(
+                            MasterPasswordTipProvider(
+                                requireContext(),
+                                ::navToSavedLogins,
+                                ::dismissTip
+                            ),
+                            MigrationTipProvider(requireContext())
+                        )
+                    ).getTip()
+                },
                 showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome
             )
         )
@@ -585,6 +616,10 @@ class HomeFragment : Fragment() {
         lifecycleScope.launch(IO) {
             requireComponents.reviewPromptController.promptReview(requireActivity())
         }
+    }
+
+    private fun navToSavedLogins() {
+        findNavController().navigate(HomeFragmentDirections.actionGlobalSavedLoginsAuthFragment())
     }
 
     private fun dispatchModeChanges(mode: Mode) {
