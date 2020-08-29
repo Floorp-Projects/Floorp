@@ -850,7 +850,7 @@ add_task(async function localOneOffEmptySearchString() {
     Assert.ok(!result.heuristic, "The first result should not be heuristic");
   }
 
-  gURLBar.setSearchMode({});
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
 
   await hidePopup();
   await SpecialPowers.popPrefEnv();
