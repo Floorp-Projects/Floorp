@@ -634,7 +634,7 @@ class nsContainerFrame : public nsSplittableFrame {
    * the frames before calling these methods.
    */
   void DestroyOverflowList() {
-    nsFrameList* list = RemovePropTableFrames(OverflowProperty());
+    nsFrameList* list = TakeProperty(OverflowProperty());
     MOZ_ASSERT(list && list->IsEmpty());
     list->Delete(PresShell());
   }
@@ -806,27 +806,6 @@ class nsContainerFrame : public nsSplittableFrame {
    * append it to this frame's principal child list.
    */
   nsIFrame* PullNextInFlowChild(ContinuationTraversingState& aState);
-
-  // ==========================================================================
-  /*
-   * Convenience methods for nsFrameLists stored in the
-   * PresContext's proptable
-   */
-
-  /**
-   * Get the PresContext-stored nsFrameList named aPropID for this frame.
-   * May return null.
-   */
-  nsFrameList* GetPropTableFrames(FrameListPropertyDescriptor aProperty) const;
-
-  /**
-   * Remove and return the PresContext-stored nsFrameList named aPropID for
-   * this frame. May return null. The caller is responsible for deleting
-   * nsFrameList and either passing ownership of the frames to someone else or
-   * destroying the frames.
-   */
-  [[nodiscard]] nsFrameList* RemovePropTableFrames(
-      FrameListPropertyDescriptor aProperty);
 
   /**
    * Safely destroy the frames on the nsFrameList stored on aProp for this
