@@ -41,7 +41,7 @@ class AboutFragment : Fragment(), AboutPageListener {
 
     private lateinit var headerAppName: String
     private lateinit var appName: String
-    private val aboutPageAdapter: AboutPageAdapter = AboutPageAdapter(this)
+    private var aboutPageAdapter: AboutPageAdapter? = AboutPageAdapter(this)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,6 +58,10 @@ class AboutFragment : Fragment(), AboutPageListener {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        if (aboutPageAdapter == null) {
+            aboutPageAdapter = AboutPageAdapter(this)
+        }
+
         about_list.run {
             adapter = aboutPageAdapter
             addItemDecoration(
@@ -76,7 +80,12 @@ class AboutFragment : Fragment(), AboutPageListener {
         )
 
         populateAboutHeader()
-        aboutPageAdapter.submitList(populateAboutList())
+        aboutPageAdapter?.submitList(populateAboutList())
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        aboutPageAdapter = null
     }
 
     private fun populateAboutHeader() {
