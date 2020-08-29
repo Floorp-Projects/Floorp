@@ -895,7 +895,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1e3a6d449ee32490c0cc564b145dc3b8755a11f9"
+        "revision": "9128f0c4ac87443b34dd2fd15bd497683ea1f0d6"
     },
     "ja-JP-mac": {
         "pin": false,
@@ -903,7 +903,7 @@
             "macosx64",
             "macosx64-devedition"
         ],
-        "revision": "d1770324289412c5a974c785cba1782213e93d8d"
+        "revision": "481cff7a7a8a1cab3e76616e240814ca0aa207b0"
     },
     "ka": {
         "pin": false,
