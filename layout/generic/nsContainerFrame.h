@@ -829,13 +829,6 @@ class nsContainerFrame : public nsSplittableFrame {
       FrameListPropertyDescriptor aProperty);
 
   /**
-   * Set the PresContext-stored nsFrameList named aPropID for this frame
-   * to the given aFrameList, which must not be null.
-   */
-  void SetPropTableFrames(nsFrameList* aFrameList,
-                          FrameListPropertyDescriptor aProperty);
-
-  /**
    * Safely destroy the frames on the nsFrameList stored on aProp for this
    * frame then remove the property and delete the frame list.
    * Nothing happens if the property doesn't exist.
