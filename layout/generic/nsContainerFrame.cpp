@@ -1636,7 +1636,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
     nextInFlow->mFrames.InsertFrames(nextInFlow, nullptr, tail);
   } else {
     // Add the frames to our overflow list
-    SetOverflowFrames(tail);
+    SetOverflowFrames(std::move(tail));
   }
 }
 
@@ -2043,7 +2043,7 @@ void nsContainerFrame::MergeSortedOverflow(nsFrameList& aList) {
   if (overflow) {
     MergeSortedFrameLists(*overflow, aList, GetContent());
   } else {
-    SetOverflowFrames(aList);
+    SetOverflowFrames(std::move(aList));
   }
 }
 
