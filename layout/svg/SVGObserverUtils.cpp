@@ -1116,8 +1116,8 @@ void SVGRenderingObserver::DebugObserverSet() {
 }
 #endif
 
-typedef nsInterfaceHashtable<URLAndReferrerInfoHashKey, nsIMutationObserver>
-    URIObserverHashtable;
+using URIObserverHashtable =
+    nsInterfaceHashtable<URLAndReferrerInfoHashKey, nsIMutationObserver>;
 
 using PaintingPropertyDescriptor =
     const FramePropertyDescriptor<SVGPaintingProperty>*;
