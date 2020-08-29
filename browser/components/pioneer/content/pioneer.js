@@ -49,6 +49,19 @@ function showEnrollmentStatus() {
   enrollmentButton.classList.toggle("primary", !pioneerId);
 }
 
+function toggleContentBasedOnLocale() {
+  const requestedLocale = Services.locale.requestedLocale;
+  if (requestedLocale !== "en-US") {
+    const localeNotificationBar = document.getElementById(
+      "locale-notification"
+    );
+    localeNotificationBar.style.display = "block";
+
+    const reportContent = document.getElementById("report-content");
+    reportContent.style.display = "none";
+  }
+}
+
 async function toggleEnrolled(studyAddonId, cachedAddons) {
   let addon;
   let install;
@@ -549,6 +562,8 @@ function updateContents(contents) {
 }
 
 document.addEventListener("DOMContentLoaded", async domEvent => {
+  toggleContentBasedOnLocale();
+
   showEnrollmentStatus();
 
   document.addEventListener("focus", removeBadge);
