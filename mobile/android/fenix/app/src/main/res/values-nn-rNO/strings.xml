@@ -491,12 +491,17 @@
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Nyleg attlatne faner</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Vis all historikk</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tabs">%d faner</string>
     <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d fane</string>
+
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Ingen nylege attlatne faner</string>
 
     <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
@@ -629,6 +634,10 @@
     <!-- Downloads -->
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Ingen nedlastingar her</string>
+
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d valde</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->

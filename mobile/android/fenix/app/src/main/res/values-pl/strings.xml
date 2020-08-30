@@ -80,6 +80,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Nie teraz</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Można ustawić Firefoksa tak, aby automatycznie otwierał odnośniki w aplikacjach.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Otwórz ustawienia</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Zamknij</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Wymagany jest dostęp do aparatu. Przejdź do ustawień Androida, stuknij „Uprawnienia” i stuknij „Zezwól”.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Przejdź do ustawień</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Zamknij</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Ustaw automatyczne zamykanie kart, które nie zostały odwiedzone w ciągu ostatniego dnia, tygodnia lub miesiąca.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Otwórz opcje</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Zamknij</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nowa karta</string>
@@ -107,7 +129,7 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Dodatki</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Nie ma tu żadnych dodatków</string>
+    <string name="no_add_ons">Nie ma żadnych dodatków</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomoc</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -266,6 +288,8 @@
     <string name="preferences_toolbar">Pasek narzędzi</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Motyw</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Strona startowa</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Dostosuj</string>
     <!-- Preference description for banner about signing in -->
@@ -382,7 +406,7 @@
     <string name="exceptions_empty_message_learn_more_link">Więcej informacji</string>
 
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Całkowicie wyłączona, przejdź do ustawień, aby ją włączyć.</string>
+    <string name="preferences_tracking_protection_turned_off_globally">Całkowicie wyłączona, otwórz ustawienia, aby ją włączyć.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetria</string>
@@ -421,7 +445,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Zeskanuj kod QR wyświetlony na stronie <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Otwórz kamerę</string>
+    <string name="pair_open_camera">Otwórz aparat</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Anuluj</string>
 
@@ -473,6 +497,32 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zamknij</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Ostatnio zamknięte karty</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Wyświetl całą historię</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">Karty: %d</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">Karty: %d</string>
+
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Nie ma ostatnio zamkniętych kart</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Zamykanie kart</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Ręczne</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Po jednym dniu</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Po tygodniu</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Po miesiącu</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Otwarte karty</string>
@@ -492,6 +542,10 @@
     <string name="tab_tray_menu_item_save">Zachowaj w kolekcji</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Udostępnij wszystkie karty</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Ostatnio zamknięte karty</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Ustawienia kart</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Zamknij wszystkie karty</string>
     <!-- Shortcut action to open new tab -->
@@ -539,6 +593,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Usuń</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Usuń z historii</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (tryb prywatny)</string>
 
@@ -703,7 +759,7 @@
     <!-- Preference for altering video and audio autoplay for all websites -->
     <string name="preference_browser_feature_autoplay">Automatyczne odtwarzanie</string>
     <!-- Preference for altering the camera access for all websites -->
-    <string name="preference_phone_feature_camera">Kamera</string>
+    <string name="preference_phone_feature_camera">Aparat</string>
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">Mikrofon</string>
     <!-- Preference for altering the location access for all websites -->
@@ -745,10 +801,8 @@
     <string name="collections_header">Kolekcje</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu kolekcji</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Zbierz rzeczy, które są dla Ciebie ważne</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Połącz ze sobą podobne wyszukiwania, witryny i karty, aby szybciej do nich wracać.</string>
+    <string name="no_collections_description2">Zbierz rzeczy, które są dla Ciebie ważne.\nPołącz ze sobą podobne wyszukiwania, witryny i karty, aby szybciej do nich wracać.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Wybierz karty</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -999,8 +1053,8 @@
     <string name="onboarding_whats_new_description">Masz pytania na temat nowego interfejsu przeglądarki %s? Chcesz wiedzieć, co się zmieniło?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Tutaj znajdziesz odpowiedzi</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Zacznij synchronizować zakładki, hasła i nie tylko za pomocą konta Firefoksa.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Zacznij synchronizować zakładki, hasła i nie tylko za pomocą konta Firefoksa.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Więcej informacji</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1504,4 +1558,18 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Najczęściej odwiedzane strony</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Usuń</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Zacznij synchronizować zakładki, hasła i nie tylko za pomocą konta Firefoksa.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Zbierz rzeczy, które są dla Ciebie ważne</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Połącz ze sobą podobne wyszukiwania, witryny i karty, aby szybciej do nich wracać.</string>
     </resources>

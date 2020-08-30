@@ -465,6 +465,21 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zapri</string>
 
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Ni nedavno zaprtih zavihkov</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Zapri zavihke</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Ročno</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Po enem dnevu</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Po enem tednu</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Po enem mesecu</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Odprti zavihki</string>
@@ -484,6 +499,10 @@
     <string name="tab_tray_menu_item_save">Shrani v zbirko</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Deli vse zavihke</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Nedavno zaprti zavihki</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Nastavitve zavihkov</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Zapri vse zavihke</string>
     <!-- Shortcut action to open new tab -->
@@ -531,6 +550,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Odstrani</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Izbriši iz zgodovine</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (zasebni način)</string>
 
@@ -1489,4 +1510,9 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">V redu, razumem</string>
 
-    </resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Odstrani</string>
+
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Združite podobna iskanja, spletne strani in zavihke za hitrejši dostop.</string>
+</resources>

@@ -82,11 +82,27 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Micca subitu</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Pudete cunfigurà Firefox per apre autumaticamente e leie in d’altre appiecazioni.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Apre e preferenze</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ricusà</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Accessu richiestu à l’appareghju-fotò. Accidite à e preferenze d’Android, picchichjate Permessi, è dopu Permette.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Apre e preferenze</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Ricusà</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Cunfigurate l’unghjette aperte per ch’elle si chjodinu autumaticamente quand’elle ùn sò state micca fighjate l’ultimi ghjorni, settimane, o mesi.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Fighjà l’ozzioni</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Ricusà</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -545,6 +561,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Caccià</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Squassà da a crunulogia</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (navigazione privata)</string>
 

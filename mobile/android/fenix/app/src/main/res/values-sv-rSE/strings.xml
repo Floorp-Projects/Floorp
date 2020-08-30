@@ -79,18 +79,25 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Inte nu</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Du kan ställa in Firefox att automatiskt öppna länkar i appar.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Gå till Inställningar</string>
 
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ignorera</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Kameraåtkomst behövs. Gå till Android-inställningar, tryck på behörigheter och tryck på tillåt.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Gå till Inställningar</string>
 
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Ignorera</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Ställ in öppna flikar så att de automatiskt stängs om de inte har visats den senaste dagen, veckan eller månaden.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Visa alternativ</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -506,6 +513,9 @@
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d flik</string>
 
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Inga nyligen stängda flikar här</string>
+
     <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Stäng flikar</string>
@@ -539,6 +549,8 @@
     <string name="tab_tray_menu_item_share">Dela alla flikar</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nyligen stängda flikar</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Flikinställningar</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Stäng alla flikar</string>
     <!-- Shortcut action to open new tab -->
@@ -1566,4 +1578,6 @@
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Samla de saker som är viktiga för dig</string>
-    </resources>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Gruppera liknande sökningar, webbplatser och flikar för snabb åtkomst senare.</string>
+</resources>

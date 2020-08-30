@@ -78,6 +78,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Ne dabar</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Galite leisti „Firefox“ automatiškai atverti saitus iš kitų programų.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Eiti į nustatymus</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Paslėpti</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Reikia kameros prieigos. Eikite į „Android“ nustatymus, bakstelėkite „leidimus“, tada bakstelėkite „leisti“.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Eiti į nustatymus</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Paslėpti</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Galite nustatyti, kad atvertos kortelės automatiškai užsivertų, jei nebuvo peržiūrėtos per paskutinę dieną, savaitę, ar mėnesį.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Peržiūrėti nustatymus</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Paslėpti</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nauja kortelė</string>
@@ -262,6 +284,8 @@
     <string name="preferences_toolbar">Priemonių juosta</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Grafinis apvalkalas</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Pradžia</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tinkinimas</string>
     <!-- Preference description for banner about signing in -->
@@ -305,6 +329,9 @@
     <string name="preferences_external_download_manager">Išorinė atsiuntimų tvarkytuvė</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Priedai</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Pranešimai</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -468,6 +495,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Užverti</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Paskiausiai užvertos kortelės</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Rodyti visą žurnalą</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">Kortelių: %d</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d kortelė</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Nėra paskiausiai užvertų kortelių</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Užverti korteles</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Pasirinktinai</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Po vienos dienos</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Po vienos savaitės</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Po vieno mėnesio</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Atvertos kortelės</string>
@@ -487,6 +539,10 @@
     <string name="tab_tray_menu_item_save">Įtraukti į rinkinį</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Dalintis visomis kortelėmis</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Paskiausiai užvertos kortelės</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Kortelės nustatymai</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Užverti visas korteles</string>
     <!-- Shortcut action to open new tab -->
@@ -533,6 +589,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Pašalinti</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Pašalinti iš žurnalo</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">„%1$s“ (privačioji veiksena)</string>
 
@@ -577,6 +635,13 @@
     <string name="history_older">Seniau</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Žurnalų įrašų nėra</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Atsiuntimų nėra</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">Pasirinkta: %1$d</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -733,10 +798,8 @@
     <string name="collections_header">Rinkiniai</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Rinkinių meniu</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Kaupkite jums svarbius dalykus</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Sugrupuokite panašias paieškas, svetaines, ir korteles patogesniam pasiekimui.</string>
+    <string name="no_collections_description2">Kaupkite jums svarbius dalykus.\nSugrupuokite panašias paieškas, svetaines, ir korteles patogesniam pasiekimui.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Pasirinkite korteles</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -987,9 +1050,10 @@
     <string name="onboarding_whats_new_description">Turite klausimų apie naująją „%s“? Norite sužinoti, kas pasikeitė?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Atsakymus rasite čia</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">išnaudokite daugiau „%s“ galimybių.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Pradėkite sinchronizuoti adresyną, slaptažodžius, ir daugiau su savo „Firefox“ paskyra.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Sužinoti daugiau</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1487,6 +1551,9 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Prisijungti prie „Sync“</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Nėra atvertų kortelių</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Pasiekta lankomiausių svetainių riba</string>
@@ -1495,4 +1562,18 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Gerai, supratau</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Rodyti lankomiausias svetaines</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Pašalinti</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">išnaudokite daugiau „%s“ galimybių.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Kaupkite jums svarbius dalykus</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Sugrupuokite panašias paieškas, svetaines, ir korteles patogesniam pasiekimui.</string>
     </resources>
