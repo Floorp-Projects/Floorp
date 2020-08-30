@@ -1749,6 +1749,11 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
 
+  if (descr.hasTraceList()) {
+    gc::VisitTraceList(trc, object, descr.traceList(), newData);
+    return;
+  }
+
   descr.traceInstance(trc, newData);
 }
 
@@ -2204,7 +2209,14 @@ void InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
 
-  typedObj.typeDescr().traceInstance(trc, typedObj.inlineTypedMem());
+  TypeDescr& descr = typedObj.typeDescr();
+  if (descr.hasTraceList()) {
+    gc::VisitTraceList(trc, object, typedObj.typeDescr().traceList(),
+                       typedObj.inlineTypedMem());
+    return;
+  }
+
+  descr.traceInstance(trc, typedObj.inlineTypedMem());
 }
 
 /* static */
