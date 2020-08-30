@@ -7827,6 +7827,5 @@ impl CompositeState {
                 surface.image_rendering,
             );
         }
-        compositor.start_compositing();
     }
 }
