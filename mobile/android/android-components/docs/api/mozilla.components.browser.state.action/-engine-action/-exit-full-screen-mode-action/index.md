@@ -2,7 +2,7 @@
 
 # ExitFullScreenModeAction
 
-`data class ExitFullScreenModeAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L508)
+`data class ExitFullScreenModeAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L524)
 
 Exits fullscreen mode in the tabs with the given [sessionId](session-id.md).
 

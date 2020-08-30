@@ -2,7 +2,7 @@
 
 # EngineMiddleware
 
-`object EngineMiddleware` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/EngineMiddleware.kt#L34)
+`object EngineMiddleware` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/EngineMiddleware.kt#L35)
 
 Helper for creating a list of [Middleware](../../mozilla.components.lib.state/-middleware.md) instances for supporting all [EngineAction](../../mozilla.components.browser.state.action/-engine-action/index.md)s.
 

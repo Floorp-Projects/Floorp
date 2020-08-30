@@ -2,7 +2,7 @@
 
 # AddDownloadAction
 
-`data class AddDownloadAction : `[`DownloadAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L698)
+`data class AddDownloadAction : `[`DownloadAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L714)
 
 Updates the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) to track the provided [download](download.md) as added.
 

@@ -22,4 +22,4 @@ A contract that indicate how an add-on provider must behave.
 
 | Name | Summary |
 |---|---|
-| [AddonCollectionProvider](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md) | `class AddonCollectionProvider : `[`AddonsProvider`](./index.md)<br>Provide access to the collections AMO API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |
+| [AddonCollectionProvider](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md) | `class AddonCollectionProvider : `[`AddonsProvider`](./index.md)<br>Provide access to the AMO collections API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |

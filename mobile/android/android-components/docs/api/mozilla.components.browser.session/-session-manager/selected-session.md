@@ -2,7 +2,7 @@
 
 # selectedSession
 
-`val selectedSession: `[`Session`](../-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L56)
+`val selectedSession: `[`Session`](../-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L57)
 
 Gets the currently selected session if there is one.
 

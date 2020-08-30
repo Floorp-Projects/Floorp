@@ -2,4 +2,4 @@
 
 # itemFromJSON
 
-`fun itemFromJSON(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, json: <ERROR CLASS>): `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SnapshotSerializer.kt#L100)
+`fun itemFromJSON(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, json: <ERROR CLASS>): `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SnapshotSerializer.kt#L101)

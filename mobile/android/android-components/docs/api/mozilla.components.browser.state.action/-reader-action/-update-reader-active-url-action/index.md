@@ -2,7 +2,7 @@
 
 # UpdateReaderActiveUrlAction
 
-`data class UpdateReaderActiveUrlAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L606)
+`data class UpdateReaderActiveUrlAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L622)
 
 Updates the [ReaderState.activeUrl](../../../mozilla.components.browser.state.state/-reader-state/active-url.md).
 

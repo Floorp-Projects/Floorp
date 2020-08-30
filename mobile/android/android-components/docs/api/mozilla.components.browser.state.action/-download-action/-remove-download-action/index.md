@@ -2,7 +2,7 @@
 
 # RemoveDownloadAction
 
-`data class RemoveDownloadAction : `[`DownloadAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L703)
+`data class RemoveDownloadAction : `[`DownloadAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L719)
 
 Updates the [BrowserState](../../../mozilla.components.browser.state.state/-browser-state/index.md) to remove the download with the provided [downloadId](download-id.md).
 

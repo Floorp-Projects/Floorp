@@ -2,4 +2,4 @@
 
 # metadata
 
-`val metadata: `[`Metadata`](../../../mozilla.components.concept.engine.media/-media/-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L660)
+`val metadata: `[`Metadata`](../../../mozilla.components.concept.engine.media/-media/-metadata/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L676)

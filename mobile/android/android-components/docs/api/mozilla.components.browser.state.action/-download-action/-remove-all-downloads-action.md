@@ -2,7 +2,7 @@
 
 # RemoveAllDownloadsAction
 
-`object RemoveAllDownloadsAction : `[`DownloadAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L708)
+`object RemoveAllDownloadsAction : `[`DownloadAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L724)
 
 Updates the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) to remove all downloads.
 

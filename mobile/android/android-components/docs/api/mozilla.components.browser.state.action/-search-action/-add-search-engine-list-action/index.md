@@ -2,7 +2,7 @@
 
 # AddSearchEngineListAction
 
-`data class AddSearchEngineListAction : `[`SearchAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L758)
+`data class AddSearchEngineListAction : `[`SearchAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L774)
 
 Updates [BrowserState.search](../../../mozilla.components.browser.state.state/-browser-state/search.md) to add/modify [SearchState.searchEngines](../../../mozilla.components.browser.state.state/-search-state/search-engines.md).
 

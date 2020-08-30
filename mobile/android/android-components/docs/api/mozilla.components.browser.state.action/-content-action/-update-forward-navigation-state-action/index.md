@@ -2,7 +2,7 @@
 
 # UpdateForwardNavigationStateAction
 
-`data class UpdateForwardNavigationStateAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L296)
+`data class UpdateForwardNavigationStateAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L312)
 
 Updates the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) of the given [sessionId](session-id.md) to indicate whether or not a forward navigation is possible.
 

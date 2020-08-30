@@ -10,11 +10,10 @@ Marks the [TabSessionState](../../../mozilla.components.browser.state.state/-tab
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SelectTabAction(tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, timeSelected: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = System.currentTimeMillis())`<br>Marks the [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) with the given [tabId](tab-id.md) as selected tab. |
+| [&lt;init&gt;](-init-.md) | `SelectTabAction(tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Marks the [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) with the given [tabId](tab-id.md) as selected tab. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [tabId](tab-id.md) | `val tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the ID of the tab to select. |
-| [timeSelected](time-selected.md) | `val timeSelected: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |

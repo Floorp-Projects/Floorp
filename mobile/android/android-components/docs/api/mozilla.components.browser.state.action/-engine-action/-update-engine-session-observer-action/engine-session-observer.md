@@ -2,4 +2,4 @@
 
 # engineSessionObserver
 
-`val engineSessionObserver: `[`Observer`](../../../mozilla.components.concept.engine/-engine-session/-observer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L554)
+`val engineSessionObserver: `[`Observer`](../../../mozilla.components.concept.engine/-engine-session/-observer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L570)

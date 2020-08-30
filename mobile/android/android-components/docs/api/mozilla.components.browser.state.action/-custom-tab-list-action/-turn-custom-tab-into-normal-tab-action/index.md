@@ -2,7 +2,7 @@
 
 # TurnCustomTabIntoNormalTabAction
 
-`data class TurnCustomTabIntoNormalTabAction : `[`CustomTabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L139)
+`data class TurnCustomTabIntoNormalTabAction : `[`CustomTabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L155)
 
 Converts an existing [CustomTabSessionState](../../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md) to a regular/normal [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md).
 

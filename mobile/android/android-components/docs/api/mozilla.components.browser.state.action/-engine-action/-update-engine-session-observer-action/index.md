@@ -2,7 +2,7 @@
 
 # UpdateEngineSessionObserverAction
 
-`data class UpdateEngineSessionObserverAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L552)
+`data class UpdateEngineSessionObserverAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L568)
 
 Updates the [EngineSession.Observer](../../../mozilla.components.concept.engine/-engine-session/-observer/index.md) of the session with the provided [sessionId](session-id.md).
 

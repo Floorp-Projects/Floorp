@@ -2,7 +2,7 @@
 
 # UnlinkEngineSessionAction
 
-`data class UnlinkEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L539)
+`data class UnlinkEngineSessionAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L555)
 
 Detaches the current [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) from the session with the provided [sessionId](session-id.md).
 

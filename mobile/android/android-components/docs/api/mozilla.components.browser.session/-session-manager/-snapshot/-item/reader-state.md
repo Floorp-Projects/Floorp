@@ -2,4 +2,4 @@
 
 # readerState
 
-`val readerState: `[`ReaderState`](../../../../mozilla.components.browser.state.state/-reader-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L305)
+`val readerState: `[`ReaderState`](../../../../mozilla.components.browser.state.state/-reader-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L310)

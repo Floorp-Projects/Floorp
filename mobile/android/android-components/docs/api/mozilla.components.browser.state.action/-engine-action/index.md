@@ -2,7 +2,7 @@
 
 # EngineAction
 
-`sealed class EngineAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L438)
+`sealed class EngineAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L454)
 
 [BrowserAction](../-browser-action.md) implementations related to updating the [EngineState](../../mozilla.components.browser.state.state/-engine-state/index.md) of a single [SessionState](../../mozilla.components.browser.state.state/-session-state/index.md) inside
 [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md).

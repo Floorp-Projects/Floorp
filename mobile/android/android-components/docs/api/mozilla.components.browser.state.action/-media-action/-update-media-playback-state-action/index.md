@@ -2,7 +2,7 @@
 
 # UpdateMediaPlaybackStateAction
 
-`data class UpdateMediaPlaybackStateAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L647)
+`data class UpdateMediaPlaybackStateAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L663)
 
 Updates the [Media.PlaybackState](../../../mozilla.components.concept.engine.media/-media/-playback-state/index.md) for the [MediaState.Element](../../../mozilla.components.browser.state.state/-media-state/-element/index.md) with id [mediaId](media-id.md) owned by the
 tab with id [tabId](tab-id.md).

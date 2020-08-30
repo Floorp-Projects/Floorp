@@ -2,4 +2,4 @@
 
 # data
 
-`val data: `[`BrowsingData`](../../../mozilla.components.concept.engine/-engine/-browsing-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L517)
+`val data: `[`BrowsingData`](../../../mozilla.components.concept.engine/-engine/-browsing-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L533)

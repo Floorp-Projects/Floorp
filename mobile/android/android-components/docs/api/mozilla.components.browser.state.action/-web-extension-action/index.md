@@ -2,7 +2,7 @@
 
 # WebExtensionAction
 
-`sealed class WebExtensionAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L353)
+`sealed class WebExtensionAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L369)
 
 [BrowserAction](../-browser-action.md) implementations related to updating [BrowserState.extensions](../../mozilla.components.browser.state.state/-browser-state/extensions.md) and
 [TabSessionState.extensionState](../../mozilla.components.browser.state.state/-tab-session-state/extension-state.md).

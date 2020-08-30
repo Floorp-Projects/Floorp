@@ -2,7 +2,7 @@
 
 # ClearFindResultsAction
 
-`data class ClearFindResultsAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L240)
+`data class ClearFindResultsAction : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L256)
 
 Removes all [FindResultState](../../../mozilla.components.browser.state.state.content/-find-result-state/index.md)s of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 

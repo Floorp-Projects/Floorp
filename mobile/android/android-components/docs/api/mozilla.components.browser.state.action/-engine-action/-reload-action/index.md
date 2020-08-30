@@ -2,7 +2,7 @@
 
 # ReloadAction
 
-`data class ReloadAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L470)
+`data class ReloadAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L486)
 
 Reloads the tab with the given [sessionId](session-id.md).
 

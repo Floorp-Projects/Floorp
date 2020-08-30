@@ -2,7 +2,7 @@
 
 # AddContainersAction
 
-`data class AddContainersAction : `[`ContainerAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L738)
+`data class AddContainersAction : `[`ContainerAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L754)
 
 Updates [BrowserState.containers](../../../mozilla.components.browser.state.state/-browser-state/containers.md) to register the given list of [containers](containers.md).
 

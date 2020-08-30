@@ -2,7 +2,7 @@
 
 # DownloadMiddleware
 
-`class DownloadMiddleware : `[`Middleware`](../../mozilla.components.lib.state/-middleware.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadMiddleware.kt#L34)
+`class DownloadMiddleware : `[`Middleware`](../../mozilla.components.lib.state/-middleware.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadMiddleware.kt#L33)
 
 [Middleware](../../mozilla.components.lib.state/-middleware.md) implementation for managing downloads via the provided download service. Its
 purpose is to react to global download state changes (e.g. of [BrowserState.downloads](../../mozilla.components.browser.state.state/-browser-state/downloads.md))

@@ -2,7 +2,7 @@
 
 # RemoveTabMediaAction
 
-`data class RemoveTabMediaAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L631)
+`data class RemoveTabMediaAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L647)
 
 Removes all [MediaState.Element](../../../mozilla.components.browser.state.state/-media-state/-element/index.md) for tabs with ids in [tabIds](tab-ids.md).
 
