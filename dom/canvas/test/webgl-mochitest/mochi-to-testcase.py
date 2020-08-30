@@ -9,6 +9,7 @@ assert MOCHI_PATH.suffix == '.html'
 
 TEST_PATH = MOCHI_PATH.with_suffix('.solo.html')
 
+
 def read_local_file(include):
     inc_path = MOCHI_PATH.parent
     file_path = inc_path / include
@@ -80,7 +81,7 @@ with open(TEST_PATH, 'wb') as fout:
 
                 if inc == b'/tests/SimpleTest/SimpleTest':
                     print('Injecting SimpleTest replacement')
-                    fout.write(SIMPLETEST_REPLACEMENT);
+                    fout.write(SIMPLETEST_REPLACEMENT)
                     continue
 
                 inc_js = inc.decode() + '.js'
@@ -90,9 +91,9 @@ with open(TEST_PATH, 'wb') as fout:
                     continue
 
                 print('Injecting include: ' + inc_js)
-                fout.write(b'\n<script>\n// Imported from: ' + inc_js.encode() + b'\n');
-                fout.write(inc_data);
-                fout.write(b'\n</script>\n');
+                fout.write(b'\n<script>\n// Imported from: ' + inc_js.encode() + b'\n')
+                fout.write(inc_data)
+                fout.write(b'\n</script>\n')
                 continue
 
             if skip_line:
@@ -100,4 +101,3 @@ with open(TEST_PATH, 'wb') as fout:
 
             fout.write(line)
             continue
-
