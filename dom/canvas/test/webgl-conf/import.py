@@ -6,25 +6,24 @@
 
 assert __name__ == '__main__'
 
-from pathlib import *
+from pathlib import Path
 import shutil
-import subprocess
 import sys
 
 REL_PATH = '/dom/canvas/test/webgl-conf'
 REPO_DIR = Path.cwd()
 DIR_IN_GECKO = Path(__file__).parent
 assert not REPO_DIR.samefile(DIR_IN_GECKO), 'Run this script from the source git checkout.'
-assert DIR_IN_GECKO.as_posix().endswith(REL_PATH) # Be paranoid with rm -rf.
+assert DIR_IN_GECKO.as_posix().endswith(REL_PATH)  # Be paranoid with rm -rf.
 
 gecko_base_dir = DIR_IN_GECKO.as_posix()[:-len(REL_PATH)]
 angle_dir = Path(gecko_base_dir, 'gfx/angle').as_posix()
 sys.path.append(angle_dir)
-from vendor_from_git import *
+from vendor_from_git import print_now, record_cherry_picks
 
 # --
 
-(MERGE_BASE_ORIGIN, ) = sys.argv[1:] # Not always 'origin'!
+(MERGE_BASE_ORIGIN, ) = sys.argv[1:]  # Not always 'origin'!
 record_cherry_picks(DIR_IN_GECKO, MERGE_BASE_ORIGIN)
 
 # --
