@@ -174,8 +174,11 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   static_assert(sizeof(JitFrameLayout) == sizeof(WasmToJSJitFrameLayout),
                 "thus a rectifier frame can be used with a wasm frame");
 
-  JitSpew(JitSpew_Codegen, "# Emitting sequential arguments rectifier");
-  generateArgumentsRectifier(masm);
+  JitSpew(JitSpew_Codegen, "# Emitting arguments rectifier");
+  generateArgumentsRectifier(masm, ArgumentsRectifierKind::Normal);
+
+  JitSpew(JitSpew_Codegen, "# Emitting trial inlining arguments rectifier");
+  generateArgumentsRectifier(masm, ArgumentsRectifierKind::TrialInlining);
 
   JitSpew(JitSpew_Codegen, "# Emitting EnterJIT sequence");
   generateEnterJIT(cx, masm);

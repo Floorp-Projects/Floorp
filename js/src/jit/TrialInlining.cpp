@@ -300,13 +300,6 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
   MOZ_ASSERT_IF(loc.getOp() == JSOp::FunCall,
                 data->callFlags.getArgFormat() == CallFlags::FunCall);
 
-  // TODO: The arguments rectifier is not yet supported.
-  uint32_t argc =
-      loc.getOp() == JSOp::FunCall ? loc.getCallArgc() - 1 : loc.getCallArgc();
-  if (argc < data->target->nargs()) {
-    return true;
-  }
-
   ICScript* newICScript = createInlinedICScript(data->target, loc);
   if (!newICScript) {
     return false;

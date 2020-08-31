@@ -3261,21 +3261,7 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
     return false;
   }
 
-  // Load JitScript
-  masm.loadPtr(Address(calleeReg, JSFunction::offsetOfScript()), codeReg);
-  masm.branchIfScriptHasNoJitScript(codeReg, failure->label());
-
-  masm.loadJitScript(codeReg, codeReg);
-
-  // Load BaselineScript
-  masm.loadPtr(Address(codeReg, JitScript::offsetOfBaselineScript()), codeReg);
-  static_assert(BaselineDisabledScript == 0x1);
-  masm.branchPtr(Assembler::BelowOrEqual, codeReg,
-                 ImmWord(BaselineDisabledScript), failure->label());
-
-  // Load Baseline jitcode
-  masm.loadPtr(Address(codeReg, BaselineScript::offsetOfMethod()), codeReg);
-  masm.loadPtr(Address(codeReg, JitCode::offsetOfCode()), codeReg);
+  masm.loadBaselineJitCodeRaw(calleeReg, codeReg, failure->label());
 
   if (!updateArgc(flags, argcReg, scratch)) {
     return false;
@@ -3322,7 +3308,12 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
   masm.load16ZeroExtend(Address(calleeReg, JSFunction::offsetOfNargs()),
                         calleeReg);
   masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
-  masm.assumeUnreachable("Arguments rectifier not yet supported.");
+
+  // Call the trial-inlining arguments rectifier.
+  ArgumentsRectifierKind kind = ArgumentsRectifierKind::TrialInlining;
+  TrampolinePtr argumentsRectifier =
+      cx_->runtime()->jitRuntime()->getArgumentsRectifier(kind);
+  masm.movePtr(argumentsRectifier, codeReg);
 
   masm.bind(&noUnderflow);
   masm.callJit(codeReg);
