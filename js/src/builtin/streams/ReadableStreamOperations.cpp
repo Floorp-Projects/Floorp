@@ -35,9 +35,9 @@
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithValue
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::Unwrap{Callee,Internal}Slot
-#include "vm/JSContext-inl.h"  // JSContext::check
-#include "vm/JSObject-inl.h"   // js::IsCallable, js::NewObjectWithClassProto
-#include "vm/Realm-inl.h"      // js::AutoRealm
+#include "vm/JSContext-inl.h"    // JSContext::check
+#include "vm/JSObject-inl.h"  // js::IsCallable, js::NewObjectWithClassProto
+#include "vm/Realm-inl.h"     // js::AutoRealm
 
 using js::IsCallable;
 using js::NewHandler;
