@@ -65,10 +65,14 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.webnotifications.WebNotificationFeature
+import mozilla.components.lib.crash.Crash
+import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.nearby.NearbyConnection
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
+import mozilla.components.support.base.crash.Breadcrumb
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
@@ -290,6 +294,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             SimpleBrowserMenuItem("P2P") {
                 P2PIntegration.launch?.invoke()
             },
+            SimpleBrowserMenuItem("Restore after crash") {
+                sessionUseCases.crashRecovery.invoke()
+            },
             BrowserMenuDivider()
         )
 
@@ -382,4 +389,37 @@ open class DefaultComponents(private val applicationContext: Context) {
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
     val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
+
+    val crashReporter: CrashReporter by lazy {
+        CrashReporter(
+            applicationContext,
+            services = listOf(
+                object : CrashReporterService {
+                    override val id: String
+                        get() = "xxx"
+                    override val name: String
+                        get() = "Test"
+
+                    override fun createCrashReportUrl(identifier: String): String? {
+                        return null
+                    }
+
+                    override fun report(crash: Crash.UncaughtExceptionCrash): String? {
+                        return null
+                    }
+
+                    override fun report(crash: Crash.NativeCodeCrash): String? {
+                        return null
+                    }
+
+                    override fun report(
+                        throwable: Throwable,
+                        breadcrumbs: ArrayList<Breadcrumb>
+                    ): String? {
+                        return null
+                    }
+                }
+            )
+        ).install(applicationContext)
+    }
 }

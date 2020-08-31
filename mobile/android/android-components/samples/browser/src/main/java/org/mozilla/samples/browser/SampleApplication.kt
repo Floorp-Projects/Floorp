@@ -40,6 +40,8 @@ class SampleApplication : Application() {
 
         Log.addSink(AndroidLogSink())
 
+        components.crashReporter.install(this)
+
         if (!isMainProcess()) {
             return
         }
