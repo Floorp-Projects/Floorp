@@ -5279,65 +5279,7 @@ double profiler_time() {
   return delta.ToMilliseconds();
 }
 
-static void locked_profiler_fill_backtrace(PSLockRef aLock,
-                                           RegisteredThread& aRegisteredThread,
-                                           ProfileBuffer& aProfileBuffer) {
-  Registers regs;
-#if defined(HAVE_NATIVE_UNWIND)
-  regs.SyncPopulate();
-#else
-  regs.Clear();
-#endif
-
-  DoSyncSample(aLock, aRegisteredThread, TimeStamp::NowUnfuzzed(), regs,
-               aProfileBuffer);
-}
-
-static UniqueProfilerBacktrace locked_profiler_get_backtrace(PSLockRef aLock) {
-  if (!ActivePS::Exists(aLock)) {
-    return nullptr;
-  }
-
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(aLock);
-  if (!registeredThread) {
-    // If this was called from a non-registered thread, return a nullptr
-    // and do no more work. This can happen from a memory hook. Before
-    // the allocation tracking there was a MOZ_ASSERT() here checking
-    // for the existence of a registeredThread.
-    return nullptr;
-  }
-
-  auto bufferManager = MakeUnique<ProfileChunkedBuffer>(
-      ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
-      MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
-  ProfileBuffer buffer(*bufferManager);
-
-  locked_profiler_fill_backtrace(aLock, *registeredThread, buffer);
-
-  return UniqueProfilerBacktrace(
-      new ProfilerBacktrace("SyncProfile", registeredThread->Info()->ThreadId(),
-                            std::move(bufferManager)));
-}
-
-UniqueProfilerBacktrace profiler_get_backtrace() {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  // Fast racy early return.
-  if (!profiler_is_active()) {
-    return nullptr;
-  }
-
-  PSAutoLock lock(gPSMutex);
-
-  return locked_profiler_get_backtrace(lock);
-}
-
-void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
-  delete aBacktrace;
-}
-
-bool profiler_capture_backtrace(ProfileChunkedBuffer& aChunkedBuffer) {
+bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -5349,15 +5291,60 @@ bool profiler_capture_backtrace(ProfileChunkedBuffer& aChunkedBuffer) {
   RegisteredThread* registeredThread =
       TLSRegisteredThread::RegisteredThread(lock);
   if (!registeredThread) {
-    MOZ_ASSERT(registeredThread);
+    // If this was called from a non-registered thread, return false and do no
+    // more work. This can happen from a memory hook. Before the allocation
+    // tracking there was a MOZ_ASSERT() here checking for the existence of a
+    // registeredThread.
     return false;
   }
 
   ProfileBuffer profileBuffer(aChunkedBuffer);
 
-  locked_profiler_fill_backtrace(lock, *registeredThread, profileBuffer);
+  Registers regs;
+#if defined(HAVE_NATIVE_UNWIND)
+  regs.SyncPopulate();
+#else
+  regs.Clear();
+#endif
+
+  DoSyncSample(lock, *registeredThread, TimeStamp::NowUnfuzzed(), regs,
+               profileBuffer);
 
   return true;
+}
+
+UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  // Quick is-active check before allocating a buffer.
+  if (!profiler_is_active()) {
+    return nullptr;
+  }
+
+  auto buffer = MakeUnique<ProfileChunkedBuffer>(
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
+      MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
+
+  if (!profiler_capture_backtrace_into(*buffer)) {
+    return nullptr;
+  }
+
+  return buffer;
+}
+
+UniqueProfilerBacktrace profiler_get_backtrace() {
+  UniquePtr<ProfileChunkedBuffer> buffer = profiler_capture_backtrace();
+
+  if (!buffer) {
+    return nullptr;
+  }
+
+  return UniqueProfilerBacktrace(new ProfilerBacktrace(
+      "SyncProfile", profiler_current_thread_id(), std::move(buffer)));
+}
+
+void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
+  delete aBacktrace;
 }
 
 static void racy_profiler_add_marker(const char* aMarkerName,
@@ -5532,21 +5519,20 @@ bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
   // locking the profiler mutex here could end up causing a deadlock if another
   // mutex is taken, which the profiler may indirectly need elsewhere.
   // See bug 1642726 for such a scenario.
-  // So instead we only try to lock, and bail out if the mutex is already
-  // locked. Native allocations are statistically sampled anyway, so missing a
-  // few because of this is acceptable.
-  PSAutoTryLock tryLock(gPSMutex);
-  if (!tryLock.IsLocked()) {
+  // So instead we bail out if the mutex is already locked. Native allocations
+  // are statistically sampled anyway, so missing a few because of this is
+  // acceptable.
+  if (gPSMutex.IsLockedOnCurrentThread()) {
     return false;
   }
 
   AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
   maybelocked_profiler_add_marker_for_thread(
       aMainThreadId, JS::ProfilingCategoryPair::OTHER, "Native allocation",
-      NativeAllocationMarkerPayload(
-          TimeStamp::Now(), aSize, aMemoryAddress, profiler_current_thread_id(),
-          locked_profiler_get_backtrace(tryLock.LockRef())),
-      &tryLock.LockRef());
+      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize, aMemoryAddress,
+                                    profiler_current_thread_id(),
+                                    profiler_get_backtrace()),
+      nullptr);
   return true;
 }
 
