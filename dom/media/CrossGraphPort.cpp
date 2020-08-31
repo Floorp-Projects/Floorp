@@ -64,41 +64,31 @@ CrossGraphPort* CrossGraphPort::Connect(
   RefPtr<MediaInputPort> port =
       aStreamTrack->ForwardTrackContentsTo(transmitter);
 
-  return new CrossGraphPort(std::move(port));
-}
-
-RefPtr<CrossGraphTransmitter> CrossGraphPort::GetTransmitter() {
-  return mTransmitter;
-}
-
-RefPtr<CrossGraphReceiver> CrossGraphPort::GetReceiver() {
-  return GetTransmitter()->mReceiver;
+  return new CrossGraphPort(std::move(port), std::move(transmitter),
+                            std::move(receiver));
 }
 
 void CrossGraphPort::AddAudioOutput(void* aKey) {
-  MOZ_ASSERT(GetTransmitter());
-  GetReceiver()->AddAudioOutput(aKey);
+  mReceiver->AddAudioOutput(aKey);
 }
 
 void CrossGraphPort::RemoveAudioOutput(void* aKey) {
-  MOZ_ASSERT(GetTransmitter());
-  GetReceiver()->RemoveAudioOutput(aKey);
+  mReceiver->RemoveAudioOutput(aKey);
 }
 
 void CrossGraphPort::SetAudioOutputVolume(void* aKey, float aVolume) {
-  MOZ_ASSERT(GetTransmitter());
-  GetReceiver()->SetAudioOutputVolume(aKey, aVolume);
+  mReceiver->SetAudioOutputVolume(aKey, aVolume);
 }
 
 void CrossGraphPort::Destroy() {
-  MOZ_ASSERT(GetTransmitter());
-  GetTransmitter()->Destroy();
-  mSourcePort->Destroy();
+  mTransmitter->Destroy();
+  mReceiver->Destroy();
+  mTransmitterPort->Destroy();
 }
 
 RefPtr<GenericPromise> CrossGraphPort::EnsureConnected() {
   // The primary graph is already working check the partner (receiver's) graph.
-  return GetReceiver()->Graph()->NotifyWhenDeviceStarted(GetReceiver().get());
+  return mReceiver->Graph()->NotifyWhenDeviceStarted(mReceiver.get());
 }
 
 /** CrossGraphTransmitter **/
@@ -145,12 +135,6 @@ void CrossGraphTransmitter::ProcessInput(GraphTime aFrom, GraphTime aTo,
       Unused << mReceiver->EnqueueAudio(*iter);
     }
   }
-}
-
-void CrossGraphTransmitter::Destroy() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MediaTrack::Destroy();
-  mReceiver->Destroy();
 }
 
 /** CrossGraphReceiver **/
