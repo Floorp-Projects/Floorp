@@ -413,6 +413,8 @@ GeckoDriver.prototype.getBrowsingContext = function(options = {}) {
     browsingContext = browsingContext.top;
   }
 
+  logger.trace(`Using browsing context ${browsingContext?.id}`);
+
   return browsingContext;
 };
 
@@ -511,8 +513,6 @@ GeckoDriver.prototype.addBrowser = function(win) {
  */
 GeckoDriver.prototype.startBrowser = function(window, isNewSession = false) {
   this.mainFrame = window;
-  this.chromeBrowsingContext = this.mainFrame.browsingContext;
-  this.contentBrowsingContext = null;
 
   this.addBrowser(window);
   this.whenBrowserStarted(window, isNewSession);
@@ -606,8 +606,7 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
     this.curBrowser.register(id, be);
   }
 
-  this.contentBrowsingContext = BrowsingContext.get(id);
-  this.wins.set(id, this.contentBrowsingContext.currentWindowGlobal);
+  this.wins.set(id, BrowsingContext.get(id).currentWindowGlobal);
 
   return id;
 };
@@ -881,10 +880,12 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   }
 
   if (this.mainFrame) {
+    this.chromeBrowsingContext = this.mainFrame.browsingContext;
     this.mainFrame.focus();
   }
 
   if (this.curBrowser.tab) {
+    this.contentBrowsingContext = this.curBrowser.contentBrowser.browsingContext;
     this.curBrowser.contentBrowser.focus();
   }
 
@@ -1721,6 +1722,8 @@ GeckoDriver.prototype.setWindowHandle = async function(
 
     this.startBrowser(winProperties.win, false /* isNewSession */);
 
+    this.chromeBrowsingContext = this.mainFrame.browsingContext;
+
     if (registerBrowsers && browserListening) {
       await registerBrowsers;
       const id = await browserListening;
@@ -1730,8 +1733,6 @@ GeckoDriver.prototype.setWindowHandle = async function(
     // Otherwise switch to the known chrome window
     this.curBrowser = this.browsers[winProperties.id];
     this.mainFrame = this.curBrowser.window;
-
-    this.chromeBrowsingContext = this.mainFrame.browsingContext;
 
     // Activate the tab if it's a content window.
     let tab = null;
@@ -1743,6 +1744,7 @@ GeckoDriver.prototype.setWindowHandle = async function(
       );
     }
 
+    this.chromeBrowsingContext = this.mainFrame.browsingContext;
     this.contentBrowsingContext = tab?.linkedBrowser.browsingContext;
   }
 
