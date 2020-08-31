@@ -19,12 +19,16 @@
 // This file is safe to include unconditionally, and only defines
 // empty macros if MOZ_GECKO_PROFILER is not set.
 
-// BaseProfilerCounts.h is also safe to include unconditionally, with empty
-// macros if MOZ_GECKO_PROFILER is not set.
+// These headers are also safe to include unconditionally, with empty macros if
+// MOZ_GECKO_PROFILER is not set.
 #include "mozilla/BaseProfilerCounts.h"
+
+// BaseProfilerMarkers.h is #included in the middle of this header!
+// #include "mozilla/BaseProfilerMarkers.h"
 
 #ifndef MOZ_GECKO_PROFILER
 
+#  include "mozilla/BaseProfilerMarkers.h"
 #  include "mozilla/UniquePtr.h"
 
 // This file can be #included unconditionally. However, everything within this
@@ -675,6 +679,16 @@ class MOZ_RAII AutoProfilerStats {
 #    define AUTO_PROFILER_STATS(name)
 
 #  endif  // PROFILER_RUNTIME_STATS else
+
+}  // namespace baseprofiler
+}  // namespace mozilla
+
+// BaseProfilerMarkers.h requires some stuff from this header.
+// TODO: Move common stuff to shared header, and move this #include to the top.
+#  include "mozilla/BaseProfilerMarkers.h"
+
+namespace mozilla {
+namespace baseprofiler {
 
 //---------------------------------------------------------------------------
 // Put profiling data into the profiler (labels and markers)
