@@ -195,7 +195,6 @@ class AudioNodeEngine;
 class AudioNodeExternalInputTrack;
 class AudioNodeTrack;
 class DirectMediaTrackListener;
-class MediaInputPort;
 class MediaTrackGraphImpl;
 class MediaTrackListener;
 class ProcessedMediaTrack;
@@ -798,13 +797,14 @@ class MediaInputPort final {
  private:
   // Do not call this constructor directly. Instead call
   // aDest->AllocateInputPort.
-  MediaInputPort(MediaTrack* aSource, ProcessedMediaTrack* aDest,
-                 uint16_t aInputNumber, uint16_t aOutputNumber)
+  MediaInputPort(MediaTrackGraphImpl* aGraph, MediaTrack* aSource,
+                 ProcessedMediaTrack* aDest, uint16_t aInputNumber,
+                 uint16_t aOutputNumber)
       : mSource(aSource),
         mDest(aDest),
         mInputNumber(aInputNumber),
         mOutputNumber(aOutputNumber),
-        mGraph(nullptr) {
+        mGraph(aGraph) {
     MOZ_COUNT_CTOR(MediaInputPort);
   }
 
@@ -814,27 +814,26 @@ class MediaInputPort final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaInputPort)
 
-  // Called on graph manager thread
-  // Do not call these from outside MediaTrackGraph.cpp!
-  void Init();
-  // Called during message processing to trigger removal of this track.
-  void Disconnect();
-
-  // Control API
   /**
    * Disconnects and destroys the port. The caller must not reference this
-   * object again.
+   * object again. Main thread.
    */
   void Destroy();
 
-  // Any thread
+  // The remaining methods and members must always be called on the graph thread
+  // from within MediaTrackGraph.cpp.
+
+  void Init();
+  // Called during message processing to trigger removal of this port's source
+  // and destination tracks.
+  void Disconnect();
+
   MediaTrack* GetSource() const { return mSource; }
   ProcessedMediaTrack* GetDestination() const { return mDest; }
 
   uint16_t InputNumber() const { return mInputNumber; }
   uint16_t OutputNumber() const { return mOutputNumber; }
 
-  // Call on graph manager thread
   struct InputInterval {
     GraphTime mStart;
     GraphTime mEnd;
@@ -849,8 +848,8 @@ class MediaInputPort final {
   /**
    * Returns the graph that owns this port.
    */
-  MediaTrackGraphImpl* GraphImpl();
-  MediaTrackGraph* Graph();
+  MediaTrackGraphImpl* GraphImpl() const;
+  MediaTrackGraph* Graph() const;
 
   /**
    * Sets the graph that owns this track.  Should only be called once.
@@ -882,8 +881,6 @@ class MediaInputPort final {
   }
 
  private:
-  friend class MediaTrackGraphImpl;
-  friend class MediaTrack;
   friend class ProcessedMediaTrack;
   // Never modified after Init()
   MediaTrack* mSource;
