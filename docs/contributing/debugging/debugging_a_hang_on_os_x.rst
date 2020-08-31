@@ -1,6 +1,10 @@
 Debugging A Hang On OS X
 ========================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 This article contains historical information about older versions of OS X.
 See `How to Report a Hung
 Firefox <https://developer.mozilla.org/en-US/docs/Mozilla/How_to_report_a_hung_Firefox>`__ instead.

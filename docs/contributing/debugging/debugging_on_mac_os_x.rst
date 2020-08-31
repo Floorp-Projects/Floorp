@@ -1,6 +1,10 @@
 Debugging On Mac Os X
 =====================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 This document explains how to debug Gecko based applications such as
 Firefox, Thunderbird, and SeaMonkey on macOS using Xcode. If you want to
 debug from the terminal see :ref:`Debugging Mozilla with

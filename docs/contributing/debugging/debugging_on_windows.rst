@@ -1,6 +1,10 @@
 Debugging On Windows
 ====================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 This document explains how to debug Gecko based applications such as
 Firefox, Thunderbird, and SeaMonkey on Windows using the Visual C++ IDE.
 

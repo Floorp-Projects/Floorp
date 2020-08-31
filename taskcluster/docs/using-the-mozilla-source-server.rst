@@ -1,6 +1,10 @@
 Using The Mozilla Source Server
 ===============================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 Using the Mozilla source server is now even more feature-packed. The
 nightly debug builds are now also Source Indexed so that by following a
 couple of simple steps you can also have the source code served to you
