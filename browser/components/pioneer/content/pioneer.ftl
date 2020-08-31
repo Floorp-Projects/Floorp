@@ -16,6 +16,7 @@ pioneer-leave-study = Leave Study
 pioneer-enrollment-button = Join { -pioneer-brand-short-name }
 pioneer-unenrollment-button = Leave { -pioneer-brand-short-name }
 pioneer-current-studies = Current Studies
+pioneer-no-current-studies = No current studies, please check back later.
 pioneer-end-study = End Study
 pioneer-ended-study = Study Ended
 pioneer-accept-participate = Accept and Participate
