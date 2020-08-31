@@ -417,17 +417,10 @@ def process_case_folding(case_folding):
     folding_tests = []
     folding_codes = set()
 
-    non_bmp_folding_map = {}
-    non_bmp_rev_folding_map = {}
-
     for row in read_case_folding(case_folding):
         code = row[0]
         mapping = row[2]
         folding_map[code] = mapping
-
-        if code > MAX_BMP:
-            non_bmp_folding_map[code] = mapping
-            non_bmp_rev_folding_map[mapping] = code
 
         if mapping not in rev_folding_map:
             rev_folding_map[mapping] = [code]
@@ -483,7 +476,6 @@ def process_case_folding(case_folding):
         folding_index[code] = i
     return (
         folding_table, folding_index,
-        non_bmp_folding_map, non_bmp_rev_folding_map,
         folding_tests
     )
 
@@ -633,7 +625,6 @@ def process_special_casing(special_casing, table, index):
 
 def make_non_bmp_file(version,
                       non_bmp_lower_map, non_bmp_upper_map,
-                      non_bmp_folding_map, non_bmp_rev_folding_map,
                       codepoint_table):
     file_name = 'UnicodeNonBMP.h'
     with io.open(file_name, mode='w', encoding='utf-8') as non_bmp_file:
@@ -660,12 +651,6 @@ def make_non_bmp_file(version,
         make_non_bmp_convert_macro(non_bmp_file, 'LOWERCASE', non_bmp_lower_map, codepoint_table)
         non_bmp_file.write('\n')
         make_non_bmp_convert_macro(non_bmp_file, 'UPPERCASE', non_bmp_upper_map, codepoint_table)
-        non_bmp_file.write('\n')
-        make_non_bmp_convert_macro(non_bmp_file, 'CASE_FOLDING',
-                                   non_bmp_folding_map, codepoint_table)
-        non_bmp_file.write('\n')
-        make_non_bmp_convert_macro(non_bmp_file, 'REV_CASE_FOLDING',
-                                   non_bmp_rev_folding_map, codepoint_table)
 
         non_bmp_file.write("""
 #endif /* util_UnicodeNonBMP_h */
@@ -1631,7 +1616,6 @@ def update_unicode(args):
         ) = process_unicode_data(unicode_data, derived_core_properties)
         (
             folding_table, folding_index,
-            non_bmp_folding_map, non_bmp_rev_folding_map,
             folding_tests
         ) = process_case_folding(case_folding)
         (
@@ -1649,7 +1633,6 @@ def update_unicode(args):
                       codepoint_table)
     make_non_bmp_file(unicode_version,
                       non_bmp_lower_map, non_bmp_upper_map,
-                      non_bmp_folding_map, non_bmp_rev_folding_map,
                       codepoint_table)
     make_irregexp_tables(unicode_version,
                          table, index,
