@@ -93,10 +93,10 @@ RefPtr<GenericPromise> CrossGraphPort::EnsureConnected() {
 
 /** CrossGraphTransmitter **/
 
-CrossGraphTransmitter::CrossGraphTransmitter(TrackRate aSampleRate,
-                                             CrossGraphReceiver* aReceiver)
+CrossGraphTransmitter::CrossGraphTransmitter(
+    TrackRate aSampleRate, RefPtr<CrossGraphReceiver> aReceiver)
     : ForwardedInputTrack(aSampleRate, MediaSegment::AUDIO),
-      mReceiver(aReceiver) {}
+      mReceiver(std::move(aReceiver)) {}
 
 void CrossGraphTransmitter::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                          uint32_t aFlags) {
