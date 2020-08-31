@@ -6508,15 +6508,6 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
     mCurrentLoadPlayTime.Pause();
     ReportTelemetry();
 
-    // For EME content, we may force destruction of the CDM client (and CDM
-    // instance if this is the last client for that CDM instance) and
-    // the CDM's decoder. This ensures the CDM gets reliable and prompt
-    // shutdown notifications, as it may have book-keeping it needs
-    // to do on shutdown.
-    if (mMediaKeys) {
-      nsAutoString keySystem;
-      mMediaKeys->GetKeySystem(keySystem);
-    }
     if (mDecoder) {
       mDecoder->Pause();
       mDecoder->Suspend();
