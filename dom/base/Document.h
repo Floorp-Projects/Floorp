@@ -1156,6 +1156,10 @@ class Document : public nsINode,
 
   nsIBFCacheEntry* GetBFCacheEntry() const { return mBFCacheEntry; }
 
+  // Removes this document from the BFCache, if it is cached, and returns
+  // true if it was.
+  bool RemoveFromBFCacheSync();
+
   /**
    * Return the parent document of this document. Will return null
    * unless this document is within a compound document and has a

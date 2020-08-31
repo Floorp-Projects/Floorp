@@ -834,22 +834,9 @@ void MessagePort::RemoveDocFromBFCache() {
     return;
   }
 
-  nsPIDOMWindowInner* window = GetOwner();
-  if (!window) {
-    return;
+  if (nsPIDOMWindowInner* window = GetOwner()) {
+    window->RemoveFromBFCacheSync();
   }
-
-  Document* doc = window->GetExtantDoc();
-  if (!doc) {
-    return;
-  }
-
-  nsCOMPtr<nsIBFCacheEntry> bfCacheEntry = doc->GetBFCacheEntry();
-  if (!bfCacheEntry) {
-    return;
-  }
-
-  bfCacheEntry->RemoveFromBFCacheSync();
 }
 
 /* static */

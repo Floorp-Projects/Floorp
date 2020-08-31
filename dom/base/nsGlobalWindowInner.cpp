@@ -7418,6 +7418,13 @@ mozilla::dom::WindowContext* nsPIDOMWindowInner::GetWindowContext() const {
   return mWindowGlobalChild ? mWindowGlobalChild->WindowContext() : nullptr;
 }
 
+bool nsPIDOMWindowInner::RemoveFromBFCacheSync() {
+  if (Document* doc = GetExtantDoc()) {
+    return doc->RemoveFromBFCacheSync();
+  }
+  return false;
+}
+
 void nsPIDOMWindowInner::MaybeCreateDoc() {
   // XXX: Forward to outer?
   MOZ_ASSERT(!mDoc);

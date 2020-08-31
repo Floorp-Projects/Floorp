@@ -239,6 +239,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // message.
   bool IsDiscarded() const { return mIsDiscarded; }
 
+  // Returns true if none of the BrowsingContext's ancestor BrowsingContexts or
+  // WindowContexts are discarded or cached.
+  bool AncestorsAreCurrent() const;
+
   bool Windowless() const { return mWindowless; }
 
   // Get the DocShell for this BrowsingContext if it is in-process, or
@@ -292,6 +296,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                    bool aSetNavigating = false);
 
   nsresult InternalLoad(nsDocShellLoadState* aLoadState);
+
+  // Removes the root document for this BrowsingContext tree from the BFCache,
+  // if it is cached, and returns true if it was.
+  bool RemoveRootFromBFCacheSync();
 
   // If the load state includes a source BrowsingContext has been passed, check
   // to see if we are sandboxed from it as the result of an iframe or CSP

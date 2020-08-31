@@ -6355,6 +6355,14 @@ void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {
   mBFCacheEntry = aEntry;
 }
 
+bool Document::RemoveFromBFCacheSync() {
+  if (nsCOMPtr<nsIBFCacheEntry> entry = GetBFCacheEntry()) {
+    entry->RemoveFromBFCacheSync();
+    return true;
+  }
+  return false;
+}
+
 static void SubDocClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry) {
   SubDocMapEntry* e = static_cast<SubDocMapEntry*>(entry);
 
