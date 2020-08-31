@@ -43,6 +43,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     _multiplerange_html = 'layout/test_carets_multiplerange.html'
     _longtext_html = 'layout/test_carets_longtext.html'
     _iframe_html = 'layout/test_carets_iframe.html'
+    _iframe_scroll_html = 'layout/test_carets_iframe_scroll.html'
     _display_none_html = 'layout/test_carets_display_none.html'
     _svg_shapes_html = 'layout/test_carets_svg_shapes.html'
 
@@ -646,3 +647,45 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # happen.
         self.assertNotEqual(sel.content, sel.selected_content.strip())
 
+    def test_select_word_scroll_then_drag_caret(self):
+        '''Bug 1657256: Test select word, scroll page up , and then drag the second
+        caret down to cover "EEEEEE".
+
+        Note the selection should be extended to just cover "EEEEEE", not extend
+        to other lines below "EEEEEE".
+
+        '''
+
+        self.open_test_html(self._iframe_scroll_html)
+        iframe = self.marionette.find_element(By.ID, 'iframe')
+
+        # Switch to the inner iframe.
+        self.marionette.switch_to_frame(iframe)
+        body = self.marionette.find_element(By.ID, 'bd')
+        sel = SelectionManager(body)
+
+        # Select "EEEEEE" to get the y position of the second caret. This is the
+        # y position we are going to drag the caret to.
+        content2 = self.marionette.find_element(By.ID, self._content2_id)
+        self.long_press_on_word(content2, 0)
+        (_, _), (x, y2) = sel.carets_location()
+
+        # Step 1: Select "DDDDDD".
+        content = self.marionette.find_element(By.ID, self._content_id)
+        self.long_press_on_word(content, 0)
+        (_, _), (_, y1) = sel.carets_location()
+
+        # The y-axis offset of the second caret needed to extend the selection.
+        y_offset = y2 - y1
+
+        # Step 2: Scroll the page upwards by 40px.
+        scroll_offset = 40
+        self.marionette.execute_script(
+            'document.documentElement.scrollTop += arguments[0]',
+            script_args=[scroll_offset])
+
+        # Step 3: Drag the second caret down.
+        self.actions.flick(body, x, y1 - scroll_offset,
+                           x, y1 - scroll_offset + y_offset).perform()
+
+        self.assertEqual("DDDDDD EEEEEE", sel.selected_content)
