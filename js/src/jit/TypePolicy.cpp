@@ -970,18 +970,6 @@ bool CallSetElementPolicy::adjustInputs(TempAllocator& alloc,
   return true;
 }
 
-bool InstanceOfPolicy::adjustInputs(TempAllocator& alloc,
-                                    MInstruction* def) const {
-  // Box first operand if it isn't object
-  if (def->getOperand(0)->type() != MIRType::Object) {
-    if (!BoxPolicy<0>::staticAdjustInputs(alloc, def)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
                                                 MInstruction* ins,
                                                 Scalar::Type writeType,
@@ -1233,7 +1221,6 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(ClampPolicy)                \
   _(ComparePolicy)              \
   _(FilterTypeSetPolicy)        \
-  _(InstanceOfPolicy)           \
   _(PowPolicy)                  \
   _(SameValuePolicy)            \
   _(SignPolicy)                 \
