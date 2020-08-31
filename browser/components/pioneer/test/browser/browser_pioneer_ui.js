@@ -177,6 +177,108 @@ const CACHED_ADDONS = [
   },
 ];
 
+const CACHED_ADDONS_BAD_DEFAULT = [
+  {
+    addon_id: "pioneer-v2-bad-default-example@mozilla.org",
+    icons: {
+      "32":
+        "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
+      "64":
+        "https://localhost/user-media/addon_icons/2644/2644632-64.png?modified=4a64e2bc",
+      "128":
+        "https://localhost/user-media/addon_icons/2644/2644632-128.png?modified=4a64e2bc",
+    },
+    name: "Demo Default Study",
+    version: "1.0",
+    sourceURI: {
+      spec: "https://localhost",
+    },
+    description: "Study purpose: Testing Pioneer.",
+    privacyPolicy: {
+      spec: "http://localhost",
+    },
+    studyType: "extension",
+    authors: {
+      name: "Pioneer Developers",
+      url: "https://addons.mozilla.org/en-US/firefox/user/6510522/",
+    },
+    dataCollectionDetails: ["test123", "test345"],
+    moreInfo: {
+      spec: "http://localhost",
+    },
+    isDefault: true,
+    studyEnded: false,
+    joinStudyConsent: "test456",
+    leaveStudyConsent: "test789",
+  },
+  {
+    addon_id: "study@partner",
+    icons: {
+      "32":
+        "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
+      "64":
+        "https://localhost/user-media/addon_icons/2644/2644632-64.png?modified=4a64e2bc",
+      "128":
+        "https://localhost/user-media/addon_icons/2644/2644632-128.png?modified=4a64e2bc",
+    },
+    name: "Example Partner Study",
+    version: "1.0",
+    sourceURI: {
+      spec: "https://localhost",
+    },
+    description: "Study purpose: Testing Pioneer.",
+    privacyPolicy: {
+      spec: "http://localhost",
+    },
+    studyType: "extension",
+    authors: {
+      name: "Study Partners",
+      url: "http://localhost",
+    },
+    dataCollectionDetails: ["test123", "test345"],
+    moreInfo: {
+      spec: "http://localhost",
+    },
+    isDefault: false,
+    studyEnded: false,
+    joinStudyConsent: "test012",
+    leaveStudyConsent: "test345",
+  },
+  {
+    addon_id: "second-study@partner",
+    icons: {
+      "32":
+        "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
+      "64":
+        "https://localhost/user-media/addon_icons/2644/2644632-64.png?modified=4a64e2bc",
+      "128":
+        "https://localhost/user-media/addon_icons/2644/2644632-128.png?modified=4a64e2bc",
+    },
+    name: "Example Second Partner Study",
+    version: "1.0",
+    sourceURI: {
+      spec: "https://localhost",
+    },
+    description: "Study purpose: Testing Pioneer.",
+    privacyPolicy: {
+      spec: "http://localhost",
+    },
+    studyType: "extension",
+    authors: {
+      name: "Second Study Partners",
+      url: "https://localhost",
+    },
+    dataCollectionDetails: ["test123", "test345"],
+    moreInfo: {
+      spec: "http://localhost",
+    },
+    isDefault: false,
+    studyEnded: false,
+    joinStudyConsent: "test678",
+    leaveStudyConsent: "test901",
+  },
+];
+
 const TEST_ADDONS = [
   { id: "pioneer-v2-example@pioneer.mozilla.org" },
   { id: "pioneer-v2-default-example@mozilla.org" },
@@ -223,6 +325,80 @@ add_task(async function testMockSchema() {
       }
     }
   }
+});
+
+add_task(async function testBadDefaultAddon() {
+  const cachedContent = JSON.stringify(CACHED_CONTENT);
+  const cachedAddons = JSON.stringify(CACHED_ADDONS_BAD_DEFAULT);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_TEST_CACHED_ADDONS, cachedAddons],
+      [PREF_TEST_CACHED_CONTENT, cachedContent],
+      [PREF_TEST_ADDONS, "[]"],
+    ],
+    clear: [
+      [PREF_PIONEER_ID, ""],
+      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:pioneer",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      ok(beforePref === null, "before enrollment, Pioneer pref is null.");
+      const enrollmentButton = content.document.getElementById(
+        "enrollment-button"
+      );
+      enrollmentButton.click();
+
+      const dialog = content.document.getElementById(
+        "join-pioneer-consent-dialog"
+      );
+      ok(dialog.open, "after clicking enrollment, consent dialog is open.");
+
+      // When a modal dialog is cancelled, the inertness for other elements
+      // is reverted. However, in order to have the new state (non-inert)
+      // effective, Firefox needs to do a frame flush. This flush is taken
+      // place when it's really needed.
+      // getBoundingClientRect forces a frame flush here to ensure the
+      // following click is going to work properly.
+      enrollmentButton.getBoundingClientRect();
+      enrollmentButton.click();
+      ok(dialog.open, "after retrying enrollment, consent dialog is open.");
+
+      const acceptDialogButton = content.document.getElementById(
+        "join-pioneer-accept-dialog-button"
+      );
+      acceptDialogButton.click();
+
+      const pioneerEnrolled = Services.prefs.getStringPref(
+        PREF_PIONEER_ID,
+        null
+      );
+      ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
+
+      await waitForAnimationFrame();
+      ok(
+        document.l10n.getAttributes(enrollmentButton).id ==
+          "pioneer-unenrollment-button",
+        "After Pioneer enrollment, join button is now leave button"
+      );
+
+      const availableStudies = content.document.getElementById(
+        "available-studies"
+      );
+      ok(
+        document.l10n.getAttributes(availableStudies).id ==
+          "pioneer-no-current-studies",
+        "No studies are available if default add-on install fails."
+      );
+    }
+  );
 });
 
 add_task(async function testAboutPage() {
