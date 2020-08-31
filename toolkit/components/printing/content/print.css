@@ -84,7 +84,8 @@ body[loading] {
   margin: 0;
 }
 
-#sheet-count[loading] {
+body[rendering] #sheet-count,
+body[invalid] #sheet-count {
   visibility: hidden;
 }
 
