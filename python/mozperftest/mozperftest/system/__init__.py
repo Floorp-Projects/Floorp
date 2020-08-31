@@ -14,7 +14,15 @@ def get_layers():
 
 def pick_system(env, flavor, mach_cmd):
     if flavor in ("desktop-browser", "xpcshell"):
-        return Layers(env, mach_cmd, (MacosDevice, Profile, ProxyRunner,))
+        return Layers(
+            env,
+            mach_cmd,
+            (
+                MacosDevice,
+                Profile,
+                ProxyRunner,
+            ),
+        )
     if flavor == "mobile-browser":
         return Layers(env, mach_cmd, (Profile, ProxyRunner, AndroidDevice))
     raise NotImplementedError(flavor)

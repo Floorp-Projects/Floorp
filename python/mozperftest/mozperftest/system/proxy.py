@@ -58,8 +58,7 @@ class OutputHandler(object):
 
 
 class ProxyRunner(Layer):
-    """Use a proxy
-    """
+    """Use a proxy"""
 
     name = "proxy"
     activated = False

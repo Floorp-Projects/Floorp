@@ -17,8 +17,7 @@ from mozperftest.runner import HERE
 
 
 class Transformer(object):
-    """Abstract class for data transformers.
-    """
+    """Abstract class for data transformers."""
 
     def __init__(self, files=None, custom_transformer=None, logger=None, prefix=None):
         """Initialize the transformer with files.
@@ -132,8 +131,7 @@ class Transformer(object):
 
 
 class SimplePerfherderTransformer:
-    """Transforms perfherder data into the standardized data format.
-    """
+    """Transforms perfherder data into the standardized data format."""
 
     entry_number = 0
 
