@@ -1693,9 +1693,13 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
 
   // Potentially the page uses the CSP directive 'upgrade-insecure-requests'. In
   // such a case we have to upgrade the action url from http:// to https://.
-  // If the actionURL is not http, then there is nothing to do.
-  bool isHttpScheme = actionURL->SchemeIs("http");
-  if (isHttpScheme && document->GetUpgradeInsecureRequests(false)) {
+  // The upgrade is only required if the actionURL is http and not a potentially
+  // trustworthy loopback URI.
+  bool needsUpgrade =
+      actionURL->SchemeIs("http") &&
+      !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(actionURL) &&
+      document->GetUpgradeInsecureRequests(false);
+  if (needsUpgrade) {
     // let's use the old specification before the upgrade for logging
     AutoTArray<nsString, 2> params;
     nsAutoCString spec;

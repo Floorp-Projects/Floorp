@@ -23,25 +23,48 @@
  */
 
 const CSP_POLICY = "upgrade-insecure-requests; script-src 'unsafe-inline'";
-let tests = 1;
+let testFiles = ["tests/dom/security/test/csp/file_upgrade_insecure_loopback.html",
+                 "tests/dom/security/test/csp/file_upgrade_insecure_loopback_form.html"];
+
+function examiner() {
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+}
+examiner.prototype = {
+  observe(subject, topic, data) {
+    if (topic === "specialpowers-http-notify-request") {
+      // we skip looking at other requests that might be observed accidentally
+      // e.g., we saw kinto requests when running this test locally
+      if (data.includes("bug-1661423-dont-upgrade-localhost")) {
+        let urlObj = new URL(data);
+        is(urlObj.protocol, "http:", "Didn't upgrade localhost URL");
+        loadTest();
+      }
+    }
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+};
+
+window.examiner = new examiner();
+
 
 function loadTest() {
+  if (testFiles.length == 0) {
+    removeAndFinish();
+    return;
+  }
   var src = "https://example.com/tests/dom/security/test/csp/file_testserver.sjs?file=";
   // append the file that should be served
-  src += escape("tests/dom/security/test/csp/file_upgrade_insecure_loopback.html")
+  src += escape(testFiles.shift())
   // append the CSP that should be used to serve the file
   src += "&csp=" + escape(CSP_POLICY);
   document.getElementById("testframe").src = src;
 }
 
-function checkResult(result) {
-  if (result === "request-not-https") {
-    ok(true, "Didn't upgrade 127.0.0.1:8080 to https://");
-  }
-  if (--tests > 0) {
-    return;
-  }
+function removeAndFinish() {
   window.removeEventListener("message", receiveMessage);
+  window.examiner.remove();
   SimpleTest.finish();
 }
 
@@ -49,7 +72,10 @@ function checkResult(result) {
 // within the iframe.
 window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
-  checkResult(event.data);
+  if (event.data === "request-not-https") {
+    ok(true, "Didn't upgrade 127.0.0.1:8080 to https://");
+    loadTest();
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
