@@ -469,6 +469,9 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
         int32_t aDepth) const;
 
     bool HasInvisibleParentAndShouldBeSkipped(nsINode& aNode) const;
+    nsresult SerializeTextNode(nsINode& aNode, const nsIContent& aContent,
+                               const StartAndEndContent& aStartAndEndContent,
+                               const nsRange& aRange) const;
 
     RangeBoundariesInclusiveAncestorsAndOffsets
         mRangeBoundariesInclusiveAncestorsAndOffsets;
@@ -1030,6 +1033,17 @@ nsDocumentEncoder::RangeSerializer::GetStartAndEndContentForRecursionLevel(
   return result;
 }
 
+nsresult nsDocumentEncoder::RangeSerializer::SerializeTextNode(
+    nsINode& aNode, const nsIContent& aContent,
+    const StartAndEndContent& aStartAndEndContent,
+    const nsRange& aRange) const {
+  const int32_t startOffset =
+      (aStartAndEndContent.mStart == &aContent) ? aRange.StartOffset() : 0;
+  const int32_t endOffset =
+      (aStartAndEndContent.mEnd == &aContent) ? aRange.EndOffset() : -1;
+  return mNodeSerializer.SerializeTextNode(aNode, startOffset, endOffset);
+}
+
 nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     const nsRange* const aRange, nsINode* const aNode, const int32_t aDepth) {
   MOZ_ASSERT(aDepth >= 0);
@@ -1059,11 +1073,7 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     // end of range.  We would have handled that case without getting here.
     // XXXsmaug What does this all mean?
     if (IsTextNode(aNode)) {
-      const int32_t startOffset =
-          (startAndEndContent.mStart == content) ? aRange->StartOffset() : 0;
-      const int32_t endOffset =
-          (startAndEndContent.mEnd == content) ? aRange->EndOffset() : -1;
-      rv = mNodeSerializer.SerializeTextNode(*aNode, startOffset, endOffset);
+      rv = SerializeTextNode(*aNode, *content, startAndEndContent, *aRange);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mClosestCommonInclusiveAncestorOfRange) {
