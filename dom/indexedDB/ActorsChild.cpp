@@ -1786,11 +1786,8 @@ mozilla::ipc::IPCResult BackgroundDatabaseChild::RecvVersionChange(
 
     // Anything in the bfcache has to be evicted and then we have to close the
     // database also.
-    if (nsCOMPtr<Document> doc = owner->GetExtantDoc()) {
-      if (nsCOMPtr<nsIBFCacheEntry> bfCacheEntry = doc->GetBFCacheEntry()) {
-        bfCacheEntry->RemoveFromBFCacheSync();
-        shouldAbortAndClose = true;
-      }
+    if (owner->RemoveFromBFCacheSync()) {
+      shouldAbortAndClose = true;
     }
 
     if (shouldAbortAndClose) {

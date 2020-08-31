@@ -770,6 +770,25 @@ bool BrowsingContext::HasOpener() const {
   return sBrowsingContexts->Contains(GetOpenerId());
 }
 
+bool BrowsingContext::AncestorsAreCurrent() const {
+  const BrowsingContext* bc = this;
+  while (true) {
+    if (bc->IsDiscarded()) {
+      return false;
+    }
+
+    if (WindowContext* wc = bc->GetParentWindowContext()) {
+      if (wc->IsCached() || wc->IsDiscarded()) {
+        return false;
+      }
+
+      bc = wc->GetBrowsingContext();
+    } else {
+      return true;
+    }
+  }
+}
+
 Span<RefPtr<BrowsingContext>> BrowsingContext::Children() const {
   if (WindowContext* current = mCurrentWindowContext) {
     return current->Children();
@@ -1608,6 +1627,15 @@ void BrowsingContext::Location(JSContext* aCx,
   if (!aLocation) {
     aError.StealExceptionFromJSContext(aCx);
   }
+}
+
+bool BrowsingContext::RemoveRootFromBFCacheSync() {
+  if (WindowContext* wc = GetParentWindowContext()) {
+    if (RefPtr<Document> doc = wc->TopWindowContext()->GetDocument()) {
+      return doc->RemoveFromBFCacheSync();
+    }
+  }
+  return false;
 }
 
 nsresult BrowsingContext::CheckSandboxFlags(nsDocShellLoadState* aLoadState) {

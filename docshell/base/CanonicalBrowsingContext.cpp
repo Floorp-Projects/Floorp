@@ -24,6 +24,8 @@
 #include "mozilla/NullPrincipal.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/MozPromiseInlines.h"
+#include "nsDocShell.h"
+#include "nsFrameLoader.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
@@ -748,28 +750,6 @@ void CanonicalBrowsingContext::Stop(uint32_t aStopFlags) {
   }
 }
 
-// While process switching, we need to check if any of our ancestors are
-// discarded or no longer current, in which case the process switch needs to be
-// aborted.
-static bool AncestorsAreCurrent(CanonicalBrowsingContext* aContext) {
-  if (aContext->IsDiscarded()) {
-    return false;
-  }
-
-  RefPtr<WindowGlobalParent> ancestorWindow(aContext->GetParentWindowContext());
-  while (ancestorWindow) {
-    // If our ancestor window is no longer the current window, or if any of our
-    // ancestors have been discarded, return `false` to abort the process
-    // switch.
-    if (ancestorWindow->IsCached() || ancestorWindow->IsDiscarded() ||
-        ancestorWindow->GetBrowsingContext()->IsDiscarded()) {
-      return false;
-    }
-    ancestorWindow = ancestorWindow->GetParentWindowContext();
-  }
-  return true;
-}
-
 void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady() {
   if (!mPromise) {
     return;
@@ -798,7 +778,10 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
     return;
   }
 
-  if (!AncestorsAreCurrent(target)) {
+  // While process switching, we need to check if any of our ancestors are
+  // discarded or no longer current, in which case the process switch needs to be
+  // aborted.
+  if (!target->AncestorsAreCurrent()) {
     NS_WARNING("Ancestor context is no longer current");
     Cancel(NS_ERROR_FAILURE);
     return;
@@ -1054,7 +1037,7 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
   MOZ_DIAGNOSTIC_ASSERT(aSpecificGroupId == 0 || aReplaceBrowsingContext,
                         "Cannot specify group ID unless replacing BC");
 
-  if (!AncestorsAreCurrent(this)) {
+  if (!AncestorsAreCurrent()) {
     NS_WARNING("An ancestor context is no longer current");
     return RemotenessPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
