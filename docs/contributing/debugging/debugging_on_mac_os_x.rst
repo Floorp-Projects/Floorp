@@ -12,8 +12,18 @@ Creating a debuggable build
 ---------------------------
 
 First, you need to build the application you're going to debug using
-``--disable-optimize``\ ``--enable-debug-symbols`` in your .mozconfig
-(also add ``--enable-debug`` if you want assertions etc. compiled in).
+this in your .mozconfig
+
+.. code::
+
+   ``--disable-optimize``\ ``--enable-debug-symbols``
+
+you can also add this flag if you want assertions etc. compiled in
+
+.. code::
+
+   ``--enable-debug``
+
 See :ref:`Building Firefox for macOS <Building Firefox On MacOS>`
 if you need help creating your own build.
 
