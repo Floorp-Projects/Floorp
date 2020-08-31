@@ -2363,6 +2363,14 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
         mOriginalStripWrappers(nsIEditor::eNoStrip) {}
 
   /**
+   * ComputeRangesToDelete() computes actual deletion ranges.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ComputeRangesToDelete(
+      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers,
+      AutoRangeArray& aRangesToDelete);
+
+  /**
    * Deletes content in or around aRangesToDelete.
    * NOTE: This method creates SelectionBatcher.  Therefore, each caller
    *       needs to check if the editor is still available even if this returns
@@ -3011,6 +3019,24 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
   nsIEditor::EStripWrappers mOriginalStripWrappers;
 };  // HTMLEditor::AutoDeleteRangesHandler
 
+nsresult HTMLEditor::ComputeTargetRanges(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
+             aStripWrappers == nsIEditor::eNoStrip);
+
+  // TODO: Handle the case to delete in a table.
+
+  AutoDeleteRangesHandler deleteHandler;
+  nsresult rv = deleteHandler.ComputeRangesToDelete(
+      *this, aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "AutoDeleteRangesHandler::ComputeRangesToDelete() failed");
+  return rv;
+}
+
 EditActionResult HTMLEditor::HandleDeleteSelection(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers) {
@@ -3078,6 +3104,28 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
     }
   }
   return EditActionHandled();
+}
+
+nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
+    const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
+             aStripWrappers == nsIEditor::eNoStrip);
+  MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
+
+  mOriginalDirectionAndAmount = aDirectionAndAmount;
+  mOriginalStripWrappers = aStripWrappers;
+
+  if (aHTMLEditor.mPaddingBRElementForEmptyEditor) {
+    nsresult rv = aRangesToDelete.Collapse(
+        EditorRawDOMPoint(aHTMLEditor.mPaddingBRElementForEmptyEditor));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::Collapse() failed");
+    return rv;
+  }
+
+  // Do complicated things.
+  return NS_OK;
 }
 
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(

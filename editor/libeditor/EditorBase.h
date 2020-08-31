@@ -887,7 +887,8 @@ class EditorBase : public nsIEditor,
      */
     bool NeedsToDispatchBeforeInputEvent() const {
       return !HasTriedToDispatchBeforeInputEvent() &&
-             NeedsBeforeInputEventHandling(mEditAction);
+             NeedsBeforeInputEventHandling(mEditAction) &&
+             IsBeforeInputEventEnabled();
     }
 
     /**
@@ -1084,6 +1085,8 @@ class EditorBase : public nsIEditor,
     }
 
    private:
+    bool IsBeforeInputEventEnabled() const;
+
     static bool NeedsBeforeInputEventHandling(EditAction aEditAction) {
       MOZ_ASSERT(aEditAction != EditAction::eNone);
       switch (aEditAction) {

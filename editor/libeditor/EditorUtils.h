@@ -801,6 +801,27 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     return mRanges.IsEmpty() ||
            (mRanges.Length() == 1 && mRanges[0]->Collapsed());
   }
+  template <typename PT, typename CT>
+  nsresult Collapse(const EditorDOMPointBase<PT, CT>& aPoint) {
+    mRanges.Clear();
+    if (!mAnchorFocusRange) {
+      ErrorResult error;
+      mAnchorFocusRange = nsRange::Create(aPoint.ToRawRangeBoundary(),
+                                          aPoint.ToRawRangeBoundary(), error);
+      if (error.Failed()) {
+        mAnchorFocusRange = nullptr;
+        return error.StealNSResult();
+      }
+    } else {
+      nsresult rv = mAnchorFocusRange->CollapseTo(aPoint.ToRawRangeBoundary());
+      if (NS_FAILED(rv)) {
+        mAnchorFocusRange = nullptr;
+        return rv;
+      }
+    }
+    mRanges.AppendElement(*mAnchorFocusRange);
+    return NS_OK;
+  }
   const nsRange* GetAnchorFocusRange() const { return mAnchorFocusRange; }
   nsDirection GetDirection() const { return mDirection; }
 
