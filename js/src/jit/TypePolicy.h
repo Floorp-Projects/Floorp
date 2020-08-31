@@ -462,16 +462,6 @@ class CallSetElementPolicy final : public TypePolicy {
                                  MInstruction* def) const override;
 };
 
-// First operand will be boxed to a Value (except for an object)
-// Second operand (if specified) will forcefully be unboxed to an object
-class InstanceOfPolicy final : public TypePolicy {
- public:
-  constexpr InstanceOfPolicy() = default;
-  EMPTY_DATA_;
-  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
-                                 MInstruction* def) const override;
-};
-
 class StoreDataViewElementPolicy;
 class StoreTypedArrayHolePolicy;
 
