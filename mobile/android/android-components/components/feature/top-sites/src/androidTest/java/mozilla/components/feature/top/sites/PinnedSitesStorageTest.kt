@@ -60,6 +60,35 @@ class PinnedSitesStorageTest {
     }
 
     @Test
+    fun testAddingAllDefaultSites() = runBlocking {
+        val defaultTopSites = listOf(
+            Pair("Mozilla", "https://www.mozilla.org"),
+            Pair("Firefox", "https://www.firefox.com"),
+            Pair("Wikipedia", "https://www.wikipedia.com"),
+            Pair("Pocket", "https://www.getpocket.com")
+        )
+
+        storage.addAllPinnedSites(defaultTopSites, isDefault = true)
+
+        val topSites = storage.getPinnedSites()
+
+        assertEquals(4, topSites.size)
+
+        assertEquals("Mozilla", topSites[0].title)
+        assertEquals("https://www.mozilla.org", topSites[0].url)
+        assertEquals(DEFAULT, topSites[0].type)
+        assertEquals("Firefox", topSites[1].title)
+        assertEquals("https://www.firefox.com", topSites[1].url)
+        assertEquals(DEFAULT, topSites[2].type)
+        assertEquals("Wikipedia", topSites[2].title)
+        assertEquals("https://www.wikipedia.com", topSites[2].url)
+        assertEquals(DEFAULT, topSites[2].type)
+        assertEquals("Pocket", topSites[3].title)
+        assertEquals("https://www.getpocket.com", topSites[3].url)
+        assertEquals(DEFAULT, topSites[3].type)
+    }
+
+    @Test
     fun testAddingPinnedSite() = runBlocking {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         storage.addPinnedSite("Firefox", "https://www.firefox.com", isDefault = true)
