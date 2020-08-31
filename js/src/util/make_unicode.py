@@ -117,7 +117,9 @@ def read_unicode_data(unicode_data):
     reader = csv.reader(unicode_data, delimiter=str(';'))
 
     while True:
-        row = next(reader)
+        row = next(reader, None)
+        if row is None:
+            return
         name = row[1]
 
         # We need to expand the UAX #44 4.2.3 Code Point Range
