@@ -59,16 +59,9 @@ class SearchCache {
    *   - private
    *       The current user-set private engine. The associated hash is called
    *       'privateHash'.
-   *   - searchDefault
-   *       The current default engine (if any) specified by the region server.
-   *   - searchDefaultExpir
-   *       The expiry time for the default engine when the region server should
-   *       be re-checked.
-   *   - visibleDefaultEngines
-   *       The list of visible default engines supplied by the region server.
    *
-   * All of the above except `searchDefaultExpir` have associated hash fields
-   * to validate the value is set by the application.
+   * All of the above have associated hash fields to validate the value is set
+   * by the application.
    */
   _metaData = {};
 
