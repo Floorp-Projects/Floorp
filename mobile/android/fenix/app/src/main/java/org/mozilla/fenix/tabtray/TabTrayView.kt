@@ -543,9 +543,11 @@ class TabTrayView(
 
             // We offset the tab index by the number of items in the other adapters.
             // We add the offset, because the layoutManager is initialized with `reverseLayout`.
+            // We also add 1 to display the tab item above the selected browser tab.
             val recyclerViewIndex = selectedBrowserTabIndex +
                 collectionsButtonAdapter.itemCount +
-                syncedTabsController.adapter.itemCount
+                syncedTabsController.adapter.itemCount +
+                1
 
             layoutManager?.scrollToPosition(recyclerViewIndex)
         }
