@@ -155,6 +155,8 @@ class nsTextControlFrame : public nsContainerFrame,
       nsISelectionController** aSelCon) override;
   nsFrameSelection* GetOwnedFrameSelection() override;
 
+  void PlaceholderChanged(const nsAttrValue* aOld, const nsAttrValue* aNew);
+
   /**
    * Ensure mEditor is initialized with the proper flags and the default value.
    * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
@@ -329,6 +331,7 @@ class nsTextControlFrame : public nsContainerFrame,
 
   nsresult CreateRootNode();
   void CreatePlaceholderIfNeeded();
+  void UpdatePlaceholderText(nsString&, bool aNotify);
   void CreatePreviewIfNeeded();
   already_AddRefed<Element> MakeAnonElement(
       mozilla::PseudoStyleType, Element* aParent = nullptr,
