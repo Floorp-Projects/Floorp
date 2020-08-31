@@ -734,23 +734,6 @@ function verifyRequestItemTarget(
 }
 
 /**
- * Helper function for waiting for an event to fire before resolving a promise.
- * Example: waitFor(aMonitor.panelWin.api, EVENT_NAME);
- *
- * @param object subject
- *        The event emitter object that is being listened to.
- * @param string eventName
- *        The name of the event to listen to.
- * @return object
- *        Returns a promise that resolves upon firing of the event.
- */
-function waitFor(subject, eventName) {
-  return new Promise(resolve => {
-    subject.once(eventName, resolve);
-  });
-}
-
-/**
  * Wait for an action of the provided type to be dispatched on the provided
  * store.
  *
