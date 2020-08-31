@@ -561,20 +561,25 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
         aUnboundedLastColumn && colData.mColCount == aConfig.mUsedColCount &&
         aConfig.mIsBalancing;
 
-    // Try to skip reflowing the child. We can't skip if the child is dirty. We
-    // also can't skip if the next column is dirty, because the next column's
-    // first line(s) might be pullable back to this column. We can't skip if
-    // it's the last child because we need to obtain the bottom margin. We can't
-    // skip if this is the last column and we're supposed to assign unbounded
-    // block-size to it, because that could change the available block-size from
-    // the last time we reflowed it and we should try to pull all the
-    // content from its next sibling. (Note that it might be the last
-    // column, but not be the last child because the desired number of columns
-    // has changed.)
-    bool skipIncremental =
-        !aReflowInput.ShouldReflowAllKids() && !child->IsSubtreeDirty() &&
-        child->GetNextSibling() && !isMeasuringFeasibleContentBSize &&
-        !child->GetNextSibling()->IsSubtreeDirty();
+    // We need to reflow the child (column) ...
+    bool reflowChild =
+        // if we are told to do so;
+        aReflowInput.ShouldReflowAllKids() ||
+        // if the child is dirty;
+        child->IsSubtreeDirty() ||
+        // if it's the last child because we need to obtain the block-end
+        // margin;
+        !child->GetNextSibling() ||
+        // if the next column is dirty, because the next column's first line(s)
+        // might be pullable back to this column;
+        child->GetNextSibling()->IsSubtreeDirty() ||
+        // if this is the last column and we are supposed to assign unbounded
+        // block-size to it, because that could change the available block-size
+        // from the last time we reflowed it and we should try to pull all the
+        // content from its next sibling (Note that it might be the last column,
+        // but not be the last child because the desired number of columns has
+        // changed.)
+        isMeasuringFeasibleContentBSize;
 
     // If column-fill is auto (not the default), then we might need to
     // move content between columns for any change in column block-size.
@@ -582,13 +587,13 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // The same is true if we have a non-'auto' computed block-size.
     //
     // FIXME: It's not clear to me why it's *ever* valid to have
-    // skipIncremental be true when changingBSize is true, since it
+    // reflowChild be false when changingBSize is true, since it
     // seems like a child broken over multiple columns might need to
     // change the size of the fragment in each column.
-    if (skipIncremental && changingBSize &&
+    if (!reflowChild && changingBSize &&
         (StyleColumn()->mColumnFill == StyleColumnFill::Auto ||
          computedBSize != NS_UNCONSTRAINEDSIZE)) {
-      skipIncremental = false;
+      reflowChild = true;
     }
     // If we need to pull up content from the prev-in-flow then this is not just
     // a block-size shrink. The prev in flow will have set the dirty bit.
@@ -598,22 +603,22 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // doesn't care about the available block-size boundary, but if so, too bad,
     // this optimization is defeated.) We want scrollable overflow here since
     // this is a calculation that affects layout.
-    if (skipIncremental && shrinkingBSize) {
+    if (!reflowChild && shrinkingBSize) {
       switch (wm.GetBlockDir()) {
         case WritingMode::eBlockTB:
           if (child->ScrollableOverflowRect().YMost() > aConfig.mColBSize) {
-            skipIncremental = false;
+            reflowChild = true;
           }
           break;
         case WritingMode::eBlockLR:
           if (child->ScrollableOverflowRect().XMost() > aConfig.mColBSize) {
-            skipIncremental = false;
+            reflowChild = true;
           }
           break;
         case WritingMode::eBlockRL:
           // XXX not sure how to handle this, so for now just don't attempt
           // the optimization
-          skipIncremental = false;
+          reflowChild = true;
           break;
         default:
           MOZ_ASSERT_UNREACHABLE("unknown block direction");
@@ -622,7 +627,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     }
 
     nscoord childContentBEnd = 0;
-    if (!reflowNext && skipIncremental) {
+    if (!reflowNext && !reflowChild) {
       // This child does not need to be reflowed, but we may need to move it
       MoveChildTo(child, childOrigin, wm, containerSize);
 
@@ -640,9 +645,8 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       }
       childContentBEnd = nsLayoutUtils::CalculateContentBEnd(wm, child);
 
-      COLUMN_SET_LOG("%s: Skipping child #%d %p (incremental %d): status=%s",
-                     __func__, colData.mColCount, child, skipIncremental,
-                     ToString(aStatus).c_str());
+      COLUMN_SET_LOG("%s: Skipping child #%d %p: status=%s", __func__,
+                     colData.mColCount, child, ToString(aStatus).c_str());
     } else {
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColBSize);
       if (isMeasuringFeasibleContentBSize) {
