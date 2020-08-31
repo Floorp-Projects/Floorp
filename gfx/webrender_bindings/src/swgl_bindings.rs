@@ -714,7 +714,7 @@ impl SwCompositor {
                             ) {
                                 (Some(y_texture), Some(u_texture), Some(v_texture)) => {
                                     SwCompositeSource::YUV(y_texture, u_texture, v_texture, info.color_space)
-                                },
+                                }
                                 _ => return,
                             },
                             _ => panic!("unsupported number of YUV planes: {}", info.yuv_planes),
@@ -829,7 +829,7 @@ impl SwCompositor {
                     Some(overlap_rect) => overlap_rect,
                     None => return,
                 }
-            },
+            }
             None => return,
         };
 
@@ -1135,7 +1135,7 @@ impl Compositor for SwCompositor {
                         // updated but are otherwise ready to composite.
                         self.flush_composites(&id, surface, tile);
                         return;
-                    },
+                    }
                 };
 
                 assert!(stride % 4 == 0);
