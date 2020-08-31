@@ -9,9 +9,9 @@ import os
 import re
 import subprocess
 
+from collections import defaultdict
 from copy import deepcopy
 from taskgraph.loader.transform import loader as base_loader
-from taskgraph.util.memoize import memoize
 from taskgraph.util.taskcluster import get_session
 from taskgraph.util.templates import merge
 
@@ -43,28 +43,42 @@ def get_components_changed(files_changed):
 
 cached_deps = {}
 
-# Gradle is expensive to run. Cache the results for each component.
-@memoize
-def get_deps_for_component(component):
+def get_upstream_deps_for_components(components):
     """Return the full list of local upstream dependencies of a component."""
     deps = set()
+    cmd = ["./gradlew"]
+    # This is eventually going to fail if there's ever enough components to make the command line
+    # too long. If that happens, we'll need to split this list up and run gradle more than once.
+    for c in sorted(components):
+        cmd.extend(["%s:dependencies" % c, "--configuration", "implementation"])
     # Parsing output like this is not ideal but bhearsum couldn't find a way
     # to get the dependencies printed in a better format. If we could convince
     # gradle to spit out JSON that would be much better.
     # This is filed as https://github.com/mozilla-mobile/android-components/issues/7814
-    for line in subprocess.check_output(['./gradlew', '%s:dependencies' % component, '--configuration', 'implementation']).splitlines():
+    current_component = None
+    for line in subprocess.check_output(cmd).splitlines():
+        # If we find the start of a new component section, update our tracking variable
+        if line.startswith("Project"):
+            if deps:
+                logger.info("Found direct upstream dependencies for component '%s': %s" % (current_component, sorted(deps)))
+            else:
+                logger.info("No direct upstream dependencies found for component '%s'" % current_component)
+            yield current_component, deps
+            deps = set()
+            current_component = line.split(":")[1]
+
+        # If we find a new local dependency, add it.
         if line.startswith("+--- project"):
             deps.add(line.split(" ")[2])
 
-    cached_deps[component] = deps
-    # So far, we only have the direct local upstream dependencies. We need to look at
-    # each of those to find _their_ upstreams as well.
-    for d in deps.copy():
-        deps.update(get_deps_for_component(d))
+    if deps:
+        logger.info("Found direct upstream dependencies for component '%s': %s" % (current_component, sorted(deps)))
+    else:
+        logger.info("No direct upstream dependencies found for component '%s'" % current_component)
+    yield current_component, deps
 
-    return deps
 
-def get_affected_components(files_changed, files_affecting_components):
+def get_affected_components(files_changed, files_affecting_components, upstream_component_dependencies, downstream_component_dependencies):
     affected_components = set()
 
     # First, find the list of changed components
@@ -82,9 +96,14 @@ def get_affected_components(files_changed, files_affecting_components):
             affected_components.update(components)
 
     # Finally, go through all of the affected components and recursively
-    # find their dependencies.
+    # find their upstream and downstream dependencies.
     for c in affected_components.copy():
-        affected_components.update(get_deps_for_component(c))
+        if upstream_component_dependencies[c]:
+            logger.info("Adding direct upstream dependencies for '%s': %s" % (c, " ".join(sorted(upstream_component_dependencies[c]))))
+            affected_components.update(upstream_component_dependencies[c])
+        if downstream_component_dependencies[c]:
+            logger.info("Adding direct downstream dependencies for '%s': %s" % (c, " ".join(sorted(downstream_component_dependencies[c]))))
+            affected_components.update(downstream_component_dependencies[c])
 
     return affected_components
 
@@ -93,24 +112,31 @@ def loader(kind, path, config, params, loaded_tasks):
     # Build everything unless we have an optimization strategy (defined below).
     files_changed = []
     affected_components = ALL_COMPONENTS
+    upstream_component_dependencies = defaultdict(set)
+    downstream_component_dependencies = defaultdict(set)
+
+    for component, deps in get_upstream_deps_for_components([c["name"] for c in get_components()]):
+        upstream_component_dependencies[component] = deps
+        for d in deps:
+            downstream_component_dependencies[d].add(component)
 
     if params["tasks_for"] == "github-pull-request":
         logger.info("Processing pull request %s" % params["pull_request_number"])
         files_changed = get_files_changed_pr(params["base_repository"], params["pull_request_number"])
-        affected_components = get_affected_components(files_changed, config.get("files-affecting-components"))
+        affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), upstream_component_dependencies, downstream_component_dependencies)
     elif params["tasks_for"] == "github-push":
         if params["base_rev"] in _GIT_ZERO_HASHES:
             logger.warn("base_rev is a zero hash, meaning there is no previous push. Building every component...")
         else:
             logger.info("Processing push for commit range %s -> %s" % (params["base_rev"], params["head_rev"]))
             files_changed = get_files_changed_push(params["base_repository"], params["base_rev"], params["head_rev"])
-            affected_components = get_affected_components(files_changed, config.get("files-affecting-components"))
+            affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), upstream_component_dependencies, downstream_component_dependencies)
 
     logger.info("Files changed: %s" % " ".join(files_changed))
     if affected_components is ALL_COMPONENTS:
         logger.info("Affected components: ALL")
     else:
-        logger.info("Affected components: %s" % " ".join(affected_components))
+        logger.info("Affected components: %s" % " ".join(sorted(affected_components)))
 
     not_for_components = config.get("not-for-components", [])
     jobs = {
