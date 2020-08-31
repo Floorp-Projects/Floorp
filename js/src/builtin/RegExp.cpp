@@ -1539,10 +1539,12 @@ static bool CollectNames(JSContext* cx, HandleLinearString replacement,
       // Step 2.b
       const CharT* nameStart = currentDollar + 2;
       const CharT* nameEnd = js_strchr_limit(nameStart, '>', replacementEnd);
+
       // Step 2.c
       if (!nameEnd) {
         return true;
       }
+
       // Step 2.d.i
       size_t nameLength = nameEnd - nameStart;
       JSAtom* atom = AtomizeChars(cx, nameStart, nameLength);
@@ -1590,14 +1592,15 @@ static bool InitNamedCaptures(JSContext* cx, HandleLinearString replacement,
   // https://tc39.es/ecma262/#table-45, "$<" section
   RootedId id(cx);
   RootedValue capture(cx);
-  RootedLinearString linear(cx);
   for (uint32_t i = 0; i < names.length(); i++) {
     // Step 2.d.i
     id = names[i];
+
     // Step 2.d.ii
     if (!GetProperty(cx, groups, groups, id, &capture)) {
       return false;
     }
+
     // Step 2.d.iii
     if (capture.isUndefined()) {
       if (!namedCaptures.append(capture)) {
@@ -1609,7 +1612,7 @@ static bool InitNamedCaptures(JSContext* cx, HandleLinearString replacement,
       if (!str) {
         return false;
       }
-      linear = str->ensureLinear(cx);
+      JSLinearString* linear = str->ensureLinear(cx);
       if (!linear) {
         return false;
       }
