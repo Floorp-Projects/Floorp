@@ -51,23 +51,24 @@ void ResolveOrReject(dom::Promise& aPromise, nsPrinterListBase& aList,
 
 NS_IMETHODIMP nsPrinterListBase::GetPrinters(JSContext* aCx,
                                              Promise** aResult) {
-  return mozilla::AsyncPromiseAttributeGetter(
-      *this, mPrintersPromise, aCx, aResult, &nsPrinterListBase::Printers);
+  return mozilla::AsyncPromiseAttributeGetter(*this, mPrintersPromise, aCx,
+                                              aResult, "Printers"_ns,
+                                              &nsPrinterListBase::Printers);
 }
 
 NS_IMETHODIMP nsPrinterListBase::GetNamedPrinter(const nsAString& aPrinterName,
                                                  JSContext* aCx,
                                                  Promise** aResult) {
-  return PrintBackgroundTaskPromise(*this, aCx, aResult,
+  return PrintBackgroundTaskPromise(*this, aCx, aResult, "NamedPrinter"_ns,
                                     &nsPrinterListBase::NamedPrinter,
                                     nsString{aPrinterName});
 }
 
 NS_IMETHODIMP nsPrinterListBase::GetNamedOrDefaultPrinter(
     const nsAString& aPrinterName, JSContext* aCx, Promise** aResult) {
-  return PrintBackgroundTaskPromise(*this, aCx, aResult,
-                                    &nsPrinterListBase::NamedOrDefaultPrinter,
-                                    nsString{aPrinterName});
+  return PrintBackgroundTaskPromise(
+      *this, aCx, aResult, "NamedOrDefaultPrinter"_ns,
+      &nsPrinterListBase::NamedOrDefaultPrinter, nsString{aPrinterName});
 }
 
 Maybe<PrinterInfo> nsPrinterListBase::NamedOrDefaultPrinter(

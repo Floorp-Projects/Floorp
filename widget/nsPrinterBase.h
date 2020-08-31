@@ -55,6 +55,8 @@ class nsPrinterBase : public nsIPrinter {
 
  private:
   enum class AsyncAttribute {
+    // If you change this list you must update attributeKeys in
+    // nsPrinterBase::AsyncPromiseAttributeGetter.
     SupportsDuplex = 0,
     SupportsColor,
     SupportsCollation,
