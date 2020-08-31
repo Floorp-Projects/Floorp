@@ -60,11 +60,8 @@ class RemoteWorkerManager final {
   RemoteWorkerServiceParent* SelectTargetActor(const RemoteWorkerData& aData,
                                                base::ProcessId aProcessId);
 
-  RemoteWorkerServiceParent* SelectTargetActorForServiceWorker(
-      const RemoteWorkerData& aData) const;
-
-  RemoteWorkerServiceParent* SelectTargetActorForSharedWorker(
-      base::ProcessId aProcessId, const RemoteWorkerData& aData) const;
+  RemoteWorkerServiceParent* SelectTargetActorInternal(
+      const RemoteWorkerData& aData, base::ProcessId aProcessId) const;
 
   void LaunchInternal(RemoteWorkerController* aController,
                       RemoteWorkerServiceParent* aTargetActor,
