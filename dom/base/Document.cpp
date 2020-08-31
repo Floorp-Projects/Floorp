@@ -6179,7 +6179,7 @@ static inline void AssertNoStaleServoDataIn(nsINode& aSubtreeRoot) {
 
 already_AddRefed<PresShell> Document::CreatePresShell(
     nsPresContext* aContext, nsViewManager* aViewManager) {
-  MOZ_ASSERT(!mPresShell, "We have a presshell already!");
+  MOZ_DIAGNOSTIC_ASSERT(!mPresShell, "We have a presshell already!");
 
   NS_ENSURE_FALSE(GetBFCacheEntry(), nullptr);
 
