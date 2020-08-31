@@ -27,6 +27,7 @@ class JsepTransceiver;
 namespace dom {
 class MediaStreamTrack;
 class Promise;
+class RTCDtlsTransport;
 struct RTCRtpContributingSource;
 struct RTCRtpSynchronizationSource;
 
@@ -51,6 +52,7 @@ class RTCRtpReceiver : public nsISupports,
 
   // webidl
   MediaStreamTrack* Track() const { return mTrack; }
+  RTCDtlsTransport* GetTransport() const { return nullptr; }
   already_AddRefed<Promise> GetStats();
   void GetContributingSources(
       nsTArray<dom::RTCRtpContributingSource>& aSources);

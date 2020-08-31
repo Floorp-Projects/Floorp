@@ -997,6 +997,7 @@ if CONFIG['MOZ_WEBRTC']:
         'RTCCertificate.webidl',
         'RTCConfiguration.webidl',
         'RTCDataChannel.webidl',
+        'RTCDtlsTransport.webidl',
         'RTCDTMFSender.webidl',
         'RTCIceCandidate.webidl',
         'RTCIdentityAssertion.webidl',

@@ -71,6 +71,7 @@ dictionary RTCRtpParameters {
  Exposed=Window]
 interface RTCRtpSender {
   readonly attribute MediaStreamTrack? track;
+  readonly attribute RTCDtlsTransport? transport;
   Promise<void> setParameters (optional RTCRtpParameters parameters = {});
   RTCRtpParameters getParameters();
   Promise<void> replaceTrack(MediaStreamTrack? withTrack);
