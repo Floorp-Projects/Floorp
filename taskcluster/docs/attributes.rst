@@ -45,7 +45,6 @@ Project names are the repositories.  They can be:
 * `mozilla-central`
 * `mozilla-beta`
 * `mozilla-release`
-* `mozilla-esr68`
 * `mozilla-esr78`
 * ... A partial list can be found in taskcluster/taskgraph/util/attributes.py
 
