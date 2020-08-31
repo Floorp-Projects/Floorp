@@ -71,8 +71,10 @@ class nsISupports;
 namespace mozilla {
 
 using namespace dom;
-using StyleDifference = HTMLEditUtils::StyleDifference;
 using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
+using InvisibleWhiteSpaces = HTMLEditUtils::InvisibleWhiteSpaces;
+using StyleDifference = HTMLEditUtils::StyleDifference;
+using TableBoundary = HTMLEditUtils::TableBoundary;
 
 enum { kLonely = 0, kPrevSib = 1, kNextSib = 2, kBothSibs = 3 };
 
@@ -2970,6 +2972,15 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
         Element& aEditingHostElement);
 
     /**
+     * ComputeTargetRanges() computes "target ranges" for deleting
+     * `mEmptyInclusiveAncestorBlockElement`.
+     */
+    nsresult ComputeTargetRanges(const HTMLEditor& aHTMLEditor,
+                                 nsIEditor::EDirection aDirectionAndAmount,
+                                 const Element& aEditingHost,
+                                 AutoRangeArray& aRangesToDelete) const;
+
+    /**
      * Deletes found empty block element by `ScanEmptyBlockInclusiveAncestor()`.
      * If found one is a list item element, calls
      * `MaybeInsertBRElementBeforeEmptyListItemElement()` before deleting
@@ -3124,7 +3135,32 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
     return rv;
   }
 
-  // Do complicated things.
+  SelectionWasCollapsed selectionWasCollapsed = aRangesToDelete.IsCollapsed()
+                                                    ? SelectionWasCollapsed::Yes
+                                                    : SelectionWasCollapsed::No;
+  if (selectionWasCollapsed == SelectionWasCollapsed::Yes) {
+    EditorDOMPoint startPoint(aRangesToDelete.GetStartPointOfFirstRange());
+    if (NS_WARN_IF(!startPoint.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+    if (startPoint.GetContainerAsContent()) {
+      RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
+      if (NS_WARN_IF(!editingHost)) {
+        return NS_ERROR_FAILURE;
+      }
+      AutoEmptyBlockAncestorDeleter deleter;
+      if (Element* elementToDelete = deleter.ScanEmptyBlockInclusiveAncestor(
+              aHTMLEditor, *startPoint.GetContainerAsContent(), *editingHost)) {
+        nsresult rv = deleter.ComputeTargetRanges(
+            aHTMLEditor, aDirectionAndAmount, *editingHost, aRangesToDelete);
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "AutoEmptyBlockAncestorDeleter::ComputeTargetRanges() failed");
+        return rv;
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -3175,8 +3211,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
 #endif  // #ifdef DEBUG
       AutoEmptyBlockAncestorDeleter deleter;
       if (deleter.ScanEmptyBlockInclusiveAncestor(
-              aHTMLEditor, MOZ_KnownLive(*startPoint.GetContainerAsContent()),
-              *editingHost)) {
+              aHTMLEditor, *startPoint.GetContainerAsContent(), *editingHost)) {
         EditActionResult result = deleter.Run(aHTMLEditor, aDirectionAndAmount);
         if (result.Failed() || result.Handled()) {
           NS_WARNING_ASSERTION(result.Succeeded(),
@@ -8971,6 +9006,81 @@ Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
     mEmptyInclusiveAncestorBlockElement = nullptr;
   }
   return mEmptyInclusiveAncestorBlockElement;
+}
+
+nsresult HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
+    ComputeTargetRanges(const HTMLEditor& aHTMLEditor,
+                        nsIEditor::EDirection aDirectionAndAmount,
+                        const Element& aEditingHost,
+                        AutoRangeArray& aRangesToDelete) const {
+  MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
+
+  // We'll delete `mEmptyInclusiveAncestorBlockElement` node from the tree, but
+  // we should return the range from start/end of next/previous editable content
+  // to end/start of the element for compatiblity with the other browsers.
+  switch (aDirectionAndAmount) {
+    case nsIEditor::eNone:
+      break;
+    case nsIEditor::ePrevious:
+    case nsIEditor::ePreviousWord:
+    case nsIEditor::eToBeginningOfLine: {
+      EditorRawDOMPoint startPoint =
+          HTMLEditUtils::GetPreviousEditablePoint<EditorRawDOMPoint>(
+              *mEmptyInclusiveAncestorBlockElement, &aEditingHost,
+              // In this case, we don't join block elements so that we won't
+              // delete invisible trailing whitespaces in the previous element.
+              InvisibleWhiteSpaces::Preserve,
+              // In this case, we won't join table cells so that we should
+              // get a range which is in a table cell even if it's in a
+              // table.
+              TableBoundary::NoCrossAnyTableElement);
+      if (!startPoint.IsSet()) {
+        NS_WARNING(
+            "HTMLEditUtils::GetPreviousEditablePoint() didn't return a valid "
+            "point");
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = aRangesToDelete.SetStartAndEnd(
+          startPoint,
+          EditorRawDOMPoint::AtEndOf(mEmptyInclusiveAncestorBlockElement));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "AutoRangeArray::SetStartAndEnd() failed");
+      return rv;
+    }
+    case nsIEditor::eNext:
+    case nsIEditor::eNextWord:
+    case nsIEditor::eToEndOfLine: {
+      EditorRawDOMPoint endPoint =
+          HTMLEditUtils::GetNextEditablePoint<EditorRawDOMPoint>(
+              *mEmptyInclusiveAncestorBlockElement, &aEditingHost,
+              // In this case, we don't join block elements so that we won't
+              // delete invisible trailing whitespaces in the next element.
+              InvisibleWhiteSpaces::Preserve,
+              // In this case, we won't join table cells so that we should
+              // get a range which is in a table cell even if it's in a
+              // table.
+              TableBoundary::NoCrossAnyTableElement);
+      if (!endPoint.IsSet()) {
+        NS_WARNING(
+            "HTMLEditUtils::GetNextEditablePoint() didn't return a valid "
+            "point");
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = aRangesToDelete.SetStartAndEnd(
+          EditorRawDOMPoint(mEmptyInclusiveAncestorBlockElement, 0), endPoint);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "AutoRangeArray::SetStartAndEnd() failed");
+      return rv;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Handle the nsIEditor::EDirection value");
+      break;
+  }
+  // No direction, let's select the element to be deleted.
+  nsresult rv =
+      aRangesToDelete.SelectNode(*mEmptyInclusiveAncestorBlockElement);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::SelectNode() failed");
+  return rv;
 }
 
 Result<RefPtr<Element>, nsresult>
