@@ -12490,7 +12490,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_instanceof() {
       return Ok();
     }
 
-    MInstanceOf* ins = MInstanceOf::New(alloc(), obj, protoObject);
+    MConstant* protoConst = constant(ObjectValue(*protoObject));
+    MInstanceOf* ins = MInstanceOf::New(alloc(), obj, protoConst);
 
     current->add(ins);
     current->push(ins);
@@ -12529,7 +12530,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_instanceof() {
       return Ok();
     }
 
-    MInstanceOf* ins = MInstanceOf::New(alloc(), obj, protoObject);
+    MInstanceOf* ins = MInstanceOf::New(alloc(), obj, protoConst);
     current->add(ins);
     current->push(ins);
     return resumeAfter(ins);
