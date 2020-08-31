@@ -295,7 +295,7 @@ void CanonicalBrowsingContext::SwapHistoryEntries(nsISHEntry* aOldEntry,
   // XXX Should we check also loading entries?
   if (mActiveEntry == aOldEntry) {
     nsCOMPtr<SessionHistoryEntry> newEntry = do_QueryInterface(aNewEntry);
-    mActiveEntry = newEntry;
+    mActiveEntry = newEntry.forget();
   }
 }
 
@@ -310,6 +310,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     entry->SetDocshellID(GetHistoryID());
+    entry->SetForInitialLoad(true);
   }
   MOZ_DIAGNOSTIC_ASSERT(entry);
 
@@ -340,13 +341,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
       RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry;
       RefPtr<SessionHistoryEntry> newActiveEntry = mLoadingEntries[i].mEntry;
 
-      bool loadFromSessionHistory = false;
-      nsCOMPtr<nsISHistory> existingHistory = newActiveEntry->GetShistory();
-      loadFromSessionHistory = (existingHistory == shistory);
-      if (!loadFromSessionHistory) {
-        newActiveEntry->SetShistory(shistory);
-      }
-
+      bool loadFromSessionHistory = !newActiveEntry->ForInitialLoad();
+      newActiveEntry->SetForInitialLoad(false);
       SessionHistoryEntry::RemoveLoadId(aLoadId);
       mLoadingEntries.RemoveElementAt(i);
       if (IsTop()) {
@@ -449,6 +445,7 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntryForTop(
                                       aPreviousScrollPos.ref().y);
   }
   RefPtr<SessionHistoryEntry> newEntry = new SessionHistoryEntry(aInfo);
+  newEntry->SetDocshellID(GetHistoryID());
   mActiveEntry = newEntry;
   Maybe<int32_t> previousEntryIndex, loadedEntryIndex;
   nsISHistory* shistory = GetSessionHistory();
@@ -476,6 +473,7 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntryForFrame(
                                       aPreviousScrollPos.ref().y);
   }
   RefPtr<SessionHistoryEntry> newEntry = new SessionHistoryEntry(aInfo);
+  newEntry->SetDocshellID(GetHistoryID());
   mActiveEntry = newEntry;
   nsISHistory* shistory = GetSessionHistory();
   if (oldActiveEntry) {
