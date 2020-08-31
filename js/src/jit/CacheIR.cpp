@@ -5126,38 +5126,17 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  // Only optimize on obj.join(...);
-  if (!thisval_.isObject()) {
+  // Only optimize if |this| is an array.
+  if (!thisval_.isObject() || !thisval_.toObject().is<ArrayObject>()) {
     return AttachDecision::NoAction;
   }
 
-  // Where |obj| is a native array.
-  JSObject* thisobj = &thisval_.toObject();
-  if (!thisobj->is<ArrayObject>()) {
+  // The separator argument must be a string, if present.
+  if (argc_ > 0 && !args_[0].isString()) {
     return AttachDecision::NoAction;
   }
 
-  auto* thisarray = &thisobj->as<ArrayObject>();
-
-  // And the array is of length 0 or 1.
-  if (thisarray->length() > 1) {
-    return AttachDecision::NoAction;
-  }
-
-  // And the array is packed.
-  if (thisarray->getDenseInitializedLength() != thisarray->length()) {
-    return AttachDecision::NoAction;
-  }
-
-  // And the only element (if it exists) is a string
-  if (thisarray->length() == 1 && !thisarray->getDenseElement(0).isString()) {
-    return AttachDecision::NoAction;
-  }
-
-  // We don't need to worry about indexed properties because we can perform
-  // hole check manually.
-
-  // Generate code.
+  // IC stub code can handle non-packed array.
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -5165,21 +5144,24 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   // Guard callee is the 'join' native function.
   emitNativeCalleeGuard(callee);
 
-  if (argc_ == 1) {
-    // If argcount is 1, guard that the argument is a string.
-    ValOperandId argValId =
-        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-    writer.guardToString(argValId);
-  }
-
   // Guard this is an array object.
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId thisObjId = writer.guardToObject(thisValId);
   writer.guardClass(thisObjId, GuardClassKind::Array);
 
+  StringOperandId sepId;
+  if (argc_ == 1) {
+    // If argcount is 1, guard that the argument is a string.
+    ValOperandId argValId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+    sepId = writer.guardToString(argValId);
+  } else {
+    sepId = writer.loadConstantString(cx_->names().comma);
+  }
+
   // Do the join.
-  writer.arrayJoinResult(thisObjId);
+  writer.arrayJoinResult(thisObjId, sepId);
 
   writer.returnFromIC();
 

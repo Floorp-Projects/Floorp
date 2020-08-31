@@ -901,9 +901,10 @@
 - name: ArrayJoinResult
   shared: false
   transpile: false
-  cost_estimate: 2
+  cost_estimate: 5
   args:
     obj: ObjId
+    sep: StringId
 
 - name: PackedArrayPopResult
   shared: true
