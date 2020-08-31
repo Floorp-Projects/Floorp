@@ -460,6 +460,14 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     ContextInfoDepth mContextInfoDepth;
 
    private:
+    struct StartAndEndContent {
+      nsCOMPtr<nsIContent> mStart;
+      nsCOMPtr<nsIContent> mEnd;
+    };
+
+    StartAndEndContent GetStartAndEndContentForRecursionLevel(
+        int32_t aDepth) const;
+
     bool HasInvisibleParentAndShouldBeSkipped(nsINode& aNode) const;
 
     RangeBoundariesInclusiveAncestorsAndOffsets
@@ -1000,6 +1008,28 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeTextNode(
   return rv;
 }
 
+nsDocumentEncoder::RangeSerializer::StartAndEndContent
+nsDocumentEncoder::RangeSerializer::GetStartAndEndContentForRecursionLevel(
+    const int32_t aDepth) const {
+  StartAndEndContent result;
+
+  const auto& inclusiveAncestorsOfStart =
+      mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfStart;
+  const auto& inclusiveAncestorsOfEnd =
+      mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfEnd;
+  int32_t start = mStartRootIndex - aDepth;
+  if (start >= 0 && (uint32_t)start <= inclusiveAncestorsOfStart.Length()) {
+    result.mStart = inclusiveAncestorsOfStart[start];
+  }
+
+  int32_t end = mEndRootIndex - aDepth;
+  if (end >= 0 && (uint32_t)end <= inclusiveAncestorsOfEnd.Length()) {
+    result.mEnd = inclusiveAncestorsOfEnd[end];
+  }
+
+  return result;
+}
+
 nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     const nsRange* const aRange, nsINode* const aNode, const int32_t aDepth) {
   MOZ_ASSERT(aDepth >= 0);
@@ -1014,25 +1044,11 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
 
   nsresult rv = NS_OK;
 
-  // get start and end nodes for this recursion level
-  nsCOMPtr<nsIContent> startNode, endNode;
-  {
-    auto& inclusiveAncestorsOfStart =
-        mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfStart;
-    auto& inclusiveAncestorsOfEnd =
-        mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfEnd;
-    int32_t start = mStartRootIndex - aDepth;
-    if (start >= 0 && (uint32_t)start <= inclusiveAncestorsOfStart.Length()) {
-      startNode = inclusiveAncestorsOfStart[start];
-    }
+  StartAndEndContent startAndEndContent =
+      GetStartAndEndContentForRecursionLevel(aDepth);
 
-    int32_t end = mEndRootIndex - aDepth;
-    if (end >= 0 && (uint32_t)end <= inclusiveAncestorsOfEnd.Length()) {
-      endNode = inclusiveAncestorsOfEnd[end];
-    }
-  }
-
-  if (startNode != content && endNode != content) {
+  if (startAndEndContent.mStart != content &&
+      startAndEndContent.mEnd != content) {
     // node is completely contained in range.  Serialize the whole subtree
     // rooted by this node.
     rv = mNodeSerializer.SerializeToStringRecursive(
@@ -1044,8 +1060,9 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     // XXXsmaug What does this all mean?
     if (IsTextNode(aNode)) {
       const int32_t startOffset =
-          (startNode == content) ? aRange->StartOffset() : 0;
-      const int32_t endOffset = (endNode == content) ? aRange->EndOffset() : -1;
+          (startAndEndContent.mStart == content) ? aRange->StartOffset() : 0;
+      const int32_t endOffset =
+          (startAndEndContent.mEnd == content) ? aRange->EndOffset() : -1;
       rv = mNodeSerializer.SerializeTextNode(*aNode, startOffset, endOffset);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
@@ -1056,10 +1073,10 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
           // is so paste client will include this node in paste.
           mHaltRangeHint = true;
         }
-        if ((startNode == content) && !mHaltRangeHint) {
+        if ((startAndEndContent.mStart == content) && !mHaltRangeHint) {
           ++mContextInfoDepth.mStart;
         }
-        if ((endNode == content) && !mHaltRangeHint) {
+        if ((startAndEndContent.mEnd == content) && !mHaltRangeHint) {
           ++mContextInfoDepth.mEnd;
         }
 
@@ -1077,11 +1094,11 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
       // do some calculations that will tell us which children of this
       // node are in the range.
       int32_t startOffset = 0, endOffset = -1;
-      if (startNode == content && mStartRootIndex >= aDepth) {
+      if (startAndEndContent.mStart == content && mStartRootIndex >= aDepth) {
         startOffset =
             inclusiveAncestorsOffsetsOfStart[mStartRootIndex - aDepth];
       }
-      if (endNode == content && mEndRootIndex >= aDepth) {
+      if (startAndEndContent.mEnd == content && mEndRootIndex >= aDepth) {
         endOffset = inclusiveAncestorsOffsetsOfEnd[mEndRootIndex - aDepth];
       }
       // generated content will cause offset values of -1 to be returned.
