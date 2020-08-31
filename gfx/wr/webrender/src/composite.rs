@@ -964,6 +964,11 @@ pub trait Compositor {
         image_rendering: ImageRendering,
     );
 
+    /// Notify the compositor that all tiles have been invalidated and all
+    /// native surfaces have been added, thus it is safe to start compositing
+    /// valid surfaces.
+    fn start_compositing(&mut self) {}
+
     /// Commit any changes in the compositor tree for this frame. WR calls
     /// this once when all surface and visual updates are complete, to signal
     /// that the OS composite transaction should be applied.
