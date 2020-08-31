@@ -4,24 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIAboutGlean.h"
-#include "mozilla/AboutGlean.h"
+#include "nsIFOG.h"
+#include "mozilla/FOG.h"
 
 #include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla {
 
-static StaticRefPtr<AboutGlean> gAboutGlean;
+static StaticRefPtr<FOG> gFOG;
 
 // static
-already_AddRefed<AboutGlean> AboutGlean::GetSingleton() {
-  if (gAboutGlean) {
-    return do_AddRef(gAboutGlean);
+already_AddRefed<FOG> FOG::GetSingleton() {
+  if (gFOG) {
+    return do_AddRef(gFOG);
   }
 
-  gAboutGlean = new AboutGlean();
-  ClearOnShutdown(&gAboutGlean);
-  return do_AddRef(gAboutGlean);
+  gFOG = new FOG();
+  ClearOnShutdown(&gFOG);
+  return do_AddRef(gFOG);
 }
 
 extern "C" {
@@ -31,20 +31,20 @@ nsresult fog_submit_ping(const nsACString* aPingName);
 }
 
 NS_IMETHODIMP
-AboutGlean::SetLogPings(bool aEnableLogPings) {
+FOG::SetLogPings(bool aEnableLogPings) {
   return fog_set_log_pings(aEnableLogPings);
 }
 
 NS_IMETHODIMP
-AboutGlean::SetTagPings(const nsACString& aDebugTag) {
+FOG::SetTagPings(const nsACString& aDebugTag) {
   return fog_set_debug_view_tag(&aDebugTag);
 }
 
 NS_IMETHODIMP
-AboutGlean::SendPing(const nsACString& aPingName) {
+FOG::SendPing(const nsACString& aPingName) {
   return fog_submit_ping(&aPingName);
 }
 
-NS_IMPL_ISUPPORTS(AboutGlean, nsIAboutGlean)
+NS_IMPL_ISUPPORTS(FOG, nsIFOG)
 
 }  //  namespace mozilla

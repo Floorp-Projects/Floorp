@@ -3,24 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_AboutGlean_h
-#define mozilla_AboutGlean_h
+#ifndef mozilla_FOG_h
+#define mozilla_FOG_h
 
-#include "nsIAboutGlean.h"
+#include "nsIFOG.h"
 
 namespace mozilla {
-class AboutGlean final : public nsIAboutGlean {
+class FOG final : public nsIFOG {
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIABOUTGLEAN
+  NS_DECL_NSIFOG
 
  public:
-  AboutGlean() = default;
-  static already_AddRefed<AboutGlean> GetSingleton();
+  FOG() = default;
+  static already_AddRefed<FOG> GetSingleton();
 
  private:
-  ~AboutGlean() = default;
+  ~FOG() = default;
 };
 
 };  // namespace mozilla
 
-#endif  // mozilla_AboutGlean_h
+#endif  // mozilla_FOG_h
