@@ -1123,12 +1123,13 @@ ssl_CacheSessionID(sslSocket *ss)
 {
     sslSecurityInfo *sec = &ss->sec;
     PORT_Assert(sec);
+    PORT_Assert(sec->ci.sid->cached == never_cached);
 
     if (sec->ci.sid && !sec->ci.sid->u.ssl3.keys.resumable) {
         return;
     }
 
-    if (!ss->sec.isServer && ss->resumptionTokenCallback) {
+    if (!sec->isServer && ss->resumptionTokenCallback) {
         ssl_CacheExternalToken(ss);
         return;
     }

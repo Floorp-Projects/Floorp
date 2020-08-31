@@ -1743,3 +1743,67 @@ loser:
 
     return ret_algid;
 }
+
+#define TEST_KEY "pbkdf test key"
+SECStatus
+sftk_fips_pbkdf_PowerUpSelfTests(void)
+{
+    SECItem *result;
+    SECItem inKey;
+    NSSPKCS5PBEParameter pbe_params;
+    unsigned char iteration_count = 5;
+    unsigned char keyLen = 64;
+    char *inKeyData = TEST_KEY;
+    static const unsigned char saltData[] =
+        { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
+    static const unsigned char pbkdf_known_answer[] = {
+        0x31, 0xf0, 0xe5, 0x39, 0x9f, 0x39, 0xb9, 0x29,
+        0x68, 0xac, 0xf2, 0xe9, 0x53, 0x9b, 0xb4, 0x9c,
+        0x28, 0x59, 0x8b, 0x5c, 0xd8, 0xd4, 0x02, 0x37,
+        0x18, 0x22, 0xc1, 0x92, 0xd0, 0xfa, 0x72, 0x90,
+        0x2c, 0x8d, 0x19, 0xd4, 0x56, 0xfb, 0x16, 0xfa,
+        0x8d, 0x5c, 0x06, 0x33, 0xd1, 0x5f, 0x17, 0xb1,
+        0x22, 0xd9, 0x9c, 0xaf, 0x5e, 0x3f, 0xf3, 0x66,
+        0xc6, 0x14, 0xfe, 0x83, 0xfa, 0x1a, 0x2a, 0xc5
+    };
+
+    sftk_PBELockInit();
+
+    inKey.data = (unsigned char *)inKeyData;
+    inKey.len = sizeof(TEST_KEY) - 1;
+
+    pbe_params.salt.data = (unsigned char *)saltData;
+    pbe_params.salt.len = sizeof(saltData);
+    /* the interation and keyLength are used as intermediate
+     * values when decoding the Algorithm ID, set them for completeness,
+     * but they are not used */
+    pbe_params.iteration.data = &iteration_count;
+    pbe_params.iteration.len = 1;
+    pbe_params.keyLength.data = &keyLen;
+    pbe_params.keyLength.len = 1;
+    /* pkcs5v2 stores the key in the AlgorithmID, so we don't need to
+     * generate it here */
+    pbe_params.ivLen = 0;
+    pbe_params.ivData = NULL;
+    /* keyID is only used by pkcs12 extensions to pkcs5v1 */
+    pbe_params.keyID = pbeBitGenCipherKey;
+    /* Algorithm is used by the decryption code after get get our key */
+    pbe_params.encAlg = SEC_OID_AES_256_CBC;
+    /* these are the fields actually used in nsspkcs5_ComputeKeyAndIV
+     * for NSSPKCS5_PBKDF2 */
+    pbe_params.iter = iteration_count;
+    pbe_params.keyLen = keyLen;
+    pbe_params.hashType = HASH_AlgSHA256;
+    pbe_params.pbeType = NSSPKCS5_PBKDF2;
+    pbe_params.is2KeyDES = PR_FALSE;
+
+    result = nsspkcs5_ComputeKeyAndIV(&pbe_params, &inKey, NULL, PR_FALSE);
+    if ((result == NULL) || (result->len != sizeof(pbkdf_known_answer)) ||
+        (PORT_Memcmp(result->data, pbkdf_known_answer, sizeof(pbkdf_known_answer)) != 0)) {
+        SECITEM_FreeItem(result, PR_TRUE);
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+    SECITEM_FreeItem(result, PR_TRUE);
+    return SECSuccess;
+}

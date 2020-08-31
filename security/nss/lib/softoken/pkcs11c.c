@@ -6856,9 +6856,9 @@ sftk_DeriveEncrypt(SFTKCipher encrypt, void *cipherInfo,
 
 CK_RV
 sftk_HKDF(CK_HKDF_PARAMS_PTR params, CK_SESSION_HANDLE hSession,
-          SFTKObject *sourceKey, unsigned char *sourceKeyBytes,
-          int sourceKeyLen, SFTKObject *key, int keySize,
-          PRBool canBeData, PRBool isFIPS)
+          SFTKObject *sourceKey, const unsigned char *sourceKeyBytes,
+          int sourceKeyLen, SFTKObject *key, unsigned char *outKeyBytes,
+          int keySize, PRBool canBeData, PRBool isFIPS)
 {
     SFTKSession *session;
     SFTKAttribute *saltKey_att = NULL;
@@ -6869,9 +6869,9 @@ sftk_HKDF(CK_HKDF_PARAMS_PTR params, CK_SESSION_HANDLE hSession,
     unsigned char keyBlock[9 * SFTK_MAX_MAC_LENGTH];
     unsigned char *keyBlockAlloc = NULL;    /* allocated keyBlock */
     unsigned char *keyBlockData = keyBlock; /* pointer to current keyBlock */
-    unsigned char *prk;                     /* psuedo-random key */
+    const unsigned char *prk;               /* psuedo-random key */
     CK_ULONG prkLen;
-    unsigned char *okm; /* output keying material */
+    const unsigned char *okm; /* output keying material */
     HASH_HashType hashType = GetHashTypeFromMechanism(params->prfHashMechanism);
     SFTKObject *saltKey = NULL;
     CK_RV crv = CKR_OK;
@@ -6896,9 +6896,14 @@ sftk_HKDF(CK_HKDF_PARAMS_PTR params, CK_SESSION_HANDLE hSession,
         (params->bExpand && keySize > 255 * hashLen)) {
         return CKR_TEMPLATE_INCONSISTENT;
     }
-    crv = sftk_DeriveSensitiveCheck(sourceKey, key, canBeData);
-    if (crv != CKR_OK)
-        return crv;
+
+    /* sourceKey is NULL if we are called from the POST, skip the
+     * sensitiveCheck */
+    if (sourceKey != NULL) {
+        crv = sftk_DeriveSensitiveCheck(sourceKey, key, canBeData);
+        if (crv != CKR_OK)
+            return crv;
+    }
 
     /* HKDF-Extract(salt, base key value) */
     if (params->bExtract) {
@@ -7014,12 +7019,18 @@ sftk_HKDF(CK_HKDF_PARAMS_PTR params, CK_SESSION_HANDLE hSession,
         HMAC_Destroy(hmac, PR_TRUE);
         okm = &keyBlockData[0];
     }
-    /* key material = prk */
-    crv = sftk_forceAttribute(key, CKA_VALUE, okm, keySize);
-    PORT_Memset(okm, 0, genLen);
+    /* key material = okm */
+    crv = CKR_OK;
+    if (key) {
+        crv = sftk_forceAttribute(key, CKA_VALUE, okm, keySize);
+    } else {
+        PORT_Assert(outKeyBytes != NULL);
+        PORT_Memcpy(outKeyBytes, okm, keySize);
+    }
+    PORT_Memset(keyBlockData, 0, genLen);
     PORT_Memset(hashbuf, 0, sizeof(hashbuf));
     PORT_Free(keyBlockAlloc);
-    return CKR_OK;
+    return crv;
 }
 
 /*
@@ -8568,7 +8579,7 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
 
             crv = sftk_HKDF(&hkdfParams, hSession, sourceKey,
                             att->attrib.pValue, att->attrib.ulValueLen,
-                            key, keySize, PR_FALSE, isFIPS);
+                            key, NULL, keySize, PR_FALSE, isFIPS);
         } break;
         case CKM_HKDF_DERIVE:
         case CKM_HKDF_DATA: /* only difference is the class of key */
@@ -8579,7 +8590,7 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
             }
             crv = sftk_HKDF((CK_HKDF_PARAMS_PTR)pMechanism->pParameter,
                             hSession, sourceKey, att->attrib.pValue,
-                            att->attrib.ulValueLen, key, keySize, PR_TRUE,
+                            att->attrib.ulValueLen, key, NULL, keySize, PR_TRUE,
                             isFIPS);
             break;
         case CKM_NSS_JPAKE_ROUND2_SHA1:

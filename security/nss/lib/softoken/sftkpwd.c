@@ -92,6 +92,11 @@ sftkdb_passwordToKey(SFTKDBHandle *keydb, SECItem *salt,
     SHA1Context *cx = NULL;
     SECStatus rv = SECFailure;
 
+    if (!pw) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
     key->data = PORT_Alloc(SHA1_LENGTH);
     if (key->data == NULL) {
         goto loser;

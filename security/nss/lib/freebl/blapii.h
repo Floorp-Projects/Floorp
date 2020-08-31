@@ -60,10 +60,10 @@ SEC_END_PROTOS
 #endif
 
 /* Alignment helpers. */
-#if defined(_WINDOWS) && defined(NSS_X86_OR_X64)
+#if defined(_MSC_VER)
 #define pre_align __declspec(align(16))
 #define post_align
-#elif defined(NSS_X86_OR_X64)
+#elif defined(__GNUC__)
 #define pre_align
 #define post_align __attribute__((aligned(16)))
 #else

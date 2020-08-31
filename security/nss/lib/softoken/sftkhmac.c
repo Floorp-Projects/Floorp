@@ -355,7 +355,7 @@ sftk_MAC_Reset(sftk_MACCtx *ctx)
 }
 
 CK_RV
-sftk_MAC_Update(sftk_MACCtx *ctx, CK_BYTE_PTR data, unsigned int data_len)
+sftk_MAC_Update(sftk_MACCtx *ctx, const CK_BYTE *data, unsigned int data_len)
 {
     switch (ctx->mech) {
         case CKM_MD2_HMAC:

@@ -900,7 +900,7 @@ HASH_HashType sftk_HMACMechanismToHash(CK_MECHANISM_TYPE mech);
 CK_RV sftk_MAC_Create(CK_MECHANISM_TYPE mech, SFTKObject *key, sftk_MACCtx **ret_ctx);
 CK_RV sftk_MAC_Init(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, SFTKObject *key);
 CK_RV sftk_MAC_InitRaw(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, const unsigned char *key, unsigned int key_len, PRBool isFIPS);
-CK_RV sftk_MAC_Update(sftk_MACCtx *ctx, CK_BYTE_PTR data, unsigned int data_len);
+CK_RV sftk_MAC_Update(sftk_MACCtx *ctx, const CK_BYTE *data, unsigned int data_len);
 CK_RV sftk_MAC_Finish(sftk_MACCtx *ctx, CK_BYTE_PTR result, unsigned int *result_len, unsigned int max_result_len);
 CK_RV sftk_MAC_Reset(sftk_MACCtx *ctx);
 void sftk_MAC_Destroy(sftk_MACCtx *ctx, PRBool free_it);
@@ -912,6 +912,15 @@ CK_RV sftk_CheckCBCPadding(CK_BYTE_PTR pBuf, unsigned int bufLen,
 
 /* NIST 800-108 (kbkdf.c) implementations */
 extern CK_RV kbkdf_Dispatch(CK_MECHANISM_TYPE mech, CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, SFTKObject *base_key, SFTKObject *ret_key, CK_ULONG keySize);
+extern SECStatus sftk_fips_SP800_108_PowerUpSelfTests(void);
+
+/* export the HKDF function for use in PowerupSelfTests */
+CK_RV sftk_HKDF(CK_HKDF_PARAMS_PTR params, CK_SESSION_HANDLE hSession,
+                SFTKObject *sourceKey, const unsigned char *sourceKeyBytes,
+                int sourceKeyLen, SFTKObject *key,
+                unsigned char *outKeyBytes, int keySize,
+                PRBool canBeData, PRBool isFIPS);
+
 char **NSC_ModuleDBFunc(unsigned long function, char *parameters, void *args);
 
 /* dh verify functions */
