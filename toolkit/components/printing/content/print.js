@@ -97,10 +97,12 @@ var PrintEventHandler = {
     // accessible printer.
     let {
       destinations,
+      defaultSystemPrinter,
       selectedPrinter,
       printersByName,
     } = await this.getPrintDestinations();
     PrintSettingsViewProxy.availablePrinters = printersByName;
+    PrintSettingsViewProxy.defaultSystemPrinter = defaultSystemPrinter;
 
     document.addEventListener("print", e => this.print());
     document.addEventListener("update-print-settings", e =>
@@ -111,8 +113,14 @@ var PrintEventHandler = {
       // This file in only used if pref print.always_print_silent is false, so
       // no need to check that here.
 
-      // Use our settings to prepopulate the system dialog
-      let settings = this.settings.clone();
+      // Use our settings to prepopulate the system dialog.
+      // The system print dialog won't recognize our internal save-to-pdf
+      // pseudo-printer.  We need to pass it a settings object from any
+      // system recognized printer.
+      let settings =
+        this.settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
+          ? PrintUtils.getPrintSettings(this.viewSettings.defaultSystemPrinter)
+          : this.settings.clone();
       const PRINTPROMPTSVC = Cc[
         "@mozilla.org/embedcomp/printingprompt-service;1"
       ].getService(Ci.nsIPrintingPromptService);
@@ -455,7 +463,7 @@ var PrintEventHandler = {
     const printersByName = {};
 
     let lastUsedPrinter;
-    let defaultPrinter;
+    let defaultSystemPrinter;
 
     let saveToPdfPrinter = {
       nameId: "printui-destination-pdf-label",
@@ -482,16 +490,22 @@ var PrintEventHandler = {
           lastUsedPrinter = destination;
         }
         if (name == defaultPrinterName) {
-          defaultPrinter = destination;
+          defaultSystemPrinter = destination;
         }
 
         return destination;
       }),
     ];
 
-    let selectedPrinter = lastUsedPrinter || defaultPrinter || saveToPdfPrinter;
+    let selectedPrinter =
+      lastUsedPrinter || defaultSystemPrinter || saveToPdfPrinter;
 
-    return { destinations, selectedPrinter, printersByName };
+    return {
+      destinations,
+      selectedPrinter,
+      printersByName,
+      defaultSystemPrinter,
+    };
   },
 
   getMarginPresets(marginSize) {
@@ -635,6 +649,13 @@ const PrintSettingsViewProxy = {
           !this.get(target, "supportsColor") ||
           (target.printerName != PrintUtils.SAVE_TO_PDF_PRINTER &&
             AppConstants.platform !== "macosx")
+        );
+      case "defaultSystemPrinter":
+        return (
+          this.defaultSystemPrinter?.value ||
+          Object.getOwnPropertyNames(this.availablePrinters).find(
+            p => p.name != PrintUtils.SAVE_TO_PDF_PRINTER
+          )?.value
         );
     }
     return target[name];
@@ -875,9 +896,13 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   }
 
   update(settings) {
+    // If there are no default system printers available and we are not on mac,
+    // we should hide the system dialog because it won't be populated with
+    // the correct settings. Mac supports save to pdf functionality
+    // in the native dialog, so it can be shown regardless.
     this.querySelector("#system-print").hidden =
-      settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER &&
-      AppConstants.platform != "macosx";
+      !settings.defaultSystemPrinter && AppConstants.platform !== "macosx";
+
     this.querySelector("#copies").hidden = settings.willSaveToFile;
   }
 
