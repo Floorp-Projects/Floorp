@@ -457,7 +457,8 @@ uint64_t Accessible::NativeInteractiveState() const {
 uint64_t Accessible::NativeLinkState() const { return 0; }
 
 bool Accessible::NativelyUnavailable() const {
-  if (mContent->IsHTMLElement()) return mContent->AsElement()->IsDisabled();
+  if (mContent->IsHTMLElement())
+    return mContent->AsElement()->IsDisabled();
 
   return mContent->IsElement() && mContent->AsElement()->AttrValueIs(
                                       kNameSpaceID_None, nsGkAtoms::disabled,

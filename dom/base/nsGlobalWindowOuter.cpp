@@ -5208,8 +5208,8 @@ static CallState CollectDocuments(Document& aDoc,
   return CallState::Continue;
 }
 
-static void DispatchPrintEventToWindowTree(Document& aDoc,
-                                           const nsAString& aEvent) {
+static void DispatchPrintEventToWindowTree(
+    Document& aDoc, const nsAString& aEvent) {
   if (aDoc.IsStaticDocument()) {
     return;
   }

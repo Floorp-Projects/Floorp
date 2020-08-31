@@ -5122,10 +5122,9 @@ NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
     frameSelection->SetDragState(false);
     frameSelection->StopAutoScrollTimer();
     if (wf.IsAlive()) {
-      nsIScrollableFrame* scrollFrame =
-          nsLayoutUtils::GetNearestScrollableFrame(
-              this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
-                        nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+      nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
+          this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                    nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
       if (scrollFrame) {
         // Perform any additional scrolling needed to maintain CSS snap point
         // requirements when autoscrolling is over.

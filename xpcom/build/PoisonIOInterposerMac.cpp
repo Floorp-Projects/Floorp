@@ -7,7 +7,7 @@
 #include "PoisonIOInterposer.h"
 // Disabled until bug 1658385 is fixed.
 #ifndef __aarch64__
-#  include "mach_override.h"
+#include "mach_override.h"
 #endif
 
 #include "mozilla/ArrayUtils.h"

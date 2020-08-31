@@ -37,7 +37,7 @@
 #include "vm/Runtime.h"           // JSAtomState, JSRuntime
 #include "vm/StringType.h"        // js::EqualStrings, js::ToString
 
-#include "vm/Compartment-inl.h"   // js::UnwrapAndTypeCheck{Argument,This,Value}
+#include "vm/Compartment-inl.h"  // js::UnwrapAndTypeCheck{Argument,This,Value}
 #include "vm/JSObject-inl.h"      // js::NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"  // js::ThrowIfNotConstructing
 
