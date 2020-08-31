@@ -22,7 +22,7 @@ extern LazyLogModule gForwardedInputTrackLog;
 #define LOG(type, msg) MOZ_LOG(gForwardedInputTrackLog, type, msg)
 #define LOG_TEST(type) MOZ_LOG_TEST(gForwardedInputTrackLog, type)
 
-CrossGraphPort* CrossGraphPort::Connect(
+UniquePtr<CrossGraphPort> CrossGraphPort::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
     nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aSink);
@@ -44,7 +44,7 @@ CrossGraphPort* CrossGraphPort::Connect(
   return CrossGraphPort::Connect(aStreamTrack, newGraph);
 }
 
-CrossGraphPort* CrossGraphPort::Connect(
+UniquePtr<CrossGraphPort> CrossGraphPort::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack,
     MediaTrackGraph* aPartnerGraph) {
   MOZ_ASSERT(aStreamTrack);
@@ -64,8 +64,8 @@ CrossGraphPort* CrossGraphPort::Connect(
   RefPtr<MediaInputPort> port =
       aStreamTrack->ForwardTrackContentsTo(transmitter);
 
-  return new CrossGraphPort(std::move(port), std::move(transmitter),
-                            std::move(receiver));
+  return WrapUnique(new CrossGraphPort(std::move(port), std::move(transmitter),
+                                       std::move(receiver)));
 }
 
 void CrossGraphPort::AddAudioOutput(void* aKey) {

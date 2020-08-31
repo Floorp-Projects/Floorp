@@ -10,6 +10,7 @@
 #include "AudioSegment.h"
 #include "ForwardedInputTrack.h"
 #include "mozilla/SPSCQueue.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 class CrossGraphReceiver;
@@ -65,10 +66,10 @@ class CrossGraphReceiver : public ProcessedMediaTrack {
 
 class CrossGraphPort final {
  public:
-  static CrossGraphPort* Connect(
+  static UniquePtr<CrossGraphPort> Connect(
       const RefPtr<dom::AudioStreamTrack>& aStreamTrack,
       MediaTrackGraph* aPartnerGraph);
-  static CrossGraphPort* Connect(
+  static UniquePtr<CrossGraphPort> Connect(
       const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
       nsPIDOMWindowInner* aWindow);
   ~CrossGraphPort() = default;
