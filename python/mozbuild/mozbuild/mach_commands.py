@@ -802,6 +802,8 @@ def _get_desktop_run_parser():
                        help='Command-line arguments to be passed through to the program. Not '
                        'specifying a --profile or -P option will result in a temporary profile '
                        'being used.')
+    group.add_argument('--packaged', action='store_true',
+                       help='Run a packaged build.')
     group.add_argument('--remote', '-r', action='store_true',
                        help='Do not pass the --no-remote argument by default.')
     group.add_argument('--background', '-b', action='store_true',
@@ -1012,21 +1014,30 @@ class RunProgram(MachCommandBase):
         return self.run_process(args=args, ensure_exit_code=False,
                                 pass_thru=True, append_env=extra_env)
 
-    def _run_desktop(self, params, remote, background, noprofile, disable_e10s,
-                     enable_crash_reporter, enable_fission, setpref, temp_profile,
-                     macos_open, debug, debugger, debugger_args, dmd, mode, stacks,
-                     show_dump_stats):
+    def _run_desktop(self, params, packaged, remote, background, noprofile,
+                     disable_e10s, enable_crash_reporter, enable_fission, setpref,
+                     temp_profile, macos_open, debug, debugger, debugger_args, dmd,
+                     mode, stacks, show_dump_stats):
         from mozprofile import Profile, Preferences
 
         try:
-            binpath = self.get_binary_path('app')
+            if packaged:
+                binpath = self.get_binary_path(where='staged-package')
+            else:
+                binpath = self.get_binary_path('app')
         except BinaryNotFoundException as e:
             self.log(logging.ERROR, 'run',
                      {'error': str(e)},
                      'ERROR: {error}')
-            self.log(logging.INFO, 'run',
-                     {'help': e.help()},
-                     '{help}')
+            if packaged:
+                self.log(logging.INFO, 'run',
+                         {'help': "It looks like your build isn\'t packaged. "
+                                  "You can run |./mach package| to package it."},
+                         '{help}')
+            else:
+                self.log(logging.INFO, 'run',
+                         {'help': e.help()},
+                         '{help}')
             return 1
 
         args = []
