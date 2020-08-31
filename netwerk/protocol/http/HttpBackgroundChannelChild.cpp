@@ -213,31 +213,42 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
 
 IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
-    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData,
-    const bool& aDataFromSocketProcess) {
-  LOG(
-      ("HttpBackgroundChannelChild::RecvOnTransportAndData [this=%p, "
-       "aDataFromSocketProcess=%d, mFirstODASource=%d]\n",
-       this, aDataFromSocketProcess, mFirstODASource));
-  MOZ_ASSERT(OnSocketThread());
+    const uint64_t& aOffset, const uint32_t& aCount,
+    const nsDependentCSubstring& aData, const bool& aDataFromSocketProcess) {
+  RefPtr<HttpBackgroundChannelChild> self = this;
+  nsCString data(aData);
+  std::function<void()> callProcessOnTransportAndData =
+      [self, aChannelStatus, aTransportStatus, aOffset, aCount, data,
+       aDataFromSocketProcess]() {
+        LOG(
+            ("HttpBackgroundChannelChild::RecvOnTransportAndData [this=%p, "
+             "aDataFromSocketProcess=%d, mFirstODASource=%d]\n",
+             self.get(), aDataFromSocketProcess, self->mFirstODASource));
+        MOZ_ASSERT(OnSocketThread());
 
-  if (NS_WARN_IF(!mChannelChild)) {
-    return IPC_OK();
-  }
+        if (NS_WARN_IF(!self->mChannelChild)) {
+          return;
+        }
 
-  if (((mFirstODASource == ODA_FROM_SOCKET) && !aDataFromSocketProcess) ||
-      ((mFirstODASource == ODA_FROM_PARENT) && aDataFromSocketProcess)) {
-    return IPC_OK();
-  }
+        if (((self->mFirstODASource == ODA_FROM_SOCKET) &&
+             !aDataFromSocketProcess) ||
+            ((self->mFirstODASource == ODA_FROM_PARENT) &&
+             aDataFromSocketProcess)) {
+          return;
+        }
 
-  // The HttpTransactionChild in socket process may not know that this request
-  // is cancelled or failed due to the IPC delay. In this case, we should not
-  // forward ODA to HttpChannelChild.
-  nsresult channelStatus;
-  mChannelChild->GetStatus(&channelStatus);
-  if (NS_FAILED(channelStatus)) {
-    return IPC_OK();
-  }
+        // The HttpTransactionChild in socket process may not know that this
+        // request is cancelled or failed due to the IPC delay. In this case, we
+        // should not forward ODA to HttpChannelChild.
+        nsresult channelStatus;
+        self->mChannelChild->GetStatus(&channelStatus);
+        if (NS_FAILED(channelStatus)) {
+          return;
+        }
+
+        self->mChannelChild->ProcessOnTransportAndData(
+            aChannelStatus, aTransportStatus, aOffset, aCount, data);
+      };
 
   // Bug 1641336: Race only happens if the data is from socket process.
   if (IsWaitingOnStartRequest()) {
@@ -245,19 +256,13 @@ IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
          "]\n",
          aOffset, aCount));
 
-    mQueuedRunnables.AppendElement(
-        NewRunnableMethod<const nsresult, const nsresult, const uint64_t,
-                          const uint32_t, const nsCString, bool>(
-            "HttpBackgroundChannelChild::RecvOnTransportAndData", this,
-            &HttpBackgroundChannelChild::RecvOnTransportAndData, aChannelStatus,
-            aTransportStatus, aOffset, aCount, aData, aDataFromSocketProcess));
-
+    mQueuedRunnables.AppendElement(NS_NewRunnableFunction(
+        "HttpBackgroundChannelChild::RecvOnTransportAndData",
+        std::move(callProcessOnTransportAndData)));
     return IPC_OK();
   }
 
-  mChannelChild->ProcessOnTransportAndData(aChannelStatus, aTransportStatus,
-                                           aOffset, aCount, aData);
-
+  callProcessOnTransportAndData();
   return IPC_OK();
 }
 
@@ -484,8 +489,8 @@ IPCResult HttpBackgroundChannelChild::RecvSetClassifierMatchedTrackingInfo(
     return IPC_OK();
   }
 
-  // SetClassifierMatchedTrackingInfo has no order dependency to OnStartRequest.
-  // It this be handled as soon as possible
+  // SetClassifierMatchedTrackingInfo has no order dependency to
+  // OnStartRequest. It this be handled as soon as possible
   mChannelChild->ProcessSetClassifierMatchedTrackingInfo(info.list(),
                                                          info.fullhash());
 
