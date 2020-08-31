@@ -1209,8 +1209,7 @@ class FuncType {
   // but are guarded against separately.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
-      if (arg.isReference() &&
-          (!arg.isExternRef() || !arg.isNullable())) {
+      if (arg.isReference() && (!arg.isExternRef() || !arg.isNullable())) {
         return true;
       }
     }
@@ -1226,8 +1225,7 @@ class FuncType {
   // excluded per spec but are guarded against separately.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     for (ValType arg : args()) {
-      if (arg.isReference() &&
-          (!arg.isExternRef() || !arg.isNullable())) {
+      if (arg.isReference() && (!arg.isExternRef() || !arg.isNullable())) {
         return true;
       }
     }
@@ -1249,8 +1247,7 @@ class FuncType {
     }
     for (ValType result : results()) {
       if (result.isReference() &&
-          (!result.isExternRef() ||
-           !result.isNullable())) {
+          (!result.isExternRef() || !result.isNullable())) {
         return true;
       }
     }

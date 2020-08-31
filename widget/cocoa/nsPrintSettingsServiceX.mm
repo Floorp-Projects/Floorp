@@ -66,7 +66,7 @@ nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* a
   NSURL* printToFileURL = [dict objectForKey:NSPrintJobSavingURL];
   if (printToFileURL) {
     if ([printToFileURL isFileURL]) {
-      nsCocoaUtils::GetStringForNSString([printToFileURL path], data->toFileName());
+      nsCocoaUtils::GetStringForNSString([printToFileURL path], data -> toFileName());
     } else {
       MOZ_ASSERT_UNREACHABLE("expected a file URL");
     }
