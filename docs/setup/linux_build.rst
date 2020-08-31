@@ -53,7 +53,7 @@ You’re ready; now we can tie it all together. In your terminal:
 
 .. code-block:: shell
 
-   cd mozilla-central
+   cd mozilla-unified  # ... or the name of the repo you chose in the above step
 
 If you are not working on the C/C++ files you can also opt for
 :ref:`Artifact Builds <Understanding Artifact Builds>`
