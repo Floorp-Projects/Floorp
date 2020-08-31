@@ -76,7 +76,8 @@ RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
   if (Ended()) {
     return GenericPromise::CreateAndResolve(true, __func__);
   }
-  CrossGraphPort* manager = CrossGraphPort::Connect(this, aSink, mWindow);
+  UniquePtr<CrossGraphPort> manager =
+      CrossGraphPort::Connect(this, aSink, mWindow);
   if (!manager) {
     auto entry = mCrossGraphs.Lookup(key);
     MOZ_ASSERT(entry);
@@ -84,12 +85,12 @@ RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
     entry.Remove();
     return GenericPromise::CreateAndResolve(true, __func__);
   }
-  UniquePtr<CrossGraphPort>* crossGraphPtr = mCrossGraphs.LookupOrAdd(key);
-  if (*crossGraphPtr) {
-    (*crossGraphPtr)->Destroy();
+  UniquePtr<CrossGraphPort>& crossGraphPtr = *mCrossGraphs.LookupOrAdd(key);
+  if (crossGraphPtr) {
+    crossGraphPtr->Destroy();
   }
-  (*crossGraphPtr).reset(manager);
-  return manager->EnsureConnected();
+  crossGraphPtr = std::move(manager);
+  return crossGraphPtr->EnsureConnected();
 }
 
 }  // namespace dom
