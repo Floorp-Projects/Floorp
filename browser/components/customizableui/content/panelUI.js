@@ -1101,7 +1101,27 @@ const PanelUI = {
   },
 
   _addedShortcuts: false,
+  _formatPrintButtonShortcuts() {
+    let printButton = this.mainView.querySelector("#appMenu-print-button");
+    if (
+      !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
+      AppConstants.platform !== "macosx"
+    ) {
+      printButton.removeAttribute("shortcut");
+    } else if (!printButton.hasAttribute("shortcut")) {
+      printButton.setAttribute(
+        "shortcut",
+        ShortcutUtils.prettifyShortcut(
+          document.getElementById(printButton.getAttribute("key"))
+        )
+      );
+    }
+  },
   _ensureShortcutsShown(view = this.mainView) {
+    // The print button shorcut visibility can change depending on the pref value,
+    // so we need to check this each time, even if we've already added shortcuts.
+    this._formatPrintButtonShortcuts();
+
     if (view.hasAttribute("added-shortcuts")) {
       return;
     }
