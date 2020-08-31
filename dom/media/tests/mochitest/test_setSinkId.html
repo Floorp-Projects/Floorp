@@ -6,8 +6,6 @@
 <body>
 <pre id="test">
 
-<audio id="audio"></audio>
-
 <script>
   createHTML({
     title: "SetSinkId in HTMLMediaElement",
@@ -30,10 +28,8 @@
     info(`Found  ${audioDevices.length} output devices`);
     ok(audioDevices.length > 0, "More than one output device found");
 
-    // Have to do this to access normally-preffed off binding methods for some
-    // reason.
-    // See bug 1544257.
-    audio = SpecialPowers.wrap(audio);
+    const audio = createMediaElement("audio", "audio");
+    document.body.appendChild(audio);
 
     is(audio.sinkId, "", "Initial value is empty string");
 
