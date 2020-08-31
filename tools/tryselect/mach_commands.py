@@ -113,9 +113,6 @@ class TrySelect(MachCommandBase):
             user_presets.edit()
             sys.exit()
 
-        if 'preset' not in self.parser.common_groups:
-            return kwargs
-
         default = self.parser.get_default
         if save:
             selector = self.subcommand or self._mach_context.settings['try']['default']
@@ -178,7 +175,8 @@ class TrySelect(MachCommandBase):
         return kwargs
 
     def run(self, **kwargs):
-        kwargs = self.handle_presets(**kwargs)
+        if 'preset' in self.parser.common_groups:
+            kwargs = self.handle_presets(**kwargs)
 
         if self.parser.task_configs:
             kwargs = self.handle_try_config(**kwargs)
