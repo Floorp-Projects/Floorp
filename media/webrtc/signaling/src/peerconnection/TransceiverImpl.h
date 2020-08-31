@@ -32,6 +32,7 @@ class WebRtcCallWrapper;
 class JsepTrackNegotiatedDetails;
 
 namespace dom {
+class RTCDtlsTransport;
 class RTCDTMFSender;
 class RTCRtpTransceiver;
 struct RTCRtpSourceEntry;
@@ -95,6 +96,7 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
   void SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver, ErrorResult& aRv);
   dom::RTCRtpReceiver* Receiver() const { return mReceiver; }
   dom::RTCDTMFSender* GetDtmf() const { return mDtmf; }
+  dom::RTCDtlsTransport* GetDtlsTransport() const { return nullptr; }
 
   bool CanSendDTMF() const;
 
