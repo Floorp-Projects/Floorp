@@ -17,7 +17,10 @@ using namespace js::jit;
 
 void JitRuntime::generateEnterJIT(JSContext*, MacroAssembler&) { MOZ_CRASH(); }
 void JitRuntime::generateInvalidator(MacroAssembler&, Label*) { MOZ_CRASH(); }
-void JitRuntime::generateArgumentsRectifier(MacroAssembler&) { MOZ_CRASH(); }
+void JitRuntime::generateArgumentsRectifier(MacroAssembler&,
+                                            ArgumentsRectifierKind kind) {
+  MOZ_CRASH();
+}
 JitRuntime::BailoutTable JitRuntime::generateBailoutTable(MacroAssembler&,
                                                           Label*, uint32_t) {
   MOZ_CRASH();

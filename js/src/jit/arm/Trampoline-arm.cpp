@@ -436,8 +436,16 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   masm.jump(bailoutTail);
 }
 
-void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm) {
-  argumentsRectifierOffset_ = startTrampolineCode(masm);
+void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
+                                            ArgumentsRectifierKind kind) {
+  switch (kind) {
+    case ArgumentsRectifierKind::Normal:
+      argumentsRectifierOffset_ = startTrampolineCode(masm);
+      break;
+    case ArgumentsRectifierKind::TrialInlining:
+      trialInliningArgumentsRectifierOffset_ = startTrampolineCode(masm);
+      break;
+  }
   masm.pushReturnAddress();
 
   // Copy number of actual arguments into r0 and r8.
@@ -522,8 +530,16 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm) {
 
   // Call the target function.
   masm.andPtr(Imm32(CalleeTokenMask), r1);
-  masm.loadJitCodeRaw(r1, r3);
-  argumentsRectifierReturnOffset_ = masm.callJitNoProfiler(r3);
+  switch (kind) {
+    case ArgumentsRectifierKind::Normal:
+      masm.loadJitCodeRaw(r1, r3);
+      argumentsRectifierReturnOffset_ = masm.callJitNoProfiler(r3);
+      break;
+    case ArgumentsRectifierKind::TrialInlining:
+      masm.loadBaselineJitCodeRaw(r1, r3);
+      masm.callJitNoProfiler(r3);
+      break;
+  }
 
   // arg1
   //  ...
