@@ -3170,7 +3170,11 @@ class nsContentUtils {
 
   // Alternate data MIME type used by the ScriptLoader to register and read
   // bytecode out of the nsCacheInfoChannel.
-  static nsCString& JSBytecodeMimeType() { return *sJSBytecodeMimeType; }
+  static MOZ_MUST_USE bool InitJSBytecodeMimeType();
+  static nsCString& JSBytecodeMimeType() {
+    MOZ_ASSERT(sJSBytecodeMimeType);
+    return *sJSBytecodeMimeType;
+  }
 
   /**
    * Checks if the passed-in name is one of the special names: "_blank", "_top",
