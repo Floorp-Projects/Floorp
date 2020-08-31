@@ -279,7 +279,7 @@ class nsPrintJob final : public nsIObserver,
   // to mPrtPreview once we've finish creating the print preview.
   RefPtr<nsPrintData> mPrtPreview;
 
-  nsPagePrintTimer* mPagePrintTimer = nullptr;
+  RefPtr<nsPagePrintTimer> mPagePrintTimer;
 
   float mScreenDPI = 115.0f;
 
