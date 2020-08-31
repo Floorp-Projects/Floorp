@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.324';
-const pdfjsBuild = 'eb3654e2';
+const pdfjsVersion = '2.6.336';
+const pdfjsBuild = 'aa27e7fb';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.324';
+    const workerVersion = '2.6.336';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -4046,12 +4046,92 @@ class Catalog {
       return onParsed;
     }
 
+    function parseOrder(refs, nestedLevels = 0) {
+      if (!Array.isArray(refs)) {
+        return null;
+      }
+
+      const order = [];
+
+      for (const value of refs) {
+        if ((0, _primitives.isRef)(value) && contentGroupRefs.includes(value)) {
+          parsedOrderRefs.put(value);
+          order.push(value.toString());
+          continue;
+        }
+
+        const nestedOrder = parseNestedOrder(value, nestedLevels);
+
+        if (nestedOrder) {
+          order.push(nestedOrder);
+        }
+      }
+
+      if (nestedLevels > 0) {
+        return order;
+      }
+
+      const hiddenGroups = [];
+
+      for (const groupRef of contentGroupRefs) {
+        if (parsedOrderRefs.has(groupRef)) {
+          continue;
+        }
+
+        hiddenGroups.push(groupRef.toString());
+      }
+
+      if (hiddenGroups.length) {
+        order.push({
+          name: null,
+          order: hiddenGroups
+        });
+      }
+
+      return order;
+    }
+
+    function parseNestedOrder(ref, nestedLevels) {
+      if (++nestedLevels > MAX_NESTED_LEVELS) {
+        (0, _util.warn)("parseNestedOrder - reached MAX_NESTED_LEVELS.");
+        return null;
+      }
+
+      const value = xref.fetchIfRef(ref);
+
+      if (!Array.isArray(value)) {
+        return null;
+      }
+
+      const nestedName = xref.fetchIfRef(value[0]);
+
+      if (typeof nestedName !== "string") {
+        return null;
+      }
+
+      const nestedOrder = parseOrder(value.slice(1), nestedLevels);
+
+      if (!nestedOrder || !nestedOrder.length) {
+        return null;
+      }
+
+      return {
+        name: (0, _util.stringToPDFString)(nestedName),
+        order: nestedOrder
+      };
+    }
+
+    const xref = this.xref,
+          parsedOrderRefs = new _primitives.RefSet(),
+          MAX_NESTED_LEVELS = 10;
     return {
       name: (0, _util.isString)(config.get("Name")) ? (0, _util.stringToPDFString)(config.get("Name")) : null,
       creator: (0, _util.isString)(config.get("Creator")) ? (0, _util.stringToPDFString)(config.get("Creator")) : null,
       baseState: (0, _primitives.isName)(config.get("BaseState")) ? config.get("BaseState").name : null,
       on: parseOnOff(config.get("ON")),
-      off: parseOnOff(config.get("OFF"))
+      off: parseOnOff(config.get("OFF")),
+      order: parseOrder(config.get("Order")),
+      groups: null
     };
   }
 
@@ -27312,7 +27392,7 @@ var Font = function FontClosure() {
             continue;
           }
 
-          if (platformId === 0 && encodingId === 0) {
+          if (platformId === 0 && (encodingId === 0 || encodingId === 1 || encodingId === 3)) {
             useTable = true;
           } else if (platformId === 1 && encodingId === 0) {
             useTable = true;
@@ -28392,14 +28472,13 @@ var Font = function FontClosure() {
         var cmapEncodingId = cmapTable.encodingId;
         var cmapMappings = cmapTable.mappings;
         var cmapMappingsLength = cmapMappings.length;
+        let baseEncoding = [];
 
-        if (properties.hasEncoding && (cmapPlatformId === 3 && cmapEncodingId === 1 || cmapPlatformId === 1 && cmapEncodingId === 0) || cmapPlatformId === -1 && cmapEncodingId === -1 && !!(0, _encodings.getEncoding)(properties.baseEncodingName)) {
-          var baseEncoding = [];
+        if (properties.hasEncoding && (properties.baseEncodingName === "MacRomanEncoding" || properties.baseEncodingName === "WinAnsiEncoding")) {
+          baseEncoding = (0, _encodings.getEncoding)(properties.baseEncodingName);
+        }
 
-          if (properties.baseEncodingName === "MacRomanEncoding" || properties.baseEncodingName === "WinAnsiEncoding") {
-            baseEncoding = (0, _encodings.getEncoding)(properties.baseEncodingName);
-          }
-
+        if (properties.hasEncoding && !this.isSymbolicFont && (cmapPlatformId === 3 && cmapEncodingId === 1 || cmapPlatformId === 1 && cmapEncodingId === 0)) {
           var glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
 
           for (let charCode = 0; charCode < 256; charCode++) {
@@ -28426,31 +28505,16 @@ var Font = function FontClosure() {
               unicodeOrCharCode = _encodings.MacRomanEncoding.indexOf(standardGlyphName);
             }
 
-            var found = false;
-
             for (let i = 0; i < cmapMappingsLength; ++i) {
               if (cmapMappings[i].charCode !== unicodeOrCharCode) {
                 continue;
               }
 
               charCodeToGlyphId[charCode] = cmapMappings[i].glyphId;
-              found = true;
               break;
             }
-
-            if (!found && properties.glyphNames) {
-              var glyphId = properties.glyphNames.indexOf(glyphName);
-
-              if (glyphId === -1 && standardGlyphName !== glyphName) {
-                glyphId = properties.glyphNames.indexOf(standardGlyphName);
-              }
-
-              if (glyphId > 0 && hasGlyph(glyphId)) {
-                charCodeToGlyphId[charCode] = glyphId;
-              }
-            }
           }
-        } else if (cmapPlatformId === 0 && cmapEncodingId === 0) {
+        } else if (cmapPlatformId === 0) {
           for (let i = 0; i < cmapMappingsLength; ++i) {
             charCodeToGlyphId[cmapMappings[i].charCode] = cmapMappings[i].glyphId;
           }
@@ -28463,6 +28527,19 @@ var Font = function FontClosure() {
             }
 
             charCodeToGlyphId[charCode] = cmapMappings[i].glyphId;
+          }
+        }
+
+        if (properties.glyphNames && baseEncoding.length) {
+          for (let i = 0; i < 256; ++i) {
+            if (charCodeToGlyphId[i] === undefined && baseEncoding[i]) {
+              glyphName = baseEncoding[i];
+              const glyphId = properties.glyphNames.indexOf(glyphName);
+
+              if (glyphId > 0 && hasGlyph(glyphId)) {
+                charCodeToGlyphId[i] = glyphId;
+              }
+            }
           }
         }
       }
