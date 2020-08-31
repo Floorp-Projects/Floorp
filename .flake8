@@ -6,7 +6,6 @@ exclude =
     dom/base,
     dom/bindings,
     dom/encoding,
-    dom/websocket,
     gfx/tests,
     ipc/ipdl/ipdl,
     layout/base/tests/marionette,

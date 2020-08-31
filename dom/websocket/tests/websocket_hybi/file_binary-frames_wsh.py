@@ -15,4 +15,4 @@ def web_socket_transfer_data(request):
 
 
 def all_distinct_bytes():
-    return ''.join([chr(i) for i in xrange(256)])
+    return ''.join([chr(i) for i in range(256)])
