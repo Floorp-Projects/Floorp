@@ -94,7 +94,6 @@ void CrossGraphPort::Destroy() {
   MOZ_ASSERT(GetTransmitter());
   GetTransmitter()->Destroy();
   mSourcePort->Destroy();
-  mSourcePort = nullptr;
 }
 
 RefPtr<GenericPromise> CrossGraphPort::EnsureConnected() {
