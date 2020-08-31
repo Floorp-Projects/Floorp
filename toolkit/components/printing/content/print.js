@@ -315,6 +315,7 @@ var PrintEventHandler = {
     let { previewBrowser, settings } = this;
     let stack = previewBrowser.parentElement;
     stack.setAttribute("rendering", true);
+    document.body.setAttribute("rendering", true);
 
     let networkDone = false;
     let documentDone = false;
@@ -392,6 +393,7 @@ var PrintEventHandler = {
       );
 
       stack.removeAttribute("rendering");
+      document.body.removeAttribute("rendering");
       this._previewUpdatingPromise = null;
     }
   },
@@ -865,8 +867,7 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
     } else if (e.type == "change" || e.type == "input") {
       let isValid = this.checkValidity();
       let section = e.target.closest(".section-block");
-      const sheetCount = document.querySelector("#sheet-count");
-      sheetCount.toggleAttribute("loading", !isValid);
+      document.body.toggleAttribute("invalid", !isValid);
       if (isValid) {
         // aria-describedby will usually cause the first value to be reported.
         // Unfortunately, screen readers don't pick up description changes from
@@ -876,7 +877,9 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
         // aria-live is set on the parent because sheetCount itself might be
         // hidden and then shown, and updates are only reported for live
         // regions that were already visible.
-        sheetCount.parentNode.setAttribute("aria-live", "polite");
+        document
+          .querySelector("#sheet-count")
+          .parentNode.setAttribute("aria-live", "polite");
       } else {
         // We're hiding the sheet count and aria-describedby includes the
         // content of hidden elements, so remove aria-describedby.
@@ -1028,20 +1031,14 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       let printAll = e.target.value == "all";
       this._startRange.required = this._endRange.required = !printAll;
       this.querySelector(".range-group").hidden = printAll;
-      if (printAll) {
-        this.dispatchSettingsChange({
-          printAllOrCustomRange: "all",
-        });
-      } else {
-        this._startRange.value = 1;
-        this._endRange.value = this._numPages || 1;
+      this._startRange.value = 1;
+      this._endRange.value = this._numPages || 1;
 
-        this.dispatchSettingsChange({
-          printAllOrCustomRange: "custom",
-          startPageRange: this._startRange.value,
-          endPageRange: this._endRange.value,
-        });
-      }
+      this.dispatchSettingsChange({
+        printAllOrCustomRange: e.target.value,
+        startPageRange: this._startRange.value,
+        endPageRange: this._endRange.value,
+      });
       this._rangeError.hidden = true;
       this._startRangeOverflowError.hidden = true;
       return;
@@ -1202,7 +1199,6 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
     document.l10n.setAttributes(this, "printui-sheets-count", {
       sheetCount: this.numPages * this.numCopies,
     });
-    this.removeAttribute("loading");
     if (this.id) {
       // We're showing the sheet count, so let it describe the dialog.
       document.body.setAttribute("aria-describedby", this.id);
