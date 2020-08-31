@@ -17,7 +17,7 @@ class nsPluginNativeWindowImpl : public nsPluginNativeWindow {
   nsPluginNativeWindowImpl();
   virtual ~nsPluginNativeWindowImpl();
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
   NPSetWindowCallbackStruct mWsInfo;
 #endif
 };
@@ -32,7 +32,7 @@ nsPluginNativeWindowImpl::nsPluginNativeWindowImpl() : nsPluginNativeWindow() {
   memset(&clipRect, 0, sizeof(clipRect));
   type = NPWindowTypeWindow;
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
   ws_info = &mWsInfo;
   mWsInfo.type = 0;
   mWsInfo.display = nullptr;
