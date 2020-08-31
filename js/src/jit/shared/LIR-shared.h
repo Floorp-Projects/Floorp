@@ -6532,32 +6532,36 @@ class LCheckPrivateFieldCache
   }
 };
 
-class LInstanceOfO : public LInstructionHelper<1, 1, 0> {
+class LInstanceOfO : public LInstructionHelper<1, 2, 0> {
  public:
   LIR_HEADER(InstanceOfO)
-  explicit LInstanceOfO(const LAllocation& lhs)
+  explicit LInstanceOfO(const LAllocation& lhs, const LAllocation& rhs)
       : LInstructionHelper(classOpcode) {
     setOperand(0, lhs);
+    setOperand(1, rhs);
   }
 
   MInstanceOf* mir() const { return mir_->toInstanceOf(); }
 
   const LAllocation* lhs() { return getOperand(0); }
+  const LAllocation* rhs() { return getOperand(1); }
 };
 
-class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES, 0> {
+class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
  public:
   LIR_HEADER(InstanceOfV)
-  explicit LInstanceOfV(const LBoxAllocation& lhs)
+  explicit LInstanceOfV(const LBoxAllocation& lhs, const LAllocation& rhs)
       : LInstructionHelper(classOpcode) {
     setBoxOperand(LHS, lhs);
+    setOperand(RHS, rhs);
   }
 
   MInstanceOf* mir() const { return mir_->toInstanceOf(); }
 
-  const LAllocation* lhs() { return getOperand(LHS); }
+  const LAllocation* rhs() { return getOperand(RHS); }
 
   static const size_t LHS = 0;
+  static const size_t RHS = BOX_PIECES;
 };
 
 class LInstanceOfCache : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
@@ -6570,7 +6574,6 @@ class LInstanceOfCache : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
   }
 
   const LDefinition* output() { return this->getDef(0); }
-  const LAllocation* lhs() { return getOperand(LHS); }
   const LAllocation* rhs() { return getOperand(RHS); }
 
   static const size_t LHS = 0;
