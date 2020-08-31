@@ -14,6 +14,7 @@
 #include "EventDispatcher.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/java/GeckoBundleWrappers.h"
+#include "mozilla/java/WebResponseWrappers.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
@@ -227,6 +228,8 @@ class nsWindow final : public nsBaseWidget {
     }
     return nullptr;
   }
+
+  void PassExternalResponse(mozilla::java::WebResponse::Param aResponse);
 
   void NotifyDisablingWebRender();
 
