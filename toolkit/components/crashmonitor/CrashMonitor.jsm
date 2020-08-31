@@ -38,9 +38,6 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-const { AsyncShutdown } = ChromeUtils.import(
-  "resource://gre/modules/AsyncShutdown.jsm"
-);
 
 const NOTIFICATIONS = [
   "final-ui-startup",
@@ -96,14 +93,19 @@ var CrashMonitorInternal = {
     this.previousCheckpoints = (async function() {
       let data;
       try {
-        data = await IOUtils.readUTF8(CrashMonitorInternal.path);
+        data = await OS.File.read(CrashMonitorInternal.path, {
+          encoding: "utf-8",
+        });
       } catch (ex) {
-        // Ignore file not found errors, but report all others.
-        if (ex.name !== "NotFoundError") {
+        if (!(ex instanceof OS.File.Error)) {
+          throw ex;
+        }
+        if (!ex.becauseNoSuchFile) {
           Cu.reportError(
-            `Error while loading crash monitor data: ${ex.message}`
+            "Error while loading crash monitor data: " + ex.toString()
           );
         }
+
         return null;
       }
 
@@ -111,7 +113,7 @@ var CrashMonitorInternal = {
       try {
         notifications = JSON.parse(data);
       } catch (ex) {
-        Cu.reportError(`Error while parsing crash monitor data: ${ex}`);
+        Cu.reportError("Error while parsing crash monitor data: " + ex);
         return null;
       }
 
@@ -171,7 +173,7 @@ var CrashMonitor = {
     }, this);
 
     // Add shutdown blocker for profile-before-change
-    AsyncShutdown.profileBeforeChange.addBlocker(
+    OS.File.profileBeforeChange.addBlocker(
       "CrashMonitor: Writing notifications to file after receiving profile-before-change",
       CrashMonitorInternal.profileBeforeChangeDeferred.promise,
       () => this.checkpoints
@@ -201,7 +203,7 @@ var CrashMonitor = {
            * written by the time the notification completes. The
            * exception is profile-before-change which has a shutdown
            * blocker. */
-          await IOUtils.writeAtomicUTF8(CrashMonitorInternal.path, data, {
+          await OS.File.writeAtomic(CrashMonitorInternal.path, data, {
             tmpPath: CrashMonitorInternal.path + ".tmp",
           });
         } finally {
