@@ -281,6 +281,35 @@ struct ProfileBufferEntryReader::Deserializer<MarkerTiming> {
   }
 };
 
+// ----------------------------------------------------------------------------
+// Serializer, Deserializer: MarkerStack
+
+// The serialization only contains the `ProfileChunkedBuffer` from the
+// backtrace; if there is no backtrace or if it's empty, this will implicitly
+// store a nullptr (see
+// `ProfileBufferEntryWriter::Serializer<ProfilerChunkedBuffer*>`).
+template <>
+struct ProfileBufferEntryWriter::Serializer<MarkerStack> {
+  static Length Bytes(const MarkerStack& aStack) {
+    return SumBytes(aStack.GetChunkedBuffer());
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW, const MarkerStack& aStack) {
+    aEW.WriteObject(aStack.GetChunkedBuffer());
+  }
+};
+
+template <>
+struct ProfileBufferEntryReader::Deserializer<MarkerStack> {
+  static void ReadInto(ProfileBufferEntryReader& aER, MarkerStack& aStack) {
+    aStack = Read(aER);
+  }
+
+  static MarkerStack Read(ProfileBufferEntryReader& aER) {
+    return MarkerStack(aER.ReadObject<UniquePtr<ProfileChunkedBuffer>>());
+  }
+};
+
 }  // namespace mozilla
 
 #endif  // MOZ_GECKO_PROFILER
