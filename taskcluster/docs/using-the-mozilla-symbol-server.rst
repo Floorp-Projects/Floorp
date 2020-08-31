@@ -30,9 +30,8 @@ with an appropriate cache directory on your machine.
 Using the symbol server in Microsoft Visual C++
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-|The Tools menu of Visual C++ with the Options item selected| |The
-Visual C++ 2017 Symbols pane of the Options dialog with the Mozilla
-symbol server configured|
+.. image:: img/vs_tools_options.png
+.. image:: img/snip_20170901070042.png
 
 Using the symbol server in Windbg
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,8 +57,8 @@ location for downloaded symbols):
 
    SRV*c:\symcache\*https://msdl.microsoft.com/download/symbols;SRV*c:\symcache\*https://symbols.mozilla.org/
 
-|Image:symbol-server-windbg-menu.jpg| |The WinDbg Symbol Search Path
-dialog with the Mozilla symbol server configured|
+.. image:: img/symbol-server-windbg-menu.jpg
+.. image:: img/snip_20170901081816.png
 
 Downloading symbols using symchk.exe
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,7 +70,7 @@ computer, if you'd prefer a different location for downloaded symbols):
 
 ::
 
-   C:\Program Files\Mozilla Firefox>c:\progra~1\debugg~1\symchk.exe /r c:\progra~1\mozill~1\* /s SRV*C:\symcache\*https://symbols.mozilla.org/
+   C:\Program Files\Mozilla Firefox>c:\progra~1\debug~1\symchk.exe /r c:\progra~1\mozill~1\* /s SRV*C:\symcache\*https://symbols.mozilla.org/
 
 Note the ``\*`` after the Mozilla directory. The output of this command
 should be similar to:
@@ -137,12 +136,3 @@ Studio. Even using the command line with symchk.exe to download symbols
 will fail. This is because Microsoft uses Internet Explorer's internet &
 proxy settings to download the symbol files. Check the File menu of
 Internet Explorer to ensure "Work Offline" is unchecked.
-
-.. |The Tools menu of Visual C++ with the Options item selected| image:: https://mdn.mozillademos.org/files/10085/vs_tools_options.png
-   :class: internal
-.. |The Visual C++ 2017 Symbols pane of the Options dialog with the Mozilla symbol server configured| image:: https://mdn.mozillademos.org/files/15387/snip_20170901070042.png
-   :class: internal
-.. |Image:symbol-server-windbg-menu.jpg| image:: https://developer.mozilla.org/@api/deki/files/877/=Symbol-server-windbg-menu.jpg
-   :class: internal
-.. |The WinDbg Symbol Search Path dialog with the Mozilla symbol server configured| image:: https://mdn.mozillademos.org/files/15389/snip_20170901081816.png
-   :class: internal
