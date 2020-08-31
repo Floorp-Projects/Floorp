@@ -102,7 +102,6 @@
 #include "nsResProtocolHandler.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
 #include "mozilla/net/PageThumbProtocolHandler.h"
-#include "mozilla/net/SFVService.h"
 #include <limits>
 
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
@@ -2548,38 +2547,6 @@ nsresult NS_MaybeOpenChannelUsingAsyncOpen(nsIChannel* aChannel,
                                            nsIStreamListener* aListener) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   return aChannel->AsyncOpen(aListener);
-}
-
-nsILoadInfo::CrossOriginEmbedderPolicy
-NS_GetCrossOriginEmbedderPolicyFromHeader(const nsACString& aHeader) {
-  nsCOMPtr<nsISFVService> sfv = GetSFVService();
-
-  nsCOMPtr<nsISFVItem> item;
-  nsresult rv = sfv->ParseItem(aHeader, getter_AddRefs(item));
-  if (NS_FAILED(rv)) {
-    return nsILoadInfo::EMBEDDER_POLICY_NULL;
-  }
-
-  nsCOMPtr<nsISFVBareItem> value;
-  rv = item->GetValue(getter_AddRefs(value));
-  if (NS_FAILED(rv)) {
-    return nsILoadInfo::EMBEDDER_POLICY_NULL;
-  }
-
-  nsCOMPtr<nsISFVToken> token = do_QueryInterface(value);
-  if (!token) {
-    return nsILoadInfo::EMBEDDER_POLICY_NULL;
-  }
-
-  nsAutoCString embedderPolicy;
-  rv = token->GetValue(embedderPolicy);
-  if (NS_FAILED(rv)) {
-    return nsILoadInfo::EMBEDDER_POLICY_NULL;
-  }
-
-  return embedderPolicy.EqualsLiteral("require-corp")
-             ? nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP
-             : nsILoadInfo::EMBEDDER_POLICY_NULL;
 }
 
 /** Given the first (disposition) token from a Content-Disposition header,
