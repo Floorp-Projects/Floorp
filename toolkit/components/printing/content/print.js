@@ -1199,6 +1199,7 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 
     this._percentScale.addEventListener("input", this);
     this._percentScale.addEventListener("keypress", this);
+    this._percentScale.addEventListener("paste", this);
     this.addEventListener("input", this);
   }
 
@@ -1224,6 +1225,17 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     if (e.type == "keypress") {
       this.handleKeypress(e);
       return;
+    }
+
+    if (e.type === "paste") {
+      let paste = (e.clipboardData || window.clipboardData)
+        .getData("text")
+        .trim();
+
+      if (paste.match(/^[0-9]*$/)) {
+        this._percentScale.value = paste;
+      }
+      e.preventDefault();
     }
 
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
