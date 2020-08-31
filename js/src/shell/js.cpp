@@ -10521,9 +10521,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
 #ifdef NIGHTLY_BUILD
-  if (op.getBoolOption("no-ti")) {
-    jit::JitOptions.typeInference = false;
-  }
   if (op.getBoolOption("no-warp")) {
     MOZ_ASSERT(!jit::JitOptions.warpBuilder,
                "WarpBuilder is disabled by default");
@@ -11059,7 +11056,6 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "no-ion-for-main-context",
                         "Disable IonMonkey for the main context only") ||
 #ifdef NIGHTLY_BUILD
-      !op.addBoolOption('\0', "no-ti", "Disable Type Inference") ||
       !op.addBoolOption('\0', "warp", "Use WarpBuilder as MIR builder") ||
 #else
       !op.addBoolOption('\0', "warp", "No-op on non-Nightly") ||

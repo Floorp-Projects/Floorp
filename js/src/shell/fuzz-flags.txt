@@ -53,7 +53,7 @@
 --spectre-mitigations=off
 --spectre-mitigations=on
 --more-compartments
---no-ti
+--warp
 
 # GC-related
 # These 2 flags can cause the shell to slow down
