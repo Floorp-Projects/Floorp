@@ -141,9 +141,9 @@ addAccessibleTask(
 
     // Other elements
     testRoleAndSubRole(accDoc, "deletion", "AXGroup", "AXDeleteStyleGroup");
-    testRoleAndSubRole(accDoc, "dl", "AXList", "AXDefinitionList");
+    testRoleAndSubRole(accDoc, "dl", "AXList", "AXDescriptionList");
     testRoleAndSubRole(accDoc, "dt", "AXGroup", "AXTerm");
-    testRoleAndSubRole(accDoc, "dd", "AXGroup", "AXDefinition");
+    testRoleAndSubRole(accDoc, "dd", "AXGroup", "AXDescription");
     testRoleAndSubRole(accDoc, "hr", "AXSplitter", "AXContentSeparator");
     testRoleAndSubRole(accDoc, "insertion", "AXGroup", "AXInsertStyleGroup");
   }
