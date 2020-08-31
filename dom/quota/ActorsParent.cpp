@@ -6492,13 +6492,13 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   QM_TRY(storageFile->Append(mStorageName + kSQLiteSuffix));
 
   QM_TRY_VAR(const auto storageFileExists,
-             ToResultInvoke(storageFile, &nsIFile::Exists));
+             MOZ_TO_RESULT_INVOKE(storageFile, Exists));
 
   if (!storageFileExists) {
     QM_TRY_VAR(auto indexedDBDir, QM_NewLocalFile(mIndexedDBPath));
 
     QM_TRY_VAR(const auto indexedDBDirExists,
-               ToResultInvoke(indexedDBDir, &nsIFile::Exists));
+               MOZ_TO_RESULT_INVOKE(indexedDBDir, Exists));
 
     if (indexedDBDirExists) {
       QM_TRY(UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
@@ -6511,7 +6511,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
         nsLiteralString(PERSISTENT_DIRECTORY_NAME)));
 
     QM_TRY_VAR(const auto persistentStorageDirExists,
-               ToResultInvoke(persistentStorageDir, &nsIFile::Exists));
+               MOZ_TO_RESULT_INVOKE(persistentStorageDir, Exists));
 
     if (persistentStorageDirExists) {
       QM_TRY(UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
@@ -6545,9 +6545,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   QM_TRY(connection->ExecuteSimpleSQL("PRAGMA synchronous = EXTRA;"_ns));
 
   // Check to make sure that the storage version is correct.
-  QM_TRY_VAR(
-      auto storageVersion,
-      ToResultInvoke(connection, &mozIStorageConnection::GetSchemaVersion));
+  QM_TRY_VAR(auto storageVersion,
+             MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
 
   // Hacky downgrade logic!
   // If we see major.minor of 3.0, downgrade it to be 2.1.
@@ -6568,7 +6567,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     QM_TRY_VAR(auto storageDir, QM_NewLocalFile(mStoragePath));
 
     QM_TRY_VAR(const auto storageDirExists,
-               ToResultInvoke(storageDir, &nsIFile::Exists));
+               MOZ_TO_RESULT_INVOKE(storageDir, Exists));
 
     const bool newDirectory = !storageDirExists;
 
@@ -6620,8 +6619,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
         }
 
         QM_TRY_VAR(storageVersion,
-                   ToResultInvoke(connection,
-                                  &mozIStorageConnection::GetSchemaVersion));
+                   MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
       }
 
       MOZ_ASSERT(storageVersion == kStorageVersion);
