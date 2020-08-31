@@ -35,14 +35,12 @@ jobs:
                         by-release-type:
                             beta: [32]
                             release: [145]
-                            esr68: [882]
                             esr78: [3820]
                             default: []
                     staging:
                         by-release-type:
                             beta: [32]
                             release: [145]
-                            esr68: [875]
                             esr78: [887]
                             default: []
             background-rate:
@@ -64,20 +62,6 @@ jobs:
         treeherder:
             platform: firefox-release/opt
             symbol: Rel(BSFx)
-            tier: 1
-            kind: build
-    firefox-bz2:
-        description: Schedule Firefox publishing in balrog (bz2)
-        name: release-firefox_schedule_publishing_in_balrog-bz2
-        shipping-product: firefox
-        run-on-releases: [esr68]
-        worker:
-            product: firefox
-            publish-rules: []
-            blob-suffix: -bz2
-        treeherder:
-            platform: firefox-release/opt
-            symbol: Rel(BSFx-bz2)
             tier: 1
             kind: build
     devedition:

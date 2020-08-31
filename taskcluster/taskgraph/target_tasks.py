@@ -453,32 +453,6 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
             and standard_filter(t, parameters)]
 
 
-@_target_task('mozilla_esr68_tasks')
-def target_tasks_mozilla_esr68(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for a promotable beta or release build
-    of desktop, plus android CI. The candidates build process involves a pipeline
-    of builds and signing, but does not include beetmover or balrog jobs."""
-
-    def filter(task):
-        if not filter_release_tasks(task, parameters):
-            return False
-
-        if not standard_filter(task, parameters):
-            return False
-
-        platform = task.attributes.get('test_platform')
-
-        # Don't run QuantumRender tests on esr68.
-        if platform and '-qr/' in platform:
-            return False
-
-        # Unlike esr60, we do want all kinds of fennec builds on esr68.
-
-        return True
-
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
-
-
 @_target_task('mozilla_esr78_tasks')
 def target_tasks_mozilla_esr78(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a promotable beta or release build
