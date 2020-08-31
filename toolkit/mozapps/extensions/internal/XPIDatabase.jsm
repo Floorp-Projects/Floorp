@@ -936,7 +936,7 @@ AddonWrapper = class {
     return null;
   }
 
-  get recommendationStates() {
+  get isRecommended() {
     let addon = addonFor(this);
     let state = addon.recommendationState;
     if (
@@ -946,22 +946,9 @@ AddonWrapper = class {
       addon.isCorrectlySigned &&
       !this.temporarilyInstalled
     ) {
-      return state.states;
+      return state.states.includes("recommended");
     }
-    return [];
-  }
-
-  get isRecommended() {
-    return this.recommendationStates.includes("recommended");
-  }
-
-  get canBypassThirdParyInstallPrompt() {
-    // We only bypass if the extension is signed (to support distributions
-    // that turn off the signing requirement) and has recommendation states.
-    return (
-      this.signedState >= AddonManager.SIGNEDSTATE_SIGNED &&
-      this.recommendationStates.length
-    );
+    return false;
   }
 
   get applyBackgroundUpdates() {
