@@ -1695,7 +1695,8 @@ class RenderSourceLMC : public profiler_screenshots::RenderSource {
 
 class DownscaleTargetLMC : public profiler_screenshots::DownscaleTarget {
  public:
-  explicit DownscaleTargetLMC(CompositingRenderTarget* aRT, Compositor* aCompositor)
+  explicit DownscaleTargetLMC(CompositingRenderTarget* aRT,
+                              Compositor* aCompositor)
       : profiler_screenshots::DownscaleTarget(aRT->GetSize()),
         mRenderSource(new RenderSourceLMC(aRT)),
         mCompositor(aCompositor) {}

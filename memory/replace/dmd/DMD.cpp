@@ -659,9 +659,7 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
         "movq (%%rbp), %0\n\t"
         : "=r"(fp));
 #  else
-    asm(
-        "ldr %0, [x29]\n\t"
-        : "=r"(fp));
+    asm("ldr %0, [x29]\n\t" : "=r"(fp));
 #  endif
     void* stackEnd = pthread_get_stackaddr_np(pthread_self());
     FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
