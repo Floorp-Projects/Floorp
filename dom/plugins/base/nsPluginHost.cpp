@@ -278,7 +278,7 @@ nsPluginHost::nsPluginHost()
   }
 
   bool waylandBackend = false;
-#if MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
   GdkDisplay* display = gdk_display_get_default();
   if (display) {
     waylandBackend = !GDK_IS_X11_DISPLAY(display);
