@@ -26,7 +26,8 @@ namespace mozilla {
  */
 class CrossGraphTransmitter : public ForwardedInputTrack {
  public:
-  CrossGraphTransmitter(TrackRate aSampleRate, CrossGraphReceiver* aReceiver);
+  CrossGraphTransmitter(TrackRate aSampleRate,
+                        RefPtr<CrossGraphReceiver> aReceiver);
   virtual CrossGraphTransmitter* AsCrossGraphTransmitter() override {
     return this;
   }
@@ -34,7 +35,7 @@ class CrossGraphTransmitter : public ForwardedInputTrack {
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
  private:
-  RefPtr<CrossGraphReceiver> mReceiver;
+  const RefPtr<CrossGraphReceiver> mReceiver;
 };
 
 /**
