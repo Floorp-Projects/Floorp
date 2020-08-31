@@ -3633,10 +3633,12 @@ var PrintPreviewListener = {
     let browser = this.getSourceBrowser();
     let preferredRemoteType = browser.remoteType;
     let initialBrowsingContextGroupId = browser.browsingContext.group.id;
+    let userContextId = browser.browsingContext.originAttributes.userContextId;
     return gBrowser.loadOneTab("about:printpreview", {
       inBackground: true,
       preferredRemoteType,
       initialBrowsingContextGroupId,
+      userContextId,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
