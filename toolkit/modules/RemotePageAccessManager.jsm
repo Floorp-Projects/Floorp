@@ -268,9 +268,9 @@ let RemotePageAccessManager = {
    */
   checkAllowAccessToFeature(aPrincipal, aFeature, aDocument) {
     let spec;
-    if (aPrincipal.isNullPrincipal) {
-      // Null principals have a null-principal URI, but for the sake of remote
-      // pages we want to access the "real" document URI directly, e.g. if the
+    if (!aPrincipal.isContentPrincipal) {
+      // For the sake of remote pages, when the principal has no uri,
+      // we want to access the "real" document URI directly, e.g. if the
       // about: page is sandboxed.
       if (!aDocument) {
         return null;
