@@ -25,7 +25,7 @@ namespace mozilla {
  * See MediaTrackGraph::CreateCrossGraphTransmitter()
  */
 class CrossGraphTransmitter : public ForwardedInputTrack {
-  friend class CrossGraphManager;
+  friend class CrossGraphPort;
 
  public:
   CrossGraphTransmitter(TrackRate aSampleRate, CrossGraphReceiver* aReceiver);
@@ -65,15 +65,15 @@ class CrossGraphReceiver : public ProcessedMediaTrack {
   AudioDriftCorrection mDriftCorrection;
 };
 
-class CrossGraphManager final {
+class CrossGraphPort final {
  public:
-  static CrossGraphManager* Connect(
+  static CrossGraphPort* Connect(
       const RefPtr<dom::AudioStreamTrack>& aStreamTrack,
       MediaTrackGraph* aPartnerGraph);
-  static CrossGraphManager* Connect(
+  static CrossGraphPort* Connect(
       const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
       nsPIDOMWindowInner* aWindow);
-  ~CrossGraphManager() = default;
+  ~CrossGraphPort() = default;
 
   void AddAudioOutput(void* aKey);
   void RemoveAudioOutput(void* aKey);
@@ -83,7 +83,7 @@ class CrossGraphManager final {
   RefPtr<GenericPromise> EnsureConnected();
 
  private:
-  explicit CrossGraphManager(const RefPtr<MediaInputPort>& aPort)
+  explicit CrossGraphPort(const RefPtr<MediaInputPort>& aPort)
       : mSourcePort(aPort),
         mTransmitter(mSourcePort->GetDestination()->AsCrossGraphTransmitter()) {
   }

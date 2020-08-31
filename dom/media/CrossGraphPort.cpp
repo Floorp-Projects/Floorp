@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CrossGraphTrack.h"
+#include "CrossGraphPort.h"
 
 #include "AudioDeviceInfo.h"
 #include "AudioStreamTrack.h"
@@ -22,7 +22,7 @@ extern LazyLogModule gForwardedInputTrackLog;
 #define LOG(type, msg) MOZ_LOG(gForwardedInputTrackLog, type, msg)
 #define LOG_TEST(type) MOZ_LOG_TEST(gForwardedInputTrackLog, type)
 
-CrossGraphManager* CrossGraphManager::Connect(
+CrossGraphPort* CrossGraphPort::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
     nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aSink);
@@ -30,7 +30,7 @@ CrossGraphManager* CrossGraphManager::Connect(
   uint32_t defaultRate;
   aSink->GetDefaultRate(&defaultRate);
   LOG(LogLevel::Debug,
-      ("CrossGraphManager::Connect: sink id: %p at rate %u, primary rate %d",
+      ("CrossGraphPort::Connect: sink id: %p at rate %u, primary rate %d",
        aSink->DeviceID(), defaultRate, aStreamTrack->Graph()->GraphRate()));
 
   if (!aSink->DeviceID()) {
@@ -41,10 +41,10 @@ CrossGraphManager* CrossGraphManager::Connect(
       MediaTrackGraph::GetInstance(MediaTrackGraph::AUDIO_THREAD_DRIVER,
                                    aWindow, defaultRate, aSink->DeviceID());
 
-  return CrossGraphManager::Connect(aStreamTrack, newGraph);
+  return CrossGraphPort::Connect(aStreamTrack, newGraph);
 }
 
-CrossGraphManager* CrossGraphManager::Connect(
+CrossGraphPort* CrossGraphPort::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack,
     MediaTrackGraph* aPartnerGraph) {
   MOZ_ASSERT(aStreamTrack);
@@ -64,40 +64,40 @@ CrossGraphManager* CrossGraphManager::Connect(
   RefPtr<MediaInputPort> port =
       aStreamTrack->ForwardTrackContentsTo(transmitter);
 
-  return new CrossGraphManager(port);
+  return new CrossGraphPort(port);
 }
 
-RefPtr<CrossGraphTransmitter> CrossGraphManager::GetTransmitter() {
+RefPtr<CrossGraphTransmitter> CrossGraphPort::GetTransmitter() {
   return mTransmitter;
 }
 
-RefPtr<CrossGraphReceiver> CrossGraphManager::GetReceiver() {
+RefPtr<CrossGraphReceiver> CrossGraphPort::GetReceiver() {
   return GetTransmitter()->mReceiver;
 }
 
-void CrossGraphManager::AddAudioOutput(void* aKey) {
+void CrossGraphPort::AddAudioOutput(void* aKey) {
   MOZ_ASSERT(GetTransmitter());
   GetReceiver()->AddAudioOutput(aKey);
 }
 
-void CrossGraphManager::RemoveAudioOutput(void* aKey) {
+void CrossGraphPort::RemoveAudioOutput(void* aKey) {
   MOZ_ASSERT(GetTransmitter());
   GetReceiver()->RemoveAudioOutput(aKey);
 }
 
-void CrossGraphManager::SetAudioOutputVolume(void* aKey, float aVolume) {
+void CrossGraphPort::SetAudioOutputVolume(void* aKey, float aVolume) {
   MOZ_ASSERT(GetTransmitter());
   GetReceiver()->SetAudioOutputVolume(aKey, aVolume);
 }
 
-void CrossGraphManager::Destroy() {
+void CrossGraphPort::Destroy() {
   MOZ_ASSERT(GetTransmitter());
   GetTransmitter()->Destroy();
   mSourcePort->Destroy();
   mSourcePort = nullptr;
 }
 
-RefPtr<GenericPromise> CrossGraphManager::EnsureConnected() {
+RefPtr<GenericPromise> CrossGraphPort::EnsureConnected() {
   // The primary graph is already working check the partner (receiver's) graph.
   return GetReceiver()->Graph()->NotifyWhenDeviceStarted(GetReceiver().get());
 }
