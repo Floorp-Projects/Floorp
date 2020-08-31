@@ -78,6 +78,32 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun downloadOneRequest() {
+        // disable test on pgo for frequently failing Bug 1543355
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
+
+        sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
+
+        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
+
+            @AssertCalled(count = 2)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return null
+            }
+
+            @AssertCalled(false)
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onExternalResponse(session: GeckoSession, response: WebResponse) {
+                assertThat("Uri should start with data:", response.uri, startsWith("blob:"))
+                assertThat("We should download the thing", String(response.body?.readBytes()!!), equalTo("Downloaded Data"))
+            }
+        })
+    }
+
     @IgnoreCrash
     @Test fun crashContent() {
         // This test doesn't make sense without multiprocess
