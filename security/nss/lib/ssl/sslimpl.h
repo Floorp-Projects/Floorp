@@ -656,8 +656,6 @@ typedef struct SSL3HandshakeStateStr {
      * One of NULL, ssl3_SendClientSecondRound, ssl3_FinishHandshake,
      * or ssl3_AlwaysFail */
     sslRestartTarget restartTarget;
-    /* Shared state between ssl3_HandleFinished and ssl3_FinishHandshake */
-    PRBool cacheSID;
 
     PRBool canFalseStart; /* Can/did we False Start */
     /* Which preliminaryinfo values have been set. */

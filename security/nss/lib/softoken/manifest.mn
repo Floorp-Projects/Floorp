@@ -5,7 +5,9 @@
 CORE_DEPTH = ../..
 
 MODULE = nss
+ifndef NSS_DISABLE_DBM
 DIRS = legacydb
+endif
 
 LIBRARY_NAME = softokn
 LIBRARY_VERSION = 3

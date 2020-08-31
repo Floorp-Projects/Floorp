@@ -11299,6 +11299,8 @@ static SECStatus ssl3_FinishHandshake(sslSocket *ss);
 static SECStatus
 ssl3_AlwaysFail(sslSocket *ss)
 {
+    /* The caller should have cleared the callback. */
+    ss->ssl3.hs.restartTarget = ssl3_AlwaysFail;
     PORT_SetError(PR_INVALID_STATE_ERROR);
     return SECFailure;
 }
@@ -11734,7 +11736,6 @@ ssl3_CacheWrappedSecret(sslSocket *ss, sslSessionID *sid,
 static SECStatus
 ssl3_HandleFinished(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
-    sslSessionID *sid = ss->sec.ci.sid;
     SECStatus rv = SECSuccess;
     PRBool isServer = ss->sec.isServer;
     PRBool isTLS;
@@ -11878,15 +11879,6 @@ xmit_loser:
         return rv;
     }
 
-    if (sid->cached == never_cached && !ss->opt.noCache) {
-        rv = ssl3_FillInCachedSID(ss, sid, ss->ssl3.crSpec->masterSecret);
-
-        /* If the wrap failed, we don't cache the sid.
-         * The connection continues normally however.
-         */
-        ss->ssl3.hs.cacheSID = rv == SECSuccess;
-    }
-
     if (ss->ssl3.hs.authCertificatePending) {
         if (ss->ssl3.hs.restartTarget) {
             PR_NOT_REACHED("ssl3_HandleFinished: unexpected restartTarget");
@@ -11951,33 +11943,45 @@ ssl3_FinishHandshake(sslSocket *ss)
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->ssl3.hs.restartTarget == NULL);
+    sslSessionID *sid = ss->sec.ci.sid;
+    SECStatus sidRv = SECFailure;
 
     /* The first handshake is now completed. */
     ss->handshake = NULL;
 
+    if (sid->cached == never_cached && !ss->opt.noCache) {
+        /* If the wrap fails, don't cache the sid. The connection proceeds
+         * normally, so the rv is only used to determine whether we cache. */
+        sidRv = ssl3_FillInCachedSID(ss, sid, ss->ssl3.crSpec->masterSecret);
+    }
+
     /* RFC 5077 Section 3.3: "The client MUST NOT treat the ticket as valid
-     * until it has verified the server's Finished message." When the server
-     * sends a NewSessionTicket in a resumption handshake, we must wait until
-     * the handshake is finished (we have verified the server's Finished
-     * AND the server's certificate) before we update the ticket in the sid.
-     *
-     * This must be done before we call ssl_CacheSessionID(ss)
-     * because CacheSID requires the session ticket to already be set, and also
-     * because of the lazy lock creation scheme used by CacheSID and
-     * ssl3_SetSIDSessionTicket.
-     */
+    * until it has verified the server's Finished message." When the server
+    * sends a NewSessionTicket in a resumption handshake, we must wait until
+    * the handshake is finished (we have verified the server's Finished
+    * AND the server's certificate) before we update the ticket in the sid.
+    *
+    * This must be done before we call ssl_CacheSessionID(ss)
+    * because CacheSID requires the session ticket to already be set, and also
+    * because of the lazy lock creation scheme used by CacheSID and
+    * ssl3_SetSIDSessionTicket. */
     if (ss->ssl3.hs.receivedNewSessionTicket) {
         PORT_Assert(!ss->sec.isServer);
-        ssl3_SetSIDSessionTicket(ss->sec.ci.sid, &ss->ssl3.hs.newSessionTicket);
-        /* The sid took over the ticket data */
+        if (sidRv == SECSuccess) {
+            /* The sid takes over the ticket data */
+            ssl3_SetSIDSessionTicket(ss->sec.ci.sid,
+                                     &ss->ssl3.hs.newSessionTicket);
+        } else {
+            PORT_Assert(ss->ssl3.hs.newSessionTicket.ticket.data);
+            SECITEM_FreeItem(&ss->ssl3.hs.newSessionTicket.ticket,
+                             PR_FALSE);
+        }
         PORT_Assert(!ss->ssl3.hs.newSessionTicket.ticket.data);
         ss->ssl3.hs.receivedNewSessionTicket = PR_FALSE;
     }
-
-    if (ss->ssl3.hs.cacheSID) {
+    if (sidRv == SECSuccess) {
         PORT_Assert(ss->sec.ci.sid->cached == never_cached);
         ssl_CacheSessionID(ss);
-        ss->ssl3.hs.cacheSID = PR_FALSE;
     }
 
     ss->ssl3.hs.canFalseStart = PR_FALSE; /* False Start phase is complete */
