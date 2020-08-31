@@ -2367,7 +2367,7 @@ bool ScriptSource::assignSource(JSContext* cx,
     return true;
   }
 
-  JSRuntime* runtime = cx->zone()->runtimeFromAnyThread();
+  JSRuntime* runtime = cx->runtime();
   auto& cache = runtime->sharedImmutableStrings();
   auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&srcBuf]() {
     using CharT = typename SourceTypeTraits<Unit>::CharT;
@@ -3208,7 +3208,7 @@ bool ScriptSource::initFromOptions(JSContext* cx,
 template <typename SharedT, typename CharT>
 static Maybe<SharedT> GetOrCreateStringZ(
     JSContext* cx, UniquePtr<CharT[], JS::FreePolicy>&& str) {
-  JSRuntime* rt = cx->zone()->runtimeFromAnyThread();
+  JSRuntime* rt = cx->runtime();
   size_t lengthWithNull = std::char_traits<CharT>::length(str.get()) + 1;
   auto res =
       rt->sharedImmutableStrings().getOrCreate(std::move(str), lengthWithNull);
