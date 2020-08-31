@@ -656,7 +656,6 @@ with modules["DOM"]:
     errors["NS_ERROR_DOM_DATA_CLONE_ERR"] = FAILURE(25)
     # StringEncoding API errors from http://wiki.whatwg.org/wiki/StringEncoding
     errors["NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR"] = FAILURE(28)
-    errors["NS_ERROR_DOM_INVALID_POINTER_ERR"] = FAILURE(29)
     # WebCrypto API errors from http://www.w3.org/TR/WebCryptoAPI/
     errors["NS_ERROR_DOM_UNKNOWN_ERR"] = FAILURE(30)
     errors["NS_ERROR_DOM_DATA_ERR"] = FAILURE(31)
