@@ -290,7 +290,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
       return NS_ERROR_FAILURE;
     }
 
-    std::function<bool(const nsCString&, uint64_t, uint32_t)> sendFunc =
+    nsHttp::SendFunc<nsCString> sendFunc =
         [self = UnsafePtr<HttpTransactionChild>(this)](
             const nsCString& aData, uint64_t aOffset, uint32_t aCount) {
           return self->SendOnDataAvailable(aData, aOffset, aCount);
@@ -310,9 +310,10 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  std::function<bool(const nsCString&, uint64_t, uint32_t)> sendFunc =
+  nsHttp::SendFunc<nsDependentCSubstring> sendFunc =
       [self = UnsafePtr<HttpTransactionChild>(this)](
-          const nsCString& aData, uint64_t aOffset, uint32_t aCount) {
+          const nsDependentCSubstring& aData, uint64_t aOffset,
+          uint32_t aCount) {
         return self->mDataBridgeParent->SendOnTransportAndData(aOffset, aCount,
                                                                aData);
       };
@@ -331,7 +332,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
       NS_NewRunnableFunction(
           "HttpTransactionChild::OnDataAvailable",
           [self, offset(aOffset), count(aCount), data(data)]() {
-            std::function<bool(const nsCString&, uint64_t, uint32_t)> sendFunc =
+            nsHttp::SendFunc<nsCString> sendFunc =
                 [self](const nsCString& aData, uint64_t aOffset,
                        uint32_t aCount) {
                   return self->SendOnDataAvailable(aData, aOffset, aCount);
