@@ -394,7 +394,7 @@ class WellKnownParserAtoms {
  public:
   WellKnownParserAtoms() = default;
 
-  bool init(JSContext * cx);
+  bool init(JSContext* cx);
 
   template <typename CharT>
   const ParserAtom* lookupChar16Seq(InflatedChar16Sequence<CharT> seq) const;

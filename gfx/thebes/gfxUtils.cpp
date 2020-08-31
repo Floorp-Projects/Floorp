@@ -1100,9 +1100,9 @@ const float kBT2020NarrowYCbCrToRGB_RowMajor[16] = {
     -0.65042f, 0.34746f, 1.16438f, 2.14177f,  0.00000f, -1.14815f,
     0.00000f,  0.00000f, 0.00000f, 1.00000f};
 const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
-    0.00000f,  0.00000f, 1.00000f, 0.00000f, 1.00000f, 0.00000f,
+    0.00000f, 0.00000f, 1.00000f, 0.00000f, 1.00000f, 0.00000f,
     0.00000f, 0.00000f, 0.00000f, 1.00000f, 0.00000f, 0.00000f,
-    0.00000f,  0.00000f, 0.00000f, 1.00000f};
+    0.00000f, 0.00000f, 0.00000f, 1.00000f};
 
 /* static */ const float* gfxUtils::YuvToRgbMatrix4x3RowMajor(
     gfx::YUVColorSpace aYUVColorSpace) {
