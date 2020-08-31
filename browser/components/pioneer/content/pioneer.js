@@ -70,7 +70,7 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
 
   if (Cu.isInAutomation) {
     install = {
-      install: () => {
+      install: async () => {
         let testAddons = Services.prefs.getStringPref(PREF_TEST_ADDONS, "[]");
         testAddons = JSON.parse(testAddons);
 
@@ -88,7 +88,6 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
     for (const testAddon of testAddons) {
       if (testAddon == studyAddonId) {
         addon = {};
-        addon.install = () => {};
         addon.uninstall = () => {
           Services.prefs.setStringPref(
             PREF_TEST_ADDONS,
@@ -151,16 +150,55 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
 }
 
 async function showAvailableStudies(cachedAddons) {
-  for (const cachedAddon of cachedAddons) {
+  const defaultAddons = cachedAddons.filter(a => a.isDefault);
+  for (const defaultAddon of defaultAddons) {
+    let addon;
+    let install;
+    if (Cu.isInAutomation) {
+      console.debug(defaultAddon);
+      install = {
+        install: async () => {
+          if (
+            defaultAddon.addon_id ==
+            "pioneer-v2-bad-default-example@mozilla.org"
+          ) {
+            throw new Error("Bad test default add-on");
+          }
+        },
+      };
+    } else {
+      addon = await AddonManager.getAddonByID(defaultAddon.addon_id);
+      install = await AddonManager.getInstallForURL(
+        defaultAddon.sourceURI.spec
+      );
+    }
+
+    if (!addon) {
+      // Any default add-ons are required, try to reinstall.
+      try {
+        console.debug("calling install for", defaultAddons.addon_id);
+        await install.install();
+      } catch (ex) {
+        console.debug("catching");
+        const availableStudies = document.getElementById("available-studies");
+        document.l10n.setAttributes(
+          availableStudies,
+          "pioneer-no-current-studies"
+        );
+        throw new Error(
+          `Default add-on not installed: ${defaultAddon.addon_id}, ${ex}`
+        );
+      }
+    }
+  }
+
+  const studyAddons = cachedAddons.filter(a => !a.isDefault);
+  for (const cachedAddon of studyAddons) {
     if (!cachedAddon) {
       console.error(
         `about:pioneer - Study addon ID not found in cache: ${studyAddonId}`
       );
       return;
-    }
-
-    if (cachedAddon.isDefault) {
-      continue;
     }
 
     const studyAddonId = cachedAddon.addon_id;
@@ -207,7 +245,6 @@ async function showAvailableStudies(cachedAddons) {
         for (const testAddon of JSON.parse(testAddons)) {
           if (testAddon == studyAddonId) {
             addon = {};
-            addon.install = () => {};
             addon.uninstall = () => {
               Services.prefs.setStringPref(PREF_TEST_ADDONS, "[]");
             };
@@ -399,10 +436,32 @@ async function setup(cachedAddons) {
         Services.prefs.setStringPref(PREF_PIONEER_ID, uuid);
         for (const cachedAddon of cachedAddons) {
           if (cachedAddon.isDefault) {
-            const install = await AddonManager.getInstallForURL(
-              cachedAddon.sourceURI.spec
-            );
-            install.install();
+            let install;
+            if (Cu.isInAutomation) {
+              install = {
+                install: async () => {
+                  if (
+                    cachedAddon.addon_id ==
+                    "pioneer-v2-bad-default-example@mozilla.org"
+                  ) {
+                    throw new Error("Bad test default add-on");
+                  }
+                },
+              };
+            } else {
+              install = await AddonManager.getInstallForURL(
+                cachedAddon.sourceURI.spec
+              );
+            }
+
+            try {
+              await install.install();
+            } catch (ex) {
+              // No need to throw here, we'll try again before letting users enroll in any studies.
+              console.error(
+                `Could not install default add-on ${cachedAddon.addon_id}`
+              );
+            }
           }
           const study = document.getElementById(cachedAddon.addon_id);
           if (study) {
@@ -621,7 +680,13 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
   }
 
   await setup(cachedAddons);
-  await showAvailableStudies(cachedAddons);
+
+  try {
+    await showAvailableStudies(cachedAddons);
+  } catch (ex) {
+    // No need to throw here, we'll try again before letting users enroll in any studies.
+    console.error(`Could not install default add-on.`);
+  }
 });
 
 async function sendDeletionPing(studyAddonId) {
