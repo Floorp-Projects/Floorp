@@ -95,20 +95,21 @@ RefPtr<GenericPromise> CrossGraphPort::EnsureConnected() {
 
 CrossGraphTransmitter::CrossGraphTransmitter(
     TrackRate aSampleRate, RefPtr<CrossGraphReceiver> aReceiver)
-    : ForwardedInputTrack(aSampleRate, MediaSegment::AUDIO),
+    : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
+                          nullptr /* aSegment */),
       mReceiver(std::move(aReceiver)) {}
 
 void CrossGraphTransmitter::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                          uint32_t aFlags) {
-  // Get previous end before mSegment is updated.
-  TrackTime previousEnd = GetEnd();
-  // Update mSegment from source track.
-  ForwardedInputTrack::ProcessInput(aFrom, aTo, aFlags);
+  MOZ_ASSERT(!mInputs.IsEmpty());
+  MOZ_ASSERT(mDisabledMode == DisabledTrackMode::ENABLED);
 
-  MOZ_ASSERT(mInputPort);
-  if (mInputPort->GetSource()->Ended() &&
-      (mInputPort->GetSource()->GetEnd() <=
-       mInputPort->GetSource()->GraphTimeToTrackTimeWithBlocking(aTo))) {
+  MediaTrack* input = mInputs[0]->GetSource();
+
+  if (mInputs[0]->GetSource()->Ended() &&
+      (mInputs[0]->GetSource()->GetEnd() <=
+       mInputs[0]->GetSource()->GraphTimeToTrackTimeWithBlocking(aFrom))) {
+    mEnded = true;
     return;
   }
 
@@ -117,23 +118,39 @@ void CrossGraphTransmitter::ProcessInput(GraphTime aFrom, GraphTime aTo,
        ", to %" PRId64 ", ticks %" PRId64 "",
        this, mSegment->GetDuration(), aFrom, aTo, aTo - aFrom));
 
-  AudioSegment* audio = GetData<AudioSegment>();
-  TrackTime ticks = aTo - aFrom;
-  MOZ_ASSERT(ticks);
-  MOZ_ASSERT(audio->GetDuration() >= ticks);
+  AudioSegment audio;
+  GraphTime next;
+  for (GraphTime t = aFrom; t < aTo; t = next) {
+    MediaInputPort::InputInterval interval =
+        MediaInputPort::GetNextInputInterval(mInputs[0], t);
+    interval.mEnd = std::min(interval.mEnd, aTo);
 
-  AudioSegment transmittingAudio;
-  transmittingAudio.AppendSlice(*audio, previousEnd, GetEnd());
-  MOZ_ASSERT(ticks >= transmittingAudio.GetDuration());
-  if (transmittingAudio.IsNull()) {
-    AudioChunk chunk;
-    chunk.SetNull(ticks);
-    Unused << mReceiver->EnqueueAudio(chunk);
-  } else {
-    for (AudioSegment::ChunkIterator iter(transmittingAudio); !iter.IsEnded();
-         iter.Next()) {
-      Unused << mReceiver->EnqueueAudio(*iter);
+    TrackTime ticks = interval.mEnd - interval.mStart;
+    next = interval.mEnd;
+
+    if (interval.mStart >= interval.mEnd) {
+      break;
     }
+
+    if (interval.mInputIsBlocked) {
+      audio.AppendNullData(ticks);
+    } else if (input->IsSuspended()) {
+      audio.AppendNullData(ticks);
+    } else {
+      MOZ_ASSERT(GetEnd() == GraphTimeToTrackTimeWithBlocking(interval.mStart),
+                 "Samples missing");
+      TrackTime inputStart =
+          input->GraphTimeToTrackTimeWithBlocking(interval.mStart);
+      TrackTime inputEnd =
+          input->GraphTimeToTrackTimeWithBlocking(interval.mEnd);
+      audio.AppendSlice(*input->GetData(), inputStart, inputEnd);
+    }
+  }
+
+  mStartTime = aTo;
+
+  for (AudioSegment::ChunkIterator iter(audio); !iter.IsEnded(); iter.Next()) {
+    Unused << mReceiver->EnqueueAudio(*iter);
   }
 }
 
