@@ -2906,6 +2906,23 @@ devtools.changesview:
     record_in_processes:
       - 'main'
 
+devtools.markup.scrollable.badge:
+  clicked:
+    bug_numbers:
+      - 1660818
+    description: >
+      Number of times the scrollable inspector badge has been clicked.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+
 dom.event:
   confluence_load_count:
     bug_numbers:

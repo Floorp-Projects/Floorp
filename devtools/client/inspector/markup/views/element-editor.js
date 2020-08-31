@@ -1041,6 +1041,11 @@ ElementEditor.prototype = {
         );
       }
     }
+
+    this.markup.telemetry.scalarAdd(
+      "devtools.markup.scrollable.badge.clicked",
+      1
+    );
   },
 
   /**
