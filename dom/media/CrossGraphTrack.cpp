@@ -68,12 +68,10 @@ CrossGraphManager* CrossGraphManager::Connect(
 }
 
 RefPtr<CrossGraphTransmitter> CrossGraphManager::GetTransmitter() {
-  MOZ_ASSERT(mSourcePort);
-  return mSourcePort->GetDestination()->AsCrossGraphTransmitter();
+  return mTransmitter;
 }
 
 RefPtr<CrossGraphReceiver> CrossGraphManager::GetReceiver() {
-  MOZ_ASSERT(mSourcePort);
   return GetTransmitter()->mReceiver;
 }
 
