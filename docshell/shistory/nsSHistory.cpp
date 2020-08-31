@@ -429,24 +429,24 @@ nsresult nsSHistory::WalkHistoryEntries(nsISHEntry* aRootEntry,
       for (BrowsingContext* child : aBC->Children()) {
         // If the SH pref is on and we are in the parent process, update
         // canonical BC directly
-        bool shouldBreak = false;
+        bool foundChild = false;
         if (StaticPrefs::fission_sessionHistoryInParent() &&
             XRE_IsParentProcess()) {
           if (child->Canonical()->HasHistoryEntry(childEntry)) {
             childBC = child;
-            shouldBreak = true;
+            foundChild = true;
           }
         }
 
         nsDocShell* docshell = static_cast<nsDocShell*>(child->GetDocShell());
         if (docshell && docshell->HasHistoryEntry(childEntry)) {
           childBC = docshell->GetBrowsingContext();
-          shouldBreak = true;
+          foundChild = true;
         }
 
         // XXX Simplify this once the old and new session history
         // implementations don't run at the same time.
-        if (shouldBreak) {
+        if (foundChild) {
           break;
         }
       }
@@ -635,6 +635,8 @@ void nsSHistory::HandleEntriesToSwapInDocShell(
     if (docshell) {
       docshell->SwapHistoryEntries(aOldEntry, aNewEntry);
     }
+  } else {
+    // FIXME Bug 1633988: Need to update entries?
   }
 
   // XXX Simplify this once the old and new session history implementations
