@@ -6,6 +6,6 @@
   res/ (*.jsm)
   res/phonenumberutils/ (phonenumberutils/*.jsm)
   res/addressmetadata/ (addressmetadata/*)
-  res/ (skin/shared/*)
 
   content/ (content/*)
+  content/skin/ (skin/shared/*)
