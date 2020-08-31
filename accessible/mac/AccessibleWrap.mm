@@ -15,6 +15,7 @@
 #include "TextRange.h"
 #include "gfxPlatform.h"
 
+#import "MOXLandmarkAccessibles.h"
 #import "MOXMathAccessibles.h"
 #import "MOXTextMarkerDelegate.h"
 #import "MOXWebAreaAccessible.h"
@@ -267,6 +268,9 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::TEXT_LEAF:
     case roles::STATICTEXT:
       return [mozTextLeafAccessible class];
+
+    case roles::LANDMARK:
+      return [MOXLandmarkAccessible class];
 
     case roles::LINK:
       return [mozLinkAccessible class];
