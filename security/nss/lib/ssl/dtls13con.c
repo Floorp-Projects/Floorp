@@ -413,8 +413,7 @@ dtls13_HandleOutOfEpochRecord(sslSocket *ss, const ssl3CipherSpec *spec,
              * server, we might have processed the client's Finished and
              * moved on to application data keys, but the client has
              * retransmitted Finished (e.g., because our ACK got lost.)
-             * We just retransmit the previous Finished to let the client
-             * complete. */
+             * We just retransmit the ACK to let the client complete. */
             if (rType == ssl_ct_handshake) {
                 if ((ss->sec.isServer) &&
                     (ss->ssl3.hs.ws == idle_handshake)) {

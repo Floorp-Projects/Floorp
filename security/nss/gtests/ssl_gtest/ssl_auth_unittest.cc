@@ -1330,7 +1330,7 @@ TEST_F(TlsConnectDatagram13, AuthCompleteBeforeFinished) {
 // This test uses a simple AuthCertificateCallback.  Due to the way that the
 // entire server flight is processed, the call to SSL_AuthCertificateComplete
 // will trigger after the Finished message is processed.
-TEST_F(TlsConnectDatagram13, AuthCompleteAfterFinished) {
+TEST_P(TlsConnectTls13, AuthCompleteAfterFinished) {
   SetDeferredAuthCertificateCallback(client_, 0);  // 0 = success.
   Connect();
 }

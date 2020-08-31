@@ -1159,6 +1159,9 @@ pk11_AEADSimulateOp(PK11Context *context, void *params, int paramslen,
          * the tag. We'll copy the tag after the operation */
         if (maxout < inlen + taglen) {
             allocOut = PORT_Alloc(inlen + taglen);
+            if (allocOut == NULL) {
+                return SECFailure;
+            }
             out = allocOut;
             length = maxout = inlen + taglen;
         }
@@ -1616,7 +1619,6 @@ finalize:
         } else {
             buffer = PORT_Alloc(count);
             if (buffer == NULL) {
-                PORT_SetError(SEC_ERROR_NO_MEMORY);
                 return SECFailure;
             }
         }
