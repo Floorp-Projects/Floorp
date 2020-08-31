@@ -309,7 +309,7 @@
       is(osfileReadStr, emoji, "OS.File can read an UTF-8 file compressed by IOUtils")
 
       info("Test IOUtils can read an UTF-8 file compressed by OS.File");
-      const ioutilsReadString = await IOUtils.readUTF8(ioutilsTmpFile, { decompress: true });
+      const ioutilsReadString = await IOUtils.readUTF8(osfileTmpFile, { decompress: true });
       is(ioutilsReadString, emoji, "IOUtils can read an UTF-8 file compressed by OS.File");
 
       await cleanup(osfileTmpFile, ioutilsTmpFile);
