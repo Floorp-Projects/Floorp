@@ -315,14 +315,12 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 .addon-badge {
   display: inline-block;
   margin-inline-end: 8px;
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
+  background-size: 16px;
   background-repeat: no-repeat;
   background-position: center;
   flex-shrink: 0;
-  border-radius: 11px;
-  -moz-context-properties: fill;
-  fill: #fff;
 }
 
 .addon-badge-private-browsing-allowed {
@@ -332,21 +330,10 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 .addon-badge-recommended {
   background-color: var(--orange-50);
   background-image: url("chrome://mozapps/skin/extensions/recommended.svg");
-}
-
-.addon-badge-line {
-  background-color: #fff;
-  background-image: url("chrome://mozapps/skin/extensions/line.svg");
-  background-size: 16px;
-  border-radius: 10px;
-  border: 1px solid #CFCFD8;
-  width: 20px;
-  height: 20px;
-}
-
-.addon-badge-verified {
-  background-color: var(--green-70);
-  background-image: url("chrome://mozapps/skin/extensions/check.svg");
+  background-size: 10px;
+  border-radius: 8px;
+  fill: #fff;
+  -moz-context-properties: fill;
 }
 
 .theme-enable-button {

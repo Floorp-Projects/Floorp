@@ -34,19 +34,6 @@ async function installAddonWithRecommendations(id, recommendation) {
   return install.addon;
 }
 
-function checkRecommended(addon, recommended = true) {
-  equal(
-    addon.isRecommended,
-    recommended,
-    "The add-on isRecommended state is correct"
-  );
-  equal(
-    addon.recommendationStates.includes("recommended"),
-    recommended,
-    "The add-on recommendationStates is correct"
-  );
-}
-
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 });
@@ -55,7 +42,7 @@ add_task(async function text_no_file() {
   const id = "no-recommendations-file@test.web.extension";
   let addon = await installAddonWithRecommendations(id, null);
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -64,7 +51,7 @@ add_task(async function text_malformed_file() {
   const id = "no-recommendations-file@test.web.extension";
   let addon = await installAddonWithRecommendations(id, "This is not JSON");
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -77,24 +64,7 @@ add_task(async function test_valid_recommendation_file() {
     validity: { not_before, not_after },
   });
 
-  checkRecommended(addon);
-
-  await addon.uninstall();
-});
-
-add_task(async function test_multiple_valid_recommendation_file() {
-  const id = "recommended@test.web.extension";
-  let addon = await installAddonWithRecommendations(id, {
-    addon_id: id,
-    states: ["recommended", "something"],
-    validity: { not_before, not_after },
-  });
-
-  checkRecommended(addon);
-  ok(
-    addon.recommendationStates.includes("something"),
-    "The add-on recommendationStates contains something"
-  );
+  ok(addon.isRecommended, "The add-on is recommended");
 
   await addon.uninstall();
 });
@@ -112,7 +82,7 @@ add_task(async function test_unsigned() {
     validity: { not_before, not_after },
   });
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
   AddonTestUtils.useRealCertChecks = false;
@@ -128,7 +98,7 @@ add_task(async function test_temporary() {
   });
   let addon = await XPIInstall.installTemporaryAddon(xpi);
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -157,7 +127,7 @@ add_task(async function test_temporary_directory() {
 
   let addon = await XPIInstall.installTemporaryAddon(extDir);
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
   extDir.remove(true);
@@ -180,7 +150,7 @@ add_task(async function test_builtin() {
   });
   await extension.awaitMessage("started");
 
-  checkRecommended(extension.addon, false);
+  ok(!extension.addon.isRecommended, "The add-on is not recommended");
 
   await extension.unload();
 });
@@ -202,7 +172,7 @@ add_task(async function test_theme() {
   });
   let { addon } = await AddonTestUtils.promiseInstallFile(xpi);
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -215,11 +185,7 @@ add_task(async function test_not_recommended() {
     validity: { not_before, not_after },
   });
 
-  checkRecommended(addon, false);
-  ok(
-    addon.recommendationStates.includes("something"),
-    "The add-on recommendationStates contains something"
-  );
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -231,7 +197,7 @@ add_task(async function test_id_missing() {
     validity: { not_before, not_after },
   });
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -240,15 +206,11 @@ add_task(async function test_expired() {
   const id = "expired@test.web.extension";
   let addon = await installAddonWithRecommendations(id, {
     addon_id: id,
-    states: ["recommended", "something"],
+    states: ["recommended"],
     validity: { not_before, not_after: not_before },
   });
 
-  checkRecommended(addon, false);
-  ok(
-    !addon.recommendationStates.length,
-    "The add-on recommendationStates does not contain anything"
-  );
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -261,7 +223,7 @@ add_task(async function test_not_valid_yet() {
     validity: { not_before: not_after, not_after },
   });
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -273,7 +235,7 @@ add_task(async function test_states_missing() {
     validity: { not_before, not_after },
   });
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -285,7 +247,7 @@ add_task(async function test_validity_missing() {
     states: ["recommended"],
   });
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -298,7 +260,7 @@ add_task(async function test_not_before_missing() {
     validity: { not_after },
   });
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -311,7 +273,7 @@ add_task(async function test_bad_states() {
     validity: { not_before, not_after },
   });
 
-  checkRecommended(addon, false);
+  ok(!addon.isRecommended, "The add-on is not recommended");
 
   await addon.uninstall();
 });
@@ -324,13 +286,13 @@ add_task(async function test_recommendation_persist_restart() {
     validity: { not_before, not_after },
   });
 
-  checkRecommended(addon);
+  ok(addon.isRecommended, "The add-on is recommended");
 
   await AddonTestUtils.promiseRestartManager();
 
   addon = await AddonManager.getAddonByID(id);
 
-  checkRecommended(addon);
+  ok(addon.isRecommended, "The add-on is still recommended");
 
   await addon.uninstall();
 });
