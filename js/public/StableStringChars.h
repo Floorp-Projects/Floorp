@@ -21,11 +21,11 @@
 
 #include "jstypes.h"  // JS_FRIEND_API
 
-#include "js/HeapAPI.h"     // JS::shadow::String
-#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/HeapAPI.h"        // JS::shadow::String
+#include "js/RootingAPI.h"     // JS::Handle, JS::Rooted
 #include "js/shadow/String.h"  // JS::shadow::String
-#include "js/TypeDecls.h"   // JSContext, JS::Latin1Char, JSString
-#include "js/Vector.h"      // js::Vector
+#include "js/TypeDecls.h"      // JSContext, JS::Latin1Char, JSString
+#include "js/Vector.h"         // js::Vector
 
 class JSLinearString;
 

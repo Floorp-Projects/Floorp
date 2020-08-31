@@ -247,7 +247,6 @@ void nsFrameLoaderOwner::ChangeRemotenessToProcess(
       mFrameLoader->ConfigRemoteProcess(aContentParent->GetRemoteType(),
                                         aContentParent);
     }
-
   };
 
   auto shouldPreserve =
