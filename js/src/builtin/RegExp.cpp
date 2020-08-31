@@ -1358,7 +1358,6 @@ static bool InterpretDollar(JSLinearString* matched, JSLinearString* string,
   if (c == '<') {
     // Step 1.
     if (namedCaptures.length() == 0) {
-      *skip = 2;
       return false;
     }
 
@@ -1368,7 +1367,6 @@ static bool InterpretDollar(JSLinearString* matched, JSLinearString* string,
 
     // Step 2.c
     if (!nameEnd) {
-      *skip = 2;
       return false;
     }
 
@@ -1378,13 +1376,13 @@ static bool InterpretDollar(JSLinearString* matched, JSLinearString* string,
     // we can just take the next one in the list.
     size_t nameLength = nameEnd - nameStart;
     *skip = nameLength + 3;  // $<...>
+
     // Steps 2.d.iii-iv
     GetParen(matched, namedCaptures[*currentNamedCapture], out);
     *currentNamedCapture += 1;
     return true;
   }
 
-  *skip = 2;
   switch (c) {
     default:
       return false;
@@ -1409,6 +1407,8 @@ static bool InterpretDollar(JSLinearString* matched, JSLinearString* string,
       out->init(string, tailPos, string->length() - tailPos);
       break;
   }
+
+  *skip = 2;
   return true;
 }
 
