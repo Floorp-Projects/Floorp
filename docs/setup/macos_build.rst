@@ -325,7 +325,7 @@ Using Mercurial <Mercurial Overview>` for the
 complete instructions.
 
 If you are interested in Firefox development only then run the following
-command, which will create a new directory, ``mozilla-central``, in the
+command, which will create a new directory, ``mozilla-unified``, in the
 current one with the contents of the remote repository.
 
 Below command will take many minutes to run, as it will be copying a
@@ -333,8 +333,8 @@ couple hundred megabytes of data over the internet.
 
 .. code::
 
-    hg clone https://hg.mozilla.org/mozilla-central/
-    cd mozilla-central
+    hg clone https://hg.mozilla.org/mozilla-unified/
+    cd mozilla-unified
 
 (If you are building Firefox for Android, you should now return to the
 `Android build instructions <https://wiki.mozilla.org/Mobile/Fennec/Android#Mac_OS_X>`_.)
