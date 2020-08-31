@@ -84,12 +84,15 @@ class CrossGraphManager final {
 
  private:
   explicit CrossGraphManager(const RefPtr<MediaInputPort>& aPort)
-      : mSourcePort(aPort) {}
+      : mSourcePort(aPort),
+        mTransmitter(mSourcePort->GetDestination()->AsCrossGraphTransmitter()) {
+  }
   RefPtr<CrossGraphTransmitter> GetTransmitter();
   RefPtr<CrossGraphReceiver> GetReceiver();
 
   // The port that connect the transmitter with the source track.
   RefPtr<MediaInputPort> mSourcePort;
+  RefPtr<CrossGraphTransmitter> mTransmitter;
 };
 
 }  // namespace mozilla
