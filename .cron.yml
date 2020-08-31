@@ -139,7 +139,6 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
-          - mozilla-esr68
           - mozilla-esr78
       when:
           - {hour: 10, minute: 0}
@@ -187,7 +186,6 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
-          - mozilla-esr68
           - mozilla-esr78
       when:
           by-project:
@@ -199,9 +197,6 @@ jobs:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
               mozilla-release:
-                  - {hour: 7, minute: 0}
-                  - {hour: 19, minute: 0}
-              mozilla-esr68:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
               mozilla-esr78:
@@ -217,7 +212,6 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
-          - mozilla-esr68
           - mozilla-esr78
       when:
           - {weekday: 'Monday', hour: 10, minute: 0}
