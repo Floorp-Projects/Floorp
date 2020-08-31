@@ -64,7 +64,7 @@ CrossGraphPort* CrossGraphPort::Connect(
   RefPtr<MediaInputPort> port =
       aStreamTrack->ForwardTrackContentsTo(transmitter);
 
-  return new CrossGraphPort(port);
+  return new CrossGraphPort(std::move(port));
 }
 
 RefPtr<CrossGraphTransmitter> CrossGraphPort::GetTransmitter() {
