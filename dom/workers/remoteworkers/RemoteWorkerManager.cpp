@@ -441,10 +441,17 @@ void RemoteWorkerManager::ForEachActor(
 }
 
 /**
- * Service Workers can spawn even when their registering page/script isn't
- * active (e.g. push notifications), so we don't attempt to spawn the worker
- * in its registering script's process. We search linearly and choose the
- * search's starting position randomly.
+ * When selecting a target actor for a given remote worker, we have to consider
+ * that:
+ *
+ * - Service Workers can spawn even when their registering page/script isn't
+ *   active (e.g. push notifications), so we don't attempt to spawn the worker
+ *   in its registering script's process. We search linearly and choose the
+ *   search's starting position randomly.
+ *
+ * - When Fission is enabled, Shared Workers may have to be spawned into
+ * different child process from the one where it has been registered from, and
+ * that child process may be going to be marked as dead and shutdown.
  *
  * Spawning the workers in a random process makes the process selection criteria
  * a little tricky, as a candidate process may imminently shutdown due to a
@@ -460,12 +467,10 @@ void RemoteWorkerManager::ForEachActor(
  * register a remote worker actor "early" and guarantee that the corresponding
  * content process will not shutdown.
  */
-RemoteWorkerServiceParent*
-RemoteWorkerManager::SelectTargetActorForServiceWorker(
-    const RemoteWorkerData& aData) const {
+RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActorInternal(
+    const RemoteWorkerData& aData, base::ProcessId aProcessId) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mChildActors.IsEmpty());
-  MOZ_ASSERT(IsServiceWorker(aData));
 
   RemoteWorkerServiceParent* actor = nullptr;
 
@@ -474,11 +479,18 @@ RemoteWorkerManager::SelectTargetActorForServiceWorker(
   ForEachActor(
       [&](RemoteWorkerServiceParent* aActor,
           RefPtr<ContentParent>&& aContentParent) {
+        // Make sure to choose an actor related to a child process that is not
+        // going to shutdown while we are still in the process of launching the
+        // remote worker.
+        //
+        // ForEachActor will start from the child actor coming from the child
+        // process with a pid equal to aProcessId if any, otherwise it would
+        // start from a random actor in the mChildActors array, this guarantees
+        // that we will choose that actor if it does also match the remote type.
         auto lock = aContentParent->mRemoteWorkerActorData.Lock();
 
-        // Select the first actor that matches the remoteType and it is not
-        // already shutting down.
-        if (lock->mCount || !lock->mShutdownStarted) {
+        if ((lock->mCount || !lock->mShutdownStarted) &&
+            (aActor->OtherPid() == aProcessId || !actor)) {
           ++lock->mCount;
 
           // This won't cause any race conditions because the content process
@@ -501,58 +513,7 @@ RemoteWorkerManager::SelectTargetActorForServiceWorker(
         MOZ_ASSERT(!actor);
         return true;
       },
-      workerRemoteType);
-
-  return actor;
-}
-
-/**
- * When Fission is enabled, Shared Workers may have to be spawned into different
- * child process from the one where it has been registered from, and that child
- * process may be going to be marked as dead and shutdown.
- *
- * To make sure to keep the selected child process alive we can used the same
- * strategy that is being used by
- * RemoteWorkerManager::SelectTargetActorForServiceWorker for very similar
- * reasons and described in more detail in the inline comment right above that
- * method (in short here on the background thread, while
- * `ContentParent::mRemoteWorkerActorData` is locked, if `mCount` > 0, we can
- * register the remote worker actor "early" and guarantee that the corresponding
- * content process will not shutdown).
- */
-RemoteWorkerServiceParent*
-RemoteWorkerManager::SelectTargetActorForSharedWorker(
-    base::ProcessId aProcessId, const RemoteWorkerData& aData) const {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mChildActors.IsEmpty());
-
-  RemoteWorkerServiceParent* actor = nullptr;
-
-  const auto& workerRemoteType = aData.remoteType();
-
-  ForEachActor(
-      [&](RemoteWorkerServiceParent* aActor,
-          RefPtr<ContentParent>&& aContentParent) {
-        // Make sure to choose an actor related to a child process that is not
-        // going to shutdown while we are still in the process of launching the
-        // remote worker.
-        //
-        // ForEachActor will start from the child actor coming from the child
-        // process with a pid equal to aProcessId if any, otherwise it would
-        // start from a random actor in the mChildActors array, this guarantees
-        // that we will choose that actor if it does also match the remote type.
-        auto lock = aContentParent->mRemoteWorkerActorData.Lock();
-        if ((lock->mCount || !lock->mShutdownStarted) &&
-            (aActor->OtherPid() == aProcessId || !actor)) {
-          ++lock->mCount;
-          actor = aActor;
-          return false;
-        }
-
-        MOZ_ASSERT(!actor);
-        return true;
-      },
-      workerRemoteType, Some(aProcessId));
+      workerRemoteType, IsServiceWorker(aData) ? Nothing() : Some(aProcessId));
 
   return actor;
 }
@@ -591,9 +552,7 @@ RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActor(
     return nullptr;
   }
 
-  return IsServiceWorker(aData)
-             ? SelectTargetActorForServiceWorker(aData)
-             : SelectTargetActorForSharedWorker(aProcessId, aData);
+  return SelectTargetActorInternal(aData, aProcessId);
 }
 
 void RemoteWorkerManager::LaunchNewContentProcess(
@@ -611,18 +570,15 @@ void RemoteWorkerManager::LaunchNewContentProcess(
   // RemoteWorkerManager, and RemoteWorkerManager isn't threadsafe, so the
   // promise callback will just dispatch the "real" failure callback to the
   // background thread.
-  auto processLaunchCallback = [isServiceWorker = IsServiceWorker(aData),
-                                principalInfo = aData.principalInfo(),
+  auto processLaunchCallback = [principalInfo = aData.principalInfo(),
                                 bgEventTarget = std::move(bgEventTarget),
                                 self = RefPtr<RemoteWorkerManager>(this)](
                                    const CallbackParamType& aValue,
                                    const nsCString& remoteType) mutable {
     if (aValue.IsResolve()) {
       LOG(("LaunchNewContentProcess: successfully got child process"));
-      if (isServiceWorker) {
-        TransmitPermissionsAndBlobURLsForPrincipalInfo(aValue.ResolveValue(),
-                                                       principalInfo);
-      }
+      TransmitPermissionsAndBlobURLsForPrincipalInfo(aValue.ResolveValue(),
+                                                     principalInfo);
 
       // The failure callback won't run, and we're on the main thread, so
       // we need to properly release the thread-unsafe RemoteWorkerManager.
