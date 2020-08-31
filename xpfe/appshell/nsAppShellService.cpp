@@ -321,18 +321,8 @@ class BrowserDestroyer final : public Runnable {
         mContainer(aContainer) {}
 
   static nsresult Destroy(nsIWebBrowser* aBrowser) {
-    RefPtr<BrowsingContext> bc;
-    if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(aBrowser)) {
-      bc = docShell->GetBrowsingContext();
-    }
-
     nsCOMPtr<nsIBaseWindow> window(do_QueryInterface(aBrowser));
-    nsresult rv = window->Destroy();
-    MOZ_ASSERT(bc);
-    if (bc) {
-      bc->Detach();
-    }
-    return rv;
+    return window->Destroy();
   }
 
   NS_IMETHOD

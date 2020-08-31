@@ -60,6 +60,7 @@
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoginReputationIPC.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -227,6 +228,7 @@
 #include "nsPluginTags.h"
 #include "nsQueryObject.h"
 #include "nsReadableUtils.h"
+#include "nsSHistory.h"
 #include "nsScriptError.h"
 #include "nsSerializationHelper.h"
 #include "nsServiceManagerUtils.h"
@@ -1932,8 +1934,11 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
 #endif
 
-  // As this process is going away, ensure that every BrowsingContextGroup has
-  // been fully unsubscribed.
+  // As this process is going away, ensure that every BrowsingContext hosted by
+  // it has been detached, and every BrowsingContextGroup has been fully
+  // unsubscribed.
+  BrowsingContext::DiscardFromContentParent(this);
+
   nsTHashtable<nsRefPtrHashKey<BrowsingContextGroup>> groups;
   mGroups.SwapElements(groups);
   for (auto& group : groups) {
