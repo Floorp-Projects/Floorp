@@ -8,7 +8,7 @@
 
 #include "MediaStreamTrack.h"
 #include "DOMMediaStream.h"
-#include "CrossGraphTrack.h"
+#include "CrossGraphPort.h"
 
 namespace mozilla {
 namespace dom {
@@ -43,11 +43,10 @@ class AudioStreamTrack : public MediaStreamTrack {
   void SetReadyState(MediaStreamTrackState aState) override;
 
  private:
-  // Track CrossGraphManager per AudioOutput key. This is required in order to
+  // Track CrossGraphPort per AudioOutput key. This is required in order to
   // redirect all AudioOutput requests (add, remove, set volume) to the
   // receiver track which, belonging to the remote graph. MainThread only.
-  nsClassHashtable<nsPtrHashKey<void>, UniquePtr<CrossGraphManager>>
-      mCrossGraphs;
+  nsClassHashtable<nsPtrHashKey<void>, UniquePtr<CrossGraphPort>> mCrossGraphs;
 };
 
 }  // namespace dom

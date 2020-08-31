@@ -8,7 +8,7 @@
 #include "mozilla/Unused.h"
 
 #include "AudioSegment.h"
-#include "CrossGraphTrack.h"
+#include "CrossGraphPort.h"
 #include "VideoSegment.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
