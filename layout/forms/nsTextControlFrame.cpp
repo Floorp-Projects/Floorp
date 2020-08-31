@@ -361,11 +361,11 @@ already_AddRefed<Element> nsTextControlFrame::MakeAnonElement(
 
 already_AddRefed<Element> nsTextControlFrame::MakeAnonDivWithTextNode(
     PseudoStyleType aPseudoType) const {
-  RefPtr<Element> divElement = MakeAnonElement(aPseudoType);
+  RefPtr<Element> div = MakeAnonElement(aPseudoType);
 
   // Create the text node for the anonymous <div> element.
-  RefPtr<nsTextNode> textNode = new (divElement->OwnerDoc()->NodeInfoManager())
-      nsTextNode(divElement->OwnerDoc()->NodeInfoManager());
+  nsNodeInfoManager* nim = div->OwnerDoc()->NodeInfoManager();
+  RefPtr<nsTextNode> textNode = new (nim) nsTextNode(nim);
   // If the anonymous div element is not for the placeholder, we should
   // mark the text node as "maybe modified frequently" for avoiding ASCII
   // range checks at every input.
@@ -377,8 +377,8 @@ already_AddRefed<Element> nsTextControlFrame::MakeAnonDivWithTextNode(
       textNode->MarkAsMaybeMasked();
     }
   }
-  divElement->AppendChildTo(textNode, false);
-  return divElement.forget();
+  div->AppendChildTo(textNode, false);
+  return div.forget();
 }
 
 nsresult nsTextControlFrame::CreateAnonymousContent(
@@ -476,21 +476,38 @@ void nsTextControlFrame::CreatePlaceholderIfNeeded() {
   MOZ_ASSERT(!mPlaceholderDiv);
 
   // Do we need a placeholder node?
-  nsAutoString placeholderTxt;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder,
-                                 placeholderTxt);
-  if (IsTextArea()) {  // <textarea>s preserve newlines...
-    nsContentUtils::PlatformToDOMLineBreaks(placeholderTxt);
-  } else {  // ...<input>s don't
-    nsContentUtils::RemoveNewlines(placeholderTxt);
-  }
-
-  if (placeholderTxt.IsEmpty()) {
+  nsAutoString placeholder;
+  if (!mContent->AsElement()->GetAttr(nsGkAtoms::placeholder, placeholder)) {
     return;
   }
 
   mPlaceholderDiv = MakeAnonDivWithTextNode(PseudoStyleType::placeholder);
-  mPlaceholderDiv->GetFirstChild()->AsText()->SetText(placeholderTxt, false);
+  UpdatePlaceholderText(placeholder, false);
+}
+
+void nsTextControlFrame::PlaceholderChanged(const nsAttrValue* aOld,
+                                            const nsAttrValue* aNew) {
+  if (!aOld || !aNew) {
+    return;  // This should be handled by GetAttributeChangeHint.
+  }
+
+  nsAutoString placeholder;
+  aNew->ToString(placeholder);
+  UpdatePlaceholderText(placeholder, true);
+}
+
+void nsTextControlFrame::UpdatePlaceholderText(nsString& aPlaceholder,
+                                               bool aNotify) {
+  MOZ_ASSERT(mPlaceholderDiv);
+  MOZ_ASSERT(mPlaceholderDiv->GetFirstChild());
+
+  if (IsTextArea()) {  // <textarea>s preserve newlines...
+    nsContentUtils::PlatformToDOMLineBreaks(aPlaceholder);
+  } else {  // ...<input>s don't
+    nsContentUtils::RemoveNewlines(aPlaceholder);
+  }
+
+  mPlaceholderDiv->GetFirstChild()->AsText()->SetText(aPlaceholder, aNotify);
 }
 
 void nsTextControlFrame::CreatePreviewIfNeeded() {
