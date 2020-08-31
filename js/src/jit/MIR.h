@@ -11012,24 +11012,17 @@ class MHasOwnCache : public MBinaryInstruction,
 };
 
 // Implementation for instanceof operator with specific rhs.
-class MInstanceOf : public MUnaryInstruction,
-                    public BoxExceptPolicy<0, MIRType::Object>::Data {
-  CompilerObject protoObj_;
-
-  MInstanceOf(MDefinition* obj, JSObject* proto)
-      : MUnaryInstruction(classOpcode, obj), protoObj_(proto) {
+class MInstanceOf : public MBinaryInstruction,
+                    public MixPolicy<BoxExceptPolicy<0, MIRType::Object>,
+                                     ObjectPolicy<1>>::Data {
+  MInstanceOf(MDefinition* obj, MDefinition* proto)
+      : MBinaryInstruction(classOpcode, obj, proto) {
     setResultType(MIRType::Boolean);
   }
 
  public:
   INSTRUCTION_HEADER(InstanceOf)
   TRIVIAL_NEW_WRAPPERS
-
-  JSObject* prototypeObject() { return protoObj_; }
-
-  bool appendRoots(MRootList& roots) const override {
-    return roots.append(protoObj_);
-  }
 };
 
 // Implementation for instanceof operator with unknown rhs.
