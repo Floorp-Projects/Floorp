@@ -1926,6 +1926,14 @@
   args:
     result: ValId
 
+- name: LoadConstantString
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    str: StringField
+    result: StringId
+
 - name: LoadConstantStringResult
   shared: false
   transpile: false
