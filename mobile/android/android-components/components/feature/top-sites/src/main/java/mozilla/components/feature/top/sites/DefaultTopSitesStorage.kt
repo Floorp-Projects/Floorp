@@ -8,9 +8,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
-import mozilla.components.feature.top.sites.ext.toTopSite
 import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.feature.top.sites.ext.hasUrl
+import mozilla.components.feature.top.sites.ext.toTopSite
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import kotlin.coroutines.CoroutineContext
@@ -39,9 +39,7 @@ class DefaultTopSitesStorage(
     init {
         if (defaultTopSites.isNotEmpty()) {
             scope.launch {
-                defaultTopSites.forEach { (title, url) ->
-                    addTopSite(title, url, isDefault = true)
-                }
+                pinnedSitesStorage.addAllPinnedSites(defaultTopSites, isDefault = true)
             }
         }
     }

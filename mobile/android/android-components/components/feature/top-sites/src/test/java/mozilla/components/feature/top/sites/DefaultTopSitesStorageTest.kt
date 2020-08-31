@@ -40,17 +40,7 @@ class DefaultTopSitesStorageTest {
             coroutineContext
         )
 
-        verify(pinnedSitesStorage).addPinnedSite(
-            "Mozilla",
-            "https://mozilla.com",
-            isDefault = true
-        )
-
-        verify(pinnedSitesStorage).addPinnedSite(
-            "Firefox",
-            "https://firefox.com",
-            isDefault = true
-        )
+        verify(pinnedSitesStorage).addAllPinnedSites(defaultTopSites, isDefault = true)
     }
 
     @Test
