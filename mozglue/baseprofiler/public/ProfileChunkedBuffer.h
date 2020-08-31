@@ -587,6 +587,11 @@ class ProfileChunkedBuffer {
     return {mRangeStart, mRangeEnd, mPushedBlockCount, mClearedBlockCount};
   }
 
+  [[nodiscard]] bool IsEmpty() const {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    return mRangeStart == mRangeEnd;
+  }
+
   // True if this buffer is already locked on this thread.
   // This should be used if some functions may call an already-locked buffer,
   // e.g.: Put -> memory hook -> profiler_add_native_allocation_marker -> Put.
@@ -1733,6 +1738,33 @@ struct ProfileBufferEntryWriter::Serializer<UniquePtr<ProfileChunkedBuffer>> {
 
   static void Write(ProfileBufferEntryWriter& aEW,
                     const UniquePtr<ProfileChunkedBuffer>& aBufferUPtr) {
+    if (!aBufferUPtr) {
+      // Null pointer, treat it like an empty buffer, i.e., write length of 0.
+      aEW.WriteULEB128<Length>(0);
+      return;
+    }
+    // Otherwise write the pointed-at ProfileChunkedBuffer (which could be
+    // out-of-session or empty.)
+    aEW.WriteObject(*aBufferUPtr);
+  }
+};
+
+// Serialization of a raw pointer to ProfileChunkedBuffer.
+// Use Deserializer<UniquePtr<ProfileChunkedBuffer>> to read it back.
+template <>
+struct ProfileBufferEntryWriter::Serializer<ProfileChunkedBuffer*> {
+  static Length Bytes(ProfileChunkedBuffer* aBufferUPtr) {
+    if (!aBufferUPtr) {
+      // Null pointer, treat it like an empty buffer, i.e., write length of 0.
+      return ULEB128Size<Length>(0);
+    }
+    // Otherwise write the pointed-at ProfileChunkedBuffer (which could be
+    // out-of-session or empty.)
+    return SumBytes(*aBufferUPtr);
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    ProfileChunkedBuffer* aBufferUPtr) {
     if (!aBufferUPtr) {
       // Null pointer, treat it like an empty buffer, i.e., write length of 0.
       aEW.WriteULEB128<Length>(0);
