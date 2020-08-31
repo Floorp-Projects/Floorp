@@ -6,16 +6,8 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(98d0e975-9cad-4ce3-ae2f-f878b8be6307)]
-interface nsIFOG : nsISupports
+interface nsIAboutGlean : nsISupports
 {
-
-  /**
-   * Initialize FOG.
-   *
-   * To be scheduled at some opportune time after the bulk of Firefox startup
-   * has completed.
-   */
-  void initializeFOG();
 
   /**
    * Enable or Disable the logging of pings in the Glean SDK.
