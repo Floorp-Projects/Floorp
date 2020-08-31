@@ -24,8 +24,8 @@ work?
 
 All of this is controlled from within the Gecko source code, through a
 process called *task-graph generation*.  This means it's easy to add a
-new job or tweak the parameters of a job in a `try
-push <https://wiki.mozilla.org/Build:TryServer>`__, eventually landing
+new job or tweak the parameters of a job in a :ref:`try
+push <Try Server>`, eventually landing
 that change on an integration branch.
 
 The details of task-graph generation are documented :ref:`in the source

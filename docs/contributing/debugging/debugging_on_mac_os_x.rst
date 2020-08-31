@@ -1,12 +1,12 @@
 Debugging On Mac Os X
 =====================
 
-This document explains how to debug Mozilla-derived applications such as
+This document explains how to debug Gecko based applications such as
 Firefox, Thunderbird, and SeaMonkey on macOS using Xcode. If you want to
 debug from the terminal see :ref:`Debugging Mozilla with
 lldb <Debugging Firefox with LLDB>`. For specific
-information on a way to debug hangs, see `Debugging a hang on OS
-X <https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_a_hang_on_OS_X>`__.
+information on a way to debug hangs, see :ref:`Debugging a hang on OS
+X <Debugging A Hang On OS X>`.
 
 Creating a debuggable build
 ---------------------------
@@ -30,7 +30,6 @@ Official Builds
 ~~~~~~~~~~~~~~~
 
 At this time, official builds of Firefox 69 and later are Notarized.
-Uplifts to Firefox 68 and ESR 68 to enable Notarization are planned.
 **As a result, it is not possible to attach a debugger to these official
 Firefox releases on macOS 10.14+ without disabling System Integrity
 Protection (SIP).** This is due to Notarization requiring Hardened
@@ -43,8 +42,8 @@ try Server Builds
 ~~~~~~~~~~~~~~~~~
 
 In most cases, developers needing to debug a build as close as possible
-to the production environment should use a `try
-build <https://wiki.mozilla.org/ReleaseEngineering/TryServer>`__. These
+to the production environment should use a :ref:`try
+build <Try Server>`. These
 builds enable Hardened Runtime and only differ from production builds in
 that they are not Notarized which should not otherwise affect
 functionality, (other than the ability to easily launch the browser on
@@ -171,7 +170,7 @@ Setting up lldb
    not stop at them. If you don't include the Mozilla's .lldbinit, you
    must at least put
    ``settings set target.inline-breakpoint-strategy always`` in your
-   ``$HOME/.lldbinit`` as recommended on :ref:`Debugging Mozilla with
+   ``$HOME/.lldbinit`` as recommended on :ref:`Debugging Firefox with
    lldb <Debugging Firefox with LLDB>`.
 
 The
@@ -290,7 +289,7 @@ debugger will break there, and you will be able to debug it.
    ``$HOME/.lldbinit`` as recommended on :ref:`Debugging Mozilla with
    lldb <Debugging Firefox with LLDB>`.
 
-Using Mozilla-specific lldb commands
+Using Firefox-specific lldb commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you included the .lldbinit when `Setting up
@@ -346,6 +345,6 @@ techniques <https://developer.apple.com/library/mac/#technotes/tn2124/_index.htm
 Questions? Problems?
 ~~~~~~~~~~~~~~~~~~~~
 
-Try asking in our IRC channels
-`#developers <irc://irc.mozilla.org/developers>`__ or
-`#macdev <irc://irc.mozilla.org/macdev>`__.
+Try asking in our Element channels
+`#developers <https://chat.mozilla.org/#/room/#developers:mozilla.org>`__ or
+`#macdev <https://chat.mozilla.org/#/room/#macdev:mozilla.org>`__.
