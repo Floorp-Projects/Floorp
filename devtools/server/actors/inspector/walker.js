@@ -208,8 +208,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       targetActor.chromeEventHandler
     );
 
+    // TODO: This preference is a client preference and should not be read here.
+    // See Bug 1662059.
     this.isOverflowDebuggingEnabled = Services.prefs.getBoolPref(
-      "devtools.overflow.debugging.enabled"
+      "devtools.overflow.debugging.enabled",
+      false
     );
 
     // In this map, the key-value pairs are the overflow causing elements and their
