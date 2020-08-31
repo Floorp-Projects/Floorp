@@ -1944,7 +1944,7 @@
 
 - name: LoadInstanceOfObjectResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     lhs: ValId
