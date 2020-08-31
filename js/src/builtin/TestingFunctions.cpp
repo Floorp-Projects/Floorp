@@ -175,6 +175,13 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  bool offThreadParseGlobal = cx->options().useOffThreadParseGlobal();
+  if (!JS_SetProperty(
+          cx, info, "offThreadParseGlobal",
+          offThreadParseGlobal ? TrueHandleValue : FalseHandleValue)) {
+    return false;
+  }
+
   args.rval().setObject(*info);
   return true;
 }
