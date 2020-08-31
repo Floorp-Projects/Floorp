@@ -385,7 +385,7 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   config.mColISize = colISize;
   config.mExpectedISizeLeftOver = expectedISizeLeftOver;
   config.mColGap = colGap;
-  config.mColMaxBSize = colBSize;
+  config.mColBSize = colBSize;
   config.mIsBalancing = isBalancing;
   config.mForceAuto = aForceAuto;
   config.mKnownFeasibleBSize = NS_UNCONSTRAINEDSIZE;
@@ -393,9 +393,9 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
 
   COLUMN_SET_LOG(
       "%s: this=%p, mUsedColCount=%d, mColISize=%d, "
-      "mExpectedISizeLeftOver=%d, mColGap=%d, mColMaxBSize=%d, mIsBalancing=%d",
+      "mExpectedISizeLeftOver=%d, mColGap=%d, mColBSize=%d, mIsBalancing=%d",
       __func__, this, config.mUsedColCount, config.mColISize,
-      config.mExpectedISizeLeftOver, config.mColGap, config.mColMaxBSize,
+      config.mExpectedISizeLeftOver, config.mColGap, config.mColBSize,
       config.mIsBalancing);
 
   return config;
@@ -509,20 +509,20 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   bool allFit = true;
   WritingMode wm = GetWritingMode();
   const bool isRTL = wm.IsBidiRTL();
-  const bool shrinkingBSize = mLastBalanceBSize > aConfig.mColMaxBSize;
-  const bool changingBSize = mLastBalanceBSize != aConfig.mColMaxBSize;
+  const bool shrinkingBSize = mLastBalanceBSize > aConfig.mColBSize;
+  const bool changingBSize = mLastBalanceBSize != aConfig.mColBSize;
 
   COLUMN_SET_LOG(
       "%s: Doing column reflow pass: mLastBalanceBSize=%d,"
-      " mColMaxBSize=%d, RTL=%d, mUsedColCount=%d,"
+      " mColBSize=%d, RTL=%d, mUsedColCount=%d,"
       " mColISize=%d, mColGap=%d",
-      __func__, mLastBalanceBSize, aConfig.mColMaxBSize, isRTL,
+      __func__, mLastBalanceBSize, aConfig.mColBSize, isRTL,
       aConfig.mUsedColCount, aConfig.mColISize, aConfig.mColGap);
 
   DrainOverflowColumns();
 
   if (changingBSize) {
-    mLastBalanceBSize = aConfig.mColMaxBSize;
+    mLastBalanceBSize = aConfig.mColBSize;
     // XXX Seems like this could fire if incremental reflow pushed the column
     // set down so we reflow incrementally with a different available height.
     // We need a way to do an incremental reflow and be sure availableHeight
@@ -601,12 +601,12 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     if (skipIncremental && shrinkingBSize) {
       switch (wm.GetBlockDir()) {
         case WritingMode::eBlockTB:
-          if (child->ScrollableOverflowRect().YMost() > aConfig.mColMaxBSize) {
+          if (child->ScrollableOverflowRect().YMost() > aConfig.mColBSize) {
             skipIncremental = false;
           }
           break;
         case WritingMode::eBlockLR:
-          if (child->ScrollableOverflowRect().XMost() > aConfig.mColMaxBSize) {
+          if (child->ScrollableOverflowRect().XMost() > aConfig.mColBSize) {
             skipIncremental = false;
           }
           break;
@@ -644,14 +644,14 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
                      __func__, colData.mColCount, child, skipIncremental,
                      ToString(aStatus).c_str());
     } else {
-      LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColMaxBSize);
+      LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColBSize);
       if (isMeasuringFeasibleContentBSize) {
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
         COLUMN_SET_LOG(
             "%s: Measuring content block-size, change available block-size "
             "from %d to %d",
-            __func__, aConfig.mColMaxBSize, availSize.BSize(wm));
+            __func__, aConfig.mColBSize, availSize.BSize(wm));
       }
 
       if (reflowNext) {
@@ -726,7 +726,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
                         ReflowChildFlags::Default);
 
       childContentBEnd = nsLayoutUtils::CalculateContentBEnd(wm, child);
-      if (childContentBEnd > aConfig.mColMaxBSize) {
+      if (childContentBEnd > aConfig.mColBSize) {
         allFit = false;
       }
       if (childContentBEnd > availSize.BSize(wm)) {
@@ -1127,7 +1127,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
                    nextGuess, iterationCount);
     ++iterationCount;
 
-    aConfig.mColMaxBSize = nextGuess;
+    aConfig.mColBSize = nextGuess;
 
     aUnboundedLastColumn = false;
     MarkPrincipalChildrenDirty(this);
@@ -1150,7 +1150,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     // We need to reflow one more time at the feasible block-size to
     // get a valid layout.
     if (aConfig.mKnownInfeasibleBSize >= availableContentBSize) {
-      aConfig.mColMaxBSize = availableContentBSize;
+      aConfig.mColBSize = availableContentBSize;
       if (mLastBalanceBSize == availableContentBSize) {
         // If we end up here, we have a constrained available content
         // block-size, and our last column's block-size exceeds it. Also, if
@@ -1182,7 +1182,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
         }
       }
     } else {
-      aConfig.mColMaxBSize = aConfig.mKnownFeasibleBSize;
+      aConfig.mColBSize = aConfig.mKnownFeasibleBSize;
     }
 
     // This is our last attempt to reflow. If our column container's available
