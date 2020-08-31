@@ -44,7 +44,6 @@ WindowGlobalInit WindowGlobalActor::BaseInitializer(
   ctx.mInnerWindowId = aInnerWindowId;
   ctx.mOuterWindowId = aOuterWindowId;
   ctx.mBrowsingContextId = aBrowsingContext->Id();
-  ctx.mBrowsingContextIsTop = aBrowsingContext->IsTop();
 
   // If any synced fields need to be initialized from our BrowsingContext, we
   // can initialize them here.

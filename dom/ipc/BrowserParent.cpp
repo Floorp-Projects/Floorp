@@ -1313,18 +1313,9 @@ IPCResult BrowserParent::RecvIndexedDBPermissionRequest(
 IPCResult BrowserParent::RecvNewWindowGlobal(
     ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,
     const WindowGlobalInit& aInit) {
-  MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext,
-                        "Should not receive messages after being unlinked");
   RefPtr<CanonicalBrowsingContext> browsingContext =
       CanonicalBrowsingContext::Get(aInit.context().mBrowsingContextId);
   if (!browsingContext) {
-    CrashReporter::AutoAnnotateCrashReport autoMissingBCId(
-        CrashReporter::Annotation::NewWindowMissingBCId,
-        static_cast<unsigned int>(aInit.context().mBrowsingContextId));
-    CrashReporter::AutoAnnotateCrashReport autoMissingBCIsTop(
-        CrashReporter::Annotation::NewWindowBCIsTop,
-        aInit.context().mBrowsingContextIsTop);
-
     return IPC_FAIL(this, "Cannot create for missing BrowsingContext");
   }
   if (!aInit.principal()) {
