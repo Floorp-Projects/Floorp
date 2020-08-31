@@ -1218,24 +1218,10 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
              "The column container should be ColumnSetWrapperFrame!");
   MOZ_ASSERT(aReflowInput.ComputedLogicalBorderPadding().IsAllZero(),
              "Only the column container can have border and padding!");
-
-#ifdef DEBUG
-  nsFrameList::Enumerator oc(GetChildList(kOverflowContainersList));
-  for (; !oc.AtEnd(); oc.Next()) {
-    MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(oc.get()));
-  }
-  nsFrameList::Enumerator eoc(GetChildList(kExcessOverflowContainersList));
-  for (; !eoc.AtEnd(); eoc.Next()) {
-    MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(eoc.get()));
-  }
-#endif
-
-  nsOverflowAreas ocBounds;
-  nsReflowStatus ocStatus;
-  if (GetPrevInFlow()) {
-    ReflowOverflowContainerChildren(aPresContext, aReflowInput, ocBounds,
-                                    ReflowChildFlags::Default, ocStatus);
-  }
+  MOZ_ASSERT(GetChildList(kOverflowContainersList).IsEmpty() &&
+                 GetChildList(kExcessOverflowContainersList).IsEmpty(),
+             "ColumnSetFrame should store overflow containers in principal "
+             "child list!");
 
   //------------ Handle Incremental Reflow -----------------
 
@@ -1277,12 +1263,9 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
                "Column set should be complete if the available block-size is "
                "unconstrained");
 
-  // Merge overflow container bounds and status.
-  aDesiredSize.mOverflowAreas.UnionWith(ocBounds);
-  aStatus.MergeCompletionStatusFrom(ocStatus);
-
-  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput,
-                                 aStatus, false);
+  MOZ_ASSERT(!HasAbsolutelyPositionedChildren(),
+             "ColumnSetWrapperFrame should be the abs.pos container!");
+  FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
