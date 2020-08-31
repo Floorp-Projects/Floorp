@@ -11,7 +11,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsIFrameInlines.h"  // for methods used by IS_TRUE_OVERFLOW_CONTAINER
 
 /**
  * nsColumnSetFrame implements CSS multi-column layout.
@@ -48,11 +47,6 @@ class nsColumnSetFrame final : public nsContainerFrame {
     if (!frame) return nullptr;
 
     return frame->GetContentInsertionFrame();
-  }
-
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eCanContainOverflowContainers));
   }
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
