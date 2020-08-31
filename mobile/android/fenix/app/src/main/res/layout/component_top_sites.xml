@@ -3,18 +3,28 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--LinearLayout is used here because we are forced by the view pager
+to keep layout_width="match_parent"-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/top_sites_list"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="8dp"
-    android:clipChildren="false"
-    android:clipToPadding="false"
-    android:overScrollMode="never"
-    android:nestedScrollingEnabled="false"
-    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-    app:spanCount="4"
-    tools:listitem="@layout/top_site_item" />
+    android:gravity="center_horizontal">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/top_sites_list"
+        android:layout_width="wrap_content"
+        android:minWidth="448dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:nestedScrollingEnabled="false"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="4"
+        tools:listitem="@layout/top_site_item" />
+</LinearLayout>

@@ -5,25 +5,27 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/top_site_item"
-    android:layout_width="64dp"
-    android:layout_height="wrap_content"
-    android:padding="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/top_sites_item_size"
+    android:layout_marginBottom="@dimen/top_sites_item_margin_top"
     android:orientation="vertical">
+
 
     <ImageView
         android:id="@+id/favicon_image"
-        style="@style/Mozac.Widgets.Favicon"
+        style="@style/TopSite.Favicon"
         android:layout_gravity="center"
         android:importantForAccessibility="no" />
 
     <TextView
         android:id="@+id/top_site_title"
-        android:layout_width="match_parent"
+        android:layout_width="64dp"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:singleLine="true"
+        android:layout_gravity="center_horizontal"
         android:textColor="@color/top_site_title_text"
         android:textSize="10sp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="@dimen/top_sites_text_margin_top" />
 
 </LinearLayout>

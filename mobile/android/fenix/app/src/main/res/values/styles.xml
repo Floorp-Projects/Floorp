@@ -622,6 +622,14 @@
         <item name="behavior_halfExpandedRatio">0.4</item>
     </style>
 
+    <style name="TopSite.Favicon" parent="Mozac.Widgets.Favicon">
+        <item name="android:layout_width">@dimen/top_sites_favicon_size</item>
+        <item name="android:layout_height">@dimen/top_sites_favicon_size</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">@dimen/top_sites_favicon_padding</item>
+        <item name="android:background">@drawable/mozac_widget_favicon_background</item>
+    </style>
+
     <style name="TabTrayFab" parent="Widget.MaterialComponents.ExtendedFloatingActionButton">
         <item name="elevation">90dp</item>
         <item name="android:stateListAnimator">@null</item>

@@ -169,6 +169,13 @@
     <dimen name="saved_logins_item_margin_start">16dp</dimen>
     <dimen name="saved_logins_item_margin_end">48dp</dimen>
 
+    <!-- Top sites  -->
+    <dimen name="top_sites_favicon_size">40dp</dimen>
+    <dimen name="top_sites_favicon_padding">4dp</dimen>
+    <dimen name="top_sites_item_size">64dp</dimen>
+    <dimen name="top_sites_item_margin_top">12dp</dimen>
+    <dimen name="top_sites_text_margin_top">8dp</dimen>
+
     <!-- a11y -->
     <dimen name="accessibility_min_height">48dp</dimen>
 
