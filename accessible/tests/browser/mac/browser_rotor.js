@@ -117,3 +117,155 @@ addAccessibleTask(
     );
   }
 );
+
+/**
+ * Test rotor with landmarks
+ */
+addAccessibleTask(
+  `
+  <header id="header">
+    <h1>This is a heading within a header</h1>
+  </header>
+
+  <nav id="nav">
+    <a href="example.com">I am a link in a nav</a>
+  </nav>
+
+  <main id="main">
+    I am some text in a main element
+  </main>
+
+  <footer id="footer">
+    <h2>Heading in footer</h2>
+  </footer>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXLandmarkSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const landmarkCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(4, landmarkCount, "Found four landmarks");
+
+    const landmarks = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    const header = getNativeInterface(accDoc, "header");
+    const nav = getNativeInterface(accDoc, "nav");
+    const main = getNativeInterface(accDoc, "main");
+    const footer = getNativeInterface(accDoc, "footer");
+
+    is(
+      header.getAttributeValue("AXSubrole"),
+      landmarks[0].getAttributeValue("AXSubrole"),
+      "Found correct first landmark"
+    );
+    is(
+      nav.getAttributeValue("AXSubrole"),
+      landmarks[1].getAttributeValue("AXSubrole"),
+      "Found correct second landmark"
+    );
+    is(
+      main.getAttributeValue("AXSubrole"),
+      landmarks[2].getAttributeValue("AXSubrole"),
+      "Found correct third landmark"
+    );
+    is(
+      footer.getAttributeValue("AXSubrole"),
+      landmarks[3].getAttributeValue("AXSubrole"),
+      "Found correct fourth landmark"
+    );
+  }
+);
+
+/**
+ * Test rotor with aria landmarks
+ */
+addAccessibleTask(
+  `
+  <div id="banner" role="banner">
+    <h1>This is a heading within a banner</h1>
+  </div>
+
+  <div id="nav" role="navigation">
+    <a href="example.com">I am a link in a nav</a>
+  </div>
+
+  <div id="main" role="main">
+    I am some text in a main element
+  </div>
+
+  <div id="contentinfo" role="contentinfo">
+    <h2>Heading in contentinfo</h2>
+  </div>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXLandmarkSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const landmarkCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(4, landmarkCount, "Found four landmarks");
+
+    const landmarks = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    const banner = getNativeInterface(accDoc, "banner");
+    const nav = getNativeInterface(accDoc, "nav");
+    const main = getNativeInterface(accDoc, "main");
+    const contentinfo = getNativeInterface(accDoc, "contentinfo");
+
+    is(
+      banner.getAttributeValue("AXSubrole"),
+      landmarks[0].getAttributeValue("AXSubrole"),
+      "Found correct first landmark"
+    );
+    is(
+      nav.getAttributeValue("AXSubrole"),
+      landmarks[1].getAttributeValue("AXSubrole"),
+      "Found correct second landmark"
+    );
+    is(
+      main.getAttributeValue("AXSubrole"),
+      landmarks[2].getAttributeValue("AXSubrole"),
+      "Found correct third landmark"
+    );
+    is(
+      contentinfo.getAttributeValue("AXSubrole"),
+      landmarks[3].getAttributeValue("AXSubrole"),
+      "Found correct fourth landmark"
+    );
+  }
+);
