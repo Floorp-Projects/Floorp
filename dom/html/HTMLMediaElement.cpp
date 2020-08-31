@@ -7740,13 +7740,13 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
       ->GetSinkDevice(win, sinkId)
       ->Then(
           mAbstractMainThread, __func__,
-          [self = RefPtr<HTMLMediaElement>(this)](
-              RefPtr<AudioDeviceInfo>&& aInfo) {
+          [self = RefPtr<HTMLMediaElement>(this),
+           this](RefPtr<AudioDeviceInfo>&& aInfo) {
             // Sink found switch output device.
             MOZ_ASSERT(aInfo);
-            if (self->mDecoder) {
-              RefPtr<SinkInfoPromise> p = self->mDecoder->SetSink(aInfo)->Then(
-                  self->mAbstractMainThread, __func__,
+            if (mDecoder) {
+              RefPtr<SinkInfoPromise> p = mDecoder->SetSink(aInfo)->Then(
+                  mAbstractMainThread, __func__,
                   [aInfo](const GenericPromise::ResolveOrRejectValue& aValue) {
                     if (aValue.IsResolve()) {
                       return SinkInfoPromise::CreateAndResolve(aInfo, __func__);
@@ -7756,11 +7756,11 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
                   });
               return p;
             }
-            if (self->mSrcStream) {
-              MOZ_ASSERT(self->mMediaStreamRenderer);
+            if (mSrcStream) {
+              MOZ_ASSERT(mMediaStreamRenderer);
               RefPtr<SinkInfoPromise> p =
-                  self->mMediaStreamRenderer->SetAudioOutputDevice(aInfo)->Then(
-                      self->mAbstractMainThread, __func__,
+                  mMediaStreamRenderer->SetAudioOutputDevice(aInfo)->Then(
+                      mAbstractMainThread, __func__,
                       [aInfo](const GenericPromise::AllPromiseType::
                                   ResolveOrRejectValue& aValue) {
                         if (aValue.IsResolve()) {
@@ -7780,10 +7780,10 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
             return SinkInfoPromise::CreateAndReject(res, __func__);
           })
       ->Then(mAbstractMainThread, __func__,
-             [promise, self = RefPtr<HTMLMediaElement>(this),
+             [promise, self = RefPtr<HTMLMediaElement>(this), this,
               sinkId](const SinkInfoPromise::ResolveOrRejectValue& aValue) {
                if (aValue.IsResolve()) {
-                 self->mSink = std::pair(sinkId, aValue.ResolveValue());
+                 mSink = std::pair(sinkId, aValue.ResolveValue());
                  promise->MaybeResolveWithUndefined();
                } else {
                  switch (aValue.RejectValue()) {
