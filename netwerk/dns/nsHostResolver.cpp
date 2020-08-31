@@ -1384,7 +1384,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
       sendAgain = false;
       if ((TRRTYPE_AAAA == rectype) && gTRRService &&
           (gTRRService->DisableIPv6() ||
-           (gTRRService->CheckIPv6Connectivity() && mNCS &&
+           (StaticPrefs::network_trr_skip_AAAA_when_not_supported() && mNCS &&
             mNCS->GetIPv6() == nsINetworkConnectivityService::NOT_AVAILABLE))) {
         break;
       }
@@ -1558,7 +1558,7 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
     return;
   }
 
-  if (gTRRService->SkipTRRWhenParentalControlEnabled() &&
+  if (StaticPrefs::network_dns_skipTRR_when_parental_control_enabled() &&
       gTRRService->ParentalControlEnabled()) {
     aRec->RecordReason(nsHostRecord::TRR_PARENTAL_CONTROL);
     aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
@@ -1984,12 +1984,12 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
         return LOOKUP_OK;
       }
 
-      if (gTRRService && gTRRService->WaitForAllResponses()) {
+      if (gTRRService && StaticPrefs::network_trr_wait_for_A_and_AAAA()) {
         LOG(("CompleteLookup: waiting for all responses!\n"));
         return LOOKUP_OK;
       }
 
-      if (addrRec->mTrrA && (!gTRRService || !gTRRService->EarlyAAAA())) {
+      if (addrRec->mTrrA && !StaticPrefs::network_trr_early_AAAA()) {
         // This is an early AAAA with a pending A response. Allowed
         // only by pref.
         LOG(("CompleteLookup: avoiding early use of TRR AAAA!\n"));

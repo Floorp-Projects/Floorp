@@ -273,10 +273,10 @@ nsresult TRR::SendHTTPRequest() {
     }
   }
 
-  bool useGet = gTRRService->UseGET();
+  bool useGet = StaticPrefs::network_trr_useGET();
   nsAutoCString body;
   nsCOMPtr<nsIURI> dnsURI;
-  bool disableECS = gTRRService->DisableECS();
+  bool disableECS = StaticPrefs::network_trr_disable_ECS();
   nsresult rv;
 
   LOG(("TRR::SendHTTPRequest resolve %s type %u\n", mHost.get(), mType));
@@ -387,7 +387,7 @@ nsresult TRR::SendHTTPRequest() {
   rv = internalChannel->SetIsTRRServiceChannel(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mAllowRFC1918 = gTRRService->AllowRFC1918();
+  mAllowRFC1918 = StaticPrefs::network_trr_allow_rfc1918();
 
   if (useGet) {
     rv = httpChannel->SetRequestMethod("GET"_ns);
