@@ -101,10 +101,10 @@ class nsColumnSetFrame final : public nsContainerFrame {
     // The width (inline-size) of each column gap.
     nscoord mColGap = NS_UNCONSTRAINEDSIZE;
 
-    // The maximum bSize of any individual column during a reflow iteration.
-    // This parameter is set during each iteration of the binary search for
-    // the best column block-size.
-    nscoord mColMaxBSize = NS_UNCONSTRAINEDSIZE;
+    // The available block-size of each individual column. This parameter is set
+    // during each iteration of the binary search for the best column
+    // block-size.
+    nscoord mColBSize = NS_UNCONSTRAINEDSIZE;
 
     // A boolean controlling whether or not we are balancing.
     bool mIsBalancing = false;
