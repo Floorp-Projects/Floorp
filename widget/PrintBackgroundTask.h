@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Telemetry.h"
 #include <utility>
 #include <tuple>
 
@@ -28,7 +29,7 @@ using PrintBackgroundTask = Result (T::*)(Args...) const;
 
 template <typename T, typename Result, typename... Args>
 void SpawnPrintBackgroundTask(
-    T& aReceiver, dom::Promise& aPromise,
+    T& aReceiver, dom::Promise& aPromise, const nsCString& aTelemetryKey,
     PrintBackgroundTask<T, Result, Args...> aBackgroundTask, Args... aArgs) {
   auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
       "nsPrinterBase::SpawnBackgroundTaskPromise", &aPromise);
@@ -45,18 +46,26 @@ void SpawnPrintBackgroundTask(
       NS_NewRunnableFunction(
           "SpawnPrintBackgroundTask",
           [holder = std::move(holder), promiseHolder = std::move(promiseHolder),
-           aBackgroundTask,
+           aTelemetryKey, startRoundTrip = TimeStamp::Now(),
+           backgroundTask = aBackgroundTask,
            aArgs = std::make_tuple(std::forward<Args>(aArgs)...)] {
+            auto start = TimeStamp::Now();
             Result result = std::apply(
                 [&](auto&&... args) {
-                  return (holder->get()->*aBackgroundTask)(args...);
+                  return (holder->get()->*backgroundTask)(args...);
                 },
                 std::move(aArgs));
+            Telemetry::AccumulateTimeDelta(
+                Telemetry::PRINT_BACKGROUND_TASK_TIME_MS, aTelemetryKey, start);
             NS_DispatchToMainThread(NS_NewRunnableFunction(
                 "SpawnPrintBackgroundTaskResolution",
                 [holder = std::move(holder),
                  promiseHolder = std::move(promiseHolder),
+                 telemetryKey = std::move(aTelemetryKey), startRoundTrip,
                  result = std::move(result)] {
+                  Telemetry::AccumulateTimeDelta(
+                      Telemetry::PRINT_BACKGROUND_TASK_ROUND_TRIP_TIME_MS,
+                      telemetryKey, startRoundTrip);
                   ResolveOrReject(*promiseHolder->get(), *holder->get(),
                                   result);
                 }));
@@ -69,6 +78,7 @@ void SpawnPrintBackgroundTask(
 template <typename T, typename Result, typename... Args>
 nsresult PrintBackgroundTaskPromise(
     T& aReceiver, JSContext* aCx, dom::Promise** aResultPromise,
+    const nsCString& aTelemetryKey,
     PrintBackgroundTask<T, Result, Args...> aTask, Args... aArgs) {
   ErrorResult rv;
   RefPtr<dom::Promise> promise =
@@ -77,7 +87,7 @@ nsresult PrintBackgroundTaskPromise(
     return rv.StealNSResult();
   }
 
-  SpawnPrintBackgroundTask(aReceiver, *promise, aTask,
+  SpawnPrintBackgroundTask(aReceiver, *promise, aTelemetryKey, aTask,
                            std::forward<Args>(aArgs)...);
 
   promise.forget(aResultPromise);
@@ -89,15 +99,16 @@ nsresult PrintBackgroundTaskPromise(
 template <typename T, typename Result, typename... Args>
 nsresult AsyncPromiseAttributeGetter(
     T& aReceiver, RefPtr<dom::Promise>& aPromiseSlot, JSContext* aCx,
-    dom::Promise** aResultPromise,
+    dom::Promise** aResultPromise, const nsCString& aTelemetryKey,
     PrintBackgroundTask<T, Result, Args...> aTask, Args... aArgs) {
   if (RefPtr<dom::Promise> existing = aPromiseSlot) {
     existing.forget(aResultPromise);
     return NS_OK;
   }
 
-  nsresult rv = PrintBackgroundTaskPromise(aReceiver, aCx, aResultPromise,
-                                           aTask, std::forward<Args>(aArgs)...);
+  nsresult rv =
+      PrintBackgroundTaskPromise(aReceiver, aCx, aResultPromise, aTelemetryKey,
+                                 aTask, std::forward<Args>(aArgs)...);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aPromiseSlot = *aResultPromise;
