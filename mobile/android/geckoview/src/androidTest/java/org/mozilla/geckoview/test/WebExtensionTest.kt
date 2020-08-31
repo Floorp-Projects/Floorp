@@ -12,7 +12,6 @@ import org.hamcrest.core.IsEqual.equalTo
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
@@ -23,8 +22,6 @@ import org.mozilla.geckoview.WebExtension.DisabledFlags
 import org.mozilla.geckoview.WebExtensionController.EnableSource
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.util.RuntimeCreator
-
-import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -466,6 +463,37 @@ class WebExtensionTest : BaseSessionTest() {
 
         // Check that the WebExtension was not installed and the border is still empty.
         assertBodyBorderEqualTo("")
+    }
+
+    @Test
+    fun createNotification() {
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebNotificationDelegate::class,
+                { delegate ->
+                    sessionRule.runtime.webNotificationDelegate = delegate },
+                { sessionRule.runtime.webNotificationDelegate = null },
+                object : WebNotificationDelegate {
+                    @GeckoSessionTestRule.AssertCalled
+                    override fun onShowNotification(notification: WebNotification) {
+                    }
+                })
+
+        val extension = sessionRule.waitForResult(
+                controller.installBuiltIn("resource://android/assets/web_extensions/notification-test/"))
+
+        sessionRule.waitUntilCalled(object : WebNotificationDelegate {
+            @AssertCalled(count = 1)
+            override fun onShowNotification(notification: WebNotification) {
+                assertEquals(notification.title, "Time for cake!")
+                assertEquals(notification.text, "Something something cake")
+                assertEquals(notification.imageUrl, "http://example.com/img.svg")
+                // This should be filled out, Bug 1589693
+                assertEquals(notification.source, null)
+            }
+        })
+
+        sessionRule.waitForResult(
+                controller.uninstall(extension))
     }
 
     // This test
