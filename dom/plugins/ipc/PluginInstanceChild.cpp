@@ -1257,7 +1257,7 @@ mozilla::ipc::IPCResult PluginInstanceChild::AnswerNPP_SetWindow(
 }
 
 bool PluginInstanceChild::Initialize() {
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
   if (mWsInfo.display) {
     // Already initialized
     return true;
