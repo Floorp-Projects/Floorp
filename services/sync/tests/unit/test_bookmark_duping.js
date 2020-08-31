@@ -1,6 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This test should be removed as part of bug 1449730, which is removing
+// the old bookmarks engine - it de-dupes new "incoming" items even though the
+// dupe already exists on the server. Dogear does not do this, so this entire
+// test file can go.
+
 const { BookmarksEngine } = ChromeUtils.import(
   "resource://services-sync/engines/bookmarks.js"
 );

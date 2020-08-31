@@ -7,8 +7,7 @@ const { BookmarksEngine } = ChromeUtils.import(
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
-add_task(async function run_test() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function run_test(engine) {
   await engine.initialize();
   engine._syncStartup = async function() {
     throw new Error("FAIL!");

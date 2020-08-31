@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { BookmarksEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/bookmarks.js"
-);
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 const { PlacesTransactions } = ChromeUtils.import(
   "resource://gre/modules/PlacesTransactions.jsm"
@@ -16,7 +13,7 @@ let tracker;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 add_task(async function setup() {
-  await Service.engineManager.register(BookmarksEngine);
+  await Service.engineManager.switchAlternatives();
   engine = Service.engineManager.get("bookmarks");
   store = engine._store;
   tracker = engine._tracker;

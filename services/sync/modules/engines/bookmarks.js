@@ -873,10 +873,8 @@ BufferedBookmarksEngine.prototype = {
     return new BufferedBookmarksChangeset();
   },
 
-  async _processIncoming(newitems) {
-    await super._processIncoming(newitems);
+  async _apply() {
     let buf = await this._store.ensureOpenMirror();
-
     let watchdog = this._newWatchdog();
     watchdog.start(BUFFERED_BOOKMARK_APPLY_TIMEOUT_MS);
 
@@ -894,6 +892,11 @@ BufferedBookmarksEngine.prototype = {
       }
       this._needWeakUpload.clear();
     }
+  },
+
+  async _processIncoming(newitems) {
+    await super._processIncoming(newitems);
+    await this._apply();
   },
 
   async _reconcile(item) {
