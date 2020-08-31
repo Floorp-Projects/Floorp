@@ -11,6 +11,7 @@
  Exposed=Window]
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack   track;
+  readonly attribute RTCDtlsTransport?  transport;
   Promise<RTCStatsReport>               getStats();
   [Pref="media.peerconnection.rtpsourcesapi.enabled"]
   sequence<RTCRtpContributingSource>    getContributingSources();
