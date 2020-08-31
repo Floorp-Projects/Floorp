@@ -592,31 +592,37 @@ class nsContainerFrame : public nsSplittableFrame {
    * containers list. The argument must be a *non-empty* list.
    *
    * After this operation, the argument becomes an empty list.
+   *
+   * @return the frame list associated with the property.
    */
-  void SetOverflowFrames(nsFrameList&& aOverflowFrames) {
+  nsFrameList* SetOverflowFrames(nsFrameList&& aOverflowFrames) {
     MOZ_ASSERT(aOverflowFrames.NotEmpty(), "Shouldn't be called");
-    SetProperty(OverflowProperty(),
-                new (PresShell()) nsFrameList(std::move(aOverflowFrames)));
+    auto* list = new (PresShell()) nsFrameList(std::move(aOverflowFrames));
+    SetProperty(OverflowProperty(), list);
+    return list;
   }
-  void SetOverflowContainers(nsFrameList&& aOverflowContainers) {
+  nsFrameList* SetOverflowContainers(nsFrameList&& aOverflowContainers) {
     MOZ_ASSERT(aOverflowContainers.NotEmpty(), "Shouldn't set an empty list!");
     MOZ_ASSERT(!GetProperty(OverflowContainersProperty()),
                "Shouldn't override existing list!");
     MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                "This type of frame can't have overflow containers!");
-    SetProperty(OverflowContainersProperty(),
-                new (PresShell()) nsFrameList(std::move(aOverflowContainers)));
+    auto* list = new (PresShell()) nsFrameList(std::move(aOverflowContainers));
+    SetProperty(OverflowContainersProperty(), list);
+    return list;
   }
-  void SetExcessOverflowContainers(nsFrameList&& aExcessOverflowContainers) {
+  nsFrameList* SetExcessOverflowContainers(
+      nsFrameList&& aExcessOverflowContainers) {
     MOZ_ASSERT(aExcessOverflowContainers.NotEmpty(),
                "Shouldn't set an empty list!");
     MOZ_ASSERT(!GetProperty(ExcessOverflowContainersProperty()),
                "Shouldn't override existing list!");
     MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                "This type of frame can't have overflow containers!");
-    SetProperty(ExcessOverflowContainersProperty(),
-                new (PresShell())
-                    nsFrameList(std::move(aExcessOverflowContainers)));
+    auto* list =
+        new (PresShell()) nsFrameList(std::move(aExcessOverflowContainers));
+    SetProperty(ExcessOverflowContainersProperty(), list);
+    return list;
   }
 
   /**
