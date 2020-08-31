@@ -34,4 +34,5 @@ check out the :doc:`how-to section <how-tos>`.
     versioncontrol
     config
     how-tos
+    task-graph
     reference
