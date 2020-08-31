@@ -1,8 +1,0 @@
-{
-  "default": {
-    "searchDefault": "engine1",
-    "visibleDefaultEngines": [
-      "engine1", "engine2"
-    ]
-  }
-}
