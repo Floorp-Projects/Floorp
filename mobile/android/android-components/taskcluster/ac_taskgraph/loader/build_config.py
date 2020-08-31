@@ -12,7 +12,6 @@ import subprocess
 from collections import defaultdict
 from copy import deepcopy
 from taskgraph.loader.transform import loader as base_loader
-from taskgraph.util.memoize import memoize
 from taskgraph.util.taskcluster import get_session
 from taskgraph.util.templates import merge
 
@@ -48,6 +47,8 @@ def get_upstream_deps_for_components(components):
     """Return the full list of local upstream dependencies of a component."""
     deps = set()
     cmd = ["./gradlew"]
+    # This is eventually going to fail if there's ever enough components to make the command line
+    # too long. If that happens, we'll need to split this list up and run gradle more than once.
     for c in sorted(components):
         cmd.extend(["%s:dependencies" % c, "--configuration", "implementation"])
     # Parsing output like this is not ideal but bhearsum couldn't find a way
