@@ -1014,6 +1014,10 @@ pro.fj
 *.fk
 
 // fm : https://en.wikipedia.org/wiki/.fm
+com.fm
+edu.fm
+net.fm
+org.fm
 fm
 
 // fo : https://en.wikipedia.org/wiki/.fo
@@ -1053,6 +1057,8 @@ ga
 gb
 
 // gd : https://en.wikipedia.org/wiki/.gd
+edu.gd
+gov.gd
 gd
 
 // ge : http://www.nic.net.ge/policy_en.pdf
@@ -10910,32 +10916,35 @@ uwu.ai
 // CentralNic : http://www.centralnic.com/names/domains
 // Submitted by registry <gavin.brown@centralnic.com>
 ae.org
-ar.com
 br.com
 cn.com
 com.de
 com.se
 de.com
 eu.com
-gb.com
 gb.net
-hu.com
 hu.net
 jp.net
 jpn.com
-kr.com
 mex.com
-no.com
-qc.com
 ru.com
 sa.com
 se.net
 uk.com
 uk.net
 us.com
-uy.com
 za.bz
 za.com
+
+// No longer operated by CentralNic, these entries should be adopted and/or removed by current operators
+// Submitted by Gavin Brown <gavin.brown@centralnic.com>
+ar.com
+gb.com
+hu.com
+kr.com
+no.com
+qc.com
+uy.com
 
 // Africa.com Web Solutions Ltd : https://registry.africa.com
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
@@ -10948,6 +10957,7 @@ gr.com
 // Radix FZC : http://domains.in.net
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
 in.net
+web.in
 
 // US REGISTRY LLC : http://us.org
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
@@ -10956,6 +10966,21 @@ us.org
 // co.com Registry, LLC : https://registry.co.com
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
 co.com
+
+// Roar Domains LLC : https://roar.basketball/
+// Submitted by Gavin Brown <gavin.brown@centralnic.com>
+aus.basketball
+nz.basketball
+
+// BRS Media : https://brsmedia.com/
+// Submitted by Gavin Brown <gavin.brown@centralnic.com>
+radio.am
+radio.fm
+
+// Globe Hosting SRL : https://www.globehosting.com/
+// Submitted by Gavin Brown <gavin.brown@centralnic.com>
+co.ro
+shop.ro
 
 // c.la : http://www.c.la/
 c.la
@@ -11884,7 +11909,6 @@ homeoffice.gov.uk
 // GlobeHosting, Inc.
 // Submitted by Zoltan Egresi <egresi@globehosting.com>
 ro.im
-shop.ro
 
 // GoIP DNS Services : http://www.goip.de
 // Submitted by Christian Poulter <milchstrasse@goip.de>
@@ -12135,13 +12159,19 @@ iobb.net
 
 //Jelastic, Inc. : https://jelastic.com/
 // Submited by Ihor Kolodyuk <ik@jelastic.com>
+appengine.flow.ch
+vip.jelastic.cloud
 jele.cloud
 jele.club
 dopaas.com
 hidora.com
 jcloud.ik-server.com
 demo.jelastic.com
+paas.massivegrid.com
 j.scaleforce.com.cy
+jelastic.dogado.eu
+fi.cloudplatform.fi
+paas.datacenter.fi
 jele.host
 mircloud.host
 jele.io
@@ -12626,6 +12656,10 @@ static.observableusercontent.com
 // Submitted by Andrew Sampson <andrew@ulterius.io>
 cya.gg
 
+// OMG.LOL : <https://omg.lol>
+// Submitted by Adam Newbold <adam@omg.lol>
+omg.lol
+
 // Omnibond Systems, LLC. : https://www.omnibond.com
 // Submitted by Cole Estep <cole@omnibond.com>
 cloudycluster.net
@@ -12953,6 +12987,10 @@ siteleaf.net
 bounty-full.com
 alpha.bounty-full.com
 beta.bounty-full.com
+
+// Small Technology Foundation : https://small-tech.org
+// Submitted by Aral Balkan <aral@small-tech.org>
+small-web.org
 
 // Stackhero : https://www.stackhero.io
 // Submitted by Adrien Gillon <adrien+public-suffix-list@stackhero.io>
