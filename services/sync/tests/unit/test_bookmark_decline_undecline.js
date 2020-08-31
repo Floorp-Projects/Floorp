@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { BookmarksEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/bookmarks.js"
-);
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 // A stored reference to the collection won't be valid after disabling.
@@ -14,11 +11,6 @@ function getBookmarkWBO(server, guid) {
   }
   return coll.wbo(guid);
 }
-
-add_task(async function setup() {
-  await Service.engineManager.register(BookmarksEngine);
-  await generateNewKeys(Service.collectionKeys);
-});
 
 add_task(async function test_decline_undecline() {
   let engine = Service.engineManager.get("bookmarks");

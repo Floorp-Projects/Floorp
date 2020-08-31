@@ -2,13 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Rewrite place: URIs.");
-const { BookmarkQuery, BookmarksEngine } = ChromeUtils.import(
+const { BookmarkQuery, BookmarkFolder } = ChromeUtils.import(
   "resource://services-sync/engines/bookmarks.js"
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-
-let engine = new BookmarksEngine(Service);
-let store = engine._store;
 
 function makeTagRecord(id, uri) {
   let tagRecord = new BookmarkQuery("bookmarks", id);
@@ -21,13 +18,26 @@ function makeTagRecord(id, uri) {
   return tagRecord;
 }
 
-add_task(async function run_test() {
+add_bookmark_test(async function run_test(engine) {
+  if (!isBufferedBookmarksEngine(engine)) {
+    return;
+  }
+  let store = engine._store;
+
+  let toolbar = new BookmarkFolder("bookmarks", "toolbar");
+  toolbar.parentid = "places";
+  toolbar.children = ["abcdefabcdef"];
+
   let uri = "place:folder=499&type=7&queryType=1";
   let tagRecord = makeTagRecord("abcdefabcdef", uri);
 
   _("Type: " + tagRecord.type);
   _("Folder name: " + tagRecord.folderName);
+  await store.applyIncoming(toolbar);
   await store.applyIncoming(tagRecord);
+  if (isBufferedBookmarksEngine(engine)) {
+    await engine._apply();
+  }
 
   let insertedRecord = await store.createRecord("abcdefabcdef", "bookmarks");
   Assert.equal(insertedRecord.bmkUri, "place:tag=bar");
@@ -36,7 +46,15 @@ add_task(async function run_test() {
   let wrongTypeURI = "place:folder=499&type=2&queryType=1";
   let wrongTypeRecord = makeTagRecord("fedcbafedcba", wrongTypeURI);
   await store.applyIncoming(wrongTypeRecord);
+  toolbar.children = ["fedcbafedcba"];
+  await store.applyIncoming(toolbar);
+  let expected = wrongTypeURI;
+  if (isBufferedBookmarksEngine(engine)) {
+    await engine._apply();
+    // the mirror appends a special param to these.
+    expected += "&excludeItems=1";
+  }
 
   insertedRecord = await store.createRecord("fedcbafedcba", "bookmarks");
-  Assert.equal(insertedRecord.bmkUri, wrongTypeURI);
+  Assert.equal(insertedRecord.bmkUri, expected);
 });

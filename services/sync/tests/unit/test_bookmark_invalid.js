@@ -3,6 +3,8 @@ const { BookmarksEngine } = ChromeUtils.import(
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
+// This test file is all 'guidMap' tests - it should be removed with the legacy
+// engine.
 let engine;
 let store;
 let tracker;

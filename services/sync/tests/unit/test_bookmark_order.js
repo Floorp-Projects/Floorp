@@ -173,14 +173,14 @@ async function resolveConflict(
   );
 }
 
-add_task(async function setup() {
-  await Service.engineManager.unregister("bookmarks");
-});
+async function get_engine() {
+  // we aren't really switching, just re-fetching a new initialized engine
+  await Service.engineManager.switchAlternatives();
+  return Service.engineManager.get("bookmarks");
+}
 
 add_task(async function test_local_order_newer() {
-  let engine = new BookmarksEngine(Service);
-  await engine.initialize();
-
+  let engine = await get_engine();
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -237,14 +237,11 @@ add_task(async function test_local_order_newer() {
     await engine.wipeClient();
     await Service.startOver();
     await promiseStopServer(server);
-    await engine.finalize();
   }
 });
 
 add_task(async function test_remote_order_newer() {
-  let engine = new BookmarksEngine(Service);
-  await engine.initialize();
-
+  let engine = await get_engine();
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -301,14 +298,12 @@ add_task(async function test_remote_order_newer() {
     await engine.wipeClient();
     await Service.startOver();
     await promiseStopServer(server);
-    await engine.finalize();
   }
 });
 
 add_task(async function test_bookmark_order() {
-  let engine = new BookmarksEngine(Service);
+  let engine = await get_engine();
   let store = engine._store;
-
   _("Starting with a clean slate of no bookmarks");
   await store.wipe();
   await assertBookmarksTreeMatches(
@@ -355,15 +350,15 @@ add_task(async function test_bookmark_order() {
     return bmFolder;
   }
 
-  async function apply(record) {
-    store._childrenToOrder = {};
-    await store.applyIncoming(record);
-    await store._orderChildren();
-    delete store._childrenToOrder;
+  async function apply(records) {
+    for (record of records) {
+      await store.applyIncoming(record);
+    }
+    await engine._apply();
   }
   let id10 = "10_aaaaaaaaa";
   _("basic add first bookmark");
-  await apply(bookmark(id10, ""));
+  await apply([bookmark(id10, "")]);
   await assertBookmarksTreeMatches(
     "",
     [
@@ -394,7 +389,7 @@ add_task(async function test_bookmark_order() {
   );
   let id20 = "20_aaaaaaaaa";
   _("basic append behind 10");
-  await apply(bookmark(id20, ""));
+  await apply([bookmark(id20, "")]);
   await assertBookmarksTreeMatches(
     "",
     [
@@ -431,9 +426,9 @@ add_task(async function test_bookmark_order() {
   let id31 = "31_aaaaaaaaa";
   let id30 = "f30_aaaaaaaa";
   _("basic create in folder");
-  await apply(bookmark(id31, id30));
+  let b31 = bookmark(id31, id30);
   let f30 = folder(id30, "", [id31]);
-  await apply(f30);
+  await apply([b31, f30]);
   await assertBookmarksTreeMatches(
     "",
     [
@@ -480,7 +475,7 @@ add_task(async function test_bookmark_order() {
   let id41 = "41_aaaaaaaaa";
   let id40 = "f40_aaaaaaaa";
   _("insert missing parent -> append to unfiled");
-  await apply(bookmark(id41, id40));
+  await apply([bookmark(id41, id40)]);
   await assertBookmarksTreeMatches(
     "",
     [
@@ -517,7 +512,6 @@ add_task(async function test_bookmark_order() {
           {
             guid: id41,
             index: 3,
-            requestedParent: id40,
           },
         ],
       },
@@ -532,7 +526,7 @@ add_task(async function test_bookmark_order() {
   let id42 = "42_aaaaaaaaa";
 
   _("insert another missing parent -> append");
-  await apply(bookmark(id42, id40));
+  await apply([bookmark(id42, id40)]);
   await assertBookmarksTreeMatches(
     "",
     [
@@ -569,12 +563,10 @@ add_task(async function test_bookmark_order() {
           {
             guid: id41,
             index: 3,
-            requestedParent: id40,
           },
           {
             guid: id42,
             index: 4,
-            requestedParent: id40,
           },
         ],
       },
@@ -584,428 +576,6 @@ add_task(async function test_bookmark_order() {
       },
     ],
     "insert another missing parent -> append"
-  );
-
-  _("insert folder -> move children and followers");
-  let f40 = folder(id40, "", [id41, id42]);
-  await apply(f40);
-  await assertBookmarksTreeMatches(
-    "",
-    [
-      {
-        guid: PlacesUtils.bookmarks.menuGuid,
-        index: 0,
-      },
-      {
-        guid: PlacesUtils.bookmarks.toolbarGuid,
-        index: 1,
-      },
-      {
-        guid: PlacesUtils.bookmarks.unfiledGuid,
-        index: 3,
-        children: [
-          {
-            guid: id10,
-            index: 0,
-          },
-          {
-            guid: id20,
-            index: 1,
-          },
-          {
-            guid: id30,
-            index: 2,
-            children: [
-              {
-                guid: id31,
-                index: 0,
-              },
-            ],
-          },
-          {
-            guid: id40,
-            index: 3,
-            children: [
-              {
-                guid: id41,
-                index: 0,
-              },
-              {
-                guid: id42,
-                index: 1,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        index: 4,
-      },
-    ],
-    "insert folder -> move children and followers"
-  );
-
-  _("Moving 41 behind 42 -> update f40");
-  f40.children = [id42, id41];
-  await apply(f40);
-  await assertBookmarksTreeMatches(
-    "",
-    [
-      {
-        guid: PlacesUtils.bookmarks.menuGuid,
-        index: 0,
-      },
-      {
-        guid: PlacesUtils.bookmarks.toolbarGuid,
-        index: 1,
-      },
-      {
-        guid: PlacesUtils.bookmarks.unfiledGuid,
-        index: 3,
-        children: [
-          {
-            guid: id10,
-            index: 0,
-          },
-          {
-            guid: id20,
-            index: 1,
-          },
-          {
-            guid: id30,
-            index: 2,
-            children: [
-              {
-                guid: id31,
-                index: 0,
-              },
-            ],
-          },
-          {
-            guid: id40,
-            index: 3,
-            children: [
-              {
-                guid: id42,
-                index: 0,
-              },
-              {
-                guid: id41,
-                index: 1,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        index: 4,
-      },
-    ],
-    "Moving 41 behind 42 -> update f40"
-  );
-
-  _("Moving 10 back to front -> update 10, 20");
-  f40.children = [id41, id42];
-  await apply(f40);
-  await assertBookmarksTreeMatches(
-    "",
-    [
-      {
-        guid: PlacesUtils.bookmarks.menuGuid,
-        index: 0,
-      },
-      {
-        guid: PlacesUtils.bookmarks.toolbarGuid,
-        index: 1,
-      },
-      {
-        guid: PlacesUtils.bookmarks.unfiledGuid,
-        index: 3,
-        children: [
-          {
-            guid: id10,
-            index: 0,
-          },
-          {
-            guid: id20,
-            index: 1,
-          },
-          {
-            guid: id30,
-            index: 2,
-            children: [
-              {
-                guid: id31,
-                index: 0,
-              },
-            ],
-          },
-          {
-            guid: id40,
-            index: 3,
-            children: [
-              {
-                guid: id41,
-                index: 0,
-              },
-              {
-                guid: id42,
-                index: 1,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        index: 4,
-      },
-    ],
-    "Moving 10 back to front -> update 10, 20"
-  );
-
-  _("Moving 20 behind 42 in f40 -> update 50");
-  await apply(bookmark(id20, id40));
-  await assertBookmarksTreeMatches(
-    "",
-    [
-      {
-        guid: PlacesUtils.bookmarks.menuGuid,
-        index: 0,
-      },
-      {
-        guid: PlacesUtils.bookmarks.toolbarGuid,
-        index: 1,
-      },
-      {
-        guid: PlacesUtils.bookmarks.unfiledGuid,
-        index: 3,
-        children: [
-          {
-            guid: id10,
-            index: 0,
-          },
-          {
-            guid: id30,
-            index: 1,
-            children: [
-              {
-                guid: id31,
-                index: 0,
-              },
-            ],
-          },
-          {
-            guid: id40,
-            index: 2,
-            children: [
-              {
-                guid: id41,
-                index: 0,
-              },
-              {
-                guid: id42,
-                index: 1,
-              },
-              {
-                guid: id20,
-                index: 2,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        index: 4,
-      },
-    ],
-    "Moving 20 behind 42 in f40 -> update 50"
-  );
-
-  _("Moving 10 in front of 31 in f30 -> update 10, f30");
-  await apply(bookmark(id10, id30));
-  f30.children = [id10, id31];
-  await apply(f30);
-  await assertBookmarksTreeMatches(
-    "",
-    [
-      {
-        guid: PlacesUtils.bookmarks.menuGuid,
-        index: 0,
-      },
-      {
-        guid: PlacesUtils.bookmarks.toolbarGuid,
-        index: 1,
-      },
-      {
-        guid: PlacesUtils.bookmarks.unfiledGuid,
-        index: 3,
-        children: [
-          {
-            guid: id30,
-            index: 0,
-            children: [
-              {
-                guid: id10,
-                index: 0,
-              },
-              {
-                guid: id31,
-                index: 1,
-              },
-            ],
-          },
-          {
-            guid: id40,
-            index: 1,
-            children: [
-              {
-                guid: id41,
-                index: 0,
-              },
-              {
-                guid: id42,
-                index: 1,
-              },
-              {
-                guid: id20,
-                index: 2,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        index: 4,
-      },
-    ],
-    "Moving 10 in front of 31 in f30 -> update 10, f30"
-  );
-
-  _("Moving 20 from f40 to f30 -> update 20, f30");
-  await apply(bookmark(id20, id30));
-  f30.children = [id10, id20, id31];
-  await apply(f30);
-  await assertBookmarksTreeMatches(
-    "",
-    [
-      {
-        guid: PlacesUtils.bookmarks.menuGuid,
-        index: 0,
-      },
-      {
-        guid: PlacesUtils.bookmarks.toolbarGuid,
-        index: 1,
-      },
-      {
-        guid: PlacesUtils.bookmarks.unfiledGuid,
-        index: 3,
-        children: [
-          {
-            guid: id30,
-            index: 0,
-            children: [
-              {
-                guid: id10,
-                index: 0,
-              },
-              {
-                guid: id20,
-                index: 1,
-              },
-              {
-                guid: id31,
-                index: 2,
-              },
-            ],
-          },
-          {
-            guid: id40,
-            index: 1,
-            children: [
-              {
-                guid: id41,
-                index: 0,
-              },
-              {
-                guid: id42,
-                index: 1,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        index: 4,
-      },
-    ],
-    "Moving 20 from f40 to f30 -> update 20, f30"
-  );
-
-  _("Move 20 back to front -> update 20, f30");
-  await apply(bookmark(id20, ""));
-  f30.children = [id10, id31];
-  await apply(f30);
-  await assertBookmarksTreeMatches(
-    "",
-    [
-      {
-        guid: PlacesUtils.bookmarks.menuGuid,
-        index: 0,
-      },
-      {
-        guid: PlacesUtils.bookmarks.toolbarGuid,
-        index: 1,
-      },
-      {
-        guid: PlacesUtils.bookmarks.unfiledGuid,
-        index: 3,
-        children: [
-          {
-            guid: id30,
-            index: 0,
-            children: [
-              {
-                guid: id10,
-                index: 0,
-              },
-              {
-                guid: id31,
-                index: 1,
-              },
-            ],
-          },
-          {
-            guid: id40,
-            index: 1,
-            children: [
-              {
-                guid: id41,
-                index: 0,
-              },
-              {
-                guid: id42,
-                index: 1,
-              },
-            ],
-          },
-          {
-            guid: id20,
-            index: 2,
-          },
-        ],
-      },
-      {
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        index: 4,
-      },
-    ],
-    "Move 20 back to front -> update 20, f30"
   );
 
   await engine.wipeClient();
