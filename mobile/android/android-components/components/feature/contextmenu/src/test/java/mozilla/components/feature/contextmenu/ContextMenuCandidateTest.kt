@@ -638,6 +638,10 @@ class ContextMenuCandidateTest {
             createTab("https://www.mozilla.org"),
             HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
 
+        assertTrue(shareLink.showFor(
+            createTab("test://www.mozilla.org"),
+            HitResult.UNKNOWN("test://www.mozilla.org")))
+
         assertFalse(shareLink.showFor(
             createTab("https://www.mozilla.org"),
             HitResult.IMAGE("https://www.mozilla.org")))
@@ -713,6 +717,10 @@ class ContextMenuCandidateTest {
         assertTrue(copyLink.showFor(
             createTab("https://www.mozilla.org"),
             HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
+
+        assertTrue(copyLink.showFor(
+            createTab("test://www.mozilla.org"),
+            HitResult.UNKNOWN("test://www.mozilla.org")))
 
         assertFalse(copyLink.showFor(
             createTab("https://www.mozilla.org"),
