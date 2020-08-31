@@ -602,7 +602,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
         rv = mNodeSerializer.SerializeNodeEnd(*prevNode);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+      nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(node);
       if (content && content->IsHTMLElement(nsGkAtoms::tr) &&
           !ParentIsTR(content)) {
         if (!prevNode) {
@@ -1055,7 +1055,7 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
   MOZ_ASSERT(aDepth >= 0);
   MOZ_ASSERT(aRange);
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(aNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   if (nsDocumentEncoder::IsInvisibleNodeAndShouldBeSkipped(*aNode, mFlags)) {
@@ -1305,7 +1305,7 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeToString(
       &inclusiveAncestorsOffsetsOfEnd);
 
   nsCOMPtr<nsIContent> commonContent =
-      do_QueryInterface(mClosestCommonInclusiveAncestorOfRange);
+      nsIContent::FromNodeOrNull(mClosestCommonInclusiveAncestorOfRange);
   mStartRootIndex = inclusiveAncestorsOfStart.IndexOf(commonContent);
   mEndRootIndex = inclusiveAncestorsOfEnd.IndexOf(commonContent);
 
@@ -1595,7 +1595,8 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
   RefPtr<nsRange> range = aSelection->GetRangeAt(0);
   nsINode* commonParent = range->GetClosestCommonInclusiveAncestor();
 
-  for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));
+  for (nsCOMPtr<nsIContent> selContent(
+           nsIContent::FromNodeOrNull(commonParent));
        selContent; selContent = selContent->GetParent()) {
     // checking for selection inside a plaintext form widget
     if (selContent->IsAnyOfHTMLElements(nsGkAtoms::input,
@@ -1729,7 +1730,7 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
 
 bool nsHTMLCopyEncoder::RangeNodeContext::IncludeInContext(
     nsINode& aNode) const {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(&aNode));
+  nsCOMPtr<nsIContent> content(nsIContent::FromNodeOrNull(&aNode));
 
   if (!content) return false;
 
@@ -1889,7 +1890,7 @@ nsresult nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsINode* aNode,
       if (offset == -1) return NS_OK;  // we hit generated content; STOP
       while ((IsFirstNode(node)) && (!IsRoot(parent)) && (parent != common)) {
         if (bResetPromotion) {
-          nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
+          nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(parent);
           if (content && content->IsHTMLElement()) {
             if (nsHTMLElement::IsBlock(
                     nsHTMLTags::AtomTagToId(content->NodeInfo()->NameAtom()))) {
@@ -1952,7 +1953,7 @@ nsresult nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsINode* aNode,
       if (offset == -1) return NS_OK;  // we hit generated content; STOP
       while ((IsLastNode(node)) && (!IsRoot(parent)) && (parent != common)) {
         if (bResetPromotion) {
-          nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
+          nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(parent);
           if (content && content->IsHTMLElement()) {
             if (nsHTMLElement::IsBlock(
                     nsHTMLTags::AtomTagToId(content->NodeInfo()->NameAtom()))) {
@@ -1993,7 +1994,7 @@ nsCOMPtr<nsINode> nsHTMLCopyEncoder::GetChildAt(nsINode* aParent,
 
   if (!aParent) return resultNode;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
+  nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(aParent);
   MOZ_ASSERT(content, "null content in nsHTMLCopyEncoder::GetChildAt");
 
   resultNode = content->GetChildAt_Deprecated(aOffset);
@@ -2011,7 +2012,7 @@ nsresult nsHTMLCopyEncoder::GetNodeLocation(nsINode* inChild,
                                             int32_t* outOffset) {
   NS_ASSERTION((inChild && outParent && outOffset), "bad args");
   if (inChild && outParent && outOffset) {
-    nsCOMPtr<nsIContent> child = do_QueryInterface(inChild);
+    nsCOMPtr<nsIContent> child = nsIContent::FromNodeOrNull(inChild);
     if (!child) {
       return NS_ERROR_NULL_POINTER;
     }
@@ -2029,7 +2030,7 @@ nsresult nsHTMLCopyEncoder::GetNodeLocation(nsINode* inChild,
 }
 
 bool nsHTMLCopyEncoder::IsRoot(nsINode* aNode) {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(aNode);
   if (!content) {
     return false;
   }
@@ -2090,7 +2091,7 @@ int32_t nsHTMLCopyEncoder::RangeNodeContext::GetImmediateContextCount(
     if (!node) {
       break;
     }
-    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    nsCOMPtr<nsIContent> content(nsIContent::FromNodeOrNull(node));
     if (!content || !content->IsAnyOfHTMLElements(
                         nsGkAtoms::tr, nsGkAtoms::thead, nsGkAtoms::tbody,
                         nsGkAtoms::tfoot, nsGkAtoms::table)) {
