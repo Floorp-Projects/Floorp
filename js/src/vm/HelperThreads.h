@@ -743,6 +743,10 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   ParseTaskKind kind;
   JS::OwningCompileOptions options;
 
+  // HelperThreads are shared between all runtimes in the process so explicitly
+  // track which one we are associated with.
+  JSRuntime* runtime = nullptr;
+
   // The global object to use while parsing.
   JSObject* parseGlobal;
 
@@ -774,9 +778,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   void activate(JSRuntime* rt);
   virtual void parse(JSContext* cx) = 0;
 
-  bool runtimeMatches(JSRuntime* rt) {
-    return parseGlobal->runtimeFromAnyThread() == rt;
-  }
+  bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
   void trace(JSTracer* trc);
 
