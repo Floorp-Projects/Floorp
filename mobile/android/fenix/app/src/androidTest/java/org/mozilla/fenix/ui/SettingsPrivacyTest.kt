@@ -147,10 +147,6 @@ class SettingsPrivacyTest {
             verifyNavigationToolBarHeader()
             verifyDataCollectionSubMenuItems()
         }.goBack {
-
-            // OPEN LINKS IN APPS
-            verifyOpenLinksInAppsButton()
-            verifyOpenLinksInAppsSwitchDefault()
         }.goBack {
             verifyHomeComponent()
         }

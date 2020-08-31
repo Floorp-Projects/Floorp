@@ -345,11 +345,16 @@ private fun assertDataCollectionButton() = onView(withText("Data collection"))
 
 private fun openLinksInAppsButton() = onView(withText("Open links in apps"))
 
-private fun assertOpenLinksInAppsButton() = openLinksInAppsButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertOpenLinksInAppsButton() {
+    scrollToElementByText("Open links in apps")
+    openLinksInAppsButton()
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
-private fun assertOpenLinksInAppsValue() = openLinksInAppsButton()
-    .assertIsEnabled(isEnabled = true)
+private fun assertOpenLinksInAppsValue() {
+    scrollToElementByText("Open links in apps")
+    openLinksInAppsButton().assertIsEnabled(isEnabled = true)
+}
 
 // DEVELOPER TOOLS SECTION
 private fun assertDeveloperToolsHeading() {

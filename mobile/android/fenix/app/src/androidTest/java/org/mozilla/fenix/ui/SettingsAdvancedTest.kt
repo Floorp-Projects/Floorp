@@ -52,6 +52,8 @@ class SettingsAdvancedTest {
             // ADVANCED
             verifyAdvancedHeading()
             verifyAddons()
+            verifyOpenLinksInAppsButton()
+            verifyOpenLinksInAppsSwitchDefault()
             verifyRemoteDebug()
             verifyLeakCanaryButton()
         }
