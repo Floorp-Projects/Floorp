@@ -391,6 +391,8 @@
   --body-bg-color: rgba(237, 237, 240, 1);
   --errorWrapper-bg-color: rgba(255, 74, 74, 1);
   --progressBar-color: rgba(10, 132, 255, 1);
+  --progressBar-indeterminate-bg-color: rgba(221, 221, 222, 1);
+  --progressBar-indeterminate-blend-color: rgba(116, 177, 239, 1);
   --scrollbar-color: auto;
   --scrollbar-bg-color: auto;
 
@@ -435,6 +437,7 @@
   --toolbarButton-viewThumbnail-icon: url(images/toolbarButton-viewThumbnail.svg);
   --toolbarButton-viewOutline-icon: url(images/toolbarButton-viewOutline.svg);
   --toolbarButton-viewAttachments-icon: url(images/toolbarButton-viewAttachments.svg);
+  --toolbarButton-viewLayers-icon: url(images/toolbarButton-viewLayers.svg);
   --toolbarButton-search-icon: url(images/toolbarButton-search.svg);
   --findbarButton-previous-icon: url(images/findbarButton-previous.svg);
   --findbarButton-next-icon: url(images/findbarButton-next.svg);
@@ -459,6 +462,8 @@
     --body-bg-color: rgba(42, 42, 46, 1);
     --errorWrapper-bg-color: rgba(199, 17, 17, 1);
     --progressBar-color: rgba(0, 96, 223, 1);
+    --progressBar-indeterminate-bg-color: rgba(40, 40, 43, 1);
+    --progressBar-indeterminate-blend-color: rgba(20, 68, 133, 1);
     --scrollbar-color: rgba(121, 121, 123, 1);
     --scrollbar-bg-color: rgba(35, 35, 39, 1);
 
@@ -503,6 +508,7 @@
     --toolbarButton-viewThumbnail-icon: url(images/toolbarButton-viewThumbnail-dark.svg);
     --toolbarButton-viewOutline-icon: url(images/toolbarButton-viewOutline-dark.svg);
     --toolbarButton-viewAttachments-icon: url(images/toolbarButton-viewAttachments-dark.svg);
+    --toolbarButton-viewLayers-icon: url(images/toolbarButton-viewLayers-dark.svg);
     --toolbarButton-search-icon: url(images/toolbarButton-search-dark.svg);
     --findbarButton-previous-icon: url(images/findbarButton-previous-dark.svg);
     --findbarButton-next-icon: url(images/findbarButton-next-dark.svg);
@@ -758,7 +764,7 @@ html[dir='rtl'] #toolbarContainer, .findbar, .secondaryToolbar {
   width: 100%;
   height: 4px;
   background-color: var(--body-bg-color);
-  border-top: 1px solid var(--toolbar-border-color);
+  border-bottom: 1px solid var(--toolbar-border-color);
 }
 
 #loadingBar .progress {
@@ -778,7 +784,7 @@ html[dir='rtl'] #toolbarContainer, .findbar, .secondaryToolbar {
 }
 
 #loadingBar .progress.indeterminate {
-  background-color: var(--progressBar-color);
+  background-color: var(--progressBar-indeterminate-bg-color);
   transition: none;
 }
 
@@ -789,10 +795,10 @@ html[dir='rtl'] #toolbarContainer, .findbar, .secondaryToolbar {
   height: 100%;
   width: calc(100% + 150px);
   background: repeating-linear-gradient(135deg,
-                                        rgba(187, 187, 187, 1) 0, rgba(153, 153, 153, 1) 5px,
-                                        rgba(153, 153, 153, 1) 45px, rgba(221, 221, 221, 1) 55px,
-                                        rgba(221, 221, 221, 1) 95px, rgba(187, 187, 187, 1) 100px);
-  animation: progressIndeterminate 950ms linear infinite;
+                                        var(--progressBar-indeterminate-blend-color) 0, var(--progressBar-indeterminate-bg-color) 5px,
+                                        var(--progressBar-indeterminate-bg-color) 45px, var(--progressBar-color) 55px,
+                                        var(--progressBar-color) 95px, var(--progressBar-indeterminate-blend-color) 100px);
+  animation: progressIndeterminate 1s linear infinite;
 }
 
 .findbar, .secondaryToolbar {
@@ -824,10 +830,10 @@ html[dir='rtl'] #toolbarContainer, .findbar, .secondaryToolbar {
   height: auto;
 }
 html[dir='ltr'] .findbar {
-  left: 63px;
+  left: 64px;
 }
 html[dir='rtl'] .findbar {
-  right: 63px;
+  right: 64px;
 }
 
 html[dir='ltr'] .findbar .splitToolbarButton {
@@ -884,11 +890,15 @@ html[dir='rtl'] .findbar .splitToolbarButton > .findNext {
   border-top-right-radius: 0;
 }
 
+.findbar input[type="checkbox"] {
+  pointer-events: none;
+}
+
 .findbar label {
   user-select: none;
 }
 
-.findbar .toolbarLabel:hover, .findbar label:hover,
+.findbar label:hover,
 .findbar input:focus + label {
   background-color: var(--button-hover-color);
 }
@@ -929,10 +939,10 @@ html[dir='rtl'] #findInput[data-status="pending"] {
   background-color: var(--doorhanger-bg-color);
 }
 html[dir='ltr'] .secondaryToolbar {
-  right: 3px;
+  right: 4px;
 }
 html[dir='rtl'] .secondaryToolbar {
-  left: 3px;
+  left: 4px;
 }
 
 #secondaryToolbarButtonContainer {
@@ -1407,6 +1417,10 @@ html[dir="rtl"] #viewOutline.toolbarButton::before {
   content: var(--toolbarButton-viewAttachments-icon);
 }
 
+#viewLayers.toolbarButton::before {
+  content: var(--toolbarButton-viewLayers-icon);
+}
+
 #viewFind.toolbarButton::before {
   content: var(--toolbarButton-search-icon);
 }
@@ -1673,7 +1687,8 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
 }
 
 #outlineView,
-#attachmentsView {
+#attachmentsView,
+#layersView {
   position: absolute;
   width: calc(100% - 8px);
   top: 0;
@@ -1714,6 +1729,16 @@ html[dir='ltr'] .treeItem > a {
 }
 html[dir='rtl'] .treeItem > a {
   padding: 2px 4px 5px 0;
+}
+
+#layersView .treeItem > a > * {
+  cursor: pointer;
+}
+html[dir='ltr'] #layersView .treeItem > a > label {
+  padding-left: 4px;
+}
+html[dir='rtl'] #layersView .treesItem > a > label {
+  padding-right: 4px;
 }
 
 .treeItemToggler {
@@ -2162,10 +2187,10 @@ html[dir='rtl'] #documentPropertiesOverlay .row > * {
     width: 0;
   }
   html[dir='ltr'] .findbar {
-    left: 38px;
+    left: 34px;
   }
   html[dir='rtl'] .findbar {
-    right: 38px;
+    right: 34px;
   }
 }
 

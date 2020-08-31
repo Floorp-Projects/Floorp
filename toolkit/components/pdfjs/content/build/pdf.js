@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.6.324';
-const pdfjsBuild = 'eb3654e2';
+const pdfjsVersion = '2.6.336';
+const pdfjsBuild = 'aa27e7fb';
 ;
 
 /***/ }),
@@ -1912,7 +1912,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.324',
+    apiVersion: '2.6.336',
     source: {
       data: source.data,
       url: source.url,
@@ -3837,9 +3837,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.324';
+const version = '2.6.336';
 exports.version = version;
-const build = 'eb3654e2';
+const build = 'aa27e7fb';
 exports.build = build;
 
 /***/ }),
@@ -8028,7 +8028,8 @@ class OptionalContentConfig {
   constructor(data) {
     this.name = null;
     this.creator = null;
-    this.groups = new Map();
+    this._order = null;
+    this._groups = new Map();
 
     if (data === null) {
       return;
@@ -8036,34 +8037,35 @@ class OptionalContentConfig {
 
     this.name = data.name;
     this.creator = data.creator;
+    this._order = data.order;
 
     for (const group of data.groups) {
-      this.groups.set(group.id, new OptionalContentGroup(group.name, group.intent));
+      this._groups.set(group.id, new OptionalContentGroup(group.name, group.intent));
     }
 
     if (data.baseState === "OFF") {
-      for (const group of this.groups) {
+      for (const group of this._groups) {
         group.visible = false;
       }
     }
 
     for (const on of data.on) {
-      this.groups.get(on).visible = true;
+      this._groups.get(on).visible = true;
     }
 
     for (const off of data.off) {
-      this.groups.get(off).visible = false;
+      this._groups.get(off).visible = false;
     }
   }
 
   isVisible(group) {
     if (group.type === "OCG") {
-      if (!this.groups.has(group.id)) {
+      if (!this._groups.has(group.id)) {
         (0, _util.warn)(`Optional content group not found: ${group.id}`);
         return true;
       }
 
-      return this.groups.get(group.id).visible;
+      return this._groups.get(group.id).visible;
     } else if (group.type === "OCMD") {
       if (group.expression) {
         (0, _util.warn)("Visibility expression not supported yet.");
@@ -8071,12 +8073,12 @@ class OptionalContentConfig {
 
       if (!group.policy || group.policy === "AnyOn") {
         for (const id of group.ids) {
-          if (!this.groups.has(id)) {
+          if (!this._groups.has(id)) {
             (0, _util.warn)(`Optional content group not found: ${id}`);
             return true;
           }
 
-          if (this.groups.get(id).visible) {
+          if (this._groups.get(id).visible) {
             return true;
           }
         }
@@ -8084,12 +8086,12 @@ class OptionalContentConfig {
         return false;
       } else if (group.policy === "AllOn") {
         for (const id of group.ids) {
-          if (!this.groups.has(id)) {
+          if (!this._groups.has(id)) {
             (0, _util.warn)(`Optional content group not found: ${id}`);
             return true;
           }
 
-          if (!this.groups.get(id).visible) {
+          if (!this._groups.get(id).visible) {
             return false;
           }
         }
@@ -8097,12 +8099,12 @@ class OptionalContentConfig {
         return true;
       } else if (group.policy === "AnyOff") {
         for (const id of group.ids) {
-          if (!this.groups.has(id)) {
+          if (!this._groups.has(id)) {
             (0, _util.warn)(`Optional content group not found: ${id}`);
             return true;
           }
 
-          if (!this.groups.get(id).visible) {
+          if (!this._groups.get(id).visible) {
             return true;
           }
         }
@@ -8110,12 +8112,12 @@ class OptionalContentConfig {
         return false;
       } else if (group.policy === "AllOff") {
         for (const id of group.ids) {
-          if (!this.groups.has(id)) {
+          if (!this._groups.has(id)) {
             (0, _util.warn)(`Optional content group not found: ${id}`);
             return true;
           }
 
-          if (this.groups.get(id).visible) {
+          if (this._groups.get(id).visible) {
             return false;
           }
         }
@@ -8129,6 +8131,39 @@ class OptionalContentConfig {
 
     (0, _util.warn)(`Unknown group type ${group.type}.`);
     return true;
+  }
+
+  setVisibility(id, visible = true) {
+    if (!this._groups.has(id)) {
+      (0, _util.warn)(`Optional content group not found: ${id}`);
+      return;
+    }
+
+    this._groups.get(id).visible = !!visible;
+  }
+
+  getOrder() {
+    if (!this._groups.size) {
+      return null;
+    }
+
+    if (this._order) {
+      return this._order.slice();
+    }
+
+    return Array.from(this._groups.keys());
+  }
+
+  getGroups() {
+    if (!this._groups.size) {
+      return null;
+    }
+
+    return Object.fromEntries(this._groups);
+  }
+
+  getGroup(id) {
+    return this._groups.get(id) || null;
   }
 
 }
