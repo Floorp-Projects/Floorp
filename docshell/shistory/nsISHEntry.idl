@@ -225,7 +225,7 @@ interface nsISHEntry : nsISupports
     [infallible] readonly attribute boolean loadedInThisProcess;
 
     /**
-     * The session history it belongs to.
+     * The session history it belongs to. This is set only on the root entries.
      */
     [noscript, infallible] attribute nsISHistory shistory;
 
