@@ -296,16 +296,8 @@ class TokenStreamSpecific;
 template <typename Unit>
 class MOZ_STACK_CLASS TokenStreamPosition final {
  public:
-  // The JS_HAZ_ROOTED is permissible below because: 1) the only field in
-  // TokenStreamPosition that can keep GC things alive is Token, 2) the only
-  // GC things Token can keep alive are atoms, and 3) the AutoKeepAtoms&
-  // passed to the constructor here represents that collection of atoms
-  // is disabled while atoms in Tokens in this Position are alive.  DON'T
-  // ADD NON-ATOM GC THING POINTERS HERE!  They would create a rooting
-  // hazard that JS_HAZ_ROOTED will cause to be ignored.
   template <class AnyCharsAccess>
-  inline TokenStreamPosition(
-      AutoKeepAtoms& keepAtoms,
+  inline explicit TokenStreamPosition(
       TokenStreamSpecific<Unit, AnyCharsAccess>& tokenStream);
 
  private:
@@ -326,7 +318,7 @@ class MOZ_STACK_CLASS TokenStreamPosition final {
   Token currentToken;
   unsigned lookahead;
   Token lookaheadTokens[TokenStreamShared::maxLookahead];
-} JS_HAZ_ROOTED;
+};
 
 template <typename Unit>
 class SourceUnits;
@@ -2881,7 +2873,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 template <typename Unit>
 template <class AnyCharsAccess>
 inline TokenStreamPosition<Unit>::TokenStreamPosition(
-    AutoKeepAtoms& keepAtoms,
     TokenStreamSpecific<Unit, AnyCharsAccess>& tokenStream)
     : currentToken(tokenStream.anyCharsAccess().currentToken()) {
   TokenStreamAnyChars& anyChars = tokenStream.anyCharsAccess();

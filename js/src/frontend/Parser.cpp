@@ -2871,7 +2871,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   Directives directives(pc_);
   Directives newDirectives = directives;
 
-  Position start(this->compilationState_.keepAtoms, tokenStream);
+  Position start(tokenStream);
   CompilationInfo::RewindToken startObj =
       this->compilationInfo_.getRewindToken();
 
@@ -2911,12 +2911,11 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
 
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::advancePastSyntaxParsedFunction(
-    AutoKeepAtoms& keepAtoms, SyntaxParser* syntaxParser) {
+    SyntaxParser* syntaxParser) {
   MOZ_ASSERT(getSyntaxParser() == syntaxParser);
 
   // Advance this parser over tokens processed by the syntax parser.
-  Position currentSyntaxPosition(this->compilationState_.keepAtoms,
-                                 syntaxParser->tokenStream);
+  Position currentSyntaxPosition(syntaxParser->tokenStream);
   if (!tokenStream.fastForward(currentSyntaxPosition, syntaxParser->anyChars)) {
     return false;
   }
@@ -2963,7 +2962,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     //   var x = (y = z => 2) => q;
     //   //           ^ we first seek to here to syntax-parse this function
     //   //      ^ then we seek back to here to syntax-parse the outer function
-    Position currentPosition(this->compilationState_.keepAtoms, tokenStream);
+    Position currentPosition(tokenStream);
     if (!syntaxParser->tokenStream.seekTo(currentPosition, anyChars)) {
       return false;
     }
@@ -2998,8 +2997,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
       return false;
     }
 
-    if (!advancePastSyntaxParsedFunction(this->compilationState_.keepAtoms,
-                                         syntaxParser)) {
+    if (!advancePastSyntaxParsedFunction(syntaxParser)) {
       return false;
     }
 
@@ -8998,7 +8996,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   // Save the tokenizer state in case we find an arrow function and have to
   // rewind.
-  Position start(this->compilationState_.keepAtoms, tokenStream);
+  Position start(tokenStream);
 
   PossibleError possibleErrorInner(*this);
   Node lhs;
