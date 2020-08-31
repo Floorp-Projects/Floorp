@@ -1,10 +1,10 @@
 Debugging On Windows
 ====================
 
-This document explains how to debug Mozilla-derived applications such as
+This document explains how to debug Gecko based applications such as
 Firefox, Thunderbird, and SeaMonkey on Windows using the Visual C++ IDE.
 
-If VC++ and your Mozilla application hang shortly after you launch the
+If VC++ and your Gecko application hang shortly after you launch the
 application under the debugger, see `Problems Loading Debug
 Symbols <#problems-loading-debug-symbols>`__.
 
@@ -62,8 +62,7 @@ server <https://developer.mozilla.org/en-US/docs/Mozilla/Using_the_Mozilla_sourc
 Creating a Visual C++ project for Firefox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please refer to the documentation on
-:ref:`firefox-source-docs <Visual Studio Projects>`.
+Please refer to :ref:`this <Visual Studio Projects>`.
 
 Changing/setting the executable to debug
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -429,10 +428,8 @@ Got a tip?
 ~~~~~~~~~~
 
 If you think you know a cool Mozilla debugging trick, feel free to
-discuss it with `#developers <irc://irc.mozilla.org/developers>`__ and
+discuss it with `#developers <https://chat.mozilla.org/#/room/#developers:mozilla.org>`__ and
 then post it here.
-
-Originally by Heikki Toivonen.
 
 .. |Screenshot of disabling assertions| image:: /@api/deki/files/420/=Win32-debug-nop.png
    :class: internal
