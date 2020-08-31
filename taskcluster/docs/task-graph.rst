@@ -1,6 +1,10 @@
 Task Graph
 ==========
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 After a change to the Gecko source code is pushed to version-control,
 jobs for that change appear
 on `Treeherder <https://treeherder.mozilla.org/>`__. How does this

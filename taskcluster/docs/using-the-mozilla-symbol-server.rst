@@ -1,6 +1,10 @@
 Using The Mozilla Symbol Server
 ===============================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 The Mozilla project runs a symbol server for trunk Firefox nightly and
 release builds on Windows. Symbols are available for at least 30
 previous days worth of nightly builds, and Firefox releases from
