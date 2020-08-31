@@ -12,10 +12,21 @@ const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 const BookmarksToolbarTitle = "toolbar";
 
-add_task(async function test_ignore_specials() {
-  _("Ensure that we can't delete bookmark roots.");
+// apply some test records without going via a test server. It's a bit different
+// depending on which engine is in use.
+async function apply_records(engine, records) {
+  for (record of records) {
+    await engine._store.applyIncoming(record);
+  }
+  if (isBufferedBookmarksEngine(engine)) {
+    await engine._apply();
+  } else {
+    await engine._store.deletePending();
+  }
+}
 
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_ignore_specials(engine) {
+  _("Ensure that we can't delete bookmark roots.");
   let store = engine._store;
 
   // Belt...
@@ -26,8 +37,7 @@ add_task(async function test_ignore_specials() {
     await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
 
-  await store.applyIncoming(record);
-  await store.deletePending();
+  await apply_records(engine, [record]);
 
   // Ensure that the toolbar exists.
   Assert.notEqual(
@@ -35,25 +45,34 @@ add_task(async function test_ignore_specials() {
     await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
 
-  // This will fail to build the local tree if the deletion worked.
-  await engine._buildGUIDMap();
+  if (!isBufferedBookmarksEngine(engine)) {
+    // This will fail to build the local tree if the deletion worked.
+    await engine._buildGUIDMap();
+  }
 
   // Braces...
-  await store.remove(record);
-  await store.deletePending();
+  if (isBufferedBookmarksEngine(engine)) {
+    await apply_records(engine, [record]);
+  } else {
+    // This test explicly called .remove() - for now assume the fact it didn't
+    // just apply them like every other test and as happens above is
+    // for a good reason.
+    await store.remove(record);
+    await store.deletePending();
+  }
+
   Assert.notEqual(
     null,
     await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
-  await engine._buildGUIDMap();
+  if (!isBufferedBookmarksEngine(engine)) {
+    await engine._buildGUIDMap();
+  }
 
   await store.wipe();
-
-  await engine.finalize();
 });
 
-add_task(async function test_bookmark_create() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_bookmark_create(engine) {
   let store = engine._store;
 
   try {
@@ -71,7 +90,7 @@ add_task(async function test_bookmark_create() {
     fxrecord.keyword = "awesome";
     fxrecord.parentName = BookmarksToolbarTitle;
     fxrecord.parentid = "toolbar";
-    await store.applyIncoming(fxrecord);
+    await apply_records(engine, [fxrecord]);
 
     _("Verify it has been created correctly.");
     item = await PlacesUtils.bookmarks.fetch(fxrecord.id);
@@ -107,7 +126,7 @@ add_task(async function test_bookmark_create() {
     tbrecord.bmkUri = "http://getthunderbird.com/";
     tbrecord.parentName = BookmarksToolbarTitle;
     tbrecord.parentid = "toolbar";
-    await store.applyIncoming(tbrecord);
+    await apply_records(engine, [tbrecord]);
 
     _("Verify it has been created correctly.");
     item = await PlacesUtils.bookmarks.fetch(tbrecord.id);
@@ -122,12 +141,10 @@ add_task(async function test_bookmark_create() {
   } finally {
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
-add_task(async function test_bookmark_update() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_bookmark_update(engine) {
   let store = engine._store;
 
   try {
@@ -147,7 +164,7 @@ add_task(async function test_bookmark_update() {
     record.title = null;
     record.keyword = null;
     record.tags = null;
-    await store.applyIncoming(record);
+    await apply_records(engine, [record]);
 
     _("Verify that the values have been cleared.");
     let item = await PlacesUtils.bookmarks.fetch(bmk1.guid);
@@ -159,12 +176,10 @@ add_task(async function test_bookmark_update() {
   } finally {
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
-add_task(async function test_bookmark_createRecord() {
-  let engine = Service.engineManager.get("bookmarks");
+add_bookmark_test(async function test_bookmark_createRecord(engine) {
   let store = engine._store;
 
   try {
@@ -184,8 +199,7 @@ add_task(async function test_bookmark_createRecord() {
   }
 });
 
-add_task(async function test_folder_create() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_folder_create(engine) {
   let store = engine._store;
 
   try {
@@ -194,7 +208,7 @@ add_task(async function test_folder_create() {
     folder.parentName = BookmarksToolbarTitle;
     folder.parentid = "toolbar";
     folder.title = "Test Folder";
-    await store.applyIncoming(folder);
+    await apply_records(engine, [folder]);
 
     _("Verify it has been created correctly.");
     let item = await PlacesUtils.bookmarks.fetch(folder.id);
@@ -216,12 +230,10 @@ add_task(async function test_folder_create() {
   } finally {
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
-add_task(async function test_folder_createRecord() {
-  let engine = Service.engineManager.get("bookmarks");
+add_bookmark_test(async function test_folder_createRecord(engine) {
   let store = engine._store;
 
   try {
@@ -261,8 +273,7 @@ add_task(async function test_folder_createRecord() {
   }
 });
 
-add_task(async function test_deleted() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_deleted(engine) {
   let store = engine._store;
 
   try {
@@ -272,28 +283,27 @@ add_task(async function test_deleted() {
       url: "http://getfirefox.com/",
       title: "Get Firefox!",
     });
+    // The buffered engine needs to think we've previously synced it.
+    await PlacesTestUtils.markBookmarksAsSynced();
 
     _("Delete the bookmark through the store.");
     let record = new PlacesItem("bookmarks", bmk1.guid);
     record.deleted = true;
-    await store.applyIncoming(record);
-    await store.deletePending();
+    await apply_records(engine, [record]);
     _("Ensure it has been deleted.");
     let item = await PlacesUtils.bookmarks.fetch(bmk1.guid);
-    Assert.equal(null, item);
-
     let newrec = await store.createRecord(bmk1.guid);
+    Assert.equal(null, item);
     Assert.equal(newrec.deleted, true);
   } finally {
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
-add_task(async function test_move_folder() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_move_folder(engine) {
   let store = engine._store;
+  store._childrenToOrder = {}; // *sob* - only needed for legacy.
 
   try {
     _("Create two folders and a bookmark in one of them.");
@@ -312,12 +322,26 @@ add_task(async function test_move_folder() {
       url: "http://getfirefox.com/",
       title: "Get Firefox!",
     });
+    // add records to the store that represent the current state.
+    await apply_records(engine, [
+      await store.createRecord(folder1.guid),
+      await store.createRecord(folder2.guid),
+      await store.createRecord(bmk.guid),
+    ]);
 
-    _("Get a record, reparent it and apply it to the store.");
-    let record = await store.createRecord(bmk.guid);
-    Assert.equal(record.parentid, folder1.guid);
-    record.parentid = folder2.guid;
-    await store.applyIncoming(record);
+    _("Now simulate incoming records reparenting it.");
+    let bmkRecord = await store.createRecord(bmk.guid);
+    Assert.equal(bmkRecord.parentid, folder1.guid);
+    bmkRecord.parentid = folder2.guid;
+
+    let folder1Record = await store.createRecord(folder1.guid);
+    Assert.deepEqual(folder1Record.children, [bmk.guid]);
+    folder1Record.children = [];
+    let folder2Record = await store.createRecord(folder2.guid);
+    Assert.deepEqual(folder2Record.children, []);
+    folder2Record.children = [bmk.guid];
+
+    await apply_records(engine, [bmkRecord, folder1Record, folder2Record]);
 
     _("Verify the new parent.");
     let movedBmk = await PlacesUtils.bookmarks.fetch(bmk.guid);
@@ -325,12 +349,10 @@ add_task(async function test_move_folder() {
   } finally {
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
-add_task(async function test_move_order() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_move_order(engine) {
   let store = engine._store;
   let tracker = engine._tracker;
 
@@ -360,11 +382,17 @@ add_task(async function test_move_order() {
     _("Move bookmarks around.");
     store._childrenToOrder = {};
     toolbar.children = [bmk2.guid, bmk1.guid];
-    await store.applyIncoming(toolbar);
-    // Bookmarks engine does this at the end of _processIncoming
-    tracker.ignoreAll = true;
-    await store._orderChildren();
-    tracker.ignoreAll = false;
+    await apply_records(engine, [
+      toolbar,
+      await store.createRecord(bmk1.guid),
+      await store.createRecord(bmk2.guid),
+    ]);
+    if (!isBufferedBookmarksEngine(engine)) {
+      // Bookmarks engine does this at the end of _processIncoming
+      tracker.ignoreAll = true;
+      await store._orderChildren();
+      tracker.ignoreAll = false;
+    }
     delete store._childrenToOrder;
 
     _("Verify new order.");
@@ -376,10 +404,12 @@ add_task(async function test_move_order() {
     await tracker.stop();
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
+// Note that dogear has subtly different semantics here, and neither it or the
+// legacy engine can lay claim to being "more correct". So this test should
+// be removed with the legacy engine as part of bug 1449730.
 add_task(async function test_orphan() {
   let engine = new BookmarksEngine(Service);
   let store = engine._store;
@@ -417,12 +447,10 @@ add_task(async function test_orphan() {
   } finally {
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
-add_task(async function test_reparentOrphans() {
-  let engine = new BookmarksEngine(Service);
+add_bookmark_test(async function test_reparentOrphans(engine) {
   let store = engine._store;
 
   try {
@@ -446,7 +474,7 @@ add_task(async function test_reparentOrphans() {
     let record = await store.createRecord(folder1.guid);
     record.title = "New title for Folder 1";
     store._childrenToOrder = {};
-    await store.applyIncoming(record);
+    await apply_records(engine, [record]);
 
     _(
       "Verify that is has been marked as an orphan even though it couldn't be moved into itself."
@@ -459,16 +487,12 @@ add_task(async function test_reparentOrphans() {
   } finally {
     _("Clean up.");
     await store.wipe();
-    await engine.finalize();
   }
 });
 
 // Tests Bug 806460, in which query records arrive with empty folder
 // names and missing bookmark URIs.
-add_task(async function test_empty_query_doesnt_die() {
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
-
+add_bookmark_test(async function test_empty_query_doesnt_die(engine) {
   let record = new BookmarkQuery("bookmarks", "8xoDGqKrXf1P");
   record.folderName = "";
   record.queryId = "";
@@ -476,12 +500,10 @@ add_task(async function test_empty_query_doesnt_die() {
   record.parentid = "toolbar";
 
   // These should not throw.
-  await store.applyIncoming(record);
+  await apply_records(engine, [record]);
 
   delete record.folderName;
-  await store.applyIncoming(record);
-
-  await engine.finalize();
+  await apply_records(engine, [record]);
 });
 
 async function assertDeleted(guid) {
@@ -489,6 +511,7 @@ async function assertDeleted(guid) {
   ok(!item);
 }
 
+// This test is very specific to the "old" store, so no `add_bookmark_test()`
 add_task(async function test_delete_buffering() {
   let engine = new BookmarksEngine(Service);
   let store = engine._store;
@@ -585,8 +608,7 @@ add_task(async function test_delete_buffering() {
   }
 });
 
-add_task(async function test_calculateIndex_for_invalid_url() {
-  let engine = Service.engineManager.get("bookmarks");
+add_bookmark_test(async function test_calculateIndex_for_invalid_url(engine) {
   let store = engine._store;
 
   let folderIndex = await store._calculateIndex({

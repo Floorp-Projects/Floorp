@@ -22,6 +22,11 @@ const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 var recordedEvents = [];
 
+// Anything in this file which references LegacyEngine is explicitly stating
+// it doesn't apply to the buffered engine and so should be removed with the
+// legacy engine as part of bug 1449730.
+const LegacyEngine = BookmarksEngine;
+
 function checkRecordedEvents(object, expected, message) {
   // Ignore event telemetry from the merger.
   let repairEvents = recordedEvents.filter(event => event.object == object);
@@ -74,28 +79,6 @@ add_task(async function setup() {
     recordedEvents.push({ object, method, value, extra });
   };
 });
-
-function add_bookmark_test(task) {
-  add_task(async function() {
-    _(`Running test ${task.name} with legacy bookmarks engine`);
-    let legacyEngine = new BookmarksEngine(Service);
-    await legacyEngine.initialize();
-    try {
-      await task(legacyEngine);
-    } finally {
-      await legacyEngine.finalize();
-    }
-
-    _(`Running test ${task.name} with buffered bookmarks engine`);
-    let bufferedEngine = new BufferedBookmarksEngine(Service);
-    await bufferedEngine.initialize();
-    try {
-      await task(bufferedEngine);
-    } finally {
-      await bufferedEngine.finalize();
-    }
-  });
-}
 
 add_task(async function test_buffer_timeout() {
   await Service.recordManager.clearCache();
@@ -383,32 +366,6 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
   } finally {
     await cleanup(engine, server);
   }
-});
-
-add_task(async function bad_record_allIDs() {
-  let server = new SyncServer();
-  server.start();
-  await SyncTestingInfrastructure(server);
-
-  _("Ensure that bad Places queries don't cause an error in getAllIDs.");
-  let badRecord = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    url: "place:folder=1138",
-  });
-
-  _("Type: " + badRecord.type);
-
-  _("Fetching all IDs.");
-  let all = await fetchAllRecordIds();
-
-  _("All IDs: " + JSON.stringify([...all]));
-  Assert.ok(all.has("menu"));
-  Assert.ok(all.has("toolbar"));
-
-  _("Clean up.");
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesSyncUtils.bookmarks.reset();
-  await promiseStopServer(server);
 });
 
 add_bookmark_test(async function test_processIncoming_error_orderChildren(
@@ -714,6 +671,9 @@ function FakeRecord(constructor, r) {
 }
 
 // Bug 632287.
+// (Note that `test_mismatched_folder_types()` in
+//  toolkit/components/places/tests/sync/test_bookmark_kinds.js is an exact
+// copy of this test, so it's fine to remove it as part of bug 1449730)
 add_task(async function test_mismatched_types() {
   _(
     "Ensure that handling a record that changes type causes deletion " +
@@ -728,7 +688,6 @@ add_task(async function test_mismatched_types() {
     description: null,
     parentid: "toolbar",
   };
-  oldRecord.cleartext = oldRecord;
 
   let newRecord = {
     id: "l1nZZXfB8nC7",
@@ -752,7 +711,6 @@ add_task(async function test_mismatched_types() {
     ],
     parentid: "toolbar",
   };
-  newRecord.cleartext = newRecord;
 
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
@@ -767,6 +725,9 @@ add_task(async function test_mismatched_types() {
     newR.parentid = PlacesUtils.bookmarks.toolbarGuid;
 
     await store.applyIncoming(oldR);
+    if (isBufferedBookmarksEngine(engine)) {
+      await engine._apply();
+    }
     _("Applied old. It's a folder.");
     let oldID = await PlacesUtils.promiseItemId(oldR.id);
     _("Old ID: " + oldID);
@@ -774,6 +735,9 @@ add_task(async function test_mismatched_types() {
     Assert.equal(oldInfo.type, PlacesUtils.bookmarks.TYPE_FOLDER);
 
     await store.applyIncoming(newR);
+    if (isBufferedBookmarksEngine(engine)) {
+      await engine._apply();
+    }
     await Assert.rejects(
       PlacesUtils.promiseItemId(newR.id),
       /no item found for the given GUID/,
@@ -781,14 +745,13 @@ add_task(async function test_mismatched_types() {
     );
   } finally {
     await cleanup(engine, server);
-    await engine.finalize();
   }
 });
 
 add_task(async function test_bookmark_guidMap_fail() {
   _("Ensure that failures building the GUID map cause early death.");
 
-  let engine = new BookmarksEngine(Service);
+  let engine = new LegacyEngine(Service); // guidMap is a legacy construct.
   await engine.initialize();
   let store = engine._store;
 
@@ -865,7 +828,9 @@ add_task(async function test_bookmark_tag_but_no_uri() {
     "Ensure that a bookmark record with tags, but no URI, doesn't throw an exception."
   );
 
-  let engine = new BookmarksEngine(Service);
+  // This test calls .create() etc which don't exist on the new engine.
+  // Hardly worth porting though?
+  let engine = new LegacyEngine(Service);
   await engine.initialize();
   let store = engine._store;
 
@@ -1237,11 +1202,9 @@ add_task(async function test_buffer_hasDupe() {
 });
 
 // Bug 890217.
-add_task(async function test_sync_imap_URLs() {
+add_bookmark_test(async function test_sync_imap_URLs(engine) {
   await Service.recordManager.clearCache();
   await PlacesSyncUtils.bookmarks.reset();
-  let engine = new BookmarksEngine(Service);
-  await engine.initialize();
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -1305,7 +1268,6 @@ add_task(async function test_sync_imap_URLs() {
     );
   } finally {
     await cleanup(engine, server);
-    await engine.finalize();
   }
 });
 

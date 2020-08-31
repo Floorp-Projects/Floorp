@@ -708,3 +708,37 @@ function bufferedBookmarksEnabled() {
     false
   );
 }
+
+function isBufferedBookmarksEngine(engine) {
+  Assert.equal(engine.name, "bookmarks");
+  // the buffered engine overrides the telemetry name.
+  return !!engine.overrideTelemetryName;
+}
+
+function add_bookmark_test(task) {
+  const { BookmarksEngine, BufferedBookmarksEngine } = ChromeUtils.import(
+    "resource://services-sync/engines/bookmarks.js"
+  );
+
+  add_task(async function() {
+    _(`Running test ${task.name} with legacy bookmarks engine`);
+    let legacyEngine = new BookmarksEngine(Service);
+    await legacyEngine.initialize();
+    await legacyEngine._resetClient();
+    try {
+      await task(legacyEngine);
+    } finally {
+      await legacyEngine.finalize();
+    }
+
+    _(`Running test ${task.name} with buffered bookmarks engine`);
+    let bufferedEngine = new BufferedBookmarksEngine(Service);
+    await bufferedEngine.initialize();
+    await bufferedEngine._resetClient();
+    try {
+      await task(bufferedEngine);
+    } finally {
+      await bufferedEngine.finalize();
+    }
+  });
+}
