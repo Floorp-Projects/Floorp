@@ -868,8 +868,8 @@ add_task(async function testPrivateBrowsingExtension() {
   await updated;
 
   // It's still allowed in PB.
-  ok(!badge.hidden, "The PB badge is shown");
   ok(await hasPrivateAllowed(id), "PB is allowed");
+  ok(!badge.hidden, "The PB badge is shown");
 
   // Disallow PB.
   updated = BrowserTestUtils.waitForEvent(card, "update");
