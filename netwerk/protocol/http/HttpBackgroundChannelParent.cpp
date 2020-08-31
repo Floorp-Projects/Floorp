@@ -198,9 +198,9 @@ bool HttpBackgroundChannelParent::OnTransportAndData(
     return NS_SUCCEEDED(rv);
   }
 
-  std::function<bool(const nsCString&, uint64_t, uint32_t)> sendFunc =
+  nsHttp::SendFunc<nsDependentCSubstring> sendFunc =
       [self = UnsafePtr<HttpBackgroundChannelParent>(this), aChannelStatus,
-       aTransportStatus](const nsCString& aData, uint64_t aOffset,
+       aTransportStatus](const nsDependentCSubstring& aData, uint64_t aOffset,
                          uint32_t aCount) {
         return self->SendOnTransportAndData(aChannelStatus, aTransportStatus,
                                             aOffset, aCount, aData, false);
