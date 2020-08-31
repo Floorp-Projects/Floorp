@@ -1457,6 +1457,53 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitArrayJoinResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Load obj->elements in scratch.
+  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+  Address lengthAddr(scratch, ObjectElements::offsetOfLength());
+
+  // If array length is 0, return empty string.
+  Label finished;
+
+  {
+    Label arrayNotEmpty;
+    masm.branch32(Assembler::NotEqual, lengthAddr, Imm32(0), &arrayNotEmpty);
+    masm.movePtr(ImmGCPtr(cx_->names().empty), scratch);
+    masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
+    masm.jump(&finished);
+    masm.bind(&arrayNotEmpty);
+  }
+
+  // Otherwise, handle array length 1 case.
+  masm.branch32(Assembler::NotEqual, lengthAddr, Imm32(1), failure->label());
+
+  // But only if initializedLength is also 1.
+  Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+  masm.branch32(Assembler::NotEqual, initLength, Imm32(1), failure->label());
+
+  // And only if elem0 is a string.
+  Address elementAddr(scratch, 0);
+  masm.branchTestString(Assembler::NotEqual, elementAddr, failure->label());
+
+  // Store the value.
+  masm.loadValue(elementAddr, output.valueReg());
+
+  masm.bind(&finished);
+
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitPackedArraySliceResult(
     uint32_t templateObjectOffset, ObjOperandId arrayId, Int32OperandId beginId,
     Int32OperandId endId) {
