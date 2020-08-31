@@ -27,7 +27,6 @@ import org.mockito.Mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
@@ -151,33 +150,71 @@ class QrFeatureTest {
         whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG))
             .thenReturn(fragment)
 
-        val feature = QrFeature(
+        val feature = spy(QrFeature(
             testContext,
             fragmentManager
-        )
+        ))
+        val listener = feature.scanCompleteListener
 
         // When
         feature.start()
 
         // Then
-        verify(fragment).scanCompleteListener = feature.scanCompleteListener
+        verify(feature).setScanCompleteListener(listener)
     }
 
     @Test
-    fun `do nothing when stop() is called`() {
+    fun `stop attaches a null listener`() {
         // Given
-        val scanResultCallback = mock<OnScanResult>()
-        val feature = QrFeature(
+        val fragment = mock<QrFragment>()
+        whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG))
+            .thenReturn(fragment)
+        val feature = spy(QrFeature(
             testContext,
-            fragmentManager,
-            onScanResult = scanResultCallback
-        )
+            fragmentManager
+        ))
 
         // When
         feature.stop()
 
         // Then
-        verifyNoMoreInteractions(scanResultCallback, fragmentManager)
+        verify(feature).setScanCompleteListener(null)
+    }
+
+    @Test
+    fun `setScanCompleteListener allows setting a null callback in QrFragment`() {
+        // Given
+        val fragment = mock<QrFragment>()
+        whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG))
+            .thenReturn(fragment)
+        val feature = QrFeature(
+            testContext,
+            fragmentManager
+        )
+        fragment.scanCompleteListener = feature.scanCompleteListener
+
+        // When
+        feature.setScanCompleteListener(null)
+        // Then
+        verify(fragment).scanCompleteListener = null
+    }
+
+    @Test
+    fun `setScanCompleteListener allows setting a valid callback in QrFragment`() {
+        // Given
+        val fragment = mock<QrFragment>()
+        whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG))
+            .thenReturn(fragment)
+        val feature = QrFeature(
+            testContext,
+            fragmentManager
+        )
+        fragment.scanCompleteListener = null
+
+        // When
+        feature.setScanCompleteListener(feature.scanCompleteListener)
+        // Then
+        verify(fragment).scanCompleteListener = feature.scanCompleteListener
     }
 }
 

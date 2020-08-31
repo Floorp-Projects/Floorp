@@ -47,19 +47,20 @@ class QrFeature(
     internal val scanCompleteListener: QrFragment.OnScanCompleteListener = object : QrFragment.OnScanCompleteListener {
         @MainThread
         override fun onScanComplete(result: String) {
+            setScanCompleteListener(null)
             removeQrFragment()
             onScanResult(result)
         }
     }
 
     override fun start() {
-        (fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG) as? QrFragment)?.let {
-            it.scanCompleteListener = scanCompleteListener
-        }
+        setScanCompleteListener(scanCompleteListener)
     }
 
     override fun stop() {
-        // Nothing to do here for now.
+        // Prevent an already in progress qr decode operation informing us later of a result
+        // and so triggering an IllegalStateException when trying to remove the qr fragment.
+        setScanCompleteListener(null)
     }
 
     override fun onBackPressed(): Boolean {
@@ -112,6 +113,16 @@ class QrFeature(
             }
         }
         return false
+    }
+
+    /**
+     * Set a callback for when a qr code has been successfully scanned and decoded.
+     */
+    @VisibleForTesting
+    internal fun setScanCompleteListener(listener: QrFragment.OnScanCompleteListener?) {
+        (fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG) as? QrFragment)?.let {
+            it.scanCompleteListener = listener
+        }
     }
 
     companion object {
