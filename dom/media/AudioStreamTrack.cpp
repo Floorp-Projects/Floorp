@@ -73,22 +73,32 @@ void AudioStreamTrack::SetReadyState(MediaStreamTrackState aState) {
 RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
     void* key, AudioDeviceInfo* aSink) {
   MOZ_ASSERT(aSink);
+
   if (Ended()) {
     return GenericPromise::CreateAndResolve(true, __func__);
   }
+
   UniquePtr<CrossGraphPort> manager =
       CrossGraphPort::Connect(this, aSink, mWindow);
   if (!manager) {
+    // We are setting the default output device.
     auto entry = mCrossGraphs.Lookup(key);
-    MOZ_ASSERT(entry);
-    (*entry.Data())->Destroy();
-    entry.Remove();
+    if (entry) {
+      // There is an existing non-default output device for this track. Remove
+      // it.
+      (*entry.Data())->Destroy();
+      entry.Remove();
+    }
     return GenericPromise::CreateAndResolve(true, __func__);
   }
+
+  // We are setting a non-default output device.
   UniquePtr<CrossGraphPort>& crossGraphPtr = *mCrossGraphs.LookupOrAdd(key);
   if (crossGraphPtr) {
+    // This key already has a non-default output device set. Destroy it.
     crossGraphPtr->Destroy();
   }
+
   crossGraphPtr = std::move(manager);
   return crossGraphPtr->EnsureConnected();
 }
