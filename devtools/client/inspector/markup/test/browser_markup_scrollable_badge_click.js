@@ -59,6 +59,8 @@ add_task(async function() {
     "Scrollable badge is active"
   );
 
+  checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 1, "scalar");
+
   info(
     "Changing CSS so elements update their overflow highlights accordingly."
   );
@@ -90,6 +92,8 @@ add_task(async function() {
     !container.editor._scrollableBadge.classList.contains("active"),
     "Scrollable badge is not active"
   );
+
+  checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 2, "scalar");
 });
 
 async function getContainerForSelector(selector, inspector) {
