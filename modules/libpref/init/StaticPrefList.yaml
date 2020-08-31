@@ -8141,6 +8141,12 @@
   value: false
   mirror: always
 
+# Whether DNS resolution is limited to literals and cached entries.
+- name: network.dns.skipTRR-when-parental-control-enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: network.dns.disablePrefetchFromHTTPS
   type: bool
   value: true
@@ -8254,6 +8260,63 @@
 - name: network.trr.blocklist_cleanup_done
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# If we should wait for captive portal confirmation before enabling TRR
+- name: network.trr.wait-for-portal
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Use GET (rather than POST)
+- name: network.trr.useGET
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Allow RFC1918 address in responses?
+- name: network.trr.allow-rfc1918
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Allow AAAA entries to be used "early", before the A results are in
+- name: network.trr.early-AAAA
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# When true, it only sends AAAA when the system has IPv6 connectivity
+- name: network.trr.skip-AAAA-when-not-supported
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# When true, the DNS request will wait for both A and AAAA responses
+# (if both have been requested) before notifying the listeners.
+# When true, it effectively cancels `network.trr.early-AAAA`
+- name: network.trr.wait-for-A-and-AAAA
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
+- name: network.trr.disable-ECS
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# When true, the DNS+TRR cache will be cleared when a relevant TRR pref
+# changes. (uri, bootstrapAddress, excluded-domains)
+- name: network.trr.clear-cache-on-pref-change
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# After this many failed TRR requests in a row, consider TRR borked
+- name: network.trr.max-fails
+  type: RelaxedAtomicUint32
+  value: 5
   mirror: always
 
 # Allow the network changed event to get sent when a network topology or setup
