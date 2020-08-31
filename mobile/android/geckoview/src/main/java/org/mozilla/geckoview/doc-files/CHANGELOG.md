@@ -16,6 +16,16 @@ exclude: true
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
   WebExtension notifications which don't have a `source` field.
+- ⚠️ Deprecated [`ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`][82.1] with the intention of removing
+  them in GeckoView v85. 
+  ([bug 1530022]({{bugzilla}}1530022))
+- Added [`ContentDelegate#onExternalResponse(GeckoSession, WebResponse)`][82.2] to eliminate the need
+  to make a second request for downloads and ensure more efficient and reliable downloads in a single request. The second
+  parameter is now a [`WebResponse`][65.15] 
+  ([bug 1530022]({{bugzilla}}1530022))
+  
+[82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
+[82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
 
 ## v81
 - Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
@@ -774,4 +784,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c19f556017d98a8e4c8087ca59bde83e11aa56da
+[api-version]: 6724a9a98a57c02a1ee2885371e944d3d3967cf2
