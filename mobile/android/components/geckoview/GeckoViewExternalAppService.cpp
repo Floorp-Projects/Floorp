@@ -11,11 +11,31 @@
 
 #include "mozilla/widget/EventDispatcher.h"
 #include "mozilla/widget/nsWindow.h"
+#include "GeckoViewStreamListener.h"
 
 #include "JavaBuiltins.h"
 
 static const char16_t kExternalResponseMessage[] =
     u"GeckoView:ExternalResponse";
+
+class StreamListener final : public mozilla::GeckoViewStreamListener {
+ public:
+  explicit StreamListener(nsWindow* aWindow)
+      : GeckoViewStreamListener(), mWindow(aWindow) {}
+
+  void SendWebResponse(mozilla::java::WebResponse::Param aResponse) {
+    mWindow->PassExternalResponse(aResponse);
+  }
+
+  void CompleteWithError(nsresult aStatus, nsIChannel* aChannel) {
+    // Currently we don't do anything about errors here
+  }
+
+  virtual ~StreamListener() {}
+
+ private:
+  RefPtr<nsWindow> mWindow;
+};
 
 mozilla::StaticRefPtr<GeckoViewExternalAppService>
     GeckoViewExternalAppService::sService;
@@ -50,9 +70,6 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
   using namespace mozilla;
   using namespace mozilla::dom;
   MOZ_ASSERT(XRE_IsParentProcess());
-
-  // We currently never want to read the channel, so cancel it immediately.
-  aRequest->Cancel(NS_ERROR_ABORT);
 
   nsresult rv;
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest, &rv));
@@ -123,7 +140,13 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
   Unused << NS_WARN_IF(
       NS_FAILED(dispatcher->Dispatch(kExternalResponseMessage, bundle)));
 
-  return NS_ERROR_ABORT;
+  RefPtr<StreamListener> listener = new StreamListener(window);
+
+  rv = channel->SetNotificationCallbacks(listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  listener.forget(aStreamListener);
+  return NS_OK;
 }
 
 NS_IMETHODIMP GeckoViewExternalAppService::ApplyDecodingForExtension(
