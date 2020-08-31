@@ -124,7 +124,17 @@ then you can just use:
 
 .. code-block:: shell
 
-    hg clone https://hg.mozilla.org/mozilla-central
+    curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -o bootstrap.py
+
+    python3 bootstrap.py
+
+... and follow the prompts. This will use mercurial to checkout the
+source code. If you prefer to work with git, use this command instead (you'll
+have to have `Git for Windows <https://git-scm.com/download/win>`_ installed):
+
+.. code-block:: shell
+
+    python3 bootstrap.py --vcs=git
 
 While you’re waiting for that process to finish, take a look at `our
 Mercurial
@@ -140,7 +150,7 @@ source directory as before and type
 
 .. code-block:: shell
 
-    cd mozilla-central
+    cd mozilla-unified  # ... or the name of the repo you chose earlier
 
     ./mach bootstrap
 
@@ -262,7 +272,7 @@ Antivirus performance
 
 -  Windows Defender and some scanning antivirus products are known to
    have a major impact on build times. For example, if you have cloned
-   ``mozilla-central`` successfully but ``./mach build`` fails, reporting
+   ``mozilla-unified`` successfully but ``./mach build`` fails, reporting
    a missing file, you are likely experiencing this problem. Our
    regression tests, for well-known security bugs, can include code
    samples that some antivirus software will identify as a threat, and
@@ -401,6 +411,9 @@ Common problems, hints, and restrictions
    newer versions of MozillaBuild. Instructions for how to update
    MozillaBuild `can be found
    here <https://wiki.mozilla.org/MozillaBuild>`_.
+-  If the bootstrapping script ``bootstrap.py`` fails, you can also try running
+   ``hg clone https://hg.mozilla.org/mozilla-unified`` followed by
+   ``cd mozilla-unified; ./mach bootstrap`` yourself.
 -  The build may fail if your machine is configured with the wrong
    architecture. If you want to build 64-bit Firefox, add the two lines
    below to your mozconfig file:
@@ -452,10 +465,10 @@ Common problems, hints, and restrictions
    ``SET "PATH=%PATH%;!LLVMDIR!\bin"``.
 -  If you encounter a build failure with
    ``LINK: fatal error LNK1181: cannot open input file ..\..\..\..\..\security\nss3.lib``,
-   it may be related to your clone of ``mozilla-central`` being located
+   it may be related to your clone of ``mozilla-unified`` being located
    in the Users folder (possibly encrypted). Try moving it outside of
    the Users folder. The docs recommend
-   ``C:\mozilla-source\mozilla-central`` which should work.
+   ``C:\mozilla-source\mozilla-unified`` which should work.
 -  If you encounter a build failure with
    ``ERROR: GetShortPathName returned a long path name.``.You need
    create a 8dot3name short name for the path which has space.For
