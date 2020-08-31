@@ -3284,7 +3284,7 @@ app_theme:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-04-01"
+    expires: "2021-04-01"
 
 pocket:
   pocket_top_site_clicked:
