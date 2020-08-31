@@ -55,9 +55,9 @@ Debugger <http://msdn.microsoft.com/en-us/library/vstudio/3s68z0b3.aspx>`__.
 Debugging Release and Nightly Builds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Refer to the steps to `use the Mozilla symbol
-server <https://developer.mozilla.org/en-US/docs/Mozilla/Using_the_Mozilla_symbol_server>`__ and `source
-server <https://developer.mozilla.org/en-US/docs/Mozilla/Using_the_Mozilla_source_server>`__
+Refer to the steps to :ref:`use the Mozilla symbol
+server <Using The Mozilla Symbol Server>` and :ref:`source
+server <Using The Mozilla Source Server>`
 
 Creating a Visual C++ project for Firefox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -431,5 +431,5 @@ If you think you know a cool Mozilla debugging trick, feel free to
 discuss it with `#developers <https://chat.mozilla.org/#/room/#developers:mozilla.org>`__ and
 then post it here.
 
-.. |Screenshot of disabling assertions| image:: /@api/deki/files/420/=Win32-debug-nop.png
+.. |Screenshot of disabling assertions| image:: https://developer.mozilla.org/@api/deki/files/420/=Win32-debug-nop.png
    :class: internal
