@@ -292,6 +292,8 @@
     <string name="preferences_toolbar">Werkbalk</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Thema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Startpagina</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Aanpassen</string>
     <!-- Preference description for banner about signing in -->
@@ -499,6 +501,32 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Sluiten</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Onlangs gesloten tabbladen</string>
+
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Volledige geschiedenis tonen</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d tabbladen</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d tabblad</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Geen onlangs gesloten tabbladen hier</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Tabbladen sluiten</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Handmatig</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Na een dag</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Na een week</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Na een maand</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Open tabbladen</string>
@@ -518,6 +546,10 @@
     <string name="tab_tray_menu_item_save">In collectie opslaan</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Alle tabbladen delen</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Onlangs gesloten tabbladen</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Tabbladinstellingen</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Alle tabbladen sluiten</string>
     <!-- Shortcut action to open new tab -->
@@ -1527,6 +1559,9 @@
     <string name="top_sites_max_limit_content">Verwijder een topwebsite om een nieuwe toe te voegen. Houd de website ingedrukt en selecteer Verwijderen.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, begrepen</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Meest bezochte websites tonen</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Verwijderen</string>

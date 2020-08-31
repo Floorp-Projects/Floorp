@@ -287,6 +287,8 @@
     <string name="preferences_toolbar">Arkbalke</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Startside</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Oanpasse</string>
     <!-- Preference description for banner about signing in -->
@@ -492,6 +494,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Slute</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Koartlyn sluten ljepblêden</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Folsleine skiednis toane</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d ljepblêden</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d ljepblêd</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Gjin koartlyn sluten ljepblêden hjir</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Ljepblêden slute</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Hânmjittich</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Nei ien dei</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Nei ien wike</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Nei ien moanne</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Iepen ljepblêden</string>
@@ -511,6 +538,10 @@
     <string name="tab_tray_menu_item_save">Yn kolleksje bewarje</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Alle ljepblêden diele</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Koartlyn sluten ljepblêden</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Ljepblêdynstellingen</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Alle ljepblêden slute</string>
     <!-- Shortcut action to open new tab -->
@@ -1516,6 +1547,9 @@
     <string name="top_sites_max_limit_content">Smyt in topwebsite fuort om in nije ta te foegjen. Hâld de website yndrukt en selektearje Fuortsmite.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, begrepen</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Meast besochte websites toane</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fuortsmite</string>

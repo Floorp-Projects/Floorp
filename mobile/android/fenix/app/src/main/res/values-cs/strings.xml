@@ -80,6 +80,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Teď ne</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Firefox můžete nastavit tak, aby automaticky otevíral odkazy v této aplikaci.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Přejít do nastavení</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Zavřít</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Pro tuto funkci je potřeba povolit přístup k fotoaparátu. Ten můžete povolit v nastavení oprávnění aplikací v systému Android.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Přejít do nastavení</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Zavřít</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Můžete si nastavit automatické zavírání panelů, které jste za poslední den, týden nebo měsíc neotevřeli.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Zobrazit možnosti</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Zavřít</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nový panel</string>
@@ -268,6 +290,8 @@
     <string name="preferences_toolbar">Nástrojová lišta</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Vzhled</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Domovská stránka</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Přizpůsobení</string>
     <!-- Preference description for banner about signing in -->
@@ -478,6 +502,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zavřít</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Nedávno zavřené panely</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Zobrazit celou historii</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">Počet panelů: %d</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">Jeden panel</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Nemáte žádné nedávno zavřené panely</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Zavřít panely</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Ručně</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Po jednom dni</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Po týdnu</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Po měsíci</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Otevřené panely</string>
@@ -497,6 +546,10 @@
     <string name="tab_tray_menu_item_save">Uložit do sbírky</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Sdílet všechny panely</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Nedávno zavřené panely</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Nastavení panelů</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Zavřít všechny panely</string>
     <!-- Shortcut action to open new tab -->
@@ -550,6 +603,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Odebrat</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Vymazat z historie</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (anonymní režim)</string>
 
@@ -759,10 +814,8 @@
     <string name="collections_header">Sbírky</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Nabídka sbírek</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Uložte si důležité věci do sbírek</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Podobná vyhledávání, stránky a panely si můžete seskupit a poté se k nim snadno vracet.</string>
+    <string name="no_collections_description2">Uložte si důležité věci do sbírek.\nPodobná vyhledávání, stránky a panely si můžete seskupit a poté se k nim snadno vracet.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Vyberte panely</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1007,8 +1060,8 @@
     <string name="onboarding_whats_new_description">Zajímají vás novinky v přepracované aplikaci %s? Chcete vědět, co se změnilo?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Zde najdete všechny odpovědi</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Využijte aplikaci %s naplno.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">S účtem Firefoxu můžete synchronizovat záložky, hesla i další svá data.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Zjistit více</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1512,4 +1565,15 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, rozumím</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Zobrazovat nejnavštěvovanější stránky</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Využijte aplikaci %s naplno.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Uložte si důležité věci do sbírek</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Podobná vyhledávání, stránky a panely si můžete seskupit a poté se k nim snadno vracet.</string>
     </resources>
