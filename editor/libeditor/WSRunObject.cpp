@@ -48,14 +48,6 @@ template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPoint& aPoint) const;
 template WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorRawDOMPoint& aPoint) const;
-template EditorDOMPoint WSRunScanner::GetAfterLastVisiblePoint(
-    Text& aTextNode, const Element* aAncestorLimiter);
-template EditorRawDOMPoint WSRunScanner::GetAfterLastVisiblePoint(
-    Text& aTextNode, const Element* aAncestorLimiter);
-template EditorDOMPoint WSRunScanner::GetFirstVisiblePoint(
-    Text& aTextNode, const Element* aAncestorLimiter);
-template EditorRawDOMPoint WSRunScanner::GetFirstVisiblePoint(
-    Text& aTextNode, const Element* aAncestorLimiter);
 
 template nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aScanStartPoint);
@@ -2259,44 +2251,6 @@ WSRunScanner::TextFragmentData::GetPreviousEditableCharPoint(
             : 0);
   }
   return EditorDOMPointInText();
-}
-
-// static
-template <typename EditorDOMPointType>
-EditorDOMPointType WSRunScanner::GetAfterLastVisiblePoint(
-    Text& aTextNode, const Element* aAncestorLimiter) {
-  if (EditorUtils::IsContentPreformatted(aTextNode)) {
-    return EditorDOMPointType::AtEndOf(aTextNode);
-  }
-  TextFragmentData textFragmentData(
-      EditorDOMPoint(&aTextNode,
-                     aTextNode.Length() ? aTextNode.Length() - 1 : 0),
-      aAncestorLimiter);
-  const EditorDOMRange& invisibleWhiteSpaceRange =
-      textFragmentData.InvisibleTrailingWhiteSpaceRangeRef();
-  if (!invisibleWhiteSpaceRange.IsPositioned() ||
-      invisibleWhiteSpaceRange.Collapsed()) {
-    return EditorDOMPointType::AtEndOf(aTextNode);
-  }
-  return EditorDOMPointType(invisibleWhiteSpaceRange.StartRef());
-}
-
-// static
-template <typename EditorDOMPointType>
-EditorDOMPointType WSRunScanner::GetFirstVisiblePoint(
-    Text& aTextNode, const Element* aAncestorLimiter) {
-  if (EditorUtils::IsContentPreformatted(aTextNode)) {
-    return EditorDOMPointType(&aTextNode, 0);
-  }
-  TextFragmentData textFragmentData(EditorDOMPoint(&aTextNode, 0),
-                                    aAncestorLimiter);
-  const EditorDOMRange& invisibleWhiteSpaceRange =
-      textFragmentData.InvisibleLeadingWhiteSpaceRangeRef();
-  if (!invisibleWhiteSpaceRange.IsPositioned() ||
-      invisibleWhiteSpaceRange.Collapsed()) {
-    return EditorDOMPointType(&aTextNode, 0);
-  }
-  return EditorDOMPointType(invisibleWhiteSpaceRange.EndRef());
 }
 
 EditorDOMPointInText
