@@ -1,5 +1,4 @@
 from tests.support.asserts import assert_success
-from tests.support.inline import inline
 
 from . import opener, window_name
 
@@ -10,7 +9,7 @@ def new_window(session, type_hint=None):
         {"type": type_hint})
 
 
-def test_payload(session):
+def test_new_tab(session):
     original_handles = session.handles
 
     response = new_window(session, type_hint="tab")
@@ -22,31 +21,16 @@ def test_payload(session):
     assert value["type"] == "tab"
 
 
-def test_keeps_current_window_handle(session):
-    original_handle = session.window_handle
-
+def test_new_tab_opens_about_blank(session):
     response = new_window(session, type_hint="tab")
     value = assert_success(response)
     assert value["type"] == "tab"
-
-    assert session.window_handle == original_handle
-
-
-def test_opens_about_blank_in_new_tab(session):
-    url = inline("<p>foo")
-    session.url = url
-
-    response = new_window(session, type_hint="tab")
-    value = assert_success(response)
-    assert value["type"] == "tab"
-
-    assert session.url == url
 
     session.window_handle = value["handle"]
     assert session.url == "about:blank"
 
 
-def test_sets_no_window_name(session):
+def test_new_tab_sets_no_window_name(session):
     response = new_window(session, type_hint="tab")
     value = assert_success(response)
     assert value["type"] == "tab"
@@ -55,7 +39,7 @@ def test_sets_no_window_name(session):
     assert window_name(session) == ""
 
 
-def test_sets_no_opener(session):
+def test_new_tab_sets_no_opener(session):
     response = new_window(session, type_hint="tab")
     value = assert_success(response)
     assert value["type"] == "tab"
