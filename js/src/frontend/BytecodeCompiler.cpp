@@ -514,8 +514,7 @@ bool frontend::ScriptCompiler<Unit>::compileScript(
     CompilationGCOutput& gcOutput) {
   assertSourceParserAndScriptCreated(compilationInfo.input);
 
-  TokenStreamPosition startPosition(compilationState_.keepAtoms,
-                                    parser->tokenStream);
+  TokenStreamPosition startPosition(parser->tokenStream);
 
   JSContext* cx = compilationInfo.cx;
 
@@ -650,8 +649,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
     const Maybe<uint32_t>& parameterListEnd) {
   assertSourceAndParserCreated(compilationInfo.input);
 
-  TokenStreamPosition startPosition(compilationState_.keepAtoms,
-                                    parser->tokenStream);
+  TokenStreamPosition startPosition(parser->tokenStream);
   CompilationInfo::RewindToken startObj = compilationInfo.getRewindToken();
 
   // Speculatively parse using the default directives implied by the context.
