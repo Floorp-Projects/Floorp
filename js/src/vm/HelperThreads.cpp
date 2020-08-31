@@ -502,7 +502,9 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options,
     return false;
   }
 
+  runtime = cx->runtime();
   parseGlobal = global;
+
   return true;
 }
 
@@ -513,7 +515,7 @@ void ParseTask::activate(JSRuntime* rt) {
 ParseTask::~ParseTask() = default;
 
 void ParseTask::trace(JSTracer* trc) {
-  if (parseGlobal->runtimeFromAnyThread() != trc->runtime()) {
+  if (runtime != trc->runtime()) {
     return;
   }
 
@@ -536,7 +538,6 @@ size_t ParseTask::sizeOfExcludingThis(
 
 void ParseTask::runTaskLocked(AutoLockHelperThreadState& locked) {
 #ifdef DEBUG
-  JSRuntime* runtime = parseGlobal->runtimeFromAnyThread();
   runtime->incOffThreadParsesRunning();
 #endif
 
@@ -561,7 +562,6 @@ void ParseTask::runTask() {
   AutoSetHelperThreadContext usesContext;
 
   JSContext* cx = TlsContext.get();
-  JSRuntime* runtime = parseGlobal->runtimeFromAnyThread();
 
   AutoSetContextRuntime ascr(runtime);
   AutoSetContextParse parsetask(this);
