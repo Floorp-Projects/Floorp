@@ -8,21 +8,21 @@ if CONFIG['MOZ_GLEAN']:
     FINAL_LIBRARY = 'xul'
 
     EXPORTS.mozilla += [
-        'AboutGlean.h',
+        'FOG.h',
     ]
 
     UNIFIED_SOURCES += [
-        'AboutGlean.cpp',
+        'FOG.cpp',
     ]
 
     XPCOM_MANIFESTS += [
         'components.conf'
     ]
 
-    XPIDL_MODULE = 'glean'
+    XPIDL_MODULE = 'fog'
 
     XPIDL_SOURCES += [
-        'nsIAboutGlean.idl',
+        'nsIFOG.idl',
     ]
 
 with Files('**'):
