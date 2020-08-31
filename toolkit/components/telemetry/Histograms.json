@@ -9521,6 +9521,32 @@
      "releaseChannelCollection": "opt-out",
      "description": "A counter incremented every time the user prints a document."
    },
+  "PRINT_BACKGROUND_TASK_TIME_MS" : {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["jwatt@jwatt.org"],
+    "expires_in_version": "88",
+    "description": "Milliseconds taken on the background thread only for print background tasks. Keys describe the task, usually the information being retrieved, current possible keys are: DefaultSettings, MarginsForPaper, Printers, NamedPrinter, NamedOrDefaultPrinter, SupportsDuplex, SupportsColor, SupportsCollation, PaperList.",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1660686]
+  },
+  "PRINT_BACKGROUND_TASK_ROUND_TRIP_TIME_MS" : {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["jwatt@jwatt.org"],
+    "expires_in_version": "88",
+    "description": "Milliseconds taken for print background tasks from spawning to background thread back to before resolving or rejecting on the main thread. See PRINT_BACKGROUND_TASK_TIME_MS for key description.",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1660686]
+  },
   "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
