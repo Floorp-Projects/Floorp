@@ -193,6 +193,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return GetFromWindow(aProxy);
   }
 
+  static void DiscardFromContentParent(ContentParent* aCP);
+
   // Create a brand-new toplevel BrowsingContext with no relationships to other
   // BrowsingContexts, and which is not embedded within any <browser> or frame
   // element.
