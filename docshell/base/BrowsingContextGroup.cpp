@@ -172,20 +172,6 @@ void BrowsingContextGroup::Unsubscribe(ContentParent* aProcess) {
   MOZ_DIAGNOSTIC_ASSERT(!hostEntry || hostEntry.Data() != aProcess,
                         "Unsubscribing existing host entry");
 #endif
-
-  // If this origin process embeds any non-discarded windowless
-  // BrowsingContexts, make sure to discard them, as this process is going away.
-  // Nested subframes will be discarded by WindowGlobalParent when it is
-  // destroyed by IPC.
-  nsTArray<RefPtr<BrowsingContext>> toDiscard;
-  for (auto& context : mToplevels) {
-    if (context->Canonical()->IsEmbeddedInProcess(aProcess->ChildID())) {
-      toDiscard.AppendElement(context);
-    }
-  }
-  for (auto& context : toDiscard) {
-    context->Detach(/* aFromIPC */ true);
-  }
 }
 
 ContentParent* BrowsingContextGroup::GetHostProcess(

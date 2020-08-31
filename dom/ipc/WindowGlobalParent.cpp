@@ -740,14 +740,6 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
     }
   }
 
-  // If there are any non-discarded nested contexts when this WindowContext is
-  // destroyed, tear them down.
-  nsTArray<RefPtr<dom::BrowsingContext>> toDiscard;
-  toDiscard.AppendElements(Children());
-  for (auto& context : toDiscard) {
-    context->Detach(/* aFromIPC */ true);
-  }
-
   // Note that our WindowContext has become discarded.
   WindowContext::Discard();
 
