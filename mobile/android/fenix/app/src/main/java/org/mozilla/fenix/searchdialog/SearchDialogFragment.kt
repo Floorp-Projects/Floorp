@@ -40,6 +40,7 @@ import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -254,6 +255,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             updateSearchSuggestionsHintVisibility(it)
             updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
             updateToolbarContentDescription(it)
+            updateSearchShortcutsIcon(it)
             toolbarView.update(it)
             awesomeBarView.update(it)
             firstUpdate = false
@@ -414,6 +416,20 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         toolbarView.view.contentDescription =
             searchState.searchEngineSource.searchEngine.name + ", " + urlView.hint
         urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+    }
+
+    private fun updateSearchShortcutsIcon(searchState: SearchFragmentState) {
+        view?.apply {
+            search_engines_shortcut_button.isVisible = searchState.areShortcutsAvailable
+
+            val showShortcuts = searchState.showSearchShortcuts
+            search_engines_shortcut_button.isChecked = showShortcuts
+
+            val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
+            search_engines_shortcut_button.compoundDrawables[0]?.setTint(
+                requireContext().getColorFromAttr(color)
+            )
+        }
     }
 
     companion object {
