@@ -1,16 +1,16 @@
 // ----------------------------------------------------------------------------
 // Tests installing an unsigned add-on through an InstallTrigger call in web
-// content. This should be blocked by the whitelist check.
+// content. This should be blocked by the origin allow check.
 // This verifies bug 645699
 function test() {
-  // prompt prior to download
-  SpecialPowers.pushPrefEnv({
-    set: [["extensions.postDownloadThirdPartyPrompt", false]],
-  });
-
   Harness.installConfirmCallback = confirm_install;
   Harness.installBlockedCallback = allow_blocked;
   Harness.installsCompletedCallback = finish_test;
+  // Prevent the Harness from ending the test on download cancel.
+  Harness.downloadCancelledCallback = () => {
+    return false;
+  };
+
   Harness.setup();
 
   PermissionTestUtils.add(
