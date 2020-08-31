@@ -193,6 +193,13 @@ using namespace mozilla::a11y;
                                : PivotRoleRule(roles::ARTICLE);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXLandmarkSearchKey"]) {
+      PivotRoleRule rule = mImmediateDescendantsOnly
+                               ? PivotRoleRule(roles::LANDMARK, mStartElem)
+                               : PivotRoleRule(roles::LANDMARK);
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;
