@@ -29,9 +29,7 @@ class CrossGraphTransmitter : public ForwardedInputTrack {
  public:
   CrossGraphTransmitter(TrackRate aSampleRate,
                         RefPtr<CrossGraphReceiver> aReceiver);
-  virtual CrossGraphTransmitter* AsCrossGraphTransmitter() override {
-    return this;
-  }
+  CrossGraphTransmitter* AsCrossGraphTransmitter() override { return this; }
 
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
@@ -46,7 +44,7 @@ class CrossGraphReceiver : public ProcessedMediaTrack {
  public:
   explicit CrossGraphReceiver(TrackRate aSampleRate,
                               TrackRate aTransmitterRate);
-  virtual CrossGraphReceiver* AsCrossGraphReceiver() override { return this; }
+  CrossGraphReceiver* AsCrossGraphReceiver() override { return this; }
 
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
