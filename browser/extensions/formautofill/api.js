@@ -69,9 +69,12 @@ function ensureCssLoaded(domWindow) {
   insertStyleSheet(domWindow, "chrome://formautofill/content/formautofill.css");
   insertStyleSheet(
     domWindow,
-    "resource://formautofill/autocomplete-item-shared.css"
+    "chrome://formautofill/content/skin/autocomplete-item-shared.css"
   );
-  insertStyleSheet(domWindow, "resource://formautofill/autocomplete-item.css");
+  insertStyleSheet(
+    domWindow,
+    "chrome://formautofill/content/skin/autocomplete-item.css"
+  );
 }
 
 function isAvailable() {
