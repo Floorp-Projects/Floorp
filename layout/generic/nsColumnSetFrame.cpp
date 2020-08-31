@@ -789,9 +789,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       kidNextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
     }
 
-    if ((contentBEnd > aReflowInput.ComputedMaxBSize() ||
-         contentBEnd > aReflowInput.ComputedBSize() ||
-         contentBEnd > aReflowInput.mCBReflowInput->ComputedMaxBSize()) &&
+    if (contentBEnd > aReflowInput.mCBReflowInput->ComputedMaxBSize() &&
         aConfig.mIsBalancing) {
       // We overflowed vertically, but have not exceeded the number of
       // columns. We're going to go into overflow columns now, so balancing
