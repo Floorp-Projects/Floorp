@@ -6658,6 +6658,7 @@ const nodeToTooltipMap = {
   "appMenu-zoomReset-button": "zoomReset-button.tooltip",
   "appMenu-zoomReduce-button": "zoomReduce-button.tooltip",
   "reader-mode-button": "reader-mode-button.tooltip",
+  "print-button": "printButton.tooltip",
 };
 const nodeToShortcutMap = {
   "bookmarks-menu-button": "manBookmarkKb",
@@ -6679,12 +6680,8 @@ const nodeToShortcutMap = {
   "appMenu-zoomReset-button": "key_fullZoomReset",
   "appMenu-zoomReduce-button": "key_fullZoomReduce",
   "reader-mode-button": "key_toggleReaderMode",
+  "print-button": "printKb",
 };
-
-if (AppConstants.platform == "macosx") {
-  nodeToTooltipMap["print-button"] = "printButton.tooltip";
-  nodeToShortcutMap["print-button"] = "printKb";
-}
 
 const gDynamicTooltipCache = new Map();
 function GetDynamicShortcutTooltipText(nodeId) {
@@ -6709,7 +6706,19 @@ function GetDynamicShortcutTooltipText(nodeId) {
 function UpdateDynamicShortcutTooltipText(aTooltip) {
   let nodeId =
     aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
-  aTooltip.setAttribute("label", GetDynamicShortcutTooltipText(nodeId));
+  if (
+    nodeId == "print-button" &&
+    !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
+    AppConstants.platform !== "macosx"
+  ) {
+    // If the new print UI pref is turned off, we should display the old title that did not have the shortcut
+    aTooltip.setAttribute(
+      "label",
+      document.getElementById(nodeId).getAttribute("print-button-title")
+    );
+  } else {
+    aTooltip.setAttribute("label", GetDynamicShortcutTooltipText(nodeId));
+  }
 }
 
 /*
