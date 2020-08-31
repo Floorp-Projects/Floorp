@@ -101,7 +101,7 @@ class DownloadMiddleware(
         downloadStorage.getDownloads().collect { downloads ->
             downloads.forEach { download ->
                 if (!context.state.downloads.containsKey(download.id)) {
-                    context.dispatch(DownloadAction.RestoreDownloadStateAction(download))
+                    context.store.dispatch(DownloadAction.RestoreDownloadStateAction(download))
                     logger.debug("Download restarted from the storage ${download.fileName}")
                 }
             }

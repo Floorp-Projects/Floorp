@@ -8,8 +8,14 @@ import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.content.Context
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -21,8 +27,10 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.ext.joinBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
@@ -32,13 +40,32 @@ import org.mockito.Mockito.never
 @RunWith(AndroidJUnit4::class)
 class DownloadMiddlewareTest {
 
+    private lateinit var dispatcher: TestCoroutineDispatcher
+    private lateinit var scope: CoroutineScope
+
+    @Before
+    fun setUp() {
+        dispatcher = TestCoroutineDispatcher()
+        scope = CoroutineScope(dispatcher)
+
+        Dispatchers.setMain(dispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        dispatcher.cleanupTestCoroutines()
+        scope.cancel()
+
+        Dispatchers.resetMain()
+    }
+
     @Test
     fun `service is started when download is queued`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadMiddleware = DownloadMiddleware(
             applicationContext,
             AbstractFetchDownloadService::class.java,
-            coroutineContext = coroutineContext,
+            coroutineContext = dispatcher,
             downloadStorage = mock()
         )
         val store = BrowserStore(
@@ -62,7 +89,7 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = coroutineContext
+            coroutineContext = dispatcher
         )
         val store = BrowserStore(
                 initialState = BrowserState(),
@@ -88,7 +115,7 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = coroutineContext
+            coroutineContext = dispatcher
         )
         val store = BrowserStore(
             initialState = BrowserState(),
@@ -111,7 +138,7 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = coroutineContext
+            coroutineContext = dispatcher
         )
         val store = BrowserStore(
             initialState = BrowserState(),
@@ -134,7 +161,7 @@ class DownloadMiddlewareTest {
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = coroutineContext
+            coroutineContext = dispatcher
         )
         val store = BrowserStore(
             initialState = BrowserState(),
@@ -165,11 +192,12 @@ class DownloadMiddlewareTest {
     fun `RestoreDownloadsState MUST populate the store with items in the storage`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
+        val dispatcher = TestCoroutineDispatcher()
         val downloadMiddleware = DownloadMiddleware(
             applicationContext,
             AbstractFetchDownloadService::class.java,
             downloadStorage = downloadStorage,
-            coroutineContext = coroutineContext
+            coroutineContext = dispatcher
         )
         val store = BrowserStore(
             initialState = BrowserState(),
@@ -186,6 +214,7 @@ class DownloadMiddlewareTest {
         assertTrue(store.state.downloads.isEmpty())
 
         store.dispatch(DownloadAction.RestoreDownloadsStateAction).joinBlocking()
+        dispatcher.advanceUntilIdle()
 
         assertEquals(download, store.state.downloads.values.first())
     }
