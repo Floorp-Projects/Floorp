@@ -3466,6 +3466,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   nonSyntacticScope = rhs.nonSyntacticScope;
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
+  useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
 };
 
 void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
@@ -3559,6 +3560,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       cx->options().throwOnAsmJSValidationFailure();
   privateClassFields = cx->options().privateClassFields();
   privateClassMethods = cx->options().privateClassMethods();
+  useOffThreadParseGlobal = cx->options().useOffThreadParseGlobal();
 
   sourcePragmas_ = cx->options().sourcePragmas();
 
