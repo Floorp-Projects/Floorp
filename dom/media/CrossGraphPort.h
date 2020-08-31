@@ -83,8 +83,8 @@ class CrossGraphPort final {
   RefPtr<GenericPromise> EnsureConnected();
 
  private:
-  explicit CrossGraphPort(const RefPtr<MediaInputPort>& aPort)
-      : mSourcePort(aPort),
+  explicit CrossGraphPort(RefPtr<MediaInputPort> aPort)
+      : mSourcePort(std::move(aPort)),
         mTransmitter(mSourcePort->GetDestination()->AsCrossGraphTransmitter()) {
   }
   RefPtr<CrossGraphTransmitter> GetTransmitter();
