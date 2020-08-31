@@ -155,8 +155,7 @@ def run_tests(mach_cmd, **kwargs):
 
 
 def main(argv=sys.argv[1:]):
-    """Used when the runner is directly called from the shell
-    """
+    """Used when the runner is directly called from the shell"""
     _setup_path()
 
     from mozbuild.mozconfig import MozconfigLoader

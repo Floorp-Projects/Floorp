@@ -117,7 +117,9 @@ def get_rustfmt_version(binary):
     """
     try:
         output = subprocess.check_output(
-            [binary, "--version"], stderr=subprocess.STDOUT, universal_newlines=True,
+            [binary, "--version"],
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
         )
     except subprocess.CalledProcessError as e:
         output = e.output
