@@ -5,21 +5,16 @@
 
 #include "HTMLEditUtils.h"
 
-#include "CSSEditUtils.h"  // for CSSEditUtils
-#include "WSRunObject.h"   // for WSRunScanner
-
-#include "mozilla/ArrayUtils.h"      // for ArrayLength
-#include "mozilla/Assertions.h"      // for MOZ_ASSERT, etc.
-#include "mozilla/EditAction.h"      // for EditAction
-#include "mozilla/EditorBase.h"      // for EditorBase, EditorType
-#include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint, etc.
-#include "mozilla/EditorUtils.h"     // for EditorUtils
-#include "mozilla/dom/Element.h"     // for Element, nsINode
+#include "CSSEditUtils.h"         // for CSSEditUtils
+#include "mozilla/ArrayUtils.h"   // for ArrayLength
+#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc.
+#include "mozilla/EditAction.h"   // for EditAction
+#include "mozilla/EditorBase.h"   // for EditorBase, EditorType
+#include "mozilla/EditorUtils.h"  // for EditorUtils
 #include "mozilla/dom/HTMLAnchorElement.h"
-#include "mozilla/dom/Text.h"  // for Text
-
-#include "nsAString.h"  // for nsAString::IsEmpty
-#include "nsAtom.h"     // for nsAtom
+#include "mozilla/dom/Element.h"  // for Element, nsINode
+#include "nsAString.h"            // for nsAString::IsEmpty
+#include "nsAtom.h"               // for nsAtom
 #include "nsCaseTreatment.h"
 #include "nsCOMPtr.h"        // for nsCOMPtr, operator==, etc.
 #include "nsDebug.h"         // for NS_ASSERTION, etc.
@@ -31,29 +26,10 @@
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsString.h"            // for nsAutoString
 #include "nsStyledElement.h"
-#include "nsTextFragment.h"  // for nsTextFragment
 
 namespace mozilla {
 
-using namespace dom;
 using EditorType = EditorBase::EditorType;
-
-template EditorDOMPoint HTMLEditUtils::GetPreviousEditablePoint(
-    nsIContent& aContent, const Element* aAncestorLimiter,
-    InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-    TableBoundary aHowToTreatTableBoundary);
-template EditorRawDOMPoint HTMLEditUtils::GetPreviousEditablePoint(
-    nsIContent& aContent, const Element* aAncestorLimiter,
-    InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-    TableBoundary aHowToTreatTableBoundary);
-template EditorDOMPoint HTMLEditUtils::GetNextEditablePoint(
-    nsIContent& aContent, const Element* aAncestorLimiter,
-    InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-    TableBoundary aHowToTreatTableBoundary);
-template EditorRawDOMPoint HTMLEditUtils::GetNextEditablePoint(
-    nsIContent& aContent, const Element* aAncestorLimiter,
-    InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-    TableBoundary aHowToTreatTableBoundary);
 
 bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
                                         const nsIContent& aRightContent,
@@ -692,232 +668,6 @@ bool HTMLEditUtils::IsNonListSingleLineContainer(nsINode& aNode) {
 bool HTMLEditUtils::IsSingleLineContainer(nsINode& aNode) {
   return IsNonListSingleLineContainer(aNode) ||
          aNode.IsAnyOfHTMLElements(nsGkAtoms::li, nsGkAtoms::dt, nsGkAtoms::dd);
-}
-
-// static
-template <typename EditorDOMPointType>
-EditorDOMPointType HTMLEditUtils::GetPreviousEditablePoint(
-    nsIContent& aContent, const Element* aAncestorLimiter,
-    InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-    TableBoundary aHowToTreatTableBoundary) {
-  MOZ_ASSERT(HTMLEditUtils::IsSimplyEditableNode(aContent));
-  NS_ASSERTION(!HTMLEditUtils::IsAnyTableElement(&aContent) ||
-                   HTMLEditUtils::IsTableCellOrCaption(aContent),
-               "HTMLEditUtils::GetPreviousEditablePoint() may return a point "
-               "between table structure elements");
-
-  // First, look for previous content.
-  nsIContent* previousContent = aContent.GetPreviousSibling();
-  if (!previousContent) {
-    if (!aContent.GetParentElement()) {
-      return EditorDOMPointType();
-    }
-    nsIContent* inclusiveAncestor = &aContent;
-    for (Element* parentElement : aContent.AncestorsOfType<Element>()) {
-      previousContent = parentElement->GetPreviousSibling();
-      if (!previousContent &&
-          (parentElement == aAncestorLimiter ||
-           !HTMLEditUtils::IsSimplyEditableNode(*parentElement) ||
-           !HTMLEditUtils::CanCrossContentBoundary(*parentElement,
-                                                   aHowToTreatTableBoundary))) {
-        // If cannot cross the parent element boundary, return the point of
-        // last inclusive ancestor point.
-        return EditorDOMPointType(inclusiveAncestor);
-      }
-
-      // Start of the parent element is a next editable point if it's an
-      // element which is not a table structure element.
-      if (!HTMLEditUtils::IsAnyTableElement(parentElement) ||
-          HTMLEditUtils::IsTableCellOrCaption(*parentElement)) {
-        inclusiveAncestor = parentElement;
-      }
-
-      if (!previousContent) {
-        continue;  // Keep looking for previous sibling of an ancestor.
-      }
-
-      // XXX Should we ignore data node like CDATA, Comment, etc?
-
-      // If previous content is not editable, let's return the point after it.
-      if (!HTMLEditUtils::IsSimplyEditableNode(*previousContent)) {
-        return EditorDOMPointType::After(*previousContent);
-      }
-
-      // If cannot cross previous content boundary, return start of last
-      // inclusive ancestor.
-      if (!HTMLEditUtils::CanCrossContentBoundary(*previousContent,
-                                                  aHowToTreatTableBoundary)) {
-        return inclusiveAncestor == &aContent
-                   ? EditorDOMPointType(inclusiveAncestor)
-                   : EditorDOMPointType(inclusiveAncestor, 0);
-      }
-      break;
-    }
-    if (!previousContent) {
-      return EditorDOMPointType(inclusiveAncestor);
-    }
-  } else if (!HTMLEditUtils::IsSimplyEditableNode(*previousContent)) {
-    return EditorDOMPointType::After(*previousContent);
-  } else if (!HTMLEditUtils::CanCrossContentBoundary(
-                 *previousContent, aHowToTreatTableBoundary)) {
-    return EditorDOMPointType(&aContent);
-  }
-
-  // Next, look for end of the previous content.
-  nsIContent* leafContent = previousContent;
-  if (previousContent->GetChildCount() &&
-      HTMLEditUtils::IsContainerNode(*previousContent)) {
-    for (nsIContent* maybeLeafContent = previousContent->GetLastChild();
-         maybeLeafContent;
-         maybeLeafContent = maybeLeafContent->GetLastChild()) {
-      // If it's not an editable content or cannot cross the boundary,
-      // return the point after the content.  Note that in this case,
-      // the content must not be any table elements except `<table>`
-      // because we've climbed down the tree.
-      if (!HTMLEditUtils::IsSimplyEditableNode(*maybeLeafContent) ||
-          !HTMLEditUtils::CanCrossContentBoundary(*maybeLeafContent,
-                                                  aHowToTreatTableBoundary)) {
-        return EditorDOMPointType::After(*maybeLeafContent);
-      }
-      leafContent = maybeLeafContent;
-      if (!HTMLEditUtils::IsContainerNode(*leafContent)) {
-        break;
-      }
-    }
-  }
-
-  if (leafContent->IsText()) {
-    Text* textNode = leafContent->AsText();
-    if (aInvisibleWhiteSpaces == InvisibleWhiteSpaces::Preserve) {
-      return EditorDOMPointType::AtEndOf(*textNode);
-    }
-    // There may be invisible trailing white-spaces which should be
-    // ignored.  Let's scan its start.
-    return WSRunScanner::GetAfterLastVisiblePoint<EditorDOMPointType>(
-        *textNode, aAncestorLimiter);
-  }
-
-  // If it's a container element, return end of it.  Otherwise, return
-  // the point after the non-container element.
-  return HTMLEditUtils::IsContainerNode(*leafContent)
-             ? EditorDOMPointType::AtEndOf(*leafContent)
-             : EditorDOMPointType::After(*leafContent);
-}
-
-// static
-template <typename EditorDOMPointType>
-EditorDOMPointType HTMLEditUtils::GetNextEditablePoint(
-    nsIContent& aContent, const Element* aAncestorLimiter,
-    InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-    TableBoundary aHowToTreatTableBoundary) {
-  MOZ_ASSERT(HTMLEditUtils::IsSimplyEditableNode(aContent));
-  NS_ASSERTION(!HTMLEditUtils::IsAnyTableElement(&aContent) ||
-                   HTMLEditUtils::IsTableCellOrCaption(aContent),
-               "HTMLEditUtils::GetPreviousEditablePoint() may return a point "
-               "between table structure elements");
-
-  // First, look for next content.
-  nsIContent* nextContent = aContent.GetNextSibling();
-  if (!nextContent) {
-    if (!aContent.GetParentElement()) {
-      return EditorDOMPointType();
-    }
-    nsIContent* inclusiveAncestor = &aContent;
-    for (Element* parentElement : aContent.AncestorsOfType<Element>()) {
-      // End of the parent element is a next editable point if it's an
-      // element which is not a table structure element.
-      if (!HTMLEditUtils::IsAnyTableElement(parentElement) ||
-          HTMLEditUtils::IsTableCellOrCaption(*parentElement)) {
-        inclusiveAncestor = parentElement;
-      }
-
-      nextContent = parentElement->GetNextSibling();
-      if (!nextContent &&
-          (parentElement == aAncestorLimiter ||
-           !HTMLEditUtils::IsSimplyEditableNode(*parentElement) ||
-           !HTMLEditUtils::CanCrossContentBoundary(*parentElement,
-                                                   aHowToTreatTableBoundary))) {
-        // If cannot cross the parent element boundary, return the point of
-        // last inclusive ancestor point.
-        return EditorDOMPointType(inclusiveAncestor);
-      }
-
-      // End of the parent element is a next editable point if it's an
-      // element which is not a table structure element.
-      if (!HTMLEditUtils::IsAnyTableElement(parentElement) ||
-          HTMLEditUtils::IsTableCellOrCaption(*parentElement)) {
-        inclusiveAncestor = parentElement;
-      }
-
-      if (!nextContent) {
-        continue;  // Keep looking for next sibling of an ancestor.
-      }
-
-      // XXX Should we ignore data node like CDATA, Comment, etc?
-
-      // If next content is not editable, let's return the point after
-      // the last inclusive ancestor.
-      if (!HTMLEditUtils::IsSimplyEditableNode(*nextContent)) {
-        return EditorDOMPointType::After(*parentElement);
-      }
-
-      // If cannot cross next content boundary, return after the last
-      // inclusive ancestor.
-      if (!HTMLEditUtils::CanCrossContentBoundary(*nextContent,
-                                                  aHowToTreatTableBoundary)) {
-        return EditorDOMPointType::After(*inclusiveAncestor);
-      }
-      break;
-    }
-    if (!nextContent) {
-      return EditorDOMPointType::After(*inclusiveAncestor);
-    }
-  } else if (!HTMLEditUtils::IsSimplyEditableNode(*nextContent)) {
-    return EditorDOMPointType::After(aContent);
-  } else if (!HTMLEditUtils::CanCrossContentBoundary(
-                 *nextContent, aHowToTreatTableBoundary)) {
-    return EditorDOMPointType::After(aContent);
-  }
-
-  // Next, look for start of the next content.
-  nsIContent* leafContent = nextContent;
-  if (nextContent->GetChildCount() &&
-      HTMLEditUtils::IsContainerNode(*nextContent)) {
-    for (nsIContent* maybeLeafContent = nextContent->GetFirstChild();
-         maybeLeafContent;
-         maybeLeafContent = maybeLeafContent->GetFirstChild()) {
-      // If it's not an editable content or cannot cross the boundary,
-      // return the point at the content (i.e., start of its parent).  Note
-      // that in this case, the content must not be any table elements except
-      // `<table>` because we've climbed down the tree.
-      if (!HTMLEditUtils::IsSimplyEditableNode(*maybeLeafContent) ||
-          !HTMLEditUtils::CanCrossContentBoundary(*maybeLeafContent,
-                                                  aHowToTreatTableBoundary)) {
-        return EditorDOMPointType(maybeLeafContent);
-      }
-      leafContent = maybeLeafContent;
-      if (!HTMLEditUtils::IsContainerNode(*leafContent)) {
-        break;
-      }
-    }
-  }
-
-  if (leafContent->IsText()) {
-    Text* textNode = leafContent->AsText();
-    if (aInvisibleWhiteSpaces == InvisibleWhiteSpaces::Preserve) {
-      return EditorDOMPointType(textNode, 0);
-    }
-    // There may be invisible leading white-spaces which should be
-    // ignored.  Let's scan its start.
-    return WSRunScanner::GetFirstVisiblePoint<EditorDOMPointType>(
-        *textNode, aAncestorLimiter);
-  }
-
-  // If it's a container element, return start of it.  Otherwise, return
-  // the point at the non-container element (i.e., start of its parent).
-  return HTMLEditUtils::IsContainerNode(*leafContent)
-             ? EditorDOMPointType(leafContent, 0)
-             : EditorDOMPointType(leafContent);
 }
 
 // static

@@ -478,32 +478,6 @@ class HTMLEditUtils final {
   }
 
   /**
-   * Get previous/next editable point from start or end of aContent.
-   */
-  enum class InvisibleWhiteSpaces {
-    Ignore,    // Ignore invisible white-spaces, i.e., don't return middle of
-               // them.
-    Preserve,  // Preserve invisible white-spaces, i.e., result may be start or
-               // end of a text node even if it begins or ends with invisible
-               // white-spaces.
-  };
-  enum class TableBoundary {
-    Ignore,                  // May cross any table element boundary.
-    NoCrossTableElement,     // Won't cross `<table>` element boundary.
-    NoCrossAnyTableElement,  // Won't cross any table element boundary.
-  };
-  template <typename EditorDOMPointType>
-  static EditorDOMPointType GetPreviousEditablePoint(
-      nsIContent& aContent, const Element* aAncestorLimiter,
-      InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-      TableBoundary aHowToTreatTableBoundary);
-  template <typename EditorDOMPointType>
-  static EditorDOMPointType GetNextEditablePoint(
-      nsIContent& aContent, const Element* aAncestorLimiter,
-      InvisibleWhiteSpaces aInvisibleWhiteSpaces,
-      TableBoundary aHowToTreatTableBoundary);
-
-  /**
    * GetAncestorBlockElement() returns parent or nearest ancestor of aContent
    * which is a block element.  If aAncestorLimiter is not nullptr,
    * this stops looking for the result when it meets the limiter.
@@ -802,16 +776,6 @@ class HTMLEditUtils final {
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
   static bool IsContainerNode(nsHTMLTag aTagId);
-
-  static bool CanCrossContentBoundary(nsIContent& aContent,
-                                      TableBoundary aHowToTreatTableBoundary) {
-    const bool cannotCrossBoundary =
-        (aHowToTreatTableBoundary == TableBoundary::NoCrossAnyTableElement &&
-         HTMLEditUtils::IsAnyTableElement(&aContent)) ||
-        (aHowToTreatTableBoundary == TableBoundary::NoCrossTableElement &&
-         aContent.IsHTMLElement(nsGkAtoms::table));
-    return !cannotCrossBoundary;
-  }
 };
 
 /**
