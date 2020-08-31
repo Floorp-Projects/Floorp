@@ -111,6 +111,11 @@ this.LoginHelper = {
       "signon.storeWhenAutocompleteOff"
     );
 
+    this.suggestImportCount = Services.prefs.getIntPref(
+      "signon.suggestImportCount",
+      0
+    );
+
     if (
       Services.prefs.getBoolPref(
         "signon.testOnlyUserHasInteractedByPrefValue",

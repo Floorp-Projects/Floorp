@@ -20,9 +20,26 @@ add_task(async function check_fluent_ids() {
   }
 });
 
-add_task(async function import_suggestion_wizard() {
-  sinon.stub(ChromeMigrationUtils, "getImportableLogins").resolves(["chrome"]);
+// Showing importables updates counts delayed, so adjust and cleanup.
+add_task(async function test_initialize() {
+  const debounce = sinon
+    .stub(LoginManagerParent, "SUGGEST_IMPORT_DEBOUNCE_MS")
+    .value(0);
+  const importable = sinon
+    .stub(ChromeMigrationUtils, "getImportableLogins")
+    .resolves(["chrome"]);
 
+  // This makes the third autocomplete test *not* show import suggestions.
+  Services.prefs.setIntPref("signon.suggestImportCount", 2);
+
+  registerCleanupFunction(() => {
+    debounce.restore();
+    importable.restore();
+    Services.prefs.clearUserPref("signon.suggestImportCount");
+  });
+});
+
+add_task(async function import_suggestion_wizard() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -59,13 +76,9 @@ add_task(async function import_suggestion_wizard() {
       await BrowserTestUtils.closeWindow(wizard);
     }
   );
-
-  ChromeMigrationUtils.getImportableLogins.restore();
 });
 
 add_task(async function import_suggestion_learn_more() {
-  sinon.stub(ChromeMigrationUtils, "getImportableLogins").resolves(["chrome"]);
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -98,6 +111,40 @@ add_task(async function import_suggestion_learn_more() {
       BrowserTestUtils.removeTab(supportTab);
     }
   );
+});
 
-  ChromeMigrationUtils.getImportableLogins.restore();
+add_task(async function import_suggestion_not_shown() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "https://example.com" + DIRECTORY_PATH + "form_basic.html",
+    },
+    async function(browser) {
+      const popup = document.getElementById("PopupAutoComplete");
+      ok(popup, "Got popup");
+      let opened = false;
+      openACPopup(popup, browser, "#form-basic-password").then(
+        () => (opened = true)
+      );
+
+      await TestUtils.waitForCondition(() => {
+        EventUtils.synthesizeKey("KEY_ArrowDown");
+        return opened;
+      });
+
+      const footer = popup.querySelector(`[originaltype="loginsFooter"]`);
+      ok(footer, "Got footer richlistitem");
+
+      await TestUtils.waitForCondition(() => {
+        return !EventUtils.isHidden(footer);
+      }, "Waiting for footer to become visible");
+
+      ok(
+        !popup.querySelector(`[originaltype="importableLogins"]`),
+        "No importable suggestion shown"
+      );
+
+      await closePopup(popup);
+    }
+  );
 });

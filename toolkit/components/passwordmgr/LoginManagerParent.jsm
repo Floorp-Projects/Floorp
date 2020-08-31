@@ -127,7 +127,8 @@ Services.ppmm.addMessageListener("PasswordManager:findRecipes", message => {
 async function getImportableLogins(formOrigin) {
   // Include the experiment state for data and UI decisions; otherwise skip
   // importing if not supported or disabled.
-  const state = LoginHelper.showAutoCompleteImport;
+  const state =
+    LoginHelper.suggestImportCount > 0 && LoginHelper.showAutoCompleteImport;
   return state
     ? {
         browsers: await ChromeMigrationUtils.getImportableLogins(formOrigin),
@@ -256,6 +257,11 @@ class LoginManagerParent extends JSWindowActorParent {
         break;
       }
 
+      case "PasswordManager:decreaseSuggestImportCount": {
+        this.decreaseSuggestImportCount(data);
+        break;
+      }
+
       case "PasswordManager:findLogins": {
         return this.sendLoginDataToChild(
           context.origin,
@@ -345,6 +351,36 @@ class LoginManagerParent extends JSWindowActorParent {
     }
 
     return undefined;
+  }
+
+  /**
+   * Update the remaining number of import suggestion impressions with debounce
+   * to allow multiple popups showing the "same" items to count as one.
+   */
+  decreaseSuggestImportCount(count) {
+    // Delay an existing timer with a potentially larger count.
+    if (this._suggestImportTimer) {
+      this._suggestImportTimer.delay =
+        LoginManagerParent.SUGGEST_IMPORT_DEBOUNCE_MS;
+      this._suggestImportCount = Math.max(count, this._suggestImportCount);
+      return;
+    }
+
+    this._suggestImportTimer = Cc["@mozilla.org/timer;1"].createInstance(
+      Ci.nsITimer
+    );
+    this._suggestImportTimer.init(
+      () => {
+        this._suggestImportTimer = null;
+        Services.prefs.setIntPref(
+          "signon.suggestImportCount",
+          LoginHelper.suggestImportCount - this._suggestImportCount
+        );
+      },
+      LoginManagerParent.SUGGEST_IMPORT_DEBOUNCE_MS,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
+    this._suggestImportCount = count;
   }
 
   /**
@@ -1316,6 +1352,8 @@ class LoginManagerParent extends JSWindowActorParent {
     return gRecipeManager.initializationPromise;
   }
 }
+
+LoginManagerParent.SUGGEST_IMPORT_DEBOUNCE_MS = 10000;
 
 XPCOMUtils.defineLazyPreferenceGetter(
   LoginManagerParent,
