@@ -5161,6 +5161,14 @@ static bool FrontendTest(JSContext* cx,
     return false;
   }
 
+  // Emplace the top-level stencil.
+  MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
+             CompilationInfo::TopLevelIndex);
+  if (!compilationInfo.stencil.scriptData.emplaceBack()) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
   if (goal == frontend::ParseGoal::Script) {
     js::frontend::ParseNode* pn;
     switch (dumpType) {
