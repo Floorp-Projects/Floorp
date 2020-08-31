@@ -71,6 +71,7 @@ class SendCrashTelemetryServiceTest {
             scope = scope
         )).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(
+            123,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
@@ -104,6 +105,7 @@ class SendCrashTelemetryServiceTest {
         val nativeCrash = caughtCrash
             ?: throw AssertionError("Expected NativeCodeCrash instance")
 
+        assertEquals(123, nativeCrash.timestamp)
         assertEquals(true, nativeCrash.minidumpSuccess)
         assertEquals(false, nativeCrash.isFatal)
         assertEquals(

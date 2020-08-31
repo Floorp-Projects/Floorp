@@ -26,6 +26,10 @@ permalink: /changelog/
 
 * **lib-push-firebase**
   * Removed non-essential dependency on `com.google.firebase:firebase-core`.
+  
+* **lib-crash**
+  * Crash report timestamp is now set to when the crash occurred.
+  * When breadcrumbs limit is reached, oldest breadcrumbs are dropped.
 
 * **feature-toolbar**
   * Added `ContainerToolbarFeature` to update the toolbar with the container page action whenever the selected tab changes.

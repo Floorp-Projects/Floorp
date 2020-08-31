@@ -19,6 +19,7 @@ class CrashTest {
     @Test
     fun `fromIntent() can deserialize a GeckoView crash Intent`() {
         val originalCrash = Crash.NativeCodeCrash(
+            123,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
@@ -32,6 +33,7 @@ class CrashTest {
         val recoveredCrash = Crash.fromIntent(intent) as? Crash.NativeCodeCrash
             ?: throw AssertionError("Expected NativeCodeCrash instance")
 
+        assertEquals(recoveredCrash.timestamp, 123)
         assertEquals(recoveredCrash.minidumpSuccess, true)
         assertEquals(recoveredCrash.isFatal, false)
         assertEquals(
@@ -48,7 +50,7 @@ class CrashTest {
     fun `Serialize and deserialize UncaughtExceptionCrash`() {
         val exception = RuntimeException("Hello World!")
 
-        val originalCrash = Crash.UncaughtExceptionCrash(exception, arrayListOf())
+        val originalCrash = Crash.UncaughtExceptionCrash(0, exception, arrayListOf())
 
         val intent = Intent()
         originalCrash.fillIn(intent)
@@ -70,13 +72,13 @@ class CrashTest {
 
         assertTrue(Crash.isCrashIntent(
             Intent().apply {
-                Crash.UncaughtExceptionCrash(RuntimeException(), arrayListOf()).fillIn(this)
+                Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf()).fillIn(this)
             }
         ))
 
         assertTrue(Crash.isCrashIntent(
             Intent().apply {
-                val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+                val crash = Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
                 crash.fillIn(this)
             }
         ))

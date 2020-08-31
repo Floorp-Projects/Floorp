@@ -155,6 +155,7 @@ class CrashReporterTest {
         ).install(testContext))
 
         val crash = Crash.NativeCodeCrash(
+            0,
             "dump.path",
             true,
             "extras.path",
@@ -346,7 +347,7 @@ class CrashReporterTest {
         ).install(testContext))
 
         reporter.submitReport(
-            Crash.UncaughtExceptionCrash(RuntimeException(), arrayListOf())
+            Crash.UncaughtExceptionCrash(0, RuntimeException(), arrayListOf())
         ).joinBlocking()
         assertTrue(exceptionCrash)
     }
@@ -379,7 +380,7 @@ class CrashReporterTest {
         ).install(testContext))
 
         reporter.submitReport(
-            Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+            Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -499,7 +500,7 @@ class CrashReporterTest {
         ).install(testContext))
 
         reporter.submitCrashTelemetry(
-            Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+            Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -539,6 +540,7 @@ class CrashReporterTest {
         ).install(context)
 
         val nativeCrash = Crash.NativeCodeCrash(
+            0,
             "dump.path",
             true,
             "extras.path",
@@ -575,6 +577,7 @@ class CrashReporterTest {
         ).install(testContext))
 
         val nativeCrash = Crash.NativeCodeCrash(
+            0,
             "dump.path",
             true,
             "extras.path",
@@ -601,6 +604,7 @@ class CrashReporterTest {
         ).install(testContext))
 
         val nativeCrash = Crash.NativeCodeCrash(
+            0,
             "dump.path",
             true,
             "extras.path",
@@ -742,6 +746,6 @@ class CrashReporterTest {
 
 private fun createUncaughtExceptionCrash(): Crash.UncaughtExceptionCrash {
     return Crash.UncaughtExceptionCrash(
-        RuntimeException(), ArrayList()
+        0, RuntimeException(), ArrayList()
     )
 }

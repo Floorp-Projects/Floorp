@@ -23,6 +23,7 @@ class CrashNotificationTest {
     @Test
     fun shouldShowNotificationInsteadOfPrompt() {
         val nonFatalNativeCrash = Crash.NativeCodeCrash(
+            timestamp = 0,
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
@@ -43,6 +44,7 @@ class CrashNotificationTest {
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 31))
 
         val fatalNativeCrash = Crash.NativeCodeCrash(
+            timestamp = 0,
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
@@ -62,7 +64,7 @@ class CrashNotificationTest {
         assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 30))
         assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 31))
 
-        val exceptionCrash = Crash.UncaughtExceptionCrash(RuntimeException("Boom"), arrayListOf())
+        val exceptionCrash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
 
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(exceptionCrash, sdkLevel = 21))
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(exceptionCrash, sdkLevel = 22))
@@ -85,7 +87,7 @@ class CrashNotificationTest {
         assertEquals(0, shadowNotificationManager.notificationChannels.size)
         assertEquals(0, shadowNotificationManager.size())
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Boom"), arrayListOf())
+        val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
 
         val crashNotification = CrashNotification(testContext, crash, CrashReporter.PromptConfiguration(
             appName = "TestApp"
