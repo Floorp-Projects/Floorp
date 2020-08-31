@@ -974,6 +974,9 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_methods");
 #endif
 
+  bool useOffThreadParseGlobal =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "off_thread_parse_global");
+
 #ifdef JS_GC_ZEAL
   int32_t zeal = Preferences::GetInt(JS_OPTIONS_DOT_STR "gczeal", -1);
   int32_t zeal_frequency = Preferences::GetInt(
@@ -1017,7 +1020,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setThrowOnDebuggeeWouldRun(throwOnDebuggeeWouldRun)
       .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun)
       .setPrivateClassFields(privateFieldsEnabled)
-      .setPrivateClassMethods(privateMethodsEnabled);
+      .setPrivateClassMethods(privateMethodsEnabled)
+      .setUseOffThreadParseGlobal(useOffThreadParseGlobal);
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {

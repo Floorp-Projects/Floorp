@@ -133,6 +133,11 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool privateClassFields = false;
   bool privateClassMethods = false;
 
+  // True if off-thread parsing should use a parse GlobalObject in order to
+  // directly allocate to the GC from a helper thread. If false, transfer the
+  // CompilationStencil back to main thread before allocating GC objects.
+  bool useOffThreadParseGlobal = true;
+
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
    * "Function", or "GeneratorFunction".
