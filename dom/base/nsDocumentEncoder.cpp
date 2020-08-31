@@ -471,8 +471,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     bool HasInvisibleParentAndShouldBeSkipped(nsINode& aNode) const;
 
     nsresult SerializeNodePartiallyContainedInRange(
-        nsINode* aNode, nsIContent* aContent,
-        const StartAndEndContent& aStartAndEndContent, const nsRange* aRange,
+        nsINode& aNode, nsIContent& aContent,
+        const StartAndEndContent& aStartAndEndContent, const nsRange& aRange,
         int32_t aDepth);
 
     nsresult SerializeTextNode(nsINode& aNode, const nsIContent& aContent,
@@ -1076,7 +1076,7 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = SerializeNodePartiallyContainedInRange(
-        aNode, content, startAndEndContent, aRange, aDepth);
+        *aNode, *content, startAndEndContent, *aRange, aDepth);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1086,32 +1086,32 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
 
 nsresult
 nsDocumentEncoder::RangeSerializer::SerializeNodePartiallyContainedInRange(
-    nsINode* aNode, nsIContent* aContent,
-    const StartAndEndContent& aStartAndEndContent, const nsRange* aRange,
+    nsINode& aNode, nsIContent& aContent,
+    const StartAndEndContent& aStartAndEndContent, const nsRange& aRange,
     const int32_t aDepth) {
   // due to implementation it is impossible for text node to be both start and
   // end of range.  We would have handled that case without getting here.
   // XXXsmaug What does this all mean?
-  if (IsTextNode(aNode)) {
+  if (IsTextNode(&aNode)) {
     nsresult rv =
-        SerializeTextNode(*aNode, *aContent, aStartAndEndContent, *aRange);
+        SerializeTextNode(aNode, aContent, aStartAndEndContent, aRange);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    if (aNode != mClosestCommonInclusiveAncestorOfRange) {
-      if (mRangeContextSerializer.mRangeNodeContext.IncludeInContext(*aNode)) {
+    if (&aNode != mClosestCommonInclusiveAncestorOfRange) {
+      if (mRangeContextSerializer.mRangeNodeContext.IncludeInContext(aNode)) {
         // halt the incrementing of mContextInfoDepth.  This
         // is so paste client will include this node in paste.
         mHaltRangeHint = true;
       }
-      if ((aStartAndEndContent.mStart == aContent) && !mHaltRangeHint) {
+      if ((aStartAndEndContent.mStart == &aContent) && !mHaltRangeHint) {
         ++mContextInfoDepth.mStart;
       }
-      if ((aStartAndEndContent.mEnd == aContent) && !mHaltRangeHint) {
+      if ((aStartAndEndContent.mEnd == &aContent) && !mHaltRangeHint) {
         ++mContextInfoDepth.mEnd;
       }
 
       // serialize the start of this node
-      nsresult rv = mNodeSerializer.SerializeNodeStart(*aNode, 0, -1);
+      nsresult rv = mNodeSerializer.SerializeNodeStart(aNode, 0, -1);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1124,14 +1124,14 @@ nsDocumentEncoder::RangeSerializer::SerializeNodePartiallyContainedInRange(
     // do some calculations that will tell us which children of this
     // node are in the range.
     int32_t startOffset = 0, endOffset = -1;
-    if (aStartAndEndContent.mStart == aContent && mStartRootIndex >= aDepth) {
+    if (aStartAndEndContent.mStart == &aContent && mStartRootIndex >= aDepth) {
       startOffset = inclusiveAncestorsOffsetsOfStart[mStartRootIndex - aDepth];
     }
-    if (aStartAndEndContent.mEnd == aContent && mEndRootIndex >= aDepth) {
+    if (aStartAndEndContent.mEnd == &aContent && mEndRootIndex >= aDepth) {
       endOffset = inclusiveAncestorsOffsetsOfEnd[mEndRootIndex - aDepth];
     }
     // generated aContent will cause offset values of -1 to be returned.
-    uint32_t childCount = aContent->GetChildCount();
+    uint32_t childCount = aContent.GetChildCount();
 
     if (startOffset == -1) startOffset = 0;
     if (endOffset == -1)
@@ -1143,19 +1143,19 @@ nsDocumentEncoder::RangeSerializer::SerializeNodePartiallyContainedInRange(
       // intermediate points on the list use the endOffset of the
       // location of the ancestor, rather than just past it.  So we need
       // to add one here in order to include it in the children we serialize.
-      if (aNode != aRange->GetEndContainer()) {
+      if (&aNode != aRange.GetEndContainer()) {
         endOffset++;
       }
     }
 
     if (endOffset) {
-      nsresult rv = SerializeChildrenOfContent(*aContent, startOffset,
-                                               endOffset, aRange, aDepth);
+      nsresult rv = SerializeChildrenOfContent(aContent, startOffset, endOffset,
+                                               &aRange, aDepth);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     // serialize the end of this node
-    if (aNode != mClosestCommonInclusiveAncestorOfRange) {
-      nsresult rv = mNodeSerializer.SerializeNodeEnd(*aNode);
+    if (&aNode != mClosestCommonInclusiveAncestorOfRange) {
+      nsresult rv = mNodeSerializer.SerializeNodeEnd(aNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
