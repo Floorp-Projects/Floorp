@@ -58,7 +58,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // Ensure ICE transports exist that we might need when offer/answer concludes
   void EnsureTransports(const JsepSession& aSession);
 
-  void UpdateRTCDtlsTransports();
+  void UpdateRTCDtlsTransports(bool aMarkAsStable);
+  void RollbackRTCDtlsTransports();
   void RemoveRTCDtlsTransportsExcept(
       const std::set<std::string>& aTransportIds);
 
