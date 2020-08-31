@@ -807,8 +807,7 @@ bool MPRISServiceHandler::EmitSupportedKeyChanged(
   return EmitPropertiesChangedSignal(parameters);
 }
 
-bool MPRISServiceHandler::EmitPropertiesChangedSignal(
-    GVariant* aParameters) const {
+bool MPRISServiceHandler::EmitPropertiesChangedSignal(GVariant* aParameters) const {
   if (!mConnection) {
     LOG("No D-Bus Connection. Cannot emit properties changed signal");
     return false;

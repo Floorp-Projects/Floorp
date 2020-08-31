@@ -1914,8 +1914,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_CERT, u"sent"_ns,
                          1);
     if (info->GetSSLVersionUsed() == nsISSLSocketControl::TLS_VERSION_1_3) {
-      Telemetry::Accumulate(Telemetry::TLS_1_3_CLIENT_AUTH_USES_PHA,
-                            info->IsHandshakeCompleted());
+        Telemetry::Accumulate(Telemetry::TLS_1_3_CLIENT_AUTH_USES_PHA,
+                              info->IsHandshakeCompleted());
     }
   }
 
