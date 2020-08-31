@@ -210,6 +210,21 @@ var PrintEventHandler = {
 
     // Ensure the output format is set properly
     this.viewSettings.printerName = printerName;
+
+    // Ensure the color option is correct, if either of the supportsX flags are
+    // false then the user cannot change the value through the UI.
+    let flags = 0;
+    if (!this.viewSettings.supportsColor) {
+      flags |= this.settingFlags.printInColor;
+      this.viewSettings.printInColor = false;
+    } else if (!this.viewSettings.supportsMonochrome) {
+      flags |= this.settingFlags.printInColor;
+      this.viewSettings.printInColor = true;
+    }
+
+    if (flags) {
+      this.saveSettingsToPrefs(flags);
+    }
   },
 
   async print(systemDialogSettings) {
@@ -268,9 +283,6 @@ var PrintEventHandler = {
 
     let printerChanged = flags & this.settingFlags.printerName;
     if (didSettingsChange) {
-      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-        Ci.nsIPrintSettingsService
-      );
       this._printerSettingsChangedFlags |= flags;
 
       if (printerChanged) {
@@ -280,7 +292,7 @@ var PrintEventHandler = {
       }
 
       if (flags) {
-        PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
+        this.saveSettingsToPrefs(flags);
       }
       if (printerChanged) {
         await this.refreshSettings(this.settings.printerName);
@@ -295,6 +307,13 @@ var PrintEventHandler = {
         })
       );
     }
+  },
+
+  saveSettingsToPrefs(flags) {
+    let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+    PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
   },
 
   /**
@@ -607,18 +626,18 @@ const PrintSettingsViewProxy = {
           target.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF ||
           this.knownSaveToFilePrinters.has(target.printerName)
         );
-      // We allow switching colors except:
+      // Black and white is always supported except:
       //
       //  * For PDF printing, where it'd require rasterization and thus bad
       //    quality.
       //
       //  * For Mac, where there's no API to print in monochrome.
       //
-      case "supportsColorSwitch":
+      case "supportsMonochrome":
         return (
-          target.printerName != PrintUtils.SAVE_TO_PDF_PRINTER &&
-          AppConstants.platform !== "macosx" &&
-          this.get(target, "supportsColor")
+          !this.get(target, "supportsColor") ||
+          (target.printerName != PrintUtils.SAVE_TO_PDF_PRINTER &&
+            AppConstants.platform !== "macosx")
         );
     }
     return target[name];
@@ -786,21 +805,10 @@ customElements.define("destination-picker", DestinationPicker, {
 
 class ColorModePicker extends PrintSettingSelect {
   update(settings) {
-    let value = settings[this.settingName];
-    let supportsColor = settings.supportsColor;
-    let supportsColorSwitch = settings.supportsColorSwitch;
-    // If we're switching to a printer that either doesn't allow us to switch
-    // to monochrome, or doesn't support color, force a value change.
-    let forceChange = value != supportsColor && (!supportsColorSwitch || value);
-    if (forceChange) {
-      value = !value;
-    }
-    this.value = value ? "color" : "bw";
-    this.toggleAttribute("disallowed", !supportsColorSwitch);
-    this.disabled = !supportsColorSwitch;
-    if (forceChange) {
-      this.dispatchEvent(new Event("change", { bubbles: true }));
-    }
+    this.value = settings[this.settingName] ? "color" : "bw";
+    let canSwitch = settings.supportsColor && settings.supportsMonochrome;
+    this.toggleAttribute("disallowed", !canSwitch);
+    this.disabled = !canSwitch;
   }
 
   handleEvent(e) {
