@@ -11338,14 +11338,6 @@
     "n_buckets": 66,
     "description": "Size of the metadata in bytes parsed from the disk."
   },
-  "NETWORK_CACHE_HASH_STATS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "46",
-    "kind": "enumerated",
-    "n_values": 160,
-    "description": "The longest hash match between a newly added entry and all the existing entries."
-  },
   "NETWORK_CACHE_SIZE" : {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],

@@ -77,8 +77,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   }
   static bool CacheFSReported() { return sCacheFSReported; }
   static void SetCacheFSReported();
-  static bool HashStatsReported() { return sHashStatsReported; }
-  static void SetHashStatsReported();
   static void ParentDirOverride(nsIFile** aDir);
 
   static bool EntryIsTooBig(int64_t aSize, bool aUsingDisk);
@@ -96,14 +94,12 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static StaticRefPtr<CacheObserver> sSelf;
 
   void StoreCacheFSReported();
-  void StoreHashStatsReported();
   void AttachToPreferences();
 
   static int32_t sAutoMemoryCacheCapacity;
   static Atomic<uint32_t, Relaxed> sSmartDiskCacheCapacity;
   static float sHalfLifeHours;
   static bool sCacheFSReported;
-  static bool sHashStatsReported;
   static Atomic<PRIntervalTime> sShutdownDemandedTime;
 
   // Non static properties, accessible via sSelf

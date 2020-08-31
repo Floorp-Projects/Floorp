@@ -1040,8 +1040,6 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  void ReportHashStats();
-
   // Reports telemetry about cache, i.e. size, entry count and content type
   // stats.
   void DoTelemetryReport();
