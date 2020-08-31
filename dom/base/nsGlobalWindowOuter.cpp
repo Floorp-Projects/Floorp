@@ -2076,6 +2076,10 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (!mBrowsingContext->AncestorsAreCurrent()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   RefPtr<Document> oldDoc = mDoc;
   MOZ_RELEASE_ASSERT(oldDoc != aDocument);
 

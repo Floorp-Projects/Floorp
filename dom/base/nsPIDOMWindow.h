@@ -354,6 +354,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
     return mWindowGlobalChild;
   }
 
+  // Removes this inner window from the BFCache, if it is cached, and returns
+  // true if it was.
+  bool RemoveFromBFCacheSync();
+
   // Determine if the window is suspended or frozen.  Outer windows
   // will forward this call to the inner window for convenience.  If
   // there is no inner window then the outer window is considered
