@@ -1038,6 +1038,18 @@ bool WarpCacheIRTranspiler::emitLoadProto(ObjOperandId objId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitLoadInstanceOfObjectResult(
+    ValOperandId lhsId, ObjOperandId protoId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* proto = getOperand(protoId);
+
+  auto* instanceOf = MInstanceOf::New(alloc(), lhs, proto);
+  addEffectful(instanceOf);
+
+  pushResult(instanceOf);
+  return resumeAfter(instanceOf);
+}
+
 bool WarpCacheIRTranspiler::emitLoadValueTag(ValOperandId valId,
                                              ValueTagOperandId resultId) {
   MDefinition* val = getOperand(valId);
