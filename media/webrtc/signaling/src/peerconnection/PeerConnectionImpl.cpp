@@ -2167,12 +2167,17 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
 
         if (HasMedia()) {
           // Section 4.4.1.5 Set the RTCSessionDescription:
-          // - step 4.5.9.1 when remote is false, type not rollback
-          // - step 4.5.9.2.13 when remote is true, type answer or pranswer
-          // More simply: never for rollback, and not for remote offers.
-          if (sdpType != mozilla::kJsepSdpRollback &&
-              !(remote && sdpType == mozilla::kJsepSdpOffer)) {
-            mMedia->UpdateRTCDtlsTransports();
+          if (sdpType == mozilla::kJsepSdpRollback) {
+            // - step 4.5.10, type is rollback
+            mMedia->RollbackRTCDtlsTransports();
+          } else if (!(remote && sdpType == mozilla::kJsepSdpOffer)) {
+            // - step 4.5.9 type is not rollback
+            // - step 4.5.9.1 when remote is false
+            // - step 4.5.9.2.13 when remote is true, type answer or pranswer
+            // More simply: not rollback, and not for remote offers.
+            bool markAsStable = sdpType == kJsepSdpOffer &&
+                                mSignalingState == RTCSignalingState::Stable;
+            mMedia->UpdateRTCDtlsTransports(markAsStable);
           }
         }
 

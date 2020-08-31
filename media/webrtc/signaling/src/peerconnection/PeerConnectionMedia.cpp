@@ -184,7 +184,7 @@ void PeerConnectionMedia::EnsureTransports(const JsepSession& aSession) {
   GatherIfReady();
 }
 
-void PeerConnectionMedia::UpdateRTCDtlsTransports() {
+void PeerConnectionMedia::UpdateRTCDtlsTransports(bool aMarkAsStable) {
   for (auto& transceiver : mTransceivers) {
     std::string transportId = transceiver->GetTransportId();
     if (transportId.empty()) {
@@ -195,7 +195,14 @@ void PeerConnectionMedia::UpdateRTCDtlsTransports() {
           transportId, new RTCDtlsTransport(transceiver->GetParentObject()));
     }
 
-    transceiver->SetDtlsTransport(mTransportIdToRTCDtlsTransport[transportId]);
+    transceiver->SetDtlsTransport(mTransportIdToRTCDtlsTransport[transportId],
+                                  aMarkAsStable);
+  }
+}
+
+void PeerConnectionMedia::RollbackRTCDtlsTransports() {
+  for (auto& transceiver : mTransceivers) {
+    transceiver->RollbackToStableDtlsTransport();
   }
 }
 

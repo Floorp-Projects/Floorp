@@ -39,7 +39,8 @@ MOZ_MTLOG_MODULE("transceiverimpl")
 using LocalDirection = MediaSessionConduitLocalDirection;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransceiverImpl, mWindow, mSendTrack,
-                                      mReceiver, mDtmf, mDtlsTransport)
+                                      mReceiver, mDtmf, mDtlsTransport,
+                                      mLastStableDtlsTransport)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransceiverImpl)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransceiverImpl)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransceiverImpl)
@@ -97,8 +98,16 @@ TransceiverImpl::TransceiverImpl(
 
 TransceiverImpl::~TransceiverImpl() = default;
 
-void TransceiverImpl::SetDtlsTransport(dom::RTCDtlsTransport* aDtlsTransport) {
+void TransceiverImpl::SetDtlsTransport(dom::RTCDtlsTransport* aDtlsTransport,
+                                       bool aStable) {
   mDtlsTransport = aDtlsTransport;
+  if (aStable) {
+    mLastStableDtlsTransport = mDtlsTransport;
+  }
+}
+
+void TransceiverImpl::RollbackToStableDtlsTransport() {
+  mDtlsTransport = mLastStableDtlsTransport;
 }
 
 void TransceiverImpl::UpdateDtlsTransportState(const std::string& aTransportId,
