@@ -25,10 +25,14 @@ already_AddRefed<FOG> FOG::GetSingleton() {
 }
 
 extern "C" {
+nsresult fog_init();
 nsresult fog_set_log_pings(bool aEnableLogPings);
 nsresult fog_set_debug_view_tag(const nsACString* aDebugTag);
 nsresult fog_submit_ping(const nsACString* aPingName);
 }
+
+NS_IMETHODIMP
+FOG::InitializeFOG() { return fog_init(); }
 
 NS_IMETHODIMP
 FOG::SetLogPings(bool aEnableLogPings) {

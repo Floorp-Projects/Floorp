@@ -2575,6 +2575,17 @@ BrowserGlue.prototype = {
         },
       },
 
+      // FOG doesn't need to be initialized _too_ early because it has a
+      // pre-init buffer.
+      {
+        task: () => {
+          let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(
+            Ci.nsIFOG
+          );
+          FOG.initializeFOG();
+        },
+      },
+
       // Marionette needs to be initialized as very last step
       {
         task: () => {
