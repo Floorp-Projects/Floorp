@@ -277,7 +277,7 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
 class MOZ_STACK_CLASS
     HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator final {
  public:
-  nsresult Run(const Document* aDocument, const nsAString& aInputString,
+  nsresult Run(const Document& aDocument, const nsAString& aInputString,
                const nsAString& aContextStr, const nsAString& aInfoStr,
                nsCOMPtr<nsINode>* aOutFragNode,
                nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
@@ -285,7 +285,7 @@ class MOZ_STACK_CLASS
 
  private:
   nsresult CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
-      const Document* aDocument, const nsAString& aInputString,
+      const Document& aDocument, const nsAString& aInputString,
       const nsAString& aContextStr, bool aTrustedInput,
       nsCOMPtr<nsINode>& aParentNodeOfPastedHTMLInContext,
       RefPtr<DocumentFragment>& aDocumentFragmentToInsert) const;
@@ -3206,11 +3206,16 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     return NS_ERROR_INVALID_ARG;
   }
 
+  RefPtr<const Document> document = mHTMLEditor.GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return NS_ERROR_FAILURE;
+  }
+
   FragmentFromPasteCreator fragmentFromPasteCreator;
 
   const nsresult rv = fragmentFromPasteCreator.Run(
-      mHTMLEditor.GetDocument(), aInputString, aContextStr, aInfoStr,
-      aOutFragNode, aOutStartNode, aOutEndNode, aTrustedInput);
+      *document, aInputString, aContextStr, aInfoStr, aOutFragNode,
+      aOutStartNode, aOutEndNode, aTrustedInput);
 
   *aOutStartOffset = 0;
   *aOutEndOffset = (*aOutEndNode)->Length();
@@ -3312,19 +3317,14 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     CreateDocumentFragmentAndGetParentOfPastedHTMLInContext(
-        const Document* aDocument, const nsAString& aInputString,
+        const Document& aDocument, const nsAString& aInputString,
         const nsAString& aContextStr, bool aTrustedInput,
         nsCOMPtr<nsINode>& aParentNodeOfPastedHTMLInContext,
         RefPtr<DocumentFragment>& aDocumentFragmentToInsert) const {
-  RefPtr<const Document> document = aDocument;
-  if (NS_WARN_IF(!document)) {
-    return NS_ERROR_FAILURE;
-  }
-
   // if we have context info, create a fragment for that
   RefPtr<DocumentFragment> documentFragmentForContext;
 
-  FragmentParser fragmentParser{*document, aTrustedInput};
+  FragmentParser fragmentParser{aDocument, aTrustedInput};
   if (!aContextStr.IsEmpty()) {
     nsresult rv = fragmentParser.ParseContext(
         aContextStr, getter_AddRefs(documentFragmentForContext));
@@ -3410,14 +3410,13 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 }
 
 nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::Run(
-    const Document* aDocument, const nsAString& aInputString,
+    const Document& aDocument, const nsAString& aInputString,
     const nsAString& aContextStr, const nsAString& aInfoStr,
     nsCOMPtr<nsINode>* aOutFragNode, nsCOMPtr<nsINode>* aOutStartNode,
     nsCOMPtr<nsINode>* aOutEndNode, bool aTrustedInput) const {
   MOZ_ASSERT(aOutFragNode);
   MOZ_ASSERT(aOutStartNode);
   MOZ_ASSERT(aOutEndNode);
-  MOZ_ASSERT(aDocument);
 
   nsCOMPtr<nsINode> parentNodeOfPastedHTMLInContext;
   RefPtr<DocumentFragment> documentFragmentToInsert;
