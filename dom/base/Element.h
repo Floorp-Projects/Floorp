@@ -1192,11 +1192,11 @@ class Element : public FragmentOrElement {
     bool activeState = false;
     if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
         aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
-      aError.ThrowNotFoundError("Invalid pointer id");
+      aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
     }
     if (!PointerEventHandler::GetPointerInfo(aPointerId, activeState)) {
-      aError.ThrowNotFoundError("Invalid pointer id");
+      aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
     }
     if (!IsInComposedDoc()) {
@@ -1218,11 +1218,11 @@ class Element : public FragmentOrElement {
     bool activeState = false;
     if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
         aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
-      aError.ThrowNotFoundError("Invalid pointer id");
+      aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
     }
     if (!PointerEventHandler::GetPointerInfo(aPointerId, activeState)) {
-      aError.ThrowNotFoundError("Invalid pointer id");
+      aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
     }
     if (HasPointerCapture(aPointerId)) {
