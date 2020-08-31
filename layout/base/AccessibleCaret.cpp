@@ -259,15 +259,15 @@ AccessibleCaret::PositionChangedResult AccessibleCaret::SetPosition(
       mImaginaryCaretRectInContainerFrame);
   const bool isSameZoomLevel = FuzzyEqualsMultiplicative(zoomLevel, mZoomLevel);
 
+  // Always update cached mImaginaryCaretRect (relative to the root frame)
+  // because it can change when the caret is scrolled.
+  mImaginaryCaretRect = imaginaryCaretRectInFrame;
+  nsLayoutUtils::TransformRect(aFrame, RootFrame(), mImaginaryCaretRect);
+
   if (isSamePosition && isSameZoomLevel) {
     return PositionChangedResult::NotChanged;
   }
 
-  nsRect imaginaryCaretRect = imaginaryCaretRectInFrame;
-  nsLayoutUtils::TransformRect(aFrame, RootFrame(), imaginaryCaretRect);
-
-  // Cache mImaginaryCaretRect, which is relative to the root frame.
-  mImaginaryCaretRect = imaginaryCaretRect;
   mImaginaryCaretRectInContainerFrame = imaginaryCaretRectInContainerFrame;
   mImaginaryCaretReferenceFrame = aFrame;
   mZoomLevel = zoomLevel;
