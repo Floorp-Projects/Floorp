@@ -373,6 +373,8 @@ class nsWindow::GeckoViewSupport final
                      bool aHasUserGesture, bool aIsTopLevel) const
       -> java::GeckoResult::LocalRef;
 
+  void PassExternalResponse(java::WebResponse::Param aResponse);
+
   void AttachMediaSessionController(const GeckoSession::Window::LocalRef& inst,
                                     jni::Object::Param aController,
                                     const int64_t aId);
@@ -2600,6 +2602,13 @@ void nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent) {
   }
 }
 
+void nsWindow::PassExternalResponse(java::WebResponse::Param aResponse) {
+  if (!mGeckoViewSupport) {
+    return;
+  }
+  mGeckoViewSupport->PassExternalResponse(aResponse);
+}
+
 mozilla::Modifiers nsWindow::GetModifiers(int32_t metaState) {
   using mozilla::java::sdk::KeyEvent;
   return (metaState & KeyEvent::META_ALT_MASK ? MODIFIER_ALT : 0) |
@@ -2631,6 +2640,20 @@ void nsWindow::GeckoViewSupport::OnReady(jni::Object::Param aQueue) {
   }
   window->OnReady(aQueue);
   mIsReady = true;
+}
+
+void nsWindow::GeckoViewSupport::PassExternalResponse(
+    java::WebResponse::Param aResponse) {
+  GeckoSession::Window::LocalRef window(mGeckoViewWindow);
+  if (!window) {
+    return;
+  }
+
+  auto response = java::WebResponse::GlobalRef(aResponse);
+
+  DispatchToUiThread("GeckoViewSupport::PassExternalResponse",
+                     [window = GeckoSession::Window::GlobalRef(window),
+                      response] { window->PassExternalWebResponse(response); });
 }
 
 void nsWindow::UserActivity() {
