@@ -25,8 +25,6 @@ static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
 static const char kPurge[] = "browser:purge-session-history";
 static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
-static const char kPrefSkipTRRParentalControl[] =
-    "network.dns.skipTRR-when-parental-control-enabled";
 static const char kRolloutURIPref[] = "doh-rollout.uri";
 static const char kRolloutModePref[] = "doh-rollout.mode";
 
@@ -50,13 +48,7 @@ TRRService::TRRService()
       mBlocklistDurationSeconds(60),
       mLock("trrservice"),
       mConfirmationNS("example.com"_ns),
-      mWaitForCaptive(true),
-      mRfc1918(false),
       mCaptiveIsPassed(false),
-      mUseGET(false),
-      mDisableECS(true),
-      mSkipTRRWhenParentalControlEnabled(true),
-      mDisableAfterFails(5),
       mTRRBLStorage("DataMutex::TRRBlocklist"),
       mConfirmationState(CONFIRM_INIT),
       mRetryConfirmInterval(1000),
@@ -159,7 +151,6 @@ nsresult TRRService::Init() {
   if (prefBranch) {
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
     prefBranch->AddObserver(kDisableIpv6Pref, this, true);
-    prefBranch->AddObserver(kPrefSkipTRRParentalControl, this, true);
     prefBranch->AddObserver(kRolloutURIPref, this, true);
     prefBranch->AddObserver(kRolloutModePref, this, true);
   }
@@ -232,7 +223,7 @@ bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
     return false;
   }
   if (mConfirmationState == CONFIRM_INIT &&
-      (!mWaitForCaptive || mCaptiveIsPassed ||
+      (!StaticPrefs::network_trr_wait_for_portal() || mCaptiveIsPassed ||
        (mMode == MODE_TRRONLY || aMode == nsIRequest::TRR_ONLY_MODE))) {
     LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
@@ -325,25 +316,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
     Preferences::GetCString(TRR_PREF("bootstrapAddress"), mBootstrapAddr);
     clearEntireCache = true;
   }
-  if (!name || !strcmp(name, TRR_PREF("wait-for-portal"))) {
-    // Wait for captive portal?
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("wait-for-portal"), &tmp))) {
-      mWaitForCaptive = tmp;
-    }
-  }
-  if (!name || !strcmp(name, TRR_PREF("allow-rfc1918"))) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("allow-rfc1918"), &tmp))) {
-      mRfc1918 = tmp;
-    }
-  }
-  if (!name || !strcmp(name, TRR_PREF("useGET"))) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("useGET"), &tmp))) {
-      mUseGET = tmp;
-    }
-  }
   if (!name || !strcmp(name, TRR_PREF("blacklist-duration"))) {
     // prefs is given in number of seconds
     uint32_t secs;
@@ -352,43 +324,10 @@ nsresult TRRService::ReadPrefs(const char* name) {
       mBlocklistDurationSeconds = secs;
     }
   }
-  if (!name || !strcmp(name, TRR_PREF("early-AAAA"))) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("early-AAAA"), &tmp))) {
-      mEarlyAAAA = tmp;
-    }
-  }
-
-  if (!name || !strcmp(name, TRR_PREF("skip-AAAA-when-not-supported"))) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(
-            TRR_PREF("skip-AAAA-when-not-supported"), &tmp))) {
-      mCheckIPv6Connectivity = tmp;
-    }
-  }
-  if (!name || !strcmp(name, TRR_PREF("wait-for-A-and-AAAA"))) {
-    bool tmp;
-    if (NS_SUCCEEDED(
-            Preferences::GetBool(TRR_PREF("wait-for-A-and-AAAA"), &tmp))) {
-      mWaitForAllResponses = tmp;
-    }
-  }
   if (!name || !strcmp(name, kDisableIpv6Pref)) {
     bool tmp;
     if (NS_SUCCEEDED(Preferences::GetBool(kDisableIpv6Pref, &tmp))) {
       mDisableIPv6 = tmp;
-    }
-  }
-  if (!name || !strcmp(name, TRR_PREF("disable-ECS"))) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("disable-ECS"), &tmp))) {
-      mDisableECS = tmp;
-    }
-  }
-  if (!name || !strcmp(name, TRR_PREF("max-fails"))) {
-    uint32_t fails;
-    if (NS_SUCCEEDED(Preferences::GetUint(TRR_PREF("max-fails"), &fails))) {
-      mDisableAfterFails = fails;
     }
   }
   if (!name || !strcmp(name, TRR_PREF("excluded-domains")) ||
@@ -417,13 +356,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
     clearEntireCache = true;
   }
 
-  if (!name || !strcmp(name, kPrefSkipTRRParentalControl)) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(kPrefSkipTRRParentalControl, &tmp))) {
-      mSkipTRRWhenParentalControlEnabled = tmp;
-    }
-  }
-
   // if name is null, then we're just now initializing. In that case we don't
   // need to clear the cache.
   if (name && clearEntireCache) {
@@ -434,13 +366,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
 }
 
 void TRRService::ClearEntireCache() {
-  bool tmp;
-  nsresult rv =
-      Preferences::GetBool(TRR_PREF("clear-cache-on-pref-change"), &tmp);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  if (!tmp) {
+  if (!StaticPrefs::network_trr_clear_cache_on_pref_change()) {
     return;
   }
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
@@ -847,7 +773,7 @@ void TRRService::TRRIsOkay(enum TrrOkay aReason) {
   } else if ((mMode == MODE_TRRFIRST) && (mConfirmationState == CONFIRM_OK)) {
     // only count failures while in OK state
     uint32_t fails = ++mTRRFailures;
-    if (fails >= mDisableAfterFails) {
+    if (fails >= StaticPrefs::network_trr_max_fails()) {
       LOG(("TRRService goes FAILED after %u failures in a row\n", fails));
       mConfirmationState = CONFIRM_FAILED;
       // Fire off a timer and start re-trying the NS domain again

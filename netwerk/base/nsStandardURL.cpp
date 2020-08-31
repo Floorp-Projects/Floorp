@@ -1780,6 +1780,7 @@ nsresult nsStandardURL::SetUsername(const nsACString& input) {
     }
     shift = ReplaceSegment(pos, len, escUsername);
     mUsername.mLen = escUsername.Length() > 0 ? escUsername.Length() : -1;
+    mUsername.mPos = pos;
   }
 
   if (shift) {
