@@ -214,7 +214,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
    public:
     virtual ~RangeNodeContext() = default;
 
-    virtual bool IncludeInContext(nsINode* aNode) const { return false; }
+    virtual bool IncludeInContext(nsINode& aNode) const { return false; }
 
     virtual int32_t GetImmediateContextCount(
         const nsTArray<nsINode*>& aAncestorArray) const {
@@ -1008,7 +1008,7 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  if (IsInvisibleNodeAndShouldBeSkipped(*aNode, mFlags)) {
+  if (nsDocumentEncoder::IsInvisibleNodeAndShouldBeSkipped(*aNode, mFlags)) {
     return NS_OK;
   }
 
@@ -1050,7 +1050,8 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mClosestCommonInclusiveAncestorOfRange) {
-        if (mRangeContextSerializer.mRangeNodeContext.IncludeInContext(aNode)) {
+        if (mRangeContextSerializer.mRangeNodeContext.IncludeInContext(
+                *aNode)) {
           // halt the incrementing of mContextInfoDepth.  This
           // is so paste client will include this node in paste.
           mHaltRangeHint = true;
@@ -1167,7 +1168,7 @@ nsresult nsDocumentEncoder::RangeContextSerializer::SerializeRangeContextStart(
     if (!node) break;
 
     // Either a general inclusion or as immediate context
-    if (mRangeNodeContext.IncludeInContext(node) || i < j) {
+    if (mRangeNodeContext.IncludeInContext(*node) || i < j) {
       rv = mNodeSerializer.SerializeNodeStart(*node, 0, -1);
       serializedContext->AppendElement(node);
       if (NS_FAILED(rv)) break;
@@ -1441,7 +1442,7 @@ already_AddRefed<nsIDocumentEncoder> do_createDocumentEncoder(
 class nsHTMLCopyEncoder : public nsDocumentEncoder {
  private:
   class RangeNodeContext final : public nsDocumentEncoder::RangeNodeContext {
-    bool IncludeInContext(nsINode* aNode) const final;
+    bool IncludeInContext(nsINode& aNode) const final;
 
     int32_t GetImmediateContextCount(
         const nsTArray<nsINode*>& aAncestorArray) const final;
@@ -1681,8 +1682,8 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
 }
 
 bool nsHTMLCopyEncoder::RangeNodeContext::IncludeInContext(
-    nsINode* aNode) const {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+    nsINode& aNode) const {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(&aNode));
 
   if (!content) return false;
 
