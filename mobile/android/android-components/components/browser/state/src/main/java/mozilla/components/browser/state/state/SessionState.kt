@@ -31,7 +31,6 @@ interface SessionState {
     val extensionState: Map<String, WebExtensionState>
     val contextId: String?
     val source: Source
-    val crashed: Boolean
 
     /**
      * Copy the class and override some parameters.
@@ -43,8 +42,7 @@ interface SessionState {
         trackingProtection: TrackingProtectionState = this.trackingProtection,
         engineState: EngineState = this.engineState,
         extensionState: Map<String, WebExtensionState> = this.extensionState,
-        contextId: String? = this.contextId,
-        crashed: Boolean = this.crashed
+        contextId: String? = this.contextId
     ): SessionState
 
     /**

@@ -43,24 +43,11 @@ internal class SuspendMiddleware(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         action: EngineAction.SuspendEngineSessionAction
     ) {
-        val tab = context.state.findTab(action.sessionId)
-        val state = tab?.engineState?.engineSession?.saveState()
-
-        if (tab == null || state == null) {
-            // If we can't find this tab or if there's no state for this tab then there's nothing
-            // to do here.
-            return
-        }
+        val tab = context.state.findTab(action.sessionId) ?: return
 
         // First we unlink (which clearsEngineSession and state)
         context.dispatch(EngineAction.UnlinkEngineSessionAction(
             tab.id
-        ))
-
-        // Then we attach the saved state to it.
-        context.dispatch(EngineAction.UpdateEngineSessionStateAction(
-            tab.id,
-            state
         ))
 
         // Now we can close the unlinked EngineSession (on the main thread).

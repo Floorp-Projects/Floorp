@@ -13,12 +13,16 @@ internal object CrashReducer {
      */
     fun reduce(state: BrowserState, action: CrashAction): BrowserState = when (action) {
         is CrashAction.SessionCrashedAction -> state.updateTabState(action.tabId) { tab ->
-            tab.createCopy(crashed = true)
+            tab.createCopy(engineState = tab.engineState.copy(
+                crashed = true
+            ))
         }
         is CrashAction.RestoreCrashedSessionAction -> state.updateTabState(action.tabId) { tab ->
-            // We only update the flag in the reducer. A middleware is responsible for actually
-            // performing a restoring side effect.
-            tab.createCopy(crashed = false)
+            // We only update the flag in the reducer. With that the next action trying to get
+            // the engine session will automatically restore this tab lazily.
+            tab.createCopy(engineState = tab.engineState.copy(
+                crashed = false
+            ))
         }
     }
 }

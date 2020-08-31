@@ -5,7 +5,6 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
-import android.os.Bundle
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -16,11 +15,9 @@ import android.webkit.WebViewDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
@@ -135,18 +132,6 @@ class SystemEngineSession(
     }
 
     /**
-     * See [EngineSession.saveState]
-     */
-    override fun saveState(): EngineSessionState {
-        return runBlocking(Dispatchers.Main) {
-            val state = Bundle()
-            webView.saveState(state)
-
-            SystemEngineSessionState(state)
-        }
-    }
-
-    /**
      * See [EngineSession.restoreState]
      */
     override fun restoreState(state: EngineSessionState): Boolean {
@@ -245,16 +230,6 @@ class SystemEngineSession(
      */
     override fun clearFindMatches() {
         webView.clearMatches()
-    }
-
-    /**
-     * This method is a no-op.
-     */
-    override fun recoverFromCrash(): Boolean {
-        // Do nothing.
-        // Technically we could remember saved states and restore the last one we saw. But for that to be useful we
-        // would need to implement and handle onRenderProcessGone() first.
-        return false
     }
 
     /**

@@ -7,8 +7,6 @@ package mozilla.components.browser.engine.system
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import android.os.Looper
-import android.webkit.WebBackForwardList
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -194,39 +192,6 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun saveState() {
-        val engineSession = spy(SystemEngineSession(testContext))
-        val webView = mock<WebView>()
-
-        engineSession.saveState()
-        verify(webView, never()).saveState(any(Bundle::class.java))
-
-        engineSession.webView = webView
-
-        engineSession.saveState()
-        verify(webView).saveState(any(Bundle::class.java))
-    }
-
-    @Test
-    fun saveStateRunsOnMainThread() {
-        val engineSession = spy(SystemEngineSession(testContext))
-        var calledOnMainThread = false
-        var saveStateCalled = false
-        val webView = object : WebView(testContext) {
-            override fun saveState(outState: Bundle?): WebBackForwardList? {
-                saveStateCalled = true
-                calledOnMainThread = Looper.getMainLooper().isCurrentThread
-                return null
-            }
-        }
-        engineSession.webView = webView
-
-        engineSession.saveState()
-        assertTrue(saveStateCalled)
-        assertTrue(calledOnMainThread)
-    }
-
-    @Test
     fun restoreState() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = spy(WebView(testContext))
@@ -240,10 +205,13 @@ class SystemEngineSessionTest {
 
         engineSession.webView = webView
         engineSession.webView.loadUrl("http://example.com")
-        val state = engineSession.saveState()
+
+        val bundle = Bundle()
+        webView.saveState(bundle)
+        val state = SystemEngineSessionState(bundle)
 
         assertTrue(engineSession.restoreState(state))
-        verify(webView).restoreState(any(Bundle::class.java))
+        verify(webView).restoreState(bundle)
     }
 
     @Test
@@ -987,17 +955,6 @@ class SystemEngineSessionTest {
 
         engineSession.close()
         verify(webView).destroy()
-    }
-
-    @Test
-    fun `recoverFromCrash does not restore state`() {
-        val engineSession = SystemEngineSession(testContext)
-        val webView = mock<WebView>()
-        engineSession.webView = webView
-
-        assertFalse(engineSession.recoverFromCrash())
-
-        verify(webView, never()).restoreState(any())
     }
 
     @Test

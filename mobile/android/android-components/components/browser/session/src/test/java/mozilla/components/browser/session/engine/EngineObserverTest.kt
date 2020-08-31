@@ -70,8 +70,6 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
-            override fun saveState(): EngineSessionState = mock()
-            override fun recoverFromCrash(): Boolean { return false }
 
             override fun loadData(data: String, mimeType: String, encoding: String) {
                 notifyObservers { onLocationChange(data) }
@@ -124,9 +122,7 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
-            override fun saveState(): EngineSessionState = mock()
             override fun loadData(data: String, mimeType: String, encoding: String) {}
-            override fun recoverFromCrash(): Boolean { return false }
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -170,7 +166,6 @@ class EngineObserverTest {
             }
 
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
-            override fun saveState(): EngineSessionState = mock()
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,
@@ -182,7 +177,6 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
-            override fun recoverFromCrash(): Boolean { return false }
         }
         val observer = EngineObserver(session, mock())
         engineSession.register(observer)

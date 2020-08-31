@@ -818,8 +818,6 @@ open class DummyEngineSession : EngineSession() {
 
     override fun restoreState(state: EngineSessionState): Boolean { return false }
 
-    override fun saveState(): EngineSessionState { return mock() }
-
     override fun loadUrl(
         url: String,
         parent: EngineSession?,
@@ -852,10 +850,6 @@ open class DummyEngineSession : EngineSession() {
     override fun clearFindMatches() {}
 
     override fun exitFullScreenMode() {}
-
-    override fun recoverFromCrash(): Boolean {
-        return false
-    }
 
     // Helper method to access the protected method from test cases.
     fun notifyInternalObservers(block: Observer.() -> Unit) {

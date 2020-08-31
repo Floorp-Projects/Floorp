@@ -7,14 +7,12 @@ package mozilla.components.browser.engine.gecko
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.AttributeSet
-import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
@@ -30,7 +28,7 @@ class GeckoEngineView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var currentGeckoView = object : NestedGeckoView(context) {
+    internal var geckoView = object : NestedGeckoView(context) {
 
         override fun onAttachedToWindow() {
             try {
@@ -38,14 +36,14 @@ class GeckoEngineView @JvmOverloads constructor(
             } catch (e: IllegalStateException) {
                 // This is to debug "display already acquired" crashes
                 val otherActivityClassName =
-                        this.session?.accessibility?.view?.context?.javaClass?.simpleName
+                    this.session?.accessibility?.view?.context?.javaClass?.simpleName
                 val otherActivityClassHashcode =
-                        this.session?.accessibility?.view?.context?.hashCode()
+                    this.session?.accessibility?.view?.context?.hashCode()
                 val activityClassName = context.javaClass.simpleName
                 val activityClassHashCode = context.hashCode()
                 val msg = "ATTACH VIEW: Current activity: $activityClassName hashcode " +
-                        "$activityClassHashCode Other activity: $otherActivityClassName " +
-                        "hashcode $otherActivityClassHashcode"
+                    "$activityClassHashCode Other activity: $otherActivityClassName " +
+                    "hashcode $otherActivityClassHashcode"
                 throw IllegalStateException(msg, e)
             }
         }
@@ -64,24 +62,6 @@ class GeckoEngineView @JvmOverloads constructor(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val observer = object : EngineSession.Observer {
-        override fun onCrash() {
-            rebind()
-        }
-
-        override fun onProcessKilled() {
-            rebind()
-        }
-
-        override fun onFirstContentfulPaint() {
-            visibility = View.VISIBLE
-        }
-
-        override fun onAppPermissionRequest(permissionRequest: PermissionRequest) = Unit
-        override fun onContentPermissionRequest(permissionRequest: PermissionRequest) = Unit
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var currentSession: GeckoEngineSession? = null
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -90,9 +70,7 @@ class GeckoEngineView @JvmOverloads constructor(
     override var selectionActionDelegate: SelectionActionDelegate? = null
 
     init {
-        // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
-        // implementation should handle at least two GeckoView so that we can switch between
-        addView(currentGeckoView)
+        addView(geckoView)
     }
 
     /**
@@ -101,23 +79,18 @@ class GeckoEngineView @JvmOverloads constructor(
     @Synchronized
     override fun render(session: EngineSession) {
         val internalSession = session as GeckoEngineSession
+        currentSession = session
 
-        currentSession?.apply { unregister(observer) }
-
-        currentSession = session.apply {
-            register(observer)
-        }
-
-        if (currentGeckoView.session != internalSession.geckoSession) {
-            currentGeckoView.session?.let {
+        if (geckoView.session != internalSession.geckoSession) {
+            geckoView.session?.let {
                 // Release a previously assigned session. Otherwise GeckoView will close it
                 // automatically.
                 detachSelectionActionDelegate(it)
-                currentGeckoView.releaseSession()
+                geckoView.releaseSession()
             }
 
             try {
-                currentGeckoView.setSession(internalSession.geckoSession)
+                geckoView.setSession(internalSession.geckoSession)
                 attachSelectionActionDelegate(internalSession.geckoSession)
             } catch (e: IllegalStateException) {
                 // This is to debug "display already acquired" crashes
@@ -128,8 +101,8 @@ class GeckoEngineView @JvmOverloads constructor(
                 val activityClassName = context.javaClass.simpleName
                 val activityClassHashCode = context.hashCode()
                 val msg = "SET SESSION: Current activity: $activityClassName hashcode " +
-                        "$activityClassHashCode Other activity: $otherActivityClassName " +
-                        "hashcode $otherActivityClassHashcode"
+                    "$activityClassHashCode Other activity: $otherActivityClassName " +
+                    "hashcode $otherActivityClassHashcode"
                 throw IllegalStateException(msg, e)
             }
         }
@@ -150,26 +123,13 @@ class GeckoEngineView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Rebinds the current session to this view. This may be required after the session crashed and
-     * the view needs to notified about a new underlying GeckoSession (created under the hood by
-     * GeckoEngineSession) - since the previous one is no longer usable.
-     */
-    private fun rebind() {
-        currentSession?.let { currentGeckoView.setSession(it.geckoSession) }
-    }
-
     @Synchronized
     override fun release() {
         detachSelectionActionDelegate(currentSession?.geckoSession)
 
-        currentSession?.apply {
-            unregister(observer)
-        }
-
         currentSession = null
 
-        currentGeckoView.releaseSession()
+        geckoView.releaseSession()
     }
 
     override fun onDetachedFromWindow() {
@@ -187,21 +147,21 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun getInputResult(): EngineView.InputResult {
         // Direct mapping of GeckoView's returned values.
         // There should be a 1-1 relation. If not fail fast to allow for a quick fix.
-        return EngineView.InputResult.values().first { it.value == currentGeckoView.inputResult }
+        return EngineView.InputResult.values().first { it.value == geckoView.inputResult }
     }
 
     override fun setVerticalClipping(clippingHeight: Int) {
-        currentGeckoView.setVerticalClipping(clippingHeight)
+        geckoView.setVerticalClipping(clippingHeight)
     }
 
     override fun setDynamicToolbarMaxHeight(height: Int) {
-        currentGeckoView.setDynamicToolbarMaxHeight(height)
+        geckoView.setDynamicToolbarMaxHeight(height)
     }
 
     @Suppress("TooGenericExceptionCaught")
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         try {
-            val geckoResult = currentGeckoView.capturePixels()
+            val geckoResult = geckoView.capturePixels()
             geckoResult.then({ bitmap ->
                 onFinish(bitmap)
                 GeckoResult<Void>()
@@ -229,7 +189,7 @@ class GeckoEngineView @JvmOverloads constructor(
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1630775
         // We do this to prevent the content from resizing when the view is not visible:
         // https://github.com/mozilla-mobile/android-components/issues/6664
-        currentGeckoView.visibility = visibility
+        geckoView.visibility = visibility
         super.setVisibility(visibility)
     }
 }

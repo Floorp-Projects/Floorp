@@ -21,5 +21,6 @@ import mozilla.components.concept.engine.EngineSessionState
 data class EngineState(
     val engineSession: EngineSession? = null,
     val engineSessionState: EngineSessionState? = null,
-    val engineObserver: EngineSession.Observer? = null
+    val engineObserver: EngineSession.Observer? = null,
+    val crashed: Boolean = false
 )

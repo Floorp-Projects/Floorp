@@ -17,22 +17,26 @@ internal object EngineStateReducer {
     fun reduce(state: BrowserState, action: EngineAction): BrowserState = when (action) {
         is EngineAction.LinkEngineSessionAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(
-                engineSession = action.engineSession,
-                engineSessionState = null
+                engineSession = action.engineSession
             )
         }
         is EngineAction.UnlinkEngineSessionAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(
                 engineSession = null,
-                engineSessionState = null,
                 engineObserver = null
             )
         }
         is EngineAction.UpdateEngineSessionObserverAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(engineObserver = action.engineSessionObserver)
         }
-        is EngineAction.UpdateEngineSessionStateAction -> state.copyWithEngineState(action.sessionId) {
-            it.copy(engineSessionState = action.engineSessionState)
+        is EngineAction.UpdateEngineSessionStateAction -> state.copyWithEngineState(action.sessionId) { engineState ->
+            if (engineState.crashed) {
+                // We ignore state updates for a crashed engine session. We want to keep the last state until
+                // this tab gets restored (or closed).
+                engineState
+            } else {
+                engineState.copy(engineSessionState = action.engineSessionState)
+            }
         }
         is EngineAction.SuspendEngineSessionAction,
         is EngineAction.CreateEngineSessionAction,

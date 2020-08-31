@@ -17,6 +17,7 @@ import mozilla.components.browser.session.ext.toElement
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.BrowserState
@@ -24,6 +25,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
@@ -308,6 +310,18 @@ internal class EngineObserver(
     override fun onCrash() {
         store?.dispatch(CrashAction.SessionCrashedAction(
             session.id
+        ))
+    }
+
+    override fun onProcessKilled() {
+        store?.dispatch(EngineAction.SuspendEngineSessionAction(
+            session.id
+        ))
+    }
+
+    override fun onStateUpdated(state: EngineSessionState) {
+        store?.dispatch(EngineAction.UpdateEngineSessionStateAction(
+            session.id, state
         ))
     }
 

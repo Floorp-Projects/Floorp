@@ -30,7 +30,6 @@ data class TabSessionState(
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
     override val contextId: String? = null,
     override val source: SessionState.Source = SessionState.Source.NONE,
-    override val crashed: Boolean = false,
     val parentId: String? = null,
     val lastAccess: Long = 0L,
     val readerState: ReaderState = ReaderState()
@@ -42,16 +41,14 @@ data class TabSessionState(
         trackingProtection: TrackingProtectionState,
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
-        contextId: String?,
-        crashed: Boolean
+        contextId: String?
     ): SessionState = copy(
         id = id,
         content = content,
         trackingProtection = trackingProtection,
         engineState = engineState,
         extensionState = extensionState,
-        contextId = contextId,
-        crashed = crashed
+        contextId = contextId
     )
 }
 

@@ -9,7 +9,6 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -335,14 +334,12 @@ class SessionManagerTest {
         // Multiple sessions in the snapshot.
         val regularSession = Session("http://www.firefox.com")
         val engineSessionState: EngineSessionState = mock()
-        val engineSession = mock(EngineSession::class.java)
-        `when`(engineSession.saveState()).thenReturn(engineSessionState)
 
         val snapshot = SessionManager.Snapshot(
             listOf(
                 SessionManager.Snapshot.Item(
                     session = regularSession,
-                    engineSession = engineSession
+                    engineSessionState = engineSessionState
                 ),
                 SessionManager.Snapshot.Item(session = Session("http://www.wikipedia.org"))
             ),

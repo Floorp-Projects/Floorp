@@ -44,7 +44,6 @@ class SessionManager(
 
         return Snapshot.Item(
             session,
-            tab?.engineState?.engineSession,
             tab?.engineState?.engineSessionState,
             tab?.readerState)
     }
@@ -212,12 +211,8 @@ class SessionManager(
         store?.syncDispatch(TabListAction.RestoreAction(tabs, selectedTabId))
 
         items.forEach { item ->
-            item.engineSession?.let { store?.syncDispatch(LinkEngineSessionAction(item.session.id, it)) }
-
-            if (item.engineSession == null) {
-                item.engineSessionState?.let {
-                    store?.syncDispatch(UpdateEngineSessionStateAction(item.session.id, it))
-                }
+            item.engineSessionState?.let {
+                store?.syncDispatch(UpdateEngineSessionStateAction(item.session.id, it))
             }
 
             item.readerState?.let {
@@ -305,7 +300,6 @@ class SessionManager(
 
         data class Item(
             val session: Session,
-            val engineSession: EngineSession? = null,
             val engineSessionState: EngineSessionState? = null,
             val readerState: ReaderState? = null,
             val lastAccess: Long = 0
