@@ -788,6 +788,7 @@ bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
   // odd elements store the corresponding capture index. We create a
   // template object with a property for each capture name, and store
   // the capture indices as a heap-allocated array.
+  MOZ_ASSERT(namedCaptures->getDenseInitializedLength() % 2 == 0);
   uint32_t numNamedCaptures = namedCaptures->getDenseInitializedLength() / 2;
 
   // Create a plain template object.
