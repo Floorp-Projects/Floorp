@@ -5,36 +5,11 @@
  * Tests that preferences are properly set by distribution.ini
  */
 
-// Import common head.
-var commonFile = do_get_file(
-  "../../../../toolkit/components/places/tests/head_common.js",
-  false
-);
-/* import-globals-from ../../../../toolkit/components/places/tests/head_common.js */
-if (commonFile) {
-  let uri = Services.io.newFileURI(commonFile);
-  Services.scriptloader.loadSubScript(uri.spec, this);
-}
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-
-AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo(
-  "xpcshell@tests.mozilla.org",
-  "XPCShell",
-  "42",
-  "42"
-);
-
-add_task(async function setup() {
-  Services.prefs.setBoolPref("browser.search.modernConfig", false);
-  await AddonTestUtils.promiseStartupManager();
-});
 
 // This test causes BrowserGlue to start but not fully initialise, when the
 // AddonManager shuts down BrowserGlue will then try to uninit which will
@@ -47,44 +22,6 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
 
 const TOPICDATA_DISTRIBUTION_CUSTOMIZATION = "force-distribution-customization";
 const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
-
-/**
- * Copy the engine-distribution.xml engine to a fake distribution
- * created in the profile, and registered with the directory service.
- * Create an empty en-US directory to make sure it isn't used.
- */
-function installDistributionEngine() {
-  const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
-
-  let dir = gProfD.clone();
-  dir.append("distribution");
-  let distDir = dir.clone();
-
-  dir.append("searchplugins");
-  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  dir.append("locale");
-  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  let localeDir = dir.clone();
-
-  dir.append("en-US");
-  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  localeDir.append("de-DE");
-  localeDir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine-de-DE.xml").copyTo(localeDir, "engine-de-DE.xml");
-
-  Services.dirsvc.registerProvider({
-    getFile(aProp, aPersistent) {
-      aPersistent.value = true;
-      if (aProp == XRE_APP_DISTRIBUTION_DIR) {
-        return distDir.clone();
-      }
-      return null;
-    },
-  });
-}
 
 registerCleanupFunction(async function() {
   // Remove the distribution dir, even if the test failed, otherwise all
@@ -109,12 +46,10 @@ add_task(async function() {
     print("distribution.ini already exists, did some test forget to cleanup?");
   }
 
-  let testDistributionFile = gTestDir.clone();
+  let testDistributionFile = do_get_cwd().clone();
   testDistributionFile.append("distribution.ini");
   testDistributionFile.copyTo(distroDir, "distribution.ini");
   Assert.ok(testDistributionFile.exists());
-
-  installDistributionEngine();
 });
 
 add_task(async function() {
@@ -278,13 +213,4 @@ add_task(async function() {
     ).data,
     "Language Set"
   );
-
-  Services.prefs.setCharPref(
-    "distribution.searchplugins.defaultLocale",
-    "de-DE"
-  );
-
-  await Services.search.init();
-  var engine = Services.search.getEngineByName("Google");
-  Assert.equal(engine.description, "override-de-DE");
 });
