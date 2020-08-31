@@ -2497,6 +2497,10 @@ bool IonCacheIRCompiler::emitArrayPush(ObjOperandId objId, ValOperandId rhsId) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitArrayJoinResult(ObjOperandId objId) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitPackedArraySliceResult(
     uint32_t templateObjectOffset, ObjOperandId arrayId, Int32OperandId beginId,
     Int32OperandId endId) {
