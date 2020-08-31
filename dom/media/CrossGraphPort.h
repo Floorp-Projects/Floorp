@@ -91,7 +91,7 @@ class CrossGraphPort final {
   RefPtr<CrossGraphReceiver> GetReceiver();
 
   // The port that connect the transmitter with the source track.
-  RefPtr<MediaInputPort> mSourcePort;
+  const RefPtr<MediaInputPort> mSourcePort;
   RefPtr<CrossGraphTransmitter> mTransmitter;
 };
 
