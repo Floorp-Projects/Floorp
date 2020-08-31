@@ -62,8 +62,8 @@ JitScript::JitScript(JSScript* script, Offset typeSetOffset,
       typeSetOffset_(typeSetOffset),
       bytecodeTypeMapOffset_(bytecodeTypeMapOffset),
       endOffset_(endOffset),
-      icScript_(this, script->getWarmUpCount(),
-                typeSetOffset - offsetOfICScript(), /*depth=*/0) {
+      icScript_(script->getWarmUpCount(), typeSetOffset - offsetOfICScript(),
+                /*depth=*/0) {
   setTypesGeneration(script->zone()->types.generation);
 
   if (IsTypeInferenceEnabled()) {
@@ -268,8 +268,6 @@ void ICScript::trace(JSTracer* trc) {
     ent.trace(trc);
   }
 }
-
-bool ICScript::isInlined() const { return jitScript()->icScript() != this; }
 
 bool ICScript::addInlinedChild(JSContext* cx, UniquePtr<ICScript> child,
                                uint32_t pcOffset) {
@@ -877,8 +875,14 @@ InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
 }
 
 FallbackICStubSpace* ICScript::fallbackStubSpace() {
-  if (inliningRoot_) {
+  if (isInlined()) {
     return inliningRoot_->fallbackStubSpace();
   }
-  return jitScript_->fallbackStubSpace();
+  return outerJitScript()->fallbackStubSpace();
+}
+
+JitScript* ICScript::outerJitScript() {
+  MOZ_ASSERT(!isInlined());
+  uint8_t* ptr = reinterpret_cast<uint8_t*>(this);
+  return reinterpret_cast<JitScript*>(ptr - JitScript::offsetOfICScript());
 }
