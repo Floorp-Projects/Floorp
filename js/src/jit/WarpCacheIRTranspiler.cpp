@@ -1005,6 +1005,13 @@ bool WarpCacheIRTranspiler::emitLoadUndefined(ValOperandId resultId) {
   return defineOperand(resultId, valConst);
 }
 
+bool WarpCacheIRTranspiler::emitLoadConstantString(uint32_t strOffset,
+                                                   StringOperandId resultId) {
+  JSString* val = stringStubField(strOffset);
+  auto* valConst = constant(StringValue(val));
+  return defineOperand(resultId, valConst);
+}
+
 bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
     ObjOperandId objId, ObjOperandId resultId) {
   MDefinition* env = getOperand(objId);
