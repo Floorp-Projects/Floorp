@@ -45,7 +45,7 @@ async function clear_state() {
 
   await clientWithDump.db.clear();
 
-  Services.prefs.clearUserPref("services.settings.default_bucket");
+  Services.prefs.setCharPref("services.settings.default_bucket", "main");
 
   // Clear events snapshot.
   TelemetryTestUtils.assertEvents([], {}, { process: "dummy" });
@@ -89,6 +89,7 @@ function run_test() {
   run_next_test();
 
   registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("services.settings.default_bucket");
     server.stop(() => {});
   });
 }
