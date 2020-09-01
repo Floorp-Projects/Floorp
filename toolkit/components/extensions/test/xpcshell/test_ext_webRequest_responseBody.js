@@ -81,6 +81,40 @@ server.registerPathHandler("/lorem.html.gz", async (request, response) => {
   response.finish();
 });
 
+server.registerPathHandler("/multipart", async (request, response) => {
+  response.processAsync();
+
+  response.setHeader(
+    "Content-Type",
+    'Content-Type: multipart/x-mixed-replace; boundary="testingtesting"',
+    false
+  );
+
+  response.write("--testingtesting\n");
+  response.write(PARTS.join(""));
+  response.write("--testingtesting--\n");
+
+  response.finish();
+});
+
+server.registerPathHandler("/multipart2", async (request, response) => {
+  response.processAsync();
+
+  response.setHeader(
+    "Content-Type",
+    'Content-Type: multipart/x-mixed-replace; boundary="testingtesting"',
+    false
+  );
+
+  response.write("--testingtesting\n");
+  response.write(PARTS.join(""));
+  response.write("--testingtesting\n");
+  response.write(PARTS.join(""));
+  response.write("--testingtesting--\n");
+
+  response.finish();
+});
+
 server.registerDirectory("/data/", do_get_file("data"));
 
 const TASKS = [
@@ -431,6 +465,70 @@ const TASKS = [
     },
     verify(response) {
       equal(response, PARTS.join(""), "Got expected final HTML");
+    },
+  },
+  {
+    url: "multipart",
+    task(filter, resolve, num) {
+      filter.onstart = event => {
+        browser.test.log(`(${num}): Request start`);
+      };
+
+      filter.onstop = event => {
+        filter.disconnect();
+        resolve();
+      };
+
+      filter.ondata = event => {
+        filter.write(event.data);
+      };
+
+      filter.onerror = event => {
+        browser.test.fail(
+          `(${num}): Got unexpected error event: ${filter.error}`
+        );
+      };
+    },
+    verify(response) {
+      equal(
+        response,
+        "--testingtesting\n" + PARTS.join("") + "--testingtesting--\n",
+        "Got expected final HTML"
+      );
+    },
+  },
+  {
+    url: "multipart2",
+    task(filter, resolve, num) {
+      filter.onstart = event => {
+        browser.test.log(`(${num}): Request start`);
+      };
+
+      filter.onstop = event => {
+        filter.disconnect();
+        resolve();
+      };
+
+      filter.ondata = event => {
+        filter.write(event.data);
+      };
+
+      filter.onerror = event => {
+        browser.test.fail(
+          `(${num}): Got unexpected error event: ${filter.error}`
+        );
+      };
+    },
+    verify(response) {
+      equal(
+        response,
+        "--testingtesting\n" +
+          PARTS.join("") +
+          "--testingtesting\n" +
+          PARTS.join("") +
+          "--testingtesting--\n",
+        "Got expected final HTML"
+      );
     },
   },
 ];
