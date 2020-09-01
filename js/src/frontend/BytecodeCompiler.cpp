@@ -188,9 +188,9 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx, bool hideScript,
 }
 
 template <typename Unit>
-static bool CreateGlobalScriptToStencil(CompilationInfo& compilationInfo,
-                                        JS::SourceText<Unit>& srcBuf,
-                                        ScopeKind scopeKind) {
+static bool CompileGlobalScriptToStencilImpl(CompilationInfo& compilationInfo,
+                                             JS::SourceText<Unit>& srcBuf,
+                                             ScopeKind scopeKind) {
   JSContext* cx = compilationInfo.cx;
 
   AutoAssertReportedException assertException(cx);
@@ -221,7 +221,7 @@ static bool CreateGlobalScriptToStencil(CompilationInfo& compilationInfo,
 bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
                                             JS::SourceText<char16_t>& srcBuf,
                                             ScopeKind scopeKind) {
-  return CreateGlobalScriptToStencil(compilationInfo, srcBuf, scopeKind);
+  return CompileGlobalScriptToStencilImpl(compilationInfo, srcBuf, scopeKind);
 }
 
 bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
@@ -252,7 +252,7 @@ bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
   }
 #endif  // JS_ENABLE_SMOOSH
 
-  return CreateGlobalScriptToStencil(compilationInfo, srcBuf, scopeKind);
+  return CompileGlobalScriptToStencilImpl(compilationInfo, srcBuf, scopeKind);
 }
 
 bool frontend::InstantiateStencils(CompilationInfo& compilationInfo,
@@ -283,29 +283,36 @@ bool frontend::InstantiateStencils(CompilationInfo& compilationInfo,
 }
 
 template <typename Unit>
-static bool CreateGlobalScript(CompilationInfo& compilationInfo,
-                               JS::SourceText<Unit>& srcBuf,
-                               ScopeKind scopeKind,
-                               CompilationGCOutput& gcOutput) {
-  if (!CompileGlobalScriptToStencil(compilationInfo, srcBuf, scopeKind)) {
-    return false;
+static JSScript* CompileGlobalScriptImpl(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
+  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  if (!compilationInfo.get().input.initForGlobal(cx)) {
+    return nullptr;
   }
 
-  return InstantiateStencils(compilationInfo, gcOutput);
+  if (!CompileGlobalScriptToStencil(compilationInfo.get(), srcBuf, scopeKind)) {
+    return nullptr;
+  }
+
+  frontend::CompilationGCOutput gcOutput(cx);
+  if (!InstantiateStencils(compilationInfo.get(), gcOutput)) {
+    return nullptr;
+  }
+
+  return gcOutput.script;
 }
 
-bool frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
-                                   JS::SourceText<char16_t>& srcBuf,
-                                   ScopeKind scopeKind,
-                                   CompilationGCOutput& gcOutput) {
-  return CreateGlobalScript(compilationInfo, srcBuf, scopeKind, gcOutput);
+JSScript* frontend::CompileGlobalScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptImpl(cx, options, srcBuf, scopeKind);
 }
 
-bool frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
-                                   JS::SourceText<Utf8Unit>& srcBuf,
-                                   ScopeKind scopeKind,
-                                   CompilationGCOutput& gcOutput) {
-  return CreateGlobalScript(compilationInfo, srcBuf, scopeKind, gcOutput);
+JSScript* frontend::CompileGlobalScript(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptImpl(cx, options, srcBuf, scopeKind);
 }
 
 template <typename Unit>
