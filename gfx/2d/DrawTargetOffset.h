@@ -22,7 +22,10 @@ namespace gfx {
 class SourceSurfaceOffset : public SourceSurface {
  public:
   SourceSurfaceOffset(RefPtr<SourceSurface> aSurface, IntPoint aOffset)
-      : mSurface(aSurface), mOffset(aOffset) {}
+      : mSurface(aSurface), mOffset(aOffset) {
+    MOZ_RELEASE_ASSERT(mSurface);
+  }
+
   virtual SurfaceType GetType() const override { return SurfaceType::OFFSET; }
   virtual IntSize GetSize() const override { return mSurface->GetSize(); }
   virtual IntRect GetRect() const override {
