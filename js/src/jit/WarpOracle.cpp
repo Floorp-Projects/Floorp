@@ -239,8 +239,7 @@ AbortReasonOr<WarpEnvironment> WarpScriptOracle::createEnvironment() {
     return WarpEnvironment(ConstantObjectEnvironment(obj));
   }
 
-  // TODO: Parameter expression-induced extra var environment not
-  // yet handled.
+  // Parameter expression-induced extra var environment not yet handled.
   if (fun->needsExtraBodyVarEnvironment()) {
     return abort(AbortReason::Disable, "Extra var environment unsupported");
   }
@@ -849,10 +848,6 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     return Ok();
   }
 
-  // TODO: check stub's hit count if we're not doing eager compilation.
-  // TODO: don't inline if the IC had unhandled cases => CacheIR is incomplete.
-  // TOOD: have a consistent bailout => invalidate story. Set a flag on the IC?
-
   const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
   const uint8_t* stubData = stub->cacheIRStubData();
 
@@ -922,18 +917,21 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   // We don't need to copy the CacheIRStubInfo: because we store and trace the
   // stub's JitCode*, the baselineCacheIRStubCodes_ map in JitZone will keep it
   // alive.
+  uint8_t* stubDataCopy = nullptr;
   size_t bytesNeeded = stubInfo->stubDataSize();
-  uint8_t* stubDataCopy = alloc_.allocateArray<uint8_t>(bytesNeeded);
-  if (!stubDataCopy) {
-    return abort(AbortReason::Alloc);
-  }
+  if (bytesNeeded > 0) {
+    stubDataCopy = alloc_.allocateArray<uint8_t>(bytesNeeded);
+    if (!stubDataCopy) {
+      return abort(AbortReason::Alloc);
+    }
 
-  // Note: nursery pointers are handled below so we don't need to trigger any GC
-  // barriers and can do a bitwise copy.
-  std::copy_n(stubData, bytesNeeded, stubDataCopy);
+    // Note: nursery pointers are handled below so we don't need to trigger any
+    // GC barriers and can do a bitwise copy.
+    std::copy_n(stubData, bytesNeeded, stubDataCopy);
 
-  if (!replaceNurseryPointers(stub, stubInfo, stubDataCopy)) {
-    return abort(AbortReason::Alloc);
+    if (!replaceNurseryPointers(stub, stubInfo, stubDataCopy)) {
+      return abort(AbortReason::Alloc);
+    }
   }
 
   JitCode* jitCode = stub->jitCode();
