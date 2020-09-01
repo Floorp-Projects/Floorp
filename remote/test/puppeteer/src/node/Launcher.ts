@@ -560,16 +560,16 @@ class FirefoxLauncher implements ProductLauncher {
       // Do not warn on quitting Firefox
       'browser.warnOnQuit': false,
 
-      // Do not show datareporting policy notifications which can
-      // interfere with tests
+      // Defensively disable data reporting systems
       'datareporting.healthreport.about.reportUrl': `http://${server}/dummy/abouthealthreport/`,
       'datareporting.healthreport.documentServerURI': `http://${server}/dummy/healthreport/`,
       'datareporting.healthreport.logging.consoleEnabled': false,
       'datareporting.healthreport.service.enabled': false,
       'datareporting.healthreport.service.firstRun': false,
       'datareporting.healthreport.uploadEnabled': false,
+
+      // Do not show datareporting policy notifications which can interfere with tests
       'datareporting.policy.dataSubmissionEnabled': false,
-      'datareporting.policy.dataSubmissionPolicyAccepted': false,
       'datareporting.policy.dataSubmissionPolicyBypassNotification': true,
 
       // DevTools JSONViewer sometimes fails to load dependencies with its require.js.
@@ -682,8 +682,6 @@ class FirefoxLauncher implements ProductLauncher {
       // Disable browser animations (tabs, fullscreen, sliding alerts)
       'toolkit.cosmeticAnimations.enabled': false,
 
-      // We want to collect telemetry, but we don't want to send in the results
-      'toolkit.telemetry.server': `https://${server}/dummy/telemetry/`,
       // Prevent starting into safe mode after application crashes
       'toolkit.startup.max_resumed_crashes': -1,
     };
