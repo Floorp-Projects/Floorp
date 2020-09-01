@@ -501,7 +501,8 @@ void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
 }
 
 /* static */
-bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
+bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
+                                          CompilationInfo& compilationInfo,
                                           JS::SourceText<Utf8Unit>& srcBuf,
                                           bool* unimplemented) {
   // FIXME: check info members and return with *unimplemented = true
@@ -509,8 +510,6 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
 
   auto bytes = reinterpret_cast<const uint8_t*>(srcBuf.get());
   size_t length = srcBuf.length();
-
-  JSContext* cx = compilationInfo.cx;
 
   const auto& options = compilationInfo.input.options;
   SmooshCompileOptions compileOptions;
@@ -581,11 +580,13 @@ bool Smoosh::compileGlobalScriptToStencil(CompilationInfo& compilationInfo,
 }
 
 /* static */
-bool Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
+bool Smoosh::compileGlobalScript(JSContext* cx,
+                                 CompilationInfo& compilationInfo,
                                  JS::SourceText<Utf8Unit>& srcBuf,
                                  CompilationGCOutput& gcOutput,
                                  bool* unimplemented) {
-  if (!compileGlobalScriptToStencil(compilationInfo, srcBuf, unimplemented)) {
+  if (!compileGlobalScriptToStencil(cx, compilationInfo, srcBuf,
+                                    unimplemented)) {
     return false;
   }
 
@@ -594,7 +595,6 @@ bool Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  JSContext* cx = compilationInfo.cx;
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return false;

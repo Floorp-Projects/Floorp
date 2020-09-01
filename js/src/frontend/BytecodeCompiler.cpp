@@ -234,8 +234,8 @@ bool frontend::CompileGlobalScriptToStencil(JSContext* cx,
   if (cx->options().trySmoosh()) {
     bool unimplemented = false;
     JSRuntime* rt = cx->runtime();
-    bool result = Smoosh::compileGlobalScriptToStencil(compilationInfo, srcBuf,
-                                                       &unimplemented);
+    bool result = Smoosh::compileGlobalScriptToStencil(cx, compilationInfo,
+                                                       srcBuf, &unimplemented);
     if (!unimplemented) {
       if (!compilationInfo.input.assignSource(cx, srcBuf)) {
         return false;

@@ -5417,7 +5417,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
           bool unimplemented;
-          if (!Smoosh::compileGlobalScriptToStencil(compilationInfo.get(),
+          if (!Smoosh::compileGlobalScriptToStencil(cx, compilationInfo.get(),
                                                     srcBuf, &unimplemented)) {
             return false;
           }
