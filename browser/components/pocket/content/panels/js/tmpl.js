@@ -83,7 +83,7 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
 },"2":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "          <p class=\"pkt_ext_learnmorecontainer\"><a class=\"pkt_ext_learnmore\" href=\"https://"
+  return "			<p class=\"pkt_ext_learnmorecontainer\"><a class=\"pkt_ext_learnmore\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/firefox_learnmore?s=ffi&t=learnmore&tv=panel_control&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -93,7 +93,7 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
 },"4":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "          <p class=\"pkt_ext_learnmorecontainer\"><a class=\"pkt_ext_learnmore\" href=\"https://"
+  return "			<p class=\"pkt_ext_learnmorecontainer\"><a class=\"pkt_ext_learnmore\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/firefox_learnmore?s=ffi&t=learnmore&tv=panel_tryit&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -103,21 +103,21 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
 },"6":function(depth0,helpers,partials,data) {
     var helper;
 
-  return "  <p class=\"pkt_ext_learnmorecontainer\"><a class=\"pkt_ext_learnmore pkt_ext_learnmoreinactive\" href=\"#\">"
+  return "	<p class=\"pkt_ext_learnmorecontainer\"><a class=\"pkt_ext_learnmore pkt_ext_learnmoreinactive\" href=\"#\">"
     + this.escapeExpression(((helper = (helper = helpers.learnmore || (depth0 != null ? depth0.learnmore : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0,{"name":"learnmore","hash":{},"data":data}) : helper)))
     + "</a></p>\n";
 },"8":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "  <h4>"
+  return "	<h4>"
     + alias3(((helper = (helper = helpers.signuptosave || (depth0 != null ? depth0.signuptosave : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signuptosave","hash":{},"data":data}) : helper)))
-    + "</h4>\n  <p class=\"btn-container\"><a href=\"https://"
+    + "</h4>\n	<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/ff_signup?s=ffi&t=signupff&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\" class=\"btn signup-btn-firefox\"><span class=\"logo\"></span><span class=\"text\">"
     + alias3(((helper = (helper = helpers.signupfirefox || (depth0 != null ? depth0.signupfirefox : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupfirefox","hash":{},"data":data}) : helper)))
-    + "</span></a></p>\n    <p class=\"alreadyhave\">"
+    + "</span></a></p>\n	<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
     + " <a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
@@ -133,21 +133,21 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
 },"11":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "          <h4>"
+  return "			<h4>"
     + alias3(((helper = (helper = helpers.signuptosave || (depth0 != null ? depth0.signuptosave : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signuptosave","hash":{},"data":data}) : helper)))
-    + "</h4>\n          <p class=\"btn-container\"><a href=\"https://"
+    + "</h4>\n			<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/ff_signup?s=ffi&tv=panel_control&t=signupff&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\" class=\"btn signup-btn-firefox\"><span class=\"logo\"></span><span class=\"text\">"
     + alias3(((helper = (helper = helpers.signupfirefox || (depth0 != null ? depth0.signupfirefox : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupfirefox","hash":{},"data":data}) : helper)))
-    + "</span></a></p>\n            <p class=\"btn-container\"><a href=\"https://"
+    + "</span></a></p>\n			<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/signup?force=email&tv=panel_control&src=extension&s=ffi&t=signupemail&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\" class=\"btn btn-secondary signup-btn-email signup-btn-initstate\">"
     + alias3(((helper = (helper = helpers.signupemail || (depth0 != null ? depth0.signupemail : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupemail","hash":{},"data":data}) : helper)))
-    + "</a></p>\n           <p class=\"alreadyhave\">"
+    + "</a></p>\n			<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
     + " <a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
@@ -159,11 +159,11 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
 },"13":function(depth0,helpers,partials,data) {
     var stack1, helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "          <p class=\"btn-container\"><a href=\"https://"
+  return "			<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/firefox_tryitnow?s=ffi&tv=panel_tryit&t=tryitnow\" target=\"_blank\" class=\"btn signup-btn-tryitnow\"><span class=\"text\">"
     + alias3(((helper = (helper = helpers.tryitnow || (depth0 != null ? depth0.tryitnow : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"tryitnow","hash":{},"data":data}) : helper)))
-    + "</span></a></p>\n            <p class=\"alreadyhave tryitnowspace\">"
+    + "</span></a></p>\n			<p class=\"alreadyhave tryitnowspace\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
     + " <a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
@@ -171,17 +171,17 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\">"
     + alias3(((helper = (helper = helpers.loginnow || (depth0 != null ? depth0.loginnow : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"loginnow","hash":{},"data":data}) : helper)))
-    + "</a>.</p>\n          <p class=\"pkt_ext_tos\">"
+    + "</a>.</p>\n			<p class=\"pkt_ext_tos\">"
     + ((stack1 = ((helper = (helper = helpers.tos || (depth0 != null ? depth0.tos : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"tos","hash":{},"data":data}) : helper))) != null ? stack1 : "")
     + "</p>\n";
 },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
     var stack1, helper;
 
-  return "<div class=\"pkt_ext_introdetail pkt_ext_introdetailhero\">\n <h2 class=\"pkt_ext_logo\">Pocket</h2>\n    <p class=\"pkt_ext_tagline\">"
+  return "<div class=\"pkt_ext_introdetail pkt_ext_introdetailhero\">\n	<h2 class=\"pkt_ext_logo\">Pocket</h2>\n	<p class=\"pkt_ext_tagline\">"
     + this.escapeExpression(((helper = (helper = helpers.tagline || (depth0 != null ? depth0.tagline : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0,{"name":"tagline","hash":{},"data":data}) : helper)))
     + "</p>\n"
     + ((stack1 = helpers['if'].call(depth0,(depth0 != null ? depth0.showlearnmore : depth0),{"name":"if","hash":{},"fn":this.program(1, data, 0),"inverse":this.program(6, data, 0),"data":data})) != null ? stack1 : "")
-    + " <div class=\"pkt_ext_introimg\"></div>\n</div>\n<div class=\"pkt_ext_signupdetail pkt_ext_signupdetail_hero\">\n"
+    + "	<div class=\"pkt_ext_introimg\"></div>\n</div>\n<div class=\"pkt_ext_signupdetail pkt_ext_signupdetail_hero\">\n"
     + ((stack1 = helpers['if'].call(depth0,(depth0 != null ? depth0.fxasignedin : depth0),{"name":"if","hash":{},"fn":this.program(8, data, 0),"inverse":this.program(10, data, 0),"data":data})) != null ? stack1 : "")
     + "</div>\n";
 },"useData":true});
@@ -192,7 +192,7 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
 },"2":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "                  <p><a class=\"pkt_ext_learnmore\" href=\"https://"
+  return "					<p><a class=\"pkt_ext_learnmore\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/firefox_learnmore?s=ffi&t=learnmore&tv=panel_control&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -202,7 +202,7 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
 },"4":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "                  <p><a class=\"pkt_ext_learnmore\" href=\"https://"
+  return "					<p><a class=\"pkt_ext_learnmore\" href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/firefox_learnmore?s=ffi&t=learnmore&tv=panel_tryit&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
@@ -212,21 +212,21 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
 },"6":function(depth0,helpers,partials,data) {
     var helper;
 
-  return "          <p><a class=\"pkt_ext_learnmore pkt_ext_learnmoreinactive\" href=\"#\">"
+  return "			<p><a class=\"pkt_ext_learnmore pkt_ext_learnmoreinactive\" href=\"#\">"
     + this.escapeExpression(((helper = (helper = helpers.learnmore || (depth0 != null ? depth0.learnmore : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0,{"name":"learnmore","hash":{},"data":data}) : helper)))
     + "</a></p>\n";
 },"8":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "  <h4>"
+  return "	<h4>"
     + alias3(((helper = (helper = helpers.signuptosave || (depth0 != null ? depth0.signuptosave : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signuptosave","hash":{},"data":data}) : helper)))
-    + "</h4>\n  <p class=\"btn-container\"><a href=\"https://"
+    + "</h4>\n	<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/ff_signup?s=ffi&t=signupff&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\" class=\"btn signup-btn-firefox\"><span class=\"logo\"></span><span class=\"text\">"
     + alias3(((helper = (helper = helpers.signupfirefox || (depth0 != null ? depth0.signupfirefox : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupfirefox","hash":{},"data":data}) : helper)))
-    + "</span></a></p>\n    <p class=\"alreadyhave\">"
+    + "</span></a></p>\n	<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
     + " <a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
@@ -242,21 +242,21 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
 },"11":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "          <h4>"
+  return "			<h4>"
     + alias3(((helper = (helper = helpers.signuptosave || (depth0 != null ? depth0.signuptosave : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signuptosave","hash":{},"data":data}) : helper)))
-    + "</h4>\n          <p class=\"btn-container\"><a href=\"https://"
+    + "</h4>\n			<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/ff_signup?s=ffi&tv=panel_control&t=signupff&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\" class=\"btn signup-btn-firefox\"><span class=\"logo\"></span><span class=\"text\">"
     + alias3(((helper = (helper = helpers.signupfirefox || (depth0 != null ? depth0.signupfirefox : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupfirefox","hash":{},"data":data}) : helper)))
-    + "</span></a></p>\n            <p class=\"btn-container\"><a href=\"https://"
+    + "</span></a></p>\n			<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/signup?force=email&tv=panel_control&src=extension&s=ffi&t=signupemail&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\" class=\"btn btn-secondary signup-btn-email signup-btn-initstate\">"
     + alias3(((helper = (helper = helpers.signupemail || (depth0 != null ? depth0.signupemail : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"signupemail","hash":{},"data":data}) : helper)))
-    + "</a></p>\n           <p class=\"alreadyhave\">"
+    + "</a></p>\n			<p class=\"alreadyhave\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
     + " <a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
@@ -268,11 +268,11 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
 },"13":function(depth0,helpers,partials,data) {
     var stack1, helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "          <p class=\"btn-container\"><a href=\"https://"
+  return "			<p class=\"btn-container\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/firefox_tryitnow?s=ffi&tv=panel_tryit&t=tryitnow\" target=\"_blank\" class=\"btn signup-btn-tryitnow\"><span class=\"text\">"
     + alias3(((helper = (helper = helpers.tryitnow || (depth0 != null ? depth0.tryitnow : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"tryitnow","hash":{},"data":data}) : helper)))
-    + "</span></a></p>\n            <p class=\"alreadyhave tryitnowspace\">"
+    + "</span></a></p>\n			<p class=\"alreadyhave tryitnowspace\">"
     + alias3(((helper = (helper = helpers.alreadyhaveacct || (depth0 != null ? depth0.alreadyhaveacct : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"alreadyhaveacct","hash":{},"data":data}) : helper)))
     + " <a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
@@ -280,19 +280,19 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\">"
     + alias3(((helper = (helper = helpers.loginnow || (depth0 != null ? depth0.loginnow : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"loginnow","hash":{},"data":data}) : helper)))
-    + "</a>.</p>\n          <p class=\"pkt_ext_tos\">"
+    + "</a>.</p>\n			<p class=\"pkt_ext_tos\">"
     + ((stack1 = ((helper = (helper = helpers.tos || (depth0 != null ? depth0.tos : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"tos","hash":{},"data":data}) : helper))) != null ? stack1 : "")
     + "</p>\n";
 },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
     var stack1, helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
 
-  return "<div class=\"pkt_ext_introdetail pkt_ext_introdetailstoryboard\">\n   <div class=\"pkt_ext_introstory pkt_ext_introstoryone\">\n      <div class=\"pkt_ext_introstory_text\">\n           <p class=\"pkt_ext_tagline\">"
+  return "<div class=\"pkt_ext_introdetail pkt_ext_introdetailstoryboard\">\n	<div class=\"pkt_ext_introstory pkt_ext_introstoryone\">\n		<div class=\"pkt_ext_introstory_text\">\n			<p class=\"pkt_ext_tagline\">"
     + alias3(((helper = (helper = helpers.taglinestory_one || (depth0 != null ? depth0.taglinestory_one : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"taglinestory_one","hash":{},"data":data}) : helper)))
-    + "</p>\n       </div>\n        <div class=\"pkt_ext_introstoryone_img\"></div>\n   </div>\n    <div class=\"pkt_ext_introstorydivider\"></div>\n   <div class=\"pkt_ext_introstory pkt_ext_introstorytwo\">\n      <div class=\"pkt_ext_introstory_text\">\n           <p class=\"pkt_ext_tagline\">"
+    + "</p>\n		</div>\n		<div class=\"pkt_ext_introstoryone_img\"></div>\n	</div>\n	<div class=\"pkt_ext_introstorydivider\"></div>\n	<div class=\"pkt_ext_introstory pkt_ext_introstorytwo\">\n		<div class=\"pkt_ext_introstory_text\">\n			<p class=\"pkt_ext_tagline\">"
     + alias3(((helper = (helper = helpers.taglinestory_two || (depth0 != null ? depth0.taglinestory_two : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"taglinestory_two","hash":{},"data":data}) : helper)))
     + "</p>\n"
     + ((stack1 = helpers['if'].call(depth0,(depth0 != null ? depth0.showlearnmore : depth0),{"name":"if","hash":{},"fn":this.program(1, data, 0),"inverse":this.program(6, data, 0),"data":data})) != null ? stack1 : "")
-    + "     </div>\n        <div class=\"pkt_ext_introstorytwo_img\"></div>\n   </div>\n</div>\n<div class=\"pkt_ext_signupdetail\">\n"
+    + "		</div>\n		<div class=\"pkt_ext_introstorytwo_img\"></div>\n	</div>\n</div>\n<div class=\"pkt_ext_signupdetail\">\n"
     + ((stack1 = helpers['if'].call(depth0,(depth0 != null ? depth0.fxasignedin : depth0),{"name":"if","hash":{},"fn":this.program(8, data, 0),"inverse":this.program(10, data, 0),"data":data})) != null ? stack1 : "")
     + "\n</div>\n";
 },"useData":true});
