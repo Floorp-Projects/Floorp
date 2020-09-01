@@ -7186,7 +7186,7 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
   ParseNode* kindNode = valNode->pn_next;
   MOZ_ASSERT(kindNode->isKind(ParseNodeKind::StringExpr));
   GeneratorResumeKind kind =
-      ParserAtomToResumeKind(compilationInfo, kindNode->as<NameNode>().atom());
+      ParserAtomToResumeKind(cx, kindNode->as<NameNode>().atom());
   MOZ_ASSERT(!kindNode->pn_next);
 
   if (!emitPushResumeKind(kind)) {
