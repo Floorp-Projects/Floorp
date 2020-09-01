@@ -1,0 +1,6 @@
+[
+  {
+    "input": [["en-US-linux"], ["en-US-windows"]],
+    "output": ["en-US-windows"]
+  }
+]
