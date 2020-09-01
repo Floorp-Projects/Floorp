@@ -602,6 +602,16 @@ bool WarpCacheIRTranspiler::emitGuardStringToIndex(StringOperandId strId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitGuardStringToInt32(StringOperandId strId,
+                                                   Int32OperandId resultId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* ins = MGuardStringToInt32::New(alloc(), str);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardNoDenseElements(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 

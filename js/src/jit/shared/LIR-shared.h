@@ -6182,6 +6182,20 @@ class LGuardStringToIndex : public LInstructionHelper<1, 1, 0> {
   const LAllocation* string() { return getOperand(0); }
 };
 
+class LGuardStringToInt32 : public LInstructionHelper<1, 1, 1> {
+ public:
+  LIR_HEADER(GuardStringToInt32)
+
+  LGuardStringToInt32(const LAllocation& str, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, str);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* string() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 class LGuardShape : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(GuardShape)
