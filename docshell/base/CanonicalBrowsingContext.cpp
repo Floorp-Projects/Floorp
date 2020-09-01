@@ -388,15 +388,9 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
           }
         }
       }
-      Group()->EachParent([&](ContentParent* aParent) {
-        nsISHistory* shistory = GetSessionHistory();
-        int32_t index = 0;
-        int32_t length = 0;
-        shistory->GetIndex(&index);
-        shistory->GetCount(&length);
-        Unused << aParent->SendHistoryCommitIndexAndLength(Top(), index, length,
-                                                           aChangeID);
-      });
+
+      HistoryCommitIndexAndLength(aChangeID);
+
       return;
     }
   }
@@ -458,12 +452,7 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntryForTop(
         nsDocShell::ShouldAddToSessionHistory(aInfo->GetURI(), nullptr),
         &previousEntryIndex, &loadedEntryIndex);
     // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
-    Group()->EachParent([&](ContentParent* aParent) {
-      int32_t index = 0;
-      shistory->GetIndex(&index);
-      Unused << aParent->SendHistoryCommitIndexAndLength(
-          Top(), index, shistory->GetCount(), aChangeID);
-    });
+    HistoryCommitIndexAndLength(aChangeID);
   }
 }
 
@@ -488,12 +477,7 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntryForFrame(
                                         UseRemoteSubframes());
   }
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
-  Group()->EachParent([&](ContentParent* aParent) {
-    int32_t index = 0;
-    shistory->GetIndex(&index);
-    Unused << aParent->SendHistoryCommitIndexAndLength(
-        Top(), index, shistory->GetCount(), aChangeID);
-  });
+  HistoryCommitIndexAndLength(aChangeID);
 }
 
 void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
@@ -1295,6 +1279,26 @@ void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {
     // has no effect when a document load has finished.
     Unused << SetCurrentLoadIdentifier(Nothing());
   }
+}
+
+void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
+    const nsID& aChangeID) {
+  if (!IsTop()) {
+    Cast(Top())->HistoryCommitIndexAndLength(aChangeID);
+    return;
+  }
+
+  nsISHistory* shistory = GetSessionHistory();
+  int32_t index = 0;
+  shistory->GetIndex(&index);
+  int32_t length = shistory->GetCount();
+
+  GetChildSessionHistory()->SetIndexAndLength(index, length, aChangeID);
+
+  Group()->EachParent([&](ContentParent* aParent) {
+    Unused << aParent->SendHistoryCommitIndexAndLength(this, index, length,
+                                                       aChangeID);
+  });
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
