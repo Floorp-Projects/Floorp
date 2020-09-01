@@ -1298,7 +1298,7 @@ bool WarpCacheIRTranspiler::emitLoadDenseElementResult(ObjOperandId objId,
   index = addBoundsCheck(index, length);
 
   bool needsHoleCheck = true;
-  bool loadDouble = false;  // TODO: Ion-only optimization.
+  bool loadDouble = false;  // TODO(post-Warp): Ion-only optimization.
   auto* load =
       MLoadElement::New(alloc(), elements, index, needsHoleCheck, loadDouble);
   add(load);
@@ -1623,7 +1623,7 @@ bool WarpCacheIRTranspiler::emitStoreDenseElementHole(ObjOperandId objId,
   MInstruction* store;
   MStoreElementCommon* common;
   if (handleAdd) {
-    // TODO: Consider changing MStoreElementHole to match IC code after Ion.
+    // TODO(post-Warp): Consider changing MStoreElementHole to match IC code.
     auto* ins = MStoreElementHole::New(alloc(), obj, elements, index, rhs);
     store = ins;
     common = ins;
@@ -2360,8 +2360,8 @@ bool WarpCacheIRTranspiler::emitArrayJoinResult(ObjOperandId objId,
 bool WarpCacheIRTranspiler::emitPackedArrayPopResult(ObjOperandId arrayId) {
   MDefinition* array = getOperand(arrayId);
 
-  // TODO(Warp): these flags only make sense for the Ion implementation. Remove
-  // them when IonBuilder is gone.
+  // TODO(post-Warp): these flags only make sense for the Ion implementation.
+  // Remove them when IonBuilder is gone.
   bool needsHoleCheck = true;
   bool maybeUndefined = true;
   auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Pop,
@@ -2375,8 +2375,8 @@ bool WarpCacheIRTranspiler::emitPackedArrayPopResult(ObjOperandId arrayId) {
 bool WarpCacheIRTranspiler::emitPackedArrayShiftResult(ObjOperandId arrayId) {
   MDefinition* array = getOperand(arrayId);
 
-  // TODO(Warp): these flags only make sense for the Ion implementation. Remove
-  // them when IonBuilder is gone.
+  // TODO(post-Warp): these flags only make sense for the Ion implementation.
+  // Remove them when IonBuilder is gone.
   bool needsHoleCheck = true;
   bool maybeUndefined = true;
   auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Shift,
@@ -3464,7 +3464,7 @@ bool WarpCacheIRTranspiler::emitCallNativeSetter(ObjOperandId receiverId,
                         sameRealm, nargsAndFlagsOffset);
 }
 
-// TODO: rename the MetaTwoByte op when IonBuilder is gone.
+// TODO(post-Warp): rename the MetaTwoByte op when IonBuilder is gone.
 bool WarpCacheIRTranspiler::emitMetaTwoByte(MetaTwoByteKind kind,
                                             uint32_t functionObjectOffset,
                                             uint32_t templateObjectOffset) {

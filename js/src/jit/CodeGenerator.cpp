@@ -10675,8 +10675,8 @@ void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
   masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), length);
 
-  // TODO(Warp): reuse/share the CacheIR implementation when IonBuilder and TI
-  // are gone (bug 1654180).
+  // TODO(post-Warp): reuse/share the CacheIR implementation when IonBuilder and
+  // TI are gone (bug 1654180).
   if (!IsTypeInferenceEnabled()) {
     // Bailout if the incremented length does not fit in int32.
     bailoutCmp32(Assembler::AboveOrEqual, length, Imm32(INT32_MAX),
