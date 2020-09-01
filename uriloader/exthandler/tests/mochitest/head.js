@@ -121,3 +121,18 @@ async function openHelperAppDialog(launcher) {
 
   return dlg;
 }
+
+async function promiseDownloadFinished(list) {
+  return new Promise(resolve => {
+    list.addView({
+      onDownloadChanged(download) {
+        info("Download changed!");
+        if (download.succeeded || download.error) {
+          info("Download succeeded or errored");
+          list.removeView(this);
+          resolve(download);
+        }
+      },
+    });
+  });
+}
