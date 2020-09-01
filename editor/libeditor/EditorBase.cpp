@@ -131,12 +131,12 @@ using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
 /*****************************************************************************
  * mozilla::EditorBase
  *****************************************************************************/
-template EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
-    const EditorDOMPoint& aPointAtCaret,
-    nsIEditor::EDirection aDirectionAndAmount) const;
-template EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
-    const EditorRawDOMPoint& aPointAtCaret,
-    nsIEditor::EDirection aDirectionAndAmount) const;
+template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
+    const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
+    const EditorDOMPoint& aPointAtCaret);
+template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
+    const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
+    const EditorRawDOMPoint& aPointAtCaret);
 
 EditorBase::EditorBase()
     : mEditActionData(nullptr),
@@ -4739,29 +4739,32 @@ NS_IMETHODIMP EditorBase::GetPasswordMask(nsAString& aPasswordMask) {
 }
 
 template <typename PT, typename CT>
-EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
-    const EditorDOMPointBase<PT, CT>& aPointAtCaret,
-    nsIEditor::EDirection aDirectionAndAmount) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
+    const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
+    const EditorDOMPointBase<PT, CT>& aPointAtCaret) {
+  MOZ_ASSERT(aEditorBase.IsEditActionDataAvailable());
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = aEditorBase.GetPresContext();
   if (NS_WARN_IF(!presContext)) {
-    return EditActionResult(NS_ERROR_FAILURE);
+    mFailed = true;
+    return;
   }
 
   if (!presContext->BidiEnabled()) {
-    return EditActionIgnored();  // Perform the deletion
+    return;  // Perform the deletion
   }
 
   if (!aPointAtCaret.GetContainerAsContent()) {
-    return EditActionResult(NS_ERROR_FAILURE);
+    mFailed = true;
+    return;
   }
 
   // XXX Not sure whether this requires strong reference here.
   RefPtr<nsFrameSelection> frameSelection =
-      SelectionRefPtr()->GetFrameSelection();
+      aEditorBase.SelectionRefPtr()->GetFrameSelection();
   if (NS_WARN_IF(!frameSelection)) {
-    return EditActionResult(NS_ERROR_FAILURE);
+    mFailed = true;
+    return;
   }
 
   nsPrevNextBidiLevels levels = frameSelection->GetPrevNextBidiLevels(
@@ -4779,19 +4782,27 @@ EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
                         : levelBefore;
 
   if (currentCaretLevel == levelOfDeletion) {
-    return EditActionIgnored();  // Perform the deletion
+    return;  // Perform the deletion
   }
 
   // Set the bidi level of the caret to that of the
   // character that will be (or would have been) deleted
-  frameSelection->SetCaretBidiLevelAndMaybeSchedulePaint(levelOfDeletion);
+  mNewCaretBidiLevel = Some(levelOfDeletion);
+  mCanceled =
+      !StaticPrefs::bidi_edit_delete_immediately() && levelBefore != levelAfter;
+}
 
-  if (!StaticPrefs::bidi_edit_delete_immediately() &&
-      levelBefore != levelAfter) {
-    return EditActionCanceled();  // Cancel deletion due to the bidi boundary
+void EditorBase::AutoCaretBidiLevelManager::MaybeUpdateCaretBidiLevel(
+    const EditorBase& aEditorBase) const {
+  MOZ_ASSERT(!mFailed);
+  if (mNewCaretBidiLevel.isNothing()) {
+    return;
   }
-
-  return EditActionIgnored();  // Perform the deletion
+  RefPtr<nsFrameSelection> frameSelection =
+      aEditorBase.SelectionRefPtr()->GetFrameSelection();
+  MOZ_ASSERT(frameSelection);
+  frameSelection->SetCaretBidiLevelAndMaybeSchedulePaint(
+      mNewCaretBidiLevel.value());
 }
 
 void EditorBase::UndefineCaretBidiLevel() const {

@@ -800,12 +800,15 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     }
 
     // Test for distance between caret and text that will be deleted
-    EditActionResult result =
-        SetCaretBidiLevelForDeletion(selectionStartPoint, aDirectionAndAmount);
-    if (result.Failed() || result.Canceled()) {
-      NS_WARNING_ASSERTION(result.Succeeded(),
-                           "EditorBase::SetCaretBidiLevelForDeletion() failed");
-      return result;
+    AutoCaretBidiLevelManager bidiLevelManager(*this, aDirectionAndAmount,
+                                               selectionStartPoint);
+    if (bidiLevelManager.Failed()) {
+      NS_WARNING("EditorBase::AutoCaretBidiLevelManager() failed");
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+    bidiLevelManager.MaybeUpdateCaretBidiLevel(*this);
+    if (bidiLevelManager.Canceled()) {
+      return EditActionCanceled();
     }
   }
 
