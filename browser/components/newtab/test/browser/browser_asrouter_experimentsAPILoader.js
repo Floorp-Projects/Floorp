@@ -144,7 +144,7 @@ add_task(async function test_loading_experimentsAPI() {
       ],
     ],
   });
-  const client = RemoteSettings("nimbus-experiments-desktop");
+  const client = RemoteSettings("nimbus-desktop-experiments");
   await client.db.importChanges(
     {},
     42,
