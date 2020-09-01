@@ -32,10 +32,9 @@ using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
 
 struct FoldInfo {
+  JSContext* cx;
   CompilationInfo& compilationInfo;
   FullParseHandler* handler;
-
-  JSContext* cx() { return compilationInfo.cx; }
 };
 
 // Don't use ReplaceNode directly, because we want the constant folder to keep
@@ -464,7 +463,7 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
       case ParseNodeKind::NumberExpr:
         if (pn->isKind(ParseNodeKind::StringExpr)) {
           double d;
-          if (!pn->as<NameNode>().atom()->toNumber(info.cx(), &d)) {
+          if (!pn->as<NameNode>().atom()->toNumber(info.cx, &d)) {
             return false;
           }
           if (!TryReplaceNode(
@@ -582,18 +581,18 @@ static bool FoldTypeOfExpr(FoldInfo info, ParseNode** nodePtr) {
   const ParserName* result = nullptr;
   if (expr->isKind(ParseNodeKind::StringExpr) ||
       expr->isKind(ParseNodeKind::TemplateStringExpr)) {
-    result = info.cx()->parserNames().string;
+    result = info.cx->parserNames().string;
   } else if (expr->isKind(ParseNodeKind::NumberExpr)) {
-    result = info.cx()->parserNames().number;
+    result = info.cx->parserNames().number;
   } else if (expr->isKind(ParseNodeKind::BigIntExpr)) {
-    result = info.cx()->parserNames().bigint;
+    result = info.cx->parserNames().bigint;
   } else if (expr->isKind(ParseNodeKind::NullExpr)) {
-    result = info.cx()->parserNames().object;
+    result = info.cx->parserNames().object;
   } else if (expr->isKind(ParseNodeKind::TrueExpr) ||
              expr->isKind(ParseNodeKind::FalseExpr)) {
-    result = info.cx()->parserNames().boolean;
+    result = info.cx->parserNames().boolean;
   } else if (expr->is<FunctionNode>()) {
-    result = info.cx()->parserNames().function;
+    result = info.cx->parserNames().function;
   }
 
   if (result) {
@@ -915,7 +914,7 @@ static bool FoldIf(FoldInfo info, ParseNode** nodePtr) {
       // A declaration that hoists outside the discarded arm prevents the
       // |if| from being folded away.
       bool containsHoistedDecls;
-      if (!ContainsHoistedDeclaration(info.cx(), discarded,
+      if (!ContainsHoistedDeclaration(info.cx, discarded,
                                       &containsHoistedDecls)) {
         return false;
       }
@@ -1205,7 +1204,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       break;
     }
 
-    Vector<const ParserAtom*, 8> accum(info.cx());
+    Vector<const ParserAtom*, 8> accum(info.cx);
     do {
       // Create a vector of all the folded strings and concatenate them.
       MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
@@ -1242,7 +1241,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       // Construct the concatenated atom.
       const ParserAtom* combination =
           info.compilationInfo.stencil.parserAtoms
-              .concatAtoms(info.cx(),
+              .concatAtoms(info.cx,
                            mozilla::Range(accum.begin(), accum.length()))
               .unwrapOr(nullptr);
       if (!combination) {
@@ -1296,15 +1295,17 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
 class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   using Base = RewritingParseNodeVisitor;
 
+  JSContext* cx;
   CompilationInfo& compilationInfo;
   FullParseHandler* handler;
 
-  FoldInfo info() const { return FoldInfo{compilationInfo, handler}; }
+  FoldInfo info() const { return FoldInfo{cx, compilationInfo, handler}; }
 
  public:
   explicit FoldVisitor(JSContext* cx, CompilationInfo& compilationInfo,
                        FullParseHandler* handler)
       : RewritingParseNodeVisitor(cx),
+        cx(cx),
         compilationInfo(compilationInfo),
         handler(handler) {}
 
@@ -1557,7 +1558,7 @@ static bool Fold(JSContext* cx, CompilationInfo& compilationInfo,
   return visitor.visit(*pnp);
 }
 static bool Fold(FoldInfo info, ParseNode** pnp) {
-  return Fold(info.cx(), info.compilationInfo, info.handler, pnp);
+  return Fold(info.cx, info.compilationInfo, info.handler, pnp);
 }
 
 bool frontend::FoldConstants(JSContext* cx, CompilationInfo& compilationInfo,
