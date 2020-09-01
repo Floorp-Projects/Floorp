@@ -3418,7 +3418,7 @@ bool IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
 
     StringOperandId strId = writer.guardToString(indexId);
     *int32Index = uint32_t(indexSigned);
-    *int32IndexId = writer.guardAndGetIndexFromString(strId);
+    *int32IndexId = writer.guardStringToIndex(strId);
     return true;
   }
 
@@ -9570,7 +9570,7 @@ AttachDecision CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
   auto createGuards = [&](HandleValue v, ValOperandId vId) {
     if (v.isString()) {
       StringOperandId strId = writer.guardToString(vId);
-      return writer.guardAndGetNumberFromString(strId);
+      return writer.guardStringToNumber(strId);
     }
     MOZ_ASSERT(v.isNumber());
     NumberOperandId numId = writer.guardIsNumber(vId);
@@ -9658,11 +9658,11 @@ AttachDecision CompareIRGenerator::tryAttachBoolStringOrNumber(
   auto createGuards = [&](HandleValue v, ValOperandId vId) {
     if (v.isBoolean()) {
       BooleanOperandId boolId = writer.guardToBoolean(vId);
-      return writer.guardAndGetNumberFromBoolean(boolId);
+      return writer.booleanToNumber(boolId);
     }
     if (v.isString()) {
       StringOperandId strId = writer.guardToString(vId);
-      return writer.guardAndGetNumberFromString(strId);
+      return writer.guardStringToNumber(strId);
     }
     MOZ_ASSERT(v.isNumber());
     return writer.guardIsNumber(vId);
@@ -10153,7 +10153,7 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringInt32() {
 
   ValOperandId valId(writer.setInputOperandId(0));
   StringOperandId stringId = writer.guardToString(valId);
-  Int32OperandId intId = writer.guardAndGetInt32FromString(stringId);
+  Int32OperandId intId = writer.guardStringToInt32(stringId);
 
   switch (op_) {
     case JSOp::BitNot:
@@ -10196,7 +10196,7 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringNumber() {
 
   ValOperandId valId(writer.setInputOperandId(0));
   StringOperandId stringId = writer.guardToString(valId);
-  NumberOperandId numId = writer.guardAndGetNumberFromString(stringId);
+  NumberOperandId numId = writer.guardStringToNumber(stringId);
 
   Int32OperandId truncatedId;
   switch (op_) {
@@ -10811,7 +10811,7 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
 
     MOZ_ASSERT(v.isString());
     StringOperandId strId = writer.guardToString(id);
-    return writer.guardAndGetInt32FromString(strId);
+    return writer.guardStringToInt32(strId);
   };
 
   Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);
