@@ -15,24 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gGeoSpecificDefaultsEnabled",
-  SearchUtils.BROWSER_SEARCH_PREF + "geoSpecificDefaults",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gModernConfig",
-  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
-  false,
-  () => {
-    // We'll re-init the service, regardless of which way the pref-flip went.
-    Services.search.reInit();
-  }
-);
-
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchCache",
@@ -131,15 +113,6 @@ class SearchCache {
       if (!json.engines || !json.engines.length) {
         throw new Error("no engine in the file");
       }
-      // Reset search default expiration on major releases
-      if (
-        !gModernConfig &&
-        json.appVersion != Services.appinfo.version &&
-        gGeoSpecificDefaultsEnabled &&
-        json.metaData
-      ) {
-        json.metaData.searchDefaultExpir = 0;
-      }
     } catch (ex) {
       logConsole.error("_readCacheFile: Error reading cache file:", ex);
       json = {};
@@ -220,12 +193,7 @@ class SearchCache {
     // Store the appVersion as well so we can do extra things during major updates.
     cache.appVersion = appVersion;
     cache.locale = locale;
-
-    if (gModernConfig) {
-      cache.builtInEngineList = this._searchService._searchOrder;
-    } else {
-      cache.visibleDefaultEngines = this._searchService._visibleDefaultEngines;
-    }
+    cache.builtInEngineList = this._searchService._searchOrder;
     cache.engines = [...this._searchService._engines.values()];
     cache.metaData = this._metaData;
 
