@@ -41,6 +41,13 @@ COMMON_ARGS = {
         "will be ignored and won't get simplified. These options are only used when "
         "--simplify-names is set.",
     },
+    "transformer": {
+        "type": str,
+        "default": None,
+        "help": "The path to the file containing the custom transformer, "
+        "or the module to import along with the class name, "
+        "e.g. mozperftest.test.xpcshell:XpcShellTransformer",
+    },
 }
 
 
@@ -135,9 +142,7 @@ class MetricsStorage(object):
             self.return_code = 1
             raise MetricsMissingResultsError("Could not find any results to process.")
 
-    def get_standardized_data(
-        self, group_name="firefox", transformer="SingleJsonRetriever"
-    ):
+    def get_standardized_data(self, group_name="firefox", transformer=None):
         """Returns a parsed, standardized results data set.
 
         The dataset is computed once then cached unless overwrite is used.
@@ -157,13 +162,14 @@ class MetricsStorage(object):
             return self.stddata
 
         for data_type, data_info in self.results.items():
+            tfm = transformer if transformer is not None else data_info["transformer"]
             prefix = data_type
             if self.prefix:
                 prefix = "{}-{}".format(self.prefix, data_type)
             config = {
                 "output": self.output_path,
                 "prefix": prefix,
-                "customtransformer": data_info["transformer"],
+                "customtransformer": tfm,
                 "file_groups": {data_type: data_info["files"]},
             }
 
@@ -172,7 +178,7 @@ class MetricsStorage(object):
                 config=config,
                 prefix=self.prefix,
                 logger=self.logger,
-                custom_transform=data_info["transformer"],
+                custom_transform=tfm,
             )
             r = ptnb.process(**data_info["options"])
             self.stddata[data_type] = r["data"]
@@ -182,7 +188,7 @@ class MetricsStorage(object):
     def filtered_metrics(
         self,
         group_name="firefox",
-        transformer="SingleJsonRetriever",
+        transformer=None,
         metrics=None,
         exclude=None,
         split_by=None,
@@ -294,7 +300,7 @@ def filtered_metrics(
     path,
     prefix,
     group_name="firefox",
-    transformer="SingleJsonRetriever",
+    transformer=None,
     metrics=None,
     settings=False,
     exclude=None,

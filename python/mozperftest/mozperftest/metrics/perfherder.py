@@ -86,6 +86,7 @@ class Perfherder(Layer):
             output,
             prefix,
             metrics=metrics,
+            transformer=self.get_arg("transformer"),
             settings=True,
             exclude=exclusions,
             split_by=self.get_arg("split-by"),

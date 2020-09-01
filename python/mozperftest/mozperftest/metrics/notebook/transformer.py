@@ -4,7 +4,6 @@
 import json
 import importlib.util
 import inspect
-import sys
 import pathlib
 
 from jsonschema import validate
@@ -14,6 +13,7 @@ from mozperftest.metrics.exceptions import (
     NotebookDuplicateTransformsError,
 )
 from mozperftest.runner import HERE
+from mozperftest.utils import load_class
 
 
 class Transformer(object):
@@ -155,12 +155,49 @@ class SimplePerfherderTransformer:
         return merged
 
 
+def get_transformer(path, ret_members=False):
+    """This function returns a Transformer class with the given path.
+
+    :param str path: The path points to the custom transformer.
+    :param bool ret_members: If true then return inspect.getmembers().
+    :return Transformer if not ret_members else inspect.getmembers().
+    """
+    file = pathlib.Path(path)
+
+    if file.suffix != ".py":
+        return load_class(path)
+
+    if not file.exists():
+        raise NotebookInvalidPathError(f"The path {path} does not exist.")
+
+    # Importing a source file directly
+    spec = importlib.util.spec_from_file_location(name=file.name, location=path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    members = inspect.getmembers(
+        module,
+        lambda c: inspect.isclass(c)
+        and hasattr(c, "transform")
+        and hasattr(c, "merge")
+        and callable(c.transform)
+        and callable(c.merge),
+    )
+
+    if not members and not ret_members:
+        raise NotebookInvalidTransformError(
+            f"The path {path} was found but it was not a valid transformer."
+        )
+
+    return members if ret_members else members[0][-1]
+
+
 def get_transformers(dirpath=None):
     """This function returns a dict of transformers under the given path.
 
     If more than one transformers have the same class name, an exception will be raised.
 
-    :param Path object dirpath: Path to a directory containing the transformers.
+    :param pathlib.Path dirpath: Path to a directory containing the transformers.
     :return dict: {"Transformer class name": Transformer class}.
     """
 
@@ -178,28 +215,13 @@ def get_transformers(dirpath=None):
     importlib.machinery.SOURCE_SUFFIXES.append("")
 
     for file in tfm_files:
-
-        # Importing a source file directly
-        spec = importlib.util.spec_from_file_location(
-            name=file.name, location=file.resolve().as_posix()
-        )
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[file.name] = module
-        spec.loader.exec_module(module)
-
-        members = inspect.getmembers(
-            module,
-            lambda c: inspect.isclass(c)
-            and hasattr(c, "transform")
-            and hasattr(c, "merge")
-            and callable(c.transform)
-            and callable(c.merge),
-        )
+        members = get_transformer(file.resolve().as_posix(), True)
 
         for (name, tfm_class) in members:
             if name in ret:
                 raise NotebookDuplicateTransformsError(
-                    f"Duplicated transformer {name} is found in the directory {dirpath}. "
+                    f"Duplicated transformer {name} "
+                    + f"is found in the directory {dirpath.as_posix()}."
                     + "Please define each transformer class with a unique class name.",
                 )
             ret.update({name: tfm_class})
