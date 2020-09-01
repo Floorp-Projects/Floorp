@@ -188,15 +188,17 @@ class nsWindow::WindowEvent : public Runnable {
 
 namespace {
 template <class Instance, class Impl>
-std::enable_if_t<
-    jni::detail::NativePtrPicker<Impl>::value == jni::detail::REFPTR, void>
+std::enable_if_t<jni::detail::NativePtrPicker<Impl>::value ==
+                     jni::detail::NativePtrType::REFPTR,
+                 void>
 CallAttachNative(Instance aInstance, Impl* aImpl) {
   Impl::AttachNative(aInstance, RefPtr<Impl>(aImpl).get());
 }
 
 template <class Instance, class Impl>
-std::enable_if_t<
-    jni::detail::NativePtrPicker<Impl>::value == jni::detail::OWNING, void>
+std::enable_if_t<jni::detail::NativePtrPicker<Impl>::value ==
+                     jni::detail::NativePtrType::OWNING,
+                 void>
 CallAttachNative(Instance aInstance, Impl* aImpl) {
   Impl::AttachNative(aInstance, UniquePtr<Impl>(aImpl));
 }
