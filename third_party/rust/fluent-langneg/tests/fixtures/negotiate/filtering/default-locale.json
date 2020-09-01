@@ -1,0 +1,18 @@
+[
+  {
+    "input": [["fr"], ["de", "it"]],
+    "output": []
+  },
+  {
+    "input": [["fr"], ["de", "it"], "en-US"],
+    "output": ["en-US"]
+  },
+  {
+    "input": [["fr"], ["de", "en-US"], "en-US"],
+    "output": ["en-US"]
+  },
+  {
+    "input": [["fr", "de-DE"], ["de-DE", "fr-CA"], "en-US"],
+    "output": ["fr-CA", "de-DE", "en-US"]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "input": [["en-US"], ["en"]],
+    "output": ["en"]
+  },
+  {
+    "input": [["en-Latn-US"], ["en-US"]],
+    "output": ["en-US"]
+  },
+  {
+    "input": [["en-US-windows"], ["en-US"]],
+    "output": ["en-US"]
+  },
+  {
+    "input": [["fr-CA", "de-DE"], ["fr", "it", "de"]],
+    "output": ["fr", "de"]
+  },
+  {
+    "input": [["ja-JP-windows"], ["ja"]],
+    "output": ["ja"]
+  },
+  {
+    "input": [["en-Latn-GB", "en-Latn-IN"], ["en-IN", "en-GB"]],
+    "output": ["en-GB", "en-IN"]
+  }
+]

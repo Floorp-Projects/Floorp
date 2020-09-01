@@ -380,7 +380,7 @@ pub struct FluentDateTime {
 }
 
 impl FluentType for FluentDateTime {
-    fn duplicate(&self) -> Box<dyn FluentType + Send> {
+    fn duplicate(&self) -> Box<dyn FluentType> {
         Box::new(self.clone())
     }
     fn as_string(&self, intls: &IntlLangMemoizer) -> Cow<'static, str> {

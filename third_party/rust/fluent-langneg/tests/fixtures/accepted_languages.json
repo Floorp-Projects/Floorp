@@ -1,0 +1,26 @@
+[
+  {
+    "input": "en-US;0.9,pl;0.8,fr;0.5",
+    "output": ["en-US", "pl", "fr"]
+  },
+  {
+    "input": "en-US,pl;0.8,fr;0.5",
+    "output": ["en-US", "pl", "fr"]
+  },
+  {
+    "input": "en-US,pl,fr",
+    "output": ["en-US", "pl", "fr"]
+  },
+  {
+    "input": "en-US,,fr",
+    "output": ["en-US", "fr"]
+  },
+  {
+    "input": "",
+    "output": []
+  },
+  {
+    "input": "pl",
+    "output": ["pl"]
+  }
+]
