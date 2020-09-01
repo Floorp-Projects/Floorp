@@ -3199,6 +3199,27 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
       // aRangesToDelete must select some haracters, a word or the line.
       return NS_OK;
     }
+
+    if (aRangesToDelete.IsCollapsed()) {
+      EditorDOMPoint caretPoint(aRangesToDelete.GetStartPointOfFirstRange());
+      if (NS_WARN_IF(!caretPoint.IsInContentNode())) {
+        return NS_ERROR_FAILURE;
+      }
+      if (!EditorUtils::IsEditableContent(*caretPoint.ContainerAsContent(),
+                                          EditorType::HTML)) {
+        return NS_SUCCESS_DOM_NO_OPERATION;
+      }
+      WSRunScanner wsRunScannerAtCaret(aHTMLEditor, caretPoint);
+      WSScanResult scanFromCaretPointResult =
+          aDirectionAndAmount == nsIEditor::eNext
+              ? wsRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(
+                    caretPoint)
+              : wsRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
+                    caretPoint);
+      if (!scanFromCaretPointResult.GetContent()) {
+        return NS_SUCCESS_DOM_NO_OPERATION;
+      }
+    }
   }
 
   return NS_OK;
