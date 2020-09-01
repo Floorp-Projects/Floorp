@@ -117,6 +117,29 @@ interface FrameLoader {
   void requestSHistoryUpdate(boolean aImmediately);
 
   /**
+   * Creates a print preview document in this frame, or updates the existing
+   * print preview document with new print settings.
+   *
+   * @param aPrintSettings The print settings to use to layout the print
+   *   preview document.
+   * @param aSourceOuterWindowID Optionally, the ID of the nsGlobalWindowOuter
+   *   that contains the document from which the print preview is to be
+   *   generated.  This should only be passed on the first call.  It should not
+   *   be passed for any subsequent calls that are made to update the existing
+   *   print preview document with a new print settings object.
+   * @return A Promise that resolves with a PrintPreviewSuccessInfo on success.
+   */
+  [ChromeOnly, Throws]
+  Promise<unsigned long> printPreview(nsIPrintSettings aPrintSettings,
+                                      optional unsigned long long aSourceOuterWindowID);
+
+  /**
+   * Inform the print preview document that we're done with it.
+   */
+  [ChromeOnly]
+  void exitPrintPreview();
+
+  /**
    * Print the current document.
    *
    * @param aOuterWindowID the ID of the outer window to print
@@ -203,6 +226,27 @@ interface mixin WebBrowserPersistable
   [Throws]
   void startPersistence(BrowsingContext? aContext,
                         nsIWebBrowserPersistDocumentReceiver aRecv);
+};
+
+/**
+ * Interface for the object that's used to resolve the Promise returned from
+ * FrameLoader.printPreview() if that method successfully creates the print
+ * preview document/successfully updates it with new settings.
+ */
+[GenerateConversionToJS]
+dictionary PrintPreviewSuccessInfo {
+  /**
+   * The total number of sheets of paper required to print, taking into account
+   * the provided nsIPrintSettings.  This takes into account page range
+   * selection, the pages-per-sheet, whether duplex printing is enabled, etc.
+   */
+  unsigned long sheetCount = 0;
+
+  /**
+   * The total number of virtual pages, not taking into account page range
+   * selection, the pages-per-sheet, whether duplex printing is enabled, etc.
+   */
+  unsigned long totalPageCount = 0;
 };
 
 FrameLoader includes WebBrowserPersistable;

@@ -6,9 +6,21 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include <functional>
+
+namespace mozilla {
+namespace dom {
+class PrintPreviewResultInfo;
+} // namespace dom
+} // namespace mozilla
+%}
+
 interface mozIDOMWindowProxy;
 interface nsIPrintSettings;
 interface nsIWebProgressListener;
+
+native PrintPreviewResolver(std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>&&);
 
 /**
  * nsIWebBrowserPrint corresponds to the main interface
@@ -98,7 +110,8 @@ interface nsIWebBrowserPrint : nsISupports
    * @return void
    */
   [noscript] void printPreview(in nsIPrintSettings aThePrintSettings,
-                               in nsIWebProgressListener aWPListener);
+                               in nsIWebProgressListener aWPListener,
+                               in PrintPreviewResolver aCallback);
 
   /**
    * @param aNavType - navigation enum
