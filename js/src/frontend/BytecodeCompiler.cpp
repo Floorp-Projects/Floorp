@@ -188,11 +188,10 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx, bool hideScript,
 }
 
 template <typename Unit>
-static bool CompileGlobalScriptToStencilImpl(CompilationInfo& compilationInfo,
+static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
+                                             CompilationInfo& compilationInfo,
                                              JS::SourceText<Unit>& srcBuf,
                                              ScopeKind scopeKind) {
-  JSContext* cx = compilationInfo.cx;
-
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
@@ -218,19 +217,21 @@ static bool CompileGlobalScriptToStencilImpl(CompilationInfo& compilationInfo,
   return true;
 }
 
-bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
+bool frontend::CompileGlobalScriptToStencil(JSContext* cx,
+                                            CompilationInfo& compilationInfo,
                                             JS::SourceText<char16_t>& srcBuf,
                                             ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(compilationInfo, srcBuf, scopeKind);
+  return CompileGlobalScriptToStencilImpl(cx, compilationInfo, srcBuf,
+                                          scopeKind);
 }
 
-bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
+bool frontend::CompileGlobalScriptToStencil(JSContext* cx,
+                                            CompilationInfo& compilationInfo,
                                             JS::SourceText<Utf8Unit>& srcBuf,
                                             ScopeKind scopeKind) {
 #ifdef JS_ENABLE_SMOOSH
-  if (compilationInfo.cx->options().trySmoosh()) {
+  if (cx->options().trySmoosh()) {
     bool unimplemented = false;
-    JSContext* cx = compilationInfo.cx;
     JSRuntime* rt = cx->runtime();
     bool result = Smoosh::compileGlobalScriptToStencil(compilationInfo, srcBuf,
                                                        &unimplemented);
@@ -239,26 +240,26 @@ bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
         return false;
       }
 
-      if (compilationInfo.cx->options().trackNotImplemented()) {
+      if (cx->options().trackNotImplemented()) {
         rt->parserWatcherFile.put("1");
       }
       return result;
     }
 
-    if (compilationInfo.cx->options().trackNotImplemented()) {
+    if (cx->options().trackNotImplemented()) {
       rt->parserWatcherFile.put("0");
     }
     fprintf(stderr, "Falling back!\n");
   }
 #endif  // JS_ENABLE_SMOOSH
 
-  return CompileGlobalScriptToStencilImpl(compilationInfo, srcBuf, scopeKind);
+  return CompileGlobalScriptToStencilImpl(cx, compilationInfo, srcBuf,
+                                          scopeKind);
 }
 
-bool frontend::InstantiateStencils(CompilationInfo& compilationInfo,
+bool frontend::InstantiateStencils(JSContext* cx,
+                                   CompilationInfo& compilationInfo,
                                    CompilationGCOutput& gcOutput) {
-  JSContext* cx = compilationInfo.cx;
-
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
@@ -269,7 +270,7 @@ bool frontend::InstantiateStencils(CompilationInfo& compilationInfo,
   }
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.cx->isHelperThreadContext()) {
+  if (!cx->isHelperThreadContext()) {
     if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
@@ -297,12 +298,13 @@ static JSScript* CompileGlobalScriptImpl(
     }
   }
 
-  if (!CompileGlobalScriptToStencil(compilationInfo.get(), srcBuf, scopeKind)) {
+  if (!CompileGlobalScriptToStencil(cx, compilationInfo.get(), srcBuf,
+                                    scopeKind)) {
     return nullptr;
   }
 
   frontend::CompilationGCOutput gcOutput(cx);
-  if (!InstantiateStencils(compilationInfo.get(), gcOutput)) {
+  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
     return nullptr;
   }
 
@@ -353,7 +355,7 @@ static JSScript* CompileEvalScriptImpl(
   }
 
   frontend::CompilationGCOutput gcOutput(cx);
-  if (!InstantiateStencils(compilationInfo.get(), gcOutput)) {
+  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
     return nullptr;
   }
 
@@ -824,7 +826,7 @@ static ModuleObject* CompileModuleImpl(
   }
 
   CompilationGCOutput gcOutput(cx);
-  if (!InstantiateStencils(compilationInfo.get(), gcOutput)) {
+  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
     return nullptr;
   }
 

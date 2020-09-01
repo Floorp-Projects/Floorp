@@ -49,15 +49,16 @@ class ModuleCompiler;
 template <typename Unit>
 class StandaloneFunctionCompiler;
 
-extern bool CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
+extern bool CompileGlobalScriptToStencil(JSContext* cx,
+                                         CompilationInfo& compilationInfo,
                                          JS::SourceText<char16_t>& srcBuf,
                                          ScopeKind scopeKind);
 
 extern bool CompileGlobalScriptToStencil(
-    CompilationInfo& compilationInfo, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    ScopeKind scopeKind);
+    JSContext* cx, CompilationInfo& compilationInfo,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
-extern bool InstantiateStencils(CompilationInfo& compilationInfo,
+extern bool InstantiateStencils(JSContext* cx, CompilationInfo& compilationInfo,
                                 CompilationGCOutput& gcOutput);
 
 extern JSScript* CompileGlobalScript(JSContext* cx,
