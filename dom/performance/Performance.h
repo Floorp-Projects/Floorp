@@ -96,7 +96,9 @@ class Performance : public DOMEventTargetHelper {
 
   virtual TimeStamp CreationTimeStamp() const = 0;
 
-  uint64_t IsSystemPrincipal() { return mSystemPrincipal; }
+  bool IsSystemPrincipal() const { return mSystemPrincipal; }
+
+  DOMHighResTimeStamp TimeStampToDOMHighResForRendering(TimeStamp) const;
 
   virtual uint64_t GetRandomTimelineSeed() = 0;
 
