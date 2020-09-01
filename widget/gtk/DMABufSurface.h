@@ -121,6 +121,10 @@ class DMABufSurface {
   // Release all underlying data.
   virtual void ReleaseSurface() = 0;
 
+#ifdef DEBUG
+  virtual void DumpToFile(const char* pFile){};
+#endif
+
   DMABufSurface(SurfaceType aSurfaceType);
 
  protected:
@@ -197,6 +201,10 @@ class DMABufSurfaceRGBA : public DMABufSurface {
   EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage; };
 
   uint32_t GetTextureCount() { return 1; };
+
+#ifdef DEBUG
+  virtual void DumpToFile(const char* pFile);
+#endif
 
   DMABufSurfaceRGBA();
 
