@@ -931,6 +931,9 @@ gfxFont* gfxPlatformFontList::SystemFindFontForChar(
     if (font && aPresentation != eFontPresentation::Any && candidate) {
       bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
       if (hasColorGlyph != PrefersColor(aPresentation)) {
+        // We're discarding `font` and using `candidate` instead, so ensure
+        // `font` is known to the global cache expiration tracker.
+        RefPtr<gfxFont> autoRefDeref(font);
         font = candidate;
       }
     }
