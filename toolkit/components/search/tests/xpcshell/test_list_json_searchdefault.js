@@ -23,12 +23,12 @@ add_task(async function test_searchDefaultEngineUS() {
 
   Assert.equal(
     Services.search.defaultEngine.name,
-    getDefaultEngineName(true),
+    "Test search engine",
     "Should have the expected engine as default."
   );
   Assert.equal(
     Services.search.originalDefaultEngine.name,
-    getDefaultEngineName(true),
+    "Test search engine",
     "Should have the expected engine as the original"
   );
 
@@ -57,12 +57,12 @@ add_task(async function test_searchDefaultEngineUS() {
 
   Assert.equal(
     Services.search.defaultPrivateEngine.name,
-    getDefaultEngineName(true, true),
+    "engine-pref",
     "Should have the private default engine when separate private browsing is on."
   );
   Assert.equal(
     Services.search.originalPrivateDefaultEngine.name,
-    getDefaultEngineName(true, true),
+    "engine-pref",
     "Should have the original private engine set correctly when separate private browsing is on."
   );
 
