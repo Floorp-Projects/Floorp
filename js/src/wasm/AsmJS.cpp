@@ -1035,7 +1035,7 @@ class Type {
 
 static const unsigned VALIDATION_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 
-class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
+class MOZ_STACK_CLASS ModuleValidatorShared {
  public:
   class Func {
     const ParserName* name_;
@@ -1850,18 +1850,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
 // module (all the globals), the emission of bytecode for all the functions in
 // the module and the validation of function's pointer tables. It also finishes
 // the compilation of all the module's stubs.
-//
-// Rooting note: ModuleValidator is a stack class that contains unrooted
-// PropertyName (JSAtom) pointers.  This is safe because it cannot be
-// constructed without a TokenStream reference.  TokenStream is itself a stack
-// class that cannot be constructed without an AutoKeepAtoms being live on the
-// stack, which prevents collection of atoms.
-//
-// ModuleValidator is marked as rooted in the rooting analysis.  Don't add
-// non-JSAtom pointers, or this will break!
 template <typename Unit>
-class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
-    : public ModuleValidatorShared {
+class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
  private:
   AsmJSParser<Unit>& parser_;
 

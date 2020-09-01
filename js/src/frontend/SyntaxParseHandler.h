@@ -39,17 +39,6 @@ class SyntaxParseHandler {
   const ParserAtom* lastAtom;
   TokenPos lastStringPos;
 
-  // WARNING: Be careful about adding fields to this function, that might be
-  //          GC things (like JSAtom*).  The JS_HAZ_ROOTED causes the GC
-  //          analysis to *ignore* anything that might be a rooting hazard in
-  //          this class.  The |lastAtom| field above is safe because
-  //          SyntaxParseHandler only appears as a field in
-  //          PerHandlerParser<SyntaxParseHandler>, and that class inherits
-  //          from ParserBase which contains a reference to a CompilationInfo,
-  //          which has an AutoKeepAtoms field that prevents atoms from being
-  //          moved around while the AutoKeepAtoms lives -- which is longer
-  //          than the lifetime of any of the parser classes.
-
  public:
   enum Node {
     NodeFailure = 0,
@@ -736,7 +725,7 @@ class SyntaxParseHandler {
   }
 
   void setPrivateNameKind(Node node, PrivateNameKind kind) {}
-} JS_HAZ_ROOTED;  // See the top of SyntaxParseHandler for why this is safe.
+};
 
 }  // namespace frontend
 }  // namespace js

@@ -224,8 +224,6 @@ struct KeywordInfo;
 
 namespace js {
 
-class AutoKeepAtoms;
-
 namespace frontend {
 
 extern TokenKind ReservedWordTokenKind(const ParserName* name);

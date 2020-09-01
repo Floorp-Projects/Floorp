@@ -1639,8 +1639,6 @@ class LexicalScopeNode : public ParseNode {
 
   ParserScopeData<LexicalScope>* scopeBindings() const {
     MOZ_ASSERT(!isEmptyScope());
-    // Bindings' GC safety depend on the presence of an AutoKeepAtoms that
-    // the rest of the frontend also depends on.
     return bindings;
   }
 
