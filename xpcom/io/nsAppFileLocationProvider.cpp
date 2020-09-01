@@ -427,8 +427,5 @@ nsAppFileLocationProvider::GetFiles(const char* aProp,
     NS_ADDREF(*aResult);
     rv = NS_OK;
   }
-  if (!strcmp(aProp, NS_APP_DISTRIBUTION_SEARCH_DIR_LIST)) {
-    return NS_NewEmptyEnumerator(aResult);
-  }
   return rv;
 }
