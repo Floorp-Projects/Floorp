@@ -583,6 +583,13 @@ function synthesizeNativeMouseEvent(aTarget, aX, aY, aType, aObserver = null) {
   return true;
 }
 
+// Promise-returning variant of synthesizeNativeMouseEvent
+function promiseNativeMouseEvent(aTarget, aX, aY, aType) {
+  return new Promise(resolve => {
+    synthesizeNativeMouseEvent(aTarget, aX, aY, aType, resolve);
+  });
+}
+
 function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
   var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(
@@ -645,7 +652,8 @@ function moveMouseAndScrollWheelOver(
   dx,
   dy,
   testDriver,
-  waitForScroll = true
+  waitForScroll = true,
+  scrollDelta = 10
 ) {
   return synthesizeNativeMouseMoveAndWaitForMoveEvent(
     target,
@@ -658,7 +666,7 @@ function moveMouseAndScrollWheelOver(
           dx,
           dy,
           0,
-          -10,
+          -scrollDelta,
           testDriver
         );
       } else {
@@ -667,7 +675,7 @@ function moveMouseAndScrollWheelOver(
           dx,
           dy,
           0,
-          -10,
+          -scrollDelta,
           testDriver
         );
       }
@@ -682,10 +690,18 @@ function promiseMoveMouseAndScrollWheelOver(
   target,
   dx,
   dy,
-  waitForScroll = true
+  waitForScroll = true,
+  scrollDelta = 10
 ) {
   return new Promise(resolve => {
-    moveMouseAndScrollWheelOver(target, dx, dy, resolve, waitForScroll);
+    moveMouseAndScrollWheelOver(
+      target,
+      dx,
+      dy,
+      resolve,
+      waitForScroll,
+      scrollDelta
+    );
   });
 }
 
@@ -772,6 +788,75 @@ function* dragVerticalScrollbar(
       mouseY + distance,
       nativeMouseUpEventMsg(),
       testDriver
+    );
+  };
+}
+
+// Synthesizes a native mouse drag, starting at offset (mouseX, mouseY) from
+// the given target. The drag occurs in the given number of steps, to a final
+// destination of (mouseX + distanceX, mouseY + distanceY) from the target.
+// Returns a promise (wrapped in a function, so it doesn't execute immediately)
+// that should be awaited after the mousemoves have been processed by the widget
+// code, to end the drag. This is important otherwise the OS can sometimes
+// reorder the events and the drag doesn't have the intended effect (see
+// bug 1368603).
+// Example usage:
+//   let dragFinisher = await promiseNativeMouseDrag(myElement, 0, 0);
+//   await myIndicationThatDragHadAnEffect;
+//   await dragFinisher();
+async function promiseNativeMouseDrag(
+  target,
+  mouseX,
+  mouseY,
+  distanceX = 20,
+  distanceY = 20,
+  steps = 20
+) {
+  var targetElement = elementForTarget(target);
+  dump(
+    "Starting drag at " +
+      mouseX +
+      ", " +
+      mouseY +
+      " from top-left of #" +
+      targetElement.id +
+      "\n"
+  );
+
+  // Move the mouse to the target position
+  await promiseNativeMouseEvent(
+    target,
+    mouseX,
+    mouseY,
+    nativeMouseMoveEventMsg()
+  );
+  // mouse down
+  await promiseNativeMouseEvent(
+    target,
+    mouseX,
+    mouseY,
+    nativeMouseDownEventMsg()
+  );
+  // drag vertically by |increment| until we reach the specified distance
+  for (var s = 1; s <= steps; s++) {
+    let dx = distanceX * (s / steps);
+    let dy = distanceY * (s / steps);
+    dump(`Dragging to ${mouseX + dx}, ${mouseY + dy} from target\n`);
+    await promiseNativeMouseEvent(
+      target,
+      mouseX + dx,
+      mouseY + dy,
+      nativeMouseMoveEventMsg()
+    );
+  }
+
+  // and return a function-wrapped promise to call afterwards to finish the drag
+  return function() {
+    return promiseNativeMouseEvent(
+      target,
+      mouseX + distanceX,
+      mouseY + distanceY,
+      nativeMouseUpEventMsg()
     );
   };
 }
