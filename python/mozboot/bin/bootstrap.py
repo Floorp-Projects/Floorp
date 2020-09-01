@@ -4,172 +4,276 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This script provides one-line bootstrap support to configure systems to build
-# the tree.
-#
-# The role of this script is to load the Python modules containing actual
-# bootstrap support. It does this through various means, including fetching
-# content from the upstream source repository.
+# the tree. It does so by cloning the repo before calling directly into `mach
+# bootstrap`.
+
+# Note that this script can't assume anything in particular about the host
+# Python environment (except that it's run with a sufficiently recent version of
+# Python 3), so we are restricted to stdlib modules.
 
 from __future__ import absolute_import, print_function, unicode_literals
-
-WRONG_PYTHON_VERSION_MESSAGE = '''
-Bootstrap currently only runs on Python 2.7 or Python 3.5+.
-Please try re-running with python2.7 or python3.5+.
-
-If these aren't available on your system, you may need to install them.
-Look for a "python2" or "python3.5" package in your package manager.
-'''
 
 import sys
 
 major, minor = sys.version_info[:2]
-if (major == 2 and minor < 7) or (major == 3 and minor < 5):
-    print(WRONG_PYTHON_VERSION_MESSAGE)
+if (major < 3) or (major == 3 and minor < 5):
+    print('Bootstrap currently only runs on Python 3.5+.'
+          'Please try re-running with python3.5+.')
     sys.exit(1)
 
 import os
 import shutil
+import stat
+import subprocess
 import tempfile
 import zipfile
 
-from io import BytesIO
 from optparse import OptionParser
+from urllib.request import urlopen
 
-# NOTE: This script is intended to be run with a vanilla Python install.  We
-# have to rely on the standard library instead of Python 2+3 helpers like
-# the six module.
-try:
-    from urllib2 import urlopen
-except ImportError:
-    from urllib.request import urlopen
+CLONE_MERCURIAL_PULL_FAIL = '''
+Failed to pull from hg.mozilla.org.
 
+This is most likely because of unstable network connection.
+Try running `cd %s && hg pull https://hg.mozilla.org/mozilla-unified` manually,
+or download a mercurial bundle and use it:
+https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles'''
 
-# The next two variables define where in the repository the Python files
-# reside. This is used to remotely download file content when it isn't
-# available locally.
-REPOSITORY_PATH_PREFIX = 'python/mozboot/'
-
-TEMPDIR = None
-
-
-def setup_proxy():
-    # Some Linux environments define ALL_PROXY, which is a SOCKS proxy
-    # intended for all protocols. Python doesn't currently automatically
-    # detect this like it does for http_proxy and https_proxy.
-    if 'ALL_PROXY' in os.environ and 'https_proxy' not in os.environ:
-        os.environ['https_proxy'] = os.environ['ALL_PROXY']
-    if 'ALL_PROXY' in os.environ and 'http_proxy' not in os.environ:
-        os.environ['http_proxy'] = os.environ['ALL_PROXY']
+WINDOWS = sys.platform.startswith('win32') or sys.platform.startswith('msys')
+VCS_HUMAN_READABLE = {
+    'hg': 'Mercurial',
+    'git': 'Git',
+}
 
 
-def fetch_files(repo_url, repo_rev, repo_type):
-    setup_proxy()
-    repo_url = repo_url.rstrip('/')
+def which(name):
+    """Python implementation of which.
 
-    files = {}
+    It returns the path of an executable or None if it couldn't be found.
+    """
+    # git-cinnabar.exe doesn't exist, but .exe versions of the other executables
+    # do.
+    if WINDOWS and name != 'git-cinnabar':
+        name += '.exe'
+    search_dirs = os.environ['PATH'].split(os.pathsep)
 
-    if repo_type == 'hgweb':
-        url = repo_url + '/archive/%s.zip/python/mozboot' % repo_rev
-        req = urlopen(url=url, timeout=30)
-        data = BytesIO(req.read())
-        data.seek(0)
-        zip = zipfile.ZipFile(data, 'r')
-        for f in zip.infolist():
-            # The paths are prefixed with the repo and revision name before the
-            # directory name.
-            offset = f.filename.find(REPOSITORY_PATH_PREFIX) + len(REPOSITORY_PATH_PREFIX)
-            name = f.filename[offset:]
+    for path in search_dirs:
+        test = os.path.join(path, name)
+        if os.path.isfile(test) and os.access(test, os.X_OK):
+            return test
 
-            # We only care about the Python modules.
-            if not name.startswith('mozboot/'):
-                continue
+    return None
 
-            files[name] = zip.read(f)
 
-        # Retrieve distro script
-        url = repo_url + '/archive/%s.zip/third_party/python/distro/distro.py' % repo_rev
-        req = urlopen(url=url, timeout=30)
-        data = BytesIO(req.read())
-        data.seek(0)
-        zip = zipfile.ZipFile(data, 'r')
-        files["distro.py"] = zip.read(zip.infolist()[0])
+def validate_clone_dest(dest):
+    dest = os.path.abspath(dest)
 
+    if not os.path.exists(dest):
+        return dest
+
+    if not os.path.isdir(dest):
+        print('ERROR! Destination %s exists but is not a directory.' % dest)
+        return None
+
+    if not os.listdir(dest):
+        return dest
     else:
-        raise NotImplementedError('Not sure how to handle repo type.', repo_type)
+        print('ERROR! Destination directory %s exists but is nonempty.' %
+              dest)
+        return None
 
-    return files
+
+def input_clone_dest(vcs, no_interactive):
+    repo_name = 'mozilla-unified'
+    print('Cloning into %s using %s...' % (repo_name, VCS_HUMAN_READABLE[vcs]))
+    while True:
+        dest = None
+        if not no_interactive:
+            dest = input('Destination directory for clone (leave empty to use '
+                         'default destination of %s): ' % repo_name).strip()
+        if not dest:
+            dest = repo_name
+        dest = validate_clone_dest(os.path.expanduser(dest))
+        if dest:
+            return dest
+        if no_interactive:
+            return None
 
 
-def ensure_environment(repo_url=None, repo_rev=None, repo_type=None):
-    """Ensure we can load the Python modules necessary to perform bootstrap."""
+def hg_clone_firefox(hg, dest):
+    # We create an empty repo then modify the config before adding data.
+    # This is necessary to ensure storage settings are optimally
+    # configured.
+    args = [
+        hg,
+        # The unified repo is generaldelta, so ensure the client is as
+        # well.
+        '--config', 'format.generaldelta=true',
+        'init',
+        dest
+    ]
+    res = subprocess.call(args)
+    if res:
+        print('unable to create destination repo; please try cloning manually')
+        return None
 
+    # Strictly speaking, this could overwrite a config based on a template
+    # the user has installed. Let's pretend this problem doesn't exist
+    # unless someone complains about it.
+    with open(os.path.join(dest, '.hg', 'hgrc'), 'a') as fh:
+        fh.write('[paths]\n')
+        fh.write('default = https://hg.mozilla.org/mozilla-unified\n')
+        fh.write('\n')
+
+        # The server uses aggressivemergedeltas which can blow up delta chain
+        # length. This can cause performance to tank due to delta chains being
+        # too long. Limit the delta chain length to something reasonable
+        # to bound revlog read time.
+        fh.write('[format]\n')
+        fh.write('# This is necessary to keep performance in check\n')
+        fh.write('maxchainlen = 10000\n')
+
+    res = subprocess.call(
+        [hg, 'pull', 'https://hg.mozilla.org/mozilla-unified'], cwd=dest)
+    print('')
+    if res:
+        print(CLONE_MERCURIAL_PULL_FAIL % dest)
+        return None
+
+    print('updating to "central" - the development head of Gecko and Firefox')
+    res = subprocess.call([hg, 'update', '-r', 'central'], cwd=dest)
+    if res:
+        print('error updating; you will need to `cd %s && hg update -r central` '
+              'manually' % dest)
+    return dest
+
+
+def git_clone_firefox(git, dest, watchman):
+    tempdir = None
+    cinnabar = None
+    env = dict(os.environ)
     try:
-        from mozboot.bootstrap import Bootstrapper
-        return Bootstrapper
-    except ImportError:
-        # The first fallback is to assume we are running from a tree checkout
-        # and have the files in a sibling directory.
-        pardir = os.path.join(os.path.dirname(__file__), os.path.pardir)
-        include = os.path.normpath(pardir)
+        cinnabar = which('git-cinnabar')
+        if not cinnabar:
+            cinnabar_url = ('https://github.com/glandium/git-cinnabar/archive/'
+                            'master.zip')
+            # If git-cinnabar isn't installed already, that's fine; we can
+            # download a temporary copy. `mach bootstrap` will clone a full copy
+            # of the repo in the state dir; we don't want to copy all that logic
+            # to this tiny bootstrapping script.
+            tempdir = tempfile.mkdtemp()
+            with open(os.path.join(tempdir, 'git-cinnabar.zip'),
+                      mode='w+b') as archive:
+                with urlopen(cinnabar_url) as repo:
+                    shutil.copyfileobj(repo, archive)
+                archive.seek(0)
+                with zipfile.ZipFile(archive) as zipf:
+                    zipf.extractall(path=tempdir)
+            cinnabar_dir = os.path.join(tempdir, 'git-cinnabar-master')
+            cinnabar = os.path.join(cinnabar_dir, 'git-cinnabar')
+            # Make git-cinnabar and git-remote-hg executable.
+            st = os.stat(cinnabar)
+            os.chmod(cinnabar, st.st_mode | stat.S_IEXEC)
+            st = os.stat(os.path.join(cinnabar_dir, 'git-remote-hg'))
+            os.chmod(os.path.join(cinnabar_dir, 'git-remote-hg'),
+                     st.st_mode | stat.S_IEXEC)
+            env['PATH'] = cinnabar_dir + os.pathsep + env['PATH']
+            subprocess.check_call(['git', 'cinnabar', 'download'],
+                                  cwd=cinnabar_dir, env=env)
+            print('WARNING! git-cinnabar is required for Firefox development  '
+                  'with git. After the clone is complete, the bootstrapper '
+                  'will ask if you would like to configure git; answer yes, '
+                  'and be sure to add git-cinnabar to your PATH according to '
+                  'the bootstrapper output.')
 
-        sys.path.append(include)
-        try:
-            from mozboot.bootstrap import Bootstrapper
-            return Bootstrapper
-        except ImportError:
-            sys.path.pop()
+        # We're guaranteed to have `git-cinnabar` installed now.
+        # Configure git per the git-cinnabar requirements.
+        subprocess.check_call(
+            [git, 'clone', '-b', 'bookmarks/central',
+             'hg::https://hg.mozilla.org/mozilla-unified', dest], env=env)
+        subprocess.check_call([git, 'config', 'fetch.prune', 'true'], cwd=dest,
+                              env=env)
+        subprocess.check_call([git, 'config', 'pull.ff', 'only'], cwd=dest,
+                              env=env)
 
-            # The next fallback is to download the files from the source
-            # repository.
-            files = fetch_files(repo_url, repo_rev, repo_type)
+        watchman_sample = os.path.join(
+            dest, '.git/hooks/fsmonitor-watchman.sample')
+        # Older versions of git didn't include fsmonitor-watchman.sample.
+        if watchman and os.path.exists(watchman_sample):
+            print('Configuring watchman')
+            watchman_config = os.path.join(dest, '.git/hooks/query-watchman')
+            if not os.path.exists(watchman_config):
+                print('Copying %s to %s' % (watchman_sample, watchman_config))
+                copy_args = ['cp', '.git/hooks/fsmonitor-watchman.sample',
+                             '.git/hooks/query-watchman']
+                subprocess.check_call(copy_args, cwd=dest)
 
-            # Install them into a temporary location. They will be deleted
-            # after this script has finished executing.
-            global TEMPDIR
-            TEMPDIR = tempfile.mkdtemp()
+            config_args = [git, 'config', 'core.fsmonitor',
+                           '.git/hooks/query-watchman']
+            subprocess.check_call(config_args, cwd=dest, env=env)
+        return dest
+    finally:
+        if not cinnabar:
+            print('Failed to install git-cinnabar. Try performing a manual '
+                  'installation: https://github.com/glandium/git-cinnabar/wiki/'
+                  'Mozilla:-A-git-workflow-for-Gecko-development')
+        if tempdir:
+            shutil.rmtree(tempdir)
 
-            for relpath in files.keys():
-                destpath = os.path.join(TEMPDIR, relpath)
-                destdir = os.path.dirname(destpath)
 
-                if not os.path.exists(destdir):
-                    os.makedirs(destdir)
+def clone(vcs, no_interactive):
+    hg = which('hg')
+    if not hg:
+        print('Mercurial is not installed. Mercurial is required to clone '
+              'Firefox%s.' % (
+                  ', even when cloning with Git' if vcs == 'git' else ''))
+        print('Try installing hg with `pip3 install Mercurial`.')
+        return None
+    if vcs == 'hg':
+        binary = hg
+    else:
+        binary = which(vcs)
+        if not binary:
+            print('Git is not installed.')
+            print('Try installing git using your system package manager.')
+            return None
 
-                with open(destpath, 'wb') as fh:
-                    fh.write(files[relpath])
+    dest = input_clone_dest(vcs, no_interactive)
+    if not dest:
+        return None
 
-            # This should always work.
-            sys.path.append(TEMPDIR)
-            from mozboot.bootstrap import Bootstrapper
-            return Bootstrapper
+    print('Cloning Firefox %s repository to %s' % (VCS_HUMAN_READABLE[vcs],
+                                                   dest))
+    if vcs == 'hg':
+        return hg_clone_firefox(binary, dest)
+    else:
+        watchman = which('watchman')
+        return git_clone_firefox(binary, dest, watchman)
+
+
+def bootstrap(srcdir, application_choice, no_interactive, no_system_changes):
+    args = [sys.executable, os.path.join(srcdir, 'mach'), 'bootstrap']
+    if application_choice:
+        args += ['--application-choice', application_choice]
+    if no_interactive:
+        args += ['--no-interactive']
+    if no_system_changes:
+        args += ['--no-system-changes']
+    print('Running `%s`' % ' '.join(args))
+    return subprocess.call(args, cwd=srcdir)
 
 
 def main(args):
     parser = OptionParser()
-    parser.add_option('-r', '--repo-url', dest='repo_url',
-                      default='https://hg.mozilla.org/mozilla-central/',
-                      help='Base URL of source control repository where bootstrap files can '
-                      'be downloaded.')
-    parser.add_option('--repo-rev', dest='repo_rev',
-                      default='default',
-                      help='Revision of files in repository to fetch')
-    parser.add_option('--repo-type', dest='repo_type',
-                      default='hgweb',
-                      help='The type of the repository. This defines how we fetch file '
-                      'content. Like --repo, you should not need to set this.')
-
     parser.add_option('--application-choice', dest='application_choice',
                       help='Pass in an application choice (see "APPLICATIONS" in '
                       'python/mozboot/mozboot/bootstrap.py) instead of using the '
                       'default interactive prompt.')
-    parser.add_option('--vcs', dest='vcs', default=None,
+    parser.add_option('--vcs', dest='vcs', default='hg', choices=['git', 'hg'],
                       help='VCS (hg or git) to use for downloading the source code, '
                       'instead of using the default interactive prompt.')
     parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
                       help='Answer yes to any (Y/n) interactive prompts.')
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      help='Print extra runtime information useful for debugging and '
-                      'bug reports.')
     parser.add_option('--no-system-changes', dest='no_system_changes', action='store_true',
                       help='Only executes actions that leave the system '
                       'configuration alone.')
@@ -177,29 +281,15 @@ def main(args):
     options, leftover = parser.parse_args(args)
 
     try:
-        try:
-            cls = ensure_environment(options.repo_url, options.repo_rev,
-                                     options.repo_type)
-        except Exception as e:
-            print('Could not load the bootstrap Python environment.\n')
-            print('This should never happen. Consider filing a bug.\n')
-            print('\n')
-
-            if options.debug:
-                # Raise full tracebacks during debugging and for bug reporting.
-                raise
-
-            print(e)
+        srcdir = clone(options.vcs, options.no_interactive)
+        if not srcdir:
             return 1
-
-        dasboot = cls(choice=options.application_choice, no_interactive=options.no_interactive,
-                      vcs=options.vcs, no_system_changes=options.no_system_changes)
-        dasboot.bootstrap()
-
-        return 0
-    finally:
-        if TEMPDIR is not None:
-            shutil.rmtree(TEMPDIR)
+        print('Clone complete.')
+        return bootstrap(srcdir, options.application_choice,
+                         options.no_interactive, options.no_system_changes)
+    except Exception:
+        print('Could not bootstrap Firefox! Consider filing a bug.')
+        raise
 
 
 if __name__ == '__main__':
