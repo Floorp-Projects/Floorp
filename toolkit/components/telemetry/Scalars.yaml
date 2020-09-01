@@ -3621,6 +3621,22 @@ gfx:
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
+  linux_window_protocol:
+    bug_numbers:
+      - 1645732
+    description: >
+      Windowing protocol on Linux. Can be Wayland, WaylandDRM, XWayland, or X11
+    expires: never
+    kind: string
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - aosmond@mozilla.com
+      - mkaply@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
 
 # The following section contains the form autofill related scalars.
 formautofill:
