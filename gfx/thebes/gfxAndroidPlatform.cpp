@@ -166,7 +166,7 @@ void gfxAndroidPlatform::GetCommonFallbackFonts(
   static const char kNotoSansCJKJP[] = "Noto Sans CJK JP";
   static const char kNotoColorEmoji[] = "Noto Color Emoji";
 
-  if (aPresentation == eFontPresentation::Emoji) {
+  if (PrefersColor(aPresentation)) {
     aFontList.AppendElement(kNotoColorEmoji);
   }
 

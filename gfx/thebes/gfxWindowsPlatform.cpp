@@ -665,7 +665,7 @@ static const char kFontYuGothic[] = "Yu Gothic";
 void gfxWindowsPlatform::GetCommonFallbackFonts(
     uint32_t aCh, Script aRunScript, eFontPresentation aPresentation,
     nsTArray<const char*>& aFontList) {
-  if (aPresentation == eFontPresentation::Emoji) {
+  if (PrefersColor(aPresentation)) {
     aFontList.AppendElement(kFontSegoeUIEmoji);
     aFontList.AppendElement(kFontTwemojiMozilla);
   }

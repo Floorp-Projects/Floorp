@@ -913,7 +913,7 @@ gfxFont* gfxPlatformFontList::SystemFindFontForChar(
       font = candidate;
     } else {
       bool hasColorGlyph = candidate->HasColorGlyphFor(aCh, aNextCh);
-      if (hasColorGlyph == (aPresentation == eFontPresentation::Emoji)) {
+      if (hasColorGlyph == PrefersColor(aPresentation)) {
         font = candidate;
       }
     }
@@ -930,7 +930,7 @@ gfxFont* gfxPlatformFontList::SystemFindFontForChar(
     // a candidate above, prefer that one.
     if (font && aPresentation != eFontPresentation::Any && candidate) {
       bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
-      if (hasColorGlyph != (aPresentation == eFontPresentation::Emoji)) {
+      if (hasColorGlyph != PrefersColor(aPresentation)) {
         font = candidate;
       }
     }
@@ -1039,7 +1039,7 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
               return font;
             }
             bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
-            if (hasColorGlyph == (aPresentation == eFontPresentation::Emoji)) {
+            if (hasColorGlyph == PrefersColor(aPresentation)) {
               return font;
             }
           }
@@ -1053,7 +1053,7 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
               return font;
             }
             bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
-            if (hasColorGlyph == (aPresentation == eFontPresentation::Emoji)) {
+            if (hasColorGlyph == PrefersColor(aPresentation)) {
               return font;
             }
           }

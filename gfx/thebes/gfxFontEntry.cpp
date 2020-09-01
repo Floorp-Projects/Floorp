@@ -1802,8 +1802,7 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
         }
         bool hasColorGlyph =
             font->HasColorGlyphFor(aMatchData->mCh, aMatchData->mNextCh);
-        if (hasColorGlyph !=
-            (aMatchData->mPresentation == eFontPresentation::Emoji)) {
+        if (hasColorGlyph != PrefersColor(aMatchData->mPresentation)) {
           distance += kPresentationMismatch;
         }
       }
@@ -1857,8 +1856,7 @@ void gfxFontFamily::SearchAllFontsForChar(GlobalFontMatch* aMatchData) {
         }
         bool hasColorGlyph =
             font->HasColorGlyphFor(aMatchData->mCh, aMatchData->mNextCh);
-        if (hasColorGlyph !=
-            (aMatchData->mPresentation == eFontPresentation::Emoji)) {
+        if (hasColorGlyph != PrefersColor(aMatchData->mPresentation)) {
           distance += kPresentationMismatch;
         }
       }
