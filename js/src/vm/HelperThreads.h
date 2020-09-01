@@ -22,6 +22,7 @@
 #include "jsapi.h"
 
 #include "ds/Fifo.h"
+#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo
 #include "jit/JitContext.h"
 #include "js/CompileOptions.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone::GCState
@@ -329,6 +330,7 @@ class GlobalHelperThreadState {
 
   JSScript* finishSingleParseTask(JSContext* cx, ParseTaskKind kind,
                                   JS::OffThreadToken* token);
+  bool generateLCovSources(JSContext* cx, ParseTask* parseTask);
   bool finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
                             JS::OffThreadToken* token,
                             MutableHandle<ScriptVector> scripts);
@@ -762,6 +764,9 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   // Holds the ScriptSourceObjects generated for the script compilation.
   GCVector<ScriptSourceObject*, 1, SystemAllocPolicy> sourceObjects;
 
+  // Holds the CompilationInfo generated for the script compilation.
+  UniquePtr<frontend::CompilationInfo> compilationInfo_;
+
   // Any errors or warnings produced during compilation. These are reported
   // when finishing the script.
   Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy> errors;
@@ -777,6 +782,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
 
   void activate(JSRuntime* rt);
   virtual void parse(JSContext* cx) = 0;
+  bool instantiateStencils(JSContext* cx);
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 

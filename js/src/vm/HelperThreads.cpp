@@ -528,6 +528,10 @@ void ParseTask::trace(JSTracer* trc) {
   TraceRoot(trc, &parseGlobal, "ParseTask::parseGlobal");
   scripts.trace(trc);
   sourceObjects.trace(trc);
+
+  if (compilationInfo_) {
+    compilationInfo_->trace(trc);
+  }
 }
 
 size_t ParseTask::sizeOfExcludingThis(
@@ -606,19 +610,41 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
+
+  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
+      cx, js_new<frontend::CompilationInfo>(cx, options));
+  if (!compilationInfo) {
+    js::ReportOutOfMemory(cx);
     return;
   }
 
-  if (!frontend::CompileGlobalScriptToStencil(compilationInfo.get(), data,
+  if (!compilationInfo.get()->input.initForGlobal(cx)) {
+    return;
+  }
+
+  if (!frontend::CompileGlobalScriptToStencil(*compilationInfo, data,
                                               scopeKind)) {
     return;
   }
 
+  compilationInfo_.reset(compilationInfo.release());
+
+  if (options.useOffThreadParseGlobal) {
+    Unused << instantiateStencils(cx);
+  }
+}
+
+bool ParseTask::instantiateStencils(JSContext* cx) {
+  if (!compilationInfo_) {
+    return false;
+  }
+
+  // Override the current context.
+  // FIXME: Do not store JSContext in CompilationInfo.
+  compilationInfo_->cx = cx;
+
   frontend::CompilationGCOutput gcOutput(cx);
-  bool result = frontend::InstantiateStencils(compilationInfo.get(), gcOutput);
+  bool result = frontend::InstantiateStencils(*compilationInfo_, gcOutput);
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid
@@ -628,12 +654,14 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
     sourceObjects.infallibleAppend(gcOutput.sourceObject);
   }
 
-  if (!result) {
-    return;
+  if (result) {
+    MOZ_ASSERT(gcOutput.script);
+    MOZ_ASSERT_IF(gcOutput.module,
+                  gcOutput.module->script() == gcOutput.script);
+    scripts.infallibleAppend(gcOutput.script);
   }
 
-  MOZ_ASSERT(gcOutput.script);
-  scripts.infallibleAppend(gcOutput.script);
+  return result;
 }
 
 template <typename Unit>
@@ -657,37 +685,28 @@ template <typename Unit>
 void ModuleParseTask<Unit>::parse(JSContext* cx) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
-  CompileOptions moduleOptions(cx, options);
-  moduleOptions.setModule();
+  options.setModule();
 
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, moduleOptions));
-  if (!compilationInfo.get().input.initForModule(cx)) {
+  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
+      cx, js_new<frontend::CompilationInfo>(cx, options));
+  if (!compilationInfo) {
+    js::ReportOutOfMemory(cx);
     return;
   }
 
-  if (!frontend::ParseModuleToStencil(compilationInfo.get(), data)) {
+  if (!compilationInfo.get()->input.initForModule(cx)) {
     return;
   }
 
-  frontend::CompilationGCOutput gcOutput(cx);
-  bool result = frontend::InstantiateStencils(compilationInfo.get(), gcOutput);
-
-  // Whatever happens to the top-level script compilation (even if it fails),
-  // we must finish initializing the SSO.  This is because there may be valid
-  // inner scripts observable by the debugger which reference the partially-
-  // initialized SSO.
-  if (gcOutput.sourceObject) {
-    sourceObjects.infallibleAppend(gcOutput.sourceObject);
-  }
-
-  if (!result) {
+  if (!frontend::ParseModuleToStencil(*compilationInfo, data)) {
     return;
   }
 
-  MOZ_ASSERT(gcOutput.module);
-  MOZ_ASSERT(gcOutput.module->script());
-  scripts.infallibleAppend(gcOutput.module->script());
+  compilationInfo_.reset(compilationInfo.release());
+
+  if (options.useOffThreadParseGlobal) {
+    Unused << instantiateStencils(cx);
+  }
 }
 
 ScriptDecodeTask::ScriptDecodeTask(JSContext* cx,
@@ -1790,64 +1809,83 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
     return nullptr;
   }
 
-  // Generate initial LCovSources for generated inner functions.
   if (coverage::IsLCovEnabled()) {
-    Rooted<GCVector<JSScript*>> workList(cx, GCVector<JSScript*>(cx));
-
-    if (!workList.appendAll(parseTask->scripts)) {
+    if (!generateLCovSources(cx, parseTask.get().get())) {
       return nullptr;
-    }
-
-    RootedScript elem(cx);
-    while (!workList.empty()) {
-      elem = workList.popCopy();
-
-      // Initialize LCov data for the script.
-      if (!coverage::InitScriptCoverage(cx, elem)) {
-        return nullptr;
-      }
-
-      // Add inner-function scripts to the work-list.
-      for (JS::GCCellPtr gcThing : elem->gcthings()) {
-        if (!gcThing.is<JSObject>()) {
-          continue;
-        }
-        JSObject* obj = &gcThing.as<JSObject>();
-
-        if (!obj->is<JSFunction>()) {
-          continue;
-        }
-        JSFunction* fun = &obj->as<JSFunction>();
-
-        // Ignore asm.js functions
-        if (!fun->isInterpreted()) {
-          continue;
-        }
-
-        MOZ_ASSERT(fun->hasBytecode(),
-                   "No lazy scripts exist when collecting coverage");
-        if (!workList.append(fun->nonLazyScript())) {
-          return nullptr;
-        }
-      }
     }
   }
 
   return std::move(parseTask.get());
 }
 
+// Generate initial LCovSources for generated inner functions.
+bool GlobalHelperThreadState::generateLCovSources(JSContext* cx,
+                                                  ParseTask* parseTask) {
+  Rooted<GCVector<JSScript*>> workList(cx, GCVector<JSScript*>(cx));
+
+  if (!workList.appendAll(parseTask->scripts)) {
+    return false;
+  }
+
+  RootedScript elem(cx);
+  while (!workList.empty()) {
+    elem = workList.popCopy();
+
+    // Initialize LCov data for the script.
+    if (!coverage::InitScriptCoverage(cx, elem)) {
+      return false;
+    }
+
+    // Add inner-function scripts to the work-list.
+    for (JS::GCCellPtr gcThing : elem->gcthings()) {
+      if (!gcThing.is<JSObject>()) {
+        continue;
+      }
+      JSObject* obj = &gcThing.as<JSObject>();
+
+      if (!obj->is<JSFunction>()) {
+        continue;
+      }
+      JSFunction* fun = &obj->as<JSFunction>();
+
+      // Ignore asm.js functions
+      if (!fun->isInterpreted()) {
+        continue;
+      }
+
+      MOZ_ASSERT(fun->hasBytecode(),
+                 "No lazy scripts exist when collecting coverage");
+      if (!workList.append(fun->nonLazyScript())) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 JSScript* GlobalHelperThreadState::finishSingleParseTask(
     JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
-  JS::RootedScript script(cx);
-
   Rooted<UniquePtr<ParseTask>> parseTask(
       cx, finishParseTaskCommon(cx, kind, token));
   if (!parseTask) {
     return nullptr;
   }
 
+  if (parseTask->compilationInfo_.get()) {
+    if (!parseTask->options.useOffThreadParseGlobal) {
+      if (!parseTask->instantiateStencils(cx)) {
+        return nullptr;
+      }
+
+      MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
+      return parseTask->scripts[0];
+    }
+  }
+
   MOZ_RELEASE_ASSERT(parseTask->scripts.length() <= 1);
 
+  JS::RootedScript script(cx);
   if (parseTask->scripts.length() > 0) {
     script = parseTask->scripts[0];
   }
