@@ -2983,6 +2983,215 @@ void TestBlocksRingBufferSerialization() {
   printf("TestBlocksRingBufferSerialization done\n");
 }
 
+void TestLiteralEmptyStringView() {
+  printf("TestLiteralEmptyStringView...\n");
+
+  static_assert(mozilla::LiteralEmptyStringView<char>() ==
+                std::string_view(""));
+  static_assert(!!mozilla::LiteralEmptyStringView<char>().data());
+  static_assert(mozilla::LiteralEmptyStringView<char>().length() == 0);
+
+  static_assert(mozilla::LiteralEmptyStringView<char16_t>() ==
+                std::basic_string_view<char16_t>(u""));
+  static_assert(!!mozilla::LiteralEmptyStringView<char16_t>().data());
+  static_assert(mozilla::LiteralEmptyStringView<char16_t>().length() == 0);
+
+  printf("TestLiteralEmptyStringView done\n");
+}
+
+void TestProfilerStringView() {
+  printf("TestProfilerStringView...\n");
+
+  // Used to verify implicit constructions, as this will normally be used in
+  // function parameters.
+  auto BS8V = [](mozilla::ProfilerString8View&& aBS8V) {
+    return std::move(aBS8V);
+  };
+
+  // Literal empty string.
+  MOZ_RELEASE_ASSERT(BS8V("").Data());
+  MOZ_RELEASE_ASSERT(BS8V("").Data()[0] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V("").Length() == 0);
+  MOZ_RELEASE_ASSERT(BS8V("").IsLiteral());
+  MOZ_RELEASE_ASSERT(!BS8V("").IsReference());
+
+  // Literal non-empty string.
+  MOZ_RELEASE_ASSERT(BS8V("hi").Data());
+  MOZ_RELEASE_ASSERT(BS8V("hi").Data()[0] == 'h');
+  MOZ_RELEASE_ASSERT(BS8V("hi").Data()[1] == 'i');
+  MOZ_RELEASE_ASSERT(BS8V("hi").Data()[2] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V("hi").Length() == 2);
+  MOZ_RELEASE_ASSERT(BS8V("hi").IsLiteral());
+  MOZ_RELEASE_ASSERT(!BS8V("hi").IsReference());
+
+  // std::string_view to a literal empty string.
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("")).Data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("")).Data()[0] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("")).Length() == 0);
+  MOZ_RELEASE_ASSERT(!BS8V(std::string_view("")).IsLiteral());
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("")).IsReference());
+
+  // std::string_view to a literal non-empty string.
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).Data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).Data()[0] == 'h');
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).Data()[1] == 'i');
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).Data()[2] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).Length() == 2);
+  MOZ_RELEASE_ASSERT(!BS8V(std::string_view("hi")).IsLiteral());
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).IsReference());
+
+  // Default std::string_view points at nullptr, ProfilerStringView converts it
+  // to the literal empty string.
+  MOZ_RELEASE_ASSERT(!std::string_view().data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view()).Data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view()).Data()[0] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view()).Length() == 0);
+  MOZ_RELEASE_ASSERT(BS8V(std::string_view()).IsLiteral());
+  MOZ_RELEASE_ASSERT(!BS8V(std::string_view()).IsReference());
+
+  // std::string to a literal empty string.
+  MOZ_RELEASE_ASSERT(BS8V(std::string("")).Data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string("")).Data()[0] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(std::string("")).Length() == 0);
+  MOZ_RELEASE_ASSERT(!BS8V(std::string("")).IsLiteral());
+  MOZ_RELEASE_ASSERT(BS8V(std::string("")).IsReference());
+
+  // std::string to a literal non-empty string.
+  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data()[0] == 'h');
+  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data()[1] == 'i');
+  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data()[2] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Length() == 2);
+  MOZ_RELEASE_ASSERT(!BS8V(std::string("hi")).IsLiteral());
+  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).IsReference());
+
+  // Default std::string_view contains an empty null-terminated string.
+  MOZ_RELEASE_ASSERT(std::string().data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string()).Data());
+  MOZ_RELEASE_ASSERT(BS8V(std::string()).Data()[0] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(std::string()).Length() == 0);
+  MOZ_RELEASE_ASSERT(!BS8V(std::string()).IsLiteral());
+  MOZ_RELEASE_ASSERT(BS8V(std::string()).IsReference());
+
+  class FakeNsCString {
+   public:
+    FakeNsCString(const char* aData, size_t aLength, bool aIsLiteral)
+        : mData(aData), mLength(aLength), mIsLiteral(aIsLiteral) {}
+
+    const char* Data() const { return mData; }
+    size_t Length() const { return mLength; }
+    bool IsLiteral() const { return mIsLiteral; }
+
+   private:
+    const char* mData;
+    size_t mLength;
+    bool mIsLiteral;
+  };
+
+  // FakeNsCString to nullptr.
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString(nullptr, 0, true)).Data());
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString(nullptr, 0, true)).Data()[0] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString(nullptr, 0, true)).Length() == 0);
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString(nullptr, 0, true)).IsLiteral());
+  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString(nullptr, 0, true)).IsReference());
+
+  // FakeNsCString to a literal empty string.
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("", 0, true)).Data());
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("", 0, true)).Data()[0] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("", 0, true)).Length() == 0);
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("", 0, true)).IsLiteral());
+  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString("", 0, true)).IsReference());
+
+  // FakeNsCString to a literal non-empty string.
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).Data());
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).Data()[0] == 'h');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).Data()[1] == 'i');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).Data()[2] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).Length() == 2);
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).IsLiteral());
+  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString("hi", 2, true)).IsReference());
+
+  // FakeNsCString to a non-literal non-empty string.
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).Data());
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).Data()[0] == 'h');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).Data()[1] == 'i');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).Data()[2] == '\0');
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).Length() == 2);
+  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString("hi", 2, false)).IsLiteral());
+  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).IsReference());
+
+  // Serialization and deserialization (with ownership).
+  constexpr size_t bufferMaxSize = 1024;
+  constexpr ProfileChunkedBuffer::Length chunkMinSize = 128;
+  ProfileBufferChunkManagerWithLocalLimit cm(bufferMaxSize, chunkMinSize);
+  ProfileChunkedBuffer cb(ProfileChunkedBuffer::ThreadSafety::WithMutex, cm);
+
+  // Literal string, serialized as raw pointer.
+  MOZ_RELEASE_ASSERT(cb.PutObject(BS8V("hi")));
+  {
+    unsigned read = 0;
+    ProfilerString8View outerBS8V;
+    cb.ReadEach([&](ProfileBufferEntryReader& aER) {
+      ++read;
+      auto bs8v = aER.ReadObject<ProfilerString8View>();
+      MOZ_RELEASE_ASSERT(bs8v.Data());
+      MOZ_RELEASE_ASSERT(bs8v.Data()[0] == 'h');
+      MOZ_RELEASE_ASSERT(bs8v.Data()[1] == 'i');
+      MOZ_RELEASE_ASSERT(bs8v.Data()[2] == '\0');
+      MOZ_RELEASE_ASSERT(bs8v.Length() == 2);
+      MOZ_RELEASE_ASSERT(bs8v.IsLiteral());
+      MOZ_RELEASE_ASSERT(!bs8v.IsReference());
+      outerBS8V = std::move(bs8v);
+    });
+    MOZ_RELEASE_ASSERT(read == 1);
+    MOZ_RELEASE_ASSERT(outerBS8V.Data());
+    MOZ_RELEASE_ASSERT(outerBS8V.Data()[0] == 'h');
+    MOZ_RELEASE_ASSERT(outerBS8V.Data()[1] == 'i');
+    MOZ_RELEASE_ASSERT(outerBS8V.Data()[2] == '\0');
+    MOZ_RELEASE_ASSERT(outerBS8V.Length() == 2);
+    MOZ_RELEASE_ASSERT(outerBS8V.IsLiteral());
+    MOZ_RELEASE_ASSERT(!outerBS8V.IsReference());
+  }
+
+  cb.Clear();
+
+  // Non-literal string, content is serialized.
+  std::string hiString("hi");
+  MOZ_RELEASE_ASSERT(cb.PutObject(BS8V(hiString)));
+  {
+    unsigned read = 0;
+    ProfilerString8View outerBS8V;
+    cb.ReadEach([&](ProfileBufferEntryReader& aER) {
+      ++read;
+      auto bs8v = aER.ReadObject<ProfilerString8View>();
+      MOZ_RELEASE_ASSERT(bs8v.Data());
+      MOZ_RELEASE_ASSERT(bs8v.Data() != hiString.data());
+      MOZ_RELEASE_ASSERT(bs8v.Data()[0] == 'h');
+      MOZ_RELEASE_ASSERT(bs8v.Data()[1] == 'i');
+      MOZ_RELEASE_ASSERT(bs8v.Data()[2] == '\0');
+      MOZ_RELEASE_ASSERT(bs8v.Length() == 2);
+      // Special ownership case, neither a literal nor a reference!
+      MOZ_RELEASE_ASSERT(!bs8v.IsLiteral());
+      MOZ_RELEASE_ASSERT(!bs8v.IsReference());
+      // Test move of ownership.
+      outerBS8V = std::move(bs8v);
+      // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move)
+      MOZ_RELEASE_ASSERT(bs8v.Length() == 0);
+    });
+    MOZ_RELEASE_ASSERT(read == 1);
+    MOZ_RELEASE_ASSERT(outerBS8V.Data());
+    MOZ_RELEASE_ASSERT(outerBS8V.Data() != hiString.data());
+    MOZ_RELEASE_ASSERT(outerBS8V.Data()[0] == 'h');
+    MOZ_RELEASE_ASSERT(outerBS8V.Data()[1] == 'i');
+    MOZ_RELEASE_ASSERT(outerBS8V.Data()[2] == '\0');
+    MOZ_RELEASE_ASSERT(outerBS8V.Length() == 2);
+    MOZ_RELEASE_ASSERT(!outerBS8V.IsLiteral());
+    MOZ_RELEASE_ASSERT(!outerBS8V.IsReference());
+  }
+
+  printf("TestProfilerStringView done\n");
+}
+
 void TestProfilerDependencies() {
   TestPowerOfTwoMask();
   TestPowerOfTwo();
@@ -2999,6 +3208,8 @@ void TestProfilerDependencies() {
   TestBlocksRingBufferUnderlyingBufferChanges();
   TestBlocksRingBufferThreading();
   TestBlocksRingBufferSerialization();
+  TestLiteralEmptyStringView();
+  TestProfilerStringView();
 }
 
 class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
