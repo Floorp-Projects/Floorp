@@ -716,7 +716,7 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
-  if (!frontend::ParseModuleToStencil(*compilationInfo, data)) {
+  if (!frontend::ParseModuleToStencil(cx, *compilationInfo, data)) {
     return;
   }
 
