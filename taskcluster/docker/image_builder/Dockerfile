@@ -5,10 +5,10 @@
 FROM golang:1.14 as skopeo
 
 WORKDIR /go/src/
-RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v1.1.1", "https://github.com/containers/skopeo", "."]
-RUN ["/usr/bin/git", "checkout", "67abbb3cefbdc876447583d5ea45e76bf441eba7"]
+RUN ["git", "clone", "--no-checkout", "--depth=1", "--branch=v1.1.1", "https://github.com/containers/skopeo", "."]
+RUN ["git", "checkout", "67abbb3cefbdc876447583d5ea45e76bf441eba7"]
 ENV GO111MODULE=on CGO_ENABLED=0
-RUN ["/usr/local/go/bin/go", "build", \
+RUN ["go", "build", \
 	"-mod=vendor", "-o", "out/skopeo", \
 	"-tags", "exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp", \
 	# Set unixTempDirForBigFiles so skopeo will extract in a directory hidden by kaniko
@@ -18,9 +18,9 @@ RUN ["/usr/local/go/bin/go", "build", \
 
 FROM golang:1.14 as kaniko
 WORKDIR /go/src/
-RUN ["/usr/bin/git", "clone", "--no-checkout", "--depth=1", "--branch=v1.0.0", "https://github.com/GoogleContainerTools/kaniko", "."]
-RUN ["/usr/bin/git", "checkout", "146ec6a9cd6f87b4a12e8119ded575d5edca35ac"]
-RUN ["/usr/bin/make"]
+RUN ["git", "clone", "--no-checkout", "--depth=1", "--branch=v1.0.0", "https://github.com/GoogleContainerTools/kaniko", "."]
+RUN ["git", "checkout", "146ec6a9cd6f87b4a12e8119ded575d5edca35ac"]
+RUN ["make"]
 
 # Build the `build-image` command as a static binary using musl
 # The setup is loosely based on a stripped down version of
@@ -72,7 +72,7 @@ ADD --chown=rust:rust build-image/ ./
 # --out-dir is not yet stable
 ENV RUSTC_BOOTSTRAP=1
 # Build our application.
-RUN ["/home/rust/.cargo/bin/cargo", "build", "--target", "x86_64-unknown-linux-musl", "--out-dir=bin", "--release", "-Zunstable-options"]
+RUN ["cargo", "build", "--target", "x86_64-unknown-linux-musl", "--out-dir=bin", "--release", "-Zunstable-options"]
 
 FROM scratch as empty
 
