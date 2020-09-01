@@ -194,6 +194,10 @@ var PrintEventHandler = {
     printPreviewBrowser.classList.add("printPreviewBrowser");
     printPreviewBrowser.setAttribute("flex", "1");
     printPreviewBrowser.setAttribute("printpreview", "true");
+    // Disable the context menu for this browser. This is set as an attribute
+    // on the browser instead of using addEventListener since the latter
+    // was causing memory leaks.
+    printPreviewBrowser.setAttribute("oncontextmenu", "return false;");
     document.l10n.setAttributes(printPreviewBrowser, "printui-preview-label");
 
     // Create the stack for the loading indicator.
