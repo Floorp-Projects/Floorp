@@ -774,10 +774,9 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 }
 
 template <typename Unit>
-static bool ParseModuleToStencilImpl(CompilationInfo& compilationInfo,
+static bool ParseModuleToStencilImpl(JSContext* cx,
+                                     CompilationInfo& compilationInfo,
                                      SourceText<Unit>& srcBuf) {
-  JSContext* cx = compilationInfo.cx;
-
   MOZ_ASSERT(srcBuf.get());
 
   AutoAssertReportedException assertException(cx);
@@ -793,14 +792,16 @@ static bool ParseModuleToStencilImpl(CompilationInfo& compilationInfo,
   return true;
 }
 
-bool frontend::ParseModuleToStencil(CompilationInfo& compilationInfo,
+bool frontend::ParseModuleToStencil(JSContext* cx,
+                                    CompilationInfo& compilationInfo,
                                     SourceText<char16_t>& srcBuf) {
-  return ParseModuleToStencilImpl(compilationInfo, srcBuf);
+  return ParseModuleToStencilImpl(cx, compilationInfo, srcBuf);
 }
 
-bool frontend::ParseModuleToStencil(CompilationInfo& compilationInfo,
+bool frontend::ParseModuleToStencil(JSContext* cx,
+                                    CompilationInfo& compilationInfo,
                                     SourceText<Utf8Unit>& srcBuf) {
-  return ParseModuleToStencilImpl(compilationInfo, srcBuf);
+  return ParseModuleToStencilImpl(cx, compilationInfo, srcBuf);
 }
 
 template <typename Unit>
@@ -821,7 +822,7 @@ static ModuleObject* CompileModuleImpl(
     return nullptr;
   }
 
-  if (!ParseModuleToStencil(compilationInfo.get(), srcBuf)) {
+  if (!ParseModuleToStencil(cx, compilationInfo.get(), srcBuf)) {
     return nullptr;
   }
 
