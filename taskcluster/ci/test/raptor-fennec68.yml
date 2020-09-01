@@ -34,42 +34,6 @@ raptor-speedometer-fennec68:
             - --app=fennec
             - --binary=org.mozilla.firefox
 
-raptor-speedometer-fennec68-power:
-    description: "Raptor Speedometer power on Fennec68"
-    try-name: raptor-speedometer-fennec68-power
-    treeherder-symbol: Rap(sp-p-f68)
-    max-run-time: 2000
-    mozharness:
-        extra-options:
-            - --test=raptor-speedometer-fennec68
-            - --app=fennec
-            - --binary=org.mozilla.firefox
-            - --power-test
-
-raptor-scn-power-idle-fennec68:
-    description: "Raptor idle-browser power-usage test on Fennec68"
-    try-name: raptor-scn-power-idle-fennec68
-    treeherder-symbol: Rap(idl-p-f68)
-    max-run-time: 3600
-    mozharness:
-        extra-options:
-            - --test=raptor-scn-power-idle-fennec68
-            - --app=fennec
-            - --binary=org.mozilla.firefox
-            - --power-test
-
-raptor-scn-power-idle-bg-fennec68:
-    description: "Raptor idle-browser (backgrounded) power-usage measurement on Fennec68"
-    try-name: raptor-scn-power-idle-bg-fennec68
-    treeherder-symbol: Rap(idlbg-p-f68)
-    max-run-time: 3600
-    mozharness:
-        extra-options:
-            - --test=raptor-scn-power-idle-bg-fennec68
-            - --app=fennec
-            - --binary=org.mozilla.firefox
-            - --power-test
-
 raptor-youtube-playback-fennec68:
     description: "Raptor YouTube Playback on Fennec68"
     try-name: raptor-youtube-playback-fennec68
