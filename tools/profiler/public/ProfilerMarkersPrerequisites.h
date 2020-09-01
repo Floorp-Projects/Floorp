@@ -17,13 +17,13 @@
 
 #ifdef MOZ_GECKO_PROFILER
 
-namespace profilermarkers {
+namespace geckoprofiler::markers {
 
 // Default marker payload types, with no extra information, not even a marker
 // type and payload. This is intended for label-only markers.
 using NoPayload = ::mozilla::baseprofiler::markers::NoPayload;
 
-}  // namespace profilermarkers
+}  // namespace geckoprofiler::markers
 
 #endif  // MOZ_GECKO_PROFILER
 
