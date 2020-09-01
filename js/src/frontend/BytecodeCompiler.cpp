@@ -316,47 +316,52 @@ JSScript* frontend::CompileGlobalScript(
 }
 
 template <typename Unit>
-static bool CreateEvalScript(CompilationInfo& compilationInfo,
-                             SourceText<Unit>& srcBuf,
-                             js::Scope* enclosingScope, JSObject* enclosingEnv,
-                             CompilationGCOutput& gcOutput) {
-  JSContext* cx = compilationInfo.cx;
-
+static JSScript* CompileEvalScriptImpl(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    SourceText<Unit>& srcBuf, JS::Handle<js::Scope*> enclosingScope,
+    JS::Handle<JSObject*> enclosingEnv) {
   AutoAssertReportedException assertException(cx);
+
+  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  if (!compilationInfo.get().input.initForEval(cx, enclosingScope)) {
+    return nullptr;
+  }
+
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
   frontend::ScriptCompiler<Unit> compiler(cx, allocScope,
-                                          compilationInfo.input.options, srcBuf,
-                                          enclosingScope, enclosingEnv);
-  if (!compiler.createSourceAndParser(compilationInfo)) {
-    return false;
+                                          compilationInfo.get().input.options,
+                                          srcBuf, enclosingScope, enclosingEnv);
+  if (!compiler.createSourceAndParser(compilationInfo.get())) {
+    return nullptr;
   }
 
   uint32_t len = srcBuf.length();
-  SourceExtent extent =
-      SourceExtent::makeGlobalExtent(len, compilationInfo.input.options.lineno,
-                                     compilationInfo.input.options.column);
-  frontend::EvalSharedContext evalsc(cx, compilationInfo,
+  SourceExtent extent = SourceExtent::makeGlobalExtent(
+      len, compilationInfo.get().input.options.lineno,
+      compilationInfo.get().input.options.column);
+  frontend::EvalSharedContext evalsc(cx, compilationInfo.get(),
                                      compiler.compilationState(), extent);
-  if (!compiler.compileScriptToStencil(compilationInfo, &evalsc)) {
-    return false;
+  if (!compiler.compileScriptToStencil(compilationInfo.get(), &evalsc)) {
+    return nullptr;
   }
 
-  if (!InstantiateStencils(compilationInfo, gcOutput)) {
-    return false;
+  frontend::CompilationGCOutput gcOutput(cx);
+  if (!InstantiateStencils(compilationInfo.get(), gcOutput)) {
+    return nullptr;
   }
 
   assertException.reset();
-  return true;
+  return gcOutput.script;
 }
 
-bool frontend::CompileEvalScript(CompilationInfo& compilationInfo,
-                                 JS::SourceText<char16_t>& srcBuf,
-                                 js::Scope* enclosingScope,
-                                 JSObject* enclosingEnv,
-                                 CompilationGCOutput& gcOutput) {
-  return CreateEvalScript(compilationInfo, srcBuf, enclosingScope, enclosingEnv,
-                          gcOutput);
+JSScript* frontend::CompileEvalScript(JSContext* cx,
+                                      const JS::ReadOnlyCompileOptions& options,
+                                      JS::SourceText<char16_t>& srcBuf,
+                                      JS::Handle<js::Scope*> enclosingScope,
+                                      JS::Handle<JSObject*> enclosingEnv) {
+  return CompileEvalScriptImpl(cx, options, srcBuf, enclosingScope,
+                               enclosingEnv);
 }
 
 template <typename Unit>
