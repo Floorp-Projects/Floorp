@@ -260,6 +260,8 @@ class GeckoEngineSessionTest {
         assertEquals(true, observedCanGoForward)
     }
 
+    // This will be addressed on https://github.com/mozilla-mobile/android-components/issues/8312
+    @Suppress("deprecation")
     @Test
     fun contentDelegateNotifiesObserverAboutDownloads() {
         val engineSession = GeckoEngineSession(mock(),
