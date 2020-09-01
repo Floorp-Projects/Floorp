@@ -24,7 +24,8 @@
 
 namespace js {
 
-static bool InterpretObjLiteralValue(const ObjLiteralAtomVector& atoms,
+static bool InterpretObjLiteralValue(JSContext* cx,
+                                     const ObjLiteralAtomVector& atoms,
                                      frontend::CompilationInfo& compilationInfo,
                                      const ObjLiteralInsn& insn,
                                      JS::Value* valOut) {
@@ -38,7 +39,7 @@ static bool InterpretObjLiteralValue(const ObjLiteralAtomVector& atoms,
       //   This needs to be coalesced to wherever jsatom creation is eventually
       //   Seems like InterpretLiteralObj would be called from main-thread
       //   stencil instantiation.
-      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(atoms[index]);
+      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(cx, atoms[index]);
       if (!jsatom) {
         return false;
       }
@@ -88,7 +89,7 @@ static JSObject* InterpretObjLiteralObj(
       //   since the other GC allocations in the function (properties vector,
       //   etc.) would need to be addressed.
       const frontend::ParserAtom* atom = atoms[insn.getKey().getAtomIndex()];
-      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(atom);
+      JSAtom* jsatom = compilationInfo.liftParserAtomToJSAtom(cx, atom);
       if (!jsatom) {
         return nullptr;
       }
@@ -97,7 +98,8 @@ static JSObject* InterpretObjLiteralObj(
 
     JS::Value propVal;
     if (!noValues) {
-      if (!InterpretObjLiteralValue(atoms, compilationInfo, insn, &propVal)) {
+      if (!InterpretObjLiteralValue(cx, atoms, compilationInfo, insn,
+                                    &propVal)) {
         return nullptr;
       }
     }
@@ -131,7 +133,7 @@ static JSObject* InterpretObjLiteralArray(
     MOZ_ASSERT(insn.isValid());
 
     JS::Value propVal;
-    if (!InterpretObjLiteralValue(atoms, compilationInfo, insn, &propVal)) {
+    if (!InterpretObjLiteralValue(cx, atoms, compilationInfo, insn, &propVal)) {
       return nullptr;
     }
     if (!elements.append(propVal)) {

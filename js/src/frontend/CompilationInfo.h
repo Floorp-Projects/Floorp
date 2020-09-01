@@ -388,10 +388,10 @@ struct CompilationInfo {
 
   MOZ_MUST_USE bool instantiateStencils(CompilationGCOutput& gcOutput);
 
-  JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
+  JSAtom* liftParserAtomToJSAtom(JSContext* cx, const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx, *this).unwrapOr(nullptr);
   }
-  const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom) {
+  const ParserAtom* lowerJSAtomToParserAtom(JSContext* cx, JSAtom* atom) {
     auto result = stencil.parserAtoms.internJSAtom(cx, *this, atom);
     return result.unwrapOr(nullptr);
   }

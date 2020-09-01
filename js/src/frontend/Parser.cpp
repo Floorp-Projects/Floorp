@@ -2693,7 +2693,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   const ParserAtom* displayAtom = nullptr;
   if (fun->displayAtom()) {
     displayAtom =
-        this->compilationInfo_.lowerJSAtomToParserAtom(fun->displayAtom());
+        this->compilationInfo_.lowerJSAtomToParserAtom(cx_, fun->displayAtom());
     if (!displayAtom) {
       return false;
     }
@@ -3184,7 +3184,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   const ParserAtom* displayAtom = nullptr;
   if (fun->displayAtom()) {
     displayAtom =
-        this->compilationInfo_.lowerJSAtomToParserAtom(fun->displayAtom());
+        this->compilationInfo_.lowerJSAtomToParserAtom(cx_, fun->displayAtom());
     if (!displayAtom) {
       return null();
     }
