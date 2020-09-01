@@ -35,7 +35,7 @@ async function getEngineNames() {
 }
 
 add_task(async function setup() {
-  await SearchTestUtils.useTestEngines("test-extensions", null, CONFIG_DEFAULT);
+  await useTestEngines("test-extensions", null, CONFIG_DEFAULT);
   await AddonTestUtils.promiseStartupManager();
   registerCleanupFunction(AddonTestUtils.promiseShutdownManager);
   SearchTestUtils.useMockIdleService();

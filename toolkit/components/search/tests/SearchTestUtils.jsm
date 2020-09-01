@@ -87,8 +87,6 @@ var SearchTestUtils = Object.freeze({
    *   The subfolder to use, if any.
    * @param {array} [config]
    *   An array which contains the configuration to set.
-   * @returns {object}
-   *   An object that is a sinon stub for the configuration getter.
    */
   async useTestEngines(folder = "data", subFolder = null, config = null) {
     let url = `resource://test/${folder}/`;
@@ -102,12 +100,12 @@ var SearchTestUtils = Object.freeze({
 
     const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
     if (config) {
-      return sinon.stub(settings, "get").returns(config);
+      sinon.stub(settings, "get").returns(config);
+    } else {
+      let response = await fetch(`resource://search-extensions/engines.json`);
+      let json = await response.json();
+      sinon.stub(settings, "get").returns(json.data);
     }
-
-    let response = await fetch(`resource://search-extensions/engines.json`);
-    let json = await response.json();
-    return sinon.stub(settings, "get").returns(json.data);
   },
 
   async useMochitestEngines(testDir) {

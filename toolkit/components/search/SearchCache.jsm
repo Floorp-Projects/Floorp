@@ -15,6 +15,24 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gGeoSpecificDefaultsEnabled",
+  SearchUtils.BROWSER_SEARCH_PREF + "geoSpecificDefaults",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gModernConfig",
+  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
+  false,
+  () => {
+    // We'll re-init the service, regardless of which way the pref-flip went.
+    Services.search.reInit();
+  }
+);
+
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchCache",
@@ -59,9 +77,16 @@ class SearchCache {
    *   - private
    *       The current user-set private engine. The associated hash is called
    *       'privateHash'.
+   *   - searchDefault
+   *       The current default engine (if any) specified by the region server.
+   *   - searchDefaultExpir
+   *       The expiry time for the default engine when the region server should
+   *       be re-checked.
+   *   - visibleDefaultEngines
+   *       The list of visible default engines supplied by the region server.
    *
-   * All of the above have associated hash fields to validate the value is set
-   * by the application.
+   * All of the above except `searchDefaultExpir` have associated hash fields
+   * to validate the value is set by the application.
    */
   _metaData = {};
 
@@ -105,6 +130,15 @@ class SearchCache {
       json = JSON.parse(new TextDecoder().decode(bytes));
       if (!json.engines || !json.engines.length) {
         throw new Error("no engine in the file");
+      }
+      // Reset search default expiration on major releases
+      if (
+        !gModernConfig &&
+        json.appVersion != Services.appinfo.version &&
+        gGeoSpecificDefaultsEnabled &&
+        json.metaData
+      ) {
+        json.metaData.searchDefaultExpir = 0;
       }
     } catch (ex) {
       logConsole.error("_readCacheFile: Error reading cache file:", ex);
@@ -173,6 +207,7 @@ class SearchCache {
     let cache = {};
     let locale = Services.locale.requestedLocale;
     let buildID = Services.appinfo.platformBuildID;
+    let appVersion = Services.appinfo.version;
 
     // Allows us to force a cache refresh should the cache format change.
     cache.version = SearchUtils.CACHE_VERSION;
@@ -182,8 +217,15 @@ class SearchCache {
     // Extension-shipped plugins are the only exception to this, but their
     // directories are blown away during updates, so we'll detect their changes.
     cache.buildID = buildID;
+    // Store the appVersion as well so we can do extra things during major updates.
+    cache.appVersion = appVersion;
     cache.locale = locale;
-    cache.builtInEngineList = this._searchService._searchOrder;
+
+    if (gModernConfig) {
+      cache.builtInEngineList = this._searchService._searchOrder;
+    } else {
+      cache.visibleDefaultEngines = this._searchService._visibleDefaultEngines;
+    }
     cache.engines = [...this._searchService._engines.values()];
     cache.metaData = this._metaData;
 
@@ -211,6 +253,19 @@ class SearchCache {
   }
 
   /**
+   * Sets an attribute.
+   *
+   * @param {string} name
+   *   The name of the attribute to set.
+   * @param {*} val
+   *   The value to set.
+   */
+  setAttribute(name, val) {
+    this._metaData[name] = val;
+    this._delayedWrite();
+  }
+
+  /**
    * Sets a verified attribute. This will save an additional hash
    * value, that can be verified when reading back.
    *
@@ -228,7 +283,7 @@ class SearchCache {
   }
 
   /**
-   * Gets an attribute without verification.
+   * Gets an attribute.
    *
    * @param {string} name
    *   The name of the attribute to get.
@@ -256,7 +311,7 @@ class SearchCache {
         SearchUtils.getVerificationHash(val)
     ) {
       logConsole.warn("getVerifiedGlobalAttr, invalid hash for", name);
-      return undefined;
+      return "";
     }
     return val;
   }
@@ -318,6 +373,7 @@ class SearchCache {
       case SearchUtils.TOPIC_SEARCH_SERVICE:
         switch (verb) {
           case "init-complete":
+          case "reinit-complete":
           case "engines-reloaded":
             this._delayedWrite();
             break;

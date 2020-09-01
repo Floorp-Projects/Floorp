@@ -1967,6 +1967,41 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
     );
   }
 
+  if (!Services.prefs.getBoolPref("browser.search.modernConfig")) {
+    // Remove all the search engines.
+    for (let engine of await Services.search.getEngines()) {
+      await Services.search.removeEngine(engine);
+    }
+    // The search service does not notify "engine-default" when removing a default engine.
+    // Manually force the notification.
+    // TODO: remove this when bug 1165341 is resolved.
+    Services.obs.notifyObservers(
+      null,
+      "browser-search-engine-modified",
+      "engine-default"
+    );
+    if (privateOn) {
+      Services.obs.notifyObservers(
+        null,
+        "browser-search-engine-modified",
+        "engine-default-private"
+      );
+    }
+    await promiseNextTick();
+
+    // Then check that no default engine is reported if none is available.
+    data = TelemetryEnvironment.currentEnvironment;
+    checkEnvironmentData(data);
+    Assert.equal(data.settings.defaultSearchEngine, "NONE");
+    Assert.deepEqual(data.settings.defaultSearchEngineData, { name: "NONE" });
+    if (privateOn) {
+      Assert.equal(data.settings.defaultPrivateSearchEngine, "NONE");
+      Assert.deepEqual(data.settings.defaultPrivateSearchEngineData, {
+        name: "NONE",
+      });
+    }
+  }
+
   // Add a new search engine (this will have no engine identifier).
   const SEARCH_ENGINE_ID = "telemetry_default";
   const SEARCH_ENGINE_URL = `http://www.example.org/${

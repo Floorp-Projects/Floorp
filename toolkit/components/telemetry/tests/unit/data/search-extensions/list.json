@@ -1,0 +1,7 @@
+{
+  "default": {
+    "visibleDefaultEngines": [
+      "telemetrySearchIdentifier"
+    ]
+  }
+}

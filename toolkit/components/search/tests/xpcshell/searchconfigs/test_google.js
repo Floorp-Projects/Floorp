@@ -97,6 +97,7 @@ add_task(async function test_searchConfig_google_with_mozparam() {
 
   for (const testData of TEST_DATA) {
     info(`Checking region ${testData.region}, locale ${testData.locale}`);
+    await test._reinit(testData.region, testData.locale);
     const engines = await test._getEngines(testData.region, testData.locale);
 
     Assert.ok(

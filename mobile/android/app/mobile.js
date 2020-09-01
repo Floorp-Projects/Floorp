@@ -230,6 +230,10 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 
+// Market-specific search defaults
+pref("browser.search.geoSpecificDefaults", true);
+pref("browser.search.geoSpecificDefaults.url", "https://search.services.mozilla.com/1/%APP%/%VERSION%/%CHANNEL%/%LOCALE%/%REGION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%");
+
 // disable updating
 pref("browser.search.update", false);
 
