@@ -340,9 +340,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   bool InFullScreenMode() const { return mInFullScreenMode; }
 
-  void PauseCompositor();
-  void ResumeCompositor();
-
  protected:
   virtual ~nsCocoaWindow();
 
