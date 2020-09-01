@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateTimerManager"
 );
 
-const COLLECTION_ID = "nimbus-experiments-desktop";
+const COLLECTION_ID = "nimbus-desktop-experiments";
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 
 const TIMER_NAME = "rs-experiment-loader-timer";
