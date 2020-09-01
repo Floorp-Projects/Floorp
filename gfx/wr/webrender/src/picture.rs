@@ -4360,8 +4360,6 @@ pub struct PrimitiveCluster {
     pub prim_range: Range<usize>,
     /// Various flags / state for this cluster.
     pub flags: ClusterFlags,
-    /// An optional scroll root to use if this cluster establishes a picture cache slice.
-    pub cache_scroll_root: Option<SpatialNodeIndex>,
 }
 
 impl PrimitiveCluster {
@@ -4375,7 +4373,6 @@ impl PrimitiveCluster {
             bounding_rect: LayoutRect::zero(),
             spatial_node_index,
             flags,
-            cache_scroll_root: None,
             prim_range: first_instance_index..first_instance_index
         }
     }
@@ -4534,18 +4531,6 @@ impl PrimitiveList {
     /// Returns true if there are no clusters (and thus primitives)
     pub fn is_empty(&self) -> bool {
         self.clusters.is_empty()
-    }
-
-    /// Merge another primitive list into this one
-    pub fn extend(&mut self, mut prim_list: PrimitiveList) {
-        let offset = self.prim_instances.len();
-        for cluster in &mut prim_list.clusters {
-            cluster.prim_range.start += offset;
-            cluster.prim_range.end += offset;
-        }
-
-        self.prim_instances.extend(prim_list.prim_instances);
-        self.clusters.extend(prim_list.clusters);
     }
 }
 
