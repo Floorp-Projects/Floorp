@@ -50,29 +50,6 @@ FX_URLBAR_SELECTED_RESULT_INDEX
   This probe tracks the indexes of picked results in the results list.
   It's an enumerated histogram with 17 buckets.
 
-FX_URLBAR_SELECTED_RESULT_TYPE
-  This probe was replaced with FX_URLBAR_SELECTED_RESULT_TYPE_2 in Firefox 78
-  because we needed more buckets.
-
-  This probe tracks the types of picked results.
-  It's an enumerated histogram with 14 buckets.
-  Values can be:
-
-    0. autofill
-    1. bookmark
-    2. history
-    3. keyword
-    4. searchengine
-    5. searchsuggestion
-    6. switchtab
-    7. tag
-    8. visiturl
-    9. remotetab
-    10. extension
-    11. preloaded-top-site
-    12. tip
-    13. topsite
-
 FX_URLBAR_SELECTED_RESULT_TYPE_2
   This probe tracks the types of picked results.
   It's an enumerated histogram with 32 buckets.
@@ -94,22 +71,14 @@ FX_URLBAR_SELECTED_RESULT_TYPE_2
     13. topsite
     14. formhistory
 
-FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE
-  This probe was replaced with FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2 in
-  Firefox 78 because we needed more buckets.
-
-  This probe tracks picked result type, for each one it tracks the index where
-  it appeared.
-  It's a keyed histogram where the keys are result types (see
-  SELECTED_RESULT_TYPES). For each key, this records the indexes of
-  picked results for that result type.
-
 FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2
   This probe tracks picked result type, for each one it tracks the index where
   it appeared.
   It's a keyed histogram where the keys are result types (see
-  SELECTED_RESULT_TYPES). For each key, this records the indexes of
-  picked results for that result type.
+  `UrlbarUtils.SELECTED_RESULT_TYPES`_). For each key, this records the indexes
+  of picked results for that result type.
+
+  .. _UrlbarUtils.SELECTED_RESULT_TYPES: https://searchfox.org/mozilla-central/search?q=symbol:UrlbarUtils%23SELECTED_RESULT_TYPES&redirect=false
 
 Scalars
 -------
@@ -321,7 +290,53 @@ browser.engagement.navigation.*
       For ``urlbar`` or ``searchbar``, indicates the user confirmed a search
       suggestion.
 
-navigation.search
+Obsolete probes
+---------------
+
+Obsolete histograms
+~~~~~~~~~~~~~~~~~~~
+
+FX_URLBAR_SELECTED_RESULT_TYPE (OBSOLETE)
+  This probe is obsolete and was replaced with
+  ``FX_URLBAR_SELECTED_RESULT_TYPE_2`` in Firefox 78 in order to increase the
+  number of buckets.
+
+  This probe tracked the types of picked results.
+  It's an enumerated histogram with 14 buckets.
+  Values can be:
+
+    0. autofill
+    1. bookmark
+    2. history
+    3. keyword
+    4. searchengine
+    5. searchsuggestion
+    6. switchtab
+    7. tag
+    8. visiturl
+    9. remotetab
+    10. extension
+    11. preloaded-top-site
+    12. tip
+    13. topsite
+
+FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE (OBSOLETE)
+  This probe is obsolete and was replaced with
+  ``FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2`` in Firefox 78 in order to
+  increase the number of buckets.
+
+  This probe tracked picked result type, for each one it tracks the index where
+  it appeared.
+  It's a keyed histogram where the keys are result types (see
+  `UrlbarUtils.SELECTED_RESULT_TYPES`_). For each key, this records the indexes
+  of picked results for that result type.
+
+  .. _UrlbarUtils.SELECTED_RESULT_TYPES: https://searchfox.org/mozilla-central/search?q=symbol:UrlbarUtils%23SELECTED_RESULT_TYPES&redirect=false
+
+Obsolete search probes
+----------------------
+
+navigation.search (OBSOLETE)
   This is a legacy and disabled event telemetry that is currently under
   discussion for removal or modernization. It can't be enabled through a pref.
   it's more or less equivalent to browser.engagement.navigation, but can also
