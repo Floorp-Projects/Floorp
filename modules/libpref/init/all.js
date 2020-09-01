@@ -4268,8 +4268,6 @@ pref("browser.search.update.log", false);
 pref("browser.search.update.interval", 21600);
 pref("browser.search.suggest.enabled", true);
 pref("browser.search.suggest.enabled.private", false);
-pref("browser.search.geoSpecificDefaults", false);
-pref("browser.search.modernConfig", false);
 pref("browser.search.separatePrivateDefault", false);
 pref("browser.search.separatePrivateDefault.ui.enabled", false);
 
