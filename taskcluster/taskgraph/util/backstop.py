@@ -27,6 +27,10 @@ def is_backstop(
     Returns:
         bool: True if this is a backtop, otherwise False.
     """
+    # In case this is being faked on try.
+    if params.get('backstop', False):
+        return True
+
     project = params["project"]
     pushid = int(params["pushlog_id"])
     pushdate = int(params["pushdate"])
