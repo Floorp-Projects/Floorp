@@ -109,6 +109,7 @@ class TestGenerator(unittest.TestCase):
 
         parameters = FakeParameters({
             '_kinds': kinds,
+            'backstop': False,
             'target_tasks_method': 'test_method',
             'test_manifest_loader': 'default',
             'try_mode': None,
