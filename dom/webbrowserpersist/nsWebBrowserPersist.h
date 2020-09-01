@@ -31,6 +31,8 @@
 class nsIStorageStream;
 class nsIWebBrowserPersistDocument;
 
+using ClosePromise = mozilla::MozPromise<nsresult, nsresult, true>;
+
 class nsWebBrowserPersist final : public nsIInterfaceRequestor,
                                   public nsIWebBrowserPersist,
                                   public nsIStreamListener,
@@ -124,8 +126,9 @@ class nsWebBrowserPersist final : public nsIInterfaceRequestor,
 
   nsresult FixRedirectedChannelEntry(nsIChannel* aNewChannel);
 
-  void EndDownload(nsresult aResult);
   void FinishDownload();
+  void EndDownload(nsresult aResult);
+  void EndDownloadInternal(nsresult aResult);
   void SerializeNextFile();
   void CalcTotalProgress();
 
@@ -153,6 +156,7 @@ class nsWebBrowserPersist final : public nsIInterfaceRequestor,
   nsClassHashtable<nsISupportsHashKey, OutputData> mOutputMap;
   nsClassHashtable<nsISupportsHashKey, UploadData> mUploadList;
   nsCOMPtr<nsISerialEventTarget> mBackgroundQueue;
+  nsTArray<RefPtr<ClosePromise>> mFileClosePromises;
   nsClassHashtable<nsCStringHashKey, URIData> mURIMap;
   nsCOMPtr<nsIWebBrowserPersistURIMap> mFlatURIMap;
   nsTArray<mozilla::UniquePtr<WalkData>> mWalkStack;
