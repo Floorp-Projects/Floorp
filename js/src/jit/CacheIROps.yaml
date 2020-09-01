@@ -901,7 +901,7 @@
 
 - name: ArrayJoinResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     obj: ObjId

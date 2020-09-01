@@ -2342,6 +2342,21 @@ bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitArrayJoinResult(ObjOperandId objId,
+                                                StringOperandId sepId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* sep = getOperand(sepId);
+
+  // TODO(Warp): This flag only make sense for the Ion implementation. Remove it
+  // when IonBuilder is gone.
+  bool optimizeForArray = true;
+  auto* join = MArrayJoin::New(alloc(), obj, sep, optimizeForArray);
+  addEffectful(join);
+
+  pushResult(join);
+  return resumeAfter(join);
+}
+
 bool WarpCacheIRTranspiler::emitPackedArrayPopResult(ObjOperandId arrayId) {
   MDefinition* array = getOperand(arrayId);
 
