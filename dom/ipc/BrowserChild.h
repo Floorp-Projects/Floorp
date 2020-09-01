@@ -527,6 +527,13 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvHandledWindowedPluginKeyEvent(
       const mozilla::NativeEventData& aKeyEventData, const bool& aIsConsumed);
 
+  mozilla::ipc::IPCResult RecvPrintPreview(
+      const PrintData& aPrintData,
+      const mozilla::Maybe<uint64_t>& aSourceOuterWindowID,
+      PrintPreviewResolver&& aCallback);
+
+  mozilla::ipc::IPCResult RecvExitPrintPreview();
+
   mozilla::ipc::IPCResult RecvPrint(const uint64_t& aOuterWindowID,
                                     const PrintData& aPrintData);
 

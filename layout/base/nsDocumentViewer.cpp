@@ -131,8 +131,17 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 
+namespace mozilla {
+namespace dom {
+class PrintPreviewResultInfo;
+}  // namespace dom
+}  // namespace mozilla
+
 using namespace mozilla;
 using namespace mozilla::dom;
+
+using PrintPreviewResolver =
+    std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;
 
 //-----------------------------------------------------
 // LOGGING
@@ -3153,7 +3162,8 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
 
 NS_IMETHODIMP
 nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
-                               nsIWebProgressListener* aWebProgressListener) {
+                               nsIWebProgressListener* aWebProgressListener,
+                               PrintPreviewResolver&& aCallback) {
 #  ifdef NS_PRINT_PREVIEW
   RefPtr<Document> doc = mDocument.get();
   NS_ENSURE_STATE(doc);
@@ -3195,7 +3205,8 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   if (!hadPrintJob) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_OPENED, 1);
   }
-  rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener);
+  rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener,
+                              std::move(aCallback));
   if (NS_FAILED(rv)) {
     OnDonePrinting();
   }
