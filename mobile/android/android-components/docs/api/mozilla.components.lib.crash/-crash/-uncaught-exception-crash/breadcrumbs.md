@@ -2,7 +2,7 @@
 
 # breadcrumbs
 
-`val breadcrumbs: `[`ArrayList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-array-list/index.html)`<`[`Breadcrumb`](../../../mozilla.components.support.base.crash/-breadcrumb/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L46)
+`val breadcrumbs: `[`ArrayList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-array-list/index.html)`<`[`Breadcrumb`](../../../mozilla.components.support.base.crash/-breadcrumb/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L51)
 
 List of breadcrumbs to send with the crash report.
 

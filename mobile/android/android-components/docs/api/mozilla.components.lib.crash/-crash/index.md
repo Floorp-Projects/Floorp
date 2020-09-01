@@ -2,7 +2,7 @@
 
 # Crash
 
-`sealed class Crash` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L32)
+`sealed class Crash` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L35)
 
 Crash types that are handled by this library.
 
