@@ -166,8 +166,8 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
 
   using Base::createSourceAndParser;
 
-  bool compileScript(CompilationInfo& compilationInfo, SharedContext* sc,
-                     CompilationGCOutput& gcOutput);
+  bool compileScriptToStencil(CompilationInfo& compilationInfo,
+                              SharedContext* sc);
 };
 
 /* If we're on main thread, tell the Debugger about a newly compiled script.
@@ -188,10 +188,9 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx, bool hideScript,
 }
 
 template <typename Unit>
-static bool CreateGlobalScript(CompilationInfo& compilationInfo,
-                               JS::SourceText<Unit>& srcBuf,
-                               ScopeKind scopeKind,
-                               CompilationGCOutput& gcOutput) {
+static bool CreateGlobalScriptToStencil(CompilationInfo& compilationInfo,
+                                        JS::SourceText<Unit>& srcBuf,
+                                        ScopeKind scopeKind) {
   JSContext* cx = compilationInfo.cx;
 
   AutoAssertReportedException assertException(cx);
@@ -211,36 +210,30 @@ static bool CreateGlobalScript(CompilationInfo& compilationInfo,
                                          compiler.compilationState().directives,
                                          extent);
 
-  if (!compiler.compileScript(compilationInfo, &globalsc, gcOutput)) {
+  if (!compiler.compileScriptToStencil(compilationInfo, &globalsc)) {
     return false;
   }
-
-  tellDebuggerAboutCompiledScript(
-      cx, compilationInfo.input.options.hideScriptFromDebugger,
-      gcOutput.script);
 
   assertException.reset();
   return true;
 }
 
-bool frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
-                                   JS::SourceText<char16_t>& srcBuf,
-                                   ScopeKind scopeKind,
-                                   CompilationGCOutput& gcOutput) {
-  return CreateGlobalScript(compilationInfo, srcBuf, scopeKind, gcOutput);
+bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
+                                            JS::SourceText<char16_t>& srcBuf,
+                                            ScopeKind scopeKind) {
+  return CreateGlobalScriptToStencil(compilationInfo, srcBuf, scopeKind);
 }
 
-bool frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
-                                   JS::SourceText<Utf8Unit>& srcBuf,
-                                   ScopeKind scopeKind,
-                                   CompilationGCOutput& gcOutput) {
+bool frontend::CompileGlobalScriptToStencil(CompilationInfo& compilationInfo,
+                                            JS::SourceText<Utf8Unit>& srcBuf,
+                                            ScopeKind scopeKind) {
 #ifdef JS_ENABLE_SMOOSH
   if (compilationInfo.cx->options().trySmoosh()) {
     bool unimplemented = false;
     JSContext* cx = compilationInfo.cx;
     JSRuntime* rt = cx->runtime();
-    bool result = Smoosh::compileGlobalScript(compilationInfo, srcBuf, gcOutput,
-                                              &unimplemented);
+    bool result = Smoosh::compileGlobalScriptToStencil(compilationInfo, srcBuf,
+                                                       &unimplemented);
     if (!unimplemented) {
       if (!compilationInfo.input.assignSource(cx, srcBuf)) {
         return false;
@@ -259,6 +252,59 @@ bool frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
   }
 #endif  // JS_ENABLE_SMOOSH
 
+  return CreateGlobalScriptToStencil(compilationInfo, srcBuf, scopeKind);
+}
+
+bool frontend::InstantiateStencils(CompilationInfo& compilationInfo,
+                                   CompilationGCOutput& gcOutput) {
+  JSContext* cx = compilationInfo.cx;
+
+  {
+    AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
+                                       JS::ProfilingCategoryPair::JS_Parsing);
+
+    if (!compilationInfo.instantiateStencils(gcOutput)) {
+      return false;
+    }
+  }
+
+  // Enqueue an off-thread source compression task after finishing parsing.
+  if (!compilationInfo.cx->isHelperThreadContext()) {
+    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
+      return false;
+    }
+  }
+
+  tellDebuggerAboutCompiledScript(
+      cx, compilationInfo.input.options.hideScriptFromDebugger,
+      gcOutput.script);
+
+  return true;
+}
+
+template <typename Unit>
+static bool CreateGlobalScript(CompilationInfo& compilationInfo,
+                               JS::SourceText<Unit>& srcBuf,
+                               ScopeKind scopeKind,
+                               CompilationGCOutput& gcOutput) {
+  if (!CompileGlobalScriptToStencil(compilationInfo, srcBuf, scopeKind)) {
+    return false;
+  }
+
+  return InstantiateStencils(compilationInfo, gcOutput);
+}
+
+bool frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
+                                   JS::SourceText<char16_t>& srcBuf,
+                                   ScopeKind scopeKind,
+                                   CompilationGCOutput& gcOutput) {
+  return CreateGlobalScript(compilationInfo, srcBuf, scopeKind, gcOutput);
+}
+
+bool frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
+                                   JS::SourceText<Utf8Unit>& srcBuf,
+                                   ScopeKind scopeKind,
+                                   CompilationGCOutput& gcOutput) {
   return CreateGlobalScript(compilationInfo, srcBuf, scopeKind, gcOutput);
 }
 
@@ -285,13 +331,13 @@ static bool CreateEvalScript(CompilationInfo& compilationInfo,
                                      compilationInfo.input.options.column);
   frontend::EvalSharedContext evalsc(cx, compilationInfo,
                                      compiler.compilationState(), extent);
-  if (!compiler.compileScript(compilationInfo, &evalsc, gcOutput)) {
+  if (!compiler.compileScriptToStencil(compilationInfo, &evalsc)) {
     return false;
   }
 
-  tellDebuggerAboutCompiledScript(
-      cx, compilationInfo.input.options.hideScriptFromDebugger,
-      gcOutput.script);
+  if (!InstantiateStencils(compilationInfo, gcOutput)) {
+    return false;
+  }
 
   assertException.reset();
   return true;
@@ -509,9 +555,8 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 }
 
 template <typename Unit>
-bool frontend::ScriptCompiler<Unit>::compileScript(
-    CompilationInfo& compilationInfo, SharedContext* sc,
-    CompilationGCOutput& gcOutput) {
+bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
+    CompilationInfo& compilationInfo, SharedContext* sc) {
   assertSourceParserAndScriptCreated(compilationInfo.input);
 
   TokenStreamPosition startPosition(parser->tokenStream);
@@ -557,19 +602,6 @@ bool frontend::ScriptCompiler<Unit>::compileScript(
     }
 
     if (!emitter->emitScript(pn)) {
-      return false;
-    }
-
-    if (!compilationInfo.instantiateStencils(gcOutput)) {
-      return false;
-    }
-
-    MOZ_ASSERT(gcOutput.script);
-  }
-
-  // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.cx->isHelperThreadContext()) {
-    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
   }
