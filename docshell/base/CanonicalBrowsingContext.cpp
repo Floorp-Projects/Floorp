@@ -309,6 +309,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       aLoadState->GetLoadingSessionHistoryInfo();
   if (existingLoadingInfo) {
     entry = SessionHistoryEntry::GetByLoadId(existingLoadingInfo->mLoadId);
+    SetHistoryID(entry->DocshellID());
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     entry->SetDocshellID(GetHistoryID());
