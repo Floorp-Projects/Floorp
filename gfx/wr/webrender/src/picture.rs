@@ -4330,18 +4330,6 @@ bitflags! {
         const IS_VISIBLE = 4;
         /// Is a backdrop-filter cluster that requires special handling during post_update.
         const IS_BACKDROP_FILTER = 8;
-        /// Force creation of a picture caching slice before this cluster.
-        const CREATE_PICTURE_CACHE_PRE = 16;
-        /// Force creation of a picture caching slice after this cluster.
-        const CREATE_PICTURE_CACHE_POST = 32;
-        /// If set, this cluster represents a scroll bar container.
-        const SCROLLBAR_CONTAINER = 64;
-        /// If set, this cluster contains clear rectangle primitives.
-        const IS_CLEAR_PRIMITIVE = 128;
-        /// This is used as a performance hint - this primitive may be promoted to a native
-        /// compositor surface under certain (implementation specific) conditions. This
-        /// is typically used for large videos, and canvas elements.
-        const PREFER_COMPOSITOR_SURFACE = 256;
     }
 }
 
@@ -4383,13 +4371,6 @@ impl PrimitiveCluster {
         spatial_node_index: SpatialNodeIndex,
         flags: ClusterFlags,
     ) -> bool {
-        // If this cluster is a scrollbar, ensure that a matching scrollbar
-        // container that follows is split up, so we don't combine the
-        // scrollbars into a single slice.
-        if self.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) {
-            return false;
-        }
-
         self.flags == flags && self.spatial_node_index == spatial_node_index
     }
 
@@ -4451,22 +4432,11 @@ impl PrimitiveList {
             PrimitiveInstanceKind::Backdrop { .. } => {
                 flags.insert(ClusterFlags::IS_BACKDROP_FILTER);
             }
-            PrimitiveInstanceKind::Clear { .. } => {
-                flags.insert(ClusterFlags::IS_CLEAR_PRIMITIVE);
-            }
             _ => {}
         }
 
         if prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
             flags.insert(ClusterFlags::IS_BACKFACE_VISIBLE);
-        }
-
-        if prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER) {
-            flags.insert(ClusterFlags::SCROLLBAR_CONTAINER);
-        }
-
-        if prim_flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
-            flags.insert(ClusterFlags::PREFER_COMPOSITOR_SURFACE);
         }
 
         let culling_rect = prim_instance.clip_set.local_clip_rect
