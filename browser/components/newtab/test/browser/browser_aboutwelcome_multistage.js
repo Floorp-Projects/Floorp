@@ -55,8 +55,7 @@ const TEST_MULTISTAGE_CONTENT = {
       id: "AW_STEP2",
       order: 1,
       content: {
-        zap: true,
-        title: "Step 2 longzaptest",
+        title: "Step 2",
         disclaimer: "test",
         tiles: {
           type: "topsites",
@@ -221,7 +220,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "div.multistageContainer",
       "main.AW_STEP1",
       "h1.welcomeZap",
-      "span.zap.short",
       "div.secondary-cta.top",
       "button.secondary",
       "label.theme",
@@ -240,13 +238,11 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     [
       "div.multistageContainer",
       "main.AW_STEP2",
-      "h1.welcomeZap",
-      "span.zap.long",
       "button.secondary",
       "div.tiles-container.info",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
+    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "h1.welcomeZap"]
   );
   await onButtonClick(browser, "button.primary");
   await test_screen_content(
@@ -260,7 +256,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "div.welcome-text",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP2", "h1.welcomeZap"]
+    ["main.AW_STEP1", "main.AW_STEP2"]
   );
   await onButtonClick(browser, "button.primary");
   await test_screen_content(
