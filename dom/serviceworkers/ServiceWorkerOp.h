@@ -61,6 +61,10 @@ class ServiceWorkerOp : public RemoteWorkerChild::Op {
   // Override to provide a runnable that's not a `ServiceWorkerOpRunnable.`
   virtual RefPtr<WorkerRunnable> GetRunnable(WorkerPrivate* aWorkerPrivate);
 
+  // Overridden by ServiceWorkerOp subclasses, it should return true when
+  // the ServiceWorkerOp was executed successfully (and false if it did fail).
+  // Content throwing an exception during event dispatch is still considered
+  // success.
   virtual bool Exec(JSContext* aCx, WorkerPrivate* aWorkerPrivate) = 0;
 
   // Override to reject any additional MozPromises that subclasses may contain.
