@@ -1154,7 +1154,7 @@ NS_IMETHODIMP EditorBase::EndOfDocument() {
   return rv;
 }
 
-nsresult EditorBase::CollapseSelectionToEnd() {
+nsresult EditorBase::CollapseSelectionToEnd() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // XXX Why doesn't this check if the document is alive?
@@ -2220,7 +2220,7 @@ nsresult EditorBase::ScrollSelectionFocusIntoView() {
 }
 
 EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
-    const EditorRawDOMPoint& aPoint) {
+    const EditorRawDOMPoint& aPoint) const {
   if (NS_WARN_IF(!aPoint.IsInContentNode())) {
     return aPoint;
   }
@@ -4192,7 +4192,8 @@ Element* EditorBase::FindSelectionRoot(nsINode* aNode) const {
   return GetRoot();
 }
 
-void EditorBase::InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit) {
+void EditorBase::InitializeSelectionAncestorLimit(
+    nsIContent& aAncestorLimit) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   SelectionRefPtr()->SetAncestorLimiter(&aAncestorLimit);

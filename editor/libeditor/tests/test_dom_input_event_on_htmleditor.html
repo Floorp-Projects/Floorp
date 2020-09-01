@@ -196,7 +196,7 @@ async function runTests() {
       `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1658702
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -385,7 +385,10 @@ async function runTests() {
     is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+    checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
+                                          startOffset: selectionRanges[0].startOffset,
+                                          endContainer: selectionRanges[0].startContainer,
+                                          endOffset: selectionRanges[0].startOffset + 1}]);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -583,7 +586,10 @@ async function runTests() {
     is(beforeInputEvent.inputType, "deleteWordBackward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordBackward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+    checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
+                                          startOffset: selectionRanges[0].endOffset - "def".length,
+                                          endContainer: selectionRanges[0].endContainer,
+                                          endOffset: selectionRanges[0].endOffset}]);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteWordBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteWordBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -614,7 +620,11 @@ async function runTests() {
     is(beforeInputEvent.inputType, "deleteWordForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordForward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+    checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
+                                          startOffset: selectionRanges[0].startOffset,
+                                          endContainer: selectionRanges[0].startContainer,
+                                          endOffset: selectionRanges[0].startOffset +
+                                              (kWordSelectEatSpaceToNextWord ? "abc ".length : "abc".length)}]);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteWordForward", `${aDescription}inputType of "input" event for ${action} should be "deleteWordForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -639,7 +649,10 @@ async function runTests() {
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     if (kIsWin) {
-      checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+      checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
+                                            startOffset: "abc ".length,
+                                            endContainer: selectionRanges[0].endContainer,
+                                            endOffset: selectionRanges[0].endOffset}]);
     } else {
       checkTargetRanges(beforeInputEvent, selectionRanges);
     }
@@ -671,7 +684,10 @@ async function runTests() {
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     if (kIsWin) {
-      checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+      checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
+                                            startOffset: selectionRanges[0].startOffset,
+                                            endContainer: selectionRanges[0].endContainer,
+                                            endOffset: kWordSelectEatSpaceToNextWord ? "abc ".length : "abc".length}]);
     } else {
       checkTargetRanges(beforeInputEvent, selectionRanges);
     }
@@ -696,7 +712,10 @@ async function runTests() {
        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineBackward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+    checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
+                                          startOffset: 0,
+                                          endContainer: selectionRanges[0].endContainer,
+                                          endOffset: selectionRanges[0].endOffset}]);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteSoftLineBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -717,7 +736,10 @@ async function runTests() {
        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineForward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+    checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
+                                          startOffset: selectionRanges[0].startOffset,
+                                          endContainer: selectionRanges[0].startContainer,
+                                          endOffset: "abc def".length}]);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteSoftLineForward", `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -742,7 +764,10 @@ async function runTests() {
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     if (kIsWin) {
-      checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+      checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
+                                            startOffset: 0,
+                                            endContainer: selectionRanges[0].endContainer,
+                                            endOffset: selectionRanges[0].endOffset}]);
     } else {
       checkTargetRanges(beforeInputEvent, selectionRanges);
     }
@@ -769,7 +794,10 @@ async function runTests() {
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     if (kIsWin) {
-      checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1618457
+      checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
+                                            startOffset: selectionRanges[0].startOffset,
+                                            endContainer: selectionRanges[0].endContainer,
+                                            endOffset: "abc def".length}]);
     } else {
       checkTargetRanges(beforeInputEvent, selectionRanges);
     }

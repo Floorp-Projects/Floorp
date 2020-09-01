@@ -106,7 +106,7 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
 
 class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
  public:
-  AutoSetTemporaryAncestorLimiter(HTMLEditor& aHTMLEditor,
+  AutoSetTemporaryAncestorLimiter(const HTMLEditor& aHTMLEditor,
                                   Selection& aSelection,
                                   nsINode& aStartPointNode,
                                   AutoRangeArray* aRanges = nullptr) {
@@ -3171,6 +3171,33 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
     }
     if (bidiLevelManager.Canceled()) {
       return NS_SUCCESS_DOM_NO_OPERATION;
+    }
+
+    // AutoRangeArray::ExtendAnchorFocusRangeFor() will use `nsFrameSelection`
+    // to extend the range for deletion.  But if focus event doesn't receive
+    // yet, ancestor isn't set.  So we must set root element of editor to
+    // ancestor temporarily.
+    AutoSetTemporaryAncestorLimiter autoSetter(
+        aHTMLEditor, *aHTMLEditor.SelectionRefPtr(), *startPoint.GetContainer(),
+        &aRangesToDelete);
+
+    Result<nsIEditor::EDirection, nsresult> extendResult =
+        aRangesToDelete.ExtendAnchorFocusRangeFor(aHTMLEditor,
+                                                  aDirectionAndAmount);
+    if (extendResult.isErr()) {
+      NS_WARNING("AutoRangeArray::ExtendAnchorFocusRangeFor() failed");
+      return extendResult.unwrapErr();
+    }
+    aDirectionAndAmount = extendResult.unwrap();
+
+    if (aDirectionAndAmount == nsIEditor::eNone) {
+      MOZ_ASSERT(aRangesToDelete.Ranges().Length() == 1);
+      if (!CanFallbackToDeleteRangesWithTransaction(aRangesToDelete)) {
+        // XXX In this case, do we need to modify the range again?
+        return NS_SUCCESS_DOM_NO_OPERATION;
+      }
+      // aRangesToDelete must select some haracters, a word or the line.
+      return NS_OK;
     }
   }
 

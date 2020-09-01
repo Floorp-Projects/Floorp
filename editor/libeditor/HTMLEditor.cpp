@@ -487,7 +487,8 @@ NS_IMETHODIMP HTMLEditor::BeginningOfDocument() {
   return rv;
 }
 
-void HTMLEditor::InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit) {
+void HTMLEditor::InitializeSelectionAncestorLimit(
+    nsIContent& aAncestorLimit) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Hack for initializing selection.
@@ -535,7 +536,7 @@ void HTMLEditor::InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit) {
 }
 
 nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
-    bool aIgnoreIfSelectionInEditingHost) {
+    bool aIgnoreIfSelectionInEditingHost) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Use editing host.  If you use root element here, selection may be
