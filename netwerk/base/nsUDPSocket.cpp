@@ -438,8 +438,7 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
     return;
   }
 
-  NetAddr netAddr;
-  PRNetAddrToNetAddr(&prClientAddr, &netAddr);
+  NetAddr netAddr(&prClientAddr);
   nsCOMPtr<nsIUDPMessage> message =
       new UDPMessageProxy(&netAddr, pipeOut, std::move(data));
   mListener->OnPacketReceived(this, message);

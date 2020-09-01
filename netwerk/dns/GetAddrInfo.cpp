@@ -170,7 +170,7 @@ _GetAddrInfo_Portable(const nsACString& aCanonHost, uint16_t aAddressFamily,
   RefPtr<AddrInfo> ai(new AddrInfo(aCanonHost, prai, disableIPv4,
                                    filterNameCollision, canonName));
   PR_FreeAddrInfo(prai);
-  if (ai->mAddresses.IsEmpty()) {
+  if (ai->Addresses().IsEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -210,17 +210,19 @@ bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
 
   RefPtr<AddrInfo> ai;
 
-  if (!cname) {
-    ai = new AddrInfo(aHost, 0);
-  } else {
-    ai = new AddrInfo(aHost, *cname, 0);
-  }
-
+  nsTArray<NetAddr> addresses;
   for (const auto& ip : *overrides) {
     if (aAddressFamily != AF_UNSPEC && ip.raw.family != aAddressFamily) {
       continue;
     }
-    ai->AddAddress(&ip);
+    NetAddr addr(&ip);
+    addresses.AppendElement(addr);
+  }
+
+  if (!cname) {
+    ai = new AddrInfo(aHost, 0, std::move(addresses));
+  } else {
+    ai = new AddrInfo(aHost, *cname, 0, std::move(addresses));
   }
 
   ai.forget(aAddrInfo);
@@ -232,6 +234,7 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
   if (NS_WARN_IF(aHost.IsEmpty()) || NS_WARN_IF(!aAddrInfo)) {
     return NS_ERROR_NULL_POINTER;
   }
+  *aAddrInfo = nullptr;
 
   if (StaticPrefs::network_dns_disabled()) {
     return NS_ERROR_UNKNOWN_HOST;
@@ -257,16 +260,17 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
     aAddressFamily = PR_AF_INET;
   }
 
-  *aAddrInfo = nullptr;
-  nsresult rv = _GetAddrInfo_Portable(host, aAddressFamily, aFlags, aAddrInfo);
+  RefPtr<AddrInfo> info;
+  nsresult rv =
+      _GetAddrInfo_Portable(host, aAddressFamily, aFlags, getter_AddRefs(info));
 
 #ifdef DNSQUERY_AVAILABLE
   if (aGetTtl && NS_SUCCEEDED(rv)) {
     // Figure out the canonical name, or if that fails, just use the host name
     // we have.
     nsAutoCString name;
-    if (*aAddrInfo != nullptr && !(*aAddrInfo)->mCanonicalName.IsEmpty()) {
-      name = (*aAddrInfo)->mCanonicalName;
+    if (info && !info->CanonicalHostname().IsEmpty()) {
+      name = info->CanonicalHostname();
     } else {
       name = host;
     }
@@ -275,7 +279,9 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
     uint32_t ttl = 0;
     nsresult ttlRv = _GetTTLData_Windows(name, &ttl, aAddressFamily);
     if (NS_SUCCEEDED(ttlRv)) {
-      (*aAddrInfo)->ttl = ttl;
+      auto builder = info->Build();
+      builder.SetTTL(ttl);
+      info = builder.Finish();
       LOG("Got TTL %u for %s (name = %s).", ttl, host.get(), name.get());
     } else {
       LOG_WARNING("Could not get TTL for %s (cname = %s).", host.get(),
@@ -284,6 +290,7 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
   }
 #endif
 
+  info.forget(aAddrInfo);
   return rv;
 }
 
