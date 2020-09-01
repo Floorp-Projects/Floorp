@@ -245,8 +245,8 @@ static void SkipBinaryGuards(CacheIRReader& reader, bool* sawStringOperand) {
       reader.skip();  // Skip over result/type.
       continue;
     }
-    if (reader.matchOp(CacheOp::GuardAndGetNumberFromString) ||
-        reader.matchOp(CacheOp::GuardAndGetInt32FromString)) {
+    if (reader.matchOp(CacheOp::GuardStringToNumber) ||
+        reader.matchOp(CacheOp::GuardStringToInt32)) {
       if (sawStringOperand) {
         *sawStringOperand = true;
       }
