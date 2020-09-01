@@ -21,6 +21,7 @@
 // look at it unless working on the profiler code.
 
 #  include "mozilla/JSONWriter.h"
+#  include "mozilla/ProfileBufferEntryKinds.h"
 
 #  include <limits>
 #  include <tuple>
@@ -91,12 +92,124 @@ struct MarkerTypeSerialization {
   template <size_t i>
   using StreamFunctionParameter =
       std::tuple_element_t<i, StreamFunctionUserParametersTuple>;
+
+ private:
+  // This templated function will recursively deserialize each argument expected
+  // by `MarkerType::StreamJSONMarkerData()` on the stack, and call it at the
+  // end. E.g., for `StreamJSONMarkerData(int, char)`:
+  // - DeserializeArguments<0>(aER, aWriter) reads an int and calls:
+  // - DeserializeArguments<1>(aER, aWriter, const int&) reads a char and calls:
+  // - MarkerType::StreamJSONMarkerData(aWriter, const int&, const char&).
+  // Prototyping on godbolt showed that clang and gcc can flatten these
+  // recursive calls into one function with successive reads followed by the one
+  // stream call; tested up to 40 arguments: https://godbolt.org/z/5KeeM4
+  template <size_t i = 0, typename... Args>
+  static void DeserializeArguments(ProfileBufferEntryReader& aEntryReader,
+                                   JSONWriter& aWriter, const Args&... aArgs) {
+    static_assert(sizeof...(Args) == i,
+                  "We should have collected `i` arguments so far");
+    if constexpr (i < scStreamFunctionParameterCount) {
+      // Deserialize the i-th argument on this stack.
+      auto argument = aEntryReader.ReadObject<StreamFunctionParameter<i>>();
+      // Add our local argument to the next recursive call.
+      DeserializeArguments<i + 1>(aEntryReader, aWriter, aArgs..., argument);
+    } else {
+      // We've read all the arguments, finally call the `StreamJSONMarkerData`
+      // function, which should write the appropriate JSON elements for this
+      // marker type. Note that the MarkerType-specific "type" element is
+      // already written.
+      MarkerType::StreamJSONMarkerData(aWriter, aArgs...);
+    }
+  }
+
+ public:
+  static void Deserialize(ProfileBufferEntryReader& aEntryReader,
+                          JSONWriter& aWriter) {
+    aWriter.StringProperty("type", MarkerType::MarkerTypeName());
+    DeserializeArguments(aEntryReader, aWriter);
+  }
 };
 
 template <>
 struct MarkerTypeSerialization<::mozilla::baseprofiler::markers::NoPayload> {
   // Nothing! NoPayload has special handling avoiding payload work.
 };
+
+template <typename NameCallback, typename StackCallback>
+[[nodiscard]] bool DeserializeAfterKindAndStream(
+    ProfileBufferEntryReader& aEntryReader, JSONWriter& aWriter,
+    int aThreadIdOrZero, NameCallback&& aNameCallback,
+    StackCallback&& aStackCallback) {
+  // Each entry is made up of the following:
+  //   ProfileBufferEntry::Kind::Marker, <- already read by caller
+  //   options,                          <- next location in entries
+  //   name,
+  //   payload
+  const MarkerOptions options = aEntryReader.ReadObject<MarkerOptions>();
+  if (aThreadIdOrZero != 0 &&
+      options.ThreadId().ThreadId() != aThreadIdOrZero) {
+    // A specific thread is being read, we're not in it.
+    return false;
+  }
+  // Write the information to JSON with the following schema:
+  // [name, startTime, endTime, phase, category, data]
+  aWriter.StartArrayElement();
+  {
+    std::forward<NameCallback>(aNameCallback)(
+        aEntryReader.ReadObject<mozilla::ProfilerString8View>());
+
+    const double startTime = options.Timing().GetStartTime();
+    aWriter.DoubleElement(startTime);
+
+    const double endTime = options.Timing().GetEndTime();
+    aWriter.DoubleElement(endTime);
+
+    aWriter.IntElement(static_cast<int64_t>(options.Timing().MarkerPhase()));
+
+    aWriter.IntElement(static_cast<int64_t>(options.Category().Category()));
+
+    if (const auto tag =
+            aEntryReader.ReadObject<mozilla::base_profiler_markers_detail::
+                                        Streaming::DeserializerTag>();
+        tag != 0) {
+      aWriter.StartObjectElement(JSONWriter::SingleLineStyle);
+      {
+        // Stream "common props".
+
+        // TODO: Move this to top-level tuple, when frontend supports it.
+        if (!options.InnerWindowId().IsUnspecified()) {
+          // Here, we are converting uint64_t to double. Both Browsing Context
+          // and Inner Window IDs are created using
+          // `nsContentUtils::GenerateProcessSpecificId`, which is specifically
+          // designed to only use 53 of the 64 bits to be lossless when passed
+          // into and out of JS as a double.
+          aWriter.DoubleProperty(
+              "innerWindowID",
+              static_cast<double>(options.InnerWindowId().Id()));
+        }
+
+        // TODO: Move this to top-level tuple, when frontend supports it.
+        if (ProfileChunkedBuffer* chunkedBuffer =
+                options.Stack().GetChunkedBuffer();
+            chunkedBuffer) {
+          aWriter.StartObjectProperty("stack");
+          { std::forward<StackCallback>(aStackCallback)(*chunkedBuffer); }
+          aWriter.EndObject();
+        }
+
+        // Stream the payload, including the type.
+        mozilla::base_profiler_markers_detail::Streaming::Deserializer
+            deserializer = mozilla::base_profiler_markers_detail::Streaming::
+                DeserializerForTag(tag);
+        MOZ_RELEASE_ASSERT(deserializer);
+        deserializer(aEntryReader, aWriter);
+      }
+      aWriter.EndObject();
+    }
+  }
+  aWriter.EndArray();
+  return true;
+}
 
 }  // namespace mozilla::base_profiler_markers_detail
 
