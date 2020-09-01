@@ -979,7 +979,11 @@ static JSObject* CreateGlobalForOffThreadParse(JSContext* cx,
 static bool QueueOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task) {
   AutoLockHelperThreadState lock;
 
-  bool mustWait = OffThreadParsingMustWaitForGC(cx->runtime());
+  bool needsParseGlobal = task->options.useOffThreadParseGlobal ||
+                          (task->kind == ParseTaskKind::ScriptDecode) ||
+                          (task->kind == ParseTaskKind::MultiScriptsDecode);
+  bool mustWait =
+      needsParseGlobal && OffThreadParsingMustWaitForGC(cx->runtime());
   auto& queue = mustWait ? HelperThreadState().parseWaitingOnGC(lock)
                          : HelperThreadState().parseWorklist(lock);
   if (!queue.append(std::move(task))) {
@@ -1003,9 +1007,16 @@ static bool StartOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task,
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
   AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-  JSObject* global = CreateGlobalForOffThreadParse(cx, nogc);
-  if (!global) {
-    return false;
+  // FIXME: XDR currently requires the parse global.
+  bool forceParseGlobal = (task->kind == ParseTaskKind::ScriptDecode) ||
+                          (task->kind == ParseTaskKind::MultiScriptsDecode);
+
+  JSObject* global = nullptr;
+  if (options.useOffThreadParseGlobal || forceParseGlobal) {
+    global = CreateGlobalForOffThreadParse(cx, nogc);
+    if (!global) {
+      return false;
+    }
   }
 
   // Mark the global's zone as created for a helper thread. This prevents it
@@ -1016,6 +1027,9 @@ static bool StartOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task,
 
   if (!task->init(cx, options, global)) {
     return false;
+  }
+  if (forceParseGlobal) {
+    task->options.useOffThreadParseGlobal = true;
   }
 
   if (!QueueOffThreadParseTask(cx, std::move(task))) {
