@@ -39,8 +39,7 @@ class PerformanceTuner:
     def _set_value_and_check_exitcode(self, file_name, value):
         self.log.info("setting {} to {}".format(file_name, value))
         if self.device.shell_bool(
-            " ".join(["echo", str(value), ">", str(file_name)]),
-            timeout=self.timeout,
+            " ".join(["echo", str(value), ">", str(file_name)]), timeout=self.timeout,
         ):
             self.log.info("successfully set {} to {}".format(file_name, value))
         else:

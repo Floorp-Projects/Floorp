@@ -90,7 +90,8 @@ def host_platform():
 
 
 class MachLogger:
-    """Wrapper around the mach logger to make logging simpler."""
+    """Wrapper around the mach logger to make logging simpler.
+    """
 
     def __init__(self, mach_cmd):
         self._logger = mach_cmd.log
@@ -241,7 +242,8 @@ def convert_day(day):
 
 
 def get_revision_namespace_url(route, day="yesterday"):
-    """Builds a URL to obtain all the namespaces of a given build route for a single day."""
+    """Builds a URL to obtain all the namespaces of a given build route for a single day.
+    """
     day = convert_day(day)
     return f"""{MULTI_REVISION_ROOT}/{route}.{day}.revision"""
 

@@ -109,8 +109,7 @@ def test_browser_failed(*mocked):
 )
 def test_browser_desktop(*mocked):
     mach_cmd, metadata, env = get_running_env(
-        browsertime_iterations=1,
-        browsertime_extra_options="one=1,two=2",
+        browsertime_iterations=1, browsertime_extra_options="one=1,two=2",
     )
     browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
