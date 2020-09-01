@@ -16,12 +16,12 @@ ChromeUtils.defineModuleGetter(
 );
 
 const INPUT_DELAY_MS = 500;
+const ourBrowser = window.docShell.chromeEventHandler;
 
 document.addEventListener(
   "DOMContentLoaded",
   e => {
-    document.mozSubdialogReady = PrintEventHandler.init();
-    let ourBrowser = window.docShell.chromeEventHandler;
+    PrintEventHandler.init();
     ourBrowser.setAttribute("flex", "0");
     ourBrowser.classList.add("printSettingsBrowser");
     ourBrowser.closest(".dialogBox").classList.add("printDialogBox");
@@ -90,6 +90,9 @@ var PrintEventHandler = {
       sourceBrowsingContext.currentWindowContext.documentURI.spec;
     this.previewBrowser = this._createPreviewBrowser(sourceBrowsingContext);
 
+    // Let the dialog appear before doing any potential main thread work.
+    await ourBrowser._dialogReady;
+
     // First check the available destinations to ensure we get settings for an
     // accessible printer.
     let {
@@ -142,6 +145,12 @@ var PrintEventHandler = {
     await document.l10n.translateElements([this.previewBrowser]);
 
     document.body.removeAttribute("loading");
+
+    window.requestAnimationFrame(() => {
+      window.focus();
+      // Now that we're showing the form, select the destination select.
+      document.getElementById("printer-picker").focus();
+    });
   },
 
   unload() {
@@ -163,7 +172,6 @@ var PrintEventHandler = {
     document.l10n.setAttributes(printPreviewBrowser, "printui-preview-label");
 
     // Create the stack for the loading indicator.
-    let ourBrowser = window.docShell.chromeEventHandler;
     let doc = ourBrowser.ownerDocument;
     let previewStack = doc.importNode(
       doc.getElementById("printPreviewStackTemplate").content,
