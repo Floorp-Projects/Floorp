@@ -1706,7 +1706,7 @@ void nsRefreshDriver::RunFullscreenSteps() {
   }
 }
 
-void nsRefreshDriver::UpdateIntersectionObservations() {
+void nsRefreshDriver::UpdateIntersectionObservations(TimeStamp aNowTime) {
   AutoTArray<RefPtr<Document>, 32> documents;
 
   if (mPresContext->Document()->HasIntersectionObservers()) {
@@ -1720,7 +1720,7 @@ void nsRefreshDriver::UpdateIntersectionObservations() {
 
   for (uint32_t i = 0; i < documents.Length(); ++i) {
     Document* doc = documents[i];
-    doc->UpdateIntersectionObservations();
+    doc->UpdateIntersectionObservations(aNowTime);
     doc->ScheduleIntersectionObserverNotification();
   }
 
@@ -1815,17 +1815,8 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
           docCallbacks.mDocument->GetInnerWindow();
       DOMHighResTimeStamp timeStamp = 0;
       if (innerWindow) {
-        mozilla::dom::Performance* perf = innerWindow->GetPerformance();
-        if (perf) {
-          timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);
-          // 0 is an inappropriate mixin for this this area; however CSS
-          // Animations needs to have it's Time Reduction Logic refactored, so
-          // it's currently only clamping for RFP mode. RFP mode gives a much
-          // lower time precision, so we accept the security leak here for now
-          if (!perf->IsSystemPrincipal()) {
-            timeStamp =
-                nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(timeStamp, 0);
-          }
+        if (Performance* perf = innerWindow->GetPerformance()) {
+          timeStamp = perf->TimeStampToDOMHighResForRendering(aNowTime);
         }
         // else window is partially torn down already
       }
@@ -2182,7 +2173,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   }
 #endif
 
-  UpdateIntersectionObservations();
+  UpdateIntersectionObservations(aNowTime);
 
   /*
    * Perform notification to imgIRequests subscribed to listen
