@@ -8,6 +8,8 @@
 <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
 <iframe width=100></iframe>
 <script>
+SimpleTest.requestLongerTimeout(2);
+
 let state = "start";
 
 const utils = SpecialPowers.DOMWindowUtils;
