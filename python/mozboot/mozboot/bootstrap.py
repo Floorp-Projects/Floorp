@@ -146,39 +146,6 @@ mozilla-unified).
 Would you like to run a few configuration steps to ensure Git is
 optimally configured?'''
 
-CLONE_VCS = '''
-If you would like to clone the {} {} repository, please
-enter the destination path below.
-'''
-
-CLONE_VCS_PROMPT = '''
-Destination directory for {} clone (leave empty to not clone): '''.lstrip()
-
-CLONE_VCS_NOT_EMPTY = '''\
-Destination directory '{}' is not empty.
-
-Would you like to clone to '{}' instead?
-  1. Yes
-  2. No, let me enter another path
-  3. No, stop cloning
-Your choice: '''
-
-CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED = '''
-ERROR! Destination directory '{}' is not empty and '{}' exists.
-'''
-
-CLONE_VCS_NOT_DIR = '''
-ERROR! Destination '{}' exists but is not a directory.
-'''
-
-CLONE_MERCURIAL_PULL_FAIL = '''
-Failed to pull from hg.mozilla.org.
-
-This is most likely because of unstable network connection.
-Try running `hg pull https://hg.mozilla.org/mozilla-unified` manually, or
-download mercurial bundle and use it:
-https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles'''
-
 DEBIAN_DISTROS = (
     'debian',
     'ubuntu',
@@ -339,43 +306,6 @@ class Bootstrapper(object):
                                       'for your OS.')
 
         self.instance = cls(**args)
-
-    def input_clone_dest(self, with_hg=True):
-        repo_name = 'mozilla-unified'
-        vcs = 'Mercurial'
-        if not with_hg:
-            vcs = 'Git'
-        print(CLONE_VCS.format(repo_name, vcs))
-
-        while True:
-            dest = input(CLONE_VCS_PROMPT.format(vcs))
-            dest = dest.strip()
-            if not dest:
-                return ''
-
-            dest = os.path.expanduser(dest)
-            if not os.path.exists(dest):
-                return dest
-
-            if not os.path.isdir(dest):
-                print(CLONE_VCS_NOT_DIR.format(dest))
-                continue
-
-            if os.listdir(dest) == []:
-                return dest
-
-            newdest = os.path.join(dest, repo_name)
-            if os.path.exists(newdest):
-                print(CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED.format(dest, newdest))
-                continue
-
-            choice = self.instance.prompt_int(prompt=CLONE_VCS_NOT_EMPTY.format(dest,
-                                              newdest), low=1, high=3)
-            if choice == 1:
-                return newdest
-            if choice == 2:
-                continue
-            return ''
 
     # The state directory code is largely duplicated from mach_bootstrap.py.
     # We can't easily import mach_bootstrap.py because the bootstrapper may
@@ -551,27 +481,6 @@ class Bootstrapper(object):
                               self.instance.which('git-cinnabar'),
                               state_dir, checkout_root)
 
-        # Offer to clone if we're not inside a clone.
-        have_clone = False
-
-        if checkout_type:
-            have_clone = True
-        elif hg_installed and not self.instance.no_interactive and vcs == 'hg':
-            dest = self.input_clone_dest()
-            if dest:
-                have_clone = hg_clone_firefox(self.instance.which('hg'), dest)
-                checkout_root = dest
-        elif self.instance.which('git') and vcs == 'git':
-            dest = self.input_clone_dest(False)
-            if dest:
-                git = self.instance.which('git')
-                watchman = self.instance.which('watchman')
-                have_clone = git_clone_firefox(git, dest, watchman)
-                checkout_root = dest
-
-        if not have_clone:
-            print(SOURCE_ADVERTISE)
-
         self.maybe_install_private_packages_or_exit(state_dir,
                                                     state_dir_available,
                                                     have_clone,
@@ -672,57 +581,6 @@ def update_mercurial_repo(hg, url, dest, revision):
         subprocess.check_call(update_args, cwd=dest)
     finally:
         print('=' * 80)
-
-
-def hg_clone_firefox(hg, dest):
-    """Clone the Firefox repository to a specified destination."""
-    print('Cloning Firefox Mercurial repository to %s' % dest)
-
-    # We create an empty repo then modify the config before adding data.
-    # This is necessary to ensure storage settings are optimally
-    # configured.
-    args = [
-        hg,
-        # The unified repo is generaldelta, so ensure the client is as
-        # well.
-        '--config', 'format.generaldelta=true',
-        'init',
-        dest
-    ]
-    res = subprocess.call(args)
-    if res:
-        print('unable to create destination repo; please try cloning manually')
-        return False
-
-    # Strictly speaking, this could overwrite a config based on a template
-    # the user has installed. Let's pretend this problem doesn't exist
-    # unless someone complains about it.
-    with open(os.path.join(dest, '.hg', 'hgrc'), 'a') as fh:
-        fh.write('[paths]\n')
-        fh.write('default = https://hg.mozilla.org/mozilla-unified\n')
-        fh.write('\n')
-
-        # The server uses aggressivemergedeltas which can blow up delta chain
-        # length. This can cause performance to tank due to delta chains being
-        # too long. Limit the delta chain length to something reasonable
-        # to bound revlog read time.
-        fh.write('[format]\n')
-        fh.write('# This is necessary to keep performance in check\n')
-        fh.write('maxchainlen = 10000\n')
-
-    res = subprocess.call([hg, 'pull', 'https://hg.mozilla.org/mozilla-unified'], cwd=dest)
-    print('')
-    if res:
-        print(CLONE_MERCURIAL_PULL_FAIL)
-        return False
-
-    print('updating to "central" - the development head of Gecko and Firefox')
-    res = subprocess.call([hg, 'update', '-r', 'central'], cwd=dest)
-    if res:
-        print('error updating; you will need to `hg update` manually')
-
-    print('Firefox source code available at %s' % dest)
-    return True
 
 
 def current_firefox_checkout(env, hg=None):
@@ -836,45 +694,6 @@ def configure_git(git, cinnabar, root_state_dir, top_src_dir):
 
     if not cinnabar:
         print(ADD_GIT_CINNABAR_PATH.format(cinnabar_dir))
-
-
-def git_clone_firefox(git, dest, watchman=None):
-    """Clone the Firefox repository to a specified destination."""
-    print('Cloning Firefox repository to %s' % dest)
-
-    try:
-        # Configure git per the git-cinnabar requirements.
-        subprocess.check_call([git, 'clone', '-b', 'bookmarks/central',
-                               'hg::https://hg.mozilla.org/mozilla-unified', dest])
-        subprocess.check_call([git, 'remote', 'add', 'inbound',
-                               'hg::ssh://hg.mozilla.org/integration/mozilla-inbound'],
-                              cwd=dest)
-        subprocess.check_call([git, 'config', 'remote.inbound.skipDefaultUpdate',
-                               'true'], cwd=dest)
-        subprocess.check_call([git, 'config', 'remote.inbound.push',
-                               '+HEAD:refs/heads/branches/default/tip'], cwd=dest)
-        subprocess.check_call([git, 'config', 'fetch.prune', 'true'], cwd=dest)
-        subprocess.check_call([git, 'config', 'pull.ff', 'only'], cwd=dest)
-
-        watchman_sample = os.path.join(dest, '.git/hooks/fsmonitor-watchman.sample')
-        # Older versions of git didn't include fsmonitor-watchman.sample.
-        if watchman and watchman_sample:
-            print('Configuring watchman')
-            watchman_config = os.path.join(dest, '.git/hooks/query-watchman')
-            if not os.path.exists(watchman_config):
-                print('Copying %s to %s' % (watchman_sample, watchman_config))
-                copy_args = ['cp', '.git/hooks/fsmonitor-watchman.sample',
-                             '.git/hooks/query-watchman']
-                subprocess.check_call(copy_args, cwd=dest)
-
-            config_args = [git, 'config', 'core.fsmonitor', '.git/hooks/query-watchman']
-            subprocess.check_call(config_args, cwd=dest)
-    except Exception as e:
-        print(e)
-        return False
-
-    print('Firefox source code available at %s' % dest)
-    return True
 
 
 def _warn_if_risky_revision(path):
