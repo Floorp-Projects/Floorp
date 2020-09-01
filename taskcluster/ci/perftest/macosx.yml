@@ -151,5 +151,6 @@ livesites:
             --flavor desktop-browser
             --perfherder
             --perfherder-metrics {perftest_metrics}
+            --perfherder-simplify-names
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
