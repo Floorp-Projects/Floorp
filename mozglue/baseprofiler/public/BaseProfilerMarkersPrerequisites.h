@@ -22,6 +22,11 @@
 #  include <type_traits>
 #  include <utility>
 
+namespace mozilla::baseprofiler {
+// Implemented in platform.cpp
+MFBT_API int profiler_current_thread_id();
+}  // namespace mozilla::baseprofiler
+
 namespace mozilla {
 
 // Return a NotNull<const CHAR*> pointing at the literal empty string `""`.
@@ -249,6 +254,30 @@ MOZ_PROFILING_CATEGORY_LIST(CATEGORY_ENUM_BEGIN_CATEGORY,
 #  undef CATEGORY_ENUM_SUBCATEGORY
 #  undef CATEGORY_ENUM_END_CATEGORY
 }  // namespace baseprofiler::category
+
+// This marker option captures a given thread id.
+// If left unspecified (by default construction) during the add-marker call, the
+// current thread id will be used then.
+class MarkerThreadId {
+ public:
+  // Default constructor, keeps the thread id unspecified.
+  constexpr MarkerThreadId() = default;
+
+  // Constructor from a given thread id.
+  constexpr explicit MarkerThreadId(int aThreadId) : mThreadId(aThreadId) {}
+
+  // Use the current thread's id.
+  static MarkerThreadId CurrentThread() {
+    return MarkerThreadId(baseprofiler::profiler_current_thread_id());
+  }
+
+  [[nodiscard]] constexpr int ThreadId() const { return mThreadId; }
+
+  [[nodiscard]] constexpr bool IsUnspecified() const { return mThreadId == 0; }
+
+ private:
+  int mThreadId = 0;
+};
 
 }  // namespace mozilla
 
