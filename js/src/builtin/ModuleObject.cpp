@@ -1302,28 +1302,28 @@ static ArrayObject* ModuleBuilderInitArray(
     const frontend::StencilModuleEntry& entry = vector[i];
 
     if (entry.specifier) {
-      specifier = compilationInfo.liftParserAtomToJSAtom(entry.specifier);
+      specifier = compilationInfo.liftParserAtomToJSAtom(cx, entry.specifier);
       if (!specifier) {
         return nullptr;
       }
     }
 
     if (entry.localName) {
-      localName = compilationInfo.liftParserAtomToJSAtom(entry.localName);
+      localName = compilationInfo.liftParserAtomToJSAtom(cx, entry.localName);
       if (!localName) {
         return nullptr;
       }
     }
 
     if (entry.importName) {
-      importName = compilationInfo.liftParserAtomToJSAtom(entry.importName);
+      importName = compilationInfo.liftParserAtomToJSAtom(cx, entry.importName);
       if (!importName) {
         return nullptr;
       }
     }
 
     if (entry.exportName) {
-      exportName = compilationInfo.liftParserAtomToJSAtom(entry.exportName);
+      exportName = compilationInfo.liftParserAtomToJSAtom(cx, entry.exportName);
       if (!exportName) {
         return nullptr;
       }

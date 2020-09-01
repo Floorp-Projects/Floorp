@@ -277,8 +277,9 @@ class SharedContext {
     return retVal;
   }
 
-  inline JSAtom* liftParserAtomToJSAtom(const ParserAtom* atomId);
-  inline const ParserAtom* lowerJSAtomToParserAtom(JSAtom* atom);
+  inline JSAtom* liftParserAtomToJSAtom(JSContext* cx,
+                                        const ParserAtom* atomId);
+  inline const ParserAtom* lowerJSAtomToParserAtom(JSContext* cx, JSAtom* atom);
 
   void copyScriptFields(ScriptStencil& script);
 };
