@@ -101,11 +101,8 @@ sources_from_WrapForJNI = sorted(
 EXPORTS.mozilla.widget += [
     'AndroidCompositorWidget.h',
     'AndroidUiThread.h',
-    'AndroidView.h',
     'EventDispatcher.h',
-    'GeckoViewSupport.h',
     'nsWindow.h',
-    'WindowEvent.h',
 ]
 
 EXPORTS.mozilla.java += [
