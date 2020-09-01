@@ -535,6 +535,27 @@ class MarkerStack {
   ProfileChunkedBuffer* mChunkedBuffer = nullptr;
 };
 
+// This marker option captures a given inner window id.
+class MarkerInnerWindowId {
+ public:
+  // Default constructor, it leaves the id unspecified.
+  constexpr MarkerInnerWindowId() = default;
+
+  // Constructor with a specified inner window id.
+  constexpr explicit MarkerInnerWindowId(uint64_t i) : mInnerWindowId(i) {}
+
+  // Explicit option with unspecified id.
+  constexpr static MarkerInnerWindowId NoId() { return MarkerInnerWindowId{}; }
+
+  [[nodiscard]] bool IsUnspecified() const { return mInnerWindowId == scNoId; }
+
+  [[nodiscard]] constexpr uint64_t Id() const { return mInnerWindowId; }
+
+ private:
+  static constexpr uint64_t scNoId = 0;
+  uint64_t mInnerWindowId = scNoId;
+};
+
 }  // namespace mozilla
 
 #endif  // MOZ_GECKO_PROFILER
