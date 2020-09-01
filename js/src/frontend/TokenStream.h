@@ -1499,6 +1499,8 @@ class TokenStreamCharsShared {
   using CharBuffer = Vector<char16_t, 32>;
 
  protected:
+  JSContext* cx;
+
   /**
    * Buffer transiently used to store sequences of identifier or string code
    * points when such can't be directly processed from the original source
@@ -1512,7 +1514,7 @@ class TokenStreamCharsShared {
  protected:
   explicit TokenStreamCharsShared(JSContext* cx,
                                   CompilationInfo* compilationInfo)
-      : charBuffer(cx), compilationInfo(compilationInfo) {}
+      : cx(cx), charBuffer(cx), compilationInfo(compilationInfo) {}
 
   MOZ_MUST_USE bool appendCodePointToCharBuffer(uint32_t codePoint);
 
@@ -1532,7 +1534,7 @@ class TokenStreamCharsShared {
   const ParserAtom* drainCharBufferIntoAtom() {
     // Add to parser atoms table.
     auto maybeId = this->compilationInfo->stencil.parserAtoms.internChar16(
-        this->compilationInfo->cx, charBuffer.begin(), charBuffer.length());
+        cx, charBuffer.begin(), charBuffer.length());
     if (maybeId.isErr()) {
       return nullptr;
     }
@@ -1690,7 +1692,7 @@ MOZ_ALWAYS_INLINE const ParserAtom*
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(
     mozilla::Span<const char16_t> units) {
   return this->compilationInfo->stencil.parserAtoms
-      .internChar16(this->compilationInfo->cx, units.data(), units.size())
+      .internChar16(cx, units.data(), units.size())
       .unwrapOr(nullptr);
 }
 
@@ -1699,7 +1701,7 @@ template <>
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
     mozilla::Span<const mozilla::Utf8Unit> units) {
   return this->compilationInfo->stencil.parserAtoms
-      .internUtf8(this->compilationInfo->cx, units.data(), units.size())
+      .internUtf8(cx, units.data(), units.size())
       .unwrapOr(nullptr);
 }
 
