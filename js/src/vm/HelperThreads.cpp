@@ -509,7 +509,9 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 void ParseTask::activate(JSRuntime* rt) {
-  rt->setUsedByHelperThread(parseGlobal->zone());
+  if (parseGlobal) {
+    rt->setUsedByHelperThread(parseGlobal->zone());
+  }
 }
 
 ParseTask::~ParseTask() = default;
@@ -519,13 +521,15 @@ void ParseTask::trace(JSTracer* trc) {
     return;
   }
 
-  Zone* zone = MaybeForwarded(parseGlobal)->zoneFromAnyThread();
-  if (zone->usedByHelperThread()) {
-    MOZ_ASSERT(!zone->isCollecting());
-    return;
+  if (parseGlobal) {
+    Zone* zone = MaybeForwarded(parseGlobal)->zoneFromAnyThread();
+    if (zone->usedByHelperThread()) {
+      MOZ_ASSERT(!zone->isCollecting());
+      return;
+    }
   }
 
-  TraceRoot(trc, &parseGlobal, "ParseTask::parseGlobal");
+  TraceNullableRoot(trc, &parseGlobal, "ParseTask::parseGlobal");
   scripts.trace(trc);
   sourceObjects.trace(trc);
 
@@ -542,7 +546,9 @@ size_t ParseTask::sizeOfExcludingThis(
 
 void ParseTask::runTaskLocked(AutoLockHelperThreadState& locked) {
 #ifdef DEBUG
-  runtime->incOffThreadParsesRunning();
+  if (parseGlobal) {
+    runtime->incOffThreadParsesRunning();
+  }
 #endif
 
   {
@@ -558,7 +564,9 @@ void ParseTask::runTaskLocked(AutoLockHelperThreadState& locked) {
   HelperThreadState().parseFinishedList(locked).insertBack(this);
 
 #ifdef DEBUG
-  runtime->decOffThreadParsesRunning();
+  if (parseGlobal) {
+    runtime->decOffThreadParsesRunning();
+  }
 #endif
 }
 
@@ -571,12 +579,22 @@ void ParseTask::runTask() {
   AutoSetContextParse parsetask(this);
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
-  Zone* zone = parseGlobal->zoneFromAnyThread();
-  zone->setHelperThreadOwnerContext(cx);
-  auto resetOwnerContext = mozilla::MakeScopeExit(
-      [&] { zone->setHelperThreadOwnerContext(nullptr); });
+  Zone* zone = nullptr;
+  if (parseGlobal) {
+    zone = parseGlobal->zoneFromAnyThread();
+    zone->setHelperThreadOwnerContext(cx);
+  }
 
-  AutoRealm ar(cx, parseGlobal);
+  auto resetOwnerContext = mozilla::MakeScopeExit([&] {
+    if (zone) {
+      zone->setHelperThreadOwnerContext(nullptr);
+    }
+  });
+
+  Maybe<AutoRealm> ar;
+  if (parseGlobal) {
+    ar.emplace(cx, parseGlobal);
+  }
 
   parse(cx);
 
@@ -922,8 +940,10 @@ class MOZ_RAII AutoSetCreatedForHelperThread {
 
  public:
   explicit AutoSetCreatedForHelperThread(JSObject* global)
-      : zone(global->zone()) {
-    zone->setCreatedForHelperThread();
+      : zone(global ? global->zone() : nullptr) {
+    if (zone) {
+      zone->setCreatedForHelperThread();
+    }
   }
 
   void forget() { zone = nullptr; }
@@ -1729,7 +1749,9 @@ void HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& lock) {
 static void LeaveParseTaskZone(JSRuntime* rt, ParseTask* task) {
   // Mark the zone as no longer in use by a helper thread, and available
   // to be collected by the GC.
-  rt->clearUsedByHelperThread(task->parseGlobal->zoneFromAnyThread());
+  if (task->parseGlobal) {
+    rt->clearUsedByHelperThread(task->parseGlobal->zoneFromAnyThread());
+  }
 }
 
 ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
@@ -1765,31 +1787,38 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   Rooted<UniquePtr<ParseTask>> parseTask(cx,
                                          removeFinishedParseTask(kind, token));
 
-  // Make sure we have all the constructors we need for the prototype
-  // remapping below, since we can't GC while that's happening.
-  if (!EnsureParserCreatedClasses(cx, kind)) {
-    LeaveParseTaskZone(cx->runtime(), parseTask.get().get());
-    return nullptr;
-  }
-
-  mergeParseTaskRealm(cx, parseTask.get().get(), cx->realm());
-
-  for (auto& script : parseTask->scripts) {
-    cx->releaseCheck(script);
-  }
-
-  // Finish initializing ScriptSourceObject now that we are back on main-thread
-  // and in the correct realm.
-  for (auto& sourceObject : parseTask->sourceObjects) {
-    RootedScriptSourceObject sso(cx, sourceObject);
-
-    if (!ScriptSourceObject::initFromOptions(cx, sso, parseTask->options)) {
+  if (parseTask->options.useOffThreadParseGlobal) {
+    // Make sure we have all the constructors we need for the prototype
+    // remapping below, since we can't GC while that's happening.
+    if (!EnsureParserCreatedClasses(cx, kind)) {
+      LeaveParseTaskZone(cx->runtime(), parseTask.get().get());
       return nullptr;
     }
 
-    if (!sso->source()->tryCompressOffThread(cx)) {
-      return nullptr;
+    mergeParseTaskRealm(cx, parseTask.get().get(), cx->realm());
+
+    for (auto& script : parseTask->scripts) {
+      cx->releaseCheck(script);
     }
+
+    // Finish initializing ScriptSourceObject now that we are back on
+    // main-thread and in the correct realm.
+    for (auto& sourceObject : parseTask->sourceObjects) {
+      RootedScriptSourceObject sso(cx, sourceObject);
+
+      if (!ScriptSourceObject::initFromOptions(cx, sso, parseTask->options)) {
+        return nullptr;
+      }
+
+      if (!sso->source()->tryCompressOffThread(cx)) {
+        return nullptr;
+      }
+    }
+  } else {
+    // GC things should be allocated in finishSingleParseTask, after
+    // calling finishParseTaskCommon.
+    MOZ_ASSERT(parseTask->scripts.length() == 0);
+    MOZ_ASSERT(parseTask->sourceObjects.length() == 0);
   }
 
   // Report out of memory errors eagerly, or errors could be malformed.
@@ -1809,9 +1838,11 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
     return nullptr;
   }
 
-  if (coverage::IsLCovEnabled()) {
-    if (!generateLCovSources(cx, parseTask.get().get())) {
-      return nullptr;
+  if (parseTask->options.useOffThreadParseGlobal) {
+    if (coverage::IsLCovEnabled()) {
+      if (!generateLCovSources(cx, parseTask.get().get())) {
+        return nullptr;
+      }
     }
   }
 
@@ -2007,6 +2038,8 @@ void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
 void GlobalHelperThreadState::mergeParseTaskRealm(JSContext* cx,
                                                   ParseTask* parseTask,
                                                   Realm* dest) {
+  MOZ_ASSERT(parseTask->parseGlobal);
+
   // After we call LeaveParseTaskZone() it's not safe to GC until we have
   // finished merging the contents of the parse task's realm into the
   // destination realm.
