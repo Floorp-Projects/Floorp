@@ -10594,7 +10594,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   switch (ltok) {
     case TokenKind::Number: {
       const ParserAtom* numAtom = NumberToParserAtom(
-          this->compilationInfo_, anyChars.currentToken().number());
+          cx_, this->compilationInfo_, anyChars.currentToken().number());
       if (!numAtom) {
         return null();
       }

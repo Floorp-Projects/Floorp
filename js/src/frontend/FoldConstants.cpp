@@ -476,7 +476,7 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
       case ParseNodeKind::StringExpr:
         if (pn->isKind(ParseNodeKind::NumberExpr)) {
           const ParserAtom* atom =
-              pn->as<NumericLiteral>().toAtom(info.compilationInfo);
+              pn->as<NumericLiteral>().toAtom(info.cx, info.compilationInfo);
           if (!atom) {
             return false;
           }
@@ -1107,7 +1107,7 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
       // Optimization 2: We have something like expr[3.14]. The number
       // isn't an array index, so it converts to a string ("3.14"),
       // enabling optimization 3 below.
-      const ParserAtom* atom = numeric->toAtom(info.compilationInfo);
+      const ParserAtom* atom = numeric->toAtom(info.cx, info.compilationInfo);
       if (!atom) {
         return false;
       }

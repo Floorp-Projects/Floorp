@@ -393,8 +393,8 @@ BigInt* BigIntLiteral::create(JSContext* cx) {
 bool BigIntLiteral::isZero() { return stencil_.bigIntData[index_].isZero(); }
 
 const ParserAtom* NumericLiteral::toAtom(
-    CompilationInfo& compilationInfo) const {
-  return NumberToParserAtom(compilationInfo, value());
+    JSContext* cx, CompilationInfo& compilationInfo) const {
+  return NumberToParserAtom(cx, compilationInfo, value());
 }
 
 RegExpObject* RegExpStencil::createRegExp(JSContext* cx) const {

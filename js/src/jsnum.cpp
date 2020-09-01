@@ -848,7 +848,7 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
 }
 
 const frontend::ParserAtom* js::Int32ToParserAtom(
-    frontend::CompilationInfo& compilationInfo, int32_t si) {
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, int32_t si) {
   char buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
   size_t length;
   char* start = BackfillInt32InBuffer(
@@ -859,8 +859,7 @@ const frontend::ParserAtom* js::Int32ToParserAtom(
     indexValue.emplace(si);
   }
 
-  return compilationInfo.stencil.parserAtoms
-      .internAscii(compilationInfo.cx, start, length)
+  return compilationInfo.stencil.parserAtoms.internAscii(cx, start, length)
       .unwrapOr(nullptr);
 }
 
@@ -1651,24 +1650,23 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
 }
 
 const frontend::ParserAtom* js::NumberToParserAtom(
-    frontend::CompilationInfo& compilationInfo, double d) {
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, double d) {
   int32_t si;
   if (NumberEqualsInt32(d, &si)) {
-    return Int32ToParserAtom(compilationInfo, si);
+    return Int32ToParserAtom(cx, compilationInfo, si);
   }
 
   ToCStringBuf cbuf;
-  char* numStr = FracNumberToCString(compilationInfo.cx, &cbuf, d);
+  char* numStr = FracNumberToCString(cx, &cbuf, d);
   if (!numStr) {
-    ReportOutOfMemory(compilationInfo.cx);
+    ReportOutOfMemory(cx);
     return nullptr;
   }
   MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
              numStr < cbuf.sbuf + cbuf.sbufSize);
 
   size_t length = strlen(numStr);
-  return compilationInfo.stencil.parserAtoms
-      .internAscii(compilationInfo.cx, numStr, length)
+  return compilationInfo.stencil.parserAtoms.internAscii(cx, numStr, length)
       .unwrapOr(nullptr);
 }
 
