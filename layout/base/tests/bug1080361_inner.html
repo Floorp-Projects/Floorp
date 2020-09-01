@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
         target.setPointerCapture(31415);
       } catch(exc) {
         test_first_exc = true;
-        parent.is(exc.name, "InvalidPointerId", "Exception InvalidPointerId should be fired");
+        parent.is(exc.name, "NotFoundError", "Exception NotFoundError should be fired");
       }
       try {
         logger("mediator.setPointerCapture()");
