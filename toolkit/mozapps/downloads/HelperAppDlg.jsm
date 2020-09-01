@@ -935,14 +935,26 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   updateMIMEInfo() {
+    let { MIMEInfo } = this.mLauncher;
+
     // Don't erase the preferred choice being internal handler
-    // if the user didn't have the choice to use that internal handler here
-    // -- this dialog is the result of the handler fallback
-    // (e.g. Content-Disposition was set as attachment)
-    var discardUpdate =
-      this.mLauncher.MIMEInfo.preferredAction ==
-        this.nsIMIMEInfo.handleInternally &&
-      !this.shouldShowInternalHandlerOption() &&
+    // -- this dialog is often the result of the handler fallback
+    // (e.g. Content-Disposition was set as attachment) and we don't
+    // want to inadvertently cause that to always show the dialog if
+    // users don't want that behaviour.
+
+    // Note: this is the same condition as the one in initDialog
+    // which avoids ticking the checkbox. The user can still change
+    // the action by ticking the checkbox, or by using the prefs to
+    // manually select always ask (at which point `areAlwaysOpeningInternally`
+    // will be false, which means `discardUpdate` will be false, which means
+    // we'll store the last-selected option even if the filetype's pref is
+    // set to always ask).
+    let areAlwaysOpeningInternally =
+      MIMEInfo.preferredAction == Ci.nsIMIMEInfo.handleInternally &&
+      !MIMEInfo.alwaysAskBeforeHandling;
+    let discardUpdate =
+      areAlwaysOpeningInternally &&
       !this.dialogElement("rememberChoice").checked;
 
     var needUpdate = false;
