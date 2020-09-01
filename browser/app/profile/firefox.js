@@ -339,6 +339,9 @@ pref("browser.urlbar.richSuggestions.tail", true);
 // Whether the Urlbar can enter search mode. Also controls the other
 // urlbar.update2 prefs.
 pref("browser.urlbar.update2", true);
+// Whether horizontal key navigation with left/right is disabled for urlbar's
+// one-off buttons.
+pref("browser.urlbar.update2.disableOneOffsHorizontalKeyNavigation", true);
 // Whether the urlbar displays one-offs to filter searches to history,
 // bookmarks, or tabs.
 pref("browser.urlbar.update2.localOneOffs", true);
@@ -347,6 +350,7 @@ pref("browser.urlbar.update2.localOneOffs", true);
 pref("browser.urlbar.update2.oneOffsRefresh", true);
 #else
 pref("browser.urlbar.update2", false);
+pref("browser.urlbar.update2.disableOneOffsHorizontalKeyNavigation", false);
 pref("browser.urlbar.update2.localOneOffs", false);
 pref("browser.urlbar.update2.oneOffsRefresh", false);
 #endif
