@@ -68,10 +68,7 @@ def create_tgg(responses, datadir):
         for url, filename in mock_requests.items():
             with open(os.path.join(datadir, filename)) as fh:
                 responses.add(
-                    responses.GET,
-                    url,
-                    json=json.load(fh),
-                    status=200,
+                    responses.GET, url, json=json.load(fh), status=200,
                 )
 
         # Still allow other real requests.

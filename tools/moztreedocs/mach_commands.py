@@ -215,9 +215,9 @@ class Documentation(MachCommandBase):
 
     def _dump_sphinx_backtrace(self):
         """
-        If there is a sphinx dump file, read and return
-        its content.
-        By default, it isn't displayed.
+            If there is a sphinx dump file, read and return
+            its content.
+            By default, it isn't displayed.
         """
         pattern = "sphinx-err-*"
         output = ""
@@ -263,7 +263,7 @@ class Documentation(MachCommandBase):
 
     def _post_process_html(self, savedir):
         """
-        Perform some operations on the generated html to fix some URL
+            Perform some operations on the generated html to fix some URL
         """
         MERMAID_VERSION = "8.4.4"
         for root, _, files in os.walk(savedir):

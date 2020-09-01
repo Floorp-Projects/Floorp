@@ -106,9 +106,7 @@ class PerftestTests(MachCommandBase):
             return False
 
     @Command(
-        "perftest-test",
-        category="testing",
-        description="Run perftest tests",
+        "perftest-test", category="testing", description="Run perftest tests",
     )
     @CommandArgument(
         "tests", default=None, nargs="*", help="Tests to run. By default will run all"
@@ -121,11 +119,7 @@ class PerftestTests(MachCommandBase):
         help="Skip flake8 and black",
     )
     @CommandArgument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Verbose mode",
+        "-v", "--verbose", action="store_true", default=False, help="Verbose mode",
     )
     def run_tests(self, **kwargs):
         MachCommandBase.activate_virtualenv(self)

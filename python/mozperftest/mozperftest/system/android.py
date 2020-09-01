@@ -58,7 +58,8 @@ class ADBLoggedDevice(ADBDevice):
 
 
 class AndroidDevice(Layer):
-    """Use an android device via ADB"""
+    """Use an android device via ADB
+    """
 
     name = "android"
     activated = False

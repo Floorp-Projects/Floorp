@@ -5,7 +5,8 @@ from mozperftest.metrics.notebook.utilities import flat
 
 
 class SingleJsonRetriever:
-    """Transforms perfherder data into the standardized data format."""
+    """Transforms perfherder data into the standardized data format.
+    """
 
     entry_number = 0
 

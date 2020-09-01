@@ -17,7 +17,8 @@ RESULTS_TEMPLATE = """\
 
 
 class ConsoleOutput(Layer):
-    """Output metrics in the console."""
+    """Output metrics in the console.
+    """
 
     name = "console"
     activated = False
