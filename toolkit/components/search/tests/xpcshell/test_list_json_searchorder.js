@@ -13,11 +13,14 @@ add_task(async function setup() {
     true
   );
 
-  await SearchTestUtils.useTestEngines();
+  await useTestEngines();
   await Services.search.init();
 });
 
 async function checkOrder(expectedOrder) {
+  await asyncReInit();
+  Assert.ok(Services.search.isInitialized, "search initialized");
+
   const sortedEngines = await Services.search.getEngines();
   Assert.deepEqual(
     sortedEngines.map(s => s.name),

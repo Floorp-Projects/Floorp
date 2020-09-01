@@ -21,10 +21,12 @@ add_task(async function setup() {
 
   await setupRemoteSettings();
 
-  cacheTemplate = await readJSONFile(
-    do_get_file("data/search_ignorelist.json")
-  );
+  let cacheTemplateFile = do_get_file("data/search_ignorelist.json");
+  cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
+
+  // The list of visibleDefaultEngines needs to match or the cache will be ignored.
+  cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
 
   await promiseSaveCacheData(cacheTemplate);
 });

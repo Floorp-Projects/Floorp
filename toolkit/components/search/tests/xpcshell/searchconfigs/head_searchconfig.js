@@ -187,6 +187,37 @@ class SearchConfigTest {
   }
 
   /**
+   * Causes re-initialization of the SearchService with the new region and locale.
+   *
+   * @param {string} region
+   *   The two-letter region code.
+   * @param {string} locale
+   *   The two-letter locale code.
+   */
+  async _reinit(region, locale) {
+    region = region?.toUpperCase();
+    if (region != Region.home) {
+      Region._setHomeRegion(region, true);
+      if (region) {
+        await SearchTestUtils.promiseSearchNotification("engines-reloaded");
+      }
+    }
+
+    const reinitCompletePromise = SearchTestUtils.promiseSearchNotification(
+      "reinit-complete"
+    );
+    Services.locale.availableLocales = [locale];
+    Services.locale.requestedLocales = [locale];
+    Services.search.reInit();
+    await reinitCompletePromise;
+
+    this.assertOk(
+      Services.search.isInitialized,
+      "Should have completely re-initialization, if it fails check logs for if reinit was successful"
+    );
+  }
+
+  /**
    * @returns {Set} the list of regions for the tests to run with.
    */
   get _regions() {

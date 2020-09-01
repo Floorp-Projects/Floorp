@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   Database: "resource://services-settings/Database.jsm",
@@ -262,7 +261,7 @@ class RemoteSettingsClient extends EventEmitter {
 
     // This attribute allows signature verification to be disabled, when running tests
     // or when pulling data from a dev server.
-    this.verifySignature = AppConstants.REMOTE_SETTINGS_VERIFY_SIGNATURE;
+    this.verifySignature = true;
 
     // The bucket preference value can be changed (eg. `main` to `main-preview`) in order
     // to preview the changes to be approved in a real client.

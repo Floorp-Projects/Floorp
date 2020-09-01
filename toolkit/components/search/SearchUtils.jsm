@@ -249,7 +249,7 @@ var SearchUtils = {
    *   The current cache version.
    */
   get CACHE_VERSION() {
-    return 5;
+    return this.gModernConfig ? 5 : 3;
   },
 
   /**
@@ -309,6 +309,13 @@ var SearchUtils = {
     return hasher.finish(true);
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  SearchUtils,
+  "gModernConfig",
+  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
+  false
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   SearchUtils,

@@ -14,7 +14,7 @@ const baseURL = "https://www.google.com/search?q=foo";
 add_task(async function setup() {
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams will be ignored.
-  await SearchTestUtils.useTestEngines();
+  await useTestEngines();
 });
 
 add_task(async function test_pref_initial_value() {

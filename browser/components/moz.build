@@ -33,6 +33,7 @@ DIRS += [
     'attribution',
     'contextualidentity',
     'customizableui',
+    'dirprovider',
     'doh',
     'downloads',
     'enterprisepolicies',

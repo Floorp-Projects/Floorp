@@ -137,6 +137,11 @@ add_task(async function test_support_of_preferences_filters() {
     {
       willMatch: true,
       filter_expression:
+        '"services.settings.default_bucket"|preferenceIsUserSet == false',
+    },
+    {
+      willMatch: true,
+      filter_expression:
         '"services.settings.last_etag"|preferenceIsUserSet == true',
     },
   ]);
@@ -145,7 +150,7 @@ add_task(async function test_support_of_preferences_filters() {
   Services.prefs.setIntPref("services.settings.last_etag", 42);
 
   const list = await client.get();
-  equal(list.length, 3);
+  equal(list.length, 4);
   ok(list.every(e => e.willMatch));
 });
 

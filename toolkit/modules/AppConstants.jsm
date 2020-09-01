@@ -419,11 +419,4 @@ this.AppConstants = Object.freeze({
 #else
     false,
 #endif
-
-  REMOTE_SETTINGS_VERIFY_SIGNATURE:
-#ifdef MOZ_THUNDERBIRD
-    false,
-#else
-    true,
-#endif
 });

@@ -3,7 +3,7 @@
 
 add_task(async function setup() {
   Region._setHomeRegion("an", false);
-  await SearchTestUtils.useTestEngines("test-extensions");
+  await useTestEngines("test-extensions");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
 });
