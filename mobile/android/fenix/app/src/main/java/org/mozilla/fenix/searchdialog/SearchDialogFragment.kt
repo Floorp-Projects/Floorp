@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
+import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
@@ -79,6 +80,21 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
     private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+
+    override fun onStart() {
+        super.onStart()
+        // https://github.com/mozilla-mobile/fenix/issues/14279
+        // To prevent GeckoView from resizing we're going to change the softInputMode to not adjust
+        // the size of the window.
+        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // https://github.com/mozilla-mobile/fenix/issues/14279
+        // Let's reset back to the default behavior after we're done searching
+        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
