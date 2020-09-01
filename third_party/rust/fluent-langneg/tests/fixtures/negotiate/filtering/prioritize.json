@@ -1,0 +1,30 @@
+[
+  {
+    "input": [["en-US"], ["en-US-windows", "en", "en-US"]],
+    "output": ["en-US", "en", "en-US-windows"]
+  },
+  {
+    "input": [["en-Latn-US"], ["en-GB", "en-US"]],
+    "output": ["en-US", "en-GB"]
+  },
+  {
+    "input": [["en"], ["en-Cyrl-US", "en-Latn-US"]],
+    "output": ["en-Latn-US"]
+  },
+  {
+    "input": [["en-US-macos"], ["en-US-windows", "en-GB-macos"]],
+    "output": ["en-US-windows", "en-GB-macos"]
+  },
+  {
+    "input": [["en-US-macos"], ["en-GB-windows"]],
+    "output": ["en-GB-windows"]
+  },
+  {
+    "input": [["en-US"], ["en-GB", "en"]],
+    "output": ["en", "en-GB"]
+  },
+  {
+    "input": [["fr-CA-macos", "de-DE"], ["de-DE", "fr-FR-windows"]],
+    "output": ["fr-FR-windows", "de-DE"]
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "input": {
+      "string": "en",
+      "options": {
+        "language": "pl"
+      }
+    },
+    "output": {
+      "language": "pl"
+    }
+  },
+  {
+    "input": {
+      "string": "en",
+      "options": {
+        "language": "pl",
+        "script": "Cyrl"
+      }
+    },
+    "output": {
+      "language": "pl",
+      "script": "Cyrl"
+    }
+  },
+  {
+    "input": {
+      "string": "en-US",
+      "options": {
+        "language": "pl",
+        "script": "Cyrl"
+      }
+    },
+    "output": {
+      "language": "pl",
+      "script": "Cyrl",
+      "region": "US"
+    }
+  },
+  {
+    "input": {
+      "string": "en-Latn-US",
+      "options": {
+        "region": "GB"
+      }
+    },
+    "output": {
+      "language": "en",
+      "script": "Latn",
+      "region": "GB"
+    }
+  }
+]

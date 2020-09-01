@@ -13,9 +13,8 @@
 [package]
 edition = "2018"
 name = "intl_pluralrules"
-version = "7.0.0"
+version = "6.0.0"
 authors = ["Kekoa Riggin <kekoariggin@gmail.com>", "Zibi Braniecki <zbraniecki@mozilla.com>"]
-include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md"]
 description = "Unicode Plural Rules categorizer for numeric input."
 readme = "README.md"
 keywords = ["localization", "l10n", "i18n", "intl", "internationalization"]
@@ -30,12 +29,12 @@ harness = false
 version = "0.3.2"
 
 [dependencies.unic-langid]
-version = "0.9"
+version = "0.8"
 [dev-dependencies.criterion]
 version = "0.3"
 
 [dev-dependencies.unic-langid]
-version = "0.9"
+version = "0.8"
 features = ["macros"]
 [badges.coveralls]
 branch = "master"
