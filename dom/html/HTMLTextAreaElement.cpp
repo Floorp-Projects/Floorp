@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
-#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MappedDeclarations.h"
@@ -40,7 +39,6 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsBaseCommandController.h"
-#include "nsTextControlFrame.h"
 #include "nsXULControllers.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
@@ -434,16 +432,11 @@ nsChangeHint HTMLTextAreaElement::GetAttributeChangeHint(
   nsChangeHint retval =
       nsGenericHTMLFormElementWithState::GetAttributeChangeHint(aAttribute,
                                                                 aModType);
-
-  const bool isAdditionOrRemoval =
-      aModType == MutationEvent_Binding::ADDITION ||
-      aModType == MutationEvent_Binding::REMOVAL;
-
   if (aAttribute == nsGkAtoms::rows || aAttribute == nsGkAtoms::cols) {
     retval |= NS_STYLE_HINT_REFLOW;
   } else if (aAttribute == nsGkAtoms::wrap) {
     retval |= nsChangeHint_ReconstructFrame;
-  } else if (aAttribute == nsGkAtoms::placeholder && isAdditionOrRemoval) {
+  } else if (aAttribute == nsGkAtoms::placeholder) {
     retval |= nsChangeHint_ReconstructFrame;
   }
   return retval;
@@ -823,7 +816,7 @@ EventStates HTMLTextAreaElement::IntrinsicState() const {
     }
   }
 
-  if (HasAttr(nsGkAtoms::placeholder) && IsValueEmpty()) {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) && IsValueEmpty()) {
     state |= NS_EVENT_STATE_PLACEHOLDERSHOWN;
   }
 
@@ -933,10 +926,6 @@ nsresult HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       UpdateTooLongValidityState();
     } else if (aName == nsGkAtoms::minlength) {
       UpdateTooShortValidityState();
-    } else if (aName == nsGkAtoms::placeholder) {
-      if (nsTextControlFrame* f = do_QueryFrame(GetPrimaryFrame())) {
-        f->PlaceholderChanged(aOldValue, aValue);
-      }
     }
   }
 
