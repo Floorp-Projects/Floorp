@@ -119,6 +119,7 @@ SubDialog.prototype = {
     this._dialogReady = new Promise(resolve => {
       this._resolveDialogReady = resolve;
     });
+    this._frame._dialogReady = this._dialogReady;
 
     // Wait until frame is ready to prevent browser crash in tests
     await this._frameCreated;
@@ -756,7 +757,17 @@ SubDialog.prototype = {
 
   focus() {
     let fm = Services.focus;
-    fm.moveFocus(this._frame.contentWindow, null, fm.MOVEFOCUS_FIRST, 0);
+    let focusedElement = fm.moveFocus(
+      this._frame.contentWindow,
+      null,
+      fm.MOVEFOCUS_FIRST,
+      0
+    );
+    if (!focusedElement) {
+      // Ensure the focus is pulled out of the content document even if there's
+      // nothing focusable in the dialog.
+      this._frame.contentWindow.focus();
+    }
   },
 
   _trapFocus() {
