@@ -121,9 +121,9 @@ ModuleObject* CompileModule(JSContext* cx,
 
 // Parse a module of the given source.  This is an internal API; if you want to
 // compile a module as a user, use CompileModule above.
-bool ParseModuleToStencil(CompilationInfo& compilationInfo,
+bool ParseModuleToStencil(JSContext* cx, CompilationInfo& compilationInfo,
                           JS::SourceText<char16_t>& srcBuf);
-bool ParseModuleToStencil(CompilationInfo& compilationInfo,
+bool ParseModuleToStencil(JSContext* cx, CompilationInfo& compilationInfo,
                           JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
 //
