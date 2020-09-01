@@ -822,12 +822,6 @@ static ModuleObject* CompileModuleImpl(
     return nullptr;
   }
 
-  // This happens in GlobalHelperThreadState::finishModuleParseTask() when a
-  // module is compiled off thread.
-  if (!ModuleObject::Freeze(cx, gcOutput.module)) {
-    return nullptr;
-  }
-
   assertException.reset();
   return gcOutput.module;
 }
