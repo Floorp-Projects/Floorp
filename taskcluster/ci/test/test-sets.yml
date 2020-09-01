@@ -619,6 +619,7 @@ android-hw-aarch64-raptor-cpu-memory-power:
     - raptor-scn-cpu-memory-power-idle-bg-refbrow
 
 android-hw-aarch64-browsertime:
+    - browsertime-power
     - browsertime-tp6m
     - browsertime-tp6m-live
     - browsertime-tp6m-profiling
@@ -626,6 +627,7 @@ android-hw-aarch64-browsertime:
     - browsertime-youtube-playback-mobile
 
 android-hw-arm7-browsertime:
+    - browsertime-power
     - browsertime-tp6m
     - browsertime-tp6m-live
     - browsertime-tp6m-profiling
