@@ -93,10 +93,10 @@ class AudioBuffer final : public nsWrapperCache {
                       JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);
 
   void CopyFromChannel(const Float32Array& aDestination,
-                       uint32_t aChannelNumber, uint32_t aStartInChannel,
+                       uint32_t aChannelNumber, uint32_t aBufferOffset,
                        ErrorResult& aRv);
   void CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
-                     uint32_t aChannelNumber, uint32_t aStartInChannel,
+                     uint32_t aChannelNumber, uint32_t aBufferOffset,
                      ErrorResult& aRv);
 
   /**
