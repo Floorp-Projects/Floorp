@@ -9,6 +9,7 @@ const {
   Component,
   createFactory,
 } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -151,7 +152,7 @@ class EvaluationContextSelector extends Component {
     for (const [targetType, menuItems] of Object.entries(dict)) {
       if (menuItems.length > 0) {
         items.push(
-          MenuItem({ role: "menuseparator", key: `${targetType}-separator` }),
+          dom.hr({ role: "menuseparator", key: `${targetType}-separator` }),
           ...menuItems
         );
       }
