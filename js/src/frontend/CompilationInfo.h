@@ -363,11 +363,6 @@ class ScriptStencilIterable {
 struct CompilationInfo {
   static constexpr FunctionIndex TopLevelIndex = FunctionIndex(0);
 
-  // This field is used as temporary storage for accessing current context.
-  // WARNING: Replace this when passing between threads.
-  // FIXME: Remove this field.
-  JSContext* cx;
-
   CompilationInput input;
   CompilationStencil stencil;
 
@@ -384,9 +379,10 @@ struct CompilationInfo {
 
   // Construct a CompilationInfo
   CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : cx(cx), input(options), stencil(cx->runtime()) {}
+      : input(options), stencil(cx->runtime()) {}
 
-  MOZ_MUST_USE bool instantiateStencils(CompilationGCOutput& gcOutput);
+  MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
+                                        CompilationGCOutput& gcOutput);
 
   JSAtom* liftParserAtomToJSAtom(JSContext* cx, const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx, *this).unwrapOr(nullptr);

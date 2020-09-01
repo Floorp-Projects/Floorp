@@ -265,7 +265,7 @@ bool frontend::InstantiateStencils(JSContext* cx,
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!compilationInfo.instantiateStencils(gcOutput)) {
+    if (!compilationInfo.instantiateStencils(cx, gcOutput)) {
       return false;
     }
   }
@@ -752,7 +752,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
             .functionFlags.isAsmJSNative());
   }
 
-  if (!compilationInfo.instantiateStencils(gcOutput)) {
+  if (!compilationInfo.instantiateStencils(cx, gcOutput)) {
     return false;
   }
 
@@ -906,7 +906,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   }
 
   CompilationGCOutput gcOutput(cx);
-  if (!compilationInfo.get().instantiateStencils(gcOutput)) {
+  if (!compilationInfo.get().instantiateStencils(cx, gcOutput)) {
     return false;
   }
 
