@@ -16,6 +16,7 @@
 #ifdef MOZ_GECKO_PROFILER
 
 #  include "mozilla/ProfileChunkedBuffer.h"
+#  include "mozilla/TimeStamp.h"
 
 #  include <string_view>
 #  include <string>
@@ -277,6 +278,116 @@ class MarkerThreadId {
 
  private:
   int mThreadId = 0;
+};
+
+// This marker option contains marker timing information.
+// This class encapsulates the logic for correctly storing a marker based on its
+// Use the static methods to create the MarkerTiming. This is a transient object
+// that is being used to enforce the constraints of the combinations of the
+// data.
+class MarkerTiming {
+ public:
+  // The following static methods are used to create the MarkerTiming based on
+  // the type that it is.
+
+  static MarkerTiming InstantAt(const TimeStamp& aTime) {
+    MOZ_ASSERT(!aTime.IsNull(), "Time is null for an instant marker.");
+    return MarkerTiming{aTime, TimeStamp{}, MarkerTiming::Phase::Instant};
+  }
+
+  static MarkerTiming InstantNow() {
+    return InstantAt(TimeStamp::NowUnfuzzed());
+  }
+
+  static MarkerTiming Interval(const TimeStamp& aStartTime,
+                               const TimeStamp& aEndTime) {
+    MOZ_ASSERT(!aStartTime.IsNull(),
+               "Start time is null for an interval marker.");
+    MOZ_ASSERT(!aEndTime.IsNull(), "End time is null for an interval marker.");
+    return MarkerTiming{aStartTime, aEndTime, MarkerTiming::Phase::Interval};
+  }
+
+  static MarkerTiming IntervalUntilNowFrom(const TimeStamp& aStartTime) {
+    return Interval(aStartTime, TimeStamp::NowUnfuzzed());
+  }
+
+  static MarkerTiming IntervalStart(
+      const TimeStamp& aTime = TimeStamp::NowUnfuzzed()) {
+    MOZ_ASSERT(!aTime.IsNull(), "Time is null for an interval start marker.");
+    return MarkerTiming{aTime, TimeStamp{}, MarkerTiming::Phase::IntervalStart};
+  }
+
+  static MarkerTiming IntervalEnd(
+      const TimeStamp& aTime = TimeStamp::NowUnfuzzed()) {
+    MOZ_ASSERT(!aTime.IsNull(), "Time is null for an interval end marker.");
+    return MarkerTiming{TimeStamp{}, aTime, MarkerTiming::Phase::IntervalEnd};
+  }
+
+  [[nodiscard]] const TimeStamp& StartTime() const { return mStartTime; }
+  [[nodiscard]] const TimeStamp& EndTime() const { return mEndTime; }
+
+  enum class Phase : uint8_t {
+    Instant = 0,
+    Interval = 1,
+    IntervalStart = 2,
+    IntervalEnd = 3,
+  };
+
+  [[nodiscard]] Phase MarkerPhase() const {
+    MOZ_ASSERT(!IsUnspecified());
+    return mPhase;
+  }
+
+  // The following getter methods are used to put the value into the buffer for
+  // storage.
+  [[nodiscard]] double GetStartTime() const {
+    MOZ_ASSERT(!IsUnspecified());
+    // If mStartTime is null (e.g., for IntervalEnd), this will output 0.0 as
+    // expected.
+    return MarkerTiming::timeStampToDouble(mStartTime);
+  }
+
+  [[nodiscard]] double GetEndTime() const {
+    MOZ_ASSERT(!IsUnspecified());
+    // If mEndTime is null (e.g., for Instant or IntervalStart), this will
+    // output 0.0 as expected.
+    return MarkerTiming::timeStampToDouble(mEndTime);
+  }
+
+  [[nodiscard]] uint8_t GetPhase() const {
+    MOZ_ASSERT(!IsUnspecified());
+    return static_cast<uint8_t>(mPhase);
+  }
+
+ private:
+  friend ProfileBufferEntryWriter::Serializer<MarkerTiming>;
+  friend ProfileBufferEntryReader::Deserializer<MarkerTiming>;
+
+  // Default timing leaves it internally "unspecified", serialization getters
+  // and add-marker functions will default to `InstantNow()`.
+  constexpr MarkerTiming() = default;
+
+  // This should only be used by internal profiler code.
+  [[nodiscard]] bool IsUnspecified() const {
+    return mStartTime.IsNull() && mEndTime.IsNull();
+  }
+
+  // Full constructor, used by static factory functions.
+  constexpr MarkerTiming(const TimeStamp& aStartTime, const TimeStamp& aEndTime,
+                         Phase aPhase)
+      : mStartTime(aStartTime), mEndTime(aEndTime), mPhase(aPhase) {}
+
+  static double timeStampToDouble(const TimeStamp& time) {
+    if (time.IsNull()) {
+      // The Phase lets us know not to use this value.
+      return 0;
+    }
+    return (time - TimeStamp::ProcessCreation()).ToMilliseconds();
+  }
+
+  TimeStamp mStartTime;
+  TimeStamp mEndTime;
+  Phase mPhase = Phase::Instant;
 };
 
 }  // namespace mozilla
