@@ -63,6 +63,8 @@ UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
     return dmabufFactory;
   }
 
+  LOGDMABUF(
+      ("SurfaceFactory_DMABUF::Create() failed, fallback to SW buffers.\n"));
   gfxPlatformGtk::GetPlatform()->DisableDMABufWebGL();
   return nullptr;
 }
