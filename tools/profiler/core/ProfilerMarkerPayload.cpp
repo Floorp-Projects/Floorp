@@ -139,8 +139,8 @@ ProfilerMarkerPayload::DeserializeCommonProps(
 // Deprecated: This function is providing a way for a few payloads to use the
 // start time and end time in their payloads, which is currently deprecated.
 // The startTime and endTime were removed from most payloads, in favor of
-// the MarkerTiming::Phase idea. However, IPC and Network markers still have
-// them as it was harder to upgrade the front-end without them.
+// the MarkerPhase idea. However, IPC and Network markers still have them as
+// it was harder to upgrade the front-end without them.
 void ProfilerMarkerPayload::StreamStartEndTime(
     SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime) const {
   WriteTime(aWriter, aProcessStartTime, mCommonProps.mStartTime, "startTime");
