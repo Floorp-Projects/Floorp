@@ -188,20 +188,20 @@ impl<T> Drop for GpuFrameProfile<T> {
     }
 }
 
+const NUM_PROFILE_FRAMES: usize = 4;
+
 pub struct GpuProfiler<T> {
     gl: Rc<dyn gl::Gl>,
-    frames: Vec<GpuFrameProfile<T>>,
+    frames: [GpuFrameProfile<T>; NUM_PROFILE_FRAMES],
     next_frame: usize,
     debug_method: GpuDebugMethod
 }
 
 impl<T> GpuProfiler<T> {
     pub fn new(gl: Rc<dyn gl::Gl>, debug_method: GpuDebugMethod) -> Self {
-        const MAX_PROFILE_FRAMES: usize = 4;
-        let frames = (0 .. MAX_PROFILE_FRAMES)
-            .map(|_| GpuFrameProfile::new(Rc::clone(&gl), debug_method))
-            .collect();
+        let f = || GpuFrameProfile::new(Rc::clone(&gl), debug_method);
 
+        let frames = [f(), f(), f(), f()];
         GpuProfiler {
             gl,
             next_frame: 0,
