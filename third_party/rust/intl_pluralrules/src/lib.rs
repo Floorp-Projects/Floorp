@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn version_test() {
-        assert_eq!(CLDR_VERSION, 36);
+        assert_eq!(CLDR_VERSION, 37);
     }
 
     #[test]
