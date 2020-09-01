@@ -121,8 +121,6 @@ class PerftestArgumentParser(ArgumentParser):
         if not self.app:
             self.app = "generic"
         for name, options in Options.args.items():
-            if "default" in options and isinstance(options["default"], list):
-                options["default"] = []
             self.add_argument(name, **options)
 
         mozlog.commandline.add_logging_group(self)
