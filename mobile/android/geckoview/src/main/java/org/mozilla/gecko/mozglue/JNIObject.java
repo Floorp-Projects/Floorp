@@ -2,9 +2,8 @@ package org.mozilla.gecko.mozglue;
 
 // Class that all classes with native methods extend from.
 public abstract class JNIObject {
-    // Pointer that references the native object. This is volatile because it may be accessed
-    // by multiple threads simultaneously.
-    private volatile long mHandle;
+    // Pointer to a WeakPtr object that refers to the native object.
+    private long mHandle;
 
     // Dispose of any reference to a native object.
     //

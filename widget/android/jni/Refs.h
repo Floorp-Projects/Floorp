@@ -1004,12 +1004,6 @@ ReturnToGlobal<Cls> ReturnTo(GlobalRef<Cls>* ref) {
   return ReturnToGlobal<Cls>(ref);
 }
 
-// Make a LocalRef<T> from any other Ref<T>
-template <typename Cls, typename JNIType>
-LocalRef<Cls> ToLocalRef(const Ref<Cls, JNIType>& aRef) {
-  return LocalRef<Cls>(aRef);
-}
-
 }  // namespace jni
 }  // namespace mozilla
 
