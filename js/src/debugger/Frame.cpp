@@ -952,18 +952,10 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    Rooted<frontend::CompilationInfo> compilationInfo(
-        cx, frontend::CompilationInfo(cx, options));
-    if (!compilationInfo.get().input.initForEval(cx, scope)) {
+    script = frontend::CompileEvalScript(cx, options, srcBuf, scope, env);
+    if (!script) {
       return false;
     }
-
-    frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo.get(), srcBuf, scope, env,
-                                     gcOutput)) {
-      return false;
-    }
-    script = gcOutput.script;
   } else {
     // Do not consider executeInGlobal{WithBindings} as an eval, but instead
     // as executing a series of statements at the global level. This is to
