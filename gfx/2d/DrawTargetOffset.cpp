@@ -180,8 +180,14 @@ void DrawTargetOffset::PushLayer(bool aOpaque, Float aOpacity,
 
 already_AddRefed<SourceSurface> DrawTargetOffset::IntoLuminanceSource(
     LuminanceType aLuminanceType, float aOpacity) {
-  return MakeAndAddRef<SourceSurfaceOffset>(
-      mDrawTarget->IntoLuminanceSource(aLuminanceType, aOpacity), mOrigin);
+  RefPtr<SourceSurface> surface =
+      mDrawTarget->IntoLuminanceSource(aLuminanceType, aOpacity);
+
+  if (!surface) {
+    return nullptr;
+  }
+
+  return MakeAndAddRef<SourceSurfaceOffset>(surface, mOrigin);
 }
 
 void DrawTargetOffset::PushLayerWithBlend(bool aOpaque, Float aOpacity,
