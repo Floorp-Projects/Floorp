@@ -105,6 +105,7 @@ class OwningExternalOrWindowProxy;
 class Promise;
 class PostMessageData;
 class PostMessageEvent;
+class PrintPreviewResultInfo;
 struct RequestInit;
 class RequestOrUSVString;
 class Selection;
@@ -166,6 +167,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
  public:
   typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowOuter*>
       OuterWindowByIdTable;
+
+  using PrintPreviewResolver =
+      std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;
 
   static void AssertIsOnMainThread()
 #ifdef DEBUG
@@ -584,7 +588,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Print(
       nsIPrintSettings*, nsIWebProgressListener*, nsIDocShell*, bool aIsPreview,
-      mozilla::ErrorResult&);
+      PrintPreviewResolver&& aPrintPreviewCallback, mozilla::ErrorResult&);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<mozilla::dom::Selection> GetSelection() override;
   nsScreen* GetScreen();
