@@ -13,6 +13,7 @@ from mozdevice import ADBDeviceFactory
 from logger.logger import RaptorLogger
 from performance_tuning import tune_performance
 from perftest import PerftestAndroid
+from power import enable_charging, disable_charging
 
 from .base import Browsertime
 
@@ -77,7 +78,11 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 "--firefox.android.activity", activity,
             ]
 
-        # if running on Fenix we must add the intent as we use a special non-default one there
+        # Setup power testing
+        if self.config["power_test"]:
+            args_list.extend(["--androidPower", "true"])
+
+        # If running on Fenix we must add the intent as we use a special non-default one there
         if self.config["app"] == "fenix" and self.config.get("intent") is not None:
             args_list.extend(["--firefox.android.intentArgument=-a"])
             args_list.extend(
@@ -167,7 +172,13 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             # Make sure that chrome is enabled on the device
             self.device.shell_output("pm enable com.android.chrome")
 
-        return super(BrowsertimeAndroid, self).run_tests(tests, test_names)
+        try:
+            if self.config["power_test"]:
+                disable_charging(self.device)
+            return super(BrowsertimeAndroid, self).run_tests(tests, test_names)
+        finally:
+            if self.config["power_test"]:
+                enable_charging(self.device)
 
     def run_test_teardown(self, test):
         LOG.info("removing reverse socket connections")

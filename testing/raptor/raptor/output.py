@@ -1399,9 +1399,12 @@ class BrowsertimeOutput(PerftestOutput):
 
         # converting suites and subtests into lists, and sorting them
         def _process(subtest):
-            subtest["value"] = filters.median(
-                filters.ignore_first(subtest["replicates"], 1)
-            )
+            if test["type"] == "power":
+                subtest["value"] = filters.mean(subtest["replicates"])
+            else:
+                subtest["value"] = filters.median(
+                    filters.ignore_first(subtest["replicates"], 1)
+                )
             return subtest
 
         def _process_suite(suite):
@@ -1421,7 +1424,10 @@ class BrowsertimeOutput(PerftestOutput):
                 vals = [
                     [subtest["value"], subtest["name"]] for subtest in suite["subtests"]
                 ]
-                suite["value"] = self.construct_summary(vals, testname=test["name"])
+                testname = suite["name"]
+                if suite["type"] == "power":
+                    testname = "supporting_data"
+                suite["value"] = self.construct_summary(vals, testname=testname)
             return suite
 
         LOG.info("preparing browsertime results for output")
@@ -1443,10 +1449,20 @@ class BrowsertimeOutput(PerftestOutput):
             extra_options = test["extra_options"]
 
             # If a test with the same name has different extra options, handle it
-            # by appending the difference in options to the key used in `suites`
-            if test_name in suites and suites[test_name]["extraOptions"] != extra_options:
+            # by appending the difference in options to the key used in `suites`. We
+            # need to do a loop here in case we get a conflicting test name again.
+            prev_name = test_name
+            while test_name in suites and suites[test_name]["extraOptions"] != extra_options:
                 missing = set(extra_options) - set(suites[test_name]["extraOptions"])
+                if len(missing) == 0:
+                    missing = set(suites[test_name]["extraOptions"]) - set(extra_options)
                 test_name = test_name + "-".join(list(missing))
+
+                if prev_name == test_name:
+                    # Kill the loop if we get the same name again
+                    break
+                else:
+                    prev_name = test_name
 
             suite = suites.setdefault(
                 test_name,
@@ -1466,7 +1482,7 @@ class BrowsertimeOutput(PerftestOutput):
             if "alert_change_type" in test and "alertChangeType" not in suite:
                 suite["alertChangeType"] = test["alert_change_type"]
 
-            if ("pageload" or "scenario") in test["type"]:
+            if test["type"] in ["pageload", "scenario", "power"]:
                 for measurement_name, replicates in test["measurements"].items():
                     if measurement_name not in suite["subtests"]:
                         subtest = {}
@@ -1507,7 +1523,7 @@ class BrowsertimeOutput(PerftestOutput):
 
         # convert suites to list
         suites = [
-            s if "benchmark" in test["type"] else _process_suite(s)
+            s if "benchmark" in s["type"] else _process_suite(s)
             for s in suites.values()
         ]
 
