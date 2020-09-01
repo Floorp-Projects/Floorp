@@ -9981,6 +9981,30 @@ class MGuardStringToInt32 : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+class MGuardStringToDouble : public MUnaryInstruction,
+                             public StringPolicy<0>::Data {
+  explicit MGuardStringToDouble(MDefinition* str)
+      : MUnaryInstruction(classOpcode, str) {
+    // Mark as guard to prevent the issue described in MGuardStringToIndex's
+    // constructor.
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Double);
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardStringToDouble)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, string))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 class MGuardNoDenseElements : public MUnaryInstruction,
                               public ObjectPolicy<0>::Data {
   explicit MGuardNoDenseElements(MDefinition* obj)
