@@ -109,7 +109,8 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   }
 
   // Call this before calling compile{Global,Eval}Script.
-  MOZ_MUST_USE bool createSourceAndParser(CompilationInfo& compilationInfo);
+  MOZ_MUST_USE bool createSourceAndParser(JSContext* cx,
+                                          CompilationInfo& compilationInfo);
 
   void assertSourceAndParserCreated(CompilationInput& compilationInput) const {
     MOZ_ASSERT(compilationInput.source() != nullptr);
@@ -166,7 +167,7 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
 
   using Base::createSourceAndParser;
 
-  bool compileScriptToStencil(CompilationInfo& compilationInfo,
+  bool compileScriptToStencil(JSContext* cx, CompilationInfo& compilationInfo,
                               SharedContext* sc);
 };
 
@@ -198,7 +199,7 @@ static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
   frontend::ScriptCompiler<Unit> compiler(
       cx, allocScope, compilationInfo.input.options, srcBuf);
 
-  if (!compiler.createSourceAndParser(compilationInfo)) {
+  if (!compiler.createSourceAndParser(cx, compilationInfo)) {
     return false;
   }
 
@@ -209,7 +210,7 @@ static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
                                          compiler.compilationState().directives,
                                          extent);
 
-  if (!compiler.compileScriptToStencil(compilationInfo, &globalsc)) {
+  if (!compiler.compileScriptToStencil(cx, compilationInfo, &globalsc)) {
     return false;
   }
 
@@ -340,7 +341,7 @@ static JSScript* CompileEvalScriptImpl(
   frontend::ScriptCompiler<Unit> compiler(cx, allocScope,
                                           compilationInfo.get().input.options,
                                           srcBuf, enclosingScope, enclosingEnv);
-  if (!compiler.createSourceAndParser(compilationInfo.get())) {
+  if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
     return nullptr;
   }
 
@@ -350,7 +351,7 @@ static JSScript* CompileEvalScriptImpl(
       compilationInfo.get().input.options.column);
   frontend::EvalSharedContext evalsc(cx, compilationInfo.get(),
                                      compiler.compilationState(), extent);
-  if (!compiler.compileScriptToStencil(compilationInfo.get(), &evalsc)) {
+  if (!compiler.compileScriptToStencil(cx, compilationInfo.get(), &evalsc)) {
     return nullptr;
   }
 
@@ -392,7 +393,7 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
       : Base(cx, allocScope, options, sourceBuffer, enclosingScope,
              enclosingEnv) {}
 
-  bool compile(CompilationInfo& compilationInfo);
+  bool compile(JSContext* cx, CompilationInfo& compilationInfo);
 };
 
 template <typename Unit>
@@ -421,13 +422,13 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
 
   using Base::createSourceAndParser;
 
-  FunctionNode* parse(CompilationInfo& compilationInfo,
+  FunctionNode* parse(JSContext* cx, CompilationInfo& compilationInfo,
                       FunctionSyntaxKind syntaxKind,
                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                       const Maybe<uint32_t>& parameterListEnd);
 
-  bool compile(CompilationInfo& compilationInfo, FunctionNode* parsedFunction,
-               CompilationGCOutput& gcOutput);
+  bool compile(JSContext* cx, CompilationInfo& compilationInfo,
+               FunctionNode* parsedFunction, CompilationGCOutput& gcOutput);
 };
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
@@ -508,13 +509,13 @@ static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
 
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
-    CompilationInfo& compilationInfo) {
-  if (!compilationInfo.input.assignSource(compilationInfo.cx, sourceBuffer_)) {
+    JSContext* cx, CompilationInfo& compilationInfo) {
+  if (!compilationInfo.input.assignSource(cx, sourceBuffer_)) {
     return false;
   }
 
   if (CanLazilyParse(compilationInfo)) {
-    syntaxParser.emplace(compilationInfo.cx, compilationInfo.input.options,
+    syntaxParser.emplace(cx, compilationInfo.input.options,
                          sourceBuffer_.units(), sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationInfo,
                          compilationState_, nullptr, nullptr);
@@ -523,8 +524,8 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
     }
   }
 
-  parser.emplace(compilationInfo.cx, compilationInfo.input.options,
-                 sourceBuffer_.units(), sourceBuffer_.length(),
+  parser.emplace(cx, compilationInfo.input.options, sourceBuffer_.units(),
+                 sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationInfo, compilationState_,
                  syntaxParser.ptrOr(nullptr), nullptr);
   parser->ss = compilationInfo.input.source();
@@ -576,12 +577,10 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 
 template <typename Unit>
 bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
-    CompilationInfo& compilationInfo, SharedContext* sc) {
+    JSContext* cx, CompilationInfo& compilationInfo, SharedContext* sc) {
   assertSourceParserAndScriptCreated(compilationInfo.input);
 
   TokenStreamPosition startPosition(parser->tokenStream);
-
-  JSContext* cx = compilationInfo.cx;
 
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
@@ -632,11 +631,11 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
 }
 
 template <typename Unit>
-bool frontend::ModuleCompiler<Unit>::compile(CompilationInfo& compilationInfo) {
-  if (!createSourceAndParser(compilationInfo)) {
+bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
+                                             CompilationInfo& compilationInfo) {
+  if (!createSourceAndParser(cx, compilationInfo)) {
     return false;
   }
-  JSContext* cx = compilationInfo.cx;
 
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationInfo.stencil.scriptData.length() ==
@@ -681,9 +680,9 @@ bool frontend::ModuleCompiler<Unit>::compile(CompilationInfo& compilationInfo) {
 // constructor.
 template <typename Unit>
 FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
-    CompilationInfo& compilationInfo, FunctionSyntaxKind syntaxKind,
-    GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-    const Maybe<uint32_t>& parameterListEnd) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
+    FunctionAsyncKind asyncKind, const Maybe<uint32_t>& parameterListEnd) {
   assertSourceAndParserCreated(compilationInfo.input);
 
   TokenStreamPosition startPosition(parser->tokenStream);
@@ -718,8 +717,8 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 // Compile a standalone JS function.
 template <typename Unit>
 bool frontend::StandaloneFunctionCompiler<Unit>::compile(
-    CompilationInfo& compilationInfo, FunctionNode* parsedFunction,
-    CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    FunctionNode* parsedFunction, CompilationGCOutput& gcOutput) {
   FunctionBox* funbox = parsedFunction->funbox();
 
   if (funbox->isInterpreted()) {
@@ -763,9 +762,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 #endif
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!compilationInfo.cx->isHelperThreadContext()) {
-    if (!compilationInfo.input.source()->tryCompressOffThread(
-            compilationInfo.cx)) {
+  if (!cx->isHelperThreadContext()) {
+    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
       return false;
     }
   }
@@ -784,7 +782,7 @@ static bool ParseModuleToStencilImpl(JSContext* cx,
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ModuleCompiler<Unit> compiler(cx, allocScope, compilationInfo.input.options,
                                 srcBuf);
-  if (!compiler.compile(compilationInfo)) {
+  if (!compiler.compile(cx, compilationInfo)) {
     return false;
   }
 
@@ -953,19 +951,19 @@ static JSFunction* CompileStandaloneFunction(
   StandaloneFunctionCompiler<char16_t> compiler(
       cx, allocScope, compilationInfo.get().input.options, srcBuf,
       enclosingScope);
-  if (!compiler.createSourceAndParser(compilationInfo.get())) {
+  if (!compiler.createSourceAndParser(cx, compilationInfo.get())) {
     return nullptr;
   }
 
   FunctionNode* parsedFunction =
-      compiler.parse(compilationInfo.get(), syntaxKind, generatorKind,
+      compiler.parse(cx, compilationInfo.get(), syntaxKind, generatorKind,
                      asyncKind, parameterListEnd);
   if (!parsedFunction) {
     return nullptr;
   }
 
   CompilationGCOutput gcOutput(cx);
-  if (!compiler.compile(compilationInfo.get(), parsedFunction, gcOutput)) {
+  if (!compiler.compile(cx, compilationInfo.get(), parsedFunction, gcOutput)) {
     return nullptr;
   }
 
