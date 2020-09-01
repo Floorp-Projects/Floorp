@@ -48,7 +48,6 @@ function run_test() {
   checkService("sysinfo", Ci.nsIPropertyBag2);
   checkService("telemetry", Ci.nsITelemetry);
   checkService("tm", Ci.nsIThreadManager);
-  checkService("uriFixup", Ci.nsIURIFixup);
   checkService("urlFormatter", Ci.nsIURLFormatter);
   checkService("vc", Ci.nsIVersionComparator);
   checkService("wm", Ci.nsIWindowMediator);
