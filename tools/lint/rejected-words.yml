@@ -326,6 +326,7 @@ avoid-blacklist-and-whitelist:
         - testing/mozharness/configs/unittests/mac_unittest.py
         - testing/mozharness/configs/unittests/win_unittest.py
         - testing/profiles/unittest-required/user.js
+        - testing/raptor/browsertime/browsertime_scenario.js
         - testing/raptor/raptor/control_server.py
         - testing/raptor/raptor/manifest.py
         - testing/specialpowers/content/SpecialPowersChild.jsm

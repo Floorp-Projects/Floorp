@@ -163,15 +163,28 @@ class Browsertime(Perftest):
         super(Browsertime, self).clean_up()
 
     def _compose_cmd(self, test, timeout):
-        browsertime_script = [
-            os.path.join(
-                os.path.dirname(__file__),
-                "..",
-                "..",
-                "browsertime",
-                "browsertime_pageload.js",
-            )
-        ]
+        if test.get("type", "") == "scenario":
+            browsertime_script = [
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "..",
+                    "browsertime",
+                    "browsertime_scenario.js",
+                ),
+                "--browsertime.scenario_time", test.get("scenario_time", 60000),
+                "--browsertime.background_app", test.get("background_app", "false")
+            ]
+        else:
+            browsertime_script = [
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "..",
+                    "browsertime",
+                    "browsertime_pageload.js",
+                )
+            ]
 
         btime_args = self.browsertime_args
         if self.config["app"] in ("chrome", "chromium", 'chrome-m'):
@@ -292,12 +305,14 @@ class Browsertime(Perftest):
         return bt_timeout
 
     def run_test(self, test, timeout):
+        global BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
+
         self.run_test_setup(test)
         # timeout is a single page-load timeout value (ms) from the test INI
         # this will be used for btime --timeouts.pageLoad
         cmd = self._compose_cmd(test, timeout)
 
-        if test.get("type") == "benchmark":
+        if test.get("type", "") == "benchmark":
             cmd.extend(
                 [
                     "--script",
@@ -310,6 +325,11 @@ class Browsertime(Perftest):
                     ),
                 ]
             )
+
+        if test.get("type", "") == "scenario":
+            # Change the timeout for scenarios since they
+            # don't output much for a long period of time
+            BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT = timeout
 
         LOG.info("timeout (s): {}".format(timeout))
         LOG.info("browsertime cwd: {}".format(os.getcwd()))
