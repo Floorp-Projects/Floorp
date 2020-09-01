@@ -27,6 +27,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -214,7 +215,9 @@ class DownloadMiddlewareTest {
         assertTrue(store.state.downloads.isEmpty())
 
         store.dispatch(DownloadAction.RestoreDownloadsStateAction).joinBlocking()
+
         dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
 
         assertEquals(download, store.state.downloads.values.first())
     }

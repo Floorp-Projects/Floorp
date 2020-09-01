@@ -21,6 +21,7 @@ import mozilla.components.browser.state.state.content.DownloadState.Status.CANCE
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.components.support.base.log.logger.Logger
 import kotlin.coroutines.CoroutineContext
 
@@ -48,10 +49,10 @@ class DownloadMiddleware(
         action: BrowserAction
     ) {
         when (action) {
-            is DownloadAction.RemoveDownloadAction -> removeDownload(action.downloadId, context)
+            is DownloadAction.RemoveDownloadAction -> removeDownload(action.downloadId, context.store)
             is DownloadAction.RemoveAllDownloadsAction -> removeDownloads()
             is DownloadAction.UpdateDownloadAction -> updateDownload(action.download, context)
-            is DownloadAction.RestoreDownloadsStateAction -> restoreDownloads(context)
+            is DownloadAction.RestoreDownloadsStateAction -> restoreDownloads(context.store)
         }
 
         next(action)
@@ -72,9 +73,9 @@ class DownloadMiddleware(
 
     private fun removeDownload(
         downloadId: String,
-        context: MiddlewareContext<BrowserState, BrowserAction>
+        store: Store<BrowserState, BrowserAction>
     ) = scope.launch {
-        context.state.downloads[downloadId]?.let {
+        store.state.downloads[downloadId]?.let {
             downloadStorage.remove(it)
             logger.debug("Removed download ${it.fileName} from the storage")
         }
@@ -97,11 +98,11 @@ class DownloadMiddleware(
         }
     }
 
-    private fun restoreDownloads(context: MiddlewareContext<BrowserState, BrowserAction>) = scope.launch {
+    private fun restoreDownloads(store: Store<BrowserState, BrowserAction>) = scope.launch {
         downloadStorage.getDownloads().collect { downloads ->
             downloads.forEach { download ->
-                if (!context.state.downloads.containsKey(download.id)) {
-                    context.store.dispatch(DownloadAction.RestoreDownloadStateAction(download))
+                if (!store.state.downloads.containsKey(download.id)) {
+                    store.dispatch(DownloadAction.RestoreDownloadStateAction(download))
                     logger.debug("Download restarted from the storage ${download.fileName}")
                 }
             }
