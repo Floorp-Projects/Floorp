@@ -21,16 +21,11 @@ function promiseDefaultNotification() {
 }
 
 add_task(async function test_originalDefaultEngine() {
-  await withGeoServer(
-    async requests => {
-      await Promise.all([Services.search.init(), promiseAfterCache()]);
-      Assert.equal(
-        Services.search.originalDefaultEngine.name,
-        "Multilocale AN",
-        "Should have returned the correct original default engine"
-      );
-    },
-    { searchDefault: "Multilocale AN" }
+  await Promise.all([Services.search.init(), promiseAfterCache()]);
+  Assert.equal(
+    Services.search.originalDefaultEngine.name,
+    "Multilocale AN",
+    "Should have returned the correct original default engine"
   );
 });
 

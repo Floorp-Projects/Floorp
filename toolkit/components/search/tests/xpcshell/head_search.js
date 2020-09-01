@@ -33,14 +33,6 @@ const { ExtensionTestUtils } = ChromeUtils.import(
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
-const PREF_SEARCH_URL = "geoSpecificDefaults.url";
-const NS_APP_SEARCH_DIR = "SrchPlugns";
-
-const MODE_RDONLY = FileUtils.MODE_RDONLY;
-const MODE_WRONLY = FileUtils.MODE_WRONLY;
-const MODE_CREATE = FileUtils.MODE_CREATE;
-const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
-
 const CACHE_FILENAME = "search.json.mozlz4";
 
 // nsSearchService.js uses Services.appinfo.name to build a salt for a hash.
@@ -142,14 +134,6 @@ async function promiseSaveGlobalMetadata(globalData) {
   await promiseSaveCacheData(data);
 }
 
-async function forceExpiration() {
-  let metadata = await promiseGlobalMetadata();
-
-  // Make the current geodefaults expire 1s ago.
-  metadata.searchDefaultExpir = Date.now() - 1000;
-  await promiseSaveGlobalMetadata(metadata);
-}
-
 function promiseDefaultNotification(type = "normal") {
   return SearchTestUtils.promiseSearchNotification(
     SearchUtils.MODIFIED_TYPE[
@@ -228,7 +212,7 @@ function readJSONFile(aFile) {
     Ci.nsIFileInputStream
   );
   try {
-    stream.init(aFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+    stream.init(aFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
     return parseJsonFromStream(stream, stream.available());
   } catch (ex) {
     dump("search test: readJSONFile: Error reading JSON file: " + ex + "\n");
@@ -295,112 +279,6 @@ function useHttpServer(dir = "data") {
     });
   });
   return httpServer;
-}
-
-async function withGeoServer(
-  testFn,
-  {
-    visibleDefaultEngines = null,
-    searchDefault = null,
-    geoLookupData = null,
-    preGeolookupPromise = Promise.resolve,
-    cohort = null,
-    intval200 = 86400 * 365,
-    intval503 = 86400,
-    delay = 0,
-    path = "lookup_defaults",
-  } = {}
-) {
-  let srv = new HttpServer();
-  let gRequests = [];
-  srv.registerPathHandler("/lookup_defaults", (metadata, response) => {
-    let data = {
-      interval: intval200,
-      settings: { searchDefault: searchDefault ?? kTestEngineName },
-    };
-    if (cohort) {
-      data.cohort = cohort;
-    }
-    if (visibleDefaultEngines) {
-      data.settings.visibleDefaultEngines = visibleDefaultEngines;
-    }
-    response.processAsync();
-    setTimeout(() => {
-      response.setStatusLine("1.1", 200, "OK");
-      response.write(JSON.stringify(data));
-      response.finish();
-      gRequests.push(metadata);
-    }, delay);
-  });
-
-  srv.registerPathHandler("/lookup_fail", (metadata, response) => {
-    response.processAsync();
-    setTimeout(() => {
-      response.setStatusLine("1.1", 404, "Not Found");
-      response.finish();
-      gRequests.push(metadata);
-    }, delay);
-  });
-
-  srv.registerPathHandler("/lookup_unavailable", (metadata, response) => {
-    response.processAsync();
-    setTimeout(() => {
-      response.setStatusLine("1.1", 503, "Service Unavailable");
-      response.setHeader("Retry-After", intval503.toString());
-      response.finish();
-      gRequests.push(metadata);
-    }, delay);
-  });
-
-  srv.registerPathHandler("/lookup_geoip", async (metadata, response) => {
-    response.processAsync();
-    await preGeolookupPromise;
-    response.setStatusLine("1.1", 200, "OK");
-    response.write(JSON.stringify(geoLookupData));
-    response.finish();
-    gRequests.push(metadata);
-  });
-
-  srv.start(-1);
-
-  let url = `http://localhost:${srv.identity.primaryPort}/${path}?`;
-  let defaultBranch = Services.prefs.getDefaultBranch(
-    SearchUtils.BROWSER_SEARCH_PREF
-  );
-  let originalURL = defaultBranch.getCharPref(PREF_SEARCH_URL, "");
-  defaultBranch.setCharPref(PREF_SEARCH_URL, url);
-  // Set a bogus user value so that running the test ensures we ignore it.
-  Services.prefs.setCharPref(
-    SearchUtils.BROWSER_SEARCH_PREF + PREF_SEARCH_URL,
-    "about:blank"
-  );
-
-  let geoLookupUrl = geoLookupData
-    ? `http://localhost:${srv.identity.primaryPort}/lookup_geoip`
-    : 'data:application/json,{"country_code": "FR"}';
-  Services.prefs.setCharPref("browser.region.network.url", geoLookupUrl);
-
-  try {
-    await testFn(gRequests);
-  } finally {
-    srv.stop(() => {});
-    defaultBranch.setCharPref(PREF_SEARCH_URL, originalURL);
-    Services.prefs.clearUserPref(
-      SearchUtils.BROWSER_SEARCH_PREF + PREF_SEARCH_URL
-    );
-    Services.prefs.clearUserPref("browser.region.network.url");
-  }
-}
-
-function checkNoRequest(requests) {
-  Assert.equal(requests.length, 0);
-}
-
-function checkRequest(requests, cohort = "") {
-  Assert.equal(requests.length, 1);
-  let req = requests.pop();
-  Assert.equal(req._method, "GET");
-  Assert.equal(req._queryString, cohort ? "/" + cohort : "");
 }
 
 /**
