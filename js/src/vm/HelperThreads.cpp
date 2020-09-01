@@ -612,9 +612,13 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
+  if (!frontend::CompileGlobalScriptToStencil(compilationInfo.get(), data,
+                                              scopeKind)) {
+    return;
+  }
+
   frontend::CompilationGCOutput gcOutput(cx);
-  bool result = frontend::CompileGlobalScript(compilationInfo.get(), data,
-                                              scopeKind, gcOutput);
+  bool result = frontend::InstantiateStencils(compilationInfo.get(), gcOutput);
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid
@@ -628,9 +632,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
-  if (gcOutput.script) {
-    scripts.infallibleAppend(gcOutput.script);
-  }
+  MOZ_ASSERT(gcOutput.script);
+  scripts.infallibleAppend(gcOutput.script);
 }
 
 template <typename Unit>
