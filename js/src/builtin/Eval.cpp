@@ -330,19 +330,13 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
       return false;
     }
 
-    Rooted<frontend::CompilationInfo> compilationInfo(
-        cx, frontend::CompilationInfo(cx, options));
-    if (!compilationInfo.get().input.initForEval(cx, enclosing)) {
+    JSScript* script =
+        frontend::CompileEvalScript(cx, options, srcBuf, enclosing, env);
+    if (!script) {
       return false;
     }
 
-    frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo.get(), srcBuf, enclosing,
-                                     env, gcOutput)) {
-      return false;
-    }
-
-    esg.setNewScript(gcOutput.script);
+    esg.setNewScript(script);
   }
 
   // If this is a direct eval we need to use the caller's newTarget.
@@ -433,19 +427,13 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
       return false;
     }
 
-    Rooted<frontend::CompilationInfo> compilationInfo(
-        cx, frontend::CompilationInfo(cx, options));
-    if (!compilationInfo.get().input.initForEval(cx, enclosing)) {
+    JSScript* script =
+        frontend::CompileEvalScript(cx, options, srcBuf, enclosing, env);
+    if (!script) {
       return false;
     }
 
-    frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileEvalScript(compilationInfo.get(), srcBuf, enclosing,
-                                     env, gcOutput)) {
-      return false;
-    }
-
-    esg.setNewScript(gcOutput.script);
+    esg.setNewScript(script);
   }
 
   return ExecuteKernel(cx, esg.script(), env, newTargetValue,

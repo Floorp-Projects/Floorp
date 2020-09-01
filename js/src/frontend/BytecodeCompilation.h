@@ -70,10 +70,11 @@ extern JSScript* CompileGlobalScript(JSContext* cx,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                      ScopeKind scopeKind);
 
-extern bool CompileEvalScript(CompilationInfo& compilationInfo,
-                              JS::SourceText<char16_t>& srcBuf,
-                              js::Scope* enclosingScope, JSObject* enclosingEnv,
-                              CompilationGCOutput& gcOutput);
+extern JSScript* CompileEvalScript(JSContext* cx,
+                                   const JS::ReadOnlyCompileOptions& options,
+                                   JS::SourceText<char16_t>& srcBuf,
+                                   JS::Handle<js::Scope*> enclosingScope,
+                                   JS::Handle<JSObject*> enclosingEnv);
 
 extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
                                              JS::Handle<BaseScript*> lazy,
