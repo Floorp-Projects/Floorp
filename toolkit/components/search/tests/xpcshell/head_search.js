@@ -535,14 +535,11 @@ function installTestEngine() {
 }
 
 async function asyncReInit({ awaitRegionFetch = false } = {}) {
-  let promises = [
-    SearchTestUtils.promiseSearchNotification("reinit-complete"),
-    SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
-  ];
+  let promise = SearchTestUtils.promiseSearchNotification("reinit-complete");
 
   Services.search.reInit();
 
-  return Promise.all(promises);
+  return promise;
 }
 
 // This "enum" from nsSearchService.js

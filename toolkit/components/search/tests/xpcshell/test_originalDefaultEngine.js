@@ -23,11 +23,7 @@ function promiseDefaultNotification() {
 add_task(async function test_originalDefaultEngine() {
   await withGeoServer(
     async requests => {
-      await Promise.all([
-        Services.search.init(true),
-        SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
-        promiseAfterCache(),
-      ]);
+      await Promise.all([Services.search.init(), promiseAfterCache()]);
       Assert.equal(
         Services.search.originalDefaultEngine.name,
         "Multilocale AN",

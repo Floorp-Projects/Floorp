@@ -55,18 +55,6 @@ const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 // changes.
 const REINIT_IDLE_TIME_SEC = 5 * 60;
 
-// A method that tries to determine our region via an XHR geoip lookup.
-var ensureKnownRegion = async function(ss) {
-  // Since bug 1492475, we don't block our init flows on the region fetch as
-  // performed here. But we'd still like to unit-test its implementation, thus
-  // we fire this observer notification.
-  Services.obs.notifyObservers(
-    null,
-    SearchUtils.TOPIC_SEARCH_SERVICE,
-    "ensure-known-region-done"
-  );
-};
-
 /**
  * Wrapper for nsIPrefBranch::getComplexValue.
  * @param {string} prefName
@@ -149,8 +137,6 @@ SearchService.prototype = {
 
   // The engine selector singleton that is managing the engine configuration.
   _engineSelector: null,
-
-  _ensureKnownRegionPromise: null,
 
   /**
    * Various search engines may be ignored if their submission urls contain a
@@ -298,13 +284,6 @@ SearchService.prototype = {
 
       // See if we have a cache file so we don't have to parse a bunch of XML.
       let cache = await this._cache.get();
-
-      // The init flow is not going to block on a fetch from an external service,
-      // but we're kicking it off as soon as possible to prevent UI flickering as
-      // much as possible.
-      this._ensureKnownRegionPromise = ensureKnownRegion(this)
-        .catch(ex => logConsole.error("_init: failure determining region:", ex))
-        .finally(() => (this._ensureKnownRegionPromise = null));
 
       this._setupRemoteSettings().catch(Cu.reportError);
 
@@ -1024,14 +1003,6 @@ SearchService.prototype = {
         );
 
         let cache = await this._cache.get(origin);
-        // The init flow is not going to block on a fetch from an external service,
-        // but we're kicking it off as soon as possible to prevent UI flickering as
-        // much as possible.
-        this._ensureKnownRegionPromise = ensureKnownRegion(this)
-          .catch(ex =>
-            logConsole.error("_reInit: failure determining region:", ex)
-          )
-          .finally(() => (this._ensureKnownRegionPromise = null));
 
         await this._loadEngines(cache);
 
@@ -2715,9 +2686,7 @@ SearchService.prototype = {
       case Region.REGION_TOPIC:
         if (verb == Region.REGION_UPDATED) {
           logConsole.debug("Region updated:", Region.home);
-          ensureKnownRegion(this)
-            .then(this._maybeReloadEngines.bind(this))
-            .catch(Cu.reportError);
+          this._maybeReloadEngines().catch(Cu.reportError);
         }
         break;
     }
