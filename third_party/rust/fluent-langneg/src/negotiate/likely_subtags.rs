@@ -19,11 +19,11 @@ impl MockLikelySubtags for LanguageIdentifier {
             "zh-GB" => "zh-Hant-GB",
             "zh-US" => "zh-Hant-US",
             _ => {
-                let lang = self.language();
+                let lang = self.language;
 
                 for subtag in REGION_MATCHING_KEYS {
                     if lang == *subtag {
-                        self.set_region(subtag).unwrap();
+                        self.region = Some(subtag.parse().unwrap());
                         return true;
                     }
                 }
@@ -31,17 +31,9 @@ impl MockLikelySubtags for LanguageIdentifier {
             }
         };
         let langid: LanguageIdentifier = extended.parse().expect("Failed to parse langid.");
-        self.set_language(langid.language()).unwrap();
-        if let Some(subtag) = langid.script() {
-            self.set_script(subtag).unwrap();
-        } else {
-            self.clear_script();
-        }
-        if let Some(subtag) = langid.region() {
-            self.set_region(subtag).unwrap();
-        } else {
-            self.clear_region();
-        }
+        self.language = langid.language;
+        self.script = langid.script;
+        self.region = langid.region;
         true
     }
 }
