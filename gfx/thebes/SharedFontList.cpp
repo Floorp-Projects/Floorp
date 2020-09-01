@@ -401,7 +401,7 @@ void Family::SearchAllFontsForChar(FontList* aList,
           continue;
         }
         if (aMatchData->mPresentation != eFontPresentation::Any) {
-          gfxFont* font = fe->FindOrMakeFont(&aMatchData->mStyle);
+          RefPtr<gfxFont> font = fe->FindOrMakeFont(&aMatchData->mStyle);
           if (!font) {
             continue;
           }
