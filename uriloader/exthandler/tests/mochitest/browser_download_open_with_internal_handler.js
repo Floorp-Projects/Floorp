@@ -110,6 +110,7 @@ add_task(async function test_check_open_with_internal_handler() {
     ok(!internalHandlerRadio.hidden, "The option should be visible for PDF");
     ok(internalHandlerRadio.selected, "The option should be selected");
 
+    let downloadFinishedPromise = promiseDownloadFinished(publicList);
     let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
     let dialog = doc.querySelector("#unknownContentType");
     let button = dialog.getButton("accept");
@@ -136,6 +137,9 @@ add_task(async function test_check_open_with_internal_handler() {
       1,
       "download should appear in publicDownloads list"
     );
+
+    let download = await downloadFinishedPromise;
+
     let subdialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
     await SpecialPowers.spawn(newTab.linkedBrowser, [], async () => {
       let downloadButton;
@@ -164,7 +168,7 @@ add_task(async function test_check_open_with_internal_handler() {
     let tabOpenListener = () => {
       ok(
         false,
-        "A new tab should not be opened when accepting the dialog with 'Save' chosen"
+        "A new tab should not be opened when accepting the dialog with 'open-with-external-app' chosen"
       );
     };
     gBrowser.tabContainer.addEventListener("TabOpen", tabOpenListener);
@@ -177,16 +181,39 @@ add_task(async function test_check_open_with_internal_handler() {
       };
     });
 
+    downloadFinishedPromise = promiseDownloadFinished(publicList);
+
     info("Accepting the dialog");
     subDoc.querySelector("#unknownContentType").acceptDialog();
     info("Waiting until DownloadIntegration.launchFile is called");
     await waitForLaunchFileCalled;
     DownloadIntegration.launchFile = oldLaunchFile;
 
+    // Remove the first file (can't do this sooner or the second load fails):
+    if (download?.target.exists) {
+      try {
+        info("removing " + download.target.path);
+        await IOUtils.remove(download.target.path);
+      } catch (ex) {
+        /* ignore */
+      }
+    }
+
     gBrowser.tabContainer.removeEventListener("TabOpen", tabOpenListener);
     BrowserTestUtils.removeTab(loadingTab);
     BrowserTestUtils.removeTab(newTab);
     BrowserTestUtils.removeTab(extraTab);
+
+    // Remove the remaining file once complete.
+    download = await downloadFinishedPromise;
+    if (download?.target.exists) {
+      try {
+        info("removing " + download.target.path);
+        await IOUtils.remove(download.target.path);
+      } catch (ex) {
+        /* ignore */
+      }
+    }
     await publicList.removeFinished();
   }
 });
@@ -243,12 +270,21 @@ add_task(async function test_check_open_with_external_application() {
       1,
       "download should appear in publicDownloads list"
     );
+    let download = publicDownloads[0];
     ok(
-      !publicDownloads[0].launchWhenSucceeded,
+      !download.launchWhenSucceeded,
       "launchWhenSucceeded should be false after launchFile is called"
     );
 
     BrowserTestUtils.removeTab(loadingTab);
+    if (download?.target.exists) {
+      try {
+        info("removing " + download.target.path);
+        await IOUtils.remove(download.target.path);
+      } catch (ex) {
+        /* ignore */
+      }
+    }
     await publicList.removeFinished();
   }
 });
@@ -396,6 +432,15 @@ add_task(async function test_check_open_with_external_then_internal() {
     // Reset the state for the next iteration of the test.
     handlerSvc.store(originalMimeInfo);
     DownloadIntegration.launchFile = oldLaunchFile;
+    let [download] = await publicList.getAll();
+    if (download?.target.exists) {
+      try {
+        info("removing " + download.target.path);
+        await IOUtils.remove(download.target.path);
+      } catch (ex) {
+        /* ignore */
+      }
+    }
     await publicList.removeFinished();
   }
 });
