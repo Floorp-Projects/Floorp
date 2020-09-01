@@ -442,12 +442,18 @@ nsresult nsHttpTransaction::Init(
         flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
       }
 
+      nsCOMPtr<nsICancelable> dnsRequest;
       rv = dns->AsyncResolveNative(
           mConnInfo->GetOrigin(), nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags,
           nullptr, this, target, mConnInfo->GetOriginAttributes(),
-          getter_AddRefs(mDNSRequest));
+          getter_AddRefs(dnsRequest));
       if (NS_FAILED(rv) && (mCaps & NS_HTTP_WAIT_HTTPSSVC_RESULT)) {
         return rv;
+      }
+
+      {
+        MutexAutoLock lock(mLock);
+        mDNSRequest.swap(dnsRequest);
       }
     }
   }
@@ -1106,7 +1112,7 @@ void nsHttpTransaction::Close(nsresult reason) {
   }
 
   if (mDNSRequest) {
-    mDNSRequest->Cancel(reason);
+    mDNSRequest->Cancel(NS_ERROR_ABORT);
     mDNSRequest = nullptr;
   }
 
@@ -2734,7 +2740,10 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
   LOG(("nsHttpTransaction::OnLookupComplete [this=%p] mActivated=%d", this,
        mActivated));
 
-  mDNSRequest = nullptr;
+  {
+    MutexAutoLock lock(mLock);
+    mDNSRequest = nullptr;
+  }
 
   MakeDontWaitHTTPSSVC();
 
