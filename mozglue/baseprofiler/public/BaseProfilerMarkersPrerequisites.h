@@ -15,6 +15,7 @@
 
 #ifdef MOZ_GECKO_PROFILER
 
+#  include "BaseProfilingCategory.h"
 #  include "mozilla/ProfileChunkedBuffer.h"
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
@@ -225,6 +226,11 @@ class MarkerCategory {
     return mCategory;
   }
 
+  // Create a MarkerOptions object from this category and options.
+  // Definition under MarkerOptions below.
+  template <typename... Options>
+  MarkerOptions WithOptions(Options&&... aOptions) const;
+
  private:
   // The default constructor is only used during deserialization of
   // MarkerOptions.
@@ -363,6 +369,7 @@ class MarkerTiming {
  private:
   friend ProfileBufferEntryWriter::Serializer<MarkerTiming>;
   friend ProfileBufferEntryReader::Deserializer<MarkerTiming>;
+  friend MarkerOptions;
 
   // Default timing leaves it internally "unspecified", serialization getters
   // and add-marker functions will default to `InstantNow()`.
@@ -555,6 +562,74 @@ class MarkerInnerWindowId {
   static constexpr uint64_t scNoId = 0;
   uint64_t mInnerWindowId = scNoId;
 };
+
+// This class combines a compulsory category with the above marker options.
+// To provide options to add-marker functions, first pick a MarkerCategory
+// object, then options may be added with WithOptions(), e.g.:
+// `mozilla::baseprofiler::category::OTHER_profiling`
+// `mozilla::baseprofiler::category::DOM.WithOptions(
+//      MarkerThreadId(1), MarkerTiming::IntervalStart())`
+class MarkerOptions {
+ public:
+  // Implicit constructor from category.
+  constexpr MOZ_IMPLICIT MarkerOptions(const MarkerCategory& aCategory)
+      : mCategory(aCategory) {}
+
+  // Constructor from category and other options.
+  template <typename... Options>
+  explicit MarkerOptions(const MarkerCategory& aCategory, Options&&... aOptions)
+      : mCategory(aCategory) {
+    (Set(std::forward<Options>(aOptions)), ...);
+  }
+
+  // Disallow copy.
+  MarkerOptions(const MarkerOptions&) = delete;
+  MarkerOptions& operator=(const MarkerOptions&) = delete;
+
+  // Allow move.
+  MarkerOptions(MarkerOptions&&) = default;
+  MarkerOptions& operator=(MarkerOptions&&) = default;
+
+  // The embedded `MarkerTiming` hasn't been specified yet.
+  [[nodiscard]] bool IsTimingUnspecified() const {
+    return mTiming.IsUnspecified();
+  }
+
+  // Each options may be added in a chain by e.g.: `Set(MarkerThreadId(123))`.
+  // Read them with the option name (without "Marker"), e.g.: `ThreadId()`.
+#  define FUNCTION_ON_MEMBER(NAME)                       \
+    MarkerOptions&& Set(Marker##NAME&& a##NAME) {        \
+      m##NAME = std::move(a##NAME);                      \
+      return std::move(*this);                           \
+    }                                                    \
+                                                         \
+    const Marker##NAME& NAME() const { return m##NAME; } \
+    Marker##NAME& NAME() { return m##NAME; }
+
+  FUNCTION_ON_MEMBER(Category);
+  FUNCTION_ON_MEMBER(ThreadId);
+  FUNCTION_ON_MEMBER(Timing);
+  FUNCTION_ON_MEMBER(Stack);
+  FUNCTION_ON_MEMBER(InnerWindowId);
+#  undef FUNCTION_ON_MEMBER
+
+ private:
+  friend ProfileBufferEntryReader::Deserializer<MarkerOptions>;
+
+  // The default constructor is only used during deserialization.
+  constexpr MarkerOptions() = default;
+
+  MarkerCategory mCategory;
+  MarkerThreadId mThreadId;
+  MarkerTiming mTiming;
+  MarkerStack mStack;
+  MarkerInnerWindowId mInnerWindowId;
+};
+
+template <typename... Options>
+MarkerOptions MarkerCategory::WithOptions(Options&&... aOptions) const {
+  return MarkerOptions(*this, std::forward<Options>(aOptions)...);
+}
 
 }  // namespace mozilla
 
