@@ -67,19 +67,7 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
-    return nullptr;
-  }
-
-  frontend::CompilationGCOutput gcOutput(cx);
-  if (!frontend::CompileGlobalScript(compilationInfo.get(), srcBuf, scopeKind,
-                                     gcOutput)) {
-    return nullptr;
-  }
-
-  return gcOutput.script;
+  return frontend::CompileGlobalScript(cx, options, srcBuf, scopeKind);
 }
 
 JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -481,20 +469,10 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   options.setNonSyntacticScope(scopeKind == ScopeKind::NonSyntactic);
   options.setIsRunOnce(true);
 
-  RootedScript script(cx);
-  {
-    Rooted<frontend::CompilationInfo> compilationInfo(
-        cx, frontend::CompilationInfo(cx, options));
-    if (!compilationInfo.get().input.initForGlobal(cx)) {
-      return false;
-    }
-
-    frontend::CompilationGCOutput gcOutput(cx);
-    if (!frontend::CompileGlobalScript(compilationInfo.get(), srcBuf, scopeKind,
-                                       gcOutput)) {
-      return false;
-    }
-    script = gcOutput.script;
+  RootedScript script(
+      cx, frontend::CompileGlobalScript(cx, options, srcBuf, scopeKind));
+  if (!script) {
+    return false;
   }
 
   return Execute(cx, script, env, rval);
