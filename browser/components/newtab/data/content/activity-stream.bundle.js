@@ -896,7 +896,8 @@ class TogglePrefCheckbox extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       type: "checkbox",
       checked: this.props.checked,
-      onChange: this.onChange
+      onChange: this.onChange,
+      disabled: this.props.disabled
     }), " ", this.props.pref, " ");
   }
 
@@ -1171,6 +1172,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
+    this.onChangeMessageGroupsFilter = this.onChangeMessageGroupsFilter.bind(this);
     this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(this);
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(this);
     this.handleExpressionEval = this.handleExpressionEval.bind(this);
@@ -1185,13 +1187,16 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     this.restoreWNMessageState = this.restoreWNMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
+    this.toggleGroups = this.toggleGroups.bind(this);
     this.state = {
       messageFilter: "all",
+      messageGroupsFilter: "all",
       WNMessages: [],
       collapsedMessages: [],
       modifiedMessages: [],
       evaluationStatus: {},
       trailhead: {},
+      toggledGroups: [],
       stringTargetingParameters: null,
       newStringTargetingParameters: null,
       copiedToClipboard: false,
@@ -1316,6 +1321,11 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
         value
       }
     });
+    this.setState(({
+      toggledGroups
+    }) => ({
+      toggledGroups: toggledGroups.includes(id) ? toggledGroups : toggledGroups.concat([id])
+    }));
   }
 
   handleExpressionEval() {
@@ -1452,6 +1462,12 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   onChangeMessageFilter(event) {
     this.setState({
       messageFilter: event.target.value
+    });
+  }
+
+  onChangeMessageGroupsFilter(event) {
+    this.setState({
+      messageGroupsFilter: event.target.value
     });
   } // Simulate a copy event that sets to clipboard all targeting paramters and values
 
@@ -1672,6 +1688,15 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To modify a message, change the JSON and click 'Modify' to see your changes. Click 'Reset' to restore the JSON to the original.")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
   }
 
+  renderMessagesByGroup() {
+    if (!this.state.messages) {
+      return null;
+    }
+
+    const messagesToShow = this.state.messageGroupsFilter === "all" ? this.state.messages.filter(m => m.groups.length) : this.state.messages.filter(message => message.groups.includes(this.state.messageGroupsFilter));
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg))));
+  }
+
   renderWNMessages() {
     if (!this.state.messages) {
       return null;
@@ -1698,6 +1723,22 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       className: "button messages-reset",
       onClick: this.handleClearAllImpressionsByProvider
     }, "Reset All") : null);
+  }
+
+  renderMessageGroupsFilter() {
+    if (!this.state.groups) {
+      return null;
+    }
+
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", null, "Show messages from ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("select", {
+      value: this.state.messageGroupsFilter,
+      onChange: this.onChangeMessageGroupsFilter
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("option", {
+      value: "all"
+    }, "all groups"), this.state.groups.map(group => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("option", {
+      key: group.id,
+      value: group.id
+    }, group.id))));
   }
 
   renderTableHead() {
@@ -2028,11 +2069,16 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
           userPreferences = []
         }, index) => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(Row, {
           key: id
-        }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(TogglePrefCheckbox, {
+        }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, console.log(id, enabled, this.state.toggledGroups), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(TogglePrefCheckbox, {
           checked: enabled,
           pref: id,
-          onChange: this.toggleGroups
-        })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, this._getGroupImpressionsCount(id, frequency)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, JSON.stringify(frequency, null, 2)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, userPreferences.join(", "))))));
+          onChange: this.toggleGroups // Disable the checkbox for groups tied to user prefs.
+          // We don't want to have calls that modify arbitrary preferences.
+          // Use state for simple toggle off/on that allows
+          // resetting impressions.
+          ,
+          disabled: !enabled && !(this.state.toggledGroups.includes(id) || !userPreferences.length)
+        })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, this._getGroupImpressionsCount(id, frequency)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, JSON.stringify(frequency, null, 2)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, userPreferences.join(", "))))), this.renderMessageGroupsFilter(), this.renderMessagesByGroup());
 
       case "ds":
         return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Discovery Stream"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DiscoveryStreamAdmin, {
