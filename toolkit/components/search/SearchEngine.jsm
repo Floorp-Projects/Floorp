@@ -22,13 +22,6 @@ const BinaryInputStream = Components.Constructor(
   "setInputStream"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gModernConfig",
-  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
-  false
-);
-
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchEngine",
@@ -1189,7 +1182,7 @@ class SearchEngine {
   toJSON() {
     // For built-in engines we don't want to store all their data in the cache
     // so just store the relevant metadata.
-    if (gModernConfig && this._isAppProvided) {
+    if (this._isAppProvided) {
       return {
         _name: this.name,
         _isAppProvided: true,
@@ -1365,29 +1358,7 @@ class SearchEngine {
   }
 
   get isAppProvided() {
-    // For the modern configuration, distribution engines are app-provided as
-    // well and we don't have xml files as app-provided engines.
-    if (gModernConfig) {
-      return !!(this._extensionID && this._isAppProvided);
-    }
-
-    if (this._extensionID) {
-      return this._isAppProvided || this._isDistribution;
-    }
-
-    // If we don't have a shortName, the engine is being parsed from a
-    // downloaded file, so this can't be a default engine.
-    if (!this._shortName) {
-      return false;
-    }
-
-    // An engine is a default one if we initially loaded it from the application
-    // or distribution directory.
-    if (/^(?:jar:)?(?:\[app\]|\[distribution\])/.test(this._loadPath)) {
-      return true;
-    }
-
-    return false;
+    return !!(this._extensionID && this._isAppProvided);
   }
 
   get _hasUpdates() {

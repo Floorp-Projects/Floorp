@@ -421,10 +421,6 @@ pref("browser.helperApps.showOpenOptionForViewableInternally", true);
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
 
-// Market-specific search defaults
-pref("browser.search.geoSpecificDefaults", true);
-pref("browser.search.geoSpecificDefaults.url", "https://search.services.mozilla.com/1/%APP%/%VERSION%/%CHANNEL%/%LOCALE%/%REGION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%");
-
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
 
@@ -444,8 +440,6 @@ pref("browser.search.widget.inNavBar", false);
 #endif
 // The maximum amount of times the private default banner is shown.
 pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
-
-pref("browser.search.modernConfig", true);
 
 pref("browser.sessionhistory.max_entries", 50);
 
