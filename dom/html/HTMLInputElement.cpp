@@ -18,6 +18,7 @@
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/InputType.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -1282,6 +1283,11 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       // Clear the cached @autocomplete attribute and autocompleteInfo state.
       mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
       mAutocompleteInfoState = nsContentUtils::eAutocompleteAttrState_Unknown;
+    } else if (aName == nsGkAtoms::placeholder) {
+      // Full addition / removals of the attribute reconstruct right now.
+      if (nsTextControlFrame* f = do_QueryFrame(GetPrimaryFrame())) {
+        f->PlaceholderChanged(aOldValue, aValue);
+      }
     }
 
     if (CreatesDateTimeWidget()) {
@@ -5124,24 +5130,47 @@ nsChangeHint HTMLInputElement::GetAttributeChangeHint(const nsAtom* aAttribute,
   nsChangeHint retval =
       nsGenericHTMLFormElementWithState::GetAttributeChangeHint(aAttribute,
                                                                 aModType);
-  if (aAttribute == nsGkAtoms::type ||
+
+  const bool isAdditionOrRemoval =
+      aModType == MutationEvent_Binding::ADDITION ||
+      aModType == MutationEvent_Binding::REMOVAL;
+
+  const bool reconstruct = [&] {
+    if (aAttribute == nsGkAtoms::type) {
+      return true;
+    }
+
+    if (PlaceholderApplies() && aAttribute == nsGkAtoms::placeholder &&
+        isAdditionOrRemoval) {
+      // We need to re-create our placeholder text.
+      return true;
+    }
+
+    if (mType == NS_FORM_INPUT_FILE &&
+        (aAttribute == nsGkAtoms::allowdirs ||
+         aAttribute == nsGkAtoms::webkitdirectory)) {
       // The presence or absence of the 'directory' attribute determines what
-      // buttons we show for type=file.
-      aAttribute == nsGkAtoms::allowdirs ||
-      aAttribute == nsGkAtoms::webkitdirectory) {
-    retval |= nsChangeHint_ReconstructFrame;
-  } else if (mType == NS_FORM_INPUT_IMAGE &&
-             (aAttribute == nsGkAtoms::alt || aAttribute == nsGkAtoms::value)) {
-    // We might need to rebuild our alt text.  Just go ahead and
-    // reconstruct our frame.  This should be quite rare..
+      // value we show in the file label when empty, via GetDisplayFileName.
+      return true;
+    }
+
+    if (mType == NS_FORM_INPUT_IMAGE && isAdditionOrRemoval &&
+        (aAttribute == nsGkAtoms::alt || aAttribute == nsGkAtoms::value)) {
+      // We might need to rebuild our alt text.  Just go ahead and
+      // reconstruct our frame.  This should be quite rare..
+      return true;
+    }
+    return false;
+  }();
+
+  if (reconstruct) {
     retval |= nsChangeHint_ReconstructFrame;
   } else if (aAttribute == nsGkAtoms::value) {
     retval |= NS_STYLE_HINT_REFLOW;
   } else if (aAttribute == nsGkAtoms::size && IsSingleLineTextControl(false)) {
     retval |= NS_STYLE_HINT_REFLOW;
-  } else if (PlaceholderApplies() && aAttribute == nsGkAtoms::placeholder) {
-    retval |= nsChangeHint_ReconstructFrame;
   }
+
   return retval;
 }
 
@@ -5877,8 +5906,7 @@ EventStates HTMLInputElement::IntrinsicState() const {
     }
   }
 
-  if (PlaceholderApplies() &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
+  if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder) &&
       ShouldShowPlaceholder()) {
     state |= NS_EVENT_STATE_PLACEHOLDERSHOWN;
   }
