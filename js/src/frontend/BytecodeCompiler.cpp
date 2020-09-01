@@ -372,7 +372,7 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
       : Base(cx, allocScope, options, sourceBuffer, enclosingScope,
              enclosingEnv) {}
 
-  bool compile(CompilationInfo& compilationInfo, CompilationGCOutput& gcOutput);
+  bool compile(CompilationInfo& compilationInfo);
 };
 
 template <typename Unit>
@@ -612,8 +612,7 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
 }
 
 template <typename Unit>
-bool frontend::ModuleCompiler<Unit>::compile(CompilationInfo& compilationInfo,
-                                             CompilationGCOutput& gcOutput) {
+bool frontend::ModuleCompiler<Unit>::compile(CompilationInfo& compilationInfo) {
   if (!createSourceAndParser(compilationInfo)) {
     return false;
   }
@@ -652,20 +651,6 @@ bool frontend::ModuleCompiler<Unit>::compile(CompilationInfo& compilationInfo,
   }
 
   builder.finishFunctionDecls(moduleMetadata);
-
-  if (!compilationInfo.instantiateStencils(gcOutput)) {
-    return false;
-  }
-
-  MOZ_ASSERT(gcOutput.script);
-  MOZ_ASSERT(gcOutput.module);
-
-  // Enqueue an off-thread source compression task after finishing parsing.
-  if (!cx->isHelperThreadContext()) {
-    if (!compilationInfo.input.source()->tryCompressOffThread(cx)) {
-      return false;
-    }
-  }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
   return true;
@@ -769,65 +754,59 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 }
 
 template <typename Unit>
-static bool InternalParseModule(JSContext* cx,
-                                const ReadOnlyCompileOptions& optionsInput,
-                                SourceText<Unit>& srcBuf,
-                                CompilationGCOutput& gcOutput) {
+static bool InternalParseModuleToStencil(CompilationInfo& compilationInfo,
+                                         SourceText<Unit>& srcBuf) {
+  JSContext* cx = compilationInfo.cx;
+
   MOZ_ASSERT(srcBuf.get());
 
   AutoAssertReportedException assertException(cx);
 
-  CompileOptions options(cx, optionsInput);
-  options.setForceStrictMode();  // ES6 10.2.1 Module code is always strict mode
-                                 // code.
-  options.setIsRunOnce(true);
-  options.allowHTMLComments = false;
-
-  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForModule(cx)) {
-    return false;
-  }
-
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, allocScope,
-                                compilationInfo.get().input.options, srcBuf);
-  if (!compiler.compile(compilationInfo.get(), gcOutput)) {
+  ModuleCompiler<Unit> compiler(cx, allocScope, compilationInfo.input.options,
+                                srcBuf);
+  if (!compiler.compile(compilationInfo)) {
     return false;
   }
-
-  tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
-                                  gcOutput.script);
 
   assertException.reset();
   return true;
 }
 
-bool frontend::ParseModule(JSContext* cx,
-                           const ReadOnlyCompileOptions& optionsInput,
-                           SourceText<char16_t>& srcBuf,
-                           CompilationGCOutput& gcOutput) {
-  return InternalParseModule(cx, optionsInput, srcBuf, gcOutput);
+bool frontend::ParseModuleToStencil(CompilationInfo& compilationInfo,
+                                    SourceText<char16_t>& srcBuf) {
+  return InternalParseModuleToStencil(compilationInfo, srcBuf);
 }
 
-bool frontend::ParseModule(JSContext* cx,
-                           const ReadOnlyCompileOptions& optionsInput,
-                           SourceText<Utf8Unit>& srcBuf,
-                           CompilationGCOutput& gcOutput) {
-  return InternalParseModule(cx, optionsInput, srcBuf, gcOutput);
+bool frontend::ParseModuleToStencil(CompilationInfo& compilationInfo,
+                                    SourceText<Utf8Unit>& srcBuf) {
+  return InternalParseModuleToStencil(compilationInfo, srcBuf);
 }
 
 template <typename Unit>
-static ModuleObject* CreateModule(JSContext* cx,
-                                  const JS::ReadOnlyCompileOptions& options,
-                                  SourceText<Unit>& srcBuf) {
+static ModuleObject* CreateModule(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& optionsInput,
+    SourceText<Unit>& srcBuf) {
   AutoAssertReportedException assertException(cx);
 
   if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
     return nullptr;
   }
 
+  CompileOptions options(cx, optionsInput);
+  options.setModule();
+
+  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
+  if (!compilationInfo.get().input.initForModule(cx)) {
+    return nullptr;
+  }
+
+  if (!ParseModuleToStencil(compilationInfo.get(), srcBuf)) {
+    return nullptr;
+  }
+
   CompilationGCOutput gcOutput(cx);
-  if (!ParseModule(cx, options, srcBuf, gcOutput)) {
+  if (!InstantiateStencils(compilationInfo.get(), gcOutput)) {
     return nullptr;
   }
 

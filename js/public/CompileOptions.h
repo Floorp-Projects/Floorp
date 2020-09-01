@@ -434,6 +434,14 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
+  CompileOptions& setModule() {
+    // ES6 10.2.1 Module code is always strict mode code.
+    setForceStrictMode();
+    setIsRunOnce(true);
+    allowHTMLComments = false;
+    return *this;
+  }
+
   CompileOptions(const CompileOptions& rhs) = delete;
   CompileOptions& operator=(const CompileOptions& rhs) = delete;
 };
