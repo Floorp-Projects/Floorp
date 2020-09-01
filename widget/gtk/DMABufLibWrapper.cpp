@@ -149,8 +149,8 @@ int nsDMABufDevice::GetGbmDeviceFd() {
 }
 
 nsDMABufDevice::nsDMABufDevice()
-    : mXRGBFormat({true, false, GBM_FORMAT_ARGB8888, nullptr, 0}),
-      mARGBFormat({true, true, GBM_FORMAT_XRGB8888, nullptr, 0}),
+    : mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
+      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
       mGbmDevice(nullptr),
       mGbmFd(-1),
       mGdmConfigured(false),
