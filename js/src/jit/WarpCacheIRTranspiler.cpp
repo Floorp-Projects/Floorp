@@ -423,6 +423,18 @@ bool WarpCacheIRTranspiler::emitProxySetByValue(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitCallSetArrayLength(ObjOperandId objId,
+                                                   bool strict,
+                                                   ValOperandId rhsId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MCallSetArrayLength::New(alloc(), obj, rhs, strict);
+  addEffectful(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
                                                           uint32_t nameOffset,
                                                           bool handleMissing) {
