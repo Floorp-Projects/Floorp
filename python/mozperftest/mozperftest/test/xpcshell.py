@@ -32,7 +32,8 @@ class XPCShellData:
 
 
 class XPCShell(Layer):
-    """Runs an xpcshell test."""
+    """Runs an xpcshell test.
+    """
 
     name = "xpcshell"
     activated = True

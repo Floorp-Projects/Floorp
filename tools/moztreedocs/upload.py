@@ -91,8 +91,7 @@ def s3_set_redirects(redirects):
         configuration["RoutingRules"].append(rule)
 
     s3.put_bucket_website(
-        Bucket=bucket,
-        WebsiteConfiguration=configuration,
+        Bucket=bucket, WebsiteConfiguration=configuration,
     )
 
 
@@ -121,10 +120,7 @@ def s3_delete_missing(files, key_prefix=None):
     while files_to_delete:
         keys_to_remove = [{"Key": key} for key in files_to_delete[:query_size]]
         response = s3.delete_objects(
-            Bucket=bucket,
-            Delete={
-                "Objects": keys_to_remove,
-            },  # NOQA
+            Bucket=bucket, Delete={"Objects": keys_to_remove,},  # NOQA
         )
         pprint(response, indent=2)
         files_to_delete = files_to_delete[query_size:]

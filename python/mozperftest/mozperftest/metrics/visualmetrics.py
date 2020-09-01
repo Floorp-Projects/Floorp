@@ -40,7 +40,8 @@ class VisualData:
 
 
 class VisualMetrics(Layer):
-    """Wrapper around Browsertime's visualmetrics.py script"""
+    """Wrapper around Browsertime's visualmetrics.py script
+    """
 
     name = "visualmetrics"
     activated = False

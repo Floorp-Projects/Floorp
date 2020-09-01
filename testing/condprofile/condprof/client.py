@@ -55,7 +55,8 @@ class RetriesError(Exception):
 
 
 def _check_service(url):
-    """Sanity check to see if we can reach the service root url."""
+    """Sanity check to see if we can reach the service root url.
+    """
 
     def _check():
         exists, _ = check_exists(url, all_types=True)
@@ -69,7 +70,8 @@ def _check_service(url):
 
 
 def _check_profile(profile_dir):
-    """Checks for prefs we need to remove or set."""
+    """Checks for prefs we need to remove or set.
+    """
     to_remove = ("gfx.blacklist.", "marionette.")
 
     def _keep_pref(name, value):

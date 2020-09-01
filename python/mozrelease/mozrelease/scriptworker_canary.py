@@ -112,6 +112,5 @@ def push_canary(scriptworkers, addresses, ssh_key_secret):
         env = os.environ.copy()
         for task in tasks:
             subprocess.check_call(
-                base_command + [task],
-                env=env,
+                base_command + [task], env=env,
             )

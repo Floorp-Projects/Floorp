@@ -47,7 +47,8 @@ class NodeException(Exception):
 
 
 class BrowsertimeRunner(NodeRunner):
-    """Runs a browsertime test."""
+    """Runs a browsertime test.
+    """
 
     name = "browsertime"
     activated = True
@@ -133,7 +134,8 @@ class BrowsertimeRunner(NodeRunner):
         return path
 
     def setup(self):
-        """Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
+        """Install browsertime and visualmetrics.py prerequisites and the Node.js package.
+        """
         node = self.get_arg("node")
         if node is not None:
             os.environ["NODEJS"] = node
