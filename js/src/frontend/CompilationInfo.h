@@ -167,8 +167,6 @@ struct CompilationInput {
 struct MOZ_RAII CompilationState {
   // Until we have dealt with Atoms in the front end, we need to hold
   // onto them.
-  AutoKeepAtoms keepAtoms;
-
   Directives directives;
 
   ScopeContext scopeContext;
@@ -180,8 +178,7 @@ struct MOZ_RAII CompilationState {
                    const JS::ReadOnlyCompileOptions& options,
                    Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr)
-      : keepAtoms(cx),
-        directives(options.forceStrictMode()),
+      : directives(options.forceStrictMode()),
         scopeContext(cx, enclosingScope, enclosingEnv),
         usedNames(cx),
         allocScope(alloc) {}

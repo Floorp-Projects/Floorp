@@ -38,8 +38,6 @@
 #include "vm/ScopeKind.h"          // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote, GCThingIndex
 
-#include "vm/JSContext-inl.h"  // AutoKeepAtoms (used by BytecodeCompiler)
-
 using mozilla::Utf8Unit;
 
 using namespace js::gc;
