@@ -32,6 +32,8 @@ class ConsoleOutput(Layer):
             self.get_arg("prefix"),
             metrics=self.get_arg("metrics"),
             split_by=self.get_arg("split-by"),
+            simplify_names=self.get_arg("simplify-names"),
+            simplify_exclude=self.get_arg("simplify-exclude"),
         )
 
         if not results:

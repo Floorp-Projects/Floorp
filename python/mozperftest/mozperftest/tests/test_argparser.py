@@ -16,6 +16,13 @@ def test_argparser():
     assert res.tests == ["test_one.js"]
 
 
+def test_argparser_defaults():
+    parser = PerftestArgumentParser()
+    args = ["test_one.js"]
+    res = parser.parse_args(args)
+    assert res.console_simplify_exclude == ["statistics"]
+
+
 def test_options():
     assert Options.args["--proxy"]["help"] == "Activates the proxy layer"
     assert Options.args["--no-browsertime"]["help"] == (
