@@ -2156,6 +2156,10 @@ class RTCRtpSender {
     this.track = track;
   }
 
+  get transport() {
+    return this._transceiverImpl.dtlsTransport;
+  }
+
   getStats() {
     if (this.track) {
       return this._pc._async(async () => this._pc._impl.getStats(this.track));

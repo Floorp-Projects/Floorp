@@ -9,6 +9,7 @@
 #include "MediaPipeline.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
+#include "RTCDtlsTransport.h"
 #include "runnable_utils.h"
 #include "signaling/src/jsep/JsepSession.h"
 #include "signaling/src/jsep/JsepTransport.h"
@@ -183,6 +184,33 @@ void PeerConnectionMedia::EnsureTransports(const JsepSession& aSession) {
   GatherIfReady();
 }
 
+void PeerConnectionMedia::UpdateRTCDtlsTransports() {
+  for (auto& transceiver : mTransceivers) {
+    std::string transportId = transceiver->GetTransportId();
+    if (transportId.empty()) {
+      continue;
+    }
+    if (!mTransportIdToRTCDtlsTransport.count(transportId)) {
+      mTransportIdToRTCDtlsTransport.emplace(
+          transportId, new RTCDtlsTransport(transceiver->GetParentObject()));
+    }
+
+    transceiver->SetDtlsTransport(mTransportIdToRTCDtlsTransport[transportId]);
+  }
+}
+
+void PeerConnectionMedia::RemoveRTCDtlsTransportsExcept(
+    const std::set<std::string>& aTransportIds) {
+  for (auto iter = mTransportIdToRTCDtlsTransport.begin();
+       iter != mTransportIdToRTCDtlsTransport.end();) {
+    if (!aTransportIds.count(iter->first)) {
+      iter = mTransportIdToRTCDtlsTransport.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+}
+
 nsresult PeerConnectionMedia::UpdateTransports(const JsepSession& aSession,
                                                const bool forceIceTcp) {
   std::set<std::string> finalTransports;
@@ -193,6 +221,9 @@ nsresult PeerConnectionMedia::UpdateTransports(const JsepSession& aSession,
       UpdateTransport(*transceiver, forceIceTcp);
     }
   }
+
+  // clean up the unused RTCDtlsTransports
+  RemoveRTCDtlsTransportsExcept(finalTransports);
 
   mTransportHandler->RemoveTransportsExcept(finalTransports);
 

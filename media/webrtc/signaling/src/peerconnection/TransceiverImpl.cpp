@@ -39,7 +39,7 @@ MOZ_MTLOG_MODULE("transceiverimpl")
 using LocalDirection = MediaSessionConduitLocalDirection;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransceiverImpl, mWindow, mSendTrack,
-                                      mReceiver, mDtmf)
+                                      mReceiver, mDtmf, mDtlsTransport)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransceiverImpl)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransceiverImpl)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransceiverImpl)
@@ -74,9 +74,9 @@ TransceiverImpl::TransceiverImpl(
 
   mConduit->SetPCHandle(mPCHandle);
 
-  mReceiver =
-      new RTCRtpReceiver(aWindow, aPrivacyNeeded, aPCHandle, aTransportHandler,
-                         aJsepTransceiver, aMainThread, aStsThread, mConduit);
+  mReceiver = new RTCRtpReceiver(aWindow, aPrivacyNeeded, aPCHandle,
+                                 aTransportHandler, aJsepTransceiver,
+                                 aMainThread, aStsThread, mConduit, this);
 
   if (!IsVideo()) {
     mDtmf = new RTCDTMFSender(
@@ -88,9 +88,35 @@ TransceiverImpl::TransceiverImpl(
                                 mStsThread.get(), IsVideo(), mConduit);
 
   mTransmitPipeline->SetTrack(mSendTrack);
+
+  mTransportHandler->SignalStateChange.connect(
+      this, &TransceiverImpl::UpdateDtlsTransportState);
+  mTransportHandler->SignalRtcpStateChange.connect(
+      this, &TransceiverImpl::UpdateDtlsTransportState);
 }
 
 TransceiverImpl::~TransceiverImpl() = default;
+
+void TransceiverImpl::SetDtlsTransport(dom::RTCDtlsTransport* aDtlsTransport) {
+  mDtlsTransport = aDtlsTransport;
+}
+
+void TransceiverImpl::UpdateDtlsTransportState(const std::string& aTransportId,
+                                               TransportLayer::State aState) {
+  if (!mMainThread->IsOnCurrentThread()) {
+    mMainThread->Dispatch(
+        WrapRunnable(this, &TransceiverImpl::UpdateDtlsTransportState,
+                     aTransportId, aState),
+        NS_DISPATCH_NORMAL);
+    return;
+  }
+
+  if (!mDtlsTransport) {
+    return;
+  }
+
+  mDtlsTransport->UpdateState(aState);
+}
 
 void TransceiverImpl::InitAudio() {
   mConduit = AudioSessionConduit::Create(mCallWrapper, mStsThread);
@@ -126,6 +152,12 @@ nsresult TransceiverImpl::UpdateSinkIdentity(
 }
 
 void TransceiverImpl::Shutdown_m() {
+  // Called via PCImpl::Close -> PCImpl::CloseInt -> PCImpl::ShutdownMedia ->
+  // PCMedia::SelfDestruct.  Satisfies step 7 of
+  // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-close
+  if (mDtlsTransport) {
+    mDtlsTransport->UpdateState(TransportLayer::TS_CLOSED);
+  }
   Stop();
   mTransmitPipeline = nullptr;
   mTransportHandler = nullptr;
