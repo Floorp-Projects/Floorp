@@ -64,6 +64,153 @@ def test_perfherder():
         assert "firstPaint" in subtest["name"]
 
 
+def test_perfherder_simple_names():
+    options = {
+        "perfherder": True,
+        "perfherder-stats": True,
+        "perfherder-prefix": "",
+        "perfherder-metrics": [metric_fields("firstPaint"), metric_fields("resource")],
+        "perfherder-simplify-names": True,
+        "perfherder-simplify-exclude": ["statistics"],
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        with metrics as m, silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    # Check some metadata
+    assert output["application"]["name"] == "firefox"
+    assert output["framework"]["name"] == "browsertime"
+
+    # Check some numbers in our data
+    assert len(output["suites"]) == 1
+    assert output["suites"][0]["value"] > 0
+
+    # Check if only firstPaint/resource metrics were obtained and
+    # that simplifications occurred
+    assert all(
+        [
+            "firstPaint" in subtest["name"]
+            or "duration" in subtest["name"]
+            or "count" in subtest["name"]
+            for subtest in output["suites"][0]["subtests"]
+        ]
+    )
+
+    found_all = {"firstPaint": False, "count": False, "duration": False}
+    for subtest in output["suites"][0]["subtests"]:
+        if subtest["name"] in found_all:
+            found_all[subtest["name"]] = True
+            continue
+        assert any([name in subtest["name"] for name in found_all.keys()])
+        # Statistics are not simplified so any metric that isn't
+        # in the list of known metrics must be a statistic
+        assert "statistics" in subtest["name"]
+
+    for entry, value in found_all.items():
+        assert found_all[entry], f"Failed finding metric simplification for {entry}"
+
+    # Statistics are not simplified by default
+    assert (
+        len(
+            [
+                subtest
+                for subtest in output["suites"][0]["subtests"]
+                if "statistics" in subtest["name"]
+            ]
+        )
+        == 27
+    )
+    assert (
+        len(
+            [
+                subtest
+                for subtest in output["suites"][0]["subtests"]
+                if "statistics" not in subtest["name"]
+            ]
+        )
+        == 3
+    )
+
+
+def test_perfherder_names_simplified_with_no_exclusions():
+    options = {
+        "perfherder": True,
+        "perfherder-stats": True,
+        "perfherder-prefix": "",
+        "perfherder-metrics": [metric_fields("firstPaint"), metric_fields("resource")],
+        "perfherder-simplify-names": True,
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        with metrics as m, silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    # Check some metadata
+    assert output["application"]["name"] == "firefox"
+    assert output["framework"]["name"] == "browsertime"
+
+    # Check some numbers in our data
+    assert len(output["suites"]) == 1
+    assert output["suites"][0]["value"] > 0
+
+    # In this case, some metrics will be called "median", "mean", etc.
+    # since those are the simplifications of the first statistics entries
+    # that were found.
+    assert not all(
+        [
+            "firstPaint" in subtest["name"]
+            or "duration" in subtest["name"]
+            or "count" in subtest["name"]
+            for subtest in output["suites"][0]["subtests"]
+        ]
+    )
+
+    found_all = {"firstPaint": False, "count": False, "duration": False}
+    for subtest in output["suites"][0]["subtests"]:
+        if subtest["name"] in found_all:
+            found_all[subtest["name"]] = True
+            continue
+
+    for entry, value in found_all.items():
+        assert found_all[entry], f"Failed finding metric simplification for {entry}"
+
+    # Only a portion of the metrics should still have statistics in
+    # their name due to a naming conflict that only emits a warning
+    assert (
+        len(
+            [
+                subtest
+                for subtest in output["suites"][0]["subtests"]
+                if "statistics" in subtest["name"]
+            ]
+        )
+        == 18
+    )
+    assert (
+        len(
+            [
+                subtest
+                for subtest in output["suites"][0]["subtests"]
+                if "statistics" not in subtest["name"]
+            ]
+        )
+        == 12
+    )
+
+
 def test_perfherder_with_extra_options():
     options = {
         "perfherder": True,
