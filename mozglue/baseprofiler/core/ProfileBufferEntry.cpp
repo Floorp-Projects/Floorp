@@ -15,8 +15,10 @@
 
 #include "BaseProfiler.h"
 #include "BaseProfilerMarkerPayload.h"
+#include "mozilla/BaseProfilerMarkers.h"
 #include "platform.h"
 #include "ProfileBuffer.h"
+#include "ProfilerBacktrace.h"
 
 namespace mozilla {
 namespace baseprofiler {
@@ -812,33 +814,61 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
     MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
                static_cast<ProfileBufferEntry::KindUnderlyingType>(
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
-    if (type == ProfileBufferEntry::Kind::MarkerData &&
-        aER.ReadObject<int>() == aThreadId) {
-      // Schema:
-      //   [name, time, category, data]
-
-      aWriter.StartArrayElement();
-      {
-        std::string name = aER.ReadObject<std::string>();
-        const ProfilingCategoryPairInfo& info = GetProfilingCategoryPairInfo(
-            static_cast<ProfilingCategoryPair>(aER.ReadObject<uint32_t>()));
-        auto payload = aER.ReadObject<UniquePtr<ProfilerMarkerPayload>>();
-        double time = aER.ReadObject<double>();
-        MOZ_ASSERT(aER.RemainingBytes() == 0);
-
-        aUniqueStacks.mUniqueStrings->WriteElement(aWriter, name.c_str());
-        aWriter.DoubleElement(time);
-        aWriter.IntElement(unsigned(info.mCategory));
-        if (payload) {
-          aWriter.StartObjectElement(SpliceableJSONWriter::SingleLineStyle);
-          { payload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks); }
-          aWriter.EndObject();
+    // Code should *break* from the switch if the entry was not fully read.
+    // Code should *return* from the switch if the entry was fully read.
+    switch (type) {
+      case ProfileBufferEntry::Kind::MarkerData:
+        if (aER.ReadObject<int>() != aThreadId) {
+          break;
         }
-      }
-      aWriter.EndArray();
-    } else {
-      aER.SetRemainingBytes(0);
+        // Schema:
+        //   [name, time, category, data]
+        aWriter.StartArrayElement();
+        {
+          std::string name = aER.ReadObject<std::string>();
+          const ProfilingCategoryPairInfo& info = GetProfilingCategoryPairInfo(
+              static_cast<ProfilingCategoryPair>(aER.ReadObject<uint32_t>()));
+          auto payload = aER.ReadObject<UniquePtr<ProfilerMarkerPayload>>();
+          double time = aER.ReadObject<double>();
+          MOZ_ASSERT(aER.RemainingBytes() == 0);
+
+          aUniqueStacks.mUniqueStrings->WriteElement(aWriter, name.c_str());
+          aWriter.DoubleElement(time);
+          aWriter.IntElement(unsigned(info.mCategory));
+          if (payload) {
+            aWriter.StartObjectElement(SpliceableJSONWriter::SingleLineStyle);
+            {
+              payload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks);
+            }
+            aWriter.EndObject();
+          }
+        }
+        aWriter.EndArray();
+        return;
+
+      case ProfileBufferEntry::Kind::Marker:
+        if (::mozilla::base_profiler_markers_detail::
+                DeserializeAfterKindAndStream(
+                    aER, aWriter, aThreadId,
+                    [&](const mozilla::ProfilerString8View& aName) {
+                      aUniqueStacks.mUniqueStrings->WriteElement(
+                          aWriter, aName.String().c_str());
+                    },
+                    [&](ProfileChunkedBuffer& aChunkedBuffer) {
+                      ProfilerBacktrace backtrace("", aThreadId,
+                                                  &aChunkedBuffer);
+                      backtrace.StreamJSON(
+                          aWriter, TimeStamp::ProcessCreation(), aUniqueStacks);
+                    })) {
+          return;
+        }
+        break;
+
+      default:
+        break;
     }
+
+    aER.SetRemainingBytes(0);
   });
 }
 
