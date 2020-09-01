@@ -1,0 +1,15 @@
+{
+  "name": "save-to-pocket-ff",
+  "version": "1.0.0",
+  "description": "Task running for Save to Pocket Extension",
+  "scripts": {
+    "build:handlebars": "node compile_handlebars.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mozilla (https://mozilla.org/)",
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "handlebars": "3.0.0"
+  },
+  "repository": "https://hg.mozilla.org/"
+}
