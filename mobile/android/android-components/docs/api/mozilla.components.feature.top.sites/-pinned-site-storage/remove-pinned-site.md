@@ -2,7 +2,7 @@
 
 # removePinnedSite
 
-`suspend fun removePinnedSite(site: `[`TopSite`](../-top-site/index.md)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/top-sites/src/main/java/mozilla/components/feature/top/sites/PinnedSiteStorage.kt#L52)
+`suspend fun removePinnedSite(site: `[`TopSite`](../-top-site/index.md)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/top-sites/src/main/java/mozilla/components/feature/top/sites/PinnedSiteStorage.kt#L78)
 
 Removes the given pinned site.
 

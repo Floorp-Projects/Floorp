@@ -2,7 +2,7 @@
 
 # isFatal
 
-`val isFatal: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L82)
+`val isFatal: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L91)
 
 Whether or not the crash was fatal or not: If true, the main application process was affected
     by the crash. If false, only an internal process used by Gecko has crashed and the application

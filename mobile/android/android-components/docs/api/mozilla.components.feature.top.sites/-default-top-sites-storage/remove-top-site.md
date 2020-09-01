@@ -2,7 +2,7 @@
 
 # removeTopSite
 
-`fun removeTopSite(topSite: `[`TopSite`](../-top-site/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/top-sites/src/main/java/mozilla/components/feature/top/sites/DefaultTopSitesStorage.kt#L56)
+`fun removeTopSite(topSite: `[`TopSite`](../-top-site/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/top-sites/src/main/java/mozilla/components/feature/top/sites/DefaultTopSitesStorage.kt#L54)
 
 Overrides [TopSitesStorage.removeTopSite](../-top-sites-storage/remove-top-site.md)
 
