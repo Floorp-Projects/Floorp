@@ -2465,23 +2465,28 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
   // nsDisplayCanvasBackground directly.) Either way we don't need to
   // paint the background color here.
   bool isCanvasFrame = IsCanvasFrame(aParams.frame);
+  const bool paintMask = aParams.paintFlags & PAINTBG_MASK_IMAGE;
 
   // Determine whether we are drawing background images and/or
   // background colors.
-  bool drawBackgroundImage;
-  bool drawBackgroundColor;
+  bool drawBackgroundImage = true;
+  bool drawBackgroundColor = !paintMask;
+  nscolor bgColor = NS_RGBA(0, 0, 0, 0);
+  if (!paintMask) {
+    bgColor = DetermineBackgroundColor(
+        &aParams.presCtx, aBackgroundSC, aParams.frame, drawBackgroundImage,
+        drawBackgroundColor);
+  }
 
-  nscolor bgColor =
-      DetermineBackgroundColor(&aParams.presCtx, aBackgroundSC, aParams.frame,
-                               drawBackgroundImage, drawBackgroundColor);
+  // Masks shouldn't be suppressed for print.
+  MOZ_ASSERT_IF(paintMask, drawBackgroundImage);
 
-  bool paintMask = (aParams.paintFlags & PAINTBG_MASK_IMAGE);
   const nsStyleImageLayers& layers =
       paintMask ? aBackgroundSC->StyleSVGReset()->mMask
                 : aBackgroundSC->StyleBackground()->mImage;
   // If we're drawing a specific layer, we don't want to draw the
   // background color.
-  if ((drawBackgroundColor && aParams.layer >= 0) || paintMask) {
+  if (drawBackgroundColor && aParams.layer >= 0) {
     drawBackgroundColor = false;
   }
 
