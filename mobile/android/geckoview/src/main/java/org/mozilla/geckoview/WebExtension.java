@@ -16,6 +16,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ImageDecoder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
