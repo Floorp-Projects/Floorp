@@ -2029,7 +2029,9 @@ JSObject* GlobalHelperThreadState::finishModuleParseTask(
   MOZ_ASSERT(script->isModule());
 
   RootedModuleObject module(cx, script->module());
-  module->fixEnvironmentsAfterRealmMerge();
+  if (cx->options().useOffThreadParseGlobal()) {
+    module->fixEnvironmentsAfterRealmMerge();
+  }
   if (!ModuleObject::Freeze(cx, module)) {
     return nullptr;
   }
