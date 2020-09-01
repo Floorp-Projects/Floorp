@@ -30,6 +30,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsIContentInlines.h"       // for nsINode::IsEditable()
 #include "nsIEditor.h"               // for nsIEditor, etc.
+#include "nsIFrame.h"                // for nsBidiLevel
 #include "nsISelectionController.h"  // for nsISelectionController constants
 #include "nsISelectionListener.h"    // for nsISelectionListener
 #include "nsISupportsImpl.h"         // for EditorBase::Release, etc.
@@ -1830,19 +1831,47 @@ class EditorBase : public nsIEditor,
 
  protected:  // Edit sub-action handler
   /**
-   * SetCaretBidiLevelForDeletion() sets caret bidi level if necessary.
-   * If current point is bidi boundary and caller shouldn't handle the
-   * deletion, returns as "canceled".  Note that even if this sets caret
-   * bidi level, this won't mark the result as "handled" so that you can
-   * use the result as edit sub-action handler's result.
-   *
-   * @param aPointAtCaret       Collapsed `Selection` point.
-   * @param aDirectionAndAmount The direction and amount to delete.
+   * AutoCaretBidiLevelManager() computes bidi level of caret, deleting
+   * character(s) from aPointAtCaret at construction.  Then, if you'll
+   * need to extend the selection, you should calls `UpdateCaretBidiLevel()`,
+   * then, this class may update caret bidi level for you if it's required.
    */
-  template <typename PT, typename CT>
-  EditActionResult SetCaretBidiLevelForDeletion(
-      const EditorDOMPointBase<PT, CT>& aPointAtCaret,
-      nsIEditor::EDirection aDirectionAndAmount) const;
+  class MOZ_RAII AutoCaretBidiLevelManager final {
+   public:
+    /**
+     * @param aEditorBase         The editor.
+     * @param aPointAtCaret       Collapsed `Selection` point.
+     * @param aDirectionAndAmount The direction and amount to delete.
+     */
+    template <typename PT, typename CT>
+    AutoCaretBidiLevelManager(const EditorBase& aEditorBase,
+                              nsIEditor::EDirection aDirectionAndAmount,
+                              const EditorDOMPointBase<PT, CT>& aPointAtCaret);
+
+    /**
+     * Failed() returns true if the constructor failed to handle the bidi
+     * information.
+     */
+    bool Failed() const { return mFailed; }
+
+    /**
+     * Canceled() returns true if when the caller should stop deleting
+     * characters since caret position is not visually adjacent the deleting
+     * characters and user does not wand to delete them in that case.
+     */
+    bool Canceled() const { return mCanceled; }
+
+    /**
+     * MaybeUpdateCaretBidiLevel() may update caret bidi level and schedule to
+     * paint it if they are necessary.
+     */
+    void MaybeUpdateCaretBidiLevel(const EditorBase& aEditorBase) const;
+
+   private:
+    Maybe<nsBidiLevel> mNewCaretBidiLevel;
+    bool mFailed = false;
+    bool mCanceled = false;
+  };
 
   /**
    * UndefineCaretBidiLevel() resets bidi level of the caret.
