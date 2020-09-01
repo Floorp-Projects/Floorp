@@ -6,10 +6,8 @@
 
 #include "ProfileBufferEntry.h"
 
-#include "mozilla/ProfilerMarkers.h"
 #include "platform.h"
 #include "ProfileBuffer.h"
-#include "ProfilerBacktrace.h"
 #include "ProfilerMarkerPayload.h"
 
 #include "jsapi.h"
@@ -674,7 +672,6 @@ class EntryGetter {
 //         */
 //   )
 //   | MarkerData
-//   | Marker
 //   | ( /* Counters */
 //       CounterId
 //       Time
@@ -1184,83 +1181,51 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
     MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
                static_cast<ProfileBufferEntry::KindUnderlyingType>(
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
-    // Code should *return* from the switch if the entry was fully read.
-    // Code should *break* from the switch if the entry was not fully read (we
-    // then need to adjust the reader position to the end of the entry, as
-    // expected by the reader code.)
-    switch (type) {
-      case ProfileBufferEntry::Kind::MarkerData:
-        if (aER.ReadObject<int>() != aThreadId) {
-          break;  // Entry not fully read.
+    if (type == ProfileBufferEntry::Kind::MarkerData &&
+        aER.ReadObject<int>() == aThreadId) {
+      aWriter.StartArrayElement();
+      {
+        // Extract the information from the buffer:
+        // Each entry is made up of the following:
+        //
+        // [
+        //   ProfileBufferEntry::Kind::MarkerData,  <- already read
+        //   threadId,                              <- already read
+        //   name,                                  <- next location in entries
+        //   startTime,
+        //   endTime,
+        //   phase,
+        //   categoryPair,
+        //   payload,
+        // ]
+        auto name = aER.ReadObject<std::string>();
+        auto startTime = aER.ReadObject<double>();
+        auto endTime = aER.ReadObject<double>();
+        auto phase = aER.ReadObject<uint8_t>();
+        const JS::ProfilingCategoryPairInfo& info =
+            GetProfilingCategoryPairInfo(static_cast<JS::ProfilingCategoryPair>(
+                aER.ReadObject<uint32_t>()));
+        auto payload = aER.ReadObject<UniquePtr<ProfilerMarkerPayload>>();
+
+        MOZ_ASSERT(aER.RemainingBytes() == 0);
+
+        // Now write this information to JSON with the following schema:
+        // [name, startTime, endTime, phase, category, data]
+        aUniqueStacks.mUniqueStrings->WriteElement(aWriter, name.c_str());
+        aWriter.DoubleElement(startTime);
+        aWriter.DoubleElement(endTime);
+        aWriter.IntElement(phase);
+        aWriter.IntElement(unsigned(info.mCategory));
+        if (payload) {
+          aWriter.StartObjectElement(SpliceableJSONWriter::SingleLineStyle);
+          { payload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks); }
+          aWriter.EndObject();
         }
-        aWriter.StartArrayElement();
-        {
-          // Extract the information from the buffer:
-          // Each entry is made up of the following:
-          //
-          // [
-          //   ProfileBufferEntry::Kind::MarkerData, <- already read
-          //   threadId,                             <- already read
-          //   name,                                 <- next location in entries
-          //   startTime,
-          //   endTime,
-          //   phase,
-          //   categoryPair,
-          //   payload
-          // ]
-          auto name = aER.ReadObject<std::string>();
-          auto startTime = aER.ReadObject<double>();
-          auto endTime = aER.ReadObject<double>();
-          auto phase = aER.ReadObject<uint8_t>();
-          const JS::ProfilingCategoryPairInfo& info =
-              GetProfilingCategoryPairInfo(
-                  static_cast<JS::ProfilingCategoryPair>(
-                      aER.ReadObject<uint32_t>()));
-          auto payload = aER.ReadObject<UniquePtr<ProfilerMarkerPayload>>();
-
-          MOZ_ASSERT(aER.RemainingBytes() == 0);
-
-          // Now write this information to JSON with the following schema:
-          // [name, startTime, endTime, phase, category, data]
-          aUniqueStacks.mUniqueStrings->WriteElement(aWriter, name.c_str());
-          aWriter.DoubleElement(startTime);
-          aWriter.DoubleElement(endTime);
-          aWriter.IntElement(phase);
-          aWriter.IntElement(unsigned(info.mCategory));
-          if (payload) {
-            aWriter.StartObjectElement(SpliceableJSONWriter::SingleLineStyle);
-            {
-              payload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks);
-            }
-            aWriter.EndObject();
-          }
-        }
-        aWriter.EndArray();
-        return;  // Entry fully read.
-
-      case ProfileBufferEntry::Kind::Marker:
-        if (mozilla::base_profiler_markers_detail::
-                DeserializeAfterKindAndStream(
-                    aER, aWriter, aThreadId,
-                    [&](const mozilla::ProfilerString8View& aName) {
-                      aUniqueStacks.mUniqueStrings->WriteElement(
-                          aWriter, aName.String().c_str());
-                    },
-                    [&](ProfileChunkedBuffer& aChunkedBuffer) {
-                      ProfilerBacktrace backtrace("", aThreadId,
-                                                  &aChunkedBuffer);
-                      backtrace.StreamJSON(aWriter, aProcessStartTime,
-                                           aUniqueStacks);
-                    })) {
-          return;  // Entry fully read.
-        }
-        break;  // Entry not fully read.
-
-      default:
-        break;  // Entry not fully read.
+      }
+      aWriter.EndArray();
+    } else {
+      aER.SetRemainingBytes(0);
     }
-
-    aER.SetRemainingBytes(0);
   });
 }
 
