@@ -84,7 +84,7 @@ EditActionResult& EditActionResult::operator|=(
 
 Result<nsIEditor::EDirection, nsresult>
 AutoRangeArray::ExtendAnchorFocusRangeFor(
-    EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount) {
+    const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount) {
   MOZ_ASSERT(aEditorBase.IsEditActionDataAvailable());
   MOZ_ASSERT(mAnchorFocusRange);
   MOZ_ASSERT(mAnchorFocusRange->IsPositioned());
