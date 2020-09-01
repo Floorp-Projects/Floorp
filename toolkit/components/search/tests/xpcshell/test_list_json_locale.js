@@ -33,14 +33,14 @@ add_task(async function test_listJSONlocale() {
 
   Assert.equal(
     Services.search.defaultEngine.name,
-    getDefaultEngineName(false, false),
+    "Test search engine",
     "Should have the correct default engine"
   );
   Assert.equal(
     Services.search.defaultPrivateEngine.name,
     // 'de' only displays google, so we'll be using the same engine as the
     // normal default.
-    getDefaultEngineName(false, false),
+    "Test search engine",
     "Should have the correct private default engine"
   );
 });
