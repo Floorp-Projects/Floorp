@@ -287,4 +287,22 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
       source: button.source,
     });
   }
+
+  /**
+   * Overrides the superclass's contextmenu listener to handle the context menu
+   * for local one-offs in addition to engine one-offs.
+   *
+   * @param {event} event
+   *   The contextmenu event.
+   */
+  _on_contextmenu(event) {
+    // Prevent the context menu from appearing on the local one-offs.
+    let target = event.originalTarget;
+    if (!target.engine) {
+      event.preventDefault();
+      return;
+    }
+
+    super._on_contextmenu(event);
+  }
 }
