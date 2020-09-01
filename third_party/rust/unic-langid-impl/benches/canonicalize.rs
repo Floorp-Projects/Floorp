@@ -7,20 +7,6 @@ use unic_langid_impl::canonicalize;
 
 fn langid_canonicalize_bench(c: &mut Criterion) {
     let strings = &[
-        "En_uS",
-        "EN-GB",
-        "ES-aR",
-        "iT",
-        "zH_HaNs_cN",
-        "dE-aT",
-        "Pl",
-        "FR-FR",
-        "de_AT",
-        "sR-CyrL_sr",
-        "NB-NO",
-        "fr_fr",
-        "Mk",
-        "uK",
         "en-us",
         "en_gb",
         "ES-AR",

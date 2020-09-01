@@ -1,0 +1,100 @@
+suites:
+  -
+    name: Isolating interpolations
+    resources:
+      -
+        source: |-
+          foo = Foo
+          bar = { foo } Bar
+          baz = { $arg } Baz
+          qux = { bar } { baz }
+    bundles:
+      -
+        useIsolating: true
+    tests:
+      -
+        name: isolates interpolated message references
+        skip: true
+        asserts:
+          -
+            id: bar
+            value: "\u2068Foo\u2069 Bar"
+      -
+        name: isolates interpolated string-typed variables
+        asserts:
+          -
+            id: baz
+            args:
+              arg: Arg
+            value: "\u2068Arg\u2069 Baz"
+      -
+        name: isolates interpolated number-typed variables
+        asserts:
+          -
+            id: baz
+            args:
+              arg: 1
+            value: "\u20681\u2069 Baz"
+      -
+        name: isolates interpolated date-typed variables
+        skip: true
+        asserts:
+          -
+            id: baz
+            args:
+              arg: 1976-07-31
+            value: "\u20681976-07-31\u2069 Baz"
+      -
+        name: isolates complex interpolations
+        skip: true
+        asserts:
+          -
+            id: qux
+            args:
+              arg: Arg
+            value: "\u2068\u2068Foo\u2069 Bar\u2069 \u2068\u2068Arg\u2069 Baz\u2069"
+  -
+    name: Skip isolation cases
+    resources:
+      -
+        source: |-
+          -brand-short-name = Amaya
+          foo = { -brand-short-name }
+    bundles:
+      -
+        useIsolating: true
+    tests:
+      -
+        name: skips isolation if the only element is a placeable
+        asserts:
+          -
+            id: foo
+            value: "Amaya"
+  -
+    name: (Rust) Skip isolation of string literals and terms
+    resources:
+      -
+        source: |-
+          rs-bar = Foo { $foo } { "Bar" } baz
+          -rs-term = My Term
+          rs-baz = Foo { $foo } { -rs-term } baz
+    bundles:
+      -
+        useIsolating: true
+    tests:
+      -
+        name: skip isolation of string literals
+        asserts:
+          -
+            id: rs-bar
+            args:
+              foo: Test
+            value: "Foo \u2068Test\u2069 Bar baz"
+      -
+        name: skip isolation of term references
+        asserts:
+          -
+            id: rs-baz
+            args:
+              foo: Test
+            value: "Foo \u2068Test\u2069 My Term baz"

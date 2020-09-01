@@ -1,8 +1,8 @@
 use serde_json::Value;
 use std::collections::HashMap;
-use std::collections::HashSet;
 use std::fs;
-use unic_langid_impl::subtags::{Language, Script};
+use std::str::FromStr;
+use tinystr::TinyStr8;
 use unic_langid_impl::CharacterDirection;
 use unic_langid_impl::LanguageIdentifier;
 
@@ -37,94 +37,48 @@ fn langid_to_direction_map(path: &str) -> HashMap<LanguageIdentifier, CharacterD
 
 fn check_all_variants_rtl(
     map: &HashMap<LanguageIdentifier, CharacterDirection>,
-    lang: Option<Language>,
-    script: Option<Script>,
+    lang: &str,
 ) -> bool {
     for (langid, dir) in map.iter() {
-        if let Some(reference_script) = script {
-            if let Some(s) = langid.script {
-                if reference_script == s && dir != &CharacterDirection::RTL {
-                    return false;
-                }
-            }
-        }
-        if let Some(reference_lang) = lang {
-            if langid.language == reference_lang && dir != &CharacterDirection::RTL {
-                println!("{:#?}", langid);
-                println!("{:#?}", lang);
-                return false;
-            }
+        if langid.language() == lang && dir != &CharacterDirection::RTL {
+            return false;
         }
     }
     true
 }
 
 fn main() {
-    let path = "./data/cldr-misc-full/main/";
+    let path = "./data/cldr-misc-modern/main/";
     let map = langid_to_direction_map(path);
 
-    let mut scripts = HashSet::new();
-    let mut langs = HashSet::new();
+    let mut result = vec![];
 
     for (langid, dir) in map.iter() {
         if dir == &CharacterDirection::LTR {
             continue;
         }
 
-        let script = langid.script;
-
-        if let Some(script) = script {
-            if scripts.contains(&script) {
-                continue;
-            }
-            assert!(
-                check_all_variants_rtl(&map, None, Some(script)),
-                "We didn't expect a script with two directionalities!"
-            );
-            scripts.insert(script);
-            continue;
-        }
-
-        let lang = langid.language;
-
-        if langs.contains(&lang) {
-            continue;
-        }
+        let lang = langid.language().to_string();
 
         assert!(
-            check_all_variants_rtl(&map, Some(lang), None),
+            check_all_variants_rtl(&map, &lang),
             "We didn't expect a language with two directionalities!"
         );
-        langs.insert(lang);
+        if !result.contains(&lang) {
+            result.push(lang.to_string());
+        }
     }
 
-    let mut scripts: Vec<String> = scripts
-        .into_iter()
+    let list: Vec<String> = result
+        .iter()
         .map(|s| {
-            let v: u32 = s.into();
-            v.to_string()
+            let num: u64 = TinyStr8::from_str(s).unwrap().into();
+            num.to_string()
         })
         .collect();
-    scripts.sort();
-    let mut langs: Vec<String> = langs
-        .into_iter()
-        .map(|s| {
-            let v: Option<u64> = s.into();
-            let v: u64 = v.expect("Expected language to not be undefined.");
-            v.to_string()
-        })
-        .collect();
-    langs.sort();
-
     println!(
-        "pub const SCRIPTS_CHARACTER_DIRECTION_RTL: [u32; {}] = [{}];",
-        scripts.len(),
-        scripts.join(", ")
-    );
-
-    println!(
-        "pub const LANGS_CHARACTER_DIRECTION_RTL: [u64; {}] = [{}];",
-        langs.len(),
-        langs.join(", ")
+        "pub const CHARACTER_DIRECTION_RTL: [u64; {}] = [{}];",
+        result.len(),
+        list.join(", ")
     );
 }
