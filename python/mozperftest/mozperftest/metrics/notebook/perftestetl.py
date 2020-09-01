@@ -7,8 +7,7 @@ import os
 import pathlib
 from collections import OrderedDict
 
-from mozperftest.utils import load_class
-from .transformer import Transformer, SimplePerfherderTransformer
+from .transformer import Transformer, SimplePerfherderTransformer, get_transformer
 from .constant import Constant
 
 
@@ -53,7 +52,7 @@ class PerftestETL(object):
         if custom_transform:
             # try to load it directly, and fallback to registry
             try:
-                tfm_cls = load_class(custom_transform)
+                tfm_cls = get_transformer(custom_transform)
             except ImportError:
                 tfm_cls = tfms_dict.get(custom_transform)
 
