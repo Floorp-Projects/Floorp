@@ -1108,8 +1108,6 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
             return False
         try_name = attributes.get('raptor_try_name')
         if '-cold' in try_name and 'shippable' in platform:
-            if '-1-refbrow-' in try_name:
-                return True
             # Get browsertime amazon smoke tests
             if 'browsertime' in try_name and \
                'amazon' in try_name and 'search' not in try_name and \

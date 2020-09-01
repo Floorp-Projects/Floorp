@@ -27,7 +27,7 @@ class AndroidCPUProfiler(object):
     # Run test...
 
     # Stop measuring and generate perfherder data
-    cpu_profiler.generate_android_cpu_profile("raptor-tp6m-1")
+    cpu_profiler.generate_android_cpu_profile("browsertime-tp6m")
     ```
     """
 

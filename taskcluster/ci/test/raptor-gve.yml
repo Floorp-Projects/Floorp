@@ -6,19 +6,11 @@ job-defaults:
     max-run-time: 1800
     suite: raptor
     run-on-projects:
-        by-test-name:
-            raptor-tp6m-.*-cold:
-                by-test-platform:
-                    android-hw-.*(?<!-shippable)/opt: []
-                    android-hw-p2-.*api-16/pgo: []
-                    android-hw-p2-.*api-16-shippable/opt: []
-                    default: ['trunk', 'mozilla-beta']
-            default:
-                by-test-platform:
-                    android-hw-p2-.*-api-16/(?!opt).*: []
-                    android-hw-p2-.*-api-16-shippable/opt: []
-                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
-                    default: ['mozilla-central']
+        by-test-platform:
+            android-hw-p2-.*-api-16/(?!opt).*: []
+            android-hw-p2-.*-api-16-shippable/opt: []
+            android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
+            default: ['mozilla-central']
     target: geckoview_example.apk
     tier: 1
     virtualization: hardware
