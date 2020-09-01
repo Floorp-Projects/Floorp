@@ -170,7 +170,7 @@ _GetAddrInfo_Portable(const nsACString& aCanonHost, uint16_t aAddressFamily,
   RefPtr<AddrInfo> ai(new AddrInfo(aCanonHost, prai, disableIPv4,
                                    filterNameCollision, canonName));
   PR_FreeAddrInfo(prai);
-  if (ai->mAddresses.isEmpty()) {
+  if (ai->mAddresses.IsEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -220,7 +220,7 @@ bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
     if (aAddressFamily != AF_UNSPEC && ip.raw.family != aAddressFamily) {
       continue;
     }
-    ai->AddAddress(new NetAddrElement(&ip));
+    ai->AddAddress(&ip);
   }
 
   ai.forget(aAddrInfo);
