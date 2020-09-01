@@ -54,14 +54,8 @@ def fixSymbols(line, jsonMode=False, slowWarning=False, breakpadSymsDir=None, hi
         if jsonMode:
             args.append('-j')
         if breakpadSymsDir:
-            # `fileid` should be packaged next to `fix_stacks.py`.
-            here = os.path.dirname(__file__)
-            fileid_exe = os.path.join(here, 'fileid')
-            if platform.system() == 'Windows':
-                fileid_exe = fileid_exe + '.exe'
-
             args.append('-b')
-            args.append(breakpadSymsDir + "," + fileid_exe)
+            args.append(breakpadSymsDir)
 
         # Sometimes we need to prevent errors from going to stderr.
         stderr = open(os.devnull) if hide_errors else None
