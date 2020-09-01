@@ -394,10 +394,6 @@ function extraRootedGCThings()
 function extraRootedPointers()
 {
     return [
-        // These are not actually rooted, but are only used in the context of
-        // AutoKeepAtoms.
-        'js::frontend::TokenStream',
-        'js::frontend::TokenStreamAnyChars',
     ];
 }
 
