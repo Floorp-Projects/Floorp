@@ -4266,6 +4266,15 @@ void LIRGenerator::visitProxySetByValue(MProxySetByValue* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitCallSetArrayLength(MCallSetArrayLength* ins) {
+  MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->rhs()->type() == MIRType::Value);
+  auto* lir = new (alloc()) LCallSetArrayLength(useRegisterAtStart(ins->obj()),
+                                                useBoxAtStart(ins->rhs()));
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitMegamorphicLoadSlot(MMegamorphicLoadSlot* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   auto* lir = new (alloc()) LMegamorphicLoadSlot(

@@ -9346,6 +9346,24 @@ class MProxySetByValue
   bool possiblyCalls() const override { return true; }
 };
 
+class MCallSetArrayLength
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  bool strict_;
+
+  MCallSetArrayLength(MDefinition* obj, MDefinition* rhs, bool strict)
+      : MBinaryInstruction(classOpcode, obj, rhs), strict_(strict) {}
+
+ public:
+  INSTRUCTION_HEADER(CallSetArrayLength)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, obj), (1, rhs))
+
+  bool strict() const { return strict_; }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 class MMegamorphicLoadSlot : public MUnaryInstruction,
                              public SingleObjectPolicy::Data {
   CompilerPropertyName name_;
