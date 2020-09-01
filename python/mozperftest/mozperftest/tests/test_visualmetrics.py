@@ -31,6 +31,10 @@ def get_res(*args, **kw):
     return json.dumps(VM_RES)
 
 
+def mocked_executable():
+    return ("ok", "ok")
+
+
 @mock.patch("mozperftest.test.browsertime.runner.install_package")
 @mock.patch(
     "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
@@ -40,6 +44,7 @@ def get_res(*args, **kw):
     new=lambda x, y: None,
 )
 @mock.patch("mozperftest.metrics.visualmetrics.which", new=lambda path: "ok")
+@mock.patch("mozbuild.nodeutil.find_node_executable", new=mocked_executable)
 @mock.patch("subprocess.check_output", new=get_res)
 def test_visual_metrics(device):
     os.environ["VISUALMETRICS_PY"] = ""
