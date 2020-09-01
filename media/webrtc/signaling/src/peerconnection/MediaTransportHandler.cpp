@@ -809,13 +809,27 @@ void MediaTransportHandlerSTS::RemoveTransportsExcept(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
         for (auto it = mTransports.begin(); it != mTransports.end();) {
-          if (!aTransportIds.count(it->first)) {
+          const std::string transportId(it->first);
+          if (!aTransportIds.count(transportId)) {
             if (it->second.mFlow) {
-              OnStateChange(it->first, TransportLayer::TS_NONE);
-              OnRtcpStateChange(it->first, TransportLayer::TS_NONE);
+              OnStateChange(transportId, TransportLayer::TS_NONE);
+              OnRtcpStateChange(transportId, TransportLayer::TS_NONE);
             }
-            mIceCtx->DestroyStream(it->first);
+            // Erase the transport before destroying the ice stream so that
+            // the close_notify alerts have a chance to be sent as the
+            // TransportFlow destructors execute.
             it = mTransports.erase(it);
+            // We're already on the STS thread, but the TransportFlow
+            // destructor executed when mTransports.erase(it) is called
+            // above dispatches the call to DestroyFinal to the STS thread. If
+            // we don't also dispatch the call to destroy the NrIceMediaStream
+            // to the STS thread, it will tear down the NrIceMediaStream
+            // before the TransportFlow is destroyed.  Without a valid
+            // NrIceMediaStream the close_notify alert cannot be sent.
+            mStsThread->Dispatch(NS_NewRunnableFunction(
+                __func__, [iceCtx = RefPtr<NrIceCtx>(mIceCtx), transportId] {
+                  iceCtx->DestroyStream(transportId);
+                }));
           } else {
             MOZ_ASSERT(it->second.mFlow);
             ++it;
