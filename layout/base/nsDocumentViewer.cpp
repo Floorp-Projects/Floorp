@@ -10,6 +10,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
@@ -3202,7 +3203,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
   mPrintJob = printJob;
 
-  if (!hadPrintJob) {
+  if (!hadPrintJob && !StaticPrefs::print_tab_modal_enabled()) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_OPENED, 1);
   }
   rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener,
@@ -3542,7 +3543,7 @@ nsDocumentViewer::ExitPrintPreview() {
     return NS_OK;
   }
 
-  if (!mPrintJob->HasEverPrinted()) {
+  if (!mPrintJob->HasEverPrinted() && !StaticPrefs::print_tab_modal_enabled()) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_CANCELLED, 1);
   }
 

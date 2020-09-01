@@ -3992,8 +3992,25 @@ printing:
     bug_numbers:
       - 1600623
     description: >
-      A counter incremented every time the print dialog is opened from print
-      preview.
+      A counter incremented every time the print dialog is opened from the old
+      print preview.
+    expires: never
+    kind: uint
+    notification_emails:
+      - jwatt@jwatt.org
+      - emalysz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+
+  dialog_opened_via_preview_tm:
+    bug_numbers:
+      - 1657220
+    description: >
+      A counter incremented every time a user opens the system print dialog
+      from the print preview interface.
     expires: never
     kind: uint
     notification_emails:
@@ -4009,8 +4026,24 @@ printing:
     bug_numbers:
       - 1600623
     description: >
-      A counter incremented every time a print dialog opened from print preview
-      is cancelled.
+      A counter incremented every time a print dialog opened from the old print
+      preview is cancelled.
+    expires: never
+    kind: uint
+    notification_emails:
+      - jwatt@jwatt.org
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+
+  dialog_via_preview_cancelled_tm:
+    bug_numbers:
+      - 1657220
+    description: >
+      A counter incremented every time a user cancels a system print dialog
+      that they opened from the print preview interface.
     expires: never
     kind: uint
     notification_emails:
@@ -4059,7 +4092,23 @@ printing:
     bug_numbers:
       - 1600623
     description: >
-      A counter incremented every time the user initiates print preview.
+      A counter incremented every time the user initiates the old print preview.
+    expires: never
+    kind: uint
+    notification_emails:
+      - jwatt@jwatt.org
+      - emalysz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+
+  preview_opened_tm:
+    bug_numbers:
+      - 1657220
+    description: >
+      A counter incremented every time a user opens print preview.
     expires: never
     kind: uint
     notification_emails:
@@ -4075,7 +4124,24 @@ printing:
     bug_numbers:
       - 1600623
     description: >
-      A counter incremented every time a print preview session exits without
+      A counter incremented every time an old print preview session exits
+      without printing.
+    expires: never
+    kind: uint
+    notification_emails:
+      - jwatt@jwatt.org
+      - emalysz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+
+  preview_cancelled_tm:
+    bug_numbers:
+      - 1657220
+    description: >
+      A counter incremented every time a user exits print preview without
       printing.
     expires: never
     kind: uint
