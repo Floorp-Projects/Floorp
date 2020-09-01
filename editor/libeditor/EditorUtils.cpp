@@ -102,7 +102,7 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
   }
 
   // At this point, the anchor-focus ranges must match for bidi information.
-  // See `EditorBase::SetCaretBidiLevelForDeletion()`.
+  // See `EditorBase::AutoCaretBidiLevelManager`.
   MOZ_ASSERT(selection->GetAnchorFocusRange()->StartRef() ==
              mAnchorFocusRange->StartRef());
   MOZ_ASSERT(selection->GetAnchorFocusRange()->EndRef() ==

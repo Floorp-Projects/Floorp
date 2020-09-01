@@ -3159,6 +3159,19 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
         return rv;
       }
     }
+
+    // We shouldn't update caret bidi level right now, but we need to check
+    // whether the deletion will be canceled or not.
+    AutoCaretBidiLevelManager bidiLevelManager(aHTMLEditor, aDirectionAndAmount,
+                                               startPoint);
+    if (bidiLevelManager.Failed()) {
+      NS_WARNING(
+          "EditorBase::AutoCaretBidiLevelManager failed to initialize itself");
+      return NS_ERROR_FAILURE;
+    }
+    if (bidiLevelManager.Canceled()) {
+      return NS_SUCCESS_DOM_NO_OPERATION;
+    }
   }
 
   return NS_OK;
@@ -3231,11 +3244,16 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
     // before modifying `Selection`.
     // XXX This looks odd.  `ExtendAnchorFocusRangeFor()` will extend
     //     anchor-focus range, but here refers the first range.
-    EditActionResult result = aHTMLEditor.SetCaretBidiLevelForDeletion(
-        startPoint, aDirectionAndAmount);
-    if (result.Failed() || result.Canceled()) {
-      NS_WARNING("EditorBase::SetCaretBidiLevelForDeletion() failed");
-      return result;
+    AutoCaretBidiLevelManager bidiLevelManager(aHTMLEditor, aDirectionAndAmount,
+                                               startPoint);
+    if (bidiLevelManager.Failed()) {
+      NS_WARNING(
+          "EditorBase::AutoCaretBidiLevelManager failed to initialize itself");
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+    bidiLevelManager.MaybeUpdateCaretBidiLevel(aHTMLEditor);
+    if (bidiLevelManager.Canceled()) {
+      return EditActionCanceled();
     }
 
     // AutoRangeArray::ExtendAnchorFocusRangeFor() will use `nsFrameSelection`
