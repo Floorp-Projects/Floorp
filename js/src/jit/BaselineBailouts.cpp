@@ -2026,6 +2026,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::Debugger:
     case BailoutKind::SpecificAtomGuard:
     case BailoutKind::SpecificSymbolGuard:
+    case BailoutKind::StringToIndexGuard:
     case BailoutKind::NonInt32ArrayLength:
     case BailoutKind::ProtoGuard:
     case BailoutKind::ProxyGuard:
