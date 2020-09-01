@@ -124,6 +124,9 @@ enum class BailoutKind : uint8_t {
   // Bailout triggered by MGuardStringToIndex.
   StringToIndexGuard,
 
+  // Bailout triggered by MGuardStringToInt32.
+  StringToInt32Guard,
+
   // Unbox expects a given type, bails out if it doesn't get it.
   NonInt32Input,
   NonNumericInput,  // unboxing a double works with int32 too
@@ -261,6 +264,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "BailoutKind::SpecificSymbolGuard";
     case BailoutKind::StringToIndexGuard:
       return "BailoutKind::StringToIndexGuard";
+    case BailoutKind::StringToInt32Guard:
+      return "BailoutKind::StringToInt32Guard";
     case BailoutKind::NonInt32Input:
       return "BailoutKind::NonInt32Input";
     case BailoutKind::NonNumericInput:

@@ -479,7 +479,7 @@
 
 - name: GuardStringToInt32
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     str: StringId

@@ -3414,6 +3414,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void guardSpecificAtom(Register str, JSAtom* atom, Register scratch,
                          const LiveRegisterSet& volatileRegs, Label* fail);
 
+  void guardStringToInt32(Register str, Register output, Register scratch,
+                          LiveRegisterSet volatileRegs, Label* fail);
+
   void loadWasmTlsRegFromFrame(Register dest = WasmTlsReg);
 
   template <typename T>

@@ -4127,6 +4127,15 @@ void LIRGenerator::visitGuardStringToIndex(MGuardStringToIndex* ins) {
   assignSafepoint(guard, ins);
 }
 
+void LIRGenerator::visitGuardStringToInt32(MGuardStringToInt32* ins) {
+  MOZ_ASSERT(ins->string()->type() == MIRType::String);
+  auto* guard =
+      new (alloc()) LGuardStringToInt32(useRegister(ins->string()), temp());
+  assignSnapshot(guard, BailoutKind::StringToInt32Guard);
+  define(guard, ins);
+  assignSafepoint(guard, ins);
+}
+
 void LIRGenerator::visitGuardNoDenseElements(MGuardNoDenseElements* ins) {
   auto* guard =
       new (alloc()) LGuardNoDenseElements(useRegister(ins->object()), temp());

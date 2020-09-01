@@ -6165,6 +6165,21 @@ MDefinition* MGuardStringToIndex::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, Int32Value(index));
 }
 
+MDefinition* MGuardStringToInt32::foldsTo(TempAllocator& alloc) {
+  if (!string()->isConstant()) {
+    return this;
+  }
+
+  JSAtom* atom = &string()->toConstant()->toString()->asAtom();
+  if (!atom->hasIndexValue()) {
+    return this;
+  }
+
+  uint32_t index = atom->getIndexValue();
+  MOZ_ASSERT(index <= INT32_MAX);
+  return MConstant::New(alloc, Int32Value(index));
+}
+
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
   const JSClass* clasp = GetObjectKnownJSClass(object());
   if (!clasp || getClass() != clasp) {

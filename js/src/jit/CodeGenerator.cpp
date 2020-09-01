@@ -4799,6 +4799,18 @@ void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardStringToInt32(LGuardStringToInt32* lir) {
+  Register str = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp());
+
+  LiveRegisterSet volatileRegs = liveVolatileRegs(lir);
+
+  Label bail;
+  masm.guardStringToInt32(str, output, temp, volatileRegs, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardNoDenseElements(LGuardNoDenseElements* guard) {
   Register obj = ToRegister(guard->input());
   Register temp = ToRegister(guard->temp());
