@@ -23,7 +23,7 @@
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="@id/mozac_browser_tabstray_card"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/play_with_background" />
+        app:srcCompat="@drawable/media_state_play" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/mozac_browser_tabstray_card"

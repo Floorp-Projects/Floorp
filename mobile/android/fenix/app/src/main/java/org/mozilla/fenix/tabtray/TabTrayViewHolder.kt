@@ -96,10 +96,7 @@ class TabTrayViewHolder(
                     contentDescription =
                         context.getString(R.string.mozac_feature_media_notification_action_play)
                     setImageDrawable(
-                        AppCompatResources.getDrawable(
-                            context,
-                            R.drawable.tab_tray_play_with_background
-                        )
+                        AppCompatResources.getDrawable(context, R.drawable.media_state_play)
                     )
                 }
 
@@ -108,10 +105,7 @@ class TabTrayViewHolder(
                     contentDescription =
                         context.getString(R.string.mozac_feature_media_notification_action_pause)
                     setImageDrawable(
-                        AppCompatResources.getDrawable(
-                            context,
-                            R.drawable.tab_tray_pause_with_background
-                        )
+                        AppCompatResources.getDrawable(context, R.drawable.media_state_pause)
                     )
                 }
 

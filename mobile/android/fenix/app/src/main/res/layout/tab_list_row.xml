@@ -48,7 +48,7 @@
             app:layout_constraintCircleRadius="28dp"
             app:layout_constraintEnd_toEndOf="@id/favicon_image"
             app:layout_constraintTop_toTopOf="@id/favicon_image"
-            app:srcCompat="@drawable/pause_with_background" />
+            app:srcCompat="@drawable/media_state_pause" />
 
         <TextView
             android:id="@+id/hostname"
