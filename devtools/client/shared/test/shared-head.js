@@ -635,19 +635,25 @@ function wait(ms) {
  * @return object
  *         A promise that is resolved with the result of the condition.
  */
-async function waitFor(
-  condition,
-  message = "waitFor",
-  interval = 10,
-  maxTries = 500
-) {
-  await BrowserTestUtils.waitForCondition(
-    condition,
-    message,
-    interval,
-    maxTries
-  );
-  return condition();
+async function waitFor(condition, message = "", interval = 10, maxTries = 500) {
+  try {
+    const value = await BrowserTestUtils.waitForCondition(
+      condition,
+      message,
+      interval,
+      maxTries
+    );
+    return value;
+  } catch (e) {
+    const errorMessage =
+      "Failed waitFor(): " +
+      message +
+      "\n" +
+      "Failed condition: " +
+      condition +
+      "\n";
+    throw new Error(errorMessage);
+  }
 }
 
 /**

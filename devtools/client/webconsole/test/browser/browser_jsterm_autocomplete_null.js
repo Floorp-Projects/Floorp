@@ -59,7 +59,7 @@ add_task(async function() {
       ok(false, `Got error ${JSON.stringify(message.textContent)}`);
     },
     error => {
-      if (!error.includes("waitFor - timed out")) {
+      if (!error.message.includes("Failed waitFor")) {
         throw error;
       }
       ok(true, `No error was logged`);
