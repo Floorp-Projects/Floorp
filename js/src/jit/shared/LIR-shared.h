@@ -6170,6 +6170,18 @@ class LGuardSpecificSymbol : public LInstructionHelper<0, 1, 0> {
   }
 };
 
+class LGuardStringToIndex : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(GuardStringToIndex)
+
+  explicit LGuardStringToIndex(const LAllocation& str)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, str);
+  }
+
+  const LAllocation* string() { return getOperand(0); }
+};
+
 class LGuardShape : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(GuardShape)
