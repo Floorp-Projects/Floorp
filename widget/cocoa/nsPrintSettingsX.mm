@@ -143,10 +143,23 @@ NS_IMETHODIMP nsPrintSettingsX::InitAdjustedPaperSize() {
 }
 
 void nsPrintSettingsX::SetCocoaPrintInfo(NSPrintInfo* aPrintInfo) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mPrintInfo != aPrintInfo) {
     [mPrintInfo release];
     mPrintInfo = [aPrintInfo retain];
   }
+
+  NSDictionary* dict = [mPrintInfo dictionary];
+  NSString* printerName = [dict objectForKey:NSPrintPrinterName];
+  if (printerName) {
+    // Ensure the name is also stored in the base nsPrintSettings.
+    nsAutoString name;
+    nsCocoaUtils::GetStringForNSString(printerName, name);
+    nsPrintSettings::SetPrinterName(name);
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs() {
@@ -309,6 +322,28 @@ NS_IMETHODIMP nsPrintSettingsX::SetPrintRange(int16_t aPrintRange) {
     BOOL allPages = aPrintRange == nsIPrintSettings::kRangeSpecifiedPageRange ? NO : YES;
     NSMutableDictionary* dict = [mPrintInfo dictionary];
     [dict setObject:[NSNumber numberWithBool:allPages] forKey:NSPrintAllPages];
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsPrintSettingsX::SetPrinterName(const nsAString& aName) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // In this case (PrinterName) we store the state in the base class in both the
+  // parent and content process since the platform specific NSPrintInfo isn't
+  // capable of representing the printer name in the case of Save to PDF:
+  nsPrintSettings::SetPrinterName(aName);
+
+  // However, we do need to keep the NSPrinter in mPrintInfo in sync in the
+  // parent process so that the object returned by GetCocoaPrintInfo is valid:
+  if (XRE_IsParentProcess()) {
+    NSString* name = nsCocoaUtils::ToNSString(aName);
+    // If the name is our pseudo-printer "Save to PDF", this will silently fail
+    // as no such printer is known.
+    [mPrintInfo setPrinter:[NSPrinter printerWithName:name]];
   }
 
   return NS_OK;

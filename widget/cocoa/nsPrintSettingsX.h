@@ -59,6 +59,12 @@ class nsPrintSettingsX : public nsPrintSettings {
   // nsPrintSettings::SetPrintRange.
   NS_IMETHOD SetPrintRange(int16_t aPrintRange) final;
 
+  // Override SetPrinterName to update the macOS printInfo in the parent,
+  // in addition to storing the string in the base class, but we do *not*
+  // override GetPrinterName because the macOS printer objects cannot actually
+  // represent the pseudo-printer destination for Save to PDF.
+  NS_IMETHOD SetPrinterName(const nsAString& aName) override;
+
   NS_IMETHOD GetStartPageRange(int32_t* aStartPageRange) final;
   NS_IMETHOD SetStartPageRange(int32_t aStartPageRange) final;
 
