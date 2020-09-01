@@ -12512,13 +12512,19 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
   canvasWrapper.appendChild(canvas);
   printContainer.appendChild(canvasWrapper);
 
+  let currentRenderTask = null;
   canvas.mozPrintCallback = function (obj) {
     const ctx = obj.context;
     ctx.save();
     ctx.fillStyle = "rgb(255, 255, 255)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
+    let thisRenderTask = null;
     pdfDocument.getPage(pageNumber).then(function (pdfPage) {
+      if (currentRenderTask) {
+        currentRenderTask.cancel();
+        currentRenderTask = null;
+      }
       const renderContext = {
         canvasContext: ctx,
         transform: [PRINT_UNITS, 0, 0, PRINT_UNITS, 0, 0],
@@ -12529,11 +12535,19 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
         intent: "print",
         annotationStorage: pdfDocument.annotationStorage
       };
-      return pdfPage.render(renderContext).promise;
+      thisRenderTask = currentRenderTask = pdfPage.render(renderContext);
+      return currentRenderTask.promise;
     }).then(function () {
+      if (currentRenderTask === thisRenderTask) {
+        currentRenderTask = null;
+      }
       obj.done();
     }, function (error) {
       console.error(error);
+      if (currentRenderTask === thisRenderTask) {
+        currentRenderTask.cancel();
+        currentRenderTask = null;
+      }
 
       if ("abort" in obj) {
         obj.abort();
