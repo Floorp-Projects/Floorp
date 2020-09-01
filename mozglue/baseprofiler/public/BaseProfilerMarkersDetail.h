@@ -310,6 +310,41 @@ struct ProfileBufferEntryReader::Deserializer<MarkerStack> {
   }
 };
 
+// ----------------------------------------------------------------------------
+// Serializer, Deserializer: MarkerOptions
+
+// The serialization contains all members (either trivially-copyable, or they
+// provide their specialization above).
+template <>
+struct ProfileBufferEntryWriter::Serializer<MarkerOptions> {
+  static Length Bytes(const MarkerOptions& aOptions) {
+    return SumBytes(aOptions.Category(), aOptions.ThreadId(), aOptions.Timing(),
+                    aOptions.Stack(), aOptions.InnerWindowId());
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const MarkerOptions& aOptions) {
+    aEW.WriteObjects(aOptions.Category(), aOptions.ThreadId(),
+                     aOptions.Timing(), aOptions.Stack(),
+                     aOptions.InnerWindowId());
+  }
+};
+
+template <>
+struct ProfileBufferEntryReader::Deserializer<MarkerOptions> {
+  static void ReadInto(ProfileBufferEntryReader& aER, MarkerOptions& aOptions) {
+    aER.ReadIntoObjects(aOptions.mCategory, aOptions.mThreadId,
+                        aOptions.mTiming, aOptions.mStack,
+                        aOptions.mInnerWindowId);
+  }
+
+  static MarkerOptions Read(ProfileBufferEntryReader& aER) {
+    MarkerOptions options;
+    ReadInto(aER, options);
+    return options;
+  }
+};
+
 }  // namespace mozilla
 
 #endif  // MOZ_GECKO_PROFILER
