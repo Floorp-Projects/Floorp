@@ -39,7 +39,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
 #include "nsIFormControl.h"
-#include "nsIThreadRetargetableRequest.h"
 #include "nsContentUtils.h"
 
 #include "ftpCore.h"
@@ -54,7 +53,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/net/CookieJarSettings.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Printf.h"
 #include "ReferrerInfo.h"
 
@@ -99,21 +97,10 @@ struct nsWebBrowserPersist::URIData {
 };
 
 // Information about the output stream
-// Note that this data structure (and the map that nsWebBrowserPersist keeps,
-// where these are values) is used from two threads: the main thread,
-// and the background task thread.
-// The background thread only writes to mStream (from OnDataAvailable), and
-// this access is guarded using mStreamMutex. It reads the mFile member, which
-// is only written to on the main thread when the object is constructed and
-// from OnStartRequest (if mCalcFileExt), both guaranteed to happen before
-// OnDataAvailable is fired.
-// The main thread gets OnStartRequest, OnStopRequest, and progress sink events,
-// and accesses the other members.
 struct nsWebBrowserPersist::OutputData {
   nsCOMPtr<nsIURI> mFile;
   nsCOMPtr<nsIURI> mOriginalLocation;
   nsCOMPtr<nsIOutputStream> mStream;
-  Mutex mStreamMutex;
   int64_t mSelfProgress;
   int64_t mSelfProgressMax;
   bool mCalcFileExt;
@@ -121,16 +108,10 @@ struct nsWebBrowserPersist::OutputData {
   OutputData(nsIURI* aFile, nsIURI* aOriginalLocation, bool aCalcFileExt)
       : mFile(aFile),
         mOriginalLocation(aOriginalLocation),
-        mStreamMutex("nsWebBrowserPersist::OutputData::mStreamMutex"),
         mSelfProgress(0),
         mSelfProgressMax(10000),
         mCalcFileExt(aCalcFileExt) {}
   ~OutputData() {
-    // Gaining this lock in the destructor is pretty icky. It should be OK
-    // because the only other place we lock the mutex is in OnDataAvailable,
-    // which will never itself cause the OutputData instance to be
-    // destroyed.
-    MutexAutoLock lock(mStreamMutex);
     if (mStream) {
       mStream->Close();
     }
@@ -286,7 +267,6 @@ const char* kWebBrowserPersistStringBundle =
 nsWebBrowserPersist::nsWebBrowserPersist()
     : mCurrentDataPathIsRelative(false),
       mCurrentThingsToPersist(0),
-      mOutputMapMutex("nsWebBrowserPersist::mOutputMapMutex"),
       mFirstAndOnlyUse(true),
       mSavingDocument(false),
       mCancel(false),
@@ -318,7 +298,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserPersist)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
 NS_INTERFACE_MAP_END
@@ -806,20 +785,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest* request) {
   }
 
   if (data && data->mFile) {
-    nsCOMPtr<nsIThreadRetargetableRequest> r = do_QueryInterface(request);
-    // Determine if we're uploading. Only use OMT onDataAvailable if not.
-    nsCOMPtr<nsIFile> localFile;
-    GetLocalFileFromURI(data->mFile, getter_AddRefs(localFile));
-    if (r && localFile) {
-      if (!mBackgroundQueue) {
-        NS_CreateBackgroundTaskQueue("WebBrowserPersist",
-                                     getter_AddRefs(mBackgroundQueue));
-      }
-      if (mBackgroundQueue) {
-        r->RetargetDeliveryTo(mBackgroundQueue);
-      }
-    }
-
     // If PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION is set in mPersistFlags,
     // try to determine whether this channel needs to apply Content-Encoding
     // conversions.
@@ -865,11 +830,8 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest* request) {
     bool isEqual = false;
     if (NS_SUCCEEDED(data->mFile->Equals(data->mOriginalLocation, &isEqual)) &&
         isEqual) {
-      {
-        MutexAutoLock lock(mOutputMapMutex);
-        // remove from output map
-        mOutputMap.Remove(keyPtr);
-      }
+      // remove from output map
+      mOutputMap.Remove(keyPtr);
 
       // cancel; we don't need to know any more
       // stop request will get called
@@ -889,30 +851,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest* request,
       SendErrorStatusChange(true, status, request, data->mFile);
     }
 
-    // If there is a stream ref, close it away from the main thread.
-    {
-      MutexAutoLock lock(data->mStreamMutex);
-      if (data->mStream) {
-        if (!mBackgroundQueue) {
-          nsresult rv = NS_CreateBackgroundTaskQueue(
-              "WebBrowserPersist", getter_AddRefs(mBackgroundQueue));
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-        }
-        // Now steal the stream ref and close it away from the main thread,
-        // keeping the promise around so we don't finish before all files
-        // are flushed and closed.
-        mFileClosePromises.AppendElement(InvokeAsync(
-            mBackgroundQueue, __func__, [stream = std::move(data->mStream)]() {
-              nsresult rv = stream->Close();
-              // We don't care if closing failed; we don't care in the
-              // destructor either...
-              return ClosePromise::CreateAndResolve(rv, __func__);
-            }));
-      }
-    }
-    MutexAutoLock lock(mOutputMapMutex);
+    // This will automatically close the output stream
     mOutputMap.Remove(keyPtr);
   } else {
     // if we didn't find the data in mOutputMap, try mUploadList
@@ -941,14 +880,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest* request,
 // nsWebBrowserPersist::nsIStreamListener
 //*****************************************************************************
 
-// Note: this is supposed to (but not guaranteed to) fire on a background
-// thread when used to save to local disk (channels not using local files will
-// use the main thread).
-// (Read) Access to mOutputMap is guarded via mOutputMapMutex.
-// Access to individual OutputData::mStream is guarded via its mStreamMutex.
-// mCancel is atomic, as is mPersistFlags (accessed via MakeOutputStream).
-// If you end up touching this method and needing other member access, bear
-// this in mind.
 NS_IMETHODIMP
 nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
                                      nsIInputStream* aIStream, uint64_t aOffset,
@@ -961,7 +892,6 @@ nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
     NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
 
-    MutexAutoLock lock(mOutputMapMutex);
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
     OutputData* data = mOutputMap.Get(keyPtr);
     if (!data) {
@@ -972,7 +902,6 @@ nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
 
     bool readError = true;
 
-    MutexAutoLock streamLock(data->mStreamMutex);
     // Make the output stream
     if (!data->mStream) {
       rv = MakeOutputStream(data->mFile, getter_AddRefs(data->mStream));
@@ -1044,8 +973,6 @@ nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
           data->mStream->Close();
           data->mStream =
               nullptr;  // null out stream so we don't close it later
-          MOZ_ASSERT(NS_IsMainThread(),
-                     "Uploads should be on the main thread.");
           rv = StartUpload(storStream, data->mFile, contentType);
           if (NS_FAILED(rv)) {
             readError = false;
@@ -1057,33 +984,18 @@ nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
 
     // Notify listener if an error occurred.
     if (cancel) {
-      RefPtr<nsIRequest> req = readError ? request : nullptr;
-      nsCOMPtr<nsIURI> file = data->mFile;
-      RefPtr<Runnable> errorOnMainThread = NS_NewRunnableFunction(
-          "nsWebBrowserPersist::SendErrorStatusChange",
-          [self = RefPtr{this}, req, file, readError, rv]() {
-            self->SendErrorStatusChange(readError, rv, req, file);
-          });
-      NS_DispatchToMainThread(errorOnMainThread);
+      SendErrorStatusChange(readError, rv, readError ? request : nullptr,
+                            data->mFile);
     }
   }
 
   // Cancel reading?
   if (cancel) {
-    nsCOMPtr<nsIRunnable> endOnMainThread = NewRunnableMethod<nsresult>(
-        "nsWebBrowserPersist::EndDownload", this,
-        &nsWebBrowserPersist::EndDownload, NS_BINDING_ABORTED);
-    NS_DispatchToMainThread(endOnMainThread);
+    EndDownload(NS_BINDING_ABORTED);
   }
 
-  return cancel ? NS_BINDING_ABORTED : NS_OK;
+  return NS_OK;
 }
-
-//*****************************************************************************
-// nsWebBrowserPersist::nsIThreadRetargetableStreamListener
-//*****************************************************************************
-
-NS_IMETHODIMP nsWebBrowserPersist::CheckListenerChain() { return NS_OK; }
 
 //*****************************************************************************
 // nsWebBrowserPersist::nsIProgressEventSink
@@ -1479,7 +1391,6 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(nsIChannel* aChannel,
     return NS_SUCCESS_DONT_FIXUP;
   }
 
-  MutexAutoLock lock(mOutputMapMutex);
   // Add the output transport to the output map with the channel as the key
   nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aChannel);
   mOutputMap.Put(keyPtr, new OutputData(aFile, mURI, aCalcFileExt));
@@ -1801,18 +1712,13 @@ void nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
 
 void nsWebBrowserPersist::Cleanup() {
   mURIMap.Clear();
-  nsClassHashtable<nsISupportsHashKey, OutputData> outputMapCopy;
-  {
-    MutexAutoLock lock(mOutputMapMutex);
-    mOutputMap.SwapElements(outputMapCopy);
-  }
-  for (auto iter = outputMapCopy.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mOutputMap.Iter(); !iter.Done(); iter.Next()) {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
     if (channel) {
       channel->Cancel(NS_BINDING_ABORTED);
     }
   }
-  outputMapCopy.Clear();
+  mOutputMap.Clear();
 
   for (auto iter = mUploadList.Iter(); !iter.Done(); iter.Next()) {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
@@ -2216,7 +2122,6 @@ nsresult nsWebBrowserPersist::CalculateAndAppendFileExt(
   return NS_OK;
 }
 
-// Note: the MakeOutputStream helpers can be called from a background thread.
 nsresult nsWebBrowserPersist::MakeOutputStream(
     nsIURI* aURI, nsIOutputStream** aOutputStream) {
   nsresult rv;
@@ -2259,18 +2164,7 @@ nsresult nsWebBrowserPersist::MakeOutputStreamFromFile(
     }
     cleanupData->mFile = aFile;
     cleanupData->mIsDirectory = false;
-    if (NS_IsMainThread()) {
-      mCleanupList.AppendElement(cleanupData);
-    } else {
-      // If we're on a background thread, add the cleanup back on the main
-      // thread.
-      RefPtr<Runnable> addCleanup = NS_NewRunnableFunction(
-          "nsWebBrowserPersist::AddCleanupToList",
-          [self = RefPtr{this}, cleanup = std::move(cleanupData)]() {
-            self->mCleanupList.AppendElement(cleanup);
-          });
-      NS_DispatchToMainThread(addCleanup);
-    }
+    mCleanupList.AppendElement(cleanupData);
   }
 
   return NS_OK;
@@ -2297,14 +2191,7 @@ void nsWebBrowserPersist::EndDownload(nsresult aResult) {
   if (NS_SUCCEEDED(mPersistResult) && NS_FAILED(aResult)) {
     mPersistResult = aResult;
   }
-  ClosePromise::All(GetCurrentSerialEventTarget(), mFileClosePromises)
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr{this}, aResult]() {
-               self->EndDownloadInternal(aResult);
-             });
-}
 
-void nsWebBrowserPersist::EndDownloadInternal(nsresult aResult) {
   // mCompleted needs to be set before issuing the stop notification.
   // (Bug 1224437)
   mCompleted = true;
@@ -2357,9 +2244,6 @@ nsresult nsWebBrowserPersist::FixRedirectedChannelEntry(
   }
 
   if (matchingKey) {
-    // We only get called from OnStartRequest, so this is always on the
-    // main thread. Make sure we don't pull the rug from under anything else.
-    MutexAutoLock lock(mOutputMapMutex);
     // If a match was found, remove the data entry with the old channel
     // key and re-add it with the new channel key.
     mozilla::UniquePtr<OutputData> outputData;
