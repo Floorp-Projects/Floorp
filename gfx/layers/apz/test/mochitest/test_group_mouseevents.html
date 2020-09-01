@@ -39,6 +39,9 @@ var subtests = [
   {"file": "helper_bug1490393-2.html"},
   // Scrollbar-dragging on scrollframes inside filters inside transforms
   {"file": "helper_bug1550510.html"},
+  // Drag-select some text after reconstructing the RSF of a non-RCD to ensure
+  // the pending visual offset update doesn't get stuck
+  {"file": "helper_visualscroll_nonrcd_rsf.html"},
 ];
 
 if (isApzEnabled()) {
