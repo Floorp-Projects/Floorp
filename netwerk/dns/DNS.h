@@ -103,7 +103,7 @@ union NetAddr {
   struct {
     uint16_t family; /* address family (0x00ff maskable) */
     char data[14];   /* raw address data */
-  } raw;
+  } raw{};
   struct {
     uint16_t family; /* address family (AF_INET) */
     uint16_t port;   /* port number */
@@ -131,12 +131,17 @@ union NetAddr {
     memcpy(this, &other, sizeof(NetAddr));
     return *this;
   }
+
+  NetAddr() { memset(this, 0, sizeof(NetAddr)); }
+  explicit NetAddr(const PRNetAddr* prAddr);
 };
 
 class AddrInfo {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AddrInfo)
 
  public:
+  static const uint32_t NO_TTL_DATA = (uint32_t)-1;
+
   // Creates an AddrInfo object.
   explicit AddrInfo(const nsACString& host, const PRAddrInfo* prAddrInfo,
                     bool disableIPv4, bool filterNameCollision,
@@ -145,39 +150,66 @@ class AddrInfo {
   // Creates a basic AddrInfo object (initialize only the host, cname and TRR
   // type).
   explicit AddrInfo(const nsACString& host, const nsACString& cname,
-                    unsigned int TRRType);
+                    unsigned int aTRR, nsTArray<NetAddr>&& addresses);
 
   // Creates a basic AddrInfo object (initialize only the host and TRR status).
-  explicit AddrInfo(const nsACString& host, unsigned int TRRType);
+  explicit AddrInfo(const nsACString& host, unsigned int aTRR,
+                    nsTArray<NetAddr>&& addresses, uint32_t aTTL = NO_TTL_DATA);
 
   explicit AddrInfo(const AddrInfo* src);  // copy
 
-  void AddAddress(const PRNetAddr* address);
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  nsCString mHostName;
-  nsCString mCanonicalName;
-  static const uint32_t NO_TTL_DATA = (uint32_t)-1;
-  uint32_t ttl = NO_TTL_DATA;
-
-  nsTArray<NetAddr> mAddresses;
   unsigned int IsTRR() { return mFromTRR; }
 
   double GetTrrFetchDuration() { return mTrrFetchDuration; }
   double GetTrrFetchDurationNetworkOnly() {
     return mTrrFetchDurationNetworkOnly;
   }
-  void SetTrrFetchDuration(double aTime) { mTrrFetchDuration = aTime; }
-  void SetTrrFetchDurationNetworkOnly(double aTime) {
-    mTrrFetchDurationNetworkOnly = aTime;
-  }
+
+  const nsTArray<NetAddr>& Addresses() { return mAddresses; }
+  const nsCString& Hostname() { return mHostName; }
+  const nsCString& CanonicalHostname() { return mCanonicalName; }
+  uint32_t TTL() { return ttl; }
+
+  class MOZ_STACK_CLASS AddrInfoBuilder {
+   public:
+    explicit AddrInfoBuilder(AddrInfo* aInfo) {
+      mInfo = new AddrInfo(aInfo);  // Clone it
+    }
+
+    void SetTrrFetchDurationNetworkOnly(double aTime) {
+      mInfo->mTrrFetchDurationNetworkOnly = aTime;
+    }
+
+    void SetTrrFetchDuration(double aTime) { mInfo->mTrrFetchDuration = aTime; }
+
+    void SetTTL(uint32_t aTTL) { mInfo->ttl = aTTL; }
+
+    void SetAddresses(nsTArray<NetAddr>&& addresses) {
+      mInfo->mAddresses = std::move(addresses);
+    }
+
+    already_AddRefed<AddrInfo> Finish() { return mInfo.forget(); }
+
+   private:
+    RefPtr<AddrInfo> mInfo;
+  };
+
+  AddrInfoBuilder Build() { return AddrInfoBuilder(this); }
 
  private:
   ~AddrInfo();
+  uint32_t ttl = NO_TTL_DATA;
+
+  nsCString mHostName;
+  nsCString mCanonicalName;
+
   unsigned int mFromTRR = 0;
   double mTrrFetchDuration = 0;
   double mTrrFetchDurationNetworkOnly = 0;
+
+  nsTArray<NetAddr> mAddresses;
 };
 
 // Copies the contents of a PRNetAddr to a NetAddr.

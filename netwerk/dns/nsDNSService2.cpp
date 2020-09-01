@@ -80,8 +80,12 @@ class nsDNSRecord : public nsIDNSAddrRecord {
   virtual ~nsDNSRecord() = default;
 
   RefPtr<AddrHostRecord> mHostRecord;
-  nsTArray<NetAddr>::iterator mIter;
-  NetAddr* iter() {
+  // Since mIter is holding a weak reference to the NetAddr array we must
+  // make sure it is not released. So we also keep a RefPtr to the AddrInfo
+  // which is immutable.
+  RefPtr<AddrInfo> mAddrInfo;
+  nsTArray<NetAddr>::const_iterator mIter;
+  const NetAddr* iter() {
     if (!mIter.GetArray()) {
       return nullptr;
     }
@@ -90,6 +94,7 @@ class nsDNSRecord : public nsIDNSAddrRecord {
     }
     return &*mIter;
   }
+
   int mIterGenCnt;  // the generation count of
                     // mHostRecord->addr_info when we
                     // start iterating
@@ -113,10 +118,10 @@ nsDNSRecord::GetCanonicalName(nsACString& result) {
     return NS_OK;
   }
 
-  if (mHostRecord->addr_info->mCanonicalName.IsEmpty()) {
-    result = mHostRecord->addr_info->mHostName;
+  if (mHostRecord->addr_info->CanonicalHostname().IsEmpty()) {
+    result = mHostRecord->addr_info->Hostname();
   } else {
-    result = mHostRecord->addr_info->mCanonicalName;
+    result = mHostRecord->addr_info->CanonicalHostname();
   }
   return NS_OK;
 }
@@ -164,15 +169,18 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
   if (mHostRecord->addr_info) {
     if (mIterGenCnt != mHostRecord->addr_info_gencnt) {
       // mHostRecord->addr_info has changed, restart the iteration.
-      mIter = nsTArray<NetAddr>::iterator();
+      mIter = nsTArray<NetAddr>::const_iterator();
       mIterGenCnt = mHostRecord->addr_info_gencnt;
+      // Make sure to hold a RefPtr to the AddrInfo so we can iterate through
+      // the NetAddr array.
+      mAddrInfo = mHostRecord->addr_info;
     }
 
     bool startedFresh = !iter();
 
     do {
       if (!iter()) {
-        mIter = mHostRecord->addr_info->mAddresses.begin();
+        mIter = mAddrInfo->Addresses().begin();
       } else {
         mIter++;
       }
@@ -183,7 +191,7 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
       // likely relearn it) and return the first address. That is better
       // than nothing.
       mHostRecord->ResetBlacklist();
-      mIter = mHostRecord->addr_info->mAddresses.begin();
+      mIter = mAddrInfo->Addresses().begin();
     }
 
     if (iter()) {
@@ -194,6 +202,9 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
 
     if (!iter()) {
       mDone = true;
+      mIter = nsTArray<NetAddr>::const_iterator();
+      mAddrInfo = nullptr;
+      mIterGenCnt = -1;
       return NS_ERROR_NOT_AVAILABLE;
     }
   } else {
@@ -228,7 +239,7 @@ nsDNSRecord::GetAddresses(nsTArray<NetAddr>& aAddressArray) {
 
   mHostRecord->addr_info_lock.Lock();
   if (mHostRecord->addr_info) {
-    for (auto& address : mHostRecord->addr_info->mAddresses) {
+    for (const auto& address : mHostRecord->addr_info->Addresses()) {
       if (mHostRecord->Blacklisted(&address)) {
         continue;
       }
@@ -291,7 +302,7 @@ nsDNSRecord::HasMore(bool* result) {
     return NS_OK;
   }
 
-  nsTArray<NetAddr>::iterator iterCopy = mIter;
+  nsTArray<NetAddr>::const_iterator iterCopy = mIter;
   int iterGenCntCopy = mIterGenCnt;
 
   NetAddr addr;
@@ -306,7 +317,7 @@ nsDNSRecord::HasMore(bool* result) {
 
 NS_IMETHODIMP
 nsDNSRecord::Rewind() {
-  mIter = nsTArray<NetAddr>::iterator();
+  mIter = nsTArray<NetAddr>::const_iterator();
   mIterGenCnt = -1;
   mDone = false;
   return NS_OK;

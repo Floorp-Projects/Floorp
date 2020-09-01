@@ -371,11 +371,7 @@ bool nsHTTPSOnlyUtils::LoopbackOrLocalException(nsIURI* aURI) {
     return false;
   }
 
-  // The linter wants this struct to get initialized,
-  // but PRNetAddrToNetAddr will do that.
-  mozilla::net::NetAddr addr;  // NOLINT(cppcoreguidelines-pro-type-member-init)
-  PRNetAddrToNetAddr(&tempAddr, &addr);
-
+  mozilla::net::NetAddr addr(&tempAddr);
   // Loopback IPs are always exempt
   if (IsLoopBackAddress(&addr)) {
     return true;

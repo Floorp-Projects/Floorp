@@ -842,10 +842,10 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
 
   // when called without a host record, this is a domain name check response.
   if (NS_SUCCEEDED(status)) {
-    LOG(("TRR verified %s to be fine!\n", newRRSet->mHostName.get()));
+    LOG(("TRR verified %s to be fine!\n", newRRSet->Hostname().get()));
   } else {
-    LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->mHostName.get()));
-    AddToBlocklist(newRRSet->mHostName, aOriginSuffix, pb, false);
+    LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->Hostname().get()));
+    AddToBlocklist(newRRSet->Hostname(), aOriginSuffix, pb, false);
   }
   return LOOKUP_OK;
 }
