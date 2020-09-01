@@ -261,7 +261,12 @@ TEST_VARIANTS = {
         'description': "{description} with WebGL IPC process enabled",
         'suffix': 'gli',
         'replace': {
-            'run-on-projects': [],
+            'run-on-projects': {
+                'by-test-platform': {
+                    'mac.*': ['trunk'],
+                    'default': [],
+                }
+            }
         },
         'merge': {
             'mozharness': {
