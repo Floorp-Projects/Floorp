@@ -12,6 +12,7 @@
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "ErrorList.h"
 #include "signaling/src/jsep/JsepTransceiver.h"
+#include "transportlayer.h"  // For TransportLayer::State
 
 class nsIPrincipal;
 
@@ -47,7 +48,9 @@ class RTCRtpReceiver;
  * Audio/VideoConduit for feeding RTP/RTCP into webrtc.org for decoding, and
  * feeding audio/video frames into webrtc.org for encoding into RTP/RTCP.
  */
-class TransceiverImpl : public nsISupports, public nsWrapperCache {
+class TransceiverImpl : public nsISupports,
+                        public nsWrapperCache,
+                        public sigslot::has_slots<> {
  public:
   /**
    * |aSendTrack| might or might not be set.
@@ -96,12 +99,16 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
   void SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver, ErrorResult& aRv);
   dom::RTCRtpReceiver* Receiver() const { return mReceiver; }
   dom::RTCDTMFSender* GetDtmf() const { return mDtmf; }
-  dom::RTCDtlsTransport* GetDtlsTransport() const { return nullptr; }
+  dom::RTCDtlsTransport* GetDtlsTransport() const { return mDtlsTransport; }
 
   bool CanSendDTMF() const;
 
   // TODO: These are for stats; try to find a cleaner way.
   RefPtr<MediaPipelineTransmit> GetSendPipeline();
+
+  void UpdateDtlsTransportState(const std::string& aTransportId,
+                                TransportLayer::State aState);
+  void SetDtlsTransport(dom::RTCDtlsTransport* aDtlsTransport);
 
   std::string GetTransportId() const {
     return mJsepTransceiver->mTransport.mTransportId;
@@ -159,6 +166,10 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
   RefPtr<WebRtcCallWrapper> mCallWrapper;
   RefPtr<MediaSessionConduit> mConduit;
   RefPtr<MediaPipelineTransmit> mTransmitPipeline;
+  // The spec says both RTCRtpReceiver and RTCRtpSender have a slot for
+  // an RTCDtlsTransport.  They are always the same, so we'll store it
+  // here.
+  RefPtr<dom::RTCDtlsTransport> mDtlsTransport;
   RefPtr<dom::RTCRtpReceiver> mReceiver;
   // TODO(bug 1616937): Move this to RTCRtpSender
   RefPtr<dom::RTCDTMFSender> mDtmf;

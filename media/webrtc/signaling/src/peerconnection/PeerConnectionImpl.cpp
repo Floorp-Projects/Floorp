@@ -1335,7 +1335,7 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    OnSetDescriptionSuccess(sdpType == mozilla::kJsepSdpRollback, false);
+    OnSetDescriptionSuccess(sdpType, false);
   }
 
   appendHistory();
@@ -1476,7 +1476,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    OnSetDescriptionSuccess(sdpType == kJsepSdpRollback, true);
+    OnSetDescriptionSuccess(sdpType, true);
   }
 
   appendHistory();
@@ -2153,16 +2153,29 @@ DOMMediaStream* PeerConnectionImpl::CreateReceiveStream(
   return mReceiveStreams.LastElement();
 }
 
-void PeerConnectionImpl::OnSetDescriptionSuccess(bool rollback, bool remote) {
+void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
+                                                 bool remote) {
   // Spec says we queue a task for all the stuff that ends up back in JS
   auto newSignalingState = GetSignalingState();
 
   mThread->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this),
-                 newSignalingState, remote] {
+                 newSignalingState, sdpType, remote] {
         if (IsClosed()) {
           return;
         }
+
+        if (HasMedia()) {
+          // Section 4.4.1.5 Set the RTCSessionDescription:
+          // - step 4.5.9.1 when remote is false, type not rollback
+          // - step 4.5.9.2.13 when remote is true, type answer or pranswer
+          // More simply: never for rollback, and not for remote offers.
+          if (sdpType != mozilla::kJsepSdpRollback &&
+              !(remote && sdpType == mozilla::kJsepSdpOffer)) {
+            mMedia->UpdateRTCDtlsTransports();
+          }
+        }
+
         JSErrorResult jrv;
         mPCObserver->SyncTransceivers(jrv);
         if (NS_WARN_IF(jrv.Failed())) {
@@ -2281,7 +2294,7 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(bool rollback, bool remote) {
     // restructuring
   }
 
-  if (!rollback) {
+  if (sdpType != kJsepSdpRollback) {
     InitializeDataChannel();
     mMedia->StartIceChecks(*mJsepSession);
   }
