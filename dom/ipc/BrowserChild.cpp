@@ -2245,6 +2245,74 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleAccessKey(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
+    const PrintData& aPrintData,
+    const mozilla::Maybe<uint64_t>& aSourceOuterWindowID,
+    PrintPreviewResolver&& aCallback) {
+#ifdef NS_PRINTING
+  // If we didn't succeed in passing off ownership of aCallback, then something
+  // went wrong.
+  auto sendCallbackError = MakeScopeExit([&] {
+    if (aCallback) {
+      aCallback(PrintPreviewResultInfo(0, 0));  // signal error
+    }
+  });
+
+  RefPtr<nsGlobalWindowOuter> sourceWindow;
+  if (aSourceOuterWindowID) {
+    sourceWindow =
+        nsGlobalWindowOuter::GetOuterWindowWithId(aSourceOuterWindowID.value());
+    if (NS_WARN_IF(!sourceWindow)) {
+      return IPC_OK();
+    }
+  } else {
+    nsCOMPtr<nsPIDOMWindowOuter> ourWindow = do_GetInterface(WebNavigation());
+    if (NS_WARN_IF(!ourWindow)) {
+      return IPC_OK();
+    }
+    sourceWindow = nsGlobalWindowOuter::Cast(ourWindow);
+  }
+
+  RefPtr<nsIPrintSettings> printSettings;
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  if (NS_WARN_IF(!printSettingsSvc)) {
+    return IPC_OK();
+  }
+  printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+  if (NS_WARN_IF(!printSettings)) {
+    return IPC_OK();
+  }
+  printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
+
+  nsCOMPtr<nsIDocShell> docShellToCloneInto;
+  if (aSourceOuterWindowID) {
+    docShellToCloneInto = do_GetInterface(WebNavigation());
+    if (NS_WARN_IF(!docShellToCloneInto)) {
+      return IPC_OK();
+    }
+  }
+
+  sourceWindow->Print(printSettings,
+                      /* aListener = */ nullptr, docShellToCloneInto,
+                      /* aIsPreview = */ true, std::move(aCallback),
+                      IgnoreErrors());
+#endif
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvExitPrintPreview() {
+#ifdef NS_PRINTING
+  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
+      do_GetInterface(ToSupports(WebNavigation()));
+  if (NS_WARN_IF(!webBrowserPrint)) {
+    return IPC_OK();
+  }
+  webBrowserPrint->ExitPrintPreview();
+#endif
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserChild::RecvPrint(const uint64_t& aOuterWindowID,
                                                 const PrintData& aPrintData) {
 #ifdef NS_PRINTING
@@ -2280,7 +2348,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(const uint64_t& aOuterWindowID,
     outerWindow->Print(printSettings,
                        /* aListener = */ nullptr,
                        /* aWindowToCloneInto = */ nullptr,
-                       /* aIsPreview = */ false, rv);
+                       /* aIsPreview = */ false,
+                       /* aPrintPreviewCallback = */ nullptr, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return IPC_OK();
     }

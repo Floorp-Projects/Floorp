@@ -41,7 +41,8 @@ namespace mozilla {
 class PresShell;
 namespace dom {
 class Document;
-}
+class PrintPreviewResultInfo;
+}  // namespace dom
 }  // namespace mozilla
 
 /**
@@ -52,6 +53,8 @@ class nsPrintJob final : public nsIObserver,
                          public nsIWebProgressListener,
                          public nsSupportsWeakReference {
   using Document = mozilla::dom::Document;
+  using PrintPreviewResolver =
+      std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;
 
  public:
   static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
@@ -116,7 +119,8 @@ class nsPrintJob final : public nsIObserver,
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   PrintPreview(Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
-               nsIWebProgressListener* aWebProgressListener);
+               nsIWebProgressListener* aWebProgressListener,
+               PrintPreviewResolver&& aCallback);
 
   bool IsDoingPrint() const { return mIsDoingPrinting; }
   bool CreatedForPrintPreview() const { return mCreatedForPrintPreview; }
@@ -280,6 +284,12 @@ class nsPrintJob final : public nsIObserver,
   RefPtr<nsPrintData> mPrtPreview;
 
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
+
+  // If the code that initiates a print preview passes a PrintPreviewResolver
+  // (a std::function) to be notified of the final sheet/page counts (once
+  // we've sufficiently laid out the document to know what those are), that
+  // callback is stored here.
+  PrintPreviewResolver mPrintPreviewCallback;
 
   float mScreenDPI = 115.0f;
 

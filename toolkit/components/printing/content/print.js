@@ -211,6 +211,10 @@ var PrintEventHandler = {
 
   async refreshSettings(printerName) {
     this.settings = PrintUtils.getPrintSettings(printerName);
+    // We set `isInitializedFromPrinter` to make sure that that's set on the
+    // SAVE_TO_PDF_PRINTER settings.  The naming is poor, but that tells the
+    // platform code that the settings object is complete.
+    this.settings.isInitializedFromPrinter = true;
     this.defaultSettings = PrintUtils.getPrintSettings(printerName, true);
     // restore settings which do not have a corresponding flag
     for (let key of Object.keys(this._nonFlaggedChangedSettings)) {
