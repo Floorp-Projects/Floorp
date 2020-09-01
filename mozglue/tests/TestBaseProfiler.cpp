@@ -11,7 +11,6 @@
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "BaseProfilerMarkerPayload.h"
-#  include "mozilla/BaseProfilerMarkerTypes.h"
 #  include "mozilla/BlocksRingBuffer.h"
 #  include "mozilla/leb128iterator.h"
 #  include "mozilla/ModuloBuffer.h"
@@ -37,7 +36,6 @@
 
 #include <algorithm>
 #include <atomic>
-#include <iostream>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -2985,200 +2983,6 @@ void TestBlocksRingBufferSerialization() {
   printf("TestBlocksRingBufferSerialization done\n");
 }
 
-void TestLiteralEmptyStringView() {
-  printf("TestLiteralEmptyStringView...\n");
-
-  static_assert(mozilla::LiteralEmptyStringView<char>() ==
-                std::string_view(""));
-  static_assert(!!mozilla::LiteralEmptyStringView<char>().data());
-  static_assert(mozilla::LiteralEmptyStringView<char>().length() == 0);
-
-  static_assert(mozilla::LiteralEmptyStringView<char16_t>() ==
-                std::basic_string_view<char16_t>(u""));
-  static_assert(!!mozilla::LiteralEmptyStringView<char16_t>().data());
-  static_assert(mozilla::LiteralEmptyStringView<char16_t>().length() == 0);
-
-  printf("TestLiteralEmptyStringView done\n");
-}
-
-void TestProfilerStringView() {
-  printf("TestProfilerStringView...\n");
-
-  // Used to verify implicit constructions, as this will normally be used in
-  // function parameters.
-  auto BS8V = [](mozilla::ProfilerString8View&& aBS8V) {
-    return std::move(aBS8V);
-  };
-
-  // Literal empty string.
-  MOZ_RELEASE_ASSERT(BS8V("").Data() == static_cast<const char*>(""));
-  MOZ_RELEASE_ASSERT(BS8V("").Length() == 0);
-  MOZ_RELEASE_ASSERT(BS8V("").IsLiteral());
-  MOZ_RELEASE_ASSERT(!BS8V("").IsReference());
-
-  // Literal non-empty string.
-  MOZ_RELEASE_ASSERT(BS8V("hi").Data() == static_cast<const char*>("hi"));
-  MOZ_RELEASE_ASSERT(BS8V("hi").Length() == 2);
-  MOZ_RELEASE_ASSERT(BS8V("hi").IsLiteral());
-  MOZ_RELEASE_ASSERT(!BS8V("hi").IsReference());
-
-  // std::string_view to a literal empty string.
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view("")).Data() ==
-                     static_cast<const char*>(""));
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view("")).Length() == 0);
-  MOZ_RELEASE_ASSERT(!BS8V(std::string_view("")).IsLiteral());
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view("")).IsReference());
-
-  // std::string_view to a literal non-empty string.
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).Data() ==
-                     static_cast<const char*>("hi"));
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).Length() == 2);
-  MOZ_RELEASE_ASSERT(!BS8V(std::string_view("hi")).IsLiteral());
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view("hi")).IsReference());
-
-  // Default std::string_view points at nullptr, ProfilerStringView converts it
-  // to the literal empty string.
-  MOZ_RELEASE_ASSERT(!std::string_view().data());
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view()).Data() ==
-                     static_cast<const char*>(""));
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view()).Length() == 0);
-  MOZ_RELEASE_ASSERT(BS8V(std::string_view()).IsLiteral());
-  MOZ_RELEASE_ASSERT(!BS8V(std::string_view()).IsReference());
-
-  // std::string to a literal empty string.
-  MOZ_RELEASE_ASSERT(BS8V(std::string("")).Data());
-  MOZ_RELEASE_ASSERT(*BS8V(std::string("")).Data() == '\0');
-  MOZ_RELEASE_ASSERT(BS8V(std::string("")).Length() == 0);
-  MOZ_RELEASE_ASSERT(!BS8V(std::string("")).IsLiteral());
-  MOZ_RELEASE_ASSERT(BS8V(std::string("")).IsReference());
-
-  // std::string to a literal non-empty string.
-  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data());
-  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data()[0] == 'h');
-  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data()[1] == 'i');
-  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Data()[2] == '\0');
-  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).Length() == 2);
-  MOZ_RELEASE_ASSERT(!BS8V(std::string("hi")).IsLiteral());
-  MOZ_RELEASE_ASSERT(BS8V(std::string("hi")).IsReference());
-
-  // Default std::string_view contains an empty null-terminated string.
-  MOZ_RELEASE_ASSERT(std::string().data());
-  MOZ_RELEASE_ASSERT(BS8V(std::string()).Data());
-  MOZ_RELEASE_ASSERT(*BS8V(std::string()).Data() == '\0');
-  MOZ_RELEASE_ASSERT(BS8V(std::string()).Length() == 0);
-  MOZ_RELEASE_ASSERT(!BS8V(std::string()).IsLiteral());
-  MOZ_RELEASE_ASSERT(BS8V(std::string()).IsReference());
-
-  class FakeNsCString {
-   public:
-    FakeNsCString(const char* aData, size_t aLength, bool aIsLiteral)
-        : mData(aData), mLength(aLength), mIsLiteral(aIsLiteral) {}
-
-    const char* Data() const { return mData; }
-    size_t Length() const { return mLength; }
-    bool IsLiteral() const { return mIsLiteral; }
-
-   private:
-    const char* mData;
-    size_t mLength;
-    bool mIsLiteral;
-  };
-
-  // FakeNsCString to nullptr.
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString(nullptr, 0, true)).Data() ==
-                     static_cast<const char*>(""));
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString(nullptr, 0, true)).Length() == 0);
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString(nullptr, 0, true)).IsLiteral());
-  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString(nullptr, 0, true)).IsReference());
-
-  // FakeNsCString to a literal empty string.
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("", 0, true)).Data());
-  MOZ_RELEASE_ASSERT(*BS8V(FakeNsCString("", 0, true)).Data() == '\0');
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("", 0, true)).Length() == 0);
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("", 0, true)).IsLiteral());
-  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString("", 0, true)).IsReference());
-
-  // FakeNsCString to a literal non-empty string.
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).Data() ==
-                     static_cast<const char*>("hi"));
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).Length() == 2);
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, true)).IsLiteral());
-  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString("hi", 2, true)).IsReference());
-
-  // FakeNsCString to a non-literal non-empty string.
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).Data() ==
-                     static_cast<const char*>("hi"));
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).Length() == 2);
-  MOZ_RELEASE_ASSERT(!BS8V(FakeNsCString("hi", 2, false)).IsLiteral());
-  MOZ_RELEASE_ASSERT(BS8V(FakeNsCString("hi", 2, false)).IsReference());
-
-  // Serialization and deserialization (with ownership).
-  constexpr size_t bufferMaxSize = 1024;
-  constexpr ProfileChunkedBuffer::Length chunkMinSize = 128;
-  ProfileBufferChunkManagerWithLocalLimit cm(bufferMaxSize, chunkMinSize);
-  ProfileChunkedBuffer cb(ProfileChunkedBuffer::ThreadSafety::WithMutex, cm);
-
-  // Literal string, serialized as raw pointer.
-  MOZ_RELEASE_ASSERT(cb.PutObject(BS8V("hi")));
-  {
-    unsigned read = 0;
-    ProfilerString8View outerBS8V;
-    cb.ReadEach([&](ProfileBufferEntryReader& aER) {
-      ++read;
-      auto bs8v = aER.ReadObject<ProfilerString8View>();
-      MOZ_RELEASE_ASSERT(bs8v.Data() == static_cast<const char*>("hi"));
-      MOZ_RELEASE_ASSERT(bs8v.Length() == 2);
-      MOZ_RELEASE_ASSERT(bs8v.IsLiteral());
-      MOZ_RELEASE_ASSERT(!bs8v.IsReference());
-      outerBS8V = std::move(bs8v);
-    });
-    MOZ_RELEASE_ASSERT(read == 1);
-    MOZ_RELEASE_ASSERT(outerBS8V.Data() == static_cast<const char*>("hi"));
-    MOZ_RELEASE_ASSERT(outerBS8V.Length() == 2);
-    MOZ_RELEASE_ASSERT(outerBS8V.IsLiteral());
-    MOZ_RELEASE_ASSERT(!outerBS8V.IsReference());
-  }
-
-  cb.Clear();
-
-  // Non-literal string, content is serialized.
-  MOZ_RELEASE_ASSERT(cb.PutObject(BS8V(std::string("hi"))));
-  MOZ_RELEASE_ASSERT(std::string("hi").data() !=
-                     static_cast<const char*>("hi"));
-  {
-    unsigned read = 0;
-    ProfilerString8View outerBS8V;
-    cb.ReadEach([&](ProfileBufferEntryReader& aER) {
-      ++read;
-      auto bs8v = aER.ReadObject<ProfilerString8View>();
-      MOZ_RELEASE_ASSERT(bs8v.Data());
-      MOZ_RELEASE_ASSERT(bs8v.Data() != static_cast<const char*>("hi"));
-      MOZ_RELEASE_ASSERT(bs8v.Data()[0] == 'h');
-      MOZ_RELEASE_ASSERT(bs8v.Data()[1] == 'i');
-      MOZ_RELEASE_ASSERT(bs8v.Data()[2] == '\0');
-      MOZ_RELEASE_ASSERT(bs8v.Length() == 2);
-      // Special ownership case, neither a literal nor a reference!
-      MOZ_RELEASE_ASSERT(!bs8v.IsLiteral());
-      MOZ_RELEASE_ASSERT(!bs8v.IsReference());
-      // Test move of ownership.
-      outerBS8V = std::move(bs8v);
-      // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move)
-      MOZ_RELEASE_ASSERT(bs8v.Length() == 0);
-    });
-    MOZ_RELEASE_ASSERT(read == 1);
-    MOZ_RELEASE_ASSERT(outerBS8V.Data());
-    MOZ_RELEASE_ASSERT(outerBS8V.Data() != static_cast<const char*>("hi"));
-    MOZ_RELEASE_ASSERT(outerBS8V.Data()[0] == 'h');
-    MOZ_RELEASE_ASSERT(outerBS8V.Data()[1] == 'i');
-    MOZ_RELEASE_ASSERT(outerBS8V.Data()[2] == '\0');
-    MOZ_RELEASE_ASSERT(outerBS8V.Length() == 2);
-    MOZ_RELEASE_ASSERT(!outerBS8V.IsLiteral());
-    MOZ_RELEASE_ASSERT(!outerBS8V.IsReference());
-  }
-
-  printf("TestProfilerStringView done\n");
-}
-
 void TestProfilerDependencies() {
   TestPowerOfTwoMask();
   TestPowerOfTwo();
@@ -3195,8 +2999,6 @@ void TestProfilerDependencies() {
   TestBlocksRingBufferUnderlyingBufferChanges();
   TestBlocksRingBufferThreading();
   TestBlocksRingBufferSerialization();
-  TestLiteralEmptyStringView();
-  TestProfilerStringView();
 }
 
 class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
@@ -3383,7 +3185,6 @@ void TestProfiler() {
       static const unsigned long long fibStart = 37;
       printf("Fibonacci(%llu)...\n", fibStart);
       AUTO_BASE_PROFILER_LABEL("Label around Fibonacci", OTHER);
-
       unsigned long long f = Fibonacci(fibStart);
       printf("Fibonacci(%llu) = %llu\n", fibStart, f);
     });
@@ -3441,20 +3242,6 @@ void TestProfiler() {
         baseprofiler::FileIOMarkerPayload(
             "operation", "source", "filename", TimeStamp::NowUnfuzzed(),
             TimeStamp::NowUnfuzzed(), std::move(cause)));
-    baseprofiler::AddMarker<mozilla::baseprofiler::markers::FileIO>(
-        "m2fileio", mozilla::baseprofiler::category::OTHER, "op2", "src2", "f2",
-        MarkerThreadId{});
-    baseprofiler::AddMarker<mozilla::baseprofiler::markers::FileIO>(
-        "m2fileio-capture",
-        mozilla::baseprofiler::category::OTHER.WithOptions(
-            MarkerStack::Capture()),
-        "op2", "src2", "f2", MarkerThreadId{});
-    baseprofiler::AddMarker<mozilla::baseprofiler::markers::FileIO>(
-        "m2fileio-take-backtrace",
-        mozilla::baseprofiler::category::OTHER.WithOptions(
-            MarkerStack::TakeBacktrace(
-                baseprofiler::profiler_capture_backtrace())),
-        "op2", "src2", "f2", MarkerThreadId{});
 
     baseprofiler::profiler_add_marker(
         "UserTimingMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
@@ -3483,67 +3270,6 @@ void TestProfiler() {
         "LogMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
         baseprofiler::LogMarkerPayload("module", "text",
                                        TimeStamp::NowUnfuzzed()));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
-        "markers 2.0 without options", mozilla::baseprofiler::category::OTHER));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
-        "markers 2.0 with option",
-        mozilla::baseprofiler::category::OTHER.WithOptions(
-            MarkerInnerWindowId(123))));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker<>(
-        "default-templated markers 2.0 without options",
-        mozilla::baseprofiler::category::OTHER));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker<>(
-        "default-templated markers 2.0 with option",
-        mozilla::baseprofiler::category::OTHER.WithOptions(
-            MarkerInnerWindowId(123))));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<::mozilla::baseprofiler::markers::NoPayload>(
-            "explicitly-default-templated markers 2.0 without options",
-            mozilla::baseprofiler::category::OTHER));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<::mozilla::baseprofiler::markers::NoPayload>(
-            "explicitly-default-templated markers 2.0 with option",
-            mozilla::baseprofiler::category::OTHER.WithOptions(
-                MarkerInnerWindowId(123))));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Tracing>(
-            "tracing", mozilla::baseprofiler::category::OTHER, "category"));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::UserTimingMark>(
-            "mark", mozilla::baseprofiler::category::OTHER, "mark name"));
-
-    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker<
-                       mozilla::baseprofiler::markers::UserTimingMeasure>(
-        "measure", mozilla::baseprofiler::category::OTHER, "measure name",
-        Some(ProfilerString8View("start")), Some(ProfilerString8View("end"))));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Hang>(
-            "hang", mozilla::baseprofiler::category::OTHER));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::LongTask>(
-            "longtask", mozilla::baseprofiler::category::OTHER));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Text>(
-            "text", mozilla::baseprofiler::category::OTHER, "text text"));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::Log>(
-            "log", mozilla::baseprofiler::category::OTHER, "module", "text"));
-
-    MOZ_RELEASE_ASSERT(
-        baseprofiler::AddMarker<mozilla::baseprofiler::markers::MediaSample>(
-            "media sample", mozilla::baseprofiler::category::OTHER, 123, 456));
 
     printf("Sleep 1s...\n");
     {
@@ -3600,252 +3326,6 @@ void TestProfiler() {
   printf("TestProfiler done\n");
 }
 
-void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
-                   mozilla::JSONWriter& aWriter) {
-  aWriter.Start();
-  {
-    aWriter.StartArrayProperty("data");
-    {
-      aBuffer.ReadEach([&](mozilla::ProfileBufferEntryReader& aEntryReader) {
-        mozilla::ProfileBufferEntryKind entryKind =
-            aEntryReader.ReadObject<mozilla::ProfileBufferEntryKind>();
-        MOZ_RELEASE_ASSERT(entryKind ==
-                           mozilla::ProfileBufferEntryKind::Marker);
-
-        const bool success = mozilla::base_profiler_markers_detail::
-            DeserializeAfterKindAndStream(
-                aEntryReader, aWriter, 0,
-                [&](const mozilla::ProfilerString8View& aName) {
-                  aWriter.StringElement(aName.String().c_str());
-                },
-                [&](mozilla::ProfileChunkedBuffer&) {
-                  aWriter.StringElement("Real backtrace would be here");
-                });
-        MOZ_RELEASE_ASSERT(success);
-      });
-    }
-    aWriter.EndArray();
-  }
-  aWriter.End();
-}
-
-void PrintMarkers(const mozilla::ProfileChunkedBuffer& aBuffer) {
-  mozilla::baseprofiler::SpliceableJSONWriter writer(
-      mozilla::MakeUnique<mozilla::baseprofiler::OStreamJSONWriteFunc>(
-          std::cout));
-  StreamMarkers(aBuffer, writer);
-}
-
-void TestMarkerNoPayload() {
-  printf("TestMarkerNoPayload...\n");
-
-  mozilla::ProfileBufferChunkManagerSingle chunkManager(512);
-  mozilla::ProfileChunkedBuffer buffer(
-      mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
-
-  mozilla::ProfileBufferBlockIndex i0 =
-      mozilla::baseprofiler::AddMarkerToBuffer<>(
-          buffer, "literal", mozilla::baseprofiler::category::OTHER_Profiling);
-  MOZ_RELEASE_ASSERT(i0);
-
-  const std::string dynamic = "dynamic";
-  mozilla::ProfileBufferBlockIndex i1 =
-      mozilla::baseprofiler::AddMarkerToBuffer<>(
-          buffer, dynamic,
-          mozilla::baseprofiler::category::GRAPHICS_FlushingAsyncPaints);
-  MOZ_RELEASE_ASSERT(i1);
-  MOZ_RELEASE_ASSERT(i1 > i0);
-
-  mozilla::ProfileBufferBlockIndex i2 =
-      mozilla::baseprofiler::AddMarkerToBuffer<>(
-          buffer, std::string_view("string_view"),
-          mozilla::baseprofiler::category::GRAPHICS_FlushingAsyncPaints);
-  MOZ_RELEASE_ASSERT(i2);
-  MOZ_RELEASE_ASSERT(i2 > i1);
-
-#  ifdef DEBUG
-  buffer.Dump();
-#  endif
-
-  PrintMarkers(buffer);
-
-  printf("TestMarkerNoPayload done\n");
-}
-
-void TestUserMarker() {
-  printf("TestUserMarker...\n");
-
-  // User-defined marker type with text. If there are no `Convert` functions,
-  // it's fine to define it right in the function where it's used.
-  struct MarkerTypeTestMinimal {
-    static constexpr const char* MarkerTypeName() { return "test-minimal"; }
-    static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
-                                     const std::string& aText) {
-      aWriter.StringProperty("text", aText.c_str());
-    }
-  };
-
-  mozilla::ProfileBufferChunkManagerSingle chunkManager(1024);
-  mozilla::ProfileChunkedBuffer buffer(
-      mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
-          std::string("payload text")));
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerThreadId(123)),
-          std::string("ThreadId(123)")));
-
-  auto start = mozilla::TimeStamp::NowUnfuzzed();
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerTiming::InstantAt(start)),
-          std::string("InstantAt(start)")));
-
-  auto then = mozilla::TimeStamp::NowUnfuzzed();
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerTiming::IntervalStart(start)),
-          std::string("IntervalStart(start)")));
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerTiming::IntervalEnd(then)),
-          std::string("IntervalEnd(then)")));
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerTiming::Interval(start, then)),
-          std::string("Interval(start, then)")));
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerTiming::IntervalUntilNowFrom(start)),
-          std::string("IntervalUntilNowFrom(start)")));
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerStack::NoStack()),
-          std::string("NoStack")));
-  // Note: We cannot test stack-capture here, because the profiler is not
-  // initialized.
-
-  MOZ_RELEASE_ASSERT(
-      mozilla::baseprofiler::AddMarkerToBuffer<MarkerTypeTestMinimal>(
-          buffer, "test2",
-          mozilla::baseprofiler::category::OTHER_Profiling.WithOptions(
-              mozilla::MarkerInnerWindowId(123)),
-          std::string("InnerWindowId(123)")));
-
-#  ifdef DEBUG
-  buffer.Dump();
-#  endif
-
-  PrintMarkers(buffer);
-
-  printf("TestUserMarker done\n");
-}
-
-void TestPredefinedMarkers() {
-  printf("TestPredefinedMarkers...\n");
-
-  // User-defined marker type with text. If there are no `Convert` functions,
-  // it's fine to define it right in the function where it's used.
-  struct MarkerTypeTestMinimal {
-    static constexpr const char* MarkerTypeName() { return "test-minimal"; }
-    static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
-                                     const std::string& aText) {
-      aWriter.StringProperty("text", aText.c_str());
-    }
-  };
-
-  mozilla::ProfileBufferChunkManagerSingle chunkManager(1024);
-  mozilla::ProfileChunkedBuffer buffer(
-      mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Tracing>(
-      buffer, std::string_view("tracing"),
-      mozilla::baseprofiler::category::OTHER, "category"));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::UserTimingMark>(
-      buffer, std::string_view("mark"), mozilla::baseprofiler::category::OTHER,
-      "mark name"));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::UserTimingMeasure>(
-      buffer, std::string_view("measure"),
-      mozilla::baseprofiler::category::OTHER, "measure name ",
-      mozilla::Some(mozilla::ProfilerString8View(" start ")),
-      mozilla::Some(mozilla::ProfilerString8View("end"))));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Hang>(
-      buffer, std::string_view("hang"),
-      mozilla::baseprofiler::category::OTHER));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::LongTask>(
-      buffer, std::string_view("long task"),
-      mozilla::baseprofiler::category::OTHER));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Text>(
-      buffer, std::string_view("text"), mozilla::baseprofiler::category::OTHER,
-      "text text"));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::Log>(
-      buffer, std::string_view("log"), mozilla::baseprofiler::category::OTHER,
-      "module", "text"));
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer<
-                     mozilla::baseprofiler::markers::MediaSample>(
-      buffer, std::string_view("media"), mozilla::baseprofiler::category::OTHER,
-      123, 456));
-
-#  ifdef DEBUG
-  buffer.Dump();
-#  endif
-
-  PrintMarkers(buffer);
-
-  printf("TestPredefinedMarkers done\n");
-}
-
-void TestProfilerMarkers() {
-  printf("TestProfilerMarkers -- pid: %d, tid: %d\n",
-         mozilla::baseprofiler::profiler_current_process_id(),
-         mozilla::baseprofiler::profiler_current_thread_id());
-  // ::SleepMilli(10000);
-
-  TestMarkerNoPayload();
-  TestUserMarker();
-  TestPredefinedMarkers();
-
-  printf("TestProfilerMarkers done\n");
-}
-
 #else  // MOZ_GECKO_PROFILER
 
 // Testing that macros are still #defined (but do nothing) when
@@ -3853,50 +3333,14 @@ void TestProfilerMarkers() {
 void TestProfiler() {
   // These don't need to make sense, we just want to know that they're defined
   // and don't do anything.
-
-#  ifndef AUTO_BASE_PROFILER_INIT
-#    error AUTO_BASE_PROFILER_INIT not #defined
-#  endif  // AUTO_BASE_PROFILER_INIT
   AUTO_BASE_PROFILER_INIT;
 
   // This wouldn't build if the macro did output its arguments.
-#  ifndef AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE
-#    error AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE not #defined
-#  endif  // AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE
   AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(catch, catch, catch, catch);
 
-#  ifndef AUTO_BASE_PROFILER_LABEL
-#    error AUTO_BASE_PROFILER_LABEL not #defined
-#  endif  // AUTO_BASE_PROFILER_LABEL
   AUTO_BASE_PROFILER_LABEL(catch, catch);
 
-#  ifndef AUTO_BASE_PROFILER_THREAD_SLEEP
-#    error AUTO_BASE_PROFILER_THREAD_SLEEP not #defined
-#  endif  // AUTO_BASE_PROFILER_THREAD_SLEEP
   AUTO_BASE_PROFILER_THREAD_SLEEP;
-
-#  ifndef BASE_PROFILER_MARKER_UNTYPED
-#    error BASE_PROFILER_MARKER_UNTYPED not #defined
-#  endif  // BASE_PROFILER_MARKER_UNTYPED
-  BASE_PROFILER_MARKER_UNTYPED(catch, catch);
-
-#  ifndef BASE_PROFILER_MARKER
-#    error BASE_PROFILER_MARKER not #defined
-#  endif  // BASE_PROFILER_MARKER
-  BASE_PROFILER_MARKER(catch, catch, catch);
-  BASE_PROFILER_MARKER(catch, catch, catch, catch);
-
-#  ifndef BASE_PROFILER_MARKER_TEXT
-#    error BASE_PROFILER_MARKER_TEXT not #defined
-#  endif  // BASE_PROFILER_MARKER_TEXT
-  BASE_PROFILER_MARKER_TEXT(catch, catch, catch);
-}
-
-// Testing that macros are still #defined (but do nothing) when
-// MOZ_GECKO_PROFILER is disabled.
-void TestProfilerMarkers() {
-  // These don't need to make sense, we just want to know that they're defined
-  // and don't do anything.
 }
 
 #endif  // MOZ_GECKO_PROFILER else
@@ -3914,10 +3358,9 @@ int main()
   // ::SleepMilli(10000);
 #endif  // MOZ_GECKO_PROFILER
 
-  // Note that there are two `TestProfiler{,Markers}` functions above, depending
-  // on whether MOZ_GECKO_PROFILER is #defined.
+  // Note that there are two `TestProfiler` functions above, depending on
+  // whether MOZ_GECKO_PROFILER is #defined.
   TestProfiler();
-  TestProfilerMarkers();
 
   return 0;
 }
