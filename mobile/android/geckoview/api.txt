@@ -1270,6 +1270,10 @@ package org.mozilla.geckoview {
     field public static final int FETCH_FLAGS_STREAM_FAILURE_TEST = 1024;
   }
 
+  @AnyThread public class Image {
+    method @NonNull public GeckoResult<Bitmap> getBitmap(int);
+  }
+
   @AnyThread public class MediaElement {
     method @Nullable public MediaElement.Delegate getDelegate();
     method public void pause();
