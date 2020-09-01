@@ -733,7 +733,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         return node.matches(":fullscreen");
       case ":cue":
         return node.nodeName == "VIDEO";
-      case ":file-chooser-button":
+      case ":file-selector-button":
         return node.nodeName == "INPUT" && node.type == "file";
       case ":placeholder":
       case ":-moz-placeholder":

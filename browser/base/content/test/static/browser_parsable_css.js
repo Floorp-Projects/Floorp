@@ -74,7 +74,7 @@ if (
   });
 }
 
-if (Services.prefs.getBoolPref("layout.css.file-chooser-button.enabled")) {
+if (Services.prefs.getBoolPref("layout.css.file-selector-button.enabled")) {
   // System colors reserved to UA / chrome sheets
   whitelist.push({
     sourceName: /(?:res|gre-resources)\/forms\.css$/i,
@@ -86,7 +86,7 @@ if (Services.prefs.getBoolPref("layout.css.file-chooser-button.enabled")) {
   // Reserved to UA sheets, behind a pref for content.
   whitelist.push({
     sourceName: /(?:res|gre-resources)\/forms\.css$/i,
-    errorMessage: /Unknown pseudo-.*file-chooser-button/i,
+    errorMessage: /Unknown pseudo-.*file-selector-button/i,
     isFromDevTools: false,
   });
 }

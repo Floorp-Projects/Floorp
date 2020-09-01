@@ -128,7 +128,7 @@ textarea {
 }
 
 /* A few properties that we don't want to inherit by default: */
-input, textarea, select, button, ::file-chooser-button {
+input, textarea, select, button, ::file-selector-button {
   text-align: initial;
   text-indent: initial;
   text-shadow: initial;
@@ -521,7 +521,7 @@ input[type="search"] {
 /* Non text-related properties for buttons: these ones are shared with
    input[type="color"] */
 button,
-::file-chooser-button,
+::file-selector-button,
 input:is([type="color"], [type="reset"], [type="button"], [type="submit"]) {
   appearance: auto;
   -moz-default-appearance: button;
@@ -540,7 +540,7 @@ input:is([type="color"], [type="reset"], [type="button"], [type="submit"]) {
 /* Text-related properties for buttons: these ones are not shared with
    input[type="color"] */
 button,
-::file-chooser-button,
+::file-selector-button,
 input:is([type="reset"], [type="button"], [type="submit"]) {
   color: ButtonText;
   font: -moz-button;
@@ -555,7 +555,7 @@ input[type="color"] {
 }
 
 button,
-::file-chooser-button {
+::file-selector-button {
   /* Buttons should lay out like "normal" html, mostly */
   white-space: unset;
   text-indent: 0;
@@ -597,19 +597,19 @@ button,
   justify-items: inherit;
 }
 
-::file-chooser-button:hover,
+::file-selector-button:hover,
 button:hover,
 input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):hover {
   background-color: -moz-buttonhoverface;
 }
 
-::file-chooser-button:hover,
+::file-selector-button:hover,
 button:hover,
 input:is([type="reset"], [type="button"], [type="submit"]):hover {
   color: -moz-buttonhovertext;
 }
 
-::file-chooser-button:active:hover,
+::file-selector-button:active:hover,
 button:active:hover,
 input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):active:hover {
 %ifndef XP_MACOSX
@@ -620,7 +620,7 @@ input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):activ
   background-color: ButtonFace;
 }
 
-::file-chooser-button:active:hover,
+::file-selector-button:active:hover,
 button:active:hover,
 input:is([type="reset"], [type="button"], [type="submit"]):active:hover {
 %ifdef MOZ_WIDGET_GTK
@@ -641,7 +641,7 @@ input:is([type="reset"], [type="button"], [type="submit"]):active:hover {
   border-color: currentColor;
 }
 
-:is(:disabled, :disabled:active)::file-chooser-button,
+:is(:disabled, :disabled:active)::file-selector-button,
 button:is(:disabled, :disabled:active),
 input:is([type="reset"], [type="button"], [type="submit"], [type="color"]):is(:disabled, :disabled:active),
 select:is(:disabled, :disabled:active) > button {
@@ -653,7 +653,7 @@ select:is(:disabled, :disabled:active) > button {
   cursor: unset;
 }
 
-:is(:disabled, :disabled:active)::file-chooser-button,
+:is(:disabled, :disabled:active)::file-selector-button,
 button:is(:disabled, :disabled:active),
 input:is([type="reset"], [type="button"], [type="submit"]):is(:disabled, :disabled:active),
 select:is(:disabled, :disabled:active) > button {
@@ -692,7 +692,7 @@ input[type="file"] > label {
 }
 
 /* button part of file selector */
-::file-chooser-button {
+::file-selector-button {
   font-size: unset;
   letter-spacing: unset;
   cursor: unset;
