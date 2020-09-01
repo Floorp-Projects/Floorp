@@ -156,7 +156,7 @@ class PerftestTests(MachCommandBase):
 
             # if we're not on try we want to install black
             if not ON_TRY and not skip_linters:
-                pypis.append("black")
+                pypis.append("black==19.10b0")
 
             # these are the deps we are getting from pypi
             for dep in pypis:
