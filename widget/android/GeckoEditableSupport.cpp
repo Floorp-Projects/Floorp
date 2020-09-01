@@ -22,7 +22,6 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/ToString.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/widget/GeckoViewSupport.h"
 
 #include <android/api-level.h>
 #include <android/input.h>
@@ -36,6 +35,10 @@
     do {                   \
     } while (0)
 #endif
+
+template <>
+const char nsWindow::NativePtr<mozilla::widget::GeckoEditableSupport>::sName[] =
+    "GeckoEditableSupport";
 
 static uint32_t ConvertAndroidKeyCodeToDOMKeyCode(int32_t androidKeyCode) {
   // Special-case alphanumeric keycodes because they are most common.
@@ -462,10 +465,8 @@ void GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
                   : widget ? widget->GetTextEventDispatcher() : nullptr;
   NS_ENSURE_TRUE_VOID(dispatcher && widget);
 
-  if (!aIsSynthesizedImeKey) {
-    if (nsWindow* window = GetNsWindow()) {
-      window->UserActivity();
-    }
+  if (!aIsSynthesizedImeKey && mWindow) {
+    mWindow->UserActivity();
   } else if (aIsSynthesizedImeKey && mIMEMaskEventsCount > 0) {
     // Don't synthesize editor keys when not focused.
     return;
@@ -858,8 +859,8 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     return false;
   }
 
-  if (nsWindow* window = GetNsWindow()) {
-    window->UserActivity();
+  if (mWindow) {
+    mWindow->UserActivity();
   }
 
   /*
@@ -1263,8 +1264,7 @@ nsresult GeckoEditableSupport::NotifyIME(
         if (mIsRemote) {
           if (!mEditableAttached) {
             // Re-attach on focus; see OnRemovedFrom().
-            jni::NativeWeakPtrHolder<GeckoEditableSupport>::AttachExisting(
-                mEditable, do_AddRef(this));
+            AttachNative(mEditable, this);
             mEditableAttached = true;
           }
           // Because GeckoEditableSupport in content process doesn't
@@ -1378,7 +1378,7 @@ void GeckoEditableSupport::OnRemovedFrom(
 
   if (mIsRemote && mEditable->HasEditableParent()) {
     // When we're remote, detach every time.
-    OnWeakNonIntrusiveDetach(NS_NewRunnableFunction(
+    OnDetach(NS_NewRunnableFunction(
         "GeckoEditableSupport::OnRemovedFrom",
         [editable = java::GeckoEditableChild::GlobalRef(mEditable)] {
           DisposeNative(editable);
@@ -1470,7 +1470,7 @@ void GeckoEditableSupport::TransferParent(jni::Object::Param aEditableParent) {
       // only, so mInputContext may be still invalid since it is set after
       // we have gotton focus.
       RefPtr<GeckoEditableSupport> self(this);
-      nsAppShell::PostEvent([self = std::move(self)] {
+      nsAppShell::PostEvent([self] {
         NS_WARNING_ASSERTION(
             self->mDispatcher,
             "Text dispatcher is still null. Why don't we get focus yet?");
@@ -1515,19 +1515,15 @@ void GeckoEditableSupport::SetOnBrowserChild(dom::BrowserChild* aBrowserChild) {
     // We need to set a new listener.
     const auto editableChild = java::GeckoEditableChild::New(
         /* parent */ nullptr, /* default */ false);
-
-    // Temporarily attach so we can receive the initial editable parent.
-    auto editableSupport =
-        jni::NativeWeakPtrHolder<GeckoEditableSupport>::Attach(editableChild,
-                                                               editableChild);
-    auto accEditableSupport(editableSupport.Access());
-    MOZ_RELEASE_ASSERT(accEditableSupport);
+    RefPtr<widget::GeckoEditableSupport> editableSupport =
+        new widget::GeckoEditableSupport(editableChild);
 
     // Tell PuppetWidget to use our listener for IME operations.
-    widget->SetNativeTextEventDispatcherListener(
-        accEditableSupport.AsRefPtr().get());
+    widget->SetNativeTextEventDispatcherListener(editableSupport);
 
-    accEditableSupport->mEditableAttached = true;
+    // Temporarily attach so we can receive the initial editable parent.
+    AttachNative(editableChild, editableSupport);
+    editableSupport->mEditableAttached = true;
 
     // Connect the new child to a parent that corresponds to the BrowserChild.
     java::GeckoServiceChildProcess::GetEditableParent(editableChild, contentId,
@@ -1549,30 +1545,13 @@ void GeckoEditableSupport::SetOnBrowserChild(dom::BrowserChild* aBrowserChild) {
       static_cast<widget::GeckoEditableSupport*>(listener.get());
   if (!support->mEditableAttached) {
     // Temporarily attach so we can receive the initial editable parent.
-    jni::NativeWeakPtrHolder<GeckoEditableSupport>::AttachExisting(
-        support->GetJavaEditable(), do_AddRef(support));
+    AttachNative(support->GetJavaEditable(), support);
     support->mEditableAttached = true;
   }
 
   // Transfer to a new parent that corresponds to the BrowserChild.
   java::GeckoServiceChildProcess::GetEditableParent(support->GetJavaEditable(),
                                                     contentId, tabId);
-}
-
-nsIWidget* GeckoEditableSupport::GetWidget() const {
-  MOZ_ASSERT(NS_IsMainThread());
-  return mDispatcher ? mDispatcher->GetWidget() : GetNsWindow();
-}
-
-nsWindow* GeckoEditableSupport::GetNsWindow() const {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto acc(mWindow.Access());
-  if (!acc) {
-    return nullptr;
-  }
-
-  return acc->GetNsWindow();
 }
 
 }  // namespace widget
