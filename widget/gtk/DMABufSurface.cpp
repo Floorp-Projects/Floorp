@@ -26,6 +26,7 @@
 #include "GLContextTypes.h"  // for GLContext, etc
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
+#include "ScopedGLHelpers.h"
 
 #include "mozilla/layers/LayersSurfaces.h"
 
@@ -278,6 +279,9 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   mWidth = aWidth;
   mHeight = aHeight;
 
+  LOGDMABUF(("DMABufSurfaceRGBA::Create() UID %d size %d x %d\n", mUID, mWidth,
+             mHeight));
+
   mGmbFormat = GetDMABufDevice()->GetGbmFormat(mSurfaceFlags & DMABUF_ALPHA);
   if (!mGmbFormat) {
     // Requested DRM format is not supported.
@@ -287,6 +291,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   bool useModifiers = (aDMABufSurfaceFlags & DMABUF_USE_MODIFIERS) &&
                       mGmbFormat->mModifiersCount > 0;
   if (useModifiers) {
+    LOGDMABUF(("    Creating with modifiers\n"));
     mGbmBufferObject[0] = nsGbmLib::CreateWithModifiers(
         GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
         mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
@@ -297,6 +302,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
 
   // Create without modifiers - use plain/linear format.
   if (!mGbmBufferObject[0]) {
+    LOGDMABUF(("    Creating without modifiers\n"));
     mGbmBufferFlags = (GBM_BO_USE_SCANOUT | GBM_BO_USE_LINEAR);
     if (mSurfaceFlags & DMABUF_TEXTURE) {
       mGbmBufferFlags |= GBM_BO_USE_TEXTURING;
@@ -316,6 +322,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   }
 
   if (!mGbmBufferObject[0]) {
+    LOGDMABUF(("    Failed to create GbmBufferObject\n"));
     return false;
   }
 
@@ -348,6 +355,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     }
   }
 
+  LOGDMABUF(("    Success\n"));
   return true;
 }
 
@@ -381,6 +389,8 @@ void DMABufSurfaceRGBA::ImportSurfaceDescriptor(
   if (desc.refCount().Length() > 0) {
     GlobalRefCountImport(desc.refCount()[0].ClonePlatformHandle().release());
   }
+
+  LOGDMABUF(("DMABufSurfaceRGBA::Import() UID %d\n", mUID));
 }
 
 bool DMABufSurfaceRGBA::Create(const SurfaceDescriptor& aDesc) {
@@ -399,6 +409,8 @@ bool DMABufSurfaceRGBA::Serialize(
   AutoTArray<uintptr_t, DMABUF_BUFFER_PLANES> images;
   AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
   AutoTArray<ipc::FileDescriptor, 1> refCountFDs;
+
+  LOGDMABUF(("DMABufSurfaceRGBA::Serialize() UID %d\n", mUID));
 
   width.AppendElement(mWidth);
   height.AppendElement(mHeight);
@@ -421,7 +433,6 @@ bool DMABufSurfaceRGBA::Serialize(
       SurfaceDescriptorDMABuf(mSurfaceType, mBufferModifier, mGbmBufferFlags,
                               fds, width, height, format, strides, offsets,
                               GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
-
   return true;
 }
 
@@ -476,7 +487,7 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
 
   aGLContext->MakeCurrent();
   aGLContext->fGenTextures(1, &mTexture);
-  aGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+  const ScopedBindTexture savedTex(aGLContext, mTexture);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
                              LOCAL_GL_CLAMP_TO_EDGE);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
@@ -487,6 +498,7 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
                              LOCAL_GL_LINEAR);
   aGLContext->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
   mGL = aGLContext;
+
   return true;
 }
 
@@ -524,6 +536,10 @@ void* DMABufSurface::MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth,
     NS_WARNING("We can't map DMABufSurfaceRGBA without mGbmBufferObject");
     return nullptr;
   }
+
+  LOGDMABUF(
+      ("DMABufSurfaceRGBA::MapInternal() UID %d size %d x %d -> %d x %d\n",
+       mUID, aX, aY, aWidth, aHeight));
 
   mMappedRegionStride[aPlane] = 0;
   mMappedRegionData[aPlane] = nullptr;
@@ -564,6 +580,31 @@ void DMABufSurface::Unmap(int aPlane) {
     mMappedRegionStride[aPlane] = 0;
   }
 }
+
+#ifdef DEBUG
+void DMABufSurfaceRGBA::DumpToFile(const char* pFile) {
+  uint32_t stride;
+
+  if (!MapReadOnly(&stride)) {
+    return;
+  }
+  cairo_surface_t* surface = nullptr;
+
+  auto unmap = MakeScopeExit([&] {
+    if (surface) {
+      cairo_surface_destroy(surface);
+    }
+    Unmap();
+  });
+
+  surface = cairo_image_surface_create_for_data(
+      (unsigned char*)mMappedRegion[0], CAIRO_FORMAT_ARGB32, mWidth, mHeight,
+      stride);
+  if (cairo_surface_status(surface) == CAIRO_STATUS_SUCCESS) {
+    cairo_surface_write_to_png(surface, pFile);
+  }
+}
+#endif
 
 #if 0
 // Copy from source surface by GL
@@ -882,7 +923,7 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
 
   aGLContext->MakeCurrent();
   aGLContext->fGenTextures(1, &mTexture[aPlane]);
-  aGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture[aPlane]);
+  const ScopedBindTexture savedTex(aGLContext, mTexture[aPlane]);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
                              LOCAL_GL_CLAMP_TO_EDGE);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
