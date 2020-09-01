@@ -1482,6 +1482,9 @@ public class GeckoSession implements Parcelable {
 
         onWindowChanged(WINDOW_CLOSE, /* inProgress */ true);
 
+        // We need to ensure the compositor releases any Surface it currently holds.
+        onSurfaceDestroyed();
+
         mWindow.close();
         mWindow.disposeNative();
         mWindow = null;
