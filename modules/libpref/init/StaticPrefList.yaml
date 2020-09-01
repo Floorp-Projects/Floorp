@@ -3373,6 +3373,32 @@
   value: @IS_ANDROID@
   mirror: always
 
+# The following four prefs control the maximum script run time before slow
+# script warning.
+- name: dom.max_script_run_time
+  type: int32_t
+  value: 10
+  mirror: always
+
+- name: dom.max_script_run_time_without_important_user_input
+  type: int32_t
+#ifdef NIGHTLY_BUILD
+  value: 20
+#else
+  value: 10
+#endif
+  mirror: always
+
+- name: dom.max_chrome_script_run_time
+  type: int32_t
+  value: 0
+  mirror: always
+
+- name: dom.max_ext_content_script_run_time
+  type: int32_t
+  value: 5
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
