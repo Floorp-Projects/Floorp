@@ -462,8 +462,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         super.onBackPressed()
     }
 
-    private fun isAndroidN(): Boolean =
-        Build.VERSION.SDK_INT == Build.VERSION_CODES.N || Build.VERSION.SDK_INT == Build.VERSION_CODES.N_MR1
+    private fun shouldUseCustomBackLongPress(): Boolean {
+        val isAndroidN =
+            Build.VERSION.SDK_INT == Build.VERSION_CODES.N || Build.VERSION.SDK_INT == Build.VERSION_CODES.N_MR1
+        // Huawei devices seem to have problems with onKeyLongPress
+        // See https://github.com/mozilla-mobile/fenix/issues/13498
+        val isHuawei = Build.MANUFACTURER.equals("huawei", ignoreCase = true)
+        return isAndroidN || isHuawei
+    }
 
     private fun handleBackLongPress(): Boolean {
         supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
@@ -476,12 +482,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     final override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         // Inspired by https://searchfox.org/mozilla-esr68/source/mobile/android/base/java/org/mozilla/gecko/BrowserApp.java#584-613
-        // Android N has broken passing onKeyLongPress events for the back button, so we
+        // Android N and Huawei devices have broken onKeyLongPress events for the back button, so we
         // instead implement the long press behavior ourselves
         // - For short presses, we cancel the callback in onKeyUp
         // - For long presses, the normal keypress is marked as cancelled, hence won't be handled elsewhere
         //   (but Android still provides the haptic feedback), and the long press action is run
-        if (isAndroidN() && keyCode == KeyEvent.KEYCODE_BACK) {
+        if (shouldUseCustomBackLongPress() && keyCode == KeyEvent.KEYCODE_BACK) {
             backLongPressJob = lifecycleScope.launch {
                 delay(ViewConfiguration.getLongPressTimeout().toLong())
                 handleBackLongPress()
@@ -491,7 +497,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     final override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (isAndroidN() && keyCode == KeyEvent.KEYCODE_BACK) {
+        if (shouldUseCustomBackLongPress() && keyCode == KeyEvent.KEYCODE_BACK) {
             backLongPressJob?.cancel()
         }
         return super.onKeyUp(keyCode, event)
@@ -500,7 +506,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     final override fun onKeyLongPress(keyCode: Int, event: KeyEvent?): Boolean {
         // onKeyLongPress is broken in Android N so we don't handle back button long presses here
         // for N. The version check ensures we don't handle back button long presses twice.
-        if (!isAndroidN() && keyCode == KeyEvent.KEYCODE_BACK) {
+        if (!shouldUseCustomBackLongPress() && keyCode == KeyEvent.KEYCODE_BACK) {
             return handleBackLongPress()
         }
         return super.onKeyLongPress(keyCode, event)
