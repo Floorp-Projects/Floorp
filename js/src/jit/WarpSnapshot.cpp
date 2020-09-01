@@ -189,8 +189,8 @@ void WarpCacheIR::dumpData(GenericPrinter& out) const {
 
 void WarpInlinedCall::dumpData(GenericPrinter& out) const {
   out.printf("    scriptSnapshot: 0x%p\n", scriptSnapshot_);
+  out.printf("    info: 0x%p\n", info_);
   cacheIRSnapshot_->dumpData(out);
-  // TODO: dump callInfo
 }
 #endif  // JS_JITSPEW
 
