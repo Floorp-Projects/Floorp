@@ -5,7 +5,7 @@
 use nsstring::nsACString;
 use nsstring::nsCString;
 use thin_vec::ThinVec;
-pub use unic_langid::{CharacterDirection, LanguageIdentifier, LanguageIdentifierError};
+pub use unic_langid::{subtags, CharacterDirection, LanguageIdentifier, LanguageIdentifierError};
 
 pub fn new_langid_for_mozilla(
     name: &nsACString,
@@ -62,7 +62,7 @@ pub unsafe extern "C" fn unic_langid_get_language(
     langid: &LanguageIdentifier,
     len: *mut u32,
 ) -> *const u8 {
-    let lang = langid.language();
+    let lang = langid.language.as_str();
     *len = lang.len() as u32;
     lang.as_bytes().as_ptr()
 }
@@ -72,12 +72,14 @@ pub unsafe extern "C" fn unic_langid_set_language(
     langid: &mut LanguageIdentifier,
     string: &nsACString,
 ) -> bool {
-    langid.set_language(string).is_ok()
+    subtags::Language::from_bytes(string)
+        .map(|lang| langid.language = lang)
+        .is_ok()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn unic_langid_clear_language(langid: &mut LanguageIdentifier) {
-    langid.clear_language()
+    langid.language.clear()
 }
 
 #[no_mangle]
@@ -85,9 +87,14 @@ pub unsafe extern "C" fn unic_langid_get_script(
     langid: &LanguageIdentifier,
     len: *mut u32,
 ) -> *const u8 {
-    let script = langid.script().unwrap_or("");
-    *len = script.len() as u32;
-    script.as_bytes().as_ptr()
+    let (ptr, l) = if let Some(script) = langid.script {
+        (script.as_str().as_bytes().as_ptr(), script.as_str().len())
+    } else {
+        (std::ptr::null(), 0)
+    };
+
+    *len = l as u32;
+    ptr
 }
 
 #[no_mangle]
@@ -95,12 +102,14 @@ pub unsafe extern "C" fn unic_langid_set_script(
     langid: &mut LanguageIdentifier,
     string: &nsACString,
 ) -> bool {
-    langid.set_script(string).is_ok()
+    subtags::Script::from_bytes(string)
+        .map(|script| langid.script = Some(script))
+        .is_ok()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn unic_langid_clear_script(langid: &mut LanguageIdentifier) {
-    langid.clear_script()
+    langid.script = None;
 }
 
 #[no_mangle]
@@ -108,9 +117,14 @@ pub unsafe extern "C" fn unic_langid_get_region(
     langid: &LanguageIdentifier,
     len: *mut u32,
 ) -> *const u8 {
-    let region = langid.region().unwrap_or("");
-    *len = region.len() as u32;
-    region.as_bytes().as_ptr()
+    let (ptr, l) = if let Some(region) = langid.region {
+        (region.as_str().as_bytes().as_ptr(), region.as_str().len())
+    } else {
+        (std::ptr::null(), 0)
+    };
+
+    *len = l as u32;
+    ptr
 }
 
 #[no_mangle]
@@ -118,12 +132,14 @@ pub unsafe extern "C" fn unic_langid_set_region(
     langid: &mut LanguageIdentifier,
     string: &nsACString,
 ) -> bool {
-    langid.set_region(string).is_ok()
+    subtags::Region::from_bytes(string)
+        .map(|region| langid.region = Some(region))
+        .is_ok()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn unic_langid_clear_region(langid: &mut LanguageIdentifier) {
-    langid.clear_region()
+    langid.region = None;
 }
 
 #[no_mangle]
@@ -132,7 +148,7 @@ pub unsafe extern "C" fn unic_langid_get_variants(
     variants: &mut ThinVec<nsCString>,
 ) {
     for v in langid.variants() {
-        variants.push(v.into());
+        variants.push(v.as_str().into());
     }
 }
 
@@ -141,7 +157,12 @@ pub unsafe extern "C" fn unic_langid_set_variants(
     langid: &mut LanguageIdentifier,
     variants: &ThinVec<nsCString>,
 ) -> bool {
-    langid.set_variants(variants).is_ok()
+    variants
+        .iter()
+        .map(|v| subtags::Variant::from_bytes(v))
+        .collect::<Result<Vec<_>, _>>()
+        .map(|variants| langid.set_variants(&variants))
+        .is_ok()
 }
 
 #[no_mangle]
