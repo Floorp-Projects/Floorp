@@ -4119,6 +4119,14 @@ void LIRGenerator::visitGuardSpecificSymbol(MGuardSpecificSymbol* ins) {
   redefine(ins, ins->symbol());
 }
 
+void LIRGenerator::visitGuardStringToIndex(MGuardStringToIndex* ins) {
+  MOZ_ASSERT(ins->string()->type() == MIRType::String);
+  auto* guard = new (alloc()) LGuardStringToIndex(useRegister(ins->string()));
+  assignSnapshot(guard, BailoutKind::StringToIndexGuard);
+  define(guard, ins);
+  assignSafepoint(guard, ins);
+}
+
 void LIRGenerator::visitGuardNoDenseElements(MGuardNoDenseElements* ins) {
   auto* guard =
       new (alloc()) LGuardNoDenseElements(useRegister(ins->object()), temp());
