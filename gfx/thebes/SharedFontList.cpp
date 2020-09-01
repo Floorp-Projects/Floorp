@@ -407,8 +407,7 @@ void Family::SearchAllFontsForChar(FontList* aList,
           }
           bool hasColorGlyph =
               font->HasColorGlyphFor(aMatchData->mCh, aMatchData->mNextCh);
-          if (hasColorGlyph !=
-              (aMatchData->mPresentation == eFontPresentation::Emoji)) {
+          if (hasColorGlyph != PrefersColor(aMatchData->mPresentation)) {
             distance += kPresentationMismatch;
             if (distance >= aMatchData->mMatchDistance) {
               continue;

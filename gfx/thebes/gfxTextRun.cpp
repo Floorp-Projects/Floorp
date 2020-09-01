@@ -3059,11 +3059,18 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     // so that a color font can be explicitly applied via font-family even to
     // characters that are not inherently emoji-style.
     if (aNextCh == kVariationSelector16 ||
-        (emojiPresentation == EmojiPresentation::EmojiDefault &&
-         aNextCh != kVariationSelector15) ||
         (aNextCh >= kEmojiSkinToneFirst && aNextCh <= kEmojiSkinToneLast)) {
-      presentation = eFontPresentation::Emoji;
+      // Emoji presentation is explicitly requested by a variation selector or
+      // the presence of a skin-tone codepoint.
+      presentation = eFontPresentation::EmojiExplicit;
+    } else if (emojiPresentation == EmojiPresentation::EmojiDefault &&
+               aNextCh != kVariationSelector15) {
+      // Emoji presentation is the default for this Unicode character. but we
+      // will allow an explicitly-specified webfont to apply to it, regardless
+      // of its glyph type.
+      presentation = eFontPresentation::EmojiDefault;
     } else if (aNextCh == kVariationSelector15) {
+      // Text presentation is explicitly requested.
       presentation = eFontPresentation::Text;
     }
   }
@@ -3136,7 +3143,9 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
   // if we should go ahead and return |f|, false to continue searching.
   auto CheckCandidate = [&](gfxFont* f, FontMatchType t) -> bool {
     // If no preference, then just accept the font.
-    if (presentation == eFontPresentation::Any) {
+    if (presentation == eFontPresentation::Any ||
+        (presentation == eFontPresentation::EmojiDefault &&
+         f->GetFontEntry()->IsUserFont())) {
       RefPtr<gfxFont> autoRefDeref(candidateFont);
       *aMatchType = t;
       return true;
@@ -3144,7 +3153,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     // Does the candidate font provide a color glyph for the current character?
     bool hasColorGlyph = f->HasColorGlyphFor(aCh, aNextCh);
     // If the provided glyph matches the preference, accept the font.
-    if (hasColorGlyph == (presentation == eFontPresentation::Emoji)) {
+    if (hasColorGlyph == PrefersColor(presentation)) {
       RefPtr<gfxFont> autoRefDeref(candidateFont);
       *aMatchType = t;
       return true;
@@ -3595,7 +3604,7 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(
   eFontPrefLang charLang;
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
 
-  if (aPresentation == eFontPresentation::Emoji) {
+  if (PrefersColor(aPresentation)) {
     charLang = eFontPrefLang_Emoji;
   } else {
     // get the pref font list if it hasn't been set up already
