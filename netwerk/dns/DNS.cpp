@@ -285,27 +285,10 @@ bool NetAddr::operator<(const NetAddr& other) const {
   return false;
 }
 
-NetAddrElement::NetAddrElement(const PRNetAddr* prNetAddr) {
-  this->mAddress.raw.family = 0;
-  this->mAddress.inet = {};
-  PRNetAddrToNetAddr(prNetAddr, &mAddress);
-}
-
-NetAddrElement::NetAddrElement(const NetAddrElement& netAddr) {
-  mAddress = netAddr.mAddress;
-}
-
-NetAddrElement::~NetAddrElement() = default;
-
 AddrInfo::AddrInfo(const nsACString& host, const PRAddrInfo* prAddrInfo,
                    bool disableIPv4, bool filterNameCollision,
                    const nsACString& cname)
-    : mHostName(host),
-      mCanonicalName(cname),
-      ttl(NO_TTL_DATA),
-      mFromTRR(false),
-      mTrrFetchDuration(0),
-      mTrrFetchDurationNetworkOnly(0) {
+    : mHostName(host), mCanonicalName(cname) {
   MOZ_ASSERT(prAddrInfo,
              "Cannot construct AddrInfo with a null prAddrInfo pointer!");
   const uint32_t nameCollisionAddr = htonl(0x7f003535);  // 127.0.53.53
@@ -318,28 +301,19 @@ AddrInfo::AddrInfo(const nsACString& host, const PRAddrInfo* prAddrInfo,
                  (!filterNameCollision || tmpAddr.raw.family != PR_AF_INET ||
                   (tmpAddr.inet.ip != nameCollisionAddr));
     if (addIt) {
-      auto* addrElement = new NetAddrElement(&tmpAddr);
-      mAddresses.insertBack(addrElement);
+      NetAddr elem;
+      PRNetAddrToNetAddr(&tmpAddr, &elem);
+      mAddresses.AppendElement(elem);
     }
   } while (iter);
 }
 
 AddrInfo::AddrInfo(const nsACString& host, const nsACString& cname,
                    unsigned int aTRR)
-    : mHostName(host),
-      mCanonicalName(cname),
-      ttl(NO_TTL_DATA),
-      mFromTRR(aTRR),
-      mTrrFetchDuration(0),
-      mTrrFetchDurationNetworkOnly(0) {}
+    : mHostName(host), mCanonicalName(cname), mFromTRR(aTRR) {}
 
 AddrInfo::AddrInfo(const nsACString& host, unsigned int aTRR)
-    : mHostName(host),
-      mCanonicalName(EmptyCString()),
-      ttl(NO_TTL_DATA),
-      mFromTRR(aTRR),
-      mTrrFetchDuration(0),
-      mTrrFetchDurationNetworkOnly(0) {}
+    : mHostName(host), mCanonicalName(EmptyCString()), mFromTRR(aTRR) {}
 
 // deep copy constructor
 AddrInfo::AddrInfo(const AddrInfo* src) {
@@ -350,25 +324,22 @@ AddrInfo::AddrInfo(const AddrInfo* src) {
   mTrrFetchDuration = src->mTrrFetchDuration;
   mTrrFetchDurationNetworkOnly = src->mTrrFetchDurationNetworkOnly;
 
-  for (auto element = src->mAddresses.getFirst(); element;
-       element = element->getNext()) {
-    AddAddress(new NetAddrElement(*element));
-  }
+  mAddresses = src->mAddresses.Clone();
 }
 
 AddrInfo::~AddrInfo() = default;
 
-void AddrInfo::AddAddress(NetAddrElement* address) {
-  MOZ_ASSERT(address, "Cannot add the address to an uninitialized list");
-
-  mAddresses.insertBack(address);
+void AddrInfo::AddAddress(const PRNetAddr* address) {
+  NetAddr elem;
+  PRNetAddrToNetAddr(address, &elem);
+  mAddresses.AppendElement(elem);
 }
 
 size_t AddrInfo::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);
   n += mHostName.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mCanonicalName.SizeOfExcludingThisIfUnshared(mallocSizeOf);
-  n += mAddresses.sizeOfExcludingThis(mallocSizeOf);
+  n += mAddresses.ShallowSizeOfExcludingThis(mallocSizeOf);
   return n;
 }
 

@@ -1328,10 +1328,7 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
     DOHaddr* item;
     uint32_t ttl = AddrInfo::NO_TTL_DATA;
     while ((item = static_cast<DOHaddr*>(mDNS.mAddresses.popFirst()))) {
-      PRNetAddr prAddr;
-      NetAddrToPRNetAddr(&item->mNet, &prAddr);
-      auto* addrElement = new NetAddrElement(&prAddr);
-      ai->AddAddress(addrElement);
+      ai->mAddresses.AppendElement(item->mNet);
       if (item->mTtl < ttl) {
         // While the DNS packet might return individual TTLs for each address,
         // we can only return one value in the AddrInfo class so pick the
