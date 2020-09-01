@@ -480,6 +480,25 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 "statistics": {},
             }
 
+            if self.power_test:
+                power_result = {
+                    "bt_ver": bt_ver,
+                    "browser": bt_browser,
+                    "url": bt_url,
+                    "measurements": {},
+                    "statistics": {},
+                    "power_data": True,
+                }
+                for cycle in raw_result["android"]["power"]:
+                    for metric in cycle:
+                        if "total" in metric:
+                            continue
+                        power_result["measurements"].setdefault(
+                            metric, []
+                        ).append(cycle[metric])
+                power_result["statistics"] = raw_result["statistics"]["android"]["power"]
+                results.append(power_result)
+
             custom_types = raw_result["browserScripts"][0].get("custom")
             if custom_types:
                 for custom_type in custom_types:
@@ -658,7 +677,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 test.get("measure"),
             ):
 
-                def _new_pageload_result(new_result):
+                def _new_standard_result(new_result, subtest_unit="ms"):
                     # add additional info not from the browsertime json
                     for field in (
                         "name",
@@ -667,16 +686,15 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         "alert_threshold",
                         "cold",
                     ):
+                        if field in new_result:
+                            continue
                         new_result[field] = test[field]
 
-                    # Differentiate Raptor `pageload` tests from `browsertime-pageload`
-                    # tests while we compare and contrast.
-                    new_result["type"] = "pageload"
-
                     # All Browsertime measurements are elapsed times in milliseconds.
-                    new_result["subtest_lower_is_better"] = True
-                    new_result["subtest_unit"] = "ms"
-                    LOG.info("parsed new result: %s" % str(new_result))
+                    new_result["subtest_lower_is_better"] = test.get(
+                        "subtest_lower_is_better", True
+                    )
+                    new_result["subtest_unit"] = subtest_unit
 
                     new_result["extra_options"] = self.build_extra_options()
 
@@ -687,40 +705,50 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
                     return new_result
 
-                def _new_benchmark_result(new_result):
-                    # add additional info not from the browsertime json
-                    for field in (
-                        "name",
-                        "unit",
-                        "lower_is_better",
-                        "alert_threshold",
-                        "cold",
-                    ):
-                        new_result[field] = test[field]
+                def _new_powertest_result(new_result):
+                    new_result["type"] = "power"
+                    new_result["unit"] = "mAh"
+                    new_result["lower_is_better"] = True
 
-                    # Differentiate Raptor `pageload` tests from other `browsertime`
-                    # tests while we compare and contrast.
+                    new_result = _new_standard_result(new_result, subtest_unit="mAh")
+                    new_result["extra_options"].append("power")
+
+                    LOG.info("parsed new power result: %s" % str(new_result))
+                    return new_result
+
+                def _new_pageload_result(new_result):
+                    new_result["type"] = "pageload"
+                    new_result = _new_standard_result(new_result)
+
+                    LOG.info("parsed new pageload result: %s" % str(new_result))
+                    return new_result
+
+                def _new_benchmark_result(new_result):
                     new_result["type"] = "benchmark"
 
-                    # Try to get subtest values or use the defaults
-                    # If values not available use the defaults
-                    subtest_lower_is_better = test.get("subtest_lower_is_better", True)
-                    new_result["subtest_lower_is_better"] = subtest_lower_is_better
-
-                    new_result["subtest_unit"] = test.get("subtest_unit", "ms")
-                    LOG.info("parsed new result: %s" % str(new_result))
-
-                    new_result["extra_options"] = self.build_extra_options()
+                    new_result = _new_standard_result(
+                        new_result,
+                        subtest_unit=test.get("subtest_unit", "ms")
+                    )
+                    # XXX Is this still needed?
                     if self.app != "firefox":
                         new_result["extra_options"].append(self.app)
 
+                    LOG.info("parsed new benchmark result: %s" % str(new_result))
                     return new_result
 
-                if test["type"] == "pageload":
+                def _is_supporting_data(res):
+                    if res.get("power_data", False):
+                        return True
+                    return False
+
+                if new_result.get("power_data", False):
+                    self.results.append(_new_powertest_result(new_result))
+                elif test["type"] == "pageload":
                     self.results.append(_new_pageload_result(new_result))
                 elif test["type"] == "benchmark":
                     for i, item in enumerate(self.results):
-                        if item["name"] == test["name"]:
+                        if item["name"] == test["name"] and not _is_supporting_data(item):
                             # add page cycle custom measurements to the existing results
                             for measurement in new_result["measurements"].iteritems():
                                 self.results[i]["measurements"][measurement[0]].extend(
