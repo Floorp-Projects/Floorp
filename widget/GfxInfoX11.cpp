@@ -17,6 +17,7 @@
 #include "prenv.h"
 #include "nsPrintfCString.h"
 #include "nsWhitespaceTokenizer.h"
+#include "mozilla/Telemetry.h"
 
 #include "GfxInfoX11.h"
 
@@ -706,6 +707,8 @@ GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
   } else {
     aWindowProtocol = GfxDriverInfo::GetWindowProtocol(WindowProtocol::X11);
   }
+  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_LINUX_WINDOW_PROTOCOL,
+                       aWindowProtocol);
   return NS_OK;
 }
 
