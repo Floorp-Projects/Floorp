@@ -76,6 +76,11 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
             it.identifier == defaultEngine
         } ?: searchEngineList.list.first()).identifier
 
+        context.components.search.searchEngineManager.defaultSearchEngine =
+            searchEngineList.list.find {
+                it.identifier == selectedEngine
+            }
+
         searchEngineGroup!!.removeAllViews()
 
         val layoutInflater = LayoutInflater.from(context)
@@ -97,6 +102,10 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
             engineItem.tag = engineId
             if (engineId == selectedEngine) {
                 updateDefaultItem(engineItem.radio_button)
+                /* #11465 -> radio_button.isChecked = true does not trigger
+                * onSearchEngineSelected because searchEngineGroup has null views at that point.
+                * So we trigger it here.*/
+                onSearchEngineSelected(engine)
             }
             searchEngineGroup!!.addView(engineItem, layoutParams)
         }
