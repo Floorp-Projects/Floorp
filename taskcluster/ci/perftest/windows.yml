@@ -119,6 +119,7 @@ livesites:
             --flavor desktop-browser
             --perfherder
             --perfherder-metrics {perftest_metrics}
+            --perfherder-simplify-names
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
             --browsertime-node ${MOZ_FETCHES_DIR}/node/node.exe
             --output $MOZ_FETCHES_DIR/../artifacts
