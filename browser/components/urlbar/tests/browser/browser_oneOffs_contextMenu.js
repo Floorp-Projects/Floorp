@@ -203,3 +203,80 @@ add_task(async function switchDefaultEngine() {
     );
   });
 });
+
+add_task(async function localOneOffsContextMenu() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+
+  // Add a popupshown listener on the context menu that sets this
+  // popupshownFired boolean.
+  let popupshownFired = false;
+  let onPopupshown = () => {
+    popupshownFired = true;
+  };
+  let contextMenu = oneOffSearchButtons.querySelector(
+    ".search-one-offs-context-menu"
+  );
+  contextMenu.addEventListener("popupshown", onPopupshown);
+
+  // Do a search to open the view.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "foo",
+  });
+
+  // First, open the context menu on a remote engine so we know this test works
+  // correctly.  We intentionally use the same logic here for detecting
+  // popupshown that we use below, when the menu should not appear.  That way we
+  // can have some confidence that the logic doesn't have any bugs and correctly
+  // detects popupshown.  If we used BrowserTestUtils.waitForEvent here instead,
+  // then it would be more likely that bugs in the logic detecting popupshown
+  // when the menu should not appear would go unnoticed.
+  let allOneOffs = oneOffSearchButtons.getSelectableButtons(true);
+  Assert.greater(allOneOffs.length, 0, "There should be at least one one-off");
+  Assert.ok(
+    allOneOffs[0].engine,
+    "The first one-off should be a remote one-off"
+  );
+  EventUtils.synthesizeMouseAtCenter(allOneOffs[0], {
+    type: "contextmenu",
+    button: 2,
+  });
+  let timeout = 500;
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, timeout));
+  Assert.ok(popupshownFired, "popupshown should be fired on a remote one-off");
+  popupshownFired = false;
+
+  // Close the context menu.
+  let hiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  contextMenu.hidePopup();
+  await hiddenPromise;
+
+  // Now try to open the context menu on a local one-off.
+  let localOneOffs = oneOffSearchButtons.localButtons;
+  Assert.greater(
+    localOneOffs.length,
+    0,
+    "There should be at least one local one-off"
+  );
+  EventUtils.synthesizeMouseAtCenter(localOneOffs[0], {
+    type: "contextmenu",
+    button: 2,
+  });
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, timeout));
+  Assert.ok(
+    !popupshownFired,
+    "popupshown should not be fired on a local one-off"
+  );
+
+  contextMenu.removeEventListener("popupshown", onPopupshown);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
