@@ -330,6 +330,21 @@ class MOZ_STACK_CLASS WSRunScanner final {
   }
 
   /**
+   * Scan aTextNode from end or start to find last or first visible things.
+   * I.e., this returns a point immediately before or after invisible
+   * white-spaces of aTextNode if aTextNode ends or begins with some invisible
+   * white-spaces.
+   * Note that the result may not be in different text node if aTextNode has
+   * only invisible white-spaces and there is previous or next text node.
+   */
+  template <typename EditorDOMPointType>
+  static EditorDOMPointType GetAfterLastVisiblePoint(
+      Text& aTextNode, const Element* aAncestorLimiter);
+  template <typename EditorDOMPointType>
+  static EditorDOMPointType GetFirstVisiblePoint(
+      Text& aTextNode, const Element* aAncestorLimiter);
+
+  /**
    * GetRangeInTextNodesToForwardDeleteFrom() returns the range to remove
    * text when caret is at aPoint.
    */
