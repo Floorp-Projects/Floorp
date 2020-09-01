@@ -79,6 +79,30 @@ def create_tgg(responses, datadir):
     return inner
 
 
+@pytest.fixture(scope="module")
+def tgg(request, create_tgg):
+    if not hasattr(request.module, "PARAMS"):
+        pytest.fail("'tgg' fixture requires a module-level 'PARAMS' variable")
+
+    tgg = create_tgg(overrides=request.module.PARAMS)
+    return tgg
+
+
+@pytest.fixture(scope="module")
+def params(tgg):
+    return tgg.parameters
+
+
+@pytest.fixture(scope="module")
+def full_task_graph(tgg):
+    return tgg.full_task_graph
+
+
+@pytest.fixture(scope="module")
+def optimized_task_graph(full_task_graph, tgg):
+    return tgg.optimized_task_graph
+
+
 @pytest.fixture(scope="session")
 def filter_tasks():
     def inner(graph, func):
