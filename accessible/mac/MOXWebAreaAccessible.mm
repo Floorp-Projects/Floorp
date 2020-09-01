@@ -6,10 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "MOXWebAreaAccessible.h"
+#import "RotorRules.h"
 
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
-#include "Pivot.h"
 
 using namespace mozilla::a11y;
 
@@ -171,33 +171,31 @@ using namespace mozilla::a11y;
 
 - (NSArray*)performSearch {
   NSMutableArray* matches = [[NSMutableArray alloc] init];
-
   for (id key in mSearchKeys) {
     if ([key isEqualToString:@"AXAnyTypeSearchKey"]) {
-      PivotMatchAllRule rule = mImmediateDescendantsOnly
-                                   ? PivotMatchAllRule(mStartElem)
-                                   : PivotMatchAllRule();
+      RotorAllRule rule =
+          mImmediateDescendantsOnly ? RotorAllRule(mStartElem) : RotorAllRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXHeadingSearchKey"]) {
-      PivotRoleRule rule = mImmediateDescendantsOnly
-                               ? PivotRoleRule(roles::HEADING, mStartElem)
-                               : PivotRoleRule(roles::HEADING);
+      RotorHeadingRule rule = mImmediateDescendantsOnly
+                                  ? RotorHeadingRule(mStartElem)
+                                  : RotorHeadingRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXArticleSearchKey"]) {
-      PivotRoleRule rule = mImmediateDescendantsOnly
-                               ? PivotRoleRule(roles::ARTICLE, mStartElem)
-                               : PivotRoleRule(roles::ARTICLE);
+      RotorArticleRule rule = mImmediateDescendantsOnly
+                                  ? RotorArticleRule(mStartElem)
+                                  : RotorArticleRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXLandmarkSearchKey"]) {
-      PivotRoleRule rule = mImmediateDescendantsOnly
-                               ? PivotRoleRule(roles::LANDMARK, mStartElem)
-                               : PivotRoleRule(roles::LANDMARK);
+      RotorLandmarkRule rule = mImmediateDescendantsOnly
+                                   ? RotorLandmarkRule(mStartElem)
+                                   : RotorLandmarkRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
   }
