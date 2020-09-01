@@ -53,7 +53,7 @@ web-platform-tests:
     treeherder-symbol: W(wpt)
     virtualization:
         by-test-platform:
-            windows10-64(?:-pgo|-shippable)?-qr/.*: hardware
+            windows10-64.*/.*: hardware
             default: virtual
     chunks:
         by-test-platform:
