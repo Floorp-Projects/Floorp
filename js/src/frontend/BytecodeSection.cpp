@@ -16,6 +16,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"     // JSContext
 #include "vm/RegExpObject.h"  // RegexpObject
+#include "vm/Scope.h"         // GlobalScope
 
 using namespace js;
 using namespace js::frontend;
@@ -34,7 +35,11 @@ bool GCThingList::append(FunctionBox* funbox, GCThingIndex* index) {
 AbstractScopePtr GCThingList::getScope(size_t index) const {
   const ScriptThingVariant& elem = vector[index];
   if (elem.is<EmptyGlobalScopeType>()) {
-    MOZ_ASSERT(compilationInfo.input.enclosingScope == &cx->global()->emptyGlobalScope());
+    // The empty enclosing scope should be stored by
+    // CompilationInput::initForSelfHostingGlobal.
+    MOZ_ASSERT(compilationInfo.input.enclosingScope);
+    MOZ_ASSERT(
+        !compilationInfo.input.enclosingScope->as<GlobalScope>().hasBindings());
     return AbstractScopePtr(compilationInfo.input.enclosingScope);
   }
   return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
