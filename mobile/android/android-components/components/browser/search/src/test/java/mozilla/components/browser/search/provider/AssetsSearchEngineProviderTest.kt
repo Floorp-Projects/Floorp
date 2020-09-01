@@ -30,7 +30,7 @@ class AssetsSearchEngineProviderTest {
         val engines = searchEngineProvider.loadSearchEngines(testContext)
         val searchEngines = engines.list
 
-        assertEquals(6, searchEngines.size)
+        assertEquals(5, searchEngines.size)
     }
 
     @Test
@@ -52,7 +52,7 @@ class AssetsSearchEngineProviderTest {
         val engines = searchEngineProvider.loadSearchEngines(testContext)
         val searchEngines = engines.list
 
-        assertEquals(4, searchEngines.size)
+        assertEquals(3, searchEngines.size)
     }
 
     @Test
@@ -67,7 +67,7 @@ class AssetsSearchEngineProviderTest {
             val engines = searchEngineProvider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
-            assertEquals(8, searchEngines.size)
+            assertEquals(7, searchEngines.size)
             assertContainsSearchEngine("google-b-m", searchEngines)
             assertContainsNotSearchEngine("google-2018", searchEngines)
         }
@@ -81,7 +81,7 @@ class AssetsSearchEngineProviderTest {
             val engines = searchEngineProvider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
-            assertEquals(8, searchEngines.size)
+            assertEquals(7, searchEngines.size)
             assertContainsSearchEngine("google-b-1-m", searchEngines)
             assertContainsNotSearchEngine("google", searchEngines)
         }
@@ -100,7 +100,7 @@ class AssetsSearchEngineProviderTest {
             val searchEngines = engines.list
 
             println("searchEngines = $searchEngines")
-            assertEquals(6, searchEngines.size)
+            assertEquals(5, searchEngines.size)
             assertContainsNotSearchEngine("yandex-en", searchEngines)
         }
         // With region
@@ -114,7 +114,7 @@ class AssetsSearchEngineProviderTest {
             val searchEngines = engines.list
 
             println("searchEngines = $searchEngines")
-            assertEquals(7, searchEngines.size)
+            assertEquals(6, searchEngines.size)
             assertContainsSearchEngine("yandex-en", searchEngines)
         }
     }
@@ -129,11 +129,11 @@ class AssetsSearchEngineProviderTest {
         val engines = searchEngineProvider.loadSearchEngines(testContext)
         val searchEngines = engines.list
 
-        // visibleDefaultEngines: ["google-b-m", "baidu", "bing", "taobao", "wikipedia-zh-CN"]
+        // visibleDefaultEngines: ["google-b-m", "bing", "baidu", "ddg", "taobao", "wikipedia-zh-CN"]
         // searchOrder (default): ["Google", "Bing"]
 
         assertEquals(
-            listOf("google-b-m", "bing", "baidu", "taobao", "wikipedia-zh-CN"),
+            listOf("google-b-m", "bing", "baidu", "ddg", "taobao", "wikipedia-zh-CN"),
             searchEngines.map { it.identifier }
         )
 
@@ -151,11 +151,11 @@ class AssetsSearchEngineProviderTest {
         val engines = searchEngineProvider.loadSearchEngines(testContext)
         val searchEngines = engines.list
 
-        // visibleDefaultEngines: ["google-b-m", "yandex-ru", "twitter", "wikipedia-ru"]
+        // visibleDefaultEngines: ["google-b-m", "ddg", "yandex-ru", "wikipedia-ru"]
         // searchOrder (default): ["Google", "Bing"]
 
         assertEquals(
-            listOf("google-b-m", "yandex-ru", "twitter", "wikipedia-ru"),
+            listOf("google-b-m", "ddg", "yandex-ru", "wikipedia-ru"),
             searchEngines.map { it.identifier }
         )
 
@@ -173,11 +173,11 @@ class AssetsSearchEngineProviderTest {
         val engines = searchEngineProvider.loadSearchEngines(testContext)
         val searchEngines = engines.list
 
-        // visibleDefaultEngines: ["amazondotcom", "bing", "google-b-m", "twitter", "wikipedia-es"]
+        // visibleDefaultEngines: ["google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-es"]
         // searchOrder (default): ["Google", "Bing"]
 
         assertEquals(
-            listOf("google-b-m", "bing", "amazondotcom", "twitter", "wikipedia-es"),
+            listOf("google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-es"),
             searchEngines.map { it.identifier }
         )
 
@@ -195,7 +195,7 @@ class AssetsSearchEngineProviderTest {
         val engines = searchEngineProvider.loadSearchEngines(testContext)
         val searchEngines = engines.list
 
-        assertEquals(6, searchEngines.size)
+        assertEquals(5, searchEngines.size)
     }
 
     @Test
@@ -210,7 +210,7 @@ class AssetsSearchEngineProviderTest {
             val engines = searchEngineProvider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
-            assertEquals(6, searchEngines.size)
+            assertEquals(5, searchEngines.size)
             assertContainsNotSearchEngine("duckduckgo", searchEngines)
         }
 
@@ -222,7 +222,7 @@ class AssetsSearchEngineProviderTest {
             val engines = provider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
-            assertEquals(7, searchEngines.size)
+            assertEquals(6, searchEngines.size)
             assertContainsSearchEngine("duckduckgo", searchEngines)
         }
     }
@@ -240,7 +240,7 @@ class AssetsSearchEngineProviderTest {
             val engines = searchEngineProvider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
-            assertEquals(6, searchEngines.size)
+            assertEquals(5, searchEngines.size)
             assertContainsNotSearchEngine("google", searchEngines)
         }
 
@@ -257,7 +257,7 @@ class AssetsSearchEngineProviderTest {
             val engines = provider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
-            assertEquals(7, searchEngines.size)
+            assertEquals(6, searchEngines.size)
             assertContainsSearchEngine("google", searchEngines)
         }
     }
