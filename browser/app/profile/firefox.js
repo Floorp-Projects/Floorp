@@ -1244,6 +1244,7 @@ pref("services.sync.prefs.sync.browser.urlbar.suggest.bookmark", true);
 pref("services.sync.prefs.sync.browser.urlbar.suggest.history", true);
 pref("services.sync.prefs.sync.browser.urlbar.suggest.openpage", true);
 pref("services.sync.prefs.sync.browser.urlbar.suggest.searches", true);
+pref("services.sync.prefs.sync.browser.urlbar.suggest.topsites", true);
 pref("services.sync.prefs.sync.dom.disable_open_during_load", true);
 pref("services.sync.prefs.sync.dom.disable_window_flip", true);
 pref("services.sync.prefs.sync.dom.disable_window_move_resize", true);
