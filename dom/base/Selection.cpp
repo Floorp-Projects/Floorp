@@ -2038,10 +2038,12 @@ void Selection::CollapseJS(nsINode* aContainer, uint32_t aOffset,
     RemoveAllRanges(aRv);
     return;
   }
-  Collapse(RawRangeBoundary(aContainer, aOffset), aRv);
+  CollapseInternal(InLimiter::eNo, RawRangeBoundary(aContainer, aOffset), aRv);
 }
 
-void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
+void Selection::CollapseInternal(InLimiter aInLimiter,
+                                 const RawRangeBoundary& aPoint,
+                                 ErrorResult& aRv) {
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);  // Can't do selection
     return;
@@ -2073,7 +2075,8 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   frameSelection->InvalidateDesiredCaretPos();
-  if (!frameSelection->IsValidSelectionPoint(aPoint.Container())) {
+  if (aInLimiter == InLimiter::eYes &&
+      !frameSelection->IsValidSelectionPoint(aPoint.Container())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
