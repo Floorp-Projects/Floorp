@@ -56,6 +56,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     this.view = view;
     this.input = view.input;
     UrlbarPrefs.addObserver(this);
+    this._setupOneOffsHorizontalKeyNavigation();
   }
 
   /**
@@ -215,6 +216,16 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     if (prefs.includes(changedPref)) {
       this._engines = null;
     }
+    this._setupOneOffsHorizontalKeyNavigation();
+  }
+
+  /**
+   * Sets whether LEFT/RIGHT should navigate through one-off buttons.
+   */
+  _setupOneOffsHorizontalKeyNavigation() {
+    this.disableOneOffsHorizontalKeyNavigation =
+      UrlbarPrefs.get("update2") &&
+      UrlbarPrefs.get("update2.disableOneOffsHorizontalKeyNavigation");
   }
 
   /**
