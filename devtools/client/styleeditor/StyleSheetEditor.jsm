@@ -115,7 +115,6 @@ function StyleSheetEditor(
   }
 
   this.onPropertyChange = this.onPropertyChange.bind(this);
-  this._onError = this._onError.bind(this);
   this.onMediaRulesChanged = this.onMediaRulesChanged.bind(this);
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
   this.markLinkedFileBroken = this.markLinkedFileBroken.bind(this);
@@ -125,7 +124,6 @@ function StyleSheetEditor(
   this._onMouseMove = this._onMouseMove.bind(this);
 
   this._focusOnSourceEditorReady = false;
-  this.styleSheet.on("error", this._onError);
   this.savedFile = this.styleSheet.file;
   this.linkCSSFile();
 
@@ -440,15 +438,6 @@ StyleSheetEditor.prototype = {
    */
   emitMediaRulesChanged: function() {
     this.emit("media-rules-changed", this.mediaRules);
-  },
-
-  /**
-   * Forward error event from stylesheet.
-   *
-   * @param  {Object} data: The parameters to customize the error message
-   */
-  _onError: function(data) {
-    this.emit("error", data);
   },
 
   /**
@@ -899,7 +888,6 @@ StyleSheetEditor.prototype = {
       }
       this._sourceEditor.destroy();
     }
-    this.styleSheet.off("error", this._onError);
     this._isDestroyed = true;
   },
 };
