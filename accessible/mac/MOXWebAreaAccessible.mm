@@ -192,6 +192,13 @@ using namespace mozilla::a11y;
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
+    if ([key isEqualToString:@"AXTableSearchKey"]) {
+      RotorTableRule rule = mImmediateDescendantsOnly
+                                ? RotorTableRule(mStartElem)
+                                : RotorTableRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
     if ([key isEqualToString:@"AXLandmarkSearchKey"]) {
       RotorLandmarkRule rule = mImmediateDescendantsOnly
                                    ? RotorLandmarkRule(mStartElem)

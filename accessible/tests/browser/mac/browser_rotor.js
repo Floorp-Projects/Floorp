@@ -119,6 +119,136 @@ addAccessibleTask(
 );
 
 /**
+ * Test rotor with tables
+ */
+addAccessibleTask(
+  `
+  <table id="shapes">
+    <tr>
+      <th>Shape</th>
+      <th>Color</th>
+      <th>Do I like it?</th>
+    </tr>
+    <tr>
+      <td>Triangle</td>
+      <td>Green</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Square</td>
+      <td>Red</td>
+      <td>Yes</td>
+    </tr>
+  </table>
+  <br>
+  <table id="food">
+    <tr>
+      <th>Grocery Item</th>
+      <th>Quantity</th>
+    </tr>
+    <tr>
+      <td>Onions</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Yogurt</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Spinach</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Cherries</td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <td>Carrots</td>
+      <td>5</td>
+    </tr>
+  </table>
+  <br>
+  <div role="table" id="ariaTable">
+    <div role="row">
+      <div role="cell">
+        I am a tiny aria table
+      </div>
+    </div>
+  </div>
+  <br>
+  <table role="grid" id="grid">
+    <tr>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+      <th>E</th>
+    </tr>
+    <tr>
+      <th>F</th>
+      <th>G</th>
+      <th>H</th>
+      <th>I</th>
+      <th>J</th>
+    </tr>
+  </table>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXTableSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const tableCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(4, tableCount, "Found four tables");
+
+    const tables = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    const shapes = getNativeInterface(accDoc, "shapes");
+    const food = getNativeInterface(accDoc, "food");
+    const ariaTable = getNativeInterface(accDoc, "ariaTable");
+    const grid = getNativeInterface(accDoc, "grid");
+
+    is(
+      shapes.getAttributeValue("AXColumnCount"),
+      tables[0].getAttributeValue("AXColumnCount"),
+      "Found correct first table"
+    );
+    is(
+      food.getAttributeValue("AXColumnCount"),
+      tables[1].getAttributeValue("AXColumnCount"),
+      "Found correct second table"
+    );
+    is(
+      ariaTable.getAttributeValue("AXColumnCount"),
+      tables[2].getAttributeValue("AXColumnCount"),
+      "Found correct third table"
+    );
+    is(
+      grid.getAttributeValue("AXColumnCount"),
+      tables[3].getAttributeValue("AXColumnCount"),
+      "Found correct fourth table"
+    );
+  }
+);
+
+/**
  * Test rotor with landmarks
  */
 addAccessibleTask(
