@@ -2,7 +2,11 @@ import mozunit
 import pytest
 from jsonschema import ValidationError
 from mozperftest.tests.support import get_running_env, HERE
-from mozperftest.metrics.notebook.transformer import Transformer, get_transformers
+from mozperftest.metrics.notebook.transformer import (
+    Transformer,
+    get_transformer,
+    get_transformers,
+)
 from mozperftest.tests.data.perftestetl_plugin import (
     test_transformer_perftestetl_plugin_1,
     test_transformer_perftestetl_plugin_2,
@@ -80,6 +84,55 @@ def test_jsonschema_valitate_failure(files):
     tfm.files = [file_1, file_2]
     with pytest.raises(ValidationError):
         tfm.process("name")
+
+
+def test_get_transformer():
+    path_1 = (
+        HERE
+        / "data"
+        / "perftestetl_plugin"
+        / "test_transformer_perftestetl_plugin_1.py"
+    )
+    assert (
+        get_transformer(path_1.as_posix()).__name__
+        == test_transformer_perftestetl_plugin_1.TestTransformer1.__name__
+    )
+
+    path_2 = (
+        "mozperftest.tests.data.perftestetl_plugin."
+        + "test_transformer_perftestetl_plugin_2:TestTransformer2"
+    )
+    assert (
+        get_transformer(path_2).__name__
+        == test_transformer_perftestetl_plugin_2.TestTransformer2.__name__
+    )
+
+
+def test_get_transformer_failure():
+    path_1 = HERE / "data" / "does-not-exist.py"
+    with pytest.raises(NotebookInvalidPathError):
+        get_transformer(path_1.as_posix())
+
+    path_2 = HERE / "data" / "does-not-exist"
+    with pytest.raises(ImportError):
+        get_transformer(path_2.as_posix())
+
+    path_3 = (
+        "mozperftest.tests.data.perftestetl_plugin."
+        + "test_transformer_perftestetl_plugin_2:TestTransformer3"
+    )
+    with pytest.raises(ImportError):
+        get_transformer(path_3)
+
+    path_4 = (
+        "mozperftest.tests.data.perftestetl_plugin."
+        + "test_transformer_perftestetl_plugin_3:TestTransformer3"
+    )
+    with pytest.raises(ImportError):
+        get_transformer(path_4)
+
+    with pytest.raises(NotebookInvalidTransformError):
+        get_transformer(__file__)
 
 
 def test_get_transformers():
