@@ -1,3 +1,8 @@
+// |jit-test| skip-if: isLcovEnabled()
+
+// NOTE: Code coverage keeps top-level script alive even if normally it would be
+//       GC'd. Skip this test in that case.
+
 // Check byte counts produced by takeCensus.
 
 const g = newGlobal({newCompartment: true});
