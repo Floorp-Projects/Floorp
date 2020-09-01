@@ -187,25 +187,22 @@ class TabTrayViewHolder(
         imageLoader.loadIntoView(thumbnailView, ImageLoadRequest(id, thumbnailSize))
     }
 
-    internal fun updateAccessibilityRowIndex(item: View, newIndex: Int) {
+    internal fun updateAccessibilityRowInfo(item: View, newIndex: Int, isSelected: Boolean) {
         item.accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(
                 host: View?,
                 info: AccessibilityNodeInfo?
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
-                info?.let {
-                    info.collectionItemInfo = info.collectionItemInfo?.let { initialInfo ->
-                        AccessibilityNodeInfo.CollectionItemInfo.obtain(
-                            newIndex,
-                            initialInfo.rowSpan,
-                            initialInfo.columnIndex,
-                            initialInfo.columnSpan,
-                            false,
-                            initialInfo.isSelected
-                        )
-                    }
-                }
+                info?.collectionItemInfo =
+                    AccessibilityNodeInfo.CollectionItemInfo.obtain(
+                        newIndex,
+                        1,
+                        1,
+                        1,
+                        false,
+                        isSelected
+                    )
             }
         }
     }

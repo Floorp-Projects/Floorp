@@ -67,7 +67,11 @@ class FenixTabsAdapter(
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
         val newIndex = tabCount - position - 1
-        (holder as TabTrayViewHolder).updateAccessibilityRowIndex(holder.itemView, newIndex)
+        (holder as TabTrayViewHolder).updateAccessibilityRowInfo(
+            holder.itemView,
+            newIndex,
+            selectedItems.contains(holder.tab)
+        )
 
         holder.tab?.let { tab ->
             showCheckedIfSelected(tab, holder.itemView)

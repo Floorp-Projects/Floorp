@@ -9,6 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityNodeInfo.CollectionInfo
 import androidx.annotation.IdRes
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -186,7 +188,7 @@ class TabTrayView(
                 concatAdapter.addAdapter(0, syncedTabsController.adapter)
 
                 if (hasAccessibilityEnabled) {
-                    tabsAdapter.notifyDataSetChanged()
+                    tabsAdapter.notifyItemRangeChanged(0, tabs.size)
                 }
                 if (!hasLoaded) {
                     hasLoaded = true
@@ -490,6 +492,22 @@ class TabTrayView(
             view.context?.getString(R.string.open_tab_tray_single)
         } else {
             view.context?.getString(R.string.open_tab_tray_plural, count.toString())
+        }
+
+        view.tabsTray.accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View?,
+                info: AccessibilityNodeInfo?
+            ) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info?.let {
+                    info.collectionInfo = CollectionInfo.obtain(
+                        tabsAdapter.tabCount,
+                        1,
+                        false
+                    )
+                }
+            }
         }
     }
 
