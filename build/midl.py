@@ -49,7 +49,7 @@ def merge_dlldata(out, *inputs):
     inputs = [open(i) for i in inputs]
     read_a_line = [True] * len(inputs)
     while True:
-        lines = [f.readline() if read_a_line[n] else '\n' for n, f in enumerate(inputs)]
+        lines = [f.readline() if read_a_line[n] else lines[n] for n, f in enumerate(inputs)]
         unique_lines = set(lines)
         if len(unique_lines) == 1:
             # All the lines are identical
@@ -57,14 +57,21 @@ def merge_dlldata(out, *inputs):
                 break
             out.write(lines[0])
             read_a_line = [True] * len(inputs)
-        elif len(unique_lines) == 2 and '\n' in unique_lines:
-            # Most lines are identical, except for some that are empty.
-            # In this case, we print out the line, but on next iteration, don't read
-            # a new line from the inputs that had nothing. This typically happens when
-            # some files have #defines that others don't.
-            unique_lines.remove('\n')
-            out.write(unique_lines.pop())
-            read_a_line = [l != '\n' for l in lines]
+        elif len(unique_lines) == 2 and len([l for l in unique_lines if '#define' in l]) == 1:
+            # Most lines are identical. When they aren't, it's typically because some
+            # files have an extra #define that others don't. When that happens, we
+            # print out the #define, and get a new input line from the files that had
+            # a #define on the next iteration. We expect that next line to match what
+            # the other files had on this iteration.
+            # Note: we explicitly don't support the case where there are different
+            # defines across different files, except when there's a different one
+            # for each file, in which case it's handled further below.
+            a = unique_lines.pop()
+            if '#define' in a:
+                out.write(a)
+            else:
+                out.write(unique_lines.pop())
+            read_a_line = ['#define' in l for l in lines]
         elif len(unique_lines) != len(lines):
             # If for some reason, we don't get lines that are entirely different
             # from each other, we have some unexpected input.
