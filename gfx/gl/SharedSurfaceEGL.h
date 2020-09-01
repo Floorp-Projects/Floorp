@@ -13,6 +13,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidNativeWindow.h"
+#  include "GLLibraryEGL.h"
 #endif
 
 namespace mozilla {
@@ -76,6 +77,7 @@ class SurfaceFactory_EGLImage final : public SurfaceFactory {
 class SharedSurface_SurfaceTexture final : public SharedSurface {
   const java::GeckoSurface::GlobalRef mSurface;
   const EGLSurface mEglSurface;
+  const std::weak_ptr<EglDisplay> mEglDisplay;
   EGLSurface mOrigEglSurface = 0;
 
  public:

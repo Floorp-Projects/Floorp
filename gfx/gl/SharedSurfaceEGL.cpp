@@ -162,7 +162,8 @@ SharedSurface_SurfaceTexture::SharedSurface_SurfaceTexture(
     const EGLSurface eglSurface)
     : SharedSurface(desc, nullptr),
       mSurface(surface),
-      mEglSurface(eglSurface) {}
+      mEglSurface(eglSurface),
+      mEglDisplay(GLContextEGL::Cast(desc.gl)->mEgl) {}
 
 SharedSurface_SurfaceTexture::~SharedSurface_SurfaceTexture() {
   if (mOrigEglSurface) {
@@ -171,9 +172,11 @@ SharedSurface_SurfaceTexture::~SharedSurface_SurfaceTexture() {
     // to the surface.
     UnlockProd();
   }
-  const auto& gle = GLContextEGL::Cast(mDesc.gl);
-  const auto& egl = gle->mEgl;
-  egl->fDestroySurface(mEglSurface);
+
+  std::shared_ptr<EglDisplay> display = mEglDisplay.lock();
+  if (display) {
+    display->fDestroySurface(mEglSurface);
+  }
   java::SurfaceAllocator::DisposeSurface(mSurface);
 }
 
