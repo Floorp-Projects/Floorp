@@ -222,7 +222,7 @@ impl From<&FluentNumber> for PluralOperands {
             .expect("Failed to generate operands out of FluentNumber");
         if let Some(mfd) = input.options.minimum_fraction_digits {
             if mfd > operands.v {
-                operands.f *= 10_usize.pow(mfd as u32 - operands.v as u32);
+                operands.f *= 10_u64.pow(mfd as u32 - operands.v as u32);
                 operands.v = mfd;
             }
         }

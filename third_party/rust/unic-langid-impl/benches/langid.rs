@@ -4,7 +4,7 @@ use criterion::criterion_main;
 use criterion::Criterion;
 use criterion::Fun;
 
-use tinystr::{TinyStr4, TinyStr8};
+use unic_langid_impl::subtags;
 use unic_langid_impl::LanguageIdentifier;
 
 static STRINGS: &[&str] = &[
@@ -22,6 +22,13 @@ static STRINGS: &[&str] = &[
     "fr-FR",
     "mk",
     "uk",
+    "en-US",
+    "en-GB",
+    "es-AR",
+    "th",
+    "de",
+    "zh-Cyrl-HN",
+    "en-Latn-US",
 ];
 
 fn language_identifier_construct_bench(c: &mut Criterion) {
@@ -47,54 +54,27 @@ fn language_identifier_construct_bench(c: &mut Criterion) {
             })
         }),
         Fun::new("from_parts", |b, langids: &Vec<LanguageIdentifier>| {
-            let entries: Vec<(Option<&str>, Option<&str>, Option<&str>, Vec<&str>)> =
-                langids
-                    .iter()
-                    .map(|langid| {
-                        let lang = Some(langid.language()).and_then(|s| {
-                            if s == "und" {
-                                None
-                            } else {
-                                Some(s)
-                            }
-                        });
-                        (
-                            lang,
-                            langid.script(),
-                            langid.region(),
-                            langid.variants().collect::<Vec<_>>(),
-                        )
-                    })
-                    .collect();
+            let entries: Vec<(
+                subtags::Language,
+                Option<subtags::Script>,
+                Option<subtags::Region>,
+                Vec<subtags::Variant>,
+            )> = langids
+                .iter()
+                .cloned()
+                .map(|langid| langid.into_parts())
+                .collect();
             b.iter(|| {
                 for (language, script, region, variants) in &entries {
-                    let _ = LanguageIdentifier::from_parts(*language, *script, *region, variants);
+                    let _ = LanguageIdentifier::from_parts(
+                        language.clone(),
+                        script.clone(),
+                        region.clone(),
+                        variants,
+                    );
                 }
             })
         }),
-        Fun::new(
-            "from_parts_unchecked",
-            |b, langids: &Vec<LanguageIdentifier>| {
-                let entries = langids
-                    .iter()
-                    .map(|langid| langid.clone().into_raw_parts())
-                    .collect::<Vec<_>>();
-                b.iter(|| {
-                    for (language, script, region, variants) in &entries {
-                        let _ = LanguageIdentifier::from_raw_parts_unchecked(
-                            language.map(|l| unsafe { TinyStr8::new_unchecked(l) }),
-                            script.map(|s| unsafe { TinyStr4::new_unchecked(s) }),
-                            region.map(|r| unsafe { TinyStr4::new_unchecked(r) }),
-                            variants.as_ref().map(|v| {
-                                v.into_iter()
-                                    .map(|v| unsafe { TinyStr8::new_unchecked(*v) })
-                                    .collect()
-                            }),
-                        );
-                    }
-                })
-            },
-        ),
     ];
 
     c.bench_functions("language_identifier_construct", funcs, langids);

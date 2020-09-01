@@ -181,7 +181,7 @@ pub fn filter_matches<'a, R: 'a + AsRef<LanguageIdentifier>, A: 'a + AsRef<Langu
 
         // Per Unicode TR35, 4.4 Locale Matching, we don't add likely subtags to
         // requested locales, so we'll skip it from the rest of the steps.
-        if req.language() == "und" {
+        if req.language.is_empty() {
             continue;
         }
 
@@ -195,13 +195,13 @@ pub fn filter_matches<'a, R: 'a + AsRef<LanguageIdentifier>, A: 'a + AsRef<Langu
         test_strategy!(true, true);
 
         // 5) Try to match against the likely subtag without region
-        req.clear_region();
+        req.region = None;
         if req.maximize() {
             test_strategy!(true, false);
         }
 
         // 6) Try to match against a region as a range
-        req.clear_region();
+        req.region = None;
         test_strategy!(true, true);
     }
 

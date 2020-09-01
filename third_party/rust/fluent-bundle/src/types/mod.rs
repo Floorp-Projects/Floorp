@@ -107,7 +107,7 @@ impl<'source> From<&ast::InlineExpression<'source>> for DisplayableNode<'source>
 }
 
 pub trait FluentType: fmt::Debug + AnyEq + 'static {
-    fn duplicate(&self) -> Box<dyn FluentType>;
+    fn duplicate(&self) -> Box<dyn FluentType + Send>;
     fn as_string(&self, intls: &intl_memoizer::IntlLangMemoizer) -> Cow<'static, str>;
     fn as_string_threadsafe(
         &self,
@@ -115,7 +115,7 @@ pub trait FluentType: fmt::Debug + AnyEq + 'static {
     ) -> Cow<'static, str>;
 }
 
-impl PartialEq for dyn FluentType {
+impl PartialEq for dyn FluentType + Send {
     fn eq(&self, other: &Self) -> bool {
         self.equals(other.as_any())
     }
@@ -155,7 +155,7 @@ impl<T: Any + PartialEq> AnyEq for T {
 pub enum FluentValue<'source> {
     String(Cow<'source, str>),
     Number(FluentNumber),
-    Custom(Box<dyn FluentType>),
+    Custom(Box<dyn FluentType + Send>),
     Error(DisplayableNode<'source>),
     None,
 }
@@ -176,7 +176,7 @@ impl<'s> Clone for FluentValue<'s> {
             FluentValue::String(s) => FluentValue::String(s.clone()),
             FluentValue::Number(s) => FluentValue::Number(s.clone()),
             FluentValue::Custom(s) => {
-                let new_value: Box<dyn FluentType> = s.duplicate();
+                let new_value: Box<dyn FluentType + Send> = s.duplicate();
                 FluentValue::Custom(new_value)
             }
             FluentValue::Error(e) => FluentValue::Error(e.clone()),
