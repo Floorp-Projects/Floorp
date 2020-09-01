@@ -205,8 +205,10 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
    public:
     explicit TlsScope(GLContext* const gl)
-        : mGL(gl), mWasTlsOk(gl->mUseTLSIsCurrent) {
-      mGL->mUseTLSIsCurrent = true;
+        : mGL(gl), mWasTlsOk(gl && gl->mUseTLSIsCurrent) {
+      if (mGL) {
+        mGL->mUseTLSIsCurrent = true;
+      }
     }
 
     ~TlsScope() {

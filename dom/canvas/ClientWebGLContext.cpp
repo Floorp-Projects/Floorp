@@ -6226,8 +6226,9 @@ void ImplCycleCollectionTraverse(
 
 void ImplCycleCollectionUnlink(std::shared_ptr<webgl::NotLostData>& field) {
   if (!field) return;
-  field->extensions = {};
-  field->state = {};
+  const auto keepAlive = field;
+  keepAlive->extensions = {};
+  keepAlive->state = {};
   field = nullptr;
 }
 
