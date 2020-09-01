@@ -69,6 +69,7 @@ struct LockedOutstandingContexts final {
 class HostWebGLContext final : public SupportsWeakPtr {
   friend class WebGLContext;
   friend class WebGLMemoryTracker;
+  friend class dom::WebGLParent;
 
   using ObjectId = webgl::ObjectId;
 
