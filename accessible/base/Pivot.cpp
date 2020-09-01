@@ -594,26 +594,3 @@ uint16_t PivotRoleRule::Match(const AccessibleOrProxy& aAccOrProxy) {
 
   return result;
 }
-
-// Match All Rule
-
-PivotMatchAllRule::PivotMatchAllRule(AccessibleOrProxy& aDirectDescendantsFrom)
-    : mDirectDescendantsFrom(aDirectDescendantsFrom) {}
-
-PivotMatchAllRule::PivotMatchAllRule() : mDirectDescendantsFrom(nullptr) {}
-
-uint16_t PivotMatchAllRule::Match(const AccessibleOrProxy& aAccOrProxy) {
-  uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
-
-  if (nsAccUtils::MustPrune(aAccOrProxy)) {
-    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-  } else if (!mDirectDescendantsFrom.IsNull() &&
-             (aAccOrProxy != mDirectDescendantsFrom)) {
-    result |= nsIAccessibleTraversalRule::FILTER_MATCH |
-              nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-  } else {
-    result |= nsIAccessibleTraversalRule::FILTER_MATCH;
-  }
-
-  return result;
-}
