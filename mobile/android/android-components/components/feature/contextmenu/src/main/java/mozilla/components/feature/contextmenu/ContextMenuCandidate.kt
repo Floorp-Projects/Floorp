@@ -15,9 +15,11 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.app.links.AppLinksUseCases
+import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.MAX_TITLE_LENGTH
 import mozilla.components.support.ktx.android.content.addContact
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.stripMailToProtocol
+import mozilla.components.support.ktx.kotlin.takeOrReplace
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -36,6 +38,10 @@ data class ContextMenuCandidate(
     val action: (SessionState, HitResult) -> Unit
 ) {
     companion object {
+        // This is used for limiting image title, in order to prevent crashes caused by base64 encoded image
+        // https://github.com/mozilla-mobile/android-components/issues/8298
+        const val MAX_TITLE_LENGTH = 2500
+
         /**
          * Returns the default list of context menu candidates.
          *
@@ -459,7 +465,9 @@ internal fun HitResult.getLink(): String = when (this) {
     is HitResult.UNKNOWN -> src
     is HitResult.IMAGE_SRC -> uri
     is HitResult.IMAGE ->
-        if (title.isNullOrBlank()) src else title.toString()
+        if (title.isNullOrBlank()) {
+            src.takeOrReplace(MAX_TITLE_LENGTH, "image")
+        } else title.toString()
     is HitResult.VIDEO ->
         if (title.isNullOrBlank()) src else title.toString()
     is HitResult.AUDIO ->

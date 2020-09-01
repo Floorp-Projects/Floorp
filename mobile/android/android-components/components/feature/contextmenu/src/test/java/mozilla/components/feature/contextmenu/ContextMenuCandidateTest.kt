@@ -626,6 +626,27 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Get link for image gets "image" title if title is null and URL is longer than 2500 characters`() {
+        val titleString = null
+        val replacementString = "image"
+        val url = "1".repeat(ContextMenuCandidate.MAX_TITLE_LENGTH + 1)
+
+        val hitResultImage = HitResult.IMAGE(url, titleString)
+        val title = hitResultImage.getLink()
+        assertEquals(replacementString, title)
+    }
+
+    @Test
+    fun `Get link for image gets URL if title is null and URL is not longer than 2500 characters`() {
+        val titleString = null
+        val url = "1".repeat(ContextMenuCandidate.MAX_TITLE_LENGTH)
+
+        val hitResultImage = HitResult.IMAGE(url, titleString)
+        val title = hitResultImage.getLink()
+        assertEquals(url, title)
+    }
+
+    @Test
     fun `Candidate "Share Link"`() {
         val context = spy(testContext)
 

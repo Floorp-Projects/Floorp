@@ -165,3 +165,11 @@ fun String.stripMailToProtocol(): String {
 fun String.urlEncode(): String {
     return URLEncoder.encode(this, Charsets.UTF_8.name())
 }
+
+/**
+ * Returns the string if it's length is not higher than @param[maximumLength] or
+ * a @param[replacement] string if String length is higher than @param[maximumLength]
+ */
+fun String.takeOrReplace(maximumLength: Int, replacement: String): String {
+    return if (this.length > maximumLength) replacement else this
+}
