@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'mozTextAccessible.mm',
     'Platform.mm',
     'RootAccessibleWrap.mm',
+    'RotorRules.mm',
 ]
 
 SOURCES += [

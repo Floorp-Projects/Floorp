@@ -6,10 +6,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "mozSelectableElements.h"
-#import "nsCocoaUtils.h"
 #import "MacUtils.h"
-
 #include "Accessible-inl.h"
+#include "nsCocoaUtils.h"
 
 using namespace mozilla::a11y;
 

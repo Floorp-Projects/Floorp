@@ -90,30 +90,15 @@ class Pivot final {
  * This rule matches accessibles on a given role, filtering out non-direct
  * descendants if necessary.
  */
-class PivotRoleRule final : public PivotRule {
+class PivotRoleRule : public PivotRule {
  public:
   explicit PivotRoleRule(role aRole);
   explicit PivotRoleRule(role aRole, AccessibleOrProxy& aDirectDescendantsFrom);
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 
- private:
+ protected:
   role mRole;
-  AccessibleOrProxy mDirectDescendantsFrom;
-};
-
-/**
- * This rule matches all accessibles, filtering out non-direct
- * descendants if necessary.
- */
-class PivotMatchAllRule final : public PivotRule {
- public:
-  explicit PivotMatchAllRule(AccessibleOrProxy& aDirectDescendantsFrom);
-  explicit PivotMatchAllRule();
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-
- private:
   AccessibleOrProxy mDirectDescendantsFrom;
 };
 
