@@ -314,7 +314,6 @@ pref("privacy.item.syncAccount", true);
 
 pref("javascript.options.mem.high_water_mark", 32);
 
-pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 pref("dom.max_script_run_time", 20);
 
 // Absolute path to the devtools unix domain socket file used
