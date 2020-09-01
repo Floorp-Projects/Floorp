@@ -44,22 +44,6 @@ raptor-speedometer-geckoview:
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
-raptor-speedometer-geckoview-power:
-    description: "Raptor Speedometer power on GeckoView"
-    try-name: raptor-speedometer-geckoview-power
-    treeherder-symbol: Rap(sp-p)
-    target: geckoview_example.apk
-    run-on-projects: []
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --test=raptor-speedometer
-            - --app=geckoview
-            - --binary=org.mozilla.geckoview_example
-            - --power-test
-            - --page-cycles 5
-            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
-
 raptor-speedometer-geckoview-cpu-memory:
     description: "Raptor Speedometer cpu/memory on GeckoView"
     try-name: raptor-speedometer-geckoview-cpu-memory
@@ -95,19 +79,6 @@ raptor-speedometer-geckoview-cpu-memory-power:
             - --page-cycles 5
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
-raptor-scn-power-idle-geckoview:
-    description: "Raptor idle-browser power-use measurement on GeckoView"
-    try-name: raptor-scn-power-idle-geckoview
-    treeherder-symbol: Rap(idl-p)
-    run-on-projects: []
-    mozharness:
-        extra-options:
-            - --test=raptor-scn-power-idle
-            - --app=geckoview
-            - --binary=org.mozilla.geckoview_example
-            - --power-test
-            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
-
 raptor-scn-cpu-memory-idle-geckoview:
     description: "Raptor idle-browser cpu/memory on GeckoView"
     try-name: raptor-scn-cpu-memory-idle-geckoview
@@ -134,19 +105,6 @@ raptor-scn-cpu-memory-power-idle-geckoview:
             - --binary=org.mozilla.geckoview_example
             - --cpu-test
             - --memory-test
-            - --power-test
-            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
-
-raptor-scn-power-idle-bg-geckoview:
-    description: "Raptor idle-browser (backgrounded) power-use measurement on GeckoView"
-    try-name: raptor-scn-power-idle-bg-geckoview
-    treeherder-symbol: Rap(idlbg-p)
-    run-on-projects: []
-    mozharness:
-        extra-options:
-            - --test=raptor-scn-power-idle-bg
-            - --app=geckoview
-            - --binary=org.mozilla.geckoview_example
             - --power-test
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 

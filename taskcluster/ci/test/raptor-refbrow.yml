@@ -20,20 +20,6 @@ job-defaults:
         config:
             - raptor/android_hw_config.py
 
-raptor-scn-power-idle-refbrow:
-    description: "Raptor idle-browser power on Reference Browser"
-    try-name: raptor-scn-power-idle-refbrow
-    treeherder-symbol: Rap-refbrow(idl-p)
-    tier: 3
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --test=raptor-scn-power-idle
-            - --app=refbrow
-            - --binary-path=org.mozilla.reference.browser.raptor
-            - --power-test
-            - --activity=org.mozilla.reference.browser.BrowserTestActivity
-
 raptor-scn-cpu-memory-idle-refbrow:
     description: "Raptor idle-browser cpu/memory on Reference Browser"
     try-name: raptor-scn-cpu-memory-idle-refbrow
@@ -62,20 +48,6 @@ raptor-scn-cpu-memory-power-idle-refbrow:
             - --binary-path=org.mozilla.reference.browser.raptor
             - --cpu-test
             - --memory-test
-            - --power-test
-            - --activity=org.mozilla.reference.browser.BrowserTestActivity
-
-raptor-scn-power-idle-bg-refbrow:
-    description: "Raptor idle-browser (backgrounded) power on Reference Browser"
-    try-name: raptor-scn-power-idle-bg-refbrow
-    treeherder-symbol: Rap-refbrow(idlbg-p)
-    tier: 3
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --test=raptor-scn-power-idle-bg
-            - --app=refbrow
-            - --binary-path=org.mozilla.reference.browser.raptor
             - --power-test
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
