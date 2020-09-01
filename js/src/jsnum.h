@@ -50,7 +50,7 @@ extern JSString* NumberToStringHelperPure(JSContext* cx, double d);
 extern JSAtom* NumberToAtom(JSContext* cx, double d);
 
 const frontend::ParserAtom* NumberToParserAtom(
-    frontend::CompilationInfo& compilationInfo, double d);
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, double d);
 
 template <AllowGC allowGC>
 extern JSLinearString* Int32ToString(JSContext* cx, int32_t i);
@@ -60,7 +60,7 @@ extern JSLinearString* Int32ToStringHelperPure(JSContext* cx, int32_t i);
 extern JSAtom* Int32ToAtom(JSContext* cx, int32_t si);
 
 const frontend::ParserAtom* Int32ToParserAtom(
-    frontend::CompilationInfo& compilationInfo, int32_t si);
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, int32_t si);
 
 // ES6 15.7.3.12
 extern bool IsInteger(const Value& val);

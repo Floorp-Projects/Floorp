@@ -1572,7 +1572,8 @@ class NumericLiteral : public ParseNode {
   void setDecimalPoint(DecimalPoint d) { decimalPoint_ = d; }
 
   // Return the decimal string representation of this numeric literal.
-  const ParserAtom* toAtom(CompilationInfo& compilationInfo) const;
+  const ParserAtom* toAtom(JSContext* cx,
+                           CompilationInfo& compilationInfo) const;
 };
 
 class BigIntLiteral : public ParseNode {
