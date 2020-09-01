@@ -3017,7 +3017,7 @@ class HTMLEditor final : public TextEditor,
 
   template <typename PT, typename CT>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG nsresult
-  CollapseSelectionTo(const EditorDOMPointBase<PT, CT>& aPoint) {
+  CollapseSelectionTo(const EditorDOMPointBase<PT, CT>& aPoint) const {
     ErrorResult error;
     CollapseSelectionTo(aPoint, error);
     return error.StealNSResult();
@@ -3025,7 +3025,7 @@ class HTMLEditor final : public TextEditor,
 
   template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG void CollapseSelectionTo(
-      const EditorDOMPointBase<PT, CT>& aPoint, ErrorResult& aRv) {
+      const EditorDOMPointBase<PT, CT>& aPoint, ErrorResult& aRv) const {
     MOZ_ASSERT(IsEditActionDataAvailable());
     MOZ_ASSERT(!aRv.Failed());
 
@@ -3043,7 +3043,7 @@ class HTMLEditor final : public TextEditor,
   }
 
   MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG void CollapseSelectionToStartOf(
-      nsINode& aNode, ErrorResult& aRv) {
+      nsINode& aNode, ErrorResult& aRv) const {
     CollapseSelectionTo(EditorRawDOMPoint(&aNode, 0), aRv);
   }
 
@@ -3736,7 +3736,7 @@ class HTMLEditor final : public TextEditor,
   SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void InitializeSelectionAncestorLimit(
-      nsIContent& aAncestorLimit) override;
+      nsIContent& aAncestorLimit) const override;
 
   /**
    * Make the given selection span the entire document.
@@ -3777,7 +3777,7 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   MaybeCollapseSelectionAtFirstEditableNode(
-      bool aIgnoreIfSelectionInEditingHost);
+      bool aIgnoreIfSelectionInEditingHost) const;
 
   class BlobReader final {
     typedef EditorBase::AutoEditActionDataSetter AutoEditActionDataSetter;

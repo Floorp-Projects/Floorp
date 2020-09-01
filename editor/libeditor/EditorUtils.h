@@ -809,7 +809,7 @@ class MOZ_STACK_CLASS AutoRangeArray final {
    * calling this.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<nsIEditor::EDirection, nsresult>
-  ExtendAnchorFocusRangeFor(EditorBase& aEditorBase,
+  ExtendAnchorFocusRangeFor(const EditorBase& aEditorBase,
                             nsIEditor::EDirection aDirectionAndAmount);
 
   /**
