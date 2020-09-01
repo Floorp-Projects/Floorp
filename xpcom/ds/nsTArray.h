@@ -273,7 +273,7 @@ struct nsTArrayHeader {
 };
 
 extern "C" {
-extern nsTArrayHeader sEmptyTArrayHeader;
+extern const nsTArrayHeader sEmptyTArrayHeader;
 }
 
 namespace detail {
@@ -577,7 +577,9 @@ class nsTArray_base {
 
   Header* Hdr() const MOZ_NONNULL_RETURN { return mHdr; }
   Header** PtrToHdr() MOZ_NONNULL_RETURN { return &mHdr; }
-  static Header* EmptyHdr() MOZ_NONNULL_RETURN { return &sEmptyTArrayHeader; }
+  static Header* EmptyHdr() MOZ_NONNULL_RETURN {
+    return const_cast<Header*>(&sEmptyTArrayHeader);
+  }
 };
 
 namespace detail {
