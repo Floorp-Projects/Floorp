@@ -5256,12 +5256,13 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     settings->SetShowPrintProgress(false);
   }
 
-  Print(settings, nullptr, nullptr, isPreview, aError);
+  Print(settings, nullptr, nullptr, isPreview, nullptr, aError);
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     nsIPrintSettings* aPrintSettings, nsIWebProgressListener* aListener,
-    nsIDocShell* aDocShellToCloneInto, bool aIsPreview, ErrorResult& aError) {
+    nsIDocShell* aDocShellToCloneInto, bool aIsPreview,
+    PrintPreviewResolver&& aPrintPreviewCallback, ErrorResult& aError) {
 #ifdef NS_PRINTING
   nsCOMPtr<nsIPrintSettingsService> printSettingsService =
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
@@ -5419,7 +5420,8 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   }
 
   if (aIsPreview) {
-    aError = webBrowserPrint->PrintPreview(aPrintSettings, aListener);
+    aError = webBrowserPrint->PrintPreview(aPrintSettings, aListener,
+                                           std::move(aPrintPreviewCallback));
   } else {
     // Historically we've eaten this error.
     webBrowserPrint->Print(aPrintSettings, aListener);
