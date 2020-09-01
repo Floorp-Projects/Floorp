@@ -33,8 +33,8 @@
 
 // This file can be #included unconditionally. However, everything within this
 // file must be guarded by a #ifdef MOZ_GECKO_PROFILER, *except* for the
-// following macros, which encapsulate the most common operations and thus
-// avoid the need for many #ifdefs.
+// following macros and functions, which encapsulate the most common operations
+// and thus avoid the need for many #ifdefs.
 
 #  define AUTO_BASE_PROFILER_INIT
 
@@ -66,19 +66,29 @@
 
 #  define AUTO_PROFILER_STATS(name)
 
+// Function stubs for when MOZ_GECKO_PROFILER is not defined.
+
 namespace mozilla {
 class ProfileChunkedBuffer;
 
 namespace baseprofiler {
 struct ProfilerBacktrace {};
 using UniqueProfilerBacktrace = UniquePtr<ProfilerBacktrace>;
+
+// Get/Capture-backtrace functions can return nullptr or false, the result
+// should be fed to another empty macro or stub anyway.
+
 static inline UniqueProfilerBacktrace profiler_get_backtrace() {
   return nullptr;
 }
 
-static inline bool profiler_capture_backtrace(
+static inline bool profiler_capture_backtrace_into(
     ProfileChunkedBuffer& aChunkedBuffer) {
   return false;
+}
+
+static inline UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
+  return nullptr;
 }
 }  // namespace baseprofiler
 }  // namespace mozilla
@@ -539,10 +549,22 @@ struct ProfilerBacktraceDestructor {
 using UniqueProfilerBacktrace =
     UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
 
-// Immediately capture the current thread's call stack and return it. A no-op
-// if the profiler is inactive.
+// Immediately capture the current thread's call stack, store it in the provided
+// buffer (usually to avoid allocations if you can construct the buffer on the
+// stack). Returns false if unsuccessful, or if the profiler is inactive.
+MFBT_API bool profiler_capture_backtrace_into(
+    ProfileChunkedBuffer& aChunkedBuffer);
+
+// Immediately capture the current thread's call stack, and return it in a
+// ProfileChunkedBuffer (usually for later use in MarkerStack::TakeBacktrace()).
+// May be null if unsuccessful, or if the profiler is inactive.
+MFBT_API UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace();
+
+// Immediately capture the current thread's call stack, and return it in a
+// ProfilerBacktrace (usually for later use in marker function that take a
+// ProfilerBacktrace). May be null if unsuccessful, or if the profiler is
+// inactive.
 MFBT_API UniqueProfilerBacktrace profiler_get_backtrace();
-MFBT_API bool profiler_capture_backtrace(ProfileChunkedBuffer& aChunkedBuffer);
 
 struct ProfilerStats {
   unsigned n = 0;
