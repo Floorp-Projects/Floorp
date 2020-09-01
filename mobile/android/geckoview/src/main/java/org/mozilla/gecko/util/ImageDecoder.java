@@ -1,4 +1,4 @@
-package org.mozilla.geckoview;
+package org.mozilla.gecko.util;
 
 import android.graphics.Bitmap;
 import android.support.annotation.AnyThread;
@@ -7,11 +7,13 @@ import android.support.annotation.NonNull;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import org.mozilla.geckoview.GeckoResult;
+
 /**
  * Provides access to Gecko's Image processing library.
  */
 @AnyThread
-/* protected */ class ImageDecoder {
+public class ImageDecoder {
     private static ImageDecoder instance;
 
     private ImageDecoder() {}
