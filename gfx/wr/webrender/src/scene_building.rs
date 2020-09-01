@@ -208,7 +208,7 @@ impl CompositeOps {
 bitflags! {
     /// Slice flags
     pub struct SliceFlags : u8 {
-        /// Slice created by a cluster that has ClusterFlags::SCROLLBAR_CONTAINER
+        /// Slice created by a prim that has PrimitiveFlags::IS_SCROLLBAR_CONTAINER
         const IS_SCROLLBAR = 1;
     }
 }
