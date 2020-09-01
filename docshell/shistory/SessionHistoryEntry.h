@@ -238,8 +238,6 @@ class SessionHistoryEntry : public nsISHEntry {
     mForInitialLoad = aForInitialLoad;
   }
 
-  const nsID& DocshellID() const;
-
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
@@ -248,6 +246,8 @@ class SessionHistoryEntry : public nsISHEntry {
  private:
   friend struct LoadingSessionHistoryInfo;
   virtual ~SessionHistoryEntry();
+
+  const nsID& DocshellID() const;
 
   UniquePtr<SessionHistoryInfo> mInfo;
   nsISHEntry* mParent = nullptr;
