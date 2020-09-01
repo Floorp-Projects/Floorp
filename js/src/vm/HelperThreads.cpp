@@ -640,7 +640,7 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
-  if (!frontend::CompileGlobalScriptToStencil(*compilationInfo, data,
+  if (!frontend::CompileGlobalScriptToStencil(cx, *compilationInfo, data,
                                               scopeKind)) {
     return;
   }
@@ -662,7 +662,7 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
   compilationInfo_->cx = cx;
 
   frontend::CompilationGCOutput gcOutput(cx);
-  bool result = frontend::InstantiateStencils(*compilationInfo_, gcOutput);
+  bool result = frontend::InstantiateStencils(cx, *compilationInfo_, gcOutput);
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid
