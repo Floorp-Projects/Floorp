@@ -23,9 +23,11 @@ exclude: true
   to make a second request for downloads and ensure more efficient and reliable downloads in a single request. The second
   parameter is now a [`WebResponse`][65.15] 
   ([bug 1530022]({{bugzilla}}1530022))
+- Added [`Image`][82.3] support for size-dependent bitmap retrieval from image resources.
   
 [82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
 [82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
+[82.3]: {{javadoc_uri}}/Image.html
 
 ## v81
 - Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
@@ -36,23 +38,23 @@ exclude: true
 ⚠️ - Changed [`GeckoView.onTouchEventForResult`][81.5] to return a `GeckoResult`, as it now
 makes a round-trip to Gecko. The result will be more accurate now, since how content treats
 the event is now considered.
+- Added [`MediaSession`][81.6] API for session-based media events and control.
 
 [81.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
 [81.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
 [81.3]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPaintStatusReset-org.mozilla.geckoview.GeckoSession-
 [81.4]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint-org.mozilla.geckoview.GeckoSession-
 [81.5]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult-android.view.MotionEvent-
+[81.6]: {{javadoc_uri}}/MediaSession.html
 
 ## v80
 - Removed `GeckoSession.hashCode` and `GeckoSession.equals` overrides in favor
   of the default implementations. ([bug 1647883]({{bugzilla}}1647883))
 - Added `strictSocialTrackingProtection` to [`ContentBlocking.Settings.Builder`][80.1] and `getStrictSocialTrackingProtection`
   to [`ContentBlocking.Settings`][80.2].
-- Added [`MediaSession`][80.3] API for session-based media events and control.
 
 [80.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
 [80.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
-[80.3]: {{javadoc_uri}}/MediaSession.html
 
 ## v79
 - Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab` ==
@@ -784,4 +786,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6724a9a98a57c02a1ee2885371e944d3d3967cf2
+[api-version]: 986633cde6e17640f1efcf15b6100936cfa8380d
