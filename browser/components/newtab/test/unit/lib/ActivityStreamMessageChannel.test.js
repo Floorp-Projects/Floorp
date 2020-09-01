@@ -127,14 +127,20 @@ describe("ActivityStreamMessageChannel", () => {
           loaded: false,
           portID: "inited",
           simulated: true,
-          browser: { getAttribute: () => "preloaded" },
+          browser: {
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
+          },
         });
         RPmessagePorts.push({
           url: "about:sheep",
           loaded: true,
           portID: "loaded",
           simulated: true,
-          browser: { getAttribute: () => "preloaded" },
+          browser: {
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
+          },
         });
 
         mm.simulateMessagesForExistingTabs();
@@ -152,7 +158,10 @@ describe("ActivityStreamMessageChannel", () => {
         RPmessagePorts.push({
           loaded: true,
           portID: "foo",
-          browser: { getAttribute: () => "preloaded" },
+          browser: {
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
+          },
         });
 
         mm.simulateMessagesForExistingTabs();
@@ -167,7 +176,17 @@ describe("ActivityStreamMessageChannel", () => {
         RPmessagePorts.push({
           loaded: true,
           portID: "foo",
-          browser: { getAttribute: () => "preloaded" },
+          browser: {
+            getAttribute: () => "preloaded",
+            ownerGlobal: {
+              STATE_MAXIMIZED: 1,
+              STATE_MINIMIZED: 2,
+              STATE_NORMAL: 3,
+              STATE_FULLSCREEN: 4,
+              windowState: 3,
+              isFullyOccluded: false,
+            },
+          },
         });
         mm.simulateMessagesForExistingTabs();
         assert.equal(RPmessagePorts[0].browser.renderLayers, true);
@@ -222,9 +241,8 @@ describe("ActivityStreamMessageChannel", () => {
       it("should get a preloaded browser if it exists", () => {
         const port = {
           browser: {
-            getAttribute() {
-              return "preloaded";
-            },
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
           },
         };
         mm.createChannel();
@@ -234,9 +252,8 @@ describe("ActivityStreamMessageChannel", () => {
       it("should get all the preloaded browsers across windows if they exist", () => {
         const port = {
           browser: {
-            getAttribute() {
-              return "preloaded";
-            },
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
           },
         };
         mm.createChannel();
@@ -247,9 +264,8 @@ describe("ActivityStreamMessageChannel", () => {
       it("should return null if there is no preloaded browser", () => {
         const port = {
           browser: {
-            getAttribute() {
-              return "consumed";
-            },
+            getAttribute: () => "consumed",
+            ownerGlobal: {},
           },
         };
         mm.createChannel();
@@ -274,7 +290,10 @@ describe("ActivityStreamMessageChannel", () => {
       it("should dispatch a NEW_TAB_LOAD action", () => {
         const t = {
           portID: "foo",
-          browser: { getAttribute: () => "preloaded" },
+          browser: {
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
+          },
         };
         sinon.stub(mm, "onActionFromContent");
         mm.onNewTabLoad({ target: t });
@@ -366,9 +385,8 @@ describe("ActivityStreamMessageChannel", () => {
       it("should send the message to the preloaded browser if there's data and a preloaded browser exists", () => {
         const port = {
           browser: {
-            getAttribute() {
-              return "preloaded";
-            },
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
           },
           sendAsyncMessage: sinon.spy(),
         };
@@ -385,9 +403,8 @@ describe("ActivityStreamMessageChannel", () => {
       it("should send the message to all the preloaded browsers if there's data and they exist", () => {
         const port = {
           browser: {
-            getAttribute() {
-              return "preloaded";
-            },
+            getAttribute: () => "preloaded",
+            ownerGlobal: {},
           },
           sendAsyncMessage: sinon.spy(),
         };
@@ -400,9 +417,8 @@ describe("ActivityStreamMessageChannel", () => {
       it("should not send the message to the preloaded browser if there's no data and a preloaded browser does not exists", () => {
         const port = {
           browser: {
-            getAttribute() {
-              return "consumed";
-            },
+            getAttribute: () => "consumed",
+            ownerGlobal: {},
           },
           sendAsyncMessage: sinon.spy(),
         };
