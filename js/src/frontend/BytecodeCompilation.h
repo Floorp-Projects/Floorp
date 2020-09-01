@@ -60,15 +60,15 @@ extern bool CompileGlobalScriptToStencil(
 extern bool InstantiateStencils(CompilationInfo& compilationInfo,
                                 CompilationGCOutput& gcOutput);
 
-extern bool CompileGlobalScript(CompilationInfo& compilationInfo,
-                                JS::SourceText<char16_t>& srcBuf,
-                                ScopeKind scopeKind,
-                                CompilationGCOutput& gcOutput);
+extern JSScript* CompileGlobalScript(JSContext* cx,
+                                     const JS::ReadOnlyCompileOptions& options,
+                                     JS::SourceText<char16_t>& srcBuf,
+                                     ScopeKind scopeKind);
 
-extern bool CompileGlobalScript(CompilationInfo& compilationInfo,
-                                JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-                                ScopeKind scopeKind,
-                                CompilationGCOutput& gcOutput);
+extern JSScript* CompileGlobalScript(JSContext* cx,
+                                     const JS::ReadOnlyCompileOptions& options,
+                                     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+                                     ScopeKind scopeKind);
 
 extern bool CompileEvalScript(CompilationInfo& compilationInfo,
                               JS::SourceText<char16_t>& srcBuf,
