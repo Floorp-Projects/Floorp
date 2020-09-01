@@ -187,7 +187,7 @@ static JSFunction* CreateFunction(JSContext* cx,
   RootedAtom displayAtom(cx);
   if (script.functionAtom) {
     displayAtom.set(
-        compilationInfo.liftParserAtomToJSAtom(script.functionAtom));
+        compilationInfo.liftParserAtomToJSAtom(cx, script.functionAtom));
     if (!displayAtom) {
       return nullptr;
     }
@@ -355,8 +355,8 @@ static bool SetTypeAndNameForExposedFunctions(JSContext* cx,
       JSAtom* funcAtom = nullptr;
       if (scriptStencil.functionFlags.hasInferredName() ||
           scriptStencil.functionFlags.hasGuessedAtom()) {
-        funcAtom =
-            compilationInfo.liftParserAtomToJSAtom(scriptStencil.functionAtom);
+        funcAtom = compilationInfo.liftParserAtomToJSAtom(
+            cx, scriptStencil.functionAtom);
         if (!funcAtom) {
           return false;
         }
