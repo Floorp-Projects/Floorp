@@ -15102,23 +15102,22 @@ void Document::ReportUseCounters() {
   }
 }
 
-void Document::UpdateIntersectionObservations() {
+void Document::UpdateIntersectionObservations(TimeStamp aNowTime) {
   if (mIntersectionObservers.IsEmpty()) {
     return;
   }
 
   DOMHighResTimeStamp time = 0;
-  if (nsPIDOMWindowInner* window = GetInnerWindow()) {
-    Performance* perf = window->GetPerformance();
-    if (perf) {
-      time = perf->Now();
+  if (nsPIDOMWindowInner* win = GetInnerWindow()) {
+    if (Performance* perf = win->GetPerformance()) {
+      time = perf->TimeStampToDOMHighResForRendering(aNowTime);
     }
   }
+
   nsTArray<RefPtr<DOMIntersectionObserver>> observers(
       mIntersectionObservers.Count());
-  for (auto iter = mIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
-    DOMIntersectionObserver* observer = iter.Get()->GetKey();
-    observers.AppendElement(observer);
+  for (auto& observer : mIntersectionObservers) {
+    observers.AppendElement(observer.GetKey());
   }
   for (const auto& observer : observers) {
     if (observer) {

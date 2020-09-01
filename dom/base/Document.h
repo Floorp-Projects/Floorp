@@ -3627,7 +3627,7 @@ class Document : public nsINode,
     return !mIntersectionObservers.IsEmpty();
   }
 
-  void UpdateIntersectionObservations();
+  void UpdateIntersectionObservations(TimeStamp aNowTime);
   void ScheduleIntersectionObserverNotification();
   MOZ_CAN_RUN_SCRIPT void NotifyIntersectionObservers();
 
