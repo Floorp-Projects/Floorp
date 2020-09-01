@@ -4,15 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import logging
+from requests import HTTPError
 
-from taskgraph.util.hg import get_push_data
+from taskgraph.util.taskcluster import get_artifact_from_index
 
 
 BACKSTOP_PUSH_INTERVAL = 20
 BACKSTOP_TIME_INTERVAL = 60 * 4  # minutes
-
-logger = logging.getLogger(__name__)
+BACKSTOP_INDEX = "gecko.v2.{project}.latest.taskgraph.backstop"
 
 
 def is_backstop(
@@ -42,31 +41,20 @@ def is_backstop(
     if pushid % push_interval == 0:
         return True
 
+    if time_interval <= 0:
+        return False
+
     # We also want to ensure we run all tasks at least once per N minutes.
-    if (
-        time_interval > 0
-        and minutes_between_pushes(
-            time_interval, params["head_repository"], project, pushid, pushdate
-        )
-        >= time_interval
-    ):
+    index = BACKSTOP_INDEX.format(project=project)
+
+    try:
+        last_pushdate = get_artifact_from_index(index, 'public/parameters.yml')["pushdate"]
+    except HTTPError as e:
+        if e.response.status_code == 404:
+            # There hasn't been a backstop push yet.
+            return True
+        raise
+
+    if (pushdate - last_pushdate) / 60 >= time_interval:
         return True
     return False
-
-
-def minutes_between_pushes(time_interval, repository, project, cur_push_id, cur_push_date):
-    # figure out the minutes that have elapsed between the current push and previous one
-    # defaulting to max min so if we can't get value, defaults to run the task
-    min_between_pushes = time_interval
-    prev_push_id = cur_push_id - 1
-
-    data = get_push_data(repository, project, prev_push_id, prev_push_id)
-
-    if data is not None:
-        prev_push_date = data[prev_push_id].get('date', 0)
-
-        # now have datetime of current and previous push
-        if cur_push_date > 0 and prev_push_date > 0:
-            min_between_pushes = (cur_push_date - prev_push_date) / 60
-
-    return min_between_pushes
