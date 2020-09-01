@@ -890,7 +890,7 @@ SessionHistoryEntry::IsDynamicallyAdded() {
 NS_IMETHODIMP
 SessionHistoryEntry::HasDynamicallyAddedChild(bool* aHasDynamicallyAddedChild) {
   for (const auto& child : mChildren) {
-    if (child->IsDynamicallyAdded()) {
+    if (child && child->IsDynamicallyAdded()) {
       *aHasDynamicallyAddedChild = true;
       return NS_OK;
     }
