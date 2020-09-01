@@ -1,0 +1,21 @@
+[
+  {
+    "input": {
+      "string": "en",
+      "options": {
+        "hour-cycle": "h12"
+      }
+    },
+    "output": "en-u-hc-h12"
+  },
+  {
+    "input": {
+      "string": "ar",
+      "options": {
+        "hour-cycle": "h12",
+        "calendar": "buddhist"
+      }
+    },
+    "output": "ar-u-ca-buddhist-hc-h12"
+  }
+]

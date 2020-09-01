@@ -1,0 +1,44 @@
+[
+  {
+    "input": {
+      "string": "en-u-hc-h12"
+    },
+    "output": {
+      "language": "en",
+      "extensions": {
+        "unicode": {
+          "hour-cycle": "h12"
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "string": "en-US-u-hc-h23"
+    },
+    "output": {
+      "language": "en",
+      "region": "US",
+      "extensions": {
+        "unicode": {
+          "hour-cycle": "h23"
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "string": "en-US-u-hc-h23-ca-gregory"
+    },
+    "output": {
+      "language": "en",
+      "region": "US",
+      "extensions": {
+        "unicode": {
+          "hour-cycle": "h23",
+          "calendar": "gregory"
+        }
+      }
+    }
+  }
+]

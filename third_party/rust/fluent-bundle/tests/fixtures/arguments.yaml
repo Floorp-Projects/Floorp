@@ -1,0 +1,133 @@
+suites:
+  -
+    name: Variables
+    suites:
+      -
+        name: in values
+        resources:
+          -
+            source: |-
+              foo = Foo { $num }
+              bar = { foo }
+              baz =
+                  .attr = Baz Attribute { $num }
+              qux = { "a" ->
+                *[a]     Baz Variant A { $num }
+              }
+        tests:
+          -
+            name: can be used in the message value
+            asserts:
+              -
+                id: foo
+                args:
+                  num: 3
+                value: Foo 3
+          -
+            name: can be used in the message value which is referenced
+            asserts:
+              -
+                id: bar
+                args:
+                  num: 3
+                value: Foo 3
+          -
+            name: can be used in an attribute
+            asserts:
+              -
+                id: baz
+                attribute: attr
+                args:
+                  num: 3
+                value: Baz Attribute 3
+          -
+            name: can be used in a variant
+            asserts:
+              -
+                id: qux
+                args:
+                  num: 3
+                value: Baz Variant A 3
+      -
+        name: in selectors
+        resources:
+          -
+            source: |-
+              foo = { $num ->
+                *[3] Foo
+              }
+        tests:
+          -
+            name: can be used as a selector
+            asserts:
+              -
+                id: foo
+                args:
+                  num: 3
+                value: Foo
+      -
+        name: in function calls
+        resources:
+          -
+            source: |-
+              foo = { NUMBER($num) }
+        bundles:
+          -
+            functions:
+              - NUMBER
+        tests:
+          -
+            name: can be a positional argument
+            asserts:
+              -
+                id: foo
+                args:
+                  num: 3
+                value: 3
+      -
+        name: simple errors
+        resources:
+          -
+            source: |-
+              foo = { $arg }
+        tests:
+          -
+            name: falls back to argument's name if it's missing
+            asserts:
+              -
+                id: foo
+                value: "{$arg}"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown variable: $arg"
+      -
+        name: and strings
+        resources:
+          -
+            source: |-
+              foo = { $arg }
+        tests:
+          -
+            name: can be a string
+            asserts:
+              -
+                id: foo
+                args:
+                  arg: Argument
+                value: Argument
+      -
+        name: and numbers
+        resources:
+          -
+            source: |-
+              foo = { $arg }
+        tests:
+          -
+            name: can be a number
+            asserts:
+              -
+                id: foo
+                args:
+                  arg: 1
+                value: 1

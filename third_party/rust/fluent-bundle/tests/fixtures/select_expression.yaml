@@ -1,0 +1,151 @@
+suites:
+  -
+    name: Select expressions
+    tests:
+      -
+        name: missing selector
+        resources:
+          -
+            source: |-
+              select = {$none ->
+                  [a] A
+                 *[b] B
+              }
+        asserts:
+          -
+            id: select
+            value: B
+            errors:
+              -
+                type: Reference
+                desc: "Unknown variable: $none"
+    suites:
+      -
+        name: string selectors
+        tests:
+          -
+            name: matching selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [a] A
+                     *[b] B
+                  }
+            asserts:
+              -
+                id: select
+                value: A
+                args:
+                  selector: a
+          -
+            name: non-matching selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [a] A
+                     *[b] B
+                  }
+            asserts:
+              -
+                id: select
+                value: B
+                args:
+                  selector: c
+      -
+        name: number selectors
+        tests:
+          -
+            name: matching selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [0] A
+                     *[1] B
+                  }
+            asserts:
+              -
+                id: select
+                value: A
+                args:
+                  selector: 0
+          -
+            name: non-matching selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [0] A
+                     *[1] B
+                  }
+            asserts:
+              -
+                id: select
+                value: B
+                args:
+                  selector: 2
+      -
+        name: plural categories
+        tests:
+          -
+            name: matching number selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [one] A
+                     *[other] B
+                  }
+            asserts:
+              -
+                id: select
+                value: A
+                args:
+                  selector: 1
+          -
+            name: matching string selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [one] A
+                     *[other] B
+                  }
+            asserts:
+              -
+                id: select
+                value: A
+                args:
+                  selector: one
+          -
+            name: non-matching number selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [one] A
+                     *[default] D
+                  }
+            asserts:
+              -
+                id: select
+                value: D
+                args:
+                  selector: 2
+          -
+            name: non-matching string selector
+            resources:
+              -
+                source: |-
+                  select = {$selector ->
+                      [one] A
+                     *[default] D
+                  }
+            asserts:
+              -
+                id: select
+                value: D
+                args:
+                  selector: other
