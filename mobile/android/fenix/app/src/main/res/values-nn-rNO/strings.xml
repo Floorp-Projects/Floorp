@@ -82,14 +82,23 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Ikkje no</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Du kan stille inn Firefox til å automatisk opne lenker i appar.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Gå til Innstillingar</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ignorer</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Kameratilgang er nødvendig. Gå til Android-innstillingar, trykk på løyve, og trykk på tillat.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Gå til Innstillingar</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Ignorer</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Still inn at opne faner som ikkje har blitt viste den siste dagen, veka eller månaden skal latast att automatisk.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Vis alternativ</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -795,6 +804,8 @@
     <string name="collections_header">Samlingar</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Samlingsmeny</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Samle tinga som betyr noko for deg.\nGrupper liknande søk, nettstadar og faner for rask tilgang seinare.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Vel faner</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1045,6 +1056,8 @@
 
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Få svar her</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Begynn å synkronisere bokmerke, passord og meir med Firefox-kontoen din.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Les meir</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1551,7 +1564,18 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, eg forstår det</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Vis mest besøkte nettstadar</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fjern</string>
 
-    </resources>
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Få mest muleg ut av %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Samle dei tinga som betyr noko for deg</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Grupper saman liknande søk, nettstadar og faner for rask tilgang seinare.</string>
+</resources>

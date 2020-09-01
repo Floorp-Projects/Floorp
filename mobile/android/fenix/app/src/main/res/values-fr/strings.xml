@@ -289,6 +289,8 @@
     <string name="preferences_toolbar">Barre d’outils</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Thème</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Accueil</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personnaliser</string>
     <!-- Preference description for banner about signing in -->
@@ -500,6 +502,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Fermer</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Onglets récemment fermés</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Afficher l’historique complet</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d onglets</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d onglet</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Aucun onglet récemment fermé ici</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Fermer les onglets</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Manuellement</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Après un jour</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Après une semaine</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Après un mois</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Onglets ouverts</string>
@@ -519,6 +546,10 @@
     <string name="tab_tray_menu_item_save">Enregistrer dans une collection</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Partager tous les onglets</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Onglets récemment fermés</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Paramètres des onglets</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Fermer tous les onglets</string>
     <!-- Shortcut action to open new tab -->
@@ -1549,6 +1580,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="top_sites_max_limit_content">Pour ajouter un nouveau site principal, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">J’ai compris</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Afficher les sites les plus visités</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Supprimer</string>

@@ -90,11 +90,15 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Mboyke</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Eikotevẽ eike ta’ãngamýime. Eho Android ñembohekópe, eukutu ñemoneĩ ha moneĩ.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Eho ñembohekópe</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Mboyke</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Emboheko tendayke ijurujáva oñemboty hag̃ua ijehegui ojehecha’ỹva pe ára, arapokõindy térã jasýpe.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Ehecha jeporavorã</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -286,6 +290,8 @@
     <string name="preferences_toolbar">Tembiporu renda</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Ñepyrũ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Ñemomba’ete</string>
     <!-- Preference description for banner about signing in -->
@@ -493,6 +499,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Mboty</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Tendayke oñemboty ramóva</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Tembiasakue jehechaukapa</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d tendaykekuéra</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d tendayke</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Ndaipóri tendayke oñemboty ramóva</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Emboty tendayke</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Popegua</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Peteĩ ára rire</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Peteĩ arapokõindy rire</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Peteĩ jasy rire</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Tendayke ijurujáva</string>
@@ -513,6 +544,10 @@
     <string name="tab_tray_menu_item_save">Eñongatu atyhápe</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Emoherakuã opaite tendayke</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Tendayke oñemboty ramóva</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Tendayke ñemboheko</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Emboty opaite tendayke</string>
     <!-- Shortcut action to open new tab -->
@@ -1540,6 +1575,9 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Ehechauka tenda ojeikeveha</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Mboguete</string>
 
@@ -1547,4 +1585,8 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Eguenohẽ %s-gui eikotevẽva.</string>
 
-    </resources>
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Embyaty umi mba’ekuéra ehayhu añetéva</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Emboaty hekaha, tenda ha tendayke ojueheguáva eike pya’eve hag̃ua ag̃ave.</string>
+</resources>
