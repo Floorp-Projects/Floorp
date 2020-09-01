@@ -10813,7 +10813,7 @@ exports.PSEUDO_ELEMENTS = [
   ":-moz-meter-bar",
   ":placeholder",
   ":-moz-color-swatch",
-  ":file-chooser-button"
+  ":file-selector-button"
 ];
 
 /**
