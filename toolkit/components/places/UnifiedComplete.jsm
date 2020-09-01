@@ -536,6 +536,14 @@ function Search(
     }
   }
 
+  // Eventually filter restriction tokens. In general it's a good idea, but if
+  // the consumer requested search mode, we should use the full string to avoid
+  // ignoring valid tokens.
+  this._searchTokens =
+    !queryContext || queryContext.shouldFilterRestrictionTokens
+      ? this.filterTokens(tokens)
+      : tokens;
+
   // The behavior can be set through:
   // 1. a specific restrictSource in the QueryContext
   // 2. typed restriction tokens
@@ -544,7 +552,6 @@ function Search(
     queryContext.restrictSource &&
     sourceToBehaviorMap.has(queryContext.restrictSource)
   ) {
-    this._searchTokens = tokens;
     this._behavior = 0;
     this.setBehavior("restrict");
     let behavior = sourceToBehaviorMap.get(queryContext.restrictSource);
@@ -554,7 +561,6 @@ function Search(
     // there is no _heuristicToken.
     this._heuristicToken = null;
   } else {
-    this._searchTokens = this.filterTokens(tokens);
     // The heuristic token is the first filtered search token, but only when it's
     // actually the first thing in the search string.  If a prefix or restriction
     // character occurs first, then the heurstic token is null.  We use the

@@ -334,6 +334,21 @@ add_task(async function() {
       }),
     ],
   });
+
+  info("Forced search through a restriction token, keyword.enabled = false");
+  query = "?bacon";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: ENGINE_NAME,
+        heuristic: true,
+        query: "bacon",
+      }),
+    ],
+  });
+
   Services.prefs.setBoolPref("keyword.enabled", true);
   info("visit two word query, keyword.enabled = true");
   query = "bacon lovers";
