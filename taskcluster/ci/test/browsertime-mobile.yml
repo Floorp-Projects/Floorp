@@ -305,7 +305,7 @@ browsertime-tp6m-live:
 browsertime-tp6m-profiling:
     description: "Raptor (browsertime) tp6 page-load tests on android with Gecko profiling"
     raptor-test: tp6m
-    raptor-subtests: ['amazon', 'youtube']
+    raptor-subtests: ["amazon", "youtube"]
     apps: ["geckoview"]
     pageload: cold
     treeherder-symbol: Btime-Prof(tp6m)
@@ -337,3 +337,18 @@ browsertime-speedometer-mobile:
         extra-options:
             - --browsertime
             - --test=speedometer
+
+browsertime-power:
+    description: "Browsertime Power Usage Tests on Android"
+    apps: ["geckoview", "fenix", "refbrow"]
+    tier: 2
+    raptor-subtests:
+        - idle
+        - idle-bg
+        - [speedometer, sp]
+    variants: []
+    run-on-projects: []
+    treeherder-symbol: Btime-P(power)
+    mozharness:
+        extra-options:
+            - --power-test
