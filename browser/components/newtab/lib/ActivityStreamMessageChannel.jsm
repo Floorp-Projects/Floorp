@@ -288,16 +288,11 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
    */
   onNewTabLoad(msg) {
     let { browser } = msg.target;
-    if (
-      this.isPreloadedBrowser(browser) &&
-      browser.ownerGlobal.windowState !== browser.ownerGlobal.STATE_MINIMIZED &&
-      !browser.ownerGlobal.isFullyOccluded
-    ) {
+    if (this.isPreloadedBrowser(browser)) {
       // As a perceived performance optimization, if this loaded Activity Stream
-      // happens to be a preloaded browser in a window that is not minimized or
-      // occluded, have it render its layers to the compositor now to increase
-      // the odds that by the time we switch to the tab, the layers are already
-      // ready to present to the user.
+      // happens to be a preloaded browser, have it render its layers to the
+      // compositor now to increase the odds that by the time we switch to
+      // the tab, the layers are already ready to present to the user.
       browser.renderLayers = true;
     }
 

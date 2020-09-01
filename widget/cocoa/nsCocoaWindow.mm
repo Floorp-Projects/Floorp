@@ -34,8 +34,6 @@
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
 #include "VibrancyManager.h"
-#include "nsPresContext.h"
-#include "nsDocShell.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -46,7 +44,6 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/layers/CompositorBridgeChild.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -2093,12 +2090,6 @@ void nsCocoaWindow::DispatchOcclusionEvent() {
   if (mWidgetListener) {
     mWidgetListener->OcclusionStateChanged(mIsFullyOccluded);
   }
-
-  if (mIsFullyOccluded) {
-    PauseCompositor();
-  } else {
-    ResumeCompositor();
-  }
 }
 
 void nsCocoaWindow::ReportSizeEvent() {
@@ -2112,72 +2103,6 @@ void nsCocoaWindow::ReportSizeEvent() {
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-void nsCocoaWindow::PauseCompositor() {
-  nsIWidget* mainChildView = static_cast<nsIWidget*>([[mWindow mainChildView] widget]);
-  if (!mainChildView) {
-    return;
-  }
-  CompositorBridgeChild* remoteRenderer = mainChildView->GetRemoteRenderer();
-  if (!remoteRenderer) {
-    return;
-  }
-  remoteRenderer->SendPause();
-
-  // Now that the compositor has paused, we also try to mark the browser window
-  // docshell inactive to stop any animations. This does not affect docshells
-  // for browsers in other processes, but browser UI code should be managing
-  // their active state appropriately.
-  if (!mWidgetListener) {
-    return;
-  }
-  PresShell* presShell = mWidgetListener->GetPresShell();
-  if (!presShell) {
-    return;
-  }
-  nsPresContext* presContext = presShell->GetPresContext();
-  if (!presContext) {
-    return;
-  }
-  nsDocShell* docShell = presContext->GetDocShell();
-  if (!docShell) {
-    return;
-  }
-  docShell->SetIsActive(false);
-}
-
-void nsCocoaWindow::ResumeCompositor() {
-  nsIWidget* mainChildView = static_cast<nsIWidget*>([[mWindow mainChildView] widget]);
-  if (!mainChildView) {
-    return;
-  }
-  CompositorBridgeChild* remoteRenderer = mainChildView->GetRemoteRenderer();
-  if (!remoteRenderer) {
-    return;
-  }
-  remoteRenderer->SendResume();
-
-  // Now that the compositor has resumed, we also try to mark the browser window
-  // docshell active to restart any animations. This does not affect docshells
-  // for browsers in other processes, but browser UI code should be managing
-  // their active state appropriately.
-  if (!mWidgetListener) {
-    return;
-  }
-  PresShell* presShell = mWidgetListener->GetPresShell();
-  if (!presShell) {
-    return;
-  }
-  nsPresContext* presContext = presShell->GetPresContext();
-  if (!presContext) {
-    return;
-  }
-  nsDocShell* docShell = presContext->GetDocShell();
-  if (!docShell) {
-    return;
-  }
-  docShell->SetIsActive(true);
 }
 
 void nsCocoaWindow::SetMenuBar(nsMenuBarX* aMenuBar) {
