@@ -43,10 +43,15 @@ class GeckoInstance(object):
         # bug 1210465.
         "apz.content_response_timeout": 60000,
 
-        # Do not send Firefox health reports to the production server
+        # Defensively disable data reporting systems
         "datareporting.healthreport.documentServerURI": "http://%(server)s/dummy/healthreport/",
+        "datareporting.healthreport.logging.consoleEnabled": False,
+        "datareporting.healthreport.service.enabled": False,
+        "datareporting.healthreport.service.firstRun": False,
+        "datareporting.healthreport.uploadEnabled": False,
 
-        # Do not show datareporting policy notifications which can interfer with tests
+        # Do not show datareporting policy notifications which can interfere with tests
+        "datareporting.policy.dataSubmissionEnabled": False,
         "datareporting.policy.dataSubmissionPolicyBypassNotification": True,
 
         # Automatically unload beforeunload alerts
@@ -131,9 +136,6 @@ class GeckoInstance(object):
 
         # Prevent starting into safe mode after application crashes
         "toolkit.startup.max_resumed_crashes": -1,
-
-        # We want to collect telemetry, but we don't want to send in the results
-        "toolkit.telemetry.server": "https://%(server)s/dummy/telemetry/",
 
         # Enabling the support for File object creation in the content process.
         "dom.file.createInChild": True,
