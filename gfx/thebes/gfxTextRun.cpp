@@ -3303,6 +3303,8 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     if (CheckCandidate(font, FontMatchType::Kind::kPrefsFallback)) {
       return font;
     }
+    // Don't leak `font` if we decided not to return it.
+    RefPtr<gfxFont> autoRefDeref(font);
   }
 
   // For fallback searches, we don't want to use a color-emoji font unless
@@ -3336,6 +3338,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     if (CheckCandidate(font, FontMatchType::Kind::kSystemFallback)) {
       return font;
     }
+    RefPtr<gfxFont> autoRefDeref(font);
   }
   if (candidateFont) {
     *aMatchType = candidateMatchType;
