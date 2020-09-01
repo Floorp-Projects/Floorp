@@ -19,7 +19,6 @@ namespace js {
 
 namespace frontend {
 class ParserAtom;
-struct CompilationInfo;
 }  // namespace frontend
 
 extern const JSClass GeneratorFunctionClass;
@@ -225,9 +224,8 @@ inline GeneratorResumeKind ResumeKindFromPC(jsbytecode* pc) {
   return IntToResumeKind(GET_UINT8(pc));
 }
 
-GeneratorResumeKind ParserAtomToResumeKind(
-    frontend::CompilationInfo& compilationInfo,
-    const frontend::ParserAtom* atom);
+GeneratorResumeKind ParserAtomToResumeKind(JSContext* cx,
+                                           const frontend::ParserAtom* atom);
 JSAtom* ResumeKindToAtom(JSContext* cx, GeneratorResumeKind kind);
 
 }  // namespace js
