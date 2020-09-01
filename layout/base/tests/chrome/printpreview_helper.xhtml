@@ -465,7 +465,7 @@ async function compareFiles(src1, src2, options = {}) {
   drawPrintPreviewWindow(ctx2);
   exitprintpreview();
 
-  ok(compareCanvases(options), `Printing ${src1} and ${src2} should produce the same results`);
+  is(compareCanvases(options), !options.expectDifference, `Printing ${src1} and ${src2} should${options.expectDifference ? ' not' : ''} produce the same results`);
 }
 
 // bug 1567105
@@ -652,6 +652,16 @@ async function runTest22() {
 
 async function runTest23() {
   await compareFiles("printpreview_prettyprint.xml", "printpreview_prettyprint_ref.xhtml");
+  requestAnimationFrame(() => setTimeout(runTest24));
+}
+async function runTest24() {
+  await compareFiles("printpreview_mask.html", "data:text/html,", {
+    settings: {
+      printBGColors: false,
+      printBGImages: false,
+    },
+    expectDifference: true,
+  });
   finish();
 }
 
