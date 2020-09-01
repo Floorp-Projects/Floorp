@@ -22,11 +22,6 @@ object FeatureFlags {
     val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables viewing tab history
-     */
-    val tabHistory = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables the new search experience
      */
     const val newSearchExperience = true
