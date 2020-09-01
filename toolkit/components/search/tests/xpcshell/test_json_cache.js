@@ -23,12 +23,13 @@ var cacheTemplate, appPluginsPath, profPlugins;
  * Test reading from search.json.mozlz4
  */
 add_task(async function setup() {
-  await SearchTestUtils.useTestEngines("data1");
+  await useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
 });
 
 async function loadCacheFile(cacheFile) {
-  cacheTemplate = await readJSONFile(do_get_file(cacheFile));
+  let cacheTemplateFile = do_get_file(cacheFile);
+  cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
   cacheTemplate.version = SearchUtils.CACHE_VERSION;
 

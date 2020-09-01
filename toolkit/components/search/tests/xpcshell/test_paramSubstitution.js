@@ -6,7 +6,7 @@
 SearchTestUtils.initXPCShellAddonManager(this);
 
 add_task(async function setup() {
-  await SearchTestUtils.useTestEngines("simple-engines");
+  await useTestEngines("simple-engines");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
 });

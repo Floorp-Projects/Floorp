@@ -11,10 +11,10 @@
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
-  await SearchTestUtils.useTestEngines(
+  await useTestEngines(
     "data",
     null,
-    (await readJSONFile(do_get_file("data/engines-no-order-hint.json"))).data
+    readJSONFile(do_get_file("data/engines-no-order-hint.json")).data
   );
 
   Services.prefs.setBoolPref(

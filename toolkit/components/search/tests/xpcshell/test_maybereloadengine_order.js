@@ -15,7 +15,9 @@ const TEST_CONFIG = [
 ];
 
 add_task(async function setup() {
-  await SearchTestUtils.useTestEngines("test-extensions", null, TEST_CONFIG);
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
+
+  await useTestEngines("test-extensions", null, TEST_CONFIG);
   await AddonTestUtils.promiseStartupManager();
 
   registerCleanupFunction(AddonTestUtils.promiseShutdownManager);

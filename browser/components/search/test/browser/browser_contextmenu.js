@@ -4,27 +4,13 @@
  * Test searching for the selected text using the context menu
  */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
-
-AddonTestUtils.initMochitest(this);
-
 const ENGINE_NAME = "mozSearch";
+const ENGINE_ID = "mozsearch-engine@search.mozilla.org";
 const PRIVATE_ENGINE_NAME = "mozPrivateSearch";
-const ENGINE_DATA = new Map([
-  [
-    ENGINE_NAME,
-    "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs",
-  ],
-  [PRIVATE_ENGINE_NAME, "https://example.com:443/browser/"],
-]);
+const PRIVATE_ENGINE_ID = "mozsearch-engine-private@search.mozilla.org";
 
 let engine;
 let privateEngine;
-let extensions = [];
-let oldDefaultEngine;
-let oldDefaultPrivateEngine;
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -38,38 +24,44 @@ add_task(async function setup() {
 
   await Services.search.init();
 
-  for (let [name, search_url] of ENGINE_DATA) {
-    let extension = ExtensionTestUtils.loadExtension({
-      manifest: {
-        chrome_settings_overrides: {
-          search_provider: {
-            name,
-            search_url,
-            params: [
-              {
-                name: "test",
-                value: "{searchTerms}",
-              },
-            ],
-          },
-        },
-      },
-    });
+  // replace the path we load search engines from with
+  // the path to our test data.
+  let searchExtensions = getChromeDir(getResolvedURI(gTestPath));
+  searchExtensions.append("mozsearch");
+  let resProt = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
+  let originalSubstitution = resProt.getSubstitution("search-extensions");
+  resProt.setSubstitution(
+    "search-extensions",
+    Services.io.newURI("file://" + searchExtensions.path)
+  );
 
-    await extension.startup();
-    await AddonTestUtils.waitForSearchProviderStartup(extension);
-    extensions.push(extension);
-  }
+  await Services.search.wrappedJSObject.ensureBuiltinExtension(ENGINE_ID);
+  await Services.search.wrappedJSObject.ensureBuiltinExtension(
+    PRIVATE_ENGINE_ID
+  );
 
   engine = await Services.search.getEngineByName(ENGINE_NAME);
   Assert.ok(engine, "Got a search engine");
-  oldDefaultEngine = await Services.search.getDefault();
+  let defaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
 
   privateEngine = await Services.search.getEngineByName(PRIVATE_ENGINE_NAME);
   Assert.ok(privateEngine, "Got a search engine");
-  oldDefaultPrivateEngine = await Services.search.getDefaultPrivate();
+  let defaultPrivateEngine = await Services.search.getDefaultPrivate();
   await Services.search.setDefaultPrivate(privateEngine);
+
+  registerCleanupFunction(async () => {
+    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefaultPrivate(defaultPrivateEngine);
+    await Services.search.removeEngine(engine);
+    await Services.search.removeEngine(privateEngine);
+
+    resProt.setSubstitution("search-extensions", originalSubstitution);
+    // Finial re-init to make sure we drop the added built-in engines.
+    await Services.search.reInit();
+  });
 });
 
 async function checkContextMenu(
@@ -128,7 +120,7 @@ async function checkContextMenu(
 
   let loaded = BrowserTestUtils.waitForNewTab(
     win.gBrowser,
-    expectedBaseUrl + "?test=test%2520search",
+    expectedBaseUrl,
     true
   );
   searchItem.click();
@@ -220,17 +212,4 @@ add_task(async function test_privateWindow_no_separate_engine() {
     ENGINE_NAME,
     "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs"
   );
-});
-
-// We can't do the unload within registerCleanupFunction as that's too late for
-// the test to be happy. Do it into a cleanup "test" here instead.
-add_task(async function cleanup() {
-  await Services.search.setDefault(oldDefaultEngine);
-  await Services.search.setDefaultPrivate(oldDefaultPrivateEngine);
-  await Services.search.removeEngine(engine);
-  await Services.search.removeEngine(privateEngine);
-
-  for (let extension of extensions) {
-    await extension.unload();
-  }
 });

@@ -22,6 +22,13 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gEnvironment: ["@mozilla.org/process/environment;1", "nsIEnvironment"],
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gModernConfig",
+  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
+  false
+);
+
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   return console.createInstance({
     prefix: "OpenSearchEngine",
@@ -139,7 +146,8 @@ class OpenSearchEngine extends SearchEngine {
     }
 
     super({
-      isAppProvided: false,
+      // These engines are never app-provided in modern config.
+      isAppProvided: gModernConfig ? false : options.isAppProvided,
       loadPath: OpenSearchEngine.getAnonymizedLoadPath(shortName, file, uri),
       shortName,
     });
