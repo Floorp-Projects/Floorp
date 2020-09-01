@@ -938,6 +938,16 @@ bool WarpCacheIRTranspiler::emitBooleanToString(BooleanOperandId inputId,
   return emitToString(inputId, resultId);
 }
 
+bool WarpCacheIRTranspiler::emitBooleanToNumber(BooleanOperandId inputId,
+                                                NumberOperandId resultId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MToDouble::New(alloc(), input);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
   MDefinition* val = getOperand(valId);
   MOZ_ASSERT(val->type() == MIRType::Int32);
