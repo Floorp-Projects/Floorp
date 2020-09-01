@@ -657,10 +657,6 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
     return false;
   }
 
-  // Override the current context.
-  // FIXME: Do not store JSContext in CompilationInfo.
-  compilationInfo_->cx = cx;
-
   frontend::CompilationGCOutput gcOutput(cx);
   bool result = frontend::InstantiateStencils(cx, *compilationInfo_, gcOutput);
 

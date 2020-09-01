@@ -544,7 +544,8 @@ static void FunctionsFromExistingLazy(CompilationInfo& compilationInfo,
   MOZ_ASSERT(idx == gcOutput.functions.length());
 }
 
-bool CompilationInfo::instantiateStencils(CompilationGCOutput& gcOutput) {
+bool CompilationInfo::instantiateStencils(JSContext* cx,
+                                          CompilationGCOutput& gcOutput) {
   if (!gcOutput.functions.resize(stencil.scriptData.length())) {
     return false;
   }
