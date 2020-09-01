@@ -94,11 +94,12 @@ static bool StringToInstrumentationKind(JSContext* cx, HandleString str,
 
 /* static */
 const frontend::ParserAtom* RealmInstrumentation::getInstrumentationKindName(
-    frontend::CompilationInfo& compilationInfo, InstrumentationKind kind) {
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    InstrumentationKind kind) {
   for (size_t i = 0; i < mozilla::ArrayLength(instrumentationNames); i++) {
     if (kind == (InstrumentationKind)(1 << i)) {
       return compilationInfo.stencil.parserAtoms
-          .internAscii(compilationInfo.cx, instrumentationNames[i],
+          .internAscii(cx, instrumentationNames[i],
                        strlen(instrumentationNames[i]))
           .unwrapOr(nullptr);
     }
