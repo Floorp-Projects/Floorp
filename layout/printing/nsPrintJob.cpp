@@ -16,6 +16,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/PBrowser.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
@@ -847,10 +848,23 @@ nsresult nsPrintJob::Print(Document* aSourceDoc,
   return rv;
 }
 
-nsresult nsPrintJob::PrintPreview(
-    Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
-    nsIWebProgressListener* aWebProgressListener) {
-  return CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
+nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
+                                  nsIPrintSettings* aPrintSettings,
+                                  nsIWebProgressListener* aWebProgressListener,
+                                  PrintPreviewResolver&& aCallback) {
+  // Take ownership of aCallback, otherwise a function further up the call
+  // stack will call it to signal failure (by passing zero).
+  mPrintPreviewCallback = std::move(aCallback);
+
+  nsresult rv =
+      CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
+  if (NS_FAILED(rv)) {
+    if (mPrintPreviewCallback) {
+      mPrintPreviewCallback(PrintPreviewResultInfo(0, 0));  // signal error
+      mPrintPreviewCallback = nullptr;
+    }
+  }
+  return rv;
 }
 
 //----------------------------------------------------------------------------------
@@ -2523,6 +2537,12 @@ nsresult nsPrintJob::FinishPrintPreview() {
     printData->OnEndPrinting();
 
     return rv;
+  }
+
+  if (mPrintPreviewCallback) {
+    mPrintPreviewCallback(
+        PrintPreviewResultInfo(GetPrintPreviewNumPages(), GetRawNumPages()));
+    mPrintPreviewCallback = nullptr;
   }
 
   // At this point we are done preparing everything
