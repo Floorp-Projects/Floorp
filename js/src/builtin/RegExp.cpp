@@ -44,6 +44,7 @@ using JS::RegExpFlags;
 bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
                                  HandleString input, const MatchPairs& matches,
                                  MutableHandleValue rval) {
+  MOZ_ASSERT(re);
   MOZ_ASSERT(input);
 
   /*
@@ -1088,8 +1089,7 @@ static bool RegExpMatcherImpl(JSContext* cx, HandleObject regexp,
   }
 
   /* Steps 16-25 */
-  Handle<RegExpObject*> reobj = regexp.as<RegExpObject>();
-  RootedRegExpShared shared(cx, RegExpObject::getShared(cx, reobj));
+  RootedRegExpShared shared(cx, regexp->as<RegExpObject>().getShared());
   return CreateRegExpMatchResult(cx, shared, string, matches, rval);
 }
 
@@ -1124,8 +1124,7 @@ bool js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp,
   // RegExp execution was successful only if the pairs have actually been
   // filled in. Note that IC code always passes a nullptr maybeMatches.
   if (maybeMatches && maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
-    Handle<RegExpObject*> reobj = regexp.as<RegExpObject>();
-    RootedRegExpShared shared(cx, RegExpObject::getShared(cx, reobj));
+    RootedRegExpShared shared(cx, regexp->as<RegExpObject>().getShared());
     return CreateRegExpMatchResult(cx, shared, input, *maybeMatches, output);
   }
 
