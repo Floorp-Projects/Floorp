@@ -121,6 +121,43 @@ promise_test(async t => {
 }, "restartIce() causes fresh ufrags");
 
 promise_test(async t => {
+  const config = {bundlePolicy: "max-bundle"};
+  const pc1 = new RTCPeerConnection(config);
+  const pc2 = new RTCPeerConnection(config);
+  t.add_cleanup(() => pc1.close());
+  t.add_cleanup(() => pc2.close());
+
+  pc1.onicecandidate = e => pc2.addIceCandidate(e.candidate);
+  pc2.onicecandidate = e => pc1.addIceCandidate(e.candidate);
+
+  pc1.addTransceiver("video");
+  pc1.addTransceiver("audio");
+  await exchangeOfferAnswerEndOnFirst(pc1, pc2);
+
+  const [videoTc, audioTc] = pc1.getTransceivers();
+  const [videoTp, audioTp] =
+      pc1.getTransceivers().map(tc => tc.sender.transport);
+  assert_equals(pc1.getTransceivers().length, 2, 'transceiver count');
+  await new Promise(r => videoTc.sender.transport.onstatechange =
+      () => videoTc.sender.transport.state == "connected" && r());
+
+  await exchangeOfferAnswerEndOnFirst(pc1, pc2);
+  assert_equals(videoTp, pc1.getTransceivers()[0].sender.transport,
+                'offer/answer retains dtls transport');
+  assert_equals(audioTp, pc1.getTransceivers()[1].sender.transport,
+                'offer/answer retains dtls transport');
+
+  pc1.restartIce();
+  await new Promise(r => pc1.onnegotiationneeded = r);
+  await exchangeOfferAnswerEndOnFirst(pc1, pc2);
+
+  const [newVideoTp, newAudioTp] =
+      pc1.getTransceivers().map(tc => tc.sender.transport);
+  assert_equals(videoTp, newVideoTp, 'ice restart retains dtls transport');
+  assert_equals(audioTp, newAudioTp, 'ice restart retains dtls transport');
+}, "restartIce() retains dtls transports");
+
+promise_test(async t => {
   const pc1 = new RTCPeerConnection();
   const pc2 = new RTCPeerConnection();
   t.add_cleanup(() => pc1.close());
