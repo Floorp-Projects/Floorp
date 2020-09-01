@@ -766,8 +766,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 }
 
 template <typename Unit>
-static bool InternalParseModuleToStencil(CompilationInfo& compilationInfo,
-                                         SourceText<Unit>& srcBuf) {
+static bool ParseModuleToStencilImpl(CompilationInfo& compilationInfo,
+                                     SourceText<Unit>& srcBuf) {
   JSContext* cx = compilationInfo.cx;
 
   MOZ_ASSERT(srcBuf.get());
@@ -787,16 +787,16 @@ static bool InternalParseModuleToStencil(CompilationInfo& compilationInfo,
 
 bool frontend::ParseModuleToStencil(CompilationInfo& compilationInfo,
                                     SourceText<char16_t>& srcBuf) {
-  return InternalParseModuleToStencil(compilationInfo, srcBuf);
+  return ParseModuleToStencilImpl(compilationInfo, srcBuf);
 }
 
 bool frontend::ParseModuleToStencil(CompilationInfo& compilationInfo,
                                     SourceText<Utf8Unit>& srcBuf) {
-  return InternalParseModuleToStencil(compilationInfo, srcBuf);
+  return ParseModuleToStencilImpl(compilationInfo, srcBuf);
 }
 
 template <typename Unit>
-static ModuleObject* CreateModule(
+static ModuleObject* CompileModuleImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& optionsInput,
     SourceText<Unit>& srcBuf) {
   AutoAssertReportedException assertException(cx);
@@ -835,13 +835,13 @@ static ModuleObject* CreateModule(
 ModuleObject* frontend::CompileModule(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
                                       SourceText<char16_t>& srcBuf) {
-  return CreateModule(cx, options, srcBuf);
+  return CompileModuleImpl(cx, options, srcBuf);
 }
 
 ModuleObject* frontend::CompileModule(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
                                       SourceText<Utf8Unit>& srcBuf) {
-  return CreateModule(cx, options, srcBuf);
+  return CompileModuleImpl(cx, options, srcBuf);
 }
 
 template <typename Unit>
