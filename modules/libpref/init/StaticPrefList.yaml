@@ -6470,10 +6470,10 @@
   value: true
   mirror: always
 
-# Is support for the ::file-chooser-button pseudo-element enabled?
-- name: layout.css.file-chooser-button.enabled
+# Is support for the ::file-selector-button pseudo-element enabled?
+- name: layout.css.file-selector-button.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_OR_DEV_EDITION@
+  value: true
   mirror: always
   rust: true
 

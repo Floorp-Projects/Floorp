@@ -92,6 +92,6 @@ CSS_PSEUDO_ELEMENT(mozTextControlEditingRoot, ":-moz-text-control-editing-root",
 CSS_PSEUDO_ELEMENT(mozTextControlPreview, ":-moz-text-control-preview",
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS)
 
-CSS_PSEUDO_ELEMENT(fileChooserButton, ":file-chooser-button",
+CSS_PSEUDO_ELEMENT(fileSelectorButton, ":file-selector-button",
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS |
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)

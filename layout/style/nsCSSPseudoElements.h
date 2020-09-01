@@ -122,8 +122,8 @@ class nsCSSPseudoElements {
     switch (aType) {
       case Type::mozFocusOuter:
         return mozilla::StaticPrefs::layout_css_moz_focus_outer_enabled();
-      case Type::fileChooserButton:
-        return mozilla::StaticPrefs::layout_css_file_chooser_button_enabled();
+      case Type::fileSelectorButton:
+        return mozilla::StaticPrefs::layout_css_file_selector_button_enabled();
       default:
         return !PseudoElementHasAnyFlag(
             aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME);
