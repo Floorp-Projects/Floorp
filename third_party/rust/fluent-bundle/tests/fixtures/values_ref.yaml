@@ -1,0 +1,140 @@
+suites:
+  -
+    name: Referencing values
+    resources:
+      -
+        source: |-
+          key1 = Value 1
+          -key2 = { $sel ->
+              [a] A2
+            *[b] B2
+          }
+          key3 = Value { 3 }
+          -key4 = { $sel ->
+              [a] A{ 4 }
+            *[b] B{ 4 }
+          }
+          key5 =
+              .a = A5
+              .b = B5
+          ref1 = { key1 }
+          ref2 = { -key2 }
+          ref3 = { key3 }
+          ref4 = { -key4 }
+          ref5 = { key5 }
+          ref6 = { -key2(sel: "a") }
+          ref7 = { -key2(sel: "b") }
+          ref8 = { -key4(sel: "a") }
+          ref9 = { -key4(sel: "b") }
+          ref10 = { key5.a }
+          ref11 = { key5.b }
+          ref12 = { key5.c }
+          ref13 = { key6 }
+          ref14 = { key6.a }
+          ref15 = { -key6 }
+          ref16 = { -key6.a ->
+              *[a] A
+          }
+    tests:
+      -
+        name: references the value
+        asserts:
+          -
+            id: ref1
+            value: Value 1
+      -
+        name: references the default variant
+        asserts:
+          -
+            id: ref2
+            value: B2
+      -
+        name: references the value if it is a pattern
+        asserts:
+          -
+            id: ref3
+            value: Value 3
+      -
+        name: references the default variant if it is a pattern
+        asserts:
+          -
+            id: ref4
+            value: B4
+      -
+        name: falls back to id if there is no value
+        asserts:
+          -
+            id: ref5
+            value: "{key5}"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown message: key5"
+      -
+        name: references the variants
+        asserts:
+          -
+            id: ref6
+            value: A2
+          -
+            id: ref7
+            value: B2
+      -
+        name: references the variants which are patterns
+        asserts:
+          -
+            id: ref8
+            value: A4
+          -
+            id: ref9
+            value: B4
+      -
+        name: references the attributes
+        asserts:
+          -
+            id: ref10
+            value: A5
+          -
+            id: ref11
+            value: B5
+          -
+            id: ref12
+            value: "{key5.c}"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown attribute: key5.c"
+      -
+        name: missing message reference
+        asserts:
+          -
+            id: ref13
+            value: "{key6}"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown message: key6"
+          -
+            id: ref14
+            value: "{key6.a}"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown attribute: key6.a"
+      -
+        name: missing term reference
+        asserts:
+          -
+            id: ref15
+            value: "{-key6}"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown term: -key6"
+          -
+            id: ref16
+            value: "A"
+            errors:
+              -
+                type: Reference
+                desc: "Unknown attribute: -key6.a"

@@ -1,0 +1,85 @@
+suites:
+  -
+    name: Functions
+    suites:
+      -
+        name: missing
+        resources:
+          -
+            source: |-
+              foo = { MISSING("Foo") }
+        tests:
+          -
+            name: falls back to the name of the function
+            asserts:
+              -
+                id: foo
+                value: "{MISSING()}"
+                errors:
+                  -
+                    type: Reference
+                    desc: "Unknown function: MISSING()"
+      -
+        name: arguments
+        resources:
+          -
+            source: |-
+              foo = Foo
+                  .attr = Attribute
+              pass-nothing       = { IDENTITY() }
+              pass-string        = { IDENTITY("a") }
+              pass-number        = { IDENTITY(1) }
+              pass-message       = { IDENTITY(foo) }
+              pass-attr          = { IDENTITY(foo.attr) }
+              pass-variable      = { IDENTITY($var) }
+              pass-function-call = { IDENTITY(IDENTITY(1)) }
+        bundles:
+          -
+            functions:
+              - IDENTITY
+        tests:
+          -
+            name: falls back when arguments don't match the arity
+            asserts:
+              -
+                id: pass-nothing
+                ## XXX: Difference from JS
+                value: "???"
+          -
+            name: accepts strings
+            asserts:
+              -
+                id: pass-string
+                value: a
+          -
+            name: accepts numbers
+            asserts:
+              -
+                id: pass-number
+                value: 1
+          -
+            name: accepts entities
+            asserts:
+              -
+                id: pass-message
+                value: Foo
+          -
+            name: accepts attributes
+            asserts:
+              -
+                id: pass-attr
+                value: Attribute
+          -
+            name: accepts variables
+            asserts:
+              -
+                id: pass-variable
+                args:
+                  var: Variable
+                value: Variable
+          -
+            name: accepts function calls
+            asserts:
+              -
+                id: pass-function-call
+                value: 1
