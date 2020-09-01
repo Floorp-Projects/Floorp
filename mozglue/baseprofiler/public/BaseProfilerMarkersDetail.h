@@ -131,6 +131,42 @@ struct ProfileBufferEntryReader::Deserializer<ProfilerStringView<CHAR>> {
   }
 };
 
+// ----------------------------------------------------------------------------
+// Serializer, Deserializer: MarkerCategory
+
+// The serialization contains both category numbers encoded as ULEB128.
+template <>
+struct ProfileBufferEntryWriter::Serializer<MarkerCategory> {
+  static Length Bytes(const MarkerCategory& aCategory) {
+    return ULEB128Size(static_cast<uint32_t>(aCategory.CategoryPair())) +
+           ULEB128Size(static_cast<uint32_t>(aCategory.Category()));
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const MarkerCategory& aCategory) {
+    aEW.WriteULEB128(static_cast<uint32_t>(aCategory.CategoryPair()));
+    aEW.WriteULEB128(static_cast<uint32_t>(aCategory.Category()));
+  }
+};
+
+template <>
+struct ProfileBufferEntryReader::Deserializer<MarkerCategory> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       MarkerCategory& aCategory) {
+    aCategory.mCategoryPair = static_cast<baseprofiler::ProfilingCategoryPair>(
+        aER.ReadULEB128<uint32_t>());
+    aCategory.mCategory = static_cast<baseprofiler::ProfilingCategory>(
+        aER.ReadULEB128<uint32_t>());
+  }
+
+  static MarkerCategory Read(ProfileBufferEntryReader& aER) {
+    return MarkerCategory(static_cast<baseprofiler::ProfilingCategoryPair>(
+                              aER.ReadULEB128<uint32_t>()),
+                          static_cast<baseprofiler::ProfilingCategory>(
+                              aER.ReadULEB128<uint32_t>()));
+  }
+};
+
 }  // namespace mozilla
 
 #endif  // MOZ_GECKO_PROFILER
