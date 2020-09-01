@@ -133,17 +133,17 @@ class ProfilingStackFrame {
   // Stack pointer for non-JS stack frames, the script pointer otherwise.
   mozilla::Atomic<void*, mozilla::ReleaseAcquire> spOrScript;
 
-  // The bytecode offset for JS stack frames.
-  // Must not be used on non-JS frames; it'll contain either the default 0,
-  // or a leftover value from a previous JS stack frame that was using this
-  // ProfilingStackFrame object.
-  mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> pcOffsetIfJS_;
-
   // ID of the JS Realm for JS stack frames.
   // Must not be used on non-JS frames; it'll contain either the default 0,
   // or a leftover value from a previous JS stack frame that was using this
   // ProfilingStackFrame object.
   mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> realmID_;
+
+  // The bytecode offset for JS stack frames.
+  // Must not be used on non-JS frames; it'll contain either the default 0,
+  // or a leftover value from a previous JS stack frame that was using this
+  // ProfilingStackFrame object.
+  mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> pcOffsetIfJS_;
 
   // Bits 0...8 hold the Flags. Bits 9...31 hold the category pair.
   mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> flagsAndCategoryPair_;
