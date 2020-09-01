@@ -2117,8 +2117,8 @@ bool CacheIRCompiler::emitGuardNoDenseElements(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardAndGetInt32FromString(StringOperandId strId,
-                                                     Int32OperandId resultId) {
+bool CacheIRCompiler::emitGuardStringToInt32(StringOperandId strId,
+                                             Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register str = allocator.useRegister(masm, strId);
   Register output = allocator.defineRegister(masm, resultId);
@@ -2179,8 +2179,8 @@ bool CacheIRCompiler::emitGuardAndGetInt32FromString(StringOperandId strId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardAndGetNumberFromString(
-    StringOperandId strId, NumberOperandId resultId) {
+bool CacheIRCompiler::emitGuardStringToNumber(StringOperandId strId,
+                                              NumberOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register str = allocator.useRegister(masm, strId);
   ValueOperand output = allocator.defineValueRegister(masm, resultId);
@@ -2246,8 +2246,8 @@ bool CacheIRCompiler::emitGuardAndGetNumberFromString(
   return true;
 }
 
-bool CacheIRCompiler::emitGuardAndGetNumberFromBoolean(
-    BooleanOperandId booleanId, NumberOperandId resultId) {
+bool CacheIRCompiler::emitBooleanToNumber(BooleanOperandId booleanId,
+                                          NumberOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register boolean = allocator.useRegister(masm, booleanId);
   ValueOperand output = allocator.defineValueRegister(masm, resultId);
@@ -2255,8 +2255,8 @@ bool CacheIRCompiler::emitGuardAndGetNumberFromBoolean(
   return true;
 }
 
-bool CacheIRCompiler::emitGuardAndGetIndexFromString(StringOperandId strId,
-                                                     Int32OperandId resultId) {
+bool CacheIRCompiler::emitGuardStringToIndex(StringOperandId strId,
+                                             Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register str = allocator.useRegister(masm, strId);
   Register output = allocator.defineRegister(masm, resultId);
