@@ -164,9 +164,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     private fun restoreDownloads() {
-        if (FeatureFlags.viewDownloads) {
-            components.useCases.downloadUseCases.restoreDownloads()
-        }
+        components.useCases.downloadUseCases.restoreDownloads()
     }
 
     private fun initVisualCompletenessQueueAndQueueTasks() {

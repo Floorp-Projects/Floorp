@@ -248,8 +248,6 @@ private fun assertSearchEngineList() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     onView(withText("DuckDuckGo"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    onView(withText("Twitter"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     onView(withText("Wikipedia"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }

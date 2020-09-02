@@ -287,14 +287,6 @@ class SmokeTest {
         }.openTabDrawer {
         }.openNewTab {
             clickSearchEngineButton()
-            mDevice.waitForIdle()
-            changeDefaultSearchEngine("Twitter")
-            verifySearchEngineIcon("Twitter")
-        }.goToSearchEngine {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openTabDrawer {
-        }.openNewTab {
-            clickSearchEngineButton()
             changeDefaultSearchEngine("Wikipedia")
             verifySearchEngineIcon("Wikipedia")
         }.goToSearchEngine {

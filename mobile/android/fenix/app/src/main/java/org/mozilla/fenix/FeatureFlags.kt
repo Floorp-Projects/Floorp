@@ -40,9 +40,4 @@ object FeatureFlags {
      * Enables downloads with external download managers.
      */
     val externalDownloadManager = Config.channel.isNightlyOrDebug
-
-    /**
-     * Enables viewing downloads in browser.
-     */
-    val viewDownloads = Config.channel.isNightlyOrDebug
 }
