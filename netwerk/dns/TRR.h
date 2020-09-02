@@ -167,7 +167,7 @@ class TRR : public Runnable,
 
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
-  unsigned char mResponse[kMaxSize];
+  unsigned char mResponse[kMaxSize]{};
   unsigned int mBodySize = 0;
   bool mFailed = false;
   bool mPB;
