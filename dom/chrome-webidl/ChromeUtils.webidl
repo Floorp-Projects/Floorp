@@ -530,6 +530,24 @@ dictionary ThreadInfoDictionary {
   unsigned long long cpuKernel = 0;
 };
 
+dictionary WindowInfoDictionary {
+  // Window ID, as known to the parent process.
+  unsigned long long outerWindowId = 0;
+
+  // URI of the document loaded in the window.
+  URI? documentURI = null;
+
+  // Title of the document loaded in the window.
+  // Commonly empty for subframes.
+  DOMString documentTitle = "";
+
+  // `true` if this window is the root for the process.
+  boolean isProcessRoot = false;
+
+  // `true` if this is loaded in the same process as the parent, `false` otherwise.
+  boolean isInProcess = false;
+};
+
 /**
  * Information on a child process.
  *
@@ -579,6 +597,9 @@ dictionary ChildProcInfoDictionary {
 
   // Type of this child process.
   WebIDLProcType type = "web";
+
+  // The windows implemented by this process.
+  sequence<WindowInfoDictionary> windows = [];
 };
 
 /**
