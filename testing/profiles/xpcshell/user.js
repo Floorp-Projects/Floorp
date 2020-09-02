@@ -14,6 +14,7 @@ user_pref("geo.provider.network.compare.url", "");
 user_pref("media.gmp-manager.updateEnabled", false);
 user_pref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager.xml");
 user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy");
+user_pref("telemetry.fog.test.localhost_port", 1337);
 // Prevent Remote Settings to issue non local connections.
 user_pref("services.settings.server", "http://localhost/remote-settings-dummy/v1");
 // Prevent intermediate preloads to be downloaded on Remote Settings polling.
