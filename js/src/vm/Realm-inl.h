@@ -31,13 +31,13 @@ js::GlobalObject* JS::Realm::maybeGlobal() const {
 }
 
 js::LexicalEnvironmentObject* JS::Realm::unbarrieredLexicalEnvironment() const {
-  return *lexicalEnv_.unsafeGet();
+  return lexicalEnv_.unbarrieredGet();
 }
 
 inline bool JS::Realm::globalIsAboutToBeFinalized() {
   MOZ_ASSERT(zone_->isGCSweeping());
   return global_ &&
-         js::gc::IsAboutToBeFinalizedUnbarriered(global_.unsafeGet());
+         js::gc::IsAboutToBeFinalizedUnbarriered(global_.unbarrieredAddress());
 }
 
 inline bool JS::Realm::hasLiveGlobal() const {
