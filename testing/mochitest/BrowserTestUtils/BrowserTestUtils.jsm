@@ -1331,7 +1331,7 @@ var BrowserTestUtils = {
     let contentEventListeners = this._contentEventListeners;
     contentEventListeners.set(id, {
       listener,
-      browsingContext: browser.browsingContext,
+      browserId: browser.browserId,
     });
 
     let eventListenerState = this._contentEventListenerSharedState;
@@ -1367,12 +1367,12 @@ var BrowserTestUtils = {
    * BrowserTestUtilsParent.jsm when a content event we were listening for
    * happens.
    */
-  _receivedContentEventListener(listenerId, browsingContext) {
+  _receivedContentEventListener(listenerId, browserId) {
     let listenerData = this._contentEventListeners.get(listenerId);
     if (!listenerData) {
       return;
     }
-    if (listenerData.browsingContext != browsingContext) {
+    if (listenerData.browserId != browserId) {
       return;
     }
     listenerData.listener();
