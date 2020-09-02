@@ -205,7 +205,17 @@ NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
 
   if (!inner) {
     nsCOMPtr<nsPIDOMWindowOuter> outer = do_QueryInterface(aSubject);
-    if (NS_WARN_IF(!outer) || NS_WARN_IF(!outer->GetCurrentInnerWindow())) {
+    if (NS_WARN_IF(!outer)) {
+      nsContentUtils::LogSimpleConsoleError(
+          NS_ConvertUTF8toUTF16(nsPrintfCString(
+              "JSWindowActor %s: expected window subject for topic '%s'.",
+              mName.get(), aTopic)),
+          "JSActor",
+          /* aFromPrivateWindow */ false,
+          /* aFromChromeContext */ true);
+      return NS_ERROR_FAILURE;
+    }
+    if (NS_WARN_IF(!outer->GetCurrentInnerWindow())) {
       return NS_ERROR_FAILURE;
     }
     wgc = outer->GetCurrentInnerWindow()->GetWindowGlobalChild();
