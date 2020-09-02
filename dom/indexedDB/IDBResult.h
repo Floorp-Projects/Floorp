@@ -28,9 +28,8 @@ struct OkType final {
   T mValue;
 };
 
-// Not final to allow use with mozilla::CompactPair.
 template <>
-struct OkType<void> {};
+struct OkType<void> final {};
 
 template <IDBSpecialValue Value>
 using SpecialConstant = std::integral_constant<IDBSpecialValue, Value>;
