@@ -97,11 +97,18 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     // Store the original display type and scrollable state and whether or not the node is
     // displayed to track changes when reflows occur.
+    const wasScrollable = this.isScrollable;
+
     this.currentDisplayType = this.displayType;
     this.wasDisplayed = this.isDisplayed;
-    this.wasScrollable = this.isScrollable;
+    this.wasScrollable = wasScrollable;
 
-    if (this.isScrollable) {
+    // We check this on each call because a static check requires a full browser restart
+    // to pick up changes.
+    const OVERFLOW_DEBUGGING_ENABLED = Services.prefs.getBoolPref(
+      "devtools.overflow.debugging.enabled"
+    );
+    if (OVERFLOW_DEBUGGING_ENABLED && wasScrollable) {
       this.walker.updateOverflowCausingElements(
         this,
         this.walker.overflowCausingElementsMap
