@@ -97,10 +97,7 @@ add_task(async function() {
   targetList.destroy();
 
   // Wait for all the targets to be fully attached so we don't have pending requests.
-  await Promise.all(
-    targetList
-      .getAllTargets(ALL_TYPES)
-      .map(t => t.attachAndInitThread(targetList))
-  );
+  await waitForAllTargetsToBeAttached(targetList);
+
   await client.close();
 });
