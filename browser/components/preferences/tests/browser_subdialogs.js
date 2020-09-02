@@ -24,7 +24,7 @@ function open_subdialog_and_test_generic_start_state(
     async function(args) {
       let rv = { acceptCount: 0 };
       let win = content.window;
-      content.gSubDialog.open(args.url, null, rv);
+      content.gSubDialog.open(args.url, undefined, rv);
       let subdialog = content.gSubDialog._topDialog;
 
       info("waiting for subdialog DOMFrameContentLoaded");

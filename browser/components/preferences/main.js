@@ -1345,9 +1345,8 @@ var gMainPane = {
     let opts = { selected: gMainPane.selectedLocales, search, telemetryId };
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/browserLanguages.xhtml",
-      null,
-      opts,
-      this.browserLanguagesClosed
+      { closingCallback: this.browserLanguagesClosed },
+      opts
     );
   },
 
@@ -1419,7 +1418,7 @@ var gMainPane = {
   configureFonts() {
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/fonts.xhtml",
-      "resizable=no"
+      { features: "resizable=no" }
     );
   },
 
@@ -1430,7 +1429,7 @@ var gMainPane = {
   configureColors() {
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/colors.xhtml",
-      "resizable=no"
+      { features: "resizable=no" }
     );
   },
 
@@ -1441,9 +1440,7 @@ var gMainPane = {
   showConnections() {
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/connection.xhtml",
-      null,
-      null,
-      this.updateProxySettingsUI.bind(this)
+      { closingCallback: this.updateProxySettingsUI.bind(this) }
     );
   },
 
@@ -2649,9 +2646,8 @@ var gMainPane = {
 
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/applicationManager.xhtml",
-      "resizable=no",
-      handlerInfo,
-      onComplete
+      { features: "resizable=no", closingCallback: onComplete },
+      handlerInfo
     );
   },
 
@@ -2715,9 +2711,8 @@ var gMainPane = {
 
       gSubDialog.open(
         "chrome://global/content/appPicker.xhtml",
-        null,
-        params,
-        onAppSelected
+        { closingCallback: onAppSelected },
+        params
       );
     } else {
       let winTitle = await document.l10n.formatValue(

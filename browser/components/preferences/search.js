@@ -396,7 +396,7 @@ var gSearchPane = {
           case "addEngineButton":
             gSubDialog.open(
               "chrome://browser/content/preferences/dialogs/addEngine.xhtml",
-              "resizable=no, modal=yes"
+              { features: "resizable=no, modal=yes" }
             );
             break;
         }

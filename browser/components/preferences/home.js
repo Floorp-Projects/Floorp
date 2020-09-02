@@ -395,9 +395,11 @@ var gHomePane = {
     const rv = { urls: null, names: null };
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/selectBookmark.xhtml",
-      "resizable=yes, modal=yes",
-      rv,
-      this._setHomePageToBookmarkClosed.bind(this, rv)
+      {
+        features: "resizable=yes, modal=yes",
+        closingCallback: this._setHomePageToBookmarkClosed.bind(this, rv),
+      },
+      rv
     );
     Services.telemetry.scalarAdd("preferences.use_bookmark", 1);
   },
