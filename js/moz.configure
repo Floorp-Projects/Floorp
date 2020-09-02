@@ -483,7 +483,7 @@ set_define('MOZ_RUST_SIMD', rust_simd)
 
 @depends(milestone.is_nightly, target, simulator)
 def cranelift_default(is_nightly, target, simulator):
-    if is_nightly or target.cpu == 'aarch64' or simulator.arm64:
+    if is_nightly or target.cpu == 'aarch64' or (simulator is not None and simulator.arm64):
         return True
 
 js_option('--enable-cranelift',
