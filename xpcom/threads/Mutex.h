@@ -170,8 +170,8 @@ class MOZ_RAII BaseAutoLock {
    *              mozilla::Mutex::NewMutex.
    * @param aOutAutoLock A Maybe<BaseAutoLock<T>> to fill if TryLock succeeds.
    **/
-  static MOZ_MUST_USE bool TryMake(T aLock,
-                                   Maybe<BaseAutoLock<T>>& aOutAutoLock) {
+  [[nodiscard]] static bool TryMake(T aLock,
+                                    Maybe<BaseAutoLock<T>>& aOutAutoLock) {
     if (aLock.TryLock()) {
       aOutAutoLock.emplace(aLock, /* aPlaceholder: */ true);
       return true;

@@ -68,7 +68,8 @@ def attributeReturnType(a, getter, macro):
             ret = "%s_(%s)" % (macro, ret)
 
     if a.must_use:
-        ret = "MOZ_MUST_USE " + ret
+        ret = "[[nodiscard]] " + ret
+
     # Ideally, we'd set MOZ_CAN_RUN_SCRIPT in the "scriptable and not
     # builtinclass" case too, so we'd just have memberCanRunScript() check
     # explicit_setter_can_run_script/explicit_setter_can_run_script and call it
@@ -122,7 +123,8 @@ def methodReturnType(m, macro):
             ret = "%s_(%s)" % (macro, ret)
 
     if m.must_use:
-        ret = "MOZ_MUST_USE " + ret
+        ret = "[[nodiscard]] " + ret
+
     # Ideally, we'd set MOZ_CAN_RUN_SCRIPT in the "scriptable and not
     # builtinclass" case too, so we'd just have memberCanRunScript() check
     # explicit_can_run_script and call it here.  But that would likely require
