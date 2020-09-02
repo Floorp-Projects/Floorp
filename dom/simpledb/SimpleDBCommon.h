@@ -49,8 +49,10 @@ extern const char* kPrefSimpleDBEnabled;
 
 namespace simpledb {
 
-void HandleError(const nsLiteralCString& aExpr,
-                 const nsLiteralCString& aSourceFile, int32_t aSourceLine);
+// See comment on mozilla::dom::quota::HandleError
+MOZ_NEVER_INLINE void HandleError(const nsLiteralCString& aExpr,
+                                  const nsLiteralCString& aSourceFile,
+                                  int32_t aSourceLine);
 
 }  // namespace simpledb
 
