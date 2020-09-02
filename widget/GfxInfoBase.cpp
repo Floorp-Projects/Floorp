@@ -496,7 +496,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
   aDriverInfo.mRuleId = "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID"_ns;
 
   for (uint32_t i = 0; i < keyValues.Length(); ++i) {
-    nsCString keyValue = keyValues[i];
+    const nsCString& keyValue = keyValues[i];
     nsTArray<nsCString> splitted;
     ParseString(keyValue, ':', splitted);
     if (splitted.Length() != 2) {
@@ -505,8 +505,8 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
           << "Unrecognized data " << keyValue.get();
       return false;
     }
-    nsCString key = splitted[0];
-    nsCString value = splitted[1];
+    const nsCString& key = splitted[0];
+    const nsCString& value = splitted[1];
     NS_ConvertUTF8toUTF16 dataValue(value);
 
     if (value.Length() == 0) {
@@ -568,8 +568,8 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
             << "Unrecognized versionRange " << value.get();
         return false;
       }
-      nsCString minValue = versionRange[0];
-      nsCString maxValue = versionRange[1];
+      const nsCString& minValue = versionRange[0];
+      const nsCString& maxValue = versionRange[1];
 
       mozilla::Version minV(minValue.get());
       mozilla::Version maxV(maxValue.get());
@@ -608,7 +608,7 @@ static void BlocklistEntriesToDriverInfo(nsTArray<nsCString>& aBlocklistEntries,
   aDriverInfo.SetLength(aBlocklistEntries.Length());
 
   for (uint32_t i = 0; i < aBlocklistEntries.Length(); ++i) {
-    nsCString blocklistEntry = aBlocklistEntries[i];
+    nsCString& blocklistEntry = aBlocklistEntries[i];
     GfxDriverInfo di;
     if (BlocklistEntryToDriverInfo(blocklistEntry, di)) {
       aDriverInfo[i] = di;
