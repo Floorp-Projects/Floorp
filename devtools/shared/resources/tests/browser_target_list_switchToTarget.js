@@ -140,7 +140,7 @@ async function testSwitchToTarget(client) {
     );
   }
 
-  targetList.stopListening();
+  targetList.destroy();
 
   BrowserTestUtils.removeTab(firstTab);
   BrowserTestUtils.removeTab(secondTab);

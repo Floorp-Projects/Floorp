@@ -47,7 +47,7 @@ add_task(async function() {
   assertContents(cachedResources1, messages);
   assertResources(cachedResources2, cachedResources1);
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 
@@ -97,7 +97,7 @@ add_task(async function() {
   assertContents(availableResources, allMessages);
   assertResources(cachedResources, availableResources);
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 
@@ -140,7 +140,7 @@ add_task(async function() {
 
   is(cachedResources.length, 0, "The cache in ResourceWatcher is cleared");
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 
@@ -200,7 +200,7 @@ add_task(async function() {
 
   assertResources(cachedResources, availableResources);
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 
@@ -271,7 +271,7 @@ async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   assertContents(cachedResourcesWithFlag, additionalMessages);
   assertContents(cachedResourcesWithoutFlag, allMessages);
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 }
 

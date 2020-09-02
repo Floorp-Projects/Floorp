@@ -103,7 +103,7 @@ async function testBrowserFrames(mainRoot) {
   ok(hasTabDocument, "retrieve the target for tab via getAllTargets");
   */
 
-  targetList.stopListening();
+  targetList.destroy();
 }
 
 async function testTabFrames(mainRoot) {
@@ -156,7 +156,7 @@ async function testTabFrames(mainRoot) {
   }
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onAvailable);
 
-  targetList.stopListening();
+  targetList.destroy();
 
   BrowserTestUtils.removeTab(tab);
 }
