@@ -695,7 +695,7 @@ class RaptorOutput(PerftestOutput):
             suite = {
                 "name": test["name"],
                 "type": test["type"],
-                "tags": [],
+                "tags": test.get("tags", []),
                 "extraOptions": test["extra_options"],
                 "subtests": subtests,
                 "lowerIsBetter": test["lower_is_better"],
@@ -1470,6 +1470,7 @@ class BrowsertimeOutput(PerftestOutput):
                     "name": test["name"],
                     "type": test["type"],
                     "extraOptions": extra_options,
+                    "tags": test.get("tags", extra_options),
                     "lowerIsBetter": test["lower_is_better"],
                     "unit": test["unit"],
                     "alertThreshold": float(test["alert_threshold"]),
