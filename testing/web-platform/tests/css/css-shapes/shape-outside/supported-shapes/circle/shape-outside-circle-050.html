@@ -4,25 +4,24 @@
 
 <html>
   <meta charset="utf-8">
-  <title>CSS Shape Test: vertical-rl, float right, circle(50% at left 40px bottom 40px)</title>
+  <title>CSS Shape Test: vertical-lr, float left, circle(50% at right 40px top 40px)</title>
   <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
   <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
   <link rel="help" href="https://drafts.csswg.org/css-shapes-1/#supported-basic-shapes">
-  <link rel="match" href="shape-outside-circle-049-ref.html">
+  <link rel="match" href="reference/shape-outside-circle-050-ref.html">
   <meta name="flags" content="">
-  <meta name="assert" content="Test the boxes are wrapping around the right float shape defined by circle(50% at left 40px bottom 40px) value under vertical-rl writing-mode.">
+  <meta name="assert" content="Test the boxes are wrapping around the right float shape defined by circle(50% at right 40px top 40px) value under vertical-lr writing-mode.">
   <style>
   .container {
-    writing-mode: vertical-rl;
-    direction: rtl;
+    writing-mode: vertical-lr;
     inline-size: 200px;
     line-height: 0;
   }
 
   .shape {
-    float: right;
-    shape-outside: circle(50% at left 40px bottom 40px) border-box;
-    clip-path: circle(50% at left 40px bottom 40px) border-box;
+    float: left;
+    shape-outside: circle(50% at right 40px top 40px) border-box;
+    clip-path: circle(50% at right 40px top 40px) border-box;
     box-sizing: content-box;
     block-size: 40px;
     inline-size: 40px;
