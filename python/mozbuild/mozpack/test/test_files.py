@@ -40,11 +40,6 @@ try:
 except ImportError:
     hglib = None
 
-try:
-    from mozpack.hg import MercurialNativeRevisionFinder
-except ImportError:
-    MercurialNativeRevisionFinder = None
-
 from mozpack.mozjar import (
     JarReader,
     JarWriter,
@@ -1287,12 +1282,6 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         self.assertIsInstance(f, MercurialFile)
         self.assertEqual(f.read(), b'initial')
         f = None
-
-
-@unittest.skipUnless(MercurialNativeRevisionFinder, 'hgnative not available')
-class TestMercurialNativeRevisionFinder(TestMercurialRevisionFinder):
-    def _get_finder(self, *args, **kwargs):
-        return MercurialNativeRevisionFinder(*args, **kwargs)
 
 
 if __name__ == '__main__':
