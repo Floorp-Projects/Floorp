@@ -31,7 +31,7 @@ class Settings(MachCommandBase):
              description='Show available config settings.')
     @CommandArgument('-l', '--list', dest='short', action='store_true',
                      help='Show settings in a concise list')
-    def settings(self, short=None):
+    def run_settings(self, short=None):
         """List available settings."""
         types = {v: k for k, v in TYPE_CLASSES.items()}
         wrapper = TextWrapper(initial_indent='# ', subsequent_indent='# ')
