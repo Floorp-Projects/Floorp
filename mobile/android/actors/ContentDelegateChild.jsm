@@ -128,6 +128,10 @@ class ContentDelegateChild extends GeckoViewActorChild {
           // uses old value of previous content.
           this.notifyParentOfViewportFit();
         }
+        if (this.contentWindow !== this.contentWindow?.top) {
+          // Only check WebApp manifest on the top level window.
+          return;
+        }
         this.contentWindow.requestIdleCallback(async () => {
           const manifest = await ManifestObtainer.contentObtainManifest(
             this.contentWindow
