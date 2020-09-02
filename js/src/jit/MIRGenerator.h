@@ -77,9 +77,11 @@ class MIRGenerator final {
   // off-thread compilation can report what error got encountered.
   void setOffThreadStatus(AbortReasonOr<Ok> result) {
     MOZ_ASSERT(offThreadStatus_.isOk());
-    offThreadStatus_ = result;
+    offThreadStatus_ = std::move(result);
   }
-  AbortReasonOr<Ok> getOffThreadStatus() const { return offThreadStatus_; }
+  const AbortReasonOr<Ok>& getOffThreadStatus() const {
+    return offThreadStatus_;
+  }
 
   MOZ_MUST_USE bool instrumentedProfiling() {
     if (!instrumentedProfilingIsCached_) {
