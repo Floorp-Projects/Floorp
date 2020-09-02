@@ -140,6 +140,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.xpcshell = posixpath.join(self.remoteBinDir, "xpcw")
         self.headJSPath = posixpath.join(self.remoteScriptsDir, 'head.js')
         self.httpdJSPath = posixpath.join(self.remoteComponentsDir, 'httpd.js')
+        self.httpdManifest = posixpath.join(self.remoteComponentsDir, 'httpd.manifest')
         self.testingModulesDir = self.remoteModulesDir
         self.testharnessdir = self.remoteScriptsDir
         xpcsCmd = xpcshell.XPCShellTestThread.buildXpcsCmd(self)
@@ -444,6 +445,11 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
         local = os.path.join(self.localBin, "components/httpd.js")
         remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.js")
+        self.device.push(local, remoteFile)
+        self.device.chmod(remoteFile)
+
+        local = os.path.join(self.localBin, "components/httpd.manifest")
+        remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.manifest")
         self.device.push(local, remoteFile)
         self.device.chmod(remoteFile)
 
