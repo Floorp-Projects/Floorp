@@ -2185,6 +2185,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     return NS_ERROR_FAILURE;
   }
 
+  NS_ENSURE_STATE(mOwnerContent);
+
   // If we are an in-process browser, we want to set up our session history.
   if (mIsTopLevelContent && mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
       !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory)) {
