@@ -513,6 +513,7 @@ var PKT_SAVED_OVERLAY = function(options) {
       myself.fillSuggestedTags();
     }
   };
+  this.renderItemRecs = function(data) {};
   this.createSendToMobilePanel = function(ho2, displayName) {
     PKT_SENDTOMOBILE.create(ho2, displayName, myself.premiumDetailsAdded);
   };
@@ -686,6 +687,10 @@ PKT_SAVED.prototype = {
       }
 
       myself.overlay.showStateSaved(resp);
+    });
+
+    thePKT_SAVED.addMessageListener("renderItemRecs", function(payload) {
+      myself.overlay.renderItemRecs(payload);
     });
   },
 };

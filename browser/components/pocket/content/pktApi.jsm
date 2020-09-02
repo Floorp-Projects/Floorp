@@ -355,7 +355,7 @@ var pktApi = (function() {
       sendData.title = options.title;
     }
 
-    return apiRequest({
+    return this.apiRequest({
       path: "/firefox/save",
       data: sendData,
       success(data) {
@@ -395,13 +395,37 @@ var pktApi = (function() {
   }
 
   /**
+   * Gets a list of related recommendations for the item
+   * @param  {string} itemId Item id of item
+   * @param {Object | undefined} options Can provide a string-based title, a
+   *                                     `success` callback and an `error` callback.
+   * @return {Boolean} Returns Boolean whether the api call started sucessfully
+   */
+  function getRecsForItem(itemId, options) {
+    return this.apiRequest({
+      path: "/discover/recIt",
+      data: {
+        item_id: itemId,
+        module: "ff_plugin",
+        count: 3,
+      },
+      success(data) {
+        if (options.success) {
+          options.success.apply(options, Array.apply(null, arguments));
+        }
+      },
+      error: options.error,
+    });
+  }
+
+  /**
    * Get a preview for saved URL
    * @param {string} url     URL of the link
    * @param {Object | undefined} options Can provide a `success` callback and an `error` callback.
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function getArticleInfo(url, options) {
-    return apiRequest({
+    return this.apiRequest({
       path: "/getItemPreview",
       data: {
         access_token: getAccessToken(),
@@ -422,7 +446,7 @@ var pktApi = (function() {
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function getMobileDownload(options) {
-    return apiRequest({
+    return this.apiRequest({
       path: "/firefox/get-app",
       data: {
         access_token: getAccessToken(),
@@ -495,7 +519,7 @@ var pktApi = (function() {
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function sendActions(actions, options) {
-    return apiRequest({
+    return this.apiRequest({
       path: "/send",
       data: {
         access_token: getAccessToken(),
@@ -672,7 +696,7 @@ var pktApi = (function() {
 
     data.access_token = getAccessToken();
 
-    return apiRequest({
+    return this.apiRequest({
       path: "/getSuggestedTags",
       data,
       success: options.success,
@@ -688,7 +712,7 @@ var pktApi = (function() {
     const requestData = Object.assign({}, data, {
       access_token: getAccessToken(),
     });
-    return apiRequest({
+    return this.apiRequest({
       path: "/firefox/get",
       data: requestData,
       success: options.success,
@@ -733,6 +757,7 @@ var pktApi = (function() {
     isUserLoggedIn,
     clearUserData,
     addLink,
+    getRecsForItem,
     deleteItem,
     archiveItem,
     addTagsToItem,
@@ -745,5 +770,6 @@ var pktApi = (function() {
     retrieve,
     getArticleInfo,
     getMobileDownload,
+    apiRequest,
   };
 })();
