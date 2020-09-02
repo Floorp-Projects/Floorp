@@ -114,7 +114,9 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
         BrowserChild::GetFrom(static_cast<mozIDOMWindow*>(aWindow));
     MOZ_ASSERT(browserChild);
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     dom::BrowsingContext* bc = aWindow->GetBrowsingContext();
+#endif
 
     MOZ_DIAGNOSTIC_ASSERT(bc->AncestorsAreCurrent());
     MOZ_DIAGNOSTIC_ASSERT(bc->IsInProcess());
