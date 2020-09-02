@@ -43,6 +43,8 @@ class RenderCompositorEGL : public RenderCompositor {
   uint32_t GetMaxPartialPresentRects() override;
   bool ShouldDrawPreviousPartialPresentRegions() override;
 
+  ipc::FileDescriptor GetAndResetReleaseFence() override;
+
  protected:
   EGLSurface CreateEGLSurface();
 
@@ -55,6 +57,12 @@ class RenderCompositorEGL : public RenderCompositor {
 #endif
 
   EGLint mBufferAge;
+
+  // FileDescriptor of release fence.
+  // Release fence is a fence that is used for waiting until usage/composite of
+  // AHardwareBuffer is ended. The fence is delivered to client side via
+  // ImageBridge. It is used only on android.
+  ipc::FileDescriptor mReleaseFenceFd;
 };
 
 }  // namespace wr

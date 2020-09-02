@@ -54,6 +54,26 @@ bool RenderAndroidHardwareBufferTextureHost::EnsureLockable(
     return false;
   }
 
+  auto fenceFd = mAndroidHardwareBuffer->GetAndResetAcquireFence();
+  if (fenceFd.IsValid()) {
+    const auto& gle = gl::GLContextEGL::Cast(mGL);
+    const auto& egl = gle->mEgl;
+
+    auto rawFD = fenceFd.TakePlatformHandle();
+    const EGLint attribs[] = {LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID,
+                              rawFD.get(), LOCAL_EGL_NONE};
+
+    EGLSync sync =
+        egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, attribs);
+    if (sync) {
+      // XXX use eglWaitSyncKHR() if possible. See Bug 1661371.
+      egl->fClientWaitSync(sync, 0, LOCAL_EGL_FOREVER);
+      egl->fDestroySync(sync);
+    } else {
+      gfxCriticalNote << "Failed to create EGLSync from acquire fence fd";
+    }
+  }
+
   if (mTextureHandle) {
     // Update filter if filter was changed.
     if (IsFilterUpdateNecessary(aRendering)) {
@@ -122,8 +142,6 @@ wr::WrExternalImage RenderAndroidHardwareBufferTextureHost::Lock(
   if (!EnsureLockable(aRendering)) {
     return InvalidToWrExternalImage();
   }
-
-  // XXX Add android Fence handling
 
   return NativeTextureToWrExternalImage(mTextureHandle, 0, 0, GetSize().width,
                                         GetSize().height);

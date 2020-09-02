@@ -20,6 +20,10 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/layers/TextureHostOGL.h"
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -534,7 +538,7 @@ void AsyncImagePipelineManager::HoldExternalImage(
 void AsyncImagePipelineManager::NotifyPipelinesUpdated(
     RefPtr<const wr::WebRenderPipelineInfo> aInfo,
     wr::RenderedFrameId aLatestFrameId,
-    wr::RenderedFrameId aLastCompletedFrameId) {
+    wr::RenderedFrameId aLastCompletedFrameId, ipc::FileDescriptor&& aFenceFd) {
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
   MOZ_ASSERT(mLastCompletedFrameId <= aLastCompletedFrameId.mId);
   MOZ_ASSERT(aLatestFrameId.IsValid());
@@ -547,7 +551,9 @@ void AsyncImagePipelineManager::NotifyPipelinesUpdated(
     MutexAutoLock lock(mRenderSubmittedUpdatesLock);
 
     // Move the pending updates into the submitted ones.
-    mRenderSubmittedUpdates.emplace_back(aLatestFrameId, std::move(aInfo));
+    mRenderSubmittedUpdates.emplace_back(
+        aLatestFrameId,
+        WebRenderPipelineInfoHolder(std::move(aInfo), std::move(aFenceFd)));
   }
 
   // Queue a runnable on the compositor thread to process the updates.
@@ -564,8 +570,7 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
     return;
   }
 
-  std::vector<
-      std::pair<wr::RenderedFrameId, RefPtr<const wr::WebRenderPipelineInfo>>>
+  std::vector<std::pair<wr::RenderedFrameId, WebRenderPipelineInfoHolder>>
       submittedUpdates;
   {
     // We need to lock for mRenderSubmittedUpdates because it can be accessed on
@@ -577,7 +582,10 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
   // submittedUpdates is a vector of RenderedFrameIds paired with vectors of
   // WebRenderPipelineInfo.
   for (auto update : submittedUpdates) {
-    auto& info = update.second->Raw();
+    auto& holder = update.second;
+    const auto& info = holder.mInfo->Raw();
+
+    mReleaseFenceFd = std::move(holder.mFenceFd);
 
     for (auto& epoch : info.epochs) {
       ProcessPipelineRendered(epoch.pipeline_id, epoch.epoch, update.first);
@@ -666,6 +674,19 @@ void AsyncImagePipelineManager::ProcessPipelineRemoved(
 
 void AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU() {
   uint64_t lastCompletedFrameId = mLastCompletedFrameId;
+
+#ifdef MOZ_WIDGET_ANDROID
+  // Set release fence if TextureHost owns AndroidHardwareBuffer.
+  for (auto& it : mTexturesInUseByGPU) {
+    auto& textures = it.second;
+    for (auto& texture : textures) {
+      if (texture->mTexture->GetAndroidHardwareBuffer()) {
+        ipc::FileDescriptor fenceFd = mReleaseFenceFd;
+        texture->mTexture->SetReleaseFence(std::move(fenceFd));
+      }
+    }
+  }
+#endif
 
   // Find first entry after mLastCompletedFrameId and release all prior ones.
   auto firstTexturesToKeep =

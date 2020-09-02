@@ -223,4 +223,22 @@ bool WebRenderTextureHost::NeedsYFlip() const {
   return yFlip;
 }
 
+void WebRenderTextureHost::SetAcquireFence(
+    mozilla::ipc::FileDescriptor&& aFenceFd) {
+  mWrappedTextureHost->SetAcquireFence(std::move(aFenceFd));
+}
+
+void WebRenderTextureHost::SetReleaseFence(
+    mozilla::ipc::FileDescriptor&& aFenceFd) {
+  mWrappedTextureHost->SetReleaseFence(std::move(aFenceFd));
+}
+
+mozilla::ipc::FileDescriptor WebRenderTextureHost::GetAndResetReleaseFence() {
+  return mWrappedTextureHost->GetAndResetReleaseFence();
+}
+
+AndroidHardwareBuffer* WebRenderTextureHost::GetAndroidHardwareBuffer() const {
+  return mWrappedTextureHost->GetAndroidHardwareBuffer();
+}
+
 }  // namespace mozilla::layers

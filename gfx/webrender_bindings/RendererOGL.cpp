@@ -247,6 +247,10 @@ void RendererOGL::WaitForGPU() {
   }
 }
 
+ipc::FileDescriptor RendererOGL::GetAndResetReleaseFence() {
+  return mCompositor->GetAndResetReleaseFence();
+}
+
 RenderedFrameId RendererOGL::GetLastCompletedFrameId() {
   return mCompositor->GetLastCompletedFrameId();
 }
