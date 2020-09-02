@@ -110,6 +110,12 @@ bool nsPrinterCUPS::SupportsDuplex() const {
 }
 
 bool nsPrinterCUPS::SupportsColor() const {
+  // CUPS 2.1 (particularly as used in Ubuntu 16) is known to have innaccurate
+  // results for CUPS_PRINT_COLOR_MODE.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1660658#c15
+  if (!IsCUPSVersionAtLeast(2, 2, 0)) {
+    return true;
+  }
   return Supports(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_COLOR) ||
          Supports(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO);
 }
@@ -127,10 +133,33 @@ bool nsPrinterCUPS::SupportsCollation() const {
   return type & CUPS_PRINTER_COLLATE;
 }
 
-bool nsPrinterCUPS::Supports(const char* option, const char* value) const {
+bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
   MOZ_ASSERT(mPrinterInfo);
   return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo,
-                                      option, value);
+                                      aOption, aValue);
+}
+
+bool nsPrinterCUPS::IsCUPSVersionAtLeast(uint64_t aCUPSMajor,
+                                         uint64_t aCUPSMinor,
+                                         uint64_t aCUPSPatch) const {
+  // Compare major version.
+  if (mCUPSMajor > aCUPSMajor) {
+    return true;
+  }
+  if (mCUPSMajor < aCUPSMajor) {
+    return false;
+  }
+
+  // Compare minor version.
+  if (mCUPSMinor > aCUPSMinor) {
+    return true;
+  }
+  if (mCUPSMinor < aCUPSMinor) {
+    return false;
+  }
+
+  // Compare patch.
+  return aCUPSPatch <= mCUPSPatch;
 }
 
 nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
