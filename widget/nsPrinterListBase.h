@@ -34,6 +34,13 @@ class nsPrinterListBase : public nsIPrinterList {
     nsString mName;
     // CUPS only: Two handles to owned cups_dest_t / cups_dinfo_t objects.
     void* mCupsHandles[2]{nullptr, nullptr};
+
+    // The major and minor version numbers for the print server that this
+    // printer is accessed through. With CUPS, these are the CUPS server's
+    // version.
+    uint64_t mServerMajor = 0;
+    uint64_t mServerMinor = 0;
+    uint64_t mServerPatch = 0;
   };
 
   // Called off the main thread, collect information to create an appropriate
