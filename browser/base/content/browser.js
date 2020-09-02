@@ -8900,11 +8900,19 @@ class TabDialogBox {
    * duplicate dialogs will be dropped.
    * @param {String} [aOptions.sizeTo] - Pass "available" to stretch dialog to
    * roughly content size.
+   * @param {Boolean} [aOptions.keepOpenSameOriginNav] - By default dialogs are
+   * aborted on any navigation.
+   * Set to true to keep the dialog open for same origin navigation.
    * @returns {Promise} - Resolves once the dialog has been closed.
    */
   open(
     aURL,
-    { features = null, allowDuplicateDialogs = true, sizeTo } = {},
+    {
+      features = null,
+      allowDuplicateDialogs = true,
+      sizeTo,
+      keepOpenSameOriginNav,
+    } = {},
     ...aParams
   ) {
     return new Promise(resolve => {
@@ -8919,7 +8927,7 @@ class TabDialogBox {
       };
 
       // Open dialog and resolve once it has been closed
-      this._dialogManager.open(
+      let dialog = this._dialogManager.open(
         aURL,
         {
           features,
@@ -8930,6 +8938,13 @@ class TabDialogBox {
         },
         ...aParams
       );
+
+      // Marking the dialog externally, instead of passing it as an option.
+      // The SubDialog(Manager) does not care about navigation.
+      // dialog can be null here if allowDuplicateDialogs = false.
+      if (dialog) {
+        dialog._keepOpenSameOriginNav = keepOpenSameOriginNav;
+      }
     });
   }
 
@@ -8937,8 +8952,11 @@ class TabDialogBox {
     // Hide PopupNotifications to prevent them from covering up dialogs.
     this.browser.setAttribute("tabDialogShowing", true);
     UpdatePopupNotificationsVisibility();
+
     // Register listeners
+    this._lastPrincipal = this.browser.contentPrincipal;
     this.browser.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+
     this.tab?.addEventListener("TabClose", this);
   }
 
@@ -8946,8 +8964,11 @@ class TabDialogBox {
     // Show PopupNotifications again.
     this.browser.removeAttribute("tabDialogShowing");
     UpdatePopupNotificationsVisibility();
+
     // Clean up listeners
     this.browser.removeProgressListener(this);
+    this._lastPrincipal = null;
+
     this.tab?.removeEventListener("TabClose", this);
   }
 
@@ -8959,7 +8980,7 @@ class TabDialogBox {
   }
 
   abortAllDialogs() {
-    this._dialogManager.abortAll();
+    this._dialogManager.abortDialogs();
   }
 
   focus() {
@@ -8977,7 +8998,23 @@ class TabDialogBox {
     ) {
       return;
     }
-    this.abortAllDialogs();
+
+    // Dialogs can be exempt from closing on same origin location change.
+    let filterFn;
+
+    // Test for same origin location change
+    if (
+      this._lastPrincipal?.isSameOrigin(
+        aLocation,
+        this.browser.browsingContext.usePrivateBrowsing
+      )
+    ) {
+      filterFn = dialog => !dialog._keepOpenSameOriginNav;
+    }
+
+    this._lastPrincipal = this.browser.contentPrincipal;
+
+    this._dialogManager.abortDialogs(filterFn);
   }
 
   get tab() {
