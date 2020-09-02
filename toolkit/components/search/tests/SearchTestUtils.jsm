@@ -73,7 +73,8 @@ var SearchTestUtils = Object.freeze({
         }
 
         Services.obs.removeObserver(observer, topic);
-        resolve(aSubject);
+        // Let the stack unwind.
+        Services.tm.dispatchToMainThread(() => resolve(aSubject));
       }, topic);
     });
   },

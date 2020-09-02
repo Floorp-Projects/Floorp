@@ -74,7 +74,6 @@ function getLocalizedPref(prefName, defaultValue) {
 }
 
 var gInitialized = false;
-var gReinitializing = false;
 
 // nsISearchParseSubmissionResult
 function ParseSubmissionResult(
@@ -210,7 +209,7 @@ SearchService.prototype = {
 
   /**
    * Resets the locally stored data to the original empty values in preparation
-   * for a reinit or a reset.
+   * for a reset.
    */
   _resetLocalData() {
     this._engines.clear();
@@ -962,86 +961,6 @@ SearchService.prototype = {
     logConsole.debug("maybeReloadEngines complete");
   },
 
-  _reInit(origin) {
-    logConsole.debug("_reInit");
-    // Re-entrance guard, because we're using an async lambda below.
-    if (gReinitializing) {
-      logConsole.debug("_reInit: already re-initializing, bailing out.");
-      return;
-    }
-    gReinitializing = true;
-
-    // Start by clearing the initialized state, so we don't abort early.
-    gInitialized = false;
-
-    // Tests want to know when we've started.
-    Services.obs.notifyObservers(
-      null,
-      SearchUtils.TOPIC_SEARCH_SERVICE,
-      "reinit-started"
-    );
-
-    (async () => {
-      try {
-        this._initObservers = PromiseUtils.defer();
-
-        // Clear the engines, too, so we don't stick with the stale ones.
-        this._resetLocalData();
-
-        // Tests that want to force a synchronous re-initialization need to
-        // be notified when we are done uninitializing.
-        Services.obs.notifyObservers(
-          null,
-          SearchUtils.TOPIC_SEARCH_SERVICE,
-          "uninit-complete"
-        );
-
-        let cache = await this._cache.get(origin);
-
-        await this._loadEngines(cache);
-
-        // If we've got this far, but the application is now shutting down,
-        // then we need to abandon any further work, especially not writing
-        // the cache. We do this, because the add-on manager has also
-        // started shutting down and as a result, we might have an incomplete
-        // picture of the installed search engines. Writing the cache at
-        // this stage would potentially mean the user would loose their engine
-        // data.
-        // We will however, rebuild the cache on next start up if we detect
-        // it is necessary.
-        if (Services.startup.shuttingDown) {
-          logConsole.warn("_reInit: abandoning reInit due to shutting down");
-          this._initObservers.reject(Cr.NS_ERROR_ABORT);
-          return;
-        }
-
-        // Typically we'll re-init as a result of a pref observer,
-        // so signal to 'callers' that we're done.
-        gInitialized = true;
-        this._initObservers.resolve();
-        Services.obs.notifyObservers(
-          null,
-          SearchUtils.TOPIC_SEARCH_SERVICE,
-          "init-complete"
-        );
-      } catch (err) {
-        logConsole.error("Reinit failed:", err);
-        Services.obs.notifyObservers(
-          null,
-          SearchUtils.TOPIC_SEARCH_SERVICE,
-          "reinit-failed"
-        );
-      } finally {
-        gReinitializing = false;
-        Services.obs.notifyObservers(
-          null,
-          SearchUtils.TOPIC_SEARCH_SERVICE,
-          "reinit-complete"
-        );
-      }
-    })();
-  },
-
   /**
    * Reset SearchService data.
    */
@@ -1449,11 +1368,6 @@ SearchService.prototype = {
 
   get isInitialized() {
     return gInitialized;
-  },
-
-  // reInit is currently only exposed for testing purposes
-  async reInit() {
-    return this._reInit("test");
   },
 
   async getEngines() {
@@ -2763,15 +2677,15 @@ SearchService.prototype = {
       "Search service: shutting down",
       () =>
         (async () => {
-          // If we are in initialization or re-initialization, then don't attempt
-          // to save the cache. It is likely that shutdown will have caused the
-          // add-on manager to stop, which can cause initialization to fail.
+          // If we are in initialization, then don't attempt to save the cache.
+          // It is likely that shutdown will have caused the add-on manager to
+          // stop, which can cause initialization to fail.
           // Hence at that stage, we could have a broken cache which we don't
           // want to write.
           // The good news is, that if we don't write the cache here, we'll
           // detect the out-of-date cache on next state, and automatically
           // rebuild it.
-          if (!gInitialized || gReinitializing) {
+          if (!gInitialized) {
             logConsole.warn(
               "not saving cache on shutdown due to initializing."
             );

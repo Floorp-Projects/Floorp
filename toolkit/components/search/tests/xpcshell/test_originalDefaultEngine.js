@@ -36,12 +36,7 @@ add_task(async function test_changeRegion() {
   // Note: the test could be done with changing regions or locales. The important
   // part is that the default engine is changing across the switch, and that
   // the engine is not the first one in the new sorted engines list.
-  let reInitPromise = SearchTestUtils.promiseSearchNotification(
-    "reinit-complete"
-  );
-  Region._setHomeRegion("tr", false);
-  Services.search.reInit();
-  await reInitPromise;
+  await promiseSetHomeRegion("tr");
 
   Assert.equal(
     Services.search.originalDefaultEngine.name,
