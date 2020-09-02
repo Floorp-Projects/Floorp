@@ -663,18 +663,20 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   void traceChildren(JSTracer* trc);
 
   static MOZ_ALWAYS_INLINE void readBarrier(JSString* thing) {
-    if (thing->isPermanentAtom() || js::gc::IsInsideNursery(thing)) {
-      return;
+    if (!thing->isPermanentAtom()) {
+      Cell::readBarrier(thing);
     }
-    js::gc::TenuredCell::readBarrier(&thing->asTenured());
   }
 
   static MOZ_ALWAYS_INLINE void writeBarrierPre(JSString* thing) {
-    if (!thing || thing->isPermanentAtom() || js::gc::IsInsideNursery(thing)) {
-      return;
+    if (thing && !thing->isPermanentAtom()) {
+      Cell::writeBarrierPre(thing);
     }
+  }
 
-    js::gc::TenuredCell::writeBarrierPre(&thing->asTenured());
+  static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, JSString* prev,
+                                                 JSString* next) {
+    js::gc::WriteBarrierPostImpl<JSString>(cellp, prev, next);
   }
 
   static void addCellAddressToStoreBuffer(js::gc::StoreBuffer* buffer,
@@ -685,24 +687,6 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static void removeCellAddressFromStoreBuffer(js::gc::StoreBuffer* buffer,
                                                js::gc::Cell** cellp) {
     buffer->unputCell(reinterpret_cast<JSString**>(cellp));
-  }
-
-  static void writeBarrierPost(void* cellp, JSString* prev, JSString* next) {
-    // See JSObject::writeBarrierPost for a description of the logic here.
-    MOZ_ASSERT(cellp);
-
-    js::gc::StoreBuffer* buffer;
-    if (next && (buffer = next->storeBuffer())) {
-      if (prev && prev->storeBuffer()) {
-        return;
-      }
-      buffer->putCell(static_cast<JSString**>(cellp));
-      return;
-    }
-
-    if (prev && (buffer = prev->storeBuffer())) {
-      buffer->unputCell(static_cast<JSString**>(cellp));
-    }
   }
 
  private:
