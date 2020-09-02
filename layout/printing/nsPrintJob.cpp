@@ -1106,7 +1106,7 @@ nsresult nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting) {
 //---------------------------------------------------------------------
 void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
   if (mPrintPreviewCallback) {
-    mPrintPreviewCallback(PrintPreviewResultInfo(0, 0));  // signal error
+    mPrintPreviewCallback(PrintPreviewResultInfo(0, 0, false));  // signal error
     mPrintPreviewCallback = nullptr;
   }
 
