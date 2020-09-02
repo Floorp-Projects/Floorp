@@ -21,6 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
                 download="with-target.txt" id="link4">Download "with-target.txt"</a></li>
         <li><a href="javascript:(1+2)+''"
             download="javascript.txt" id="link5">Download "javascript.txt"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?inline=download_page_3.txt"
+            download="not_used.txt" id="link8">Download "download_page_3.txt"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?attachment=download_page_3.txt"
+            download="not_used.txt" id="link9">Download "download_page_3.txt"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?inline=none"
+            download="download_page_4.txt" id="link10">Download "download_page_4.txt"</a></li>
+        <li><a href="download_with_content_disposition_header.sjs?attachment=none"
+            download="download_page_4.txt" id="link11">Download "download_page_4.txt"</a></li>
     </ul>
     <script>
         var li = document.createElement("li");

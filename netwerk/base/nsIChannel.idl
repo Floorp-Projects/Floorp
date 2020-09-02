@@ -292,9 +292,11 @@ interface nsIChannel : nsIRequest
      * attachment.
      *
      * Setting contentDisposition provides a hint to the channel about the
-     * disposition.  If a normal Content-Disposition header is present its
-     * value will always be used.  If it is missing the hinted value will
-     * be used if set.
+     * disposition.  If the hint is DISPOSITION_ATTACHMENT and a normal
+     * Content-Disposition header is present, the hinted value will always be
+     * used.  The value from Content-Disposition header is only used when
+     * the hinted value is not DISPOSITION_ATTACHMENT.
+     * If the header is missing the hinted value will be used if set.
      *
      * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header either
      * doesn't exist for this type of channel or is empty, and return
