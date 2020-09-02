@@ -9,7 +9,7 @@ description = "Shared Rust code for libxul"
 geckoservo = { path = "../../../../servo/ports/geckolib" }
 kvstore = { path = "../../../components/kvstore" }
 lmdb-rkv-sys = { version = "0.11", features = ["mdb_idl_logn_9"] }
-mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "d5a37fd0bd51e06a53274c68213b00136aba83a6" }
+mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "fe9028570e44f3a725dd78bbb58428909c4618bf" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
@@ -83,7 +83,7 @@ cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 gecko_refcount_logging = ["geckoservo/gecko_refcount_logging"]
 simd-accel = ["encoding_glue/simd-accel", "jsrust_shared/simd-accel"]
-moz_memory = ["mp4parse_capi/mp4parse_fallible"]
+moz_memory = []
 moz_places = ["bookmark_sync"]
 spidermonkey_rust = ["jsrust_shared/baldrdash"]
 cranelift_x86 = ["jsrust_shared/cranelift_x86"]

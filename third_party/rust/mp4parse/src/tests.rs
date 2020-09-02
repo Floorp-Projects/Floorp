@@ -5,12 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use super::fallible::TryRead as _;
 use super::read_mp4;
 use super::Error;
 use super::MediaContext;
+use fallible_collections::TryRead as _;
 
-#[cfg(feature = "mp4parse_fallible")]
 use std::convert::TryInto as _;
 use std::io::Cursor;
 use std::io::Read as _;
@@ -1297,11 +1296,10 @@ fn read_to_end_() {
     let mut src = b"1234567890".take(5);
     let buf = src.read_into_try_vec().unwrap();
     assert_eq!(buf.len(), 5);
-    assert_eq!(buf.into_inner(), b"12345");
+    assert_eq!(buf, b"12345".as_ref());
 }
 
 #[test]
-#[cfg(feature = "mp4parse_fallible")]
 fn read_to_end_oom() {
     let mut src = b"1234567890".take(std::usize::MAX.try_into().expect("usize < u64"));
     assert!(src.read_into_try_vec().is_err());
