@@ -530,6 +530,10 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void TRRService::RebuildSuffixList(nsTArray<nsCString>&& aSuffixList) {
+  if (!StaticPrefs::network_trr_split_horizon_mitigations()) {
+    return;
+  }
+
   MutexAutoLock lock(mLock);
   mDNSSuffixDomains.Clear();
   for (const auto& item : aSuffixList) {
