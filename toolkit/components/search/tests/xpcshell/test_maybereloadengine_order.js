@@ -15,7 +15,7 @@ const TEST_CONFIG = [
 ];
 
 add_task(async function setup() {
-  await useTestEngines("test-extensions", null, TEST_CONFIG);
+  await SearchTestUtils.useTestEngines("test-extensions", null, TEST_CONFIG);
   await AddonTestUtils.promiseStartupManager();
 
   registerCleanupFunction(AddonTestUtils.promiseShutdownManager);
