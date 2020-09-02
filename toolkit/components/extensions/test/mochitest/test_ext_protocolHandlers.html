@@ -88,8 +88,11 @@ add_task(async function test_protocolHandler() {
     background() {
       browser.test.onMessage.addListener(async (msg, arg) => {
         if (msg == "open") {
-          let tab = await browser.windows.create({url: arg, incognito: true});
-          browser.test.sendMessage("opened", tab.id);
+          let win = await browser.windows.create({ url: arg, incognito: true });
+          browser.test.sendMessage("opened", { windowId: win.id, tabId: win.tabs[0].id });
+        } else if(msg == "nav") {
+          await browser.tabs.update(arg.tabId, { url: arg.url })
+          browser.test.sendMessage("navigated");
         } else if (msg == "close") {
           await browser.windows.remove(arg);
           browser.test.sendMessage("closed");
@@ -134,29 +137,65 @@ add_task(async function test_protocolHandler() {
 
   // Expect the chooser window to be open, close it.
   chromeScript = SpecialPowers.loadChromeScript(async () => {
+    const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xhtml";
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-    let window = await BrowserTestUtils.domWindowOpened(undefined, win => {
-      return BrowserTestUtils.waitForEvent(win, "load", false, event => {
-        let win = event.target.defaultView;
-        return !!win.document.querySelector("dialog#handling");
-      });
-    });
-    let entry =  window.document.getElementById("items").firstChild;
+    let windowOpen = BrowserTestUtils.domWindowOpenedAndLoaded();
+
+    sendAsyncMessage("listenWindow");
+
+    let window = await windowOpen;
+    let gBrowser = window.gBrowser
+    let tabDialogBox = gBrowser.getTabDialogBox(gBrowser.selectedBrowser);
+    let dialogStack = tabDialogBox._dialogManager._dialogStack;
+
+    let checkFn = dialogEvent =>
+      dialogEvent.detail.dialog?._openedURL == CONTENT_HANDLING_URL;
+
+    let eventPromise = BrowserTestUtils.waitForEvent(
+      dialogStack,
+      "dialogopen",
+      true,
+      checkFn
+    );
+
+    sendAsyncMessage("listenDialog");
+
+    let event = await eventPromise;
+
+    let { dialog } = event.detail;
+
+    let entry =  dialog._frame.contentDocument.getElementById("items").firstChild;
     sendAsyncMessage("handling", {name: entry.getAttribute("name"), disabled: entry.disabled});
-    window.close();
+
+    dialog.close();
   });
 
-  let testData = chromeScript.promiseOneMessage("handling");
+  // Wait for the chrome script to attach window listener
+  await chromeScript.promiseOneMessage("listenWindow");
+
+  let listenDialog = chromeScript.promiseOneMessage("listenDialog");
+  let windowOpen =  pb_extension.awaitMessage("opened");
+
   pb_extension.sendMessage("open", "ext+foo:test");
-  id = await pb_extension.awaitMessage("opened");
+
+  // Wait for chrome script to attach dialog listener
+  await listenDialog;
+  let {tabId, windowId} = await windowOpen;
+
+  let testData = chromeScript.promiseOneMessage("handling");
+  let navPromise = pb_extension.awaitMessage("navigated");
+  pb_extension.sendMessage("nav", {url: "ext+foo:test", tabId});
+  await navPromise;
   await consoleMonitor.finished();
   let entry = await testData;
+
   is(entry.name, "a foo protocol handler", "entry is correct");
   ok(entry.disabled, "handler is disabled");
 
-  pb_extension.sendMessage("close", id);
-  await pb_extension.awaitMessage("closed");
+  let promiseClosed = pb_extension.awaitMessage("closed");
+  pb_extension.sendMessage("close", windowId);
+  await promiseClosed;
   await pb_extension.unload();
 
   // Shutdown the addon, then ensure the protocol was removed.

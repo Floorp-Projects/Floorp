@@ -122,6 +122,45 @@ async function openHelperAppDialog(launcher) {
   return dlg;
 }
 
+/**
+ * Wait for protocol ask dialog open/close.
+ * @param {*} browser - Browser element the dialog belongs to.
+ * @param {Boolean} state - true: dialog open, false: dialog close
+ * @returns {Promise<SubDialog>} - Returns a promise which resolves with the
+ * SubDialog object of the dialog which closed or opened.
+ */
+async function waitForProtocolAskDialog(browser, state) {
+  const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xhtml";
+
+  let eventStr = state ? "dialogopen" : "dialogclose";
+
+  let tabDialogBox = gBrowser.getTabDialogBox(browser);
+  let dialogStack = tabDialogBox._dialogManager._dialogStack;
+
+  let checkFn;
+
+  if (state) {
+    checkFn = dialogEvent =>
+      dialogEvent.detail.dialog?._openedURL == CONTENT_HANDLING_URL;
+  }
+
+  let event = await BrowserTestUtils.waitForEvent(
+    dialogStack,
+    eventStr,
+    true,
+    checkFn
+  );
+
+  let { dialog } = event.detail;
+
+  // If the dialog is closing wait for it to be fully closed before resolving
+  if (!state) {
+    await dialog._closingPromise;
+  }
+
+  return event.detail.dialog;
+}
+
 async function promiseDownloadFinished(list) {
   return new Promise(resolve => {
     list.addView({
