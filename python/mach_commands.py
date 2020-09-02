@@ -27,7 +27,6 @@ from manifestparser import filters as mpf
 from mozbuild.base import (
     MachCommandBase,
 )
-from mozbuild.virtualenv import VirtualenvManager
 
 from mach.decorators import (
     CommandArgument,
@@ -92,17 +91,12 @@ class MachCommands(MachCommandBase):
                                 python_unbuffered=False,  # Leave input buffered.
                                 append_env=append_env)
 
-    @Command('python-test', category='testing',
-             description='Run Python unit tests with an appropriate test runner.')
+    @Command('python-test', category='testing', virtualenv_name='python-test',
+             description='Run Python unit tests with pytest.')
     @CommandArgument('-v', '--verbose',
                      default=False,
                      action='store_true',
                      help='Verbose output.')
-    @CommandArgument('--python',
-                     default='3',
-                     help='Version of Python for Pipenv to use. When given a '
-                          'Python version, Pipenv will automatically scan your '
-                          'system for a Python that matches that given version.')
     @CommandArgument('-j', '--jobs',
                      default=None,
                      type=int,
@@ -142,12 +136,11 @@ class MachCommands(MachCommandBase):
                          subsuite=None,
                          verbose=False,
                          jobs=None,
-                         python=None,
                          exitfirst=False,
                          extra=None,
                          **kwargs):
-        self._activate_test_virtualenvs(python)
 
+        self.activate_virtualenv()
         if test_objects is None:
             from moztest.resolve import TestResolver
             resolver = self._spawn(TestResolver)
@@ -237,38 +230,6 @@ class MachCommands(MachCommandBase):
         self.log(logging.INFO, 'python-test', {'return_code': return_code},
                  'Return code from mach python-test: {return_code}')
         return return_code
-
-    def _activate_test_virtualenvs(self, python):
-        """Make sure the test suite virtualenvs are set up and activated.
-
-        Args:
-            python: Optional python version string we want to run the suite with.
-                See the `--python` argument to the `mach python-test` command.
-        """
-        from mozbuild.pythonutil import find_python3_executable
-
-        default_manager = self.virtualenv_manager
-
-        # Grab the default virtualenv properties before we activate other virtualenvs.
-        python = python or default_manager.python_path
-        py3_root = default_manager.virtualenv_root + '_py3'
-
-        self.activate_pipenv(os.path.dirname(default_manager.virtualenv_root),
-                             pipfile=None, populate=True, python=python)
-
-        # If the current process is running under Python 2, the Python 3
-        # virtualenv may not be set up yet. To avoid problems in tests
-        # that implicitly depend on the Python 3 virtualenv we ensure the Python 3
-        # virtualenv is up to date before the tests start.
-        if not six.PY3:
-            python3, version = find_python3_executable(min_version='3.5.0')
-            py3_manager = VirtualenvManager(
-                default_manager.topsrcdir,
-                py3_root,
-                default_manager.log_handle,
-                default_manager.manifest_path,
-            )
-            py3_manager.ensure(python3)
 
     def _run_python_test(self, test):
         from mozprocess import ProcessHandler
