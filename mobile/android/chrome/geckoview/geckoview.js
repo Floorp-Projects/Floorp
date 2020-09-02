@@ -562,7 +562,6 @@ function startup() {
               events: {
                 DOMContentLoaded: {},
                 DOMMetaViewportFitChanged: {},
-                DOMTitleChanged: {},
                 "MozDOMFullscreen:Entered": {},
                 "MozDOMFullscreen:Exit": {},
                 "MozDOMFullscreen:Exited": {},
