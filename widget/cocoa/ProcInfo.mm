@@ -62,7 +62,6 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
 
           // copying all the info to the ProcInfo struct
           info.filename.AssignASCII(proc.pbi_name);
-          info.virtualMemorySize = pti.pti_virtual_size;
           info.residentSetSize = pti.pti_resident_size;
           info.cpuUser = pti.pti_total_user;
           info.cpuKernel = pti.pti_total_system;

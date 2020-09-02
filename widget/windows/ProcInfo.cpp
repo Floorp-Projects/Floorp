@@ -89,7 +89,6 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.cpuKernel = ToNanoSeconds(kernelTime);
           info.cpuUser = ToNanoSeconds(userTime);
           info.residentSetSize = memoryCounters.WorkingSetSize;
-          info.virtualMemorySize = memoryCounters.PagefileUsage;
 
           // Computing the resident unique size is somewhat tricky,
           // so we use about:memory's implementation. This implementation

@@ -55,16 +55,6 @@ add_task(async function test_proc_info() {
           `Resident-unique-size should be bounded by resident-set-size ${parentProc.residentUniqueSize} <= ${parentProc.residentSetSize}`
         );
 
-        if (AppConstants.platform != "win") {
-          // The definition of `virtualMemorySize` seens to differ between Windows < 7 and >= 7.
-          // Also, under Windows 7+, `virtualMemorySize` is defined as the number of private bytes,
-          // which is entirely unrelated to virtual memory.
-          Assert.ok(
-            parentProc.residentUniqueSize <= parentProc.virtualMemorySize,
-            `Resident-unique-size should be bounded by virtual ${parentProc.residentUniqueSize} <= ${parentProc.virtualMemorySize}`
-          );
-        }
-
         // While it's very unlikely that the parent will disappear while we're running
         // tests, some children can easily vanish. So we go twice through the list of
         // children. Once to test stuff that all process data respects the invariants
@@ -126,16 +116,6 @@ add_task(async function test_proc_info() {
             childProc.residentUniqueSize <= childProc.residentSetSize,
             `Resident-unique-size should be bounded by resident-set-size ${childProc.residentUniqueSize} <= ${childProc.residentSetSize}`
           );
-
-          if (AppConstants.platform != "win") {
-            // The definition of `virtualMemorySize` seens to differ between Windows < 7 and >= 7.
-            // Also, under Windows 7+, `virtualMemorySize` is defined as the number of private bytes,
-            // which is entirely unrelated to virtual memory.
-            Assert.ok(
-              childProc.residentUniqueSize <= childProc.virtualMemorySize,
-              `Resident-unique-size should be bounded by virtual memory size ${childProc.residentUniqueSize} <= ${childProc.virtualMemorySize}`
-            );
-          }
 
           // Once we have found the socket process, bailout.
           break;

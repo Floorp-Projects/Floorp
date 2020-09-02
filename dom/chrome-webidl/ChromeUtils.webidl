@@ -549,9 +549,6 @@ dictionary ChildProcInfoDictionary {
   // Process filename (without the path name).
   DOMString filename = "";
 
-  // VMS, in bytes.
-  unsigned long long virtualMemorySize = 0;
-
   // RSS, in bytes, i.e. the total amount of memory allocated
   // by this process.
   long long residentSetSize = 0;
@@ -595,9 +592,6 @@ dictionary ParentProcInfoDictionary {
 
   // Process filename (without the path name).
   DOMString filename = "";
-
-  // VMS, in bytes.
-  unsigned long long virtualMemorySize = 0;
 
   // RSS, in bytes, i.e. the total amount of memory allocated
   // by this process.
