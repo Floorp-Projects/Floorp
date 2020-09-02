@@ -38,7 +38,7 @@ enum punycode_status {
 };
 
 #if UINT_MAX >= (1 << 26) - 1
-using punycode_uint = unsigned int;
+typedef unsigned int punycode_uint;
 #else
 typedef unsigned long punycode_uint;
 #endif
