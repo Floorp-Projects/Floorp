@@ -80,7 +80,6 @@ const WarpOpSnapshot* WarpBuilder::getOpSnapshotImpl(
 void WarpBuilder::initBlock(MBasicBlock* block) {
   graph().addBlock(block);
 
-  // TODO: set block hit count (for branch pruning pass)
   block->setLoopDepth(loopDepth());
 
   current = block;
@@ -754,7 +753,6 @@ bool WarpBuilder::build_True(BytecodeLocation) {
 
 bool WarpBuilder::build_Pop(BytecodeLocation) {
   current->pop();
-  // TODO: IonBuilder inserts a resume point in loops, re-evaluate this.
   return true;
 }
 
@@ -971,9 +969,6 @@ bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
              "arguments aliases formals when an arguments binding is present "
              "and the arguments object is mapped");
 
-  // TODO: double check corresponding IonBuilder code when supporting the
-  // arguments analysis in WarpBuilder.
-
   MOZ_ASSERT(info().needsArgsObj(),
              "unexpected JSOp::SetArg with lazy arguments");
 
@@ -994,12 +989,6 @@ bool WarpBuilder::build_ToNumeric(BytecodeLocation loc) {
   return buildUnaryOp(loc);
 }
 
-bool WarpBuilder::build_Pos(BytecodeLocation loc) {
-  // TODO: MUnaryCache is the most basic implementation. Optimize it for known
-  // numbers at least.
-  return buildUnaryOp(loc);
-}
-
 bool WarpBuilder::buildUnaryOp(BytecodeLocation loc) {
   MDefinition* value = current->pop();
   return buildIC(loc, CacheKind::UnaryArith, {value});
@@ -1008,6 +997,8 @@ bool WarpBuilder::buildUnaryOp(BytecodeLocation loc) {
 bool WarpBuilder::build_Inc(BytecodeLocation loc) { return buildUnaryOp(loc); }
 
 bool WarpBuilder::build_Dec(BytecodeLocation loc) { return buildUnaryOp(loc); }
+
+bool WarpBuilder::build_Pos(BytecodeLocation loc) { return buildUnaryOp(loc); }
 
 bool WarpBuilder::build_Neg(BytecodeLocation loc) { return buildUnaryOp(loc); }
 
@@ -1138,9 +1129,9 @@ bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
   //         \    |
   //        joinBlock
   //
-  // TODO: re-evaluate this. It would probably be better to fix FoldTests to
-  // support the triangle pattern so that we can remove this. IonBuilder had
-  // other concerns that don't apply to WarpBuilder.
+  // TODO(post-Warp): re-evaluate this. It would probably be better to fix
+  // FoldTests to support the triangle pattern so that we can remove this.
+  // IonBuilder had other concerns that don't apply to WarpBuilder.
   auto createEmptyBlockForTest = [&](MBasicBlock* pred, size_t successor,
                                      size_t numToPop) -> MBasicBlock* {
     MOZ_ASSERT(joinBlock);
@@ -1319,8 +1310,6 @@ bool WarpBuilder::build_LoopHead(BytecodeLocation loc) {
 
   MInterruptCheck* check = MInterruptCheck::New(alloc());
   current->add(check);
-
-  // TODO: recompile check
 
   return true;
 }
@@ -1745,8 +1734,8 @@ bool WarpBuilder::build_Iter(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_IterNext(BytecodeLocation) {
-  // TODO: IterNext was added as hint to prevent IonBuilder/TI loop restarts.
-  // Once IonBuilder is gone this op should probably just be removed.
+  // TODO(post-Warp): IterNext was added as hint to prevent IonBuilder/TI loop
+  // restarts. Once IonBuilder is gone this op should probably just be removed.
   MDefinition* def = current->pop();
   MInstruction* unbox =
       MUnbox::New(alloc(), def, MIRType::String, MUnbox::Infallible);
@@ -1796,7 +1785,6 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
     return buildInlinedCall(loc, inliningSnapshot, callInfo);
   }
 
-  // TODO: Consider using buildIC for this as well.
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
     return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, callInfo);
   }
@@ -1805,8 +1793,6 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
     callInfo.setImplicitlyUsedUnchecked();
     return buildBailoutForColdIC(loc, CacheKind::Call);
   }
-
-  // TODO: consider adding a Call IC like Baseline has.
 
   bool needsThisCheck = false;
   if (callInfo.constructing()) {
