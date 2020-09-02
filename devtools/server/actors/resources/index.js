@@ -13,6 +13,7 @@ const TYPES = {
   DOCUMENT_EVENT: "document-event",
   ERROR_MESSAGE: "error-message",
   PLATFORM_MESSAGE: "platform-message",
+  NETWORK_EVENT: "network-event",
 };
 exports.TYPES = TYPES;
 
@@ -45,7 +46,11 @@ const FrameTargetResources = augmentResourceDictionary({
     path: "devtools/server/actors/resources/platform-messages",
   },
 });
-const ParentProcessResources = augmentResourceDictionary({});
+const ParentProcessResources = augmentResourceDictionary({
+  [TYPES.NETWORK_EVENT]: {
+    path: "devtools/server/actors/resources/network-events",
+  },
+});
 
 function augmentResourceDictionary(dict) {
   for (const resource of Object.values(dict)) {
