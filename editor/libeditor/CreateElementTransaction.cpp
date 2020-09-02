@@ -119,9 +119,9 @@ NS_IMETHODIMP CreateElementTransaction::DoTransaction() {
     return NS_ERROR_FAILURE;
   }
   IgnoredErrorResult ignoredError;
-  selection->Collapse(afterNewNode, ignoredError);
+  selection->CollapseInLimiter(afterNewNode, ignoredError);
   NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Selection::Collapse() failed, but ignored");
+                       "Selection::CollapseInLimiter() failed, but ignored");
   return NS_OK;
 }
 
