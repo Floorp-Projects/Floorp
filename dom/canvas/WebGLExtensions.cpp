@@ -28,7 +28,13 @@ bool WebGLExtensionBlendMinMax::IsSupported(const WebGLContext* webgl) {
 WebGLExtensionExplicitPresent::WebGLExtensionExplicitPresent(
     WebGLContext* const webgl)
     : WebGLExtensionBase(webgl) {
-  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+  if (!IsSupported(webgl)) {
+    NS_WARNING(
+        "Constructing WebGLExtensionExplicitPresent but IsSupported() is "
+        "false!");
+    // This was previously an assert, but it seems like we get races against
+    // StaticPrefs changes/initialization?
+  }
 }
 
 bool WebGLExtensionExplicitPresent::IsSupported(
@@ -102,7 +108,13 @@ bool WebGLExtensionTextureNorm16::IsSupported(const WebGLContext* const webgl) {
 
 WebGLExtensionTextureNorm16::WebGLExtensionTextureNorm16(WebGLContext* webgl)
     : WebGLExtensionBase(webgl) {
-  MOZ_ASSERT(IsSupported(webgl));
+  if (!IsSupported(webgl)) {
+    NS_WARNING(
+        "Constructing WebGLExtensionTextureNorm16 but IsSupported() is "
+        "false!");
+    // This was previously an assert, but it seems like we get races against
+    // StaticPrefs changes/initialization?
+  }
 
   auto& fua = *webgl->mFormatUsage;
 
