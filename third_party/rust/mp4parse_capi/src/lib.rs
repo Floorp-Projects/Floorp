@@ -36,6 +36,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 extern crate byteorder;
+extern crate log;
 extern crate mp4parse;
 extern crate num_traits;
 
@@ -600,7 +601,7 @@ fn mp4parse_new_common_safe<T: Read, P: ContextParser>(
 
     P::read(io, &mut context)
         .map(|_| P::with_context(context))
-        .and_then(TryBox::try_new)
+        .and_then(|x| TryBox::try_new(x).map_err(mp4parse::Error::from))
         .map(TryBox::into_raw)
         .map_err(Mp4parseStatus::from)
 }
@@ -629,6 +630,12 @@ impl From<Result<(), Mp4parseStatus>> for Mp4parseStatus {
             Err(Mp4parseStatus::Ok) => unreachable!(),
             Err(e) => e,
         }
+    }
+}
+
+impl From<fallible_collections::TryReserveError> for Mp4parseStatus {
+    fn from(_: fallible_collections::TryReserveError) -> Self {
+        Mp4parseStatus::Oom
     }
 }
 
