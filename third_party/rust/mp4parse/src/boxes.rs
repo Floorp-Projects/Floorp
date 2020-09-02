@@ -44,7 +44,7 @@ macro_rules! box_database {
         impl fmt::Debug for BoxType {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 let fourcc: FourCC = From::from(self.clone());
-                write!(f, "{}", fourcc)
+                fourcc.fmt(f)
             }
         }
     }
@@ -79,7 +79,7 @@ impl From<[u8; 4]> for FourCC {
 impl fmt::Debug for FourCC {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match std::str::from_utf8(&self.value) {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => f.write_str(s),
             Err(_) => self.value.fmt(f),
         }
     }
@@ -87,10 +87,7 @@ impl fmt::Debug for FourCC {
 
 impl fmt::Display for FourCC {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match std::str::from_utf8(&self.value) {
-            Ok(s) => write!(f, "{}", s),
-            Err(_) => write!(f, "null"),
-        }
+        f.write_str(std::str::from_utf8(&self.value).unwrap_or("null"))
     }
 }
 

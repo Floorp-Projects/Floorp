@@ -29,6 +29,7 @@ static VIDEO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_video_init.mp4";
 static VIDEO_AV1_MP4: &str = "tests/tiny_av1.mp4";
 static IMAGE_AVIF: &str = "av1-avif/testFiles/Microsoft/Monochrome.avif";
 static IMAGE_AVIF_CORRUPT: &str = "tests/bug-1655846.avif";
+static IMAGE_AVIF_CORRUPT_2: &str = "tests/bug-1661347.avif";
 static IMAGE_AVIF_GRID: &str = "av1-avif/testFiles/Microsoft/Summer_in_Tomsk_720p_5x4_grid.avif";
 static AVIF_TEST_DIR: &str = "av1-avif/testFiles";
 
@@ -632,6 +633,13 @@ fn public_avif_primary_item() {
 fn public_avif_bug_1655846() {
     let context = &mut mp4::AvifContext::new();
     let input = &mut File::open(IMAGE_AVIF_CORRUPT).expect("Unknown file");
+    assert!(mp4::read_avif(input, context).is_err());
+}
+
+#[test]
+fn public_avif_bug_1661347() {
+    let context = &mut mp4::AvifContext::new();
+    let input = &mut File::open(IMAGE_AVIF_CORRUPT_2).expect("Unknown file");
     assert!(mp4::read_avif(input, context).is_err());
 }
 

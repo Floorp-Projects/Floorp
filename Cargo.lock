@@ -1385,6 +1385,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
 
 [[package]]
+name = "fallible_collections"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba3301bcde54d3fc19c626ff4bf962630fe1f94cb6cdc3f18a26727a2d1f4a67"
+dependencies = [
+ "hashbrown",
+]
+
+[[package]]
 name = "ffi-support"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3121,10 +3130,11 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.11.4"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=d5a37fd0bd51e06a53274c68213b00136aba83a6#d5a37fd0bd51e06a53274c68213b00136aba83a6"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=fe9028570e44f3a725dd78bbb58428909c4618bf#fe9028570e44f3a725dd78bbb58428909c4618bf"
 dependencies = [
  "bitreader",
  "byteorder",
+ "fallible_collections",
  "hashbrown",
  "log",
  "num-traits",
@@ -3138,9 +3148,10 @@ version = "0.1.0"
 [[package]]
 name = "mp4parse_capi"
 version = "0.11.4"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=d5a37fd0bd51e06a53274c68213b00136aba83a6#d5a37fd0bd51e06a53274c68213b00136aba83a6"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=fe9028570e44f3a725dd78bbb58428909c4618bf#fe9028570e44f3a725dd78bbb58428909c4618bf"
 dependencies = [
  "byteorder",
+ "fallible_collections",
  "log",
  "mp4parse",
  "num-traits",
