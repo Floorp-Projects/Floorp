@@ -169,7 +169,7 @@ async function testWatchTargets(mainRoot) {
     onDestroyed
   );
 
-  targetList.stopListening();
+  targetList.destroy();
 }
 
 async function testContentProcessTarget(mainRoot) {
@@ -216,7 +216,7 @@ async function testContentProcessTarget(mainRoot) {
   // to TargetList and registers a duplicated entry
   is(targets.size, 1, "We were only notified about the top level target");
 
-  targetList.stopListening();
+  targetList.destroy();
 }
 
 async function testThrowingInOnAvailable(mainRoot) {
@@ -252,5 +252,5 @@ async function testThrowingInOnAvailable(mainRoot) {
     "retrieved the expected number of processes via onAvailable. All but the first one where we have thrown."
   );
 
-  targetList.stopListening();
+  targetList.destroy();
 }

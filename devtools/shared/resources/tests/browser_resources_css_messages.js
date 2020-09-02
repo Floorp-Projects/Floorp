@@ -70,7 +70,7 @@ async function testWatchingCssMessages() {
   ok(true, "All the expected CSS messages were received");
 
   Services.console.reset();
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 }
 
@@ -119,7 +119,7 @@ async function testWatchingCachedCssMessages() {
   is(receivedMessages.length, 3, "Cached messages were retrieved as expected");
 
   Services.console.reset();
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 }
 

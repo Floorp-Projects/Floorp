@@ -176,7 +176,7 @@ add_task(async function() {
   );
   ok(hasWorker2, "retrieve the target for tab via getAllTargets");
 
-  targetList.stopListening();
+  targetList.destroy();
 
   info("Unregister service workers so they don't appear in other tests.");
   await unregisterAllServiceWorkers(client);
