@@ -2359,16 +2359,9 @@ nscolor nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
                                                  nsIFrame* aFrame,
                                                  bool& aDrawBackgroundImage,
                                                  bool& aDrawBackgroundColor) {
-  aDrawBackgroundImage = true;
-  aDrawBackgroundColor = true;
-
-  const nsStyleVisibility* visibility = aStyle->StyleVisibility();
-
-  if (visibility->mColorAdjust != StyleColorAdjust::Exact &&
-      aFrame->HonorPrintBackgroundSettings()) {
-    aDrawBackgroundImage = aPresContext->GetBackgroundImageDraw();
-    aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
-  }
+  auto shouldPaint = aFrame->ComputeShouldPaintBackground();
+  aDrawBackgroundImage = shouldPaint.mImage;
+  aDrawBackgroundColor = shouldPaint.mColor;
 
   const nsStyleBackground* bg = aStyle->StyleBackground();
   nscolor bgColor;

@@ -127,7 +127,7 @@ class nsBoxFrame : public nsContainerFrame {
   virtual void DidReflow(nsPresContext* aPresContext,
                          const ReflowInput* aReflowInput) override;
 
-  virtual bool HonorPrintBackgroundSettings() override;
+  virtual bool HonorPrintBackgroundSettings() const override;
 
   // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
   // can override it

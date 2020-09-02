@@ -78,7 +78,7 @@ class nsHTMLButtonControlFrame : public nsContainerFrame,
   }
 #endif
 
-  virtual bool HonorPrintBackgroundSettings() override { return false; }
+  virtual bool HonorPrintBackgroundSettings() const override { return false; }
 
   // nsIFormControlFrame
   void SetFocus(bool aOn, bool aRepaint) override;
