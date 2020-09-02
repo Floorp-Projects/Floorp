@@ -843,8 +843,13 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            int32_t aSourceLine);
 #endif
 
-void HandleError(const nsLiteralCString& aExpr,
-                 const nsLiteralCString& aSourceFile, int32_t aSourceLine);
+// As this is a function that will only be called in error cases, this is marked
+// with MOZ_NEVER_INLINE to avoid bloating the code of calling functions. The
+// corresponding functions in the quota clients should have exactly the same
+// signature incl. attributes.
+MOZ_NEVER_INLINE void HandleError(const nsLiteralCString& aExpr,
+                                  const nsLiteralCString& aSourceFile,
+                                  int32_t aSourceLine);
 
 }  // namespace quota
 }  // namespace dom
