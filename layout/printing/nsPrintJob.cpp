@@ -887,7 +887,8 @@ nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
       CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
   if (NS_FAILED(rv)) {
     if (mPrintPreviewCallback) {
-      mPrintPreviewCallback(PrintPreviewResultInfo(0, 0));  // signal error
+      mPrintPreviewCallback(
+          PrintPreviewResultInfo(0, 0, false));  // signal error
       mPrintPreviewCallback = nullptr;
     }
   }
@@ -2572,8 +2573,9 @@ nsresult nsPrintJob::FinishPrintPreview() {
   }
 
   if (mPrintPreviewCallback) {
-    mPrintPreviewCallback(
-        PrintPreviewResultInfo(GetPrintPreviewNumPages(), GetRawNumPages()));
+    mPrintPreviewCallback(PrintPreviewResultInfo(
+        GetPrintPreviewNumPages(), GetRawNumPages(),
+        !mDisallowSelectionPrint && printData->mSelectionRoot));
     mPrintPreviewCallback = nullptr;
   }
 
