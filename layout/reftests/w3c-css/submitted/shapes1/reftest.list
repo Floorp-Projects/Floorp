@@ -1,15 +1,3 @@
-# Basic shape: inset()
-== shape-outside-inset-016.html shape-outside-inset-016-ref.html
-== shape-outside-inset-017.html shape-outside-inset-017-ref.html
-== shape-outside-inset-020.html shape-outside-inset-020-ref.html
-== shape-outside-inset-021.html shape-outside-inset-021-ref.html
-== shape-outside-inset-022.html shape-outside-inset-022-ref.html
-== shape-outside-inset-023.html shape-outside-inset-023-ref.html
-== shape-outside-inset-024.html shape-outside-inset-024-ref.html
-== shape-outside-inset-025.html shape-outside-inset-025-ref.html
-== shape-outside-inset-026.html shape-outside-inset-026-ref.html
-== shape-outside-inset-027.html shape-outside-inset-027-ref.html
-
 # Basic shape: polygon()
 == shape-outside-polygon-018.html shape-outside-polygon-018-ref.html
 == shape-outside-polygon-019.html shape-outside-polygon-019-ref.html

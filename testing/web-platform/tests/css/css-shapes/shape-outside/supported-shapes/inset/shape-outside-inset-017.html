@@ -4,21 +4,22 @@
 
 <html>
   <meta charset="utf-8">
-  <title>CSS Shape Test: float left, inset(20px) border-box</title>
+  <title>CSS Shape Test: float right, inset(20px) border-box</title>
   <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
   <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
   <link rel="help" href="https://drafts.csswg.org/css-shapes-1/#supported-basic-shapes">
-  <link rel="match" href="shape-outside-inset-016-ref.html">
+  <link rel="match" href="reference/shape-outside-inset-017-ref.html">
   <meta name="flags" content="">
-  <meta name="assert" content="Test the boxes are wrapping around the left float shape defined by the inset(20px) border-box value.">
+  <meta name="assert" content="Test the boxes are wrapping around the right float shape defined by the inset(20px) border-box value.">
   <style>
   .container {
+    direction: rtl;
     width: 200px;
     line-height: 0;
   }
 
   .shape {
-    float: left;
+    float: right;
     shape-outside: inset(20px) border-box;
     clip-path: inset(20px) border-box;
     box-sizing: content-box;
