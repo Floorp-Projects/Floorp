@@ -147,7 +147,7 @@ function makeMultiLocaleExtension(version) {
 }
 
 add_task(async function setup() {
-  await useTestEngines("test-extensions", null, TEST_CONFIG);
+  await SearchTestUtils.useTestEngines("test-extensions", null, TEST_CONFIG);
   await promiseStartupManager();
 
   registerCleanupFunction(promiseShutdownManager);

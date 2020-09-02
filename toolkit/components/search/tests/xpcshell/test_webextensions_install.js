@@ -22,7 +22,7 @@ async function getEngineNames() {
 }
 
 add_task(async function setup() {
-  await useTestEngines("test-extensions");
+  await SearchTestUtils.useTestEngines("test-extensions");
   await promiseStartupManager();
 
   registerCleanupFunction(async () => {

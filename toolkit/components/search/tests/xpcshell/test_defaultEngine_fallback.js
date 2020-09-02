@@ -3,7 +3,7 @@
 
 add_task(async function setup() {
   useHttpServer();
-  await useTestEngines();
+  await SearchTestUtils.useTestEngines();
 
   Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + "region", "US");
   Services.prefs.setBoolPref(
