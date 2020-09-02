@@ -105,9 +105,12 @@ struct CompilationInput {
 
   ScriptSourceHolder source_;
 
-  // The enclosing scope of the function if we're compiling standalone function.
-  // The enclosing scope of the `eval` if we're compiling eval.
-  // Null otherwise.
+  //  * If we're compiling standalone function, the non-null enclosing scope of
+  //    the function
+  //  * If we're compiling eval, the non-null enclosing scope of the `eval`.
+  //  * If we're compiling module, null that means empty global scope
+  //    (See EmitterScope::checkEnvironmentChainLength)
+  //  * Null otherwise
   Scope* enclosingScope = nullptr;
 
   explicit CompilationInput(const JS::ReadOnlyCompileOptions& options)
@@ -140,7 +143,7 @@ struct CompilationInput {
     if (!initScriptSource(cx)) {
       return false;
     }
-    enclosingScope = &cx->global()->emptyGlobalScope();
+    // The `enclosingScope` is the emptyGlobalScope.
     return true;
   }
 
