@@ -7325,9 +7325,6 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       }
       const ParserAtom* storedMethodAtom =
           storedMethodName.finishParserAtom(this->compilationInfo_);
-      if (!storedMethodAtom) {
-        return false;
-      }
       const ParserName* storedMethodProp = storedMethodAtom->asName();
       if (!noteDeclaredName(storedMethodProp, DeclarationKind::Const, pos())) {
         return false;
