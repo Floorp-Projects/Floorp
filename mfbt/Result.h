@@ -49,8 +49,8 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
 
  public:
   ResultImplementation(ResultImplementation&&) = default;
-  ResultImplementation(const ResultImplementation&) = default;
-  ResultImplementation& operator=(const ResultImplementation&) = default;
+  ResultImplementation(const ResultImplementation&) = delete;
+  ResultImplementation& operator=(const ResultImplementation&) = delete;
   ResultImplementation& operator=(ResultImplementation&&) = default;
 
   explicit ResultImplementation(V&& aValue)
@@ -392,9 +392,9 @@ class MOZ_MUST_USE_TYPE Result final {
     MOZ_ASSERT(isErr());
   }
 
-  Result(const Result&) = default;
+  Result(const Result&) = delete;
   Result(Result&&) = default;
-  Result& operator=(const Result&) = default;
+  Result& operator=(const Result&) = delete;
   Result& operator=(Result&&) = default;
 
   /** True if this Result is a success result. */
