@@ -20,6 +20,8 @@
 // Everything below is internal implementation detail, you shouldn't need to
 // look at it unless working on the profiler code.
 
+#  include "mozilla/JSONWriter.h"
+
 #  include <limits>
 
 namespace mozilla::baseprofiler {
@@ -36,6 +38,26 @@ inline ProfileChunkedBuffer& CachedBaseCoreBuffer() {
       baseprofiler::profiler_get_core_buffer();
   return coreBuffer;
 }
+
+struct Streaming {
+  // A `Deserializer` is a free function that can read a serialized payload from
+  // an `EntryReader` and streams it as JSON object properties.
+  using Deserializer = void (*)(ProfileBufferEntryReader&, JSONWriter&);
+
+  // A `DeserializerTag` will be added before the payload, to help select the
+  // correct deserializer when reading back the payload.
+  using DeserializerTag = uint8_t;
+
+  // Store a deserializer and get its `DeserializerTag`.
+  // This is intended to be only used once per deserializer, so it should be
+  // called to initialize a `static const` tag that will be re-used by all
+  // markers of the corresponding payload type.
+  MFBT_API static DeserializerTag TagForDeserializer(
+      Deserializer aDeserializer);
+
+  // Get the `Deserializer` for a given `DeserializerTag`.
+  MFBT_API static Deserializer DeserializerForTag(DeserializerTag aTag);
+};
 
 }  // namespace mozilla::base_profiler_markers_detail
 
