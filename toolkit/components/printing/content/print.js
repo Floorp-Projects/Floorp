@@ -16,6 +16,8 @@ ChromeUtils.defineModuleGetter(
 );
 
 const INPUT_DELAY_MS = 500;
+const MM_PER_POINT = 25.4 / 72;
+const INCHES_PER_POINT = 1 / 72;
 const ourBrowser = window.docShell.chromeEventHandler;
 
 document.addEventListener(
@@ -24,7 +26,7 @@ document.addEventListener(
     PrintEventHandler.init();
     ourBrowser.setAttribute("flex", "0");
     ourBrowser.classList.add("printSettingsBrowser");
-    ourBrowser.closest(".dialogBox").classList.add("printDialogBox");
+    ourBrowser.closest(".dialogBox")?.classList.add("printDialogBox");
   },
   { once: true }
 );
@@ -116,10 +118,12 @@ var PrintEventHandler = {
     let {
       destinations,
       defaultSystemPrinter,
+      fallbackPaperList,
       selectedPrinter,
       printersByName,
     } = await this.getPrintDestinations();
     PrintSettingsViewProxy.availablePrinters = printersByName;
+    PrintSettingsViewProxy.fallbackPaperList = fallbackPaperList;
     PrintSettingsViewProxy.defaultSystemPrinter = defaultSystemPrinter;
 
     document.addEventListener("print", e => this.print());
@@ -252,6 +256,31 @@ var PrintEventHandler = {
       this.viewSettings.printInColor = true;
     }
 
+    // See if the paperName needs to change
+    let paperName = this.viewSettings.paperName;
+    let matchedPaper = PrintSettingsViewProxy.getBestPaperMatch(
+      paperName,
+      this.viewSettings.paperWidth,
+      this.viewSettings.paperHeight,
+      this.viewSettings.paperSizeUnit
+    );
+    if (!matchedPaper) {
+      // We didn't find a good match. Take the first paper size, but clear the
+      // global flag for carrying the paper size over.
+      paperName = Object.keys(PrintSettingsViewProxy.availablePaperSizes)[0];
+      this._printerSettingsChangedFlags ^= this.settingFlags.paperName;
+    } else if (matchedPaper.name !== paperName) {
+      // The exact paper name doesn't exist for this printer, update it
+      flags |= this.settingFlags.paperName;
+      paperName = matchedPaper.name;
+      console.log(
+        `Initial settings.paperName: "${this.viewSettings.paperName}" missing, using: ${paperName} instead`
+      );
+    }
+    // Compute and cache the margins for the current paper size
+    await PrintSettingsViewProxy.fetchPaperMargins(paperName);
+    this.viewSettings.paperName = paperName;
+
     if (flags) {
       this.saveSettingsToPrefs(flags);
     }
@@ -287,6 +316,13 @@ var PrintEventHandler = {
     let didSettingsChange = false;
     let updatePreviewWithoutFlag = false;
     let flags = 0;
+
+    if (changedSettings.paperName) {
+      // The paper's margin properties are async,
+      // so resolve those now before we update the settings
+      await PrintSettingsViewProxy.fetchPaperMargins(changedSettings.paperName);
+    }
+
     for (let [setting, value] of Object.entries(changedSettings)) {
       if (this.viewSettings[setting] != value) {
         this.viewSettings[setting] = value;
@@ -447,6 +483,7 @@ var PrintEventHandler = {
       printers = await printerList.printers;
     }
 
+    const fallbackPaperList = await printerList.fallbackPaperList;
     const lastUsedPrinterName = PrintUtils._getLastUsedPrinterName();
     const defaultPrinterName = printerList.systemDefaultPrinterName;
     const printersByName = {};
@@ -491,21 +528,21 @@ var PrintEventHandler = {
 
     return {
       destinations,
+      fallbackPaperList,
       selectedPrinter,
       printersByName,
       defaultSystemPrinter,
     };
   },
 
-  getMarginPresets(marginSize) {
-    // NOTE: In the future these values should be pulled from the current nsIPaper object
+  getMarginPresets(marginSize, paper) {
     switch (marginSize) {
       case "minimum":
         return {
-          marginTop: this.defaultSettings.unwriteableMarginTop,
-          marginLeft: this.defaultSettings.unwriteableMarginLeft,
-          marginBottom: this.defaultSettings.unwriteableMarginBottom,
-          marginRight: this.defaultSettings.unwriteableMarginRight,
+          marginTop: (paper || this.defaultSettings).unwriteableMarginTop,
+          marginLeft: (paper || this.defaultSettings).unwriteableMarginLeft,
+          marginBottom: (paper || this.defaultSettings).unwriteableMarginBottom,
+          marginRight: (paper || this.defaultSettings).unwriteableMarginRight,
         };
       case "none":
         return {
@@ -568,10 +605,75 @@ const PrintSettingsViewProxy = {
     "Microsoft XPS Document Writer",
   ]),
 
+  getBestPaperMatch(paperName, paperWidth, paperHeight, paperSizeUnit) {
+    let matchedPaper = paperName && this.availablePaperSizes[paperName];
+    if (matchedPaper) {
+      return matchedPaper;
+    }
+    let paperSizes = Object.values(this.availablePaperSizes);
+    if (!(paperWidth && paperHeight)) {
+      return null;
+    }
+    // first try to match on the paper dimensions using the current units
+    let unitsPerPoint;
+    let altUnitsPerPoint;
+    if (paperSizeUnit == PrintEventHandler.settings.kPaperSizeMillimeters) {
+      unitsPerPoint = MM_PER_POINT;
+      altUnitsPerPoint = INCHES_PER_POINT;
+    } else {
+      unitsPerPoint = INCHES_PER_POINT;
+      altUnitsPerPoint = MM_PER_POINT;
+    }
+    // equality to 1pt.
+    const equal = (a, b) => Math.abs(a - b) < 1;
+    const findMatch = (widthPts, heightPts) =>
+      paperSizes.find(paperInfo => {
+        // the dimensions on the nsIPaper object are in points
+        let result =
+          equal(widthPts, paperInfo.paper.width) &&
+          equal(heightPts, paperInfo.paper.height);
+        return result;
+      });
+    // Look for a paper with matching dimensions, using the current printer's
+    // paper size unit, then the alternate unit
+    matchedPaper =
+      findMatch(paperWidth / unitsPerPoint, paperHeight / unitsPerPoint) ||
+      findMatch(paperWidth / altUnitsPerPoint, paperHeight / altUnitsPerPoint);
+
+    if (matchedPaper) {
+      return matchedPaper;
+    }
+    return null;
+  },
+
+  async fetchPaperMargins(paperName) {
+    // resolve any async and computed properties we need on the paper
+    let paperInfo = this.availablePaperSizes[paperName];
+    if (!paperInfo) {
+      throw new Error("Can't fetchPaperMargins: " + paperName);
+    }
+    if (paperInfo._resolved) {
+      // We've already resolved and calculated these values
+      return;
+    }
+    let margins = await paperInfo.paper.unwriteableMargin;
+    margins.QueryInterface(Ci.nsIPaperMargin);
+
+    // margin dimenions are given on the paper in points, setting values need to be in inches
+    paperInfo.unwriteableMarginTop = margins.top * INCHES_PER_POINT;
+    paperInfo.unwriteableMarginRight = margins.right * INCHES_PER_POINT;
+    paperInfo.unwriteableMarginBottom = margins.bottom * INCHES_PER_POINT;
+    paperInfo.unwriteableMarginLeft = margins.left * INCHES_PER_POINT;
+    // No need to re-resolve static properties
+    paperInfo._resolved = true;
+  },
+
   async resolvePropertiesForPrinter(printerName) {
     // resolve any async properties we need on the printer
     let printerInfo = this.availablePrinters[printerName];
     if (printerInfo._resolved) {
+      // Store a convenience reference
+      this.availablePaperSizes = printerInfo.availablePaperSizes;
       return printerInfo;
     }
 
@@ -596,6 +698,7 @@ const PrintSettingsViewProxy = {
       // The Mozilla PDF pseudo-printer has no actual nsIPrinter implementation
       printerInfo.defaultSettings = PSSVC.newPrintSettings;
       printerInfo.defaultSettings.printerName = printerName;
+      printerInfo.paperList = this.fallbackPaperList;
     }
     printerInfo.settings = printerInfo.defaultSettings.clone();
     // Apply any user values
@@ -609,6 +712,34 @@ const PrintSettingsViewProxy = {
     // platform code that the settings object is complete.
     printerInfo.settings.isInitializedFromPrinter = true;
 
+    // prepare the available paper sizes for this printer
+    let unitsPerPoint =
+      printerInfo.settings.paperSizeUnit ==
+      printerInfo.settings.kPaperSizeMillimeters
+        ? MM_PER_POINT
+        : INCHES_PER_POINT;
+
+    let papersByName = (printerInfo.availablePaperSizes = {});
+    // Store a convenience reference
+    this.availablePaperSizes = papersByName;
+
+    for (let paper of printerInfo.paperList) {
+      paper.QueryInterface(Ci.nsIPaper);
+      // Bug 1662239: I'm seeing multiple duplicate entries for each paper size
+      // so ensure we have one entry per name
+      if (!papersByName[paper.name]) {
+        papersByName[paper.name] = {
+          paper,
+          name: paper.name,
+          // Prepare dimension values in the correct unit for the settings. Paper dimensions
+          // are given in points, so we multiply with the units-per-pt to get dimensions
+          // in the correct unit for the current printer
+          width: paper.width * unitsPerPoint,
+          height: paper.height * unitsPerPoint,
+          unitsPerPoint,
+        };
+      }
+    }
     // The printer properties don't change, mark this as resolved for next time
     printerInfo._resolved = true;
     return printerInfo;
@@ -616,6 +747,11 @@ const PrintSettingsViewProxy = {
 
   get(target, name) {
     switch (name) {
+      case "currentPaper": {
+        let paperName = this.get(target, "paperName");
+        return this.availablePaperSizes[paperName];
+      }
+
       case "margins":
         let marginSettings = {
           marginTop: target.marginTop,
@@ -624,8 +760,12 @@ const PrintSettingsViewProxy = {
           marginRight: target.marginRight,
         };
         // see if they match the minimum first
+        let paperSize = this.get(target, "currentPaper");
         for (let presetName of ["minimum", "none"]) {
-          let marginPresets = PrintEventHandler.getMarginPresets(presetName);
+          let marginPresets = PrintEventHandler.getMarginPresets(
+            presetName,
+            paperSize
+          );
           if (
             Object.keys(marginSettings).every(
               name => marginSettings[name] == marginPresets[name]
@@ -636,6 +776,14 @@ const PrintSettingsViewProxy = {
         }
         // Fall back to the default for any other values
         return "default";
+
+      case "paperSizes":
+        return Object.values(this.availablePaperSizes).map(paper => {
+          return {
+            name: paper.name,
+            value: paper.name,
+          };
+        });
 
       case "printBackgrounds":
         return target.printBGImages || target.printBGColors;
@@ -691,11 +839,26 @@ const PrintSettingsViewProxy = {
           console.warn("Unexpected margin preset name: ", value);
           value = "default";
         }
-        let marginPresets = PrintEventHandler.getMarginPresets(value);
+        let paperSize = this.get(target, "currentPaper");
+        let marginPresets = PrintEventHandler.getMarginPresets(
+          value,
+          paperSize
+        );
         for (let [settingName, presetValue] of Object.entries(marginPresets)) {
           target[settingName] = presetValue;
         }
         break;
+
+      case "paperName": {
+        let paperName = value;
+        let paperSize = this.availablePaperSizes[paperName];
+        target.paperWidth = paperSize.width;
+        target.paperHeight = paperSize.height;
+        target.paperName = value;
+        // pull new margin values for the new paperName
+        this.set(target, "margins", this.get(target, "margins"));
+        break;
+      }
 
       case "printBackgrounds":
         target.printBGImages = value;
@@ -874,6 +1037,24 @@ class ColorModePicker extends PrintSettingSelect {
   }
 }
 customElements.define("color-mode-select", ColorModePicker, {
+  extends: "select",
+});
+
+class PaperSizePicker extends PrintSettingSelect {
+  initialize() {
+    super.initialize();
+    this._printerName = null;
+  }
+
+  update(settings) {
+    if (settings.printerName !== this._printerName) {
+      this._printerName = settings.printerName;
+      this.setOptions(settings.paperSizes);
+    }
+    this.value = settings.paperName;
+  }
+}
+customElements.define("paper-size-select", PaperSizePicker, {
   extends: "select",
 });
 
