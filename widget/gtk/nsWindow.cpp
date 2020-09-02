@@ -121,9 +121,7 @@ using namespace mozilla::widget;
 #include "mozilla/layers/IAPZCTreeManager.h"
 
 #ifdef MOZ_X11
-#  include "mozilla/gfx/gfxVars.h"
 #  include "GLContextGLX.h"  // for GLContextGLX::FindVisual()
-#  include "GLContextEGL.h"  // for GLContextEGL::FindVisual()
 #  include "GtkCompositorWidget.h"
 #  include "gfxXlibSurface.h"
 #  include "WindowSurfaceX11Image.h"
@@ -146,7 +144,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using namespace mozilla::layers;
-using mozilla::gl::GLContextEGL;
 using mozilla::gl::GLContextGLX;
 
 // Don't put more than this many rects in the dirty region, just fluff
@@ -4330,25 +4327,17 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // Use GL/WebRender compatible visual only when it is necessary, since
       // the visual consumes more memory.
       if (mIsX11Display && mIsAccelerated) {
+        auto display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
+        auto screen = gtk_widget_get_screen(mShell);
+        int screenNumber = GDK_SCREEN_XNUMBER(screen);
+        int visualId = 0;
         if (useWebRender) {
           // WebRender rquests AlphaVisual for making readback to work
           // correctly.
           needsAlphaVisual = true;
         }
-        auto screen = gtk_widget_get_screen(mShell);
-        int visualId = 0;
-        bool haveVisual;
-
-        if (!gfx::gfxVars::UseEGL()) {
-          auto display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
-          int screenNumber = GDK_SCREEN_XNUMBER(screen);
-          haveVisual = GLContextGLX::FindVisual(
-              display, screenNumber, useWebRender, needsAlphaVisual, &visualId);
-        } else {
-          haveVisual = GLContextEGL::FindVisual(useWebRender, needsAlphaVisual,
-                                                &visualId);
-        }
-        if (haveVisual) {
+        if (GLContextGLX::FindVisual(display, screenNumber, useWebRender,
+                                     needsAlphaVisual, &visualId)) {
           // If we're using CSD, rendering will go through mContainer, but
           // it will inherit this visual as it is a child of mShell.
           gtk_widget_set_visual(mShell,

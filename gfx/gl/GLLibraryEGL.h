@@ -150,8 +150,6 @@ class GLLibraryEGL final {
 
   bool IsANGLE() const { return mIsANGLE; }
 
-  static bool FindVisual(Display* display, int screen, bool useWebRender,
-                         bool useAlpha, int* const out_visualId);
   // -
   // PFN wrappers
 

@@ -92,15 +92,6 @@ inline bool IsWaylandDisplay() {
 #endif
 }
 
-inline bool IsX11Display() {
-#ifdef MOZ_WIDGET_GTK
-  return gdk_display_get_default() &&
-         GDK_IS_X11_DISPLAY(gdk_display_get_default());
-#else
-  return false;
-#endif
-}
-
 struct wl_egl_window;
 
 using namespace mozilla::gfx;
@@ -139,7 +130,7 @@ void DeleteWaylandGLSurface(EGLSurface surface) {
 
 static bool CreateConfigScreen(EglDisplay&, EGLConfig* const aConfig,
                                const bool aEnableDepthBuffer,
-                               const bool aUseGles, int aVisual = 0);
+                               const bool aUseGles);
 
 // append three zeros at the end of attribs list to work around
 // EGL implementation bugs that iterate until they find 0, instead of
@@ -223,10 +214,6 @@ static EGLSurface CreateSurfaceFromNativeWindow(
   ANativeWindow_release(nativeWindow);
 #else
   newSurface = egl.fCreateWindowSurface(config, window, 0);
-  if (!newSurface) {
-    const auto err = egl.mLib->fGetError();
-    gfxCriticalNote << "Failed to create EGLSurface!: " << gfx::hexa(err);
-  }
 #endif
   return newSurface;
 }
@@ -265,22 +252,6 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     return nullptr;
   }
 
-  int visualID = 0;
-  if (IsX11Display()) {
-#ifdef MOZ_WIDGET_GTK
-    GdkDisplay* gdkDisplay = gdk_display_get_default();
-    auto display = gdkDisplay ? GDK_DISPLAY_XDISPLAY(gdkDisplay) : nullptr;
-    if (display) {
-      XWindowAttributes windowAttrs;
-      if (!XGetWindowAttributes(display, (Window)aWindow, &windowAttrs)) {
-        NS_WARNING("[EGL] XGetWindowAttributes() failed");
-        return nullptr;
-      }
-      visualID = XVisualIDFromVisual(windowAttrs.visual);
-    }
-#endif
-  }
-
   bool doubleBuffered = true;
 
   EGLConfig config;
@@ -295,16 +266,14 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     }
   } else {
     if (aDepth) {
-      if (!CreateConfig(*egl, &config, aDepth, aWebRender, aUseGles,
-                        visualID)) {
+      if (!CreateConfig(*egl, &config, aDepth, aWebRender, aUseGles)) {
         gfxCriticalNote
             << "Failed to create EGLConfig for WebRender with depth!";
         return nullptr;
       }
     } else {
       if (!CreateConfigScreen(*egl, &config,
-                              /* aEnableDepthBuffer */ aWebRender, aUseGles,
-                              visualID)) {
+                              /* aEnableDepthBuffer */ aWebRender, aUseGles)) {
         gfxCriticalNote << "Failed to create EGLConfig!";
         return nullptr;
       }
@@ -314,9 +283,6 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
   EGLSurface surface = EGL_NO_SURFACE;
   if (aWindow) {
     surface = mozilla::gl::CreateSurfaceFromNativeWindow(*egl, aWindow, config);
-    if (!surface) {
-      return nullptr;
-    }
   }
 
   CreateContextFlags flags = CreateContextFlags::NONE;
@@ -865,7 +831,7 @@ static const EGLint kEGLConfigAttribsRGBA32[] = {
     LOCAL_EGL_ALPHA_SIZE,   8};
 
 bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
-                  bool aEnableDepthBuffer, bool aUseGles, int aVisual) {
+                  bool aEnableDepthBuffer, bool aUseGles) {
   EGLConfig configs[64];
   std::vector<EGLint> attribs;
   EGLint ncfg = ArrayLength(configs);
@@ -920,15 +886,6 @@ bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
           continue;
         }
       }
-#if defined(MOZ_WIDGET_GTK)
-      if (aVisual) {
-        int vis;
-        if (!egl.fGetConfigAttrib(config, LOCAL_EGL_NATIVE_VISUAL_ID, &vis) ||
-            aVisual != vis) {
-          continue;
-        }
-      }
-#endif
       *aConfig = config;
       return true;
     }
@@ -941,13 +898,11 @@ bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
 //
 // NB: It's entirely legal for the returned EGLConfig to be valid yet
 // have the value null.
-// aVisual is used in Linux only.
 static bool CreateConfigScreen(EglDisplay& egl, EGLConfig* const aConfig,
                                const bool aEnableDepthBuffer,
-                               const bool aUseGles, int aVisual) {
+                               const bool aUseGles) {
   int32_t depth = gfxVars::ScreenDepth();
-  if (CreateConfig(egl, aConfig, depth, aEnableDepthBuffer, aUseGles,
-                   aVisual)) {
+  if (CreateConfig(egl, aConfig, depth, aEnableDepthBuffer, aUseGles)) {
     return true;
   }
 #ifdef MOZ_WIDGET_ANDROID
@@ -1084,30 +1039,6 @@ static EGLConfig ChooseConfig(EglDisplay& egl, const GLContextCreateDesc& desc,
 
   EGLConfig config = configs[0];
   return config;
-}
-
-/* static */
-bool GLContextEGL::FindVisual(bool aUseWebRender, bool useAlpha,
-                              int* const out_visualId) {
-  nsCString discardFailureId;
-  const auto egl = DefaultEglDisplay(&discardFailureId);
-  if (!egl) {
-    gfxCriticalNote
-        << "GLContextEGL::FindVisual(): Failed to load EGL library!";
-    return false;
-  }
-
-  EGLConfig config;
-  const int bpp = useAlpha ? 32 : 24;
-  if (!CreateConfig(*egl, &config, bpp, aUseWebRender, /* aUseGles */ false)) {
-    gfxCriticalNote
-        << "GLContextEGL::FindVisual(): Failed to create EGLConfig!";
-    return false;
-  }
-  if (egl->fGetConfigAttrib(config, LOCAL_EGL_NATIVE_VISUAL_ID, out_visualId)) {
-    return true;
-  }
-  return false;
 }
 
 /*static*/
