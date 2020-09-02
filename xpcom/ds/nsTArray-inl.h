@@ -15,7 +15,7 @@ nsTArray_base<Alloc, RelocationStrategy>::nsTArray_base() : mHdr(EmptyHdr()) {
 
 template <class Alloc, class RelocationStrategy>
 nsTArray_base<Alloc, RelocationStrategy>::~nsTArray_base() {
-  if (!HasEmptyHeader() && !UsesAutoArrayBuffer()) {
+  if (mHdr != EmptyHdr() && !UsesAutoArrayBuffer()) {
     Alloc::Free(mHdr);
   }
   MOZ_COUNT_DTOR(nsTArray_base);
@@ -157,7 +157,7 @@ nsTArray_base<Alloc, RelocationStrategy>::EnsureCapacity(size_type aCapacity,
 
   size_t reqSize = sizeof(Header) + aCapacity * aElemSize;
 
-  if (HasEmptyHeader()) {
+  if (mHdr == EmptyHdr()) {
     // Malloc() new data
     Header* header = static_cast<Header*>(ActualAlloc::Malloc(reqSize));
     if (!header) {
@@ -228,7 +228,7 @@ nsTArray_base<Alloc, RelocationStrategy>::EnsureCapacity(size_type aCapacity,
 template <class Alloc, class RelocationStrategy>
 void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
     size_type aElemSize, size_t aElemAlign) {
-  if (HasEmptyHeader() || UsesAutoArrayBuffer()) {
+  if (mHdr == EmptyHdr() || UsesAutoArrayBuffer()) {
     return;
   }
 
@@ -272,7 +272,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacityToZero(
     size_type aElemSize, size_t aElemAlign) {
   MOZ_ASSERT(mHdr->mLength == 0);
 
-  if (HasEmptyHeader() || UsesAutoArrayBuffer()) {
+  if (mHdr == EmptyHdr() || UsesAutoArrayBuffer()) {
     return;
   }
 
@@ -413,12 +413,12 @@ template <class Alloc, class RelocationStrategy>
 nsTArray_base<Alloc,
               RelocationStrategy>::IsAutoArrayRestorer::~IsAutoArrayRestorer() {
   // Careful: We don't want to set mIsAutoArray = 1 on sEmptyTArrayHeader.
-  if (mIsAuto && mArray.HasEmptyHeader()) {
+  if (mIsAuto && mArray.mHdr == mArray.EmptyHdr()) {
     // Call GetAutoArrayBufferUnsafe() because GetAutoArrayBuffer() asserts
     // that mHdr->mIsAutoArray is true, which surely isn't the case here.
     mArray.mHdr = mArray.GetAutoArrayBufferUnsafe(mElemAlign);
     mArray.mHdr->mLength = 0;
-  } else if (!mArray.HasEmptyHeader()) {
+  } else if (mArray.mHdr != mArray.EmptyHdr()) {
     mArray.mHdr->mIsAutoArray = mIsAuto;
   }
 }
@@ -510,17 +510,17 @@ nsTArray_base<Alloc, RelocationStrategy>::SwapArrayElements(
       largerElements, temp.Elements(), smallerLength, aElemSize);
 
   // Swap the arrays' lengths.
-  MOZ_ASSERT((aOther.Length() == 0 || !HasEmptyHeader()) &&
-                 (Length() == 0 || !aOther.HasEmptyHeader()),
+  MOZ_ASSERT((aOther.Length() == 0 || mHdr != EmptyHdr()) &&
+                 (Length() == 0 || aOther.mHdr != EmptyHdr()),
              "Don't set sEmptyTArrayHeader's length.");
   size_type tempLength = Length();
 
   // Avoid writing to EmptyHdr, since it can trigger false
   // positives with TSan.
-  if (!HasEmptyHeader()) {
+  if (mHdr != EmptyHdr()) {
     mHdr->mLength = aOther.Length();
   }
-  if (!aOther.HasEmptyHeader()) {
+  if (aOther.mHdr != EmptyHdr()) {
     aOther.mHdr->mLength = tempLength;
   }
 
@@ -575,16 +575,16 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
                                                    aOther.Length(), aElemSize);
 
   // Swap the arrays' lengths.
-  MOZ_ASSERT((aOther.Length() == 0 || !HasEmptyHeader()) &&
-                 (Length() == 0 || !aOther.HasEmptyHeader()),
+  MOZ_ASSERT((aOther.Length() == 0 || mHdr != EmptyHdr()) &&
+                 (Length() == 0 || aOther.mHdr != EmptyHdr()),
              "Don't set sEmptyTArrayHeader's length.");
 
   // Avoid writing to EmptyHdr, since it can trigger false
   // positives with TSan.
-  if (!HasEmptyHeader()) {
+  if (mHdr != EmptyHdr()) {
     mHdr->mLength = aOther.Length();
   }
-  if (!HasEmptyHeader()) {
+  if (aOther.mHdr != EmptyHdr()) {
     aOther.mHdr->mLength = 0;
   }
 }
@@ -617,7 +617,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::MoveConstructNonAutoArray(
   mHdr = aOther.mHdr;
   // We might write to mHdr, so ensure it's not the static empty header. aOther
   // shouldn't have been empty if we get here anyway.
-  MOZ_ASSERT(!HasEmptyHeader());
+  MOZ_ASSERT(EmptyHdr() != mHdr);
 
   if (otherIsAuto) {
     mHdr->mIsAutoArray = false;
