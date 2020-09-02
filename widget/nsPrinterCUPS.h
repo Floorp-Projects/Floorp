@@ -32,11 +32,15 @@ class nsPrinterCUPS final : public nsPrinterBase {
   nsPrinterCUPS() = delete;
 
   nsPrinterCUPS(const nsCUPSShim& aShim, nsString aDisplayName,
-                cups_dest_t* aPrinter, cups_dinfo_t* aPrinterInfo)
+                cups_dest_t* aPrinter, cups_dinfo_t* aPrinterInfo,
+                uint64_t aCUPSMajor, uint64_t aCUPSMinor, uint64_t aCUPSPatch)
       : mShim(aShim),
         mDisplayName(std::move(aDisplayName)),
         mPrinter(aPrinter),
-        mPrinterInfo(aPrinterInfo) {}
+        mPrinterInfo(aPrinterInfo),
+        mCUPSMajor(aCUPSMajor),
+        mCUPSMinor(aCUPSMinor),
+        mCUPSPatch(aCUPSPatch) {}
 
  private:
   ~nsPrinterCUPS();
@@ -56,6 +60,9 @@ class nsPrinterCUPS final : public nsPrinterBase {
   nsString mDisplayName;
   cups_dest_t* mPrinter;
   cups_dinfo_t* mPrinterInfo;
+  uint64_t mCUPSMajor;
+  uint64_t mCUPSMinor;
+  uint64_t mCUPSPatch;
 };
 
 #endif /* nsPrinterCUPS_h___ */
