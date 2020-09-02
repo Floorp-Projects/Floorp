@@ -50,6 +50,8 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
+  void DestroyFrom(nsIFrame*, PostDestroyData&) override;
+
   already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       nsDisplayItem* aItem,
