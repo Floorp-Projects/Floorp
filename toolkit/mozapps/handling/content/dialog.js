@@ -74,6 +74,10 @@ customElements.define("mozapps-handler", MozHandler, {
   extends: "richlistitem",
 });
 
+window.addEventListener("DOMContentLoaded", () => dialog.initialize(), {
+  once: true,
+});
+
 var dialog = {
   // Member Variables
 
@@ -132,7 +136,7 @@ var dialog = {
         host: principal.exposablePrePath,
         scheme: this._URI.scheme,
       });
-      document.l10n
+      document.mozSubdialogReady = document.l10n
         .translateElements([hostContainer])
         .then(() => window.sizeToContent());
       document.l10n.resumeObserving();
