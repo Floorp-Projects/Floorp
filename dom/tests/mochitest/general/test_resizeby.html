@@ -28,22 +28,25 @@
       let linkclick = () => {
         clicky.removeEventListener('click', linkclick);
         let popup = window.open("about:blank", "_blank", "width=500,height=500");
-        is(popup.innerHeight, 500, "starting width is 500");
-        is(popup.innerWidth, 500, "starting height in 500");
+        function loaded() {
+          is(popup.innerHeight, 500, "starting width is 500");
+          is(popup.innerWidth, 500, "starting height in 500");
 
-        popup.resizeBy(50, 0);
+          popup.resizeBy(50, 0);
 
-        // We resized synchronously. If this happened, we sometimes won't fire
-        // an resize event, so we resolve immediately.
-        if (popup.innerWidth == 550) {
-          resolve(popup);
-        } else {
-          let popupresize = () => {
-            popup.removeEventListener('resize', popupresize);
+          // We resized synchronously. If this happened, we sometimes won't fire
+          // an resize event, so we resolve immediately.
+          if (popup.innerWidth == 550) {
             resolve(popup);
-          };
-          popup.addEventListener('resize', popupresize);
-        }
+          } else {
+            let popupresize = () => {
+              popup.removeEventListener('resize', popupresize);
+              resolve(popup);
+            };
+            popup.addEventListener('resize', popupresize);
+          }
+        };
+        popup.addEventListener("load", loaded, { once: true })
       };
 
       clicky.addEventListener('click', linkclick);
