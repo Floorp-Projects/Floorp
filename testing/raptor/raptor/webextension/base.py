@@ -38,15 +38,7 @@ class WebExtension(Perftest):
         self.using_condprof = self.config.get("using_condprof", True)
 
         # set up the results handler
-        self.results_handler = RaptorResultsHandler(
-            gecko_profile=self.config.get("gecko_profile"),
-            power_test=self.config.get("power_test"),
-            cpu_test=self.config.get("cpu_test"),
-            memory_test=self.config.get("memory_test"),
-            no_conditioned_profile=self.config["no_conditioned_profile"],
-            extra_prefs=self.config.get("extra_prefs"),
-            enable_webrender=self.config["enable_webrender"],
-        )
+        self.results_handler = RaptorResultsHandler(**self.config)
         browser_name, browser_version = self.get_browser_meta()
         self.results_handler.add_browser_meta(self.config["app"], browser_version)
 

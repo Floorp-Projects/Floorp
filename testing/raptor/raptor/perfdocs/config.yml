@@ -10,6 +10,7 @@ suites:
         description: "Tests for page-load performance. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium)"
         tests:
             raptor-tp6-amazon: "WX, FF, CH, CU"
+            raptor-tp6-cnn-ampstories: "WX, FF"
             raptor-tp6-facebook: "WX, CH, CU"
             raptor-tp6-google: "WX, FF, CH, CU"
             raptor-tp6-youtube: "WX, FF, CH, CU"
