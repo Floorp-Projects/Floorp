@@ -328,6 +328,49 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun closeRequest() {
+        if (!sessionRule.env.isAutomation) {
+            sessionRule.setPrefsUntilTestEnd(mapOf("dom.allow_scripts_to_close_windows" to true))
+        }
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("window.close()")
+        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onCloseRequest(session: GeckoSession) {
+            }
+        })
+    }
+
+    @Test fun windowOpenClose() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val newSession = sessionRule.createClosedSession()
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return GeckoResult.fromValue(newSession)
+            }
+        })
+
+        mainSession.evaluateJS("const w = window.open('about:blank'); w.close()")
+
+        newSession.waitUntilCalled(object : Callbacks.All {
+            @AssertCalled(count = 1)
+            override fun onCloseRequest(session: GeckoSession) {
+            }
+
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+    }
+
     /**
      * Preferences to induce wanted behaviour.
      */
