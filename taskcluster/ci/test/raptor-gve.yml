@@ -21,7 +21,7 @@ job-defaults:
         extra-options:
             - --no-conditioned-profile
     optimization:
-        push-interval-25: null
+        push-interval-20: null
 
 raptor-speedometer-geckoview:
     description: "Raptor Speedometer on GeckoView"

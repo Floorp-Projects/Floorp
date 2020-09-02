@@ -1375,7 +1375,7 @@ linux-gcp/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
     optimization:
-        push-interval-25: null
+        push-interval-20: null
 
 linux-gcp/opt:
     description: "Linux32 Opt - built on GCP"
@@ -1467,7 +1467,7 @@ linux64-gcp/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
     optimization:
-        push-interval-25: null
+        push-interval-20: null
 
 linux64-gcp/opt:
     description: "Linux64 Opt - built on GCP"

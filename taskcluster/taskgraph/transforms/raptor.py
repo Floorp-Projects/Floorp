@@ -357,5 +357,5 @@ def apply_tier_optimization(config, tests):
 
         test['optimization'] = {'push-interval-10': None}
         if test['tier'] > 1:
-            test['optimization'] = {'push-interval-25': None}
+            test['optimization'] = {'push-interval-20': None}
         yield test
