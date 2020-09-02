@@ -6002,18 +6002,31 @@ class MStringSplit : public MBinaryInstruction,
 // Returns the object to use as |this| value in a non-strict function. See also
 // BoxNonStrictThis in Interpreter.h.
 class MBoxNonStrictThis : public MUnaryInstruction, public BoxPolicy<0>::Data {
-  explicit MBoxNonStrictThis(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def) {
+  CompilerObject globalThis_;
+
+  MBoxNonStrictThis(MDefinition* def, JSObject* globalThis)
+      : MUnaryInstruction(classOpcode, def), globalThis_(globalThis) {
     setResultType(MIRType::Object);
+    setMovable();
   }
 
  public:
   INSTRUCTION_HEADER(BoxNonStrictThis)
   TRIVIAL_NEW_WRAPPERS
 
+  JSObject* globalThis() const { return globalThis_; }
+
   bool possiblyCalls() const override { return true; }
 
-  // Note: don't override getAliasSet: the thisValue hook can be effectful.
+  AliasSet getAliasSet() const override {
+    // This instruction can allocate a new object for wrapped primitives, but
+    // has no effect on existing objects.
+    return AliasSet::None();
+  }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(globalThis_);
+  }
 };
 
 class MImplicitThis : public MUnaryInstruction,
