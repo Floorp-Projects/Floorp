@@ -199,7 +199,7 @@ class HomeFragment : Fragment() {
                     collections = components.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
-                    topSites = components.core.topSiteStorage.cachedTopSites,
+                    topSites = components.core.topSitesStorage.cachedTopSites,
                     tip = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
                         FenixTipManager(
                             listOf(
@@ -219,7 +219,7 @@ class HomeFragment : Fragment() {
         topSitesFeature.set(
             feature = TopSitesFeature(
                 view = DefaultTopSitesView(homeFragmentStore),
-                storage = components.core.topSiteStorage,
+                storage = components.core.topSitesStorage,
                 config = ::getTopSitesConfig
             ),
             owner = this,
@@ -552,7 +552,7 @@ class HomeFragment : Fragment() {
             HomeFragmentAction.Change(
                 collections = components.core.tabCollectionStorage.cachedTabCollections,
                 mode = currentMode.getCurrentMode(),
-                topSites = components.core.topSiteStorage.cachedTopSites,
+                topSites = components.core.topSitesStorage.cachedTopSites,
                 tip = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
                     FenixTipManager(
                         listOf(

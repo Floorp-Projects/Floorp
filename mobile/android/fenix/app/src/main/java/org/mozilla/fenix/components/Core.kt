@@ -265,7 +265,7 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
 
     val pinnedSiteStorage by lazy { PinnedSiteStorage(context) }
 
-    val topSiteStorage by lazy {
+    val topSitesStorage by lazy {
         val defaultTopSites = mutableListOf<Pair<String, String>>()
 
         StrictMode.allowThreadDiskReads().resetPoliciesAfter {

@@ -27,5 +27,5 @@ class TestCore(context: Context, crashReporter: CrashReporting) : Core(context, 
     override val client = mockk<Client>()
     override val webAppShortcutManager = mockk<WebAppShortcutManager>()
     override val thumbnailStorage = mockk<ThumbnailStorage>()
-    override val topSiteStorage = mockk<DefaultTopSitesStorage>()
+    override val topSitesStorage = mockk<DefaultTopSitesStorage>()
 }

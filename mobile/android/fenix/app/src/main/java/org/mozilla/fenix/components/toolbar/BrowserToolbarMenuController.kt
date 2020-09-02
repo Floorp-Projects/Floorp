@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
@@ -19,6 +20,8 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.top.sites.DefaultTopSitesStorage
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -62,7 +65,8 @@ class DefaultBrowserToolbarMenuController(
     private val openInFenixIntent: Intent,
     private val bookmarkTapped: (Session) -> Unit,
     private val scope: CoroutineScope,
-    private val tabCollectionStorage: TabCollectionStorage
+    private val tabCollectionStorage: TabCollectionStorage,
+    private val topSitesStorage: DefaultTopSitesStorage
 ) : BrowserToolbarMenuController {
 
     private val currentSession
@@ -124,23 +128,38 @@ class DefaultBrowserToolbarMenuController(
             )
             ToolbarMenu.Item.AddToTopSites -> {
                 scope.launch {
-                    ioScope.launch {
-                        currentSession?.let {
-                            with(activity.components.useCases.topSitesUseCase) {
-                                addPinnedSites(it.title, it.url)
-                            }
-                        }
-                    }.join()
+                    val context = swipeRefresh.context
+                    val numPinnedSites =
+                        topSitesStorage.cachedTopSites.filter { it.type != TopSite.Type.FRECENT }.size
 
-                    FenixSnackbar.make(
-                        view = swipeRefresh,
-                        duration = Snackbar.LENGTH_SHORT,
-                        isDisplayedWithBrowserToolbar = true
-                    )
-                        .setText(
-                            swipeRefresh.context.getString(R.string.snackbar_added_to_top_sites)
+                    if (numPinnedSites >= settings.topSitesMaxLimit) {
+                        AlertDialog.Builder(swipeRefresh.context).apply {
+                            setTitle(R.string.top_sites_max_limit_title)
+                            setMessage(R.string.top_sites_max_limit_content_2)
+                            setPositiveButton(R.string.top_sites_max_limit_confirmation_button) { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            create()
+                        }.show()
+                    } else {
+                        ioScope.launch {
+                            currentSession?.let {
+                                with(activity.components.useCases.topSitesUseCase) {
+                                    addPinnedSites(it.title, it.url)
+                                }
+                            }
+                        }.join()
+
+                        FenixSnackbar.make(
+                            view = swipeRefresh,
+                            duration = Snackbar.LENGTH_SHORT,
+                            isDisplayedWithBrowserToolbar = true
                         )
-                        .show()
+                            .setText(
+                                context.getString(R.string.snackbar_added_to_top_sites)
+                            )
+                            .show()
+                    }
                 }
             }
             ToolbarMenu.Item.AddToHomeScreen, ToolbarMenu.Item.InstallToHomeScreen -> {

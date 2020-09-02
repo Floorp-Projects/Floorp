@@ -293,7 +293,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 openInFenixIntent = openInFenixIntent,
                 bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
                 scope = viewLifecycleOwner.lifecycleScope,
-                tabCollectionStorage = requireComponents.core.tabCollectionStorage
+                tabCollectionStorage = requireComponents.core.tabCollectionStorage,
+                topSitesStorage = requireComponents.core.topSitesStorage
             )
 
             _browserInteractor = BrowserInteractor(

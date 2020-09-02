@@ -32,6 +32,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -83,6 +84,7 @@ class DefaultBrowserToolbarMenuControllerTest {
     @RelaxedMockK private lateinit var readerModeController: ReaderModeController
     @MockK private lateinit var sessionFeatureWrapper: ViewBoundFeatureWrapper<SessionFeature>
     @RelaxedMockK private lateinit var sessionFeature: SessionFeature
+    @RelaxedMockK private lateinit var topSitesStorage: DefaultTopSitesStorage
 
     @Before
     fun setUp() {
@@ -105,6 +107,7 @@ class DefaultBrowserToolbarMenuControllerTest {
             every { id } returns R.id.browserFragment
         }
         every { currentSession.id } returns "1"
+        every { settings.topSitesMaxLimit } returns 16
 
         val onComplete = slot<() -> Unit>()
         every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
@@ -487,7 +490,8 @@ class DefaultBrowserToolbarMenuControllerTest {
         bookmarkTapped = bookmarkTapped,
         readerModeController = readerModeController,
         sessionManager = sessionManager,
-        sessionFeature = sessionFeatureWrapper
+        sessionFeature = sessionFeatureWrapper,
+        topSitesStorage = topSitesStorage
     ).apply {
         ioScope = scope
     }
