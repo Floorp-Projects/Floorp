@@ -1054,7 +1054,10 @@ function setCertErrorDetails(event) {
   }
 }
 
-async function setTechnicalDetailsOnCertError() {
+// The optional argument is only here for testing purposes.
+async function setTechnicalDetailsOnCertError(
+  failedCertInfo = document.getFailedCertSecurityInfo()
+) {
   let technicalInfo = document.getElementById("badCertTechnicalInfo");
 
   function setL10NLabel(l10nId, args = {}, attrs = {}, rewrite = true) {
@@ -1095,7 +1098,6 @@ async function setTechnicalDetailsOnCertError() {
   let args = {
     hostname: hostString,
   };
-  let failedCertInfo = document.getFailedCertSecurityInfo();
   if (failedCertInfo.isUntrusted) {
     switch (failedCertInfo.errorCodeString) {
       case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
@@ -1140,9 +1142,7 @@ async function setTechnicalDetailsOnCertError() {
         setL10NLabel("cert-error-intro", args);
         setL10NLabel("cert-error-untrusted-default", {}, {}, false);
     }
-  }
-
-  if (failedCertInfo.isDomainMismatch) {
+  } else if (failedCertInfo.isDomainMismatch) {
     let subjectAltNames = failedCertInfo.subjectAltNames.split(",");
     subjectAltNames = subjectAltNames.filter(name => !!name.length);
     let numSubjectAltNames = subjectAltNames.length;
@@ -1220,9 +1220,7 @@ async function setTechnicalDetailsOnCertError() {
     } else {
       setL10NLabel("cert-error-domain-mismatch", { hostname: hostString });
     }
-  }
-
-  if (failedCertInfo.isNotValidAtThisTime) {
+  } else if (failedCertInfo.isNotValidAtThisTime) {
     let notBefore = failedCertInfo.validNotBefore;
     let notAfter = failedCertInfo.validNotAfter;
     args = {
