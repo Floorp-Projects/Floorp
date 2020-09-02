@@ -151,7 +151,17 @@ case " $(echo $py2commands) " in
         run_py "$py2executable" "$@"
         ;;
     *)
-        run_py "$py3executable" "$@"
+	if [ -z ${MACH_PY2} ]
+	then
+            run_py "$py3executable" "$@"
+	else
+	    if [ $command != "python-test" ]
+	    then
+	       echo "MACH_PY2 is only valid for mach python-test; please unset MACH_PY2 to continue."
+	       exit 1
+	    fi
+	    run_py "$py2executable" "$@"
+	fi
         ;;
 esac
 
