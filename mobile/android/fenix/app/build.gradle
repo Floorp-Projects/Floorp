@@ -59,12 +59,14 @@ android {
             shrinkResources false
             minifyEnabled false
             applicationIdSuffix ".fenix.debug"
+            buildConfigField "String", "AMO_COLLECTION", "\"83a9cccfe6e24a34bd7b155ff9ee32\""
             resValue "bool", "IS_DEBUG", "true"
             pseudoLocalesEnabled true
         }
         nightly releaseTemplate >> {
             applicationIdSuffix ".fenix"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            buildConfigField "String", "AMO_COLLECTION", "\"83a9cccfe6e24a34bd7b155ff9ee32\""
             def deepLinkSchemeValue = "fenix-nightly"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
             manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
