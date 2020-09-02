@@ -30,9 +30,8 @@ add_task(async function() {
   hud = await BrowserConsoleManager.toggleBrowserConsole();
   await testBrowserConsole(hud);
 
-  // clear and close the browser console.
+  // clear the browser console.
   await clearOutput(hud);
-  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 async function testMessages(hud) {

@@ -290,7 +290,18 @@ registerCleanupFunction(() => {
   );
 });
 
+var {
+  BrowserConsoleManager,
+} = require("devtools/client/webconsole/browser-console-manager");
+
 registerCleanupFunction(async function cleanup() {
+  // Closing the browser console if there's one
+  const browserConsole = BrowserConsoleManager.getBrowserConsole();
+  if (browserConsole) {
+    browserConsole.targetList.destroy();
+    await safeCloseBrowserConsole({ clearOutput: true });
+  }
+
   // Close any tab opened by the test.
   // There should be only one tab opened by default when firefox starts the test.
   while (gBrowser.tabs.length > 1) {
@@ -319,6 +330,50 @@ registerCleanupFunction(async function cleanup() {
   // Clear the cached value for the fission content toolbox preference.
   gDevTools.clearIsFissionContentToolboxEnabledReferenceForTest();
 });
+
+async function safeCloseBrowserConsole({ clearOutput = false } = {}) {
+  const hud = BrowserConsoleManager.getBrowserConsole();
+  if (!hud) {
+    return;
+  }
+
+  if (clearOutput) {
+    info("Clear the browser console output");
+    const { ui } = hud;
+    const promises = [ui.once("messages-cleared")];
+    // If there's an object inspector, we need to wait for the actors to be released.
+    if (ui.outputNode.querySelector(".object-inspector")) {
+      promises.push(ui.once("fronts-released"));
+    }
+    ui.clearOutput(true);
+    await Promise.all(promises);
+    info("Browser console cleared");
+  }
+
+  info("Wait for all Browser Console targets to be attached");
+  // It might happen that waitForAllTargetsToBeAttached does not resolve, so we set a
+  // timeout of 1s before closing
+  await Promise.race([
+    waitForAllTargetsToBeAttached(hud.targetList),
+    wait(1000),
+  ]);
+  info("Close the Browser Console");
+  await BrowserConsoleManager.closeBrowserConsole();
+  info("Browser Console closed");
+}
+
+/**
+ * Returns a Promise that resolves when all the targets are fully attached.
+ *
+ * @param {TargetList} targetList
+ */
+function waitForAllTargetsToBeAttached(targetList) {
+  return Promise.allSettled(
+    targetList
+      .getAllTargets(targetList.ALL_TYPES)
+      .map(target => target._onThreadInitialized)
+  );
+}
 
 /**
  * Add a new test tab in the browser and load the given url.
