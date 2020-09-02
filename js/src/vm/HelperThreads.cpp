@@ -746,7 +746,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   }
 
   mozilla::DebugOnly<XDRResult> res = decoder->codeScript(&resultScript);
-  MOZ_ASSERT(bool(resultScript) == static_cast<XDRResult>(res).isOk());
+  MOZ_ASSERT(bool(resultScript) == static_cast<const XDRResult&>(res).isOk());
 
   if (sourceObject) {
     sourceObjects.infallibleAppend(sourceObject);
@@ -788,7 +788,7 @@ void MultiScriptsDecodeTask::parse(JSContext* cx) {
     }
 
     mozilla::DebugOnly<XDRResult> res = decoder->codeScript(&resultScript);
-    MOZ_ASSERT(bool(resultScript) == static_cast<XDRResult>(res).isOk());
+    MOZ_ASSERT(bool(resultScript) == static_cast<const XDRResult&>(res).isOk());
 
     if (sourceObject) {
       sourceObjects.infallibleAppend(sourceObject);
