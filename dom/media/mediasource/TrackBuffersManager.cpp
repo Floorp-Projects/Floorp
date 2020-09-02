@@ -2859,7 +2859,7 @@ void TrackBuffersManager::TrackData::AddSizeOfResources(
 
 void TrackBuffersManager::GetDebugInfo(
     dom::TrackBuffersManagerDebugInfo& aInfo) {
-  aInfo.mType = NS_ConvertUTF8toUTF16(mType.Type().AsString());
+  CopyUTF8toUTF16(mType.Type().AsString(), aInfo.mType);
 
   if (HasAudio()) {
     aInfo.mNextSampleTime = mAudioTracks.mNextSampleTime.ToSeconds();

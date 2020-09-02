@@ -424,7 +424,7 @@ nsPrintSettingsGTK::GetPrinterName(nsAString& aPrinter) {
       return NS_OK;
     }
   }
-  aPrinter = NS_ConvertUTF8toUTF16(gtkPrintName);
+  CopyUTF8toUTF16(MakeStringSpan(gtkPrintName), aPrinter);
   return NS_OK;
 }
 
@@ -479,7 +479,7 @@ NS_IMETHODIMP
 nsPrintSettingsGTK::GetPaperName(nsAString& aPaperName) {
   const gchar* name =
       gtk_paper_size_get_name(gtk_page_setup_get_paper_size(mPageSetup));
-  aPaperName = NS_ConvertUTF8toUTF16(name);
+  CopyUTF8toUTF16(MakeStringSpan(name), aPaperName);
   return NS_OK;
 }
 NS_IMETHODIMP

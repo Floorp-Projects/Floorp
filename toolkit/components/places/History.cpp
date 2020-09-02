@@ -2024,7 +2024,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       if (fatGUID.IsVoid()) {
         guid.SetIsVoid(true);
       } else {
-        guid = NS_ConvertUTF16toUTF8(fatGUID);
+        CopyUTF16toUTF8(fatGUID, guid);
       }
     }
 

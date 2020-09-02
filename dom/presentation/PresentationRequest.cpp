@@ -58,7 +58,7 @@ static nsresult GetAbsoluteURL(const nsAString& aUrl, nsIURI* aBaseUri,
   nsAutoCString spec;
   uri->GetSpec(spec);
 
-  aAbsoluteUrl = NS_ConvertUTF8toUTF16(spec);
+  CopyUTF8toUTF16(spec, aAbsoluteUrl);
 
   return NS_OK;
 }

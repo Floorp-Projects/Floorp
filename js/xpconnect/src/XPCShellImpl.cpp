@@ -1023,7 +1023,7 @@ static bool GetCurrentWorkingDirectory(nsAString& workingDirectory) {
   // size back down to the actual string length
   cwd.SetLength(strlen(result) + 1);
   cwd.Replace(cwd.Length() - 1, 1, '/');
-  workingDirectory = NS_ConvertUTF8toUTF16(cwd);
+  CopyUTF8toUTF16(cwd, workingDirectory);
 #endif
   return true;
 }

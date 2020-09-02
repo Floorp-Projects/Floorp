@@ -32,7 +32,7 @@ nsMIMEInfoAndroid::LoadUriInternal(nsIURI* aURI) {
   if (mType.Equals(uriScheme) || mType.Equals(uriSpec)) {
     mimeType = EmptyString();
   } else {
-    mimeType = NS_ConvertUTF8toUTF16(mType);
+    CopyUTF8toUTF16(mType, mimeType);
   }
 
   if (java::GeckoAppShell::OpenUriExternal(

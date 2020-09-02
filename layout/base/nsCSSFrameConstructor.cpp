@@ -1538,7 +1538,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
       } else {
         auto& counters = item.AsCounters();
         name = counters._0.AsAtom();
-        separator = NS_ConvertUTF8toUTF16(counters._1.AsString());
+        CopyUTF8toUTF16(counters._1.AsString(), separator);
         ptr = CounterStylePtr::FromStyle(counters._2);
       }
 

@@ -124,7 +124,7 @@ NS_IMETHODIMP
 nsCertTreeDispInfo::GetHostPort(nsAString& aHostPort) {
   nsAutoCString hostPort;
   nsCertOverrideService::GetHostWithPort(mAsciiHost, mPort, hostPort);
-  aHostPort = NS_ConvertUTF8toUTF16(hostPort);
+  CopyUTF8toUTF16(hostPort, aHostPort);
   return NS_OK;
 }
 
@@ -926,7 +926,7 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn* col, nsAString& _retval) {
       nsAutoCString hostPort;
       nsCertOverrideService::GetHostWithPort(certdi->mAsciiHost, certdi->mPort,
                                              hostPort);
-      _retval = NS_ConvertUTF8toUTF16(hostPort);
+      CopyUTF8toUTF16(hostPort, _retval);
     } else {
       _retval = u"*"_ns;
     }

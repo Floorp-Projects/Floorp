@@ -619,7 +619,7 @@ nsresult PersistNodeFixup::FixupURI(nsAString& aURI) {
     return NS_ERROR_FAILURE;
   }
   if (!replacement->IsEmpty()) {
-    aURI = NS_ConvertUTF8toUTF16(*replacement);
+    CopyUTF8toUTF16(*replacement, aURI);
   }
   return NS_OK;
 }

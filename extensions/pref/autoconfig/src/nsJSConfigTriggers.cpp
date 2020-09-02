@@ -137,7 +137,7 @@ nsresult EvaluateAdminConfigScript(JS::HandleObject sandbox,
   nsString convertedScript;
   bool isUTF8 = IsUtf8(script);
   if (isUTF8) {
-    convertedScript = NS_ConvertUTF8toUTF16(script);
+    CopyUTF8toUTF16(script, convertedScript);
   } else {
     nsContentUtils::ReportToConsoleNonLocalized(
         nsLiteralString(

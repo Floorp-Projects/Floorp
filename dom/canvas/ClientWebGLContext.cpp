@@ -5387,7 +5387,7 @@ void ClientWebGLContext::GetActiveUniformBlockName(const WebGLProgramJS& prog,
   }
 
   const auto& block = list[index];
-  retval = NS_ConvertUTF8toUTF16(block.name.c_str());
+  CopyUTF8toUTF16(block.name, retval);
 }
 
 void ClientWebGLContext::GetActiveUniformBlockParameter(
@@ -5742,7 +5742,7 @@ void ClientWebGLContext::GetProgramInfoLog(const WebGLProgramJS& prog,
   if (!prog.ValidateUsable(*this, "program")) return;
 
   const auto& res = GetLinkResult(prog);
-  retval = NS_ConvertUTF8toUTF16(res.log);
+  CopyUTF8toUTF16(res.log, retval);
 }
 
 void ClientWebGLContext::GetProgramParameter(
@@ -5826,7 +5826,7 @@ void ClientWebGLContext::GetShaderInfoLog(const WebGLShaderJS& shader,
   if (!shader.ValidateUsable(*this, "shader")) return;
 
   const auto& result = GetCompileResult(shader);
-  retval = NS_ConvertUTF8toUTF16(result.log);
+  CopyUTF8toUTF16(result.log, retval);
 }
 
 void ClientWebGLContext::GetShaderParameter(
@@ -5864,7 +5864,7 @@ void ClientWebGLContext::GetShaderSource(const WebGLShaderJS& shader,
   if (IsContextLost()) return;
   if (!shader.ValidateUsable(*this, "shader")) return;
 
-  retval = NS_ConvertUTF8toUTF16(shader.mSource.c_str());
+  CopyUTF8toUTF16(shader.mSource, retval);
 }
 
 void ClientWebGLContext::GetTranslatedShaderSource(const WebGLShaderJS& shader,
@@ -5875,7 +5875,7 @@ void ClientWebGLContext::GetTranslatedShaderSource(const WebGLShaderJS& shader,
   if (!shader.ValidateUsable(*this, "shader")) return;
 
   const auto& result = GetCompileResult(shader);
-  retval = NS_ConvertUTF8toUTF16(result.translatedSource);
+  CopyUTF8toUTF16(result.translatedSource, retval);
 }
 
 void ClientWebGLContext::ShaderSource(WebGLShaderJS& shader,

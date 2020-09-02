@@ -153,7 +153,7 @@ void DOMLocalization::GetAttributes(Element& aElement, L10nIdArgs& aResult,
   nsAutoString l10nArgs;
 
   if (aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nid, l10nId)) {
-    aResult.mId = NS_ConvertUTF16toUTF8(l10nId);
+    CopyUTF16toUTF8(l10nId, aResult.mId);
   }
 
   if (aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, l10nArgs)) {

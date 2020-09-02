@@ -284,7 +284,7 @@ nsresult nsAlertsIconListener::InitAlertAsync(nsIAlertNotification* aAlert,
 
       if (bundle) {
         bundle->GetStringFromName("brandShortName", appName);
-        appShortName = NS_ConvertUTF16toUTF8(appName);
+        CopyUTF16toUTF8(appName, appShortName);
       } else {
         NS_WARNING(
             "brand.properties not present, using default application name");
@@ -329,13 +329,13 @@ nsresult nsAlertsIconListener::InitAlertAsync(nsIAlertNotification* aAlert,
   if (title.IsEmpty()) {
     mAlertTitle = " "_ns;
   } else {
-    mAlertTitle = NS_ConvertUTF16toUTF8(title);
+    CopyUTF16toUTF8(title, mAlertTitle);
   }
 
   nsAutoString text;
   rv = aAlert->GetText(text);
   NS_ENSURE_SUCCESS(rv, rv);
-  mAlertText = NS_ConvertUTF16toUTF8(text);
+  CopyUTF16toUTF8(text, mAlertText);
 
   mAlertListener = aAlertListener;
 

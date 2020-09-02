@@ -213,7 +213,7 @@ Command GetInternalCommand(const char* aCommandName,
       if (NS_FAILED(rv)) {
         return Command::FormatJustifyNone;
       }
-      cValue = NS_ConvertUTF16toUTF8(value);
+      CopyUTF16toUTF8(value, cValue);
     }
     if (cValue.LowerCaseEqualsASCII("left")) {
       return Command::FormatJustifyLeft;

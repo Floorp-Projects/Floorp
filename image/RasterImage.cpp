@@ -1814,7 +1814,7 @@ void RasterImage::ReportDecoderError() {
       if (!GetSpecTruncatedTo1k(uri)) {
         msg += u" URI in this note truncated due to length."_ns;
       }
-      src = NS_ConvertUTF8toUTF16(uri);
+      CopyUTF8toUTF16(uri, src);
     }
     if (NS_SUCCEEDED(errorObject->InitWithWindowID(msg, src, EmptyString(), 0,
                                                    0, nsIScriptError::errorFlag,

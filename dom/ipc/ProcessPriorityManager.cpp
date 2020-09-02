@@ -624,7 +624,7 @@ const nsAutoCString& ParticularProcessPriorityManager::NameWithComma() {
     return mNameWithComma;  // empty string
   }
 
-  mNameWithComma = NS_ConvertUTF16toUTF8(name);
+  CopyUTF16toUTF8(name, mNameWithComma);
   mNameWithComma.AppendLiteral(", ");
   return mNameWithComma;
 }

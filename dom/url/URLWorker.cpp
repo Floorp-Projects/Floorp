@@ -47,7 +47,7 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
       return false;
     }
 
-    mURL = NS_ConvertUTF8toUTF16(url);
+    CopyUTF8toUTF16(url, mURL);
     return true;
   }
 };

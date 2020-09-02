@@ -749,7 +749,7 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
     } else {
       Event::GetWidgetEventType(aEvent, eventTypeU16);
     }
-    eventType = NS_ConvertUTF16toUTF8(eventTypeU16);
+    CopyUTF16toUTF8(eventTypeU16, eventType);
 
     nsCOMPtr<Element> element = do_QueryInterface(aTarget);
     nsAutoString elementId;

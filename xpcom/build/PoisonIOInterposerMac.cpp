@@ -100,7 +100,7 @@ void MacIOAutoObservation::Filename(nsAString& aFilename) {
 
   char filename[MAXPATHLEN];
   if (fcntl(mFd, F_GETPATH, filename) != -1) {
-    mFilename = NS_ConvertUTF8toUTF16(filename);
+    CopyUTF8toUTF16(filename, mFilename);
   } else {
     mFilename.Truncate();
   }

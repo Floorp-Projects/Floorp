@@ -66,7 +66,7 @@ class UDPSocket final : public DOMEventTargetHelper,
       return;
     }
 
-    aRetVal = NS_ConvertUTF8toUTF16(mRemoteAddress);
+    CopyUTF8toUTF16(mRemoteAddress, aRetVal);
   }
 
   Nullable<uint16_t> GetRemotePort() const { return mRemotePort; }

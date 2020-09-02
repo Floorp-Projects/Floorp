@@ -357,7 +357,7 @@ MediaEventSource<int64_t>& DecodedStreamData::OnOutput() {
 void DecodedStreamData::Forget() { mListener->Forget(); }
 
 void DecodedStreamData::GetDebugInfo(dom::DecodedStreamDataDebugInfo& aInfo) {
-  aInfo.mInstance = NS_ConvertUTF8toUTF16(nsPrintfCString("%p", this));
+  CopyUTF8toUTF16(nsPrintfCString("%p", this), aInfo.mInstance);
   aInfo.mAudioFramesWritten = mAudioFramesWritten;
   aInfo.mStreamAudioWritten = mAudioTrackWritten;
   aInfo.mNextAudioTime = mNextAudioTime.ToMicroseconds();

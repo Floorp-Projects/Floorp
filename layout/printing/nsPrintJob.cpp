@@ -2944,8 +2944,8 @@ static void GetDocTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
   nsAutoString docTitleStr;
   nsAutoString docURLStr;
   GetDocumentTitleAndURL(aPO->mDocument, docTitleStr, docURLStr);
-  aDocStr = NS_ConvertUTF16toUTF8(docTitleStr);
-  aURLStr = NS_ConvertUTF16toUTF8(docURLStr);
+  CopyUTF16toUTF8(docTitleStr, aDocStr);
+  CopyUTF16toUTF8(docURLStr, aURLStr);
 }
 
 //-------------------------------------------------------------

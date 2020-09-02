@@ -70,7 +70,7 @@ class WebGLActiveInfoJS final : public RefCounted<WebGLActiveInfoJS> {
   GLenum Type() const { return mInfo.elemType; }
 
   void GetName(nsString& retval) const {
-    retval = NS_ConvertUTF8toUTF16(mInfo.name.c_str());
+    CopyUTF8toUTF16(mInfo.name, retval);
   }
 
   bool WrapObject(JSContext*, JS::Handle<JSObject*>,
