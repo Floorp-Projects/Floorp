@@ -1346,6 +1346,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
         startPageRange: this._startRange.value,
         endPageRange: this._endRange.value,
       });
+      window.clearTimeout(this.showErrorTimeoutId);
       this._rangeError.hidden = true;
       this._startRangeOverflowError.hidden = true;
       return;
