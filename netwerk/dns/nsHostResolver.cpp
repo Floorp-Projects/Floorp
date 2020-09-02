@@ -116,9 +116,7 @@ class nsResState {
 
   bool Reset() {
     // reset no more than once per second
-    if (PR_IntervalToSeconds(PR_IntervalNow() - mLastReset) < 1) {
-      return false;
-    }
+    if (PR_IntervalToSeconds(PR_IntervalNow() - mLastReset) < 1) return false;
 
     LOG(("Calling 'res_ninit'.\n"));
 
@@ -768,7 +766,7 @@ void nsHostResolver::ClearPendingQueue(
     LinkedList<RefPtr<nsHostRecord>>& aPendingQ) {
   // loop through pending queue, erroring out pending lookups.
   if (!aPendingQ.isEmpty()) {
-    for (const RefPtr<nsHostRecord>& rec : aPendingQ) {
+    for (RefPtr<nsHostRecord> rec : aPendingQ) {
       rec->Cancel();
       if (rec->IsAddrRecord()) {
         CompleteLookup(rec, NS_ERROR_ABORT, nullptr, rec->pb, rec->originSuffix,
@@ -798,7 +796,7 @@ void nsHostResolver::FlushCache(bool aTrrToo) {
   // Clear the evictionQ and remove all its corresponding entries from
   // the cache first
   if (!mEvictionQ.isEmpty()) {
-    for (const RefPtr<nsHostRecord>& rec : mEvictionQ) {
+    for (RefPtr<nsHostRecord> rec : mEvictionQ) {
       rec->Cancel();
       mRecordDB.Remove(*static_cast<nsHostKey*>(rec));
     }
@@ -851,9 +849,7 @@ void nsHostResolver::Shutdown() {
     mEvictionQSize = 0;
     mPendingCount = 0;
 
-    if (mNumIdleTasks) {
-      mIdleTaskCV.NotifyAll();
-    }
+    if (mNumIdleTasks) mIdleTaskCV.NotifyAll();
 
     for (auto iter = mRecordDB.Iter(); !iter.Done(); iter.Next()) {
       iter.UserData()->Cancel();
@@ -869,7 +865,7 @@ void nsHostResolver::Shutdown() {
   ClearPendingQueue(pendingQLow);
 
   if (!evictionQ.isEmpty()) {
-    for (const RefPtr<nsHostRecord>& rec : evictionQ) {
+    for (RefPtr<nsHostRecord> rec : evictionQ) {
       rec->Cancel();
     }
   }
@@ -941,9 +937,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
 
   // ensure that we are working with a valid hostname before proceeding.  see
   // bug 304904 for details.
-  if (!net_IsValidHostName(host)) {
-    return NS_ERROR_UNKNOWN_HOST;
-  }
+  if (!net_IsValidHostName(host)) return NS_ERROR_UNKNOWN_HOST;
 
   // By-Type requests use only TRR. If TRR is disabled we can return
   // immediately.
@@ -1425,11 +1419,10 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
       rectype = TRRTYPE_TXT;
     } else if (rec->type == nsIDNSService::RESOLVE_TYPE_HTTPSSVC) {
       rectype = TRRTYPE_HTTPSSVC;
-    } else if (pushedTRR) {
+    }
+
+    if (pushedTRR) {
       rectype = pushedTRR->Type();
-    } else {
-      MOZ_ASSERT(false, "Not an expected request type");
-      return NS_ERROR_UNKNOWN_HOST;
     }
 
     LOG(("TRR Resolve %s type %d\n", typeRec->host.get(), (int)rectype));
@@ -1456,7 +1449,7 @@ void nsHostResolver::AssertOnQ(nsHostRecord* rec,
 #ifdef DEBUG
   MOZ_ASSERT(!q.isEmpty());
   MOZ_ASSERT(rec->isInList());
-  for (const RefPtr<nsHostRecord>& r : q) {
+  for (RefPtr<nsHostRecord> r : q) {
     if (rec == r) {
       return;
     }
@@ -1748,9 +1741,7 @@ bool nsHostResolver::GetHostToLookup(AddrHostRecord** result) {
 
     // Determining timeout is racy, so allow one cycle through checking the
     // queues before exiting.
-    if (timedOut) {
-      break;
-    }
+    if (timedOut) break;
 
     // wait for one or more of the following to occur:
     //  (1) the pending queue has a host record to process
@@ -2058,7 +2049,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
     }
 
     addrRec->mNative = false;
-    addrRec->mNativeSuccess = static_cast<bool>(newRRSet);
+    addrRec->mNativeSuccess = newRRSet ? true : false;
     if (addrRec->mNativeSuccess) {
       addrRec->mNativeDuration = TimeStamp::Now() - addrRec->mNativeStart;
     }
@@ -2240,7 +2231,7 @@ void nsHostResolver::CancelAsyncRequest(
   if (rec) {
     nsHostRecord* recPtr = nullptr;
 
-    for (const RefPtr<nsResolveHostCallback>& c : rec->mCallbacks) {
+    for (RefPtr<nsResolveHostCallback> c : rec->mCallbacks) {
       if (c->EqualsAsyncListener(aListener)) {
         c->remove();
         recPtr = rec;
@@ -2267,7 +2258,7 @@ size_t nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
 
   n += mRecordDB.ShallowSizeOfExcludingThis(mallocSizeOf);
   for (auto iter = mRecordDB.ConstIter(); !iter.Done(); iter.Next()) {
-    auto* entry = iter.UserData();
+    auto entry = iter.UserData();
     n += entry->SizeOfIncludingThis(mallocSizeOf);
   }
 

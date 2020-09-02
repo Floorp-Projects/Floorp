@@ -452,8 +452,8 @@ class AHostResolver {
  * nsHostResolver - an asynchronous host name resolver.
  */
 class nsHostResolver : public nsISupports, public AHostResolver {
-  using CondVar = mozilla::CondVar;
-  using Mutex = mozilla::Mutex;
+  typedef mozilla::CondVar CondVar;
+  typedef mozilla::Mutex Mutex;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -464,7 +464,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   static nsresult Create(uint32_t maxCacheEntries,  // zero disables cache
                          uint32_t defaultCacheEntryLifetime,  // seconds
                          uint32_t defaultGracePeriod,         // seconds
-                         nsHostResolver** result);
+                         nsHostResolver** resolver);
 
   /**
    * Set (new) cache limits.
@@ -486,7 +486,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
    * host lookup cannot be canceled (cancelation can be layered above this by
    * having the callback implementation return without doing anything).
    */
-  nsresult ResolveHost(const nsACString& aHost, const nsACString& trrServer,
+  nsresult ResolveHost(const nsACString& hostname, const nsACString& trrServer,
                        uint16_t type,
                        const mozilla::OriginAttributes& aOriginAttributes,
                        uint16_t flags, uint16_t af,
@@ -574,7 +574,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
 
   // Kick-off a name resolve operation, using native resolver and/or TRR
   nsresult NameLookup(nsHostRecord*);
-  bool GetHostToLookup(AddrHostRecord** result);
+  bool GetHostToLookup(AddrHostRecord** m);
 
   // Removes the first element from the list and returns it AddRef-ed in aResult
   // Should not be called for an empty linked list.
