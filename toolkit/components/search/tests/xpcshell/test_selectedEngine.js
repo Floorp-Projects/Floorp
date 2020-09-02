@@ -5,7 +5,7 @@ const kDefaultEngineName = "engine1";
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-  await useTestEngines("data1");
+  await SearchTestUtils.useTestEngines("data1");
   Assert.ok(!Services.search.isInitialized);
 });
 

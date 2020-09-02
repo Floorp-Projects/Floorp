@@ -11,7 +11,7 @@
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
-  await useTestEngines(
+  await SearchTestUtils.useTestEngines(
     "data",
     null,
     readJSONFile(do_get_file("data/engines-no-order-hint.json")).data
