@@ -261,6 +261,8 @@
     <string name="preferences_toolbar">పనిముట్ల పట్టీ</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">అలంకారం</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">ముంగిలి</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">అభిమతీకరణ</string>
     <!-- Preference description for banner about signing in -->
@@ -471,6 +473,17 @@
     <string name="content_description_history_menu">చరిత్ర అంశపు మెనూ</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">మూసివేయి</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">ఇటీవల మూసిన ట్యాబులు</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">పూర్తి చరిత్రను చూపించు</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d ట్యాబులు</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d ట్యాబు</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1516,4 +1529,5 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">తొలగించు</string>
-</resources>
+
+    </resources>
