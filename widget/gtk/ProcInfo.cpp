@@ -95,11 +95,6 @@ class StatReader {
         aInfo.cpuKernel = GetCPUTime(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
-      case 22:
-        // Virtual memory size in bytes.
-        aInfo.virtualMemorySize = Get64Value(aToken, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        break;
       case 23:
         // Resident Set Size: number of pages the process has
         // in real memory.
