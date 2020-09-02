@@ -3535,59 +3535,7 @@ double profiler_time() {
   return delta.ToMilliseconds();
 }
 
-static void locked_profiler_fill_backtrace(PSLockRef aLock,
-                                           RegisteredThread& aRegisteredThread,
-                                           ProfileBuffer& aProfileBuffer) {
-  Registers regs;
-#if defined(HAVE_NATIVE_UNWIND)
-  regs.SyncPopulate();
-#else
-  regs.Clear();
-#endif
-
-  DoSyncSample(aLock, aRegisteredThread, TimeStamp::NowUnfuzzed(), regs,
-               aProfileBuffer);
-}
-
-static UniqueProfilerBacktrace locked_profiler_get_backtrace(PSLockRef aLock) {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  if (!ActivePS::Exists(aLock)) {
-    return nullptr;
-  }
-
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(aLock);
-  if (!registeredThread) {
-    MOZ_ASSERT(registeredThread);
-    return nullptr;
-  }
-
-  auto bufferManager = MakeUnique<ProfileChunkedBuffer>(
-      ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
-      MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
-  ProfileBuffer buffer(*bufferManager);
-
-  locked_profiler_fill_backtrace(aLock, *registeredThread, buffer);
-
-  return UniqueProfilerBacktrace(
-      new ProfilerBacktrace("SyncProfile", registeredThread->Info()->ThreadId(),
-                            std::move(bufferManager)));
-}
-
-UniqueProfilerBacktrace profiler_get_backtrace() {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  PSAutoLock lock;
-
-  return locked_profiler_get_backtrace(lock);
-}
-
-void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
-  delete aBacktrace;
-}
-
-bool profiler_capture_backtrace(ProfileChunkedBuffer& aChunkedBuffer) {
+bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock;
@@ -3605,9 +3553,51 @@ bool profiler_capture_backtrace(ProfileChunkedBuffer& aChunkedBuffer) {
 
   ProfileBuffer profileBuffer(aChunkedBuffer);
 
-  locked_profiler_fill_backtrace(lock, *registeredThread, profileBuffer);
+  Registers regs;
+#if defined(HAVE_NATIVE_UNWIND)
+  regs.SyncPopulate();
+#else
+  regs.Clear();
+#endif
+
+  DoSyncSample(lock, *registeredThread, TimeStamp::NowUnfuzzed(), regs,
+               profileBuffer);
 
   return true;
+}
+
+UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  // Quick is-active check before allocating a buffer.
+  if (!profiler_is_active()) {
+    return nullptr;
+  }
+
+  auto buffer = MakeUnique<ProfileChunkedBuffer>(
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
+      MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
+
+  if (!profiler_capture_backtrace_into(*buffer)) {
+    return nullptr;
+  }
+
+  return buffer;
+}
+
+UniqueProfilerBacktrace profiler_get_backtrace() {
+  UniquePtr<ProfileChunkedBuffer> buffer = profiler_capture_backtrace();
+
+  if (!buffer) {
+    return nullptr;
+  }
+
+  return UniqueProfilerBacktrace(new ProfilerBacktrace(
+      "SyncProfile", profiler_current_thread_id(), std::move(buffer)));
+}
+
+void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
+  delete aBacktrace;
 }
 
 bool profiler_is_locked_on_current_thread() {
