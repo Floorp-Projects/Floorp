@@ -1594,6 +1594,8 @@ var gSync = {
   },
 
   onFxaDisabled() {
+    document.documentElement.setAttribute("fxadisabled", true);
+
     const toHide = [...document.querySelectorAll(".sync-ui-item")];
     for (const item of toHide) {
       item.hidden = true;

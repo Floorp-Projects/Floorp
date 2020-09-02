@@ -3,6 +3,26 @@
 
 "use strict";
 
+add_task(async function test_app_menu_fxa_disabled() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
+
+  const getter = sinon.stub(gSync, "FXA_ENABLED").get(() => false);
+  gSync.onFxaDisabled(); // Would have been called on gSync initialization if FXA_ENABLED had been set.
+  await openMainPanel();
+
+  ok(
+    BrowserTestUtils.is_hidden(document.getElementById("appMenu-fxa-status")),
+    "Fxa status is hidden"
+  );
+
+  getter.restore();
+
+  [...document.querySelectorAll(".sync-ui-item")].forEach(
+    e => (e.hidden = false)
+  );
+  await closeTabAndMainPanel();
+});
+
 add_task(function setup() {
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
