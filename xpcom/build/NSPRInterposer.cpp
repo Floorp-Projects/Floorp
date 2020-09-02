@@ -65,7 +65,7 @@ class NSPRIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
     if (mShouldReport && aFd &&
         GetPathFromFd(PR_FileDesc2NativeHandle(aFd), filename,
                       sizeof(filename)) != -1) {
-      mFilename = NS_ConvertUTF8toUTF16(filename);
+      CopyUTF8toUTF16(mozilla::MakeStringSpan(filename), mFilename);
     } else {
       mFilename.Truncate();
     }

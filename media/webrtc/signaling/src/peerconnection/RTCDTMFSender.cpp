@@ -85,7 +85,7 @@ void RTCDTMFSender::InsertDTMF(const nsAString& aTones, uint32_t aDuration,
     return;
   }
 
-  mToneBuffer = NS_ConvertUTF8toUTF16(utf8Tones.c_str());
+  CopyUTF8toUTF16(utf8Tones, mToneBuffer);
   mDuration = std::clamp(aDuration, 40U, 6000U);
   mInterToneGap = std::clamp(aInterToneGap, 30U, 6000U);
 

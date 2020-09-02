@@ -698,9 +698,9 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  mDisplayName = NS_ConvertUTF16toUTF8(m.mName);
-  mDescription = NS_ConvertUTF16toUTF8(m.mDescription);
-  mVersion = NS_ConvertUTF16toUTF8(m.mVersion);
+  CopyUTF16toUTF8(m.mName, mDisplayName);
+  CopyUTF16toUTF8(m.mDescription, mDescription);
+  CopyUTF16toUTF8(m.mVersion, mVersion);
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {

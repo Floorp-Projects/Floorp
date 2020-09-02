@@ -3016,7 +3016,7 @@ nsresult MediaManager::AnonymizeId(nsAString& aId,
     return rv;
   }
 
-  aId = NS_ConvertUTF8toUTF16(mac);
+  CopyUTF8toUTF16(mac, aId);
   return NS_OK;
 }
 

@@ -1339,12 +1339,12 @@ MediaDecoderOwner::NextFrameStatus MediaDecoder::NextFrameBufferedStatus() {
 }
 
 void MediaDecoder::GetDebugInfo(dom::MediaDecoderDebugInfo& aInfo) {
-  aInfo.mInstance = NS_ConvertUTF8toUTF16(nsPrintfCString("%p", this));
+  CopyUTF8toUTF16(nsPrintfCString("%p", this), aInfo.mInstance);
   aInfo.mChannels = mInfo ? mInfo->mAudio.mChannels : 0;
   aInfo.mRate = mInfo ? mInfo->mAudio.mRate : 0;
   aInfo.mHasAudio = mInfo ? mInfo->HasAudio() : false;
   aInfo.mHasVideo = mInfo ? mInfo->HasVideo() : false;
-  aInfo.mPlayState = NS_ConvertUTF8toUTF16(PlayStateStr());
+  CopyUTF8toUTF16(MakeStringSpan(PlayStateStr()), aInfo.mPlayState);
   aInfo.mContainerType =
       NS_ConvertUTF8toUTF16(ContainerType().Type().AsString());
   mReader->GetDebugInfo(aInfo.mReader);

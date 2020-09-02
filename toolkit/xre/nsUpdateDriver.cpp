@@ -151,7 +151,7 @@ static nsresult GetInstallDirPath(nsIFile* appDir, nsACString& installDirPath) {
   nsAutoString installDirPathW;
   rv = appDir->GetPath(installDirPathW);
   NS_ENSURE_SUCCESS(rv, rv);
-  installDirPath = NS_ConvertUTF16toUTF8(installDirPathW);
+  CopyUTF16toUTF8(installDirPathW, installDirPath);
 #else
   rv = appDir->GetNativePath(installDirPath);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -336,7 +336,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   if (NS_FAILED(rv)) {
     return;
   }
-  updaterPath = NS_ConvertUTF16toUTF8(updaterPathW);
+  CopyUTF16toUTF8(updaterPathW, updaterPath);
 
   // Get the path to the update dir.
   nsAutoString updateDirPathW;
@@ -344,7 +344,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   if (NS_FAILED(rv)) {
     return;
   }
-  updateDirPath = NS_ConvertUTF16toUTF8(updateDirPathW);
+  CopyUTF16toUTF8(updateDirPathW, updateDirPath);
 #elif defined(XP_MACOSX)
   // Get an nsIFile reference for the updater in the installation dir.
   if (!GetFile(appDir, nsLiteralCString(UPDATER_APP), updater)) {
@@ -418,7 +418,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
     if (NS_FAILED(rv)) {
       return;
     }
-    appFilePath = NS_ConvertUTF16toUTF8(appFilePathW);
+    CopyUTF16toUTF8(appFilePathW, appFilePath);
 #else
     rv = appFile->GetNativePath(appFilePath);
     if (NS_FAILED(rv)) {
@@ -454,7 +454,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
     if (NS_FAILED(rv)) {
       return;
     }
-    applyToDirPath = NS_ConvertUTF16toUTF8(applyToDirPathW);
+    CopyUTF16toUTF8(applyToDirPathW, applyToDirPath);
 #else
     rv = updatedDir->GetNativePath(applyToDirPath);
 #endif

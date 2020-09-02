@@ -3100,7 +3100,7 @@ nsresult internal_ParseHistogramData(
     return NS_ERROR_FAILURE;
   }
 
-  aOutName = NS_ConvertUTF16toUTF8(histogramName);
+  CopyUTF16toUTF8(histogramName, aOutName);
 
   // Get the data for this histogram.
   JS::RootedValue histogramData(aCx);

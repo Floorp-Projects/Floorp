@@ -84,7 +84,7 @@ struct APZTestDataToJSConverter {
   }
 
   static void ConvertString(const std::string& aFrom, nsString& aOutTo) {
-    aOutTo = NS_ConvertUTF8toUTF16(aFrom.c_str(), aFrom.size());
+    CopyUTF8toUTF16(aFrom, aOutTo);
   }
 
   static void ConvertHitResult(const APZTestData::HitResult& aResult,

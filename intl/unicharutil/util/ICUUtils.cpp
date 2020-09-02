@@ -38,7 +38,7 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
     nsAutoString lang;
     mContent->GetLang(lang);
     if (!lang.IsEmpty()) {
-      aBCP47LangTag = NS_ConvertUTF16toUTF8(lang);
+      CopyUTF16toUTF8(lang, aBCP47LangTag);
       return;
     }
   }
@@ -50,7 +50,7 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
     nsAutoString lang;
     mContent->OwnerDoc()->GetContentLanguage(lang);
     if (!lang.IsEmpty()) {
-      aBCP47LangTag = NS_ConvertUTF16toUTF8(lang);
+      CopyUTF16toUTF8(lang, aBCP47LangTag);
       return;
     }
   }

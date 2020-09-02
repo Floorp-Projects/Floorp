@@ -279,7 +279,7 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
 
   nsAutoString path;
   libFile->GetPath(path);
-  aOutLibPath = NS_ConvertUTF16toUTF8(path);
+  CopyUTF16toUTF8(path, aOutLibPath);
 
   return true;
 #endif
@@ -396,7 +396,7 @@ static bool AppendHostPath(nsCOMPtr<nsIFile>& aFile,
   nsCOMPtr<nsIFile> sigFile;
   if (GetSigPath(2, binary, aFile, sigFile) &&
       NS_SUCCEEDED(sigFile->GetPath(str))) {
-    sigFilePath = NS_ConvertUTF16toUTF8(str);
+    CopyUTF16toUTF8(str, sigFilePath);
   } else {
     // Cannot successfully get the sig file path.
     // Assume it is located at the same place as plugin-container
@@ -431,7 +431,7 @@ GMPChild::MakeCDMHostVerificationPaths() {
   const std::string pluginContainer =
       WideToUTF8(CommandLine::ForCurrentProcess()->program());
   path = nullptr;
-  str = NS_ConvertUTF8toUTF16(nsDependentCString(pluginContainer.c_str()));
+  CopyUTF8toUTF16(nsDependentCString(pluginContainer.c_str()), str);
   if (NS_FAILED(NS_NewLocalFile(str, true, /* aFollowLinks */
                                 getter_AddRefs(path))) ||
       !AppendHostPath(path, paths)) {

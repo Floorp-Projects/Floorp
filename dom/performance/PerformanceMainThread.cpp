@@ -34,7 +34,7 @@ void GetURLSpecFromChannel(nsITimedChannel* aChannel, nsAString& aSpec) {
     return;
   }
 
-  aSpec = NS_ConvertUTF8toUTF16(spec);
+  CopyUTF8toUTF16(spec, aSpec);
 }
 
 }  // namespace

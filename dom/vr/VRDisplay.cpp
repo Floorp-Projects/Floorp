@@ -379,7 +379,7 @@ uint32_t VRDisplay::DisplayId() const {
 
 void VRDisplay::GetDisplayName(nsAString& aDisplayName) const {
   const gfx::VRDisplayInfo& info = mClient->GetDisplayInfo();
-  aDisplayName = NS_ConvertUTF8toUTF16(info.GetDisplayName());
+  CopyUTF8toUTF16(MakeStringSpan(info.GetDisplayName()), aDisplayName);
 }
 
 void VRDisplay::UpdateFrameInfo() {
