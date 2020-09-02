@@ -150,8 +150,8 @@ js_option('--enable-simulator', choices=('arm', 'arm64', 'mips32', 'mips64'),
           nargs=1,
           help='Enable a JIT code simulator for the specified architecture')
 
-@depends('--enable-jit', '--enable-simulator', target)
-def simulator(jit_enabled, simulator_enabled, target):
+@depends('--enable-jit', '--enable-simulator', target, '--help')
+def simulator(jit_enabled, simulator_enabled, target, _):
     if not jit_enabled or not simulator_enabled:
         return
 
