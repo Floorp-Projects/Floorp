@@ -155,6 +155,7 @@ struct PrintPreviewResultInfo
 {
   uint32_t sheetCount;
   uint32_t totalPageCount;
+  bool hasSelection;
 };
 
 /**
