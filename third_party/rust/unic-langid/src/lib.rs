@@ -8,17 +8,20 @@
 //!
 //! ```
 //! use unic_langid::LanguageIdentifier;
+//! use unic_langid::subtags::{Language, Script, Region};
 //!
 //! let mut li: LanguageIdentifier = "en-US".parse()
-//!     .expect("Failed to parse.");
+//!     .expect("Parsing failed.");
 //!
-//! assert_eq!(li.language(), "en");
-//! assert_eq!(li.script(), None);
-//! assert_eq!(li.region(), Some("US"));
+//! let lang: Language = "en".parse().expect("Parsing failed.");
+//! let region: Region = "US".parse().expect("Parsing failed.");
+//! assert_eq!(li.language, lang);
+//! assert_eq!(li.script, None);
+//! assert_eq!(li.region, Some(region));
 //! assert_eq!(li.variants().len(), 0);
 //!
-//! li.set_region("GB")
-//!     .expect("Region parsing failed.");
+//! let region: Region = "GB".parse().expect("Parsing failed.");
+//! li.region = Some(region);
 //!
 //! assert_eq!(li.to_string(), "en-GB");
 //! ```
@@ -33,19 +36,33 @@
 //! which allows to construct build-time well-formed language identifiers with zero-cost at runtime.
 //!
 //! ``` ignore
-//! use unic_langid::{langid, langids};
+//! use unic_langid::{langid, langids, lang, region, script, variant};
+//! use unic_langid::subtags::{Language, Script, Region, Variant};
+//! use std::str::FromStr;
 //!
 //! let es_ar = langid!("es-AR");
 //! let en_us = langid!("en-US");
 //!
-//! assert_eq!(es_ar, "es-AR");
-//! assert_eq!(en_us, "en-US");
+//! assert_eq!(&es_ar.to_string(), "es-AR");
+//! assert_eq!(&en_us.to_string(), "en-US");
 //!
 //! let lang_ids = langids!("es-AR", "en-US", "de");
 //!
-//! assert_eq!(lang_ids.get(0), "es-AR");
-//! assert_eq!(lang_ids.get(1), "en-US");
-//! assert_eq!(lang_ids.get(2), "de");
+//! assert_eq!(lang_ids[0], "es-AR");
+//! assert_eq!(lang_ids[1], "en-US");
+//! assert_eq!(lang_ids[2], "de");
+//!
+//! assert_eq!(lang!("pl"), "pl");
+//! assert_eq!(lang!("pl"), Language::from_str("pl").unwrap());
+//!
+//! assert_eq!(script!("latn"), "Latn");
+//! assert_eq!(script!("latn"), Script::from_str("Latn").unwrap());
+//!
+//! assert_eq!(region!("us"), "US");
+//! assert_eq!(region!("us"), Region::from_str("us").unwrap());
+//!
+//! assert_eq!(variant!("macos"), "macos");
+//! assert_eq!(variant!("macos"), Variant::from_str("macos").unwrap());
 //! ```
 //!
 //! The macros produce instances of `LanguageIdentifier` the same way as parsing from `&str` does,
@@ -89,7 +106,7 @@
 pub use unic_langid_impl::*;
 
 #[cfg(feature = "unic-langid-macros")]
-pub use unic_langid_macros::langid;
+pub use unic_langid_macros::{lang, langid, region, script, variant};
 
 #[cfg(feature = "unic-langid-macros")]
 #[macro_export]

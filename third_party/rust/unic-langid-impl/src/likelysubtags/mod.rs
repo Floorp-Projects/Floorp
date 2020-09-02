@@ -2,30 +2,40 @@ mod tables;
 
 pub use tables::CLDR_VERSION;
 
-use tinystr::{TinyStr4, TinyStr8};
+use crate::subtags;
 
 unsafe fn lang_from_parts(
     input: (Option<u64>, Option<u32>, Option<u32>),
-    lang: Option<TinyStr8>,
-    script: Option<TinyStr4>,
-    region: Option<TinyStr4>,
-) -> Option<(Option<TinyStr8>, Option<TinyStr4>, Option<TinyStr4>)> {
-    let lang = lang.or_else(|| input.0.map(|l| TinyStr8::new_unchecked(l)));
-    let script = script.or_else(|| input.1.map(|s| TinyStr4::new_unchecked(s)));
-    let region = region.or_else(|| input.2.map(|r| TinyStr4::new_unchecked(r)));
+    lang: Option<subtags::Language>,
+    script: Option<subtags::Script>,
+    region: Option<subtags::Region>,
+) -> Option<(
+    subtags::Language,
+    Option<subtags::Script>,
+    Option<subtags::Region>,
+)> {
+    let lang = lang
+        .or_else(|| input.0.map(|s| subtags::Language::from_raw_unchecked(s)))
+        .unwrap();
+    let script = script.or_else(|| input.1.map(|s| subtags::Script::from_raw_unchecked(s)));
+    let region = region.or_else(|| input.2.map(|r| subtags::Region::from_raw_unchecked(r)));
     Some((lang, script, region))
 }
 
 pub fn maximize(
-    lang: Option<TinyStr8>,
-    script: Option<TinyStr4>,
-    region: Option<TinyStr4>,
-) -> Option<(Option<TinyStr8>, Option<TinyStr4>, Option<TinyStr4>)> {
-    if lang.is_some() && script.is_some() && region.is_some() {
+    lang: subtags::Language,
+    script: Option<subtags::Script>,
+    region: Option<subtags::Region>,
+) -> Option<(
+    subtags::Language,
+    Option<subtags::Script>,
+    Option<subtags::Region>,
+)> {
+    if !lang.is_empty() && script.is_some() && region.is_some() {
         return None;
     }
 
-    if let Some(l) = lang {
+    if let Some(l) = Into::<Option<u64>>::into(lang) {
         if let Some(r) = region {
             let result = tables::LANG_REGION
                 .binary_search_by_key(&(&l.into(), &r.into()), |(key_l, key_r, _)| (key_l, key_r))
@@ -85,13 +95,17 @@ pub fn maximize(
 }
 
 pub fn minimize(
-    lang: Option<TinyStr8>,
-    script: Option<TinyStr4>,
-    region: Option<TinyStr4>,
-) -> Option<(Option<TinyStr8>, Option<TinyStr4>, Option<TinyStr4>)> {
+    lang: subtags::Language,
+    script: Option<subtags::Script>,
+    region: Option<subtags::Region>,
+) -> Option<(
+    subtags::Language,
+    Option<subtags::Script>,
+    Option<subtags::Region>,
+)> {
     // maximize returns None when all 3 components are
     // already filled so don't call it in that case.
-    let max_langid = if lang.is_some() && script.is_some() && region.is_some() {
+    let max_langid = if !lang.is_empty() && script.is_some() && region.is_some() {
         (lang, script, region)
     } else {
         maximize(lang, script, region)?

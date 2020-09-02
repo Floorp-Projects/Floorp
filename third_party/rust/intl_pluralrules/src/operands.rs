@@ -59,15 +59,15 @@ pub struct PluralOperands {
     /// Absolute value of input
     pub n: f64,
     /// Integer value of input
-    pub i: usize,
+    pub i: u64,
     /// Number of visible fraction digits with trailing zeros
     pub v: usize,
     /// Number of visible fraction digits without trailing zeros
     pub w: usize,
     /// Visible fraction digits with trailing zeros
-    pub f: usize,
+    pub f: u64,
     /// Visible fraction digits without trailing zeros
-    pub t: usize,
+    pub t: u64,
 }
 
 impl<'a> TryFrom<&'a str> for PluralOperands {
@@ -93,17 +93,17 @@ impl<'a> TryFrom<&'a str> for PluralOperands {
             let dec_str = &abs_str[(dec_pos + 1)..];
 
             integer_digits =
-                usize::from_str(&int_str).map_err(|_| "Could not convert string to integer!")?;
+                u64::from_str(&int_str).map_err(|_| "Could not convert string to integer!")?;
 
             let backtrace = dec_str.trim_end_matches('0');
 
             num_fraction_digits0 = dec_str.len() as usize;
             num_fraction_digits = backtrace.len() as usize;
             fraction_digits0 =
-                usize::from_str(dec_str).map_err(|_| "Could not convert string to integer!")?;
-            fraction_digits = usize::from_str(backtrace).unwrap_or(0);
+                u64::from_str(dec_str).map_err(|_| "Could not convert string to integer!")?;
+            fraction_digits = u64::from_str(backtrace).unwrap_or(0);
         } else {
-            integer_digits = absolute_value as usize;
+            integer_digits = absolute_value as u64;
             num_fraction_digits0 = 0;
             num_fraction_digits = 0;
             fraction_digits0 = 0;
@@ -128,7 +128,7 @@ macro_rules! impl_integer_type {
                 // XXXManishearth converting from u32 or u64 to isize may wrap
                 PluralOperands {
                     n: input as f64,
-                    i: input as usize,
+                    i: input as u64,
                     v: 0,
                     w: 0,
                     f: 0,
@@ -151,7 +151,7 @@ macro_rules! impl_signed_integer_type {
                 let x = (input as isize).checked_abs().ok_or("Number too big")?;
                 Ok(PluralOperands {
                     n: x as f64,
-                    i: x as usize,
+                    i: x as u64,
                     v: 0,
                     w: 0,
                     f: 0,

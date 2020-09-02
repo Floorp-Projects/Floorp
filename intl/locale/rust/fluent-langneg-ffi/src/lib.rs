@@ -51,7 +51,7 @@ fn get_strategy(input: NegotiationStrategy) -> LangNegNegotiationStrategy {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fluent_langneg_negotiate_languages(
+pub extern "C" fn fluent_langneg_negotiate_languages(
     requested: &ThinVec<nsCString>,
     available: &ThinVec<nsCString>,
     default: &nsACString,
