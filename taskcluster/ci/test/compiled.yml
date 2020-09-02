@@ -101,7 +101,7 @@ jittest:
         by-test-platform:
             windows10-64-ccov/.*: 7200
             macosx.*-ccov/.*: 7200
-            android-hw.*: 4500
+            android-hw.*: 5400
             default: 3600
     mozharness:
         chunked:
