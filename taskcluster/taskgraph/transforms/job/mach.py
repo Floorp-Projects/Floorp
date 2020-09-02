@@ -21,6 +21,11 @@ mach_schema = Schema({
     # The mach command (omitting `./mach`) to run
     Required('mach'): taskref_or_string,
 
+    # The version of Python to run with. Either an absolute path to the binary
+    # on the worker, a version identifier (e.g python2.7 or 3.8). There is no
+    # validation performed to ensure the specified binaries actually exist.
+    Optional('python-version'): Any(text_type, int, float),
+
     # The sparse checkout profile to use. Value is the filename relative to the
     # directory where sparse profiles are defined (build/sparse-profiles/).
     Optional('sparse-profile'): Any(text_type, None),
@@ -43,6 +48,7 @@ defaults = {
 @run_job_using("generic-worker", "mach", schema=mach_schema, defaults=defaults)
 def configure_mach(config, job, taskdesc):
     run = job['run']
+    worker = job['worker']
 
     additional_prefix = []
     if job['worker-type'].endswith('1014'):
@@ -50,6 +56,25 @@ def configure_mach(config, job, taskdesc):
             'LC_ALL=en_US.UTF-8',
             'LANG=en_US.UTF-8'
         ]
+
+    python = run.get('python-version')
+    if python:
+        del run['python-version']
+
+        if worker['os'] == 'macosx' and python == 3:
+            # OSX hosts can't seem to find python 3 on their own
+            python = '/tools/python37/bin/python3.7'
+            if job['worker-type'].endswith('1014'):
+                python = '/usr/local/bin/python3'
+
+        python = str(python)
+        try:
+            float(python)
+            python = "python" + python
+        except ValueError:
+            pass
+
+        additional_prefix.append(python)
 
     command_prefix = ' '.join(additional_prefix + ['./mach '])
 

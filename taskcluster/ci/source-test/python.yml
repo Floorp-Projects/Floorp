@@ -112,7 +112,7 @@ mochitest-harness:
             start_xvfb '1600x1200x24' 0 &&
             export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
             export TEST_HARNESS_ROOT=$MOZ_FETCHES_DIR/tests &&
-            ./mach python-test --python 2 --subsuite mochitest
+            python2 ./mach python-test --subsuite mochitest
     fetches:
         build:
             - target.tar.bz2
@@ -293,7 +293,7 @@ reftest-harness:
             start_xvfb '1600x1200x24' 0 &&
             export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
             export TEST_HARNESS_ROOT=$MOZ_FETCHES_DIR/tests &&
-            ./mach python-test --python 2 --subsuite reftest
+            python2 ./mach python-test --subsuite reftest
     fetches:
         build:
             - target.tar.bz2
@@ -481,7 +481,7 @@ telemetry-integration-tests:
             source /builds/worker/scripts/xvfb.sh &&
             start_xvfb '1600x1200x24' 0 &&
             export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
-            ./mach python-test --python 2 --subsuite telemetry-integration-tests
+            python2 ./mach python-test --subsuite telemetry-integration-tests
     fetches:
         build:
             - target.tar.bz2
