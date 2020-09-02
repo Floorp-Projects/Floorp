@@ -419,7 +419,7 @@ class CorePS {
   PS_GET_LOCKLESS(int, MainThreadId)
 
   // No PSLockRef is needed for this field because it's immutable.
-  PS_GET_LOCKLESS(TimeStamp, ProcessStartTime)
+  PS_GET_LOCKLESS(const TimeStamp&, ProcessStartTime)
 
   // No PSLockRef is needed for this field because it's thread-safe.
   PS_GET_LOCKLESS(ProfileChunkedBuffer&, CoreBuffer)
@@ -567,6 +567,11 @@ class CorePS {
 };
 
 CorePS* CorePS::sInstance = nullptr;
+
+ProfileChunkedBuffer& profiler_get_core_buffer() {
+  MOZ_ASSERT(CorePS::Exists());
+  return CorePS::CoreBuffer();
+}
 
 class SamplerThread;
 
