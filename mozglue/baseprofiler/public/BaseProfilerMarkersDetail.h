@@ -131,7 +131,6 @@ struct ProfileBufferEntryReader::Deserializer<ProfilerStringView<CHAR>> {
   }
 };
 
-// ----------------------------------------------------------------------------
 // Serializer, Deserializer: MarkerCategory
 
 // The serialization contains both category numbers encoded as ULEB128.
@@ -164,6 +163,121 @@ struct ProfileBufferEntryReader::Deserializer<MarkerCategory> {
                               aER.ReadULEB128<uint32_t>()),
                           static_cast<baseprofiler::ProfilingCategory>(
                               aER.ReadULEB128<uint32_t>()));
+  }
+};
+
+// ----------------------------------------------------------------------------
+// Serializer, Deserializer: MarkerTiming
+
+// The serialization starts with the marker phase, followed by one or two
+// timestamps as needed.
+template <>
+struct ProfileBufferEntryWriter::Serializer<MarkerTiming> {
+  static Length Bytes(const MarkerTiming& aTiming) {
+    MOZ_ASSERT(!aTiming.IsUnspecified());
+    const auto phase = aTiming.MarkerPhase();
+    switch (phase) {
+      case MarkerTiming::Phase::Instant:
+        return SumBytes(phase, aTiming.StartTime());
+      case MarkerTiming::Phase::Interval:
+        return SumBytes(phase, aTiming.StartTime(), aTiming.EndTime());
+      case MarkerTiming::Phase::IntervalStart:
+        return SumBytes(phase, aTiming.StartTime());
+      case MarkerTiming::Phase::IntervalEnd:
+        return SumBytes(phase, aTiming.EndTime());
+      default:
+        MOZ_RELEASE_ASSERT(phase == MarkerTiming::Phase::Instant ||
+                           phase == MarkerTiming::Phase::Interval ||
+                           phase == MarkerTiming::Phase::IntervalStart ||
+                           phase == MarkerTiming::Phase::IntervalEnd);
+        return 0;  // Only to avoid build errors.
+    }
+  }
+
+  static void Write(ProfileBufferEntryWriter& aEW,
+                    const MarkerTiming& aTiming) {
+    MOZ_ASSERT(!aTiming.IsUnspecified());
+    const auto phase = aTiming.MarkerPhase();
+    switch (phase) {
+      case MarkerTiming::Phase::Instant:
+        aEW.WriteObjects(phase, aTiming.StartTime());
+        return;
+      case MarkerTiming::Phase::Interval:
+        aEW.WriteObjects(phase, aTiming.StartTime(), aTiming.EndTime());
+        return;
+      case MarkerTiming::Phase::IntervalStart:
+        aEW.WriteObjects(phase, aTiming.StartTime());
+        return;
+      case MarkerTiming::Phase::IntervalEnd:
+        aEW.WriteObjects(phase, aTiming.EndTime());
+        return;
+      default:
+        MOZ_RELEASE_ASSERT(phase == MarkerTiming::Phase::Instant ||
+                           phase == MarkerTiming::Phase::Interval ||
+                           phase == MarkerTiming::Phase::IntervalStart ||
+                           phase == MarkerTiming::Phase::IntervalEnd);
+        return;
+    }
+  }
+};
+
+template <>
+struct ProfileBufferEntryReader::Deserializer<MarkerTiming> {
+  static void ReadInto(ProfileBufferEntryReader& aER, MarkerTiming& aTiming) {
+    aTiming.mPhase = aER.ReadObject<MarkerTiming::Phase>();
+    switch (aTiming.mPhase) {
+      case MarkerTiming::Phase::Instant:
+        aTiming.mStartTime = aER.ReadObject<TimeStamp>();
+        aTiming.mEndTime = TimeStamp{};
+        break;
+      case MarkerTiming::Phase::Interval:
+        aTiming.mStartTime = aER.ReadObject<TimeStamp>();
+        aTiming.mEndTime = aER.ReadObject<TimeStamp>();
+        break;
+      case MarkerTiming::Phase::IntervalStart:
+        aTiming.mStartTime = aER.ReadObject<TimeStamp>();
+        aTiming.mEndTime = TimeStamp{};
+        break;
+      case MarkerTiming::Phase::IntervalEnd:
+        aTiming.mStartTime = TimeStamp{};
+        aTiming.mEndTime = aER.ReadObject<TimeStamp>();
+        break;
+      default:
+        MOZ_RELEASE_ASSERT(aTiming.mPhase == MarkerTiming::Phase::Instant ||
+                           aTiming.mPhase == MarkerTiming::Phase::Interval ||
+                           aTiming.mPhase ==
+                               MarkerTiming::Phase::IntervalStart ||
+                           aTiming.mPhase == MarkerTiming::Phase::IntervalEnd);
+        break;
+    }
+  }
+
+  static MarkerTiming Read(ProfileBufferEntryReader& aER) {
+    TimeStamp start;
+    TimeStamp end;
+    auto phase = aER.ReadObject<MarkerTiming::Phase>();
+    switch (phase) {
+      case MarkerTiming::Phase::Instant:
+        start = aER.ReadObject<TimeStamp>();
+        break;
+      case MarkerTiming::Phase::Interval:
+        start = aER.ReadObject<TimeStamp>();
+        end = aER.ReadObject<TimeStamp>();
+        break;
+      case MarkerTiming::Phase::IntervalStart:
+        start = aER.ReadObject<TimeStamp>();
+        break;
+      case MarkerTiming::Phase::IntervalEnd:
+        end = aER.ReadObject<TimeStamp>();
+        break;
+      default:
+        MOZ_RELEASE_ASSERT(phase == MarkerTiming::Phase::Instant ||
+                           phase == MarkerTiming::Phase::Interval ||
+                           phase == MarkerTiming::Phase::IntervalStart ||
+                           phase == MarkerTiming::Phase::IntervalEnd);
+        break;
+    }
+    return MarkerTiming(start, end, phase);
   }
 };
 
