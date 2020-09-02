@@ -48,27 +48,17 @@ the
 `GeckoRuntime <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html>`_
 instance. The extension persists even when your app is restarted.
 Installing at every start up is fine, but it could be slow. To avoid
-installing multiple times you can query the list of installed extensions
-using ``WebExtensionRuntime.list``:
+installing multiple times you can use ``WebExtensionRuntime.ensureBuiltIn``,
+which will only install if the extension is not installed yet.
 
 .. code:: java
 
-   runtime.getWebExtensionController().list().then(extensionList -> {
-       for (WebExtension extension : extensionList) {
-           if (extension.id.equals("messaging@example.com")
-                   && extension.metaData.version.equals("1.0")) {
-               // Extension already installed, no need to install it again
-               return GeckoResult.fromValue(extension);
-           }
-       }
-
-       // Install if it's not already installed.
-       return runtime.getWebExtensionController()
-           .installBuiltIn("resource://android/assets/messaging/");
-   }).accept(
+   runtime.getWebExtensionController()
+     .ensureBuiltIn("resource://android/assets/messaging/", "messaging@example.com")
+     .accept(
            extension -> Log.i("MessageDelegate", "Extension installed: " + extension),
            e -> Log.e("MessageDelegate", "Error registering WebExtension", e)
-   );
+     );
 
 Communicating with Web Content
 ------------------------------
@@ -175,25 +165,16 @@ Activity.java
        }
    };
 
-   // Let's check if the extension is already installed first
-   runtime.getWebExtensionController().list().then(extensionList -> {
-       for (WebExtension extension : extensionList) {
-           if (extension.id.equals(EXTENSION_ID)
-                   && extension.metaData.version.equals(EXTENSION_VERSION)) {
-               // Extension already installed, no need to install it again
-               return GeckoResult.fromValue(extension);
-           }
-       }
+   // Let's make sure the extension is installed
+   runtime.getWebExtensionController()
+           .ensureBuiltIn(EXTENSION_LOCATION, "messaging@example.com").accept(
+               // Set delegate that will receive messages coming from this extension.
+               extension -> session.getWebExtensionController()
+                       .setMessageDelegate(extension, messageDelegate, "browser"),
+               // Something bad happened, let's log an error
+               e -> Log.e("MessageDelegate", "Error registering extension", e)
+           );
 
-       // Install if it's not already installed.
-       return runtime.getWebExtensionController().installBuiltIn(EXTENSION_LOCATION);
-   }).accept(
-           // Set the delegate that will receive messages coming from this WebExtension.
-           extension -> session.getWebExtensionController()
-                   .setMessageDelegate(extension, messageDelegate, "browser"),
-           // Something bad happened, let's log an error
-           e -> Log.e("MessageDelegate", "Error registering WebExtension", e)
-   );
 
 Now add the ``geckoViewAddons``, ``nativeMessaging`` and
 ``nativeMessagingFromContent`` permissions to your ``manifest.json``
@@ -380,7 +361,7 @@ and then using it when needed.
        };
 
        runtime.getWebExtensionController()
-           .installBuiltIn("resource://android/assets/messaging/")
+           .ensureBuiltIn("resource://android/assets/messaging/", "messaging@example.com")
            .accept(
                // Register message delegate for background script
                extension -> extension.setMessageDelegate(messageDelegate, "browser"),

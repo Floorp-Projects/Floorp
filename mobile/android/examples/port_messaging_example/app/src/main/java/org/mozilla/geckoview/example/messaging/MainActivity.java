@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         sRuntime.getWebExtensionController()
-                .installBuiltIn("resource://android/assets/messaging/")
+                .ensureBuiltIn("resource://android/assets/messaging/", "messaging@example.com")
                 .accept(
                     // Register message delegate for background script
                     extension -> extension.setMessageDelegate(messageDelegate, "browser"),
