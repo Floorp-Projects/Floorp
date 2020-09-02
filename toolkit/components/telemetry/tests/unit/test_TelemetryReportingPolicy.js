@@ -63,9 +63,6 @@ add_task(async function test_setup() {
   finishAddonManagerStartup();
   fakeIntlReady();
 
-  // Make sure SearchService is ready for it to be called.
-  await Services.search.init();
-
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
 
@@ -79,6 +76,11 @@ add_task(async function test_setup() {
 });
 
 add_task(async function test_firstRun() {
+  if (AppConstants.IS_ANDROID) {
+    return;
+  }
+  await Services.search.init();
+
   const FIRST_RUN_TIMEOUT_MSEC = 60 * 1000; // 60s
   const OTHER_RUNS_TIMEOUT_MSEC = 10 * 1000; // 10s
 
