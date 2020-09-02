@@ -557,13 +557,13 @@ class RefTest(object):
             stepOptions = copy.deepcopy(options)
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.runUntilFailure = True
-            stepOptions.environment.append("MOZ_CHAOSMODE=3")
+            stepOptions.environment.append("MOZ_CHAOSMODE=0xfb")
             result = self.runTests(tests, stepOptions)
             return result
 
         def step4():
             stepOptions = copy.deepcopy(options)
-            stepOptions.environment.append("MOZ_CHAOSMODE=3")
+            stepOptions.environment.append("MOZ_CHAOSMODE=0xfb")
             for i in range(VERIFY_REPEAT_SINGLE_BROWSER):
                 result = self.runTests(tests, stepOptions)
                 if result != 0:

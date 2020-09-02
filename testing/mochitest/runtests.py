@@ -2558,7 +2558,7 @@ toolbar#nav-bar {
             stepOptions = copy.deepcopy(options)
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.keep_open = False
-            stepOptions.environment.append("MOZ_CHAOSMODE=3")
+            stepOptions.environment.append("MOZ_CHAOSMODE=0xfb")
             stepOptions.profilePath = None
             result = self.runTests(stepOptions)
             result = result or (-2 if self.countfail > 0 else 0)
@@ -2569,7 +2569,7 @@ toolbar#nav-bar {
             stepOptions = copy.deepcopy(options)
             stepOptions.repeat = 0
             stepOptions.keep_open = False
-            stepOptions.environment.append("MOZ_CHAOSMODE=3")
+            stepOptions.environment.append("MOZ_CHAOSMODE=0xfb")
             for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
                 stepOptions.profilePath = None
                 result = self.runTests(stepOptions)

@@ -1697,7 +1697,7 @@ class XPCShellTests(object):
             def step2():
                 # Run tests sequentially, with MOZ_CHAOSMODE enabled.
                 sequential_tests = []
-                self.env["MOZ_CHAOSMODE"] = "3"
+                self.env["MOZ_CHAOSMODE"] = "0xfb"
                 for i in range(VERIFY_REPEAT):
                     self.testCount += 1
                     test = testClass(test_object, retry=False,
