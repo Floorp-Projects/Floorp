@@ -1328,9 +1328,14 @@ add_task(async function test_dnsSuffix() {
       "network:dns-suffix-list-updated"
     );
     await new DNSListener("test.com", "1.2.3.4");
-    await new DNSListener("example.org", "127.0.0.1");
-    // Also test that we don't use the pushed entry.
-    await new DNSListener("push.example.org", "127.0.0.1");
+    if (Services.prefs.getBoolPref("network.trr.split_horizon_mitigations")) {
+      await new DNSListener("example.org", "127.0.0.1");
+      // Also test that we don't use the pushed entry.
+      await new DNSListener("push.example.org", "127.0.0.1");
+    } else {
+      await new DNSListener("example.org", "1.2.3.4");
+      await new DNSListener("push.example.org", "2018::2018");
+    }
 
     // Attempt to clean up, just in case
     networkLinkService.dnsSuffixList = [];
@@ -1340,9 +1345,15 @@ add_task(async function test_dnsSuffix() {
     );
   }
 
+  Services.prefs.setBoolPref("network.trr.split_horizon_mitigations", true);
   await checkDnsSuffixInMode(2);
   Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
   await checkDnsSuffixInMode(3);
+  Services.prefs.setBoolPref("network.trr.split_horizon_mitigations", false);
+  // Test again with mitigations off
+  await checkDnsSuffixInMode(2);
+  await checkDnsSuffixInMode(3);
+  Services.prefs.clearUserPref("network.trr.split_horizon_mitigations");
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
 });
 
