@@ -7,7 +7,13 @@
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
 const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
+const ALPENGLOW_THEME_ID = "firefox-alpenglow@mozilla.org";
+
 const MAX_THEME_COUNT = 6; // Not exposed from CustomizeMode.jsm
+
+const { _defaultImportantThemes } = ChromeUtils.import(
+  "resource:///modules/CustomizeMode.jsm"
+);
 
 async function installTheme(id) {
   let extension = ExtensionTestUtils.loadExtension({
@@ -72,27 +78,39 @@ add_task(async function() {
 
   let header = document.getElementById("customization-lwtheme-menu-header");
   let footer = document.getElementById("customization-lwtheme-menu-footer");
+  let menu = document.getElementById("customization-lwtheme-menu");
+  let themeMenuItems = menu.querySelectorAll(
+    "toolbarbutton.customization-lwtheme-menu-theme"
+  );
 
   is(
-    header.nextElementSibling.nextElementSibling.nextElementSibling
-      .nextElementSibling.nextElementSibling,
-    footer,
+    themeMenuItems.length,
+    _defaultImportantThemes.length,
     "There should only be four themes (default, light, dark, alpenglow) in the 'My Themes' section by default"
   );
+  // Note that we use our own theme ID constants in the
+  // following tests because we want to test things are
+  // displayed in the proper order, not just in the order
+  // that constants in the code happens to be in.
   is(
-    header.nextElementSibling.theme.id,
+    themeMenuItems[0].theme.id,
     DEFAULT_THEME_ID,
     "The first theme should be the default theme"
   );
   is(
-    header.nextElementSibling.nextElementSibling.theme.id,
+    themeMenuItems[1].theme.id,
     LIGHT_THEME_ID,
     "The second theme should be the light theme"
   );
   is(
-    header.nextElementSibling.nextElementSibling.nextElementSibling.theme.id,
+    themeMenuItems[2].theme.id,
     DARK_THEME_ID,
     "The third theme should be the dark theme"
+  );
+  is(
+    themeMenuItems[3].theme.id,
+    ALPENGLOW_THEME_ID,
+    "The fourth theme should be the alpenglow theme"
   );
 
   let themeChangedPromise = promiseObserverNotified(

@@ -22,7 +22,6 @@ var isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
 // If you need to whitelist specific files, please use the 'whitelist' object.
 var gExceptionPaths = [
   "chrome://browser/content/defaultthemes/",
-  "resource://app/modules/themes/alpenglow/",
   "resource://app/defaults/settings/blocklists/",
   "resource://app/defaults/settings/security-state/",
   "resource://app/defaults/settings/main/",
@@ -429,6 +428,14 @@ async function parseJsonManifest(uri) {
   if (data.theme_experiment && data.theme_experiment.stylesheet) {
     let stylesheet = uri.resolve(data.theme_experiment.stylesheet);
     gReferencesFromCode.set(stylesheet, null);
+  }
+
+  for (let themeKey of ["theme", "dark_theme"]) {
+    if (data?.[themeKey]?.images?.additional_backgrounds) {
+      for (let background of data[themeKey].images.additional_backgrounds) {
+        gReferencesFromCode.set(uri.resolve(background), null);
+      }
+    }
   }
 
   return null;
