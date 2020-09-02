@@ -194,9 +194,9 @@ add_task(async function searchEngines() {
       search: otherScheme + "://ex",
       matches: [
         makeVisitResult(context, {
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: otherScheme + "://ex/",
           title: otherScheme + "://ex/",
-          iconUri: "",
           heuristic: true,
         }),
       ],
@@ -207,9 +207,9 @@ add_task(async function searchEngines() {
       search: otherScheme + "://www.ex",
       matches: [
         makeVisitResult(context, {
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: otherScheme + "://www.ex/",
           title: otherScheme + "://www.ex/",
-          iconUri: "",
           heuristic: true,
         }),
       ],
@@ -220,8 +220,10 @@ add_task(async function searchEngines() {
       context,
       matches: [
         makeVisitResult(context, {
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://example/",
           title: "http://example/",
+          iconUri: "page-icon:http://example/",
           heuristic: true,
         }),
       ],

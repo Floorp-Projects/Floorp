@@ -121,7 +121,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
             engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
             keyword: [tokenAliases[0], UrlbarUtils.HIGHLIGHT.TYPED],
             query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: engine.iconURI ? engine.iconURI.spec : "",
+            icon: engine.iconURI?.spec,
             keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
           })
         );
@@ -156,18 +156,30 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
   }
 
   _getAutofillResult(queryContext) {
+    let lowerCaseSearchString = queryContext.searchString.toLowerCase();
+
     // The user is typing a specific engine. We should show a heuristic result.
     for (let { engine, tokenAliases } of this._engines) {
       for (let alias of tokenAliases) {
-        if (alias.startsWith(queryContext.searchString.toLowerCase())) {
-          // We found a specific engine. We will add an autofill result.
+        if (alias.startsWith(lowerCaseSearchString)) {
+          // We found the engine.
+
+          // Stop adding an autofill result once the user has typed the full
+          // alias followed by a space.  UrlbarProviderUnifiedComplete will take
+          // over at this point.
+          if (
+            UrlbarPrefs.get("update2") &&
+            lowerCaseSearchString.startsWith(alias + " ")
+          ) {
+            return null;
+          }
+
+          // Add an autofill result.  Append a space so the user can hit enter
+          // or the right arrow key and immediately start typing their query.
           let aliasPreservingUserCase =
             queryContext.searchString +
             alias.substr(queryContext.searchString.length);
-          // Don't append a space if update2 is on since selecting this result
-          // will just enter search mode.
-          let value =
-            aliasPreservingUserCase + (UrlbarPrefs.get("update2") ? "" : " ");
+          let value = aliasPreservingUserCase + " ";
           let result = new UrlbarResult(
             UrlbarUtils.RESULT_TYPE.SEARCH,
             UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -175,14 +187,8 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
               engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
               keyword: [aliasPreservingUserCase, UrlbarUtils.HIGHLIGHT.TYPED],
               query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
-              icon: engine.iconURI ? engine.iconURI.spec : "",
+              icon: engine.iconURI?.spec,
               keywordOffer: UrlbarUtils.KEYWORD_OFFER.HIDE,
-              // For test interoperabilty with UrlbarProviderSearchSuggestions.
-              suggestion: undefined,
-              tailPrefix: undefined,
-              tail: undefined,
-              tailOffsetIndex: -1,
-              isSearchHistory: false,
             })
           );
           result.heuristic = true;

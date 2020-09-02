@@ -37,9 +37,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
       makeSearchResult(context, {
@@ -55,9 +55,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
       makeSearchResult(context, {
@@ -73,9 +73,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
       makeSearchResult(context, {
@@ -91,9 +91,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${query}/`,
         title: `${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -106,9 +106,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${query}/`,
         title: `${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -121,9 +121,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${query}/`,
         title: `${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -136,9 +136,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: query,
         title: query,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -151,9 +151,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${query}/`,
         title: `${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -175,6 +175,7 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}`,
         title: `http://${query}`,
         iconUri: "page-icon:http://mozilla.org/",
@@ -223,9 +224,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
       makeSearchResult(context, {
@@ -241,6 +242,7 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}`,
         title: `http://${query}`,
         iconUri: "page-icon:http://firefox/",
@@ -260,6 +262,7 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}`,
         title: `http://${query}`,
         iconUri: "page-icon:http://mozilla/",
@@ -276,9 +279,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -291,9 +294,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -312,9 +315,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -327,9 +330,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: query,
         title: query,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -357,9 +360,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${query}/`,
         title: `${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -372,9 +375,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${query}/`,
         title: `${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -387,9 +390,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${query}/`,
         title: `http://${query}/`,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -427,9 +430,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: query,
         title: query,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -442,9 +445,9 @@ add_task(async function() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: query,
         title: query,
-        iconUri: "",
         heuristic: true,
       }),
     ],
@@ -489,8 +492,9 @@ add_task(async function() {
   });
   await Services.search.setDefault(originalTestEngine);
 
+  Services.prefs.setBoolPref("browser.urlbar.update2", false);
   info(
-    "Leading restriction tokens are not removed from the search result, apart from the search token."
+    "With update2 disabled, leading restriction tokens are not removed from the search result, apart from the search token."
   );
   // Note that we use the alias from AliasEngine in the query. Since we're using
   // a restriction token, we expect that the default engine be used.
@@ -515,5 +519,59 @@ add_task(async function() {
       });
     }
   }
+  Services.prefs.clearUserPref("browser.urlbar.update2");
+
+  Services.prefs.setBoolPref("browser.urlbar.update2", true);
+  info(
+    "Leading search-mode restriction tokens are removed from the search result."
+  );
+  for (let restrict of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
+    let token = UrlbarTokenizer.RESTRICT[restrict];
+    query = `${token} query`;
+    let expectedQuery = query.substring(2);
+    context = createContext(query, { isPrivate: false });
+    info(`Searching for "${query}", expecting "${expectedQuery}"`);
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          heuristic: true,
+          query: expectedQuery,
+          alias: token,
+          keywordOffer: UrlbarUtils.KEYWORD_OFFER.NONE,
+        }),
+      ],
+    });
+  }
+
+  info(
+    "Leading non-search-mode restriction tokens are not removed from the search result."
+  );
+  for (let restrict of Object.keys(UrlbarTokenizer.RESTRICT)) {
+    if (
+      UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(restrict) ||
+      restrict == "SEARCH"
+    ) {
+      continue;
+    }
+    let token = UrlbarTokenizer.RESTRICT[restrict];
+    query = `${token} query`;
+    let expectedQuery = query;
+    context = createContext(query, { isPrivate: false });
+    info(`Searching for "${query}", expecting "${expectedQuery}"`);
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          heuristic: true,
+          query: expectedQuery,
+          engineName: ENGINE_NAME,
+        }),
+      ],
+    });
+  }
+  Services.prefs.clearUserPref("browser.urlbar.update2");
+
   await Services.search.removeEngine(engine2);
 });

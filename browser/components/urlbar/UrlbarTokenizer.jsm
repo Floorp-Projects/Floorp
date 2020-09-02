@@ -76,6 +76,9 @@ var UrlbarTokenizer = {
     URL: "$",
   },
 
+  // The keys of characters in RESTRICT that will enter search mode.
+  SEARCH_MODE_RESTRICT: new Set(["HISTORY", "BOOKMARK", "OPENPAGE"]),
+
   /**
    * Returns whether the passed in token looks like a URL.
    * This is based on guessing and heuristics, that means if this function

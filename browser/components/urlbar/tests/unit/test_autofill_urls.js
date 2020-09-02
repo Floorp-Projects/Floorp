@@ -67,6 +67,7 @@ add_task(async function portNoMatch() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://example.com:8999/f",
         title: "http://example.com:8999/f",
         iconUri: "page-icon:http://example.com:8999/",

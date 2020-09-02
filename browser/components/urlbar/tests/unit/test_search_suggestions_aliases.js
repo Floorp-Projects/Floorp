@@ -6,176 +6,338 @@
  * behavior.
  */
 
+const DEFAULT_ENGINE_NAME = "TestDefaultEngine";
 const SUGGESTIONS_ENGINE_NAME = "engine-suggestions.xml";
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
+const HISTORY_TITLE = "fire";
 
 let engine;
 
 add_task(async function setup() {
   engine = await addTestSuggestionsEngine();
-});
 
-add_task(async function engineWithSuggestions() {
-  // History matches should not appear with @ aliases, so this visit/match
-  // should not appear when searching with the @ alias below.
-  let historyTitle = "fire";
+  // Set a mock engine as the default so we don't hit the network below when we
+  // do searches that return the default engine heuristic result.
+  Services.search.defaultEngine = await Services.search.addEngineWithDetails(
+    DEFAULT_ENGINE_NAME,
+    { template: "http://example.com/?s=%S" }
+  );
+
+  // History matches should not appear with @aliases, so this visit should not
+  // appear when searching with @aliases below.
   await PlacesTestUtils.addVisits({
     uri: engine.searchForm,
-    title: historyTitle,
+    title: HISTORY_TITLE,
   });
-
-  // Search in both a non-private and private context.
-  for (let private of [false, true]) {
-    // Use a normal alias and then one with an "@".  For the @ alias, the only
-    // matches should be the search suggestions -- no history matches.
-    for (let alias of ["moz", "@moz"]) {
-      engine.alias = alias;
-      Assert.equal(engine.alias, alias);
-
-      // Search for "alias"
-      let context = createContext(`${alias}`, { isPrivate: private });
-      let expectedMatches = [
-        makeSearchResult(context, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          alias,
-          query: "",
-          heuristic: true,
-        }),
-      ];
-      if (alias[0] != "@") {
-        expectedMatches.push(
-          makeVisitResult(context, {
-            uri: "http://localhost:9000/search?terms=",
-            title: historyTitle,
-          })
-        );
-      }
-
-      await check_results({
-        context,
-        matches: expectedMatches,
-      });
-
-      // Search for "alias " (trailing space)
-      context = createContext(`${alias} `, { isPrivate: private });
-      expectedMatches = [
-        makeSearchResult(context, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          alias,
-          query: "",
-          heuristic: true,
-        }),
-      ];
-      if (alias[0] != "@") {
-        expectedMatches.push(
-          makeVisitResult(context, {
-            uri: "http://localhost:9000/search?terms=",
-            title: historyTitle,
-          })
-        );
-      }
-      await check_results({
-        context,
-        matches: expectedMatches,
-      });
-
-      // Search for "alias historyTitle" -- Include the history title so that
-      // the history result is eligible to be shown.  Whether or not it's
-      // actually shown depends on the alias: If it's an @ alias, it shouldn't
-      // be shown.
-      context = createContext(`${alias} ${historyTitle}`, {
-        isPrivate: private,
-      });
-      expectedMatches = [
-        makeSearchResult(context, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          alias,
-          query: historyTitle,
-          heuristic: true,
-        }),
-      ];
-      // Suggestions should be shown in a non-private context but not in a
-      // private context.
-      if (!private) {
-        expectedMatches.push(
-          makeSearchResult(context, {
-            engineName: SUGGESTIONS_ENGINE_NAME,
-            alias,
-            query: historyTitle,
-            suggestion: `${historyTitle} foo`,
-          }),
-          makeSearchResult(context, {
-            engineName: SUGGESTIONS_ENGINE_NAME,
-            alias,
-            query: historyTitle,
-            suggestion: `${historyTitle} bar`,
-          })
-        );
-      }
-      if (alias[0] != "@") {
-        expectedMatches.push(
-          makeVisitResult(context, {
-            uri: "http://localhost:9000/search?terms=",
-            title: historyTitle,
-          })
-        );
-      }
-      await check_results({
-        context,
-        matches: expectedMatches,
-      });
-    }
-  }
-
-  engine.alias = "";
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesUtils.history.clear();
 });
 
-add_task(async function disabled_urlbarSuggestions() {
+// A non-token alias without a trailing space shouldn't be recognized as a
+// keyword.  It should be treated as part of the search string.
+add_task(async function nonTokenAlias_noTrailingSpace() {
+  Services.prefs.setBoolPref("browser.urlbar.update2", true);
+  let alias = "moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  let context = createContext(alias, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: DEFAULT_ENGINE_NAME,
+        query: alias,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: DEFAULT_ENGINE_NAME,
+        query: alias,
+        heuristic: false,
+        inPrivateWindow: true,
+        isPrivateEngine: false,
+      }),
+    ],
+  });
+  Services.prefs.clearUserPref("browser.urlbar.update2");
+});
+
+// With update2 disabled, a non-token alias without a trailing space should be
+// recognized as a keyword, and the history result should be included.
+add_task(async function nonTokenAlias_noTrailingSpace_legacy() {
+  Services.prefs.setBoolPref("browser.urlbar.update2", false);
+  let alias = "moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  for (let isPrivate of [false, true]) {
+    let context = createContext(alias, { isPrivate });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
+          query: "",
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "http://localhost:9000/search?terms=",
+          title: HISTORY_TITLE,
+        }),
+      ],
+    });
+  }
+  Services.prefs.clearUserPref("browser.urlbar.update2");
+});
+
+// A non-token alias with a trailing space should be recognized as a keyword,
+// and the history result should be included.
+add_task(async function nonTokenAlias_trailingSpace() {
+  let alias = "moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  for (let isPrivate of [false, true]) {
+    let context = createContext(alias + " ", { isPrivate });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
+          query: "",
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "http://localhost:9000/search?terms=",
+          title: HISTORY_TITLE,
+        }),
+      ],
+    });
+  }
+});
+
+// Search for "alias HISTORY_TITLE" with a non-token alias in a non-private
+// context.  The remote suggestions and history result should be shown.
+add_task(async function nonTokenAlias_history_nonPrivate() {
+  let alias = "moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  let context = createContext(`${alias} ${HISTORY_TITLE}`, {
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        suggestion: `${HISTORY_TITLE} foo`,
+      }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        suggestion: `${HISTORY_TITLE} bar`,
+      }),
+      makeVisitResult(context, {
+        uri: "http://localhost:9000/search?terms=",
+        title: HISTORY_TITLE,
+      }),
+    ],
+  });
+});
+
+// Search for "alias HISTORY_TITLE" with a non-token alias in a private context.
+// The history result should be shown, but not the remote suggestions.
+add_task(async function nonTokenAlias_history_private() {
+  let alias = "moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  let context = createContext(`${alias} ${HISTORY_TITLE}`, {
+    isPrivate: true,
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "http://localhost:9000/search?terms=",
+        title: HISTORY_TITLE,
+      }),
+    ],
+  });
+});
+
+// A token alias without a trailing space should be autofilled with a trailing
+// space and recognized as a keyword with a keyword offer.
+add_task(async function tokenAlias_noTrailingSpace() {
+  let alias = "@moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  for (let isPrivate of [false, true]) {
+    let context = createContext(alias, { isPrivate });
+    await check_results({
+      context,
+      autofilled: alias + " ",
+      matches: [
+        makeSearchResult(context, {
+          engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
+          keywordOffer: UrlbarUtils.KEYWORD_OFFER.HIDE,
+          query: "",
+          heuristic: true,
+        }),
+      ],
+    });
+  }
+});
+
+// A token alias with a trailing space should be recognized as a keyword without
+// a keyword offer.
+add_task(async function tokenAlias_trailingSpace() {
+  Services.prefs.setBoolPref("browser.urlbar.update2", true);
+  let alias = "@moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  for (let isPrivate of [false, true]) {
+    let context = createContext(alias + " ", { isPrivate });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
+          query: "",
+          heuristic: true,
+        }),
+      ],
+    });
+  }
+  Services.prefs.clearUserPref("browser.urlbar.update2");
+});
+
+// Search for "alias HISTORY_TITLE" with a token alias in a non-private context.
+// The remote suggestions should be shown, but not the history result.
+add_task(async function tokenAlias_history_nonPrivate() {
+  let alias = "@moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  let context = createContext(`${alias} ${HISTORY_TITLE}`, {
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        suggestion: `${HISTORY_TITLE} foo`,
+      }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        suggestion: `${HISTORY_TITLE} bar`,
+      }),
+    ],
+  });
+});
+
+// Search for "alias HISTORY_TITLE" with a token alias in a private context.
+// Neither the history result nor the remote suggestions should be shown.
+add_task(async function tokenAlias_history_private() {
+  let alias = "@moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  let context = createContext(`${alias} ${HISTORY_TITLE}`, {
+    isPrivate: true,
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: HISTORY_TITLE,
+        heuristic: true,
+      }),
+    ],
+  });
+});
+
+// Even when they're disabled, suggestions should still be returned when using a
+// token alias in a non-private context.
+add_task(async function suggestionsDisabled_nonPrivate() {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
   let alias = "@moz";
   engine.alias = alias;
   Assert.equal(engine.alias, alias);
-
-  for (let private of [false, true]) {
-    let context = createContext(`${alias} term`, { isPrivate: private });
-    let expectedMatches = [
+  let context = createContext(`${alias} term`, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
       makeSearchResult(context, {
         engineName: SUGGESTIONS_ENGINE_NAME,
         alias,
         query: "term",
         heuristic: true,
       }),
-    ];
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: "term",
+        suggestion: "term foo",
+      }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: "term",
+        suggestion: "term bar",
+      }),
+    ],
+  });
+  Services.prefs.clearUserPref(SUGGEST_PREF);
+  Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
+});
 
-    if (!private) {
-      expectedMatches.push(
-        makeSearchResult(context, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          alias,
-          query: "term",
-          suggestion: "term foo",
-        })
-      );
-      expectedMatches.push(
-        makeSearchResult(context, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          alias,
-          query: "term",
-          suggestion: "term bar",
-        })
-      );
-    }
-    await check_results({
-      context,
-      matches: expectedMatches,
-    });
-  }
-
-  engine.alias = "";
+// Suggestions should not be returned when using a token alias in a private
+// context.
+add_task(async function suggestionsDisabled_private() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  let alias = "@moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  let context = createContext(`${alias} term`, { isPrivate: true });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: "term",
+        heuristic: true,
+      }),
+    ],
+  });
   Services.prefs.clearUserPref(SUGGEST_PREF);
   Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
 });
