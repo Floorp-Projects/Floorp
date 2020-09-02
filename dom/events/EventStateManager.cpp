@@ -5230,7 +5230,7 @@ nsresult EventStateManager::HandleMiddleClickPaste(
     //     designMode editor is clicked, the point is in the editor.
     //     However, outer HTMLEditor and Selection should handle it.
     //     So, in such case, Selection::Collapse() will fail.
-    DebugOnly<nsresult> rv = selection->Collapse(container, offset);
+    DebugOnly<nsresult> rv = selection->CollapseInLimiter(container, offset);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to collapse Selection at middle clicked");
   }
