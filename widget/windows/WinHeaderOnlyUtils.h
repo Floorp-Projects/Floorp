@@ -414,18 +414,11 @@ class FileUniqueId final {
     GetId(aFile);
   }
 
-  FileUniqueId(const FileUniqueId& aOther) : mId(aOther.mId) {}
-
   ~FileUniqueId() = default;
 
   bool IsError() const { return mId.isErr(); }
 
   const WindowsErrorType& GetError() const { return mId.inspectErr(); }
-
-  FileUniqueId& operator=(const FileUniqueId& aOther) {
-    mId = aOther.mId;
-    return *this;
-  }
 
   FileUniqueId(FileUniqueId&& aOther) = default;
   FileUniqueId& operator=(FileUniqueId&& aOther) = delete;
