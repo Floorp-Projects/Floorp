@@ -14,3 +14,9 @@ using namespace mozilla;
 void GkRustUtils::GenerateUUID(nsACString& aResult) {
   GkRustUtils_GenerateUUID(&aResult);
 };
+
+/* static */
+bool GkRustUtils::ParseSemVer(const nsACString& aVersion, uint64_t& aOutMajor,
+                              uint64_t& aOutMinor, uint64_t& aOutPatch) {
+  return GkRustUtils_ParseSemVer(&aVersion, &aOutMajor, &aOutMinor, &aOutPatch);
+}
