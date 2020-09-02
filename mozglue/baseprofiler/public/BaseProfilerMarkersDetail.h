@@ -23,6 +23,7 @@
 #  include "mozilla/JSONWriter.h"
 
 #  include <limits>
+#  include <tuple>
 
 namespace mozilla::baseprofiler {
 // Implemented in platform.cpp
@@ -57,6 +58,39 @@ struct Streaming {
 
   // Get the `Deserializer` for a given `DeserializerTag`.
   MFBT_API static Deserializer DeserializerForTag(DeserializerTag aTag);
+};
+
+// This helper will examine a marker type's `StreamJSONMarkerData` function, see
+// specialization below.
+template <typename T>
+struct StreamFunctionTypeHelper;
+
+// Helper specialization that takes the expected
+// `StreamJSONMarkerData(JSONWriter&, ...)` function and provide information
+// about the `...` parameters.
+template <typename R, typename... As>
+struct StreamFunctionTypeHelper<R(JSONWriter&, As...)> {
+  constexpr static size_t scArity = sizeof...(As);
+  using TupleType =
+      std::tuple<std::remove_cv_t<std::remove_reference_t<As>>...>;
+};
+
+// Helper for a marker type.
+// A marker type is defined in a `struct` with some expected static member
+// functions. See example in BaseProfilerMarkers.h.
+template <typename MarkerType>
+struct MarkerTypeSerialization {
+  // Definitions to access the expected `StreamJSONMarkerData(JSONWriter&, ...)`
+  // function and its parameters.
+  using StreamFunctionType =
+      StreamFunctionTypeHelper<decltype(MarkerType::StreamJSONMarkerData)>;
+  constexpr static size_t scStreamFunctionParameterCount =
+      StreamFunctionType::scArity;
+  using StreamFunctionUserParametersTuple =
+      typename StreamFunctionType::TupleType;
+  template <size_t i>
+  using StreamFunctionParameter =
+      std::tuple_element_t<i, StreamFunctionUserParametersTuple>;
 };
 
 }  // namespace mozilla::base_profiler_markers_detail
