@@ -119,6 +119,7 @@ async function doSetURITest(initialURL, searchString, url, expectSearchMode) {
         ? null
         : {
             source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+            entry: "oneoff",
           }
     );
 

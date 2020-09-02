@@ -336,6 +336,23 @@ browser.engagement.navigation:
     record_in_processes:
       - 'main'
 
+  urlbar_searchmode:
+    bug_numbers:
+      - 1654680
+    description: >
+      The count URI loads triggered in a subsession from the urlbar's search
+      mode, broken down by the originating action.
+    expires: never
+    kind: uint
+    keyed: True
+    notification_emails:
+      - htwyford@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   searchbar:
     bug_numbers:
       - 1271313
@@ -5286,6 +5303,129 @@ urlbar:
       - 'firefox'
     record_in_processes:
       - main
+
+urlbar.searchmode:
+  keywordoffer:
+    bug_numbers:
+      - 1654680
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecting a keyword offer result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  oneoff:
+    bug_numbers:
+      - 1654680
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecting a one-off.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  shortcut:
+    bug_numbers:
+      - 1654680
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after pressing a keyboard shortcut.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  topsites_newtab:
+    bug_numbers:
+      - 1654680
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecting a search shortcut Top Site on the New Tab Page.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  topsites_urlbar:
+    bug_numbers:
+      - 1654680
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecting a search shortcut Top Site in the Urlbar..
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  typed:
+    bug_numbers:
+      - 1654680
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after typing an alias.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  other:
+    bug_numbers:
+      - 1654680
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode from an unknown entry point. If values appear for this probe in
+      Telemetry, we should review the entry points to search mode.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 
 migration:
   uninstaller_profile_refresh:

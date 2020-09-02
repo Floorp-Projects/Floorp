@@ -333,7 +333,11 @@ describe("PlacesFeed", () => {
       feed.fillSearchTopSiteTerm(action);
 
       assert.calledOnce(locationBar.searchWithAlias);
-      assert.calledWithExactly(locationBar.searchWithAlias, "@Foo");
+      assert.calledWithExactly(
+        locationBar.searchWithAlias,
+        "@Foo",
+        "topsites_newtab"
+      );
     });
     it("should call saveToPocket on SAVE_TO_POCKET", () => {
       const action = {
@@ -539,7 +543,12 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWith(fakeUrlBar.searchWithAlias, "@google ", "foo");
+      assert.calledWith(
+        fakeUrlBar.searchWithAlias,
+        "@google ",
+        "handoff",
+        "foo"
+      );
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -564,7 +573,7 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWith(fakeUrlBar.searchWithAlias, "@bing ", "foo");
+      assert.calledWith(fakeUrlBar.searchWithAlias, "@bing ", "handoff", "foo");
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -589,7 +598,12 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWithExactly(fakeUrlBar.searchWithAlias, "@google ", "foo");
+      assert.calledWithExactly(
+        fakeUrlBar.searchWithAlias,
+        "@google ",
+        "handoff",
+        "foo"
+      );
       assert.notCalled(fakeUrlBar.focus);
 
       // Now call ESC keydown.
@@ -613,7 +627,12 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWithExactly(fakeUrlBar.searchWithAlias, "", "foo");
+      assert.calledWithExactly(
+        fakeUrlBar.searchWithAlias,
+        "",
+        "handoff",
+        "foo"
+      );
     });
   });
 

@@ -55,6 +55,7 @@ add_task(async function switchTabs() {
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    entry: "oneoff",
   });
 
   // Switch to tab 2.  Search mode should be exited.
@@ -78,6 +79,7 @@ add_task(async function switchTabs() {
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    entry: "oneoff",
   });
 
   // Switch to tab 1.  Search mode should be exited.
@@ -90,6 +92,7 @@ add_task(async function switchTabs() {
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.TABS,
+    entry: "oneoff",
   });
 
   // Exit search mode.
@@ -101,6 +104,7 @@ add_task(async function switchTabs() {
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    entry: "oneoff",
   });
 
   // Switch back to tab 2.  We should do a search but search mode should be
@@ -116,6 +120,7 @@ add_task(async function switchTabs() {
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    entry: "oneoff",
   });
 
   // Exit search mode.

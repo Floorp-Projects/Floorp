@@ -188,6 +188,7 @@ add_task(async function test_returnAfterSuggestion() {
     await resultsPromise;
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: gEngine.name,
+      entry: "oneoff",
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   });
@@ -259,6 +260,7 @@ add_task(async function test_returnAfterSuggestion_nonDefault() {
     await resultsPromise;
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: gEngine2.name,
+      entry: "oneoff",
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   });
@@ -310,6 +312,7 @@ add_task(async function test_clickAfterSuggestion() {
     await resultsPromise;
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: gEngine2.name,
+      entry: "oneoff",
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   });
@@ -361,6 +364,7 @@ add_task(async function test_clickAfterSuggestion_nonDefault() {
     await resultsPromise;
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: gEngine2.name,
+      entry: "oneoff",
     });
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   });

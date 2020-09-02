@@ -217,6 +217,7 @@ add_task(async function selectSearchTopSite() {
   await searchPromise;
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: amazonSearch.result.payload.engine,
+    entry: "topsites_urlbar",
   });
   await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
 

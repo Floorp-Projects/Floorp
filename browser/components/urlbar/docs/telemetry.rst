@@ -145,6 +145,44 @@ urlbar.tips
   - ``searchTip_redirect-shown``
     Incremented when the redirect search tip is shown.
 
+urlbar.searchmode.*
+  This is set of keyed scalars whose values are uints are are incremented each
+  time search mode is entered in the Urlbar. The suffix on the scalar name
+  describes how search mode was entered. Possibilities include:
+
+  - ``handoff``
+    Used when the user uses the search box on the new tab page and is handed off
+    to the address bar.
+  - ``keywordoffer``
+    Used when the user selects a keyword offer result.
+  - ``oneoff``
+    Used when the user selects a one-off engine in the Urlbar.
+  - ``shortcut``
+    Used when the user enters search mode with a keyboard shortcut or menu bar
+    item (e.g. ``Accel+K``).
+  - ``topsites_newtab``
+    Used when the user selects a search shortcut Top Site from the New Tab Page.
+  - ``topsites_urlbar``
+    Used when the user selects a search shortcut Top Site from the Urlbar.
+  - ``typed``
+    Used when the user types an engine alias in the Urlbar.
+  - ``other``
+    Used as a catchall for other behaviour. We don't expect this scalar to hold
+    any values. If it does, we need to correct an issue with search mode entry
+    points.
+
+  The keys for the scalars above are engine and source names. If the user enters
+  a remote search mode with a built-in engine, we record the engine name. If the
+  user enters a remote search mode with an engine they installed (e.g. via
+  OpenSearch or a WebExtension), we record ``other`` (not to be confused with
+  the ``urlbar.searchmode.other`` scalar above). If they enter a local search
+  mode, we record the English name of the result source (e.g. "bookmarks",
+  "history", "tabs"). Note that we slightly modify the engine name for some
+  built-in engines: we flatten all localized Amazon sites (Amazon.com,
+  Amazon.ca, Amazon.de, etc.) to "Amazon" and we flatten all localized
+  Wikipedia sites (Wikipedia (en), Wikipedia (fr), etc.) to "Wikipedia". This
+  is done to reduce the number of keys used by these scalars.
+
 Event Telemetry
 ---------------
 
@@ -202,7 +240,7 @@ Event Object
 
 Event Extra
   This object contains additional information about the interaction.
-  Extra is a key-value store, whhere all the keys and values are strings.
+  Extra is a key-value store, where all the keys and values are strings.
 
   - ``elapsed``
     Time in milliseconds from the initial interaction to an action.
@@ -244,13 +282,15 @@ SEARCH_COUNTS
     - ``alias`` This is when using an alias (like ``@google``) in the urlbar.
       Note there is often confusion between the terms alias and keyword, and
       they may be used inappropriately: aliases refer to search engines, while
-      keywords refer to bookmarks.
+      keywords refer to bookmarks. We expect no results for this SAP in Firefox
+      82+, since urlbar-searchmode replaces it.
     - ``abouthome``
     - ``contextmenu``
     - ``newtab``
     - ``searchbar``
     - ``system``
-    - ``urlbar`` Except aliases.
+    - ``urlbar`` Except aliases and search mode.
+    - ``urlbar-searchmode`` Used when the Urlbar is in search mode.
     - ``webextension``
     - ``oneoff-urlbar``
     - ``oneoff-searchbar``
@@ -264,7 +304,8 @@ browser.engagement.navigation.*
   by the originating action.
   Possible SAPs are:
 
-    - ``urlbar``
+    - ``urlbar``  Except search mode.
+    - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
     - ``searchbar``
     - ``about_home``
     - ``about_newtab``

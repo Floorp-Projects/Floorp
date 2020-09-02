@@ -1,0 +1,352 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+/**
+ * This file tests the urlbar.searchmode.* scalars telemetry with search mode
+ * related actions.
+ */
+
+"use strict";
+
+const SCALAR_PREFIX = "urlbar.searchmode.";
+const ENGINE_NAME = "MozSearch";
+const ENGINE_ALIAS = "alias";
+const TEST_QUERY = "test";
+
+// The preference to enable suggestions.
+const SUGGEST_PREF = "browser.search.suggest.enabled";
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
+});
+
+/**
+ * Asserts that search mode telemetry was recorded correctly.
+ * @param {string} entry
+ * @param {string} key
+ */
+function assertSearchModeScalar(entry, key) {
+  // Check if the urlbar.searchmode.entry scalar contains the expected value.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
+  TelemetryTestUtils.assertKeyedScalar(scalars, SCALAR_PREFIX + entry, key, 1);
+
+  for (let e of UrlbarUtils.SEARCH_MODE_ENTRY) {
+    if (e == entry) {
+      Assert.equal(
+        Object.keys(scalars[SCALAR_PREFIX + entry]).length,
+        1,
+        `This search must only increment one entry in the correct scalar: ${e}`
+      );
+    } else {
+      Assert.ok(
+        !scalars[SCALAR_PREFIX + e],
+        `No other urlbar.searchmode scalars should be recorded. Checking ${e}`
+      );
+    }
+  }
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+
+  // Create a new search engine.
+  await Services.search.addEngineWithDetails(ENGINE_NAME, {
+    alias: ENGINE_ALIAS,
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
+  });
+
+  // Make it the default search engine.
+  let engine = Services.search.getEngineByName("MozSearch");
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+
+  // And the first one-off engine.
+  await Services.search.moveEngine(engine, 0);
+
+  // Enable local telemetry recording for the duration of the tests.
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+
+  // Clear history so that history added by previous tests doesn't mess up this
+  // test when it selects results in the urlbar.
+  await PlacesUtils.history.clear();
+
+  // Clear historical search suggestions to avoid interference from previous
+  // tests.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.maxHistoricalSearchSuggestions", 0]],
+  });
+
+  // Allows UrlbarTestUtils to access this scope's test helpers, like Assert.
+  UrlbarTestUtils.init(this);
+
+  // Make sure to restore the engine once we're done.
+  registerCleanupFunction(async function() {
+    Services.telemetry.canRecordExtended = oldCanRecord;
+    await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engine);
+    await PlacesUtils.history.clear();
+    Services.telemetry.setEventRecordingEnabled("navigation", false);
+    UrlbarTestUtils.uninit();
+  });
+});
+
+// Clicks the first one off.
+add_task(async function test_oneoff_remote() {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_QUERY,
+  });
+  // Enters search mode by clicking a one-off.
+  await UrlbarTestUtils.enterSearchMode(window);
+  assertSearchModeScalar("oneoff", "other");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Clicks the history one off.
+add_task(async function test_oneoff_local() {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_QUERY,
+  });
+  // Enters search mode by clicking a one-off.
+  await UrlbarTestUtils.enterSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+  });
+  assertSearchModeScalar("oneoff", "history");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Checks that the Amazon search mode name is collapsed to "Amazon".
+add_task(async function test_oneoff_amazon() {
+  // Disable suggestions to avoid hitting Amazon servers.
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGEST_PREF, false]],
+  });
+
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_QUERY,
+  });
+  // Enters search mode by clicking a one-off.
+  await UrlbarTestUtils.enterSearchMode(window, {
+    engineName: "Amazon.com",
+  });
+  assertSearchModeScalar("oneoff", "Amazon");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
+// Checks that the Wikipedia search mode name is collapsed to "Wikipedia".
+add_task(async function test_oneoff_wikipedia() {
+  // Disable suggestions to avoid hitting Wikipedia servers.
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGEST_PREF, false]],
+  });
+
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_QUERY,
+  });
+  // Enters search mode by clicking a one-off.
+  await UrlbarTestUtils.enterSearchMode(window, {
+    engineName: "Wikipedia (en)",
+  });
+  assertSearchModeScalar("oneoff", "Wikipedia");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
+// Enters search mode by pressing the keyboard shortcut.
+add_task(async function test_shortcut() {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_QUERY,
+  });
+  // Enter search mode by pressing the keyboard shortcut.
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeKey("k", { accelKey: true });
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: ENGINE_NAME,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    entry: "shortcut",
+  });
+  assertSearchModeScalar("shortcut", "other");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Enters search mode by selecting a Top Site from the Urlbar.
+add_task(async function test_topsites_urlbar() {
+  // Disable suggestions to avoid hitting Wikipedia servers.
+  await SpecialPowers.pushPrefEnv({
+    set: [[SUGGEST_PREF, false]],
+  });
+
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  // Enter search mode by selecting a Top Site from the Urlbar.
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      gURLBar.handleRevert();
+    }
+    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+  });
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  let amazonSearch = await UrlbarTestUtils.waitForAutocompleteResultAt(
+    window,
+    0
+  );
+  Assert.equal(
+    amazonSearch.result.payload.keyword,
+    "@amazon",
+    "First result should have the Amazon keyword."
+  );
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeMouseAtCenter(amazonSearch, {});
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: amazonSearch.result.payload.engine,
+    entry: "topsites_urlbar",
+  });
+  assertSearchModeScalar("topsites_urlbar", "Amazon");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
+// Enters search mode by selecting a keyword offer result.
+add_task(async function test_keywordoffer() {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  // Enter search mode by selecting a keywordoffer result.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: ENGINE_ALIAS,
+  });
+  let keywordOfferResult = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    0
+  );
+  Assert.equal(
+    keywordOfferResult.searchParams.keyword,
+    ENGINE_ALIAS,
+    "The first result should be a keyword search result with the correct alias."
+  );
+
+  // Select the keyword offer.
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: ENGINE_NAME,
+    entry: "keywordoffer",
+  });
+  assertSearchModeScalar("keywordoffer", "other");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Enters search mode by typing an alias.
+add_task(async function test_typed() {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  // Enter search mode by selecting a keywordoffer result.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: `${ENGINE_ALIAS} `,
+  });
+
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  // Fire an input event simulating typing a space after the ALIAS.
+  UrlbarTestUtils.fireInputEvent(window);
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: ENGINE_NAME,
+    entry: "typed",
+  });
+  assertSearchModeScalar("typed", "other");
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+
+  BrowserTestUtils.removeTab(tab);
+});

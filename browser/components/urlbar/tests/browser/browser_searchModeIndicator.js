@@ -198,6 +198,7 @@ add_task(async function escape() {
   ).getSelectableButtons(true);
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: oneOffs[0].engine.name,
+    entry: "oneoff",
   });
 
   EventUtils.synthesizeKey("KEY_Escape");
@@ -270,6 +271,7 @@ add_task(async function keyboard_shortcut() {
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: defaultEngine.name,
+    entry: "shortcut",
   });
   await UrlbarTestUtils.exitSearchMode(window, {
     clickClose: true,
@@ -286,6 +288,7 @@ add_task(async function menubar_item() {
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: defaultEngine.name,
+    entry: "shortcut",
   });
   await UrlbarTestUtils.exitSearchMode(window, {
     clickClose: true,

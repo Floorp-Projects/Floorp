@@ -323,6 +323,7 @@ add_task(async function clickAndFillAlias() {
 
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: testEngineItem.result.payload.engine,
+    entry: "keywordoffer",
   });
 
   await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
@@ -417,6 +418,7 @@ add_task(async function enterAndFillAlias() {
 
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: details.searchParams.engine,
+    entry: "keywordoffer",
   });
 
   await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
@@ -484,6 +486,7 @@ add_task(async function enterAutofillsAlias() {
 
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: testEngineItem.result.payload.engine,
+      entry: "keywordoffer",
     });
 
     await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
@@ -515,6 +518,7 @@ add_task(async function enterAutofillsAlias() {
 
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: testEngineItem.result.payload.engine,
+      entry: "typed",
     });
 
     gURLBar.setSearchMode({});

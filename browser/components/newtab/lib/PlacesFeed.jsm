@@ -367,7 +367,10 @@ class PlacesFeed {
   }
 
   fillSearchTopSiteTerm({ _target, data }) {
-    _target.browser.ownerGlobal.gURLBar.searchWithAlias(data.label);
+    _target.browser.ownerGlobal.gURLBar.searchWithAlias(
+      data.label,
+      "topsites_newtab"
+    );
   }
 
   _getSearchPrefix(isPrivateWindow) {
@@ -391,7 +394,7 @@ class PlacesFeed {
     if (!data || !data.text) {
       urlBar.setHiddenFocus();
     } else {
-      urlBar.searchWithAlias(searchAlias, data.text);
+      urlBar.searchWithAlias(searchAlias, "handoff", data.text);
       isFirstChange = false;
     }
 
@@ -402,7 +405,7 @@ class PlacesFeed {
       if (isFirstChange) {
         isFirstChange = false;
         urlBar.removeHiddenFocus();
-        urlBar.searchWithAlias(searchAlias);
+        urlBar.searchWithAlias(searchAlias, "handoff");
         this.store.dispatch(
           ac.OnlyToOneContent({ type: at.HIDE_SEARCH }, meta.fromTarget)
         );

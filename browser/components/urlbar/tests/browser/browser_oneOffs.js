@@ -487,6 +487,7 @@ add_task(async function oneOffClick() {
       );
       await UrlbarTestUtils.assertSearchMode(window, {
         engineName: oneOffs[0].engine.name,
+        entry: "oneoff",
       });
       await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
     } else {
@@ -539,6 +540,7 @@ add_task(async function oneOffReturn() {
       );
       await UrlbarTestUtils.assertSearchMode(window, {
         engineName: oneOffs[0].engine.name,
+        entry: "oneoff",
       });
       await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
     } else {
@@ -708,6 +710,7 @@ add_task(async function localOneOffClick() {
     );
     await UrlbarTestUtils.assertSearchMode(window, {
       source: button.source,
+      entry: "oneoff",
     });
   }
 
@@ -774,6 +777,7 @@ add_task(async function localOneOffReturn() {
     );
     await UrlbarTestUtils.assertSearchMode(window, {
       source: button.source,
+      entry: "oneoff",
     });
   }
 
@@ -831,6 +835,7 @@ add_task(async function localOneOffEmptySearchString() {
     );
     await UrlbarTestUtils.assertSearchMode(window, {
       source: button.source,
+      entry: "oneoff",
     });
 
     let resultCount = UrlbarTestUtils.getResultCount(window);

@@ -133,11 +133,12 @@ add_task(async function searchWithAlias() {
   });
 
   await UrlbarTestUtils.promisePopupOpen(window, () =>
-    gURLBar.searchWithAlias(ALIAS, "test")
+    gURLBar.searchWithAlias(ALIAS, "test", "test")
   );
   Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
   UrlbarTestUtils.assertSearchMode(window, {
     engineName: aliasEngine.name,
+    entry: "other",
   });
   await assertUrlbarValue("test");
   assertOneOffButtonsVisible(true);
@@ -154,7 +155,7 @@ add_task(async function searchWithAlias_legacy() {
   });
 
   await UrlbarTestUtils.promisePopupOpen(window, () =>
-    gURLBar.searchWithAlias(ALIAS, "test")
+    gURLBar.searchWithAlias(ALIAS, "test", "test")
   );
   Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
   Assert.equal(gURLBar.value, `${ALIAS} test`);
@@ -184,7 +185,7 @@ add_task(async function searchWithAliasInvalidAlias() {
   });
 
   await UrlbarTestUtils.promisePopupOpen(window, () =>
-    gURLBar.searchWithAlias("@invalidalias", "test")
+    gURLBar.searchWithAlias("@invalidalias", "test", "test")
   );
   Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
   UrlbarTestUtils.assertSearchMode(window, null);
