@@ -593,9 +593,9 @@ nsRect Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
   if (frame && mContent) {
     bool* pHasHitRegionRect =
         static_cast<bool*>(mContent->GetProperty(nsGkAtoms::hitregion));
-    MOZ_ASSERT(pHasHitRegionRect == nullptr || *pHasHitRegionRect,
+    MOZ_ASSERT(!pHasHitRegionRect || *pHasHitRegionRect,
                "hitregion property is always null or true");
-    bool hasHitRegionRect = pHasHitRegionRect != nullptr && *pHasHitRegionRect;
+    bool hasHitRegionRect = pHasHitRegionRect && *pHasHitRegionRect;
 
     if (hasHitRegionRect && mContent->IsElement()) {
       // This is for canvas fallback content
@@ -609,15 +609,14 @@ nsRect Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
       // make the canvas the bounding frame
       if (canvasFrame) {
         *aBoundingFrame = canvasFrame;
-        dom::HTMLCanvasElement* canvas =
-            dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent());
-
-        // get the bounding rect of the hit region
-        nsRect bounds;
-        if (canvas && canvas->CountContexts() &&
-            canvas->GetContextAtIndex(0)->GetHitRegionRect(
-                mContent->AsElement(), bounds)) {
-          return bounds;
+        if (auto* canvas =
+              dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent())) {
+          if (auto* context = canvas->GetCurrentContext()) {
+            nsRect bounds;
+            if (context->GetHitRegionRect(mContent->AsElement(), bounds)) {
+              return bounds;
+            }
+          }
         }
       }
     }

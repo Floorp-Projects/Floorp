@@ -1067,19 +1067,6 @@ void HTMLCanvasElement::InvalidateCanvas() {
   frame->InvalidateFrame();
 }
 
-int32_t HTMLCanvasElement::CountContexts() {
-  if (mCurrentContext) return 1;
-
-  return 0;
-}
-
-nsICanvasRenderingContextInternal* HTMLCanvasElement::GetContextAtIndex(
-    int32_t index) {
-  if (mCurrentContext && index == 0) return mCurrentContext;
-
-  return nullptr;
-}
-
 bool HTMLCanvasElement::GetIsOpaque() {
   if (mCurrentContext) {
     return mCurrentContext->GetIsOpaque();
@@ -1309,7 +1296,7 @@ ClientWebGLContext* HTMLCanvasElement::GetWebGLContext() {
     return nullptr;
   }
 
-  return static_cast<ClientWebGLContext*>(GetContextAtIndex(0));
+  return static_cast<ClientWebGLContext*>(GetCurrentContext());
 }
 
 webgpu::CanvasContext* HTMLCanvasElement::GetWebGPUContext() {
@@ -1317,7 +1304,7 @@ webgpu::CanvasContext* HTMLCanvasElement::GetWebGPUContext() {
     return nullptr;
   }
 
-  return static_cast<webgpu::CanvasContext*>(GetContextAtIndex(0));
+  return static_cast<webgpu::CanvasContext*>(GetCurrentContext());
 }
 
 }  // namespace dom
