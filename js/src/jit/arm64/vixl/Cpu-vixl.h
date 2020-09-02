@@ -165,7 +165,11 @@ class CPU {
   // the I and D caches. I and D caches are not automatically coherent on ARM
   // so this operation is required before any dynamically generated code can
   // safely run.
-  static void EnsureIAndDCacheCoherency(void *address, size_t length);
+  static void EnsureIAndDCacheCoherency(void *address, size_t length, bool codeIsThreadLocal);
+
+  // Returns true when the current machine supports flushing the instruction
+  // cache on a background thread.
+  static bool CanFlushICacheFromBackgroundThreads();
 
   // Read and interpret the ID registers. This requires
   // CPUFeatures::kIDRegisterEmulation, and therefore cannot be called on
