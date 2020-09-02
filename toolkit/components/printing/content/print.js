@@ -756,6 +756,18 @@ function PrintUIControlMixin(superClass) {
       );
     }
 
+    handleKeypress(e) {
+      let char = String.fromCharCode(e.charCode);
+      if (
+        !char.match(/^[0-9]$/) &&
+        !char.match("\x00") &&
+        !e.ctrlKey &&
+        !e.metaKey
+      ) {
+        e.preventDefault();
+      }
+    }
+
     handleEvent(event) {}
   };
 }
@@ -865,6 +877,7 @@ class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
   initialize() {
     super.initialize();
     this.addEventListener("input", this);
+    this.addEventListener("keypress", this);
   }
 
   update(settings) {
@@ -872,6 +885,11 @@ class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
   }
 
   handleEvent(e) {
+    if (e.type == "keypress") {
+      this.handleKeypress(e);
+      return;
+    }
+
     if (this.checkValidity()) {
       this.dispatchSettingsChange({
         numCopies: e.target.value,
@@ -1000,15 +1018,7 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 
   handleEvent(e) {
     if (e.type == "keypress") {
-      let char = String.fromCharCode(e.charCode);
-      if (
-        !char.match(/^[0-9]$/) &&
-        !char.match("\x00") &&
-        !e.ctrlKey &&
-        !e.metaKey
-      ) {
-        e.preventDefault();
-      }
+      this.handleKeypress(e);
       return;
     }
 
@@ -1062,6 +1072,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
     );
 
     this.addEventListener("input", this);
+    this.addEventListener("keypress", this);
     document.addEventListener("page-count", this);
   }
 
@@ -1074,6 +1085,11 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
+    if (e.type == "keypress") {
+      this.handleKeypress(e);
+      return;
+    }
+
     if (e.type == "page-count") {
       this._startRange.max = this._endRange.max = this._numPages =
         e.detail.totalPages;
