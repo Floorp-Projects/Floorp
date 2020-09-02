@@ -241,6 +241,9 @@ class RaptorResultsHandler(PerftestResultsHandler):
             (self.fission_enabled, "fission"),
             (self.webrender_enabled, "webrender"),
         ]))
+        if self.live_sites:
+            new_result_json.setdefault("tags", []).append("live")
+            new_result_json["extra_options"].append("live")
         self.results.append(new_result_json)
 
     def summarize_and_output(self, test_config, tests, test_names):

@@ -38,6 +38,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 * `raptor-tp6-amazon (WX, FF, CH, CU) <https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1>`__
 * `raptor-tp6-apple (WX, FF, CH, CU) <https://www.apple.com/macbook-pro/>`__
 * `raptor-tp6-bing (WX, FF, CH, CU) <https://www.bing.com/search?q=barack+obama>`__
+* `raptor-tp6-cnn-ampstories (WX, FF) <https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other>`__
 * `raptor-tp6-docs (WX, FF, CH, CU) <https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing>`__
 * `raptor-tp6-ebay (WX, FF, CH, CU) <https://www.ebay.com/>`__
 * `raptor-tp6-facebook (WX, CH, CU) <https://www.facebook.com>`__
