@@ -287,8 +287,14 @@ static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
   Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
-    return nullptr;
+  if (options.selfHostingMode) {
+    if (!compilationInfo.get().input.initForSelfHostingGlobal(cx)) {
+      return nullptr;
+    }
+  } else {
+    if (!compilationInfo.get().input.initForGlobal(cx)) {
+      return nullptr;
+    }
   }
 
   if (!CompileGlobalScriptToStencil(compilationInfo.get(), srcBuf, scopeKind)) {
