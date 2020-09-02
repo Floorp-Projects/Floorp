@@ -197,8 +197,8 @@ void jit::FinishOffThreadTask(JSRuntime* runtime, IonCompileTask* task,
   if (script->isIonCompilingOffThread()) {
     script->jitScript()->clearIsIonCompilingOffThread(script);
 
-    AbortReasonOr<Ok> status = task->mirGen().getOffThreadStatus();
-    if (status.isErr() && status.unwrapErr() == AbortReason::Disable) {
+    const AbortReasonOr<Ok>& status = task->mirGen().getOffThreadStatus();
+    if (status.isErr() && status.inspectErr() == AbortReason::Disable) {
       script->disableIon();
     }
   }
