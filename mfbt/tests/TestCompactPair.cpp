@@ -6,6 +6,7 @@
 
 #include <type_traits>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/CompactPair.h"
 
 using mozilla::CompactPair;
@@ -67,6 +68,55 @@ INSTANTIATE(A, A, class1, 2);
 INSTANTIATE(A, B, class2, 2);
 INSTANTIATE(A, EmptyClass, class3, 1);
 
+struct EmptyNonMovableNonDefaultConstructible {
+  explicit EmptyNonMovableNonDefaultConstructible(int) {}
+
+  EmptyNonMovableNonDefaultConstructible(
+      const EmptyNonMovableNonDefaultConstructible&) = delete;
+  EmptyNonMovableNonDefaultConstructible(
+      EmptyNonMovableNonDefaultConstructible&&) = delete;
+  EmptyNonMovableNonDefaultConstructible& operator=(
+      const EmptyNonMovableNonDefaultConstructible&) = delete;
+  EmptyNonMovableNonDefaultConstructible& operator=(
+      EmptyNonMovableNonDefaultConstructible&&) = delete;
+};
+
+static void TestInPlaceConstruction() {
+  constexpr int firstValue = 42;
+  constexpr int secondValue = 43;
+
+  {
+    const CompactPair<EmptyNonMovableNonDefaultConstructible, int> pair{
+        std::piecewise_construct, std::tuple(firstValue),
+        std::tuple(secondValue)};
+    MOZ_RELEASE_ASSERT(pair.second() == secondValue);
+  }
+
+  {
+    const CompactPair<int, EmptyNonMovableNonDefaultConstructible> pair{
+        std::piecewise_construct, std::tuple(firstValue),
+        std::tuple(secondValue)};
+    MOZ_RELEASE_ASSERT(pair.first() == firstValue);
+  }
+
+  {
+    const CompactPair<int, int> pair{std::piecewise_construct,
+                                     std::tuple(firstValue),
+                                     std::tuple(secondValue)};
+    MOZ_RELEASE_ASSERT(pair.first() == firstValue);
+    MOZ_RELEASE_ASSERT(pair.second() == secondValue);
+  }
+
+  {
+    const CompactPair<EmptyNonMovableNonDefaultConstructible,
+                      EmptyNonMovableNonDefaultConstructible>
+        pair{std::piecewise_construct, std::tuple(firstValue),
+             std::tuple(secondValue)};
+
+    // nothing to assert here...
+  }
+}
+
 struct OtherEmpty : EmptyClass {
   explicit OtherEmpty(int aI) : EmptyClass(aI) {}
 };
@@ -103,6 +153,8 @@ int main() {
   // Check that copy assignment and move assignment work.
   a = constA;
   a = A(0);
+
+  TestInPlaceConstruction();
 
   return 0;
 }
