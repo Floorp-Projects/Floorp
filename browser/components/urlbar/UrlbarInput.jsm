@@ -1287,6 +1287,7 @@ class UrlbarInput {
         // discussion.
         this.searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
       }
+      // Set text content for the search mode indicator.
       this._searchModeIndicatorTitle.textContent = engineName;
       this._searchModeLabel.textContent = engineName;
       this.document.l10n.setAttributes(
@@ -1329,6 +1330,10 @@ class UrlbarInput {
         this.searchMode.entry = entry;
       }
       this.toggleAttribute("searchmode", true);
+      // Clear autofill.
+      if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
+        this.value = this.window.gBrowser.userTypedValue;
+      }
       // Search mode should only be active when pageproxystate is invalid.
       if (this.getAttribute("pageproxystate") == "valid") {
         this.value = "";
@@ -1710,7 +1715,11 @@ class UrlbarInput {
    *   Whether autofill should be allowed in the new search.
    */
   _maybeAutofillOnInput(value) {
-    let allowAutofill = this.selectionEnd == value.length && !this.searchMode;
+    // We allow autofill in local but not remote search modes.
+    let allowAutofill =
+      this.selectionEnd == value.length &&
+      !this.searchMode?.engineName &&
+      this.searchMode?.source != UrlbarUtils.RESULT_SOURCE.SEARCH;
 
     // Determine whether we can autofill the placeholder.  The placeholder is a
     // value that we autofill now, when the search starts and before we wait on
