@@ -3306,7 +3306,7 @@ public class GeckoSession implements Parcelable {
 
         /**
          * @deprecated Use {@link ContentDelegate#onExternalResponse(GeckoSession, WebResponse)}
-         * instead. This method will be removed in GeckoView 84.
+         * instead. This method will be removed in GeckoView 85.
          */
         @Deprecated // Bug 1530022
         @SuppressWarnings("checkstyle:javadocmethod")
