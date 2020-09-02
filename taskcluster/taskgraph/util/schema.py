@@ -227,7 +227,7 @@ OptimizationSchema = voluptuous.Any(
     # the search occurs in order, with the first match winning
     {'index-search': [text_type]},
     {'push-interval-10': None},
-    {'push-interval-25': None},
+    {'push-interval-20': None},
     # skip this task if none of the given file patterns match
     {'skip-unless-changed': [text_type]},
     # skip this task if unless the change files' SCHEDULES contains any of these components

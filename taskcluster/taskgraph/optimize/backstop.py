@@ -20,7 +20,6 @@ class Backstop(OptimizationStrategy):
 
 @register_strategy("push-interval-10", args=(10,))
 @register_strategy("push-interval-20", args=(20,))
-@register_strategy("push-interval-25", args=(25,))
 class PushInterval(OptimizationStrategy):
     """Runs tasks every N pushes.
 
