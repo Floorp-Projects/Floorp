@@ -503,6 +503,7 @@ class Simulator : public DecoderVisitor {
  public:
 #ifdef JS_CACHE_SIMULATOR_ARM64
   using Decoder = CachingDecoder;
+  mozilla::Atomic<bool> pendingCacheRequests = mozilla::Atomic<bool>{ false };
 #endif
   explicit Simulator(Decoder* decoder, FILE* stream = stdout);
   ~Simulator();
@@ -2522,6 +2523,7 @@ class SimulatorProcess
   mozilla::Vector<SimFlushes, 1> pendingFlushes_;
 
   static void recordICacheFlush(void* start, size_t length);
+  static void membarrier();
   static ICacheFlushes& getICacheFlushes(Simulator* sim);
   static MOZ_MUST_USE bool registerSimulator(Simulator* sim);
   static void unregisterSimulator(Simulator* sim);

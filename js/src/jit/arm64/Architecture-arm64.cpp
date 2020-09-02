@@ -78,8 +78,12 @@ uint32_t FloatRegister::getRegisterDumpOffsetInBytes() {
 
 uint32_t GetARM64Flags() { return 0; }
 
-void FlushICache(void* code, size_t size) {
-  vixl::CPU::EnsureIAndDCacheCoherency(code, size);
+void FlushICache(void* code, size_t size, bool codeIsThreadLocal) {
+  vixl::CPU::EnsureIAndDCacheCoherency(code, size, codeIsThreadLocal);
+}
+
+bool CanFlushICacheFromBackgroundThreads() {
+  return vixl::CPU::CanFlushICacheFromBackgroundThreads();
 }
 
 }  // namespace jit

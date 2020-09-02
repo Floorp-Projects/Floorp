@@ -177,9 +177,19 @@ class ExecutableAllocator {
   }
 
   MOZ_MUST_USE
-  static bool makeExecutableAndFlushICache(void* start, size_t size) {
+  static bool makeExecutableAndFlushICache(FlushICacheSpec flushSpec,
+                                           void* start, size_t size) {
+    MustFlushICache mustFlushICache;
+    switch (flushSpec) {
+      case FlushICacheSpec::LocalThreadOnly:
+        mustFlushICache = MustFlushICache::LocalThreadOnly;
+        break;
+      case FlushICacheSpec::AllThreads:
+        mustFlushICache = MustFlushICache::AllThreads;
+        break;
+    }
     return ReprotectRegion(start, size, ProtectionSetting::Executable,
-                           MustFlushICache::Yes);
+                           mustFlushICache);
   }
 
   static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);

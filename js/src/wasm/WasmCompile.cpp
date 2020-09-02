@@ -449,6 +449,20 @@ void CompilerEnvironment::computeParameters() {
   state_ = Computed;
 }
 
+// Check that this architecture either:
+// - is cache-coherent, which is the case for most tier-1 architectures we care
+// about.
+// - or has the ability to invalidate the instruction cache of all threads, so
+// background compilation in tiered compilation can be synchronized across all
+// threads.
+static bool IsICacheSafe() {
+#ifdef JS_CODEGEN_ARM64
+  return jit::CanFlushICacheFromBackgroundThreads();
+#else
+  return true;
+#endif
+}
+
 void CompilerEnvironment::computeParameters(Decoder& d) {
   MOZ_ASSERT(!isComputed());
 
@@ -484,7 +498,7 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
   }
 
   if (baselineEnabled && hasSecondTier && CanUseExtraThreads() &&
-      (TieringBeneficial(codeSectionSize) || forceTiering)) {
+      (TieringBeneficial(codeSectionSize) || forceTiering) && IsICacheSafe()) {
     mode_ = CompileMode::Tier1;
     tier_ = Tier::Baseline;
   } else {
