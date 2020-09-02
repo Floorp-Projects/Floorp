@@ -866,7 +866,7 @@ class SubDialogManager {
       !allowDuplicates &&
       this._dialogs.some(dialog => dialog._openedURL == aURL)
     ) {
-      return;
+      return undefined;
     }
 
     let doc = this._dialogStack.ownerDocument;
@@ -901,6 +901,8 @@ class SubDialogManager {
     );
     this._dialogs.push(this._preloadDialog);
 
+    let openedDialog = this._preloadDialog;
+
     this._preloadDialog = new SubDialog({
       template: this._dialogTemplate,
       parentElement: this._dialogStack,
@@ -911,16 +913,22 @@ class SubDialogManager {
     if (this._dialogs.length == 1) {
       this._ensureStackEventListeners();
     }
+
+    return openedDialog;
   }
 
   close() {
     this._topDialog.close();
   }
 
-  abortAll() {
-    // When closing dialogs we splice elements from the dialogs array.
-    // Create a copy to ensure we go all over all dialogs.
-    this._dialogs.slice().forEach(dialog => dialog.abort());
+  /**
+   * Abort open dialogs.
+   * @param {function} [filterFn] - Function which should return true for
+   * dialogs that should be aborted and false for dialogs that should remain
+   * open. Defaults to aborting all dialogs.
+   */
+  abortDialogs(filterFn = () => true) {
+    this._dialogs.filter(filterFn).forEach(dialog => dialog.abort());
   }
 
   get hasDialogs() {
