@@ -102,37 +102,9 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
   void traceChildren(JSTracer* trc);
 
-  static MOZ_ALWAYS_INLINE void readBarrier(BigInt* thing) {
-    if (js::gc::IsInsideNursery(thing)) {
-      return;
-    }
-    js::gc::TenuredCell::readBarrier(&thing->asTenured());
-  }
-
-  static MOZ_ALWAYS_INLINE void writeBarrierPre(BigInt* thing) {
-    if (!thing || js::gc::IsInsideNursery(thing)) {
-      return;
-    }
-
-    js::gc::TenuredCell::writeBarrierPre(&thing->asTenured());
-  }
-
-  static void writeBarrierPost(void* cellp, BigInt* prev, BigInt* next) {
-    // See JSObject::writeBarrierPost for a description of the logic here.
-    MOZ_ASSERT(cellp);
-
-    js::gc::StoreBuffer* buffer;
-    if (next && (buffer = next->storeBuffer())) {
-      if (prev && prev->storeBuffer()) {
-        return;
-      }
-      buffer->putCell(static_cast<BigInt**>(cellp));
-      return;
-    }
-
-    if (prev && (buffer = prev->storeBuffer())) {
-      buffer->unputCell(static_cast<BigInt**>(cellp));
-    }
+  static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, BigInt* prev,
+                                                 BigInt* next) {
+    js::gc::WriteBarrierPostImpl<BigInt>(cellp, prev, next);
   }
 
   void finalize(JSFreeOp* fop);
