@@ -59,19 +59,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        // Let's check if the extension is already installed first
-        sRuntime.getWebExtensionController().list().then(extensionList -> {
-            for (WebExtension extension : extensionList) {
-                if (extension.id.equals(EXTENSION_ID)
-                        && extension.metaData.version.equals(EXTENSION_VERSION)) {
-                    // Extension already installed, no need to install it again
-                    return GeckoResult.fromValue(extension);
-                }
-            }
-
-            // Install if it's not already installed.
-            return sRuntime.getWebExtensionController().installBuiltIn(EXTENSION_LOCATION);
-        }).accept(
+        // Let's make sure the extension is installed
+        sRuntime.getWebExtensionController()
+                .ensureBuiltIn(EXTENSION_LOCATION, "messaging@example.com").accept(
                 // Set delegate that will receive messages coming from this extension.
                 extension -> session.getWebExtensionController()
                         .setMessageDelegate(extension, messageDelegate, "browser"),
