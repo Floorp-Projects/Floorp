@@ -998,7 +998,7 @@ class MessageEventOp final : public ExtendableEventOp {
     nsCString origin;
     mozUrl->Origin(origin);
 
-    init.mOrigin = NS_ConvertUTF8toUTF16(origin);
+    CopyUTF8toUTF16(origin, init.mOrigin);
 
     init.mSource.SetValue().SetAsClient() = new Client(
         sgo, mArgs.get_ServiceWorkerMessageEventOpArgs().clientInfoAndState());
@@ -1297,7 +1297,7 @@ void FetchEventOp::GetRequestURL(nsAString& aOutRequestURL) {
       mArgs.get_ServiceWorkerFetchEventOpArgs().internalRequest().urlList();
   MOZ_ASSERT(!urls.IsEmpty());
 
-  aOutRequestURL = NS_ConvertUTF8toUTF16(urls.LastElement());
+  CopyUTF8toUTF16(urls.LastElement(), aOutRequestURL);
 }
 
 void FetchEventOp::ResolvedCallback(JSContext* aCx,

@@ -43,7 +43,7 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
   ReportDeliver::ReportData data;
   data.mType = u"crash"_ns;
   data.mGroupName = u"default"_ns;
-  data.mURL = NS_ConvertUTF8toUTF16(safe_origin_spec);
+  CopyUTF8toUTF16(safe_origin_spec, data.mURL);
   data.mCreationTime = TimeStamp::Now();
 
   Navigator::GetUserAgent(nullptr, aPrincipal, false, data.mUserAgent);

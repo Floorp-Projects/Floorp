@@ -421,7 +421,7 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
       if (mSelfURI) {
         mSelfURI->GetAsciiSpec(selfURIspec);
       }
-      referrer = NS_ConvertUTF16toUTF8(mReferrer);
+      CopyUTF16toUTF8(mReferrer, referrer);
       CSPCONTEXTLOG(
           ("nsCSPContext::AppendPolicy added UPGRADE_IF_INSECURE_DIRECTIVE "
            "self-uri=%s referrer=%s",
@@ -997,7 +997,7 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
   // document-uri
   nsAutoCString reportDocumentURI;
   StripURIForReporting(mSelfURI, mSelfURI, reportDocumentURI);
-  aViolationEventInit.mDocumentURI = NS_ConvertUTF8toUTF16(reportDocumentURI);
+  CopyUTF8toUTF16(reportDocumentURI, aViolationEventInit.mDocumentURI);
 
   // referrer
   aViolationEventInit.mReferrer = mReferrer;
@@ -1015,9 +1015,9 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
     }
     nsAutoCString reportBlockedURI;
     StripURIForReporting(uriToReport, mSelfURI, reportBlockedURI);
-    aViolationEventInit.mBlockedURI = NS_ConvertUTF8toUTF16(reportBlockedURI);
+    CopyUTF8toUTF16(reportBlockedURI, aViolationEventInit.mBlockedURI);
   } else {
-    aViolationEventInit.mBlockedURI = NS_ConvertUTF8toUTF16(aBlockedString);
+    CopyUTF8toUTF16(aBlockedString, aViolationEventInit.mBlockedURI);
   }
 
   // effective-directive
@@ -1043,7 +1043,7 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
     if (sourceURI) {
       nsAutoCString spec;
       sourceURI->GetSpecIgnoringRef(spec);
-      aSourceFile = NS_ConvertUTF8toUTF16(spec);
+      CopyUTF8toUTF16(spec, aSourceFile);
     }
     aViolationEventInit.mSourceFile = aSourceFile;
   }

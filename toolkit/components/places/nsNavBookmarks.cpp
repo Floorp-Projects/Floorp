@@ -1870,7 +1870,7 @@ void nsNavBookmarks::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
 
     ItemVisitData visitData;
     visitData.visitId = visit->mVisitId;
-    visitData.bookmark.url = NS_ConvertUTF16toUTF8(visit->mUrl);
+    CopyUTF16toUTF8(visit->mUrl, visitData.bookmark.url);
     visitData.time = visit->mVisitTime * 1000;
     visitData.transitionType = visit->mTransitionType;
     RefPtr<AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>> notifier =
@@ -1923,7 +1923,7 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI, uint32_t aChangedAttribute,
     NS_ENSURE_SUCCESS(rv, rv);
     changeData.property = "favicon"_ns;
     changeData.isAnnotation = false;
-    changeData.newValue = NS_ConvertUTF16toUTF8(aNewValue);
+    CopyUTF16toUTF8(aNewValue, changeData.newValue);
     changeData.bookmark.lastModified = 0;
     changeData.bookmark.type = TYPE_BOOKMARK;
 

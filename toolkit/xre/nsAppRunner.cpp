@@ -4034,7 +4034,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       nsString leafName;
       rv = mProfD->GetLeafName(leafName);
       if (NS_SUCCEEDED(rv)) {
-        profileName = NS_ConvertUTF16toUTF8(leafName);
+        CopyUTF16toUTF8(leafName, profileName);
       }
     }
 

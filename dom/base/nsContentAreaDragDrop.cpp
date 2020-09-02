@@ -287,7 +287,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable* aTransferable,
           NS_ENSURE_SUCCESS(rv, rv);
           newFileName.Append(".");
           newFileName.Append(primaryExtension);
-          targetFilename = NS_ConvertUTF8toUTF16(newFileName);
+          CopyUTF8toUTF16(newFileName, targetFilename);
         }
       }
     }

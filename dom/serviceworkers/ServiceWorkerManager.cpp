@@ -2112,7 +2112,7 @@ ServiceWorkerManager::GetScopeForUrl(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  aScope = NS_ConvertUTF8toUTF16(r->Scope());
+  CopyUTF8toUTF16(r->Scope(), aScope);
   return NS_OK;
 }
 

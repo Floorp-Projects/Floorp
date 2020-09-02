@@ -64,7 +64,7 @@ class AccessibleWrap : public Accessible {
 
   static const char* ReturnString(nsAString& aString) {
     static nsCString returnedString;
-    returnedString = NS_ConvertUTF16toUTF8(aString);
+    CopyUTF16toUTF8(aString, returnedString);
     return returnedString.get();
   }
 

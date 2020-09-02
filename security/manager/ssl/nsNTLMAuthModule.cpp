@@ -568,7 +568,7 @@ static nsresult GenerateType3Msg(const nsString& domain,
   }
 
   if (unicode) {
-    ucsHostBuf = NS_ConvertUTF8toUTF16(hostBuf);
+    CopyUTF8toUTF16(hostBuf, ucsHostBuf);
     hostPtr = ucsHostBuf.get();
     hostLen = ucsHostBuf.Length() * 2;
 #ifdef IS_BIG_ENDIAN

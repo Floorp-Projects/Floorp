@@ -272,7 +272,7 @@ nsresult TCPSocket::InitWithTransport(nsISocketTransport* aTransport) {
 
   nsAutoCString host;
   mTransport->GetHost(host);
-  mHost = NS_ConvertUTF8toUTF16(host);
+  CopyUTF8toUTF16(host, mHost);
   int32_t port;
   mTransport->GetPort(&port);
   mPort = port;

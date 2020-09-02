@@ -5904,7 +5904,7 @@ nsresult nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal,
     asciiOrigin.AssignLiteral("null");
   }
 
-  aOrigin = NS_ConvertUTF8toUTF16(asciiOrigin);
+  CopyUTF8toUTF16(asciiOrigin, aOrigin);
   return NS_OK;
 }
 
@@ -5930,7 +5930,7 @@ nsresult nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin) {
   rv = GetASCIIOrigin(aURI, asciiOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aOrigin = NS_ConvertUTF8toUTF16(asciiOrigin);
+  CopyUTF8toUTF16(asciiOrigin, aOrigin);
   return NS_OK;
 }
 
@@ -8838,7 +8838,7 @@ void nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell,
 
     nsAutoCString uriStr;
     uri->GetSpec(uriStr);
-    aPresentationUrl = NS_ConvertUTF8toUTF16(uriStr);
+    CopyUTF8toUTF16(uriStr, aPresentationUrl);
     return;
   }
 
