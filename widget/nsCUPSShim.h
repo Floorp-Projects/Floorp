@@ -33,6 +33,7 @@ class nsCUPSShim {
   X(cupsConnectDest)           \
   X(cupsCopyDest)              \
   X(cupsCopyDestInfo)          \
+  X(cupsDoRequest)             \
   X(cupsFreeDestInfo)          \
   X(cupsFreeDests)             \
   X(cupsGetDestMediaDefault)   \
@@ -45,7 +46,14 @@ class nsCUPSShim {
   X(cupsLocalizeDestMedia)     \
   X(cupsPrintFile)             \
   X(cupsTempFd)                \
-  X(httpClose)
+  X(httpClose)                 \
+  X(ippAddString)              \
+  X(ippAddStrings)             \
+  X(ippDelete)                 \
+  X(ippFindAttribute)          \
+  X(ippGetCount)               \
+  X(ippGetString)              \
+  X(ippNewRequest)
 
 #ifdef CUPS_SHIM_RUNTIME_LINK
   // Define a single field which holds a function pointer.
