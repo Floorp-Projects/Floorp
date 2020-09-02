@@ -37,7 +37,11 @@ function openAndLoadSubDialog(
   aClosingCallback = null
 ) {
   let promise = promiseLoadSubDialog(aURL);
-  content.gSubDialog.open(aURL, aFeatures, aParams, aClosingCallback);
+  content.gSubDialog.open(
+    aURL,
+    { features: aFeatures, closingCallback: aClosingCallback },
+    aParams
+  );
   return promise;
 }
 

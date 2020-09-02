@@ -8892,31 +8892,43 @@ class TabDialogBox {
   /**
    * Open a dialog on tab level.
    * @param {String} aURL - URL of the dialog to load in the tab box.
-   * @param {String} [aFeatures] - Comma separated list of window features.
-   * @param {*} [aParams] - Parameters to pass to dialog window.
-   * @param {Object} [aOpenOptions] - Parameters to pass to dialog open method.
+   * @param {Object} [aOptions]
+   * @param {String} [aOptions.features] - Comma separated list of window
+   * features.
+   * @param {Boolean} [aOptions.allowDuplicateDialogs] - Whether to allow
+   * showing multiple dialogs with aURL at the same time. If false calls for
+   * duplicate dialogs will be dropped.
+   * @param {String} [aOptions.sizeTo] - Pass "available" to stretch dialog to
+   * roughly content size.
    * @returns {Promise} - Resolves once the dialog has been closed.
    */
-  open(aURL, aFeatures = null, aParams = null, aOpenOptions = {}) {
+  open(
+    aURL,
+    { features = null, allowDuplicateDialogs = true, sizeTo } = {},
+    ...aParams
+  ) {
     return new Promise(resolve => {
       if (!this._dialogManager.hasDialogs) {
         this._onFirstDialogOpen();
       }
 
+      let closingCallback = () => {
+        if (!this._dialogManager.hasDialogs) {
+          this._onLastDialogClose();
+        }
+      };
+
       // Open dialog and resolve once it has been closed
       this._dialogManager.open(
         aURL,
-        aFeatures,
-        aParams,
-        // Closing
-        () => {
-          if (!this._dialogManager.hasDialogs) {
-            this._onLastDialogClose();
-          }
+        {
+          features,
+          allowDuplicateDialogs,
+          sizeTo,
+          closingCallback,
+          closedCallback: resolve,
         },
-        // Resolve on closed callback
-        resolve,
-        aOpenOptions
+        ...aParams
       );
     });
   }
