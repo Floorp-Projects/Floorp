@@ -730,7 +730,7 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
     // As above, no flags are expected to be set here.
     MOZ_ASSERT(!IsInsideNursery(newValue));
     PtrT::writeBarrierPre(headerPtr());
-    unsafeSetHeaderPtr(newValue);
+    unbarrieredSetHeaderPtr(newValue);
   }
 
  public:
@@ -744,7 +744,7 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
     return reinterpret_cast<PtrT*>(this->header_);
   }
 
-  void unsafeSetHeaderPtr(PtrT* newValue) {
+  void unbarrieredSetHeaderPtr(PtrT* newValue) {
     uintptr_t data = uintptr_t(newValue);
     MOZ_ASSERT(this->flags() == 0);
     MOZ_ASSERT((data & Cell::RESERVED_MASK) == 0);

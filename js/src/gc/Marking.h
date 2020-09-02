@@ -74,8 +74,7 @@ inline bool IsMarkedUnbarriered(JSRuntime* rt, T* thingp) {
 // are always reported as being marked.
 template <typename T>
 inline bool IsMarked(JSRuntime* rt, BarrieredBase<T>* thingp) {
-  return IsMarkedInternal(rt,
-                          ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+  return IsMarkedInternal(rt, ConvertToBase(thingp->unbarrieredAddress()));
 }
 
 template <typename T>
@@ -86,13 +85,13 @@ inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
 template <typename T>
 inline bool IsAboutToBeFinalized(const WriteBarriered<T>* thingp) {
   return IsAboutToBeFinalizedInternal(
-      ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+      ConvertToBase(thingp->unbarrieredAddress()));
 }
 
 template <typename T>
 inline bool IsAboutToBeFinalized(ReadBarriered<T>* thingp) {
   return IsAboutToBeFinalizedInternal(
-      ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+      ConvertToBase(thingp->unbarrieredAddress()));
 }
 
 inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell* cell);

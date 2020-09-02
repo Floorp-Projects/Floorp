@@ -1348,8 +1348,9 @@ struct ObjectGroupRealm::AllocationSiteKey {
   }
 
   bool needsSweep() {
-    return IsAboutToBeFinalizedUnbarriered(script.unsafeGet()) ||
-           (proto && IsAboutToBeFinalizedUnbarriered(proto.unsafeGet()));
+    return IsAboutToBeFinalizedUnbarriered(script.unbarrieredAddress()) ||
+           (proto &&
+            IsAboutToBeFinalizedUnbarriered(proto.unbarrieredAddress()));
   }
 
   bool operator==(const AllocationSiteKey& other) const {

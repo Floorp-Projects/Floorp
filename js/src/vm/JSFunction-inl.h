@@ -123,13 +123,12 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   // value to which we could sensibly initialize this.
   MOZ_MAKE_MEM_UNDEFINED(&fun->u, sizeof(u));
 
-  // Safe: we're initializing for the very first time.
-  fun->atom_.unsafeSet(nullptr);
+  fun->atom_.init(nullptr);
 
   if (kind == js::gc::AllocKind::FUNCTION_EXTENDED) {
     fun->setFlags(FunctionFlags::EXTENDED);
     for (js::GCPtrValue& extendedSlot : fun->toExtended()->extendedSlots) {
-      extendedSlot.unsafeSet(JS::UndefinedValue());
+      extendedSlot.init(JS::UndefinedValue());
     }
   } else {
     fun->setFlags(0);

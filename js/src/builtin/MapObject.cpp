@@ -470,7 +470,7 @@ static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
   }
 
   // Clear newKey to avoid the barrier in ~PreBarriered.
-  newKey.unsafeClear();
+  newKey.unbarrieredClear();
 }
 
 void MapObject::trace(JSTracer* trc, JSObject* obj) {

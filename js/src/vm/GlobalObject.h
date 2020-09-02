@@ -926,7 +926,7 @@ class GlobalObject : public NativeObject {
   }
   void clearSourceURLSHolder() {
     // This is called at the start of shrinking GCs, so avoids barriers.
-    getSlotRef(SOURCE_URLS).unsafeSet(UndefinedValue());
+    getSlotRef(SOURCE_URLS).unbarrieredSet(UndefinedValue());
   }
 
   // A class used in place of a prototype during off-thread parsing.

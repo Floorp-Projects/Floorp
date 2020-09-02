@@ -635,9 +635,7 @@ class TypedObject : public JSObject {
   // callee here is the type descriptor.
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
-  Shape** addressOfShapeFromGC() {
-    return shape_.unsafeUnbarrieredForTracing();
-  }
+  Shape** addressOfShapeFromGC() { return shape_.unbarrieredAddress(); }
 };
 
 using HandleTypedObject = Handle<TypedObject*>;
