@@ -3391,8 +3391,8 @@ void CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& aOptions,
       }
     }
 #ifdef ACCESSIBILITY
-    aOptions.mControl->SetProperty(nsGkAtoms::hitregion, new bool(true),
-                                   nsINode::DeleteProperty<bool>);
+    aOptions.mControl->SetProperty(nsGkAtoms::hitregion,
+                                   reinterpret_cast<void*>(true));
 #endif
   }
 
