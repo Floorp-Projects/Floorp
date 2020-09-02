@@ -40,14 +40,6 @@ AbstractScopePtr ScopeStencil::enclosing(CompilationInfo& compilationInfo) {
     return AbstractScopePtr(compilationInfo, *enclosing_);
   }
 
-  // HACK: The self-hosting script uses the EmptyGlobalScopeType placeholder
-  // which does not correspond to a ScopeStencil. This means that the inner
-  // scopes may store Nothing as an enclosing ScopeIndex.
-  if (compilationInfo.input.options.selfHostingMode) {
-    MOZ_ASSERT(compilationInfo.input.enclosingScope == nullptr);
-    return AbstractScopePtr(&compilationInfo.cx->global()->emptyGlobalScope());
-  }
-
   return AbstractScopePtr(compilationInfo.input.enclosingScope);
 }
 

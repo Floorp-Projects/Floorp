@@ -34,8 +34,8 @@ bool GCThingList::append(FunctionBox* funbox, GCThingIndex* index) {
 AbstractScopePtr GCThingList::getScope(size_t index) const {
   const ScriptThingVariant& elem = vector[index];
   if (elem.is<EmptyGlobalScopeType>()) {
-    MOZ_ASSERT(compilationInfo.input.enclosingScope == nullptr);
-    return AbstractScopePtr(&compilationInfo.cx->global()->emptyGlobalScope());
+    MOZ_ASSERT(compilationInfo.input.enclosingScope == &cx->global()->emptyGlobalScope());
+    return AbstractScopePtr(compilationInfo.input.enclosingScope);
   }
   return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
 }
