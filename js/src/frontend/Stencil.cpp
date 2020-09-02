@@ -549,6 +549,13 @@ bool CompilationInfo::instantiateStencils(CompilationGCOutput& gcOutput) {
     return false;
   }
 
+  if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
+    MOZ_ASSERT(input.enclosingScope == nullptr);
+    input.enclosingScope = &cx->global()->emptyGlobalScope();
+    MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
+               ModuleScope::EnclosingEnvironmentChainLength);
+  }
+
   if (input.lazy) {
     FunctionsFromExistingLazy(*this, gcOutput);
   } else {
