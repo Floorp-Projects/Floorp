@@ -127,9 +127,7 @@ NS_IMETHODIMP
 ChildDNSRecord::GetScriptableNextAddr(uint16_t port, nsINetAddr** result) {
   NetAddr addr;
   nsresult rv = GetNextAddr(port, &addr);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   RefPtr<nsNetAddr> netaddr = new nsNetAddr(&addr);
   netaddr.forget(result);
@@ -461,9 +459,9 @@ bool DNSRequestSender::OnRecvLookupCompleted(const DNSRequestResponse& reply) {
   }
 
   if (DNSRequestChild* child = mIPCActor->AsDNSRequestChild()) {
-    Unused << mozilla::net::DNSRequestChild::Send__delete__(child);
+    Unused << child->Send__delete__(child);
   } else if (DNSRequestParent* parent = mIPCActor->AsDNSRequestParent()) {
-    Unused << mozilla::net::DNSRequestParent::Send__delete__(parent);
+    Unused << parent->Send__delete__(parent);
   }
 
   return true;
