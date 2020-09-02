@@ -134,13 +134,21 @@ UniquePtr<SharedSurface_SurfaceTexture> SharedSurface_SurfaceTexture::Create(
     const SharedSurfaceDesc& desc) {
   const auto& size = desc.size;
 
-  jni::Object::LocalRef surfaceObj =
-      java::SurfaceAllocator::AcquireSurface(size.width, size.height, true);
+  jni::Object::LocalRef surfaceObj;
+  const bool useSingleBuffer =
+      desc.gl->Renderer() != GLRenderer::AndroidEmulator;
+
+  if (useSingleBuffer) {
+    surfaceObj =
+        java::SurfaceAllocator::AcquireSurface(size.width, size.height, true);
+  }
+
   if (!surfaceObj) {
     // Try multi-buffer mode
     surfaceObj =
         java::SurfaceAllocator::AcquireSurface(size.width, size.height, false);
   }
+
   if (!surfaceObj) {
     // Give up
     NS_WARNING("Failed to allocate SurfaceTexture!");
