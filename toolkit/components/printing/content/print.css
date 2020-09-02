@@ -59,10 +59,6 @@ body[loading] #print {
   text-align: center;
 }
 
-.cols-2 > .col:nth-child(2) {
-  flex: 1 1 auto;
-}
-
 .header-container {
   display: flex;
   flex-direction: row;
