@@ -556,13 +556,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
       fileName.get(), trimmedScript.get());
 #endif
 
-#ifdef EARLY_BETA_OR_EARLIER
-  // Until we understand the events coming from release, we don't want to
-  // enforce eval restrictions on release. Limiting to Nightly and early beta.
   return false;
-#else
-  return true;
-#endif
 }
 
 /* static */
