@@ -122,12 +122,6 @@ class ContentDelegateChild extends GeckoViewActorChild {
           this.notifyParentOfViewportFit();
         }
         break;
-      case "DOMTitleChanged":
-        this.eventDispatcher.sendRequest({
-          type: "GeckoView:DOMTitleChanged",
-          title: this.contentWindow.document.title,
-        });
-        break;
       case "DOMWindowClose":
         if (!aEvent.isTrusted) {
           return;
