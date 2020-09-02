@@ -15566,6 +15566,19 @@
     "description": "Seconds between `user-interaction-active` and `user-interaction-inactive`. For use in evaluating baseline engagement for Project FOG.",
     "releaseChannelCollection": "opt-out"
   },
+  "FOG_EVAL_USER_INACTIVE_S" : {
+    "products": ["firefox"],
+    "record_in_processes": ["main"],
+    "alert_emails": ["chutten@mozilla.com"],
+    "expires_in_version": "85",
+    "kind": "exponential",
+    "keyed": false,
+    "high": 7200,
+    "n_buckets": 50,
+    "bug_numbers": [1660887],
+    "description": "Seconds between `user-interaction-inactive` and `user-interaction-active`. For use in evaluating baseline engagement for Project FOG.",
+    "releaseChannelCollection": "opt-out"
+  },
   "FOG_EVAL_WINDOW_RAISED_S" : {
     "products": ["firefox"],
     "record_in_processes": ["main"],
