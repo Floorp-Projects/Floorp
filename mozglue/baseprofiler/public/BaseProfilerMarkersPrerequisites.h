@@ -199,6 +199,57 @@ class MOZ_STACK_CLASS ProfilerStringView {
 using ProfilerString8View = ProfilerStringView<char>;
 using ProfilerString16View = ProfilerStringView<char16_t>;
 
+// The classes below are all embedded in a `MarkerOptions` object.
+class MarkerOptions;
+
+// This compulsory marker option contains the required category information.
+class MarkerCategory {
+ public:
+  // Constructor from category pair (aka sub-category) and category.
+  constexpr MarkerCategory(baseprofiler::ProfilingCategoryPair aCategoryPair,
+                           baseprofiler::ProfilingCategory aCategory)
+      : mCategoryPair(aCategoryPair), mCategory(aCategory) {}
+
+  constexpr baseprofiler::ProfilingCategoryPair CategoryPair() const {
+    return mCategoryPair;
+  }
+
+  constexpr baseprofiler::ProfilingCategory Category() const {
+    return mCategory;
+  }
+
+ private:
+  // The default constructor is only used during deserialization of
+  // MarkerOptions.
+  friend MarkerOptions;
+  constexpr MarkerCategory() = default;
+
+  friend ProfileBufferEntryReader::Deserializer<MarkerCategory>;
+
+  baseprofiler::ProfilingCategoryPair mCategoryPair =
+      baseprofiler::ProfilingCategoryPair::OTHER;
+  baseprofiler::ProfilingCategory mCategory =
+      baseprofiler::ProfilingCategory::OTHER;
+};
+
+namespace baseprofiler::category {
+// Each category-pair (aka subcategory) name constructs a MarkerCategory.
+// E.g.: mozilla::baseprofiler::category::OTHER_Profiling
+// Profiler macros will take the category name alone.
+// E.g.: `PROFILER_MARKER_UNTYPED("name", OTHER_Profiling)`
+#  define CATEGORY_ENUM_BEGIN_CATEGORY(name, labelAsString, color)
+#  define CATEGORY_ENUM_SUBCATEGORY(supercategory, name, labelAsString) \
+    static constexpr MarkerCategory name{ProfilingCategoryPair::name,   \
+                                         ProfilingCategory::supercategory};
+#  define CATEGORY_ENUM_END_CATEGORY
+MOZ_PROFILING_CATEGORY_LIST(CATEGORY_ENUM_BEGIN_CATEGORY,
+                            CATEGORY_ENUM_SUBCATEGORY,
+                            CATEGORY_ENUM_END_CATEGORY)
+#  undef CATEGORY_ENUM_BEGIN_CATEGORY
+#  undef CATEGORY_ENUM_SUBCATEGORY
+#  undef CATEGORY_ENUM_END_CATEGORY
+}  // namespace baseprofiler::category
+
 }  // namespace mozilla
 
 #endif  // MOZ_GECKO_PROFILER
