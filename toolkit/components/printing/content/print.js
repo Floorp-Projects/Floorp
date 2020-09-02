@@ -214,19 +214,17 @@ var PrintEventHandler = {
   },
 
   async refreshSettings(printerName) {
-    this.settings = PrintUtils.getPrintSettings(printerName);
-    // We set `isInitializedFromPrinter` to make sure that that's set on the
-    // SAVE_TO_PDF_PRINTER settings.  The naming is poor, but that tells the
-    // platform code that the settings object is complete.
-    this.settings.isInitializedFromPrinter = true;
-    this.defaultSettings = PrintUtils.getPrintSettings(printerName, true);
+    let currentPrinter = await PrintSettingsViewProxy.resolvePropertiesForPrinter(
+      printerName
+    );
+    this.settings = currentPrinter.settings;
+    this.defaultSettings = currentPrinter.defaultSettings;
     // restore settings which do not have a corresponding flag
     for (let key of Object.keys(this._nonFlaggedChangedSettings)) {
       if (key in this.settings) {
         this.settings[key] = this._nonFlaggedChangedSettings[key];
       }
     }
-    await PrintSettingsViewProxy.resolvePropertiesForPrinter(printerName);
 
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
@@ -602,14 +600,48 @@ const PrintSettingsViewProxy = {
 
   async resolvePropertiesForPrinter(printerName) {
     // resolve any async properties we need on the printer
-    let printer = this.availablePrinters[printerName];
-    // Await the async printer data.
-    if (printer.printer) {
-      [printer.supportsColor, printer.paperList] = await Promise.all([
-        printer.printer.supportsColor,
-        printer.printer.paperList,
-      ]);
+    let printerInfo = this.availablePrinters[printerName];
+    if (printerInfo._resolved) {
+      return printerInfo;
     }
+
+    const PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+
+    // Await the async printer data.
+    if (printerInfo.printer) {
+      [
+        printerInfo.supportsColor,
+        printerInfo.paperList,
+        printerInfo.defaultSettings,
+      ] = await Promise.all([
+        printerInfo.printer.supportsColor,
+        printerInfo.printer.paperList,
+        // get a set of default settings for this printer
+        printerInfo.printer.createDefaultSettings(printerName),
+      ]);
+      printerInfo.defaultSettings.QueryInterface(Ci.nsIPrintSettings);
+    } else if (printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
+      // The Mozilla PDF pseudo-printer has no actual nsIPrinter implementation
+      printerInfo.defaultSettings = PSSVC.newPrintSettings;
+      printerInfo.defaultSettings.printerName = printerName;
+    }
+    printerInfo.settings = printerInfo.defaultSettings.clone();
+    // Apply any user values
+    PSSVC.initPrintSettingsFromPrefs(
+      printerInfo.settings,
+      true,
+      printerInfo.settings.kInitSaveAll
+    );
+    // We set `isInitializedFromPrinter` to make sure that that's set on the
+    // SAVE_TO_PDF_PRINTER settings.  The naming is poor, but that tells the
+    // platform code that the settings object is complete.
+    printerInfo.settings.isInitializedFromPrinter = true;
+
+    // The printer properties don't change, mark this as resolved for next time
+    printerInfo._resolved;
+    return printerInfo;
   },
 
   get(target, name) {
