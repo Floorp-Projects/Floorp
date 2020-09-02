@@ -110,6 +110,10 @@ struct CompilationInput {
   //  * If we're compiling eval, the non-null enclosing scope of the `eval`.
   //  * If we're compiling module, null that means empty global scope
   //    (See EmitterScope::checkEnvironmentChainLength)
+  //  * If we're compiling self-hosted JS, an empty global scope.
+  //    This scope is also used for EmptyGlobalScopeType in
+  //    CompilationStencil.gcThings.
+  //    See the comment in initForSelfHostingGlobal.
   //  * Null otherwise
   Scope* enclosingScope = nullptr;
 
@@ -121,6 +125,21 @@ struct CompilationInput {
 
  public:
   bool initForGlobal(JSContext* cx) { return initScriptSource(cx); }
+
+  bool initForSelfHostingGlobal(JSContext* cx) {
+    if (!initScriptSource(cx)) {
+      return false;
+    }
+
+    // This enclosing scope is also recorded as EmptyGlobalScopeType in
+    // CompilationStencil.gcThings even though corresponding ScopeStencil
+    // isn't generated.
+    //
+    // Store the enclosing scope here in order to access it from
+    // inner scopes' ScopeStencil::enclosing.
+    enclosingScope = &cx->global()->emptyGlobalScope();
+    return true;
+  }
 
   bool initForStandaloneFunction(JSContext* cx,
                                  HandleScope functionEnclosingScope) {
