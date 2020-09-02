@@ -16,7 +16,7 @@ add_task(async function() {
   let dialogURL = "";
   let dialogOpened = false;
   XPCOMUtils.defineLazyGetter(win, "gSubDialog", () => ({
-    open(aDialogURL, unused, unused2, aCallback) {
+    open(aDialogURL, { closingCallback: aCallback }) {
       dialogOpened = true;
       dialogURL = aDialogURL;
       masterPasswordSet = masterPasswordNextState;

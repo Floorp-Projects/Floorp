@@ -277,7 +277,7 @@ class PromptParent extends JSWindowActorParent {
         }
         // Tab
         let dialogBox = win.gBrowser.getTabDialogBox(browser);
-        await dialogBox.open(uri, "resizable=no", bag);
+        await dialogBox.open(uri, { features: "resizable=no" }, bag);
       } else {
         // Window
         Services.ww.openWindow(
