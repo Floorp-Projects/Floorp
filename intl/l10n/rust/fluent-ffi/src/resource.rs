@@ -8,7 +8,7 @@ use std::mem;
 use std::rc::Rc;
 
 #[no_mangle]
-pub unsafe extern "C" fn fluent_resource_new(
+pub extern "C" fn fluent_resource_new(
     name: &nsACString,
     has_errors: &mut bool,
 ) -> *const FluentResource {

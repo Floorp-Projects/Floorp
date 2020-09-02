@@ -10,38 +10,37 @@ pub fn parse_language_identifier_from_iter<'a>(
     iter: &mut Peekable<impl Iterator<Item = &'a [u8]>>,
     allow_extension: bool,
 ) -> Result<LanguageIdentifier, ParserError> {
-    let mut position = 0;
+    let language = if let Some(subtag) = iter.next() {
+        subtags::Language::from_bytes(subtag)?
+    } else {
+        subtags::Language::default()
+    };
 
-    let mut language = None;
     let mut script = None;
     let mut region = None;
     let mut variants = vec![];
 
-    let mut st_peek = iter.peek();
+    let mut position = 1;
 
-    while let Some(subtag) = st_peek {
-        if position == 0 {
-            // Language
-            language = subtags::parse_language_subtag(subtag)?;
-            position = 1;
-        } else if position == 1 {
-            if let Ok(s) = subtags::parse_script_subtag(subtag) {
+    while let Some(subtag) = iter.peek() {
+        if position == 1 {
+            if let Ok(s) = subtags::Script::from_bytes(subtag) {
                 script = Some(s);
                 position = 2;
-            } else if let Ok(s) = subtags::parse_region_subtag(subtag) {
+            } else if let Ok(s) = subtags::Region::from_bytes(subtag) {
                 region = Some(s);
                 position = 3;
-            } else if let Ok(v) = subtags::parse_variant_subtag(subtag) {
+            } else if let Ok(v) = subtags::Variant::from_bytes(subtag) {
                 variants.push(v);
                 position = 3;
             } else {
                 break;
             }
         } else if position == 2 {
-            if let Ok(s) = subtags::parse_region_subtag(subtag) {
+            if let Ok(s) = subtags::Region::from_bytes(subtag) {
                 region = Some(s);
                 position = 3;
-            } else if let Ok(v) = subtags::parse_variant_subtag(subtag) {
+            } else if let Ok(v) = subtags::Variant::from_bytes(subtag) {
                 variants.push(v);
                 position = 3;
             } else {
@@ -49,14 +48,13 @@ pub fn parse_language_identifier_from_iter<'a>(
             }
         } else {
             // Variants
-            if let Ok(v) = subtags::parse_variant_subtag(subtag) {
+            if let Ok(v) = subtags::Variant::from_bytes(subtag) {
                 variants.push(v);
             } else {
                 break;
             }
         }
         iter.next();
-        st_peek = iter.peek();
     }
 
     if !allow_extension && iter.peek().is_some() {

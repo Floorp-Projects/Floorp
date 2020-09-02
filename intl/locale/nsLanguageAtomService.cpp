@@ -199,7 +199,7 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
       }
       // Search list of known script subtags that map to langGroup codes.
       size_t foundIndex;
-      const nsDependentCSubstring& script = loc.GetScript();
+      nsDependentCSubstring script = loc.GetScript();
       if (BinarySearchIf(
               kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
               [script](const auto& entry) -> int {
