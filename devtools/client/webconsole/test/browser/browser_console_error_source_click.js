@@ -11,6 +11,10 @@ const TEST_URI =
   "<button onclick='foobar.explode()'>click!</button>";
 
 add_task(async function() {
+  // Disable the preloaded process as it creates processes intermittently
+  // which forces the emission of RDP requests we aren't correctly waiting for.
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
   await pushPref("devtools.browserconsole.contentMessages", true);
   await addTab(TEST_URI);
 
@@ -50,7 +54,4 @@ add_task(async function() {
   locationNode.click();
   await onTabOpen;
   ok(true, "The view source tab was opened in response to clicking the link");
-
-  await waitForAllTargetsToBeAttached(hud);
-  await BrowserConsoleManager.closeBrowserConsole();
 });

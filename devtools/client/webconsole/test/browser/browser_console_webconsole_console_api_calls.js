@@ -146,5 +146,5 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   // would occassionally fail because the transport is closed before pending server
   // responses have been sent.
   await waitForTick();
-  await BrowserConsoleManager.toggleBrowserConsole();
+  await safeCloseBrowserConsole();
 }

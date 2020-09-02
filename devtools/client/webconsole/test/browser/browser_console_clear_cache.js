@@ -32,7 +32,7 @@ add_task(async function() {
   is(messages.length, 1, "There is only the new message in the output");
 
   info("Close and re-open the browser console");
-  await BrowserConsoleManager.toggleBrowserConsole();
+  await safeCloseBrowserConsole();
   hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Log a smoke message in order to know that the console is ready");

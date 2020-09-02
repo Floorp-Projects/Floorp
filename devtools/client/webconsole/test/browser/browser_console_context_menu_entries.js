@@ -113,12 +113,6 @@ add_task(async function() {
   );
 
   await hideContextMenu(hud);
-  // Close the browser console.
-  try {
-    await BrowserConsoleManager.toggleBrowserConsole();
-  } catch (e) {
-    console.warn("Error when closing Browser Console", e);
-  }
 });
 
 function addPrefBasedEntries(expectedEntries) {
