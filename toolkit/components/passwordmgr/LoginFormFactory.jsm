@@ -46,7 +46,7 @@ this.LoginFormFactory = {
 
   /**
    * Maps all DOM content documents in this content process, including those in
-   * frames, to a WeakSet of LoginForm for the document.
+   * frames, to a WeakSet of LoginForm.rootElement for the document.
    */
   _loginFormRootElementsByDocument: new WeakMap(),
 
@@ -104,8 +104,10 @@ this.LoginFormFactory = {
       );
     }
 
-    if (aField.form) {
-      return this.createFromForm(aField.form);
+    let form =
+      aField.form || FormLikeFactory.closestFormIgnoringShadowRoots(aField);
+    if (form) {
+      return this.createFromForm(form);
     } else if (aField.hasAttribute("form")) {
       log.debug(
         "createFromField: field has form attribute but no form: ",
