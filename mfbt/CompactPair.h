@@ -10,7 +10,6 @@
 #define mozilla_CompactPair_h
 
 #include <type_traits>
-#include <tuple>
 #include <utility>
 
 #include "mozilla/Attributes.h"
@@ -41,16 +40,6 @@ struct CompactPairHelper;
 template <typename A, typename B>
 struct CompactPairHelper<A, B, AsMember, AsMember> {
  protected:
-  template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
-            std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
-      : mFirstA(std::forward<AArgs>(std::get<AIndexes>(aATuple))...),
-        mSecondB(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...) {}
-
- public:
   template <typename AArg, typename BArg>
   CompactPairHelper(AArg&& aA, BArg&& aB)
       : mFirstA(std::forward<AArg>(aA)), mSecondB(std::forward<BArg>(aB)) {}
@@ -73,16 +62,6 @@ struct CompactPairHelper<A, B, AsMember, AsMember> {
 template <typename A, typename B>
 struct CompactPairHelper<A, B, AsMember, AsBase> : private B {
  protected:
-  template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
-            std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
-      : B(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...),
-        mFirstA(std::forward<AArgs>(std::get<AIndexes>(aATuple))...) {}
-
- public:
   template <typename AArg, typename BArg>
   CompactPairHelper(AArg&& aA, BArg&& aB)
       : B(std::forward<BArg>(aB)), mFirstA(std::forward<AArg>(aA)) {}
@@ -104,16 +83,6 @@ struct CompactPairHelper<A, B, AsMember, AsBase> : private B {
 template <typename A, typename B>
 struct CompactPairHelper<A, B, AsBase, AsMember> : private A {
  protected:
-  template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
-            std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
-      : A(std::forward<AArgs>(std::get<AIndexes>(aATuple))...),
-        mSecondB(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...) {}
-
- public:
   template <typename AArg, typename BArg>
   CompactPairHelper(AArg&& aA, BArg&& aB)
       : A(std::forward<AArg>(aA)), mSecondB(std::forward<BArg>(aB)) {}
@@ -135,16 +104,6 @@ struct CompactPairHelper<A, B, AsBase, AsMember> : private A {
 template <typename A, typename B>
 struct CompactPairHelper<A, B, AsBase, AsBase> : private A, private B {
  protected:
-  template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
-            std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
-      : A(std::forward<AArgs>(std::get<AIndexes>(aATuple))...),
-        B(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...) {}
-
- public:
   template <typename AArg, typename BArg>
   CompactPairHelper(AArg&& aA, BArg&& aB)
       : A(std::forward<AArg>(aA)), B(std::forward<BArg>(aB)) {}
@@ -182,13 +141,10 @@ template <typename A, typename B>
 struct CompactPair : private detail::CompactPairHelper<A, B> {
   typedef typename detail::CompactPairHelper<A, B> Base;
 
-  using Base::Base;
-
-  template <typename... AArgs, typename... BArgs>
-  CompactPair(std::piecewise_construct_t, std::tuple<AArgs...> aFirst,
-              std::tuple<BArgs...> aSecond)
-      : Base(aFirst, aSecond, std::index_sequence_for<AArgs...>(),
-             std::index_sequence_for<BArgs...>()) {}
+ public:
+  template <typename AArg, typename BArg>
+  CompactPair(AArg&& aA, BArg&& aB)
+      : Base(std::forward<AArg>(aA), std::forward<BArg>(aB)) {}
 
   CompactPair(CompactPair&& aOther) = default;
   CompactPair(const CompactPair& aOther) = default;
