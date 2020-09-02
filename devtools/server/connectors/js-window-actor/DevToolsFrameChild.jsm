@@ -36,7 +36,15 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
   const window = Services.wm.getCurrentInnerWindowWithId(
     windowGlobal.innerWindowId
   );
-  if (!window.docShell.hasLoadedNonBlankURI) {
+  // For some unknown reason, the print preview of PDFs generates an about:blank document,
+  // which, on the parent process, has windowGlobal.documentURI.spec set to the pdf's URL.
+  // So that Frame target helper accept this WindowGlobal and instantiate a target for it.
+  // Which is great as this is a valuable document to debug.
+  // But at the end of the day, in the content process, this ends up being an about:blank document,
+  // and hasLoadedNonBlankURI is always false.
+  // As print preview uses a dialog, check for `opener` being set. It is hard to find
+  // any very good differenciator...
+  if (!window.docShell.hasLoadedNonBlankURI && !browsingContext.opener) {
     return false;
   }
 
