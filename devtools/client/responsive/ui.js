@@ -294,7 +294,7 @@ class ResponsiveUI {
         [this.targetList.TYPES.FRAME],
         this.onTargetAvailable
       );
-      this.targetList.stopListening();
+      this.targetList.destroy();
     }
 
     this.tab.removeEventListener("TabClose", this);

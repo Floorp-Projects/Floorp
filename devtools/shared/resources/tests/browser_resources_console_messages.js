@@ -78,7 +78,7 @@ async function testConsoleMessagesResources() {
     "Got the expected number of runtime messages"
   );
 
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 }
 
@@ -129,7 +129,7 @@ async function testConsoleMessagesResourcesWithIgnoreExistingResources() {
     checkConsoleAPICall(message, expected);
   }
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 }
 

@@ -132,7 +132,7 @@ add_task(async function() {
     Object.assign(expectedResource, { styleText: "" })
   );
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 
