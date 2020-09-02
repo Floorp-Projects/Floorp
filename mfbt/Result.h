@@ -13,6 +13,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CompactPair.h"
 #include "mozilla/Types.h"
 #include "mozilla/Variant.h"
 
@@ -94,51 +95,64 @@ class ResultImplementation<V, E&, PackingStrategy::Variant> {
   const E& inspectErr() const { return *mStorage.template as<E*>(); }
 };
 
+// XXX For NullIsOk, we don't actually need default-constructibility. If V is
+// not, we just couldn't use a CompactPair<V, ...> but would need to use
+// uninitialized storage, which is much more complex (but would also be more
+// efficient if default construction of V is complex).
+
 /**
- * Specialization for when the success type is Ok (or another empty class) and
- * the error type is a reference.
+ * Specialization for when the success type is default-constructible and the
+ * error type is a reference.
  */
 template <typename V, typename E>
 class ResultImplementation<V, E&, PackingStrategy::NullIsOk> {
-  E* mErrorValue;
+  CompactPair<V, E*> mValue;
 
  public:
-  explicit ResultImplementation(V) : mErrorValue(nullptr) {}
-  explicit ResultImplementation(E& aErrorValue) : mErrorValue(&aErrorValue) {}
+  explicit ResultImplementation(const V& aSuccessValue)
+      : mValue(aSuccessValue, nullptr) {}
+  explicit ResultImplementation(V&& aSuccessValue)
+      : mValue(std::move(aSuccessValue), nullptr) {}
+  explicit ResultImplementation(E& aErrorValue) : mValue(V{}, &aErrorValue) {}
 
-  bool isOk() const { return mErrorValue == nullptr; }
+  bool isOk() const { return mValue.second() == nullptr; }
 
-  const V& inspect() const = delete;
-  V unwrap() { return V(); }
+  const V& inspect() const { return mValue.first(); }
+  V unwrap() { return std::move(mValue.first()); }
 
-  const E& inspectErr() const { return *mErrorValue; }
-  E& unwrapErr() { return *mErrorValue; }
+  const E& inspectErr() const { return *mValue.second(); }
+  E& unwrapErr() { return *mValue.second(); }
 };
 
 /**
- * Specialization for when the success type is Ok (or another empty class) and
- * the error type is a value type which can never have the value 0 (as
- * determined by UnusedZero<>).
+ * Specialization for when the success type is default-constructible and the
+ * error type is a value type which can never have the value 0 (as determined by
+ * UnusedZero<>).
  */
 template <typename V, typename E>
 class ResultImplementation<V, E, PackingStrategy::NullIsOk> {
   static constexpr E NullValue = E(0);
 
-  E mErrorValue;
+  CompactPair<V, E> mValue;
+
+  static_assert(std::is_trivially_copyable_v<E>);
 
  public:
-  explicit ResultImplementation(V) : mErrorValue(NullValue) {}
-  explicit ResultImplementation(E aErrorValue) : mErrorValue(aErrorValue) {
+  explicit ResultImplementation(const V& aSuccessValue)
+      : mValue(aSuccessValue, NullValue) {}
+  explicit ResultImplementation(V&& aSuccessValue)
+      : mValue(std::move(aSuccessValue), NullValue) {}
+  explicit ResultImplementation(E aErrorValue) : mValue(V{}, aErrorValue) {
     MOZ_ASSERT(aErrorValue != NullValue);
   }
 
-  bool isOk() const { return mErrorValue == NullValue; }
+  bool isOk() const { return mValue.second() == NullValue; }
 
-  const V& inspect() const = delete;
-  V unwrap() { return V(); }
+  const V& inspect() const { return mValue.first(); }
+  V unwrap() { return std::move(mValue.first()); }
 
-  const E& inspectErr() const { return mErrorValue; }
-  E unwrapErr() { return std::move(mErrorValue); }
+  const E& inspectErr() const { return mValue.second(); }
+  E unwrapErr() { return std::move(mValue.second()); }
 };
 
 /**
@@ -267,17 +281,18 @@ struct HasFreeLSB<T&> {
 template <typename V, typename E>
 struct SelectResultImpl {
   static const PackingStrategy value =
-      (std::is_empty_v<V> && UnusedZero<E>::value)
-          ? PackingStrategy::NullIsOk
-          : (detail::HasFreeLSB<V>::value && detail::HasFreeLSB<E>::value)
-                ? PackingStrategy::LowBitTagIsError
+      (HasFreeLSB<V>::value && HasFreeLSB<E>::value)
+          ? PackingStrategy::LowBitTagIsError
+          : (std::is_trivially_default_constructible_v<V> &&
+             UnusedZero<E>::value && sizeof(E) <= sizeof(uintptr_t))
+                ? PackingStrategy::NullIsOk
                 : (std::is_default_constructible_v<V> &&
                    std::is_default_constructible_v<E> &&
                    IsPackableVariant<V, E>::value)
                       ? PackingStrategy::PackedVariant
                       : PackingStrategy::Variant;
 
-  using Type = detail::ResultImplementation<V, E, value>;
+  using Type = ResultImplementation<V, E, value>;
 };
 
 template <typename T>
