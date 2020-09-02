@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES.themes['alpenglow'] += [
+FINAL_TARGET_FILES.modules['themes']['alpenglow'] += [
     'background-gradient-dark.svg',
     'background-gradient.svg',
     'background-noodles-left-dark.svg',
