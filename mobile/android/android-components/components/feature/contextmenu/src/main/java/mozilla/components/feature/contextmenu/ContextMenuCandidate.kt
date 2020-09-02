@@ -89,7 +89,7 @@ data class ContextMenuCandidate(
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_in_new_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_new_tab),
-            showFor = { tab, hitResult -> hitResult.isLink() && !tab.content.private },
+            showFor = { tab, hitResult -> hitResult.isHttpLink() && !tab.content.private },
             action = { parent, hitResult ->
                 val tab = tabsUseCases.addTab(
                     hitResult.getLink(),
@@ -121,7 +121,7 @@ data class ContextMenuCandidate(
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_in_private_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_private_tab),
-            showFor = { _, hitResult -> hitResult.isLink() },
+            showFor = { _, hitResult -> hitResult.isHttpLink() },
             action = { parent, hitResult ->
                 val tab = tabsUseCases.addPrivateTab(
                     hitResult.getLink(),
@@ -307,7 +307,7 @@ data class ContextMenuCandidate(
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.share_link",
             label = context.getString(R.string.mozac_feature_contextmenu_share_link),
-            showFor = { _, hitResult -> hitResult.isLink() },
+            showFor = { _, hitResult -> hitResult.isUri() },
             action = { _, hitResult ->
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
@@ -347,7 +347,7 @@ data class ContextMenuCandidate(
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.copy_link",
             label = context.getString(R.string.mozac_feature_contextmenu_copy_link),
-            showFor = { _, hitResult -> hitResult.isLink() },
+            showFor = { _, hitResult -> hitResult.isUri() },
             action = { _, hitResult ->
                 clipPlaintText(context, hitResult.getLink(), hitResult.getLink(),
                     R.string.mozac_feature_contextmenu_snackbar_link_copied, snackBarParentView,
@@ -427,14 +427,16 @@ private fun HitResult.isImage(): Boolean =
 private fun HitResult.isVideoAudio(): Boolean =
     (this is HitResult.VIDEO || this is HitResult.AUDIO) && src.isNotEmpty()
 
-private fun HitResult.isLink(): Boolean =
-    ((this is HitResult.UNKNOWN && src.isNotEmpty()) || this is HitResult.IMAGE_SRC) &&
-        getLink().startsWith("http")
+private fun HitResult.isUri(): Boolean =
+    ((this is HitResult.UNKNOWN && src.isNotEmpty()) || this is HitResult.IMAGE_SRC)
+
+private fun HitResult.isHttpLink(): Boolean =
+    isUri() && getLink().startsWith("http")
 
 private fun HitResult.isLinkForOtherThanWebpage(): Boolean {
     val link = getLink()
     val isHtml = link.endsWith("html") || link.endsWith("htm")
-    return isLink() && !isHtml
+    return isHttpLink() && !isHtml
 }
 
 private fun HitResult.isIntent(): Boolean =
@@ -446,7 +448,7 @@ private fun HitResult.isMailto(): Boolean =
         getLink().startsWith("mailto:")
 
 private fun HitResult.canOpenInExternalApp(appLinksUseCases: AppLinksUseCases): Boolean {
-    if (isLink() || isIntent() || isVideoAudio()) {
+    if (isHttpLink() || isIntent() || isVideoAudio()) {
         val redirect = appLinksUseCases.appLinkRedirectIncludeInstall(getLink())
         return redirect.hasExternalApp() || redirect.hasMarketplaceIntent()
     }
