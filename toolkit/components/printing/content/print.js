@@ -178,9 +178,7 @@ var PrintEventHandler = {
   },
 
   unload() {
-    this.previewBrowser.messageManager.sendAsyncMessage(
-      "Printing:Preview:Exit"
-    );
+    this.previewBrowser.frameLoader.exitPrintPreview();
   },
 
   _createPreviewBrowser(sourceBrowsingContext) {
@@ -251,7 +249,6 @@ var PrintEventHandler = {
 
   async print(systemDialogSettings) {
     let settings = systemDialogSettings || this.settings;
-    settings.printSilent = true;
 
     if (settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
       try {
@@ -363,77 +360,32 @@ var PrintEventHandler = {
    * Create a print preview for the provided source browsingContext, or refresh
    * the preview with new settings when omitted.
    *
-   * @param browsingContext {BrowsingContext} [optional]
+   * @param sourceBrowsingContext {BrowsingContext} [optional]
    *        The source BrowsingContext (the one associated with a tab or
    *        subdocument) that should be previewed.
    *
    * @return {Promise} Resolves when the preview has been updated.
    */
-  async _updatePrintPreview(browsingContext) {
+  async _updatePrintPreview(sourceBrowsingContext) {
     let { previewBrowser, settings } = this;
+
+    // We never want the progress dialog to show
+    settings.showPrintProgress = false;
+
     let stack = previewBrowser.parentElement;
     stack.setAttribute("rendering", true);
     document.body.setAttribute("rendering", true);
 
-    let networkDone = false;
-    let documentDone = false;
-
-    let totalPages = await new Promise(resolve => {
-      let numPages;
-
-      function onStateChange(msg) {
-        // We get 2 STATE_STOP events, make sure they've both completed.
-        if (msg.data.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          networkDone =
-            networkDone ||
-            msg.data.stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
-          documentDone =
-            documentDone ||
-            msg.data.stateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
-
-          if (networkDone && documentDone) {
-            cleanup();
-            resolve(numPages);
-          }
-        }
-      }
-
-      function onUpdatePageCount(msg) {
-        numPages = msg.data.totalPages;
-      }
-
-      function cleanup() {
-        previewBrowser.messageManager.removeMessageListener(
-          "Printing:Preview:UpdatePageCount",
-          onUpdatePageCount
-        );
-        previewBrowser.messageManager.removeMessageListener(
-          "Printing:Preview:StateChange",
-          onStateChange
-        );
-      }
-
-      previewBrowser.messageManager.addMessageListener(
-        "Printing:Preview:StateChange",
-        onStateChange
-      );
-      previewBrowser.messageManager.addMessageListener(
-        "Printing:Preview:UpdatePageCount",
-        onUpdatePageCount
-      );
-
-      previewBrowser.messageManager.sendAsyncMessage("Printing:Preview:Enter", {
-        changingBrowsers: false,
-        lastUsedPrinterName: settings.printerName,
-        simplifiedMode: false,
-        browsingContextId:
-          browsingContext?.id || previewBrowser.browsingContext.id,
-        outputFormat: settings.outputFormat,
-        startPageRange: settings.startPageRange,
-        endPageRange: settings.endPageRange,
-        printRange: settings.printRange,
-      });
-    });
+    let sourceWinId;
+    if (sourceBrowsingContext) {
+      sourceWinId = sourceBrowsingContext.currentWindowGlobal.outerWindowId;
+    }
+    // This resolves with a PrintPreviewSuccessInfo dictionary.  That also has
+    // a `sheetCount` property available which we should use (bug 1662331).
+    let { totalPageCount } = await previewBrowser.frameLoader.printPreview(
+      settings,
+      sourceWinId
+    );
 
     if (this._queuedPreviewUpdatePromise) {
       // Now that we're done, the queued update (if there is one) will start.
@@ -441,13 +393,15 @@ var PrintEventHandler = {
       this._queuedPreviewUpdatePromise = null;
     } else {
       // No other update queued, send the page count and show the preview.
-      let numPages = totalPages;
+      let numPages = totalPageCount;
       // Adjust number of pages if the user specifies the pages they want printed
       if (settings.printRange == Ci.nsIPrintSettings.kRangeSpecifiedPageRange) {
         numPages = settings.endPageRange - settings.startPageRange + 1;
       }
       document.dispatchEvent(
-        new CustomEvent("page-count", { detail: { numPages, totalPages } })
+        new CustomEvent("page-count", {
+          detail: { numPages, totalPages: totalPageCount },
+        })
       );
 
       stack.removeAttribute("rendering");

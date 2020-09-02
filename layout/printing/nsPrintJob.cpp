@@ -651,10 +651,28 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // The dialog is not shown, but this means we don't need to access the printer
   // driver from the child, which causes sandboxing issues.
   if (!mIsCreatingPrintPreview || printingViaParent) {
-    bool printSilently = false;
-    printData->mPrintSettings->GetPrintSilent(&printSilently);
-    if (StaticPrefs::print_always_print_silent()) {
-      printSilently = true;
+    bool printSilentOnSettings = false;
+    printData->mPrintSettings->GetPrintSilent(&printSilentOnSettings);
+
+    bool printSilently =
+        printSilentOnSettings || StaticPrefs::print_always_print_silent();
+
+    // The new print UI does not need to enter ShowPrintDialog below to spin
+    // the event loop and fetch real printer settings from the parent process,
+    // since it always passes complete print settings. (In fact, trying to
+    // fetch them from the parent can cause crashes.) Here we check for that
+    // case so that we can avoid calling ShowPrintDialog below. To err on the
+    // safe side, we exclude the old UI and non-frontend callers
+    // (Extensions.tabs.saveAsPDF()) which set `printSilent` on the settings
+    // object.
+    // We should remove the exception for tabx.saveAsPDF soon:
+    //   https://bugzilla.mozilla.org/show_bug.cgi?id=1662222
+    // Slightly longer term we'll remove the old print UI, and even change the
+    // check for `isInitializedFromPrinter` to a MOZ_DIAGNOSTIC_ASSERT.
+    bool settingsAreComplete = false;
+    if (StaticPrefs::print_tab_modal_enabled() && !printSilentOnSettings) {
+      printData->mPrintSettings->GetIsInitializedFromPrinter(
+          &settingsAreComplete);
     }
 
     // Ask dialog to be Print Shown via the Plugable Printing Dialog Service
@@ -662,7 +680,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     // If printing silently or you can't get the service continue on
     // If printing via the parent then we need to confirm that the pref is set
     // and get a remote print job, but the parent won't display a prompt.
-    if (!printSilently || printingViaParent) {
+    if (!settingsAreComplete && (!printSilently || printingViaParent)) {
       nsCOMPtr<nsIPrintingPromptService> printPromptService(
           do_GetService(kPrintingPromptService));
       if (printPromptService) {
@@ -752,7 +770,16 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         // No dialog service available
         rv = NS_ERROR_NOT_IMPLEMENTED;
       }
-    } else {
+    } else if (printSilently && !printingViaParent) {
+      // The condition above is only so contorted in order to enter this block
+      // under the exact same circumstances as we used to, in order to
+      // minimize risk for this change which may be getting late Beta uplift.
+      // Frankly calling SetupSilentPrinting should not be necessary any more
+      // since nsDeviceContextSpecGTK::EndDocument does what we need using a
+      // Runnable instead of spinning an event loop in a risk place like here.
+      // Additionally we should never need to do this when setting up print
+      // preview, we would only need it for printing.
+
       // Call any code that requires a run of the event loop.
       rv = printData->mPrintSettings->SetupSilentPrinting();
     }
@@ -1077,6 +1104,11 @@ nsresult nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting) {
 
 //---------------------------------------------------------------------
 void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
+  if (mPrintPreviewCallback) {
+    mPrintPreviewCallback(PrintPreviewResultInfo(0, 0));  // signal error
+    mPrintPreviewCallback = nullptr;
+  }
+
   nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
   if (NS_WARN_IF(!cv)) {
     return;
@@ -2422,7 +2454,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   // NOTE: All POs have been "turned off" for printing
   // this is where we decided which POs get printed.
 
-  if (!printData->mPrintSettings) {
+  if (!printData || !printData->mPrintSettings) {
     return NS_ERROR_FAILURE;
   }
 
