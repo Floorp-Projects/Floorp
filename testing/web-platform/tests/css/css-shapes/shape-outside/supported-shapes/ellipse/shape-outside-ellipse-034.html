@@ -4,23 +4,24 @@
 
 <html>
   <meta charset="utf-8">
-  <title>CSS Shape Test: float left, ellipse(40px 60px at left top)</title>
+  <title>CSS Shape Test: float right, ellipse(40px 60px at right top)</title>
   <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
   <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
   <link rel="help" href="https://drafts.csswg.org/css-shapes-1/#supported-basic-shapes">
-  <link rel="match" href="shape-outside-ellipse-032-ref.html">
+  <link rel="match" href="reference/shape-outside-ellipse-034-ref.html">
   <meta name="flags" content="">
-  <meta name="assert" content="Test the boxes are wrapping around the left float shape defined by the basic shape ellipse(40px 60px at left top) value.">
+  <meta name="assert" content="Test the boxes are wrapping around the right float shape defined by the basic shape ellipse(40px 60px at right top)">
   <style>
   .container {
+    direction: rtl;
     width: 200px;
     line-height: 0;
   }
 
   .shape {
-    float: left;
-    shape-outside: ellipse(40px 60px at left top);
-    clip-path: ellipse(40px 60px at left top);
+    float: right;
+    shape-outside: ellipse(40px 60px at right top);
+    clip-path: ellipse(40px 60px at right top);
     box-sizing: content-box;
     height: 40px;
     width: 40px;
