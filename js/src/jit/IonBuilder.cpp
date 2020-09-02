@@ -11956,18 +11956,20 @@ AbortReasonOr<Ok> IonBuilder::jsop_functionthis() {
                  "JSOp::FunctionThis would need non-syntactic global");
   }
 
+  LexicalEnvironmentObject* globalLexical =
+      &script()->global().lexicalEnvironment();
+  JSObject* globalThis = globalLexical->thisObject();
+
   if (IsNullOrUndefined(def->type())) {
-    LexicalEnvironmentObject* globalLexical =
-        &script()->global().lexicalEnvironment();
-    pushConstant(ObjectValue(*globalLexical->thisObject()));
+    pushConstant(ObjectValue(*globalThis));
     return Ok();
   }
 
-  MBoxNonStrictThis* thisObj = MBoxNonStrictThis::New(alloc(), def);
+  MBoxNonStrictThis* thisObj = MBoxNonStrictThis::New(alloc(), def, globalThis);
   current->add(thisObj);
   current->push(thisObj);
 
-  return resumeAfter(thisObj);
+  return Ok();
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_globalthis() {
