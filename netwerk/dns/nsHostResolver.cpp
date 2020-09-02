@@ -1425,10 +1425,11 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
       rectype = TRRTYPE_TXT;
     } else if (rec->type == nsIDNSService::RESOLVE_TYPE_HTTPSSVC) {
       rectype = TRRTYPE_HTTPSSVC;
-    }
-
-    if (pushedTRR) {
+    } else if (pushedTRR) {
       rectype = pushedTRR->Type();
+    } else {
+      MOZ_ASSERT(false, "Not an expected request type");
+      return NS_ERROR_UNKNOWN_HOST;
     }
 
     LOG(("TRR Resolve %s type %d\n", typeRec->host.get(), (int)rectype));
