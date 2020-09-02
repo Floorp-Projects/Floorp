@@ -8,6 +8,7 @@
 #ifndef nsTSubstring_h
 #define nsTSubstring_h
 
+#include <iterator>
 #include <type_traits>
 
 #include "mozilla/Casting.h"
@@ -1386,14 +1387,27 @@ class nsTSubstringSplitter {
 
   class nsTSubstringSplit_Iter {
    public:
-    nsTSubstringSplit_Iter(const nsTSubstringSplitter<T>& aObj, size_type aPos)
+    using value_type = const nsTDependentSubstring<T>;
+    using pointer = value_type*;
+    using reference = value_type&;
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = ptrdiff_t;
+
+    nsTSubstringSplit_Iter() : mObj(nullptr), mPos(0) {}
+
+    nsTSubstringSplit_Iter(const nsTSubstringSplitter<T>* aObj, size_type aPos)
         : mObj(aObj), mPos(aPos) {}
 
+    bool operator==(const nsTSubstringSplit_Iter& other) const {
+      MOZ_ASSERT(mObj == other.mObj);
+      return mPos == other.mPos;
+    }
     bool operator!=(const nsTSubstringSplit_Iter& other) const {
-      return mPos != other.mPos;
+      return !(*this == other);
     }
 
     const nsTDependentSubstring<T>& operator*() const;
+    const nsTDependentSubstring<T>* operator->() const;
 
     const nsTSubstringSplit_Iter& operator++() {
       ++mPos;
@@ -1401,7 +1415,7 @@ class nsTSubstringSplitter {
     }
 
    private:
-    const nsTSubstringSplitter<T>& mObj;
+    const nsTSubstringSplitter<T>* mObj;
     size_type mPos;
   };
 
@@ -1415,11 +1429,11 @@ class nsTSubstringSplitter {
   nsTSubstringSplitter(const nsTSubstring<T>* aStr, char_type aDelim);
 
   nsTSubstringSplit_Iter begin() const {
-    return nsTSubstringSplit_Iter(*this, 0);
+    return nsTSubstringSplit_Iter(this, 0);
   }
 
   nsTSubstringSplit_Iter end() const {
-    return nsTSubstringSplit_Iter(*this, mArraySize);
+    return nsTSubstringSplit_Iter(this, mArraySize);
   }
 
   const nsTDependentSubstring<T>& Get(const size_type index) const {
