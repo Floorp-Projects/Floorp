@@ -843,23 +843,6 @@ class MozbuildObject(ProcessExecutionMixin):
     def _set_log_level(self, verbose):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
 
-    def ensure_pipenv(self):
-        self.activate_virtualenv()
-        pipenv = os.path.join(self.virtualenv_manager.bin_path, 'pipenv')
-        if not os.path.exists(pipenv + '.exe' if self._is_windows() else pipenv):
-            for package in ['certifi', 'pipenv', 'six', 'virtualenv', 'virtualenv-clone']:
-                path = os.path.normpath(os.path.join(
-                    self.topsrcdir, 'third_party/python', package))
-                self.virtualenv_manager.install_pip_package(path, vendored=True)
-
-    def activate_pipenv(self, workon_home, pipfile=None, populate=False,
-                        python=None):
-        if pipfile is not None and not os.path.exists(pipfile):
-            raise Exception('Pipfile not found: %s.' % pipfile)
-        self.ensure_pipenv()
-        self.virtualenv_manager.activate_pipenv(workon_home, pipfile, populate,
-                                                python)
-
     def _ensure_zstd(self):
         try:
             import zstandard  # noqa: F401

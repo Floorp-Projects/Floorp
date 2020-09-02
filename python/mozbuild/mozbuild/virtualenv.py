@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -655,110 +654,6 @@ class VirtualenvManager(VirtualenvHelper):
         pip = os.path.join(self.bin_path, 'pip')
         subprocess.check_call([pip] + args, stderr=subprocess.STDOUT, cwd=self.topsrcdir,
                               universal_newlines=PY3)
-
-    def activate_pipenv(self, workon_home, pipfile=None, populate=False,
-                        python=None):
-        """Activate a virtual environment managed by pipenv
-
-        If ``pipfile`` is not ``None`` then the Pipfile located at the path
-        provided will be used to create the virtual environment. If
-        ``populate`` is ``True`` then the virtual environment will be
-        populated from the manifest file. The optional ``python`` argument
-        indicates the version of Python for pipenv to use.
-        """
-
-        import distutils.sysconfig
-        from distutils.version import LooseVersion
-
-        pipenv = os.path.join(self.bin_path, 'pipenv')
-        env = ensure_subprocess_env(os.environ.copy())
-        env.update(ensure_subprocess_env({
-            'PIPENV_IGNORE_VIRTUALENVS': '1',
-            'WORKON_HOME': str(os.path.normpath(workon_home)),
-        }))
-        # On mac, running pipenv with LC_CTYPE set to "UTF-8" (which happens
-        # when wrapping with run-task on automation) fails.
-        # Unsetting it doesn't really matter for what pipenv does.
-        env.pop('LC_CTYPE', None)
-
-        # Avoid click RuntimeError under python 3 on linux: http://click.pocoo.org/python3/
-        if PY3 and sys.platform == 'linux':
-            env.update(ensure_subprocess_env({
-                'LC_ALL': 'C.UTF-8',
-                'LANG': 'C.UTF-8'
-            }))
-
-        if python is not None:
-            env.update(ensure_subprocess_env({
-                'PIPENV_DEFAULT_PYTHON_VERSION': str(python),
-                'PIPENV_PYTHON': str(python)
-            }))
-
-        def ensure_venv():
-            """Create virtual environment if needed and return path"""
-            if python is not None:
-                if os.path.exists(python):
-                    pipenv_python = python
-                else:
-                    # If the desired python version matches the running python version,
-                    # then have pipenv install that same identical version.
-                    # Without this logic, pipenv would be more aggressive at finding the
-                    # newest possible relevant python version available.
-                    # However, due to "purge a venv if it has a different version" logic
-                    # we have elsewhere in-tree, it is more useful to have consistent
-                    # venv versions than new-as-possible venv versions.
-                    target_version = LooseVersion(python)
-                    current_version = LooseVersion(platform.python_version())
-                    pipenv_python = sys.executable
-
-                    for target, current in zip(target_version.version, current_version.version):
-                        if target != current:
-                            pipenv_python = python
-
-            venv = get_venv()
-            if venv is not None:
-                return venv
-            if python is not None:
-                subprocess.check_call(
-                    [pipenv, '--python', pipenv_python],
-                    stderr=subprocess.STDOUT,
-                    env=env)
-            return get_venv()
-
-        def get_venv():
-            """Return path to virtual environment or None"""
-            try:
-                sub_env = env.copy()
-                sub_env.pop('PYCHARM_HOSTED', None)
-                return subprocess.check_output(
-                        [pipenv, '--venv'],
-                        stderr=subprocess.STDOUT,
-                        env=sub_env, universal_newlines=True).rstrip()
-
-            except subprocess.CalledProcessError:
-                # virtual environment does not exist
-                return None
-
-        if pipfile is not None:
-            # Install from Pipfile
-            env.update(ensure_subprocess_env({
-                'PIPENV_PIPFILE': str(pipfile)
-            }))
-            subprocess.check_call([pipenv, 'install'], stderr=subprocess.STDOUT, env=env)
-
-        self.virtualenv_root = ensure_venv()
-
-        if populate:
-            # Populate from the manifest
-            args = [
-                pipenv, 'run', 'python', os.path.join(here, 'virtualenv.py'), 'populate',
-                self.topsrcdir, self.virtualenv_root, self.manifest_path,
-                '--parent-site-dir', distutils.sysconfig.get_python_lib()]
-            if self.populate_local_paths:
-                args.append('--populate-local-paths')
-            subprocess.check_call(args, stderr=subprocess.STDOUT, env=env)
-
-        self.activate()
 
 
 def verify_python_version(log_handle):
