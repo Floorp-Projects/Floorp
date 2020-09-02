@@ -112,8 +112,9 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
     return NS_ERROR_FAILURE;
   }
   EditorRawDOMPoint atEndOfLeftNode(EditorRawDOMPoint::AtEndOf(newLeftContent));
-  selection->Collapse(atEndOfLeftNode, error);
-  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+  selection->CollapseInLimiter(atEndOfLeftNode, error);
+  NS_WARNING_ASSERTION(!error.Failed(),
+                       "Selection::CollapseInLimiter() failed");
   return error.StealNSResult();
 }
 

@@ -2186,7 +2186,7 @@ void Selection::CollapseToStart(ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  Collapse(*container, firstRange->StartOffset(), aRv);
+  CollapseInLimiter(*container, firstRange->StartOffset(), aRv);
 }
 
 /*
@@ -2222,7 +2222,7 @@ void Selection::CollapseToEnd(ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  Collapse(*container, lastRange->EndOffset(), aRv);
+  CollapseInLimiter(*container, lastRange->EndOffset(), aRv);
 }
 
 void Selection::GetType(nsAString& aOutType) const {
@@ -3198,7 +3198,7 @@ void Selection::DeleteFromDocument(ErrorResult& aRv) {
   // If we deleted one character, then we move back one element.
   // FIXME  We don't know how to do this past frame boundaries yet.
   if (AnchorOffset() > 0) {
-    Collapse(GetAnchorNode(), AnchorOffset());
+    CollapseInLimiter(GetAnchorNode(), AnchorOffset());
   }
 #ifdef DEBUG
   else {
@@ -3275,7 +3275,7 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
       return;
     }
     uint32_t focusOffset = FocusOffset();
-    Collapse(focusNode, focusOffset);
+    CollapseInLimiter(focusNode, focusOffset);
   }
 
   // If the paragraph direction of the focused frame is right-to-left,
