@@ -14,6 +14,7 @@ import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.profiler.Profiler
+import mozilla.components.browser.engine.gecko.util.SpeculativeSessionFactory
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
 import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushDelegate
@@ -69,9 +70,8 @@ class GeckoEngine(
 ) : Engine, WebExtensionRuntime {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
-    @VisibleForTesting internal var speculativeSession: GeckoEngineSession? = null
     private val sharedPref = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
-
+    @VisibleForTesting internal val speculativeConnectionFactory = SpeculativeSessionFactory()
     private var webExtensionDelegate: WebExtensionDelegate? = null
     private val webExtensionActionHandler = object : ActionHandler {
         override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
@@ -150,17 +150,8 @@ class GeckoEngine(
      */
     override fun createSession(private: Boolean, contextId: String?): EngineSession {
         ThreadUtils.assertOnUiThread()
-        val speculativeSession = this.speculativeSession?.let { speculativeSession ->
-            if (speculativeSession.geckoSession.settings.usePrivateMode == private &&
-                speculativeSession.geckoSession.settings.contextId == contextId) {
-                speculativeSession
-            } else {
-                speculativeSession.close()
-                null
-            }.also {
-                this.speculativeSession = null
-            }
-        }
+
+        val speculativeSession = speculativeConnectionFactory.get(private, contextId)
         return speculativeSession ?: GeckoEngineSession(runtime, private, defaultSettings, contextId)
     }
 
@@ -175,20 +166,14 @@ class GeckoEngine(
      * See [Engine.speculativeCreateSession].
      */
     override fun speculativeCreateSession(private: Boolean, contextId: String?) {
-        ThreadUtils.assertOnUiThread()
-        if (this.speculativeSession?.geckoSession?.settings?.usePrivateMode != private ||
-            this.speculativeSession?.geckoSession?.settings?.contextId != contextId) {
-            this.speculativeSession?.geckoSession?.close()
-            this.speculativeSession = GeckoEngineSession(runtime, private, defaultSettings, contextId)
-        }
+        speculativeConnectionFactory.create(runtime, private, contextId, defaultSettings)
     }
 
     /**
      * See [Engine.clearSpeculativeSession].
      */
     override fun clearSpeculativeSession() {
-        this.speculativeSession?.geckoSession?.close()
-        this.speculativeSession = null
+        speculativeConnectionFactory.clear()
     }
 
     /**
