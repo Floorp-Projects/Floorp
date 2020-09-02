@@ -272,7 +272,9 @@ NS_IMETHODIMP
 nsDNSRecord::GetScriptableNextAddr(uint16_t port, nsINetAddr** result) {
   NetAddr addr;
   nsresult rv = GetNextAddr(port, &addr);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   RefPtr<nsNetAddr> netaddr = new nsNetAddr(&addr);
   netaddr.forget(result);
@@ -284,7 +286,9 @@ NS_IMETHODIMP
 nsDNSRecord::GetNextAddrAsString(nsACString& result) {
   NetAddr addr;
   nsresult rv = GetNextAddr(0, &addr);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   char buf[kIPv6CStrBufSize];
   if (NetAddrToString(&addr, buf, sizeof(buf))) {
@@ -934,8 +938,9 @@ nsresult nsDNSService::AsyncResolveInternal(
   {
     MutexAutoLock lock(mLock);
 
-    if (mDisablePrefetch && (flags & RESOLVE_SPECULATE))
+    if (mDisablePrefetch && (flags & RESOLVE_SPECULATE)) {
       return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
+    }
 
     res = mResolver;
     idn = mIDN;
@@ -946,7 +951,9 @@ nsresult nsDNSService::AsyncResolveInternal(
     NS_DispatchToMainThread(new NotifyDNSResolution(aHostname));
   }
 
-  if (!res) return NS_ERROR_OFFLINE;
+  if (!res) {
+    return NS_ERROR_OFFLINE;
+  }
 
   if ((type != RESOLVE_TYPE_DEFAULT) && (type != RESOLVE_TYPE_TXT) &&
       (type != RESOLVE_TYPE_HTTPSSVC)) {
@@ -988,7 +995,9 @@ nsresult nsDNSService::AsyncResolveInternal(
   RefPtr<nsDNSAsyncRequest> req =
       new nsDNSAsyncRequest(res, hostname, DNSResolverInfo::URL(aResolver),
                             type, aOriginAttributes, listener, flags, af);
-  if (!req) return NS_ERROR_OUT_OF_MEMORY;
+  if (!req) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   rv = res->ResolveHost(req->mHost, DNSResolverInfo::URL(aResolver), type,
                         req->mOriginAttributes, flags, af, req);
@@ -1008,14 +1017,17 @@ nsresult nsDNSService::CancelAsyncResolveInternal(
   {
     MutexAutoLock lock(mLock);
 
-    if (mDisablePrefetch && (aFlags & RESOLVE_SPECULATE))
+    if (mDisablePrefetch && (aFlags & RESOLVE_SPECULATE)) {
       return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
+    }
 
     res = mResolver;
     idn = mIDN;
     localDomain = mLocalDomains.GetEntry(aHostname);
   }
-  if (!res) return NS_ERROR_OFFLINE;
+  if (!res) {
+    return NS_ERROR_OFFLINE;
+  }
 
   nsCString hostname;
   nsresult rv = PreprocessHostname(localDomain, aHostname, idn, hostname);
@@ -1176,7 +1188,9 @@ nsresult nsDNSService::ResolveInternal(
   //
 
   PRMonitor* mon = PR_NewMonitor();
-  if (!mon) return NS_ERROR_OUT_OF_MEMORY;
+  if (!mon) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   PR_EnterMonitor(mon);
   RefPtr<nsDNSSyncRequest> syncReq = new nsDNSSyncRequest(mon);
@@ -1254,7 +1268,9 @@ nsDNSService::Observe(nsISupports* subject, const char* topic,
 }
 
 uint16_t nsDNSService::GetAFForLookup(const nsACString& host, uint32_t flags) {
-  if (mDisableIPv6 || (flags & RESOLVE_DISABLE_IPV6)) return PR_AF_INET;
+  if (mDisableIPv6 || (flags & RESOLVE_DISABLE_IPV6)) {
+    return PR_AF_INET;
+  }
 
   MutexAutoLock lock(mLock);
 
@@ -1274,11 +1290,15 @@ uint16_t nsDNSService::GetAFForLookup(const nsACString& host, uint32_t flags) {
 
     do {
       // skip any whitespace
-      while (*domain == ' ' || *domain == '\t') ++domain;
+      while (*domain == ' ' || *domain == '\t') {
+        ++domain;
+      }
 
       // find end of this domain in the string
       end = strchr(domain, ',');
-      if (!end) end = domainEnd;
+      if (!end) {
+        end = domainEnd;
+      }
 
       // to see if the hostname is in the domain, check if the domain
       // matches the end of the hostname.
@@ -1300,7 +1320,9 @@ uint16_t nsDNSService::GetAFForLookup(const nsACString& host, uint32_t flags) {
     } while (*end);
   }
 
-  if ((af != PR_AF_INET) && (flags & RESOLVE_DISABLE_IPV4)) af = PR_AF_INET6;
+  if ((af != PR_AF_INET) && (flags & RESOLVE_DISABLE_IPV4)) {
+    af = PR_AF_INET6;
+  }
 
   return af;
 }
