@@ -54,6 +54,8 @@ class GeckoViewContent extends GeckoViewModule {
       /* untrusted */ false
     );
 
+    this.window.addEventListener("pagetitlechanged", this);
+
     Services.obs.addObserver(this, "oop-frameloader-crashed");
     Services.obs.addObserver(this, "ipc:content-shutdown");
   }
@@ -74,6 +76,8 @@ class GeckoViewContent extends GeckoViewModule {
       this,
       /* capture */ true
     );
+
+    this.window.removeEventListener("pagetitlechanged", this);
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
     Services.obs.removeObserver(this, "ipc:content-shutdown");
@@ -185,6 +189,12 @@ class GeckoViewContent extends GeckoViewModule {
         break;
       case "MozDOMFullscreen:Exited":
         this.sendToAllChildren("GeckoView:DOMFullscreenExited");
+        break;
+      case "pagetitlechanged":
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:PageTitleChanged",
+          title: this.browser.contentTitle,
+        });
         break;
     }
   }
