@@ -231,12 +231,9 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
    */
   void InvalidateCanvas();
 
-  /*
-   * Get the number of contexts in this canvas, and request a context at
-   * an index.
-   */
-  int32_t CountContexts();
-  nsICanvasRenderingContextInternal* GetContextAtIndex(int32_t index);
+  nsICanvasRenderingContextInternal* GetCurrentContext() {
+    return mCurrentContext;
+  }
 
   /*
    * Returns true if the canvas context content is guaranteed to be opaque
