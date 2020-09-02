@@ -116,7 +116,7 @@ add_task(async function() {
   assertNoPrivateMessages(hud);
 
   info("close the browser console");
-  await BrowserConsoleManager.toggleBrowserConsole();
+  await safeCloseBrowserConsole();
 
   info("reopen the browser console");
   hud = await BrowserConsoleManager.toggleBrowserConsole();

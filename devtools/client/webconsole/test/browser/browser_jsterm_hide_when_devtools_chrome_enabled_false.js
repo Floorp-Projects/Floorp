@@ -54,9 +54,9 @@ add_task(async function() {
   // while the connection is being destroyed.
   await waitForSourceMapWorker(browserConsole);
   await closeConsole(browserTab);
-  await BrowserConsoleManager.toggleBrowserConsole();
-  Services.prefs.setBoolPref("devtools.chrome.enabled", false);
+  await safeCloseBrowserConsole();
 
+  Services.prefs.setBoolPref("devtools.chrome.enabled", false);
   browserConsole = await BrowserConsoleManager.toggleBrowserConsole();
   objInspector = await logObject(browserConsole);
   testInputRelatedElementsAreNotVisibile(browserConsole);
@@ -72,7 +72,7 @@ add_task(async function() {
   // while the connection is being destroyed.
   await waitForSourceMapWorker(browserConsole);
   await closeConsole(browserTab);
-  await BrowserConsoleManager.toggleBrowserConsole();
+  await safeCloseBrowserConsole();
 });
 
 async function logObject(hud) {

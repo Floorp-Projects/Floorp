@@ -104,6 +104,7 @@ async function testBrowserFrames(mainRoot) {
   */
 
   targetList.destroy();
+  await waitForAllTargetsToBeAttached(targetList);
 }
 
 async function testTabFrames(mainRoot) {
@@ -157,6 +158,7 @@ async function testTabFrames(mainRoot) {
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onAvailable);
 
   targetList.destroy();
+  await waitForAllTargetsToBeAttached(targetList);
 
   BrowserTestUtils.removeTab(tab);
 }
