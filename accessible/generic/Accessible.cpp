@@ -591,13 +591,7 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
 nsRect Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
   nsIFrame* frame = GetFrame();
   if (frame && mContent) {
-    bool* pHasHitRegionRect =
-        static_cast<bool*>(mContent->GetProperty(nsGkAtoms::hitregion));
-    MOZ_ASSERT(!pHasHitRegionRect || *pHasHitRegionRect,
-               "hitregion property is always null or true");
-    bool hasHitRegionRect = pHasHitRegionRect && *pHasHitRegionRect;
-
-    if (hasHitRegionRect && mContent->IsElement()) {
+    if (mContent->GetProperty(nsGkAtoms::hitregion) && mContent->IsElement()) {
       // This is for canvas fallback content
       // Find a canvas frame the found hit region is relative to.
       nsIFrame* canvasFrame = frame->GetParent();
