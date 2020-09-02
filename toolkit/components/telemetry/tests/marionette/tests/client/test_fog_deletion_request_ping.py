@@ -38,9 +38,9 @@ class TestDeletionRequestPing(FOGTestCase):
 
         debug_tag = "my-test-tag"
         tagging_script = """\
-        let AboutGlean = Components.classes["@mozilla.org/toolkit/glean;1"]
-            .createInstance(Components.interfaces.nsIAboutGlean);
-        AboutGlean.setTagPings("{}");
+        let FOG = Components.classes["@mozilla.org/toolkit/glean;1"]
+            .createInstance(Components.interfaces.nsIFOG);
+        FOG.setTagPings("{}");
         """.format(debug_tag)
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             self.marionette.execute_script(textwrap.dedent(tagging_script))

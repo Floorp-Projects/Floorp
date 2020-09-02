@@ -39,7 +39,7 @@ if CONFIG['MOZ_GLEAN']:
                   inputs=['metrics_index.py'])
 
     DIRS += [
-        'aboutGlean',
+        'xpcom',
     ]
 
 with Files('docs/**'):
