@@ -74,6 +74,21 @@ struct StreamFunctionTypeHelper<R(JSONWriter&, As...)> {
   constexpr static size_t scArity = sizeof...(As);
   using TupleType =
       std::tuple<std::remove_cv_t<std::remove_reference_t<As>>...>;
+
+  // Serialization function that takes the exact same parameter types
+  // (const-ref'd) as `StreamJSONMarkerData`. This has to be inside the helper
+  // because only here can we access the raw parameter pack `As...`.
+  // And because we're using the same argument types through
+  // references-to-const, permitted implicit conversions can happen.
+  static ProfileBufferBlockIndex Serialize(
+      ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
+      MarkerOptions&& aOptions, Streaming::DeserializerTag aDeserializerTag,
+      const As&... aAs) {
+    // Note that options are first after the entry kind, because they contain
+    // the thread id, which is handled first to filter markers by threads.
+    return aBuffer.PutObjects(ProfileBufferEntryKind::Marker, aOptions, aName,
+                              aDeserializerTag, aAs...);
+  }
 };
 
 // Helper for a marker type.
@@ -92,6 +107,28 @@ struct MarkerTypeSerialization {
   template <size_t i>
   using StreamFunctionParameter =
       std::tuple_element_t<i, StreamFunctionUserParametersTuple>;
+
+  template <typename... Ts>
+  static ProfileBufferBlockIndex Serialize(ProfileChunkedBuffer& aBuffer,
+                                           const ProfilerString8View& aName,
+                                           MarkerOptions&& aOptions,
+                                           const Ts&... aTs) {
+    static_assert(!std::is_same_v<MarkerType,
+                                  ::mozilla::baseprofiler::markers::NoPayload>,
+                  "NoPayload should have been handled in the caller.");
+    // Note that the tag is stored in a function-static object, and this
+    // function is static in a templated struct, so there should only be one tag
+    // per MarkerType.
+    // Making the tag class-static may have been more efficient (to avoid a
+    // thread-safe init check at every call), but random global static
+    // initialization order would make it more complex to coordinate with
+    // `Streaming::TagForDeserializer()`, and also would add a (small) cost for
+    // everybody, even the majority of users not using the profiler.
+    static const Streaming::DeserializerTag tag =
+        Streaming::TagForDeserializer(Deserialize);
+    return StreamFunctionType::Serialize(aBuffer, aName, std::move(aOptions),
+                                         tag, aTs...);
+  }
 
  private:
   // This templated function will recursively deserialize each argument expected
@@ -134,6 +171,67 @@ template <>
 struct MarkerTypeSerialization<::mozilla::baseprofiler::markers::NoPayload> {
   // Nothing! NoPayload has special handling avoiding payload work.
 };
+
+template <typename MarkerType, typename... Ts>
+static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
+    ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
+    MarkerOptions&& aOptions, const Ts&... aTs) {
+  if constexpr (std::is_same_v<MarkerType,
+                               ::mozilla::baseprofiler::markers::NoPayload>) {
+    static_assert(sizeof...(Ts) == 0,
+                  "NoPayload does not accept any payload arguments.");
+    // Note that options are first after the entry kind, because they contain
+    // the thread id, which is handled first to filter markers by threads.
+    return aBuffer.PutObjects(
+        ProfileBufferEntryKind::Marker, std::move(aOptions), aName,
+        base_profiler_markers_detail::Streaming::DeserializerTag(0));
+  } else {
+    return MarkerTypeSerialization<MarkerType>::Serialize(
+        aBuffer, aName, std::move(aOptions), aTs...);
+  }
+}
+
+// Pointer to a function that can capture a backtrace into the provided
+// `ProfileChunkedBuffer`, and returns true when successful.
+using BacktraceCaptureFunction = bool (*)(ProfileChunkedBuffer&);
+
+// Add a marker with the given name, options, and arguments to the given buffer.
+// Because this may be called from either Base or Gecko Profiler functions, the
+// appropriate backtrace-capturing function must also be provided.
+template <typename MarkerType, typename... Ts>
+ProfileBufferBlockIndex AddMarkerToBuffer(
+    ProfileChunkedBuffer& aBuffer, const ProfilerString8View& aName,
+    MarkerOptions&& aOptions,
+    BacktraceCaptureFunction aBacktraceCaptureFunction, const Ts&... aTs) {
+  if (aOptions.ThreadId().IsUnspecified()) {
+    // If yet unspecified, set thread to this thread where the marker is added.
+    aOptions.Set(MarkerThreadId::CurrentThread());
+  }
+
+  if (aOptions.IsTimingUnspecified()) {
+    // If yet unspecified, set timing to this instant of adding the marker.
+    aOptions.Set(MarkerTiming::InstantNow());
+  }
+
+  if (aOptions.Stack().IsCaptureNeeded()) {
+    // A capture was requested, let's attempt to do it here&now. This avoids a
+    // lot of allocations that would be necessary if capturing a backtrace
+    // separately.
+    // TODO use a local on-stack byte buffer to remove last allocation.
+    // TODO reduce internal profiler stack levels, see bug 1659872.
+    ProfileBufferChunkManagerSingle chunkManager(64 * 1024);
+    ProfileChunkedBuffer chunkedBuffer(
+        ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
+    aOptions.Stack().UseRequestedBacktrace(
+        aBacktraceCaptureFunction(chunkedBuffer) ? &chunkedBuffer : nullptr);
+    // This call must be made from here, while chunkedBuffer is in scope.
+    return AddMarkerWithOptionalStackToBuffer<MarkerType>(
+        aBuffer, aName, std::move(aOptions), aTs...);
+  }
+
+  return AddMarkerWithOptionalStackToBuffer<MarkerType>(
+      aBuffer, aName, std::move(aOptions), aTs...);
+}
 
 template <typename NameCallback, typename StackCallback>
 [[nodiscard]] bool DeserializeAfterKindAndStream(
