@@ -33,7 +33,6 @@ mozilla-version==0.3.4
 pathlib2==2.3.2
 pathspec==0.8
 pip-tools==4.5.1
-pipenv==2020.06.02
 ply==3.10
 psutil==5.7.0
 pyasn1==0.4.8
