@@ -88,7 +88,7 @@ async function testPlatformMessagesResources() {
   ok(true, "All the expected messages were received");
 
   Services.console.reset();
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 }
 
@@ -140,6 +140,6 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   }
 
   Services.console.reset();
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 }

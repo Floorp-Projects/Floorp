@@ -149,7 +149,7 @@ class TargetList extends EventEmitter {
       return;
     }
 
-    if (targetFront.isDestroyedOrBeingDestroyed()) {
+    if (this.isDestroyed() || targetFront.isDestroyedOrBeingDestroyed()) {
       return;
     }
 
@@ -558,6 +558,17 @@ class TargetList extends EventEmitter {
 
   isTargetRegistered(targetFront) {
     return this._targets.has(targetFront);
+  }
+
+  isDestroyed() {
+    return this._isDestroyed;
+  }
+
+  destroy() {
+    this.stopListening();
+    this._createListeners.off();
+    this._destroyListeners.off();
+    this._isDestroyed = true;
   }
 }
 

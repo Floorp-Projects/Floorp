@@ -71,7 +71,7 @@ add_task(async function() {
   await waitUntil(() => targets.length === 0);
 
   // Stop listening to avoid worker related requests
-  targetList.stopListening();
+  targetList.destroy();
 
   await client.waitForRequestsToSettle();
 

@@ -286,7 +286,7 @@ async function testNetworkEventResources(options) {
       onUpdated: onResourceUpdated,
     }
   );
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
 }

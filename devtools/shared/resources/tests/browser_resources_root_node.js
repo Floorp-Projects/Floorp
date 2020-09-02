@@ -70,7 +70,7 @@ add_task(async function() {
   );
 
   // Cleanup
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 });
 
@@ -131,6 +131,6 @@ add_task(async function testRootNodeFrontIsCorrect() {
   resourceWatcher.unwatchResources([ResourceWatcher.TYPES.ROOT_NODE], {
     onAvailable,
   });
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 });

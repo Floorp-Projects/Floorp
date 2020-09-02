@@ -56,7 +56,7 @@ add_task(async function() {
   });
 
   info("Close the client, which will destroy the target");
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 
   info(

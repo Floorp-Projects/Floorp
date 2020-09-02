@@ -107,7 +107,7 @@ add_task(async function() {
   );
 
   // Cleanup
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 });
 
