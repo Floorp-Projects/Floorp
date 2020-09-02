@@ -139,6 +139,10 @@ EXPORTS.mozilla += [
     'public/ProfileJSONWriter.h',
     # vm/GeckoProfiler.h needs to include this and doesn't like #include "ProfilerCounts.h"
     'public/ProfilerCounts.h',
+    'public/ProfilerMarkers.h',
+    'public/ProfilerMarkersDetail.h',
+    'public/ProfilerMarkersPrerequisites.h',
+    'public/ProfilerMarkerTypes.h',
 ]
 
 if CONFIG['MOZ_VTUNE']:
