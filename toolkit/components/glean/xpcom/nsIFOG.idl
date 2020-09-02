@@ -10,6 +10,14 @@ interface nsIFOG : nsISupports
 {
 
   /**
+   * Initialize FOG.
+   *
+   * To be scheduled at some opportune time after the bulk of Firefox startup
+   * has completed.
+   */
+  void initializeFOG();
+
+  /**
    * Enable or Disable the logging of pings in the Glean SDK.
    * See https://firefox-source-docs.mozilla.org/toolkit/components/glean/testing.html
    * for details.
