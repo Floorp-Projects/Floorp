@@ -66,7 +66,9 @@ static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
   }
 
   MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
-  if (!handler->PressKey(key.value())) {
+  if (handler->PressKey(key.value())) {
+    g_dbus_method_invocation_return_value(aInvocation, nullptr);
+  } else {
     g_dbus_method_invocation_return_error(
         aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
         "%s.%s.%s is not available now", aObjectPath, aInterfaceName,
