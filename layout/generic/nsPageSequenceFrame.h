@@ -103,7 +103,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
 
   // We must allow Print Preview UI to have a background, no matter what the
   // user's settings
-  bool HonorPrintBackgroundSettings() override { return false; }
+  bool HonorPrintBackgroundSettings() const override { return false; }
 
   bool HasTransformGetter() const override { return true; }
 

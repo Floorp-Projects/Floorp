@@ -2521,6 +2521,22 @@ nscolor nsIFrame::GetCaretColorAt(int32_t aOffset) {
   return nsLayoutUtils::GetColor(this, &nsStyleUI::mCaretColor);
 }
 
+auto nsIFrame::ComputeShouldPaintBackground() const -> ShouldPaintBackground {
+  nsPresContext* pc = PresContext();
+  ShouldPaintBackground settings{pc->GetBackgroundColorDraw(),
+                                 pc->GetBackgroundImageDraw()};
+  if (settings.mColor && settings.mImage) {
+    return settings;
+  }
+
+  if (!HonorPrintBackgroundSettings() ||
+      StyleVisibility()->mColorAdjust == StyleColorAdjust::Exact) {
+    return {true, true};
+  }
+
+  return settings;
+}
+
 bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
                                               const nsDisplayListSet& aLists,
                                               bool aForceBackground) {
