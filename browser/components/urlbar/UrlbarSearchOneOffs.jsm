@@ -172,8 +172,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
 
     this.input.setSearchMode(searchMode);
     this.selectedButton = null;
+    // We allow autofill in local but not remote search modes.
     this.input.startQuery({
-      allowAutofill: false,
+      allowAutofill:
+        !searchMode.engineName &&
+        searchMode.source != UrlbarUtils.RESULT_SOURCE.SEARCH,
       event,
     });
   }
