@@ -826,6 +826,11 @@ if __name__ == "__main__":
         extra_ldflags = ["-Wl,-syslibroot,%s" % os.getenv("CROSS_SYSROOT"),
                          "-Wl,-dead_strip"]
 
+    upload_dir = os.getenv('UPLOAD_DIR')
+    if upload_dir:
+        extra_cflags2 += ['-fcrash-diagnostics-dir=%s' % upload_dir]
+        extra_cxxflags2 += ['-fcrash-diagnostics-dir=%s' % upload_dir]
+
     build_one_stage(
         [cc] + extra_cflags,
         [cxx] + extra_cxxflags,
