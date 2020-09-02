@@ -298,7 +298,6 @@ test-verify-wpt:
         category: test-verify
         name: test-verify-wpt
     variants: []
-    schedules-component: test-verify-wpt
     treeherder-symbol: TVw
     max-run-time: 10800
     run-on-projects:
@@ -310,6 +309,8 @@ test-verify-wpt:
             # do not run on beta or release: usually just confirms earlier results
             default: ['integration']
     built-projects-only: true
+    optimization:
+        test-verify: ["test-verify-wpt"]
     tier: 2
     mozharness:
         extra-options:
