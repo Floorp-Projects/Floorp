@@ -155,5 +155,6 @@ add_task(async function() {
     }
 
     await UrlbarTestUtils.promisePopupClose(window);
+    gURLBar.handleRevert();
   }
 });

@@ -558,9 +558,6 @@ class UrlbarView {
             UrlbarTokenizer.RESTRICT.SEARCH ||
             queryContext.trimmedSearchString.length != 1)
       );
-
-      // Notify the input, so it can make adjustments based on the first result.
-      this.input.onFirstResult(firstResult);
     }
 
     if (
@@ -1718,7 +1715,9 @@ class UrlbarView {
       if (
         result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
         (!result.heuristic &&
-          (!result.payload.suggestion || result.payload.isSearchHistory) &&
+          (!result.payload.suggestion ||
+            (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+              result.source == UrlbarUtils.RESULT_SOURCE.HISTORY)) &&
           (!result.payload.inPrivateWindow || result.payload.isPrivateEngine))
       ) {
         continue;

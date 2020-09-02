@@ -97,6 +97,7 @@ add_task(async function() {
     spy.restore();
     Assert.ok(spy.called, "invoked getHeuristicResultFor");
     Assert.deepEqual(await promise, args, "Check arguments are coherent");
+    gURLBar.handleRevert();
   }
 });
 

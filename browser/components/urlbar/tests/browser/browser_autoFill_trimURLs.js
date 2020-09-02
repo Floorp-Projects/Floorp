@@ -107,7 +107,6 @@ const tests = [
     searchParams: {
       engine: "Google",
       query: "http://",
-      isSearchHistory: false,
     },
   },
   {
@@ -119,7 +118,6 @@ const tests = [
     searchParams: {
       engine: "Google",
       query: "https://",
-      isSearchHistory: false,
     },
   },
   {

@@ -179,6 +179,7 @@ add_task(async function test_searchEngine_different_scheme_noautofill() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://pie/",
         title: "http://pie/",
         iconUri: "",

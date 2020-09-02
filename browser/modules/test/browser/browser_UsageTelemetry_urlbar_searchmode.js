@@ -50,7 +50,11 @@ function assertSearchModeScalar(entry, key) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
   });
 
   // Create a new search engine.
@@ -290,10 +294,13 @@ add_task(async function test_keywordoffer() {
     "about:blank"
   );
 
-  // Enter search mode by selecting a keywordoffer result.
+  // Do a search for "@" + our test alias.  It should autofill with a trailing
+  // space, and the heuristic result should be an autofill result with a keyword
+  // offer.
+  let alias = "@" + ENGINE_ALIAS;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: ENGINE_ALIAS,
+    value: alias,
   });
   let keywordOfferResult = await UrlbarTestUtils.getDetailsOfResultAt(
     window,
@@ -301,7 +308,7 @@ add_task(async function test_keywordoffer() {
   );
   Assert.equal(
     keywordOfferResult.searchParams.keyword,
-    ENGINE_ALIAS,
+    alias,
     "The first result should be a keyword search result with the correct alias."
   );
 

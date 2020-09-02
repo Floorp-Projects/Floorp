@@ -15,6 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
@@ -588,6 +589,12 @@ class Query {
         break;
       }
     }
+
+    this.context.firstResultChanged = !ObjectUtils.deepEqual(
+      this.context.firstResult,
+      this.context.results[0]
+    );
+    this.context.firstResult = this.context.results[0];
 
     if (this.controller) {
       this.controller.receiveResults(this.context);

@@ -144,7 +144,7 @@ class ProviderTopSites extends UrlbarProvider {
       // are stored in `label`, so prefer it.  Search top sites currently
       // don't have titles but `hostname` instead.
       title: link.label || link.title || link.hostname || "",
-      favicon: link.smallFavicon || link.favicon || null,
+      favicon: link.smallFavicon || link.favicon || undefined,
       sendAttributionRequest: link.sendAttributionRequest,
     }));
 

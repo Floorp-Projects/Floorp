@@ -156,13 +156,14 @@ var UrlbarUtils = {
     SUGGESTED: 2,
   },
 
-  // Search results with keywords and empty queries are called "keyword offers".
-  // When the user selects a keyword offer, the keyword followed by a space is
-  // put in the input as a hint that the user can search using the keyword.
-  // Depending on the use case, keyword-offer results can show or not show the
-  // keyword itself.
+  // "Keyword offers" are search results with keywords that enter search mode
+  // when the user picks them.  Depending on the use case, a keyword offer can
+  // visually show or hide the keyword itself in its result.  For example,
+  // typing "@" by itself will show keyword offers for all engines with @
+  // aliases, and those results will visually show their keywords -- @google,
+  // @bing, etc.  When a keyword offer is a heuristic -- like an autofilled @
+  // alias -- usually it hides its keyword since the user is already typing it.
   KEYWORD_OFFER: {
-    NONE: 0,
     SHOW: 1,
     HIDE: 2,
   },
@@ -464,12 +465,15 @@ var UrlbarUtils = {
             : null,
         };
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
-        const engine = Services.search.getEngineByName(result.payload.engine);
-        let [url, postData] = this.getSearchQueryUrl(
-          engine,
-          result.payload.suggestion || result.payload.query
-        );
-        return { url, postData };
+        if (result.payload.engine) {
+          const engine = Services.search.getEngineByName(result.payload.engine);
+          let [url, postData] = this.getSearchQueryUrl(
+            engine,
+            result.payload.suggestion || result.payload.query
+          );
+          return { url, postData };
+        }
+        break;
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
         // Return the button URL. Consumers must check payload.helpUrl
@@ -905,9 +909,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "boolean",
       },
       isPrivateEngine: {
-        type: "boolean",
-      },
-      isSearchHistory: {
         type: "boolean",
       },
       keyword: {

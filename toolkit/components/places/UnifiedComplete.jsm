@@ -396,22 +396,6 @@ function makeKeyForMatch(match) {
 }
 
 /**
- * Returns the portion of a string starting at the index where another string
- * ends.
- *
- * @param   {string} sourceStr
- *          The string to search within.
- * @param   {string} targetStr
- *          The string to search for.
- * @returns {string} The substring within sourceStr where targetStr ends, or the
- *          empty string if targetStr does not occur in sourceStr.
- */
-function substringAfter(sourceStr, targetStr) {
-  let index = sourceStr.indexOf(targetStr);
-  return index < 0 ? "" : sourceStr.substr(index + targetStr.length);
-}
-
-/**
  * Makes a moz-action url for the given action and set of parameters.
  *
  * @param   type
@@ -493,6 +477,7 @@ function Search(
     this._userContextId = queryContext.userContextId;
     this._currentPage = queryContext.currentPage;
     this._searchModeEngine = queryContext.searchMode?.engineName;
+    this._searchMode = queryContext.searchMode;
   } else {
     let params = new Set(searchParam.split(" "));
     this._enableActions = params.has("enable-actions");
@@ -1009,6 +994,11 @@ Search.prototype = {
   },
 
   async _matchFirstHeuristicResult(conn) {
+    if (this._searchMode) {
+      // Use UrlbarProviderHeuristicFallback.
+      return false;
+    }
+
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
 
@@ -1047,7 +1037,7 @@ Search.prototype = {
       return false;
     }
 
-    let searchString = substringAfter(
+    let searchString = UrlbarUtils.substringAfter(
       this._originalSearchString,
       keyword
     ).trim();
@@ -1106,11 +1096,18 @@ Search.prototype = {
       return false;
     }
 
+    let query = UrlbarUtils.substringAfter(this._originalSearchString, alias);
+
+    // Match an alias only when it has a space after it.  If there's no trailing
+    // space, then continue to treat it as part of the search string.
+    if (UrlbarPrefs.get("update2") && !query.startsWith(" ")) {
+      return false;
+    }
+
     this._searchEngineAliasMatch = {
       engine,
       alias,
-      query: substringAfter(this._originalSearchString, alias).trim(),
-      isTokenAlias: alias.startsWith("@"),
+      query: query.trimStart(),
     };
     this._addSearchEngineMatch(this._searchEngineAliasMatch);
     if (!this._keywordSubstitute) {

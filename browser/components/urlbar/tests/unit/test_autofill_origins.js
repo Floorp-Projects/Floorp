@@ -176,6 +176,7 @@ add_task(async function portNoMatch1() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${origin}:89/`,
         title: `http://${origin}:89/`,
         iconUri: "",
@@ -199,6 +200,7 @@ add_task(async function portNoMatch2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${origin}:9/`,
         title: `http://${origin}:9/`,
         iconUri: "",
@@ -211,7 +213,7 @@ add_task(async function portNoMatch2() {
 });
 
 // "example/" should *not* match http://example.com/.
-add_task(async function trailingSlash() {
+add_task(async function trailingSlash_2() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://example.com/",
@@ -222,8 +224,10 @@ add_task(async function trailingSlash() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://example/",
         title: "http://example/",
+        iconUri: "page-icon:http://example/",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
       }),
@@ -562,6 +566,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
         title: `${search}/`,
         iconUri: "",
@@ -581,6 +586,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
         title: `${search}/`,
         iconUri: "",
@@ -600,6 +606,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
         title: `${search}/`,
         iconUri: "",

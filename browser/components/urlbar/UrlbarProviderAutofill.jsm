@@ -697,7 +697,7 @@ class ProviderAutofill extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: engine.iconURI ? engine.iconURI.spec : "",
+        icon: engine.iconURI?.spec,
       })
     );
     let autofilledValue =

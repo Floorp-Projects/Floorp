@@ -394,11 +394,18 @@ function frecencyForUrl(aURI) {
  */
 function makeBookmarkResult(
   queryContext,
-  { title, uri, iconUri, tags = [], heuristic = false }
+  {
+    title,
+    uri,
+    iconUri,
+    tags = [],
+    heuristic = false,
+    source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+  }
 ) {
   let result = new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.URL,
-    UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    source,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
       // Check against undefined so consumers can pass in the empty string.
@@ -429,7 +436,6 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       engine: engineName,
       suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-      isSearchHistory: true,
       lowerCaseSuggestion: suggestion.toLocaleLowerCase(),
     })
   );
@@ -532,7 +538,7 @@ function makePrioritySearchResult(
     UrlbarUtils.RESULT_SOURCE.SEARCH,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
-      icon: engineIconUri ? engineIconUri : "",
+      icon: engineIconUri,
     })
   );
 
@@ -580,51 +586,49 @@ function makeSearchResult(
     alias,
     query,
     engineIconUri,
-    heuristic = false,
     keywordOffer,
     providerName,
+    inPrivateWindow,
+    isPrivateEngine,
+    heuristic = false,
+    type = UrlbarUtils.RESULT_TYPE.SEARCH,
+    source = UrlbarUtils.RESULT_SOURCE.SEARCH,
   }
 ) {
-  if (!keywordOffer) {
-    keywordOffer = UrlbarUtils.KEYWORD_OFFER.NONE;
-    if (
-      alias &&
-      !query.trim() &&
-      (UrlbarPrefs.get("update2") || alias.startsWith("@"))
-    ) {
-      keywordOffer = heuristic
-        ? UrlbarUtils.KEYWORD_OFFER.HIDE
-        : UrlbarUtils.KEYWORD_OFFER.SHOW;
+  // Tail suggestion common cases, handled here to reduce verbosity in tests.
+  if (tail) {
+    if (!tailPrefix) {
+      tailPrefix = "… ";
+    }
+    if (!tailOffsetIndex) {
+      tailOffsetIndex = suggestion.indexOf(tail);
     }
   }
 
-  // Tail suggestion common cases, handled here to reduce verbosity in tests.
-  if (tail && !tailPrefix) {
-    tailPrefix = "… ";
-  }
-
-  if (!tailOffsetIndex) {
-    tailOffsetIndex = tail ? suggestion.indexOf(tail) : -1;
-  }
-
   let result = new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.SEARCH,
-    UrlbarUtils.RESULT_SOURCE.SEARCH,
+    type,
+    source,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
       suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
       tailPrefix,
       tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
       tailOffsetIndex,
-      keyword: [alias, UrlbarUtils.HIGHLIGHT.TYPED],
+      keyword: [
+        alias,
+        keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW
+          ? UrlbarUtils.HIGHLIGHT.TYPED
+          : UrlbarUtils.HIGHLIGHT.NONE,
+      ],
       // Check against undefined so consumers can pass in the empty string.
       query: [
         typeof query != "undefined" ? query : queryContext.trimmedSearchString,
         UrlbarUtils.HIGHLIGHT.TYPED,
       ],
-      isSearchHistory: false,
-      icon: [engineIconUri ? engineIconUri : ""],
+      icon: engineIconUri,
       keywordOffer,
+      inPrivateWindow,
+      isPrivateEngine,
     })
   );
 
@@ -661,14 +665,29 @@ function makeSearchResult(
  */
 function makeVisitResult(
   queryContext,
-  { title, uri, iconUri, tags = null, heuristic = false, providerName }
+  {
+    title,
+    uri,
+    iconUri,
+    providerName,
+    tags = null,
+    heuristic = false,
+    source = UrlbarUtils.RESULT_SOURCE.HISTORY,
+  }
 ) {
   let payload = {
     url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
-    // Check against undefined so consumers can pass in the empty string.
-    icon: [typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`],
     title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
   };
+
+  if (iconUri) {
+    payload.icon = iconUri;
+  } else if (
+    iconUri === undefined &&
+    source != UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL
+  ) {
+    payload.icon = `page-icon:${uri}`;
+  }
 
   if (!heuristic || tags) {
     payload.tags = [tags || [], UrlbarUtils.HIGHLIGHT.TYPED];
@@ -676,7 +695,7 @@ function makeVisitResult(
 
   let result = new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.URL,
-    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    source,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
   );
 
@@ -726,12 +745,14 @@ async function check_results({
   let controller = UrlbarTestUtils.newMockController({
     input: {
       isPrivate: context.isPrivate,
+      onFirstResult() {
+        return false;
+      },
       window: {
         location: {
           href: AppConstants.BROWSER_CHROME_URL,
         },
       },
-      autofillFirstResult() {},
     },
   });
 
@@ -763,35 +784,62 @@ async function check_results({
     }
   }
   if (context.results.length != matches.length) {
-    info("Returned results: " + JSON.stringify(context.results));
-    Assert.equal(
-      context.results.length,
-      matches.length,
-      "Found the expected number of results."
-    );
+    info("Actual results: " + JSON.stringify(context.results));
+  }
+  Assert.equal(
+    context.results.length,
+    matches.length,
+    "Found the expected number of results."
+  );
+
+  function getPayload(result) {
+    let payload = {};
+    for (let [key, value] of Object.entries(result.payload)) {
+      if (value !== undefined) {
+        payload[key] = value;
+      }
+    }
+    return payload;
   }
 
-  Assert.deepEqual(
-    matches.map(m => m.payload),
-    context.results.map(m => m.payload),
-    "Payloads are the same."
-  );
-
-  Assert.deepEqual(
-    matches.map(m => m.heuristic),
-    context.results.map(m => m.heuristic),
-    "Heuristic results are correctly flagged."
-  );
-
-  matches.forEach((match, i) => {
-    if (match.providerName) {
+  for (let i = 0; i < matches.length; i++) {
+    let actual = context.results[i];
+    let expected = matches[i];
+    info(
+      `Comparing results at index ${i}:` +
+        " actual=" +
+        JSON.stringify(actual) +
+        " expected=" +
+        JSON.stringify(expected)
+    );
+    Assert.equal(
+      actual.type,
+      expected.type,
+      `result.type at result index ${i}`
+    );
+    Assert.equal(
+      actual.source,
+      expected.source,
+      `result.source at result index ${i}`
+    );
+    Assert.equal(
+      actual.heuristic,
+      expected.heuristic,
+      `result.heuristic at result index ${i}`
+    );
+    if (expected.providerName) {
       Assert.equal(
-        match.providerName,
-        context.results[i].providerName,
-        `The result at index ${i} is from the correct provider.`
+        actual.providerName,
+        expected.providerName,
+        `result.providerName at result index ${i}`
       );
     }
-  });
+    Assert.deepEqual(
+      getPayload(actual),
+      getPayload(expected),
+      `result.payload at result index ${i}`
+    );
+  }
 }
 
 /**

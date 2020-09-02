@@ -44,6 +44,7 @@ add_task(async function test_casing_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://mozilla.org/T",
         title: "http://mozilla.org/T",
         iconUri: "page-icon:http://mozilla.org/",
@@ -91,6 +92,7 @@ add_task(async function test_casing_4() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://mozilla.org/t",
         title: "http://mozilla.org/t",
         iconUri: "page-icon:http://mozilla.org/",
@@ -190,6 +192,7 @@ add_task(async function test_untrimmed_path_casing() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://mozilla.org/t",
         title: "http://mozilla.org/t",
         iconUri: "page-icon:http://mozilla.org/",
@@ -237,6 +240,7 @@ add_task(async function test_untrimmed_path_www_casing() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.mozilla.org/t",
         title: "http://www.mozilla.org/t",
         iconUri: "page-icon:http://www.mozilla.org/",

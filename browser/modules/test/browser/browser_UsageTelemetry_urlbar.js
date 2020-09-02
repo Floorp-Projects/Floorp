@@ -237,7 +237,102 @@ add_task(async function test_simpleQuery() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function test_searchAlias() {
+add_task(async function test_searchMode_enter() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_INDEX"
+  );
+  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
+  );
+  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
+  );
+  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
+    "FX_URLBAR_SELECTED_RESULT_METHOD"
+  );
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  info("Enter search mode using an alias and a query.");
+  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await searchInAwesomebar("mozalias query");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await p;
+
+  // Check if the scalars contain the expected values.
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    SCALAR_SEARCHMODE,
+    "search_enter",
+    1
+  );
+  Assert.equal(
+    Object.keys(scalars[SCALAR_SEARCHMODE]).length,
+    1,
+    "This search must only increment one entry in the scalar."
+  );
+
+  // Also check events.
+  TelemetryTestUtils.assertEvents(
+    [
+      [
+        "navigation",
+        "search",
+        "urlbar_searchmode",
+        "enter",
+        { engine: "other-MozSearch" },
+      ],
+    ],
+    { category: "navigation", method: "search" }
+  );
+
+  // Check the histograms as well.
+  TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
+
+  TelemetryTestUtils.assertHistogram(
+    resultTypeHist,
+    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
+    1
+  );
+
+  TelemetryTestUtils.assertKeyedHistogramValue(
+    resultIndexByTypeHist,
+    "searchengine",
+    0,
+    1
+  );
+
+  TelemetryTestUtils.assertHistogram(
+    resultMethodHist,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
+    1
+  );
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
+// This subtest can be removed with the update2 pref.
+add_task(async function test_searchAlias_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", false],
+      ["browser.urlbar.update2.oneOffsRefresh", false],
+    ],
+  });
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
@@ -316,6 +411,7 @@ add_task(async function test_searchAlias() {
   );
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 // Performs a search using the first result, a one-off button, and the Return

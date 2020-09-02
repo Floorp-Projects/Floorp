@@ -651,23 +651,8 @@ const tests = [
       value: `${alias} `,
     });
 
-    let keywordOfferResult = await UrlbarTestUtils.getDetailsOfResultAt(
-      window,
-      0
-    );
-    Assert.equal(
-      keywordOfferResult.searchParams.keyword,
-      alias,
-      "The first result should be a keyword search result with the correct alias."
-    );
-
-    // Fire an input event simulating typing a space after the alias.
-    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-    UrlbarTestUtils.fireInputEvent(window);
-    await searchPromise;
-
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: keywordOfferResult.searchParams.engine,
+      engineName: "AliasTest",
       entry: "typed",
     });
 

@@ -72,6 +72,7 @@ add_task(async function switchToTab() {
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
+  gURLBar.handleRevert();
   gBrowser.removeTab(tab);
 });
 
