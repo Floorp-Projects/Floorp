@@ -633,6 +633,14 @@ MarkerOptions MarkerCategory::WithOptions(Options&&... aOptions) const {
 
 }  // namespace mozilla
 
+namespace mozilla::baseprofiler::markers {
+
+// Default marker payload types, with no extra information, not even a marker
+// type and payload. This is intended for label-only markers.
+struct NoPayload final {};
+
+}  // namespace mozilla::baseprofiler::markers
+
 #endif  // MOZ_GECKO_PROFILER
 
 #endif  // BaseProfilerMarkersPrerequisites_h
