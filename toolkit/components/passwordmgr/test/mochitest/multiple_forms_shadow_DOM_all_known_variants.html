@@ -1,0 +1,111 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<!-- Page with multiple forms containing the following Shadow DOM variants: -->
+<!-- Case 1: Each field (username and password) in its own shadow root -->
+<!-- Case 2: Both fields (username and password) together in a shadow root with a form ancestor -->
+<!-- Case 3: Form and fields (username and password) together in a shadow root -->
+<span id="outer-wrapper">
+</span>
+
+<script>
+  const outerWrapper = document.getElementById("outer-wrapper");
+  const outerShadow = outerWrapper.attachShadow({mode: "closed"});
+
+  function makeFormlessOuterForm(scenario) {
+    const fields = ["username", "password"];
+    for (let field of fields) {
+      const inputEle = document.createElement("input");
+      inputEle.id = `${field}-${scenario}`;
+      inputEle.name = `${field}-${scenario}`;
+      if (field === "password") {
+        inputEle.type = field;
+      }
+      outerShadow.append(inputEle);
+    }
+    const submitButton = document.createElement("input");
+    submitButton.id = `submit-${scenario}`;
+    submitButton.type = "submit";
+    outerShadow.append(submitButton);
+  }
+
+  function makeFormEachFieldInItsOwnShadowRoot(scenario) {
+    const form = document.createElement("form");
+    form.id = scenario;
+    const submitButton = document.createElement("input");
+    submitButton.id = `submit-${scenario}`;
+    submitButton.type = "submit";
+    form.append(submitButton);
+    const fields = ["username", "password"];
+    for (let field of fields) {
+      const inputEle = document.createElement("input");
+      inputEle.id = `${field}-${scenario}`;
+      inputEle.name = `${field}-${scenario}`;
+      if (field === "password") {
+        inputEle.type = field;
+      }
+      const wrapper = document.createElement("span");
+      wrapper.id = `wrapper-${field}-${scenario}`;
+      const shadow = wrapper.attachShadow({mode: "closed"});
+      shadow.append(inputEle);
+      submitButton.before(wrapper);
+    }
+    outerShadow.append(form);
+  }
+
+  function makeFormBothFieldsTogetherInAShadowRoot(scenario) {
+    const form = document.createElement("form");
+    form.id = scenario;
+    const submitButton = document.createElement("input");
+    submitButton.id = `submit-${scenario}`;
+    submitButton.type = "submit";
+    form.append(submitButton);
+    const wrapper = document.createElement("span");
+    wrapper.id = `wrapper-${scenario}`;
+    const shadow = wrapper.attachShadow({mode: "closed"});
+    const fields = ["username", "password"];
+    for (let field of fields) {
+      const inputEle = document.createElement("input");
+      inputEle.id = `${field}-${scenario}`;
+      inputEle.name = `${field}-${scenario}`;
+      if (field === "password") {
+        inputEle.type = field;
+      }
+      shadow.append(inputEle);
+    }
+    submitButton.before(wrapper);
+    outerShadow.append(form);
+  }
+
+  function makeFormFormAndFieldsTogetherInAShadowRoot(scenario) {
+    const wrapper = document.createElement("span");
+    wrapper.id = `wrapper-${scenario}`;
+    const shadow = wrapper.attachShadow({mode: "closed"});
+    const form = document.createElement("form");
+    form.id = scenario;
+    shadow.append(form);
+    const submitButton = document.createElement("input");
+    submitButton.id = `submit-${scenario}`;
+    submitButton.type = "submit";
+    form.append(submitButton);
+    const fields = ["username", "password"];
+    for (let field of fields) {
+      const inputEle = document.createElement("input");
+      inputEle.id = field;
+      inputEle.name = field;
+      if (field === "password") {
+        inputEle.type = field;
+      }
+      submitButton.before(inputEle);
+    }
+    outerShadow.append(wrapper);
+  }
+
+  makeFormlessOuterForm("formless-case-2");
+  makeFormEachFieldInItsOwnShadowRoot("form-case-1");
+  makeFormBothFieldsTogetherInAShadowRoot("form-case-2");
+  makeFormFormAndFieldsTogetherInAShadowRoot("form-case-3");
+</script>
+
+</body></html>
