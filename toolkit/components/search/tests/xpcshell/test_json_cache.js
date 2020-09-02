@@ -28,8 +28,7 @@ add_task(async function setup() {
 });
 
 async function loadCacheFile(cacheFile) {
-  let cacheTemplateFile = do_get_file(cacheFile);
-  cacheTemplate = readJSONFile(cacheTemplateFile);
+  cacheTemplate = await readJSONFile(do_get_file(cacheFile));
   cacheTemplate.buildID = getAppInfo().platformBuildID;
   cacheTemplate.version = SearchUtils.CACHE_VERSION;
 
