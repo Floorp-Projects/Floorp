@@ -75,40 +75,44 @@ add_task(async function test_setup() {
   TelemetryReportingPolicy.setup();
 });
 
-add_task(async function test_firstRun() {
-  if (AppConstants.IS_ANDROID) {
-    return;
+add_task(
+  {
+    // This tests initialises the search service, but that doesn't currently
+    // work on Android.
+    skip_if: () => AppConstants.platform == "android",
+  },
+  async function test_firstRun() {
+    await Services.search.init();
+
+    const FIRST_RUN_TIMEOUT_MSEC = 60 * 1000; // 60s
+    const OTHER_RUNS_TIMEOUT_MSEC = 10 * 1000; // 10s
+
+    Preferences.reset(TelemetryUtils.Preferences.FirstRun);
+
+    let startupTimeout = 0;
+    fakeShowPolicyTimeout(
+      (callback, timeout) => (startupTimeout = timeout),
+      () => {}
+    );
+    TelemetryReportingPolicy.reset();
+
+    Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+    Assert.equal(
+      startupTimeout,
+      FIRST_RUN_TIMEOUT_MSEC,
+      "The infobar display timeout should be 60s on the first run."
+    );
+
+    // Run again, and check that we actually wait only 10 seconds.
+    TelemetryReportingPolicy.reset();
+    Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+    Assert.equal(
+      startupTimeout,
+      OTHER_RUNS_TIMEOUT_MSEC,
+      "The infobar display timeout should be 10s on other runs."
+    );
   }
-  await Services.search.init();
-
-  const FIRST_RUN_TIMEOUT_MSEC = 60 * 1000; // 60s
-  const OTHER_RUNS_TIMEOUT_MSEC = 10 * 1000; // 10s
-
-  Preferences.reset(TelemetryUtils.Preferences.FirstRun);
-
-  let startupTimeout = 0;
-  fakeShowPolicyTimeout(
-    (callback, timeout) => (startupTimeout = timeout),
-    () => {}
-  );
-  TelemetryReportingPolicy.reset();
-
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
-  Assert.equal(
-    startupTimeout,
-    FIRST_RUN_TIMEOUT_MSEC,
-    "The infobar display timeout should be 60s on the first run."
-  );
-
-  // Run again, and check that we actually wait only 10 seconds.
-  TelemetryReportingPolicy.reset();
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
-  Assert.equal(
-    startupTimeout,
-    OTHER_RUNS_TIMEOUT_MSEC,
-    "The infobar display timeout should be 10s on other runs."
-  );
-});
+);
 
 add_task(async function test_prefs() {
   TelemetryReportingPolicy.reset();
