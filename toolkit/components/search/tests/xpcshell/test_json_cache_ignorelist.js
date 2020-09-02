@@ -21,8 +21,9 @@ add_task(async function setup() {
 
   await setupRemoteSettings();
 
-  let cacheTemplateFile = do_get_file("data/search_ignorelist.json");
-  cacheTemplate = readJSONFile(cacheTemplateFile);
+  cacheTemplate = await readJSONFile(
+    do_get_file("data/search_ignorelist.json")
+  );
   cacheTemplate.buildID = getAppInfo().platformBuildID;
 
   await promiseSaveCacheData(cacheTemplate);
