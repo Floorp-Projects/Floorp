@@ -47,7 +47,7 @@ add_task(async function test_listJSONlocale() {
 
 // Check that switching locale switches search engines
 add_task(async function test_listJSONlocaleSwitch() {
-  let promise = SearchTestUtils.promiseSearchNotification("reinit-complete");
+  let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   let defaultBranch = Services.prefs.getDefaultBranch(
     SearchUtils.BROWSER_SEARCH_PREF
