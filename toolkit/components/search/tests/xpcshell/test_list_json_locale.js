@@ -47,17 +47,12 @@ add_task(async function test_listJSONlocale() {
 
 // Check that switching locale switches search engines
 add_task(async function test_listJSONlocaleSwitch() {
-  let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-
   let defaultBranch = Services.prefs.getDefaultBranch(
     SearchUtils.BROWSER_SEARCH_PREF
   );
   defaultBranch.setCharPref("param.code", "good&id=unique");
 
-  Services.locale.availableLocales = ["fr"];
-  Services.locale.requestedLocales = ["fr"];
-
-  await promise;
+  await promiseSetLocale("fr");
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 
@@ -82,9 +77,7 @@ add_task(async function test_listJSONlocaleSwitch() {
 
 // Check that region overrides apply
 add_task(async function test_listJSONRegionOverride() {
-  Region._setHomeRegion("RU", false);
-
-  await asyncReInit();
+  await promiseSetHomeRegion("RU");
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 

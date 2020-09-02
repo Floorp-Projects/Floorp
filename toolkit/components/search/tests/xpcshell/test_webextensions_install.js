@@ -54,9 +54,7 @@ add_task(async function basic_install_test() {
 });
 
 add_task(async function basic_multilocale_test() {
-  let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-  Region._setHomeRegion("an");
-  await promise;
+  await promiseSetHomeRegion("an");
 
   Assert.deepEqual(await getEngineNames(), [
     "Plain",
@@ -66,9 +64,7 @@ add_task(async function basic_multilocale_test() {
 });
 
 add_task(async function complex_multilocale_test() {
-  let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-  Region._setHomeRegion("af");
-  await promise;
+  await promiseSetHomeRegion("af");
 
   Assert.deepEqual(await getEngineNames(), [
     "Plain",
@@ -77,12 +73,11 @@ add_task(async function complex_multilocale_test() {
     "Multilocale AN",
   ]);
 });
+
 add_task(async function test_manifest_selection() {
+  // Sets the home region without updating.
   Region._setHomeRegion("an", false);
-  let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-  Services.locale.availableLocales = ["af"];
-  Services.locale.requestedLocales = ["af"];
-  await promise;
+  await promiseSetLocale("af");
 
   let engine = await Services.search.getEngineByName("Multilocale AN");
   Assert.ok(
