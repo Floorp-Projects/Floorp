@@ -1,6 +1,0 @@
-# Those are default settings for all tests
-
-bundle:
-  useIsolating: false
-  locales:
-    - en-US

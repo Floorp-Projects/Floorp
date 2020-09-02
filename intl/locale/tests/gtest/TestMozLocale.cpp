@@ -106,3 +106,18 @@ TEST(Intl_Locale_Locale, jaJPmac)
   Locale loc = Locale("ja-JP-mac");
   ASSERT_TRUE(loc.AsString().Equals("ja-JP-macos"));
 }
+
+TEST(Intl_Locale_Locale, Maximize)
+{
+  Locale loc = Locale("en");
+
+  ASSERT_TRUE(loc.GetLanguage().Equals("en"));
+  ASSERT_TRUE(loc.GetScript().IsEmpty());
+  ASSERT_TRUE(loc.GetRegion().IsEmpty());
+
+  ASSERT_TRUE(loc.Maximize());
+
+  ASSERT_TRUE(loc.GetLanguage().Equals("en"));
+  ASSERT_TRUE(loc.GetScript().Equals("Latn"));
+  ASSERT_TRUE(loc.GetRegion().Equals("US"));
+}

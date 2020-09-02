@@ -170,7 +170,7 @@ fn fluent_bundle_new_internal(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fluent_bundle_get_locales(
+pub extern "C" fn fluent_bundle_get_locales(
     bundle: &FluentBundleRc,
     result: &mut ThinVec<nsCString>,
 ) {
@@ -185,7 +185,7 @@ pub unsafe extern "C" fn fluent_bundle_destroy(bundle: *mut FluentBundleRc) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fluent_bundle_has_message(
+pub extern "C" fn fluent_bundle_has_message(
     bundle: &FluentBundleRc,
     id: &nsACString,
 ) -> bool {

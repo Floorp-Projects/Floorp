@@ -5,9 +5,9 @@ authors = ["Zibi Braniecki <zibi@braniecki.net>"]
 edition = "2018"
 
 [dependencies]
-fluent = { version = "0.11" , features = ["fluent-pseudo"] }
+fluent = { version = "0.12" , features = ["fluent-pseudo"] }
 fluent-pseudo = "0.2"
-intl-memoizer = "0.4"
-unic-langid = "0.8"
+intl-memoizer = "0.5"
+unic-langid = "0.9"
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }

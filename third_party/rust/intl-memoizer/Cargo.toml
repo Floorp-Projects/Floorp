@@ -13,8 +13,9 @@
 [package]
 edition = "2018"
 name = "intl-memoizer"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>", "Manish Goregaokar <manishsmail@gmail.com>"]
+include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md"]
 description = "A memoizer specifically tailored for storing lazy-initialized\nintl formatters.\n"
 homepage = "http://www.projectfluent.org"
 readme = "README.md"
@@ -26,9 +27,9 @@ repository = "https://github.com/projectfluent/fluent-rs"
 version = "0.3"
 
 [dependencies.unic-langid]
-version = "0.8"
+version = "0.9"
 [dev-dependencies.fluent-langneg]
-version = "0.12"
+version = "0.13"
 
 [dev-dependencies.intl_pluralrules]
-version = "6.0"
+version = "7.0"
