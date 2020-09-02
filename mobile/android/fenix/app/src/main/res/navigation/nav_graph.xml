@@ -410,6 +410,11 @@
         android:id="@+id/settingsFragment"
         android:name="org.mozilla.fenix.settings.SettingsFragment"
         android:label="@string/settings_title">
+        <argument
+            android:name="preference_to_scroll_to"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
         <action
             android:id="@+id/action_settingsFragment_to_dataChoicesFragment"
             app:destination="@id/dataChoicesFragment"

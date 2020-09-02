@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings
 
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -15,6 +16,7 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -27,8 +29,8 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.application
@@ -45,6 +47,7 @@ import kotlin.system.exitProcess
 @Suppress("LargeClass", "TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat() {
 
+    private val args by navArgs<SettingsFragmentArgs>()
     private lateinit var accountUiView: AccountUiView
 
     private val accountObserver = object : AccountObserver {
@@ -124,6 +127,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         updateMakeDefaultBrowserPreference()
     }
 
+    @SuppressLint("RestrictedApi")
     override fun onResume() {
         super.onResume()
 
@@ -135,6 +139,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         requireView().findViewById<RecyclerView>(R.id.recycler_view)
             ?.hideInitialScrollBar(viewLifecycleOwner.lifecycleScope)
+
+        if (args.preferenceToScrollTo != null) {
+            scrollToPreference(args.preferenceToScrollTo)
+        }
 
         // Consider finish of `onResume` to be the point at which we consider this fragment as 'created'.
         creatingFragment = false
