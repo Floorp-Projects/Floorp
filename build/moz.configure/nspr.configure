@@ -61,8 +61,10 @@ def nspr_pkg(nspr_pkg):
         lib_dir=lib_dir,
     )
 
-@depends(nspr_minver, when='--with-system-nspr')
-def pkgconf_requires_private(nspr_minver):
+@depends('--with-system-nspr', nspr_minver)
+def pkgconf_requires_private(system_nspr, nspr_minver):
+    if not system_nspr:
+        return ''
     return 'Requires.private: %s' % nspr_minver
 
 set_config('PKGCONF_REQUIRES_PRIVATE', pkgconf_requires_private)
