@@ -416,6 +416,7 @@ class GypProcessor(object):
                             for name, _ in finder.find('*/supplement.gypi'))
 
         str_vars = dict(gyp_dir_attrs.variables)
+        str_vars['python'] = sys.executable
         self._gyp_loader_future = executor.submit(load_gyp, [path], 'mozbuild',
                                                   str_vars, includes,
                                                   depth, params)
