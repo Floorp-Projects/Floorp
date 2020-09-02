@@ -262,7 +262,7 @@ add_task(async function() {
     onAvailable,
     onDestroy
   );
-  targetList.stopListening();
+  targetList.destroy();
 
   info("Unregister service workers so they don't appear in other tests.");
   await unregisterAllServiceWorkers(client);

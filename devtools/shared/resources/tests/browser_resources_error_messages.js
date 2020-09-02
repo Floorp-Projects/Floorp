@@ -96,7 +96,7 @@ async function testErrorMessagesResources() {
   ok(true, "All the expected errors were received");
 
   Services.console.reset();
-  targetList.stopListening();
+  targetList.destroy();
   await client.close();
 }
 
@@ -140,7 +140,7 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   }
 
   Services.console.reset();
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 }
 

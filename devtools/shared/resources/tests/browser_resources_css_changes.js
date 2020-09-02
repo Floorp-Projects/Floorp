@@ -91,7 +91,7 @@ add_task(async function() {
   is(availableResources[2], existingResources[2], "3rd resource is correct");
   is(availableResources[3], existingResources[3], "4th resource is correct");
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 

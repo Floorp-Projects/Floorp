@@ -101,7 +101,7 @@ async function generatePlatformMessagesStubs() {
     stubs.set(key, getCleanedPacket(key, packet));
   }
 
-  resourceWatcher.targetList.stopListening();
+  resourceWatcher.targetList.destroy();
   await client.close();
 
   return stubs;

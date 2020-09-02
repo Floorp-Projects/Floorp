@@ -77,7 +77,7 @@ add_task(async function() {
     []
   );
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 

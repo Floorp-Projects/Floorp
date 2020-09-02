@@ -312,7 +312,7 @@ add_task(async function() {
   );
   assertMediaRules(styleSheetResult.mediaRules, expectedMediaRules);
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
 });
 

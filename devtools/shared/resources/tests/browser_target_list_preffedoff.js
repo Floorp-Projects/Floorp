@@ -99,7 +99,7 @@ async function testPreffedOffMainProcess(mainRoot, mainProcess) {
   );
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
 
-  targetList.stopListening();
+  targetList.destroy();
 }
 
 async function testPreffedOffTab(mainRoot) {
@@ -156,7 +156,7 @@ async function testPreffedOffTab(mainRoot) {
   );
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
 
-  targetList.stopListening();
+  targetList.destroy();
 
   BrowserTestUtils.removeTab(tab);
 }
