@@ -226,6 +226,12 @@ struct GCPolicy<jsid> {
     return !id.isGCThing() ||
            js::gc::IsCellPointerValid(id.toGCCellPtr().asCell());
   }
+
+  static bool isTenured(jsid id) {
+    MOZ_ASSERT_IF(id.isGCThing(),
+                  !js::gc::IsInsideNursery(id.toGCCellPtr().asCell()));
+    return true;
+  }
 };
 
 #ifdef DEBUG
