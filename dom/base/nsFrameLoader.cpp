@@ -3203,6 +3203,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
       PrintPreviewSuccessInfo info;
       info.mSheetCount = aInfo.sheetCount();
       info.mTotalPageCount = aInfo.totalPageCount();
+      info.mHasSelection = aInfo.hasSelection();
       promise->MaybeResolve(info);
     } else {
       promise->MaybeRejectWithUnknownError("Print preview failed");

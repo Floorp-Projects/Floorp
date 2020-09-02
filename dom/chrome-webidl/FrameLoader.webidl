@@ -247,6 +247,11 @@ dictionary PrintPreviewSuccessInfo {
    * selection, the pages-per-sheet, whether duplex printing is enabled, etc.
    */
   unsigned long totalPageCount = 0;
+
+  /**
+   * Whether the document has a selection that can be printed.
+   */
+  boolean hasSelection = false;
 };
 
 FrameLoader includes WebBrowserPersistable;
