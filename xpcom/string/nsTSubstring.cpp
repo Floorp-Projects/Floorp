@@ -1459,7 +1459,13 @@ nsTSubstringSplitter<T> nsTSubstring<T>::Split(const char_type aChar) const {
 template <typename T>
 const nsTDependentSubstring<T>&
 nsTSubstringSplitter<T>::nsTSubstringSplit_Iter::operator*() const {
-  return mObj.Get(mPos);
+  return mObj->Get(mPos);
+}
+
+template <typename T>
+const nsTDependentSubstring<T>*
+nsTSubstringSplitter<T>::nsTSubstringSplit_Iter::operator->() const {
+  return &mObj->Get(mPos);
 }
 
 // Common logic for nsTSubstring<T>::ToInteger and nsTSubstring<T>::ToInteger64.
