@@ -47,6 +47,16 @@ ChromeUtils.defineModuleGetter(
   "Region",
   "resource://gre/modules/Region.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "HomePage",
+  "resource:///modules/HomePage.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutNewTab",
+  "resource:///modules/AboutNewTab.jsm"
+);
 
 // ASRouterTargeting.findMatchingMessage
 add_task(async function find_matching_message() {
@@ -973,4 +983,130 @@ add_task(async function check_profileRestartCount() {
     !isNaN(ASRouterTargeting.Environment.profileRestartCount),
     "it should return a number"
   );
+});
+
+add_task(async function check_homePageSettings_default() {
+  let settings = ASRouterTargeting.Environment.homePageSettings;
+
+  ok(settings.isDefault, "should set as default");
+  ok(!settings.isLocked, "should not set as locked");
+  ok(!settings.isWebExt, "should not be web extension");
+  ok(!settings.isCustomUrl, "should not be custom URL");
+  is(settings.urls.length, 1, "should be an 1-entry array");
+  is(settings.urls[0].url, "about:home", "should be about:home");
+  is(settings.urls[0].host, "", "should be an empty string");
+});
+
+add_task(async function check_homePageSettings_locked() {
+  const PREF = "browser.startup.homepage";
+  Services.prefs.lockPref(PREF);
+  let settings = ASRouterTargeting.Environment.homePageSettings;
+
+  ok(settings.isDefault, "should set as default");
+  ok(settings.isLocked, "should set as locked");
+  ok(!settings.isWebExt, "should not be web extension");
+  ok(!settings.isCustomUrl, "should not be custom URL");
+  is(settings.urls.length, 1, "should be an 1-entry array");
+  is(settings.urls[0].url, "about:home", "should be about:home");
+  is(settings.urls[0].host, "", "should be an empty string");
+  Services.prefs.unlockPref(PREF);
+});
+
+add_task(async function check_homePageSettings_customURL() {
+  await HomePage.set("https://www.google.com");
+  let settings = ASRouterTargeting.Environment.homePageSettings;
+
+  ok(!settings.isDefault, "should not be the default");
+  ok(!settings.isLocked, "should set as locked");
+  ok(!settings.isWebExt, "should not be web extension");
+  ok(settings.isCustomUrl, "should be custom URL");
+  is(settings.urls.length, 1, "should be an 1-entry array");
+  is(settings.urls[0].url, "https://www.google.com", "should be a custom URL");
+  is(
+    settings.urls[0].host,
+    "google.com",
+    "should be the host name without 'www.'"
+  );
+
+  HomePage.reset();
+});
+
+add_task(async function check_homePageSettings_customURL_multiple() {
+  await HomePage.set("https://www.google.com|https://www.youtube.com");
+  let settings = ASRouterTargeting.Environment.homePageSettings;
+
+  ok(!settings.isDefault, "should not be the default");
+  ok(!settings.isLocked, "should not set as locked");
+  ok(!settings.isWebExt, "should not be web extension");
+  ok(settings.isCustomUrl, "should be custom URL");
+  is(settings.urls.length, 2, "should be a 2-entry array");
+  is(settings.urls[0].url, "https://www.google.com", "should be a custom URL");
+  is(
+    settings.urls[0].host,
+    "google.com",
+    "should be the host name without 'www.'"
+  );
+  is(settings.urls[1].url, "https://www.youtube.com", "should be a custom URL");
+  is(
+    settings.urls[1].host,
+    "youtube.com",
+    "should be the host name without 'www.'"
+  );
+
+  HomePage.reset();
+});
+
+add_task(async function check_homePageSettings_webExtension() {
+  const extURI =
+    "moz-extension://0d735548-ba3c-aa43-a0e4-7089584fbb53/homepage.html";
+  await HomePage.set(extURI);
+  let settings = ASRouterTargeting.Environment.homePageSettings;
+
+  ok(!settings.isDefault, "should not be the default");
+  ok(!settings.isLocked, "should not set as locked");
+  ok(settings.isWebExt, "should be a web extension");
+  ok(!settings.isCustomUrl, "should be custom URL");
+  is(settings.urls.length, 1, "should be an 1-entry array");
+  is(settings.urls[0].url, extURI, "should be a webExtension URI");
+  is(settings.urls[0].host, "", "should be an empty string");
+
+  HomePage.reset();
+});
+
+add_task(async function check_newtabSettings_default() {
+  let settings = ASRouterTargeting.Environment.newtabSettings;
+
+  ok(settings.isDefault, "should set as default");
+  ok(!settings.isWebExt, "should not be web extension");
+  ok(!settings.isCustomUrl, "should not be custom URL");
+  is(settings.url, "about:newtab", "should be about:home");
+  is(settings.host, "", "should be an empty string");
+});
+
+add_task(async function check_newTabSettings_customURL() {
+  AboutNewTab.newTabURL = "https://www.google.com";
+  let settings = ASRouterTargeting.Environment.newtabSettings;
+
+  ok(!settings.isDefault, "should not be the default");
+  ok(!settings.isWebExt, "should not be web extension");
+  ok(settings.isCustomUrl, "should be custom URL");
+  is(settings.url, "https://www.google.com", "should be a custom URL");
+  is(settings.host, "google.com", "should be the host name without 'www.'");
+
+  AboutNewTab.resetNewTabURL();
+});
+
+add_task(async function check_newTabSettings_webExtension() {
+  const extURI =
+    "moz-extension://0d735548-ba3c-aa43-a0e4-7089584fbb53/homepage.html";
+  AboutNewTab.newTabURL = extURI;
+  let settings = ASRouterTargeting.Environment.newtabSettings;
+
+  ok(!settings.isDefault, "should not be the default");
+  ok(settings.isWebExt, "should not be web extension");
+  ok(!settings.isCustomUrl, "should be custom URL");
+  is(settings.url, extURI, "should be the web extension URI");
+  is(settings.host, "", "should be an empty string");
+
+  AboutNewTab.resetNewTabURL();
 });
