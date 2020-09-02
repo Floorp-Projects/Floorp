@@ -193,6 +193,19 @@ var UrlbarUtils = {
     "Yandex",
   ]),
 
+  // Valid entry points for search mode. If adding a value here, please update
+  // telemetry documentation.
+  SEARCH_MODE_ENTRY: new Set([
+    "handoff",
+    "keywordoffer",
+    "oneoff",
+    "other",
+    "shortcut",
+    "topsites_newtab",
+    "topsites_urlbar",
+    "typed",
+  ]),
+
   /**
    * Returns the payload schema for the given type of result.
    *

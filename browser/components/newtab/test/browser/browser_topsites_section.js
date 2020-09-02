@@ -205,7 +205,7 @@ test_newtab({
       ok(
         ObjectUtils.deepEqual(
           gURLBar.searchMode,
-          { engineName },
+          { engineName, entry: "topsites_newtab" },
           "The Urlbar is in search mode."
         )
       );
