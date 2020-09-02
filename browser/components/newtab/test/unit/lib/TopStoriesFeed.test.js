@@ -95,7 +95,14 @@ describe("Top Stories Feed", () => {
     instance = new TopStoriesFeed();
     instance.store = {
       getState() {
-        return { Prefs: { values: { showSponsored: true } } };
+        return {
+          Prefs: {
+            values: {
+              showSponsored: true,
+              "feeds.section.topstories": true,
+            },
+          },
+        };
       },
       dispatch: sinon.spy(),
     };
@@ -117,6 +124,7 @@ describe("Top Stories Feed", () => {
         Prefs: {
           values: {
             "discoverystream.config": JSON.stringify({ enabled: true }),
+            "feeds.section.topstories": true,
           },
         },
       });
@@ -129,6 +137,7 @@ describe("Top Stories Feed", () => {
         Prefs: {
           values: {
             "discoverystream.config": JSON.stringify({ enabled: false }),
+            "feeds.section.topstories": true,
           },
         },
       });
@@ -172,6 +181,7 @@ describe("Top Stories Feed", () => {
           values: {
             "discoverystream.config": JSON.stringify({ enabled: true }),
             "discoverystream.enabled": true,
+            "feeds.section.topstories": true,
           },
         },
       });
@@ -193,6 +203,7 @@ describe("Top Stories Feed", () => {
         Prefs: {
           values: {
             "discoverystream.config": JSON.stringify({ enabled: false }),
+            "feeds.section.topstories": true,
           },
         },
       });
@@ -257,6 +268,79 @@ describe("Top Stories Feed", () => {
       });
       assert.calledOnce(instance.lazyLoadTopStories);
       assert.notCalled(instance.onInit);
+    });
+    it("should not init props if ds pref is true", () => {
+      sinon.stub(instance, "initializeProperties");
+      instance.propertiesInitialized = false;
+      instance.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.config": JSON.stringify({ enabled: false }),
+            "discoverystream.enabled": true,
+            "feeds.section.topstories": true,
+          },
+        },
+      });
+      instance.lazyLoadTopStories({
+        dsPref: JSON.stringify({ enabled: true }),
+      });
+      assert.notCalled(instance.initializeProperties);
+    });
+    it("should fire init if user pref is true", () => {
+      sinon.stub(instance, "onInit");
+      instance.store.getState = () => ({
+        Prefs: {
+          values: {
+            "discoverystream.config": JSON.stringify({ enabled: false }),
+            "discoverystream.enabled": false,
+            "feeds.section.topstories": false,
+          },
+        },
+      });
+      instance.lazyLoadTopStories({ userPref: true });
+      assert.calledOnce(instance.onInit);
+    });
+    it("should fire uninit if topstories update to false", () => {
+      sinon.stub(instance, "uninit");
+      instance.discoveryStreamEnabled = false;
+      instance.onAction({
+        type: at.PREF_CHANGED,
+        data: {
+          value: false,
+          name: "feeds.section.topstories",
+        },
+      });
+      assert.calledOnce(instance.uninit);
+      instance.discoveryStreamEnabled = true;
+      instance.onAction({
+        type: at.PREF_CHANGED,
+        data: {
+          value: false,
+          name: "feeds.section.topstories",
+        },
+      });
+      assert.calledTwice(instance.uninit);
+    });
+    it("should fire lazyLoadTopstories if topstories update to true", () => {
+      sinon.stub(instance, "lazyLoadTopStories");
+      instance.discoveryStreamEnabled = false;
+      instance.onAction({
+        type: at.PREF_CHANGED,
+        data: {
+          value: true,
+          name: "feeds.section.topstories",
+        },
+      });
+      assert.calledOnce(instance.lazyLoadTopStories);
+      instance.discoveryStreamEnabled = true;
+      instance.onAction({
+        type: at.PREF_CHANGED,
+        data: {
+          value: true,
+          name: "feeds.section.topstories",
+        },
+      });
+      assert.calledTwice(instance.lazyLoadTopStories);
     });
   });
 
