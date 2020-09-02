@@ -256,7 +256,9 @@ add_task(async function spaceToEnterSearchMode() {
       value: engine.alias,
     });
 
-    let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
+    // We need to wait for two searches: The first enters search mode, the
+    // second does the search in search mode.
+    let searchPromise = UrlbarTestUtils.promiseSearchComplete(win, 2);
     EventUtils.synthesizeKey(" ", {}, win);
     await searchPromise;
 

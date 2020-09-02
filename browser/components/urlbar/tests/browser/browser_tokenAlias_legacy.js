@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This file can be deleted when update2 is enabled by default.
+//
 // This test checks "@" search engine aliases ("token aliases") in the urlbar.
 
 "use strict";
@@ -8,18 +10,7 @@
 const ALIAS = "@test";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-let testEngine;
-
 add_task(async function init() {
-  // This test requires update2.  See also browser_tokenAlias_legacy.js.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.localOneOffs", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-
   // Add a default engine with suggestions, to avoid hitting the network when
   // fetching them.
   let defaultEngine = await SearchTestUtils.promiseNewSearchEngine(
@@ -28,19 +19,23 @@ add_task(async function init() {
   defaultEngine.alias = "@default";
   let oldDefaultEngine = await Services.search.getDefault();
   Services.search.setDefault(defaultEngine);
-  testEngine = await Services.search.addEngineWithDetails("Test", {
+  let engine = await Services.search.addEngineWithDetails("Test", {
     alias: ALIAS,
     template: "http://example.com/?search={searchTerms}",
   });
   registerCleanupFunction(async function() {
-    await Services.search.removeEngine(testEngine);
+    await Services.search.removeEngine(engine);
     Services.search.setDefault(oldDefaultEngine);
   });
 
-  // Search results aren't shown in quantumbar unless search suggestions are
-  // enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
+    set: [
+      // Disable update2.
+      ["browser.urlbar.update2", false],
+      // Search results aren't shown in quantumbar unless search suggestions are
+      // enabled.
+      ["browser.urlbar.suggest.searches", true],
+    ],
   });
 });
 
@@ -63,100 +58,56 @@ async function doSimpleTest(revertBetweenSteps) {
     set: [["browser.urlbar.autoFill", false]],
   });
 
-  // "@tes" -- not an alias, no search mode
+  // "@tes" -- not an alias, no highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: ALIAS.substr(0, ALIAS.length - 1),
+    fireInputEvent: true,
   });
-  await UrlbarTestUtils.assertSearchMode(window, null);
-  Assert.equal(
-    gURLBar.value,
-    ALIAS.substr(0, ALIAS.length - 1),
-    "value should be alias substring"
-  );
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(false);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
     gURLBar.blur();
   }
 
-  // "@test" -- alias but no trailing space, no search mode
+  // "@test" -- alias, highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: ALIAS,
+    fireInputEvent: true,
   });
-  await UrlbarTestUtils.assertSearchMode(window, null);
-  Assert.equal(gURLBar.value, ALIAS, "value should be alias");
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
     gURLBar.blur();
   }
 
-  // "@test " -- alias with trailing space, search mode
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: ALIAS + " ",
-  });
-  // Wait for the second new search that starts when search mode is entered.
-  await UrlbarTestUtils.promiseSearchComplete(window);
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
-    entry: "typed",
-  });
-  Assert.equal(gURLBar.value, "", "value should be empty");
-  await UrlbarTestUtils.exitSearchMode(window);
-
-  if (revertBetweenSteps) {
-    gURLBar.handleRevert();
-    gURLBar.blur();
-  }
-
-  // "@test foo" -- alias, search mode
+  // "@test foo" -- alias, highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: ALIAS + " foo",
+    fireInputEvent: true,
   });
-  // Wait for the second new search that starts when search mode is entered.
-  await UrlbarTestUtils.promiseSearchComplete(window);
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
-    entry: "typed",
-  });
-  Assert.equal(gURLBar.value, "foo", "value should be query");
-  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
     gURLBar.blur();
   }
 
-  // "@test " -- alias with trailing space, search mode
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: ALIAS + " ",
-  });
-  // Wait for the second new search that starts when search mode is entered.
-  await UrlbarTestUtils.promiseSearchComplete(window);
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
-    entry: "typed",
-  });
-  Assert.equal(gURLBar.value, "", "value should be empty");
-  await UrlbarTestUtils.exitSearchMode(window);
-
-  if (revertBetweenSteps) {
-    gURLBar.handleRevert();
-    gURLBar.blur();
-  }
-
-  // "@test" -- alias but no trailing space, no highlight
+  // "@test" -- alias, highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: ALIAS,
+    fireInputEvent: true,
   });
-  await UrlbarTestUtils.assertSearchMode(window, null);
-  Assert.equal(gURLBar.value, ALIAS, "value should be alias");
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
@@ -167,13 +118,10 @@ async function doSimpleTest(revertBetweenSteps) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: ALIAS.substr(0, ALIAS.length - 1),
+    fireInputEvent: true,
   });
-  await UrlbarTestUtils.assertSearchMode(window, null);
-  Assert.equal(
-    gURLBar.value,
-    ALIAS.substr(0, ALIAS.length - 1),
-    "value should be alias substring"
-  );
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(false);
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
@@ -182,72 +130,39 @@ async function doSimpleTest(revertBetweenSteps) {
   await SpecialPowers.popPrefEnv();
 }
 
-// An alias should be recognized even when there are spaces before it, and
-// search mode should be entered.
+// An alias should be recognized and highlighted even when there are spaces
+// before it.
 add_task(async function spacesBeforeAlias() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "     " + ALIAS + " ",
-  });
-  // Wait for the second new search that starts when search mode is entered.
+  gURLBar.search("     " + ALIAS);
   await UrlbarTestUtils.promiseSearchComplete(window);
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
-    entry: "typed",
-  });
-  Assert.equal(gURLBar.value, "", "value should be empty");
-  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
+
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
 });
 
-// An alias in the middle of a string should not be recognized and search mode
-// should not be entered.
+// An alias in the middle of a string should not be recognized or highlighted.
 add_task(async function charsBeforeAlias() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "not an alias " + ALIAS + " ",
-  });
-  await UrlbarTestUtils.assertSearchMode(window, null);
-  Assert.equal(
-    gURLBar.value,
-    "not an alias " + ALIAS + " ",
-    "value should be unchanged"
-  );
+  gURLBar.search("not an alias " + ALIAS);
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(false);
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
 });
 
-// While already in search mode, an alias should not be recognized.
-add_task(async function alreadyInSearchMode() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "",
-  });
-  await UrlbarTestUtils.enterSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-  });
+// In a search string that starts with a restriction character followed by an
+// alias, the alias should be neither recognized nor highlighted.
+add_task(async function restrictionCharBeforeAlias() {
+  gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK + " " + ALIAS);
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(false);
 
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: ALIAS + " ",
-  });
-
-  // Search mode source should still be bookmarks.
-  await UrlbarTestUtils.assertSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-    entry: "oneoff",
-  });
-  Assert.equal(gURLBar.value, ALIAS + " ", "value should be unchanged");
-
-  // Exit search mode, but first remove the value in the input.  Since the value
-  // is "alias ", we'd actually immediately re-enter search mode otherwise.
-  gURLBar.value = "";
-
-  await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
@@ -262,55 +177,83 @@ add_task(async function spaceWhileTypingAlias() {
     selectionStart: value.length,
     selectionEnd: value.length,
   });
-  Assert.equal(gURLBar.value, ALIAS + " ", "Alias should be autofilled");
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
 
+  gURLBar.value = value + " ";
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-  EventUtils.synthesizeKey(" ");
+  UrlbarTestUtils.fireInputEvent(window);
   await searchPromise;
 
-  Assert.equal(gURLBar.value, value + " ", "Alias should not be autofilled");
-  await UrlbarTestUtils.assertSearchMode(window, null);
-
-  await UrlbarTestUtils.promisePopupClose(window);
+  await assertAlias(false);
 });
 
-// Aliases are case insensitive.  Make sure that searching with an alias using a
-// weird case still causes the alias to be recognized and search mode entered.
+// Aliases are case insensitive, and the alias in the result uses the case that
+// the user typed in the input.  Make sure that searching with an alias using a
+// weird case still causes the alias to be highlighted.
 add_task(async function aliasCase() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "@TeSt ",
-  });
-  // Wait for the second new search that starts when search mode is entered.
+  let alias = "@TeSt";
+  gURLBar.search(alias);
   await UrlbarTestUtils.promiseSearchComplete(window);
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
-    entry: "typed",
-  });
-  Assert.equal(gURLBar.value, "", "value should be empty");
-  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true, alias);
+
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
 });
 
-// Same as previous but with a query.
-add_task(async function aliasCase_query() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "@tEsT query",
-  });
-  // Wait for the second new search that starts when search mode is entered.
+// Even when the heuristic result is a search engine result with an alias, if
+// the urlbar value does not match that result, then no alias substring in the
+// urlbar should be highlighted.  This is the case when the user uses an alias
+// to perform a search: The popup closes (preserving the results in it), the
+// urlbar value changes to the URL of the search results page, and the search
+// results page is loaded.
+add_task(async function inputDoesntMatchHeuristicResult() {
+  // Do a search using the alias.
+  let searchString = `${ALIAS} aaa`;
+  gURLBar.search(searchString);
   await UrlbarTestUtils.promiseSearchComplete(window);
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
-    entry: "typed",
-  });
-  Assert.equal(gURLBar.value, "query", "value should be query");
-  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
+
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
+
+  // Manually set the urlbar value to a string that contains the alias at the
+  // beginning but is not the alias.
+  let value = `${ALIAS}xxx`;
+  gURLBar.value = `${ALIAS}xxx`;
+
+  // The alias substring should not be highlighted.
+  Assert.equal(gURLBar.untrimmedValue, value);
+  Assert.ok(gURLBar.untrimmedValue.includes(ALIAS));
+  assertHighlighted(false, ALIAS);
+
+  // Do another search using the alias.
+  searchString = `${ALIAS} bbb`;
+  gURLBar.search(searchString);
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
+
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
+
+  // Manually set the urlbar value to a string that contains the alias, but not
+  // at the beginning and is not the same as the search string.
+  value = `bbb ${ALIAS}`;
+  gURLBar.value = `bbb ${ALIAS}`;
+
+  // The alias substring should not be highlighted.
+  Assert.equal(gURLBar.untrimmedValue, value);
+  Assert.ok(gURLBar.untrimmedValue.includes(ALIAS));
+  assertHighlighted(false, ALIAS);
+
+  // Reset for the next test.
+  gURLBar.search("");
 });
 
 // Selecting a non-heuristic (non-first) search engine result with an alias and
@@ -341,10 +284,8 @@ add_task(async function nonHeuristicAliases() {
 
   // Populate the results with the list of token alias engines by searching for
   // "@".
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "@",
-  });
+  gURLBar.search("@");
+  await UrlbarTestUtils.promiseSearchComplete(window);
   await UrlbarTestUtils.waitForAutocompleteResultAt(
     window,
     tokenEngines.length - 1
@@ -362,14 +303,32 @@ add_task(async function nonHeuristicAliases() {
   );
 });
 
+// Aliases that don't start with @ shouldn't be highlighted.
+add_task(async function nonTokenAlias() {
+  let alias = "nontokenalias";
+  let engine = Services.search.getEngineByName("Test");
+  engine.alias = "nontokenalias";
+  Assert.equal(engine.alias, alias);
+
+  gURLBar.search(alias);
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertFirstResultIsAlias(true, alias);
+  assertHighlighted(false);
+
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
+
+  engine.alias = ALIAS;
+});
+
 // Clicking on an @ alias offer (an @ alias with an empty search string) in the
-// view should enter search mode.
-add_task(async function clickAndFillAlias() {
+// view should fill it in the urlbar input.
+add_task(async function clickAndFillAlias_legacy() {
   // Do a search for "@" to show all the @ aliases.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "@",
-  });
+  gURLBar.search("@");
+  await UrlbarTestUtils.promiseSearchComplete(window);
 
   // Find our test engine in the results.  It's probably last, but for
   // robustness don't assume it is.
@@ -385,36 +344,46 @@ add_task(async function clickAndFillAlias() {
   }
 
   // Click it.
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
   EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
-  await searchPromise;
 
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngineItem.result.payload.engine,
-    entry: "keywordoffer",
-  });
+  // A new search will start and its result should be the alias.
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
 
-  await UrlbarTestUtils.exitSearchMode(window);
+  // The urlbar input value should be the alias followed by a space so that it's
+  // ready for the user to start typing.
+  Assert.equal(gURLBar.value, `${ALIAS} `);
+
+  // Press the enter key a couple of times.  Nothing should happen except a new
+  // search will start and its result should be the alias again.  The urlbar
+  // should still contain the alias.  An empty search results page should not
+  // load.  The test will hang if that happens.
+  for (let i = 0; i < 2; i++) {
+    EventUtils.synthesizeKey("KEY_Enter");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+    await assertAlias(true);
+    Assert.equal(gURLBar.value, `${ALIAS} `);
+  }
+
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
 });
 
 // Pressing enter on an @ alias offer (an @ alias with an empty search string)
-// in the view should enter search mode.
-add_task(async function enterAndFillAlias() {
+// in the view should fill it in the urlbar input.
+add_task(async function enterAndFillAlias_legacy() {
   // Do a search for "@" to show all the @ aliases.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "@",
-  });
+  gURLBar.search("@");
+  await UrlbarTestUtils.promiseSearchComplete(window);
 
   // Find our test engine in the results.  It's probably last, but for
   // robustness don't assume it is.
-  let details;
   let index = 0;
   for (; ; index++) {
-    details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
     if (details.searchParams && details.searchParams.keyword == ALIAS) {
       index++;
       break;
@@ -423,23 +392,38 @@ add_task(async function enterAndFillAlias() {
 
   // Key down to it and press enter.
   EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
   EventUtils.synthesizeKey("KEY_Enter");
-  await searchPromise;
 
-  await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: details.searchParams.engine,
-    entry: "keywordoffer",
-  });
+  // A new search will start and its result should be the alias.
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  await assertAlias(true);
 
-  await UrlbarTestUtils.exitSearchMode(window);
+  // The urlbar input value should be the alias followed by a space so that it's
+  // ready for the user to start typing.
+  Assert.equal(gURLBar.value, `${ALIAS} `);
+
+  // Press the enter key a couple of times.  Nothing should happen except a new
+  // search will start and its result should be the alias again.  The urlbar
+  // should still contain the alias.  An empty search results page should not
+  // load.  The test will hang if that happens.
+  for (let i = 0; i < 2; i++) {
+    EventUtils.synthesizeKey("KEY_Enter");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+    await assertAlias(true);
+    Assert.equal(gURLBar.value, `${ALIAS} `);
+  }
+
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
 });
 
-// Pressing Enter on an @ alias autofill should enter search mode.
-add_task(async function enterAutofillsAlias() {
+// Pressing enter on an @ alias autofill should fill it in the urlbar input
+// with a trailing space and move the caret at the end.
+add_task(async function enterAutofillsAlias_legacy() {
+  let expectedString = `${ALIAS} `;
   for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -447,46 +431,19 @@ add_task(async function enterAutofillsAlias() {
       selectionStart: value.length,
       selectionEnd: value.length,
     });
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
 
     // Press Enter.
-    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeKey("KEY_Enter");
-    await searchPromise;
+    await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
 
-    await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
-      entry: "keywordoffer",
-    });
-
-    await UrlbarTestUtils.exitSearchMode(window);
+    // The urlbar input value should be the alias followed by a space so that it's
+    // ready for the user to start typing.
+    Assert.equal(gURLBar.value, expectedString);
+    Assert.equal(gURLBar.selectionStart, expectedString.length);
+    Assert.equal(gURLBar.selectionEnd, expectedString.length);
+    await assertAlias(true);
   }
-  await UrlbarTestUtils.promisePopupClose(window, () =>
-    EventUtils.synthesizeKey("KEY_Escape")
-  );
-});
-
-// Pressing Right on an @ alias autofill should enter search mode.
-add_task(async function rightEntersSearchMode() {
-  for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value,
-      selectionStart: value.length,
-      selectionEnd: value.length,
-    });
-
-    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-    EventUtils.synthesizeKey("KEY_ArrowRight");
-    await searchPromise;
-
-    await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
-      entry: "typed",
-    });
-    Assert.equal(gURLBar.value, "", "value should be empty");
-    await UrlbarTestUtils.exitSearchMode(window);
-  }
-
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
@@ -597,6 +554,11 @@ add_task(async function nonPrefixedKeyword() {
 
   await Services.search.removeEngine(engine);
 });
+
+async function assertAlias(aliasPresent, expectedAlias = ALIAS) {
+  await assertFirstResultIsAlias(aliasPresent, expectedAlias);
+  assertHighlighted(aliasPresent, expectedAlias);
+}
 
 async function assertFirstResultIsAlias(isAlias, expectedAlias) {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);

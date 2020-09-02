@@ -30,6 +30,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class ProviderHeuristicFallback extends UrlbarProvider {
   constructor() {
     super();
+
+    // The Set of local search mode keywords/restriction characters.  We use
+    // this to quickly look them up.
+    XPCOMUtils.defineLazyGetter(this, "_localSearchModeKeywords", () => {
+      return new Set(
+        [...UrlbarTokenizer.SEARCH_MODE_RESTRICT].map(
+          r => UrlbarTokenizer.RESTRICT[r]
+        )
+      );
+    });
   }
 
   /**
@@ -105,11 +115,20 @@ class ProviderHeuristicFallback extends UrlbarProvider {
           addCallback(this, searchResult);
         }
       }
-    } else {
-      result = await this._defaultEngineSearchResult(queryContext);
-      if (!result || instance != this.queryInstance) {
-        return;
-      }
+      return;
+    }
+
+    result = this._localSearchModeKeywordResult(queryContext);
+    if (result) {
+      addCallback(this, result);
+      return;
+    }
+
+    result = await this._defaultEngineSearchResult(queryContext);
+    if (instance != this.queryInstance) {
+      return;
+    }
+    if (result) {
       result.heuristic = true;
       addCallback(this, result);
     }
@@ -152,7 +171,6 @@ class ProviderHeuristicFallback extends UrlbarProvider {
           ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [searchUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [searchUrl, UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: "",
           })
         );
         result.heuristic = true;
@@ -196,7 +214,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     // flicker, since the url keeps changing while the user types.
     // By default we won't provide an icon, but for the subset of urls with a
     // host we'll check for a typed slash and set favicon for the host part.
-    let iconUri = "";
+    let iconUri;
     if (hostExpected && (searchUrl.endsWith("/") || uri.pathname.length > 1)) {
       // Look for an icon with the entire URL except for the pathname, including
       // scheme, usernames, passwords, hostname, and port.
@@ -212,6 +230,57 @@ class ProviderHeuristicFallback extends UrlbarProvider {
         title: [displayURL, UrlbarUtils.HIGHLIGHT.TYPED],
         url: [escapedURL, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: iconUri,
+      })
+    );
+    result.heuristic = true;
+    return result;
+  }
+
+  _localSearchModeKeywordResult(queryContext) {
+    if (!UrlbarPrefs.get("update2")) {
+      return null;
+    }
+
+    if (!queryContext.tokens.length) {
+      return null;
+    }
+
+    let firstToken = queryContext.tokens[0].value;
+    if (!this._localSearchModeKeywords.has(firstToken)) {
+      return null;
+    }
+
+    // At this point, the search string starts with a local search mode token.
+    // Now we need to determine what to do based on the remainder of the search
+    // string.  If the remainder starts with a space, then we should enter
+    // search mode, so we should continue below and create the result.
+    // Otherwise, we should not enter search mode, and in that case, the search
+    // string will look like one of the following:
+    //
+    // * The search string ends with the local search mode token (e.g., the user
+    //   has typed only the token by itself, with no trailing spaces).
+    // * More tokens exist, but there's no space between the local search mode
+    //   token and the following token.  This is possible because the tokenizer
+    //   does not require spaces between a restriction token and the remainder
+    //   of the search string.  In this case, we should not enter search mode.
+    //
+    // If we return null here and thereby do not enter search mode, then we'll
+    // continue on to _defaultEngineSearchResult, and the heuristic will be a
+    // default engine search result.
+    let query = UrlbarUtils.substringAfter(
+      queryContext.searchString,
+      firstToken
+    );
+    if (!query.startsWith(" ")) {
+      return null;
+    }
+
+    let result = new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        query: [query.trimStart(), UrlbarUtils.HIGHLIGHT.NONE],
+        keyword: [firstToken, UrlbarUtils.HIGHLIGHT.NONE],
       })
     );
     result.heuristic = true;
@@ -249,26 +318,17 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       ).trim();
     }
 
-    let result = new UrlbarResult(
+    return new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: [engine.iconURI?.spec || ""],
+        icon: engine.iconURI?.spec,
         query: [query, UrlbarUtils.HIGHLIGHT.NONE],
         // We're confident that there is no alias, since UnifiedComplete
         // handles heuristic searches with aliases.
-        keyword: undefined,
-        keywordOffer: UrlbarUtils.KEYWORD_OFFER.NONE,
-        // For test interoperabilty with UrlbarProviderSearchSuggestions.
-        suggestion: undefined,
-        tailPrefix: undefined,
-        tail: undefined,
-        tailOffsetIndex: -1,
-        isSearchHistory: false,
       })
     );
-    return result;
   }
 }
 

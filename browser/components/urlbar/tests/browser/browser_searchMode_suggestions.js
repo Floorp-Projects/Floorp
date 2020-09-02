@@ -48,7 +48,6 @@ add_task(async function setup() {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
       searchParams: {
-        isSearchHistory: true,
         suggestion: value,
         engine: suggestionsEngine.name,
       },
@@ -109,7 +108,6 @@ add_task(async function nonEmptySearch() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           engine: suggestionsEngine.name,
         },
       },
@@ -120,7 +118,6 @@ add_task(async function nonEmptySearch() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           suggestion: `${query}foo`,
           engine: suggestionsEngine.name,
         },
@@ -131,7 +128,6 @@ add_task(async function nonEmptySearch() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           suggestion: `${query}bar`,
           engine: suggestionsEngine.name,
         },
@@ -162,7 +158,6 @@ add_task(async function nonEmptySearch_nonMatching() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           engine: suggestionsEngine.name,
         },
       },
@@ -172,7 +167,6 @@ add_task(async function nonEmptySearch_nonMatching() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           suggestion: `${query}foo`,
           engine: suggestionsEngine.name,
         },
@@ -183,7 +177,6 @@ add_task(async function nonEmptySearch_nonMatching() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           suggestion: `${query}bar`,
           engine: suggestionsEngine.name,
         },
@@ -218,7 +211,6 @@ add_task(async function nonEmptySearch_withHistory() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           engine: suggestionsEngine.name,
         },
       },
@@ -228,7 +220,6 @@ add_task(async function nonEmptySearch_withHistory() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           suggestion: `${query}foo`,
           engine: suggestionsEngine.name,
         },
@@ -239,7 +230,6 @@ add_task(async function nonEmptySearch_withHistory() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           suggestion: `${query}bar`,
           engine: suggestionsEngine.name,
         },
@@ -283,7 +273,6 @@ add_task(async function nonEmptySearch_url() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query,
-          isSearchHistory: false,
           engine: suggestionsEngine.name,
         },
       },

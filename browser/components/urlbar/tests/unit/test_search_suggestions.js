@@ -436,6 +436,7 @@ add_task(async function restrictToken() {
       ...makeExpectedFormHistoryResults(context),
     ],
   });
+
   // Also if followed by multiple spaces.
   context = createContext(`${UrlbarTokenizer.RESTRICT.SEARCH}  `, {
     isPrivate: false,
@@ -451,6 +452,7 @@ add_task(async function restrictToken() {
       ...makeExpectedFormHistoryResults(context),
     ],
   });
+
   // If followed by any char we should fetch suggestions.
   // Note this uses "h" to match form history.
   context = createContext(`${UrlbarTokenizer.RESTRICT.SEARCH}h`, {
@@ -470,6 +472,7 @@ add_task(async function restrictToken() {
       }),
     ],
   });
+
   // Also if followed by a space and single char.
   context = createContext(`${UrlbarTokenizer.RESTRICT.SEARCH} h`, {
     isPrivate: false,
@@ -488,7 +491,9 @@ add_task(async function restrictToken() {
       }),
     ],
   });
-  // Any other restriction char allows to search for it.
+
+  // With update2 disabled, any other restriction char allows to search for it.
+  Services.prefs.setBoolPref("browser.urlbar.update2", false);
   context = createContext(UrlbarTokenizer.RESTRICT.OPENPAGE, {
     isPrivate: false,
   });
@@ -498,6 +503,54 @@ add_task(async function restrictToken() {
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
+  Services.prefs.clearUserPref("browser.urlbar.update2");
+
+  // Leading search-mode restriction tokens are removed.
+  Services.prefs.setBoolPref("browser.urlbar.update2", true);
+  context = createContext(
+    `${UrlbarTokenizer.RESTRICT.BOOKMARK} ${SEARCH_STRING}`,
+    { isPrivate: false }
+  );
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        heuristic: true,
+        query: SEARCH_STRING,
+        alias: UrlbarTokenizer.RESTRICT.BOOKMARK,
+        keywordOffer: UrlbarUtils.KEYWORD_OFFER.NONE,
+      }),
+      makeBookmarkResult(context, {
+        uri: `http://example.com/${SEARCH_STRING}-bookmark`,
+        title: `${SEARCH_STRING} bookmark`,
+      }),
+    ],
+  });
+
+  // Non-search-mode restriction tokens remain in the query and heuristic search
+  // result.
+  let restrict;
+  for (let r of Object.keys(UrlbarTokenizer.RESTRICT)) {
+    if (!UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(r)) {
+      restrict = r;
+      break;
+    }
+  }
+  Assert.ok(
+    restrict,
+    "Non-search-mode restrict token exists -- if not, you can probably remove me!"
+  );
+  context = createContext(UrlbarTokenizer.RESTRICT[restrict], {
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+  Services.prefs.clearUserPref("browser.urlbar.update2");
 
   await cleanUpSuggestions();
 });
@@ -760,6 +813,7 @@ add_task(async function prohibit_suggestions() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${SEARCH_STRING}/`,
         title: `http://${SEARCH_STRING}/`,
         iconUri: "",
@@ -800,6 +854,7 @@ add_task(async function prohibit_suggestions() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${SEARCH_STRING}/`,
         title: `http://${SEARCH_STRING}/`,
         iconUri: "",
@@ -818,6 +873,7 @@ add_task(async function prohibit_suggestions() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://somethingelse/",
         title: "http://somethingelse/",
         iconUri: "",
@@ -848,8 +904,10 @@ add_task(async function prohibit_suggestions() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://1.2.3.4/",
         title: "http://1.2.3.4/",
+        iconUri: "page-icon:http://1.2.3.4/",
         heuristic: true,
       }),
     ],
@@ -860,6 +918,7 @@ add_task(async function prohibit_suggestions() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://[2001::1]:30/",
         title: "http://[2001::1]:30/",
         iconUri: "",
@@ -873,6 +932,7 @@ add_task(async function prohibit_suggestions() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://user:pass@test/",
         title: "http://user:pass@test/",
         iconUri: "",
@@ -886,6 +946,7 @@ add_task(async function prohibit_suggestions() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "data:text/plain,Content",
         title: "data:text/plain,Content",
         iconUri: "",
@@ -916,6 +977,7 @@ add_task(async function uri_like_queries() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         title: `http://${query}/`,
         uri: `http://${query}/`,
         iconUri: "",
@@ -1135,6 +1197,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "ftp://test/",
         title: "ftp://test/",
         iconUri: "",
@@ -1174,6 +1237,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "ftp://test/",
         title: "ftp://test/",
         iconUri: "",
@@ -1219,6 +1283,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www/",
         title: "http://www/",
         iconUri: "",
@@ -1232,6 +1297,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "https://www/",
         title: "https://www/",
         iconUri: "",
@@ -1245,6 +1311,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://test/",
         title: "http://test/",
         iconUri: "",
@@ -1258,6 +1325,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "https://test/",
         title: "https://test/",
         iconUri: "",
@@ -1271,6 +1339,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.test/",
         title: "http://www.test/",
         iconUri: "",
@@ -1284,6 +1353,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.test.com/",
         title: "http://www.test.com/",
         iconUri: "",
@@ -1321,6 +1391,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "file:///Users",
         title: "file:///Users",
         iconUri: "",
@@ -1516,6 +1587,7 @@ add_task(async function formHistory() {
     context,
     matches: [
       makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         uri: "http://foo.example.com/",
         title: "foo.example.com",
         heuristic: true,

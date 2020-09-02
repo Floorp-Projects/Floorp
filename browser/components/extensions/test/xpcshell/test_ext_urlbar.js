@@ -37,6 +37,16 @@ function promiseUninstallCompleted(extensionId) {
   });
 }
 
+function getPayload(result) {
+  let payload = {};
+  for (let [key, value] of Object.entries(result.payload)) {
+    if (value !== undefined) {
+      payload[key] = value;
+    }
+  }
+  return payload;
+}
+
 const ORIGINAL_NOTIFICATION_TIMEOUT =
   UrlbarProviderExtension.notificationTimeout;
 
@@ -284,14 +294,6 @@ add_task(async function test_onProviderResultsRequested() {
       payload: {
         query: "test",
         engine: "Test engine",
-        suggestion: undefined,
-        tailPrefix: undefined,
-        tail: undefined,
-        tailOffsetIndex: -1,
-        keyword: undefined,
-        isSearchHistory: false,
-        icon: "",
-        keywordOffer: false,
       },
     },
     // The second result should be our search suggestion result since the
@@ -363,7 +365,7 @@ add_task(async function test_onProviderResultsRequested() {
     source: r.source,
     title: r.title,
     heuristic: r.heuristic,
-    payload: r.payload,
+    payload: getPayload(r),
   }));
 
   Assert.deepEqual(actualResults, expectedResults);

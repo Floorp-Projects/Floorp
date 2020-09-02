@@ -11,6 +11,8 @@ const serverInfo = {
   port: 20709, // Must be identical to what is in searchSuggestionEngine2.xml
 };
 
+let aliasEngine;
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -45,7 +47,7 @@ add_task(async function setup() {
   await Services.search.moveEngine(engine2, 0);
 
   // Add an engine with an alias.
-  let aliasEngine = await Services.search.addEngineWithDetails("MozSearch", {
+  aliasEngine = await Services.search.addEngineWithDetails("MozSearch", {
     alias: "alias",
     method: "GET",
     template: "http://example.com/?q={searchTerms}",
@@ -381,7 +383,56 @@ add_task(async function test_oneoff_selected_with_private_engine_keyboard() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function test_alias() {
+add_task(async function test_alias_no_query() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+  info(
+    "Test that 'Search in a Private Window' doesn't appear if an alias is typed with no query"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "alias ",
+  });
+  // Wait for the second new search that starts when search mode is entered.
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: aliasEngine.name,
+    entry: "typed",
+  });
+  await AssertNoPrivateResult(window);
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_alias_query() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+  info(
+    "Test that 'Search in a Private Window' appears when an alias is typed with a query"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "alias something",
+  });
+  // Wait for the second new search that starts when search mode is entered.
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: "MozSearch",
+    entry: "typed",
+  });
+  await AssertPrivateResult(window, aliasEngine, true);
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_alias_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
   info(
     "Test that 'Search in a Private Window' doesn't appear if an alias is typed"
   );
@@ -396,6 +447,7 @@ add_task(async function test_alias() {
     value: "alias something",
   });
   await AssertNoPrivateResult(window);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_restrict() {

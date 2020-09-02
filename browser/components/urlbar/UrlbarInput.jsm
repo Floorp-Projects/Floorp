@@ -992,7 +992,7 @@ class UrlbarInput {
    * @param {UrlbarResult} result
    *   The first result.
    */
-  autofillFirstResult(result) {
+  _autofillFirstResult(result) {
     if (!result.autofill) {
       return;
     }
@@ -1020,17 +1020,34 @@ class UrlbarInput {
   }
 
   /**
-   * Invoked by the view when the first result is received.
-   * @param {UrlbarResult} firstResult The first result received.
+   * Invoked by the controller when the first result is received.
+   *
+   * @param {UrlbarResult} firstResult
+   *   The first result received.
+   * @returns {boolean}
+   *   True if this method canceled the query and started a new one.  False
+   *   otherwise.
    */
   onFirstResult(firstResult) {
+    // If the heuristic result has a keyword but isn't a keyword offer, we may
+    // need to enter search mode.
+    if (
+      firstResult.heuristic &&
+      firstResult.payload.keyword &&
+      !firstResult.payload.keywordOffer &&
+      this.maybePromoteKeywordToSearchMode(firstResult, false)
+    ) {
+      return true;
+    }
+
     // To prevent selection flickering, we apply autofill on input through a
     // placeholder, without waiting for results. But, if the first result is
     // not an autofill one, the autofill prediction was wrong and we should
     // restore the original user typed string.
-    if (
+    if (firstResult.autofill) {
+      this._autofillFirstResult(firstResult);
+    } else if (
       this._autofillPlaceholder &&
-      !firstResult.autofill &&
       // Avoid clobbering added spaces (for token aliases, for example).
       !this.value.endsWith(" ")
     ) {
@@ -1043,6 +1060,8 @@ class UrlbarInput {
     } else if (firstResult.heuristic) {
       this._resultForCurrentValue = firstResult;
     }
+
+    return false;
   }
 
   /**
@@ -1511,18 +1530,34 @@ class UrlbarInput {
   }
 
   /**
-   * Certain actions can autofill a keyword into searchMode
-   * @param {UrlbarResult} [result] The currently selected urlbar result.
-   * @returns {boolean} Whether Search Mode was started.
+   * Enters search mode and starts a new search if appropriate for the given
+   * result.  See also _searchModeForResult.
+   *
+   * @param {UrlbarResult} result
+   *   The currently selected urlbar result.
+   * @param {boolean} checkValue
+   *   If true, the trimmed input value must equal the result's keyword in order
+   *   to enter search mode.
+   * @returns {boolean}
+   *   True if we entered search mode and false if not.
    */
-  maybePromoteKeywordToSearchMode(result = this._resultForCurrentValue) {
-    let searchMode = this._searchModeForResult(result, "typed");
-    if (searchMode && this.value.trim() == result.payload.keyword.trim()) {
-      this.setSearchMode(searchMode);
-      this.value = "";
-      return true;
+  maybePromoteKeywordToSearchMode(
+    result = this._resultForCurrentValue,
+    checkValue = true
+  ) {
+    if (checkValue && this.value.trim() != result.payload.keyword?.trim()) {
+      return false;
     }
-    return false;
+
+    let searchMode = this._searchModeForResult(result, "typed");
+    if (!searchMode) {
+      return false;
+    }
+
+    this.setSearchMode(searchMode);
+    this._setValue(result.payload.query?.trimStart() || "", false);
+    this.startQuery({ allowAutofill: false });
+    return true;
   }
 
   // Private methods below.
@@ -2242,31 +2277,47 @@ class UrlbarInput {
       return null;
     }
 
-    // If result.originalEngine is set, then the user is Alt+Tabbing through the
-    // one-offs, so the keyword doesn't match the engine.
-    if (
-      result &&
-      result.payload.keywordOffer &&
-      (!result.payload.originalEngine ||
-        result.payload.engine == result.payload.originalEngine)
-    ) {
-      let searchModeEntry;
+    // Search mode is determined by the result's keyword.
+    if (!result.payload.keyword) {
+      return null;
+    }
+
+    let searchMode = null;
+    switch (result.payload.keyword) {
+      case UrlbarTokenizer.RESTRICT.BOOKMARK:
+        searchMode = { source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS };
+        break;
+      case UrlbarTokenizer.RESTRICT.HISTORY:
+        searchMode = { source: UrlbarUtils.RESULT_SOURCE.HISTORY };
+        break;
+      case UrlbarTokenizer.RESTRICT.OPENPAGE:
+        searchMode = { source: UrlbarUtils.RESULT_SOURCE.TABS };
+        break;
+      default:
+        // If result.originalEngine is set, then the user is Alt+Tabbing
+        // through the one-offs, so the keyword doesn't match the engine.
+        if (
+          result.payload.engine &&
+          (!result.payload.originalEngine ||
+            result.payload.engine == result.payload.originalEngine)
+        ) {
+          searchMode = { engineName: result.payload.engine };
+        }
+        break;
+    }
+
+    if (searchMode) {
       if (entry) {
-        searchModeEntry = entry;
+        searchMode.entry = entry;
       } else {
-        searchModeEntry =
+        searchMode.entry =
           result.providerName == "UrlbarProviderTopSites"
             ? "topsites_urlbar"
             : "keywordoffer";
       }
-
-      return {
-        engineName: result.payload.engine,
-        entry: searchModeEntry,
-      };
     }
 
-    return null;
+    return searchMode;
   }
 
   /**
@@ -2505,13 +2556,6 @@ class UrlbarInput {
   }
 
   _on_input(event) {
-    // We enter search mode when space is typed if there is a selected keyword
-    // offer result.
-    let enteredSearchMode = false;
-    if (event.data == " ") {
-      enteredSearchMode = this.maybePromoteKeywordToSearchMode();
-    }
-
     let value = this.value;
     this.valueIsTyped = true;
     this._untrimmedValue = value;
@@ -2549,7 +2593,7 @@ class UrlbarInput {
 
     if (!this.view.isOpen) {
       this.view.clear();
-    } else if (!value && !canShowTopSites && !enteredSearchMode) {
+    } else if (!value && !canShowTopSites) {
       this.view.clear();
       if (!this.searchMode) {
         this.view.close();

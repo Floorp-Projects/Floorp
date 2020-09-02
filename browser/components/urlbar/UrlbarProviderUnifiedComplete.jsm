@@ -132,7 +132,10 @@ function convertLegacyAutocompleteResult(context, acResult, urls) {
     let isHeuristic = i == 0 && style.includes("heuristic");
     let result = makeUrlbarResult(context.tokens, {
       url,
-      icon: acResult.getImageAt(i),
+      // getImageAt returns an empty string if there is no icon.  Use undefined
+      // instead so that tests can be simplified by not including `icon: ""` in
+      // all their payloads.
+      icon: acResult.getImageAt(i) || undefined,
       style,
       comment: acResult.getCommentAt(i),
       firstToken: context.tokens[0],
@@ -180,15 +183,43 @@ function makeUrlbarResult(tokens, info) {
   if (action) {
     switch (action.type) {
       case "searchengine": {
-        let keywordOffer = UrlbarUtils.KEYWORD_OFFER.NONE;
+        if (action.params.isSearchHistory) {
+          // Return a form history result.
+          return new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.SEARCH,
+            UrlbarUtils.RESULT_SOURCE.HISTORY,
+            ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
+              engine: action.params.engineName,
+              suggestion: [
+                action.params.searchSuggestion,
+                UrlbarUtils.HIGHLIGHT.SUGGESTED,
+              ],
+              lowerCaseSuggestion: action.params.searchSuggestion.toLocaleLowerCase(),
+            })
+          );
+        }
+
+        let keywordOffer;
         if (
-          action.params.alias &&
-          !action.params.searchQuery.trim() &&
-          (UrlbarPrefs.get("update2") || action.params.alias.startsWith("@"))
+          !UrlbarPrefs.get("update2") &&
+          action.params.alias?.startsWith("@") &&
+          !action.params.searchQuery.trim()
         ) {
-          keywordOffer = info.isHeuristic
-            ? UrlbarUtils.KEYWORD_OFFER.HIDE
-            : UrlbarUtils.KEYWORD_OFFER.SHOW;
+          // This conditional is true only for the heuristic result, when the
+          // search string is "@alias" followed by any number of spaces.  There
+          // are only three other cases where results will have a token alias
+          // and empty search string: When autofilling a token alias, which
+          // UrlbarProviderTokenAliasEngines handles; when the search string is
+          // "@" and we show all token aliases, which
+          // UrlbarProviderTokenAliasEngines also handles; and when a top site
+          // is an alias, which UrlbarProviderTopSites handles.
+          //
+          // When update2 is disabled, we want this result to be a keyword offer
+          // so that the user can pick it and it behaves like an autofilled
+          // @alias result.  The keyword should be hidden.  When update2 is
+          // enabled, we want it not to be an offer so that it causes the input
+          // to enter search mode.
+          keywordOffer = UrlbarUtils.KEYWORD_OFFER.HIDE;
         }
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
@@ -199,17 +230,13 @@ function makeUrlbarResult(tokens, info) {
               action.params.searchSuggestion,
               UrlbarUtils.HIGHLIGHT.SUGGESTED,
             ],
-            // For test interoperabilty with UrlbarProviderSearchSuggestions.
-            tailPrefix: undefined,
-            tail: undefined,
-            tailOffsetIndex: -1,
-            keyword: [action.params.alias, UrlbarUtils.HIGHLIGHT.TYPED],
+            lowerCaseSuggestion: action.params.searchSuggestion?.toLocaleLowerCase(),
+            keyword: action.params.alias,
             query: [
               action.params.searchQuery.trim(),
               UrlbarUtils.HIGHLIGHT.NONE,
             ],
-            isSearchHistory: !!action.params.isSearchHistory,
-            icon: [info.icon],
+            icon: info.icon,
             keywordOffer,
           })
         );
@@ -241,7 +268,7 @@ function makeUrlbarResult(tokens, info) {
             keyword: [info.firstToken.value, UrlbarUtils.HIGHLIGHT.TYPED],
             input: [action.params.input],
             postData: [action.params.postData],
-            icon: [info.icon],
+            icon: info.icon,
           })
         );
       }
@@ -253,7 +280,7 @@ function makeUrlbarResult(tokens, info) {
             url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
             device: [action.params.deviceName, UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: [info.icon],
+            icon: info.icon,
           })
         );
       case "switchtab":
@@ -263,7 +290,7 @@ function makeUrlbarResult(tokens, info) {
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: [info.icon],
+            icon: info.icon,
           })
         );
       case "visiturl":
@@ -273,7 +300,7 @@ function makeUrlbarResult(tokens, info) {
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
-            icon: [info.icon],
+            icon: info.icon,
           })
         );
       default:
@@ -288,7 +315,7 @@ function makeUrlbarResult(tokens, info) {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
         engine: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: [info.icon],
+        icon: info.icon,
       })
     );
   }
@@ -340,7 +367,7 @@ function makeUrlbarResult(tokens, info) {
     source,
     ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
       url: [info.url, UrlbarUtils.HIGHLIGHT.TYPED],
-      icon: [info.icon],
+      icon: info.icon,
       title: [comment, UrlbarUtils.HIGHLIGHT.TYPED],
       tags: [tags, UrlbarUtils.HIGHLIGHT.TYPED],
     })
