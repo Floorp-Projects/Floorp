@@ -4,6 +4,7 @@
 
 #include "nsPrinterListCUPS.h"
 
+#include "mozilla/GkRustUtils.h"
 #include "mozilla/IntegerRange.h"
 #include "nsCUPSShim.h"
 #include "nsPrinterCUPS.h"
@@ -11,6 +12,9 @@
 #include "prenv.h"
 
 static nsCUPSShim sCupsShim;
+// Requested attributes for IPP requests, just the CUPS version now.
+static constexpr mozilla::Array<const char* const, 1> requestedAttributes{
+    "cups-version"};
 using PrinterInfo = nsPrinterListBase::PrinterInfo;
 
 /**
@@ -29,6 +33,51 @@ static void GetDisplayNameForPrinter(const cups_dest_t& aDest,
     CopyUTF8toUTF16(MakeStringSpan(displayName), aName);
   }
 #endif
+}
+
+// Fetches the CUPS version for the print server controlling the printer. This
+// will only modify the output arguments if the fetch succeeds.
+static void FetchCUPSVersionForPrinter(const cups_dest_t& aDest,
+                                       uint64_t& aOutMajor, uint64_t& aOutMinor,
+                                       uint64_t& aOutPatch) {
+  // Make an IPP request to the server for the printer.
+  const char* const uri = sCupsShim.cupsGetOption(
+      "printer-uri-supported", aDest.num_options, aDest.options);
+  if (!uri) {
+    return;
+  }
+
+  ipp_t* const ippRequest =
+      sCupsShim.ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+
+  // Set the URI we want to use.
+  sCupsShim.ippAddString(ippRequest, IPP_TAG_OPERATION, IPP_TAG_URI,
+                         "printer-uri", nullptr, uri);
+
+  // Set the attributes to request.
+  sCupsShim.ippAddStrings(ippRequest, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+                          "requested-attributes", requestedAttributes.Length,
+                          nullptr, &(requestedAttributes[0]));
+
+  // Use the default HTTP connection to query the CUPS server itself to get
+  // the CUPS version.
+  // Note that cupsDoRequest will delete the request whether it succeeds or
+  // fails, so we should not use ippDelete on it.
+  if (ipp_t* const ippResponse =
+          sCupsShim.cupsDoRequest(CUPS_HTTP_DEFAULT, ippRequest, "/")) {
+    ipp_attribute_t* const versionAttrib =
+        sCupsShim.ippFindAttribute(ippResponse, "cups-version", IPP_TAG_TEXT);
+    if (versionAttrib && sCupsShim.ippGetCount(versionAttrib) == 1) {
+      const char* versionString =
+          sCupsShim.ippGetString(versionAttrib, 0, nullptr);
+      MOZ_ASSERT(versionString);
+      // On error, GkRustUtils::ParseSemVer will not modify its arguments.
+      GkRustUtils::ParseSemVer(
+          nsDependentCSubstring{MakeStringSpan(versionString)}, aOutMajor,
+          aOutMinor, aOutPatch);
+    }
+    sCupsShim.ippDelete(ippResponse);
+  }
 }
 
 nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
@@ -56,8 +105,12 @@ nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
     nsString name;
     GetDisplayNameForPrinter(*dest, name);
 
-    printerInfoList.AppendElement(
-        PrinterInfo{std::move(name), {ownedDest, ownedInfo}});
+    uint64_t major = 0;
+    uint64_t minor = 0;
+    uint64_t patch = 0;
+    FetchCUPSVersionForPrinter(*dest, major, minor, patch);
+    printerInfoList.AppendElement(PrinterInfo{
+        std::move(name), {ownedDest, ownedInfo}, major, minor, patch});
   }
 
   sCupsShim.cupsFreeDests(numPrinters, printers);
@@ -68,7 +121,8 @@ RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
   return mozilla::MakeRefPtr<nsPrinterCUPS>(
       sCupsShim, std::move(aInfo.mName),
       static_cast<cups_dest_t*>(aInfo.mCupsHandles[0]),
-      static_cast<cups_dinfo_t*>(aInfo.mCupsHandles[1]));
+      static_cast<cups_dinfo_t*>(aInfo.mCupsHandles[1]), aInfo.mServerMajor,
+      aInfo.mServerMinor, aInfo.mServerPatch);
 }
 
 Maybe<PrinterInfo> nsPrinterListCUPS::NamedPrinter(
