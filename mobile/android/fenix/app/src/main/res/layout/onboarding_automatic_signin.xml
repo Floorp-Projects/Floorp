@@ -19,7 +19,7 @@
         android:drawablePadding="12dp"
         android:textAppearance="@style/Header16TextStyle"
         android:textColor="@color/onboarding_card_primary_text_dark"
-        tools:text="@string/onboarding_firefox_account_auto_signin_header_2" />
+        tools:text="@string/onboarding_firefox_account_auto_signin_header_3" />
 
     <Button
         android:id="@+id/fxa_sign_in_button"

@@ -1034,7 +1034,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">You are signed in as %s on another Firefox browser on this phone. Would you like to sign in with this account?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">You are signed in as %s on another Firefox browser on this device. Would you like to sign in with this account?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Yes, sign me in</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1274,7 +1274,7 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Shortcut name</string>
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">You can easily add this website to your phone’s Home screen to have instant access and browse faster with an app-like experience.</string>
+    <string name="add_to_homescreen_description_2">You can easily add this website to your device’s Home screen to have instant access and browse faster with an app-like experience.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Logins and passwords</string>
@@ -1533,4 +1533,8 @@
     <string name="no_collections_header1">Collect the things that matter to you</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Group together similar searches, sites, and tabs for quick access later.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">You are signed in as %s on another Firefox browser on this phone. Would you like to sign in with this account?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">You can easily add this website to your phone’s Home screen to have instant access and browse faster with an app-like experience.</string>
 </resources>

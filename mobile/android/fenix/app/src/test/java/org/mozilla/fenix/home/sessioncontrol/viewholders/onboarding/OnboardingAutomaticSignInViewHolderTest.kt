@@ -62,7 +62,7 @@ class OnboardingAutomaticSignInViewHolderTest {
             every { email } returns "email@example.com"
         })
         assertEquals(
-            "You are signed in as email@example.com on another Firefox browser on this phone. Would you like to sign in with this account?",
+            "You are signed in as email@example.com on another Firefox browser on this device. Would you like to sign in with this account?",
             view.header_text.text
         )
         assertTrue(view.fxa_sign_in_button.isEnabled)

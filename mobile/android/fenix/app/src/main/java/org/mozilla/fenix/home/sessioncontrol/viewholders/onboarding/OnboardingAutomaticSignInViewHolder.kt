@@ -41,7 +41,7 @@ class OnboardingAutomaticSignInViewHolder(
     fun bind(account: ShareableAccount) {
         shareableAccount = account
         headerText.text = itemView.context.getString(
-            R.string.onboarding_firefox_account_auto_signin_header_2, account.email
+            R.string.onboarding_firefox_account_auto_signin_header_3, account.email
         )
         val icon = getDrawable(itemView.context, R.drawable.ic_onboarding_avatar_anonymous)
         headerText.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)

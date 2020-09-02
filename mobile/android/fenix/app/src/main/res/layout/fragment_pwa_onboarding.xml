@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:textColor="?primaryText"
             android:textSize="16sp"
-            android:text="@string/add_to_homescreen_description"
+            android:text="@string/add_to_homescreen_description_2"
             app:layout_constraintStart_toEndOf="@id/home_icon"
             app:layout_constraintTop_toTopOf="@id/home_icon"
             app:layout_constraintEnd_toEndOf="parent" />
