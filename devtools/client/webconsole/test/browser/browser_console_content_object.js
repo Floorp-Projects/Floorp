@@ -30,7 +30,7 @@ add_task(async function() {
   await testExpandObject(objectMessage);
 
   info("Restart the Browser Console");
-  await BrowserConsoleManager.toggleBrowserConsole();
+  await safeCloseBrowserConsole();
   hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Wait until the content object is displayed");
@@ -40,9 +40,6 @@ add_task(async function() {
   ok(true, "Content object is displayed in the Browser Console after restart");
 
   await testExpandObject(objectMessage);
-
-  info("Close the browser console");
-  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 async function testExpandObject(objectMessage) {

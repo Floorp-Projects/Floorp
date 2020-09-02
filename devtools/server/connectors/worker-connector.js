@@ -19,6 +19,10 @@ loader.lazyRequireGetter(
  */
 function connectToWorker(connection, dbg, id, options) {
   return new Promise((resolve, reject) => {
+    if (dbg.isClosed) {
+      reject("closed");
+    }
+
     // Step 1: Ensure the worker debugger is initialized.
     if (!dbg.isInitialized) {
       dbg.initialize("resource://devtools/server/startup/worker.js");
@@ -79,6 +83,10 @@ function connectToWorker(connection, dbg, id, options) {
       };
 
       dbg.addListener(listener);
+    }
+
+    if (dbg.isClosed) {
+      reject("closed");
     }
 
     // Step 2: Send a connect request to the worker debugger.

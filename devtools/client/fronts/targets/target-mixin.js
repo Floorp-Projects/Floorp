@@ -635,8 +635,16 @@ function TargetMixin(parentClass) {
       // Before taking any action, notify listeners that destruction is imminent.
       this.emit("close");
 
+      // If the target is being attached, try to wait until it's done, to prevent having
+      // pending connection to the server when the toolbox is destroyed.
       if (this._onThreadInitialized) {
-        await this._onThreadInitialized;
+        try {
+          await this._onThreadInitialized;
+        } catch (e) {
+          // We might still get into cases where attaching fails (e.g. the worker we're
+          // trying to attach to is already closed). Since the target is being destroyed,
+          // we don't need to do anything special here.
+        }
       }
 
       for (let [, front] of this.fronts) {
