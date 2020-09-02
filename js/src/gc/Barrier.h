@@ -324,7 +324,7 @@ struct InternalBarrierMethods {};
 
 template <typename T>
 struct InternalBarrierMethods<T*> {
-  static bool isMarkable(T* v) { return v != nullptr; }
+  static bool isMarkable(const T* v) { return v != nullptr; }
 
   static void preBarrier(T* v) { T::writeBarrierPre(v); }
 
@@ -426,7 +426,7 @@ class MOZ_NON_MEMMOVABLE BarrieredBase {
   // instantiation. Friending to the generic template leads to a number of
   // unintended consequences, including template resolution ambiguity and a
   // circular dependency with Tracing.h.
-  T* unsafeUnbarrieredForTracing() const { return const_cast<T*>(&value); }
+  T* unbarrieredAddress() const { return const_cast<T*>(&value); }
 };
 
 // Base class for barriered pointer types that intercept only writes.
@@ -447,7 +447,7 @@ class WriteBarriered : public BarrieredBase<T>,
 
   // Use this if you want to change the value without invoking barriers.
   // Obviously this is dangerous unless you know the barrier is not needed.
-  void unsafeSet(const T& v) { this->value = v; }
+  void unbarrieredSet(const T& v) { this->value = v; }
 
   // For users who need to manually barrier the raw types.
   static void writeBarrierPre(const T& v) {
@@ -798,12 +798,14 @@ class WeakHeapPtr : public ReadBarriered<T>,
 
   const T& operator->() const { return get(); }
 
-  T* unsafeGet() { return &this->value; }
-  T const* unsafeGet() const { return &this->value; }
-
   void set(const T& v) {
     AssertTargetIsNotGray(v);
     setUnchecked(v);
+  }
+
+  void unbarrieredSet(const T& v) {
+    AssertTargetIsNotGray(v);
+    this->value = v;
   }
 
  private:
@@ -1078,7 +1080,7 @@ struct HeapPtrHasher {
 
   static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
   static bool match(const Key& k, Lookup l) { return k.get() == l; }
-  static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
+  static void rekey(Key& k, const Key& newKey) { k.unbarrieredSet(newKey); }
 };
 
 template <class T>
@@ -1088,7 +1090,7 @@ struct PreBarrieredHasher {
 
   static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
   static bool match(const Key& k, Lookup l) { return k.get() == l; }
-  static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
+  static void rekey(Key& k, const Key& newKey) { k.unbarrieredSet(newKey); }
 };
 
 /* Useful for hashtables with a WeakHeapPtr as key. */

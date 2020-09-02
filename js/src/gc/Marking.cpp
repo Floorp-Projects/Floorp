@@ -2999,7 +2999,7 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
     MOZ_ASSERT(clampedStart <= clampedEnd);
     mover.traceSlots(
         static_cast<HeapSlot*>(obj->getDenseElements() + clampedStart)
-            ->unsafeUnbarrieredForTracing(),
+            ->unbarrieredAddress(),
         clampedEnd - clampedStart);
   } else {
     uint32_t start = std::min(start_, obj->slotSpan());
@@ -3211,7 +3211,7 @@ void js::TenuringTracer::traceObject(JSObject* obj) {
   if (!nobj->hasEmptyElements() && !nobj->denseElementsAreCopyOnWrite() &&
       ObjectDenseElementsMayBeMarkable(nobj)) {
     HeapSlotArray elements = nobj->getDenseElements();
-    Value* elems = elements.begin()->unsafeUnbarrieredForTracing();
+    Value* elems = elements.begin()->unbarrieredAddress();
     traceSlots(elems, elems + nobj->getDenseInitializedLength());
   }
 
@@ -3226,12 +3226,11 @@ void js::TenuringTracer::traceObjectSlots(NativeObject* nobj, uint32_t start,
   HeapSlot* dynEnd;
   nobj->getSlotRange(start, length, &fixedStart, &fixedEnd, &dynStart, &dynEnd);
   if (fixedStart) {
-    traceSlots(fixedStart->unsafeUnbarrieredForTracing(),
-               fixedEnd->unsafeUnbarrieredForTracing());
+    traceSlots(fixedStart->unbarrieredAddress(),
+               fixedEnd->unbarrieredAddress());
   }
   if (dynStart) {
-    traceSlots(dynStart->unsafeUnbarrieredForTracing(),
-               dynEnd->unsafeUnbarrieredForTracing());
+    traceSlots(dynStart->unbarrieredAddress(), dynEnd->unbarrieredAddress());
   }
 }
 

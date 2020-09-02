@@ -312,9 +312,8 @@ void Realm::traceRoots(JSTracer* trc,
     //
     // If a realm is on-stack, we mark its global so that
     // JSContext::global() remains valid.
-    if (shouldTraceGlobal() && global_.unbarrieredGet()) {
-      TraceRoot(trc, global_.unsafeUnbarrieredForTracing(),
-                "on-stack realm global");
+    if (shouldTraceGlobal() && global_) {
+      TraceRoot(trc, global_.unbarrieredAddress(), "on-stack realm global");
     }
   }
 
@@ -453,9 +452,9 @@ void Realm::fixupAfterMovingGC(JSTracer* trc) {
 }
 
 void Realm::fixupGlobal() {
-  GlobalObject* global = *global_.unsafeGet();
+  GlobalObject* global = global_.unbarrieredGet();
   if (global) {
-    global_.set(MaybeForwarded(global));
+    global_.unbarrieredSet(MaybeForwarded(global));
   }
 }
 
