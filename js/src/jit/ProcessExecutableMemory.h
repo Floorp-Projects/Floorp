@@ -70,7 +70,15 @@ enum class ProtectionSetting {
   Executable,
 };
 
-enum class MustFlushICache { No, Yes };
+/// Whether the instruction cache must be flushed:
+//- No means no flushing will happen.
+//- LocalThreadOnly means only the local thread's icache will be flushed.
+//- AllThreads means all the threads' icaches will be flushed; this must be used
+// when the compiling thread and the executing thread might be different.
+
+enum class MustFlushICache { No, LocalThreadOnly, AllThreads };
+
+enum class FlushICacheSpec { LocalThreadOnly, AllThreads };
 
 extern MOZ_MUST_USE bool ReprotectRegion(void* start, size_t size,
                                          ProtectionSetting protection,

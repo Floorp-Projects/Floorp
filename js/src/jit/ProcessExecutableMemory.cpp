@@ -738,9 +738,11 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
                               ProtectionSetting protection,
                               MustFlushICache flushICache) {
   // Flush ICache when making code executable, before we modify |size|.
-  if (flushICache == MustFlushICache::Yes) {
+  if (flushICache == MustFlushICache::LocalThreadOnly ||
+      flushICache == MustFlushICache::AllThreads) {
     MOZ_ASSERT(protection == ProtectionSetting::Executable);
-    jit::FlushICache(start, size);
+    bool codeIsThreadLocal = flushICache == MustFlushICache::LocalThreadOnly;
+    jit::FlushICache(start, size, codeIsThreadLocal);
   }
 
   // Calculate the start of the page containing this region,

@@ -616,6 +616,8 @@ inline bool hasMultiAlias() { return false; }
 
 uint32_t GetARM64Flags();
 
+bool CanFlushICacheFromBackgroundThreads();
+
 }  // namespace jit
 }  // namespace js
 

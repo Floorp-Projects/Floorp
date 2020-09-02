@@ -162,6 +162,8 @@ class CodeSegment {
 
 using UniqueModuleSegment = UniquePtr<ModuleSegment>;
 
+enum IsTier2 { Tier2, NotTier2 };
+
 class ModuleSegment : public CodeSegment {
   const Tier tier_;
   uint8_t* const trapCode_;
@@ -175,8 +177,9 @@ class ModuleSegment : public CodeSegment {
   static UniqueModuleSegment create(Tier tier, const Bytes& unlinkedBytes,
                                     const LinkData& linkData);
 
-  bool initialize(const CodeTier& codeTier, const LinkData& linkData,
-                  const Metadata& metadata, const MetadataTier& metadataTier);
+  bool initialize(IsTier2 compileMode, const CodeTier& codeTier,
+                  const LinkData& linkData, const Metadata& metadata,
+                  const MetadataTier& metadataTier);
 
   Tier tier() const { return tier_; }
 
@@ -519,7 +522,8 @@ class LazyStubTier {
   size_t lastStubSegmentIndex_;
 
   bool createMany(const Uint32Vector& funcExportIndices,
-                  const CodeTier& codeTier, size_t* stubSegmentIndex);
+                  const CodeTier& codeTier, bool flushAllThreadsIcaches,
+                  size_t* stubSegmentIndex);
 
  public:
   LazyStubTier() : lastStubSegmentIndex_(0) {}
@@ -579,7 +583,7 @@ class CodeTier {
         lazyStubs_(mutexForTier(segment_->tier())) {}
 
   bool initialized() const { return !!code_ && segment_->initialized(); }
-  bool initialize(const Code& code, const LinkData& linkData,
+  bool initialize(IsTier2 isTier2, const Code& code, const LinkData& linkData,
                   const Metadata& metadata);
 
   Tier tier() const { return segment_->tier(); }
