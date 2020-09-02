@@ -954,6 +954,17 @@ function PrintUIControlMixin(superClass) {
       }
     }
 
+    handlePaste(e) {
+      let paste = (e.clipboardData || window.clipboardData)
+        .getData("text")
+        .trim();
+
+      if (paste.match(/^[0-9]*$/)) {
+        e.target.value = paste;
+      }
+      e.preventDefault();
+    }
+
     handleEvent(event) {}
   };
 }
@@ -1082,6 +1093,7 @@ class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
     super.initialize();
     this.addEventListener("input", this);
     this.addEventListener("keypress", this);
+    this.addEventListener("paste", this);
   }
 
   update(settings) {
@@ -1092,6 +1104,10 @@ class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
     if (e.type == "keypress") {
       this.handleKeypress(e);
       return;
+    }
+
+    if (e.type === "paste") {
+      this.handlePaste(e);
     }
 
     if (this.checkValidity()) {
@@ -1228,14 +1244,7 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     }
 
     if (e.type === "paste") {
-      let paste = (e.clipboardData || window.clipboardData)
-        .getData("text")
-        .trim();
-
-      if (paste.match(/^[0-9]*$/)) {
-        this._percentScale.value = paste;
-      }
-      e.preventDefault();
+      this.handlePaste(e);
     }
 
     if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
@@ -1289,6 +1298,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
     this.addEventListener("input", this);
     this.addEventListener("keypress", this);
+    this.addEventListener("paste", this);
     document.addEventListener("page-count", this);
   }
 
@@ -1304,6 +1314,10 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
     if (e.type == "keypress") {
       this.handleKeypress(e);
       return;
+    }
+
+    if (e.type === "paste") {
+      this.handlePaste(e);
     }
 
     if (e.type == "page-count") {
