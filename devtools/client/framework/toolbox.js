@@ -3643,7 +3643,7 @@ Toolbox.prototype = {
       this._onTargetDestroyed
     );
 
-    this.targetList.stopListening();
+    this.targetList.destroy();
 
     // Unregister buttons listeners
     this.toolbarButtons.forEach(button => {

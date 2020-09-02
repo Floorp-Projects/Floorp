@@ -57,7 +57,7 @@ registerCleanupFunction(async function() {
   });
   const browserConsole = BrowserConsoleManager.getBrowserConsole();
   if (browserConsole) {
-    browserConsole.targetList.stopListening();
+    browserConsole.targetList.destroy();
     await clearOutput(browserConsole);
     await waitForAllTargetsToBeAttached(browserConsole);
     await BrowserConsoleManager.closeBrowserConsole();
