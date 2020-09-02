@@ -7,35 +7,16 @@
 
 /* import-globals-from aboutDialog.js */
 
-// These two eslint directives should be removed when we remove handling for the
-// legacy app updater.
-/* eslint-disable prettier/prettier */
-/* global AppUpdater, appUpdater, onUnload */
-
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppUpdater: "resource:///modules/AppUpdater.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 
 var gAppUpdater;
-
-(() => {
-
-// If the new app updater is preffed off, load the legacy version.
-if (!Services.prefs.getBoolPref("browser.aboutDialogNewAppUpdater", false)) {
-  Services.scriptloader.loadSubScript(
-    "chrome://browser/content/aboutDialog-appUpdater-legacy.js",
-    this
-  );
-  return;
-}
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppUpdater: "resource:///modules/AppUpdater.jsm",
-});
 
 function onUnload(aEvent) {
   if (gAppUpdater) {
@@ -228,8 +209,3 @@ appUpdater.prototype = {
     this._appUpdater.startDownload();
   },
 };
-
-this.onUnload = onUnload;
-this.appUpdater = appUpdater;
-
-})();
