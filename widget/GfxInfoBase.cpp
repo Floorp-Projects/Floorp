@@ -476,7 +476,7 @@ static VersionComparisonOp BlocklistComparatorToComparisonOp(
   e.g:
   os:WINNT 6.0\tvendor:0x8086\tdevices:0x2582,0x2782\tfeature:DIRECT3D_10_LAYERS\tfeatureStatus:BLOCKED_DRIVER_VERSION\tdriverVersion:8.52.322.2202\tdriverVersionComparator:LESS_THAN_OR_EQUAL
 */
-static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
+static bool BlocklistEntryToDriverInfo(const nsACString& aBlocklistEntry,
                                        GfxDriverInfo& aDriverInfo) {
   // If we get an application version to be zero, something is not working
   // and we are not going to bother checking the blocklist versions.
@@ -598,13 +598,14 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
   return true;
 }
 
-static void BlocklistEntriesToDriverInfo(nsTArray<nsCString>& aBlocklistEntries,
+static void BlocklistEntriesToDriverInfo(const nsTSubstringSplitter<char>& aBlocklistEntries,
                                          nsTArray<GfxDriverInfo>& aDriverInfo) {
   aDriverInfo.Clear();
-  aDriverInfo.SetLength(aBlocklistEntries.Length());
+  const uint32_t n = std::distance(aBlocklistEntries.begin(), aBlocklistEntries.end());
+  aDriverInfo.SetLength(n);
 
-  for (uint32_t i = 0; i < aBlocklistEntries.Length(); ++i) {
-    nsCString& blocklistEntry = aBlocklistEntries[i];
+  for (uint32_t i = 0; i < n; ++i) {
+    const nsDependentCSubstring& blocklistEntry = aBlocklistEntries.Get(i);
     GfxDriverInfo di;
     if (BlocklistEntryToDriverInfo(blocklistEntry, di)) {
       aDriverInfo[i] = di;
@@ -619,12 +620,8 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) {
   if (strcmp(aTopic, "blocklist-data-gfxItems") == 0) {
     nsTArray<GfxDriverInfo> driverInfo;
-    nsTArray<nsCString> blocklistEntries;
-    nsCString utf8Data = NS_ConvertUTF16toUTF8(aData);
-    if (utf8Data.Length() > 0) {
-      ParseString(utf8Data, '\n', blocklistEntries);
-    }
-    BlocklistEntriesToDriverInfo(blocklistEntries, driverInfo);
+    NS_ConvertUTF16toUTF8 utf8Data(aData);
+    BlocklistEntriesToDriverInfo(utf8Data.Split('\n'), driverInfo);
     EvaluateDownloadedBlocklist(driverInfo);
   }
 
