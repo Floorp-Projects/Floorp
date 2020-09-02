@@ -496,6 +496,10 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
 //    void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
+  if (!postBarrierSlot_.used()) {
+    return true;
+  }
+
   masm.bind(&postBarrierSlot_);
 
   saveInterpreterPCReg();
